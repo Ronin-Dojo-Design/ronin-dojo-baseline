@@ -1,0 +1,7 @@
+{
+  "count_posts": "{count, plural, =0 {posts} =1 {post} other {posts}}",
+  "no_posts": "No posts found for the given filters.",
+  "read_time": "{count} min read",
+  "written_by": "Written by",
+  "tools_mentioned": "Mentioned in this post"
+}

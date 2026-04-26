@@ -1,0 +1,54 @@
+{
+  "claim": {
+    "title": "Claim {toolName}",
+    "otp_sent": "OTP code sent to your email",
+    "success_message": "You've successfully claimed {toolName}",
+    "intro": "To claim this listing, you need to verify ownership of the {domain} domain. This helps us ensure that you represent the organization.",
+    "benefits_title": "By claiming this tool, it will get a verified badge and you'll be able to:",
+    "benefit_update": "Update tool information",
+    "benefit_manage": "Manage its categories and alternatives",
+    "benefit_promote": "Promote it on {siteName}",
+    "email_label": "Email Address",
+    "email_placeholder": "e.g. hello@{domain}",
+    "cancel_button": "Cancel",
+    "claim_button": "Claim {toolName}",
+    "send_code_button": "Send Verification Code",
+    "verification_intro": "We've sent a verification code to {email}. Enter the code below to complete the verification process.",
+    "verification_label": "Verification Code",
+    "verification_placeholder": "Enter the {length}-digit code",
+    "change_email_button": "Change email",
+    "resend_in": "Resend in {seconds}s",
+    "resend_code": "Resend code",
+    "email_domain_error": "Email must match the website domain ({domain})"
+  },
+  "embed": {
+    "title": "Embed the {toolName} badge",
+    "description": "Use the following badge to showcase your tool on your website or documentation.",
+    "theme_label": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "width_label": "Width",
+    "height_label": "Height",
+    "preview_label": "Preview",
+    "code_label": "Embed code",
+    "copy_button": "Copy",
+    "copied": "Copied!"
+  },
+  "report": {
+    "title": "Report {toolName}",
+    "success_message": "Thank you for your report. We'll take a look at it shortly.",
+    "question": "What is happening with this tool?",
+    "email_label": "Email",
+    "email_placeholder": "Your email",
+    "type_label": "Type",
+    "message_label": "Message",
+    "message_placeholder": "Provide additional details about the issue...",
+    "send_button": "Send",
+    "cancel_button": "Cancel",
+    "errors": {
+      "rate_limited": "You're sending reports too quickly. Please wait a moment and try again.",
+      "failed": "We couldn't send your report. Please try again later.",
+      "generic": "Something went wrong while sending the report. Please try again."
+    }
+  }
+}

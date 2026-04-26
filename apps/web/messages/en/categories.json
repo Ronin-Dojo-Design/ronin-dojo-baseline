@@ -1,0 +1,4 @@
+{
+  "count_categories": "{count, plural, =0 {categories} =1 {category} other {categories}}",
+  "no_categories": "No categories found for the given filters."
+}

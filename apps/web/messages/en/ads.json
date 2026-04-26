@@ -1,0 +1,28 @@
+{
+  "clear_selection": "Clear {adSpot} selection",
+  "day": "{count, plural, =1 {day} other {days}}",
+  "total": "Total:",
+  "discount_tooltip": "Discount applied based on the order value. Max {discount}% off.",
+  "discount_label": "{discount}% off",
+  "select_dates_error": "Please select dates for at least one ad type",
+  "purchase_button": "Purchase Now",
+  "spots": {
+    "listing": {
+      "label": "Listing Ad",
+      "description": "Visible on every tool listing page"
+    },
+    "banner": {
+      "label": "Banner Ad",
+      "description": "Visible on every page of the website"
+    },
+    "tool_page": {
+      "label": "Tool Page Ad",
+      "description": "Visible on the sidebar of every tool page"
+    }
+  },
+  "default_ad": {
+    "name": "Your brand here",
+    "description": "Reach our audience of professional directory owners and boost your sales.",
+    "button_label": "Advertise on {siteName}"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "or": "or",
+  "built_with": "Built with",
+  "verified": "Verified",
+  "reset": "Reset",
+  "send": "Send",
+  "cancel": "Cancel",
+  "loading": "Loading...",
+  "order_by": "Order by",
+  "featured": "Featured on",
+  "coming_soon": "Coming soon on",
+  "visit": "Visit {name}",
+  "read_more": "Read more",
+  "on_this_page": "On this page",
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "count_tools": "{count, plural, =0 {tools} =1 {tool} other {tools}}",
+  "no_tools": "No tools found for the given filters.",
+  "actions": {
+    "promote_tooltip": "Promote this tool to get more visibility",
+    "promote_button": "Promote",
+    "claim_tooltip": "Claim this tool to get a verified badge",
+    "claim_button": "Claim",
+    "report_tooltip": "Send a report/suggestion",
+    "report_button": "Report",
+    "embed_tooltip": "Embed this tool on your website",
+    "embed_button": "Embed",
+    "visit_button": "Visit"
+  },
+  "filters": {
+    "search_placeholder": "Search tools...",
+    "all_categories": "All categories",
+    "sort_latest": "Latest",
+    "sort_name_asc": "Name (A to Z)",
+    "sort_name_desc": "Name (Z to A)"
+  },
+  "nav": {
+    "copy_link": "Copy Link",
+    "link_copied": "Link copied to clipboard",
+    "share": "Share",
+    "share_on": "Share on {platform}"
+  },
+  "preview_alert": {
+    "title": "This is a preview only.",
+    "scheduled": "{toolName} will be published on {date}.",
+    "description": "{toolName} is not yet published and is only visible on this page. If you want to speed up the process, you can expedite publication below.",
+    "publish_button": "Publish within 24h"
+  }
+}

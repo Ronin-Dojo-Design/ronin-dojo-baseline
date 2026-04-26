@@ -1,0 +1,82 @@
+{
+  "submit": {
+    "your_name_label": "Your Name",
+    "your_name_placeholder": "John Doe",
+    "your_email_label": "Your Email",
+    "your_email_placeholder": "john@doe.com",
+    "name_label": "Name",
+    "name_placeholder": "PostHog",
+    "website_label": "Website URL",
+    "website_placeholder": "https://posthog.com",
+    "note_label": "Note",
+    "note_placeholder": "Any additional information...",
+    "newsletter_label": "I'd like to receive free email updates",
+    "submit_button": "Submit",
+    "already_published": "{name} has already been published.",
+    "submitted_success": "{name} has been submitted.",
+    "errors": {
+      "rate_limited": "Too many submissions. Please try again later.",
+      "disposable_email": "Please use a valid, non-disposable email address.",
+      "failed_submission": "We couldn't submit your tool. Please try again.",
+      "slug_generation_failed": "We couldn't generate a unique URL for your tool. Try renaming it and resubmit."
+    }
+  },
+  "ad_details": {
+    "create": {
+      "success_message": "Advertisement created successfully",
+      "button_label": "Create Ad"
+    },
+    "update": {
+      "success_message": "Advertisement updated successfully",
+      "button_label": "Update Ad"
+    },
+    "name_label": "Name",
+    "name_placeholder": "Product name",
+    "website_url_label": "Website URL",
+    "website_url_placeholder": "https://yourwebsite.com",
+    "description_label": "Description",
+    "description_note": "Max. 160 chars",
+    "description_placeholder": "Brief description of your product",
+    "button_label": "Button Label",
+    "button_placeholder": "Get started for free",
+    "errors": {
+      "session_incomplete": "The checkout session has not finished yet. Refresh the page and try again.",
+      "invalid_session": "We couldn't process this checkout session. Please start over.",
+      "generic": "Something went wrong while saving the advertisement. Please try again."
+    }
+  },
+  "cta": {
+    "email_placeholder": "Enter your email",
+    "proof": "Join {count}+ other members",
+    "button_md": "Subscribe",
+    "button_lg": "Join our community"
+  },
+  "feedback": {
+    "question": "What can we do to improve {siteName}?",
+    "email_placeholder": "Your email",
+    "feedback_placeholder": "Write your feedback here...",
+    "dismiss_button": "Dismiss",
+    "send_button": "Send feedback",
+    "success_message": "Thank you for your feedback!",
+    "errors": {
+      "rate_limited": "You're sending feedback too quickly. Please wait a moment and try again.",
+      "failed": "We couldn't send your feedback. Please try again later.",
+      "generic": "Something went wrong while sending your feedback. Please try again."
+    }
+  },
+  "media": {
+    "success": "Media updated successfully. Save the form to apply changes.",
+    "error": "We couldn't process this media file. Please try again.",
+    "fetch_error": "We couldn't fetch media from that URL. Double-check the address and try again."
+  },
+  "sign_in": {
+    "title": "Sign In",
+    "description": "Get access to the dashboard and manage your submitted tools.",
+    "continue_with": "Continue with {provider}",
+    "email_placeholder": "Enter your email",
+    "magic_link_button": "Send me a Magic Link"
+  },
+  "sign_out": {
+    "success_message": "You've been signed out successfully"
+  }
+}

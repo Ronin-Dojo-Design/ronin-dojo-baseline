@@ -1,0 +1,449 @@
+generator client {
+  provider        = "prisma-client"
+  previewFeatures = ["postgresqlExtensions"]
+  engineType      = "client"
+  output          = "../.generated/prisma"
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [citext]
+}
+
+enum AdType {
+  Banner
+  Tools
+  ToolPage
+  BlogPost
+  Bottom
+  All
+}
+
+enum ToolStatus {
+  Draft
+  Scheduled
+  Pending
+  Published
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("user")
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Ronin Dojo: which brand this user is currently working in
+  // (drives `where: { brand }` scoping; persists across sessions)
+  lastActiveBrandId Brand?
+
+  // Relations (Dirstarter template)
+  accounts Account[]
+  sessions Session[]
+  tools    Tool[]
+
+  // Relations (Ronin Dojo)
+  profile             Profile?
+  memberships         Membership[]
+  earnedBelts         Progress[]               @relation("EarnedBy")
+  awardedBelts        Progress[]               @relation("AwardedBy")
+  ownedSchools        School[]                 @relation("SchoolOwner")
+  gamificationLog     GamificationEvent[]
+  tournamentEntries   TournamentRegistration[]
+
+  // Indexes
+  @@index([id])
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  token          String   @unique
+  expiresAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  // Indexes
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  // Indexes
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  email       String
+  name        String
+  description String?
+  websiteUrl  String
+  faviconUrl  String?
+  bannerUrl   String?
+  buttonLabel String?
+  type        AdType   @default(All)
+  startsAt    DateTime
+  endsAt      DateTime
+  sessionId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tool {
+  id             String     @id @default(cuid())
+  name           String     @db.Citext
+  slug           String     @unique
+  websiteUrl     String
+  affiliateUrl   String?
+  tagline        String?
+  description    String?
+  content        String?
+  faviconUrl     String?
+  screenshotUrl  String?
+  isFeatured     Boolean    @default(false)
+  submitterName  String?
+  submitterEmail String?
+  submitterNote  String?
+  status         ToolStatus @default(Draft)
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  categories Category[]
+  tags       Tag[]
+  reports    Report[]
+  owner      User?      @relation(fields: [ownerId], references: [id])
+  ownerId    String?
+
+  @@index([id, slug])
+  @@index([name])
+  @@index([status])
+  @@index([ownerId])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @db.Citext
+  slug        String   @unique
+  label       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Implicit relation
+  tools Tool[]
+
+  // Indexes
+  @@index([slug])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @db.Citext
+  slug      String   @unique
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  // Relations
+  tools Tool[]
+
+  // Indexes
+  @@index([name])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  type      String   @default("Other")
+  message   String?
+  email     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tool   Tool?   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId String?
+
+  // Indexes
+  @@index([toolId])
+}
+
+// =============================================================================
+// RONIN DOJO PLATFORM MODELS
+// =============================================================================
+// Everything below is the Ronin Dojo martial-arts platform schema.
+// The models above (Tool, Category, Tag, Report, Ad) come from the Dirstarter
+// directory template and are kept intact during the learning phase as a working
+// reference for Prisma patterns — citext, indexes, owner relations, soft enums,
+// implicit M:N relations.
+//
+// TODO(remove-before-prod): delete the Dirstarter template models + their
+// migrations once we no longer need them as a reference. Track in a follow-up
+// issue before BBL DNS cutover (see ADR 0007).
+// =============================================================================
+
+enum Brand {
+  RONIN_DOJO_DESIGN     // umbrella / admin-facing
+  BASELINE_MARTIAL_ARTS // TuffBuffs successor
+  BBL                   // Black Belt Legacy
+  WEKAF                 // WEKAF USA
+}
+
+enum MembershipRole {
+  STUDENT
+  INSTRUCTOR
+  OWNER
+  COACH
+}
+
+enum CertificationType {
+  BELT_RANK
+  SAFETY
+  COACH
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  displayName String?
+  bio         String?
+  phone       String?
+  socialLinks Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+}
+
+model School {
+  id         String   @id @default(cuid())
+  brand      Brand
+  name       String
+  slug       String
+  address    String?
+  websiteUrl String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  owner       User?         @relation("SchoolOwner", fields: [ownerId], references: [id])
+  ownerId     String?
+  styles      SchoolStyle[]
+  memberships Membership[]
+  courses     Course[]
+  tournaments Tournament[]
+
+  @@unique([brand, slug])
+  @@index([brand])
+  @@index([ownerId])
+}
+
+model Style {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schools SchoolStyle[]
+  belts   Belt[]
+  courses Course[]
+}
+
+// Explicit M:N join table: schools × styles taught at the school.
+model SchoolStyle {
+  schoolId String
+  styleId  String
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  style  Style  @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  @@id([schoolId, styleId])
+}
+
+// A user's relationship to a school. A user can hold multiple memberships
+// across schools and brands (e.g., instructor at school A, student at school B).
+model Membership {
+  id        String         @id @default(cuid())
+  brand     Brand
+  role      MembershipRole
+  joinedAt  DateTime       @default(now())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId String
+
+  @@unique([userId, schoolId, role])
+  @@index([brand, schoolId])
+  @@index([userId])
+}
+
+model Belt {
+  id        String   @id @default(cuid())
+  name      String
+  rank      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  style    Style      @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  styleId  String
+  progress Progress[]
+
+  @@unique([styleId, rank])
+  @@index([styleId])
+}
+
+// A belt-rank award. `awardedBy` is the instructor who certified.
+model Progress {
+  id        String   @id @default(cuid())
+  awardedAt DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User    @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  belt        Belt    @relation(fields: [beltId], references: [id], onDelete: Restrict)
+  beltId      String
+  awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
+  awardedById String?
+
+  @@unique([userId, beltId])
+  @@index([userId, awardedAt])
+  @@index([beltId])
+}
+
+model Course {
+  id                String            @id @default(cuid())
+  brand             Brand
+  title             String
+  slug              String
+  description       String?
+  certificationType CertificationType
+  isPublished       Boolean           @default(false)
+  publishedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId        String
+  style           Style?           @relation(fields: [styleId], references: [id])
+  styleId         String?
+  curriculumItems CurriculumItem[]
+
+  @@unique([brand, schoolId, slug])
+  @@index([brand, schoolId])
+  @@index([styleId])
+}
+
+model CurriculumItem {
+  id        String   @id @default(cuid())
+  order     Int
+  title     String
+  notes     String?
+  // For video: store Mux/Cloudflare playbackId. For image: S3 URL.
+  mediaUrl  String?
+  mediaType String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+
+  @@index([courseId, order])
+}
+
+// Append-only ledger of point-bearing events. Aggregates (level, badges)
+// are computed on read or in materialized views — not stored fields.
+model GamificationEvent {
+  id        String   @id @default(cuid())
+  brand     Brand
+  eventType String
+  points    Int      @default(0)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId, createdAt])
+  @@index([brand, eventType])
+}
+
+model Tournament {
+  id          String    @id @default(cuid())
+  brand       Brand
+  name        String
+  slug        String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  host          School                   @relation(fields: [hostId], references: [id])
+  hostId        String
+  registrations TournamentRegistration[]
+
+  @@unique([brand, slug])
+  @@index([brand, startsAt])
+  @@index([hostId])
+}
+
+model TournamentRegistration {
+  id          String   @id @default(cuid())
+  division    String?
+  weightClass String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId String
+  competitor   User       @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  competitorId String
+
+  @@unique([tournamentId, competitorId])
+  @@index([tournamentId])
+  @@index([competitorId])
+}

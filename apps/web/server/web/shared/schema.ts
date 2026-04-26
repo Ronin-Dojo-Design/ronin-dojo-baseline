@@ -1,0 +1,120 @@
+import { isMimeTypeMatch } from "@primoui/utils"
+import type { useTranslations } from "next-intl"
+import { z } from "zod"
+
+type TFunction = ReturnType<typeof useTranslations>
+
+export const ALLOWED_MIMETYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+]
+
+const pathSchema = z.object({
+  path: z.string().regex(/^[a-z0-9/_-]+$/i),
+})
+
+export const createFileSchema = (t: TFunction) => {
+  return z
+    .instanceof(File)
+    .refine(async ({ size }) => size > 0, {
+      error: t("fileCannotBeEmpty"),
+    })
+    .refine(async ({ size }) => size < 1024 * 512, {
+      error: t("fileSizeTooLarge"),
+    })
+    .refine(async ({ type }) => isMimeTypeMatch(type, ALLOWED_MIMETYPES), {
+      error: t("fileTypeInvalid"),
+    })
+}
+
+export const createSubmitToolSchema = (t: TFunction) => {
+  return z.object({
+    name: z.string().min(1, { error: t("required") }),
+    websiteUrl: z
+      .url(t("invalidUrl"))
+      .min(1, { error: t("required") })
+      .trim(),
+    submitterName: z.string().min(1, { error: t("required") }),
+    submitterEmail: z.email({ error: t("invalidEmail") }),
+    submitterNote: z
+      .string()
+      .max(256, { error: issue => t("maxLength", { length: Number(issue.maximum) }) }),
+    newsletterOptIn: z.boolean().optional().default(true),
+  })
+}
+
+export const createNewsletterSchema = (t: TFunction) => {
+  return z.object({
+    captcha: z.literal("").optional(),
+    value: z.email({ error: t("invalidEmail") }),
+  })
+}
+
+export const createReportToolSchema = (t: TFunction) => {
+  return z.object({
+    type: z.string().min(1, { error: t("required") }),
+    email: z.email({ error: t("invalidEmail") }),
+    message: z
+      .string()
+      .max(256, { error: issue => t("maxLength", { length: Number(issue.maximum) }) }),
+    toolId: z.string(),
+  })
+}
+
+export const createFeedbackSchema = (t: TFunction) => {
+  return z.object({
+    email: z.email({ error: t("invalidEmail") }),
+    message: z.string().min(1, { error: t("required") }),
+  })
+}
+
+export const createClaimToolEmailSchema = (t: TFunction) => {
+  return z.object({
+    toolId: z.string(),
+    email: z.email({ error: t("invalidEmail") }),
+  })
+}
+
+export const createClaimToolOtpSchema = (t: TFunction) => {
+  return z.object({
+    toolId: z.string(),
+    otp: z.string().length(6, {
+      error: issue => t("invalidLength", { length: Number(issue.minimum || issue.maximum) }),
+    }),
+  })
+}
+
+export const createAdDetailsSchema = (t: TFunction) => {
+  return z.object({
+    sessionId: z.string(),
+    name: z.string().min(1, { error: t("required") }),
+    description: z
+      .string()
+      .min(1, { error: t("required") })
+      .max(160, { error: issue => t("maxLength", { length: Number(issue.maximum) }) }),
+    websiteUrl: z
+      .url({ error: t("invalidUrl") })
+      .min(1, { error: t("required") })
+      .trim(),
+    buttonLabel: z.string().optional(),
+  })
+}
+
+export const createFetchMediaSchema = (t: TFunction) => {
+  return pathSchema.extend({
+    url: z
+      .url({ error: t("invalidUrl") })
+      .min(1, { error: t("required") })
+      .trim(),
+    type: z.enum(["favicon", "screenshot"]).default("favicon"),
+  })
+}
+
+export const createUploadMediaSchema = (t: TFunction) => {
+  return pathSchema.extend({
+    file: createFileSchema(t),
+  })
+}

@@ -1,0 +1,103 @@
+{
+  "search": {
+    "placeholder": "Type to search...",
+    "no_results": "No results found."
+  },
+  "ads": {
+    "ad_label": "Ad",
+    "learn_more": "Learn More",
+    "preview_ad": "Preview this ad",
+    "day": "day"
+  },
+  "bottom": {
+    "popular_categories": "Popular Categories:"
+  },
+  "footer": {
+    "cta_title": "Subscribe to our newsletter",
+    "cta_description": "Join {count}+ other members and get updates straight to your inbox."
+  },
+  "count_badge": {
+    "new_tools": "{count} new {count, plural, =0 {tools} =1 {tool} other {tools}} added",
+    "total_tools": "{count} {count, plural, =0 {tools} =1 {tool} other {tools}} listed"
+  },
+  "cta_proof": {
+    "message": "Join {count}+ directory enthusiasts"
+  },
+  "feature_nudge": {
+    "message": "{name} has already been published on {siteName}. You can feature it for extra exposure.",
+    "feature_button": "Feature {toolName}",
+    "dismiss_button": "Dismiss"
+  },
+  "featured_tools": {
+    "title": "Featured tools",
+    "add_tooltip": "Get your tool featured"
+  },
+  "listings": {
+    "featured_tools": "Featured Tools",
+    "similar_to": "Similar to {toolName}",
+    "view_all_tools": "View all tools"
+  },
+  "pagination": {
+    "prev": "Prev",
+    "next": "Next",
+    "page_of": "Page {page} of {pageCount}",
+    "page_label": "Page:"
+  },
+  "product": {
+    "interval": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "price_period": {
+      "month": "month",
+      "one_time": "one-time"
+    }
+  },
+  "price": {
+    "off": "{discount}% off",
+    "left": "left"
+  },
+  "stats": {
+    "pageviews": "Monthly Pageviews",
+    "tools": "Listed Tools",
+    "subscribers": "Newsletter Subscribers"
+  },
+  "data_table": {
+    "empty_state": "No results.",
+    "column_header": {
+      "sorted_desc": "Sorted descending. Click to sort ascending.",
+      "sorted_asc": "Sorted ascending. Click to sort descending.",
+      "not_sorted": "Not sorted. Click to sort ascending.",
+      "sort_asc": "Sort ascending",
+      "asc": "Asc",
+      "sort_desc": "Sort descending",
+      "desc": "Desc",
+      "hide_column": "Hide column",
+      "hide": "Hide"
+    },
+    "pagination": {
+      "rows_selected": "{selected} of {total} row(s) selected.",
+      "per_page": "Per page",
+      "page_of": "Page {page} of {total}",
+      "go_to_first": "Go to first page",
+      "go_to_previous": "Go to previous page",
+      "go_to_next": "Go to next page",
+      "go_to_last": "Go to last page"
+    },
+    "view_options": {
+      "toggle_columns": "Toggle columns",
+      "view": "View",
+      "search_columns": "Search columns...",
+      "no_columns": "No columns found."
+    },
+    "toolbar": {
+      "reset_filters": "Reset filters",
+      "reset": "Reset"
+    },
+    "faceted_filter": {
+      "selected": "selected",
+      "no_results": "No results found.",
+      "clear_filters": "Clear filters"
+    }
+  }
+}

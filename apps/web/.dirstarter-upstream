@@ -1,0 +1,12 @@
+# Dirstarter upstream provenance
+#
+# This app started as a copy of the Dirstarter (Polarsoft) template.
+# The inner .git was stripped on copy so this monorepo has one git history.
+# If you want to pull future Dirstarter updates, clone the upstream into
+# a sibling worktree and cherry-pick or three-way-merge changes by hand.
+
+upstream_url    = https://github.com/dirstarter/dirstarter.git
+upstream_branch = main
+copied_at_sha   = c42e8bbc9a093daa8bb70faebfc552399134ee13
+copied_on       = 2026-04-25
+copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template

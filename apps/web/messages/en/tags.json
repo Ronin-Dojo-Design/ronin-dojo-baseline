@@ -1,0 +1,9 @@
+{
+  "count_tags": "{count, plural, =0 {tags} =1 {tag} other {tags}}",
+  "no_tags": "No tags found for the given filters.",
+  "filters": {
+    "search_placeholder": "Search tags...",
+    "sort_name_asc": "Name (A to Z)",
+    "sort_name_desc": "Name (Z to A)"
+  }
+}
