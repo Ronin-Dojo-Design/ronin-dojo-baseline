@@ -79,3 +79,17 @@ Items deferred but tracked:
 ## Bow-out line
 
 SESSION_0001 closed. BaselineDashboard is live. Next: SESSION_0002 — Petey plans the S1 schema rev. No code yet; design then sign-off, then migration in SESSION_0003.
+
+---
+
+## Post-close addendum — GitHub setup
+
+After the bow-out line above, the user authorized handling the GitHub side of the bootstrap as part of this same session. Per the closing ritual, commits + remote setup are inside the close, not after it.
+
+- **Repo:** [Ronin-Dojo-Design/ronin-dojo-baseline](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline) (private)
+- **Initial commit:** `cab9dda` — "Initial commit: project bootstrap through SESSION_0001 close"
+- **Author:** BScott `<mrbscott@gmail.com>`
+- **Branch:** `main` tracking `origin/main`
+- **One config note:** `git config http.postBuffer 524288000` (500MB) was set locally to recover from an HTTP 400 on the initial push. Future pushes are normal-sized and don't need it; the config persists harmlessly.
+
+The `Ronin-Dojo-Design` GitHub org sits alongside the legacy `ronin-dojo-monorepo` repo. They are deliberately separate; this new repo does not import legacy backend code per the program plan's layer rules ([Layer 4](../architecture/program-plan.md) is the only place legacy assets feed in, and that's UI-only at S11).
