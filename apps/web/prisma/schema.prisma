@@ -49,13 +49,25 @@ model User {
   tools    Tool[]
 
   // Relations (Ronin Dojo)
-  profile             Profile?
-  memberships         Membership[]
-  earnedBelts         Progress[]               @relation("EarnedBy")
-  awardedBelts        Progress[]               @relation("AwardedBy")
-  ownedSchools        School[]                 @relation("SchoolOwner")
-  gamificationLog     GamificationEvent[]
-  tournamentEntries   TournamentRegistration[]
+  passport                   Passport?
+  directoryProfile           DirectoryProfile?
+  memberships                Membership[]
+  rankAwards                 RankAward[]                    @relation("EarnedBy")
+  awardedRankAwards          RankAward[]                    @relation("AwardedBy")
+  ownedOrganizations         Organization[]                 @relation("OrganizationOwner")
+  gamificationLog            GamificationEvent[]
+  registrations              Registration[]
+  subscriptions              UserBrandSubscription[]
+  lineageNode                LineageNode?
+  courseEnrollments           CourseEnrollment[]
+  waiverSignatures           WaiverSignature[]
+  waiverSignaturesOnBehalf   WaiverSignature[]              @relation("SignedOnBehalf")
+  tournamentStaffAssignments TournamentStaffAssignment[]
+  certifications             Certification[]
+  issuedCertifications       Certification[]                @relation("CertIssuedBy")
+  createdStyles              Style[]                        @relation("StyleCreatedBy")
+  approvedStyles             Style[]                        @relation("StyleApprovedBy")
+  verifiedItemCompletions    CurriculumItemCompletion[]     @relation("ItemVerifiedBy")
 
   // Indexes
   @@index([id])
@@ -221,18 +233,15 @@ model Report {
 // issue before BBL DNS cutover (see ADR 0007).
 // =============================================================================
 
-enum Brand {
-  RONIN_DOJO_DESIGN     // umbrella / admin-facing
-  BASELINE_MARTIAL_ARTS // TuffBuffs successor
-  BBL                   // Black Belt Legacy
-  WEKAF                 // WEKAF USA
-}
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
 
-enum MembershipRole {
-  STUDENT
-  INSTRUCTOR
-  OWNER
-  COACH
+enum Brand {
+  RONIN_DOJO_DESIGN
+  BASELINE_MARTIAL_ARTS
+  BBL
+  WEKAF
 }
 
 enum CertificationType {
@@ -241,118 +250,361 @@ enum CertificationType {
   COACH
 }
 
-model Profile {
-  id          String   @id @default(cuid())
-  displayName String?
-  bio         String?
-  phone       String?
-  socialLinks Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum OrganizationType {
+  DOJO
+  LEAGUE
+  SCHOOL
+  CLUB
+}
+
+enum MembershipStatus {
+  INVITED
+  PENDING
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+}
+
+enum RankSystemKind {
+  BELT
+  PRAJIOUD
+  GRADE
+  KYU_DAN
+  OTHER
+}
+
+enum TournamentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum RegistrationStatus {
+  STARTED
+  SUBMITTED
+  APPROVED
+  WAITLISTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIAL
+}
+
+enum DivisionFormat {
+  SINGLE_ELIM
+  ROUND_ROBIN
+  POOL_TO_BRACKET
+  KATA
+  SPARRING
+  FORMS
+}
+
+enum DivisionGender {
+  ANY
+  FEMALE
+  MALE
+}
+
+enum DirectoryVisibility {
+  HIDDEN
+  MEMBERS_ONLY
+  PUBLIC
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  NONBINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum EntryStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum StyleStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+enum WaiverType {
+  LIABILITY
+  TOURNAMENT
+  MINOR_CONSENT
+  MEDIA_RELEASE
+  MEDICAL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAST_DUE
+}
+
+enum LineageVisibility {
+  PUBLIC
+  UNLISTED
+  RESTRICTED
+  PRIVATE
+}
+
+enum LineageRelationType {
+  TOURNAMENT_PARTNER
+  AFFILIATION
+  TRAINING_PARTNER
+  SEMINAR
+  COMPETITION_TEAM
+}
+
+enum CertificationStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+// ---------------------------------------------------------------------------
+// Models — Identity shell
+// ---------------------------------------------------------------------------
+
+model Passport {
+  id                        String    @id @default(cuid())
+  displayName               String?
+  legalFirstName            String?
+  legalLastName             String?
+  dob                       DateTime? @db.Date
+  gender                    Gender?
+  phoneE164                 String?
+  emergencyContactName      String?
+  emergencyContactPhoneE164 String?
+  avatarUrl                 String?
+  bio                       String?
+  socialLinks               Json?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
 }
 
-model School {
-  id         String   @id @default(cuid())
+model DirectoryProfile {
+  id              String              @id @default(cuid())
+  visibility      DirectoryVisibility @default(MEMBERS_ONLY)
+  locationCity    String?
+  locationRegion  String?
+  locationCountry String?             @db.Char(2)
+  showEmail       Boolean             @default(false)
+  showPhone       Boolean             @default(false)
+  showOrgs        Boolean             @default(true)
+  showRanks       Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+}
+
+// ---------------------------------------------------------------------------
+// Models — Organization + Discipline
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id         String           @id @default(cuid())
   brand      Brand
   name       String
   slug       String
+  type       OrganizationType @default(DOJO)
   address    String?
   websiteUrl String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
-  owner       User?         @relation("SchoolOwner", fields: [ownerId], references: [id])
-  ownerId     String?
-  styles      SchoolStyle[]
-  memberships Membership[]
-  courses     Course[]
-  tournaments Tournament[]
+  owner              User?                    @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  ownerId            String?
+  disciplines        OrganizationDiscipline[]
+  memberships        Membership[]
+  courses            Course[]
+  tournaments        Tournament[]
+  waivers            Waiver[]
+  certifications     Certification[]
+  gamificationEvents GamificationEvent[]
 
   @@unique([brand, slug])
   @@index([brand])
   @@index([ownerId])
 }
 
-model Style {
+model Discipline {
   id        String   @id @default(cuid())
   name      String   @unique
   slug      String   @unique
+  code      String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  schools SchoolStyle[]
-  belts   Belt[]
-  courses Course[]
+  organizations         OrganizationDiscipline[]
+  rankSystems           RankSystem[]
+  courses               Course[]
+  memberships           Membership[]
+  tournamentDisciplines TournamentDiscipline[]
+  styles                Style[]
+  gamificationEvents    GamificationEvent[]
 }
 
-// Explicit M:N join table: schools × styles taught at the school.
-model SchoolStyle {
-  schoolId String
-  styleId  String
+model OrganizationDiscipline {
+  organizationId String
+  disciplineId   String
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  style  Style  @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  discipline   Discipline   @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
 
-  @@id([schoolId, styleId])
+  @@id([organizationId, disciplineId])
 }
 
-// A user's relationship to a school. A user can hold multiple memberships
-// across schools and brands (e.g., instructor at school A, student at school B).
+// ---------------------------------------------------------------------------
+// Models — Rank system
+// ---------------------------------------------------------------------------
+
+model RankSystem {
+  id           String         @id @default(cuid())
+  name         String
+  kind         RankSystemKind @default(BELT)
+  createdAt    DateTime       @default(now())
+
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String
+
+  ranks Rank[]
+
+  @@unique([disciplineId, name])
+  @@index([disciplineId])
+}
+
+model Rank {
+  id           String   @id @default(cuid())
+  sortOrder    Int
+  name         String
+  shortName    String?
+  colorHex     String?
+  createdAt    DateTime @default(now())
+
+  rankSystem   RankSystem @relation(fields: [rankSystemId], references: [id])
+  rankSystemId String
+
+  divisionRankMin Division[] @relation("DivisionRankMin")
+  divisionRankMax Division[] @relation("DivisionRankMax")
+
+  memberships  Membership[]
+  rankAwards   RankAward[]
+  courses      Course[]
+
+  @@unique([rankSystemId, sortOrder])
+  @@unique([rankSystemId, name])
+  @@index([rankSystemId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Membership + Roles
+// ---------------------------------------------------------------------------
+
 model Membership {
-  id        String         @id @default(cuid())
-  brand     Brand
-  role      MembershipRole
-  joinedAt  DateTime       @default(now())
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id           String           @id @default(cuid())
+  brand        Brand
+  status       MembershipStatus @default(PENDING)
+  memberNumber String?
+  joinedAt     DateTime?        @db.Date
+  leftAt       DateTime?        @db.Date
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   String
-  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  discipline     Discipline   @relation(fields: [disciplineId], references: [id])
+  disciplineId   String
+  style          Style?       @relation(fields: [styleId], references: [id])
+  styleId        String?
+  rank           Rank?        @relation(fields: [rankId], references: [id])
+  rankId         String?
 
-  @@unique([userId, schoolId, role])
-  @@index([brand, schoolId])
+  roleAssignments     MembershipRoleAssignment[]
+  registrationEntries RegistrationEntry[]
+
+  @@unique([userId, organizationId, disciplineId])
+  @@index([brand, organizationId])
+  @@index([organizationId, status])
   @@index([userId])
-}
-
-model Belt {
-  id        String   @id @default(cuid())
-  name      String
-  rank      Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  style    Style      @relation(fields: [styleId], references: [id], onDelete: Cascade)
-  styleId  String
-  progress Progress[]
-
-  @@unique([styleId, rank])
   @@index([styleId])
 }
 
-// A belt-rank award. `awardedBy` is the instructor who certified.
-model Progress {
+model MembershipRoleAssignment {
+  id           String   @id @default(cuid())
+  assignedAt   DateTime @default(now())
+
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  membershipId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleId       String
+
+  @@unique([membershipId, roleId])
+  @@index([membershipId])
+  @@index([roleId])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  brand       Brand?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roleAssignments MembershipRoleAssignment[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Rank awards
+// ---------------------------------------------------------------------------
+
+model RankAward {
   id        String   @id @default(cuid())
   awardedAt DateTime @default(now())
   notes     String?
+  location  String?
+  mediaUrls Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user        User    @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
+  user        User   @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
   userId      String
-  belt        Belt    @relation(fields: [beltId], references: [id], onDelete: Restrict)
-  beltId      String
-  awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
+  rank        Rank   @relation(fields: [rankId], references: [id], onDelete: Restrict)
+  rankId      String
+  awardedBy   User?  @relation("AwardedBy", fields: [awardedById], references: [id])
   awardedById String?
 
-  @@unique([userId, beltId])
+  gamificationEvents GamificationEvent[]
+
+  @@unique([userId, rankId])
   @@index([userId, awardedAt])
-  @@index([beltId])
+  @@index([rankId])
 }
+
+// ---------------------------------------------------------------------------
+// Models — Courses + Curriculum
+// ---------------------------------------------------------------------------
 
 model Course {
   id                String            @id @default(cuid())
@@ -366,15 +618,20 @@ model Course {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolId        String
-  style           Style?           @relation(fields: [styleId], references: [id])
-  styleId         String?
-  curriculumItems CurriculumItem[]
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId     String
+  discipline         Discipline?       @relation(fields: [disciplineId], references: [id])
+  disciplineId       String?
+  rank               Rank?             @relation(fields: [rankId], references: [id])
+  rankId             String?
+  curriculumItems    CurriculumItem[]
+  enrollments        CourseEnrollment[]
+  gamificationEvents GamificationEvent[]
+  certifications     Certification[]
 
-  @@unique([brand, schoolId, slug])
-  @@index([brand, schoolId])
-  @@index([styleId])
+  @@unique([brand, organizationId, slug])
+  @@index([brand, organizationId])
+  @@index([disciplineId])
 }
 
 model CurriculumItem {
@@ -382,68 +639,439 @@ model CurriculumItem {
   order     Int
   title     String
   notes     String?
-  // For video: store Mux/Cloudflare playbackId. For image: S3 URL.
   mediaUrl  String?
   mediaType String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId String
+  course      Course                    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId     String
+  completions CurriculumItemCompletion[]
 
   @@index([courseId, order])
 }
 
-// Append-only ledger of point-bearing events. Aggregates (level, badges)
-// are computed on read or in materialized views — not stored fields.
+model CourseEnrollment {
+  id          String    @id @default(cuid())
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+
+  itemCompletions CurriculumItemCompletion[]
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+model CurriculumItemCompletion {
+  id          String   @id @default(cuid())
+  completedAt DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  enrollment       CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  enrollmentId     String
+  curriculumItem   CurriculumItem   @relation(fields: [curriculumItemId], references: [id], onDelete: Cascade)
+  curriculumItemId String
+  verifiedBy       User?            @relation("ItemVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedById     String?
+
+  @@unique([enrollmentId, curriculumItemId])
+  @@index([curriculumItemId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Tournaments
+// ---------------------------------------------------------------------------
+
+model Tournament {
+  id            String           @id @default(cuid())
+  brand         Brand
+  name          String
+  slug          String
+  description   String?
+  status        TournamentStatus @default(DRAFT)
+  startDate     DateTime         @db.Date
+  endDate       DateTime         @db.Date
+  timezone      String?
+  venueName     String?
+  venueCity     String?
+  venueRegion   String?
+  venueCountry  String?          @db.Char(2)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  host             Organization              @relation(fields: [hostId], references: [id])
+  hostId           String
+  disciplines      TournamentDiscipline[]
+  registrations    Registration[]
+  waivers          Waiver[]
+  staffAssignments TournamentStaffAssignment[]
+
+  @@unique([brand, slug])
+  @@index([brand, startDate])
+  @@index([hostId])
+}
+
+model TournamentDiscipline {
+  id           String  @id @default(cuid())
+  rulesetName  String?
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId String
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String
+
+  divisions Division[]
+
+  @@unique([tournamentId, disciplineId])
+}
+
+model Division {
+  id                     String         @id @default(cuid())
+  name                   String
+  format                 DivisionFormat
+  gender                 DivisionGender @default(ANY)
+  ageMin                 Int?
+  ageMax                 Int?
+  weightMinKg            Decimal?       @db.Decimal(5, 2)
+  weightMaxKg            Decimal?       @db.Decimal(5, 2)
+  feeCents               Int            @default(0)
+  capacity               Int?
+  sortOrder              Int            @default(0)
+  createdAt              DateTime       @default(now())
+
+  tournamentDiscipline   TournamentDiscipline @relation(fields: [tournamentDisciplineId], references: [id], onDelete: Cascade)
+  tournamentDisciplineId String
+
+  roleRequired     TournamentRole @relation("DivisionRoleRequired", fields: [roleRequiredId], references: [id])
+  roleRequiredId   String
+
+  rankMin    Rank? @relation("DivisionRankMin", fields: [rankMinId], references: [id])
+  rankMinId  String?
+  rankMax    Rank? @relation("DivisionRankMax", fields: [rankMaxId], references: [id])
+  rankMaxId  String?
+
+  entries          RegistrationEntry[]
+  staffAssignments TournamentStaffAssignment[]
+
+  @@index([tournamentDisciplineId, sortOrder])
+  @@index([roleRequiredId])
+}
+
+model Registration {
+  id              String             @id @default(cuid())
+  status          RegistrationStatus @default(STARTED)
+  paymentStatus   PaymentStatus      @default(UNPAID)
+  totalFeeCents   Int                @default(0)
+  currency        String             @default("USD") @db.Char(3)
+  submittedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+
+  entries RegistrationEntry[]
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId, status])
+  @@index([userId])
+}
+
+model RegistrationEntry {
+  id                       String      @id @default(cuid())
+  snapshotRankName         String?
+  snapshotOrgName          String?
+  status                   EntryStatus @default(ACTIVE)
+  createdAt                DateTime    @default(now())
+
+  registration             Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId           String
+  division                 Division     @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+  divisionId               String
+  tournamentRole           TournamentRole @relation(fields: [tournamentRoleId], references: [id])
+  tournamentRoleId         String
+  representingMembership   Membership?  @relation(fields: [representingMembershipId], references: [id], onDelete: SetNull)
+  representingMembershipId String?
+
+  @@unique([registrationId, divisionId, tournamentRoleId])
+  @@index([tournamentRoleId])
+}
+
+model TournamentRole {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  brand       Brand?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  divisionRoleRequired Division[]          @relation("DivisionRoleRequired")
+  registrationEntries  RegistrationEntry[]
+  staffAssignments     TournamentStaffAssignment[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+
+model TournamentStaffAssignment {
+  id               String   @id @default(cuid())
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tournament       Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId     String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  tournamentRole   TournamentRole @relation(fields: [tournamentRoleId], references: [id])
+  tournamentRoleId String
+  division         Division?      @relation(fields: [divisionId], references: [id])
+  divisionId       String?
+
+  @@unique([tournamentId, userId, tournamentRoleId, divisionId])
+  @@index([tournamentId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Gamification
+// ---------------------------------------------------------------------------
+
+model GamificationEventType {
+  id            String   @id @default(cuid())
+  code          String
+  name          String
+  description   String?
+  defaultPoints Int      @default(0)
+  isSystem      Boolean  @default(false)
+  brand         Brand?
+  createdAt     DateTime @default(now())
+
+  events GamificationEvent[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+
 model GamificationEvent {
   id        String   @id @default(cuid())
   brand     Brand
-  eventType String
   points    Int      @default(0)
   meta      Json?
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  eventType      GamificationEventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId    String
+  rankAward      RankAward?            @relation(fields: [rankAwardId], references: [id])
+  rankAwardId    String?
+  course         Course?               @relation(fields: [courseId], references: [id])
+  courseId       String?
+  organization   Organization?         @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  discipline     Discipline?           @relation(fields: [disciplineId], references: [id])
+  disciplineId   String?
 
   @@index([userId, createdAt])
-  @@index([brand, eventType])
+  @@index([brand, eventTypeId])
+  @@index([rankAwardId])
+  @@index([courseId])
 }
 
-model Tournament {
-  id          String    @id @default(cuid())
-  brand       Brand
-  name        String
-  slug        String
-  description String?
-  startsAt    DateTime
-  endsAt      DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+// ---------------------------------------------------------------------------
+// Models — Styles (substyles within a Discipline)
+// ---------------------------------------------------------------------------
 
-  host          School                   @relation(fields: [hostId], references: [id])
-  hostId        String
-  registrations TournamentRegistration[]
+model Style {
+  id               String      @id @default(cuid())
+  code             String
+  name             String
+  status           StyleStatus @default(APPROVED)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  approvedAt       DateTime?
 
-  @@unique([brand, slug])
-  @@index([brand, startsAt])
-  @@index([hostId])
+  discipline       Discipline  @relation(fields: [disciplineId], references: [id])
+  disciplineId     String
+  parentStyle      Style?      @relation("StyleParent", fields: [parentStyleId], references: [id])
+  parentStyleId    String?
+  childStyles      Style[]     @relation("StyleParent")
+  createdBy        User?       @relation("StyleCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId  String?
+  approvedBy       User?       @relation("StyleApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedByUserId String?
+
+  memberships Membership[]
+
+  @@unique([disciplineId, code])
+  @@index([disciplineId, status])
 }
 
-model TournamentRegistration {
+// ---------------------------------------------------------------------------
+// Models — Subscriptions
+// ---------------------------------------------------------------------------
+
+model SubscriptionTier {
   id          String   @id @default(cuid())
-  division    String?
-  weightClass String?
+  code        String
+  name        String
+  description String?
+  level       Int
+  isSystem    Boolean  @default(false)
+  brand       Brand?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  tournamentId String
-  competitor   User       @relation(fields: [competitorId], references: [id], onDelete: Cascade)
-  competitorId String
+  subscriptions UserBrandSubscription[]
 
-  @@unique([tournamentId, competitorId])
+  @@unique([code, brand])
+  @@index([brand, level])
+}
+
+model UserBrandSubscription {
+  id        String             @id @default(cuid())
+  brand     Brand
+  status    SubscriptionStatus @default(ACTIVE)
+  startsAt  DateTime           @default(now())
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  tier   SubscriptionTier @relation(fields: [tierId], references: [id])
+  tierId String
+
+  @@unique([userId, brand])
+  @@index([brand, status])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Lineage
+// ---------------------------------------------------------------------------
+
+model LineageNode {
+  id         String            @id @default(cuid())
+  visibility LineageVisibility @default(PUBLIC)
+  isVerified Boolean           @default(false)
+  slug       String?           @unique
+  bio        String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  relationshipsFrom LineageRelationship[] @relation("LineageFrom")
+  relationshipsTo   LineageRelationship[] @relation("LineageTo")
+}
+
+model LineageRelationship {
+  id          String              @id @default(cuid())
+  type        LineageRelationType
+  description String?
+  startedAt   DateTime?
+  endedAt     DateTime?
+  isVerified  Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+
+  fromNode   LineageNode @relation("LineageFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  fromNodeId String
+  toNode     LineageNode @relation("LineageTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  toNodeId   String
+
+  @@unique([fromNodeId, toNodeId, type])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Waivers
+// ---------------------------------------------------------------------------
+
+model Waiver {
+  id             String     @id @default(cuid())
+  type           WaiverType
+  title          String
+  content        String
+  version        String     @default("1.0")
+  isRequired     Boolean    @default(true)
+  isActive       Boolean    @default(true)
+  brand          Brand?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  tournament     Tournament?   @relation(fields: [tournamentId], references: [id])
+  tournamentId   String?
+
+  signatures WaiverSignature[]
+
+  @@index([brand, type, isActive])
+  @@index([organizationId])
   @@index([tournamentId])
-  @@index([competitorId])
+}
+
+model WaiverSignature {
+  id                 String   @id @default(cuid())
+  signedAt           DateTime @default(now())
+  ipAddress          String?
+  userAgent          String?
+  createdAt          DateTime @default(now())
+
+  waiver             Waiver @relation(fields: [waiverId], references: [id], onDelete: Restrict)
+  waiverId           String
+  user               User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  signedOnBehalfOf   User?  @relation("SignedOnBehalf", fields: [signedOnBehalfOfId], references: [id])
+  signedOnBehalfOfId String?
+
+  @@unique([waiverId, userId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Certifications
+// ---------------------------------------------------------------------------
+
+model Certification {
+  id                String              @id @default(cuid())
+  type              CertificationType
+  status            CertificationStatus @default(ACTIVE)
+  issuedAt          DateTime            @default(now())
+  expiresAt         DateTime?
+  revokedAt         DateTime?
+  certificateNumber String?
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  course         Course?      @relation(fields: [courseId], references: [id])
+  courseId        String?
+  issuedBy       User?        @relation("CertIssuedBy", fields: [issuedById], references: [id])
+  issuedById     String?
+
+  @@index([userId, type, status])
+  @@index([organizationId])
+  @@index([courseId])
 }

@@ -1,4 +1,4 @@
-import { type Brand, MembershipRole } from "~/.generated/prisma/client"
+import { type Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**
@@ -99,16 +99,18 @@ export const isInSameBrand = async (user: AuthzUser, brand: Brand): Promise<bool
 }
 
 /**
- * True if user can edit the school: admin, OR holds an OWNER/INSTRUCTOR membership
- * at that school.
+ * True if user can edit the organization: admin, OR holds an OWNER/INSTRUCTOR role
+ * at that organization (via MembershipRoleAssignment → Role table).
  */
-export const canEditSchool = async (user: AuthzUser, schoolId: string): Promise<boolean> => {
+export const canEditOrganization = async (user: AuthzUser, organizationId: string): Promise<boolean> => {
   if (isAdmin(user)) return true
   const membership = await db.membership.findFirst({
     where: {
       userId: user.id,
-      schoolId,
-      role: { in: [MembershipRole.OWNER, MembershipRole.INSTRUCTOR] },
+      organizationId,
+      roleAssignments: {
+        some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } },
+      },
     },
     select: { id: true },
   })
@@ -116,27 +118,29 @@ export const canEditSchool = async (user: AuthzUser, schoolId: string): Promise<
 }
 
 /**
- * True if user can award belts at the school: admin, OR INSTRUCTOR/OWNER/COACH
- * at that school.
+ * True if user can award ranks at the organization: admin, OR holds INSTRUCTOR/OWNER/COACH
+ * role at that organization.
  */
-export const canAwardBelt = async (user: AuthzUser, schoolId: string): Promise<boolean> => {
+export const canAwardRank = async (user: AuthzUser, organizationId: string): Promise<boolean> => {
   if (isAdmin(user)) return true
   const membership = await db.membership.findFirst({
     where: {
       userId: user.id,
-      schoolId,
-      role: { in: [MembershipRole.OWNER, MembershipRole.INSTRUCTOR, MembershipRole.COACH] },
+      organizationId,
+      roleAssignments: {
+        some: { role: { code: { in: ["OWNER", "INSTRUCTOR", "COACH"] } } },
+      },
     },
     select: { id: true },
   })
   return Boolean(membership)
 }
 
-/** True if user can read the school's roster: admin, OR any membership at the school. */
-export const canViewSchoolRoster = async (user: AuthzUser, schoolId: string): Promise<boolean> => {
+/** True if user can read the organization's roster: admin, OR any membership at the org. */
+export const canViewOrgRoster = async (user: AuthzUser, organizationId: string): Promise<boolean> => {
   if (isAdmin(user)) return true
   const membership = await db.membership.findFirst({
-    where: { userId: user.id, schoolId },
+    where: { userId: user.id, organizationId },
     select: { id: true },
   })
   return Boolean(membership)
