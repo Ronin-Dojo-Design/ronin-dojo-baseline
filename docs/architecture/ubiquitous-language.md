@@ -1,0 +1,276 @@
+---
+status: active
+pairs_with: docs/architecture/s1-schema-design.md
+version: 1
+---
+
+# Ubiquitous Language
+
+This glossary is the shared domain language for Ronin Dojo Baseline.
+
+It exists to prevent AI-assisted development from creating naming drift, duplicate concepts, and hidden architecture changes.
+
+## Rule
+
+If a code change introduces, renames, or changes the meaning of a domain concept, update this file in the same change.
+
+## Core identity
+
+### User
+
+The authentication account.
+
+A User owns login state, email, auth sessions, and account-level flags. It should not directly own martial arts rank, organization status, tournament role, or public directory settings.
+
+### Passport
+
+The global person identity attached to a User.
+
+A Passport answers: who is this person across the whole platform?
+
+It may include display name, legal name, date of birth, gender, phone, emergency contact, and avatar.
+
+Former name: `Profile`.
+
+### DirectoryProfile
+
+The public or member-facing visibility profile attached to a User.
+
+It owns directory visibility, bio, location fields, and privacy flags such as whether email, phone, organizations, or ranks may be shown.
+
+Passport is identity. DirectoryProfile is presentation and privacy.
+
+## Organizations and disciplines
+
+### Organization
+
+A dojo, school, league, club, federation, or training group.
+
+An Organization belongs to a Brand and can host memberships, courses, tournaments, and discipline offerings.
+
+Former name: `School`.
+
+### Discipline
+
+A martial art or ruleset family such as Karate, BJJ, Judo, Muay Thai, Eskrima, Kali, Boxing, Kajukenbo, or Taekwondo.
+
+Former name: `Style`.
+
+Do not use `Style` for this concept in new code.
+
+### OrganizationDiscipline
+
+The join between Organization and Discipline.
+
+It answers: which disciplines does this organization teach, support, sanction, or host?
+
+Former name: `SchoolStyle`.
+
+## Ranks
+
+### RankSystem
+
+The ordered rank structure for a Discipline.
+
+Examples include BJJ belts, Karate kyu/dan, Kali levels, and coach certifications.
+
+### Rank
+
+One position inside a RankSystem.
+
+Former name: `Belt`.
+
+Use Rank because not all martial arts or certifications use belts.
+
+### RankAward
+
+A rank promotion record awarded to a User.
+
+RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It also supports promotion photos/videos via `mediaUrls` and links to `GamificationEvent` for point tracking.
+
+Former name: `Progress`.
+
+Do not use `Progress` in new code.
+
+## Membership shells
+
+### Shell
+
+A context-specific identity layer.
+
+The same person has one Passport but different shells in different contexts.
+
+### Membership
+
+A User inside an Organization and Discipline.
+
+The core identity is:
+
+```txt
+User x Organization x Discipline
+```
+
+Membership owns status, optional rank, member number, joined/left dates, and assigned roles.
+
+### MembershipStatus
+
+The lifecycle state of a Membership.
+
+Initial values: `INVITED`, `PENDING`, `ACTIVE`, `SUSPENDED`, `EXPIRED`.
+
+### Role
+
+A table (not enum) representing a role that can be assigned to a Membership.
+
+Universal seed roles (`isSystem=true`, `brand=null`): `STUDENT`, `INSTRUCTOR`, `OWNER`, `COACH`, `ORG_ADMIN`, `STYLE_APPROVER`.
+
+Brand-specific custom roles are supported via the `brand` column (e.g., `brand=BBL, code="SENIOR_INSTRUCTOR"`). The `isSystem` flag prevents deletion of universal defaults.
+
+Former name: `MembershipRole` (was an enum; replaced with a table per Q3 decision in SESSION_0003).
+
+### MembershipRoleAssignment
+
+The join between Membership and Role.
+
+This allows one membership to hold multiple roles without creating duplicate memberships.
+
+## Courses and curriculum
+
+### Course
+
+A structured learning path created by an Organization, optionally attached to a Discipline.
+
+### CurriculumItem
+
+One ordered unit inside a Course.
+
+It may represent a lesson, technique, drill, requirement, video, note, or assessment checkpoint.
+
+## Tournament shells
+
+### Tournament
+
+An event hosted by an Organization under a Brand.
+
+It owns event-level identity, dates, venue, timezone, lifecycle status, supported disciplines, and registrations.
+
+### TournamentDiscipline
+
+The join between Tournament and Discipline.
+
+It answers: which disciplines or rulesets are offered at this tournament?
+
+### Division
+
+A competition or participation category inside a TournamentDiscipline.
+
+A Division owns format, role requirement, gender category, age range, weight range, rank range, fee, capacity, and sort order.
+
+### Registration
+
+A User's registration record for a Tournament.
+
+A Registration may contain multiple RegistrationEntries.
+
+Former name: `TournamentRegistration`.
+
+### RegistrationEntry
+
+One specific entry in one Division.
+
+This table stores immutable rank and organization snapshots so future promotions or organization changes do not rewrite tournament history.
+
+### TournamentRole
+
+A table (not enum) representing a role within a tournament context (e.g., COMPETITOR, COACH, JUDGE, VOLUNTEER).
+
+Semantically distinct from org membership `Role`. Same extensibility pattern: `isSystem` defaults, brand-customizable. `Division.roleRequired` FKs to this table.
+
+### TournamentStaffAssignment
+
+Assignment of a User to a Tournament in a specific TournamentRole, optionally scoped to a Division.
+
+Used for judges, referees, directors, timekeepers, and medical staff.
+
+## Substyles
+
+### Style
+
+A substyle within a Discipline (e.g., Shotokan under Karate, Hawaiian Kenpo under Kenpo).
+
+Supports parent/child hierarchy and an approval workflow (PENDING → APPROVED / REJECTED). User-submitted styles require approval by a user with the STYLE_APPROVER role.
+
+Do not confuse with `Discipline`. Discipline is the top-level martial art; Style is a variant within it.
+
+## Subscriptions
+
+### SubscriptionTier
+
+A table defining subscription levels per brand (e.g., FREE, PREMIUM, INSTRUCTOR, SCHOOL_OWNER, LEGEND).
+
+Same `isSystem` + `brand` extensibility pattern as Role and TournamentRole.
+
+### UserBrandSubscription
+
+A User's subscription to a specific tier within a Brand. One subscription per user per brand.
+
+## Lineage
+
+### LineageNode
+
+A user's node in the martial arts lineage graph. Controls visibility (PUBLIC, UNLISTED, RESTRICTED, PRIVATE) and verification status.
+
+### LineageRelationship
+
+A connection between two LineageNodes (e.g., TRAINING_PARTNER, AFFILIATION, SEMINAR, TOURNAMENT_PARTNER, COMPETITION_TEAM).
+
+Vertical lineage (instructor→student) is captured by `RankAward.awardedById`. These models capture the richer horizontal graph.
+
+## Waivers
+
+### Waiver
+
+A consent document scoped to an Organization, Tournament, or globally to a Brand. Supports version tracking for legal compliance.
+
+### WaiverSignature
+
+A user's signed consent for a Waiver. Includes IP/user-agent for legal audit. Supports minor consent via `signedOnBehalfOfId`.
+
+## Certifications
+
+### Certification
+
+A formal record of a safety, coaching, or belt certification issued to a User by an Organization. Supports expiry tracking and revocation.
+
+Distinct from `RankAward`: RankAward is specifically for rank promotions; Certification covers the broader set (CPR, first aid, coaching certs, formal belt certificates with external numbers).
+
+## Gamification
+
+### GamificationEventType
+
+A table defining types of gamification events (e.g., CLASS_ATTENDED, BELT_AWARDED, COURSE_COMPLETED). Same `isSystem` + `brand` pattern.
+
+### GamificationEvent
+
+An append-only ledger entry for a point-bearing event. Links back to source (RankAward, Course, Organization, Discipline) for traceability.
+
+## Brand
+
+The public-facing product identity or domain context.
+
+Initial values:
+
+- `RONIN_DOJO_DESIGN`
+- `BASELINE_MARTIAL_ARTS`
+- `BBL`
+- `WEKAF`
+
+Brand is currently an enum/column, not a table.
+
+## AI naming rules
+
+1. Do not introduce aliases for locked terms.
+2. Do not use legacy terms in new code unless writing migration notes.
+3. Do not use `school`, `style`, `belt`, or `profile` as new model names.
+4. Use `Organization`, `Discipline`, `Rank`, and `Passport` everywhere in new code.
+5. If a domain word feels unclear, stop and update this glossary before coding.
