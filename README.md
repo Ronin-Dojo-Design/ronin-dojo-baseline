@@ -2,9 +2,11 @@
 
 Martial arts member directory, course creation for belt-rank certification, gamified progress, curriculum library — web + iOS + Android, single Postgres backend.
 
+**Repo:** [Ronin-Dojo-Design/ronin-dojo-baseline](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline) (private)
+
 ## Stack
 
-- **Web** — Dirstarter (Next.js 15 + Prisma + Better-Auth + Stripe + Resend + S3) at `apps/web/`
+- **Web** — Dirstarter (Next.js 16 + Prisma 7 + Better-Auth + Stripe + Resend + S3) at `apps/web/`
 - **Mobile** — Expo (iOS + Android) at `apps/mobile/`
 - **Database** — Postgres (one DB serves web + mobile)
 - **Content** — MDX in `apps/web/content/blog/` (no separate CMS)

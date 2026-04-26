@@ -5,7 +5,7 @@
 
 ## Context
 
-The legacy monorepo at `/Users/brianscott/dev/ronin-dojo-monorepo/` runs four brands (Ronin Dojo, TuffBuffs, Black Belt Legacy, WEKAF USA) as **four near-identical PHP plugins** plus four WordPress themes plus four Vite entry points. Same logic copy-pasted four times. Bug fixes happen in 1 of 4 places.
+The legacy monorepo at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) runs four brands (Ronin Dojo, TuffBuffs, Black Belt Legacy, WEKAF USA) as **four near-identical PHP plugins** plus four WordPress themes plus four Vite entry points. Same logic copy-pasted four times. Bug fixes happen in 1 of 4 places.
 
 ## Decision
 

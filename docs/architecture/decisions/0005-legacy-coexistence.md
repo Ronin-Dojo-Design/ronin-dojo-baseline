@@ -5,7 +5,7 @@
 
 ## Context
 
-The legacy monorepo at `/Users/brianscott/dev/ronin-dojo-monorepo/` powers the live TuffBuffs site at `tuffbuffs.com` and has real users. The new platform at `/Users/brianscott/dev/ronin-dojo-app/` is a clean-slate rebuild for Ronin Dojo Design (umbrella), Baseline Martial Arts (the TuffBuffs rebrand/successor), BBL, and WEKAF.
+The legacy monorepo at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) powers the live TuffBuffs site at `tuffbuffs.com` and has real users. The new platform at [Ronin-Dojo-Design/ronin-dojo-baseline](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline) is a clean-slate rebuild for Ronin Dojo Design (umbrella), Baseline Martial Arts (the TuffBuffs rebrand/successor), BBL, and WEKAF.
 
 ## Decision
 
@@ -30,7 +30,7 @@ The new stack (Ronin Dojo Design, Baseline Martial Arts, BBL, WEKAF) runs on its
 ## What this means operationally
 
 - The legacy monorepo stays where it is. Don't merge the new repo into it.
-- The Local install at `/Users/brianscott/Local Sites/ronin-dojo/app/public/` is irrelevant to both stacks now (legacy lives elsewhere; new lives elsewhere).
+- An earlier WordPress Local install at `/Users/brianscott/Local Sites/ronin-dojo/app/public/` was abandoned during planning; it is irrelevant to both stacks now.
 - If TuffBuffs.com needs a fix, it's a legacy-side change. Don't backport to the new stack.
 
 ## Future migration (deferred decision)

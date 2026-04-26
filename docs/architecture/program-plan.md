@@ -17,10 +17,10 @@ The rebuild is **four layers**, each with its own source of truth. The layers ar
 
 | Layer | Source of truth | Authority |
 |---|---|---|
-| **L1 — Code patterns** | [Dirstarter](file:///Users/brianscott/Local%20Sites/DirStarter%20/dirstarter_template) (now copied into `apps/web/`) | How files are organized; framework choices (Next.js + Prisma + Better-Auth + Bun); HOC patterns; action client chain; content collections; env config |
+| **L1 — Code patterns** | [Dirstarter](https://github.com/dirstarter/dirstarter) (Polarsoft template; copied into `apps/web/` at upstream `c42e8bb` — see `apps/web/.dirstarter-upstream`) | How files are organized; framework choices (Next.js + Prisma + Better-Auth + Bun); HOC patterns; action client chain; content collections; env config |
 | **L2 — Data & behavioral spec** | [ChatGPT plan](source/chatgpt-original-plan.md) (sections 1–7) | What the system DOES: Passport + Shells, Org × Discipline × Membership, RankSystem per discipline, Tournament/Division/Registration with rank snapshots, Directory privacy, lifecycle states |
 | **L3 — Multi-tenant** | Our addition ([ADR 0004](decisions/0004-multi-brand-as-column.md), [0006](decisions/0006-multi-domain-hosting.md), [0008](decisions/0008-brand-switcher.md)) | `brand` column on tenant-scoped tables; host→brand middleware; per-brand themes |
-| **L4 — UX, content, theming** | TuffBuffs / BBL / WEKAF legacy frontends in `/Users/brianscott/dev/ronin-dojo-monorepo/src/` and `wordpress/<brand>-theme/` | Visual design tokens, branded copy, screen layouts, component idioms — ported on top of the new APIs |
+| **L4 — UX, content, theming** | TuffBuffs / BBL / WEKAF legacy frontends in [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (paths `src/` and `wordpress/<brand>-theme/`) | Visual design tokens, branded copy, screen layouts, component idioms — ported on top of the new APIs |
 
 **Critical rule:** these layers don't bleed into each other. We don't import legacy backend code. We don't put UI assumptions into the schema. We don't let Dirstarter's "tool directory" defaults drive the data model.
 

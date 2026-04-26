@@ -5,11 +5,11 @@
 
 ## Context
 
-Original framing assumed WordPress hosting at the apex domain (`/Users/brianscott/Local Sites/ronin-dojo/app/public/`), with a React app mounted via shortcodes. An interim plan kept WP for `/blog/*` only. User pushed back: "Is there really any reason I am keeping WP at all?"
+Original framing assumed WordPress hosting at the apex domain, with a React app mounted via shortcodes. An interim plan kept WP for `/blog/*` only. User pushed back: "Is there really any reason I am keeping WP at all?"
 
 ## Decision
 
-Drop WordPress entirely from the new architecture. The Local install at `/Users/brianscott/Local Sites/ronin-dojo/app/public/` is no longer in the deployment path; ignore or delete it.
+Drop WordPress entirely from the new architecture. The exploratory WP Local install (originally at `/Users/brianscott/Local Sites/ronin-dojo/app/public/` during planning) is not part of the deployment path and can be deleted from the planning machine.
 
 Blog/marketing content lives as **MDX in `apps/web/content/blog/`**, rendered via Dirstarter's `content-collections.ts` setup. Editorial UX deferred — add **Keystatic** (git-backed) or **TinaCMS** (visual editing) later if and only if a non-dev co-author joins.
 

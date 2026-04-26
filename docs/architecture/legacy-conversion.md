@@ -1,6 +1,6 @@
 # Converting legacy frontend assets
 
-The legacy monorepo at `/Users/brianscott/dev/ronin-dojo-monorepo/` has UI work worth keeping (TuffBuffs designs, BBL screens, partial WEKAF pages). Don't lift-and-shift wholesale — selective port.
+The legacy monorepo at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (locally: `/Users/brianscott/dev/ronin-dojo-monorepo/`) has UI work worth keeping (TuffBuffs designs, BBL screens, partial WEKAF pages). Don't lift-and-shift wholesale — selective port.
 
 ## What to port, what to throw out
 
@@ -38,4 +38,4 @@ Per the build-order in the approved plan:
 
 ## Keep the legacy repo around
 
-Don't delete `/Users/brianscott/dev/ronin-dojo-monorepo/` while you're porting from it. It's the source material. Once each brand has cut over and you're satisfied with parity, archive it (rename, push to a `legacy-archive` branch on GitHub) but leave it readable.
+Don't delete [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (or its local clone at `/Users/brianscott/dev/ronin-dojo-monorepo/`) while you're porting from it. It's the source material. Once each brand has cut over and you're satisfied with parity, archive the GitHub repo (rename, mark archived) but keep it readable.

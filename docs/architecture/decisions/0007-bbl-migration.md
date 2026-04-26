@@ -5,7 +5,7 @@
 
 ## Context
 
-BBL has real users in the legacy stack at `/Users/brianscott/dev/ronin-dojo-monorepo/`. Unlike WEKAF (greenfield, no users) and TuffBuffs (staying on legacy indefinitely — see [ADR 0005](0005-legacy-coexistence.md)), BBL needs to migrate once before its DNS cuts over to the new stack.
+BBL has real users in the legacy stack at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo). Unlike WEKAF (greenfield, no users) and TuffBuffs (staying on legacy indefinitely — see [ADR 0005](0005-legacy-coexistence.md)), BBL needs to migrate once before its DNS cuts over to the new stack.
 
 ## Decision
 

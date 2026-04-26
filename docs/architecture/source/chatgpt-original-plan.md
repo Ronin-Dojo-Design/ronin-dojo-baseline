@@ -2,7 +2,7 @@
 
 **Captured:** 2026-04-25
 **Source:** ChatGPT session (paste content below)
-**Status:** Historical reference — superseded by [the approved plan](file:///Users/brianscott/.claude/plans/new-i-have-a-kind-cocke.md) and ADRs in `../decisions/`.
+**Status:** Historical reference — superseded by [program-plan.md](../program-plan.md), [plan-vs-current.md](../plan-vs-current.md), and the ADRs in [../decisions/](../decisions/).
 
 ---
 
