@@ -2,8 +2,8 @@
 
 Design doc for sign-off before migration. No code changes until Brian approves.
 
-**Author:** Petey (SESSION_0002)
-**Inputs:** program-plan.md S1 row, plan-vs-current.md, ADR 0004, chatgpt-original-plan.md §2, current schema.prisma, TuffBuffs legacy rank data
+**Author:** Petey (SESSION_0002, updated SESSION_0003)
+**Inputs:** program-plan.md S1 row, plan-vs-current.md, ADR 0004, chatgpt-original-plan.md §1–7, current schema.prisma, TuffBuffs legacy rank data, BBL tiers + lineage schemas
 
 ---
 
@@ -18,13 +18,24 @@ One migration that:
 5. Replaces `SchoolStyle` → `OrganizationDiscipline`
 6. Adds `RankSystem` + renames `Belt` → `Rank` (expanded fields)
 7. Adds `MembershipStatus` enum, reshapes `Membership` with `disciplineId` + `status`
-8. Replaces single-role with `MembershipRoleAssignment` join table
+8. Replaces single-role enum with `Role` table + `MembershipRoleAssignment` join table (Q3 resolved: table, not enum)
 9. Renames `Progress` → `RankAward` (clearer intent)
 10. Reshapes `Tournament` (status enum, venue fields, org-hosted instead of school-hosted)
 11. Adds `TournamentDiscipline`, `Division`, reshapes `TournamentRegistration` → `Registration`, adds `RegistrationEntry` with snapshot fields
-12. Renames `Course.schoolId` → `organizationId`, `Course.styleId` → `disciplineId`
+12. Renames `Course.schoolId` → `organizationId`, `Course.styleId` → `disciplineId`, adds `rankId` FK (Q6)
+13. Adds `Style` model for substyles (Shotokan, Goju-Ryu, etc.) with approval workflow (Gap 4)
+14. Adds `TournamentRole` table for tournament-specific roles (Q5 resolved: table, not enum)
+15. Adds `SubscriptionTier` table + `UserBrandSubscription` model (Q7 resolved: Option C)
+16. Adds `LineageNode` + `LineageRelationship` models (Q8 resolved: add now)
+17. Adds `GamificationEvent` FKs to `RankAward`, `Course`, `Organization`, `Discipline` + `GamificationEventType` table (Gap 1)
+18. Adds `CourseEnrollment` + `CurriculumItemCompletion` models for student progress tracking (Gap 2)
+19. Adds `Waiver` + `WaiverSignature` models for tournament/org consent records (Gap 3)
+20. Adds `TournamentStaffAssignment` for judge/ref/director assignments (Gap 5)
+21. Adds `Certification` model for safety/coach certification records (Gap 6)
 
-No changes to Dirstarter template models (User core, Session, Account, Verification, Tool, Category, Tag, Report, Ad). No changes to `GamificationEvent` or `CurriculumItem` beyond FK renames.
+Seeds all 7 Baseline Martial Arts disciplines + rank systems in S1 (Q4 resolved: include now).
+
+No changes to Dirstarter template models (User core, Session, Account, Verification, Tool, Category, Tag, Report, Ad).
 
 ---
 
@@ -38,15 +49,9 @@ enum Brand {
   WEKAF
 }
 
-// EXISTING — no change
-enum MembershipRole {
-  STUDENT
-  INSTRUCTOR
-  OWNER
-  COACH
-  JUDGE        // NEW — plan spec includes judge as tournament role
-  VOLUNTEER    // NEW — plan spec includes volunteer
-}
+// REMOVED — MembershipRole is now a `Role` table (Q3 resolved)
+// Universal seed roles: STUDENT, INSTRUCTOR, OWNER, COACH, ORG_ADMIN, STYLE_APPROVER
+// Per-brand custom roles supported via brand column
 
 // EXISTING — no change
 enum CertificationType {
@@ -143,6 +148,54 @@ enum EntryStatus {
   ACTIVE
   CANCELLED
 }
+
+// NEW — Style approval workflow (Gap 4)
+enum StyleStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+// NEW — Waiver types (Gap 3)
+enum WaiverType {
+  LIABILITY          // general liability waiver
+  TOURNAMENT         // tournament-specific waiver
+  MINOR_CONSENT      // parental consent for minors
+  MEDIA_RELEASE      // photo/video consent
+  MEDICAL            // medical clearance
+}
+
+// NEW — Subscription status (Q7)
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAST_DUE
+}
+
+// NEW — Lineage visibility (Q8)
+enum LineageVisibility {
+  PUBLIC
+  UNLISTED
+  RESTRICTED
+  PRIVATE
+}
+
+// NEW — Lineage relationship type (Q8)
+enum LineageRelationType {
+  TOURNAMENT_PARTNER
+  AFFILIATION
+  TRAINING_PARTNER
+  SEMINAR
+  COMPETITION_TEAM
+}
+
+// NEW — Certification status (Gap 6)
+enum CertificationStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
 ```
 
 ---
@@ -180,6 +233,19 @@ model User {
   ownedOrganizations  Organization[]           @relation("OrganizationOwner")
   gamificationLog     GamificationEvent[]
   registrations       Registration[]
+
+  // NEW relations (SESSION_0003 additions)
+  subscriptions            UserBrandSubscription[]
+  lineageNode              LineageNode?
+  courseEnrollments         CourseEnrollment[]
+  waiverSignatures         WaiverSignature[]
+  waiverSignaturesOnBehalf WaiverSignature[]    @relation("SignedOnBehalf")
+  tournamentStaffAssignments TournamentStaffAssignment[]
+  certifications           Certification[]
+  issuedCertifications     Certification[]      @relation("CertIssuedBy")
+  createdStyles            Style[]              @relation("StyleCreatedBy")
+  approvedStyles           Style[]              @relation("StyleApprovedBy")
+  verifiedItemCompletions  CurriculumItemCompletion[] @relation("ItemVerifiedBy")
 
   @@index([id])
 }
@@ -262,6 +328,9 @@ model Organization {
   memberships  Membership[]
   courses      Course[]
   tournaments  Tournament[]
+  waivers      Waiver[]
+  certifications Certification[]
+  gamificationEvents GamificationEvent[]
 
   @@unique([brand, slug])
   @@index([brand])
@@ -289,6 +358,8 @@ model Discipline {
   courses       Course[]
   memberships   Membership[]
   tournamentDisciplines TournamentDiscipline[]
+  styles        Style[]
+  gamificationEvents GamificationEvent[]
 }
 ```
 
@@ -347,6 +418,11 @@ model Rank {
   divisionRankMin Division[] @relation("DivisionRankMin")
   divisionRankMax Division[] @relation("DivisionRankMax")
 
+  // Used by other models
+  memberships  Membership[]
+  rankAwards   RankAward[]
+  courses      Course[]
+
   @@unique([rankSystemId, sortOrder])
   @@unique([rankSystemId, name])
   @@index([rankSystemId])
@@ -390,6 +466,8 @@ model Membership {
   organizationId String
   discipline     Discipline   @relation(fields: [disciplineId], references: [id])
   disciplineId   String
+  style          Style?       @relation(fields: [styleId], references: [id]) // NEW Gap 4: optional substyle
+  styleId        String?
 
   // Current rank in this discipline at this org (nullable = unranked)
   rank           Rank?        @relation(fields: [rankId], references: [id])
@@ -402,15 +480,17 @@ model Membership {
   @@index([brand, organizationId])
   @@index([organizationId, status])
   @@index([userId])
+  @@index([styleId])
 }
 ```
 
 **Changes from current:**
 
-- Removed single `role` field → replaced by `MembershipRoleAssignment` M:N
+- Removed single `role` field → replaced by `MembershipRoleAssignment` M:N (references `Role` table per Q3)
 - Added `disciplineId` — membership is now per (user × org × discipline)
+- Added `styleId` — optional substyle (e.g., Shotokan under Karate) per Gap 4
 - Added `status` lifecycle enum
-- Added `rankId` — user's current rank in this discipline at this org
+- Added `rankId` — user's current rank in this discipline at this org (Q1: direct FK)
 - Added `memberNumber`, `joinedAt`, `leftAt` per plan spec
 - Unique constraint changed from `[userId, schoolId, role]` → `[userId, organizationId, disciplineId]`
 
@@ -420,19 +500,21 @@ model Membership {
 
 ```prisma
 model MembershipRoleAssignment {
-  id           String         @id @default(cuid())
-  role         MembershipRole
-  assignedAt   DateTime       @default(now())
+  id           String   @id @default(cuid())
+  assignedAt   DateTime @default(now())
 
   membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   membershipId String
+  role         Role       @relation(fields: [roleId], references: [id]) // UPDATED: FK to Role table (Q3)
+  roleId       String
 
-  @@unique([membershipId, role])
+  @@unique([membershipId, roleId])
   @@index([membershipId])
+  @@index([roleId])
 }
 ```
 
-A user who is both STUDENT and COACH at the same (org × discipline) has two rows here.
+A user who is both STUDENT and COACH at the same (org × discipline) has two rows here. The `Role` table replaces the old `MembershipRole` enum (Q3 resolved).
 
 ---
 
@@ -455,6 +537,8 @@ model RankAward {
   awardedBy   User?  @relation("AwardedBy", fields: [awardedById], references: [id])
   awardedById String?
 
+  gamificationEvents GamificationEvent[]
+
   @@unique([userId, rankId])
   @@index([userId, awardedAt])
   @@index([rankId])
@@ -465,7 +549,7 @@ model RankAward {
 
 ---
 
-### Course (FK renames only)
+### Course (FK renames + rankId added, Q6)
 
 ```prisma
 model Course {
@@ -484,7 +568,12 @@ model Course {
   organizationId String
   discipline     Discipline?  @relation(fields: [disciplineId], references: [id])
   disciplineId   String?
-  curriculumItems CurriculumItem[]
+  rank           Rank?        @relation(fields: [rankId], references: [id]) // NEW Q6: connects curriculum to target rank
+  rankId         String?
+  curriculumItems   CurriculumItem[]
+  enrollments       CourseEnrollment[]    // NEW Gap 2
+  gamificationEvents GamificationEvent[] // NEW Gap 1
+  certifications    Certification[]      // NEW Gap 6
 
   @@unique([brand, organizationId, slug])
   @@index([brand, organizationId])
@@ -520,6 +609,8 @@ model Tournament {
   hostId          String
   disciplines     TournamentDiscipline[]
   registrations   Registration[]
+  waivers         Waiver[]
+  staffAssignments TournamentStaffAssignment[]
 
   @@unique([brand, slug])
   @@index([brand, startDate])
@@ -560,7 +651,6 @@ model Division {
   id                      String         @id @default(cuid())
   name                    String         // "Adult Male Blue Belt Featherweight"
   format                  DivisionFormat
-  roleRequired            MembershipRole @default(STUDENT) // who can enter: competitor, coach, judge, volunteer
   gender                  DivisionGender @default(ANY)
   ageMin                  Int?
   ageMax                  Int?
@@ -574,14 +664,20 @@ model Division {
   tournamentDiscipline    TournamentDiscipline @relation(fields: [tournamentDisciplineId], references: [id], onDelete: Cascade)
   tournamentDisciplineId  String
 
+  // Who can enter this division — FK to TournamentRole table (Q5)
+  roleRequired       TournamentRole @relation("DivisionRoleRequired", fields: [roleRequiredId], references: [id])
+  roleRequiredId     String
+
   rankMin    Rank? @relation("DivisionRankMin", fields: [rankMinId], references: [id])
   rankMinId  String?
   rankMax    Rank? @relation("DivisionRankMax", fields: [rankMaxId], references: [id])
   rankMaxId  String?
 
-  entries RegistrationEntry[]
+  entries            RegistrationEntry[]
+  staffAssignments   TournamentStaffAssignment[]
 
   @@index([tournamentDisciplineId, sortOrder])
+  @@index([roleRequiredId])
 }
 ```
 
@@ -624,7 +720,6 @@ model Registration {
 ```prisma
 model RegistrationEntry {
   id                       String      @id @default(cuid())
-  role                     MembershipRole @default(STUDENT)
   snapshotRankName         String?     // frozen at registration time
   snapshotOrgName          String?     // frozen at registration time
   status                   EntryStatus @default(ACTIVE)
@@ -634,14 +729,428 @@ model RegistrationEntry {
   registrationId           String
   division                 Division     @relation(fields: [divisionId], references: [id], onDelete: Restrict)
   divisionId               String
+  // What role the entrant plays in this division — FK to TournamentRole (Q5)
+  tournamentRole           TournamentRole @relation(fields: [tournamentRoleId], references: [id])
+  tournamentRoleId         String
   representingMembership   Membership?  @relation(fields: [representingMembershipId], references: [id], onDelete: SetNull)
   representingMembershipId String?
 
-  @@unique([registrationId, divisionId, role])
+  @@unique([registrationId, divisionId, tournamentRoleId])
+  @@index([tournamentRoleId])
 }
 ```
 
 **Critical design:** `snapshotRankName` and `snapshotOrgName` are denormalized strings frozen at registration time. A future promotion doesn't rewrite competitive history. The `representingMembershipId` links back to the live membership for audit but the snapshots are the record of truth for the division entry.
+
+---
+
+### Role (new — replaces MembershipRole enum, Q3 resolved)
+
+```prisma
+model Role {
+  id          String  @id @default(cuid())
+  code        String  // e.g., "STUDENT", "INSTRUCTOR", "OWNER", "COACH", "ORG_ADMIN", "STYLE_APPROVER"
+  name        String  // human-readable: "Student", "Instructor", etc.
+  description String?
+  isSystem    Boolean @default(false) // true = universal default, cannot be deleted
+  brand       Brand?  // null = universal across all brands; set = brand-specific custom role
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roleAssignments MembershipRoleAssignment[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+```
+
+**Design notes:** Universal seed roles (isSystem=true, brand=null): STUDENT, INSTRUCTOR, OWNER, COACH, ORG_ADMIN, STYLE_APPROVER. White-label SaaS clients can add custom roles scoped to their brand (e.g., brand=BBL, code="SENIOR_INSTRUCTOR"). The `isSystem` flag prevents deletion of universal defaults.
+
+---
+
+### TournamentRole (new — Q5 resolved)
+
+```prisma
+model TournamentRole {
+  id          String  @id @default(cuid())
+  code        String  // e.g., "COMPETITOR", "COACH", "JUDGE", "VOLUNTEER", "REFEREE", "TIMEKEEPER"
+  name        String
+  description String?
+  isSystem    Boolean @default(false)
+  brand       Brand?  // null = universal; set = brand-specific
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  divisionRoleRequired Division[]       @relation("DivisionRoleRequired")
+  registrationEntries  RegistrationEntry[]
+  staffAssignments     TournamentStaffAssignment[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+```
+
+**Design notes:** Universal seed roles (isSystem=true): COMPETITOR, COACH, JUDGE, VOLUNTEER. Tournament organizers can add custom roles per brand (e.g., "REFEREE", "TIMEKEEPER", "MEDICAL_STAFF", "CORNER_JUDGE"). `Division.roleRequired` now FKs to this table instead of using the old MembershipRole enum.
+
+---
+
+### Style (new — Gap 4, substyle model with approval workflow)
+
+```prisma
+model Style {
+  id              String      @id @default(cuid())
+  code            String      // server-slugified from name
+  name            String
+  status          StyleStatus @default(APPROVED)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  approvedAt      DateTime?
+
+  discipline      Discipline  @relation(fields: [disciplineId], references: [id])
+  disciplineId    String
+  parentStyle     Style?      @relation("StyleParent", fields: [parentStyleId], references: [id])
+  parentStyleId   String?
+  childStyles     Style[]     @relation("StyleParent")
+  createdBy       User?       @relation("StyleCreatedBy", fields: [createdByUserId], references: [id])
+  createdByUserId String?
+  approvedBy      User?       @relation("StyleApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedByUserId String?
+
+  memberships     Membership[]
+
+  @@unique([disciplineId, code])
+  @@index([disciplineId, status])
+}
+```
+
+**Design notes:** Disciplines are the big buckets (BJJ, Karate, Muay Thai). Styles are substyles within a discipline. Karate seeds: Shotokan, Wado-Ryu, Goju-Ryu, Hawaiian Kenpo, Kajukenbo. Parent/child hierarchy supports depth (e.g., "Kenpo" parent → "Hawaiian Kenpo" child). User-submitted styles start as PENDING; approved by org_owner/org_admin/instructor/style_approver via the Role table.
+
+---
+
+### SubscriptionTier (new — Q7 resolved)
+
+```prisma
+model SubscriptionTier {
+  id          String  @id @default(cuid())
+  code        String  // e.g., "FREE", "PREMIUM", "INSTRUCTOR", "SCHOOL_OWNER", "LEGEND"
+  name        String
+  description String?
+  level       Int     // ordering/comparison: higher = more access. FREE=0, PREMIUM=10, etc.
+  isSystem    Boolean @default(false)
+  brand       Brand?  // null = universal; set = brand-specific
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subscriptions UserBrandSubscription[]
+
+  @@unique([code, brand])
+  @@index([brand, level])
+}
+```
+
+---
+
+### UserBrandSubscription (new — Q7 resolved)
+
+```prisma
+model UserBrandSubscription {
+  id        String             @id @default(cuid())
+  brand     Brand
+  status    SubscriptionStatus @default(ACTIVE)
+  startsAt  DateTime           @default(now())
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  tier   SubscriptionTier @relation(fields: [tierId], references: [id])
+  tierId String
+
+  @@unique([userId, brand])
+  @@index([brand, status])
+  @@index([userId])
+}
+```
+
+**Design notes:** One subscription per user per brand. Universal tiers seeded (isSystem=true, brand=null): FREE (level=0). BBL-specific tiers (brand=BBL): FREE(0), PREMIUM(10), INSTRUCTOR(20), SCHOOL_OWNER(30), LEGEND(40). Stripe wiring comes at S10 but the schema is ready. `level` int enables access checks: `if (userTier.level >= requiredTier.level)`.
+
+---
+
+### LineageNode (new — Q8 resolved)
+
+```prisma
+model LineageNode {
+  id          String            @id @default(cuid())
+  visibility  LineageVisibility @default(PUBLIC)
+  isVerified  Boolean           @default(false)
+  slug        String?           @unique // shareable URL: /lineage/:slug
+  bio         String?           // lineage-specific bio
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  relationshipsFrom LineageRelationship[] @relation("LineageFrom")
+  relationshipsTo   LineageRelationship[] @relation("LineageTo")
+}
+```
+
+---
+
+### LineageRelationship (new — Q8 resolved)
+
+```prisma
+model LineageRelationship {
+  id          String               @id @default(cuid())
+  type        LineageRelationType
+  description String?
+  startedAt   DateTime?
+  endedAt     DateTime?
+  isVerified  Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+
+  fromNode    LineageNode @relation("LineageFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  fromNodeId  String
+  toNode      LineageNode @relation("LineageTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  toNodeId    String
+
+  @@unique([fromNodeId, toNodeId, type])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+```
+
+**Design notes:** Vertical lineage (instructor→student) is already captured by `RankAward.awardedById`. These models capture the richer graph: horizontal partner connections, affiliations, seminar links. Visibility per node allows users to control who sees their lineage. Verified status supports admin/peer verification of claimed relationships.
+
+---
+
+### GamificationEventType (new — Gap 1, replaces freeform eventType string)
+
+```prisma
+model GamificationEventType {
+  id          String  @id @default(cuid())
+  code        String  // e.g., "CLASS_ATTENDED", "BELT_AWARDED", "TOURNAMENT_PLACED", "COURSE_COMPLETED", "CURRICULUM_ITEM_COMPLETED"
+  name        String
+  description String?
+  defaultPoints Int   @default(0) // default point value when this event fires
+  isSystem    Boolean @default(false)
+  brand       Brand?
+  createdAt   DateTime @default(now())
+
+  events GamificationEvent[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+```
+
+---
+
+### GamificationEvent (reshaped — Gap 1)
+
+```prisma
+model GamificationEvent {
+  id        String   @id @default(cuid())
+  brand     Brand
+  points    Int      @default(0)
+  meta      Json?    // event-type-specific payload
+  createdAt DateTime @default(now())
+
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  eventType      GamificationEventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId    String
+  // Optional FKs — link back to the source event for traceability
+  rankAward      RankAward?            @relation(fields: [rankAwardId], references: [id])
+  rankAwardId    String?
+  course         Course?               @relation(fields: [courseId], references: [id])
+  courseId       String?
+  organization   Organization?         @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  discipline     Discipline?           @relation(fields: [disciplineId], references: [id])
+  disciplineId   String?
+
+  @@index([userId, createdAt])
+  @@index([brand, eventTypeId])
+  @@index([rankAwardId])
+  @@index([courseId])
+}
+```
+
+**Changes from current:** `eventType` string → FK to `GamificationEventType` table (extensible per brand, consistent with Role/TournamentRole pattern). Added optional FKs to `RankAward`, `Course`, `Organization`, `Discipline` so gamification events are traceable to their source. A belt promotion creates both a `RankAward` and a `GamificationEvent` pointing back to it.
+
+---
+
+### CourseEnrollment (new — Gap 2)
+
+```prisma
+model CourseEnrollment {
+  id          String    @id @default(cuid())
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId  String
+
+  itemCompletions CurriculumItemCompletion[]
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+```
+
+---
+
+### CurriculumItemCompletion (new — Gap 2)
+
+```prisma
+model CurriculumItemCompletion {
+  id          String   @id @default(cuid())
+  completedAt DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  enrollment       CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  enrollmentId     String
+  curriculumItem   CurriculumItem   @relation(fields: [curriculumItemId], references: [id], onDelete: Cascade)
+  curriculumItemId String
+  verifiedBy       User?            @relation("ItemVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedById     String?
+
+  @@unique([enrollmentId, curriculumItemId])
+  @@index([curriculumItemId])
+}
+```
+
+**Design notes:** A student enrolls in a course (`CourseEnrollment`), then completes individual items (`CurriculumItemCompletion`). When all required items are complete, the system can flag the student as eligible for the course's target rank (`Course.rankId`). An instructor can then award the promotion (`RankAward`), which also fires a `GamificationEvent`. The `verifiedById` allows an instructor to sign off on individual item completions (e.g., confirming a technique was demonstrated).
+
+---
+
+### Waiver (new — Gap 3)
+
+```prisma
+model Waiver {
+  id          String     @id @default(cuid())
+  type        WaiverType
+  title       String
+  content     String     // full waiver text (markdown or plain text)
+  version     String     @default("1.0") // version tracking for legal compliance
+  isRequired  Boolean    @default(true)
+  isActive    Boolean    @default(true)
+  brand       Brand?     // null = universal; set = brand-specific
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Optional scoping — a waiver can belong to an org or tournament
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  tournament     Tournament?   @relation(fields: [tournamentId], references: [id])
+  tournamentId   String?
+
+  signatures WaiverSignature[]
+
+  @@index([brand, type, isActive])
+  @@index([organizationId])
+  @@index([tournamentId])
+}
+```
+
+---
+
+### WaiverSignature (new — Gap 3)
+
+```prisma
+model WaiverSignature {
+  id        String   @id @default(cuid())
+  signedAt  DateTime @default(now())
+  ipAddress String?  // for legal audit
+  userAgent String?  // for legal audit
+  createdAt DateTime @default(now())
+
+  waiver   Waiver @relation(fields: [waiverId], references: [id], onDelete: Restrict)
+  waiverId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  // For minors: the parent/guardian who signed on their behalf
+  signedOnBehalfOf   User?  @relation("SignedOnBehalf", fields: [signedOnBehalfOfId], references: [id])
+  signedOnBehalfOfId String?
+
+  @@unique([waiverId, userId]) // one signature per waiver per user
+  @@index([userId])
+}
+```
+
+**Design notes:** Waivers can be scoped to an organization (membership waiver), a tournament (competition waiver), or global (brand=null). Tournament registration can require specific waivers — the registration submit flow checks `WaiverSignature` exists for all required waivers. Minor consent is handled by `signedOnBehalfOfId` — a parent signs the waiver and the FK links to the minor's user record. Version tracking supports legal compliance when waiver text changes.
+
+---
+
+### TournamentStaffAssignment (new — Gap 5)
+
+```prisma
+model TournamentStaffAssignment {
+  id        String   @id @default(cuid())
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament     Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId   String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  tournamentRole TournamentRole @relation(fields: [tournamentRoleId], references: [id])
+  tournamentRoleId String
+  // Optional: assigned to specific division(s)
+  division       Division?      @relation(fields: [divisionId], references: [id])
+  divisionId     String?
+
+  @@unique([tournamentId, userId, tournamentRoleId, divisionId])
+  @@index([tournamentId])
+  @@index([userId])
+}
+```
+
+**Design notes:** This is how judges, referees, directors, timekeepers, and medical staff get assigned to a tournament and optionally to specific divisions. Without this model, the E2E lifecycle for judge/ref/director roles has no schema home. The `TournamentRole` FK ensures tournament staff roles are extensible per brand (same pattern as `Role`).
+
+---
+
+### Certification (new — Gap 6)
+
+```prisma
+model Certification {
+  id            String              @id @default(cuid())
+  type          CertificationType   // BELT_RANK, SAFETY, COACH
+  status        CertificationStatus @default(ACTIVE)
+  issuedAt      DateTime            @default(now())
+  expiresAt     DateTime?           // safety/coach certs can expire
+  revokedAt     DateTime?
+  certificateNumber String?         // external cert number if applicable
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId String
+  course         Course?       @relation(fields: [courseId], references: [id])
+  courseId        String?       // the course that led to this certification
+  issuedBy       User?         @relation("CertIssuedBy", fields: [issuedById], references: [id])
+  issuedById     String?
+
+  @@index([userId, type, status])
+  @@index([organizationId])
+  @@index([courseId])
+}
+```
+
+**Design notes:** `RankAward` handles belt/rank promotions specifically. `Certification` handles the broader set: safety certifications (CPR, first aid), coaching certifications, and can also record formal belt certifications with external certificate numbers. A safety cert earned through a `Course` links back via `courseId`. Expiry tracking (`expiresAt`) is critical for safety certs that need renewal. Status lifecycle: ACTIVE → EXPIRED (automatic by date) or REVOKED (manual).
 
 ---
 
@@ -650,87 +1159,84 @@ model RegistrationEntry {
 | Model | Reason |
 | --- | --- |
 | `Tool`, `Category`, `Tag`, `Report`, `Ad` | Dirstarter template models — kept as working reference |
-| `GamificationEvent` | Shape is fine; no S1 dependency |
-| `CurriculumItem` | Shape is fine; only its parent `Course` gets FK renames |
+| `CurriculumItem` | Shape is fine; gains `completions` relation but no column changes |
 | `Account`, `Session`, `Verification` | Better-Auth models — untouched |
 
 ---
 
-## Open questions for sign-off
+## Resolved questions (signed off SESSION_0003)
 
-### Q1: Rank relation on Membership — direct FK or through RankAward?
+### Q1: Rank relation on Membership — direct FK ✅
 
-**Current design:** `Membership.rankId` is a direct FK to the user's current rank. `RankAward` is the historical log of all awards.
+**Decision:** Keep direct FK `Membership.rankId`. Promotion updates both `Membership.rankId` and inserts `RankAward` atomically via `prisma.$transaction()`. Supports multi-discipline members (e.g., White Belt in BJJ + 2nd Degree Black Belt in Eskrima) because each `Membership` row is per-discipline with its own `rankId`.
 
-**Alternative:** No `rankId` on Membership; derive current rank from the latest `RankAward` for that (user × discipline).
+### Q2: No stripes column ✅
 
-**Recommendation:** Keep the direct FK. It's faster to query ("what rank is this person at this org?"), and the `RankAward` table serves as the audit log. When a promotion happens, update both atomically.
+**Decision:** No separate `stripes` column on `Rank`. Each stripe level is a distinct `Rank` row. Stripe info stays in `name`/`shortName` conventions. If UI needs structured stripe data, use a `metadata Json?` column.
 
-### Q2: Should `Rank` have a `stripes` column for BJJ?
+### Q3: Role table (not enum) ✅
 
-**Current design:** Each stripe level is a distinct Rank row (15 rows for BJJ). Stripe count is embedded in the `name` and `shortName`.
+**Decision:** `MembershipRole` enum replaced by `Role` table. Universal defaults seeded as `isSystem=true, brand=null`. White-label SaaS clients can add custom roles per brand. `MembershipRoleAssignment` join table references `Role` by FK.
 
-**Alternative:** Add an optional `stripes Int?` column so UI can render stripe indicators without parsing the name.
+### Q4: All 7 Baseline disciplines in S1 ✅
 
-**Recommendation:** No separate column for now. If the UI needs stripe count, extract it from `shortName` conventions or add a `metadata Json?` column on Rank for discipline-specific display hints. Avoids polluting a universal model with BJJ-specific fields.
+**Decision:** Include all 7 now: BJJ, Eskrima, Muay Thai, Boxing, Self Defense, Judo, Kajukenbo. These serve as the default template for white-label clients. Full rank system data seeded per discipline.
 
-### Q3: Should `MembershipRole` stay as an enum or become a table?
+### Q5: TournamentRole table (not enum) ✅
 
-**Plan spec** uses a `roles` table (`id`, `code`, `name`). Our current schema uses an enum.
+**Decision:** Separate `TournamentRole` table, not merged into `Role`. Tournament roles are semantically different from org membership roles. Same extensibility pattern: `isSystem` defaults (COMPETITOR, COACH, JUDGE, VOLUNTEER), brand-customizable. `Division.roleRequired` FKs to `TournamentRole`.
 
-**Recommendation:** Stay with the enum for MVP. We have a known, small set of roles (STUDENT, INSTRUCTOR, OWNER, COACH, JUDGE, VOLUNTEER). If custom roles emerge post-MVP, migrate to a table then. The `MembershipRoleAssignment` join table structure doesn't change either way.
+### Q6: Course.rankId FK added now ✅
 
-### Q4: Judo and Kajukenbo — include in S1 schema or defer to S5 seed?
+**Decision:** Add `rankId String?` on `Course` in S1. Connects curriculum to the rank it targets, queryable from day one. Deeper curriculum structure (sections, technique metadata) stays as S6 work.
 
-Both exist in the legacy data. The schema supports them already (just add `Discipline` rows + `RankSystem` + `Rank` rows). No schema change needed.
+### Q7: SubscriptionTier table + UserBrandSubscription ✅
 
-**Recommendation:** Defer to S5. The schema is discipline-agnostic. Seeding specific discipline data is S5's job.
+**Decision:** Option C — add lightweight subscription model now. `SubscriptionTier` as a table (extensible per brand, same pattern). `UserBrandSubscription` model: user × brand × tier + status + expiresAt. Universal tier: FREE. BBL-specific tiers: FREE, PREMIUM, INSTRUCTOR, SCHOOL_OWNER, LEGEND. Stripe wiring deferred to S10.
 
-### Q5: Should `Division.roleRequired` use `MembershipRole` or a separate `DivisionRole` enum?
+### Q8: LineageNode + LineageRelationship added now ✅
 
-The plan spec uses a smaller enum (`competitor, coach, judge, volunteer`). Our `MembershipRole` includes `STUDENT`, `INSTRUCTOR`, `OWNER` which don't map cleanly to tournament roles.
+**Decision:** Add both models now. Vertical lineage is partially captured by `RankAward.awardedById`. These models capture the richer graph: horizontal partner connections, affiliations, seminar links, tournament partners. Per-node visibility controls. Verified status supports admin/peer verification.
 
-**Recommendation:** Use `MembershipRole` for now — `STUDENT` means "competitor" in a tournament context. If the semantic mismatch bothers us, we can add a `TournamentRole` enum later. Not worth the extra type for MVP.
+---
 
-### Q6: Should `Course` get a `rankId` FK in S1 to connect curriculum to ranks?
+## Gap analysis resolved (SESSION_0003)
 
-The legacy TuffBuffs data shows a clear pattern: each curriculum level maps to a rank (e.g., `level1Curriculum` → `BJJ_LEVELS.LEVEL_1`). Currently `Course` has no rank connection — a course can have a `disciplineId` but no way to say "this course covers Blue Belt requirements."
+### Gap 1: GamificationEvent FKs + GamificationEventType table ✅
 
-**Option A:** Add `rankId String?` to `Course` now (one nullable FK, cheap).
-**Option B:** Defer entirely to S6 when curriculum CRUD is the sprint focus.
+**Problem:** `eventType` was a freeform string with no traceability to source events. No way to link a "belt awarded" gamification event back to the specific `RankAward`.
 
-**Recommendation:** Option A — add the FK now. It's one line, avoids a migration in S6, and makes the curriculum→rank relationship queryable from day one. The deeper curriculum structure (sections, technique metadata, key points, tags, `isRequired` flags) stays as S6 work.
+**Solution:** `GamificationEventType` table (extensible per brand, consistent with Role pattern). Optional FKs on `GamificationEvent` to `RankAward`, `Course`, `Organization`, `Discipline` for source traceability.
 
-### Q7: Should S1 include a subscription tier model?
+### Gap 2: CourseEnrollment + CurriculumItemCompletion ✅
 
-BBL's `bblTiers.js` reveals a **paid access tier** system (Free → Premium → Instructor → School Owner → Legend) that's orthogonal to `MembershipRole`. Roles describe *what you do* (student, instructor, coach); tiers describe *what you can access* (free techniques vs. premium library, limited vs. unlimited favorites). TuffBuffs has an equivalent via `ACCESS_LEVELS` (PUBLIC/STUDENT/MEMBER) on curriculum items.
+**Problem:** No model for tracking student progress through a course. No way to know which curriculum items a student has completed or whether they're eligible for the course's target rank.
 
-This is a cross-brand need — every brand will want free vs. paid feature gating.
+**Solution:** `CourseEnrollment` (user × course) + `CurriculumItemCompletion` (enrollment × item). Instructor can verify individual completions. When all required items are done, student is flagged for promotion eligibility.
 
-**Option A:** Add a `SubscriptionTier` enum + `subscriptionTier` field on `Membership` or `User` now.
-**Option B:** Defer to S10 (Payments + Stripe) when we have the payment infrastructure to enforce tiers.
-**Option C:** Add a lightweight `UserBrandSubscription` model now (user × brand × tier + expiresAt) so the schema is ready, even though Stripe wiring comes later.
+### Gap 3: Waiver + WaiverSignature ✅
 
-**Recommendation:** Option C if we want to be forward-looking — the model is small and it avoids a migration at S10. But Option B is defensible if we want to stay lean. This is a sign-off question.
+**Problem:** The ChatGPT plan explicitly lists "Waivers / consent" under Passport. Tournaments and orgs often require signed waivers. No model existed.
 
-### Q8: Should S1 include a lineage model?
+**Solution:** `Waiver` (scoped to org, tournament, or global) with version tracking. `WaiverSignature` with IP/UA for legal audit. Minor consent via `signedOnBehalfOfId`. Registration submit can enforce required waiver signatures.
 
-BBL's `lineageSchemas.js` reveals a **martial arts lineage tree** — who trained under whom, going back generations. This is a core BBL feature but applies to all brands (every practitioner has a lineage). The legacy data models:
+### Gap 4: Style substyle model ✅
 
-- **Vertical lineage:** instructor → student teaching chain
-- **School grouping:** instructors clustered under academies
-- **Partner relationships:** horizontal connections (tournament partners, affiliations, training partners, seminar connections)
-- **Visibility controls:** public/unlisted/restricted/private per node
+**Problem:** ChatGPT plan Delta B introduced a `styles` table for Karate substyles. Our S1 design had `Discipline` but no sub-model for substyles.
 
-Our current schema partially covers this: `RankAward.awardedById` captures "who promoted me" and `Organization` captures school grouping. But the full lineage is richer — it's a graph, not just individual promotions. Key missing pieces:
+**Solution:** `Style` model with `disciplineId`, parent/child hierarchy, approval workflow (PENDING/APPROVED/REJECTED), `createdBy`/`approvedBy` user FKs. Karate seeds: Shotokan, Wado-Ryu, Goju-Ryu, Hawaiian Kenpo, Kajukenbo. `Membership` gains optional `styleId` FK.
 
-1. **`LineageNode`** — a user's place in the lineage tree, with visibility, verified status, and shareable slug
-2. **`LineageRelationship`** — horizontal partner connections between nodes (type: tournament/affiliation/training/seminar/competition_team)
+### Gap 5: TournamentStaffAssignment ✅
 
-**Option A:** Add `LineageNode` + `LineageRelationship` models now.
-**Option B:** Defer entirely — lineage is a feature, not foundation. Build it when a sprint calls for it.
+**Problem:** No schema for assigning judges, referees, directors, medical staff to tournaments/divisions. The E2E lifecycle for tournament staff had no home.
 
-**Recommendation:** Option B — defer. Lineage is important but it's a feature build, not a schema foundation. The `RankAward.awardedById` chain already captures the vertical lineage data implicitly. When we build the lineage UI (likely post-MVP or as a BBL-specific sprint), we can add these models then. The existing schema doesn't block it.
+**Solution:** `TournamentStaffAssignment` (tournament × user × tournamentRole, optionally scoped to division).
+
+### Gap 6: Certification record model ✅
+
+**Problem:** `data-model.md` lists `SafetyCertification` and `CoachCertification` but the S1 design only had `CertificationType` enum on `Course`. When someone completes a safety course, there was no record model.
+
+**Solution:** `Certification` model with type (BELT_RANK/SAFETY/COACH), status lifecycle (ACTIVE/EXPIRED/REVOKED), expiry tracking, optional link to `Course` and issuing `User`.
 
 ---
 
