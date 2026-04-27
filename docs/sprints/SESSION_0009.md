@@ -2,7 +2,7 @@
 title: "SESSION 0009 — Verify proxy.ts merge, complete S2 smoke test, begin S3"
 slug: session-0009
 type: session
-status: in-progress
+status: closed-full
 created: 2026-04-26
 updated: 2026-04-26
 last_agent: copilot-session-0009
@@ -75,50 +75,68 @@ backlinks:
 ## Reflections
 
 ### What went well
+
 - S2 smoke test finally passes end-to-end. The entire auth → identity → edit → save pipeline works.
 - Proxy.ts merge from SESSION_0008 was correct and clean — no issues on boot.
 
 ### Key lessons learned
 
 #### 1. `"use server"` files can only export async functions
+
 **Problem:** Exporting a Zod schema object from a `"use server"` file causes Next.js to serialize it as a server reference. On the client, it's a function stub, not a schema — `zodResolver` throws "not a Zod schema."
+
 **Pattern:** Always keep shared schemas in a plain `.ts` file (no directive). Server actions import from it; client components import from it. Never re-export objects from `"use server"`.
+
 **Runbook candidate:** Yes — "Schema/Action Separation" SOP.
 
 #### 2. Prisma client runtime leaks into client bundles via enum imports
+
 **Problem:** `import { Gender } from "~/.generated/prisma/client"` in a client-reachable file pulls in `@prisma/client/runtime/client.mjs` which uses `node:module` — crashes Turbopack.
+
 **Pattern:** For client-facing code, duplicate enum values as `z.enum([...])` string literals. Keep `z.nativeEnum(PrismaEnum)` only in server-only files.
+
 **Runbook candidate:** Yes — "Client-Safe Enums" pattern.
 
 #### 3. Dirstarter's `sendEmail` silently no-ops in dev
+
 **Problem:** Upstream `lib/email.ts` has `if (!isProd) { console.log(...); return }` — emails never send in dev. Since the only auth method is magic link, this means **you can never log in locally** without removing the guard.
+
 **Pattern:** For projects that rely on email auth, remove or bypass the dev guard. Log the payload but still send.
+
 **Runbook candidate:** Yes — add to "Local Dev Auth" runbook.
 
 #### 4. `emptyStringAsUndefined` in env.ts + `z.string().optional()` = correct
+
 **Problem:** Initial env vars were empty strings `""`. With `emptyStringAsUndefined: true` in createEnv, they become `undefined`. Marking them `.optional()` lets validation pass.
+
 **Pattern:** Don't use `.min(1)` for env vars you haven't wired yet. Use `.optional()` and guard the service constructor.
 
 #### 5. Better Auth session cookie name
+
 **Discovery:** The cookie is `better-auth.session_token`. The proxy.ts `getSessionCookie()` only checks cookie *presence* — it doesn't validate against DB. The actual session validation happens in `getServerSession()` on the page.
+
 **Implication:** Proxy.ts auth guard is a UX convenience (fast redirect), not a security boundary. Real auth check is server-side.
 
 #### 6. Magic link sign-up doesn't trigger the same hooks as email/social sign-up
+
 **Problem:** The auth hook checked `path === "/sign-up/email" || "/sign-up/social" || "/callback/:id"` but magic link uses a different path. New users via magic link got no Passport.
+
 **Pattern:** Auth hooks must cover ALL auth paths. Better: use a more defensive pattern — check on every authenticated request if Passport exists, create if missing (eventual consistency approach).
+
 **Runbook candidate:** Yes — "Identity Shell Guarantee" pattern.
 
 ### Anti-patterns observed
+
 - **Pasting terminal commands into .env files** — happened when copy-pasting corrupted the API key line. Always double-check .env after editing.
 - **Running `npx`/`bunx` without verifying CWD** — caused wrong Next.js versions to download. Always use project-local binaries.
 - **Too many terminal sessions** — 10+ terminals accumulated. Close unused ones to reduce confusion.
 
 ### Patterns to codify as runbooks/SOPs
 
-| Pattern | File to create | Summary |
-|---|---|---|
-| Schema/Action Separation | `docs/runbooks/schema-action-separation.md` | Zod schemas in plain `.ts`, never in `"use server"` files |
-| Client-Safe Enums | `docs/runbooks/client-safe-enums.md` | Use `z.enum()` not `z.nativeEnum(Prisma)` in client-reachable code |
-| Local Dev Auth | `docs/runbooks/local-dev-auth.md` | Resend setup, sender email, dev email guard bypass |
-| Identity Shell Guarantee | `docs/runbooks/identity-shell-guarantee.md` | Ensure every user gets Passport + DirectoryProfile regardless of auth path |
-| Service Constructor Guards | `docs/runbooks/service-guards.md` | Pattern for optional services: `env.KEY ? new Client(key) : null` |
+| Pattern                    | File to create                                | Summary                                                                      |
+| -------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------- |
+| Schema/Action Separation   | `docs/runbooks/schema-action-separation.md`   | Zod schemas in plain `.ts`, never in `"use server"` files                    |
+| Client-Safe Enums          | `docs/runbooks/client-safe-enums.md`          | Use `z.enum()` not `z.nativeEnum(Prisma)` in client-reachable code           |
+| Local Dev Auth             | `docs/runbooks/local-dev-auth.md`             | Resend setup, sender email, dev email guard bypass                           |
+| Identity Shell Guarantee   | `docs/runbooks/identity-shell-guarantee.md`   | Ensure every user gets Passport + DirectoryProfile regardless of auth path   |
+| Service Constructor Guards | `docs/runbooks/service-guards.md`             | Pattern for optional services: `env.KEY ? new Client(key) : null`            |

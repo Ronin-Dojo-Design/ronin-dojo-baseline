@@ -2,7 +2,7 @@
 title: "SESSION 0008 — S2 Smoke Test + S3 Org Create & Join Flow"
 slug: session-0008
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-26
 updated: 2026-04-26
 last_agent: copilot-session-0008
