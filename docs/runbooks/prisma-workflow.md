@@ -1,3 +1,16 @@
+---
+title: Prisma Workflow Runbook
+slug: prisma-workflow
+type: runbook
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+last_agent: copilot-session-0005
+health: 7
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Prisma Schema Workflow — local dev
 
 The recurring pattern for schema changes during local development.

@@ -1,3 +1,18 @@
+---
+title: Wiki Lint Protocol
+slug: wiki-lint
+type: protocol
+status: active
+created: 2026-04-26
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/protocols/code-guardrails.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Wiki Lint Protocol
 
 ## Purpose

@@ -1,3 +1,16 @@
+---
+title: Auth Architecture
+slug: auth
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-25
+last_agent: copilot-session-0002
+health: 5
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Auth
 
 ## Stack

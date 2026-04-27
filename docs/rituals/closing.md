@@ -1,3 +1,20 @@
+---
+title: Closing Ritual
+slug: closing
+type: protocol
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/rituals/opening.md
+  - docs/protocols/code-guardrails.md
+  - docs/knowledge/wiki/incidents.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Closing ritual — bow out
 
 Run this before ending any session. The point: leave the repo in a state where the next bow-in is cheap.
@@ -8,14 +25,15 @@ Run this before ending any session. The point: leave the repo in a state where t
 
 Any of: "Bow out" / "Close session" / "End session" / task complete / hitting a natural pause point.
 
-## Two modes
+## Two Three modes
 
 | Mode | When to use | Required actions |
 |---|---|---|
 | **Quick close** | Back-to-back execution sessions | Fill SESSION file; commit if needed; done |
 | **Full close** | End of day, end of sprint, after a milestone, before any context loss | Quick close + Reflections + memory-update sweep |
+| **Unclean close recovery** | Session crashed, compaction ate context, or bow-out was skipped | Recovery checklist below; creates incident entry |
 
-Default to quick. Escalate to full when the moment warrants it.
+Default to quick. Escalate to full when the moment warrants it. Use unclean close recovery when a previous session wasn't closed properly.
 
 ## Quick close steps
 
@@ -112,3 +130,37 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format in full.
 - [Wiki lint protocol](../protocols/wiki-lint.md) — rules for JETTY 3.0 sweep verification.
 - [Prisma workflow runbook](../runbooks/prisma-workflow.md) — recurring schema change cycle.
+- [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
+- [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
+
+---
+
+## Unclean close recovery
+
+Use when a previous session's bow-out was skipped — context loss, compaction, crash, or operator error.
+
+### When this applies
+
+- The latest `SESSION_NNNN.md` has `Status: in-progress` but the session is over.
+- A new session discovers the previous one was never closed.
+- The closing ritual was interrupted mid-flight.
+
+### Recovery checklist
+
+1. **Read the unclosed SESSION file.** Identify what was done by reading `git log`, `git diff`, and any partial `What landed` entries.
+2. **Backfill the SESSION file.** Fill in `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session`.
+3. **Set status:** `Status: closed-unclean`
+4. **Add reason tag:** Add `**Reason for unclean close:** {one sentence}` below the Status line.
+5. **Log the incident.** Append an entry to [`docs/knowledge/wiki/incidents.md`](../knowledge/wiki/incidents.md) with date, session number, reason, and recovery actions.
+6. **JETTY 3.0 sweep.** Run step 3 from quick close on any files touched in the unclosed session.
+7. **Wiki index update.** Update session status in `wiki/index.md`.
+8. **Continue.** Create the next `SESSION_NNNN.md` and proceed with bow-in.
+
+### Status values (complete list)
+
+| Status | Meaning |
+|---|---|
+| `in-progress` | Session is active |
+| `closed-quick` | Normal quick close |
+| `closed-full` | Full close with reflections |
+| `closed-unclean` | Recovered from missed bow-out |

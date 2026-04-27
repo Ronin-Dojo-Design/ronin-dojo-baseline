@@ -1,3 +1,16 @@
+---
+title: Architecture README
+slug: architecture-readme
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-25
+last_agent: copilot-session-0002
+health: 5
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Architecture docs
 
 - [plan-vs-current.md](plan-vs-current.md) — **start here** — behavioral roadmap; ChatGPT plan's spec vs current schema; phased build order

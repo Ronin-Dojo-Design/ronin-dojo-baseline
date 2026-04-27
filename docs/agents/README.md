@@ -1,3 +1,16 @@
+---
+title: Agents README
+slug: agents-readme
+type: protocol
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 6
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # BaselineDashboard
 
 The operating framework for working on this project across sessions and across operators (LLM or human). It captures *how* we work, separately from *what* we're building.

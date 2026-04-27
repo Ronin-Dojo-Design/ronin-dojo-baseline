@@ -1,3 +1,19 @@
+---
+title: Chat Handoff Protocol
+slug: chat-handoff
+type: protocol
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/rituals/closing.md
+  - docs/rituals/opening.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Chat handoff protocol
 
 How sessions hand off context to each other so we don't lose momentum between bow-out and the next bow-in.

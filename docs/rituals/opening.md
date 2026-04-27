@@ -1,3 +1,18 @@
+---
+title: Opening Ritual
+slug: opening
+type: protocol
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/rituals/closing.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Opening ritual — bow in
 
 Run this at the start of every session, before any code is touched.

@@ -1,3 +1,16 @@
+---
+title: Database Runbook
+slug: database
+type: runbook
+status: active
+created: 2026-04-25
+updated: 2026-04-25
+last_agent: copilot-session-0003
+health: 6
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Database — local dev (Postgres.app) + production (Neon)
 
 ## Two-environment plan

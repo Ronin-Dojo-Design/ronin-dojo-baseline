@@ -6,10 +6,9 @@ status: active
 created: 2026-04-26
 updated: 2026-04-26
 author: Brian + Copilot
-last_agent: copilot-session-0004
-health: 5
+last_agent: copilot-session-0006
+health: 7
 needs_fix:
-  - "Most pages not yet retrofitted with JETTY 3.0 frontmatter"
   - "Backlinks not yet wired on architecture docs"
 ---
 
@@ -40,7 +39,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active | 8 |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active | 8 |
 | [Program Plan](../../architecture/program-plan.md) | file | active | 7 |
-| [Plan vs Current](../../architecture/plan-vs-current.md) | file | stale | 4 |
+| [Plan vs Current](../../architecture/plan-vs-current.md) | file | active | 7 |
 | [Data Model](../../architecture/data-model.md) | concept | active | 7 |
 | [Auth](../../architecture/auth.md) | file | active | 5 |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active | 5 |
@@ -59,7 +58,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0002](../../sprints/SESSION_0002.md) | session | closed |
 | [SESSION_0003](../../sprints/SESSION_0003.md) | session | closed-full |
 | [SESSION_0004](../../sprints/SESSION_0004.md) | session | closed-full |
-| [SESSION_0005](../../sprints/SESSION_0005.md) | session | in-progress |
+| [SESSION_0005](../../sprints/SESSION_0005.md) | session | closed-quick |
+| [SESSION_0006](../../sprints/SESSION_0006.md) | session | closed-quick |
 
 ## Protocols
 
@@ -67,8 +67,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
+| [Code Guardrails](../../protocols/code-guardrails.md) | protocol | active |
 | [Opening Ritual](../../rituals/opening.md) | protocol | active |
 | [Closing Ritual](../../rituals/closing.md) | protocol | active |
+| [Incidents Log](incidents.md) | protocol | active |
 
 ## Agents
 
@@ -91,6 +93,15 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- | --- |
 | [schema.prisma](files/schema-prisma.md) | file | active | 8 |
 | [seed.ts](files/seed-ts.md) | file | active | 8 |
+| [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active | 7 |
+
+## Obsidian Vault
+
+| Page | Type | Status |
+| --- | --- | --- |
+| [Ronin Obsidian Starter Vault](../../../ronin_obsidian_starter_vault/README.md) | reference | active |
+| [Learning Path](../../../ronin_obsidian_starter_vault/LEARNING_PATH.md) | reference | active |
+| [Vault Map](../../../ronin_obsidian_starter_vault/VAULT_MAP.md) | reference | active |
 
 ## Templates
 

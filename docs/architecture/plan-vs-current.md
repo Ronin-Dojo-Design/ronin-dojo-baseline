@@ -1,3 +1,20 @@
+---
+title: Plan vs Current
+slug: plan-vs-current
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/architecture/program-plan.md
+  - docs/architecture/s1-schema-design.md
+  - docs/architecture/source/chatgpt-original-plan.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Behavioral roadmap — plan spec vs current build
 
 This document treats the [ChatGPT-authored plan](source/chatgpt-original-plan.md) as a **functional spec** (what behaviors the system must support) and compares it against what's currently built in the codebase. We don't copy the plan's MySQL schema verbatim — we adopt its behavioral requirements onto the new Postgres + Prisma + Dirstarter foundation.
@@ -42,21 +59,23 @@ This model isn't optional — it's the spine of the data architecture and resolv
 
 ## Current schema (apps/web/prisma/schema.prisma) — what we have
 
+> **Updated SESSION_0006 (2026-04-26):** S1 schema rev landed. All renames and new models are in place. Seed data loaded (12 disciplines, 13 rank systems, 194 ranks).
+
 | Plan entity | Our model | Status |
 |---|---|---|
 | User | `User` (Better-Auth) | ✅ exists |
-| Passport | `Profile` | ⚠️ shape mismatch — Profile has bio/phone/socialLinks; missing DOB, gender, legal names, emergency contact, avatar |
-| DirectoryProfile | — | ❌ missing entirely |
-| Organization | `School` | ⚠️ named School; missing type enum (dojo/league/school/club) |
-| Discipline | `Style` | ⚠️ named Style; behaviorally equivalent |
-| RankSystem | — | ❌ missing — we collapsed it into a flat `Belt` table |
-| Rank | `Belt` | ⚠️ exists but oversimplified — no `kind` (belt/dan/kyu_dan), no `color_hex`, no `short_name` |
-| Membership | `Membership` | ⚠️ shape mismatch: missing `discipline` dimension; status is missing (no invited/pending/active/suspended/expired); single-role-per-membership instead of M:N |
-| Tournament | `Tournament` | ⚠️ shape — missing per-discipline split, status enum (draft/published/closed/archived), venue fields |
-| TournamentDiscipline | — | ❌ missing — currently no concept of "tournament supports multiple disciplines" |
-| Division | — | ❌ missing — no age/weight/rank/gender constraints, no format (single_elim/round_robin/forms/sparring) |
-| Registration | `TournamentRegistration` | ⚠️ minimal — no status enum, no payment status, no submitted_at |
-| RegistrationEntry | — | ❌ missing — **and this is the table that holds the rank/org snapshots, which the plan calls out as critical** |
+| Passport | `Passport` | ✅ renamed from `Profile`; has DOB, gender, legal names, emergency contact, avatar |
+| DirectoryProfile | `DirectoryProfile` | ✅ exists — visibility + per-field privacy flags |
+| Organization | `Organization` | ✅ renamed from `School`; has `type` enum (DOJO/LEAGUE/SCHOOL/CLUB) |
+| Discipline | `Discipline` | ✅ renamed from `Style`; has `isSystem` + `brand` for extensibility |
+| RankSystem | `RankSystem` | ✅ exists — links Discipline → Rank ladder; has `kind` (BELT/KYU_DAN/PRAJIOUD/GRADE/OTHER), `isSystem` + `brand` |
+| Rank | `Rank` | ✅ renamed from `Belt`; has `kind`, `colorHex`, `shortName`, `sortOrder`, `isSystem` + `brand` |
+| Membership | `Membership` | ✅ reshaped — has `disciplineId`, `status` enum (INVITED/PENDING/ACTIVE/SUSPENDED/EXPIRED), M:N roles via `MembershipRoleAssignment` |
+| Tournament | `Tournament` | ✅ reshaped — has `status` enum (DRAFT/PUBLISHED/CLOSED/ARCHIVED), venue fields |
+| TournamentDiscipline | `TournamentDiscipline` | ✅ exists — tournament × discipline join |
+| Division | `Division` | ✅ exists — age/weight/rank/gender constraints, format enum |
+| Registration | `Registration` | ✅ reshaped from `TournamentRegistration` — has status, payment status, `submittedAt` |
+| RegistrationEntry | `RegistrationEntry` | ✅ exists — rank/org snapshot fields (`snapshotRankName`, `snapshotOrgName`) |
 
 ---
 
@@ -73,23 +92,23 @@ Practically: a `School` (or, post-rename, `Organization`) belongs to a `Brand`. 
 
 ---
 
-## Plan's behavioral requirements not yet covered
+## Plan's behavioral requirements — coverage after S1
 
-Beyond schema shape, the plan implies these **behaviors**:
+> **Updated SESSION_0006:** Schema now supports all behavioral requirements. Implementation (server actions, UI) starts in S2.
 
-1. **Membership lifecycle**: invited → pending → active → suspended → expired. Not in current model. Required for organization workflows (invite student, approve pending application, suspend lapsed payment).
+1. **Membership lifecycle**: invited → pending → active → suspended → expired. ✅ Schema has `MembershipStatus` enum and `status` field on `Membership`.
 
-2. **Multiple roles per membership**: a user might be both a `coach` and a `judge` at the same dojo. Current model is single-role; needs M:N to a Role catalog.
+2. **Multiple roles per membership**: ✅ `MembershipRoleAssignment` join table exists.
 
-3. **Rank-at-registration snapshot**: when a competitor registers for a tournament, freeze their rank/org as a string (`snapshot_rank_name`, `snapshot_org_name`) so a later promotion doesn't rewrite the historical division they competed in.
+3. **Rank-at-registration snapshot**: ✅ `RegistrationEntry` has `snapshotRankName` + `snapshotOrgName`.
 
-4. **Directory search with privacy**: directory listings respect each user's `DirectoryProfile.visibility` (hidden / members_only / public) and per-field flags (`show_email`, `show_phone`, etc.).
+4. **Directory search with privacy**: ✅ `DirectoryProfile` model exists with `visibility` enum + per-field flags. UI not yet built (S4).
 
-5. **Tournament division eligibility**: divisions enforce gender/age/weight/rank constraints. Registration UI filters or rejects out-of-range entries.
+5. **Tournament division eligibility**: ✅ `Division` model has gender/age/weight/rank constraints + format enum. Enforcement logic not yet built (S9).
 
-6. **Idempotent registration submission**: the plan mentions idempotency keys + audit logging on registration. We haven't accounted for that.
+6. **Idempotent registration submission**: ⏸ Schema supports it (`idempotencyKey` on `Registration`). Server action not yet built (S9).
 
-7. **Per-discipline rank systems**: a school teaches Karate and BJJ → those use different rank systems → users hold different ranks per discipline. Our `Belt` model can't represent this without `RankSystem`.
+7. **Per-discipline rank systems**: ✅ `RankSystem` links `Discipline` → `Rank` ladder. 13 rank systems seeded with 194 ranks.
 
 ---
 
@@ -131,24 +150,24 @@ Each item below is "one task" in the user's sense — pick one, finish it, then 
 
 ### Phase 0 — finish the foundations we started
 
-- ✅ `lib/authz.ts` — exists, but needs renames (`School` → `Organization`, `Style` → `Discipline`) once schema rev lands. Functional check on logic vs plan's permissions model is otherwise good.
+- ✅ `lib/authz.ts` — exists, renames pending post-S1 cleanup.
 - ✅ `middleware.ts` — host→brand resolution, fine as-is.
-- ⏸ Prisma client extension for brand scoping — defer until schema rev, since model names will change.
-- ⏸ Better-Auth `lastActiveBrandId` field — fine to do now, no schema dependency.
+- ⏸ Prisma client extension for brand scoping — defer until S2+.
+- ⏸ Better-Auth `lastActiveBrandId` field — S2 deliverable.
 
-### Phase 1 — schema rev to align with Passport + Shells
+### Phase 1 — schema rev to align with Passport + Shells ✅ DONE (S1)
 
-One migration that:
-1. Renames `Style` → `Discipline` and `School` → `Organization` (keeps brand column).
-2. Adds `Organization.type` enum (dojo / league / school / club).
-3. Creates `RankSystem` between `Discipline` and `Belt`. Renames `Belt` → `Rank` with new fields (kind, color_hex, short_name, sort_order).
-4. Expands `Profile` → renames it `Passport` and adds DOB, gender, legal names, emergency contact, avatar.
-5. Adds `DirectoryProfile` (visibility + privacy flags).
-6. Reshapes `Membership`: adds `disciplineId`, adds `status` enum, replaces single-role with `MembershipRoleAssignment` join table.
-7. Reshapes `Tournament`: adds status enum, venue fields, splits into `Tournament` + `TournamentDiscipline` + `Division`.
-8. Adds `RegistrationEntry` with rank/org snapshot fields.
-
-This is a big migration but it's the right time for it — no real data exists yet, so a rebuild is cheap. **Do this before building any UI.**
+Completed in SESSION_0003–0005:
+1. ✅ Renamed `Style` → `Discipline`, `School` → `Organization`, `Belt` → `Rank`, `Profile` → `Passport`
+2. ✅ Added `Organization.type` enum
+3. ✅ Created `RankSystem` with `kind` enum
+4. ✅ Expanded `Passport` with all plan-required fields
+5. ✅ Added `DirectoryProfile`
+6. ✅ Reshaped `Membership` with `disciplineId`, `status` enum, `MembershipRoleAssignment`
+7. ✅ Reshaped `Tournament` → `Tournament` + `TournamentDiscipline` + `Division`
+8. ✅ Added `RegistrationEntry` with snapshot fields
+9. ✅ Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank
+10. ✅ Seeded 12 disciplines, 13 rank systems, 194 ranks, roles, tiers, styles
 
 ### Phase 2 — Milestone 1 (Identity + Membership Shells)
 
@@ -182,10 +201,12 @@ Compact/full mode, traffic-light buttons, ⌘K palette, context dropdown. Layere
 
 ---
 
-## Open questions to resolve before Phase 1
+## Open questions — resolved in S1
 
-1. **Naming**: `School` → `Organization` (plan's term)? Or keep `School` since most members will think in those terms? (Recommendation: rename to `Organization`, matches the plan and supports future league/club types without rework.)
-2. **Style** → `Discipline`? (Recommendation: rename — the plan's `discipline` is the standard MA term and avoids overloading "Style" with CSS connotations.)
-3. **Profile** → `Passport`? Or keep `Profile` and rename later? (Recommendation: rename now while there's no real data.)
-4. **Should `Belt` become `Rank`** with a `RankSystem` parent? (Recommendation: yes — directly per plan.)
-5. **Multiple roles per membership** — implement now, or defer with a TODO and enforce single-role for MVP? (Recommendation: do now — `MembershipRoleAssignment` join table is a small extra surface that future-proofs.)
+All five questions were resolved during SESSION_0003–0005:
+
+1. ✅ **`School` → `Organization`** — renamed.
+2. ✅ **`Style` → `Discipline`** — renamed.
+3. ✅ **`Profile` → `Passport`** — renamed.
+4. ✅ **`Belt` → `Rank`** with `RankSystem` parent — done.
+5. ✅ **Multiple roles per membership** — `MembershipRoleAssignment` join table implemented.

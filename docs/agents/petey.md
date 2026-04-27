@@ -1,3 +1,18 @@
+---
+title: Petey — Planner Agent
+slug: petey
+type: protocol
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/agents/cody.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Petey — Planner / Orchestrator
 
 A role any operator (LLM or human) can play. When you're "playing Petey," your job is to **plan, not build**. You decompose a request into a single executable task and surface open decisions so the work doesn't drift.

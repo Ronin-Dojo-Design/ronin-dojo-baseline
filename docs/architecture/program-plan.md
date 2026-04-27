@@ -1,3 +1,19 @@
+---
+title: Program Plan
+slug: program-plan
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+pairs_with:
+  - docs/architecture/plan-vs-current.md
+  - docs/architecture/s1-schema-design.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Program plan — Ronin Dojo platform rebuild
 
 A real plan we can review together, edit, and execute against. Built to address four threads:
@@ -53,11 +69,11 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 
 | Sprint | Major deliverable | Notes |
 |---|---|---|
-| **S1** | Phase 1 schema rev: rename `Style→Discipline`, `School→Organization`, `Profile→Passport`; add `RankSystem`, `Rank` (replacing `Belt`), `DirectoryProfile`, `MembershipRoleAssignment`; expand `Membership` with `disciplineId` + `status` enum; reshape `Tournament` into `Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry` | One big migration. No real data yet — cheap. Update authz.ts and middleware.ts naming after. |
+| **S1** ✅ | Phase 1 schema rev: rename `Style→Discipline`, `School→Organization`, `Profile→Passport`; add `RankSystem`, `Rank` (replacing `Belt`), `DirectoryProfile`, `MembershipRoleAssignment`; expand `Membership` with `disciplineId` + `status` enum; reshape `Tournament` into `Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry`. Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank. | Done — 31 models, all enums, seed data loaded (12 disciplines, 13 rank systems, 194 ranks). Sessions 0003–0005. |
 | **S2** | Better-Auth + Passport bootstrap | Sign-up creates `User + Passport + DirectoryProfile` stubs. `/me` route renders the Passport editor. Brand cookie wired through middleware. |
 | **S3** | Organization create + join flow | Owner creates an Organization (dojo/league/school/club). Invite link → user joins as Membership in (Org × Discipline). Multi-role. Status lifecycle (invited/pending/active/suspended/expired) modeled and enforced. |
 | **S4** | Directory search with privacy | List view honoring `DirectoryProfile.visibility` and per-field flags. Filters by org/discipline/rank/location. **Plan Milestone 1 ✅** |
-| **S5** | RankSystem + Rank seed data | Seed real-world rank systems (e.g., BJJ belt, Karate kyu/dan, Kali) for the 4–6 disciplines we know we need. Admin UI to add new rank systems. |
+| **S5** ✅ | RankSystem + Rank seed data | Done — pulled forward into S1. 12 disciplines, 13 rank systems, 194 ranks seeded. Admin UI to add new rank systems deferred to future sprint. |
 | **S6** | Course + CurriculumItem CRUD | Instructors author courses tied to (Organization × Discipline × certificationType: BELT_RANK / SAFETY / COACH). MDX or rich-text notes; image/video uploads via S3. |
 | **S7** | Progress awarding + gamification ledger | Instructor → student belt promotion flow. `GamificationEvent` ledger with point values. Level/badge computation as derived views. Resend email on promotion. |
 | **S8** | Tournament create wizard | Draft → Published lifecycle. Add `TournamentDiscipline`s. Define `Division`s with format/age/weight/rank/gender constraints. |

@@ -1,3 +1,16 @@
+---
+title: Legacy Conversion
+slug: legacy-conversion
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-25
+last_agent: copilot-session-0002
+health: 5
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # Converting legacy frontend assets
 
 The legacy monorepo at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (locally: `/Users/brianscott/dev/ronin-dojo-monorepo/`) has UI work worth keeping (TuffBuffs designs, BBL screens, partial WEKAF pages). Don't lift-and-shift wholesale — selective port.

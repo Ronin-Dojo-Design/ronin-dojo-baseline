@@ -1,3 +1,19 @@
+---
+title: S1 Schema Design
+slug: s1-schema-design
+type: file
+status: active
+created: 2026-04-25
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 8
+pairs_with:
+  - docs/architecture/plan-vs-current.md
+  - docs/architecture/program-plan.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # S1 Schema Design — Phase 1 Rev
 
 Design doc for sign-off before migration. No code changes until Brian approves.
