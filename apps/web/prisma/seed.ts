@@ -773,6 +773,159 @@ async function main() {
   })
   console.log("Created 5 Karate substyles")
 
+  // =========================================================================
+  // TEST USERS + FULL IDENTITY GRAPH
+  // =========================================================================
+  // Creates realistic test practitioners with Passport, DirectoryProfile,
+  // Organization, Membership, OrganizationDiscipline, and RankAward.
+  // This exercises: auth → passport → directory → org → membership → rank.
+  // =========================================================================
+
+  // --- Organizations ---
+  const baselineOrg = await db.organization.create({
+    data: {
+      brand: "BASELINE_MARTIAL_ARTS",
+      name: "Baseline Martial Arts Academy",
+      slug: "baseline-academy",
+      type: "DOJO",
+      city: "Boulder",
+      state: "CO",
+      country: "US",
+    },
+  })
+  console.log("Created Baseline org")
+
+  // Wire disciplines to org
+  await db.organizationDiscipline.createMany({
+    data: [
+      { organizationId: baselineOrg.id, disciplineId: bjj.id },
+      { organizationId: baselineOrg.id, disciplineId: muayThai.id },
+      { organizationId: baselineOrg.id, disciplineId: eskrima.id },
+    ],
+  })
+  console.log("Created org-discipline links")
+
+  // --- Test users with full identity graph ---
+  const testUsers = [
+    {
+      name: "Sensei Demo",
+      email: "sensei@baseline.test",
+      role: "user",
+      passport: { displayName: "Sensei Demo", legalFirstName: "Demo", legalLastName: "Instructor", bio: "Head instructor at Baseline Academy." },
+      directory: { visibility: "PUBLIC" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: true, showPhone: false, showOrgs: true, showRanks: true },
+      disciplineId: bjj.id,
+      membershipStatus: "ACTIVE" as const,
+    },
+    {
+      name: "Student Alpha",
+      email: "alpha@baseline.test",
+      role: "user",
+      passport: { displayName: "Student Alpha", legalFirstName: "Alpha", legalLastName: "Student", bio: "BJJ and Muay Thai student." },
+      directory: { visibility: "PUBLIC" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: true, showRanks: true },
+      disciplineId: bjj.id,
+      membershipStatus: "ACTIVE" as const,
+    },
+    {
+      name: "Student Beta",
+      email: "beta@baseline.test",
+      role: "user",
+      passport: { displayName: "Student Beta", legalFirstName: "Beta", legalLastName: "Student", bio: "Eskrima practitioner." },
+      directory: { visibility: "MEMBERS_ONLY" as const, locationCity: "Denver", locationRegion: "CO", locationCountry: "US", showEmail: true, showPhone: true, showOrgs: true, showRanks: true },
+      disciplineId: eskrima.id,
+      membershipStatus: "ACTIVE" as const,
+    },
+    {
+      name: "Ghost User",
+      email: "ghost@baseline.test",
+      role: "user",
+      passport: { displayName: "Ghost User", legalFirstName: "Ghost", legalLastName: "Hidden" },
+      directory: { visibility: "HIDDEN" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: false, showRanks: false },
+      disciplineId: muayThai.id,
+      membershipStatus: "ACTIVE" as const,
+    },
+    {
+      name: "Pending Patty",
+      email: "pending@baseline.test",
+      role: "user",
+      passport: { displayName: "Pending Patty", legalFirstName: "Patty", legalLastName: "Pending", bio: "Just signed up!" },
+      directory: { visibility: "PUBLIC" as const, locationCity: "Longmont", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: true, showRanks: true },
+      disciplineId: bjj.id,
+      membershipStatus: "PENDING" as const,
+    },
+  ]
+
+  // Fetch some ranks for awards
+  const bjjBlue = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "BL0" } })
+  const bjjWhite = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "W0" } })
+  const eskrimaL3 = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } }, shortName: "L3" } })
+
+  for (const tu of testUsers) {
+    const user = await db.user.create({
+      data: {
+        name: tu.name,
+        email: tu.email,
+        emailVerified: true,
+        role: tu.role,
+        lastActiveBrandId: "BASELINE_MARTIAL_ARTS",
+      },
+    })
+
+    await db.passport.create({
+      data: { userId: user.id, ...tu.passport },
+    })
+
+    await db.directoryProfile.create({
+      data: { userId: user.id, ...tu.directory },
+    })
+
+    const membership = await db.membership.create({
+      data: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        status: tu.membershipStatus,
+        userId: user.id,
+        organizationId: baselineOrg.id,
+        disciplineId: tu.disciplineId,
+        joinedAt: tu.membershipStatus === "ACTIVE" ? now : undefined,
+      },
+    })
+
+    // Rank awards for active members
+    if (tu.membershipStatus === "ACTIVE") {
+      let awardRank: typeof bjjBlue = null
+      if (tu.disciplineId === bjj.id && tu.email === "sensei@baseline.test") awardRank = bjjBlue
+      else if (tu.disciplineId === bjj.id) awardRank = bjjWhite
+      else if (tu.disciplineId === eskrima.id) awardRank = eskrimaL3
+
+      if (awardRank) {
+        await db.rankAward.create({
+          data: {
+            userId: user.id,
+            rankId: awardRank.id,
+            awardedAt: now,
+          },
+        })
+        // Update membership with current rank
+        await db.membership.update({
+          where: { id: membership.id },
+          data: { rankId: awardRank.id },
+        })
+      }
+    }
+
+    console.log(`Created test user: ${tu.name} (${tu.directory.visibility}, ${tu.membershipStatus})`)
+  }
+
+  // Set org owner
+  const senseiUser = await db.user.findUnique({ where: { email: "sensei@baseline.test" } })
+  if (senseiUser) {
+    await db.organization.update({
+      where: { id: baselineOrg.id },
+      data: { ownerId: senseiUser.id },
+    })
+  }
+
+  console.log("Created 5 test users with full identity graph")
+
   console.log("Seeding completed!")
 }
 

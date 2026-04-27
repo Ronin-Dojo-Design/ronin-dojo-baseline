@@ -1,39 +1,30 @@
 ---
-title: SOP — Data and Wiring Flows
+title: "SOP — Data Flows and Wiring Flows"
 slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
 updated: 2026-04-27
-author: Brian + ChatGPT
-last_agent: chatgpt-adoption-pass
+last_agent: copilot-session-0015
 health: 7
+pairs_with:
+  - docs/runbooks/sop-e2e-user-lifecycle.md
 backlinks:
   - docs/knowledge/wiki/index.md
-tags:
-  - sop
-  - workflow
+  - docs/ronin_dojo_baseline_systems_pack/08_SOP_DATA_AND_WIRING_FLOWS_BASELINE.md
 ---
 
-## Summary
+# SOP — Data Flows and Wiring Flows
 
-Documents the major system flows in the baseline repo using low-fi ASCII so humans can reason about the codebase quickly and future agents do not have to rebuild the same mental model from scratch. Covers platform, host/brand resolution, auth + brand context, mobile auth, identity shell, tournaments, content truth, documentation/session, wiki maintenance, and content-engine flows. Keeps product, auth, content, and brand wiring separate.
+## Purpose
+Document the major system flows in low-fi ASCII so:
+- humans can reason about the repo quickly
+- future agents do not rebuild the same mental model from scratch
+- product, auth, content, and brand wiring stay separate
 
-## Status
+---
 
-active, adopted SESSION_0010 (2026-04-27)
-
-## When to use
-
-- Onboarding a new agent or contributor and needing a quick mental model of the repo
-- Reasoning about how host brand vs. active brand context interact
-- Planning changes to auth, identity, tournament, or content systems
-- Auditing whether a proposed change crosses lane boundaries (auth ↔ content ↔ brand)
-- Answering "where does this data flow?" questions during design or review
-
-## Steps
-
-### 1. High-level platform flow
+## 1. High-level platform flow
 
 ```text
                     +----------------------+
@@ -66,9 +57,17 @@ active, adopted SESSION_0010 (2026-04-27)
                     +----------------------+
 ```
 
+```mermaid
+flowchart TD
+    A[User / Browser] --> B[Next.js app/web\nroute + middleware]
+    B -->|host → brand context| C[Better-Auth session\n+ activeBrandId]
+    C --> D[authz.ts checks\nbrand + role + scope]
+    D --> E[Prisma client\nPostgres]
+```
+
 ---
 
-### 2. Host/brand resolution flow
+## 2. Host/brand resolution flow
 
 ```text
 request.host
@@ -91,12 +90,23 @@ theme / marketing chrome / copy defaults
 auth session may still carry activeBrandId
 ```
 
-#### Key rule
+```mermaid
+flowchart TD
+    R[request.host] --> MW[middleware.ts\nresolve host]
+    MW --> B1[BASELINE_MARTIAL_ARTS]
+    MW --> B2[BBL]
+    MW --> B3[WEKAF]
+    MW --> B4[RONIN_DOJO_DESIGN]
+    B1 & B2 & B3 & B4 --> TH[theme / marketing chrome / copy defaults]
+    TH --> AS[auth session may carry activeBrandId]
+```
+
+### Key rule
 Host brand and active app brand may align, but they are not always the same thing.
 
 ---
 
-### 3. Auth + brand context flow (web)
+## 3. Auth + brand context flow (web)
 
 ```text
 Visitor
@@ -128,9 +138,24 @@ Prisma query
 Postgres rowset
 ```
 
+```mermaid
+flowchart TD
+    V[Visitor] --> SI[Sign in / Sign up]
+    SI --> BA[Better-Auth creates session cookie]
+    BA --> SR[Server reads session]
+    SR --> HC[host-derived brand context]
+    SR --> AB[session.user.activeBrandId]
+    HC & AB --> AZ[authz.ts]
+    AZ --> ADM{isAdmin?}
+    AZ --> BRD{isInSameBrand?}
+    AZ --> MEM{membership / role checks}
+    ADM & BRD & MEM --> PQ[Prisma query]
+    PQ --> PG[Postgres rowset]
+```
+
 ---
 
-### 4. Mobile auth decision flow (current unresolved branch)
+## 4. Mobile auth decision flow (current unresolved branch)
 
 ```text
                 +--------------------+
@@ -157,9 +182,19 @@ shared session contract             explicit token lifecycle
                     app/api/v1 calls
 ```
 
+```mermaid
+flowchart TD
+    EXPO[apps/mobile - Expo] --> Q{Which mobile auth path?}
+    Q -->|Option A| BA_MOB[Better-Auth mobile SDK]
+    Q -->|Option B| JWT[JWT bridge fallback\nshort-lived mobile token]
+    BA_MOB --> SSC[shared session contract]
+    JWT --> TLC[explicit token lifecycle]
+    SSC & TLC --> API[app/api/v1 calls]
+```
+
 ---
 
-### 5. Identity shell flow
+## 5. Identity shell flow
 
 ```text
 User
@@ -177,9 +212,21 @@ User
        +--> Status
 ```
 
+```mermaid
+flowchart TD
+    U[User] --> P[Passport\nglobal identity]
+    U --> DP[DirectoryProfile\nprivacy + visibility]
+    U --> M[Memberships]
+    M --> O[Organization]
+    M --> D[Discipline]
+    M --> R[Rank]
+    M --> RA[Role assignments]
+    M --> S[Status]
+```
+
 ---
 
-### 6. Tournament flow
+## 6. Tournament flow
 
 ```text
 Tournament
@@ -197,14 +244,25 @@ Tournament
                                 +--> representingMembership
 ```
 
-#### Why snapshot matters
+```mermaid
+flowchart TD
+    T[Tournament] --> TD[TournamentDiscipline]
+    TD --> DIV[Division]
+    DIV --> REG[Registration]
+    REG --> RE[RegistrationEntry]
+    RE --> SRN[snapshotRankName]
+    RE --> SON[snapshotOrgName]
+    RE --> RM[representingMembership]
+```
+
+### Why snapshot matters
 Registration history must not be rewritten by later promotions or organization changes.
 
 ---
 
-### 7. Content truth flow (current + emerging)
+## 7. Content truth flow (current + emerging)
 
-#### Current public long-form content
+## Current public long-form content
 ```text
 Authoring in repo
    |
@@ -218,7 +276,7 @@ Next.js render
 public blog/article output
 ```
 
-#### Emerging structured editorial flow
+## Emerging structured editorial flow
 ```text
 Capture / draft / knowledge
    |
@@ -233,7 +291,7 @@ ContentAtom / ContentTask / content variants
 render / publish / campaign outputs
 ```
 
-#### Key rule
+### Key rule
 Do not confuse:
 - wiki knowledge pages
 - current live MDX blog content
@@ -243,7 +301,7 @@ These are related, not identical.
 
 ---
 
-### 8. Documentation / session flow
+## 8. Documentation / session flow
 
 ```text
 Bow in
@@ -269,7 +327,7 @@ next SESSION picks up from there
 
 ---
 
-### 9. Wiki maintenance flow
+## 9. Wiki maintenance flow
 
 ```text
 new page or changed page
@@ -289,7 +347,7 @@ update wiki index if needed
 
 ---
 
-### 10. Suggested content-engine operational flow for this repo
+## 10. Suggested content-engine operational flow for this repo
 
 ```text
 Capture idea
@@ -319,7 +377,7 @@ Publication log / next iteration
 
 ---
 
-### 11. What not to do
+## 11. What not to do
 
 - do not let host brand logic replace active brand logic
 - do not let public blog output pretend to be the whole content system
@@ -329,7 +387,7 @@ Publication log / next iteration
 
 ---
 
-### Petey close
+## Petey close
 
 A clean system has clean flows.
 
@@ -337,11 +395,3 @@ If a flow feels muddy, the truth boundary is probably muddy too.
 
 **Planned Passion Produces Purpose.**
 **OSSS.**
-
-## Rollback
-
-_Not applicable — this SOP describes a process, not a destructive operation. If a step fails, halt and surface the blocker in the SESSION file._
-
-## Last verified
-
-2026-04-27 — adopted from raw import; not yet exercised against current repo state

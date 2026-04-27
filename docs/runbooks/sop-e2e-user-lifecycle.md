@@ -1,39 +1,29 @@
 ---
-title: SOP — End-to-End User Lifecycle
+title: "SOP — End-to-End User Lifecycle"
 slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
 updated: 2026-04-27
-author: Brian + ChatGPT
-last_agent: chatgpt-adoption-pass
+last_agent: copilot-session-0015
 health: 7
+pairs_with:
+  - docs/runbooks/sop-data-and-wiring-flows.md
 backlinks:
   - docs/knowledge/wiki/index.md
-tags:
-  - sop
-  - workflow
+  - docs/ronin_dojo_baseline_systems_pack/09_SOP_E2E_USER_LIFECYCLE_BASELINE.md
 ---
 
-## Summary
+# SOP — End-to-End User Lifecycle
 
-Shows the intended user lifecycle from first visit through active membership, training, competition, and publication/state touchpoints. Low-fi by design. Maps the spine of identity, organization shell, directory, courses, ranks, tournaments, staff/admin, subscriptions, cross-brand context, and content-lifecycle touchpoints around a user.
+## Purpose
+Show the intended lifecycle from first visit through active membership, training, competition, and publication/state touchpoints.
 
-## Status
+This is low-fi by design.
 
-active, adopted SESSION_0010 (2026-04-27)
+---
 
-## When to use
-
-- Designing or reviewing flows that touch sign-up, identity, directory, course, rank, or tournament features
-- Onboarding contributors who need a single mental model of the user spine
-- Diagnosing whether a feature breakage is a shell-model leak vs. a feature bug
-- Planning new features that depend on multiple lifecycle touchpoints (e.g. spotlights, recaps)
-- Stress-testing edge cases (mobile auth divergence, expired subscription, hidden-but-active member)
-
-## Steps
-
-### 1. Visitor -> account -> identity
+# 1. Visitor -> account -> identity
 
 ```text
 +---------+      +-------------+      +------------------+
@@ -47,7 +37,14 @@ active, adopted SESSION_0010 (2026-04-27)
                                   +----------------------+
 ```
 
-#### Outcome
+```mermaid
+flowchart LR
+    V[Visitor] --> S[Sign up/in] --> U[Better-Auth User]
+    U --> P[Passport stub]
+    U --> DP[DirectoryProfile stub]
+```
+
+## Outcome
 The user now exists as:
 - account
 - Passport
@@ -55,7 +52,7 @@ The user now exists as:
 
 ---
 
-### 2. Identity -> organization shell
+# 2. Identity -> organization shell
 
 ```text
 Passport
@@ -78,12 +75,24 @@ Organization row            Invite / join path
                   +--> rank
 ```
 
-#### Outcome
+```mermaid
+flowchart TD
+    PA[Passport] --> CO[Create organization]
+    PA --> JO[Join organization]
+    CO --> ORG[Organization row]
+    JO --> INV[Invite / join path]
+    ORG & INV --> M[Membership\nOrg × Discipline]
+    M --> ST[status]
+    M --> RL[roles]
+    M --> RK[rank]
+```
+
+## Outcome
 The same person now has a contextual shell inside one organization and one discipline.
 
 ---
 
-### 3. Directory lifecycle
+# 3. Directory lifecycle
 
 ```text
 Passport + DirectoryProfile + Membership
@@ -102,7 +111,15 @@ Passport + DirectoryProfile + Membership
           searchable directory
 ```
 
-#### Visibility knobs
+```mermaid
+flowchart TD
+    SRC[Passport + DirectoryProfile + Membership] --> VIS{Visibility rules}
+    VIS -->|HIDDEN / MEMBERS_ONLY| PRIV[restricted]
+    VIS -->|PUBLIC| PUB[public]
+    PRIV & PUB --> DIR[Searchable directory]
+```
+
+### Visibility knobs
 - show email?
 - show phone?
 - show orgs?
@@ -110,7 +127,7 @@ Passport + DirectoryProfile + Membership
 
 ---
 
-### 4. Course / curriculum lifecycle
+# 4. Course / curriculum lifecycle
 
 ```text
 Membership
@@ -128,12 +145,12 @@ CurriculumItemCompletion
 Rank / certification readiness
 ```
 
-#### Outcome
+## Outcome
 The user can progress in a structured training path.
 
 ---
 
-### 5. Rank lifecycle
+# 5. Rank lifecycle
 
 ```text
 Course / instructor / org process
@@ -151,12 +168,12 @@ Membership rank updates
 Directory / tournament eligibility can change
 ```
 
-#### Important rule
+### Important rule
 Historic tournament entries must not be rewritten by later rank changes.
 
 ---
 
-### 6. Tournament lifecycle
+# 6. Tournament lifecycle
 
 ```text
 User
@@ -181,9 +198,21 @@ Create RegistrationEntry
 Submit / approve / waitlist / cancel
 ```
 
+```mermaid
+flowchart TD
+    U[User] --> VT[View tournament]
+    VT --> CE[Check eligible divisions]
+    CE --> CR[Create Registration]
+    CR --> RE[Create RegistrationEntry]
+    RE --> SRN[snapshotRankName]
+    RE --> SON[snapshotOrgName]
+    RE --> RM[representingMembership]
+    RE --> ST{Submit / approve / waitlist / cancel}
+```
+
 ---
 
-### 7. Staff / admin lifecycle
+# 7. Staff / admin lifecycle
 
 ```text
 User
@@ -202,7 +231,7 @@ TournamentStaffAssignment / admin pages
 
 ---
 
-### 8. Subscription / certification lifecycle (extended platform lane)
+# 8. Subscription / certification lifecycle (extended platform lane)
 
 ```text
 User
@@ -217,7 +246,7 @@ access / entitlement / proof / expiry states
 
 ---
 
-### 9. Cross-brand lifecycle
+# 9. Cross-brand lifecycle
 
 ```text
 One user
@@ -231,12 +260,12 @@ One user
 same account, different app context
 ```
 
-#### Key rule
+### Key rule
 One human can move across brands without needing a separate backend identity.
 
 ---
 
-### 10. Content lifecycle touchpoints around a user
+# 10. Content lifecycle touchpoints around a user
 
 ```text
 User journey
@@ -256,7 +285,7 @@ future content atom references:
 
 ---
 
-### 11. E2E happy-path ASCII journey
+# 11. E2E happy-path ASCII journey
 
 ```text
 Visit site
@@ -293,9 +322,25 @@ Rank / role / status established
 long-term member / competitor / instructor / admin lifecycle
 ```
 
+```mermaid
+flowchart TD
+    VS[Visit site] --> CA[Create account]
+    CA --> PP[Passport created]
+    PP --> DP[DirectoryProfile created]
+    DP --> ORG[Join or create Organization]
+    ORG --> MS[Membership shell created]
+    MS --> RRS[Rank / role / status established]
+    RRS --> DIR[Appears in directory]
+    RRS --> ENR[Enrolls in courses]
+    RRS --> RA[Receives rank awards]
+    RRS --> REG[Registers for tournament]
+    REG --> SNAP[Registration entries snapshot rank + org]
+    DIR & ENR & RA & SNAP --> LT[Long-term lifecycle:\nmember / competitor / instructor / admin]
+```
+
 ---
 
-### 12. Failure / edge states to remember
+# 12. Failure / edge states to remember
 
 - account exists but Passport stub incomplete
 - Passport complete but no Membership yet
@@ -308,7 +353,7 @@ long-term member / competitor / instructor / admin lifecycle
 
 ---
 
-### Petey close
+## Petey close
 
 The user lifecycle should feel like one spine, not six disconnected features.
 
@@ -316,11 +361,3 @@ If the journey breaks, the shell model is probably leaking.
 
 **Planned Passion Produces Purpose.**
 **OSSS.**
-
-## Rollback
-
-_Not applicable — this SOP describes a process, not a destructive operation. If a step fails, halt and surface the blocker in the SESSION file._
-
-## Last verified
-
-2026-04-27 — adopted from raw import; not yet exercised against current repo state

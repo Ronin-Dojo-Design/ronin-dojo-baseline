@@ -53,6 +53,14 @@ Cody is **not** invoked when:
 5. If no exact match → follow the closest L1 pattern (e.g., `tool-listing.tsx` → `directory-listing.tsx`, `tool-query.tsx` → `directory-query.tsx`)
 6. Raw HTML elements (`<select>`, `<input>`, `<button>`) are NEVER acceptable when a styled common component exists
 
+### Data pre-flight checklist (before building ANY feature)
+
+1. Read [`docs/architecture/feature-data-prerequisites.md`](../architecture/feature-data-prerequisites.md) — find the section for the feature you're building
+2. Verify the seed script (`prisma/seed.ts`) creates all prerequisite records for that feature
+3. If seed data is missing → **update the seed script first, reseed, then build the feature**
+4. Read [`docs/runbooks/sop-e2e-user-lifecycle.md`](../runbooks/sop-e2e-user-lifecycle.md) — confirm where this feature sits in the user journey
+5. Read [`docs/runbooks/sop-data-and-wiring-flows.md`](../runbooks/sop-data-and-wiring-flows.md) — confirm the data flow pattern for this feature area
+
 ## Self-review checklist (before declaring done)
 
 Before you bow out of a Cody session, confirm:
