@@ -44,13 +44,21 @@ If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](
 
 If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute.
 
-### 5. Create the new SESSION file
+### 5. Branch check
+
+Verify the current git branch (`git branch --show-current`) and working tree status (`git status --short`).
+
+- If on `main` and that's expected: proceed.
+- If uncommitted changes from a previous session exist: raise them before starting new work.
+- If on a stale feature branch: discuss with the user whether to merge/rebase/abandon before starting.
+
+### 6. Create the new SESSION file
 
 In `docs/sprints/`, create `SESSION_NNNN.md` (next number after the previous one). Fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. The rest gets filled during/at end of session.
 
 If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
 
-### 6. Begin work
+### 7. Begin work
 
 The opening ritual is done. From here forward, you are operating as Petey or Cody (or both, sequentially) for the duration of the session.
 

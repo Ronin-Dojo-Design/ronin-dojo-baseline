@@ -36,17 +36,29 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
 
-### 3. Commit (only if changes warrant it AND the user has authorized commits)
+### 3. JETTY 3.0 sweep on touched files
 
-If file changes are commit-worthy and the user has either:
-- Asked you to commit, or
-- Has standing authorization for routine commits in this project,
+For every file listed in `Files touched`:
 
-then commit with a clear message. Don't bundle unrelated changes. Don't skip hooks. Don't push unless explicitly asked.
+- If it's a wiki page or architecture doc: verify JETTY 3.0 frontmatter is present and `updated` date is current.
+- If it's a code file with a wiki annotation (e.g., `wiki/files/schema-prisma.md`): bump `updated`, re-evaluate `health`.
+- Update `backlinks` on any page that references or is referenced by touched files. Both directions.
+- Update `wiki/index.md` if any new wiki pages were created, or any page status/health changed.
 
-If the user hasn't authorized commits, leave the changes uncommitted and note that in the SESSION file's `Open decisions`.
+If you created new cross-references during the session, verify both pages list each other in `pairs_with` or `backlinks`.
 
-### 4. Bow-out line
+### 4. Git hygiene
+
+Before committing:
+
+1. **Branch check**: Verify you're on the expected branch (`git branch --show-current`). If you should be on a feature branch but you're on `main`, stop and discuss with the user.
+2. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
+3. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
+4. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
+
+If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
+
+### 5. Bow-out line
 
 State to the user (or in the SESSION file): "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
 
@@ -56,7 +68,7 @@ That's quick close done.
 
 After the quick-close steps:
 
-### 5. Reflections (in the SESSION file)
+### 6. Reflections (in the SESSION file)
 
 Add a `## Reflections` section to the SESSION file. Capture what's worth remembering:
 
@@ -67,7 +79,7 @@ Add a `## Reflections` section to the SESSION file. Capture what's worth remembe
 
 This is the kaizen-style note from the legacy system, kept lightweight.
 
-### 6. Memory sweep
+### 7. Memory sweep
 
 If anything from this session is worth carrying forward across all future sessions (not just the next one), update operator-side memory. Examples:
 
@@ -77,7 +89,7 @@ If anything from this session is worth carrying forward across all future sessio
 
 Do *not* memory-dump the SESSION file's content. The SESSION file is the session-scoped record; memory is for project-scoped facts.
 
-### 7. Confirm next session is unblocked
+### 8. Confirm next session is unblocked
 
 Re-read your `Open decisions / blockers` and `Next session` entries. Is the next session's `First task` actually doable, or does it require user input first? If the latter, explicitly note "BLOCKED ON USER" in the next session's entry.
 
@@ -91,8 +103,12 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 
 - The SESSION file update. **Always.** No exceptions. If you skipped it, the session didn't close — it crashed.
 - The `Next session` entry. If the next session can't pick up the thread, this ritual failed.
+- The JETTY 3.0 sweep (step 3). If you touched wiki pages and didn't update backlinks, the next agent will have broken references.
+- The git hygiene check (step 4). Uncommitted changes with no record of what they are = lost work.
 
 ## Cross-references
 
 - [Opening ritual](opening.md) — paired counterpart at the start of a session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format in full.
+- [Wiki lint protocol](../protocols/wiki-lint.md) — rules for JETTY 3.0 sweep verification.
+- [Prisma workflow runbook](../runbooks/prisma-workflow.md) — recurring schema change cycle.

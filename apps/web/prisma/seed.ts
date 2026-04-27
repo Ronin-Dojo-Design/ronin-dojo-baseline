@@ -1,6 +1,13 @@
 import { addDays } from "date-fns"
-import { ToolStatus } from "~/.generated/prisma/client"
-import { db } from "~/services/db"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient, ToolStatus } from "~/.generated/prisma/client"
+
+// Seed uses its own Prisma client to bypass env.ts validation
+// (which requires all production env vars to be set)
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+})
+const db = new PrismaClient({ adapter })
 
 const ADMIN_EMAIL = "admin@dirstarter.com"
 const USER_EMAIL = "user@dirstarter.com"
@@ -370,6 +377,402 @@ async function main() {
   }
 
   console.log("Created tools")
+
+  // =========================================================================
+  // RONIN DOJO PLATFORM SEED DATA
+  // =========================================================================
+  // System defaults for the multi-brand martial arts SaaS platform.
+  // isSystem=true, brand=null rows are visible to all brands.
+  // isSystem=false, brand=X rows are brand-specific templates.
+  // =========================================================================
+
+  // ---------------------------------------------------------------------------
+  // Disciplines (12 system defaults)
+  // ---------------------------------------------------------------------------
+  const disciplines = await Promise.all([
+    db.discipline.create({ data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true } }),
+    db.discipline.create({ data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true } }),
+    db.discipline.create({ data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true } }),
+    db.discipline.create({ data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true } }),
+    db.discipline.create({ data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true } }),
+    db.discipline.create({ data: { name: "Judo", slug: "judo", code: "judo", isSystem: true } }),
+    db.discipline.create({ data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true } }),
+    db.discipline.create({ data: { name: "Karate", slug: "karate", code: "karate", isSystem: true } }),
+    db.discipline.create({ data: { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true } }),
+    db.discipline.create({ data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true } }),
+    db.discipline.create({ data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true } }),
+    db.discipline.create({ data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true } }),
+  ])
+
+  const [bjj, eskrima, muayThai, boxing, selfDefense, judo, kajukenbo, karate, tkd, wrestling, kravMaga, wingChun] = disciplines
+  console.log("Created 12 disciplines")
+
+  // ---------------------------------------------------------------------------
+  // Rank Systems + Ranks
+  // ---------------------------------------------------------------------------
+
+  // Helper to create a rank system with its ranks
+  async function seedRankSystem(
+    disciplineId: string,
+    name: string,
+    kind: "BELT" | "PRAJIOUD" | "GRADE" | "KYU_DAN" | "OTHER",
+    isSystem: boolean,
+    brand: "BASELINE_MARTIAL_ARTS" | "BBL" | "RONIN_DOJO_DESIGN" | "WEKAF" | null,
+    ranks: Array<{ name: string; shortName?: string; colorHex?: string }>,
+  ) {
+    const rs = await db.rankSystem.create({
+      data: { name, kind, isSystem, brand, disciplineId },
+    })
+    await db.rank.createMany({
+      data: ranks.map((r, i) => ({
+        sortOrder: i + 1,
+        name: r.name,
+        shortName: r.shortName ?? null,
+        colorHex: r.colorHex ?? null,
+        isSystem,
+        brand,
+        rankSystemId: rs.id,
+      })),
+    })
+    return rs
+  }
+
+  // --- 1. BJJ — IBJJF Belt System (30 ranks) ---
+  const bjjRanks: Array<{ name: string; shortName: string; colorHex: string }> = []
+  const bjjBelts = [
+    { belt: "White Belt", prefix: "W", hex: "#FFFFFF" },
+    { belt: "Blue Belt", prefix: "BL", hex: "#0000FF" },
+    { belt: "Purple Belt", prefix: "P", hex: "#800080" },
+    { belt: "Brown Belt", prefix: "BR", hex: "#8B4513" },
+  ]
+  for (const { belt, prefix, hex } of bjjBelts) {
+    bjjRanks.push({ name: belt, shortName: `${prefix}0`, colorHex: hex })
+    for (let s = 1; s <= 4; s++) {
+      bjjRanks.push({ name: `${belt} - ${s} Stripe${s > 1 ? "s" : ""}`, shortName: `${prefix}${s}`, colorHex: hex })
+    }
+  }
+  bjjRanks.push(
+    { name: "Black Belt - 1st Degree", shortName: "BK1", colorHex: "#000000" },
+    { name: "Black Belt - 2nd Degree", shortName: "BK2", colorHex: "#000000" },
+    { name: "Black Belt - 3rd Degree", shortName: "BK3", colorHex: "#000000" },
+    { name: "Black Belt - 4th Degree", shortName: "BK4", colorHex: "#000000" },
+    { name: "Black Belt - 5th Degree", shortName: "BK5", colorHex: "#000000" },
+    { name: "Black Belt - 6th Degree", shortName: "BK6", colorHex: "#000000" },
+    { name: "Coral Belt (Red/Black) - 7th Degree", shortName: "CB7", colorHex: "#FF0000" },
+    { name: "Coral Belt (Red/White) - 8th Degree", shortName: "CB8", colorHex: "#FF0000" },
+    { name: "Red Belt - 9th Degree", shortName: "R9", colorHex: "#FF0000" },
+    { name: "Red Belt - 10th Degree (Grand Master)", shortName: "R10", colorHex: "#FF0000" },
+  )
+  await seedRankSystem(bjj.id, "IBJJF Belt System", "BELT", true, null, bjjRanks)
+  console.log("Created BJJ rank system (30 ranks)")
+
+  // --- 2. Eskrima — PIMA Denver Doce Pares (GM Steve Wolk) (22 ranks) ---
+  const pimaDenverRanks: Array<{ name: string; shortName: string }> = []
+  for (let i = 1; i <= 11; i++) {
+    pimaDenverRanks.push({ name: `Level ${i}`, shortName: `L${i}` })
+  }
+  pimaDenverRanks.push(
+    { name: "Black Belt (Guro)", shortName: "BB" },
+    { name: "1st Degree Black Belt", shortName: "1D" },
+    { name: "2nd Degree Black Belt", shortName: "2D" },
+    { name: "3rd Degree Black Belt", shortName: "3D" },
+    { name: "4th Degree Black Belt", shortName: "4D" },
+    { name: "5th Degree Black Belt (Master)", shortName: "5D" },
+    { name: "6th Degree Black Belt", shortName: "6D" },
+    { name: "7th Degree Black Belt", shortName: "7D" },
+    { name: "8th Degree Black Belt", shortName: "8D" },
+    { name: "9th Degree Black Belt (Grandmaster)", shortName: "9D" },
+    { name: "10th Degree Red Belt (Supreme Grandmaster)", shortName: "10D" },
+  )
+  await seedRankSystem(eskrima.id, "PIMA Denver Doce Pares (GM Steve Wolk)", "BELT", true, null, pimaDenverRanks)
+  console.log("Created Eskrima PIMA Denver rank system (22 ranks)")
+
+  // --- 3. Eskrima — PIMA Jersey Doce Pares (SGM Dong Cuesta) (22 ranks) ---
+  const pimaJerseyRanks = [
+    { name: "White Belt", shortName: "W", colorHex: "#FFFFFF" },
+    { name: "Yellow Belt", shortName: "Y", colorHex: "#FFD700" },
+    { name: "Orange Belt", shortName: "O", colorHex: "#FFA500" },
+    { name: "Green Belt", shortName: "G", colorHex: "#008000" },
+    { name: "Blue Belt", shortName: "BL", colorHex: "#0000FF" },
+    { name: "Purple Belt", shortName: "P", colorHex: "#800080" },
+    { name: "Brown Belt", shortName: "BR", colorHex: "#8B4513" },
+    { name: "Brown Belt with Black Stripe", shortName: "BRS", colorHex: "#8B4513" },
+    { name: "Brown Belt 1st Grade", shortName: "BR1", colorHex: "#8B4513" },
+    { name: "Brown Belt 2nd Grade", shortName: "BR2", colorHex: "#8B4513" },
+    { name: "Black Belt with Stripes", shortName: "BKS", colorHex: "#000000" },
+    { name: "Black Belt (Guro)", shortName: "BB", colorHex: "#000000" },
+    { name: "1st Degree Black Belt", shortName: "1D", colorHex: "#000000" },
+    { name: "2nd Degree Black Belt", shortName: "2D", colorHex: "#000000" },
+    { name: "3rd Degree Black Belt", shortName: "3D", colorHex: "#000000" },
+    { name: "4th Degree Black Belt", shortName: "4D", colorHex: "#000000" },
+    { name: "5th Degree Black Belt (Master)", shortName: "5D", colorHex: "#000000" },
+    { name: "6th Degree Black Belt", shortName: "6D", colorHex: "#000000" },
+    { name: "7th Degree Black Belt", shortName: "7D", colorHex: "#000000" },
+    { name: "8th Degree Black Belt", shortName: "8D", colorHex: "#000000" },
+    { name: "9th Degree Black Belt (Grandmaster)", shortName: "9D", colorHex: "#000000" },
+    { name: "10th Degree Red Belt (Supreme Grandmaster)", shortName: "10D", colorHex: "#FF0000" },
+  ]
+  await seedRankSystem(eskrima.id, "PIMA Jersey Doce Pares (SGM Dong Cuesta)", "BELT", true, null, pimaJerseyRanks)
+  console.log("Created Eskrima PIMA Jersey rank system (22 ranks)")
+
+  // --- 4. Muay Thai — Sak Va Roon Prajioud System (9 ranks) ---
+  const muayThaiRanks = [
+    { name: "White (Beginner)", shortName: "W", colorHex: "#FFFFFF" },
+    { name: "Yellow", shortName: "Y", colorHex: "#FFD700" },
+    { name: "Yellow-Black", shortName: "YB", colorHex: "#FFD700" },
+    { name: "Blue (Intermediate)", shortName: "BL", colorHex: "#0000FF" },
+    { name: "Blue-Black", shortName: "BLB", colorHex: "#0000FF" },
+    { name: "Red (Advanced)", shortName: "R", colorHex: "#FF0000" },
+    { name: "Black (Fighter)", shortName: "BK", colorHex: "#000000" },
+    { name: "Red-Black (Instructor - Fighter)", shortName: "RB", colorHex: "#FF0000" },
+    { name: "Red-Blue-Black (Fighter - Corner/Kru/Head Instructor)", shortName: "RBB", colorHex: "#FF0000" },
+  ]
+  await seedRankSystem(muayThai.id, "Sak Va Roon Thai Boxing Prajioud System", "PRAJIOUD", true, null, muayThaiRanks)
+  console.log("Created Muay Thai rank system (9 ranks)")
+
+  // --- 5. Boxing — Skill Levels (Baseline-specific) (8 ranks) ---
+  const boxingRanks = [
+    { name: "Fundamentals", shortName: "F" },
+    { name: "Novice", shortName: "N" },
+    { name: "Beginner", shortName: "B" },
+    { name: "Intermediate", shortName: "I" },
+    { name: "Advanced", shortName: "A" },
+    { name: "Sparring Ready", shortName: "SR" },
+    { name: "Amateur", shortName: "AM" },
+    { name: "Competition Ready", shortName: "CR" },
+  ]
+  await seedRankSystem(boxing.id, "Boxing Skill Levels", "GRADE", false, "BASELINE_MARTIAL_ARTS", boxingRanks)
+  console.log("Created Boxing rank system (8 ranks, Baseline-specific)")
+
+  // --- 6. Self Defense — Levels (Baseline-specific) (8 ranks) ---
+  const selfDefenseRanks = [
+    { name: "Awareness", shortName: "AW" },
+    { name: "Fundamentals", shortName: "F" },
+    { name: "Basic Responses", shortName: "BR" },
+    { name: "Intermediate", shortName: "I" },
+    { name: "Advanced", shortName: "A" },
+    { name: "Weapons Defense", shortName: "WD" },
+    { name: "Ground Defense", shortName: "GD" },
+    { name: "Multiple Attackers", shortName: "MA" },
+  ]
+  await seedRankSystem(selfDefense.id, "Self Defense Levels", "GRADE", false, "BASELINE_MARTIAL_ARTS", selfDefenseRanks)
+  console.log("Created Self Defense rank system (8 ranks, Baseline-specific)")
+
+  // --- 7. Judo — Kodokan Kyu-Dan System (16 ranks) ---
+  const judoRanks = [
+    { name: "6th Kyu (Rokkyu) - White Belt", shortName: "6K", colorHex: "#FFFFFF" },
+    { name: "5th Kyu (Gokyu) - Yellow Belt", shortName: "5K", colorHex: "#FFD700" },
+    { name: "4th Kyu (Yonkyu) - Orange Belt", shortName: "4K", colorHex: "#FFA500" },
+    { name: "3rd Kyu (Sankyu) - Green Belt", shortName: "3K", colorHex: "#008000" },
+    { name: "2nd Kyu (Nikyu) - Blue Belt", shortName: "2K", colorHex: "#0000FF" },
+    { name: "1st Kyu (Ikkyu) - Brown Belt", shortName: "1K", colorHex: "#8B4513" },
+    { name: "1st Dan (Shodan) - Black Belt", shortName: "1D", colorHex: "#000000" },
+    { name: "2nd Dan (Nidan) - Black Belt", shortName: "2D", colorHex: "#000000" },
+    { name: "3rd Dan (Sandan) - Black Belt", shortName: "3D", colorHex: "#000000" },
+    { name: "4th Dan (Yondan) - Black Belt", shortName: "4D", colorHex: "#000000" },
+    { name: "5th Dan (Godan) - Black Belt", shortName: "5D", colorHex: "#000000" },
+    { name: "6th Dan (Rokudan) - Red-White Belt", shortName: "6D", colorHex: "#FF0000" },
+    { name: "7th Dan (Shichidan) - Red-White Belt", shortName: "7D", colorHex: "#FF0000" },
+    { name: "8th Dan (Hachidan) - Red-White Belt", shortName: "8D", colorHex: "#FF0000" },
+    { name: "9th Dan (Kudan) - Red Belt", shortName: "9D", colorHex: "#FF0000" },
+    { name: "10th Dan (Judan) - Red Belt", shortName: "10D", colorHex: "#FF0000" },
+  ]
+  await seedRankSystem(judo.id, "Kodokan Judo Kyu-Dan System", "KYU_DAN", true, null, judoRanks)
+  console.log("Created Judo rank system (16 ranks)")
+
+  // --- 8. Kajukenbo — Belt System (19 ranks) ---
+  const kajukenboRanks = [
+    { name: "White Belt", shortName: "W", colorHex: "#FFFFFF" },
+    { name: "Yellow Belt", shortName: "Y", colorHex: "#FFD700" },
+    { name: "Orange Belt", shortName: "O", colorHex: "#FFA500" },
+    { name: "Purple Belt", shortName: "P", colorHex: "#800080" },
+    { name: "Blue Belt", shortName: "BL", colorHex: "#0000FF" },
+    { name: "Green Belt", shortName: "G", colorHex: "#008000" },
+    { name: "Brown Belt - 3rd Degree", shortName: "BR3", colorHex: "#8B4513" },
+    { name: "Brown Belt - 2nd Degree", shortName: "BR2", colorHex: "#8B4513" },
+    { name: "Brown Belt - 1st Degree", shortName: "BR1", colorHex: "#8B4513" },
+    { name: "Black Belt - 1st Degree", shortName: "BK1", colorHex: "#000000" },
+    { name: "Black Belt - 2nd Degree", shortName: "BK2", colorHex: "#000000" },
+    { name: "Black Belt - 3rd Degree", shortName: "BK3", colorHex: "#000000" },
+    { name: "Black Belt - 4th Degree", shortName: "BK4", colorHex: "#000000" },
+    { name: "Black Belt - 5th Degree", shortName: "BK5", colorHex: "#000000" },
+    { name: "Black Belt - 6th Degree", shortName: "BK6", colorHex: "#000000" },
+    { name: "Black Belt - 7th Degree", shortName: "BK7", colorHex: "#000000" },
+    { name: "Black Belt - 8th Degree", shortName: "BK8", colorHex: "#000000" },
+    { name: "Black Belt - 9th Degree", shortName: "BK9", colorHex: "#000000" },
+    { name: "Black Belt - 10th Degree", shortName: "BK10", colorHex: "#000000" },
+  ]
+  await seedRankSystem(kajukenbo.id, "Kajukenbo Belt System", "BELT", true, null, kajukenboRanks)
+  console.log("Created Kajukenbo rank system (19 ranks)")
+
+  // --- 9. Karate — USA Karate Federation Kyu-Dan System (20 ranks) ---
+  const karateRanks = [
+    { name: "10th Kyu (Jukyu) - White Belt", shortName: "10K", colorHex: "#FFFFFF" },
+    { name: "9th Kyu (Kukyu) - White Belt", shortName: "9K", colorHex: "#FFFFFF" },
+    { name: "8th Kyu (Hachikyu) - Yellow Belt", shortName: "8K", colorHex: "#FFD700" },
+    { name: "7th Kyu (Shichikyu) - Orange Belt", shortName: "7K", colorHex: "#FFA500" },
+    { name: "6th Kyu (Rokkyu) - Green Belt", shortName: "6K", colorHex: "#008000" },
+    { name: "5th Kyu (Gokyu) - Blue Belt", shortName: "5K", colorHex: "#0000FF" },
+    { name: "4th Kyu (Yonkyu) - Blue Belt", shortName: "4K", colorHex: "#0000FF" },
+    { name: "3rd Kyu (Sankyu) - Brown Belt", shortName: "3K", colorHex: "#8B4513" },
+    { name: "2nd Kyu (Nikyu) - Brown Belt", shortName: "2K", colorHex: "#8B4513" },
+    { name: "1st Kyu (Ikkyu) - Brown Belt", shortName: "1K", colorHex: "#8B4513" },
+    { name: "Shodan (1st Dan) - Black Belt", shortName: "1D", colorHex: "#000000" },
+    { name: "Nidan (2nd Dan) - Black Belt", shortName: "2D", colorHex: "#000000" },
+    { name: "Sandan (3rd Dan) - Black Belt", shortName: "3D", colorHex: "#000000" },
+    { name: "Yondan (4th Dan) - Black Belt", shortName: "4D", colorHex: "#000000" },
+    { name: "Godan (5th Dan) - Black Belt", shortName: "5D", colorHex: "#000000" },
+    { name: "Rokudan (6th Dan) - Black Belt", shortName: "6D", colorHex: "#000000" },
+    { name: "Shichidan (7th Dan) - Black Belt", shortName: "7D", colorHex: "#000000" },
+    { name: "Hachidan (8th Dan) - Black Belt", shortName: "8D", colorHex: "#000000" },
+    { name: "Kudan (9th Dan) - Black Belt", shortName: "9D", colorHex: "#000000" },
+    { name: "Judan (10th Dan) - Black Belt", shortName: "10D", colorHex: "#000000" },
+  ]
+  await seedRankSystem(karate.id, "USA Karate Federation Kyu-Dan System", "KYU_DAN", true, null, karateRanks)
+  console.log("Created Karate rank system (20 ranks)")
+
+  // --- 10. TKD — USA Taekwondo Gup-Dan System (20 ranks) ---
+  const tkdRanks = [
+    { name: "10th Gup - White Belt", shortName: "10G", colorHex: "#FFFFFF" },
+    { name: "9th Gup - White Belt with Yellow Stripe", shortName: "9G", colorHex: "#FFFFFF" },
+    { name: "8th Gup - Yellow Belt", shortName: "8G", colorHex: "#FFD700" },
+    { name: "7th Gup - Yellow Belt with Green Stripe", shortName: "7G", colorHex: "#FFD700" },
+    { name: "6th Gup - Green Belt", shortName: "6G", colorHex: "#008000" },
+    { name: "5th Gup - Green Belt with Blue Stripe", shortName: "5G", colorHex: "#008000" },
+    { name: "4th Gup - Blue Belt", shortName: "4G", colorHex: "#0000FF" },
+    { name: "3rd Gup - Blue Belt with Red Stripe", shortName: "3G", colorHex: "#0000FF" },
+    { name: "2nd Gup - Red Belt", shortName: "2G", colorHex: "#FF0000" },
+    { name: "1st Gup - Red Belt with Black Stripe", shortName: "1G", colorHex: "#FF0000" },
+    { name: "1st Dan (Poom/Dan) - Black Belt", shortName: "1D", colorHex: "#000000" },
+    { name: "2nd Dan - Black Belt", shortName: "2D", colorHex: "#000000" },
+    { name: "3rd Dan - Black Belt", shortName: "3D", colorHex: "#000000" },
+    { name: "4th Dan - Black Belt", shortName: "4D", colorHex: "#000000" },
+    { name: "5th Dan - Black Belt", shortName: "5D", colorHex: "#000000" },
+    { name: "6th Dan - Black Belt", shortName: "6D", colorHex: "#000000" },
+    { name: "7th Dan - Black Belt", shortName: "7D", colorHex: "#000000" },
+    { name: "8th Dan - Black Belt", shortName: "8D", colorHex: "#000000" },
+    { name: "9th Dan - Black Belt", shortName: "9D", colorHex: "#000000" },
+    { name: "10th Dan - Black Belt", shortName: "10D", colorHex: "#000000" },
+  ]
+  await seedRankSystem(tkd.id, "USA Taekwondo Gup-Dan System", "KYU_DAN", true, null, tkdRanks)
+  console.log("Created TKD rank system (20 ranks)")
+
+  // --- 11. Wrestling — Skill Levels (6 ranks) ---
+  const wrestlingRanks = [
+    { name: "Beginner", shortName: "BEG" },
+    { name: "Novice", shortName: "NOV" },
+    { name: "Intermediate", shortName: "INT" },
+    { name: "Advanced", shortName: "ADV" },
+    { name: "Elite", shortName: "ELI" },
+    { name: "Master", shortName: "MAS" },
+  ]
+  await seedRankSystem(wrestling.id, "Wrestling Skill Levels", "GRADE", true, null, wrestlingRanks)
+  console.log("Created Wrestling rank system (6 ranks)")
+
+  // --- 12. Krav Maga — Level System (6 ranks) ---
+  const kravMagaRanks = [
+    { name: "Practitioner 1 (P1)", shortName: "P1" },
+    { name: "Practitioner 2 (P2)", shortName: "P2" },
+    { name: "Practitioner 3 (P3)", shortName: "P3" },
+    { name: "Practitioner 4 (P4)", shortName: "P4" },
+    { name: "Practitioner 5 (P5)", shortName: "P5" },
+    { name: "Graduate / Expert", shortName: "EXP" },
+  ]
+  await seedRankSystem(kravMaga.id, "Krav Maga Level System", "GRADE", true, null, kravMagaRanks)
+  console.log("Created Krav Maga rank system (6 ranks)")
+
+  // --- 13. Wing Chun — Forms Progression (8 ranks) ---
+  const wingChunRanks = [
+    { name: "Siu Nim Tao (Little Idea)", shortName: "SNT" },
+    { name: "Chum Kiu (Seeking Bridge)", shortName: "CK" },
+    { name: "Biu Jee (Thrusting Fingers)", shortName: "BJ" },
+    { name: "Muk Yan Jong (Wooden Dummy)", shortName: "MYJ" },
+    { name: "Luk Dim Boon Gwan (Six-and-a-Half Point Pole)", shortName: "LDB" },
+    { name: "Baat Jaam Do (Eight Chopping Knives)", shortName: "BJD" },
+    { name: "Instructor", shortName: "INS" },
+    { name: "Master", shortName: "MAS" },
+  ]
+  await seedRankSystem(wingChun.id, "Wing Chun Forms Progression", "OTHER", true, null, wingChunRanks)
+  console.log("Created Wing Chun rank system (8 ranks)")
+
+  // ---------------------------------------------------------------------------
+  // Roles (6 system defaults)
+  // ---------------------------------------------------------------------------
+  await db.role.createMany({
+    data: [
+      { code: "STUDENT", name: "Student", description: "Standard member/student role", isSystem: true },
+      { code: "INSTRUCTOR", name: "Instructor", description: "Teaches classes and can verify curriculum completions", isSystem: true },
+      { code: "OWNER", name: "Owner", description: "Organization owner with full administrative access", isSystem: true },
+      { code: "COACH", name: "Coach", description: "Coaches students, can award ranks and manage rosters", isSystem: true },
+      { code: "ORG_ADMIN", name: "Organization Admin", description: "Administrative access to organization settings and membership", isSystem: true },
+      { code: "STYLE_APPROVER", name: "Style Approver", description: "Can approve user-submitted styles within their organization", isSystem: true },
+    ],
+  })
+  console.log("Created 6 system roles")
+
+  // ---------------------------------------------------------------------------
+  // Tournament Roles (4 system defaults)
+  // ---------------------------------------------------------------------------
+  await db.tournamentRole.createMany({
+    data: [
+      { code: "COMPETITOR", name: "Competitor", description: "Participates in divisions as a competitor", isSystem: true },
+      { code: "COACH", name: "Coach", description: "Corners/coaches competitors during events", isSystem: true },
+      { code: "JUDGE", name: "Judge", description: "Judges or referees matches/forms", isSystem: true },
+      { code: "VOLUNTEER", name: "Volunteer", description: "General volunteer staff", isSystem: true },
+    ],
+  })
+  console.log("Created 4 system tournament roles")
+
+  // ---------------------------------------------------------------------------
+  // Gamification Event Types (6 system defaults)
+  // TODO(gamification-design): Needs a proper design pass — these are the
+  // obvious event types derived from TuffBuffs behavioral needs. Point values,
+  // badge triggers, and level thresholds are all TBD.
+  // ---------------------------------------------------------------------------
+  await db.gamificationEventType.createMany({
+    data: [
+      { code: "BELT_PROMOTION", name: "Belt/Rank Promotion", description: "Awarded when a student receives a new rank", defaultPoints: 100, isSystem: true },
+      { code: "CLASS_ATTENDANCE", name: "Class Attendance", description: "Awarded for attending a class session", defaultPoints: 10, isSystem: true },
+      { code: "TOURNAMENT_WIN", name: "Tournament Win", description: "Awarded for winning a division in a tournament", defaultPoints: 50, isSystem: true },
+      { code: "TOURNAMENT_PARTICIPATION", name: "Tournament Participation", description: "Awarded for participating in a tournament", defaultPoints: 25, isSystem: true },
+      { code: "COURSE_COMPLETION", name: "Course Completion", description: "Awarded for completing an entire course", defaultPoints: 75, isSystem: true },
+      { code: "CURRICULUM_ITEM_COMPLETION", name: "Curriculum Item Completion", description: "Awarded for completing a single curriculum item", defaultPoints: 5, isSystem: true },
+    ],
+  })
+  console.log("Created 6 system gamification event types")
+
+  // ---------------------------------------------------------------------------
+  // Subscription Tiers
+  // ---------------------------------------------------------------------------
+  await db.subscriptionTier.createMany({
+    data: [
+      // Universal (all brands)
+      { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true },
+      // BBL-specific tiers
+      { code: "FREE", name: "Free", description: "BBL free tier", level: 0, isSystem: false, brand: "BBL" },
+      { code: "PREMIUM", name: "Premium", description: "BBL premium membership", level: 10, isSystem: false, brand: "BBL" },
+      { code: "INSTRUCTOR", name: "Instructor", description: "BBL instructor tier", level: 20, isSystem: false, brand: "BBL" },
+      { code: "SCHOOL_OWNER", name: "School Owner", description: "BBL school owner tier", level: 30, isSystem: false, brand: "BBL" },
+      { code: "LEGEND", name: "Legend", description: "BBL legend tier", level: 40, isSystem: false, brand: "BBL" },
+    ],
+  })
+  console.log("Created 6 subscription tiers (1 universal + 5 BBL)")
+
+  // ---------------------------------------------------------------------------
+  // Karate Substyles (Style rows under Karate discipline)
+  // Kajukenbo appears here as a substyle AND as a standalone discipline (Option C)
+  // ---------------------------------------------------------------------------
+  await db.style.createMany({
+    data: [
+      { code: "shotokan", name: "Shotokan Karate", status: "APPROVED", disciplineId: karate.id },
+      { code: "wado-ryu", name: "Wado-Ryu", status: "APPROVED", disciplineId: karate.id },
+      { code: "goju-ryu", name: "Goju-Ryu", status: "APPROVED", disciplineId: karate.id },
+      { code: "hawaiian-kenpo", name: "Hawaiian Kenpo", status: "APPROVED", disciplineId: karate.id },
+      { code: "kajukenbo", name: "Kajukenbo", status: "APPROVED", disciplineId: karate.id },
+    ],
+  })
+  console.log("Created 5 Karate substyles")
+
   console.log("Seeding completed!")
 }
 

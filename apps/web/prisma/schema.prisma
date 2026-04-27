@@ -68,6 +68,8 @@ model User {
   createdStyles              Style[]                        @relation("StyleCreatedBy")
   approvedStyles             Style[]                        @relation("StyleApprovedBy")
   verifiedItemCompletions    CurriculumItemCompletion[]     @relation("ItemVerifiedBy")
+  createdContentAtoms        ContentAtom[]                  @relation("AtomCreatedBy")
+  assignedContentTasks       ContentTask[]                  @relation("TaskAssignee")
 
   // Indexes
   @@index([id])
@@ -370,6 +372,50 @@ enum CertificationStatus {
   REVOKED
 }
 
+enum ContentAtomStatus {
+  INBOX
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentChannel {
+  BLOG
+  INSTAGRAM
+  FACEBOOK
+  YOUTUBE_SHORT
+  YOUTUBE_LONG
+  REDDIT
+  TIKTOK
+  EMAIL
+  CURRICULUM
+}
+
+enum ContentVariantStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentTaskType {
+  WRITING
+  MEDIA
+  REVIEW
+  PUBLISH
+  QA
+}
+
+enum ContentTaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
 // ---------------------------------------------------------------------------
 // Models — Identity shell
 // ---------------------------------------------------------------------------
@@ -435,6 +481,7 @@ model Organization {
   waivers            Waiver[]
   certifications     Certification[]
   gamificationEvents GamificationEvent[]
+  contentAtoms       ContentAtom[]
 
   @@unique([brand, slug])
   @@index([brand])
@@ -443,9 +490,11 @@ model Organization {
 
 model Discipline {
   id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  code      String?  @unique
+  name      String
+  slug      String
+  code      String?
+  isSystem  Boolean  @default(false)
+  brand     Brand?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -456,6 +505,10 @@ model Discipline {
   tournamentDisciplines TournamentDiscipline[]
   styles                Style[]
   gamificationEvents    GamificationEvent[]
+  contentAtoms          ContentAtom[]
+  @@unique([code, brand])
+  @@unique([name, brand])
+  @@index([brand])
 }
 
 model OrganizationDiscipline {
@@ -476,6 +529,8 @@ model RankSystem {
   id           String         @id @default(cuid())
   name         String
   kind         RankSystemKind @default(BELT)
+  isSystem     Boolean        @default(false)
+  brand        Brand?
   createdAt    DateTime       @default(now())
 
   discipline   Discipline @relation(fields: [disciplineId], references: [id])
@@ -483,8 +538,9 @@ model RankSystem {
 
   ranks Rank[]
 
-  @@unique([disciplineId, name])
+  @@unique([disciplineId, name, brand])
   @@index([disciplineId])
+  @@index([brand])
 }
 
 model Rank {
@@ -493,6 +549,8 @@ model Rank {
   name         String
   shortName    String?
   colorHex     String?
+  isSystem     Boolean  @default(false)
+  brand        Brand?
   createdAt    DateTime @default(now())
 
   rankSystem   RankSystem @relation(fields: [rankSystemId], references: [id])
@@ -508,6 +566,7 @@ model Rank {
   @@unique([rankSystemId, sortOrder])
   @@unique([rankSystemId, name])
   @@index([rankSystemId])
+  @@index([brand])
 }
 
 // ---------------------------------------------------------------------------
@@ -916,6 +975,7 @@ model Style {
   approvedByUserId String?
 
   memberships Membership[]
+  contentAtoms ContentAtom[]
 
   @@unique([disciplineId, code])
   @@index([disciplineId, status])
@@ -1074,4 +1134,129 @@ model Certification {
   @@index([userId, type, status])
   @@index([organizationId])
   @@index([courseId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Content Engine
+// ---------------------------------------------------------------------------
+// The Content Atom is the smallest reusable unit of teaching/marketing content.
+// One atom stores the canonical truth; variants adapt it per brand × channel.
+// Tasks track operational workflow; publications track what went live where.
+// ---------------------------------------------------------------------------
+
+model ContentAtom {
+  id                String            @id @default(cuid())
+  canonicalId       String            @unique /// e.g. atom-2026-cross-training-001
+  title             String
+  slug              String
+  status            ContentAtomStatus @default(INBOX)
+  hook              String?
+  promise           String?
+  proof             String?
+  cta               String?
+  oneSentenceValue  String?
+  teachingTruth     String?           /// Core teaching content (markdown)
+  longFormCopy      String?           /// Full article/lesson body (markdown)
+  curriculumExtract Json?             /// Structured: objective, movements, drills, cues
+  videoExtract      Json?             /// Structured: teaser, reel outline, lesson outline
+  siteTargets       Brand[]           /// Which brands this atom targets
+  channelTargets    ContentChannel[]  /// Which channels this atom targets
+  qualityScore      Int?              /// 0-10 editorial quality rating
+  sourceAssets      String[]          /// URLs/paths to source media
+  meta              Json?             /// Extensible metadata
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  createdBy      User          @relation("AtomCreatedBy", fields: [createdById], references: [id])
+  createdById    String
+  discipline     Discipline?   @relation(fields: [disciplineId], references: [id])
+  disciplineId   String?
+  style          Style?        @relation(fields: [styleId], references: [id])
+  styleId        String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  variants     ContentVariant[]
+  tasks        ContentTask[]
+  publications ContentPublication[]
+
+  @@unique([slug])
+  @@index([status])
+  @@index([createdById])
+  @@index([disciplineId])
+  @@index([organizationId])
+}
+
+model ContentVariant {
+  id              String               @id @default(cuid())
+  brand           Brand
+  channel         ContentChannel
+  status          ContentVariantStatus @default(DRAFT)
+  publicTitle     String?
+  publicSlug      String?
+  renderedCopy    String?              /// Channel-formatted output (markdown/html)
+  excerpt         String?
+  cta             String?
+  thumbnailUrl    String?
+  videoUrl        String?
+  voiceNotes      String?              /// Brand voice adaptation notes
+  meta            Json?
+  publishDate     DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  atom   ContentAtom @relation(fields: [atomId], references: [id], onDelete: Cascade)
+  atomId String
+
+  publications ContentPublication[]
+
+  @@unique([atomId, brand, channel])
+  @@index([brand, channel, status])
+  @@index([atomId])
+}
+
+model ContentTask {
+  id          String            @id @default(cuid())
+  type        ContentTaskType
+  title       String
+  status      ContentTaskStatus @default(TODO)
+  priority    Int               @default(0) /// Higher = more urgent
+  notes       String?
+  dueAt       DateTime?
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  atom         ContentAtom    @relation(fields: [atomId], references: [id], onDelete: Cascade)
+  atomId       String
+  assignee     User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId   String?
+  dependsOn    ContentTask?   @relation("TaskDependency", fields: [dependsOnId], references: [id])
+  dependsOnId  String?
+  dependedOnBy ContentTask[]  @relation("TaskDependency")
+
+  @@index([atomId, status])
+  @@index([assigneeId, status])
+  @@index([dueAt])
+}
+
+model ContentPublication {
+  id              String   @id @default(cuid())
+  brand           Brand
+  channel         ContentChannel
+  platformPostId  String?  /// External platform's ID for the published content
+  publicUrl       String?
+  publishedAt     DateTime @default(now())
+  checksum        String?  /// Content hash for change detection
+  createdAt       DateTime @default(now())
+
+  atom      ContentAtom     @relation(fields: [atomId], references: [id], onDelete: Cascade)
+  atomId    String
+  variant   ContentVariant? @relation(fields: [variantId], references: [id])
+  variantId String?
+
+  @@index([brand, channel])
+  @@index([atomId])
+  @@index([publishedAt])
 }
