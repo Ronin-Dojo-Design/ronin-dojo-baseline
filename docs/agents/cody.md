@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-04-27
-last_agent: copilot-session-0014
+last_agent: copilot-session-0015
 health: 7
 pairs_with:
   - docs/agents/petey.md
@@ -75,8 +75,11 @@ Before you bow out of a Cody session, confirm:
 - [ ] If a schema change: was the migration generated and applied locally?
 - [ ] If a security-sensitive change: was authz logic preserved or strengthened?
 - [ ] If new env vars: documented in `.env.example`?
+- [ ] If full close: have I executed EVERY numbered step in `closing.md`? Produce `## Close checklist` in SESSION file with checkmarks before setting `Status: closed-full`.
 
 If any answer is no, fix or flag in the closing notes.
+
+**The bow-out statement ("Bowed out — SESSION_NNNN closed") must be the LAST thing said, after ALL steps are verified complete.** (See FS-0004.)
 
 ## Style
 

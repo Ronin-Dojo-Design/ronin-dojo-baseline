@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-04-27
 author: Brian + Copilot
-last_agent: copilot-session-0010
+last_agent: copilot-session-0015
 health: 7
 needs_fix:
   - "Backlinks not yet wired on architecture docs"
@@ -25,6 +25,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [How to Use These Registries](../how-to-use-these-registries.md) | protocol | active | 7 |
 | [LLM Wiki README](../README.md) | protocol | active | 6 |
 | [CLAUDE.md](../../../CLAUDE.md) | protocol | active | 6 |
+| [Build Log](../../build-log.md) | log | active | 8 |
 
 ## Concepts
 
@@ -50,6 +51,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Data Model](../../architecture/data-model.md) | concept | active | 7 |
 | [Auth](../../architecture/auth.md) | file | active | 5 |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active | 5 |
+| [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active | 8 |
 
 ### ADRs
 
@@ -75,6 +77,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0012](../../sprints/SESSION_0012.md) | session | closed-full |
 | [SESSION_0013](../../sprints/SESSION_0013.md) | session | closed-unclean |
 | [SESSION_0014](../../sprints/SESSION_0014.md) | session | closed-full |
+| [SESSION_0015](../../sprints/SESSION_0015.md) | session | closed-full |
 
 ## Protocols
 

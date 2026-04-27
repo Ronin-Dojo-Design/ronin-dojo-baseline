@@ -86,3 +86,11 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Files:** docs/runbooks/sop-data-and-wiring-flows.md, docs/runbooks/sop-e2e-user-lifecycle.md, docs/architecture/feature-data-prerequisites.md, docs/agents/cody.md
 - **Seed data:** n/a (docs only)
 - **Smoke test:** n/a
+
+### S15_CLOSE_FIX — Full close steps remediation (FS-0004)
+- **Session:** SESSION_0015
+- **Sprint:** S4 (process fix)
+- **Status:** ✅ verified
+- **Files:** docs/protocols/failed-steps-log.md, docs/agents/cody.md, docs/knowledge/wiki/index.md, docs/knowledge/wiki/files/seed-ts.md, docs/architecture/feature-data-prerequisites.md, docs/sprints/SESSION_0015.md
+- **Seed data:** n/a
+- **Smoke test:** JETTY sweep completed, wiki index updated, close checklist artifact added to SESSION file

@@ -10,6 +10,7 @@ health: 8
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/knowledge/wiki/files/seed-ts.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

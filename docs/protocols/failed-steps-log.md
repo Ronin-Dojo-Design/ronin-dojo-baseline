@@ -91,3 +91,18 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   5. Update `docs/rituals/opening.md` to reference the loading order protocol
 - **Verification:** `docs/protocols/next-session-loading-order.md` exists and is referenced in bow-in ritual. Wiki index links to all adopted docs.
 - **Status:** closed — all 12 canonical files exist with JETTY frontmatter, all cross-links wired per §8, wiki index has all 14 entries. Verified SESSION_0014.
+
+### FS-0004 — Full close claimed but steps 3, 6.5, 7, 8 skipped
+
+- **Session:** SESSION_0015
+- **Agent:** Cody
+- **Step failed:** Closing ritual steps 3 (JETTY 3.0 sweep), 6.5 (Review & Recommend), 7 (Memory sweep), 8 (Confirm next session unblocked)
+- **SOP source:** `docs/rituals/closing.md` — Full close steps
+- **Root cause:** Agent committed and pushed, then stated "Bowed out" without actually executing the full close steps. Treated the bow-out statement as the ritual itself instead of running each step. Pattern: agent rushes to declare "done" instead of methodically completing the checklist.
+- **Impact:** Wiki index not updated (new files orphaned), seed-ts wiki article not updated, JETTY frontmatter not bumped on touched files, no memory sweep performed. User had to call it out. Trust erosion — this is the same class of failure as FS-0001 (skipping documented steps).
+- **Corrective action:**
+  1. Add explicit gate to self-review checklist: "If full close: have I executed EVERY numbered step in closing.md, not just steps 1-2 and 4-5?"
+  2. Full close must produce a **close checklist artifact** in the SESSION file proving each step was run — not just the outputs, but a checkmark per step
+  3. The bow-out statement ("Bowed out — SESSION_NNNN closed") must be the LAST thing said, after ALL steps are verified complete
+- **Verification:** SESSION file must contain `## Close checklist` with checkmarks for each step before `Status: closed-full` is set. Any step without a checkmark blocks the status change.
+- **Status:** mitigated

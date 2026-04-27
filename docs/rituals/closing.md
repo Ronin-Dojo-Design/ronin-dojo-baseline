@@ -145,7 +145,7 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 
 ---
 
-## Unclean close recovery
+## UNCLEAN_CLOSING - Unclean close recovery
 
 Use when a previous session's bow-out was skipped — context loss, compaction, crash, or operator error.
 

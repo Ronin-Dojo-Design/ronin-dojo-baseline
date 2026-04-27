@@ -4,16 +4,18 @@ slug: seed-ts
 type: file
 status: active
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-27
 author: Brian + Copilot
-last_agent: Copilot (SESSION_0005)
+last_agent: Copilot (SESSION_0015)
 pairs_with:
   - knowledge/wiki/files/schema-prisma
   - architecture/data-model
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0005
+  - sprints/SESSION_0015
   - architecture/data-model
+  - architecture/feature-data-prerequisites
 health: 8
 needs_fix:
   - "Kajukenbo TuffBuffs-specific rank system (#14) deferred — need to confirm from monorepo"
@@ -42,6 +44,7 @@ Two sections:
 
 1. **Dirstarter demo data** — admin/user accounts, categories, tags, 17 sample tools
 2. **Ronin Dojo seed data** — disciplines, rank systems, ranks, roles, tournament roles, gamification event types, subscription tiers, Karate substyles
+3. **Test users (SESSION_0015)** — 5 practitioners with full identity graph: Passport, DirectoryProfile, Organization, Membership, RankAward. Covers PUBLIC/MEMBERS_ONLY/HIDDEN visibility + ACTIVE/PENDING membership status.
 
 Creates its own PrismaClient directly (bypasses `env.ts` validation which requires all production env vars).
 
@@ -57,6 +60,10 @@ Creates its own PrismaClient directly (bypasses `env.ts` validation which requir
 | Gamification Event Types | 6 | BELT_PROMOTION through CURRICULUM_ITEM_COMPLETION |
 | Subscription Tiers | 6 | 1 universal FREE + 5 BBL-specific |
 | Karate Substyles | 5 | Shotokan, Wado-Ryu, Goju-Ryu, Hawaiian Kenpo, Kajukenbo |
+| Test Users | 5 | Sensei (PUBLIC/Blue), Alpha (PUBLIC/White), Beta (MEMBERS_ONLY/L3), Ghost (HIDDEN), Pending (PUBLIC/PENDING) |
+| Organizations | 1 | Baseline Academy (Boulder, CO) with BJJ, Muay Thai, Eskrima |
+| Memberships | 5 | 4 ACTIVE + 1 PENDING, all BASELINE_MARTIAL_ARTS |
+| RankAwards | 3 | Sensei→BJJ Blue, Alpha→BJJ White, Beta→Eskrima L3 |
 
 ## Health
 
