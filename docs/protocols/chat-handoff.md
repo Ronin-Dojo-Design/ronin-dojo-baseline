@@ -110,3 +110,8 @@ The opening ritual instructs you to read the latest SESSION file. The minimum re
 - `Next session: Goal + First task` (likely your starting point)
 
 Anything else you read on demand.
+
+## Cross-references (added SESSION_0010)
+
+- [Next Session Loading Order](next-session-loading-order.md) — the explicit tier-1/tier-2/tier-3 file load order for the start of any session
+- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — read at bow-in when choosing the next proof target

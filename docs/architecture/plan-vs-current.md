@@ -210,3 +210,11 @@ All five questions were resolved during SESSION_0003–0005:
 3. ✅ **`Profile` → `Passport`** — renamed.
 4. ✅ **`Belt` → `Rank`** with `RankSystem` parent — done.
 5. ✅ **Multiple roles per membership** — `MembershipRoleAssignment` join table implemented.
+
+---
+
+## Cross-references (added SESSION_0010)
+
+- [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map for the layers this doc compares against
+- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — items currently "code complete / smoke pending" that this doc tracks against the spec
+- [Command Center and Intake](../knowledge/wiki/content-engine/command-center-and-intake.md) — content-engine view of how authored content lands against the data spine

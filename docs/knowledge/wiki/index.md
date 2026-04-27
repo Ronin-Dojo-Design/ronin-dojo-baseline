@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-27
 author: Brian + Copilot
-last_agent: copilot-session-0009
+last_agent: copilot-session-0010
 health: 7
 needs_fix:
   - "Backlinks not yet wired on architecture docs"
@@ -21,6 +21,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status | Health |
 | --- | --- | --- | --- |
 | [JETTY 3.0](../JETTY_3.0.md) | protocol | active | 7 |
+| [JETTY 3.0 Systems Profile for Baseline Repo](../jetty-3-baseline-systems-profile.md) | protocol | active | 7 |
+| [How to Use These Registries](../how-to-use-these-registries.md) | protocol | active | 7 |
 | [LLM Wiki README](../README.md) | protocol | active | 6 |
 | [CLAUDE.md](../../../CLAUDE.md) | protocol | active | 6 |
 
@@ -29,8 +31,13 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status | Health |
 | --- | --- | --- | --- |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active | 6 |
+| [Repo Truth Index](repo-truth-index.md) | concept | active | 7 |
+| [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active | 7 |
+| [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active | 7 |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active | 7 |
 | [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active | 6 |
+| [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active | 6 |
+| [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active | 6 |
 
 ## Architecture
 
@@ -63,12 +70,14 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0007](../../sprints/SESSION_0007.md) | session | closed-full |
 | [SESSION_0008](../../sprints/SESSION_0008.md) | session | closed-unclean |
 | [SESSION_0009](../../sprints/SESSION_0009.md) | session | closed-full |
+| [SESSION_0010](../../sprints/SESSION_0010.md) | session | in-progress |
 
 ## Protocols
 
 | Page | Type | Status |
 | --- | --- | --- |
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
+| [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [Code Guardrails](../../protocols/code-guardrails.md) | protocol | active |
 | [Opening Ritual](../../rituals/opening.md) | protocol | active |
@@ -89,6 +98,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Database](../../runbooks/database.md) | runbook | active |
 | [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
+| [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
+| [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
+| [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |
+| [SOP — Agent Workflows and Rituals](../../runbooks/sop-agent-workflows-and-rituals.md) | runbook | active |
 
 ## Code files (annotated)
 

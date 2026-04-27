@@ -184,3 +184,9 @@ For S1–S4 (foundation + Milestone 1):
 - [docs/architecture/legacy-conversion.md](legacy-conversion.md) — what to port from legacy frontends
 - [docs/architecture/decisions/](decisions/) — ADRs 0001–0008
 - Legacy monorepo `RoninDashboard/`: rituals at `RoninDashboard/rituals/`, protocols at `RoninDashboard/protocols/`, personas at `dashboard/personas/`
+
+### Governance and canon registries (added SESSION_0010)
+
+- [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — what each part of the repo is the truth for
+- [Aliases and Canonical IDs](../knowledge/wiki/aliases-and-canonical-ids.md) — historical names → canonical IDs across brands, models, enums, sessions
+- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — every "smoke pending" / "code complete but not verified" item; the source for choosing the next real proof target

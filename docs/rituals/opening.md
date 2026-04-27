@@ -111,4 +111,6 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 
 - [Closing ritual](closing.md) — pairs with this; ends the session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
+- [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
+- [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

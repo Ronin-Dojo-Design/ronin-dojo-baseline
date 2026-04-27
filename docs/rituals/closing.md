@@ -132,6 +132,8 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Prisma workflow runbook](../runbooks/prisma-workflow.md) — recurring schema change cycle.
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
+- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
+- [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
 
 ---
 
