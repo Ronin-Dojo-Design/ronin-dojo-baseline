@@ -37,9 +37,9 @@ const prepareEmail = async (email: EmailParams): Promise<CreateEmailOptions> => 
 export const sendEmail = async (email: EmailParams): Promise<CreateEmailResponse | undefined> => {
   const payload = await prepareEmail(email)
 
+  // Log payload in dev for debugging, but still send
   if (!isProd) {
-    console.log("Email payload:", payload)
-    return
+    console.log("📧 Sending email:", payload.to, payload.subject)
   }
 
   return resend.emails.send(payload)

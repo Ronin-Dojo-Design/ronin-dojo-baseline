@@ -17,10 +17,12 @@ import { Input } from "~/components/common/input"
 import { TextArea } from "~/components/common/textarea"
 import {
   updatePassport,
-  updatePassportSchema,
   updateDirectoryProfile,
-  updateDirectoryProfileSchema,
 } from "~/server/web/passport/actions"
+import {
+  updatePassportSchema,
+  updateDirectoryProfileSchema,
+} from "~/server/web/passport/schemas"
 
 /** Coerce null/undefined to empty string for HTML inputs */
 const str = (v: string | null | undefined) => v ?? ""
