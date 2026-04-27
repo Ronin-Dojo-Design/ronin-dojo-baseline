@@ -4,8 +4,8 @@ slug: cody
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
+updated: 2026-04-27
+last_agent: copilot-session-0012
 health: 7
 pairs_with:
   - docs/agents/petey.md
@@ -42,6 +42,7 @@ Cody is **not** invoked when:
 4. **Don't expand scope.** If you find adjacent tech debt, name it in the closing notes — don't fix it as part of this task.
 5. **Don't introduce abstractions for "future" needs.** Three similar lines is fine. Build for what's needed.
 6. **Match the codebase's existing patterns** — Dirstarter has tight conventions (HOC chains, action client patterns, content collections, Prisma extension chaining). Use them.
+7. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult the [UI Components inventory](../knowledge/wiki/index.md#ui-components-dirstarter-common-library) in the wiki index. Only create a new component if nothing existing covers the need.
 
 ## Self-review checklist (before declaring done)
 

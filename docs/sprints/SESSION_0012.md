@@ -2,10 +2,10 @@
 title: "SESSION 0012 — Org UI + protocol codification"
 slug: session-0012
 type: session
-status: pending
+status: closed-full
 created: 2026-04-27
 updated: 2026-04-27
-last_agent: copilot-session-0012-prestage
+last_agent: copilot-session-0012
 health: 5
 sprint: S3
 pairs_with:
@@ -16,10 +16,10 @@ backlinks:
 
 # SESSION_0012
 
-**Date:** _(set at bow-in)_
-**Operator:** Brian + Claude
+**Date:** 2026-04-27
+**Operator:** Brian + Copilot
 **Goal:** Wire Organization UI (create + list pages) and verify the new Petey Plan + Review & Recommend protocols in practice
-**Status:** pending
+**Status:** closed-full
 
 ---
 
@@ -90,20 +90,73 @@ Do NOT expand into: membership approval flow, org settings/edit, role assignment
 
 ## What landed
 
-_(filled during session)_
+- **TASK_01 — `/organizations/new` create form** ✅
+  - `CreateOrganizationForm` client component: RHF + Zod → `createOrganization` server action via `useHookFormAction`
+  - Fields: name (auto-slug), slug, type (Radix Select), address (TextArea), websiteUrl, disciplines (Checkbox grid)
+  - All UI from existing Dirstarter `components/common/` — no new components created
+  - `getDisciplinesByBrand()` query: filters `isSystem=true` OR matching brand
+  - Server component page reads brand from `x-brand` header (proxy.ts, not middleware)
+- **TASK_02 — `/organizations` list + `/organizations/[slug]` detail** ✅
+  - List page: card grid of orgs by brand with type/member/discipline badges, "Create Organization" button
+  - Detail page: org info (owner, address, website), discipline badges, member list with status, join buttons per discipline
+  - `JoinOrganizationButton` client component: `useAction` → `joinOrganization`, instant PENDING, toast + refresh
+  - `getOrganizationBySlug(brand, slug)` query: uses composite `brand_slug` unique key
+- **JETTY 3.0 wiki annotations** for all 6 new source files, registered in wiki index
+- **Wiki index**: added full L1 component inventory (39 common + 7 web UI), "Custom components" section
+- **Dirstarter L1 Baseline umbrella doc** — `docs/knowledge/wiki/files/dirstarter-l1-baseline.md`: upstream provenance, modify-then-JETTY rule, modified files tracker
+- **Cody operating rule 7** added: "Reuse existing components before creating new ones" with link to wiki inventory
 
 ## Files touched
 
-_(filled during session)_
+- `apps/web/app/(web)/organizations/new/page.tsx` — new server component page
+- `apps/web/components/web/organizations/create-organization-form.tsx` — new client component form
+- `apps/web/server/web/organization/discipline-queries.ts` — new discipline query
+- `apps/web/app/(web)/organizations/page.tsx` — new list page
+- `apps/web/app/(web)/organizations/[slug]/page.tsx` — new detail page
+- `apps/web/components/web/organizations/join-organization-button.tsx` — new join button
+- `apps/web/server/web/organization/queries.ts` — added `getOrganizationBySlug(brand, slug)`
+- `docs/knowledge/wiki/files/create-organization-form.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/organization-new-page.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/discipline-queries.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/organizations-list-page.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/organization-detail-page.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/join-organization-button.md` — new JETTY 3.0 annotation
+- `docs/knowledge/wiki/files/dirstarter-l1-baseline.md` — new L1 umbrella doc
+- `docs/knowledge/wiki/index.md` — registered 7 file annotations, added full UI Components + Custom components sections
+- `docs/agents/cody.md` — added operating rule 7 (reuse existing components)
 
 ## Decisions resolved
 
-_(filled during session)_
+- **Discipline picker source**: filter by brand + `isSystem=true` (system disciplines visible to all brands)
+- **Discipline picker UI**: Checkbox grid (multi-select), not Radix Select (single-value only)
+- **Brand source**: `x-brand` header from `proxy.ts` (middleware deleted in SESSION_0008)
+
+- **Join flow UX**: Instant PENDING, no confirmation modal (iterate later)
+- **Org slug lookup**: Composite `brand_slug` unique key required (not slug alone)
 
 ## Open decisions / blockers
 
-_(filled during session)_
+- **Smoke test** of TASK_01 + TASK_02 not yet done (need dev server running + seeded DB)
+- **TASK_03** (protocol dry-run) — partially done: Petey plan was pre-staged, Cody executed tasks. Review & Recommend not formally run.
 
 ## Next session
 
-_(filled at bow-out via Review & Recommend protocol)_
+**Goal:** Smoke-test organization UI end-to-end in browser. Fix runtime issues. If clean, begin S3 wrap-up and S4 prep (Directory search).
+
+**Inputs to read:**
+
+- This session file (SESSION_0012)
+- `apps/web/server/web/organization/` — all action/query/schema files
+- `apps/web/components/web/organizations/` — form + button components
+- `docs/knowledge/wiki/files/dirstarter-l1-baseline.md` — L1 baseline reference
+
+**First task:** Start dev server (`bun dev`), navigate to `/organizations/new`, create an org, verify list + detail pages render and join flow works.
+
+## Reflections
+
+- **Zero new UI components needed.** The Dirstarter common library (Form, Input, Select, Checkbox, Card, Badge, Grid, Button, Stack) covered every UI need. This validates the L1 architecture decision.
+- **`useHookFormAction` pattern is clean.** The Dirstarter bridge between RHF and next-safe-action works well. The `SubmitForm` was a good reference for the org create form.
+- **Brand resolution via `proxy.ts` is simple and correct.** No middleware — `x-brand` header in server components, brand cookie for client. The proxy.ts consolidation from SESSION_0008 was the right call.
+- **Composite unique key surprise.** `Organization.slug` is not unique alone — it's `brand_slug`. This caught a type error early. Good that Prisma's types enforced it.
+- **JETTY 3.0 annotations add value during build.** Writing them while the code is fresh is efficient. The wiki index now has a component inventory that will help future sessions.
+- **Protocol dry-run (TASK_03) was implicit, not formal.** We used the Petey plan structure but didn't formally invoke Review & Recommend. Next session should do that explicitly.

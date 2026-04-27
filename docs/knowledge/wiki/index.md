@@ -72,7 +72,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0009](../../sprints/SESSION_0009.md) | session | closed-full |
 | [SESSION_0010](../../sprints/SESSION_0010.md) | session | closed-unclean |
 | [SESSION_0011](../../sprints/SESSION_0011.md) | session | closed-quick |
-| [SESSION_0012](../../sprints/SESSION_0012.md) | session | pending |
+| [SESSION_0012](../../sprints/SESSION_0012.md) | session | closed-full |
+| [SESSION_0013](../../sprints/SESSION_0013.md) | session | pending |
 
 ## Protocols
 
@@ -113,7 +114,79 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- | --- |
 | [schema.prisma](files/schema-prisma.md) | file | active | 8 |
 | [seed.ts](files/seed-ts.md) | file | active | 8 |
+| [Dirstarter L1 Baseline](files/dirstarter-l1-baseline.md) | file | active | 8 |
+| [create-organization-form.tsx](files/create-organization-form.md) | file | active | 7 |
+| [organizations/new/page.tsx](files/organization-new-page.md) | file | active | 7 |
+| [discipline-queries.ts](files/discipline-queries.md) | file | active | 7 |
+| [organizations/page.tsx](files/organizations-list-page.md) | file | active | 7 |
+| [organizations/[slug]/page.tsx](files/organization-detail-page.md) | file | active | 7 |
+| [join-organization-button.tsx](files/join-organization-button.md) | file | active | 7 |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active | 7 |
+
+## UI Components (Dirstarter common library)
+
+Components inherited from Dirstarter and used as-is by the Ronin Dojo build. These are **not modified** — they're the L1 code layer. Listed here for discoverability. Check here before creating anything new.
+
+| Component | Path | Notes |
+| --- | --- | --- |
+| Accordion | `components/common/accordion.tsx` | Radix collapsible sections |
+| AnimatedContainer | `components/common/animated-container.tsx` | Transition wrapper |
+| Avatar | `components/common/avatar.tsx` | User/entity avatar |
+| Badge | `components/common/badge.tsx` | Variants: primary, soft, outline, success, warning, info, danger |
+| Box | `components/common/box.tsx` | Focus/hover ring wrapper |
+| Button | `components/common/button.tsx` | Variants: fancy, primary, secondary, soft, ghost, destructive. Has `isPending`, `prefix`, `suffix`, `asChild` |
+| Calendar | `components/common/calendar.tsx` | Date picker calendar |
+| Card / CardHeader / CardDescription / CardFooter / CardBadges / CardBg / CardIcon | `components/common/card.tsx` | Card layout with hover, reveal, highlight states |
+| Checkbox | `components/common/checkbox.tsx` | Radix checkbox |
+| Command | `components/common/command.tsx` | Command palette (cmdk) |
+| Dialog | `components/common/dialog.tsx` | Radix modal dialog |
+| DropdownMenu | `components/common/dropdown-menu.tsx` | Radix dropdown |
+| Form / FormField / FormItem / FormLabel / FormControl / FormMessage / FormDescription | `components/common/form.tsx` | RHF + Radix Slot integration |
+| FormMedia | `components/common/form-media.tsx` | Media upload field |
+| Heading (H1–H6) | `components/common/heading.tsx` | Semantic headings |
+| Hint | `components/common/hint.tsx` | Inline hint/error text |
+| HoverCard | `components/common/hover-card.tsx` | Radix hover popover |
+| Input | `components/common/input.tsx` | Text input with size variants |
+| Kbd | `components/common/kbd.tsx` | Keyboard shortcut badge |
+| Label | `components/common/label.tsx` | Form label |
+| Link | `components/common/link.tsx` | Next.js link wrapper |
+| Note | `components/common/note.tsx` | Callout/note box |
+| Ping | `components/common/ping.tsx` | Animated ping indicator |
+| Popover | `components/common/popover.tsx` | Radix popover |
+| Prose | `components/common/prose.tsx` | MDX/rich text container |
+| RadioGroup | `components/common/radio-group.tsx` | Radix radio group |
+| Search | `components/common/search.tsx` | Search input |
+| Select / SelectTrigger / SelectContent / SelectItem / SelectValue / SelectGroup | `components/common/select.tsx` | Radix single-value select |
+| Separator | `components/common/separator.tsx` | Horizontal/vertical divider |
+| ShowMore | `components/common/show-more.tsx` | Truncated list with "show more" |
+| Skeleton | `components/common/skeleton.tsx` | Loading placeholder |
+| Slottable | `components/common/slottable.tsx` | Radix Slot helper |
+| Stack | `components/common/stack.tsx` | Flex row/column with gap |
+| Switch | `components/common/switch.tsx` | Radix toggle switch |
+| Table | `components/common/table.tsx` | Data table |
+| TextArea | `components/common/textarea.tsx` | Multi-line text input |
+| Toaster | `components/common/toaster.tsx` | Toast notification container |
+| Tooltip | `components/common/tooltip.tsx` | Radix tooltip |
+| Wrapper | `components/common/wrapper.tsx` | Max-width content wrapper |
+
+### Dirstarter web UI components
+
+| Component | Path | Notes |
+| --- | --- | --- |
+| Grid | `components/web/ui/grid.tsx` | Responsive card grid |
+| Intro / IntroTitle / IntroDescription | `components/web/ui/intro.tsx` | Page header |
+| Section / Section.Content | `components/web/ui/section.tsx` | Page section wrapper |
+| Container | `components/web/ui/container.tsx` | Centered container |
+| Breadcrumbs | `components/web/ui/breadcrumbs.tsx` | Navigation breadcrumbs |
+| Tag | `components/web/ui/tag.tsx` | Tag component |
+| NavLink | `components/web/ui/nav-link.tsx` | Active-aware nav link |
+
+## Custom components (Ronin Dojo additions)
+
+| Component | Path | Notes |
+| --- | --- | --- |
+| CreateOrganizationForm | `components/web/organizations/create-organization-form.tsx` | RHF + Zod → createOrganization action |
+| JoinOrganizationButton | `components/web/organizations/join-organization-button.tsx` | useAction → joinOrganization action |
 
 ## Obsidian Vault
 
