@@ -81,6 +81,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status |
 | --- | --- | --- |
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
+| [Cody Pre-flight Protocol](../../protocols/cody-preflight.md) | protocol | active |
+| [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |

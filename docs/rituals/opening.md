@@ -47,6 +47,10 @@ Only the ones that bear on today's task:
 
 Don't bulk-read. Reach for these as the work surfaces a need.
 
+### 3b. Check FAILED_STEPS log
+
+Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). Check for any `open` or `mitigated` entries in the area you're about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.
+
 ### 4. Identify ONE task for this session
 
 State the task in chat (or in your notes) before you start. Be explicit:
@@ -57,7 +61,7 @@ State the task in chat (or in your notes) before you start. Be explicit:
 
 If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](../agents/petey.md) to plan first, using the [Petey Plan protocol](../protocols/petey-plan.md).
 
-If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute.
+If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute. **Cody must complete the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code.**
 
 ### 5. Branch check
 
@@ -112,6 +116,8 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Closing ritual](closing.md) — pairs with this; ends the session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
+- [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
+- [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.
