@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
-last_agent: chatgpt-adoption-pass
+last_agent: copilot-session-0011
 health: 7
 pairs_with:
   - repo-truth-index
@@ -67,7 +67,7 @@ Blocker classes:
 | MB-001 | S2 auth | Lock mobile auth path: Better-Auth mobile SDK vs JWT bridge fallback | owner + Cody | mobile_contract | one explicit architecture decision + implementation target | open |
 | MB-002 | brand scope hardening | Decide and implement Prisma brand-scope enforcement layer | Cody | auth_decision | code path + test evidence + updated auth doc | open |
 | MB-003 | brand switcher | Finish `activeBrandId` persistence + switch flow + smoke proof | Cody | runtime_proof | working end-to-end flow, session survives reload | open |
-| MB-004 | S2 Passport bootstrap | Convert "code complete / smoke pending" into verified flow | Cody + Doug | qa_proof | signup -> Passport stub -> DirectoryProfile stub smoke proof | open |
+| MB-004 | S2 Passport bootstrap | Convert "code complete / smoke pending" into verified flow | Cody + Doug | qa_proof | signup -> Passport stub -> DirectoryProfile stub smoke proof | verified |
 | MB-005 | transitional cleanup | Remove Dirstarter reference models before prod or formally quarantine them | Petey + Cody | cleanup | tracked removal plan or quarantine ADR | open |
 | MB-006 | Baseline rollout | Approve Baseline-first public rollout surfaces and alias rules | Brandon + owner | brand_migration | approved alias map + rollout checklist | open |
 | MB-007 | staging deploy | Vercel + Neon staging environment proof | Cody + Doug | deploy_env | deploy succeeds + smoke checklist passes | open |
@@ -83,7 +83,7 @@ Blocker classes:
 
 **MB-003 — Active brand persistence.** The auth doc names the behavior clearly. What matters now is operational proof.
 
-**MB-004 — Passport bootstrap.** Program plan notes this is code complete but still needs smoke proof. That makes this a perfect tracked manual boundary instead of a vague "almost done."
+**MB-004 — Passport bootstrap.** ~~Program plan notes this is code complete but still needs smoke proof. That makes this a perfect tracked manual boundary instead of a vague "almost done."~~ **VERIFIED SESSION_0011:** `scripts/smoke-passport.ts` proves User→Passport→DirectoryProfile creation, read, update, re-read, and default verification. Proof artifact: `apps/web/scripts/smoke-passport.ts` + passing run log.
 
 **MB-005 — Dirstarter residue.** The schema literally marks template models for future removal before production. That should stay visible until handled.
 
@@ -106,4 +106,4 @@ If a boundary was closed prematurely (no proof artifact, owner unknown, or downs
 
 ## Last verified
 
-2026-04-27 — adopted into baseline repo at SESSION_0010. No boundary entries verified yet; all entries currently `open`.
+2026-04-27 — MB-004 (Passport bootstrap) verified in SESSION_0011 via `scripts/smoke-passport.ts`.

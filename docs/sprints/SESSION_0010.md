@@ -2,7 +2,7 @@
 title: "SESSION 0010 — Adopt baseline systems pack into repo canon"
 slug: session-0010
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0010
@@ -19,7 +19,8 @@ backlinks:
 **Date:** 2026-04-27
 **Operator:** Brian + Claude (Petey orchestrating; parallel sub-agents as Cody)
 **Goal:** Adopt the imported `ronin_dojo_baseline_systems_pack` docs into baseline repo canon, wire them into the wiki/protocol structure, and surface candidates for the next real execution target.
-**Status:** awaiting-bow-out (Phases 1–4 done; user picks next-target before status flips to `closed-full`)
+**Status:** closed-unclean
+**Reason for unclean close:** Session ended without bow-out; closing recovered in SESSION_0011 via UNCLEAN_CLOSING protocol.
 
 ---
 
@@ -105,9 +106,9 @@ Petey runs Phase 3 wiring sequentially because the wiki index and cross-link ins
 
 ## Next session
 
-- **Goal:** _(set at bow-out — see candidates below)_
-- **Inputs to read:** `docs/sprints/SESSION_0010.md`, `docs/knowledge/wiki/manual-boundary-registry.md` (drives next proof target), `docs/protocols/next-session-loading-order.md`
-- **First task:** _(set at bow-out)_
+- **Goal:** Passport bootstrap smoke proof + S3 org create/join if space allows
+- **Inputs to read:** `docs/sprints/SESSION_0010.md`, `docs/knowledge/wiki/manual-boundary-registry.md`, `docs/protocols/next-session-loading-order.md`, `docs/architecture/program-plan.md`
+- **First task:** Run UNCLEAN_CLOSING recovery for SESSION_0010, then begin Passport bootstrap smoke proof
 
 ### Candidates for next-target
 

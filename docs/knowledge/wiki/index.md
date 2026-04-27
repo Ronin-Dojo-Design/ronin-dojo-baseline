@@ -70,7 +70,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0007](../../sprints/SESSION_0007.md) | session | closed-full |
 | [SESSION_0008](../../sprints/SESSION_0008.md) | session | closed-unclean |
 | [SESSION_0009](../../sprints/SESSION_0009.md) | session | closed-full |
-| [SESSION_0010](../../sprints/SESSION_0010.md) | session | in-progress |
+| [SESSION_0010](../../sprints/SESSION_0010.md) | session | closed-unclean |
+| [SESSION_0011](../../sprints/SESSION_0011.md) | session | closed-quick |
 
 ## Protocols
 
