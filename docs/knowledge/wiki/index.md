@@ -110,6 +110,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |
 | [SOP — Agent Workflows and Rituals](../../runbooks/sop-agent-workflows-and-rituals.md) | runbook | active |
+| [Dev Environment](../../runbooks/dev-environment.md) | runbook | active |
 
 ## Code files (annotated)
 

@@ -73,7 +73,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   1. `docs/runbooks/dev-environment.md` to be created (SESSION_0015 task)
   2. Bow-in checklist requires confirming dev server command
 - **Verification:** Dev server command appears in `dev-environment.md` runbook. Bow-in checklist has explicit field for it.
-- **Status:** open — runbook not yet created
+- **Status:** closed — `docs/runbooks/dev-environment.md` created with dev server command, DB connection, brand hosts, Prisma commands, import paths, rollback steps.
 
 ### FS-0003 — Baseline systems pack SOPs not adopted
 
@@ -90,4 +90,4 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   4. Wire `04_MANUAL_BOUNDARY_REGISTRY` → `docs/knowledge/wiki/manual-boundary-registry.md`
   5. Update `docs/rituals/opening.md` to reference the loading order protocol
 - **Verification:** `docs/protocols/next-session-loading-order.md` exists and is referenced in bow-in ritual. Wiki index links to all adopted docs.
-- **Status:** open — adoption not yet done
+- **Status:** closed — all 12 canonical files exist with JETTY frontmatter, all cross-links wired per §8, wiki index has all 14 entries. Verified SESSION_0014.
