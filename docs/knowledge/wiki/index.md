@@ -73,7 +73,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0010](../../sprints/SESSION_0010.md) | session | closed-unclean |
 | [SESSION_0011](../../sprints/SESSION_0011.md) | session | closed-quick |
 | [SESSION_0012](../../sprints/SESSION_0012.md) | session | closed-full |
-| [SESSION_0013](../../sprints/SESSION_0013.md) | session | pending |
+| [SESSION_0013](../../sprints/SESSION_0013.md) | session | closed-unclean |
+| [SESSION_0014](../../sprints/SESSION_0014.md) | session | closed-full |
 
 ## Protocols
 
@@ -121,7 +122,28 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [organizations/page.tsx](files/organizations-list-page.md) | file | active | 7 |
 | [organizations/[slug]/page.tsx](files/organization-detail-page.md) | file | active | 7 |
 | [join-organization-button.tsx](files/join-organization-button.md) | file | active | 7 |
+| [directory/queries.ts](files/directory-queries.md) | file | active | 7 |
+| [directory/schema.ts](files/directory-schema.md) | file | active | 7 |
+| [directory/page.tsx](files/directory-page.md) | file | active | 7 |
+| [directory/directory-query.tsx](files/directory-query-component.md) | file | active | 7 |
+| [directory/directory-listing.tsx](files/directory-listing-component.md) | file | active | 7 |
+| [directory/directory-list.tsx](files/directory-list-component.md) | file | active | 7 |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active | 7 |
+
+## L1 Component Patterns (reference index)
+
+Key Dirstarter L1 patterns and their reference implementations. **Check here before creating any new component.**
+
+| Pattern | Reference File | Used By |
+| --- | --- | --- |
+| Filter state (URL params) | `contexts/filter-context.tsx` + `nuqs` | All listing pages |
+| Search + filter bar | `components/web/filters/filters.tsx` | Tool listing, directory |
+| Sort dropdown | `components/web/filters/sort.tsx` | Tool listing |
+| Listing wrapper (FiltersProvider) | `components/web/tools/tool-listing.tsx` | Tool, directory |
+| Server query component | `components/web/tools/tool-query.tsx` | Tool, directory |
+| nuqs schema + cache | `server/web/tools/schema.ts` | Tool, directory |
+| Form (RHF + safe-action) | `components/web/feedback-widget.tsx` | Feedback, CTA, org create |
+| Data table + faceted filter | `components/data-table/` | Admin pages |
 
 ## UI Components (Dirstarter common library)
 

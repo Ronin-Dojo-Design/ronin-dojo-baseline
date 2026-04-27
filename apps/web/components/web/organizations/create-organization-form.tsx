@@ -210,7 +210,7 @@ export const CreateOrganizationForm = ({
               name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>City</FormLabel>
+                  <FormLabel>City *</FormLabel>
                   <FormControl>
                     <Input size="lg" placeholder="City" {...field} />
                   </FormControl>
@@ -224,7 +224,7 @@ export const CreateOrganizationForm = ({
               name="state"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>State</FormLabel>
+                  <FormLabel>State *</FormLabel>
                   <FormControl>
                     <Input size="lg" placeholder="State" {...field} />
                   </FormControl>

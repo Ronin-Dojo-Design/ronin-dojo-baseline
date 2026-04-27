@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-04-27
-last_agent: copilot-session-0012
+last_agent: copilot-session-0014
 health: 7
 pairs_with:
   - docs/agents/petey.md
@@ -43,6 +43,15 @@ Cody is **not** invoked when:
 5. **Don't introduce abstractions for "future" needs.** Three similar lines is fine. Build for what's needed.
 6. **Match the codebase's existing patterns** — Dirstarter has tight conventions (HOC chains, action client patterns, content collections, Prisma extension chaining). Use them.
 7. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult the [UI Components inventory](../knowledge/wiki/index.md#ui-components-dirstarter-common-library) in the wiki index. Only create a new component if nothing existing covers the need.
+
+### L1 pre-flight checklist (before creating ANY new component or pattern)
+
+1. Search `components/web/` and `components/common/` for existing components that serve the same purpose (filters, forms, lists, cards, etc.)
+2. Search the Dirstarter template (`dirstarter_template/components/`) for the L1 reference implementation
+3. Search `contexts/` for existing providers (e.g., `filter-context.tsx` for filter state)
+4. If a matching component exists → extend or compose it, don't rebuild from scratch
+5. If no exact match → follow the closest L1 pattern (e.g., `tool-listing.tsx` → `directory-listing.tsx`, `tool-query.tsx` → `directory-query.tsx`)
+6. Raw HTML elements (`<select>`, `<input>`, `<button>`) are NEVER acceptable when a styled common component exists
 
 ## Self-review checklist (before declaring done)
 

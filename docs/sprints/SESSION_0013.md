@@ -2,7 +2,7 @@
 title: "SESSION 0013 — Org UI smoke test + S3 wrap-up"
 slug: session-0013
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0012-prestage
@@ -19,7 +19,8 @@ backlinks:
 **Date:** 2026-04-27
 **Operator:** Brian + Copilot
 **Goal:** Smoke-test organization UI end-to-end. Fix runtime issues. If clean, wrap S3 and begin S4 prep (Directory search with privacy).
-**Status:** in-progress
+**Status:** closed-unclean
+**Reason for unclean close:** Session ended without bow-out; all tasks were complete but closing ritual was never run.
 
 ---
 
@@ -98,7 +99,44 @@ Do NOT expand into: membership approval flow, org settings/edit, role assignment
 - No server errors, no type errors across all three org page files
 - Zero TASK_02 fixes needed
 
-### TASK_02 — Fix runtime issues: SKIPPED (none found)
+### TASK_02 — Fix runtime issues: SKIPPED (no runtime errors found)
+
+### Unplanned work — S3 deferred items built (commit `0c61a09`)
+
+After TASK_01 passed cleanly and TASK_03 listed 4 deferred items, a scope expansion occurred — all 4 were implemented in a single commit:
+
+1. **Address field expansion** — schema added `addressLine2`, `country`; form updated
+2. **Invite link flow** — invite action + token-based join URL + `organizations/join` acceptance page
+3. **Multi-role assignment** — membership-actions server component, role assign/remove
+4. **Status lifecycle enforcement** — approve/suspend/expire actions in membership-actions
+
+This work exceeds the SESSION_0013 scope guard ("Do NOT expand into..."). Noting for audit. No runtime errors were introduced — the commit compiles and the migration applied.
+
+## Files touched
+
+| Path | Note |
+|---|---|
+| `apps/web/app/(web)/organizations/page.tsx` | List page |
+| `apps/web/app/(web)/organizations/new/page.tsx` | Create page |
+| `apps/web/app/(web)/organizations/[slug]/page.tsx` | Detail page |
+| `apps/web/app/(web)/organizations/join/page.tsx` | Invite-join page |
+| `apps/web/components/web/organizations/create-organization-form.tsx` | Create form component |
+| `apps/web/components/web/organizations/invite-join-form.tsx` | Invite join form |
+| `apps/web/components/web/organizations/join-organization-button.tsx` | Join button |
+| `apps/web/components/web/organizations/membership-actions.tsx` | Membership server actions |
+| `apps/web/server/web/organization/actions.ts` | Org CRUD actions |
+| `apps/web/server/web/organization/queries.ts` | Org queries |
+| `apps/web/server/web/organization/schemas.ts` | Zod schemas |
+| `apps/web/server/web/organization/discipline-queries.ts` | Discipline lookup |
+| `apps/web/prisma/schema.prisma` | Minor schema tweaks |
+| `docs/architecture/program-plan.md` | S3 marked complete |
+| `docs/sprints/SESSION_0013.md` | This session file |
+| `docs/knowledge/wiki/index.md` | Wiki entries for new files |
+
+## Decisions resolved
+
+- S3 ("Organization create + join flow") declared **complete** — deferred items logged, none are blockers.
+- S4 scope confirmed: Directory search with privacy.
 
 ## Open decisions / blockers
 
