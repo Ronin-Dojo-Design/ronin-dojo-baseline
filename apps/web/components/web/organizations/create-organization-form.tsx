@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
-import { TextArea } from "~/components/common/textarea"
 import { createOrganization } from "~/server/web/organization/actions"
 import { createOrganizationSchema } from "~/server/web/organization/schemas"
 import type { Brand } from "~/.generated/prisma/client"
@@ -55,7 +54,12 @@ export const CreateOrganizationForm = ({
           name: "",
           slug: "",
           type: "DOJO" as const,
-          address: "",
+          addressLine1: "",
+          addressLine2: "",
+          city: "",
+          state: "",
+          zip: "",
+          country: "US",
           websiteUrl: "",
           disciplineIds: [],
         },
@@ -166,16 +170,92 @@ export const CreateOrganizationForm = ({
 
           <FormField
             control={form.control}
-            name="address"
+            name="addressLine1"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Address</FormLabel>
+                <FormLabel>Address Line 1</FormLabel>
                 <FormControl>
-                  <TextArea
+                  <Input
                     size="lg"
-                    placeholder="123 Main St, City, State"
+                    placeholder="123 Main St"
                     {...field}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="addressLine2"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address Line 2</FormLabel>
+                <FormControl>
+                  <Input
+                    size="lg"
+                    placeholder="Suite 100"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid gap-4 @sm:grid-cols-3">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input size="lg" placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <Input size="lg" placeholder="State" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="zip"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ZIP</FormLabel>
+                  <FormControl>
+                    <Input size="lg" placeholder="12345" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Input size="lg" placeholder="US" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

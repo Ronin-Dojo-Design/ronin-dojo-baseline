@@ -1,7 +1,14 @@
 "use server"
 
 import { userActionClient } from "~/lib/safe-actions"
-import { createOrganizationSchema, joinOrganizationSchema } from "./schemas"
+import {
+  createOrganizationSchema,
+  joinOrganizationSchema,
+  joinByInviteCodeSchema,
+  updateMembershipStatusSchema,
+  assignRoleSchema,
+  removeRoleSchema,
+} from "./schemas"
 
 // ---------------------------------------------------------------------------
 // Create Organization
@@ -31,8 +38,8 @@ export const createOrganization = userActionClient
         })),
       })
 
-      // 3. Create owner membership (ACTIVE, first discipline)
-      await db.membership.create({
+      // 3. Create owner membership (ACTIVE, first discipline) + assign OWNER role
+      const membership = await db.membership.create({
         data: {
           brand: orgData.brand,
           userId: user.id,
@@ -42,6 +49,13 @@ export const createOrganization = userActionClient
           joinedAt: new Date(),
         },
       })
+
+      const ownerRole = await db.role.findFirst({ where: { code: "OWNER", isSystem: true } })
+      if (ownerRole) {
+        await db.membershipRoleAssignment.create({
+          data: { membershipId: membership.id, roleId: ownerRole.id },
+        })
+      }
     }
 
     revalidate({ paths: ["/organizations", `/organizations/${org.slug}`] })
@@ -49,7 +63,7 @@ export const createOrganization = userActionClient
   })
 
 // ---------------------------------------------------------------------------
-// Join Organization
+// Join Organization (direct)
 // ---------------------------------------------------------------------------
 // Creates a PENDING membership for the calling user.
 
@@ -58,11 +72,9 @@ export const joinOrganization = userActionClient
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const { organizationId, disciplineId, brand } = parsedInput
 
-    // Verify org exists
     const org = await db.organization.findUnique({ where: { id: organizationId } })
     if (!org) throw new Error("Organization not found")
 
-    // Check for existing membership
     const existing = await db.membership.findUnique({
       where: {
         userId_organizationId_disciplineId: {
@@ -86,4 +98,151 @@ export const joinOrganization = userActionClient
 
     revalidate({ paths: [`/organizations/${org.slug}`] })
     return membership
+  })
+
+// ---------------------------------------------------------------------------
+// Join Organization by Invite Code
+// ---------------------------------------------------------------------------
+// Invite link: /organizations/join?code=<inviteCode>
+// Creates an INVITED membership (auto-approved to ACTIVE since they had the link).
+
+export const joinByInviteCode = userActionClient
+  .inputSchema(joinByInviteCodeSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const { inviteCode, disciplineId } = parsedInput
+
+    const org = await db.organization.findUnique({ where: { inviteCode } })
+    if (!org) throw new Error("Invalid invite code")
+
+    const existing = await db.membership.findUnique({
+      where: {
+        userId_organizationId_disciplineId: {
+          userId: user.id,
+          organizationId: org.id,
+          disciplineId,
+        },
+      },
+    })
+    if (existing) throw new Error("Already a member of this organization for this discipline")
+
+    const membership = await db.membership.create({
+      data: {
+        brand: org.brand,
+        userId: user.id,
+        organizationId: org.id,
+        disciplineId,
+        status: "ACTIVE",
+        joinedAt: new Date(),
+      },
+    })
+
+    // Auto-assign STUDENT role
+    const studentRole = await db.role.findFirst({ where: { code: "STUDENT", isSystem: true } })
+    if (studentRole) {
+      await db.membershipRoleAssignment.create({
+        data: { membershipId: membership.id, roleId: studentRole.id },
+      })
+    }
+
+    revalidate({ paths: [`/organizations/${org.slug}`] })
+    return { membership, org }
+  })
+
+// ---------------------------------------------------------------------------
+// Update Membership Status (approve / suspend / expire)
+// ---------------------------------------------------------------------------
+// Only the org owner can transition status.
+
+export const updateMembershipStatus = userActionClient
+  .inputSchema(updateMembershipStatusSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const { membershipId, status } = parsedInput
+
+    const membership = await db.membership.findUnique({
+      where: { id: membershipId },
+      include: { organization: true },
+    })
+    if (!membership) throw new Error("Membership not found")
+
+    // Only org owner can change status
+    if (membership.organization.ownerId !== user.id) {
+      throw new Error("Only the organization owner can update membership status")
+    }
+
+    // Validate transitions
+    const validTransitions: Record<string, string[]> = {
+      INVITED: ["ACTIVE", "EXPIRED"],
+      PENDING: ["ACTIVE", "EXPIRED"],
+      ACTIVE: ["SUSPENDED", "EXPIRED"],
+      SUSPENDED: ["ACTIVE", "EXPIRED"],
+      EXPIRED: [], // terminal state
+    }
+    const allowed = validTransitions[membership.status] ?? []
+    if (!allowed.includes(status)) {
+      throw new Error(`Cannot transition from ${membership.status} to ${status}`)
+    }
+
+    const updated = await db.membership.update({
+      where: { id: membershipId },
+      data: {
+        status: status as any,
+        joinedAt: status === "ACTIVE" && !membership.joinedAt ? new Date() : undefined,
+        leftAt: status === "EXPIRED" ? new Date() : undefined,
+      },
+    })
+
+    revalidate({ paths: [`/organizations/${membership.organization.slug}`] })
+    return updated
+  })
+
+// ---------------------------------------------------------------------------
+// Assign Role to Membership
+// ---------------------------------------------------------------------------
+
+export const assignRole = userActionClient
+  .inputSchema(assignRoleSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const { membershipId, roleId } = parsedInput
+
+    const membership = await db.membership.findUnique({
+      where: { id: membershipId },
+      include: { organization: true },
+    })
+    if (!membership) throw new Error("Membership not found")
+    if (membership.organization.ownerId !== user.id) {
+      throw new Error("Only the organization owner can assign roles")
+    }
+
+    const assignment = await db.membershipRoleAssignment.create({
+      data: { membershipId, roleId },
+    })
+
+    revalidate({ paths: [`/organizations/${membership.organization.slug}`] })
+    return assignment
+  })
+
+// ---------------------------------------------------------------------------
+// Remove Role from Membership
+// ---------------------------------------------------------------------------
+
+export const removeRole = userActionClient
+  .inputSchema(removeRoleSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const { membershipId, roleId } = parsedInput
+
+    const membership = await db.membership.findUnique({
+      where: { id: membershipId },
+      include: { organization: true },
+    })
+    if (!membership) throw new Error("Membership not found")
+    if (membership.organization.ownerId !== user.id) {
+      throw new Error("Only the organization owner can remove roles")
+    }
+
+    await db.membershipRoleAssignment.delete({
+      where: { membershipId_roleId: { membershipId, roleId } },
+    })
+
+    revalidate({ paths: [`/organizations/${membership.organization.slug}`] })
+    return { success: true }
   })

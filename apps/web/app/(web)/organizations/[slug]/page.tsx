@@ -9,7 +9,9 @@ import { Stack } from "~/components/common/stack"
 import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { JoinOrganizationButton } from "~/components/web/organizations/join-organization-button"
-import { getOrganizationBySlug } from "~/server/web/organization/queries"
+import { MembershipActions } from "~/components/web/organizations/membership-actions"
+import { getOrganizationBySlug, getSystemRoles } from "~/server/web/organization/queries"
+import { getServerSession } from "~/lib/auth"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -33,9 +35,19 @@ export default async function OrganizationDetailPage({ params }: Props) {
   const { slug } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
-  const org = await getOrganizationBySlug(brand, slug)
+  const [org, session, roles] = await Promise.all([
+    getOrganizationBySlug(brand, slug),
+    getServerSession(),
+    getSystemRoles(),
+  ])
 
   if (!org) notFound()
+
+  const isOwner = session?.user?.id === org.ownerId
+
+  // Format address from expanded fields
+  const addressParts = [org.addressLine1, org.addressLine2, org.city, org.state, org.zip, org.country].filter(Boolean)
+  const formattedAddress = addressParts.length > 0 ? addressParts.join(", ") : null
 
   return (
     <>
@@ -64,10 +76,10 @@ export default async function OrganizationDetailPage({ params }: Props) {
                   </>
                 )}
 
-                {org.address && (
+                {formattedAddress && (
                   <>
                     <dt className="text-muted-foreground">Address</dt>
-                    <dd>{org.address}</dd>
+                    <dd>{formattedAddress}</dd>
                   </>
                 )}
 
@@ -96,6 +108,15 @@ export default async function OrganizationDetailPage({ params }: Props) {
                       <Badge key={od.discipline.id}>{od.discipline.name}</Badge>
                     ))}
                   </Stack>
+                </div>
+              )}
+
+              {isOwner && org.inviteCode && (
+                <div className="space-y-2">
+                  <H4>Invite Link</H4>
+                  <p className="text-sm text-muted-foreground break-all">
+                    {`/organizations/join?code=${org.inviteCode}`}
+                  </p>
                 </div>
               )}
             </div>
@@ -127,7 +148,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                       <span className="text-sm font-medium">
                         {m.user.name ?? "Unknown"}
                       </span>
-                      <Badge size="sm" variant={m.status === "ACTIVE" ? "success" : "warning"}>
+                      <Badge size="sm" variant={m.status === "ACTIVE" ? "success" : m.status === "SUSPENDED" ? "danger" : "warning"}>
                         {m.status}
                       </Badge>
                       {m.discipline && (
@@ -135,7 +156,19 @@ export default async function OrganizationDetailPage({ params }: Props) {
                           {m.discipline.name}
                         </Badge>
                       )}
+                      {m.roleAssignments.map((ra) => (
+                        <Badge key={ra.role.id} size="sm" variant="soft">
+                          {ra.role.name}
+                        </Badge>
+                      ))}
                     </CardHeader>
+                    {isOwner && m.user.id !== org.ownerId && (
+                      <MembershipActions
+                        membership={m}
+                        roles={roles}
+                        assignedRoleIds={m.roleAssignments.map((ra) => ra.role.id)}
+                      />
+                    )}
                   </Card>
                 ))}
 

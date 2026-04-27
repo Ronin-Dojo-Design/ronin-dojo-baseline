@@ -22,9 +22,22 @@ export const getOrganizationBySlug = cache(async (brand: string, slug: string) =
         include: {
           user: { select: { id: true, name: true } },
           discipline: { select: { id: true, name: true } },
+          roleAssignments: {
+            include: { role: { select: { id: true, code: true, name: true } } },
+          },
         },
         orderBy: { createdAt: "asc" },
       },
+      _count: { select: { memberships: true } },
+    },
+  })
+})
+
+export const getOrganizationByInviteCode = cache(async (inviteCode: string) => {
+  return db.organization.findUnique({
+    where: { inviteCode },
+    include: {
+      disciplines: { include: { discipline: true } },
       _count: { select: { memberships: true } },
     },
   })
@@ -49,7 +62,17 @@ export const getUserMemberships = cache(async (userId: string) => {
       discipline: true,
       style: true,
       rank: true,
+      roleAssignments: {
+        include: { role: { select: { id: true, code: true, name: true } } },
+      },
     },
     orderBy: { createdAt: "desc" },
+  })
+})
+
+export const getSystemRoles = cache(async () => {
+  return db.role.findMany({
+    where: { isSystem: true },
+    orderBy: { name: "asc" },
   })
 })

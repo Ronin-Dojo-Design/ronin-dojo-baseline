@@ -2,7 +2,7 @@
 title: "SESSION 0013 — Org UI smoke test + S3 wrap-up"
 slug: session-0013
 type: session
-status: pending
+status: in-progress
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0012-prestage
@@ -16,10 +16,10 @@ backlinks:
 
 # SESSION_0013
 
-**Date:** _(set at bow-in)_
+**Date:** 2026-04-27
 **Operator:** Brian + Copilot
 **Goal:** Smoke-test organization UI end-to-end. Fix runtime issues. If clean, wrap S3 and begin S4 prep (Directory search with privacy).
-**Status:** pending
+**Status:** in-progress
 
 ---
 
@@ -82,3 +82,48 @@ Prove the S3 org UI works in the browser. Every page from SESSION_0012 needs to 
 ### Scope guard
 
 Do NOT expand into: membership approval flow, org settings/edit, role assignment, admin UI, or brand switcher. Those are S4+ unless S3 assessment surfaces them as blockers.
+
+---
+
+## What landed
+
+### TASK_01 — Smoke test: PASS ✅
+
+- Dev server starts cleanly (`bun dev`, Next.js 16.0.9 Turbopack)
+- `/organizations` — 200, list page renders (empty state)
+- `/organizations/new` — 200, create form renders with discipline checkboxes
+- `/organizations/baseline-martial-arts` — 200, detail page renders after form submit
+- `/organizations/test-org` — 404, correctly handles nonexistent slug
+- Brian created **Baseline Martial Arts** org via real browser — form submit → DB insert → redirect all worked
+- No server errors, no type errors across all three org page files
+- Zero TASK_02 fixes needed
+
+### TASK_02 — Fix runtime issues: SKIPPED (none found)
+
+## Open decisions / blockers
+
+- **Address fields expansion needed (future):** Organization create form currently has single-line address, city, state, zip — no address line 2, no country field. Needs expansion in a future sprint. Not a blocker for S3 close.
+
+### TASK_03 — S3 completion assessment: DONE ✅
+
+**Verdict: S3 marked complete.** Core create + join flow works end-to-end. Program plan updated.
+
+**S3 deferred items** (not blockers):
+
+1. Invite link flow (plan said "invite link → user joins" — currently direct join button only)
+2. Multi-role assignment UI (`MembershipRoleAssignment` table exists, no UI/actions)
+3. Status lifecycle enforcement (PENDING/ACTIVE set, no approve/suspend/expire transitions)
+4. Address field expansion (single address line, needs line2 + country)
+
+**S4 scope — Directory search with privacy:**
+
+- List view honoring `DirectoryProfile.visibility` (PUBLIC / MEMBERS_ONLY / PRIVATE) and per-field flags (`showOrgs`, `showRanks`)
+- Filters by org, discipline, rank, location
+- Completes Plan Milestone 1 ✅
+- Detailed task breakdown to be drafted at SESSION_0014 bow-in
+
+## Next session
+
+- **Goal:** Begin S4 — Directory search with privacy
+- **Inputs to read:** `DirectoryProfile` model in schema, `plan-vs-current.md` directory section, S4 row in program plan
+- **First task:** Petey plan for S4 — break down into queries, page routes, filter components, privacy enforcement
