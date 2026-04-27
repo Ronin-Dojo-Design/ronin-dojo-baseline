@@ -97,6 +97,12 @@ Add a `## Reflections` section to the SESSION file. Capture what's worth remembe
 
 This is the kaizen-style note from the legacy system, kept lightweight.
 
+### 6.5. Review & Recommend (stage the next session)
+
+Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file. Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
+
+At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
+
 ### 7. Memory sweep
 
 If anything from this session is worth carrying forward across all future sessions (not just the next one), update operator-side memory. Examples:
@@ -134,6 +140,8 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
 - [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
+- [Petey Plan protocol](../protocols/petey-plan.md) — structured planning for staging the next session at bow-out.
+- [Review & Recommend protocol](../protocols/review-recommend.md) — the review + next-target recommendation cycle run at full close.
 
 ---
 

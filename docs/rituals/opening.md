@@ -55,7 +55,7 @@ State the task in chat (or in your notes) before you start. Be explicit:
 - Why this task now? (one sentence connecting to program plan or user request)
 - What does "done" look like?
 
-If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](../agents/petey.md) to plan first.
+If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](../agents/petey.md) to plan first, using the [Petey Plan protocol](../protocols/petey-plan.md).
 
 If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute.
 
@@ -112,5 +112,6 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Closing ritual](closing.md) — pairs with this; ends the session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
+- [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

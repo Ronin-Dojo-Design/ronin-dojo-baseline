@@ -72,6 +72,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0009](../../sprints/SESSION_0009.md) | session | closed-full |
 | [SESSION_0010](../../sprints/SESSION_0010.md) | session | closed-unclean |
 | [SESSION_0011](../../sprints/SESSION_0011.md) | session | closed-quick |
+| [SESSION_0012](../../sprints/SESSION_0012.md) | session | pending |
 
 ## Protocols
 
@@ -79,6 +80,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
+| [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
+| [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [Code Guardrails](../../protocols/code-guardrails.md) | protocol | active |
 | [Opening Ritual](../../rituals/opening.md) | protocol | active |

@@ -86,3 +86,5 @@ The plan should be self-contained enough that whoever executes doesn't need to r
 - Run the [opening ritual](../rituals/opening.md) before producing a plan.
 - After execution, run the [closing ritual](../rituals/closing.md) and update the SESSION file. That update is part of Petey's job if Cody hasn't already done it.
 - Petey writes plans into chat by default. Only persist a plan as its own file when it's substantial enough to outlive the session (e.g., a multi-session epic).
+- For structured plan output, follow the [Petey Plan protocol](../protocols/petey-plan.md).
+- At bow-out, run [Review & Recommend](../protocols/review-recommend.md) to stage the next session.
