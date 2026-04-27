@@ -60,6 +60,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0004](../../sprints/SESSION_0004.md) | session | closed-full |
 | [SESSION_0005](../../sprints/SESSION_0005.md) | session | closed-quick |
 | [SESSION_0006](../../sprints/SESSION_0006.md) | session | closed-quick |
+| [SESSION_0007](../../sprints/SESSION_0007.md) | session | closed-full |
 
 ## Protocols
 

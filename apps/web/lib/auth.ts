@@ -55,6 +55,32 @@ export const auth = betterAuth({
           revalidatePath(callbackURL)
         }
       }
+
+      // On sign-up, create Passport + DirectoryProfile stubs in a transaction.
+      // Better-Auth creates the User row; we extend with identity shell records.
+      if (path === "/sign-up/email" || path === "/sign-up/social" || path === "/callback/:id") {
+        const newUserId = context.body?.user?.id ?? context.body?.id
+        if (newUserId && typeof newUserId === "string") {
+          // Only create if not already present (idempotent for social re-auth)
+          const existing = await db.passport.findUnique({ where: { userId: newUserId } })
+          if (!existing) {
+            await db.$transaction([
+              db.passport.create({
+                data: {
+                  userId: newUserId,
+                  displayName: context.body?.user?.name ?? null,
+                },
+              }),
+              db.directoryProfile.create({
+                data: {
+                  userId: newUserId,
+                  // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
+                },
+              }),
+            ])
+          }
+        }
+      }
     }),
   },
 

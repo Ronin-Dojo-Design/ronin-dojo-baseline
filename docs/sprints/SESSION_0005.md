@@ -1,3 +1,19 @@
+---
+title: "SESSION 0005 — Seed File, Shadow DB, Data-Model Update"
+slug: session-0005
+type: session
+status: closed-quick
+created: 2026-04-26
+updated: 2026-04-26
+last_agent: copilot-session-0005
+health: 6
+sprint: S1
+pairs_with:
+  - docs/sprints/SESSION_0004.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # SESSION_0005 — Seed file, shadow DB, data-model.md update
 
 **Date:** 2026-04-26

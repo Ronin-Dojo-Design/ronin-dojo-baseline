@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-26
 updated: 2026-04-26
-health: 7
+health: 8
 ---
 
 # Code Guardrails
@@ -64,6 +64,33 @@ After any schema change:
 ### G7 — No scope creep
 
 If you find adjacent tech debt during a task, note it in the SESSION file `Open decisions / blockers` — don't fix it inline.
+
+### G8 — Zod form schemas: `.optional()` not `.nullish()` for strings
+
+When a Zod schema feeds into React Hook Form → HTML inputs, use `.optional()` for string fields. HTML `<input value={null}>` is a React error. Reserve `.nullish()` for fields where `null` has distinct DB meaning (dates, enums, JSON columns with `Prisma.JsonNull`).
+
+```typescript
+// ✅ OK — form-bound string field
+displayName: z.string().max(100).optional(),
+
+// ❌ BAD — null flows into <Input value={null}>
+displayName: z.string().max(100).nullish(),
+
+// ✅ OK — date where null means "not set" in Prisma
+dob: z.coerce.date().nullish(),
+```
+
+### G9 — Zod v4 `z.record()` requires key schema
+
+`z.record(valueSchema)` is Zod v3. Zod v4 requires two arguments: `z.record(keySchema, valueSchema)`.
+
+```typescript
+// ✅ Zod v4
+socialLinks: z.record(z.string(), z.string().url()),
+
+// ❌ Zod v3 syntax — compile error in v4
+socialLinks: z.record(z.string().url()),
+```
 
 ## When to run
 

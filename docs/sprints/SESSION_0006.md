@@ -1,3 +1,19 @@
+---
+title: "SESSION 0006 — Documentation Housekeeping + JETTY 3.0 Sweep"
+slug: session-0006
+type: session
+status: closed-quick
+created: 2026-04-26
+updated: 2026-04-26
+last_agent: copilot-session-0006
+health: 7
+sprint: S1
+pairs_with:
+  - docs/sprints/SESSION_0005.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # SESSION_0006
 
 **Date:** 2026-04-26

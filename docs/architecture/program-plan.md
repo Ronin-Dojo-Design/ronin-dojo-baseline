@@ -70,7 +70,7 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 | Sprint | Major deliverable | Notes |
 |---|---|---|
 | **S1** ✅ | Phase 1 schema rev: rename `Style→Discipline`, `School→Organization`, `Profile→Passport`; add `RankSystem`, `Rank` (replacing `Belt`), `DirectoryProfile`, `MembershipRoleAssignment`; expand `Membership` with `disciplineId` + `status` enum; reshape `Tournament` into `Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry`. Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank. | Done — 31 models, all enums, seed data loaded (12 disciplines, 13 rank systems, 194 ranks). Sessions 0003–0005. |
-| **S2** | Better-Auth + Passport bootstrap | Sign-up creates `User + Passport + DirectoryProfile` stubs. `/me` route renders the Passport editor. Brand cookie wired through middleware. |
+| **S2** | Better-Auth + Passport bootstrap | Sign-up creates `User + Passport + DirectoryProfile` stubs. `/me` route renders the Passport editor. Brand cookie wired through middleware. **Code complete — smoke test pending.** Session 0007. |
 | **S3** | Organization create + join flow | Owner creates an Organization (dojo/league/school/club). Invite link → user joins as Membership in (Org × Discipline). Multi-role. Status lifecycle (invited/pending/active/suspended/expired) modeled and enforced. |
 | **S4** | Directory search with privacy | List view honoring `DirectoryProfile.visibility` and per-field flags. Filters by org/discipline/rank/location. **Plan Milestone 1 ✅** |
 | **S5** ✅ | RankSystem + Rank seed data | Done — pulled forward into S1. 12 disciplines, 13 rank systems, 194 ranks seeded. Admin UI to add new rank systems deferred to future sprint. |

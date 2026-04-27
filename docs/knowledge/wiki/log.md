@@ -28,4 +28,12 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Updated `plan-vs-current.md` — all entities ✅, behavioral requirements with S1 coverage, phases updated
 - Updated `program-plan.md` — S1 and S5 marked ✅
 - Updated wiki index: session statuses, health scores, new Obsidian vault + wiki-lint + code guardrails + incidents sections
-- Registered first incident: SESSION_0005 unclean close (compaction)
+
+## 2026-04-26 — SESSION_0007
+
+- **S2 implemented**: Better-Auth post-signup hook, Passport + DirectoryProfile server actions/queries, `/me` page + editor
+- Added JETTY 3.0 frontmatter to SESSION_0005, SESSION_0006, SESSION_0007
+- Updated `docs/rituals/opening.md` step 6: SESSION files must include JETTY 3.0 frontmatter template at creation
+- Added G8 (Zod `.optional()` for form strings) and G9 (`z.record()` v4 arity) to code guardrails
+- Kaizen: `str()` helper pattern, check-before-build habit, Zod v4 gotchas documented
+- Updated `program-plan.md` — S2 marked code complete (smoke test pending)

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-04-26
-last_agent: copilot-session-0006
+last_agent: copilot-session-0007
 health: 7
 pairs_with:
   - docs/rituals/closing.md
@@ -69,7 +69,27 @@ Verify the current git branch (`git branch --show-current`) and working tree sta
 
 ### 6. Create the new SESSION file
 
-In `docs/sprints/`, create `SESSION_NNNN.md` (next number after the previous one). Fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. The rest gets filled during/at end of session.
+In `docs/sprints/`, create `SESSION_NNNN.md` (next number after the previous one). **Always include JETTY 3.0 frontmatter** at the top of the file:
+
+```yaml
+---
+title: "SESSION NNNN — <short description>"
+slug: session-NNNN
+type: session
+status: in-progress
+created: <today>
+updated: <today>
+last_agent: copilot-session-NNNN
+health: 5
+sprint: <current sprint, e.g. S2>
+pairs_with:
+  - docs/sprints/SESSION_<previous>.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+```
+
+Then fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. The rest gets filled during/at end of session.
 
 If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
 
