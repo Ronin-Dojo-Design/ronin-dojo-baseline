@@ -94,6 +94,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0018](../../sprints/SESSION_0018.md) | session | closed |
 | [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
 | [SESSION_0020](../../sprints/SESSION_0020.md) | session | closed-full |
+| [SESSION_0021](../../sprints/SESSION_0021.md) | session | planned |
 
 ## Protocols
 
@@ -106,6 +107,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
+| [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) | protocol | active |
 | [Code Guardrails](../../protocols/code-guardrails.md) | protocol | active |
 | [Opening Ritual](../../rituals/opening.md) | protocol | active |
 | [Closing Ritual](../../rituals/closing.md) | protocol | active |

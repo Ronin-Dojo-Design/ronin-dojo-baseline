@@ -1533,11 +1533,299 @@ model Discipline {
 
 ---
 
+## 10. Pass 3 — Deep Research Gaps (SESSION_0020 preflight)
+
+Gaps identified by ChatGPT deep research brief + Launch OS doc against PushPress, Wodify, Zen Planner, Kihapp, Smoothcomp, and BJJBuddy. Source: `docs/architecture/source/Ronin-Dojo-Launch-Deep-Research-Brief.md`.
+
+### 10.1 New enums (pass 3)
+
+```prisma
+enum LeadStatus {
+  NEW
+  CONTACTED
+  TRIAL_BOOKED
+  TRIAL_COMPLETED
+  CONVERTED
+  LOST
+  NURTURE
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  WALK_IN
+  SOCIAL_MEDIA
+  EVENT
+  PARTNER
+  AD_CAMPAIGN
+  OTHER
+}
+
+enum ScoringMethod {
+  POINTS
+  SUBMISSION
+  DECISION
+  DISQUALIFICATION
+  TIME
+  CUSTOM
+}
+
+enum MatAssignmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+}
+```
+
+### 10.2 Lead / CRM
+
+The research brief and every competitor (PushPress, Wodify, Zen Planner) treat lead-to-member conversion as core, not optional. Current schema has no CRM lane.
+
+#### Lead
+
+```prisma
+model Lead {
+  id            String     @id @default(cuid())
+  brand         Brand
+  status        LeadStatus @default(NEW)
+  source        LeadSource @default(WEBSITE)
+  firstName     String
+  lastName      String?
+  email         String?
+  phoneE164     String?
+  notes         String?
+  referredBy    String?    /// free text or userId
+  trialBookedAt DateTime?
+  convertedAt   DateTime?
+  convertedToUserId String? /// links to User upon conversion
+  meta          Json?      /// UTM params, ad campaign, etc.
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  program        Program?     @relation(fields: [programId], references: [id])
+  programId      String?      /// which program they expressed interest in
+
+  followUps LeadFollowUp[]
+
+  @@index([brand, organizationId, status])
+  @@index([email])
+  @@index([convertedToUserId])
+}
+```
+
+#### LeadFollowUp
+
+```prisma
+model LeadFollowUp {
+  id          String   @id @default(cuid())
+  channel     String   /// "EMAIL", "SMS", "PHONE", "IN_PERSON"
+  notes       String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  lead       Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId     String
+  assignedTo User?  @relation("FollowUpAssignee", fields: [assignedToId], references: [id])
+  assignedToId String?
+
+  @@index([leadId])
+  @@index([assignedToId])
+}
+```
+
+### 10.3 Tournament Rules Engine
+
+The brief identifies that `TournamentDiscipline.rulesetName` (string) is insufficient for Smoothcomp/Kihapp-level competition. Need structured rules and scoring templates.
+
+#### RuleSet
+
+```prisma
+model RuleSet {
+  id              String   @id @default(cuid())
+  name            String   /// "IBJJF Gi Rules", "WEKAF Single Stick"
+  description     String?
+  matchDurationSec Int?    /// default match length
+  overtimeSec     Int?
+  scoringMethod   ScoringMethod @default(POINTS)
+  scoringConfig   Json?    /// { pointValues: { takedown: 2, sweep: 2, mount: 4 }, penalties: [...] }
+  isSystem        Boolean  @default(false)
+  brand           Brand?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  discipline   Discipline? @relation(fields: [disciplineId], references: [id])
+  disciplineId String?
+
+  tournamentDisciplines TournamentDiscipline[]
+
+  @@unique([name, brand])
+  @@index([brand])
+  @@index([disciplineId])
+}
+```
+
+#### WeighInRecord
+
+```prisma
+model WeighInRecord {
+  id            String   @id @default(cuid())
+  weightKg      Decimal  @db.Decimal(5, 2)
+  recordedAt    DateTime @default(now())
+  recordedBy    String?  /// userId of official
+  isOfficial    Boolean  @default(false)
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId String
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+
+  @@index([registrationId])
+  @@index([userId])
+}
+```
+
+#### MatAssignment
+
+For tournament operations — which mat/ring a match is assigned to.
+
+```prisma
+model MatAssignment {
+  id        String              @id @default(cuid())
+  matName   String              /// "Mat 1", "Ring A"
+  status    MatAssignmentStatus @default(PENDING)
+  startTime DateTime?
+  endTime   DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  match        Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId      String     @unique
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId String
+
+  @@index([tournamentId, matName])
+}
+```
+
+### 10.4 Existing model modifications (pass 3)
+
+#### User — additional relations
+
+```prisma
+model User {
+  // ...existing relations...
+  leadFollowUps  LeadFollowUp[] @relation("FollowUpAssignee")
+  weighInRecords WeighInRecord[]
+}
+```
+
+#### Organization — additional relation
+
+```prisma
+model Organization {
+  // ...existing relations...
+  leads Lead[]
+}
+```
+
+#### Program — additional relation
+
+```prisma
+model Program {
+  // ...existing relations...
+  leads Lead[]
+}
+```
+
+#### TournamentDiscipline — add ruleSet FK
+
+```prisma
+model TournamentDiscipline {
+  // ...existing fields...
+  ruleSet      RuleSet? @relation(fields: [ruleSetId], references: [id])
+  ruleSetId    String?
+  // rulesetName remains for display override
+}
+```
+
+#### Discipline — additional relation
+
+```prisma
+model Discipline {
+  // ...existing relations...
+  ruleSets RuleSet[]
+}
+```
+
+#### Registration — additional relation
+
+```prisma
+model Registration {
+  // ...existing relations...
+  weighInRecords WeighInRecord[]
+}
+```
+
+#### Match — additional relation
+
+```prisma
+model Match {
+  // ...existing relations...
+  matAssignment MatAssignment?
+}
+```
+
+#### Tournament — additional relation
+
+```prisma
+model Tournament {
+  // ...existing relations...
+  matAssignments MatAssignment[]
+}
+```
+
+### 10.5 Pass 3 model count
+
+| Category | New models | New enums |
+|---|---|---|
+| Lead / CRM | 2 (Lead, LeadFollowUp) | 2 (LeadStatus, LeadSource) |
+| Tournament Rules | 1 (RuleSet) | 1 (ScoringMethod) |
+| Tournament Operations | 2 (WeighInRecord, MatAssignment) | 1 (MatAssignmentStatus) |
+| **Pass 3 total** | **5 new models** | **4 new enums** |
+
+### 10.6 Updated grand total (pass 1 + 2 + 3)
+
+| | Pass 1 | Pass 2 | Pass 3 | Combined |
+|---|---|---|---|---|
+| New models | 24 | 9 | 5 | **38** |
+| New enums | 17 | 8 | 4 | **29** |
+| **Total platform models** | | | | **~74** (36 existing + 38 new) |
+
+### 10.7 Final coverage check (all 3 passes)
+
+| Area | Status | Notes |
+|---|---|---|
+| Lead pipeline / CRM | ✅ NOW COVERED | Lead + LeadFollowUp + conversion tracking |
+| Tournament rules engine | ✅ NOW COVERED | RuleSet with structured scoring config |
+| Weigh-in tracking | ✅ NOW COVERED | WeighInRecord per registration |
+| Mat/ring assignment | ✅ NOW COVERED | MatAssignment per match |
+| White-label (Sites/Templates) | ⏳ POST-LAUNCH | RDD-specific; deferred per Option A-plus |
+| Athlete journal/HealthKit | ⏳ POST-LAUNCH | BJJBuddy-style features post-launch |
+| Ranking series | ⏳ POST-LAUNCH | Cross-tournament rankings deferred |
+
+---
+
 ## Sign-off
 
-- [ ] Brian approves model names and relationships (pass 1 + pass 2)
+- [ ] Brian approves model names and relationships (pass 1 + 2 + 3)
 - [ ] Brian approves enum values
-- [ ] Brian confirms nothing is missing
-- [ ] Ready for Cody to implement migration
+- [ ] Brian confirms nothing is missing for May 18 launch
+- [ ] Launch strategy: **Option A-plus** confirmed
+- [ ] Ready for Cody to implement migration in 3 waves
 
 **Once signed off, this becomes the implementation spec for the schema migration.**
