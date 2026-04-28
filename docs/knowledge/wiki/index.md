@@ -60,6 +60,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active | 6 |
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 5 |
 | [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | active | 5 |
+| [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | draft-for-review | 5 |
 
 ### ADRs
 
@@ -92,7 +93,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0017](../../sprints/SESSION_0017.md) | session | in-progress |
 | [SESSION_0018](../../sprints/SESSION_0018.md) | session | closed |
 | [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
-| [SESSION_0020](../../sprints/SESSION_0020.md) | session | planned |
+| [SESSION_0020](../../sprints/SESSION_0020.md) | session | closed-full |
 
 ## Protocols
 
