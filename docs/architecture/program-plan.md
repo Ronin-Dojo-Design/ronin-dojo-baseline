@@ -10,6 +10,7 @@ health: 7
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md
+  - docs/protocols/WORKFLOW_5.0.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

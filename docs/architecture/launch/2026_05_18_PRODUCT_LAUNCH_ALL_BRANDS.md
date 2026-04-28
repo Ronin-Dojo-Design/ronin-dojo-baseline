@@ -16,6 +16,7 @@ backlinks:
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/SCHEMA_NEEDS_MANIFEST.md
+  - docs/protocols/WORKFLOW_5.0.md
 tags:
   - launch
   - production

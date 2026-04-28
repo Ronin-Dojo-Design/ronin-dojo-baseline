@@ -9,6 +9,7 @@ author: Brian + Copilot
 last_agent: Copilot (SESSION_0005)
 pairs_with:
   - architecture/s1-schema-design
+  - docs/architecture/s2-schema-additions.md
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0004

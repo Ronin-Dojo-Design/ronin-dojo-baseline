@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-04-27
+updated: 2026-04-28
 author: Brian + Copilot
-last_agent: copilot-session-0015
+last_agent: copilot-session-0020-preflight
 health: 7
 needs_fix:
   - "Backlinks not yet wired on architecture docs"
@@ -90,7 +90,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0014](../../sprints/SESSION_0014.md) | session | closed-full |
 | [SESSION_0015](../../sprints/SESSION_0015.md) | session | closed-full |
 | [SESSION_0016](../../sprints/SESSION_0016.md) | session | closed-full |
-| [SESSION_0017](../../sprints/SESSION_0017.md) | session | in-progress |
+| [SESSION_0017](../../sprints/SESSION_0017.md) | session | closed-full |
 | [SESSION_0018](../../sprints/SESSION_0018.md) | session | closed |
 | [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
 | [SESSION_0020](../../sprints/SESSION_0020.md) | session | closed-full |
