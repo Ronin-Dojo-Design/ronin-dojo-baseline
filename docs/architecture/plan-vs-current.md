@@ -4,12 +4,15 @@ slug: plan-vs-current
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
-health: 7
+updated: 2026-04-28
+last_agent: copilot-session-0020-preflight
+health: 5
+needs_fix:
+  - "Gap table below only covers S1 behavioral requirements — needs refresh for s2-schema-additions Pass 1–3 coverage"
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/s1-schema-design.md
+  - docs/architecture/s2-schema-additions.md
   - docs/architecture/source/chatgpt-original-plan.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -216,5 +219,20 @@ All five questions were resolved during SESSION_0003–0005:
 ## Cross-references (added SESSION_0010)
 
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map for the layers this doc compares against
+
+---
+
+## S2 Schema Additions — gap closure (SESSION_0020)
+
+> **This section is a pointer, not a duplicate.** Full spec lives in [s2-schema-additions.md](s2-schema-additions.md).
+
+SESSION_0020 identified 10 operational gaps that were NOT covered by S1. All 10 are launch blockers. Three design passes produced 38 new models and 29 new enums covering:
+
+- Programs, scheduling, attendance, check-in (Pass 1)
+- Belt testing, family accounts, billing/Stripe Connect, contracts, notifications, org settings (Pass 1)
+- Invitations, generic events, tournament brackets/matches, fight records, audit logging (Pass 2)
+- Lead/CRM pipeline, tournament rules engine, weigh-ins, mat assignments (Pass 3)
+
+**Status:** Design complete, sign-off pending, migration not yet run. See [s2-schema-additions.md](s2-schema-additions.md) for the full implementation spec.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — items currently "code complete / smoke pending" that this doc tracks against the spec
 - [Command Center and Intake](../knowledge/wiki/content-engine/command-center-and-intake.md) — content-engine view of how authored content lands against the data spine

@@ -49,17 +49,17 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- | --- |
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active | 8 |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active | 8 |
-| [Program Plan](../../architecture/program-plan.md) | file | active | 7 |
-| [Plan vs Current](../../architecture/plan-vs-current.md) | file | active | 7 |
-| [Data Model](../../architecture/data-model.md) | concept | active | 7 |
+| [Program Plan](../../architecture/program-plan.md) | file | active | 5 |
+| [Plan vs Current](../../architecture/plan-vs-current.md) | file | active | 5 |
+| [Data Model](../../architecture/data-model.md) | concept | active | 5 |
 | [Auth](../../architecture/auth.md) | file | active | 5 |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active | 5 |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active | 8 |
 | [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active | 8 |
 | [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active | 7 |
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active | 6 |
-| [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 5 |
-| [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | active | 5 |
+| [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 7 |
+| [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated | 3 |
 | [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | draft-for-review | 5 |
 
 ### ADRs

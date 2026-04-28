@@ -4,9 +4,9 @@ slug: data-model
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-26
+updated: 2026-04-28
 author: Brian + Copilot
-last_agent: Copilot (SESSION_0005)
+last_agent: copilot-session-0020-preflight
 pairs_with:
   - architecture/s1-schema-design
   - docs/architecture/s2-schema-additions.md
@@ -14,13 +14,16 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0004
   - sprints/SESSION_0005
+  - sprints/SESSION_0020
   - knowledge/wiki/files/schema-prisma
   - knowledge/wiki/content-engine/content-atoms
-health: 7
+health: 5
 needs_fix:
-  - "plan-vs-current.md still references old naming — needs refresh"
+  - "Model count outdated — says 31, target is ~74 after s2-schema-additions"
+  - "Wiring section references 31 models — should reference 74"
+  - "Missing sections for Pass 1–3 models (programs, scheduling, billing, tournaments, CRM)"
 wiring:
-  - "apps/web/prisma/schema.prisma — all 31 models"
+  - "apps/web/prisma/schema.prisma — 36 existing models, 38 new planned (s2-schema-additions.md)"
   - "apps/web/prisma/seed.ts — seed data for disciplines, ranks, roles, etc."
   - "apps/web/lib/authz.ts — permission checks reference Organization, Rank, Role"
 tags: [schema, prisma, data-model, s1]
@@ -32,11 +35,13 @@ Source of truth: `apps/web/prisma/schema.prisma`. This document is the human-rea
 
 ## Summary
 
-31 Prisma models, 18 enums. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage, waivers, certifications, and substyle taxonomy.
+36 Prisma models currently in schema, with 38 additional models designed in [s2-schema-additions.md](s2-schema-additions.md) (target: ~74 total). 29 new enums across 3 design passes. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage, waivers, certifications, substyle taxonomy, class scheduling, attendance tracking, belt testing, family/guardian accounts, invoicing/payments (Stripe Connect), CRM/lead pipeline, membership contracts, notification preferences, org network relationships, and audit logging.
 
 ## Status
 
-Schema is live in local dev. Migration via `prisma db push`. Seed file populates 12 disciplines, 13 rank systems (~194 ranks), 6 roles, 4 tournament roles, 6 gamification event types, 6 subscription tiers, and 5 Karate substyles.
+Schema is live in local dev with 36 models. Migration via `prisma db push`. Seed file populates 12 disciplines, 13 rank systems (~194 ranks), 6 roles, 4 tournament roles, 6 gamification event types, 6 subscription tiers, and 5 Karate substyles.
+
+**S2 additions (not yet migrated):** 38 new models across 3 passes covering programs, scheduling, attendance, belt testing, family, billing, contracts, notifications, org network, invitations, generic events, tournament brackets/matches, fight records, audit logging, CRM/leads, tournament rules engine, weigh-ins, and mat assignments. See [s2-schema-additions.md](s2-schema-additions.md) for full spec.
 
 ---
 

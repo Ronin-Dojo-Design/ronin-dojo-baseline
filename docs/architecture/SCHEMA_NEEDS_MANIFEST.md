@@ -1,3 +1,23 @@
+---
+title: Schema Needs Manifest
+slug: schema-needs-manifest
+type: file
+status: deprecated
+created: 2026-04-25
+updated: 2026-04-28
+last_agent: copilot-session-0020-preflight
+health: 3
+pairs_with:
+  - docs/architecture/s2-schema-additions.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+  - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
+needs_fix:
+  - "Superseded by s2-schema-additions.md — all gaps addressed in Passes 1–3"
+---
+
+> **⚠️ DEPRECATED** — This was Brian's raw intake notes from early planning. All schema gaps identified here have been resolved in [s2-schema-additions.md](s2-schema-additions.md) (38 new models, 29 new enums across 3 passes). Kept for historical reference only. Do not use as a planning input.
+
 Project Overview:
 - Architecture: mo-fi wireframes for data structure and end-to-end user registration/lifecycle
 - Current work: building schema, enums, and tables for ranks, disciplines, roles, members, etc.

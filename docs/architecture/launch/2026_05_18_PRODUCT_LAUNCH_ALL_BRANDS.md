@@ -6,8 +6,8 @@ status: active
 created: 2026-04-28
 updated: 2026-04-28
 author: Brian + Petey
-last_agent: session-0019-petey
-health: 5
+last_agent: copilot-session-0020-preflight
+health: 7
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
@@ -110,7 +110,9 @@ This is no longer MVP. This is production launch.
 
 ## Schema gaps (from SCHEMA_NEEDS_MANIFEST.md)
 
-The following entities are referenced in the schema needs manifest but do NOT exist in the current Prisma schema:
+> **UPDATE (SESSION_0020):** All schema gaps below have been addressed in [s2-schema-additions.md](../s2-schema-additions.md) across 3 design passes (38 new models, 29 new enums). `SCHEMA_NEEDS_MANIFEST.md` is now deprecated. The table below is preserved for historical reference.
+
+The following entities were referenced in the schema needs manifest but did NOT exist in the Prisma schema at time of writing:
 
 | Entity | Needed for | Current status |
 | --- | --- | --- |
@@ -157,7 +159,23 @@ The following entities are referenced in the schema needs manifest but do NOT ex
 
 ## Recommended launch strategy
 
-### Option A: Staggered launch (recommended)
+> **UPDATE (SESSION_0020):** Option A-plus selected pending formal sign-off. Session calendar and execution plan now governed by [WORKFLOW_5.0.md](../../protocols/WORKFLOW_5.0.md).
+
+### Option A-plus: All brands live May 18, differentiated depth (recommended)
+
+All four brands go publicly live on May 18 with differentiated feature depth:
+
+- **P1 Baseline:** Full member lifecycle — scheduling, attendance, billing, belt testing, CRM
+- **P2 BBL:** Migration-safe community — lineage, curriculum, certifications, member profiles
+- **P3 WEKAF:** Real registration + bracket visibility — not full long-tail tournament rules engine
+- **P4 Ronin Dojo Design:** Assisted white-label sales + onboarding — not fully self-serve wizard
+
+Schema migration in 3 waves (see WORKFLOW_5.0.md for session calendar):
+- **Wave A (SESSION_0021–0022):** School ops models
+- **Wave B (SESSION_0023–0025):** Promotions, events, leads
+- **Wave C (SESSION_0027–0029):** Tournament execution
+
+### Option A: Staggered launch (original recommendation, superseded)
 
 - **May 18:** P1 (Baseline) fully functional. P2–P4 have branded landing pages, user registration, directory — but advanced features (tournaments, onboarding wizard) marked "coming soon."
 - **June 1:** P3 (WEKAF) tournament features live

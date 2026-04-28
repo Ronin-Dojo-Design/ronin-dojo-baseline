@@ -4,9 +4,12 @@ slug: program-plan
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
-health: 7
+updated: 2026-04-28
+last_agent: copilot-session-0020-preflight
+health: 5
+needs_fix:
+  - "Sprint scheduling superseded by WORKFLOW_5.0.md session calendar (SESSION_0021–0040)"
+  - "S6–S12 scope no longer accurate — replaced by WORKFLOW 5.0 lane model"
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md
@@ -16,6 +19,8 @@ backlinks:
 ---
 
 # Program plan — Ronin Dojo platform rebuild
+
+> **⚠️ PARTIALLY SUPERSEDED (SESSION_0020):** The 12-sprint sequential schedule (S6–S12) is replaced by [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) which defines a 20-session calendar (SESSION_0021–0040) targeting May 18 all-brand launch. The layered architecture, brand sequencing, and agent system sections remain valid.
 
 A real plan we can review together, edit, and execute against. Built to address four threads:
 
