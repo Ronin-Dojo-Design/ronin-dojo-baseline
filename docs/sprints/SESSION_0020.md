@@ -2,7 +2,7 @@
 title: "SESSION 0020 — PETEY DEEP DIVE: Production launch plan — all brands May 18"
 slug: session-0020
 type: session
-status: planned
+status: closed-full
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: session-0019-petey
@@ -16,10 +16,10 @@ backlinks:
 
 # SESSION_0020
 
-**Date:** TBD (next session)
+**Date:** 2026-04-28
 **Operator:** Brian + Agent
 **Goal:** Petey deep dive — reconcile SCHEMA_NEEDS_MANIFEST.md against current schema, build per-brand feature matrix, lock launch strategy for 2026-05-18, replan sprints S6–S12, finalize cache strategy (ADR 0010).
-**Status:** planned
+**Status:** closed-full
 **Role:** Petey (planner)
 
 ---
@@ -73,23 +73,59 @@ If multiple agents can work simultaneously, define worktree splits, persona assi
 
 ## What landed
 
-*(pending)*
+- **TASK_01 COMPLETE**: Schema needs reconciliation — grilled Brian through 3 rounds of questions, identified 10 operational gaps ALL confirmed as launch blockers
+- **S2 schema additions spec produced**: `docs/architecture/s2-schema-additions.md` — 33 new models, 25 new enums, 1 enum modification, ~10 existing models modified
+- **Pass 1 (24 models)**: Programs & scheduling, belt testing, family/guardian, payments/invoicing, contracts, notifications, org network, org settings
+- **Pass 2 (9 models)**: Invitations/QR invite, generic events (seminars/camps/parties), tournament brackets & matches, fight records, audit log
+- **Architecture decisions locked**: Stripe Express Connect default, iCal RRULE + parsed fields, CheckIn→Attendance→Gamification chain, full notification granularity, per-org configurability for everything
+- **Brian approved**: All pass 1 + pass 2 models, pending final sign-off checkbox
 
 ## Files touched
 
-*(pending)*
+- `docs/architecture/s2-schema-additions.md` — NEW: complete schema additions spec (pass 1 + pass 2), 33 new models, 25 new enums
+- `docs/sprints/SESSION_0020.md` — session tracking, status updates
 
 ## Decisions resolved
 
-*(pending)*
+- All 10 operational gaps are launch blockers (class scheduling, belt testing, family, payments, check-in, notifications, contracts, programs, instructor assignment, recurring schedules)
+- Stripe Express Connect default, Standard Connect for independent clients
+- iCal RRULE + parsed day/time columns for schedule storage
+- Instructor title hierarchy: Discipline default → Org override → ClassInstructorAssignment override
+- CheckIn → ClassSession match → Attendance → GamificationEvent chain confirmed
+- Waiver enforcement: configurable per org (at enrollment, first check-in, annual renewal)
+- Notification granularity: full (per-category × per-channel × per-program)
+- Family billing: both models (one sub for all kids OR per-kid with family discount)
+- Org modes: owner-operated, affiliation, white-label — modeled via SubscriptionTier + OrgRelationship
+- Payment models: monthly, annual, drop-in, class pack, per-test, free trial, intro pack, barter/comp — all supported
+- All features must be configurable per-org (SaaS platform, not single-school app)
 
 ## Open decisions / blockers
 
-- Launch strategy (Option A/B/C) — needs Brian sign-off
-- ADR 0010 — needs final lock for production
-- Additional ChatGPT outputs — Brian may have more
-- Schema additions scope — how much before May 18?
+- Launch strategy (Option A/B/C) — still needs Brian sign-off (TASK_03 not reached)
+- ADR 0010 cache strategy — still `proposed`, needs final lock (TASK_05 not reached)
+- Sprint replan S6–S12 — blocked on launch strategy decision (TASK_04)
+- `ProgramWaiver` join table referenced in Program model but not fully defined — Cody should add during implementation
+- Schema sign-off checkboxes in s2-schema-additions.md — Brian to check off
 
 ## Next session
 
-*(pending — depends on TASK_03 outcome)*
+**Goal:** Deep research pass in ChatGPT or Codex — validate s2-schema-additions.md against real-world martial arts SaaS platforms, stress-test edge cases, then return to lock launch strategy (TASK_03) and replan sprints (TASK_04).
+
+**Inputs to read:**
+1. `docs/architecture/s2-schema-additions.md` — the schema spec to validate
+2. `docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md` — launch strategy options
+3. `docs/architecture/decisions/0010-cache-strategy.md` — cache strategy to finalize
+
+**First task:** Feed s2-schema-additions.md into ChatGPT deep research mode or Codex for validation against competitive martial arts SaaS platforms (Zen Planner, Kicksite, Spark Membership, etc.) — identify any missing patterns before Cody starts implementing.
+
+---
+
+## Reflections
+
+This session was pure Petey planning — no code touched, which is exactly right. The grill rounds surfaced that the schema was modeled for "what things ARE" but not "how the school OPERATES." The 10 gaps (class scheduling, attendance, belt testing, family accounts, payments, check-in, notifications, contracts, programs, instructor assignment) were all hiding in plain sight — the SCHEMA_NEEDS_MANIFEST.md hinted at them but didn't make them explicit enough.
+
+Key insight: Brian's platform is a **SaaS for martial arts schools**, not a single-school app. Every answer was "both, all, customizable" — which is the correct answer for a platform. This means every feature needs a configurable default with per-org overrides, which is why OrgSettings exists as a model.
+
+The schema went from 36 models to ~69 models. That's a lot, but it's the right scope for a production martial arts SaaS covering scheduling, billing, tournaments, gamification, and multi-org networking. Nothing is over-engineered — every model maps to a real operational need.
+
+Risk: 33 new models + 25 new enums is a large migration. Cody should implement in batches, not one giant migration. Suggested batches: (1) Programs + Scheduling + Attendance, (2) Payments + Contracts, (3) Belt Testing + Events + Invites, (4) Brackets + Fight Records + Audit.
