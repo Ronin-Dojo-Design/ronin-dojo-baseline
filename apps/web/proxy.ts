@@ -26,6 +26,9 @@ const HOST_TO_BRAND: Record<string, Brand> = {
   "baseline.local": Brand.BASELINE_MARTIAL_ARTS,
   "bbl.local": Brand.BBL,
   "wekaf.local": Brand.WEKAF,
+
+  // localhost defaults to Baseline during MVP build (S1–S12)
+  "localhost": Brand.BASELINE_MARTIAL_ARTS,
 }
 
 const DEFAULT_BRAND: Brand = Brand.RONIN_DOJO_DESIGN

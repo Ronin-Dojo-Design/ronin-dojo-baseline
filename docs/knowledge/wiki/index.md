@@ -39,6 +39,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active | 6 |
 | [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active | 6 |
 | [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active | 6 |
+| [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active | 8 |
 
 ## Architecture
 
@@ -52,12 +53,15 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Auth](../../architecture/auth.md) | file | active | 5 |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active | 5 |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active | 8 |
+| [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active | 8 |
+| [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active | 7 |
 
 ### ADRs
 
 | Page | Type | Status |
 | --- | --- | --- |
 | [decisions/](../../architecture/decisions/) | decision | various |
+| [ADR 0009 Mobile Auth Strategy](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
 
 ## Sessions
 
@@ -78,6 +82,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0013](../../sprints/SESSION_0013.md) | session | closed-unclean |
 | [SESSION_0014](../../sprints/SESSION_0014.md) | session | closed-full |
 | [SESSION_0015](../../sprints/SESSION_0015.md) | session | closed-full |
+| [SESSION_0016](../../sprints/SESSION_0016.md) | session | closed-full |
+| [SESSION_0017](../../sprints/SESSION_0017.md) | session | in-progress |
 
 ## Protocols
 
@@ -94,6 +100,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Opening Ritual](../../rituals/opening.md) | protocol | active |
 | [Closing Ritual](../../rituals/closing.md) | protocol | active |
 | [Incidents Log](incidents.md) | protocol | active |
+| [Drift Register](drift-register.md) | protocol | active |
 
 ## Agents
 

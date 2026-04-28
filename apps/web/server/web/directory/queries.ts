@@ -1,5 +1,11 @@
 import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
+import {
+  directoryProfileListPayload,
+  filterDisciplinePayload,
+  filterOrganizationPayload,
+  filterRankPayload,
+} from "~/server/web/directory/payloads"
 import { db } from "~/services/db"
 
 export type DirectoryFilters = {
@@ -71,28 +77,14 @@ export const getDirectoryProfiles = cache(
           ...(userRankFilter && { rankAwards: userRankFilter }),
         },
       },
-      include: {
+      select: {
+        ...directoryProfileListPayload,
         user: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            // Email/phone conditionally included — filtered post-query by per-field flags
-            email: true,
+            ...directoryProfileListPayload.user.select,
             memberships: {
               where: { organization: { brand } },
-              select: {
-                organization: { select: { id: true, name: true, slug: true } },
-                discipline: { select: { id: true, name: true } },
-                status: true,
-              },
-            },
-            rankAwards: {
-              select: {
-                rank: { select: { id: true, name: true, sortOrder: true, rankSystem: { select: { id: true, name: true } } } },
-                awardedAt: true,
-              },
-              orderBy: { rank: { sortOrder: "desc" } },
+              select: directoryProfileListPayload.user.select.memberships.select,
             },
           },
         },
@@ -130,17 +122,17 @@ export const getDirectoryFilterOptions = cache(async (brand: Brand) => {
   const [organizations, disciplines, ranks] = await Promise.all([
     db.organization.findMany({
       where: { brand },
-      select: { id: true, name: true },
+      select: filterOrganizationPayload,
       orderBy: { name: "asc" },
     }),
     db.discipline.findMany({
       where: { brand },
-      select: { id: true, name: true },
+      select: filterDisciplinePayload,
       orderBy: { name: "asc" },
     }),
     db.rank.findMany({
       where: { rankSystem: { brand } },
-      select: { id: true, name: true, sortOrder: true },
+      select: filterRankPayload,
       orderBy: { sortOrder: "asc" },
     }),
   ])

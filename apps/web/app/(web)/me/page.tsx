@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
 import { PassportEditor } from "./passport-editor"
@@ -27,15 +29,19 @@ export default async function MePage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-2xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold">My Passport</h1>
-        <p className="text-muted-foreground mt-1">
+    <>
+      <Intro>
+        <IntroTitle>My Passport</IntroTitle>
+        <IntroDescription>
           Manage your identity and control what others see in the directory.
-        </p>
-      </div>
+        </IntroDescription>
+      </Intro>
 
-      <PassportEditor passport={passport} directoryProfile={directoryProfile} />
-    </div>
+      <Section>
+        <Section.Content>
+          <PassportEditor passport={passport} directoryProfile={directoryProfile} />
+        </Section.Content>
+      </Section>
+    </>
   )
 }
