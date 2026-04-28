@@ -1,9 +1,14 @@
 # ADR 0010 — Cache strategy for auth-scoped queries
 
-**Status:** accepted
-**Date:** 2026-04-27
-**Deciders:** Brian + Copilot (SESSION_0018)
-**Relates to:** D-005 (drift register), Dirstarter L1 cache pattern
+**Status:** proposed
+**Date:** 2026-04-27 (drafted), 2026-04-28 (reverted to proposed per SESSION_0019)
+**Deciders:** Brian + Copilot (SESSION_0018, reviewed SESSION_0019)
+**Relates to:** D-005 (drift register), Dirstarter L1 cache pattern, [Cache Risk Register](../cache-risk-register.md)
+
+> **SESSION_0019 note:** This ADR was incorrectly marked `accepted` before validation.
+> SESSION_0018 produced the draft; SESSION_0019 reviewed it against live Dirstarter docs,
+> current Next.js cache documentation, and the repo's actual query implementations.
+> Recommendation: narrow to T1 public-only for now. See `docs/architecture/cache-risk-register.md`.
 
 ## Context
 

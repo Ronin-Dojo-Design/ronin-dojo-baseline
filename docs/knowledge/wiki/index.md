@@ -35,6 +35,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Repo Truth Index](repo-truth-index.md) | concept | active | 7 |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active | 7 |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active | 7 |
+| [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | active | 7 |
+| [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | active | 6 |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active | 7 |
 | [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active | 6 |
 | [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active | 6 |
@@ -55,6 +57,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active | 8 |
 | [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active | 8 |
 | [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active | 7 |
+| [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active | 6 |
+| [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 5 |
+| [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | active | 5 |
 
 ### ADRs
 
@@ -62,6 +67,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [decisions/](../../architecture/decisions/) | decision | various |
 | [ADR 0009 Mobile Auth Strategy](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
+| [ADR 0010 Cache Strategy](../../architecture/decisions/0010-cache-strategy.md) | decision | proposed |
 
 ## Sessions
 
@@ -84,6 +90,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0015](../../sprints/SESSION_0015.md) | session | closed-full |
 | [SESSION_0016](../../sprints/SESSION_0016.md) | session | closed-full |
 | [SESSION_0017](../../sprints/SESSION_0017.md) | session | in-progress |
+| [SESSION_0018](../../sprints/SESSION_0018.md) | session | closed |
+| [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
+| [SESSION_0020](../../sprints/SESSION_0020.md) | session | planned |
 
 ## Protocols
 
