@@ -6,10 +6,7 @@ status: active
 created: 2026-04-25
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight
-health: 5
-needs_fix:
-  - "Sprint scheduling superseded by WORKFLOW_5.0.md session calendar (SESSION_0021–0040)"
-  - "S6–S12 scope no longer accurate — replaced by WORKFLOW 5.0 lane model"
+health: 9
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md
@@ -80,13 +77,13 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 | **S3** ✅ | Organization create + join flow | Create org (DOJO/LEAGUE/SCHOOL/CLUB) + owner ACTIVE membership + discipline links. Join button creates PENDING membership. Pages: list, create, detail. Smoke-tested SESSION_0013. **Deferred to future sprint:** invite link flow, multi-role assignment UI, status lifecycle transitions, address field expansion. Sessions 0008–0013. |
 | **S4** ✅ | Directory search with privacy | List view honoring `DirectoryProfile.visibility` and per-field flags. Filters by org/discipline/rank/location. Browser-verified SESSION_0017. **Plan Milestone 1 ✅** |
 | **S5** ✅ | RankSystem + Rank seed data | Done — pulled forward into S1. 12 disciplines, 13 rank systems, 194 ranks seeded. Admin UI to add new rank systems deferred to future sprint. |
-| **S6** | Course + CurriculumItem CRUD | Instructors author courses tied to (Organization × Discipline × certificationType: BELT_RANK / SAFETY / COACH). MDX or rich-text notes; image/video uploads via S3. |
-| **S7** | Progress awarding + gamification ledger | Instructor → student belt promotion flow. `GamificationEvent` ledger with point values. Level/badge computation as derived views. Resend email on promotion. |
-| **S8** | Tournament create wizard | Draft → Published lifecycle. Add `TournamentDiscipline`s. Define `Division`s with format/age/weight/rank/gender constraints. |
-| **S9** | Registration + RegistrationEntry with snapshots | User picks tournament → eligible divisions filtered by their current rank → submit creates Registration + Entries with `snapshot_rank_name` + `snapshot_org_name`. Idempotency key on submit. Audit log for staff review. |
-| **S10** | Payments + capacity + waitlist | Stripe wiring for division fees. Capacity enforcement; auto-waitlist when full. Refund flow. **Plan Milestone 2 ✅** |
-| **S11** | Baseline Martial Arts brand rollout | Theme tokens (colors/logos/copy), branded marketing pages, onboarding microcopy, port relevant TuffBuffs UI components onto the new APIs. Custom domain config in Vercel. |
-| **S12** | Ronin Bar UI shell + Vercel/Neon staging deploy | Compact/full mode with traffic-light buttons, ⌘K command palette, context dropdown (Org/Tournament/Admin), notifications. Deploy to staging on Vercel + Neon. Smoke-test full flows end-to-end. |
+| **S6** | Course + CurriculumItem CRUD | **Superseded →** SESSION_0026 (Content + curriculum lane) |
+| **S7** | Progress awarding + gamification ledger | **Superseded →** SESSION_0026 (Content + curriculum lane) |
+| **S8** | Tournament create wizard | **Superseded →** SESSION_0027–0029 (Tournament operations lane) |
+| **S9** | Registration + RegistrationEntry with snapshots | **Superseded →** SESSION_0028 (Tournament operations lane) |
+| **S10** | Payments + capacity + waitlist | **Superseded →** SESSION_0024 (School operations lane) |
+| **S11** | Baseline Martial Arts brand rollout | **Superseded →** SESSION_0031 (Baseline brand lane) |
+| **S12** | Ronin Bar UI shell + Vercel/Neon staging deploy | **Superseded →** SESSION_0034 (Ronin Dojo Design lane) + SESSION_0039 (Launch readiness) |
 
 **After S12 (post-MVP):**
 - Per-brand rollout #2: Ronin Dojo Design (admin/umbrella)
@@ -105,79 +102,66 @@ The legacy `RoninDashboard/` system is mature: 6 personas, 10+ protocol loops, v
 
 Triage in three buckets:
 
-### Bucket A — Bring forward (with refresh)
+### Bucket A — Bring forward (with refresh) ✅ DONE
 
-These deliver value on any project; carry over with version bumps to v5.0 to mark the new context.
+All items ported and live:
 
-- **`opening_v4.5.md` → `opening_v5.0.md`** (bow in ritual). Keep structure, re-tune to reflect new stack: Dirstarter conventions, Postgres/Prisma instead of MySQL/Pods, ChatGPT plan as behavioral spec, plan-vs-current.md as reference.
-- **`closing_v4.5.md` → `closing_v5.0.md`** (bow out ritual). Same — carry forward, refresh to reference new doc paths and stack.
-- **`CHAT_HANDOFF.md`** protocol. Slim it down — the new project benefits from session continuity, but the legacy version was tightly coupled to the old `RoninDashboard/sprints/active/` structure. Rewrite leaner.
-- **Petey persona** — orchestrator/planner. Universally useful. Bring forward, retune the prompt to reference new stack.
-- **Cody persona** — coder/builder. Universally useful. Bring forward.
+- ✅ **`opening_v5.0.md`** — bow in ritual at `docs/rituals/opening.md`
+- ✅ **`closing_v5.0.md`** — bow out ritual at `docs/rituals/closing.md`
+- ✅ **`CHAT_HANDOFF.md`** — slimmed version at `docs/protocols/chat-handoff.md`
+- ✅ **Petey persona** — at `docs/agents/petey.md`
+- ✅ **Cody persona** — at `docs/agents/cody.md`
 
-### Bucket B — Rework
+### Bucket B — Rework ✅ DONE
 
-Worth keeping, but the v4.x shape was specific to the legacy stack and needs rethinking for the new one.
+- ✅ **`WORKFLOW_5.0.md`** — created at `docs/protocols/WORKFLOW_5.0.md`. Defines 5 hard rules, 10-point score rubric, 20-session calendar, 6 personas, 5 worktrees, 3-pass review loop.
+- ✅ **Doug persona** — active as QA/reviewer
+- ⏸ **`COMPONENT_REVIEW_PROTOCOL.md`** — refresh scheduled for when UI work begins (SESSION_0030+)
 
-- **`WORKFLOW_4.4.md` → `WORKFLOW_5.0.md`** Petey orchestration script. The recipe was tuned for the legacy multi-brand WP+React work. New stack has different boundaries (single Next.js app, Prisma migrations as the schema gate, Vercel deploys, Neon for prod). Rewrite from a blank page using the v4.4 outline as scaffolding.
-- **`PETEY_ORCHESTRATOR_LOOP.md`** — same. The orchestrator pattern is right; the steps need refresh to the new stack.
-- **`DOUG_QA_LOOP.md`** — QA loop. Useful, but the new stack's QA needs are different (Prisma migration diff in CI, RLS-equivalent authz tests, Better-Auth flow tests, etc.). Refresh substantially.
-- **Doug persona** — QA/reviewer. Keep, refresh role description for new stack.
-- **`COMPONENT_REVIEW_PROTOCOL.md`** — code review loop. Worth retaining; refresh to account for Server Components, action clients, Biome instead of ESLint.
+### Bucket C — Drop or de-prioritize → PARTIALLY RESURRECTED
 
-### Bucket C — Drop or de-prioritize
+SESSION_0020 resurrected more personas than originally planned:
 
-Either tightly tied to the legacy stack, or operational machinery that doesn't apply yet.
+- ✅ **Giddy** — resurrected as Architecture + Git strategy persona (WORKFLOW 5.0)
+- ✅ **Desi** — resurrected as UX + design consistency persona (WORKFLOW 5.0)
+- ✅ **Brandon** — resurrected as Brand + marketing rollout persona (WORKFLOW 5.0)
+- Remaining Bucket C items (session-specific handoffs, bash automation, nested optimization loops) stay archived as planned.
 
-- **`PETEY_NEXT_SESSION_PROMPT_SESSION_606..619.md`** — these are session-specific handoffs from the legacy project, not reusable templates. Archive in place; don't import.
-- **`OPERATOR_HANDOFF_ONE_PAGER_SESSION_*.md`** — same, session-specific. Archive.
-- **`GIDDY_BRANCH_MONITOR.md` / `GIDDY_LOOP.md` / `GIDDY_COMMIT_GATE_PROTOCOL.md`** — branch/commit gating loops. Useful eventually, but only when we have multiple parallel work streams and a busy repo. Defer until post-MVP. (Drop **Giddy persona** for MVP; resurrect when load justifies it.)
-- **`PETEY_BUBBLE_DICTIONARY.md`** — looked legacy-specific (BubbleBuilder/MAD-Bubble references in monorepo). Skip unless we discover we need it.
-- **`PETEY_INTENT_SANITIZER_LOOP.md` / `PETEY_PARSE_PRIORITIZE_PREPARE_PLAN_LOOP.md` / `PERFECT_PETEY_PROMPT_LOOP.md`** — these are nested optimization loops. Useful at scale; overkill for MVP. Defer.
-- **`DESIGN_REVIEW_MINI_SPRINT.md`** — pull in only when we hit a design-heavy sprint (S11–S12).
-- **Brandon, Desi, Giddy personas** — defer. We don't have enough work parallelism in the MVP phase to justify 6 personas; Petey (orchestrator) + Cody (builder) + Doug (QA) is enough through S10.
-- **`scripts/utilities/petey-orchestrator.sh` / `giddy-loop-audit.sh` / `petey-parse-prioritize-prepare-plan-loop.mjs`** — bash/JS automation that ran the legacy loops. Don't port verbatim — rewrite per-project if/when we need them.
+### Bucket D — Genuinely new for this project ✅ DONE
 
-### Bucket D — Genuinely new for this project
+- ✅ `docs/runbooks/database.md`
+- ✅ `docs/architecture/plan-vs-current.md`
+- ✅ `docs/protocols/WORKFLOW_5.0.md` — the phase gate + session calendar doc
+- ✅ `docs/architecture/s2-schema-additions.md` — schema migration spec
 
-Things the legacy system didn't have but this project needs:
+### Current active agent + ritual set
 
-- **`docs/runbooks/database.md`** ✅ already written.
-- **`docs/architecture/plan-vs-current.md`** ✅ already written — this is the cross-reference doc.
-- **A "phase gate" doc** — what makes Phase 1 done, what makes Phase 2 done. So we don't drift past milestones.
-- **Schema rev playbook** — the standard sequence we follow when reshaping Prisma models (write migration, run `migrate dev`, regenerate authz that touches the renamed model, etc.). Useful when S1 lands and likely again for future schema revs.
+For SESSION_0021 onward (governed by WORKFLOW 5.0):
 
-### Recommended initial agent + ritual set
-
-For S1–S4 (foundation + Milestone 1):
-- **Personas**: Petey, Cody, Doug
-- **Rituals**: opening_v5.0, closing_v5.0
-- **Protocols**: WORKFLOW_5.0, COMPONENT_REVIEW (refreshed), CHAT_HANDOFF (slimmed)
-- Everything else stays archived in the legacy monorepo until we earn the right to bring it forward.
+- **Personas**: Petey, Cody, Doug, Giddy, Desi, Brandon (all 6 active)
+- **Rituals**: opening (bow in), closing (bow out)
+- **Protocols**: WORKFLOW_5.0, chat-handoff, cody-preflight, code-guardrails, wiki-lint
 
 ---
 
-## 5. Open decisions before we execute
+## 5. Open decisions before we execute ✅ ALL RESOLVED
 
-1. **Sign off on the layer model.** Are L1/L2/L3/L4 the right separation? Anything I'm missing?
-2. **Sign off on Baseline-first.** Or do you want Ronin Dojo Design as the first public brand for a different reason (e.g., admin tooling needs come first)?
-3. **Sign off on the 12-sprint scope.** Anything in/out vs. what's listed? Tournament registration is one of the heaviest features (S8–S10) — comfortable with that horizon, or pull it forward / push it back?
-4. **Naming locks before S1 schema rev:**
-   - `Style → Discipline` ✅ recommended
-   - `School → Organization` ✅ recommended (with `type` enum)
-   - `Profile → Passport` ✅ recommended
-   - `Belt → Rank` (with `RankSystem` parent) ✅ recommended
-5. **Multi-role memberships from S1?** (`MembershipRoleAssignment` join table) — recommended yes; small extra surface, future-proofs the lifecycle.
-6. **Bucket A/B/C call on the agent system.** Want me to actually port the Bucket A files (opening_v5.0, closing_v5.0, Petey/Cody persona refreshes, slim CHAT_HANDOFF) into this repo as a separate task? Or stay heads-down on the schema/code work and do the agent setup later?
-7. **Where does the agent system live?** Recommended path: `docs/agents/` (personas), `docs/protocols/` (loops), `docs/rituals/` (opening/closing), `docs/sprints/` (sprint plans + handoffs). Mirrors the legacy structure but lives in a single docs tree.
+1. ✅ **Layer model signed off.** L1/L2/L3/L4 accepted as-is.
+2. ✅ **Baseline-first signed off.** Build order: Baseline → BBL → WEKAF → Ronin Dojo Design.
+3. ✅ **12-sprint scope signed off** (S1–S5 executed). S6–S12 superseded by WORKFLOW 5.0 session calendar.
+4. ✅ **Naming locks**: `Style→Discipline`, `School→Organization`, `Profile→Passport`, `Belt→Rank` — all done in S1.
+5. ✅ **Multi-role memberships from S1** — `MembershipRoleAssignment` implemented.
+6. ✅ **Agent system ported** — Bucket A/B done, Bucket C partially resurrected (see Section 4 above).
+7. ✅ **Agent system location** — `docs/agents/`, `docs/protocols/`, `docs/rituals/`, `docs/sprints/` as recommended.
 
 ---
 
-## 6. What changes if you accept this plan
+## 6. What changed when the plan was accepted ✅ ALL DONE
 
-- **Pause** the four backend pieces I started (authz.ts and middleware.ts stay; brand-scope extension and Better-Auth `lastActiveBrandId` deferred). They get reworked after S1's schema rev.
-- **S1 becomes the next single task**: the schema rev migration + naming align. Everything downstream depends on this.
-- **The current `Per-brand rollout #1: Ronin Dojo Design` todo is wrong** — replaced by the 12-sprint plan above. The first brand rolled out is Baseline Martial Arts in S11.
+- ✅ Paused the four in-progress backend pieces. Reworked after S1 schema rev.
+- ✅ S1 became the next single task: schema rev migration + naming align. Completed SESSION_0003–0005.
+- ✅ "Per-brand rollout #1: Ronin Dojo Design" todo removed. Replaced by Baseline-first approach, now superseded by Option A-plus (all brands May 18).
+- ✅ Plan accepted and executed through S5. S6+ governed by WORKFLOW 5.0.
 
 ---
 

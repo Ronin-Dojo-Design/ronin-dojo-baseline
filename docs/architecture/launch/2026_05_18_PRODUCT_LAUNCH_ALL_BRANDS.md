@@ -7,7 +7,7 @@ created: 2026-04-28
 updated: 2026-04-28
 author: Brian + Petey
 last_agent: copilot-session-0020-preflight
-health: 7
+health: 9
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
@@ -114,48 +114,59 @@ This is no longer MVP. This is production launch.
 
 The following entities were referenced in the schema needs manifest but did NOT exist in the Prisma schema at time of writing:
 
-| Entity | Needed for | Current status |
+| Entity | Needed for | Resolved in |
 | --- | --- | --- |
-| Sites (white-label) | P4 — demo sites, templates | Not in schema |
-| Templates + customization | P4 — rapid site standup | Not in schema |
-| Client intake | P4 — onboarding wizard | Not in schema |
-| Onboarding wizard state | P4 — maps to site fields | Not in schema |
-| Products/Programs | P1 — curriculum purchase | Not in schema |
-| Pricing tiers + service bundles | P4 — sales flow | Not in schema |
-| Bracket system | P3 — tournament brackets | Division/Registration exist; bracket management does not |
-| Match formats | P3 — bracket types | Partially in Tournament schema |
-| Rule set association | P3 — multi-rule-set | Not in schema |
-| Fight records (per-discipline) | All — fighter records across arts | Not in schema |
-| Instructor lineage | P2 — BBL core feature | Not in schema |
-| Referee/judge courses | P3 — tournament staffing | Not in schema |
-| Scoring systems | P3 — per-format scoring | Not in schema |
+| Sites (white-label) | P4 — demo sites, templates | ⏳ POST-LAUNCH (Option A-plus) |
+| Templates + customization | P4 — rapid site standup | ⏳ POST-LAUNCH |
+| Client intake | P4 — onboarding wizard | ⏳ POST-LAUNCH |
+| Onboarding wizard state | P4 — maps to site fields | ⏳ POST-LAUNCH |
+| Products/Programs | P1 — curriculum purchase | ✅ Program + ProgramCourse + ProgramEnrollment (Pass 1) |
+| Pricing tiers + service bundles | P4 — sales flow | ✅ PricingPlan + SubscriptionTier (Pass 1) |
+| Bracket system | P3 — tournament brackets | ✅ Bracket + Match + MatchCompetitor (Pass 2) |
+| Match formats | P3 — bracket types | ✅ Match.result + MatchStatus enum (Pass 2) |
+| Rule set association | P3 — multi-rule-set | ✅ RuleSet + TournamentDiscipline.ruleSetId (Pass 3) |
+| Fight records (per-discipline) | All — fighter records across arts | ✅ FightRecord (Pass 2) |
+| Instructor lineage | P2 — BBL core feature | ✅ LineageRelationType.INSTRUCTOR_STUDENT (Pass 1) |
+| Referee/judge courses | P3 — tournament staffing | ✅ TournamentRole.JUDGE + Course (S1, live) |
+| Scoring systems | P3 — per-format scoring | ✅ RuleSet.scoringConfig + ScoringMethod (Pass 3) |
 
-## What exists today (S1–S5 complete)
+## What exists today (S1–S5 complete + S2 design)
 
-- 31 Prisma models, all enums
+**Live in schema (36 models):**
+
 - User + Passport + DirectoryProfile (S2)
 - Organization CRUD + membership + join flow (S3)
 - Directory search with privacy filters (S4)
-- 12 disciplines, 13 rank systems, 194 ranks seeded (S5/S1)
+- 12 disciplines, 13 rank systems, 194 ranks seeded (S1)
 - Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry (schema only, no UI)
+- Courses + CurriculumItem + Gamification + Subscriptions + Lineage + Waivers + Certifications + Content Engine
+
+**Designed, migration pending (38 models):**
+
+- Programs, scheduling, attendance, check-in, belt testing, family, billing, contracts, notifications, org settings (Pass 1 — 24 models)
+- Invitations, generic events, brackets, matches, fight records, audit log (Pass 2 — 9 models)
+- Lead/CRM, rules engine, weigh-ins, mat assignments (Pass 3 — 5 models)
 
 ## Gap analysis: 20 days to launch
 
-| Sprint | Planned work | Days needed (est.) | Launch-critical? |
-| --- | --- | --- | --- |
-| S6 | Course + CurriculumItem CRUD | 3–4 | Yes (P1) |
-| S7 | Progress awarding + gamification | 3–4 | Yes (P1) |
-| S8 | Tournament create wizard | 2–3 | Yes (P3) |
-| S9 | Registration + RegistrationEntry + snapshots | 2–3 | Yes (P3) |
-| S10 | Payments + capacity + waitlist | 3–4 | Yes (P1, P3) |
-| S11 | All brand themes + marketing pages | 3–4 | Yes (all) |
-| S12 | Deploy + smoke test | 1–2 | Yes (all) |
-| NEW | Schema additions (sites, templates, onboarding, products, brackets, scoring, lineage) | 5–8 | P2–P4 |
-| NEW | BBL data migration | 2–3 | P2 |
-| NEW | White-label + onboarding wizard UI | 5–8 | P4 |
-| **Total** | | **~30–42 days** | — |
+> **Updated SESSION_0020:** Old sprint estimates replaced by WORKFLOW 5.0 session calendar.
 
-**Assessment:** 30–42 days of work in 20 calendar days. This requires either parallel work streams, scope cuts for launch, or a phased rollout within the May 18 date (P1 fully functional, P2–P4 with landing pages + coming-soon).
+| Session block | Work | WORKFLOW 5.0 sessions |
+| --- | --- | --- |
+| Schema Wave A | School ops models → Prisma migration | 0021–0022 |
+| Schema Wave B | Promotions, events, leads, invitations | 0023–0025 |
+| Content + curriculum | Curriculum, media, certifications | 0026 |
+| Schema Wave C | Tournament execution — brackets, scoring, rules | 0027–0029 |
+| Athlete-facing contracts | BJJBuddy-plus baseline app contracts | 0030 |
+| Brand launches | Baseline → BBL → WEKAF → RDD | 0031–0034 |
+| QA hardening | E2E tests, fixtures, seeds, migration rehearsal | 0035 |
+| Launch + support | Email, analytics, storage, payments, ops | 0036 |
+| Buffer | Mandatory debt burn-down | 0037 |
+| Cross-brand QA | UAT, accessibility, performance | 0038 |
+| Launch readiness | Freeze, rollback drill, support playbook | 0039 |
+| Launch day | Release execution, monitoring, triage | 0040 |
+
+**Assessment:** 20 sessions across 20 days. Tight but feasible with WORKFLOW 5.0's single-lane-per-session discipline and 9.5/10 score gate.
 
 ## Recommended launch strategy
 
@@ -193,21 +204,21 @@ Schema migration in 3 waves (see WORKFLOW_5.0.md for session calendar):
 - Safest option. Original program plan essentially.
 - Doesn't match Brian's stated goal of all brands launching.
 
-## SESSION_0020 scope
+## SESSION_0020 scope ✅ COMPLETED
 
-SESSION_0020 should be a Petey deep dive covering:
+All items completed during SESSION_0020 Petey deep dive:
 
-1. **Schema needs pass** — reconcile `SCHEMA_NEEDS_MANIFEST.md` against current schema; identify every missing model/enum/relation
-2. **Per-brand feature matrix** — exact features each brand needs for launch, with done/not-done status
-3. **Launch strategy decision** — Option A/B/C above, with Brian's sign-off
-4. **Sprint replan** — rewrite S6–S12 scope against the May 18 date
-5. **Parallel workstream plan** — if multiple agents/sessions can work in parallel, define the worktree split
-6. **Cache strategy finalization** — ADR 0010 decision must be locked for production (currently `proposed`)
+1. ✅ **Schema needs pass** — reconciled against current schema; produced [s2-schema-additions.md](../s2-schema-additions.md) with 38 new models, 29 new enums across 3 passes
+2. ✅ **Per-brand feature matrix** — Option A-plus defines differentiated depth per brand (see above)
+3. ✅ **Launch strategy decision** — Option A-plus selected (all brands live May 18, differentiated depth)
+4. ✅ **Sprint replan** — replaced S6–S12 with WORKFLOW 5.0 session calendar (SESSION_0021–0040)
+5. ✅ **Parallel workstream plan** — 5 worktrees defined in WORKFLOW 5.0 (core-platform, school-ops, tournaments, brand-launch, qa-hardening)
+6. ⏸ **Cache strategy finalization** — ADR 0010 still `proposed`; scheduled for SESSION_0022
 
-## Open questions for Brian
+## Open questions for Brian ✅ RESOLVED
 
-1. Is May 18 a hard deadline or a target? What's the consequence of slipping?
-2. Are you comfortable with Option A (staggered) or does it have to be Option B (everything May 18)?
-3. Do you have additional developers, or is this single-operator + AI agents?
-4. Is `SCHEMA_NEEDS_MANIFEST.md` the complete spec, or is there more from the ChatGPT sessions?
-5. For P4 (Ronin Dojo Design) — how much of the white-label/onboarding/template system is launch-critical vs. post-launch?
+1. ✅ **Hard deadline.** May 18 is a hard launch date, not a target.
+2. ✅ **Option A-plus.** All brands live May 18 with differentiated depth. Not staggered, not deferred.
+3. ✅ **Single operator + AI agents.** No additional developers. 6 AI personas (Petey, Cody, Doug, Desi, Brandon, Giddy).
+4. ✅ **Complete spec.** s2-schema-additions.md (3 passes) + ChatGPT deep research brief = complete spec. SCHEMA_NEEDS_MANIFEST.md is deprecated.
+5. ✅ **P4 white-label.** Assisted onboarding is launch scope. Self-serve wizard is post-launch.

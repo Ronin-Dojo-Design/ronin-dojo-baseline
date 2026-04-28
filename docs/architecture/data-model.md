@@ -17,16 +17,12 @@ backlinks:
   - sprints/SESSION_0020
   - knowledge/wiki/files/schema-prisma
   - knowledge/wiki/content-engine/content-atoms
-health: 5
-needs_fix:
-  - "Model count outdated — says 31, target is ~74 after s2-schema-additions"
-  - "Wiring section references 31 models — should reference 74"
-  - "Missing sections for Pass 1–3 models (programs, scheduling, billing, tournaments, CRM)"
+health: 9
 wiring:
-  - "apps/web/prisma/schema.prisma — 36 existing models, 38 new planned (s2-schema-additions.md)"
+  - "apps/web/prisma/schema.prisma — 36 existing models (live), 38 new models (s2-schema-additions, migration pending)"
   - "apps/web/prisma/seed.ts — seed data for disciplines, ranks, roles, etc."
   - "apps/web/lib/authz.ts — permission checks reference Organization, Rank, Role"
-tags: [schema, prisma, data-model, s1]
+tags: [schema, prisma, data-model, s1, s2]
 ---
 
 # Data Model
@@ -347,3 +343,185 @@ The following models come from the Dirstarter directory template and are kept as
 - `Account`, `Session`, `Verification` (Better-Auth)
 
 TODO: remove before production (tracked in follow-up before BBL DNS cutover, see ADR 0007).
+
+---
+
+## S2 Schema Additions (38 new models — design complete, migration pending)
+
+Full Prisma definitions in [s2-schema-additions.md](s2-schema-additions.md). Below is the human-readable rationale for each model group.
+
+### Programs & Scheduling (8 models)
+
+The missing operational backbone. A **Program** is a student-facing offering ("Adult BJJ", "Kids Karate 5–8") that determines schedule access and pricing. Programs link to Courses via the **ProgramCourse** M:N join. Students enroll via **ProgramEnrollment** (with waitlist support and age enforcement).
+
+Each Program has **ClassSchedules** — recurring definitions ("Mon/Wed/Fri 6–7:30pm") storing both iCal RRULE and parsed day/time columns. **ClassInstructorAssignment** maps instructors to schedules with customizable titles ("Guro", "Sensei"). **ClassSession** represents a specific date instance auto-generated from the schedule.
+
+**CheckIn** captures raw kiosk/QR/app events. When matched to a ClassSession, it creates an **Attendance** record that triggers the existing GamificationEvent chain.
+
+```text
+Program → ClassSchedule → ClassSession → Attendance ← CheckIn
+   ↕            ↕                              ↕
+ProgramEnrollment  ClassInstructorAssignment   GamificationEvent (existing)
+   ↕
+ProgramCourse ↔ Course (existing)
+```
+
+### Belt Testing (3 models)
+
+**BeltTestEvent** is a scheduled exam day scoped to an org and optionally a rank system. Students register via **BeltTestRegistration** (with fee tracking, prerequisite verification, and per-technique score breakdown). **BeltTestPrerequisiteConfig** defines per-rank requirements (time-in-rank, attendance count, curriculum completion, instructor approval) — configurable per org.
+
+### Family & Guardian (2 models)
+
+**FamilyGroup** + **FamilyMember** groups users under one billing/management umbrella. Supports guardian, child, and spouse roles. Primary billing contact is flagged. Enables family discount billing and minor account management.
+
+### Payments & Billing (6 models)
+
+**PricingPlan** defines purchasable options (monthly, annual, drop-in, class pack, trial, intro pack). **Invoice** → **InvoiceLineItem** → **Payment** is the billing chain. Payments support card, bank, cash, check, barter, coupon, and comp methods.
+
+**StripeAccount** stores Stripe Connect credentials per org (Express default, Standard for independent clients). **PayoutSplit** defines revenue sharing between instructors/staff.
+
+**PromoCode** supports org-level and platform-wide discount codes.
+
+### Contracts (1 model)
+
+**MembershipContract** — legally distinct from waivers. Stores term length, auto-renewal, cancellation notice period, cooling-off period, and monthly amount.
+
+### Notifications (2 models)
+
+**NotificationPreference** provides full granularity: per-category (class reminder, billing, belt test, etc.) × per-channel (email, SMS, push) × per-program. **Announcement** supports org-wide or program-specific broadcast messages across multiple channels.
+
+### Org Network (1 model)
+
+**OrgRelationship** tracks parent-child relationships between organizations: affiliation, white-label, and franchise types. Enables the three usage modes (owner-operated, affiliation, white-label).
+
+### Org Settings (1 model)
+
+**OrgSettings** is the per-org configuration singleton. Stores all operational toggles: check-in window, late check-in, waiver enforcement, waiver renewal, SMS cost pass-through, drop-in fees, barter membership, gamification, belt test scoring.
+
+### Invitations (2 models)
+
+**Invite** is a universal invite system — QR code, link, or manual — covering org join, program enroll, tournament registration, and event attendance. **InviteClaim** records who claimed what and when.
+
+### Generic Events (2 models)
+
+**Event** covers seminars, workshops, birthday parties, summer camps, open mats, and custom events (NOT tournaments — those have their own richer model). **EventRegistration** tracks attendance and payment.
+
+### Tournament Execution (3 models)
+
+Extends the existing Tournament → Division chain. **Bracket** lives inside a Division (single elim, pool play, repechage). **Match** is a single bout with round/match positioning, result, and structured score data. **MatchCompetitor** links RegistrationEntry to match slots.
+
+### Fight Records (1 model)
+
+**FightRecord** — per-fighter, per-discipline competition record (wins/losses/draws/no-contests). Supports tournament, exhibition, smoker, and professional types. One fighter can have separate records for BJJ, boxing, eskrima, etc.
+
+### Audit Log (1 model)
+
+**AuditLog** — append-only log for sensitive operations (rank promotions, payment modifications, role changes, belt test results). Stores before/after snapshots, IP, and user agent.
+
+### Lead / CRM (2 models)
+
+**Lead** captures prospect data before they become a User — source tracking, trial booking, conversion tracking, UTM params. **LeadFollowUp** tracks outreach attempts across channels with assignee and scheduling.
+
+### Tournament Rules Engine (1 model)
+
+**RuleSet** — structured scoring templates ("IBJJF Gi Rules", "WEKAF Single Stick") with match duration, overtime, scoring method, and configurable point values/penalties. Links to TournamentDiscipline, replacing the flat `rulesetName` string.
+
+### Tournament Operations (2 models)
+
+**WeighInRecord** tracks official weigh-ins per registration with decimal weight, official status, and recorder. **MatAssignment** assigns matches to physical mats/rings with time slots and status tracking.
+
+---
+
+## Full relationship map (74 models)
+
+```text
+User (Better-Auth)
+  ├─ Passport (1:1)
+  ├─ DirectoryProfile (1:1)
+  ├─ Membership (1:N) → MembershipRoleAssignment
+  ├─ ProgramEnrollment (1:N)
+  ├─ Attendance (1:N) ← CheckIn (1:N)
+  ├─ BeltTestRegistration (1:N)
+  ├─ FamilyMember → FamilyGroup
+  ├─ Invoice (1:N) → InvoiceLineItem → Payment
+  ├─ MembershipContract (1:N)
+  ├─ NotificationPreference (1:N)
+  ├─ PayoutSplit (1:N)
+  ├─ ClassInstructorAssignment (1:N)
+  ├─ Invite (created, 1:N) ← InviteClaim (1:N)
+  ├─ EventRegistration (1:N)
+  ├─ Registration (1:N) → RegistrationEntry → MatchCompetitor
+  ├─ FightRecord (1:N)
+  ├─ LeadFollowUp (assignee, 1:N)
+  ├─ WeighInRecord (1:N)
+  ├─ AuditLog (1:N)
+  ├─ RankAward (1:N)
+  ├─ CourseEnrollment (1:N)
+  ├─ GamificationEvent (1:N)
+  ├─ LineageNode (1:1) → LineageRelationship
+  ├─ WaiverSignature (1:N)
+  └─ Certification (1:N)
+
+Organization
+  ├─ Program (1:N) → ClassSchedule → ClassSession → Attendance
+  ├─ BeltTestEvent (1:N)
+  ├─ BeltTestPrerequisiteConfig (1:N)
+  ├─ Invoice (1:N) → Payment
+  ├─ MembershipContract (1:N)
+  ├─ PricingPlan (1:N)
+  ├─ PromoCode (1:N)
+  ├─ StripeAccount (1:1) → PayoutSplit
+  ├─ OrgSettings (1:1)
+  ├─ OrgRelationship (parent/child)
+  ├─ Announcement (1:N)
+  ├─ Invite (1:N)
+  ├─ Event (1:N) → EventRegistration
+  ├─ Lead (1:N) → LeadFollowUp
+  ├─ AuditLog (1:N)
+  ├─ Tournament (1:N) → TournamentDiscipline → Division → Bracket → Match
+  ├─ MatAssignment (via Tournament)
+  ├─ Membership (1:N)
+  ├─ Course (1:N) → CurriculumItem
+  └─ Waiver (1:N) → WaiverSignature
+
+Tournament
+  ├─ TournamentDiscipline (1:N) → RuleSet
+  ├─ Division (1:N) → Bracket → Match → MatchCompetitor
+  ├─ Registration (1:N) → RegistrationEntry → WeighInRecord
+  ├─ MatAssignment (1:N)
+  └─ TournamentStaffAssignment (1:N)
+```
+
+---
+
+## Model count
+
+| Category | Existing (S1) | New (S2 design) | Total |
+| --- | ---: | ---: | ---: |
+| Identity + directory | 3 | 0 | 3 |
+| Organization + membership | 5 | 0 | 5 |
+| Rank + awards | 4 | 0 | 4 |
+| Courses + curriculum | 4 | 0 | 4 |
+| Tournaments + registration | 7 | 0 | 7 |
+| Gamification | 2 | 0 | 2 |
+| Subscriptions | 2 | 0 | 2 |
+| Lineage | 2 | 0 | 2 |
+| Waivers | 2 | 0 | 2 |
+| Certifications | 1 | 0 | 1 |
+| Content engine | 4 | 0 | 4 |
+| Programs + scheduling | 0 | 8 | 8 |
+| Belt testing | 0 | 3 | 3 |
+| Family | 0 | 2 | 2 |
+| Payments + billing | 0 | 7 | 7 |
+| Contracts | 0 | 1 | 1 |
+| Notifications | 0 | 2 | 2 |
+| Org network + settings | 0 | 2 | 2 |
+| Invitations | 0 | 2 | 2 |
+| Generic events | 0 | 2 | 2 |
+| Tournament execution | 0 | 3 | 3 |
+| Fight records | 0 | 1 | 1 |
+| Audit log | 0 | 1 | 1 |
+| Lead / CRM | 0 | 2 | 2 |
+| Tournament rules + ops | 0 | 3 | 3 |
+| **Subtotal** | **36** | **38** | **74** |
+| Dirstarter template (to remove) | 5 | 0 | — |

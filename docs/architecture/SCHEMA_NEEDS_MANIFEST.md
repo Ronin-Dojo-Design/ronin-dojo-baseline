@@ -6,7 +6,7 @@ status: deprecated
 created: 2026-04-25
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight
-health: 3
+health: 9
 pairs_with:
   - docs/architecture/s2-schema-additions.md
 backlinks:
@@ -17,6 +17,45 @@ needs_fix:
 ---
 
 > **⚠️ DEPRECATED** — This was Brian's raw intake notes from early planning. All schema gaps identified here have been resolved in [s2-schema-additions.md](s2-schema-additions.md) (38 new models, 29 new enums across 3 passes). Kept for historical reference only. Do not use as a planning input.
+
+## Traceability: original requirement → resolved model
+
+| Brian's original requirement | Resolved by | s2-schema-additions section |
+| --- | --- | --- |
+| Brands | `Brand` enum (S1, live) | — |
+| Sites (white-label demos) | ⏳ POST-LAUNCH (Option A-plus) | — |
+| Templates + customization | ⏳ POST-LAUNCH | — |
+| Client intake / onboarding wizard | ⏳ POST-LAUNCH (RDD P4) | — |
+| Users/Members (roles, ranks, disciplines) | User, Passport, Membership, Rank, Discipline (S1, live) | — |
+| Products/Programs | Program, ProgramCourse, ProgramEnrollment | § 2.1 |
+| Pricing tiers/options | PricingPlan, SubscriptionTier | § 2.4 |
+| Tournament divisions | Division (S1, live) | — |
+| Tournament brackets | Bracket, Match, MatchCompetitor | § 7.4 |
+| Weight classes per division | Division.weightMin/weightMax (S1, live) + WeighInRecord | § 10.3 |
+| Rule set association | RuleSet + TournamentDiscipline.ruleSetId | § 10.3 |
+| Fight records (per-discipline) | FightRecord | § 7.5 |
+| Instructor lineage | LineageNode + LineageRelationship + INSTRUCTOR_STUDENT enum | § 4 |
+| Coaching certification courses | Course + CertificationType.COACH (S1, live) | — |
+| Scoring systems | RuleSet.scoringConfig + ScoringMethod enum | § 10.3 |
+| Referee/judge courses | Course + TournamentRole.JUDGE (S1, live) | — |
+| Class scheduling / attendance | ClassSchedule, ClassSession, CheckIn, Attendance | § 2.1 |
+| Belt testing | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig | § 2.2 |
+| Family / guardian | FamilyGroup, FamilyMember | § 2.3 |
+| Invoicing / billing | Invoice, InvoiceLineItem, Payment | § 2.4 |
+| Stripe Connect | StripeAccount, PayoutSplit | § 2.4 |
+| Contracts | MembershipContract | § 2.5 |
+| Notifications | NotificationPreference, Announcement | § 2.6 |
+| Org network (affiliation) | OrgRelationship | § 2.7 |
+| Promo codes | PromoCode | § 2.4 |
+| Lead / CRM | Lead, LeadFollowUp | § 10.2 |
+| Audit trail | AuditLog | § 7.6 |
+| Invitations / QR | Invite, InviteClaim | § 7.2 |
+| Generic events (seminars, camps) | Event, EventRegistration | § 7.3 |
+| Mat/ring assignment | MatAssignment | § 10.3 |
+
+---
+
+## Original raw notes (archived)
 
 Project Overview:
 - Architecture: mo-fi wireframes for data structure and end-to-end user registration/lifecycle

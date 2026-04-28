@@ -6,9 +6,7 @@ status: active
 created: 2026-04-25
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight
-health: 5
-needs_fix:
-  - "Gap table below only covers S1 behavioral requirements — needs refresh for s2-schema-additions Pass 1–3 coverage"
+health: 9
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/s1-schema-design.md
@@ -62,7 +60,9 @@ This model isn't optional — it's the spine of the data architecture and resolv
 
 ## Current schema (apps/web/prisma/schema.prisma) — what we have
 
-> **Updated SESSION_0006 (2026-04-26):** S1 schema rev landed. All renames and new models are in place. Seed data loaded (12 disciplines, 13 rank systems, 194 ranks).
+> **Updated SESSION_0020 (2026-04-28):** S1 schema rev is live (36 models). S2 schema additions designed (38 new models, 29 new enums across 3 passes). Migration pending sign-off. See [s2-schema-additions.md](s2-schema-additions.md).
+
+### S1 models (live in schema)
 
 | Plan entity | Our model | Status |
 |---|---|---|
@@ -80,6 +80,26 @@ This model isn't optional — it's the spine of the data architecture and resolv
 | Registration | `Registration` | ✅ reshaped from `TournamentRegistration` — has status, payment status, `submittedAt` |
 | RegistrationEntry | `RegistrationEntry` | ✅ exists — rank/org snapshot fields (`snapshotRankName`, `snapshotOrgName`) |
 
+### S2 models (designed, migration pending)
+
+| Model group | Models | Status |
+| --- | --- | --- |
+| Programs + scheduling | Program, ProgramCourse, ProgramEnrollment, ClassSchedule, ClassInstructorAssignment, ClassSession, CheckIn, Attendance | 📐 designed (Pass 1) |
+| Belt testing | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig | 📐 designed (Pass 1) |
+| Family / guardian | FamilyGroup, FamilyMember | 📐 designed (Pass 1) |
+| Payments / billing | PricingPlan, Invoice, InvoiceLineItem, Payment, StripeAccount, PayoutSplit, PromoCode | 📐 designed (Pass 1) |
+| Contracts | MembershipContract | 📐 designed (Pass 1) |
+| Notifications | NotificationPreference, Announcement | 📐 designed (Pass 1) |
+| Org network + settings | OrgRelationship, OrgSettings | 📐 designed (Pass 1) |
+| Invitations | Invite, InviteClaim | 📐 designed (Pass 2) |
+| Generic events | Event, EventRegistration | 📐 designed (Pass 2) |
+| Tournament execution | Bracket, Match, MatchCompetitor | 📐 designed (Pass 2) |
+| Fight records | FightRecord | 📐 designed (Pass 2) |
+| Audit log | AuditLog | 📐 designed (Pass 2) |
+| Lead / CRM | Lead, LeadFollowUp | 📐 designed (Pass 3) |
+| Tournament rules | RuleSet | 📐 designed (Pass 3) |
+| Tournament operations | WeighInRecord, MatAssignment | 📐 designed (Pass 3) |
+
 ---
 
 ## Where Brand fits (our addition, not in the plan)
@@ -95,23 +115,56 @@ Practically: a `School` (or, post-rename, `Organization`) belongs to a `Brand`. 
 
 ---
 
-## Plan's behavioral requirements — coverage after S1
+## Plan's behavioral requirements — coverage after S1 + S2 design
 
-> **Updated SESSION_0006:** Schema now supports all behavioral requirements. Implementation (server actions, UI) starts in S2.
+> **Updated SESSION_0020:** S1 behavioral requirements all met. S2 design (3 passes) covers 10 additional operational gaps identified as launch blockers.
 
-1. **Membership lifecycle**: invited → pending → active → suspended → expired. ✅ Schema has `MembershipStatus` enum and `status` field on `Membership`.
+### Original plan requirements (S1 — all met)
 
-2. **Multiple roles per membership**: ✅ `MembershipRoleAssignment` join table exists.
+1. **Membership lifecycle**: invited → pending → active → suspended → expired. ✅ Live.
+2. **Multiple roles per membership**: ✅ `MembershipRoleAssignment` join table. Live.
+3. **Rank-at-registration snapshot**: ✅ `RegistrationEntry` snapshot fields. Live.
+4. **Directory search with privacy**: ✅ `DirectoryProfile` + UI. Live (S4).
+5. **Tournament division eligibility**: ✅ `Division` model with constraints. Schema live, enforcement logic pending.
+6. **Idempotent registration submission**: ✅ `idempotencyKey` on `Registration`. Schema live, server action pending.
+7. **Per-discipline rank systems**: ✅ 13 rank systems, 194 ranks seeded. Live.
 
-3. **Rank-at-registration snapshot**: ✅ `RegistrationEntry` has `snapshotRankName` + `snapshotOrgName`.
+### Operational requirements (S2 design — all addressed)
 
-4. **Directory search with privacy**: ✅ `DirectoryProfile` model exists with `visibility` enum + per-field flags. UI not yet built (S4).
+| # | Requirement | Coverage | Status |
+| --- | --- | --- | --- |
+| 8 | Class scheduling + attendance | Program → ClassSchedule → ClassSession → CheckIn → Attendance | 📐 designed |
+| 9 | Belt testing + prerequisites | BeltTestEvent + Registration + PrerequisiteConfig | 📐 designed |
+| 10 | Family / guardian accounts | FamilyGroup + FamilyMember | 📐 designed |
+| 11 | Payments / invoicing / Stripe Connect | PricingPlan → Invoice → Payment + StripeAccount | 📐 designed |
+| 12 | Check-in / kiosk | CheckIn with QR/manual/kiosk/app methods | 📐 designed |
+| 13 | Notifications (per-category × channel × program) | NotificationPreference + Announcement | 📐 designed |
+| 14 | Membership contracts | MembershipContract (term, renewal, cooling-off) | 📐 designed |
+| 15 | Programs vs courses (M:N) | Program ↔ ProgramCourse ↔ Course | 📐 designed |
+| 16 | Instructor assignment + titles | ClassInstructorAssignment + displayTitle | 📐 designed |
+| 17 | Org configurability | OrgSettings (all operational toggles) | 📐 designed |
 
-5. **Tournament division eligibility**: ✅ `Division` model has gender/age/weight/rank constraints + format enum. Enforcement logic not yet built (S9).
+### Extended requirements (S2 Passes 2–3)
 
-6. **Idempotent registration submission**: ⏸ Schema supports it (`idempotencyKey` on `Registration`). Server action not yet built (S9).
+| # | Requirement | Coverage | Status |
+| --- | --- | --- | --- |
+| 18 | Invitations / QR invite | Invite + InviteClaim, universal type system | 📐 designed |
+| 19 | Generic events (seminars, camps) | Event + EventRegistration | 📐 designed |
+| 20 | Tournament brackets + matches | Bracket → Match → MatchCompetitor | 📐 designed |
+| 21 | Fight records | FightRecord per user × discipline × type | 📐 designed |
+| 22 | Audit trail | AuditLog append-only | 📐 designed |
+| 23 | Lead / CRM pipeline | Lead + LeadFollowUp + conversion tracking | 📐 designed |
+| 24 | Tournament rules engine | RuleSet with structured scoring config | 📐 designed |
+| 25 | Weigh-in tracking | WeighInRecord per registration | 📐 designed |
+| 26 | Mat/ring assignment | MatAssignment per match | 📐 designed |
 
-7. **Per-discipline rank systems**: ✅ `RankSystem` links `Discipline` → `Rank` ladder. 13 rank systems seeded with 194 ranks.
+### Deferred (post-launch)
+
+| Requirement | Rationale |
+| --- | --- |
+| White-label sites/templates | RDD-specific; deferred per Option A-plus |
+| Athlete journal / HealthKit | BJJBuddy-style features; post-launch |
+| Ranking series | Cross-tournament rankings; post-launch |
 
 ---
 
@@ -147,16 +200,16 @@ Our current todo list jumps to per-brand rollouts (Ronin Dojo Design, BBL, etc.)
 
 ---
 
-## Recommended sequencing (revised against plan)
+## Recommended sequencing (revised — governed by WORKFLOW 5.0)
 
-Each item below is "one task" in the user's sense — pick one, finish it, then come back for the next.
+> **Updated SESSION_0020:** The original Phase 2–5 sequencing below was based on the 12-sprint plan. Execution is now governed by [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) with 20 sessions (0021–0040) targeting May 18. The phase model below is preserved for conceptual reference.
 
-### Phase 0 — finish the foundations we started
+### Phase 0 — finish the foundations we started ✅ DONE
 
-- ✅ `lib/authz.ts` — exists, renames pending post-S1 cleanup.
-- ✅ `middleware.ts` — host→brand resolution, fine as-is.
-- ⏸ Prisma client extension for brand scoping — defer until S2+.
-- ⏸ Better-Auth `lastActiveBrandId` field — S2 deliverable.
+- ✅ `lib/authz.ts` — exists, renames complete.
+- ✅ `middleware.ts` — host→brand resolution, working.
+- ⏸ Prisma client extension for brand scoping — SESSION_0022.
+- ⏸ Better-Auth `lastActiveBrandId` field — SESSION_0022.
 
 ### Phase 1 — schema rev to align with Passport + Shells ✅ DONE (S1)
 
@@ -172,35 +225,35 @@ Completed in SESSION_0003–0005:
 9. ✅ Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank
 10. ✅ Seeded 12 disciplines, 13 rank systems, 194 ranks, roles, tiers, styles
 
-### Phase 2 — Milestone 1 (Identity + Membership Shells)
+### Phase 2 — Milestone 1 (Identity + Membership Shells) ✅ DONE (S2–S4)
 
-Sequence per the plan:
-1. Better-Auth wired with Passport linkage (sign-up creates User + Passport stub).
-2. Passport CRUD UI (a `/me` route).
-3. Organization create + join flow.
-4. Membership creation tied to (Organization × Discipline) with role assignment.
-5. Directory search with `DirectoryProfile` privacy filters.
+1. ✅ Better-Auth wired with Passport linkage (S2).
+2. ✅ Passport CRUD UI — `/me` route (S2).
+3. ✅ Organization create + join flow (S3).
+4. ✅ Membership creation tied to (Organization × Discipline) with role assignment (S3).
+5. ✅ Directory search with `DirectoryProfile` privacy filters (S4).
 
-### Phase 3 — Milestone 2 (Tournament registration)
+### Phase 3 — Schema Wave A–C + operational features (SESSION_0021–0029)
 
-Per the plan:
-1. Tournament create wizard (draft → published).
-2. Add disciplines + divisions to a tournament.
-3. Registration → entries with rank/org snapshot at submit time.
-4. Idempotency + audit log on submission.
+Supersedes the old "Milestone 2 (Tournament registration)" phase. Now governed by WORKFLOW 5.0:
 
-### Phase 4 — Per-brand rollout
+- **Wave A (SESSION_0021–0022):** School ops — programs, schedules, attendance, billing, family, org settings
+- **Wave B (SESSION_0023–0025):** Promotions, events, leads, invitations, belt testing
+- **Wave C (SESSION_0027–0029):** Tournament execution — brackets, matches, scoring, rules engine, weigh-ins, mat assignments
 
-Each brand becomes:
-- A subdomain mapping in `middleware.ts`
-- Theming (colors, logo, copy) via the brand cookie/header
-- Optional brand-specific seed data
+### Phase 4 — Per-brand launch (SESSION_0031–0034)
 
-This is when the legacy frontends get ported visually, but they all consume the same Phase 1–3 APIs.
+Each brand gets:
 
-### Phase 5 — Ronin Bar UI shell
+- Brand-specific theme tokens, content, seed data
+- Core journey verification per brand
+- Launch pages and onboarding flows
 
-Compact/full mode, traffic-light buttons, ⌘K palette, context dropdown. Layered on top once the data + flows are working.
+### Phase 5 — QA + launch (SESSION_0035–0040)
+
+- E2E lifecycle tests, fixtures, seeds, migration rehearsal
+- Cross-brand UAT, accessibility, performance
+- Release execution, monitoring, support
 
 ---
 
@@ -234,5 +287,10 @@ SESSION_0020 identified 10 operational gaps that were NOT covered by S1. All 10 
 - Lead/CRM pipeline, tournament rules engine, weigh-ins, mat assignments (Pass 3)
 
 **Status:** Design complete, sign-off pending, migration not yet run. See [s2-schema-additions.md](s2-schema-additions.md) for the full implementation spec.
+
+---
+
+## Cross-references (continued)
+
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — items currently "code complete / smoke pending" that this doc tracks against the spec
 - [Command Center and Intake](../knowledge/wiki/content-engine/command-center-and-intake.md) — content-engine view of how authored content lands against the data spine
