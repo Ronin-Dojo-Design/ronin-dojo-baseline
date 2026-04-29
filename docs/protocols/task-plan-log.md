@@ -4,8 +4,8 @@ slug: task-plan-log
 type: protocol
 status: active
 created: 2026-04-29
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-04-28
+last_agent: copilot-session-0026
 health: 8
 pairs_with:
   - docs/protocols/task-review-log.md
@@ -60,3 +60,9 @@ review coverage.
 | SESSION_0025_TASK_01 | [SESSION_0025](../sprints/SESSION_0025.md) | Core platform | Giddy + Doug | Log full-close proof and wiki-lint failure | FS-0005 exists with corrective action and verification | landed | [SESSION_0025_REVIEW_01](task-review-log.md#session_0025_review_01---full-close-proof-contract-review) |
 | SESSION_0025_TASK_02 | [SESSION_0025](../sprints/SESSION_0025.md) | Core platform | Giddy | Tighten closing mode contract | `closing.md` requires full-close evidence, wiki-lint result, and mode-specific behavior | landed | [SESSION_0025_REVIEW_01](task-review-log.md#session_0025_review_01---full-close-proof-contract-review) |
 | SESSION_0025_TASK_03 | [SESSION_0025](../sprints/SESSION_0025.md) | Core platform | Giddy | Commit and push accumulated work | Branch is committed and pushed, or push failure is recorded | landed | [SESSION_0025_REVIEW_01](task-review-log.md#session_0025_review_01---full-close-proof-contract-review) |
+| SESSION_0026_TASK_01 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Petey | Mark SESSION_0021 superseded | SESSION_0021 status → superseded, superseded_by: SESSION_0023 | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |
+| SESSION_0026_TASK_02 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Petey | Scope finding: nullable unique constraints | Scoping decision recorded, target session assigned | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |
+| SESSION_0026_TASK_03 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Petey | Scope finding: MB-002 auth predicates | Per-feature enforcement decision recorded | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |
+| SESSION_0026_TASK_04 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Petey | Scope finding: production migration artifacts | Target session assigned, runbook steps defined | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |
+| SESSION_0026_TASK_05 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Cody | Update TASK_REVIEW_LOG finding statuses | Four findings updated to scoped/resolved | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |
+| SESSION_0026_TASK_06 | [SESSION_0026](../sprints/SESSION_0026.md) | Core platform | Cody | Schema Waves B/C/D implementation (UNPLANNED) | prisma validate passes, 26 models + 21 enums added | landed | [SESSION_0026_REVIEW_01](task-review-log.md#session_0026_review_01---full-close-hostile-review) |

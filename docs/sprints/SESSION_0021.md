@@ -2,7 +2,8 @@
 session: "0021"
 date: 2026-04-29
 operator: Brian Scott
-status: planned
+status: superseded
+superseded_by: SESSION_0023
 goal: "Land Schema Wave A migration — school ops models + Dirstarter compliance refresh"
 lane: Core platform
 worktree: wt-core-platform
@@ -50,11 +51,11 @@ Freeze model names for Wave A. Cross-check s2-schema-additions.md Pass 1 model l
 
 ## Status
 
-`planned` — will activate on bow-in.
+`superseded` — Wave A scope was absorbed by SESSION_0023 (Codex). This session was never activated. See SESSION_0023_FINDING_02 in `docs/protocols/task-review-log.md`.
 
 ## What landed
 
-_Session not yet started._
+_Session was superseded before activation. All planned deliverables landed in SESSION_0023._
 
 ## Files touched
 
