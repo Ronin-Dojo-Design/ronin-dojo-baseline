@@ -2,7 +2,7 @@
 title: "Petey Plan — S2 Schema Pass 4: Media, Techniques, Certificates, Gamification Alignment"
 slug: petey-plan-s2-schema-pass4
 type: plan
-status: draft-for-review
+status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: copilot-session-0022
@@ -877,14 +877,14 @@ Public verification via QR code → /verify/:qrVerificationCode
 
 | # | Decision | Recommendation | Status |
 |---|---|---|---|
-| D1 | Media: polymorphic FKs vs MediaAttachment join table | **Join table** — cleaner, extensible, no null FK sprawl | ⬜ pending |
-| D2 | ContentAtomStatus: expand to 10 states or keep 6 | **Keep 6** — workflow phases tracked via ContentTask | ⬜ pending |
-| D3 | Content intake: separate model or ContentAtom+INBOX | **ContentAtom+INBOX** + sourceType field | ⬜ pending |
-| D4 | Favorite: polymorphic entityType+entityId vs nullable FKs | **entityType+entityId** — simpler, extensible | ⬜ pending |
-| D5 | CertificationType: expand enum with 4 new values | **Yes** — SEMINAR_ATTENDANCE, COURSE_COMPLETION, TOURNAMENT_PLACEMENT, INSTRUCTOR | ⬜ pending |
-| D6 | Technique position/category: enum vs free text | **Enums** — enables filtered graph views, avoids typo drift | ⬜ pending |
-| D7 | TechniquePrerequisite: strict vs soft prerequisite flag | **Both** — `isStrict` boolean; strict blocks progression, soft = recommended | ⬜ pending |
-| D8 | Certificate pricing: through PricingPlan or inline priceCents | **Inline priceCents** on CertificateTemplate — certificates aren't recurring subscriptions | ⬜ pending |
+| D1 | Media: polymorphic FKs vs MediaAttachment join table | **Join table** — cleaner, extensible, no null FK sprawl | ✅ signed off |
+| D2 | ContentAtomStatus: expand to 10 states or keep 6 | **Keep 6** — workflow phases tracked via ContentTask | ✅ signed off |
+| D3 | Content intake: separate model or ContentAtom+INBOX | **ContentAtom+INBOX** + sourceType field | ✅ signed off |
+| D4 | Favorite: polymorphic entityType+entityId vs nullable FKs | **entityType+entityId** — simpler, extensible | ✅ signed off |
+| D5 | CertificationType: expand enum with 4 new values | **Yes** — SEMINAR_ATTENDANCE, COURSE_COMPLETION, TOURNAMENT_PLACEMENT, INSTRUCTOR | ✅ signed off |
+| D6 | Technique position/category: enum vs free text | **Enums** — enables filtered graph views, avoids typo drift | ✅ signed off |
+| D7 | TechniquePrerequisite: strict vs soft prerequisite flag | **Both** — `isStrict` boolean; strict blocks progression, soft = recommended | ✅ signed off |
+| D8 | Certificate pricing: through PricingPlan or inline priceCents | **Inline priceCents** on CertificateTemplate — certificates aren't recurring subscriptions | ✅ signed off |
 
 ---
 

@@ -34,9 +34,14 @@ Read at minimum:
 - `Open decisions / blockers` (any block today?)
 - `Next session: Goal` and `First task` (likely your starting point)
 
-### 2. Read the program plan (skim if seen, full if not)
+### 2. Read WORKFLOW 5.0 + program plan
 
-[`docs/architecture/program-plan.md`](../architecture/program-plan.md). Find the current sprint row. Note the deliverable.
+[`docs/protocols/WORKFLOW_5.0.md`](../protocols/WORKFLOW_5.0.md) is the governing operating system for SESSION_0021 forward. Read:
+- The **session calendar** — find today's session row, confirm the primary lane and main outcome.
+- The **worktree map** — confirm which worktree this session operates in.
+- The **Dirstarter alignment table** — you must fill this during bow-in.
+
+Then skim [`docs/architecture/program-plan.md`](../architecture/program-plan.md) for broader context (partially superseded by WORKFLOW 5.0 but layered architecture and brand sequencing sections remain valid).
 
 ### 3. Skim relevant cross-references on demand
 
@@ -114,6 +119,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 ## Cross-references
 
 - [Closing ritual](closing.md) — pairs with this; ends the session.
+- [WORKFLOW 5.0](../protocols/WORKFLOW_5.0.md) — governing operating system for SESSION_0021+; session calendar, lane model, worktree map.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.

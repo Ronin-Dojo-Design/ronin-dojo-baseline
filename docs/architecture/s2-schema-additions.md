@@ -2,11 +2,11 @@
 title: "S2 Schema Additions — Production Launch Requirements"
 slug: s2-schema-additions
 type: file
-status: draft-for-review
+status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
-last_agent: copilot-session-0020
-health: 5
+last_agent: copilot-session-0022
+health: 9
 pairs_with:
   - docs/architecture/s1-schema-design.md
   - docs/architecture/SCHEMA_NEEDS_MANIFEST.md
@@ -1180,7 +1180,7 @@ model Invite {
   code        String       @unique @default(cuid()) /// used in QR code / link
   status      InviteStatus @default(PENDING)
   maxUses     Int?         /// null = unlimited
-  currentUses Int          @default(0)
+  currentUses     Int      @default(0)
   expiresAt   DateTime?
   meta        Json?        /// { programId, tournamentId, eventId, roleCode, etc. }
   createdAt   DateTime     @default(now())
@@ -1361,8 +1361,6 @@ model MatchCompetitor {
 }
 ```
 
-### 7.5 Fight Records
-
 #### FightRecord
 
 Per-fighter, per-discipline competition record. Aggregates across tournaments. One fighter can have separate records for BJJ, Boxing, Muay Thai, Eskrima, etc.
@@ -1386,8 +1384,6 @@ model FightRecord {
   @@index([userId])
 }
 ```
-
-### 7.6 Audit Log
 
 #### AuditLog
 
@@ -1474,17 +1470,6 @@ model Discipline {
   fightRecords FightRecord[]
 }
 ```
-
-### 7.8 Supplement model count
-
-| Category | New models | New enums |
-|---|---|---|
-| Invitations | 2 (Invite, InviteClaim) | 2 (InviteStatus, InviteType) |
-| Generic Events | 2 (Event, EventRegistration) | 3 (EventType, EventStatus, EventRegistrationStatus) |
-| Tournament Execution | 3 (Bracket, Match, MatchCompetitor) | 2 (MatchStatus, MatchResult) |
-| Fight Records | 1 (FightRecord) | 1 (FightRecordType) |
-| Audit Log | 1 (AuditLog) | 0 |
-| **Supplement total** | **9 new models** | **8 new enums** |
 
 ---
 
@@ -1718,7 +1703,9 @@ model MatAssignment {
 
 ```prisma
 model User {
-  // ...existing relations...
+  // ...existing + pass-1 + pass-2 relations...
+
+  // PASS 3 additions
   leadFollowUps  LeadFollowUp[] @relation("FollowUpAssignee")
   weighInRecords WeighInRecord[]
 }
@@ -1728,7 +1715,9 @@ model User {
 
 ```prisma
 model Organization {
-  // ...existing relations...
+  // ...existing + pass-1 + pass-2 relations...
+
+  // PASS 3 additions
   leads Lead[]
 }
 ```
@@ -1789,16 +1778,9 @@ model Tournament {
 }
 ```
 
-### 10.5 Pass 3 model count
+---
 
-| Category | New models | New enums |
-|---|---|---|
-| Lead / CRM | 2 (Lead, LeadFollowUp) | 2 (LeadStatus, LeadSource) |
-| Tournament Rules | 1 (RuleSet) | 1 (ScoringMethod) |
-| Tournament Operations | 2 (WeighInRecord, MatAssignment) | 1 (MatAssignmentStatus) |
-| **Pass 3 total** | **5 new models** | **4 new enums** |
-
-### 10.6 Updated grand total (pass 1 + 2 + 3)
+## 10. Grand total (pass 1 + pass 2 + pass 3)
 
 | | Pass 1 | Pass 2 | Pass 3 | Combined |
 |---|---|---|---|---|
@@ -1822,10 +1804,597 @@ model Tournament {
 
 ## Sign-off
 
-- [ ] Brian approves model names and relationships (pass 1 + 2 + 3)
-- [ ] Brian approves enum values
-- [ ] Brian confirms nothing is missing for May 18 launch
-- [ ] Launch strategy: **Option A-plus** confirmed
-- [ ] Ready for Cody to implement migration in 3 waves
+- [x] Brian approves model names and relationships (pass 1 + 2 + 3 + 4)
+- [x] Brian approves enum values
+- [x] Brian confirms nothing is missing for May 18 launch
+- [x] Launch strategy: **Option A-plus** confirmed
+- [x] Pass 4 decisions D1–D8 signed off (SESSION_0022)
+- [x] Ready for Cody to implement migration in 4 waves
 
-**Once signed off, this becomes the implementation spec for the schema migration.**
+**Signed off SESSION_0022 (2026-04-28). This is the implementation spec for the schema migration.**
+
+---
+
+## 11. Pass 4 — Media, Techniques, Certificates, Gamification Alignment (SESSION_0022)
+
+Gaps identified by grill audit against blackbeltlegacy.com features, SOP sweep across baseline systems pack docs 08–12, and user requirements for media uploads, technique library + graph, purchasable certificates, favorites, student lists, and gamification alignment.
+
+**Decisions D1–D8 signed off by Brian (SESSION_0022, 2026-04-28).** Full decision log in `PETEY_PLAN_S2_SCHEMA_PASS4.md`.
+
+### 11.1 New enums (pass 4)
+
+```prisma
+enum MediaType {
+  IMAGE
+  VIDEO
+  YOUTUBE
+  DOCUMENT
+}
+
+enum CertificateDeliveryMethod {
+  DIGITAL
+  PHYSICAL
+  BOTH
+}
+
+enum ShippingStatus {
+  NOT_APPLICABLE
+  PENDING
+  SHIPPED
+  DELIVERED
+}
+
+enum TechniqueCategory {
+  STRIKE
+  KICK
+  THROW
+  SUBMISSION
+  SWEEP
+  ESCAPE
+  BLOCK
+  FORM
+  DRILL
+  CONDITIONING
+  TRANSITION
+  TAKEDOWN
+}
+
+enum TechniquePosition {
+  STANDING
+  GUARD
+  HALF_GUARD
+  MOUNT
+  SIDE_CONTROL
+  BACK
+  TURTLE
+  CLINCH
+  OPEN
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum TechniqueProgressStatus {
+  NOT_STARTED
+  LEARNING
+  DRILLING
+  SPARRING
+  MASTERED
+}
+
+enum FavoriteEntityType {
+  TECHNIQUE
+  CONTENT_ATOM
+  EVENT
+  USER_PROFILE
+  COURSE
+  ORGANIZATION
+}
+
+enum ContentSourceType {
+  MANUAL
+  VOICE_MEMO
+  VIDEO_CAPTURE
+  CLASS_NOTE
+  TOURNAMENT_RESULT
+  SESSION_FILE
+  WIKI_PAGE
+  IPHONE_SHORTCUT
+  OPERATOR_REQUEST
+}
+```
+
+### 11.2 Media system
+
+#### Media
+
+```prisma
+model Media {
+  id            String    @id @default(cuid())
+  brand         Brand
+  type          MediaType
+  url           String         /// S3 key or full YouTube URL
+  thumbnailUrl  String?
+  title         String?
+  description   String?
+  altText       String?        /// accessibility
+  mimeType      String?        /// "image/jpeg", "video/mp4"
+  sizeBytes     Int?
+  widthPx       Int?
+  heightPx      Int?
+  durationSec   Int?           /// for video
+  sortOrder     Int            @default(0)
+  isPublic      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  uploadedBy     User          @relation("MediaUploadedBy", fields: [uploadedById], references: [id])
+  uploadedById   String
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  attachments MediaAttachment[]
+
+  @@index([brand, uploadedById])
+  @@index([organizationId])
+  @@index([type])
+}
+```
+
+#### MediaAttachment
+
+```prisma
+model MediaAttachment {
+  id        String   @id @default(cuid())
+  purpose   String?  /// "gallery", "cover", "technique_video", "promotion_photo", "certificate_bg"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  mediaId String
+
+  passportId          String?
+  techniqueId         String?
+  eventId             String?
+  rankAwardId         String?
+  courseId             String?
+  organizationId      String?
+  contentAtomId       String?
+  certificateTemplateId String?
+
+  @@index([mediaId])
+  @@index([passportId])
+  @@index([techniqueId])
+  @@index([eventId])
+  @@index([rankAwardId])
+  @@index([courseId])
+  @@index([organizationId])
+  @@index([contentAtomId])
+  @@index([certificateTemplateId])
+}
+```
+
+### 11.3 Technique library + graph
+
+#### Technique
+
+```prisma
+model Technique {
+  id               String             @id @default(cuid())
+  brand            Brand
+  name             String
+  slug             String
+  description      String?
+  position         TechniquePosition?
+  category         TechniqueCategory?
+  difficultyLevel  DifficultyLevel?
+  isGi             Boolean?           /// null = both
+  isFoundational   Boolean            @default(false)
+  requiresPartner  Boolean            @default(false)
+  requiresEquipment Boolean           @default(false)
+  movementPattern  String?
+  rangeBand        String?
+  teachingCues     String[]
+  commonErrors     String[]
+  safetyNotes      String?
+  isPublished      Boolean            @default(false)
+  sortOrder        Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  discipline     Discipline   @relation(fields: [disciplineId], references: [id])
+  disciplineId   String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  style          Style?       @relation(fields: [styleId], references: [id])
+  styleId        String?
+  beltLevelMin   Rank?        @relation("TechBeltMin", fields: [beltLevelMinId], references: [id])
+  beltLevelMinId String?
+  beltLevelMax   Rank?        @relation("TechBeltMax", fields: [beltLevelMaxId], references: [id])
+  beltLevelMaxId String?
+
+  mediaAttachments   MediaAttachment[]
+  curriculumLinks    TechniqueCurriculumLink[]
+  prerequisiteFor    TechniquePrerequisite[]    @relation("TechPrereqTarget")
+  prerequisites      TechniquePrerequisite[]    @relation("TechPrereqSource")
+  progress           TechniqueProgress[]
+  favorites          Favorite[]
+  gamificationEvents GamificationEvent[]
+
+  @@unique([brand, organizationId, slug])
+  @@index([brand, disciplineId])
+  @@index([position, category])
+  @@index([disciplineId, difficultyLevel])
+}
+```
+
+#### TechniquePrerequisite
+
+```prisma
+model TechniquePrerequisite {
+  id          String   @id @default(cuid())
+  description String?
+  isStrict    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  technique       Technique @relation("TechPrereqTarget", fields: [techniqueId], references: [id], onDelete: Cascade)
+  techniqueId     String
+  prerequisite    Technique @relation("TechPrereqSource", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  prerequisiteId  String
+
+  @@unique([techniqueId, prerequisiteId])
+  @@index([techniqueId])
+  @@index([prerequisiteId])
+}
+```
+
+#### TechniqueCurriculumLink
+
+```prisma
+model TechniqueCurriculumLink {
+  techniqueId      String
+  curriculumItemId String
+  sortOrder        Int @default(0)
+
+  technique      Technique      @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  curriculumItem CurriculumItem @relation(fields: [curriculumItemId], references: [id], onDelete: Cascade)
+
+  @@id([techniqueId, curriculumItemId])
+}
+```
+
+#### TechniqueProgress
+
+```prisma
+model TechniqueProgress {
+  id           String                  @id @default(cuid())
+  status       TechniqueProgressStatus @default(NOT_STARTED)
+  lastDrilledAt DateTime?
+  notes        String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  technique    Technique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  techniqueId  String
+  verifiedBy   User?     @relation("TechProgressVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedById String?
+
+  @@unique([userId, techniqueId])
+  @@index([userId, status])
+  @@index([techniqueId])
+}
+```
+
+### 11.4 Certificate products
+
+#### CertificateTemplate
+
+```prisma
+model CertificateTemplate {
+  id              String                   @id @default(cuid())
+  brand           Brand
+  name            String
+  type            CertificationType
+  deliveryMethod  CertificateDeliveryMethod @default(DIGITAL)
+  description     String?
+  layoutConfig    Json?
+  backgroundUrl   String?
+  priceCents      Int                      @default(0)
+  currency        String                   @default("USD") @db.Char(3)
+  isActive        Boolean                  @default(true)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  orders         CertificateOrder[]
+  issuances      CertificateIssuance[]
+  mediaAttachments MediaAttachment[]
+
+  @@index([brand, type])
+  @@index([organizationId])
+}
+```
+
+#### CertificateOrder
+
+```prisma
+model CertificateOrder {
+  id                    String         @id @default(cuid())
+  amountCents           Int
+  currency              String         @default("USD") @db.Char(3)
+  paymentStatus         PaymentStatus  @default(UNPAID)
+  shippingStatus        ShippingStatus @default(NOT_APPLICABLE)
+  shippingName          String?
+  shippingAddressLine1  String?
+  shippingAddressLine2  String?
+  shippingCity          String?
+  shippingState         String?
+  shippingZip           String?
+  shippingCountry       String?        @default("US")
+  trackingNumber        String?
+  stripePaymentIntentId String?
+  notes                 String?
+  orderedAt             DateTime       @default(now())
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  certificateTemplate CertificateTemplate @relation(fields: [certificateTemplateId], references: [id])
+  certificateTemplateId String
+
+  issuance CertificateIssuance?
+
+  @@index([userId])
+  @@index([certificateTemplateId])
+  @@index([paymentStatus])
+}
+```
+
+#### CertificateIssuance
+
+```prisma
+model CertificateIssuance {
+  id                String   @id @default(cuid())
+  certificateNumber String   @unique
+  qrVerificationCode String  @unique
+  pdfUrl            String?
+  issuedAt          DateTime @default(now())
+  expiresAt         DateTime?
+  revokedAt         DateTime?
+  meta              Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  certificateTemplate CertificateTemplate @relation(fields: [certificateTemplateId], references: [id])
+  certificateTemplateId String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String
+  certification         Certification?      @relation(fields: [certificationId], references: [id])
+  certificationId       String?
+  order                 CertificateOrder?   @relation(fields: [orderId], references: [id])
+  orderId               String?             @unique
+
+  @@index([userId])
+  @@index([certificateTemplateId])
+  @@index([certificationId])
+}
+```
+
+### 11.5 Favorites + Student lists
+
+#### Favorite
+
+```prisma
+model Favorite {
+  id         String             @id @default(cuid())
+  entityType FavoriteEntityType
+  entityId   String
+  notes      String?
+  createdAt  DateTime           @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([userId, entityType, entityId])
+  @@index([userId, entityType])
+}
+```
+
+#### StudentList
+
+```prisma
+model StudentList {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy      User         @relation("ListCreatedBy", fields: [createdById], references: [id])
+  createdById    String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  members StudentListMember[]
+
+  @@index([createdById])
+  @@index([organizationId])
+}
+```
+
+#### StudentListMember
+
+```prisma
+model StudentListMember {
+  id        String   @id @default(cuid())
+  addedAt   DateTime @default(now())
+
+  studentList   StudentList @relation(fields: [studentListId], references: [id], onDelete: Cascade)
+  studentListId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+
+  @@unique([studentListId, userId])
+  @@index([userId])
+}
+```
+
+### 11.6 Enum modifications (pass 4)
+
+#### CertificationType — expand
+
+```prisma
+enum CertificationType {
+  BELT_RANK
+  SAFETY
+  COACH
+  SEMINAR_ATTENDANCE
+  COURSE_COMPLETION
+  TOURNAMENT_PLACEMENT
+  INSTRUCTOR
+}
+```
+
+### 11.7 Existing model modifications (pass 4)
+
+#### ContentAtom — add sourceType
+
+```prisma
+model ContentAtom {
+  // ...existing fields...
+  sourceType ContentSourceType?
+}
+```
+
+#### DirectoryProfile — add media fields
+
+```prisma
+model DirectoryProfile {
+  // ...existing fields...
+  coverPhotoUrl  String?
+  videoIntroUrl  String?
+}
+```
+
+#### GamificationEvent — close the gamification loop
+
+```prisma
+model GamificationEvent {
+  // ...existing relations...
+  technique                Technique?               @relation(fields: [techniqueId], references: [id])
+  techniqueId              String?
+  attendance               Attendance?              @relation(fields: [attendanceId], references: [id])
+  attendanceId             String?
+  curriculumItemCompletion CurriculumItemCompletion? @relation(fields: [curriculumItemCompletionId], references: [id])
+  curriculumItemCompletionId String?
+  beltTestRegistration     BeltTestRegistration?    @relation(fields: [beltTestRegistrationId], references: [id])
+  beltTestRegistrationId   String?
+}
+```
+
+#### Certification — add issuance link
+
+```prisma
+model Certification {
+  // ...existing fields...
+  issuance CertificateIssuance?
+}
+```
+
+#### Rank — technique belt-level relations
+
+```prisma
+model Rank {
+  // ...existing relations...
+  techniqueBeltMin Technique[] @relation("TechBeltMin")
+  techniqueBeltMax Technique[] @relation("TechBeltMax")
+}
+```
+
+#### CurriculumItem — technique links
+
+```prisma
+model CurriculumItem {
+  // ...existing relations...
+  techniqueLinks TechniqueCurriculumLink[]
+}
+```
+
+#### User — pass 4 relations
+
+```prisma
+model User {
+  // ...existing relations...
+  uploadedMedia         Media[]              @relation("MediaUploadedBy")
+  favorites             Favorite[]
+  studentListMemberships StudentListMember[]
+  createdStudentLists   StudentList[]        @relation("ListCreatedBy")
+  techniqueProgress     TechniqueProgress[]
+  verifiedTechProgress  TechniqueProgress[]  @relation("TechProgressVerifiedBy")
+  certificateOrders     CertificateOrder[]
+  certificateIssuances  CertificateIssuance[]
+}
+```
+
+#### Organization — pass 4 relations
+
+```prisma
+model Organization {
+  // ...existing relations...
+  media              Media[]
+  techniques         Technique[]
+  studentLists       StudentList[]
+  certificateTemplates CertificateTemplate[]
+}
+```
+
+#### Discipline, Style, Attendance, BeltTestRegistration, CurriculumItemCompletion — new relations
+
+```prisma
+// Discipline
+techniques Technique[]
+
+// Style
+techniques Technique[]
+
+// Attendance
+gamificationEvents GamificationEvent[]
+
+// BeltTestRegistration
+gamificationEvents GamificationEvent[]
+
+// CurriculumItemCompletion
+gamificationEvents GamificationEvent[]
+```
+
+### 11.8 Pass 4 model count
+
+| Category | New models | New enums |
+| --- | --- | --- |
+| Media system | 2 (Media, MediaAttachment) | 1 (MediaType) |
+| Technique library + graph | 4 (Technique, TechniquePrerequisite, TechniqueCurriculumLink, TechniqueProgress) | 4 (TechniqueCategory, TechniquePosition, DifficultyLevel, TechniqueProgressStatus) |
+| Certificate products | 3 (CertificateTemplate, CertificateOrder, CertificateIssuance) | 2 (CertificateDeliveryMethod, ShippingStatus) |
+| Favorites | 1 (Favorite) | 1 (FavoriteEntityType) |
+| Student lists | 2 (StudentList, StudentListMember) | 0 |
+| Content engine | 0 (field additions only) | 1 (ContentSourceType) |
+| Gamification alignment | 0 (FK additions only) | 0 |
+| **Pass 4 total** | **12 new models** | **9 new enums** |
+
+### 11.9 Final grand total (pass 1 + pass 2 + pass 3 + pass 4)
+
+| | Pass 1 | Pass 2 | Pass 3 | Pass 4 | Combined |
+| --- | --- | --- | --- | --- | --- |
+| New models | 24 | 9 | 5 | 12 | **50** |
+| New enums | 17 | 8 | 4 | 9 | **38** |
+| **Total platform models** | | | | | **~86** (36 existing + 50 new) |
