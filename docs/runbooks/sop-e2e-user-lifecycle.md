@@ -9,7 +9,7 @@ last_agent: copilot-session-0015
 health: 7
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
-backlinks:
+use_count: 0backlinks:
   - docs/knowledge/wiki/index.md
   - docs/ronin_dojo_baseline_systems_pack/09_SOP_E2E_USER_LIFECYCLE_BASELINE.md
 ---

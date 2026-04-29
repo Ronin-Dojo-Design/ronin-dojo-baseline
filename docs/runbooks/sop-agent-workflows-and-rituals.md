@@ -13,7 +13,7 @@ pairs_with:
   - docs/agents/cody.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
-backlinks:
+use_count: 0backlinks:
   - docs/knowledge/wiki/index.md
 tags:
   - sop
