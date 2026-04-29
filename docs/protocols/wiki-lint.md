@@ -4,13 +4,15 @@ slug: wiki-lint
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-04-26
-last_agent: copilot-session-0006
-health: 7
+updated: 2026-04-29
+last_agent: codex-session-0025
+health: 8
 pairs_with:
   - docs/protocols/code-guardrails.md
+  - docs/rituals/closing.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0025.md
 ---
 
 # Wiki Lint Protocol
@@ -67,25 +69,38 @@ If a page's health score hasn't been re-evaluated in 30+ days (`updated` > 30 da
 
 **Check:** Flag pages where `updated` is > 30 days from current date.
 
-## How to run (manual)
+## How to run
 
-Until we automate this, run mentally during closing:
+From the repo root:
+
+```bash
+bun run wiki:lint
+```
+
+This calls `scripts/wiki-lint.ts`. The command exits `0` when clean, `1` when
+violations are found, and `2` if the lint process itself crashes.
+
+During full close, record the command and result in the SESSION file's
+`## Full close evidence` table. If the command fails because of known legacy
+violations, list the count and state whether any touched file introduced a new
+violation.
+
+## Manual fallback
+
+Use this only if the script cannot run:
 
 1. **Files touched this session** — did each get `updated` bumped and `last_agent` set?
 2. **New pages** — are they in `index.md`? Do referenced pages have backlinks updated?
 3. **Pairs_with** — is it bidirectional?
 4. **Links in body** — do they resolve?
 
-## Future automation
+If using the fallback, record why the script could not run.
 
-A `bun run scripts/wiki-lint.ts` script could automate R1–R7 by:
-- Globbing `docs/**/*.md`
-- Parsing YAML frontmatter
-- Extracting markdown links via regex
-- Cross-referencing file existence and backlink symmetry
-- Reporting violations to stdout
+## Automation
 
-This would be modeled after `llm-wiki-compiler`'s `src/linter/rules.ts` pattern: pure static analysis, no LLM calls, structured diagnostics.
+The current script implements static analysis only: no LLM calls and no writes.
+It checks broken links, missing backlinks, orphan wiki pages, stale frontmatter,
+missing frontmatter, thin pages, and health drift.
 
 ## Outputs
 

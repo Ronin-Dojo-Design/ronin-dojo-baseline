@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
 author: Brian + ChatGPT
-last_agent: copilot-session-0011
+last_agent: codex-session-0025
 health: 7
 pairs_with:
   - repo-truth-index
@@ -14,6 +14,10 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/chat-handoff.md
   - docs/rituals/closing.md
+  - docs/sprints/SESSION_0023.md
+  - docs/protocols/task-review-log.md
+  - docs/knowledge/wiki/baseline-docs-adoption-checklist.md
+  - docs/knowledge/how-to-use-these-registries.md
 tags:
   - blockers
   - ops
@@ -80,6 +84,8 @@ Blocker classes:
 **MB-001 — Mobile auth path.** Current auth documentation explicitly preserves two viable mobile options. That means the mobile contract is not fully closed.
 
 **MB-002 — Brand scope enforcement.** The docs already describe a future Prisma extension for stronger brand scoping. Until that is real, the safety posture is partly procedural and partly architectural.
+
+SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `MembershipContract`, `Attendance`, `CheckIn`, `PayoutSplit`, etc.). No routes/actions expose them yet, but every future query/mutation touching these tables must prove brand scope plus organization membership/role checks before this boundary can close.
 
 **MB-003 — Active brand persistence.** The auth doc names the behavior clearly. What matters now is operational proof.
 

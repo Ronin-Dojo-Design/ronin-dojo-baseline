@@ -4,14 +4,17 @@ slug: s1-schema-design
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
+updated: 2026-04-29
+last_agent: codex-session-0025
 health: 8
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/program-plan.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/architecture/data-model.md
+  - docs/knowledge/wiki/concepts/passport-and-shells.md
+  - docs/knowledge/wiki/files/schema-prisma.md
 ---
 
 # S1 Schema Design — Phase 1 Rev

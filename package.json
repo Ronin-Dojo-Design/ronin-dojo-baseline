@@ -7,6 +7,7 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
+    "wiki:lint": "bun run scripts/wiki-lint.ts",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
   },

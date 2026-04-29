@@ -4,15 +4,17 @@ slug: aliases-and-canonical-ids
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
 author: Brian + ChatGPT
-last_agent: chatgpt-adoption-pass
+last_agent: codex-session-0025
 health: 7
 pairs_with:
   - repo-truth-index
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/program-plan.md
+  - docs/knowledge/wiki/baseline-docs-adoption-checklist.md
+  - docs/knowledge/how-to-use-these-registries.md
 tags:
   - naming
   - migration

@@ -52,24 +52,35 @@ model User {
   passport                   Passport?
   directoryProfile           DirectoryProfile?
   memberships                Membership[]
-  rankAwards                 RankAward[]                    @relation("EarnedBy")
-  awardedRankAwards          RankAward[]                    @relation("AwardedBy")
-  ownedOrganizations         Organization[]                 @relation("OrganizationOwner")
+  rankAwards                 RankAward[]                 @relation("EarnedBy")
+  awardedRankAwards          RankAward[]                 @relation("AwardedBy")
+  ownedOrganizations         Organization[]              @relation("OrganizationOwner")
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
   lineageNode                LineageNode?
-  courseEnrollments           CourseEnrollment[]
+  courseEnrollments          CourseEnrollment[]
   waiverSignatures           WaiverSignature[]
-  waiverSignaturesOnBehalf   WaiverSignature[]              @relation("SignedOnBehalf")
+  waiverSignaturesOnBehalf   WaiverSignature[]           @relation("SignedOnBehalf")
   tournamentStaffAssignments TournamentStaffAssignment[]
   certifications             Certification[]
-  issuedCertifications       Certification[]                @relation("CertIssuedBy")
-  createdStyles              Style[]                        @relation("StyleCreatedBy")
-  approvedStyles             Style[]                        @relation("StyleApprovedBy")
-  verifiedItemCompletions    CurriculumItemCompletion[]     @relation("ItemVerifiedBy")
-  createdContentAtoms        ContentAtom[]                  @relation("AtomCreatedBy")
-  assignedContentTasks       ContentTask[]                  @relation("TaskAssignee")
+  issuedCertifications       Certification[]             @relation("CertIssuedBy")
+  createdStyles              Style[]                     @relation("StyleCreatedBy")
+  approvedStyles             Style[]                     @relation("StyleApprovedBy")
+  verifiedItemCompletions    CurriculumItemCompletion[]  @relation("ItemVerifiedBy")
+  createdContentAtoms        ContentAtom[]               @relation("AtomCreatedBy")
+  assignedContentTasks       ContentTask[]               @relation("TaskAssignee")
+  programEnrollments         ProgramEnrollment[]
+  classInstructorAssignments ClassInstructorAssignment[]
+  substituteClassSessions    ClassSession[]              @relation("ClassSessionSubstituteInstructor")
+  attendances                Attendance[]
+  checkIns                   CheckIn[]
+  beltTestRegistrations      BeltTestRegistration[]
+  familyMemberships          FamilyMember[]
+  invoices                   Invoice[]
+  contracts                  MembershipContract[]
+  notificationPreferences    NotificationPreference[]
+  payoutSplits               PayoutSplit[]
 
   // Indexes
   @@index([id])
@@ -359,6 +370,7 @@ enum LineageVisibility {
 }
 
 enum LineageRelationType {
+  INSTRUCTOR_STUDENT
   TOURNAMENT_PARTNER
   AFFILIATION
   TRAINING_PARTNER
@@ -416,6 +428,142 @@ enum ContentTaskStatus {
   CANCELLED
 }
 
+enum ScheduleStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum ClassSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  EXCUSED
+  NO_SHOW
+}
+
+enum CheckInMethod {
+  QR_SCAN
+  MANUAL
+  KIOSK_TAP
+  APP
+}
+
+enum ProgramStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  WAITLISTED
+  COMPLETED
+  WITHDRAWN
+  SUSPENDED
+}
+
+enum BeltTestStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BeltTestResult {
+  PASS
+  FAIL
+  CONDITIONAL_PASS
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  VOID
+  REFUNDED
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_ACCOUNT
+  CASH
+  CHECK
+  BARTER
+  COUPON
+  COMP
+}
+
+enum PricingModel {
+  MONTHLY
+  ANNUAL
+  DROP_IN
+  CLASS_PACK
+  PER_TEST
+  FREE_TRIAL
+  INTRO_PACK
+  CUSTOM
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAUSED
+}
+
+enum StripeConnectMode {
+  EXPRESS
+  STANDARD
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum NotificationCategory {
+  CLASS_REMINDER
+  CLASS_CANCELLED
+  BELT_TEST
+  BILLING
+  PROMOTION
+  ANNOUNCEMENT
+  SYSTEM
+}
+
+enum FamilyRole {
+  GUARDIAN
+  CHILD
+  SPOUSE
+}
+
+enum OrgRelationType {
+  AFFILIATION
+  WHITE_LABEL
+  FRANCHISE
+}
+
 // ---------------------------------------------------------------------------
 // Models — Identity shell
 // ---------------------------------------------------------------------------
@@ -462,10 +610,10 @@ model DirectoryProfile {
 // ---------------------------------------------------------------------------
 
 model Organization {
-  id         String           @id @default(cuid())
-  brand      Brand
-  name       String
-  slug       String
+  id           String           @id @default(cuid())
+  brand        Brand
+  name         String
+  slug         String
   type         OrganizationType @default(DOJO)
   addressLine1 String?
   addressLine2 String?
@@ -475,19 +623,32 @@ model Organization {
   country      String?          @default("US")
   websiteUrl   String?
   inviteCode   String?          @unique @default(cuid())
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  owner              User?                    @relation("OrganizationOwner", fields: [ownerId], references: [id])
-  ownerId            String?
-  disciplines        OrganizationDiscipline[]
-  memberships        Membership[]
-  courses            Course[]
-  tournaments        Tournament[]
-  waivers            Waiver[]
-  certifications     Certification[]
-  gamificationEvents GamificationEvent[]
-  contentAtoms       ContentAtom[]
+  owner                 User?                        @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  ownerId               String?
+  disciplines           OrganizationDiscipline[]
+  memberships           Membership[]
+  courses               Course[]
+  tournaments           Tournament[]
+  waivers               Waiver[]
+  certifications        Certification[]
+  gamificationEvents    GamificationEvent[]
+  contentAtoms          ContentAtom[]
+  programs              Program[]
+  classSchedules        ClassSchedule[]
+  beltTestEvents        BeltTestEvent[]
+  beltTestPrereqConfigs BeltTestPrerequisiteConfig[]
+  invoices              Invoice[]
+  contracts             MembershipContract[]
+  pricingPlans          PricingPlan[]
+  promoCodes            PromoCode[]
+  stripeAccount         StripeAccount?
+  orgSettings           OrgSettings?
+  announcements         Announcement[]
+  parentRelationships   OrgRelationship[]            @relation("OrgChild")
+  childRelationships    OrgRelationship[]            @relation("OrgParent")
 
   @@unique([brand, slug])
   @@index([brand])
@@ -495,23 +656,27 @@ model Organization {
 }
 
 model Discipline {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String
-  code      String?
-  isSystem  Boolean  @default(false)
-  brand     Brand?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  name                   String
+  slug                   String
+  code                   String?
+  isSystem               Boolean  @default(false)
+  brand                  Brand?
+  defaultInstructorTitle String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   organizations         OrganizationDiscipline[]
   rankSystems           RankSystem[]
   courses               Course[]
   memberships           Membership[]
+  programs              Program[]
+  classSchedules        ClassSchedule[]
   tournamentDisciplines TournamentDiscipline[]
   styles                Style[]
   gamificationEvents    GamificationEvent[]
   contentAtoms          ContentAtom[]
+
   @@unique([code, brand])
   @@unique([name, brand])
   @@index([brand])
@@ -532,17 +697,19 @@ model OrganizationDiscipline {
 // ---------------------------------------------------------------------------
 
 model RankSystem {
-  id           String         @id @default(cuid())
-  name         String
-  kind         RankSystemKind @default(BELT)
-  isSystem     Boolean        @default(false)
-  brand        Brand?
-  createdAt    DateTime       @default(now())
+  id        String         @id @default(cuid())
+  name      String
+  kind      RankSystemKind @default(BELT)
+  isSystem  Boolean        @default(false)
+  brand     Brand?
+  createdAt DateTime       @default(now())
 
   discipline   Discipline @relation(fields: [disciplineId], references: [id])
   disciplineId String
 
-  ranks Rank[]
+  ranks               Rank[]
+  beltTestEvents      BeltTestEvent[]
+  prerequisiteConfigs BeltTestPrerequisiteConfig[]
 
   @@unique([disciplineId, name, brand])
   @@index([disciplineId])
@@ -550,14 +717,14 @@ model RankSystem {
 }
 
 model Rank {
-  id           String   @id @default(cuid())
-  sortOrder    Int
-  name         String
-  shortName    String?
-  colorHex     String?
-  isSystem     Boolean  @default(false)
-  brand        Brand?
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  sortOrder Int
+  name      String
+  shortName String?
+  colorHex  String?
+  isSystem  Boolean  @default(false)
+  brand     Brand?
+  createdAt DateTime @default(now())
 
   rankSystem   RankSystem @relation(fields: [rankSystemId], references: [id])
   rankSystemId String
@@ -565,9 +732,11 @@ model Rank {
   divisionRankMin Division[] @relation("DivisionRankMin")
   divisionRankMax Division[] @relation("DivisionRankMax")
 
-  memberships  Membership[]
-  rankAwards   RankAward[]
-  courses      Course[]
+  memberships           Membership[]
+  rankAwards            RankAward[]
+  courses               Course[]
+  beltTestRegistrations BeltTestRegistration[]
+  prerequisiteConfigs   BeltTestPrerequisiteConfig[]
 
   @@unique([rankSystemId, sortOrder])
   @@unique([rankSystemId, name])
@@ -611,8 +780,8 @@ model Membership {
 }
 
 model MembershipRoleAssignment {
-  id           String   @id @default(cuid())
-  assignedAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  assignedAt DateTime @default(now())
 
   membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
   membershipId String
@@ -625,19 +794,546 @@ model MembershipRoleAssignment {
 }
 
 model Role {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  description String?
-  isSystem    Boolean  @default(false)
-  brand       Brand?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  code         String
+  name         String
+  description  String?
+  isSystem     Boolean  @default(false)
+  brand        Brand?
+  displayTitle String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   roleAssignments MembershipRoleAssignment[]
 
   @@unique([code, brand])
   @@index([brand])
+}
+
+// ---------------------------------------------------------------------------
+// Models — School operations
+// ---------------------------------------------------------------------------
+
+model Program {
+  id            String        @id @default(cuid())
+  brand         Brand
+  name          String
+  slug          String
+  description   String?
+  status        ProgramStatus @default(DRAFT)
+  ageMin        Int?
+  ageMax        Int?
+  enforceAgeCap Boolean       @default(false)
+  maxEnrollment Int?
+  minEnrollment Int?
+  sortOrder     Int           @default(0)
+  imageUrl      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  discipline     Discipline?  @relation(fields: [disciplineId], references: [id])
+  disciplineId   String?
+
+  classSchedules          ClassSchedule[]
+  programEnrollments      ProgramEnrollment[]
+  courses                 ProgramCourse[]
+  pricingPlans            PricingPlan[]
+  waivers                 ProgramWaiver[]
+  notificationPreferences NotificationPreference[]
+  announcements           Announcement[]
+
+  @@unique([brand, organizationId, slug])
+  @@index([brand, organizationId])
+  @@index([disciplineId])
+}
+
+model ProgramCourse {
+  programId String
+  courseId  String
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([programId, courseId])
+}
+
+model ProgramWaiver {
+  programId String
+  waiverId  String
+  required  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  waiver  Waiver  @relation(fields: [waiverId], references: [id], onDelete: Cascade)
+
+  @@id([programId, waiverId])
+  @@index([waiverId])
+}
+
+model ProgramEnrollment {
+  id               String           @id @default(cuid())
+  status           EnrollmentStatus @default(ACTIVE)
+  waitlistPosition Int?
+  enrolledAt       DateTime         @default(now())
+  withdrawnAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  program   Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  programId String
+
+  @@unique([userId, programId])
+  @@index([programId, status])
+  @@index([userId])
+}
+
+model ClassSchedule {
+  id            String         @id @default(cuid())
+  brand         Brand
+  name          String
+  description   String?
+  status        ScheduleStatus @default(ACTIVE)
+  daysOfWeek    DayOfWeek[]
+  startTime     String
+  endTime       String
+  rrule         String?
+  timezone      String         @default("America/Denver")
+  effectiveFrom DateTime?      @db.Date
+  effectiveTo   DateTime?      @db.Date
+  capacity      Int?
+  locationName  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  program        Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  programId      String
+  discipline     Discipline?  @relation(fields: [disciplineId], references: [id])
+  disciplineId   String?
+
+  sessions              ClassSession[]
+  instructorAssignments ClassInstructorAssignment[]
+
+  @@index([brand, organizationId])
+  @@index([programId])
+}
+
+model ClassInstructorAssignment {
+  id           String   @id @default(cuid())
+  isPrimary    Boolean  @default(false)
+  displayTitle String?
+  createdAt    DateTime @default(now())
+
+  classSchedule   ClassSchedule @relation(fields: [classScheduleId], references: [id], onDelete: Cascade)
+  classScheduleId String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  @@unique([classScheduleId, userId])
+  @@index([userId])
+}
+
+model ClassSession {
+  id                     String             @id @default(cuid())
+  date                   DateTime           @db.Date
+  startTime              String
+  endTime                String
+  status                 ClassSessionStatus @default(SCHEDULED)
+  notes                  String?
+  substituteInstructorId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  classSchedule        ClassSchedule @relation(fields: [classScheduleId], references: [id], onDelete: Cascade)
+  classScheduleId      String
+  substituteInstructor User?         @relation("ClassSessionSubstituteInstructor", fields: [substituteInstructorId], references: [id])
+
+  attendances Attendance[]
+
+  @@unique([classScheduleId, date])
+  @@index([date])
+  @@index([substituteInstructorId])
+}
+
+model CheckIn {
+  id                    String        @id @default(cuid())
+  method                CheckInMethod
+  deviceId              String?
+  ipAddress             String?
+  timestamp             DateTime      @default(now())
+  matchedToAttendanceId String?       @unique
+  createdAt             DateTime      @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  attendance Attendance? @relation(fields: [matchedToAttendanceId], references: [id])
+
+  @@index([userId, timestamp])
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  status    AttendanceStatus @default(PRESENT)
+  notes     String?
+  createdAt DateTime         @default(now())
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  classSession   ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+  classSessionId String
+  checkIn        CheckIn?
+
+  @@unique([userId, classSessionId])
+  @@index([classSessionId])
+  @@index([userId])
+}
+
+model BeltTestEvent {
+  id            String         @id @default(cuid())
+  brand         Brand
+  name          String
+  status        BeltTestStatus @default(DRAFT)
+  scheduledDate DateTime       @db.Date
+  scheduledTime String?
+  location      String?
+  feeCents      Int            @default(0)
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  rankSystem     RankSystem?  @relation(fields: [rankSystemId], references: [id])
+  rankSystemId   String?
+
+  registrations BeltTestRegistration[]
+
+  @@index([brand, organizationId])
+  @@index([scheduledDate])
+}
+
+model BeltTestRegistration {
+  id               String          @id @default(cuid())
+  result           BeltTestResult?
+  feePaidCents     Int             @default(0)
+  paymentStatus    PaymentStatus   @default(UNPAID)
+  notes            String?
+  scoreBreakdown   Json?
+  prerequisitesMet Json?
+  testedAt         DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  beltTestEvent   BeltTestEvent @relation(fields: [beltTestEventId], references: [id], onDelete: Cascade)
+  beltTestEventId String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  targetRank      Rank          @relation(fields: [targetRankId], references: [id])
+  targetRankId    String
+
+  @@unique([beltTestEventId, userId])
+  @@index([userId])
+}
+
+model BeltTestPrerequisiteConfig {
+  id                        String   @id @default(cuid())
+  minTimeInRankDays         Int?
+  minAttendanceCount        Int?
+  requireCurriculumComplete Boolean  @default(false)
+  requireInstructorApproval Boolean  @default(true)
+  customRules               Json?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  rankSystem     RankSystem   @relation(fields: [rankSystemId], references: [id])
+  rankSystemId   String
+  rank           Rank?        @relation(fields: [rankId], references: [id])
+  rankId         String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  @@unique([rankSystemId, rankId, organizationId])
+}
+
+model FamilyGroup {
+  id        String   @id @default(cuid())
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members FamilyMember[]
+
+  @@index([id])
+}
+
+model FamilyMember {
+  id        String     @id @default(cuid())
+  role      FamilyRole
+  isPrimary Boolean    @default(false)
+  createdAt DateTime   @default(now())
+
+  familyGroup   FamilyGroup @relation(fields: [familyGroupId], references: [id], onDelete: Cascade)
+  familyGroupId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+
+  @@unique([familyGroupId, userId])
+  @@index([userId])
+}
+
+model PricingPlan {
+  id             String       @id @default(cuid())
+  brand          Brand
+  name           String
+  pricingModel   PricingModel
+  amountCents    Int
+  currency       String       @default("USD") @db.Char(3)
+  intervalMonths Int?
+  classCount     Int?
+  trialDays      Int?
+  isActive       Boolean      @default(true)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  program        Program?     @relation(fields: [programId], references: [id])
+  programId      String?
+
+  invoiceLineItems InvoiceLineItem[]
+
+  @@index([brand, organizationId])
+  @@index([programId])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  brand         Brand
+  invoiceNumber String?
+  status        InvoiceStatus @default(DRAFT)
+  subtotalCents Int           @default(0)
+  discountCents Int           @default(0)
+  taxCents      Int           @default(0)
+  totalCents    Int           @default(0)
+  currency      String        @default("USD") @db.Char(3)
+  issuedAt      DateTime?
+  dueAt         DateTime?
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+
+  @@index([brand, organizationId])
+  @@index([userId])
+  @@index([status])
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(cuid())
+  description String
+  amountCents Int
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+
+  invoice       Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId     String
+  pricingPlan   PricingPlan? @relation(fields: [pricingPlanId], references: [id])
+  pricingPlanId String?
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id                    String            @id @default(cuid())
+  amountCents           Int
+  currency              String            @default("USD") @db.Char(3)
+  method                PaymentMethodType
+  stripePaymentIntentId String?
+  barterNote            String?
+  paidAt                DateTime          @default(now())
+  createdAt             DateTime          @default(now())
+
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String
+
+  @@index([invoiceId])
+  @@index([stripePaymentIntentId])
+}
+
+model StripeAccount {
+  id                 String            @id @default(cuid())
+  mode               StripeConnectMode @default(EXPRESS)
+  stripeAccountId    String            @unique
+  chargesEnabled     Boolean           @default(false)
+  payoutsEnabled     Boolean           @default(false)
+  applicationFeeBps  Int               @default(500)
+  onboardingComplete Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @unique
+
+  payoutSplits PayoutSplit[]
+
+  @@index([stripeAccountId])
+}
+
+model PayoutSplit {
+  id             String   @id @default(cuid())
+  recipientLabel String
+  splitBps       Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  stripeAccount   StripeAccount @relation(fields: [stripeAccountId], references: [id], onDelete: Cascade)
+  stripeAccountId String
+  recipientUser   User          @relation(fields: [recipientUserId], references: [id])
+  recipientUserId String
+
+  @@index([stripeAccountId])
+  @@index([recipientUserId])
+}
+
+model PromoCode {
+  id            String    @id @default(cuid())
+  brand         Brand
+  code          String
+  description   String?
+  discountType  String
+  discountValue Int
+  maxUses       Int?
+  currentUses   Int       @default(0)
+  validFrom     DateTime?
+  validTo       DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  @@unique([brand, code])
+  @@index([brand, isActive])
+}
+
+model MembershipContract {
+  id                     String         @id @default(cuid())
+  status                 ContractStatus @default(ACTIVE)
+  termMonths             Int?
+  autoRenew              Boolean        @default(true)
+  cancellationNoticeDays Int            @default(30)
+  coolingOffDays         Int            @default(3)
+  monthlyCents           Int
+  currency               String         @default("USD") @db.Char(3)
+  signedAt               DateTime?
+  startsAt               DateTime
+  endsAt                 DateTime?
+  cancelledAt            DateTime?
+  notes                  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+
+  @@index([userId])
+  @@index([organizationId, status])
+}
+
+model NotificationPreference {
+  id        String               @id @default(cuid())
+  category  NotificationCategory
+  channel   NotificationChannel
+  enabled   Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@unique([userId, category, channel, programId])
+  @@index([userId])
+}
+
+model Announcement {
+  id        String                @id @default(cuid())
+  brand     Brand
+  title     String
+  body      String
+  channels  NotificationChannel[]
+  publishAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  program        Program?     @relation(fields: [programId], references: [id])
+  programId      String?
+
+  @@index([brand, organizationId])
+  @@index([publishAt])
+}
+
+model OrgRelationship {
+  id        String          @id @default(cuid())
+  type      OrgRelationType
+  isActive  Boolean         @default(true)
+  agreedAt  DateTime?
+  expiresAt DateTime?
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  parentOrg   Organization @relation("OrgParent", fields: [parentOrgId], references: [id], onDelete: Cascade)
+  parentOrgId String
+  childOrg    Organization @relation("OrgChild", fields: [childOrgId], references: [id], onDelete: Cascade)
+  childOrgId  String
+
+  @@unique([parentOrgId, childOrgId, type])
+  @@index([parentOrgId])
+  @@index([childOrgId])
+}
+
+model OrgSettings {
+  id                         String   @id @default(cuid())
+  defaultInstructorTitle     String?
+  checkInWindowMinutes       Int      @default(30)
+  allowLateCheckIn           Boolean  @default(true)
+  requireWaiverBeforeCheckIn Boolean  @default(true)
+  waiverRenewalMonths        Int?
+  smsCostPassthrough         Boolean  @default(false)
+  dropInFeeCents             Int?
+  dropInRequiresWaiver       Boolean  @default(true)
+  allowBarterMembership      Boolean  @default(false)
+  enableGamification         Boolean  @default(true)
+  enableBeltTestScoring      Boolean  @default(false)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @unique
 }
 
 // ---------------------------------------------------------------------------
@@ -653,11 +1349,11 @@ model RankAward {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user        User   @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
+  user        User    @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
   userId      String
-  rank        Rank   @relation(fields: [rankId], references: [id], onDelete: Restrict)
+  rank        Rank    @relation(fields: [rankId], references: [id], onDelete: Restrict)
   rankId      String
-  awardedBy   User?  @relation("AwardedBy", fields: [awardedById], references: [id])
+  awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
   awardedById String?
 
   gamificationEvents GamificationEvent[]
@@ -683,16 +1379,17 @@ model Course {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId     String
-  discipline         Discipline?       @relation(fields: [disciplineId], references: [id])
+  discipline         Discipline?         @relation(fields: [disciplineId], references: [id])
   disciplineId       String?
-  rank               Rank?             @relation(fields: [rankId], references: [id])
+  rank               Rank?               @relation(fields: [rankId], references: [id])
   rankId             String?
   curriculumItems    CurriculumItem[]
   enrollments        CourseEnrollment[]
   gamificationEvents GamificationEvent[]
   certifications     Certification[]
+  programs           ProgramCourse[]
 
   @@unique([brand, organizationId, slug])
   @@index([brand, organizationId])
@@ -709,8 +1406,8 @@ model CurriculumItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course      Course                    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId     String
+  course      Course                     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId    String
   completions CurriculumItemCompletion[]
 
   @@index([courseId, order])
@@ -723,9 +1420,9 @@ model CourseEnrollment {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId String
 
   itemCompletions CurriculumItemCompletion[]
@@ -757,23 +1454,23 @@ model CurriculumItemCompletion {
 // ---------------------------------------------------------------------------
 
 model Tournament {
-  id            String           @id @default(cuid())
-  brand         Brand
-  name          String
-  slug          String
-  description   String?
-  status        TournamentStatus @default(DRAFT)
-  startDate     DateTime         @db.Date
-  endDate       DateTime         @db.Date
-  timezone      String?
-  venueName     String?
-  venueCity     String?
-  venueRegion   String?
-  venueCountry  String?          @db.Char(2)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id           String           @id @default(cuid())
+  brand        Brand
+  name         String
+  slug         String
+  description  String?
+  status       TournamentStatus @default(DRAFT)
+  startDate    DateTime         @db.Date
+  endDate      DateTime         @db.Date
+  timezone     String?
+  venueName    String?
+  venueCity    String?
+  venueRegion  String?
+  venueCountry String?          @db.Char(2)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  host             Organization              @relation(fields: [hostId], references: [id])
+  host             Organization                @relation(fields: [hostId], references: [id])
   hostId           String
   disciplines      TournamentDiscipline[]
   registrations    Registration[]
@@ -786,8 +1483,8 @@ model Tournament {
 }
 
 model TournamentDiscipline {
-  id           String  @id @default(cuid())
-  rulesetName  String?
+  id          String  @id @default(cuid())
+  rulesetName String?
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId String
@@ -800,29 +1497,29 @@ model TournamentDiscipline {
 }
 
 model Division {
-  id                     String         @id @default(cuid())
-  name                   String
-  format                 DivisionFormat
-  gender                 DivisionGender @default(ANY)
-  ageMin                 Int?
-  ageMax                 Int?
-  weightMinKg            Decimal?       @db.Decimal(5, 2)
-  weightMaxKg            Decimal?       @db.Decimal(5, 2)
-  feeCents               Int            @default(0)
-  capacity               Int?
-  sortOrder              Int            @default(0)
-  createdAt              DateTime       @default(now())
+  id          String         @id @default(cuid())
+  name        String
+  format      DivisionFormat
+  gender      DivisionGender @default(ANY)
+  ageMin      Int?
+  ageMax      Int?
+  weightMinKg Decimal?       @db.Decimal(5, 2)
+  weightMaxKg Decimal?       @db.Decimal(5, 2)
+  feeCents    Int            @default(0)
+  capacity    Int?
+  sortOrder   Int            @default(0)
+  createdAt   DateTime       @default(now())
 
   tournamentDiscipline   TournamentDiscipline @relation(fields: [tournamentDisciplineId], references: [id], onDelete: Cascade)
   tournamentDisciplineId String
 
-  roleRequired     TournamentRole @relation("DivisionRoleRequired", fields: [roleRequiredId], references: [id])
-  roleRequiredId   String
+  roleRequired   TournamentRole @relation("DivisionRoleRequired", fields: [roleRequiredId], references: [id])
+  roleRequiredId String
 
-  rankMin    Rank? @relation("DivisionRankMin", fields: [rankMinId], references: [id])
-  rankMinId  String?
-  rankMax    Rank? @relation("DivisionRankMax", fields: [rankMaxId], references: [id])
-  rankMaxId  String?
+  rankMin   Rank?   @relation("DivisionRankMin", fields: [rankMinId], references: [id])
+  rankMinId String?
+  rankMax   Rank?   @relation("DivisionRankMax", fields: [rankMaxId], references: [id])
+  rankMaxId String?
 
   entries          RegistrationEntry[]
   staffAssignments TournamentStaffAssignment[]
@@ -832,14 +1529,14 @@ model Division {
 }
 
 model Registration {
-  id              String             @id @default(cuid())
-  status          RegistrationStatus @default(STARTED)
-  paymentStatus   PaymentStatus      @default(UNPAID)
-  totalFeeCents   Int                @default(0)
-  currency        String             @default("USD") @db.Char(3)
-  submittedAt     DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  id            String             @id @default(cuid())
+  status        RegistrationStatus @default(STARTED)
+  paymentStatus PaymentStatus      @default(UNPAID)
+  totalFeeCents Int                @default(0)
+  currency      String             @default("USD") @db.Char(3)
+  submittedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId String
@@ -854,19 +1551,19 @@ model Registration {
 }
 
 model RegistrationEntry {
-  id                       String      @id @default(cuid())
-  snapshotRankName         String?
-  snapshotOrgName          String?
-  status                   EntryStatus @default(ACTIVE)
-  createdAt                DateTime    @default(now())
+  id               String      @id @default(cuid())
+  snapshotRankName String?
+  snapshotOrgName  String?
+  status           EntryStatus @default(ACTIVE)
+  createdAt        DateTime    @default(now())
 
-  registration             Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registration             Registration   @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId           String
-  division                 Division     @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+  division                 Division       @relation(fields: [divisionId], references: [id], onDelete: Restrict)
   divisionId               String
   tournamentRole           TournamentRole @relation(fields: [tournamentRoleId], references: [id])
   tournamentRoleId         String
-  representingMembership   Membership?  @relation(fields: [representingMembershipId], references: [id], onDelete: SetNull)
+  representingMembership   Membership?    @relation(fields: [representingMembershipId], references: [id], onDelete: SetNull)
   representingMembershipId String?
 
   @@unique([registrationId, divisionId, tournamentRoleId])
@@ -883,7 +1580,7 @@ model TournamentRole {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  divisionRoleRequired Division[]          @relation("DivisionRoleRequired")
+  divisionRoleRequired Division[]                  @relation("DivisionRoleRequired")
   registrationEntries  RegistrationEntry[]
   staffAssignments     TournamentStaffAssignment[]
 
@@ -892,10 +1589,10 @@ model TournamentRole {
 }
 
 model TournamentStaffAssignment {
-  id               String   @id @default(cuid())
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id        String   @id @default(cuid())
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   tournament       Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId     String
@@ -962,25 +1659,25 @@ model GamificationEvent {
 // ---------------------------------------------------------------------------
 
 model Style {
-  id               String      @id @default(cuid())
-  code             String
-  name             String
-  status           StyleStatus @default(APPROVED)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  approvedAt       DateTime?
+  id         String      @id @default(cuid())
+  code       String
+  name       String
+  status     StyleStatus @default(APPROVED)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  approvedAt DateTime?
 
-  discipline       Discipline  @relation(fields: [disciplineId], references: [id])
+  discipline       Discipline @relation(fields: [disciplineId], references: [id])
   disciplineId     String
-  parentStyle      Style?      @relation("StyleParent", fields: [parentStyleId], references: [id])
+  parentStyle      Style?     @relation("StyleParent", fields: [parentStyleId], references: [id])
   parentStyleId    String?
-  childStyles      Style[]     @relation("StyleParent")
-  createdBy        User?       @relation("StyleCreatedBy", fields: [createdByUserId], references: [id])
+  childStyles      Style[]    @relation("StyleParent")
+  createdBy        User?      @relation("StyleCreatedBy", fields: [createdByUserId], references: [id])
   createdByUserId  String?
-  approvedBy       User?       @relation("StyleApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedBy       User?      @relation("StyleApprovedBy", fields: [approvedByUserId], references: [id])
   approvedByUserId String?
 
-  memberships Membership[]
+  memberships  Membership[]
   contentAtoms ContentAtom[]
 
   @@unique([disciplineId, code])
@@ -1071,16 +1768,16 @@ model LineageRelationship {
 // ---------------------------------------------------------------------------
 
 model Waiver {
-  id             String     @id @default(cuid())
-  type           WaiverType
-  title          String
-  content        String
-  version        String     @default("1.0")
-  isRequired     Boolean    @default(true)
-  isActive       Boolean    @default(true)
-  brand          Brand?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  type       WaiverType
+  title      String
+  content    String
+  version    String     @default("1.0")
+  isRequired Boolean    @default(true)
+  isActive   Boolean    @default(true)
+  brand      Brand?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
@@ -1088,6 +1785,7 @@ model Waiver {
   tournamentId   String?
 
   signatures WaiverSignature[]
+  programs   ProgramWaiver[]
 
   @@index([brand, type, isActive])
   @@index([organizationId])
@@ -1095,17 +1793,17 @@ model Waiver {
 }
 
 model WaiverSignature {
-  id                 String   @id @default(cuid())
-  signedAt           DateTime @default(now())
-  ipAddress          String?
-  userAgent          String?
-  createdAt          DateTime @default(now())
+  id        String   @id @default(cuid())
+  signedAt  DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 
-  waiver             Waiver @relation(fields: [waiverId], references: [id], onDelete: Restrict)
+  waiver             Waiver  @relation(fields: [waiverId], references: [id], onDelete: Restrict)
   waiverId           String
-  user               User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
-  signedOnBehalfOf   User?  @relation("SignedOnBehalf", fields: [signedOnBehalfOfId], references: [id])
+  signedOnBehalfOf   User?   @relation("SignedOnBehalf", fields: [signedOnBehalfOfId], references: [id])
   signedOnBehalfOfId String?
 
   @@unique([waiverId, userId])
@@ -1133,7 +1831,7 @@ model Certification {
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
   course         Course?      @relation(fields: [courseId], references: [id])
-  courseId        String?
+  courseId       String?
   issuedBy       User?        @relation("CertIssuedBy", fields: [issuedById], references: [id])
   issuedById     String?
 
@@ -1161,15 +1859,15 @@ model ContentAtom {
   proof             String?
   cta               String?
   oneSentenceValue  String?
-  teachingTruth     String?           /// Core teaching content (markdown)
-  longFormCopy      String?           /// Full article/lesson body (markdown)
-  curriculumExtract Json?             /// Structured: objective, movements, drills, cues
-  videoExtract      Json?             /// Structured: teaser, reel outline, lesson outline
-  siteTargets       Brand[]           /// Which brands this atom targets
-  channelTargets    ContentChannel[]  /// Which channels this atom targets
-  qualityScore      Int?              /// 0-10 editorial quality rating
-  sourceAssets      String[]          /// URLs/paths to source media
-  meta              Json?             /// Extensible metadata
+  teachingTruth     String? /// Core teaching content (markdown)
+  longFormCopy      String? /// Full article/lesson body (markdown)
+  curriculumExtract Json? /// Structured: objective, movements, drills, cues
+  videoExtract      Json? /// Structured: teaser, reel outline, lesson outline
+  siteTargets       Brand[] /// Which brands this atom targets
+  channelTargets    ContentChannel[] /// Which channels this atom targets
+  qualityScore      Int? /// 0-10 editorial quality rating
+  sourceAssets      String[] /// URLs/paths to source media
+  meta              Json? /// Extensible metadata
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -1195,22 +1893,22 @@ model ContentAtom {
 }
 
 model ContentVariant {
-  id              String               @id @default(cuid())
-  brand           Brand
-  channel         ContentChannel
-  status          ContentVariantStatus @default(DRAFT)
-  publicTitle     String?
-  publicSlug      String?
-  renderedCopy    String?              /// Channel-formatted output (markdown/html)
-  excerpt         String?
-  cta             String?
-  thumbnailUrl    String?
-  videoUrl        String?
-  voiceNotes      String?              /// Brand voice adaptation notes
-  meta            Json?
-  publishDate     DateTime?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id           String               @id @default(cuid())
+  brand        Brand
+  channel      ContentChannel
+  status       ContentVariantStatus @default(DRAFT)
+  publicTitle  String?
+  publicSlug   String?
+  renderedCopy String? /// Channel-formatted output (markdown/html)
+  excerpt      String?
+  cta          String?
+  thumbnailUrl String?
+  videoUrl     String?
+  voiceNotes   String? /// Brand voice adaptation notes
+  meta         Json?
+  publishDate  DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
   atom   ContentAtom @relation(fields: [atomId], references: [id], onDelete: Cascade)
   atomId String
@@ -1234,13 +1932,13 @@ model ContentTask {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
-  atom         ContentAtom    @relation(fields: [atomId], references: [id], onDelete: Cascade)
+  atom         ContentAtom   @relation(fields: [atomId], references: [id], onDelete: Cascade)
   atomId       String
-  assignee     User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assignee     User?         @relation("TaskAssignee", fields: [assigneeId], references: [id])
   assigneeId   String?
-  dependsOn    ContentTask?   @relation("TaskDependency", fields: [dependsOnId], references: [id])
+  dependsOn    ContentTask?  @relation("TaskDependency", fields: [dependsOnId], references: [id])
   dependsOnId  String?
-  dependedOnBy ContentTask[]  @relation("TaskDependency")
+  dependedOnBy ContentTask[] @relation("TaskDependency")
 
   @@index([atomId, status])
   @@index([assigneeId, status])
@@ -1248,14 +1946,14 @@ model ContentTask {
 }
 
 model ContentPublication {
-  id              String   @id @default(cuid())
-  brand           Brand
-  channel         ContentChannel
-  platformPostId  String?  /// External platform's ID for the published content
-  publicUrl       String?
-  publishedAt     DateTime @default(now())
-  checksum        String?  /// Content hash for change detection
-  createdAt       DateTime @default(now())
+  id             String         @id @default(cuid())
+  brand          Brand
+  channel        ContentChannel
+  platformPostId String? /// External platform's ID for the published content
+  publicUrl      String?
+  publishedAt    DateTime       @default(now())
+  checksum       String? /// Content hash for change detection
+  createdAt      DateTime       @default(now())
 
   atom      ContentAtom     @relation(fields: [atomId], references: [id], onDelete: Cascade)
   atomId    String

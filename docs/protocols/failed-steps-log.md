@@ -4,11 +4,16 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
+last_agent: codex-session-0025
+health: 8
+pairs_with:
+  - docs/rituals/closing.md
 backlinks:
   - docs/protocols/cody-preflight.md
   - docs/agents/cody.md
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0025.md
 ---
 
 # FAILED_STEPS Log
@@ -105,4 +110,20 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. Full close must produce a **close checklist artifact** in the SESSION file proving each step was run — not just the outputs, but a checkmark per step
   3. The bow-out statement ("Bowed out — SESSION_NNNN closed") must be the LAST thing said, after ALL steps are verified complete
 - **Verification:** SESSION file must contain `## Close checklist` with checkmarks for each step before `Status: closed-full` is set. Any step without a checkmark blocks the status change.
+- **Status:** mitigated
+
+### FS-0005 — Full close proof was too vague; wiki-lint not enforced
+
+- **Session:** SESSION_0025
+- **Agent:** Giddy + Doug
+- **Step failed:** Full close evidence for closing ritual steps 3, 6, 6.5, 7, and 8 was not concrete enough; wiki-lint was referenced but not actually run or recorded.
+- **SOP source:** `docs/rituals/closing.md` — Full close steps; `docs/protocols/wiki-lint.md` — Trigger and rules
+- **Root cause:** The close checklist allowed generic checkmarks such as "JETTY/frontmatter sweep ran" without requiring per-file proof, backlink/index evidence, wiki-lint command output, or Kaizen/reflection evidence. The protocol named wiki-lint but did not make the run command a hard close artifact.
+- **Impact:** A full close could still hide missing frontmatter updates, asymmetric backlinks, stale wiki index entries, or skipped Kaizen reflections. User had to call out the ambiguity.
+- **Corrective action:**
+  1. `docs/rituals/closing.md` now defines a strict mode contract: user-requested quick close means quick close; user-requested full close means every quick + full step.
+  2. Full close must include a `## Full close evidence` artifact with JETTY/backlink proof, wiki-lint result, Kaizen reflections, review/recommend result, memory sweep decision, and next-session unblock check.
+  3. `docs/protocols/wiki-lint.md` and root `package.json` now expose an explicit `bun run wiki:lint` command.
+  4. `docs/architecture/ubiquitous-language.md` now defines Quick close, Full close, JETTY sweep, Wiki lint, Kaizen reflection, and Hostile close review.
+- **Verification:** A SESSION may only set `status: closed-full` when it contains `## Full close evidence` with the required proof fields and a recorded `wiki:lint` pass/fail summary. Closing without those fields is a failed step.
 - **Status:** mitigated

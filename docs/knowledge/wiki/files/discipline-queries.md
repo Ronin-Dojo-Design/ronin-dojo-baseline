@@ -4,15 +4,16 @@ slug: discipline-queries
 type: file
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: copilot-session-0012
+last_agent: codex-session-0025
 pairs_with:
   - knowledge/wiki/files/organization-new-page
   - knowledge/wiki/files/schema-prisma
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
+  - docs/knowledge/wiki/files/create-organization-form.md
 health: 7
 wiring:
   - "apps/web/services/db.ts — PrismaClient"

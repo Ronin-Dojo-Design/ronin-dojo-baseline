@@ -4,9 +4,9 @@ slug: product-launch-all-brands
 type: file
 status: active
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-29
 author: Brian + Petey
-last_agent: copilot-session-0020-preflight
+last_agent: codex-session-0025
 health: 9
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -41,7 +41,7 @@ This is no longer MVP. This is production launch.
 | Priority | Brand | Domain(s) | Type | Status |
 | --- | --- | --- | --- | --- |
 | **P1** | Baseline Martial Arts | baselinemartialarts.com | White-labeled SaaS martial arts platform; curriculum/certification affiliation available for purchase | Schema done through S4; needs S6–S10 features |
-| **P2** | Black Belt Legacy (BBL) | blackbeltlegacy.com | Martial arts community/legacy platform; data migration from legacy site needed ([ADR 0007](../architecture/decisions/0007-bbl-migration.md)) | Schema exists; migration plan needed |
+| **P2** | Black Belt Legacy (BBL) | blackbeltlegacy.com | Martial arts community/legacy platform; data migration from legacy site needed ([ADR 0007](../decisions/0007-bbl-migration.md)) | Schema exists; migration plan needed |
 | **P3** | WEKAF USA | wekafusa.com, usastickfighting.com | Tournament organization/league; stick fighting focus; needs full tournament bracket system | Tournament schema exists (S8–S9 planned); greenfield rebuild |
 | **P4** | Ronin Dojo Design | ronindojodesign.com | Umbrella/admin brand; agency platform; hosts demos of all three brands + white-label sales system | Most complex — runs real AND demo versions of P1–P3 plus white-label client onboarding |
 
@@ -68,7 +68,7 @@ This is no longer MVP. This is production launch.
 - **Function:** Community platform, instructor profiles, lineage tracking, legacy content.
 - **Features needed for launch:**
   - All P1 features (shared platform)
-  - Data migration from legacy BBL site ([ADR 0007](../architecture/decisions/0007-bbl-migration.md))
+  - Data migration from legacy BBL site ([ADR 0007](../decisions/0007-bbl-migration.md))
   - Brand-specific theme tokens
   - Instructor lineage features (not yet in schema)
 - **Risk:** Migration plan doesn't exist yet. Legacy data format unknown.

@@ -134,8 +134,14 @@ async function findAllMarkdownFiles(dir: string): Promise<string[]> {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      // Skip templates directory
-      if (entry.name === "templates" || entry.name === "node_modules") continue
+      // Skip raw imports/source archives; active docs are checked elsewhere.
+      if (
+        entry.name === "templates" ||
+        entry.name === "node_modules" ||
+        entry.name === "_imports" ||
+        entry.name === "source" ||
+        entry.name === "ronin_dojo_baseline_systems_pack"
+      ) continue
       results.push(...await findAllMarkdownFiles(fullPath))
     } else if (entry.name.endsWith(".md") && !entry.name.startsWith("_template")) {
       results.push(fullPath)

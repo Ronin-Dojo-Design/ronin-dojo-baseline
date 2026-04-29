@@ -4,12 +4,12 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-04-28
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: copilot-session-0020-preflight
-health: 7
+last_agent: codex-session-0025
+health: 8
 needs_fix:
-  - "Backlinks not yet wired on architecture docs"
+  - "SESSION_0021 remains planned after SESSION_0023 landed Wave A; needs superseded/recovery decision"
 ---
 
 # LLM Wiki Index
@@ -60,7 +60,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active | 6 |
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 9 |
 | [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated | 9 |
-| [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | draft-for-review | 5 |
+| [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | signed-off | 9 |
 
 ### ADRs
 
@@ -95,6 +95,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
 | [SESSION_0020](../../sprints/SESSION_0020.md) | session | closed-full |
 | [SESSION_0021](../../sprints/SESSION_0021.md) | session | planned |
+| [SESSION_0022](../../sprints/SESSION_0022.md) | session | closed-full |
+| [SESSION_0023](../../sprints/SESSION_0023.md) | session | closed-full |
+| [SESSION_0024](../../sprints/SESSION_0024.md) | session | closed-full |
+| [SESSION_0025](../../sprints/SESSION_0025.md) | session | closed-full |
 
 ## Protocols
 
@@ -103,6 +107,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
 | [Cody Pre-flight Protocol](../../protocols/cody-preflight.md) | protocol | active |
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
+| [TASK_PLAN_LOG](../../protocols/task-plan-log.md) | protocol | active |
+| [TASK_REVIEW_LOG](../../protocols/task-review-log.md) | protocol | active |
+| [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
@@ -127,6 +134,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status |
 | --- | --- | --- |
 | [Database](../../runbooks/database.md) | runbook | active |
+| [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
 | [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
@@ -247,7 +255,7 @@ Components inherited from Dirstarter and used as-is by the Ronin Dojo build. The
 
 | Template | For type |
 | --- | --- |
-| [_template-concept](templates/_template-concept.md) | concept |
-| [_template-file](templates/_template-file.md) | file |
-| [_template-decision](templates/_template-decision.md) | decision |
-| [_template-runbook](templates/_template-runbook.md) | runbook |
+| [_template-concept](../templates/_template-concept.md) | concept |
+| [_template-file](../templates/_template-file.md) | file |
+| [_template-decision](../templates/_template-decision.md) | decision |
+| [_template-runbook](../templates/_template-runbook.md) | runbook |

@@ -4,11 +4,12 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0007
+updated: 2026-04-29
+last_agent: codex-session-0023
 health: 7
 pairs_with:
   - docs/rituals/closing.md
+  - docs/protocols/task-plan-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -68,6 +69,20 @@ If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](
 
 If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute. **Cody must complete the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code.**
 
+### 4b. Number tasks in TASK_PLAN_LOG
+
+For every task in the session plan, add or update an entry in [`TASK_PLAN_LOG`](../protocols/task-plan-log.md) before implementation starts.
+
+Use stable IDs:
+
+```text
+SESSION_NNNN_TASK_01
+SESSION_NNNN_TASK_02
+SESSION_NNNN_TASK_03
+```
+
+The SESSION file remains the detailed handoff. `TASK_PLAN_LOG` is the audit ledger that lets Giddy/Doug verify ownership, done criteria, status, and review coverage across sessions.
+
 ### 5. Branch check
 
 Verify the current git branch (`git branch --show-current`) and working tree status (`git status --short`).
@@ -124,6 +139,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
+- [TASK_PLAN_LOG](../protocols/task-plan-log.md) — append-only numbered task ledger from SESSION_0023 forward.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

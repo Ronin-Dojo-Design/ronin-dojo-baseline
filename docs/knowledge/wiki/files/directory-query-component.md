@@ -4,9 +4,9 @@ slug: directory-query-component
 type: file
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: copilot-session-0014
+last_agent: codex-session-0025
 pairs_with:
   - knowledge/wiki/files/directory-queries
   - knowledge/wiki/files/directory-schema
@@ -15,6 +15,7 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
+  - docs/knowledge/wiki/files/directory-page.md
 health: 7
 wiring:
   - "apps/web/server/web/directory/queries.ts — getDirectoryProfiles()"

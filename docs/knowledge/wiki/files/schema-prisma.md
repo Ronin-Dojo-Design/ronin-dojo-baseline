@@ -4,9 +4,9 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-26
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: Copilot (SESSION_0005)
+last_agent: codex-session-0025
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
@@ -18,6 +18,8 @@ backlinks:
   - architecture/data-model
   - knowledge/wiki/content-engine/content-atoms
   - knowledge/wiki/content-engine/curriculum-extract-schema
+  - docs/knowledge/wiki/files/dirstarter-l1-baseline.md
+  - docs/knowledge/wiki/files/discipline-queries.md
 health: 8
 needs_fix:
   - "Dirstarter template models (Tool, Category, Tag, Report, Ad) still present — remove before prod"

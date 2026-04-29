@@ -4,10 +4,10 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-04-28
-last_agent: copilot-session-0022
+updated: 2026-04-29
+last_agent: codex-session-0023
 health: 8
-use_count: 0
+use_count: 1
 pairs_with:
   - docs/runbooks/database.md
   - docs/runbooks/prisma-workflow.md
@@ -16,6 +16,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0022.md
+  - docs/sprints/SESSION_0023.md
 ---
 
 # Schema Migration Runbook
@@ -41,7 +42,7 @@ cd /Users/brianscott/dev/ronin-dojo-app/apps/web
 # Verify DB is reachable
 /Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_dev -c "SELECT 1;"
 # Verify current schema state
-bunx prisma db push --dry-run 2>&1 | head -20
+bunx prisma validate
 ```
 
 ### 2. Edit schema.prisma

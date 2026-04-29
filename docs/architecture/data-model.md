@@ -4,9 +4,9 @@ slug: data-model
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-28
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: copilot-session-0020-preflight
+last_agent: codex-session-0025
 pairs_with:
   - architecture/s1-schema-design
   - docs/architecture/s2-schema-additions.md
@@ -16,6 +16,7 @@ backlinks:
   - sprints/SESSION_0005
   - sprints/SESSION_0020
   - knowledge/wiki/files/schema-prisma
+  - docs/knowledge/wiki/files/seed-ts.md
   - knowledge/wiki/content-engine/content-atoms
 health: 9
 wiring:

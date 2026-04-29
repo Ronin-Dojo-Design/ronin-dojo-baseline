@@ -1,7 +1,20 @@
 ---
+title: "Ubiquitous Language"
+slug: ubiquitous-language
+type: concept
 status: active
-pairs_with: docs/architecture/s1-schema-design.md
-version: 1
+created: 2026-04-25
+updated: 2026-04-29
+last_agent: codex-session-0025
+health: 8
+version: 2
+pairs_with:
+  - docs/architecture/s1-schema-design.md
+  - docs/rituals/closing.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0025.md
+  - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
 # Ubiquitous Language
@@ -13,6 +26,60 @@ It exists to prevent AI-assisted development from creating naming drift, duplica
 ## Rule
 
 If a code change introduces, renames, or changes the meaning of a domain concept, update this file in the same change.
+
+## Operational governance language
+
+### Bow-in
+
+The opening ritual for a session. Bow-in loads the latest SESSION file, WORKFLOW 5.0, relevant runbooks, failed steps, and task plan context before work starts.
+
+### Bow-out
+
+The closing ritual for a session. Bow-out records what landed, what remains, verification evidence, git state, and the next session handoff.
+
+### Quick close
+
+The lightweight bow-out mode. Quick close runs the required close steps for session handoff and git hygiene, but it does not require Kaizen reflections or the full review/recommend loop unless the operator escalates.
+
+If the user asks for quick close, do not silently perform or claim full close.
+
+### Full close
+
+The complete bow-out mode. Full close includes every quick close step plus Kaizen reflections, hostile close review, review/recommend, memory sweep, next-session unblock check, JETTY/backlink proof, and wiki-lint proof.
+
+If the user asks for full close, the SESSION file must include a `## Full close evidence` table before status becomes `closed-full`.
+
+### JETTY 3.0 sweep
+
+The doc metadata and linking sweep performed during close. It checks touched docs for current frontmatter (`updated`, `last_agent`, `health` where applicable), bidirectional `pairs_with`/`backlinks`, and wiki index visibility.
+
+Do not use this phrase unless the sweep evidence is recorded in the SESSION file.
+
+### Wiki lint
+
+The automated docs/wiki lint pass run from the repo root:
+
+```bash
+bun run wiki:lint
+```
+
+Wiki lint checks broken links, missing backlinks, orphan pages, stale frontmatter, missing frontmatter, thin pages, and health drift. Full close must record the command result.
+
+### Kaizen reflection
+
+The reflection section of full close. It captures surprises, near misses, patterns, and advice for the next operator. It is not a vibe check; it is operational learning.
+
+### Hostile close review
+
+The Giddy + Doug close review that challenges plan sanity, Dirstarter alignment, security, data integrity, verification honesty, workflow compliance, and merge readiness.
+
+### Task plan log
+
+The append-only task ledger at `docs/protocols/task-plan-log.md`. Every task from SESSION_0023 forward gets a stable `SESSION_NNNN_TASK_XX` ID.
+
+### Task review log
+
+The append-only review ledger at `docs/protocols/task-review-log.md`. Every non-trivial close records findings against task IDs.
 
 ## Core identity
 

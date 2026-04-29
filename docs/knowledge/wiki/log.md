@@ -4,7 +4,9 @@ slug: log
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-04-27
+updated: 2026-04-29
+last_agent: codex-session-0025
+health: 7
 ---
 
 # Wiki Change Log
@@ -68,3 +70,13 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Updated `/me/page.tsx` to use Dirstarter `<Intro>/<Section>` pattern
 - Updated `program-plan.md` — S4 marked ✅
 - Updated wiki log (this entry)
+
+## 2026-04-29 — SESSION_0023 through SESSION_0025
+
+- Implemented Wave A schema substrate in `apps/web/prisma/schema.prisma`
+- Created numbered accountability ledgers: `TASK_PLAN_LOG` and `TASK_REVIEW_LOG`
+- Added hostile close review protocol and wired it into `closing.md`
+- Tightened full-close mode contract with required full-close evidence artifact
+- Added executable wiki lint command: `bun run wiki:lint`
+- Updated ubiquitous language for quick close, full close, JETTY sweep, wiki lint, Kaizen reflection, and hostile close review
+- Cleaned active wiki backlinks until `bun run wiki:lint` returned no violations

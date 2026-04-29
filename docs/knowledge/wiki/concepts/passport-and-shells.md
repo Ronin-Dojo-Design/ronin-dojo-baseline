@@ -4,9 +4,9 @@ slug: passport-and-shells
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-29
 author: Brian + ChatGPT
-last_agent: copilot-session-0004
+last_agent: codex-session-0025
 pairs_with:
   - architecture/ubiquitous-language.md
   - architecture/s1-schema-design.md
@@ -62,17 +62,17 @@ The shell pattern ensures that a user's brown belt in Karate at Org A doesn't in
 
 ## Relationships
 
-- [Passport](../../architecture/ubiquitous-language.md#passport) → User (1:1)
-- [Membership](../../architecture/ubiquitous-language.md#membership) → User × Organization × Discipline
-- [Registration](../../architecture/ubiquitous-language.md#registration) → User × Tournament
-- [RegistrationEntry](../../architecture/ubiquitous-language.md#registrationentry) → Division snapshot (immutable)
-- [RankAward](../../architecture/ubiquitous-language.md#rankaward) → User × Rank (promotion record)
+- [Passport](../../../architecture/ubiquitous-language.md#passport) → User (1:1)
+- [Membership](../../../architecture/ubiquitous-language.md#membership) → User × Organization × Discipline
+- [Registration](../../../architecture/ubiquitous-language.md#registration) → User × Tournament
+- [RegistrationEntry](../../../architecture/ubiquitous-language.md#registrationentry) → Division snapshot (immutable)
+- [RankAward](../../../architecture/ubiquitous-language.md#rankaward) → User × Rank (promotion record)
 
 ## Sources
 
 - SESSION_0002 — schema design discussions
 - SESSION_0003 — Q1–Q8 sign-off, shell pattern confirmed
-- [s1-schema-design.md](../../architecture/s1-schema-design.md) — full model definitions
+- [s1-schema-design.md](../../../architecture/s1-schema-design.md) — full model definitions
 
 ## Open Questions
 
