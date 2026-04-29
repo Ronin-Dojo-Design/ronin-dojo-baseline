@@ -6,7 +6,6 @@ status: closed-full
 created: 2026-04-29
 updated: 2026-04-29
 last_agent: codex-session-0024
-health: 8
 sprint: S2
 pairs_with:
   - docs/sprints/SESSION_0023.md

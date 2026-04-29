@@ -16,7 +16,6 @@ backlinks:
   - sprints/SESSION_0015
   - architecture/data-model
   - architecture/feature-data-prerequisites
-health: 8
 needs_fix:
   - "Kajukenbo TuffBuffs-specific rank system (#14) deferred — need to confirm from monorepo"
   - "GamificationEventType point values are placeholder — needs design pass"

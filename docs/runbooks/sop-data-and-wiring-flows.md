@@ -6,10 +6,10 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0015
-health: 7
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
-use_count: 0backlinks:
+  - docs/protocols/cody-preflight.md
+backlinks:
   - docs/knowledge/wiki/index.md
   - docs/ronin_dojo_baseline_systems_pack/08_SOP_DATA_AND_WIRING_FLOWS_BASELINE.md
 ---

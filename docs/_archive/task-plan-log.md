@@ -6,7 +6,6 @@ status: active
 created: 2026-04-29
 updated: 2026-04-28
 last_agent: copilot-session-0026
-health: 8
 pairs_with:
   - docs/protocols/task-review-log.md
   - docs/rituals/opening.md

@@ -13,7 +13,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
-health: 7
 wiring:
   - "apps/web/server/web/organization/queries.ts — getOrganizationBySlug(brand, slug)"
   - "apps/web/components/web/organizations/join-organization-button.tsx — JoinOrganizationButton"

@@ -6,13 +6,12 @@ status: active
 created: 2026-04-25
 updated: 2026-04-29
 last_agent: codex-session-0025
-health: 7
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
   - docs/knowledge/wiki/incidents.md
   - docs/protocols/failed-steps-log.md
-  - docs/protocols/task-review-log.md
+  - docs/protocols/project-log.md
   - docs/protocols/hostile-close-review.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -150,7 +149,7 @@ Run the [Review & Recommend protocol](../protocols/review-recommend.md). This re
 
 At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
 
-Append or update the current session entry in [`TASK_REVIEW_LOG`](../protocols/task-review-log.md). The review entry must reference the numbered task IDs from [`TASK_PLAN_LOG`](../protocols/task-plan-log.md) and list unresolved findings as open follow-ups.
+Append or update the current session entry in the [Project Log](../protocols/project-log.md) review section. The review entry must reference the numbered task IDs from the project log's task plan section and list unresolved findings as open follow-ups.
 
 ### 7. Memory sweep
 
@@ -188,8 +187,7 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
-- [TASK_PLAN_LOG](../protocols/task-plan-log.md) — append-only numbered task ledger from SESSION_0023 forward.
-- [TASK_REVIEW_LOG](../protocols/task-review-log.md) — append-only task review and finding ledger from SESSION_0023 forward.
+- [Project Log](../protocols/project-log.md) — unified build, task plan, and review ledger.
 - [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — hard close review against Dirstarter, security, data integrity, and workflow honesty.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
 - [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.

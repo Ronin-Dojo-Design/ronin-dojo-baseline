@@ -6,7 +6,6 @@ status: active
 created: 2026-04-26
 updated: 2026-04-26
 last_agent: copilot-session-0005
-health: 7
 use_count: 0backlinks:
   - docs/knowledge/wiki/index.md
 ---

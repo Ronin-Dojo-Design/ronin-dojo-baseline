@@ -14,7 +14,6 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
   - docs/knowledge/wiki/files/organizations-list-page.md
-health: 7
 wiring:
   - "apps/web/components/web/organizations/create-organization-form.tsx — form component"
   - "apps/web/server/web/organization/discipline-queries.ts — getDisciplinesByBrand()"

@@ -40,7 +40,6 @@ backlinks:                          # auto-maintained reverse links
   - slug-or-relative-path
 
 # Health
-health: 0-10                        # 0 = broken, 10 = production-ready
 needs_fix:                          # list of known issues
   - "description of issue"
 bug_flags:                          # critical problems
@@ -82,7 +81,7 @@ tags: []
 | `## Architecture` | Data flow, logic flow, or code flow (use mermaid or bullets) |
 | `## Key exports / models` | What it exposes |
 | `## Wiring` | What imports it, what it imports |
-| `## Health` | Compiles? Tested? Known bugs? Score 0–10 |
+| `## Health` | Compiles? Tested? Known bugs? (Prose description, no numeric score) |
 | `## Teachable explanation` | Explain it like the next developer (or agent) is new |
 
 ### Type: `decision`
@@ -126,13 +125,7 @@ tags: []
 
 ## Health scoring
 
-| Score | Meaning |
-| --- | --- |
-| 0–2 | Broken, missing, or critically wrong |
-| 3–4 | Exists but incomplete or stale |
-| 5–6 | Functional, minor gaps |
-| 7–8 | Solid, reviewed, tested |
-| 9–10 | Production-quality, fully wired, verified |
+> **Removed (SESSION_0027).** The 0–10 numeric health score was dropped because agents self-assigned on creation and never re-evaluated — 33 of 43 docs sat at 7. The `status` field (active / stale / deprecated / archived) now carries this responsibility. WORKFLOW_5.0's 10-point rubric scores deliverables; docs don't need a second, weaker scoring system.
 
 ## Backlink rules
 

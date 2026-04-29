@@ -13,7 +13,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
-health: 7
 wiring:
   - "apps/web/prisma/schema.prisma — DirectoryProfile, Membership, Rank, RankAward"
   - "apps/web/services/db.ts — Prisma client"

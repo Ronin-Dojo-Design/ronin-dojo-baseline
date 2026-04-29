@@ -20,7 +20,6 @@ backlinks:
   - knowledge/wiki/content-engine/curriculum-extract-schema
   - docs/knowledge/wiki/files/dirstarter-l1-baseline.md
   - docs/knowledge/wiki/files/discipline-queries.md
-health: 8
 needs_fix:
   - "Dirstarter template models (Tool, Category, Tag, Report, Ad) still present — remove before prod"
   - "prisma migrate dev hangs — using db push for now"

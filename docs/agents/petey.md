@@ -6,7 +6,6 @@ status: active
 created: 2026-04-25
 updated: 2026-04-26
 last_agent: copilot-session-0006
-health: 7
 pairs_with:
   - docs/agents/cody.md
 backlinks:

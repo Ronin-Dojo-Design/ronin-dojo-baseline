@@ -6,7 +6,6 @@ status: active
 created: 2026-04-28
 updated: 2026-04-29
 last_agent: codex-session-0023
-health: 8
 use_count: 1
 pairs_with:
   - docs/runbooks/database.md

@@ -6,7 +6,6 @@ status: active
 created: 2026-04-26
 updated: 2026-04-29
 last_agent: codex-session-0025
-health: 8
 pairs_with:
   - docs/protocols/code-guardrails.md
   - docs/rituals/closing.md
@@ -63,11 +62,9 @@ Pages with fewer than 50 characters of body content (excluding frontmatter) are 
 
 **Check:** Flag pages with body length < 50 characters.
 
-### R7 — Health score drift
+### R7 — ~~Health score drift~~ (REMOVED)
 
-If a page's health score hasn't been re-evaluated in 30+ days (`updated` > 30 days old), flag for review.
-
-**Check:** Flag pages where `updated` is > 30 days from current date.
+> **Removed (SESSION_0027).** Health scores dropped from JETTY frontmatter. The `status` field handles doc freshness. No replacement rule needed.
 
 ## How to run
 

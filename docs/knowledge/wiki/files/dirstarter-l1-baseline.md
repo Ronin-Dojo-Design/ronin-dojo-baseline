@@ -13,7 +13,6 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
   - architecture/program-plan
-health: 8
 tags: [dirstarter, l1, components, baseline, architecture]
 ---
 

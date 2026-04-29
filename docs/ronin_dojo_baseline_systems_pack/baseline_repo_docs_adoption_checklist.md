@@ -127,7 +127,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -155,7 +154,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -180,7 +178,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -206,7 +203,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - docs/knowledge/JETTY_3.0.md
 backlinks:
@@ -230,7 +226,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - repo-truth-index
   - aliases-and-canonical-ids
@@ -255,7 +250,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - docs/protocols/chat-handoff.md
   - docs/rituals/opening.md
@@ -282,7 +276,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -303,7 +296,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 6
 parent: docs/knowledge/wiki/content-engine/content-atoms.md
 backlinks:
   - docs/knowledge/wiki/index.md

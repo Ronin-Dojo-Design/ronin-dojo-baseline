@@ -7,13 +7,13 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - docs/agents/petey.md
   - docs/agents/cody.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
-use_count: 0backlinks:
+  - docs/protocols/cody-preflight.md
+backlinks:
   - docs/knowledge/wiki/index.md
 tags:
   - sop

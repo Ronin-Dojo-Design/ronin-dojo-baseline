@@ -13,7 +13,6 @@ pairs_with:
 parent: ""
 backlinks:
   - knowledge/wiki/index.md
-health: 6
 needs_fix:
   - "Open question on RankAward→Membership linkage not yet resolved"
 wiring:

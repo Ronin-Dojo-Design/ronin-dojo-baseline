@@ -6,7 +6,6 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0015
-health: 8
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/sop-data-and-wiring-flows.md

@@ -10,7 +10,6 @@ last_agent: ""
 pairs_with: []
 parent: ""
 backlinks: []
-health: 5
 needs_fix: []
 bug_flags: []
 wiring: []

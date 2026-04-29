@@ -6,7 +6,6 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0014
-health: 8
 use_count: 0backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md

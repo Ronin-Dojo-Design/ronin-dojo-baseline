@@ -13,7 +13,6 @@ pairs_with:
 parent: knowledge/wiki/content-engine/content-atoms
 backlinks:
   - sprints/SESSION_0005
-health: 6
 needs_fix:
   - "Not yet wired into ContentAtom.curriculumExtract JSON schema"
   - "Technique taxonomy needs validation against 12 disciplines"

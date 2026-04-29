@@ -6,7 +6,6 @@ status: accepted
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0016
-health: 7
 pairs_with:
   - docs/architecture/decisions/0002-expo-for-mobile.md
 backlinks:

@@ -16,7 +16,6 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
   - docs/knowledge/wiki/files/directory-page.md
-health: 7
 wiring:
   - "apps/web/server/web/directory/queries.ts — getDirectoryProfiles()"
   - "apps/web/server/web/directory/schema.ts — directoryFilterParamsCache"

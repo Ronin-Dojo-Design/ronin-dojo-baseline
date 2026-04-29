@@ -6,7 +6,6 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0016
-health: 8
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/plan-vs-current.md

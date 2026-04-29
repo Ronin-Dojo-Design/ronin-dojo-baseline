@@ -6,7 +6,6 @@ status: active
 created: 2026-04-25
 updated: 2026-04-29
 last_agent: codex-session-0025
-health: 8
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md

@@ -6,7 +6,6 @@ status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: copilot-session-0022
-health: 5
 sprint: S2
 pairs_with:
   - docs/architecture/s2-schema-additions.md

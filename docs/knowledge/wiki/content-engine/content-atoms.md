@@ -14,7 +14,6 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0005
   - knowledge/wiki/content-engine/curriculum-extract-schema
-health: 7
 needs_fix:
   - "Seed data for sample content atoms not yet written"
   - "Admin UI for content atom CRUD not yet built"

@@ -13,7 +13,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
-health: 7
 wiring:
   - "apps/web/components/web/filters/filters.tsx — Filters"
   - "apps/web/components/web/filters/sort.tsx — Sort"

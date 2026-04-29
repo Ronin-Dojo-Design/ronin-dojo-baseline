@@ -14,7 +14,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
-health: 7
 wiring:
   - "apps/web/server/web/organization/actions.ts — createOrganization server action"
   - "apps/web/server/web/organization/schemas.ts — createOrganizationSchema (Zod)"

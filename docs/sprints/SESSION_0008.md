@@ -6,7 +6,6 @@ status: closed-unclean
 created: 2026-04-26
 updated: 2026-04-26
 last_agent: copilot-session-0008
-health: 5
 sprint: S3
 pairs_with:
   - docs/sprints/SESSION_0007.md

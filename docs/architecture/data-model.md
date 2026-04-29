@@ -18,7 +18,6 @@ backlinks:
   - knowledge/wiki/files/schema-prisma
   - docs/knowledge/wiki/files/seed-ts.md
   - knowledge/wiki/content-engine/content-atoms
-health: 9
 wiring:
   - "apps/web/prisma/schema.prisma — 36 existing models (live), 38 new models (s2-schema-additions, migration pending)"
   - "apps/web/prisma/seed.ts — seed data for disciplines, ranks, roles, etc."

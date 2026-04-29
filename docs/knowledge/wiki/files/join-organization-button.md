@@ -12,7 +12,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
-health: 7
 wiring:
   - "apps/web/server/web/organization/actions.ts — joinOrganization server action"
   - "apps/web/components/common/button.tsx — Button with isPending"

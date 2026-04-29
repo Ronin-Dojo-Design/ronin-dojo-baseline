@@ -7,7 +7,6 @@ created: 2026-04-27
 updated: 2026-04-29
 author: Brian + ChatGPT
 last_agent: codex-session-0025
-health: 7
 pairs_with:
   - repo-truth-index
 backlinks:

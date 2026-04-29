@@ -7,7 +7,6 @@ created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - docs/protocols/chat-handoff.md
   - docs/rituals/opening.md

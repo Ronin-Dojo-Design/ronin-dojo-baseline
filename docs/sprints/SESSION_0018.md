@@ -6,7 +6,6 @@ status: in-progress
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0018
-health: 5
 sprint: S6-prep
 pairs_with:
   - docs/sprints/SESSION_0017.md

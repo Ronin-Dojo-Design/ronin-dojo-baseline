@@ -2,12 +2,11 @@
 title: Baseline Repo Docs Adoption Checklist
 slug: baseline-docs-adoption-checklist
 type: protocol
-status: active
+status: deprecated
 created: 2026-04-27
 updated: 2026-04-27
 author: Brian + ChatGPT
 last_agent: chatgpt-adoption-pass
-health: 7
 pairs_with:
   - repo-truth-index
   - aliases-and-canonical-ids

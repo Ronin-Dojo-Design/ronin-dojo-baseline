@@ -6,7 +6,6 @@ status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: copilot-session-0022
-health: 9
 pairs_with:
   - docs/architecture/s1-schema-design.md
   - docs/architecture/SCHEMA_NEEDS_MANIFEST.md

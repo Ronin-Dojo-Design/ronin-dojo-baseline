@@ -6,7 +6,6 @@ status: active
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight
-health: 5
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md

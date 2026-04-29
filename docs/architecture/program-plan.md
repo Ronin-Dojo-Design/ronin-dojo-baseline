@@ -6,7 +6,6 @@ status: active
 created: 2026-04-25
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight
-health: 9
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md

@@ -7,7 +7,6 @@ created: 2026-04-26
 updated: 2026-04-29
 author: Brian + Copilot
 last_agent: codex-session-0025
-health: 8
 needs_fix:
   - "SESSION_0021 remains planned after SESSION_0023 landed Wave A; needs superseded/recovery decision"
 ---
@@ -18,49 +17,49 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 ## Meta
 
-| Page | Type | Status | Health |
-| --- | --- | --- | --- |
-| [JETTY 3.0](../JETTY_3.0.md) | protocol | active | 7 |
-| [JETTY 3.0 Systems Profile for Baseline Repo](../jetty-3-baseline-systems-profile.md) | protocol | active | 7 |
-| [How to Use These Registries](../how-to-use-these-registries.md) | protocol | active | 7 |
-| [LLM Wiki README](../README.md) | protocol | active | 6 |
-| [CLAUDE.md](../../../CLAUDE.md) | protocol | active | 6 |
-| [Build Log](../../build-log.md) | log | active | 8 |
+| Page | Type | Status |
+| --- | --- | --- |
+| [JETTY 3.0](../JETTY_3.0.md) | protocol | active |
+| [JETTY 3.0 Systems Profile for Baseline Repo](../jetty-3-baseline-systems-profile.md) | protocol | active |
+| [How to Use These Registries](../how-to-use-these-registries.md) | protocol | active |
+| [LLM Wiki README](../README.md) | protocol | active |
+| [CLAUDE.md](../../../CLAUDE.md) | protocol | active |
+| [Project Log](../../protocols/project-log.md) | log | active |
 
 ## Concepts
 
-| Page | Type | Status | Health |
-| --- | --- | --- | --- |
-| [Passport and Shells](concepts/passport-and-shells.md) | concept | active | 6 |
-| [Repo Truth Index](repo-truth-index.md) | concept | active | 7 |
-| [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active | 7 |
-| [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active | 7 |
-| [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | active | 7 |
-| [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | active | 6 |
-| [Content Atoms](content-engine/content-atoms.md) | concept | active | 7 |
-| [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active | 6 |
-| [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active | 6 |
-| [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active | 6 |
-| [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active | 8 |
+| Page | Type | Status |
+| --- | --- | --- |
+| [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
+| [Repo Truth Index](repo-truth-index.md) | concept | active |
+| [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
+| [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
+| [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | active |
+| [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | active |
+| [Content Atoms](content-engine/content-atoms.md) | concept | active |
+| [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active |
+| [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active |
+| [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active |
+| [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active |
 
 ## Architecture
 
-| Page | Type | Status | Health |
-| --- | --- | --- | --- |
-| [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active | 8 |
-| [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active | 8 |
-| [Program Plan](../../architecture/program-plan.md) | file | active | 9 |
-| [Plan vs Current](../../architecture/plan-vs-current.md) | file | active | 9 |
-| [Data Model](../../architecture/data-model.md) | concept | active | 9 |
-| [Auth](../../architecture/auth.md) | file | active | 5 |
-| [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active | 5 |
-| [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active | 8 |
-| [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active | 8 |
-| [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active | 7 |
-| [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active | 6 |
-| [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active | 9 |
-| [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated | 9 |
-| [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | signed-off | 9 |
+| Page | Type | Status |
+| --- | --- | --- |
+| [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active |
+| [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active |
+| [Program Plan](../../architecture/program-plan.md) | file | active |
+| [Plan vs Current](../../architecture/plan-vs-current.md) | file | active |
+| [Data Model](../../architecture/data-model.md) | concept | active |
+| [Auth](../../architecture/auth.md) | file | active |
+| [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active |
+| [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active |
+| [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active |
+| [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active |
+| [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active |
+| [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active |
+| [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated |
+| [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | signed-off |
 
 ### ADRs
 
@@ -107,8 +106,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
 | [Cody Pre-flight Protocol](../../protocols/cody-preflight.md) | protocol | active |
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
-| [TASK_PLAN_LOG](../../protocols/task-plan-log.md) | protocol | active |
-| [TASK_REVIEW_LOG](../../protocols/task-review-log.md) | protocol | active |
+| [Project Log](../../protocols/project-log.md) | protocol | active |
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
@@ -144,24 +142,24 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 ## Code files (annotated)
 
-| Page | Type | Status | Health |
-| --- | --- | --- | --- |
-| [schema.prisma](files/schema-prisma.md) | file | active | 8 |
-| [seed.ts](files/seed-ts.md) | file | active | 8 |
-| [Dirstarter L1 Baseline](files/dirstarter-l1-baseline.md) | file | active | 8 |
-| [create-organization-form.tsx](files/create-organization-form.md) | file | active | 7 |
-| [organizations/new/page.tsx](files/organization-new-page.md) | file | active | 7 |
-| [discipline-queries.ts](files/discipline-queries.md) | file | active | 7 |
-| [organizations/page.tsx](files/organizations-list-page.md) | file | active | 7 |
-| [organizations/[slug]/page.tsx](files/organization-detail-page.md) | file | active | 7 |
-| [join-organization-button.tsx](files/join-organization-button.md) | file | active | 7 |
-| [directory/queries.ts](files/directory-queries.md) | file | active | 7 |
-| [directory/schema.ts](files/directory-schema.md) | file | active | 7 |
-| [directory/page.tsx](files/directory-page.md) | file | active | 7 |
-| [directory/directory-query.tsx](files/directory-query-component.md) | file | active | 7 |
-| [directory/directory-listing.tsx](files/directory-listing-component.md) | file | active | 7 |
-| [directory/directory-list.tsx](files/directory-list-component.md) | file | active | 7 |
-| [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active | 7 |
+| Page | Type | Status |
+| --- | --- | --- |
+| [schema.prisma](files/schema-prisma.md) | file | active |
+| [seed.ts](files/seed-ts.md) | file | active |
+| [Dirstarter L1 Baseline](files/dirstarter-l1-baseline.md) | file | active |
+| [create-organization-form.tsx](files/create-organization-form.md) | file | active |
+| [organizations/new/page.tsx](files/organization-new-page.md) | file | active |
+| [discipline-queries.ts](files/discipline-queries.md) | file | active |
+| [organizations/page.tsx](files/organizations-list-page.md) | file | active |
+| [organizations/[slug]/page.tsx](files/organization-detail-page.md) | file | active |
+| [join-organization-button.tsx](files/join-organization-button.md) | file | active |
+| [directory/queries.ts](files/directory-queries.md) | file | active |
+| [directory/schema.ts](files/directory-schema.md) | file | active |
+| [directory/page.tsx](files/directory-page.md) | file | active |
+| [directory/directory-query.tsx](files/directory-query-component.md) | file | active |
+| [directory/directory-listing.tsx](files/directory-listing-component.md) | file | active |
+| [directory/directory-list.tsx](files/directory-list-component.md) | file | active |
+| [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns (reference index)
 

@@ -18,13 +18,21 @@ backlinks:
 
 ## When
 
-Before writing ANY new file or component. No exceptions.
+Before writing ANY new file, component, schema change, or backend implementation. No exceptions.
 
 ## Why
 
-SESSION_0014 proved that without enforceable gates, the agent skips discovery and builds from scratch. This protocol produces a **reviewable artifact** — not a promise to "check first."
+SESSION_0014 proved that without enforceable gates, the agent skips discovery and builds from scratch. SESSION_0026 proved the same for schema work — 26 models added without pre-flight. This protocol produces a **reviewable artifact** — not a promise to "check first."
 
-## The checklist
+## Scope
+
+This protocol covers three work types:
+
+1. **UI/component work** — use the Component Checklist below
+2. **Schema/model work** — use the Schema Checklist below
+3. **Backend/action work** — use the Backend Checklist below
+
+## Component checklist
 
 Cody must add a `## Pre-flight: {component name}` section to the active SESSION file with these fields filled in **before writing code:**
 
@@ -69,6 +77,67 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 3. **The pre-flight section stays in the SESSION file as permanent record.** It is not deleted after the task is done.
 
 4. **Petey may waive pre-flight for trivial tasks** (e.g., fixing a typo, updating a doc). The waiver must be noted: `Pre-flight: waived by Petey — {reason}`.
+
+## Schema checklist
+
+For any task that adds or modifies Prisma models (3+ models = mandatory Petey first):
+
+```markdown
+## Pre-flight: Schema — {description}
+
+### 1. Petey invocation
+- [ ] Petey plan exists in SESSION file with task IDs
+- [ ] Petey waived: {reason} (only for ≤2 model changes)
+
+### 2. Design doc check
+- Design doc consulted: {s1-schema-design.md / s2-schema-additions.md / none}
+- Models match design doc: {yes / deviations listed}
+
+### 3. Existing schema scan
+- Current model count: {N}
+- Related existing models: {list}
+- Back-relations needed: {list}
+
+### 4. Runbook consulted
+- [ ] `docs/runbooks/schema-migration.md` read
+- [ ] `docs/runbooks/prisma-workflow.md` read
+- Migration strategy: {db push for dev / migrate dev for staging}
+
+### 5. Data flow reference
+- [ ] `docs/runbooks/sop-data-and-wiring-flows.md` — relevant flow identified: {which}
+- [ ] `docs/runbooks/sop-e2e-user-lifecycle.md` — lifecycle stage covered: {which}
+
+### 6. FAILED_STEPS check
+- Prior failures in this area: {FS-NNNN or "none"}
+- Mitigation acknowledged: {yes/no}
+```
+
+## Backend checklist
+
+For any task that adds server actions, queries, or API routes:
+
+```markdown
+## Pre-flight: Backend — {description}
+
+### 1. Auth predicates planned
+- [ ] Session auth required
+- [ ] Org membership verified
+- [ ] Brand column filtered (ADR 0004)
+- Authorization approach: {description}
+
+### 2. Existing action scan
+- Searched `server/` for: {search terms}
+- Related existing actions: {list}
+- L1 pattern match: {dirstarter action client chain / custom}
+
+### 3. Data flow reference
+- [ ] `docs/runbooks/sop-data-and-wiring-flows.md` — flow: {which}
+- [ ] `docs/runbooks/sop-e2e-user-lifecycle.md` — lifecycle stage: {which}
+
+### 4. FAILED_STEPS check
+- Prior failures in this area: {FS-NNNN or "none"}
+- Manual Boundary Registry entries: {MB-NNNN or "none"}
+```
 
 ## Enforcement
 

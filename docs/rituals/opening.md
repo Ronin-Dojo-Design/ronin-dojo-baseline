@@ -6,10 +6,9 @@ status: active
 created: 2026-04-25
 updated: 2026-04-29
 last_agent: codex-session-0023
-health: 7
 pairs_with:
   - docs/rituals/closing.md
-  - docs/protocols/task-plan-log.md
+  - docs/protocols/project-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -53,9 +52,11 @@ Only the ones that bear on today's task:
 
 Don't bulk-read. Reach for these as the work surfaces a need.
 
-### 3b. Check FAILED_STEPS log
+### 3b. Check FAILED_STEPS log + Drift Register
 
 Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). Check for any `open` or `mitigated` entries in the area you're about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.
+
+Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) for open drift entries relevant to today's lane. If a drift item directly affects the task, note it in the SESSION file.
 
 ### 4. Identify ONE task for this session
 
@@ -71,7 +72,7 @@ If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute.
 
 ### 4b. Number tasks in TASK_PLAN_LOG
 
-For every task in the session plan, add or update an entry in [`TASK_PLAN_LOG`](../protocols/task-plan-log.md) before implementation starts.
+For every task in the session plan, add or update an entry in the [Project Log](../protocols/project-log.md) task plan section before implementation starts.
 
 Use stable IDs:
 
@@ -104,7 +105,6 @@ status: in-progress
 created: <today>
 updated: <today>
 last_agent: copilot-session-NNNN
-health: 5
 sprint: <current sprint, e.g. S2>
 pairs_with:
   - docs/sprints/SESSION_<previous>.md
@@ -139,7 +139,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
-- [TASK_PLAN_LOG](../protocols/task-plan-log.md) — append-only numbered task ledger from SESSION_0023 forward.
+- [Project Log](../protocols/project-log.md) — unified build, task plan, and review ledger.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

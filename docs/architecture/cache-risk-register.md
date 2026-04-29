@@ -7,7 +7,6 @@ created: 2026-04-28
 updated: 2026-04-28
 author: Petey
 last_agent: session-0019-petey
-health: 6
 pairs_with:
   - docs/architecture/decisions/0010-cache-strategy.md
 backlinks:

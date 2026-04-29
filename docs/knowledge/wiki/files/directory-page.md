@@ -12,7 +12,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
-health: 7
 wiring:
   - "apps/web/components/web/directory/directory-query.tsx — DirectoryQuery"
   - "apps/web/lib/auth.ts — getServerSession()"

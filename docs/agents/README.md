@@ -6,7 +6,6 @@ status: active
 created: 2026-04-25
 updated: 2026-04-26
 last_agent: copilot-session-0006
-health: 6
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -34,21 +33,20 @@ This is a fresh start that draws on the operational lessons from the legacy `Ron
 | Rituals | [../rituals/](../rituals/) | Per-session opening/closing checklists |
 | Sprints | [../sprints/](../sprints/) | Numbered SESSION files; the operational log |
 
-## Active personas (v5.0 minimum set)
+## Active personas (WORKFLOW 5.0)
 
-These are the roles in scope right now. Others stay archived in the legacy monorepo until we earn the right to bring them forward.
+All six personas are now active per WORKFLOW_5.0.md:
 
-| Persona | Role | When to use |
+| Persona | Role | Key outputs |
 |---|---|---|
-| [Petey](petey.md) | Planner / orchestrator | Session start; task decomposition; surfacing open decisions |
-| [Cody](cody.md) | Builder / self-reviewer | Implementing a planned task; small commits with their own review |
+| [Petey](petey.md) | Orchestrator | Session scope, lane selection, score gate |
+| [Cody](cody.md) | Implementation + code review | Code quality gate, pre-flight protocol |
+| Giddy | Architecture + Git strategy | Worktree boundaries, branch strategy, Dirstarter compliance |
+| Doug | QA + release readiness | Failure modes, test gates, migration rehearsal |
+| Desi | UX + design consistency | Screen→backend contract verification |
+| Brandon | Brand + marketing rollout | Launch narrative, messaging per brand |
 
-Deferred (will be brought forward when the work warrants it, *not* preemptively):
-
-- **Doug** — dedicated QA/review. Add when work parallelism creates a separate review queue.
-- **Brandon** — brand strategist. Add at S11 when the Baseline Martial Arts brand rollout begins.
-- **Giddy** — branch/commit gating loops. Add when the repo has multiple parallel work streams.
-- **Desi** — TBD; legacy role wasn't load-bearing for this project's MVP scope.
+> Petey and Cody have dedicated role files. Giddy, Doug, Desi, and Brandon are defined in [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) § Persona responsibilities and invoked as review voices during the review pass loop.
 
 ## Active rituals + protocols
 

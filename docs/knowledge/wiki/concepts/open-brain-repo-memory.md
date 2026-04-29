@@ -5,7 +5,6 @@ type: concept
 status: active
 created: 2026-04-27
 updated: 2026-04-27
-health: 8
 source_pages:
   - docs/sprints/SESSION_0017.md
   - docs/knowledge/wiki/index.md

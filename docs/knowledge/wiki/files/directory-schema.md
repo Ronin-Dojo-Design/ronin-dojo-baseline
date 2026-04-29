@@ -13,7 +13,6 @@ pairs_with:
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
-health: 7
 wiring:
   - "nuqs/server — createSearchParamsCache, parseAsString, parseAsInteger"
 tags: [directory, schema, nuqs, filters, s4]

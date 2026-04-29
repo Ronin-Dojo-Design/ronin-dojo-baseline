@@ -5,7 +5,6 @@ type: protocol
 status: active
 created: 2026-04-26
 updated: 2026-04-26
-health: 8
 ---
 
 # Code Guardrails

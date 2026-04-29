@@ -6,7 +6,6 @@ status: active
 created: 2026-04-25
 updated: 2026-04-29
 last_agent: codex-session-0025
-health: 8
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/program-plan.md

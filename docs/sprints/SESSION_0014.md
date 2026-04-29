@@ -6,7 +6,6 @@ status: closed-full
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0014
-health: 7
 sprint: S4
 pairs_with:
   - docs/sprints/SESSION_0013.md

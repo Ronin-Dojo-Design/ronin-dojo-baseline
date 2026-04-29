@@ -7,7 +7,6 @@ created: 2026-04-28
 updated: 2026-04-29
 author: Brian + Petey
 last_agent: codex-session-0025
-health: 9
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md

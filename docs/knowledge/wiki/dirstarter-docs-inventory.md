@@ -7,7 +7,6 @@ created: 2026-04-28
 updated: 2026-04-28
 author: Petey
 last_agent: session-0019-petey
-health: 7
 pairs_with:
   - docs/knowledge/wiki/dirstarter-gap-audit.md
 parent: docs/knowledge/wiki/index.md

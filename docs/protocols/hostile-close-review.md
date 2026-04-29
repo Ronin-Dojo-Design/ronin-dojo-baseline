@@ -6,10 +6,9 @@ status: active
 created: 2026-04-29
 updated: 2026-04-29
 last_agent: codex-session-0025
-health: 8
 pairs_with:
   - docs/rituals/closing.md
-  - docs/protocols/task-review-log.md
+  - docs/protocols/project-log.md
   - docs/protocols/WORKFLOW_5.0.md
 backlinks:
   - docs/knowledge/wiki/index.md

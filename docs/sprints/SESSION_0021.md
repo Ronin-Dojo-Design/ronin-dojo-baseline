@@ -7,7 +7,6 @@ superseded_by: SESSION_0023
 goal: "Land Schema Wave A migration — school ops models + Dirstarter compliance refresh"
 lane: Core platform
 worktree: wt-core-platform
-health: 5
 last_agent: null
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md

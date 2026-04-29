@@ -5,7 +5,6 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-04-27
-health: 7
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md

@@ -6,7 +6,6 @@ status: active
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0012
-health: 7
 pairs_with:
   - docs/protocols/petey-plan.md
   - docs/rituals/closing.md

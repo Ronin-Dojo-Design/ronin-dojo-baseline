@@ -14,7 +14,6 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012
   - docs/knowledge/wiki/files/create-organization-form.md
-health: 7
 wiring:
   - "apps/web/services/db.ts — PrismaClient"
   - "apps/web/prisma/schema.prisma — Discipline model (isSystem, brand columns)"
