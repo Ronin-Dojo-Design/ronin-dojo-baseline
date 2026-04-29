@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-04-28
+last_agent: copilot-session-0026
 health: 8
 pairs_with:
   - docs/rituals/closing.md
@@ -127,3 +127,36 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   4. `docs/architecture/ubiquitous-language.md` now defines Quick close, Full close, JETTY sweep, Wiki lint, Kaizen reflection, and Hostile close review.
 - **Verification:** A SESSION may only set `status: closed-full` when it contains `## Full close evidence` with the required proof fields and a recorded `wiki:lint` pass/fail summary. Closing without those fields is a failed step.
 - **Status:** mitigated
+
+### FS-0006 — Petey not invoked; WORKFLOW 5.0 not followed for multi-model schema work
+
+- **Session:** SESSION_0026
+- **Agent:** Cody (should have been Petey first)
+- **Step failed:** WORKFLOW 5.0 session lifecycle — Petey bow-in audit, lane selection, Dirstarter alignment table, deliverable scoping, review pass loop. Also: Cody pre-flight protocol not run before schema additions.
+- **SOP source:** `docs/protocols/WORKFLOW_5.0.md` (session lifecycle, five hard rules); `docs/protocols/cody-preflight.md` (pre-flight checklist); `docs/agents/petey.md` (role: invoked when scope is multi-part or has open decisions)
+- **Root cause:** User said "more schema waves, BCD" and the agent jumped directly to implementation without routing through Petey. The task was clearly multi-part (26 models, 21 enums across 3 passes) and should have triggered Petey for lane selection, deliverable scoping, and TASK_PLAN_LOG entries. Instead, Cody acted as both planner and builder without any planning artifact. The `next-session-loading-order.md` protocol was also not consulted — no Tier 1/2/3 loading was performed.
+- **Impact:** No lane selection, no score rubric applied during work, no review pass loop, TASK_PLAN_LOG entries created retroactively at close instead of at planning time. Hostile close review scored session 7.5/10. The schema itself validates, but the process failure means no architectural review caught potential issues before implementation was complete. Sets a precedent that protocols are optional when the task feels clear.
+- **Corrective action:**
+  1. Any request involving 3+ models or spanning multiple design doc passes must route through Petey before Cody touches schema
+  2. Cody pre-flight must be run for schema changes, not just component work — expand scope of `cody-preflight.md` to cover schema/backend tasks
+  3. TASK_PLAN_LOG entries must be created at planning time, not backfilled at close
+  4. Agent must explicitly state "Invoking Petey" or "Petey waived because {reason}" in the SESSION file before starting work
+- **Verification:** SESSION file must contain either a `## Petey plan` with TASK_PLAN_LOG entries created before implementation, or an explicit `Petey waived: {reason}` with the waiver meeting the criteria in `docs/agents/petey.md`. Hostile close review checks WORKFLOW 5.0 compliance (question 7).
+- **Status:** open
+
+### FS-0007 — Protocols not enforced; governance artifacts decaying
+
+- **Session:** SESSION_0026 (systemic, spans multiple sessions)
+- **Agent:** All agents
+- **Step failed:** Systematic non-enforcement of: `next-session-loading-order.md` (Tier 1/2/3 loading), `cody-preflight.md` (pre-flight checklist for non-UI work), `WORKFLOW_5.0.md` (score rubric, review passes), and general protocol consultation during execution.
+- **SOP source:** `docs/protocols/next-session-loading-order.md`; `docs/protocols/cody-preflight.md`; `docs/protocols/WORKFLOW_5.0.md`; `docs/rituals/opening.md`; `docs/rituals/closing.md`
+- **Root cause:** Protocols exist but are not in the agent's execution path. The wiki has grown to 112+ markdown files, but agents don't consult the loading order, don't run pre-flight for non-component work, and don't apply the score rubric during execution. The protocols are written as if enforcement is automatic, but nothing forces an agent to read them. Additionally, several governance artifacts (build-log, task-plan-log, session calendar in WORKFLOW_5.0) are drifting out of sync with actual work.
+- **Impact:** Protocols become decoration. The more protocols that exist without enforcement, the less any individual protocol is trusted or consulted. Users lose confidence that the system works. Governance artifacts (build-log, session calendar) become stale, making them unreliable inputs for planning.
+- **Corrective action:**
+  1. Next session (SESSION_0027): Petey-led audit of all governance artifacts — identify stale, unused, or redundant docs
+  2. Consolidate or archive artifacts that aren't earning their keep
+  3. Reduce protocol surface area to what agents actually enforce, rather than expanding it further
+  4. Consider adding protocol names to copilot-instructions.md so they're in every agent's system prompt, not just discoverable via wiki
+  5. Expand `cody-preflight.md` scope to cover schema/backend/migration work, not just UI components
+- **Verification:** Next session produces a governance audit artifact listing every log/protocol with status (active-enforced, active-unenforced, stale, archive-candidate). Stale artifacts are either updated or archived. Protocol count is reduced or each remaining protocol has a clear enforcement mechanism.
+- **Status:** open
