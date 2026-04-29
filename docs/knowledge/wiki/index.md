@@ -131,9 +131,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
-| [Database](../../runbooks/database.md) | runbook | active |
+| [Database](../../_archive/database.md) | runbook | archived |
 | [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
-| [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
+| [Prisma Workflow](../../_archive/prisma-workflow.md) | runbook | archived |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |

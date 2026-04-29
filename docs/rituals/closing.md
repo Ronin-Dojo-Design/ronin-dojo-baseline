@@ -183,7 +183,7 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Opening ritual](opening.md) — paired counterpart at the start of a session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format in full.
 - [Wiki lint protocol](../protocols/wiki-lint.md) — rules for JETTY 3.0 sweep verification.
-- [Prisma workflow runbook](../runbooks/prisma-workflow.md) — recurring schema change cycle.
+- [Schema Migration Runbook](../runbooks/schema-migration.md) — recurring schema change cycle.
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.

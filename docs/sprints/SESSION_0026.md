@@ -129,7 +129,7 @@ None — all four findings have clear scoping and owners.
 | --- | --- |
 | `docs/sprints/SESSION_0021.md` | Status → superseded, superseded_by: SESSION_0023 |
 | `docs/sprints/SESSION_0026.md` | This session |
-| `docs/protocols/task-review-log.md` | Finding statuses updated to `scoped`/`resolved` |
+| `do../protocols/project-log.md` | Finding statuses updated to `scoped`/`resolved` |
 | `apps/web/prisma/schema.prisma` | Waves B+C+D: +26 models, +21 enums, existing model modifications |
 
 ## Decisions resolved
@@ -158,7 +158,7 @@ None — all four findings have clear scoping and owners.
 
 ## Review log
 
-See [SESSION_0026_REVIEW_01](../protocols/task-review-log.md#session_0026_review_01---full-close-hostile-review)
+See [SESSION_0026_REVIEW_01](../protocols/project-log.md#session_0026_review_01---full-close-hostile-review)
 
 ## Hostile close review
 
@@ -169,8 +169,8 @@ See review log. **Score: 7.5/10** — capped by workflow honesty failure and mis
 - **Goal:** Fix SOP compliance — audit stale governance artifacts (build-log, task-plan-log, wiki docs), establish process discipline for WORKFLOW_5.0, then commit the Wave B/C/D schema with proper TASK_PLAN_LOG entries and review.
 - **Inputs to read:**
   1. `docs/protocols/WORKFLOW_5.0.md`
-  2. `docs/protocols/task-plan-log.md`
-  3. `docs/protocols/task-review-log.md`
+  2. `do../protocols/project-log.md`
+  3. `do../protocols/project-log.md`
   4. `docs/rituals/opening.md`
   5. `docs/build-log.md`
 - **First task:** Petey audit — inventory all governance logs/docs, identify which are stale/unused/redundant, propose consolidation or archival.

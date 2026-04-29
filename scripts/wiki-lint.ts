@@ -27,8 +27,8 @@ const MIN_BODY_LENGTH = 50
 const STALE_DAYS = 30
 
 const REQUIRED_FRONTMATTER = ["title", "slug", "type", "status", "created", "updated"]
-// health is required by JETTY 3.0 but many legacy pages don't have it yet
-const RECOMMENDED_FRONTMATTER = ["health"]
+// health was removed from JETTY 3.0 in SESSION_0027 — status field handles freshness
+const RECOMMENDED_FRONTMATTER: string[] = []
 
 // ---------------------------------------------------------------------------
 // Types
@@ -359,26 +359,9 @@ function R6_emptyPages(pages: ParsedPage[]): LintResult[] {
   return results
 }
 
-function R7_healthDrift(pages: ParsedPage[]): LintResult[] {
-  const results: LintResult[] = []
-
-  for (const page of pages) {
-    const health = page.frontmatter.health
-    const status = page.frontmatter.status
-
-    if (typeof status === "string" && status === "stale" && typeof health === "string") {
-      const score = parseInt(health, 10)
-      if (!isNaN(score) && score > 5) {
-        results.push({
-          rule: "R7",
-          severity: "warning",
-          file: page.relativePath,
-          message: `Status is "stale" but health is ${score} (>5) — re-evaluate`,
-        })
-      }
-    }
-  }
-  return results
+// R7 removed — health scores dropped in SESSION_0027
+function R7_healthDrift(_pages: ParsedPage[]): LintResult[] {
+  return []
 }
 
 // ---------------------------------------------------------------------------

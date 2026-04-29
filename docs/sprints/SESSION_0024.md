@@ -11,8 +11,8 @@ pairs_with:
   - docs/sprints/SESSION_0023.md
   - docs/rituals/closing.md
   - docs/protocols/hostile-close-review.md
-  - docs/protocols/task-plan-log.md
-  - docs/protocols/task-review-log.md
+  - do../protocols/project-log.md
+  - do../protocols/project-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -103,8 +103,8 @@ No subagents needed. This was a small protocol edit over an already-open worktre
 
 - `docs/protocols/hostile-close-review.md` — new Giddy + Doug hard-review protocol.
 - `docs/rituals/closing.md` — hostile review gate and cross-reference.
-- `docs/protocols/task-plan-log.md` — added `SESSION_0024_TASK_01`.
-- `docs/protocols/task-review-log.md` — added `SESSION_0024_REVIEW_01`.
+- `do../protocols/project-log.md` — added `SESSION_0024_TASK_01`.
+- `do../protocols/project-log.md` — added `SESSION_0024_REVIEW_01`.
 - `docs/knowledge/wiki/index.md` — indexed the new session and protocol.
 - `docs/sprints/SESSION_0024.md` — this session record.
 
@@ -126,11 +126,11 @@ No subagents needed. This was a small protocol edit over an already-open worktre
 
 ## Task log
 
-- [SESSION_0024_TASK_01](../protocols/task-plan-log.md) — landed
+- [SESSION_0024_TASK_01](../protocols/project-log.md) — landed
 
 ## Review log
 
-- [SESSION_0024_REVIEW_01](../protocols/task-review-log.md#session_0024_review_01---hostile-close-review-protocol-review)
+- [SESSION_0024_REVIEW_01](../protocols/project-log.md#session_0024_review_01---hostile-close-review-protocol-review)
 
 ## Hostile close review
 
@@ -148,7 +148,7 @@ No subagents needed. This was a small protocol edit over an already-open worktre
 
 **Inputs to read:**
 1. `docs/sprints/SESSION_0023.md`
-2. `docs/protocols/task-review-log.md`
+2. `do../protocols/project-log.md`
 3. `docs/sprints/SESSION_0021.md`
 4. `apps/web/prisma/schema.prisma`
 

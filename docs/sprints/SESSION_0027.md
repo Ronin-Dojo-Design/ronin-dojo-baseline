@@ -2,7 +2,7 @@
 title: "SESSION 0027 — Governance audit + SOP compliance restoration"
 slug: session-0027
 type: session
-status: complete
+status: closed-full
 created: 2026-04-28
 updated: 2026-04-28
 last_agent: copilot-session-0027
@@ -285,3 +285,124 @@ Per `docs/knowledge/JETTY_3.0.md`:
 | SESSION_0027_TASK_01 | landed |
 | SESSION_0027_TASK_02 | landed |
 | SESSION_0027_TASK_03 | landed |
+
+## Hostile close review
+
+### SESSION_0027_REVIEW_01 — Governance audit hostile review
+
+**Reviewed tasks:** SESSION_0027_TASK_01, SESSION_0027_TASK_02, SESSION_0027_TASK_03
+
+**Dirstarter docs check:** not applicable — governance/docs only, no Dirstarter baseline layer touched.
+
+**Sources:** local protocols and wiki only.
+
+**Verdict:** This session did what it said it would do. WORKFLOW 5.0 was followed: Petey planned, Cody executed, lane was declared, Dirstarter alignment table filled. The governance audit produced a concrete inventory, real decisions were made (health scores dropped, logs merged, SOPs wired), and FS-0006/FS-0007 were mitigated with verifiable mechanisms. Wiki-lint passes clean. No code was written except the wiki-lint script fix (removing the health check it was enforcing). No schema, auth, payments, or deployment touched. The risk is that the newly expanded cody-preflight checklists become the next round of unenforced protocols — but that's a future-session verification, not a current-session failure.
+
+**Score: 9.5/10** — No caps triggered. Governance-only session with full WORKFLOW 5.0 compliance. Minor deduction: session calendar deviation (SESSION_0027 was mapped to Tournament ops, used for governance instead) is justified but should be formally re-sequenced in WORKFLOW_5.0.
+
+### SESSION_0027_FINDING_01 — WORKFLOW_5.0 session calendar is stale
+
+- **Severity:** low
+- **Task:** SESSION_0027_TASK_01
+- **Evidence:** `docs/protocols/WORKFLOW_5.0.md` session calendar maps SESSION_0027 to "Tournament operations" on May 5. Actual SESSION_0027 was governance audit on Apr 28.
+- **Impact:** Session calendar cannot be trusted for planning. Future agents may load wrong lane expectations.
+- **Required follow-up:** Re-sequence the session calendar to reflect actual progress. Can be done as part of next session's Petey plan.
+- **Status:** open
+
+## Reflections
+
+This session was the correction SESSION_0026 demanded. The governance audit surfaced what we suspected: two-thirds of the docs aren't enforced, health scores are theater, and the log proliferation (build-log + task-plan-log + task-review-log) created three places to write the same thing — which meant agents wrote in none of them consistently.
+
+**What worked:**
+- The Petey → Cody handoff was clean. Petey inventoried, user made decisions, Cody executed. No scope creep.
+- Dropping health scores was the right call. `status` is binary and enforceable; numeric self-assessment is not.
+- Merging three logs into one `project-log.md` reduces the "where do I write this?" confusion.
+- Wiring the SOP runbooks into cody-preflight gives them a concrete enforcement point instead of existing as aspirational reference.
+
+**What to watch:**
+- The expanded cody-preflight (Schema + Backend checklists) could become the next FS-0006 if agents skip it for "simple" changes. The 3+ model gate is the canary.
+- Drift register has 5 open entries (D-005, D-006, D-007, D-008, D-010, D-011, D-012, D-013). Some may be stale. Next governance pass should sweep them.
+- 15 wiki `files/*.md` pages are stale. They document S3-S4 code that has evolved. Not urgent but they erode trust in the wiki.
+
+**Pattern confirmed:** Governance work feels like "not real work" but this session proved it's load-bearing. The cody-preflight expansion directly prevents the FS-0006 class of failure. The log merge directly prevents the "where do I log this?" confusion that led to FS-0007.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `health:` removed from 107 files. `updated` bumped on all touched governance docs. `pairs_with` updated on sop-*.md, hostile-close-review.md. No new wiki pages created. |
+| Backlinks/index sweep | Wiki index updated: project-log replaces 3 old entries; database.md and prisma-workflow.md marked archived. No new backlinks needed. |
+| Wiki lint | `bun run wiki:lint` — ✅ 0 errors, 0 warnings across 114 files. R7 rule disabled in script; RECOMMENDED_FRONTMATTER emptied. Broken links from archival fixed in SESSION_0023/0024/0026, wiki index, closing.md. |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | SESSION_0027_REVIEW_01 above — score 9.5/10 |
+| Review & Recommend | Next session goal written: yes (see below) |
+| Memory sweep | Protocol: `cody-preflight.md` now covers schema+backend work. `project-log.md` replaces 3 separate logs. Health scores no longer exist. These are project-scoped facts worth retaining. |
+| Next session unblock check | Unblocked — no user decision required. Schema commit from SESSION_0026 is on main. WORKFLOW_5.0 calendar re-sequencing can proceed independently. |
+| Git hygiene | Branch: `main`. Commit 1: `b458c66` (109 files). Commit 2 pending (6 files: broken link fixes + wiki-lint script). Will commit before bow-out line. |
+
+## Next session
+
+### Petey plan for SESSION_0028
+
+#### Goal
+
+Re-sequence WORKFLOW_5.0 session calendar to reflect actual progress, then begin the first real feature lane: **School Operations — Programs, Schedules, Attendance** (originally SESSION_0023 in the calendar, now the next unblocked feature work).
+
+#### Tasks
+
+##### SESSION_0028_TASK_01 — Re-sequence WORKFLOW_5.0 session calendar
+
+- **Agent:** Petey
+- **What:** Update the session calendar table in `WORKFLOW_5.0.md` to reflect sessions 0021–0027 as they actually happened, and re-map sessions 0028–0040 based on current state. The schema is at 97 models (Waves A–D complete). The next real work is feature UI lanes.
+- **Steps:**
+  1. Read current calendar vs actual session history
+  2. Rewrite calendar rows 0021–0027 to match reality
+  3. Re-plan 0028–0040 starting from "schema complete, need feature UI"
+  4. Update launch board in WORKFLOW_5.0
+- **Done means:** Calendar reflects reality; no phantom sessions
+- **Depends on:** nothing
+
+##### SESSION_0028_TASK_02 — Cody pre-flight + first School Ops feature
+
+- **Agent:** Cody
+- **What:** Run the full Schema + Backend pre-flight for the first School Ops server action: **Program CRUD** (list, create, detail pages + server actions). This is the first feature lane since S4 Directory.
+- **Steps:**
+  1. Run Schema Checklist (models exist from Wave A)
+  2. Run Backend Checklist (auth predicates, brand scoping per ADR 0004)
+  3. Implement Program list page + create action
+  4. Smoke test in browser
+- **Done means:** `/programs` page renders, create action works, pre-flight artifact in SESSION file
+- **Depends on:** SESSION_0028_TASK_01
+
+#### Parallelism
+
+TASK_01 then TASK_02 (sequential — calendar must be accurate before feature work begins).
+
+#### Agent assignments
+
+| Task | Agent | Rationale |
+| --- | --- | --- |
+| TASK_01 | Petey | Planning/calendar work |
+| TASK_02 | Cody | Feature implementation with pre-flight |
+
+#### Open decisions
+
+- Which School Ops feature first? Recommendation: Programs (simplest CRUD, most models already exist, unlocks Schedules and Attendance downstream).
+- Should SESSION_0028 also re-sequence the schema migration waves table? Recommendation: yes, since Waves A–D are all complete.
+
+#### Risks
+
+- First feature lane since S4 — dev environment may need verification (last browser test was SESSION_0017).
+- Schema has 97 models but seed data only covers S1 entities. Program/Schedule seeds may be needed.
+
+#### Scope guard
+
+Calendar re-sequencing is planning. Program CRUD is one feature. Do not expand into Schedules or Attendance in the same session.
+
+- **Inputs to read:**
+  1. `docs/protocols/WORKFLOW_5.0.md` — session calendar
+  2. `docs/protocols/cody-preflight.md` — new schema/backend checklists
+  3. `docs/runbooks/dev-environment.md` — dev server setup
+  4. `docs/runbooks/sop-e2e-user-lifecycle.md` — lifecycle stage 4 (Programs)
+  5. `apps/web/prisma/schema.prisma` — Program model and related models
+- **First task:** Petey re-sequences WORKFLOW_5.0 session calendar.

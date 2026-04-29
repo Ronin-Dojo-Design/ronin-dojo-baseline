@@ -201,8 +201,18 @@ Three sections:
 
 #### SESSION_0026_FINDING_01 — WORKFLOW 5.0 not followed for schema work
 - **Severity:** high
-- **Status:** open → being addressed SESSION_0027
+- **Status:** mitigated — SESSION_0027 (cody-preflight expanded, Petey gate enforced)
 
 #### SESSION_0026_FINDING_02 — Governance artifact staleness
 - **Severity:** medium
-- **Status:** open → being addressed SESSION_0027
+- **Status:** mitigated — SESSION_0027 (governance audit, log merge, protocol reduction)
+
+### SESSION_0027_REVIEW_01 — Governance audit hostile review
+
+**Reviewed tasks:** SESSION_0027_TASK_01, SESSION_0027_TASK_02, SESSION_0027_TASK_03
+
+**Score: 9.5/10** — Full WORKFLOW 5.0 compliance. Governance-only session.
+
+#### SESSION_0027_FINDING_01 — WORKFLOW_5.0 session calendar is stale
+- **Severity:** low
+- **Status:** open — re-sequence in SESSION_0028

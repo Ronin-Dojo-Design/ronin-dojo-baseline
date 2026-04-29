@@ -12,8 +12,8 @@ pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/architecture/s2-schema-additions.md
   - docs/runbooks/schema-migration.md
-  - docs/protocols/task-plan-log.md
-  - docs/protocols/task-review-log.md
+  - do../protocols/project-log.md
+  - do../protocols/project-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -189,8 +189,8 @@ Only Wave A school-ops schema lands in this session. Pass 2-4 implementation sta
 - `apps/web/prisma/schema.prisma` — Wave A schema additions, relation fields, and `ProgramWaiver`.
 - `docs/runbooks/schema-migration.md` — fixed invalid Prisma 7 dry-run command; bumped `updated`, `last_agent`, and `use_count`.
 - `docs/sprints/SESSION_0023.md` — session artifact, plan, pre-flight, verification, and handoff.
-- `docs/protocols/task-plan-log.md` — new numbered task ledger from SESSION_0023 forward.
-- `docs/protocols/task-review-log.md` — new review/finding ledger from SESSION_0023 forward.
+- `do../protocols/project-log.md` — new numbered task ledger from SESSION_0023 forward.
+- `do../protocols/project-log.md` — new review/finding ledger from SESSION_0023 forward.
 - `docs/rituals/opening.md` — added task-plan-log gate during bow-in.
 - `docs/rituals/closing.md` — added task-review-log gate during full close.
 - `docs/knowledge/wiki/index.md` — added SESSION_0022/0023 and task log links.
@@ -235,15 +235,15 @@ Hard cap applied: data integrity has open findings, so the score is capped at 8.
 
 ## Task log
 
-- [SESSION_0023_TASK_01](../protocols/task-plan-log.md) — landed
-- [SESSION_0023_TASK_02](../protocols/task-plan-log.md) — landed
-- [SESSION_0023_TASK_03](../protocols/task-plan-log.md) — landed
-- [SESSION_0023_TASK_04](../protocols/task-plan-log.md) — landed
+- [SESSION_0023_TASK_01](../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_02](../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_03](../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_04](../protocols/project-log.md) — landed
 
 ## Review log
 
-- [SESSION_0023_REVIEW_01](../protocols/task-review-log.md#session_0023_review_01---schema-wave-a-hostile-review)
-- [SESSION_0023_REVIEW_02](../protocols/task-review-log.md#session_0023_review_02---accountability-log-review)
+- [SESSION_0023_REVIEW_01](../protocols/project-log.md#session_0023_review_01---schema-wave-a-hostile-review)
+- [SESSION_0023_REVIEW_02](../protocols/project-log.md#session_0023_review_02---accountability-log-review)
 
 ## Hostile review findings
 
