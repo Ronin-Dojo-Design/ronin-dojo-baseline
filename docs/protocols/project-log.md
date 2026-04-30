@@ -99,6 +99,14 @@ Three sections:
 - **Seed data:** n/a
 - **Smoke test:** JETTY sweep completed, wiki index updated, close checklist artifact added to SESSION file
 
+### S28_PROGRAM_CRUD — School Ops Program CRUD
+- **Session:** SESSION_0028
+- **Sprint:** S2 / School operations lane
+- **Status:** ✅ verified
+- **Files:** apps/web/server/web/program/*, apps/web/app/(web)/programs/*, apps/web/components/web/programs/create-program-form.tsx, apps/web/lib/authz.ts, apps/web/prisma/seed.ts, apps/web/scripts/smoke-program.ts
+- **Seed data:** yes — 2 Baseline Programs plus Sensei OWNER role assignment
+- **Smoke test:** `bun scripts/smoke-program.ts` passed; HTTP smoke returned `/programs` 200, `/programs/[id]` 200, protected create/edit routes 307 to login
+
 ---
 
 ## Task plan log
@@ -134,6 +142,9 @@ Three sections:
 | SESSION_0027_TASK_01 | SESSION_0027 | Core platform | Petey | Governance artifact inventory | Classification table in SESSION file | landed | — |
 | SESSION_0027_TASK_02 | SESSION_0027 | Core platform | Cody | Consolidate/archive stale artifacts | All docs active-enforced, archived, or updated | in-progress | — |
 | SESSION_0027_TASK_03 | SESSION_0027 | Core platform | Cody | Close FS-0006 + FS-0007 | Failed steps mitigated with evidence | planned | — |
+| SESSION_0028_TASK_01 | SESSION_0028 | School operations | Petey + Giddy | Re-sequence WORKFLOW_5.0 calendar | Calendar reflects actual sessions and current feature sequence | landed | SESSION_0028_REVIEW_01 |
+| SESSION_0028_TASK_02 | SESSION_0028 | School operations | Cody + Desi | Program CRUD pre-flight and implementation | `/programs` list/create/detail works with auth and brand scoping | landed | SESSION_0028_REVIEW_01 |
+| SESSION_0028_TASK_03 | SESSION_0028 | School operations | Doug + Giddy | Verification and close evidence | Checks and smoke evidence recorded in SESSION_0028 | landed | SESSION_0028_REVIEW_01 |
 
 ---
 
@@ -215,4 +226,16 @@ Three sections:
 
 #### SESSION_0027_FINDING_01 — WORKFLOW_5.0 session calendar is stale
 - **Severity:** low
-- **Status:** open — re-sequence in SESSION_0028
+- **Status:** addressed — SESSION_0028 re-sequenced `WORKFLOW_5.0.md`.
+
+### SESSION_0028_REVIEW_01 — Calendar repair + Program CRUD hostile review
+
+**Reviewed tasks:** SESSION_0028_TASK_01, SESSION_0028_TASK_02, SESSION_0028_TASK_03
+
+**Score: 9.5/10** — Calendar drift addressed, Program CRUD delivered with auth/brand proof, targeted verification passed.
+
+**Dirstarter docs check:** live docs checked.
+
+**Sources:** [Prisma setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Project structure](https://dirstarter.com/docs/codebase/structure)
+
+**Verdict:** Sound and merge-ready for a feature branch. Program code follows Dirstarter's feature-folder shape (`server/web/program/{actions,queries,payloads,schemas}`), Prisma client/seed flow, and action protection expectations. The implementation does not trust hidden brand input: writes derive the brand from the current request and selected organization, then enforce editable-org permission and discipline linkage. Verification is credible for this slice: Prisma validates, touched files pass Biome, the Program smoke script proves create/reject cases, and HTTP smoke proves the list/detail and auth redirects. Full-app typecheck remains red on pre-existing baseline issues, but filtered typecheck shows no Program-slice errors.

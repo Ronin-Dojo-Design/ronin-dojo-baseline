@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-26
 updated: 2026-04-29
-last_agent: codex-session-0025
+last_agent: codex-session-0028
 ---
 
 # Wiki Change Log
@@ -79,3 +79,9 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Added executable wiki lint command: `bun run wiki:lint`
 - Updated ubiquitous language for quick close, full close, JETTY sweep, wiki lint, Kaizen reflection, and hostile close review
 - Cleaned active wiki backlinks until `bun run wiki:lint` returned no violations
+
+## 2026-04-29 — SESSION_0028
+
+- Re-sequenced `WORKFLOW_5.0.md` after SESSION_0021-0027 drift.
+- Added Program CRUD feature data prerequisites and updated `seed.ts` wiki notes for Program seed data.
+- Added SESSION_0028 Program CRUD implementation and smoke proof references.

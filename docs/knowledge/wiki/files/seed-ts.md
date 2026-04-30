@@ -4,9 +4,9 @@ slug: seed-ts
 type: file
 status: active
 created: 2026-04-26
-updated: 2026-04-27
+updated: 2026-04-29
 author: Brian + Copilot
-last_agent: Copilot (SESSION_0015)
+last_agent: codex-session-0028
 pairs_with:
   - knowledge/wiki/files/schema-prisma
   - architecture/data-model
@@ -44,6 +44,7 @@ Two sections:
 1. **Dirstarter demo data** — admin/user accounts, categories, tags, 17 sample tools
 2. **Ronin Dojo seed data** — disciplines, rank systems, ranks, roles, tournament roles, gamification event types, subscription tiers, Karate substyles
 3. **Test users (SESSION_0015)** — 5 practitioners with full identity graph: Passport, DirectoryProfile, Organization, Membership, RankAward. Covers PUBLIC/MEMBERS_ONLY/HIDDEN visibility + ACTIVE/PENDING membership status.
+4. **School Ops seed data (SESSION_0028)** — Baseline Programs plus Sensei OWNER role assignment for Program CRUD.
 
 Creates its own PrismaClient directly (bypasses `env.ts` validation which requires all production env vars).
 
@@ -63,12 +64,14 @@ Creates its own PrismaClient directly (bypasses `env.ts` validation which requir
 | Organizations | 1 | Baseline Academy (Boulder, CO) with BJJ, Muay Thai, Eskrima |
 | Memberships | 5 | 4 ACTIVE + 1 PENDING, all BASELINE_MARTIAL_ARTS |
 | RankAwards | 3 | Sensei→BJJ Blue, Alpha→BJJ White, Beta→Eskrima L3 |
+| MembershipRoleAssignments | 1 | Sensei has OWNER role for Baseline Academy |
+| Programs | 2 | Adult BJJ and Muay Thai Striking for Baseline Academy |
 
-## Health
+## Current Notes
 
-- Runs clean: ✅
-- Idempotent: ❌ (must run against empty DB — no upsert logic)
-- Score: **8/10**
+- Runs against an empty dev database; it is not idempotent.
+- Program CRUD smoke coverage lives in `apps/web/scripts/smoke-program.ts`.
+- GamificationEventType point values are still placeholders and need a design pass.
 
 ## Teachable explanation
 

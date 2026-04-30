@@ -4,8 +4,8 @@ slug: feature-data-prerequisites
 type: architecture
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0015
+updated: 2026-04-29
+last_agent: codex-session-0028
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -67,6 +67,20 @@ Discipline → RankSystem → Rank (ordered by sortOrder)
 
 - **Minimum:** 1 Discipline with 1 RankSystem with ≥2 Ranks
 - **Seed covers:** ✅ 12 disciplines, 13 rank systems, 194 ranks
+
+## Program CRUD (School Ops — SESSION_0028)
+
+```text
+Organization (brand=BASELINE_MARTIAL_ARTS)
+  ├─ OrganizationDiscipline
+  ├─ owner or ACTIVE member with OWNER/ORG_ADMIN/INSTRUCTOR role
+  └─ Program (brand, orgId, optional disciplineId, status=ACTIVE)
+```
+
+- **Minimum:** 1 brand-scoped Organization with at least 1 linked Discipline, 1 editable user, and 1 ACTIVE Program
+- **Auth requirement:** Create/update/archive must verify session, active brand, organization brand, editable org permission, and optional discipline linkage
+- **Seed covers:** ✅ Baseline Academy + Sensei OWNER role + 2 ACTIVE Programs (BJJ, Muay Thai)
+- **Smoke proof:** `cd apps/web && bun scripts/smoke-program.ts`
 
 ## Course + Curriculum (S6 — upcoming)
 

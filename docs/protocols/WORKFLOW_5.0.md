@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-04-28
-last_agent: copilot-session-0020-preflight
+updated: 2026-04-29
+last_agent: codex-session-0028
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -148,39 +148,42 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 
 ## Session calendar (SESSION_0021–0040)
 
-| Date | Session | Primary lane | Main outcome |
+This table is reality-adjusted as of SESSION_0028. Completed sessions show the actual outcome; future sessions show target outcomes. The May 18 launch target remains fixed.
+
+| Date / target | Session | Primary lane | Main outcome |
 | --- | --- | --- | --- |
-| Apr 29 | 0021 | Core platform | Schema Wave A migration (school ops models), Dirstarter compliance |
-| Apr 30 | 0022 | Core platform | Tenancy, roles, permissions, locations, org settings |
-| May 1 | 0023 | School operations | Programs, schedules, attendance, trial flow, family accounts |
-| May 2 | 0024 | School operations | Subscriptions, invoices, dunning, waivers, contracts, refunds |
-| May 3 | 0025 | School operations | Lead intake, trial conversion, CRM states |
-| May 4 | 0026 | Content + curriculum | Curriculum, promotions, certifications, media, content publishing |
-| May 5 | 0027 | Tournament operations | Rulesets, weight classes, divisions, eligibility, seeding |
-| May 6 | 0028 | Tournament operations | Registration checkout, rosters, teams, refunds, check-in |
-| May 7 | 0029 | Tournament operations | Brackets, match ops, scoring, mat assignment, live results |
-| May 8 | 0030 | School operations | Athlete-facing app contracts (BJJBuddy-plus baseline) |
-| May 9 | 0031 | Baseline brand | Baseline onboarding, pricing, public pages, sample org, seed data |
-| May 10 | 0032 | BBL brand | BBL lineage, curriculum, history, certification surfaces |
-| May 11 | 0033 | WEKAF brand | Event discovery, tournament admin, rankings/result publishing |
-| May 12 | 0034 | Ronin Dojo Design | White-label org provisioning, theme packs, demo flows |
-| May 13 | 0035 | QA hardening | E2E lifecycle tests, fixtures, seeds, migration rehearsal |
-| May 14 | 0036 | Launch + support | Email, analytics, storage, payments, ops rehearsal |
-| May 15 | 0037 | Buffer | Mandatory debt burn-down for anything under 9.5 |
-| May 16 | 0038 | Cross-brand QA | UAT, accessibility, performance, content verification |
-| May 17 | 0039 | Launch readiness | Freeze, rollback drill, support playbook, launch calendar lock |
-| May 18 | 0040 | Launch day | Release execution, monitoring, support, post-launch triage |
+| Apr 29 actual | 0021 | Core platform | Superseded planning stub; Wave A scope absorbed by SESSION_0023 |
+| Apr 28 actual | 0022 | Core platform | Schema Pass 4 grill, migration SOP, runbook inventory |
+| Apr 29 actual | 0023 | Core platform | Schema Wave A landed; task/review logs introduced |
+| Apr 29 actual | 0024 | Core platform governance | Hostile close review protocol wired into closing |
+| Apr 29 actual | 0025 | Core platform governance | Full-close proof contract, wiki-lint close evidence, branch push |
+| Apr 28 actual | 0026 | Core platform | Traceability cleanup; Schema Waves B/C/D landed; process failure logged |
+| Apr 28 actual | 0027 | Core platform governance | Governance audit; logs merged; FS-0006/FS-0007 mitigated |
+| Apr 29 target | 0028 | School operations | Calendar re-sequence; Program CRUD with auth and brand scoping |
+| Apr 30 target | 0029 | School operations | Class schedules, class sessions, instructor assignments |
+| May 1 target | 0030 | School operations | Attendance/check-in flows and staff class-control surface |
+| May 2 target | 0031 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
+| May 3 target | 0032 | School operations | Pricing plans, contracts, invoices, Stripe account wiring |
+| May 4 target | 0033 | School operations | Lead intake, trial conversion, CRM follow-up states |
+| May 5 target | 0034 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
+| May 6 target | 0035 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
+| May 7 target | 0036 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
+| May 8 target | 0037 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
+| May 9 target | 0038 | QA hardening | E2E lifecycle tests, fixtures, migration artifacts, auth regression |
+| May 10-17 target | 0039 | Launch + support | Staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
+| May 18 target | 0040 | Launch day | Release execution, monitoring, support, post-launch triage |
 
 ---
 
 ## Schema migration waves
 
-| Wave | Models | Session target |
+| Wave | Models | Session target / status |
 | --- | --- | --- |
-| **Wave A — School ops** | Program, ProgramEnrollment, ProgramCourse, ClassSchedule, ClassInstructorAssignment, ClassSession, CheckIn, Attendance, FamilyGroup, FamilyMember, PricingPlan, Invoice, InvoiceLineItem, Payment, MembershipContract, OrgSettings, OrgRelationship, StripeAccount, PayoutSplit, PromoCode | 0021–0022 |
-| **Wave B — Promotions + events** | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig, NotificationPreference, Announcement, Invite, InviteClaim, Event, EventRegistration, Lead, LeadFollowUp | 0023–0025 |
-| **Wave C — Tournament execution** | Bracket, Match, MatchCompetitor, FightRecord, AuditLog, RuleSet, WeighInRecord, MatAssignment | 0027–0029 |
-| **Wave D — Media, techniques, certificates, gamification** | Media, MediaAttachment, Technique, TechniquePrerequisite, TechniqueCurriculumLink, TechniqueProgress, CertificateTemplate, CertificateOrder, CertificateIssuance, Favorite, StudentList, StudentListMember + gamification FK additions | 0026 |
+| **Wave A — School ops** | Program, ProgramEnrollment, ProgramCourse, ClassSchedule, ClassInstructorAssignment, ClassSession, CheckIn, Attendance, FamilyGroup, FamilyMember, PricingPlan, Invoice, InvoiceLineItem, Payment, MembershipContract, OrgSettings, OrgRelationship, StripeAccount, PayoutSplit, PromoCode | Landed SESSION_0023 |
+| **Wave B — Promotions + events** | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig, NotificationPreference, Announcement, Invite, InviteClaim, Event, EventRegistration, Lead, LeadFollowUp | Landed SESSION_0026 |
+| **Wave C — Tournament execution** | Bracket, Match, MatchCompetitor, FightRecord, AuditLog, RuleSet, WeighInRecord, MatAssignment | Landed SESSION_0026 |
+| **Wave D — Media, techniques, certificates, gamification** | Media, MediaAttachment, Technique, TechniquePrerequisite, TechniqueCurriculumLink, TechniqueProgress, CertificateTemplate, CertificateOrder, CertificateIssuance, Favorite, StudentList, StudentListMember + gamification FK additions | Landed SESSION_0026 |
+| **Migration hardening** | Durable Prisma migrations, partial unique indexes for nullable business rules, staging rehearsal, rollback plan | Target SESSION_0038 before staging deploy |
 
 ---
 
@@ -216,20 +219,21 @@ BACKLOG
   [Ranking series] [Athlete journal/HealthKit]
 
 NOW
-  [Schema Wave A migration]
-  [Dirstarter compliance refresh]
-  [Launch strategy lock: Option A-plus]
+  [Program CRUD]
+  [School Ops auth predicates per feature]
+  [Calendar re-sequence cleanup]
 
 NEXT
-  [Wave B: promotions + events + leads]
-  [Wave C: tournament execution]
-  [Brand content + seed data]
+  [Class schedules + sessions]
+  [Attendance/check-in]
+  [Program enrollments + trials + family groups]
+  [Pricing/contracts/invoices]
 
 READY FOR LAUNCH
-  [Baseline core member lifecycle]
-  [BBL migration-safe profile/community]
-  [WEKAF event registration + brackets]
-  [RDD branded funnel + assisted onboarding]
+  [S1-S4 identity/org/directory foundation]
+  [Schema Waves A-D validated locally]
+  [Governance close gates restored]
+  [Launch strategy Option A-plus]
 
 POST-LAUNCH
   [Full self-serve white-label templating]

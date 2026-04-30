@@ -6,9 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-04-29
 author: Brian + Copilot
-last_agent: codex-session-0025
-needs_fix:
-  - "SESSION_0021 remains planned after SESSION_0023 landed Wave A; needs superseded/recovery decision"
+last_agent: codex-session-0028
 ---
 
 # LLM Wiki Index
@@ -93,11 +91,14 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0018](../../sprints/SESSION_0018.md) | session | closed |
 | [SESSION_0019](../../sprints/SESSION_0019.md) | session | closed-full |
 | [SESSION_0020](../../sprints/SESSION_0020.md) | session | closed-full |
-| [SESSION_0021](../../sprints/SESSION_0021.md) | session | planned |
+| [SESSION_0021](../../sprints/SESSION_0021.md) | session | superseded |
 | [SESSION_0022](../../sprints/SESSION_0022.md) | session | closed-full |
 | [SESSION_0023](../../sprints/SESSION_0023.md) | session | closed-full |
 | [SESSION_0024](../../sprints/SESSION_0024.md) | session | closed-full |
 | [SESSION_0025](../../sprints/SESSION_0025.md) | session | closed-full |
+| [SESSION_0026](../../sprints/SESSION_0026.md) | session | closed-full |
+| [SESSION_0027](../../sprints/SESSION_0027.md) | session | closed-full |
+| [SESSION_0028](../../sprints/SESSION_0028.md) | session | in-progress |
 
 ## Protocols
 

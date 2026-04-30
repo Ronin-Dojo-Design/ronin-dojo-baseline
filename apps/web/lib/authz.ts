@@ -1,4 +1,4 @@
-import { type Brand } from "~/.generated/prisma/client"
+import type { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**
@@ -99,22 +99,35 @@ export const isInSameBrand = async (user: AuthzUser, brand: Brand): Promise<bool
 }
 
 /**
- * True if user can edit the organization: admin, OR holds an OWNER/INSTRUCTOR role
- * at that organization (via MembershipRoleAssignment → Role table).
+ * True if user can edit the organization: admin, direct owner, OR active member
+ * with OWNER/ORG_ADMIN/INSTRUCTOR at that organization.
  */
-export const canEditOrganization = async (user: AuthzUser, organizationId: string): Promise<boolean> => {
+export const canEditOrganization = async (
+  user: AuthzUser,
+  organizationId: string,
+): Promise<boolean> => {
   if (isAdmin(user)) return true
-  const membership = await db.membership.findFirst({
+  const organization = await db.organization.findFirst({
     where: {
-      userId: user.id,
-      organizationId,
-      roleAssignments: {
-        some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } },
-      },
+      id: organizationId,
+      OR: [
+        { ownerId: user.id },
+        {
+          memberships: {
+            some: {
+              userId: user.id,
+              status: "ACTIVE",
+              roleAssignments: {
+                some: { role: { code: { in: ["OWNER", "ORG_ADMIN", "INSTRUCTOR"] } } },
+              },
+            },
+          },
+        },
+      ],
     },
     select: { id: true },
   })
-  return Boolean(membership)
+  return Boolean(organization)
 }
 
 /**
@@ -137,7 +150,10 @@ export const canAwardRank = async (user: AuthzUser, organizationId: string): Pro
 }
 
 /** True if user can read the organization's roster: admin, OR any membership at the org. */
-export const canViewOrgRoster = async (user: AuthzUser, organizationId: string): Promise<boolean> => {
+export const canViewOrgRoster = async (
+  user: AuthzUser,
+  organizationId: string,
+): Promise<boolean> => {
   if (isAdmin(user)) return true
   const membership = await db.membership.findFirst({
     where: { userId: user.id, organizationId },
@@ -150,11 +166,6 @@ export const canViewOrgRoster = async (user: AuthzUser, organizationId: string):
 // Internal
 // -----------------------------------------------------------------------------
 
-const BRANDS = new Set<string>([
-  "RONIN_DOJO_DESIGN",
-  "BASELINE_MARTIAL_ARTS",
-  "BBL",
-  "WEKAF",
-])
+const BRANDS = new Set<string>(["RONIN_DOJO_DESIGN", "BASELINE_MARTIAL_ARTS", "BBL", "WEKAF"])
 
 const isBrand = (value: string): value is Brand => BRANDS.has(value)

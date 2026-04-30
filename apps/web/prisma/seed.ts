@@ -1,11 +1,12 @@
-import { addDays } from "date-fns"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { addDays } from "date-fns"
 import { PrismaClient, ToolStatus } from "~/.generated/prisma/client"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  connectionString:
+    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
 })
 const db = new PrismaClient({ adapter })
 
@@ -390,21 +391,54 @@ async function main() {
   // Disciplines (12 system defaults)
   // ---------------------------------------------------------------------------
   const disciplines = await Promise.all([
-    db.discipline.create({ data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true } }),
-    db.discipline.create({ data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true } }),
-    db.discipline.create({ data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true } }),
-    db.discipline.create({ data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true } }),
-    db.discipline.create({ data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true } }),
+    db.discipline.create({
+      data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true },
+    }),
     db.discipline.create({ data: { name: "Judo", slug: "judo", code: "judo", isSystem: true } }),
-    db.discipline.create({ data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true } }),
-    db.discipline.create({ data: { name: "Karate", slug: "karate", code: "karate", isSystem: true } }),
+    db.discipline.create({
+      data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Karate", slug: "karate", code: "karate", isSystem: true },
+    }),
     db.discipline.create({ data: { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true } }),
-    db.discipline.create({ data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true } }),
-    db.discipline.create({ data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true } }),
-    db.discipline.create({ data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true } }),
+    db.discipline.create({
+      data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true },
+    }),
+    db.discipline.create({
+      data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true },
+    }),
   ])
 
-  const [bjj, eskrima, muayThai, boxing, selfDefense, judo, kajukenbo, karate, tkd, wrestling, kravMaga, wingChun] = disciplines
+  const [
+    bjj,
+    eskrima,
+    muayThai,
+    boxing,
+    selfDefense,
+    judo,
+    kajukenbo,
+    karate,
+    tkd,
+    wrestling,
+    kravMaga,
+    wingChun,
+  ] = disciplines
   console.log("Created 12 disciplines")
 
   // ---------------------------------------------------------------------------
@@ -448,7 +482,11 @@ async function main() {
   for (const { belt, prefix, hex } of bjjBelts) {
     bjjRanks.push({ name: belt, shortName: `${prefix}0`, colorHex: hex })
     for (let s = 1; s <= 4; s++) {
-      bjjRanks.push({ name: `${belt} - ${s} Stripe${s > 1 ? "s" : ""}`, shortName: `${prefix}${s}`, colorHex: hex })
+      bjjRanks.push({
+        name: `${belt} - ${s} Stripe${s > 1 ? "s" : ""}`,
+        shortName: `${prefix}${s}`,
+        colorHex: hex,
+      })
     }
   }
   bjjRanks.push(
@@ -484,7 +522,14 @@ async function main() {
     { name: "9th Degree Black Belt (Grandmaster)", shortName: "9D" },
     { name: "10th Degree Red Belt (Supreme Grandmaster)", shortName: "10D" },
   )
-  await seedRankSystem(eskrima.id, "PIMA Denver Doce Pares (GM Steve Wolk)", "BELT", true, null, pimaDenverRanks)
+  await seedRankSystem(
+    eskrima.id,
+    "PIMA Denver Doce Pares (GM Steve Wolk)",
+    "BELT",
+    true,
+    null,
+    pimaDenverRanks,
+  )
   console.log("Created Eskrima PIMA Denver rank system (22 ranks)")
 
   // --- 3. Eskrima — PIMA Jersey Doce Pares (SGM Dong Cuesta) (22 ranks) ---
@@ -512,7 +557,14 @@ async function main() {
     { name: "9th Degree Black Belt (Grandmaster)", shortName: "9D", colorHex: "#000000" },
     { name: "10th Degree Red Belt (Supreme Grandmaster)", shortName: "10D", colorHex: "#FF0000" },
   ]
-  await seedRankSystem(eskrima.id, "PIMA Jersey Doce Pares (SGM Dong Cuesta)", "BELT", true, null, pimaJerseyRanks)
+  await seedRankSystem(
+    eskrima.id,
+    "PIMA Jersey Doce Pares (SGM Dong Cuesta)",
+    "BELT",
+    true,
+    null,
+    pimaJerseyRanks,
+  )
   console.log("Created Eskrima PIMA Jersey rank system (22 ranks)")
 
   // --- 4. Muay Thai — Sak Va Roon Prajioud System (9 ranks) ---
@@ -525,9 +577,20 @@ async function main() {
     { name: "Red (Advanced)", shortName: "R", colorHex: "#FF0000" },
     { name: "Black (Fighter)", shortName: "BK", colorHex: "#000000" },
     { name: "Red-Black (Instructor - Fighter)", shortName: "RB", colorHex: "#FF0000" },
-    { name: "Red-Blue-Black (Fighter - Corner/Kru/Head Instructor)", shortName: "RBB", colorHex: "#FF0000" },
+    {
+      name: "Red-Blue-Black (Fighter - Corner/Kru/Head Instructor)",
+      shortName: "RBB",
+      colorHex: "#FF0000",
+    },
   ]
-  await seedRankSystem(muayThai.id, "Sak Va Roon Thai Boxing Prajioud System", "PRAJIOUD", true, null, muayThaiRanks)
+  await seedRankSystem(
+    muayThai.id,
+    "Sak Va Roon Thai Boxing Prajioud System",
+    "PRAJIOUD",
+    true,
+    null,
+    muayThaiRanks,
+  )
   console.log("Created Muay Thai rank system (9 ranks)")
 
   // --- 5. Boxing — Skill Levels (Baseline-specific) (8 ranks) ---
@@ -541,7 +604,14 @@ async function main() {
     { name: "Amateur", shortName: "AM" },
     { name: "Competition Ready", shortName: "CR" },
   ]
-  await seedRankSystem(boxing.id, "Boxing Skill Levels", "GRADE", false, "BASELINE_MARTIAL_ARTS", boxingRanks)
+  await seedRankSystem(
+    boxing.id,
+    "Boxing Skill Levels",
+    "GRADE",
+    false,
+    "BASELINE_MARTIAL_ARTS",
+    boxingRanks,
+  )
   console.log("Created Boxing rank system (8 ranks, Baseline-specific)")
 
   // --- 6. Self Defense — Levels (Baseline-specific) (8 ranks) ---
@@ -555,7 +625,14 @@ async function main() {
     { name: "Ground Defense", shortName: "GD" },
     { name: "Multiple Attackers", shortName: "MA" },
   ]
-  await seedRankSystem(selfDefense.id, "Self Defense Levels", "GRADE", false, "BASELINE_MARTIAL_ARTS", selfDefenseRanks)
+  await seedRankSystem(
+    selfDefense.id,
+    "Self Defense Levels",
+    "GRADE",
+    false,
+    "BASELINE_MARTIAL_ARTS",
+    selfDefenseRanks,
+  )
   console.log("Created Self Defense rank system (8 ranks, Baseline-specific)")
 
   // --- 7. Judo — Kodokan Kyu-Dan System (16 ranks) ---
@@ -628,7 +705,14 @@ async function main() {
     { name: "Kudan (9th Dan) - Black Belt", shortName: "9D", colorHex: "#000000" },
     { name: "Judan (10th Dan) - Black Belt", shortName: "10D", colorHex: "#000000" },
   ]
-  await seedRankSystem(karate.id, "USA Karate Federation Kyu-Dan System", "KYU_DAN", true, null, karateRanks)
+  await seedRankSystem(
+    karate.id,
+    "USA Karate Federation Kyu-Dan System",
+    "KYU_DAN",
+    true,
+    null,
+    karateRanks,
+  )
   console.log("Created Karate rank system (20 ranks)")
 
   // --- 10. TKD — USA Taekwondo Gup-Dan System (20 ranks) ---
@@ -692,7 +776,14 @@ async function main() {
     { name: "Instructor", shortName: "INS" },
     { name: "Master", shortName: "MAS" },
   ]
-  await seedRankSystem(wingChun.id, "Wing Chun Forms Progression", "OTHER", true, null, wingChunRanks)
+  await seedRankSystem(
+    wingChun.id,
+    "Wing Chun Forms Progression",
+    "OTHER",
+    true,
+    null,
+    wingChunRanks,
+  )
   console.log("Created Wing Chun rank system (8 ranks)")
 
   // ---------------------------------------------------------------------------
@@ -700,12 +791,42 @@ async function main() {
   // ---------------------------------------------------------------------------
   await db.role.createMany({
     data: [
-      { code: "STUDENT", name: "Student", description: "Standard member/student role", isSystem: true },
-      { code: "INSTRUCTOR", name: "Instructor", description: "Teaches classes and can verify curriculum completions", isSystem: true },
-      { code: "OWNER", name: "Owner", description: "Organization owner with full administrative access", isSystem: true },
-      { code: "COACH", name: "Coach", description: "Coaches students, can award ranks and manage rosters", isSystem: true },
-      { code: "ORG_ADMIN", name: "Organization Admin", description: "Administrative access to organization settings and membership", isSystem: true },
-      { code: "STYLE_APPROVER", name: "Style Approver", description: "Can approve user-submitted styles within their organization", isSystem: true },
+      {
+        code: "STUDENT",
+        name: "Student",
+        description: "Standard member/student role",
+        isSystem: true,
+      },
+      {
+        code: "INSTRUCTOR",
+        name: "Instructor",
+        description: "Teaches classes and can verify curriculum completions",
+        isSystem: true,
+      },
+      {
+        code: "OWNER",
+        name: "Owner",
+        description: "Organization owner with full administrative access",
+        isSystem: true,
+      },
+      {
+        code: "COACH",
+        name: "Coach",
+        description: "Coaches students, can award ranks and manage rosters",
+        isSystem: true,
+      },
+      {
+        code: "ORG_ADMIN",
+        name: "Organization Admin",
+        description: "Administrative access to organization settings and membership",
+        isSystem: true,
+      },
+      {
+        code: "STYLE_APPROVER",
+        name: "Style Approver",
+        description: "Can approve user-submitted styles within their organization",
+        isSystem: true,
+      },
     ],
   })
   console.log("Created 6 system roles")
@@ -715,10 +836,30 @@ async function main() {
   // ---------------------------------------------------------------------------
   await db.tournamentRole.createMany({
     data: [
-      { code: "COMPETITOR", name: "Competitor", description: "Participates in divisions as a competitor", isSystem: true },
-      { code: "COACH", name: "Coach", description: "Corners/coaches competitors during events", isSystem: true },
-      { code: "JUDGE", name: "Judge", description: "Judges or referees matches/forms", isSystem: true },
-      { code: "VOLUNTEER", name: "Volunteer", description: "General volunteer staff", isSystem: true },
+      {
+        code: "COMPETITOR",
+        name: "Competitor",
+        description: "Participates in divisions as a competitor",
+        isSystem: true,
+      },
+      {
+        code: "COACH",
+        name: "Coach",
+        description: "Corners/coaches competitors during events",
+        isSystem: true,
+      },
+      {
+        code: "JUDGE",
+        name: "Judge",
+        description: "Judges or referees matches/forms",
+        isSystem: true,
+      },
+      {
+        code: "VOLUNTEER",
+        name: "Volunteer",
+        description: "General volunteer staff",
+        isSystem: true,
+      },
     ],
   })
   console.log("Created 4 system tournament roles")
@@ -731,12 +872,48 @@ async function main() {
   // ---------------------------------------------------------------------------
   await db.gamificationEventType.createMany({
     data: [
-      { code: "BELT_PROMOTION", name: "Belt/Rank Promotion", description: "Awarded when a student receives a new rank", defaultPoints: 100, isSystem: true },
-      { code: "CLASS_ATTENDANCE", name: "Class Attendance", description: "Awarded for attending a class session", defaultPoints: 10, isSystem: true },
-      { code: "TOURNAMENT_WIN", name: "Tournament Win", description: "Awarded for winning a division in a tournament", defaultPoints: 50, isSystem: true },
-      { code: "TOURNAMENT_PARTICIPATION", name: "Tournament Participation", description: "Awarded for participating in a tournament", defaultPoints: 25, isSystem: true },
-      { code: "COURSE_COMPLETION", name: "Course Completion", description: "Awarded for completing an entire course", defaultPoints: 75, isSystem: true },
-      { code: "CURRICULUM_ITEM_COMPLETION", name: "Curriculum Item Completion", description: "Awarded for completing a single curriculum item", defaultPoints: 5, isSystem: true },
+      {
+        code: "BELT_PROMOTION",
+        name: "Belt/Rank Promotion",
+        description: "Awarded when a student receives a new rank",
+        defaultPoints: 100,
+        isSystem: true,
+      },
+      {
+        code: "CLASS_ATTENDANCE",
+        name: "Class Attendance",
+        description: "Awarded for attending a class session",
+        defaultPoints: 10,
+        isSystem: true,
+      },
+      {
+        code: "TOURNAMENT_WIN",
+        name: "Tournament Win",
+        description: "Awarded for winning a division in a tournament",
+        defaultPoints: 50,
+        isSystem: true,
+      },
+      {
+        code: "TOURNAMENT_PARTICIPATION",
+        name: "Tournament Participation",
+        description: "Awarded for participating in a tournament",
+        defaultPoints: 25,
+        isSystem: true,
+      },
+      {
+        code: "COURSE_COMPLETION",
+        name: "Course Completion",
+        description: "Awarded for completing an entire course",
+        defaultPoints: 75,
+        isSystem: true,
+      },
+      {
+        code: "CURRICULUM_ITEM_COMPLETION",
+        name: "Curriculum Item Completion",
+        description: "Awarded for completing a single curriculum item",
+        defaultPoints: 5,
+        isSystem: true,
+      },
     ],
   })
   console.log("Created 6 system gamification event types")
@@ -749,11 +926,46 @@ async function main() {
       // Universal (all brands)
       { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true },
       // BBL-specific tiers
-      { code: "FREE", name: "Free", description: "BBL free tier", level: 0, isSystem: false, brand: "BBL" },
-      { code: "PREMIUM", name: "Premium", description: "BBL premium membership", level: 10, isSystem: false, brand: "BBL" },
-      { code: "INSTRUCTOR", name: "Instructor", description: "BBL instructor tier", level: 20, isSystem: false, brand: "BBL" },
-      { code: "SCHOOL_OWNER", name: "School Owner", description: "BBL school owner tier", level: 30, isSystem: false, brand: "BBL" },
-      { code: "LEGEND", name: "Legend", description: "BBL legend tier", level: 40, isSystem: false, brand: "BBL" },
+      {
+        code: "FREE",
+        name: "Free",
+        description: "BBL free tier",
+        level: 0,
+        isSystem: false,
+        brand: "BBL",
+      },
+      {
+        code: "PREMIUM",
+        name: "Premium",
+        description: "BBL premium membership",
+        level: 10,
+        isSystem: false,
+        brand: "BBL",
+      },
+      {
+        code: "INSTRUCTOR",
+        name: "Instructor",
+        description: "BBL instructor tier",
+        level: 20,
+        isSystem: false,
+        brand: "BBL",
+      },
+      {
+        code: "SCHOOL_OWNER",
+        name: "School Owner",
+        description: "BBL school owner tier",
+        level: 30,
+        isSystem: false,
+        brand: "BBL",
+      },
+      {
+        code: "LEGEND",
+        name: "Legend",
+        description: "BBL legend tier",
+        level: 40,
+        isSystem: false,
+        brand: "BBL",
+      },
     ],
   })
   console.log("Created 6 subscription tiers (1 universal + 5 BBL)")
@@ -767,7 +979,12 @@ async function main() {
       { code: "shotokan", name: "Shotokan Karate", status: "APPROVED", disciplineId: karate.id },
       { code: "wado-ryu", name: "Wado-Ryu", status: "APPROVED", disciplineId: karate.id },
       { code: "goju-ryu", name: "Goju-Ryu", status: "APPROVED", disciplineId: karate.id },
-      { code: "hawaiian-kenpo", name: "Hawaiian Kenpo", status: "APPROVED", disciplineId: karate.id },
+      {
+        code: "hawaiian-kenpo",
+        name: "Hawaiian Kenpo",
+        status: "APPROVED",
+        disciplineId: karate.id,
+      },
       { code: "kajukenbo", name: "Kajukenbo", status: "APPROVED", disciplineId: karate.id },
     ],
   })
@@ -811,8 +1028,22 @@ async function main() {
       name: "Sensei Demo",
       email: "sensei@baseline.test",
       role: "user",
-      passport: { displayName: "Sensei Demo", legalFirstName: "Demo", legalLastName: "Instructor", bio: "Head instructor at Baseline Academy." },
-      directory: { visibility: "PUBLIC" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: true, showPhone: false, showOrgs: true, showRanks: true },
+      passport: {
+        displayName: "Sensei Demo",
+        legalFirstName: "Demo",
+        legalLastName: "Instructor",
+        bio: "Head instructor at Baseline Academy.",
+      },
+      directory: {
+        visibility: "PUBLIC" as const,
+        locationCity: "Boulder",
+        locationRegion: "CO",
+        locationCountry: "US",
+        showEmail: true,
+        showPhone: false,
+        showOrgs: true,
+        showRanks: true,
+      },
       disciplineId: bjj.id,
       membershipStatus: "ACTIVE" as const,
     },
@@ -820,8 +1051,22 @@ async function main() {
       name: "Student Alpha",
       email: "alpha@baseline.test",
       role: "user",
-      passport: { displayName: "Student Alpha", legalFirstName: "Alpha", legalLastName: "Student", bio: "BJJ and Muay Thai student." },
-      directory: { visibility: "PUBLIC" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: true, showRanks: true },
+      passport: {
+        displayName: "Student Alpha",
+        legalFirstName: "Alpha",
+        legalLastName: "Student",
+        bio: "BJJ and Muay Thai student.",
+      },
+      directory: {
+        visibility: "PUBLIC" as const,
+        locationCity: "Boulder",
+        locationRegion: "CO",
+        locationCountry: "US",
+        showEmail: false,
+        showPhone: false,
+        showOrgs: true,
+        showRanks: true,
+      },
       disciplineId: bjj.id,
       membershipStatus: "ACTIVE" as const,
     },
@@ -829,8 +1074,22 @@ async function main() {
       name: "Student Beta",
       email: "beta@baseline.test",
       role: "user",
-      passport: { displayName: "Student Beta", legalFirstName: "Beta", legalLastName: "Student", bio: "Eskrima practitioner." },
-      directory: { visibility: "MEMBERS_ONLY" as const, locationCity: "Denver", locationRegion: "CO", locationCountry: "US", showEmail: true, showPhone: true, showOrgs: true, showRanks: true },
+      passport: {
+        displayName: "Student Beta",
+        legalFirstName: "Beta",
+        legalLastName: "Student",
+        bio: "Eskrima practitioner.",
+      },
+      directory: {
+        visibility: "MEMBERS_ONLY" as const,
+        locationCity: "Denver",
+        locationRegion: "CO",
+        locationCountry: "US",
+        showEmail: true,
+        showPhone: true,
+        showOrgs: true,
+        showRanks: true,
+      },
       disciplineId: eskrima.id,
       membershipStatus: "ACTIVE" as const,
     },
@@ -839,7 +1098,16 @@ async function main() {
       email: "ghost@baseline.test",
       role: "user",
       passport: { displayName: "Ghost User", legalFirstName: "Ghost", legalLastName: "Hidden" },
-      directory: { visibility: "HIDDEN" as const, locationCity: "Boulder", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: false, showRanks: false },
+      directory: {
+        visibility: "HIDDEN" as const,
+        locationCity: "Boulder",
+        locationRegion: "CO",
+        locationCountry: "US",
+        showEmail: false,
+        showPhone: false,
+        showOrgs: false,
+        showRanks: false,
+      },
       disciplineId: muayThai.id,
       membershipStatus: "ACTIVE" as const,
     },
@@ -847,17 +1115,40 @@ async function main() {
       name: "Pending Patty",
       email: "pending@baseline.test",
       role: "user",
-      passport: { displayName: "Pending Patty", legalFirstName: "Patty", legalLastName: "Pending", bio: "Just signed up!" },
-      directory: { visibility: "PUBLIC" as const, locationCity: "Longmont", locationRegion: "CO", locationCountry: "US", showEmail: false, showPhone: false, showOrgs: true, showRanks: true },
+      passport: {
+        displayName: "Pending Patty",
+        legalFirstName: "Patty",
+        legalLastName: "Pending",
+        bio: "Just signed up!",
+      },
+      directory: {
+        visibility: "PUBLIC" as const,
+        locationCity: "Longmont",
+        locationRegion: "CO",
+        locationCountry: "US",
+        showEmail: false,
+        showPhone: false,
+        showOrgs: true,
+        showRanks: true,
+      },
       disciplineId: bjj.id,
       membershipStatus: "PENDING" as const,
     },
   ]
 
   // Fetch some ranks for awards
-  const bjjBlue = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "BL0" } })
-  const bjjWhite = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "W0" } })
-  const eskrimaL3 = await db.rank.findFirst({ where: { rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } }, shortName: "L3" } })
+  const bjjBlue = await db.rank.findFirst({
+    where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "BL0" },
+  })
+  const bjjWhite = await db.rank.findFirst({
+    where: { rankSystem: { discipline: { code: "bjj" } }, shortName: "W0" },
+  })
+  const eskrimaL3 = await db.rank.findFirst({
+    where: {
+      rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } },
+      shortName: "L3",
+    },
+  })
 
   for (const tu of testUsers) {
     const user = await db.user.create({
@@ -912,7 +1203,9 @@ async function main() {
       }
     }
 
-    console.log(`Created test user: ${tu.name} (${tu.directory.visibility}, ${tu.membershipStatus})`)
+    console.log(
+      `Created test user: ${tu.name} (${tu.directory.visibility}, ${tu.membershipStatus})`,
+    )
   }
 
   // Set org owner
@@ -922,9 +1215,52 @@ async function main() {
       where: { id: baselineOrg.id },
       data: { ownerId: senseiUser.id },
     })
+
+    const senseiMembership = await db.membership.findFirst({
+      where: {
+        userId: senseiUser.id,
+        organizationId: baselineOrg.id,
+      },
+    })
+    const ownerRole = await db.role.findFirst({ where: { code: "OWNER", isSystem: true } })
+
+    if (senseiMembership && ownerRole) {
+      await db.membershipRoleAssignment.create({
+        data: {
+          membershipId: senseiMembership.id,
+          roleId: ownerRole.id,
+        },
+      })
+    }
   }
 
   console.log("Created 5 test users with full identity graph")
+
+  await db.program.createMany({
+    data: [
+      {
+        brand: "BASELINE_MARTIAL_ARTS",
+        organizationId: baselineOrg.id,
+        disciplineId: bjj.id,
+        name: "Adult Brazilian Jiu-Jitsu",
+        slug: "adult-brazilian-jiu-jitsu",
+        description: "Fundamentals, sparring, and rank progression for adult BJJ students.",
+        status: "ACTIVE",
+        sortOrder: 10,
+      },
+      {
+        brand: "BASELINE_MARTIAL_ARTS",
+        organizationId: baselineOrg.id,
+        disciplineId: muayThai.id,
+        name: "Muay Thai Striking",
+        slug: "muay-thai-striking",
+        description: "Pad work, clinch basics, conditioning, and safe technical sparring.",
+        status: "ACTIVE",
+        sortOrder: 20,
+      },
+    ],
+  })
+  console.log("Created 2 Baseline programs")
 
   console.log("Seeding completed!")
 }
