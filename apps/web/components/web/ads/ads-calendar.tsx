@@ -40,7 +40,7 @@ export const AdsCalendar = ({
   const booked = useMemo(
     () =>
       ads
-        .filter(({ type }) => type === adSpot.type || type === "All")
+        .filter(({ type }) => adSpot.type === "All" || type === adSpot.type || type === "All")
         .map(({ startsAt, endsAt }) => ({
           from: startOfDay(startsAt),
           to: startOfDay(endsAt),

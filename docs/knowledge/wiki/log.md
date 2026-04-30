@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-04-29
-last_agent: codex-session-0028
+updated: 2026-04-30
+last_agent: codex-directory-monetization-roadmap
 ---
 
 # Wiki Change Log
@@ -85,3 +85,10 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Re-sequenced `WORKFLOW_5.0.md` after SESSION_0021-0027 drift.
 - Added Program CRUD feature data prerequisites and updated `seed.ts` wiki notes for Program seed data.
 - Added SESSION_0028 Program CRUD implementation and smoke proof references.
+
+## 2026-04-30 — Directory monetization roadmap
+
+- Preserved the pasted roadmap source at `docs/architecture/source/directory-monetization-roadmap.md`.
+- Created `content-engine/directory-monetization-roadmap.md` with the repo reuse audit, DRY guardrails, phased plan, and Dirstarter source links.
+- Updated the wiki index for SESSION_0028 closed-full status and the new roadmap page.
+- Added full-close evidence to the roadmap synthesis and marked Local by Flywheel WordPress cleanup as MB-012.

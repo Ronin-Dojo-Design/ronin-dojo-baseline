@@ -1,21 +1,22 @@
-import { google } from "@ai-sdk/google"
 import { streamText } from "ai"
 import { z } from "zod"
+import { AI_GATEWAY_DISABLED_MESSAGE, getAiCompletionModel, isAiGatewayConfigured } from "~/lib/ai"
 import { withAdminAuth } from "~/lib/auth-hoc"
 
 const completionSchema = z.object({
   prompt: z.string(),
-  model: z
-    .enum(["gemini-2.0-pro-exp-02-05", "gemini-2.0-flash-lite-preview-02-05"])
-    .optional()
-    .default("gemini-2.0-flash-lite-preview-02-05"),
+  model: z.string().optional(),
 })
 
 export const POST = withAdminAuth(async req => {
   const { prompt, model } = completionSchema.parse(await req.json())
 
+  if (!isAiGatewayConfigured()) {
+    return new Response(AI_GATEWAY_DISABLED_MESSAGE, { status: 503 })
+  }
+
   const result = streamText({
-    model: google(model),
+    model: getAiCompletionModel(model),
     prompt,
   })
 

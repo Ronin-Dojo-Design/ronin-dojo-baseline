@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-04-29
+updated: 2026-04-30
 author: Brian + Copilot
-last_agent: codex-session-0028
+last_agent: codex-directory-monetization-roadmap
 ---
 
 # LLM Wiki Index
@@ -38,6 +38,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active |
 | [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active |
 | [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active |
+| [Directory Monetization Roadmap](content-engine/directory-monetization-roadmap.md) | concept | active |
 | [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active |
 
 ## Architecture
@@ -53,6 +54,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active |
 | [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active |
+| [Directory Monetization Roadmap Raw Source](../../architecture/source/directory-monetization-roadmap.md) | source | active |
 | [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active |
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active |
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active |
@@ -98,7 +100,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0025](../../sprints/SESSION_0025.md) | session | closed-full |
 | [SESSION_0026](../../sprints/SESSION_0026.md) | session | closed-full |
 | [SESSION_0027](../../sprints/SESSION_0027.md) | session | closed-full |
-| [SESSION_0028](../../sprints/SESSION_0028.md) | session | in-progress |
+| [SESSION_0028](../../sprints/SESSION_0028.md) | session | closed-full |
 
 ## Protocols
 

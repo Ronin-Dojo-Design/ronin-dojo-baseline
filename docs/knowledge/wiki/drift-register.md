@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -31,3 +31,4 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 | D-011 | 13+ schema entities missing for full launch | `SCHEMA_NEEDS_MANIFEST.md` | `schema.prisma` (31 models) | Schema reconciliation in SESSION_0020 | 🔴 open | — |
 | D-012 | Dirstarter source audit (TASK_02) not completed | SESSION_0019 plan | — | Carry to future session | 🟡 open | — |
 | D-013 | Admin auth behavior: 404 vs redirect | `auth-hoc.tsx` (redirects to `/`) | `auth.md` (says 404) | Pick one and align both | 🟡 open | — |
+| D-014 | Dirstarter `Tool` residue is both slated for removal and reused by monetization roadmap | `schema.prisma` TODO(remove-before-prod), MB-005 | `directory-monetization-roadmap.md`, active `/submit` and `/advertise` flows | Decide quarantine, promotion, or replacement before production | 🔴 open | — |

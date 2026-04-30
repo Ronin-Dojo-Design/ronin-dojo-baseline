@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-04-28
-last_agent: copilot-session-0027
+updated: 2026-04-30
+last_agent: codex-directory-monetization-roadmap
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -13,6 +13,7 @@ pairs_with:
   - docs/protocols/hostile-close-review.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
   - docs/sprints/SESSION_0023.md
   - docs/sprints/SESSION_0024.md
   - docs/sprints/SESSION_0025.md
@@ -107,6 +108,14 @@ Three sections:
 - **Seed data:** yes — 2 Baseline Programs plus Sensei OWNER role assignment
 - **Smoke test:** `bun scripts/smoke-program.ts` passed; HTTP smoke returned `/programs` 200, `/programs/[id]` 200, protected create/edit routes 307 to login
 
+### DIRECTORY_MONETIZATION_ROADMAP — Directory monetization roadmap + Dirstarter reuse pass
+- **Session:** Roadmap artifact, not numbered SESSION_0029 per owner directive
+- **Sprint:** Cross-lane roadmap / Content + monetization
+- **Status:** ✅ verified with known full-typecheck baseline debt
+- **Files:** `docs/architecture/source/directory-monetization-roadmap.md`, `docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md`, `apps/web/lib/ai.ts`, AI routes, ad picker/bottom placement, Stripe product setup, seed data, wiki governance docs
+- **Seed data:** yes — martial-arts `Tool` entries for Baseline Martial Arts, Black Belt Legacy, WEKAF USA, Ronin Dojo Design, USA Stick Fighting, Black Belt Wiki, and Smoothcomp
+- **Smoke test:** `bunx biome check --write` on touched code passed; `bun run db:generate` passed; `bunx prisma validate --schema prisma/schema.prisma` passed; `bun run wiki:lint` passed; `git diff --check` passed; `curl -H "Host: baseline.local" http://localhost:3000/submit` returned 200; `curl -H "Host: baseline.local" http://localhost:3000/advertise` returned 200. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues, with no errors reported in the roadmap-touched code paths after Prisma generate.
+
 ---
 
 ## Task plan log
@@ -145,6 +154,10 @@ Three sections:
 | SESSION_0028_TASK_01 | SESSION_0028 | School operations | Petey + Giddy | Re-sequence WORKFLOW_5.0 calendar | Calendar reflects actual sessions and current feature sequence | landed | SESSION_0028_REVIEW_01 |
 | SESSION_0028_TASK_02 | SESSION_0028 | School operations | Cody + Desi | Program CRUD pre-flight and implementation | `/programs` list/create/detail works with auth and brand scoping | landed | SESSION_0028_REVIEW_01 |
 | SESSION_0028_TASK_03 | SESSION_0028 | School operations | Doug + Giddy | Verification and close evidence | Checks and smoke evidence recorded in SESSION_0028 | landed | SESSION_0028_REVIEW_01 |
+| ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
+| ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
+| ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
+| ROADMAP_DIRECTORY_MONETIZATION_TASK_04 | Roadmap | Governance + close | Petey + Doug | Full closing ritual and cleanup boundary mark | Full close evidence recorded; MB-012 added for Local by Flywheel WordPress cleanup | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_02 |
 
 ---
 
@@ -239,3 +252,27 @@ Three sections:
 **Sources:** [Prisma setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Project structure](https://dirstarter.com/docs/codebase/structure)
 
 **Verdict:** Sound and merge-ready for a feature branch. Program code follows Dirstarter's feature-folder shape (`server/web/program/{actions,queries,payloads,schemas}`), Prisma client/seed flow, and action protection expectations. The implementation does not trust hidden brand input: writes derive the brand from the current request and selected organization, then enforce editable-org permission and discipline linkage. Verification is credible for this slice: Prisma validates, touched files pass Biome, the Program smoke script proves create/reject cases, and HTTP smoke proves the list/detail and auth redirects. Full-app typecheck remains red on pre-existing baseline issues, but filtered typecheck shows no Program-slice errors.
+
+### ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 — Roadmap source + monetization reuse review
+
+**Reviewed tasks:** ROADMAP_DIRECTORY_MONETIZATION_TASK_01 through ROADMAP_DIRECTORY_MONETIZATION_TASK_03
+
+**Score: 9.3/10** — Useful roadmap and low-risk code alignment landed, but the score stays under full-close quality until Stripe/webhook/admin browser smoke runs with real test credentials.
+
+**Dirstarter docs check:** live docs checked.
+
+**Sources:** [Getting Started](https://dirstarter.com/docs/getting-started), [Content Management](https://dirstarter.com/docs/content), [Monetization](https://dirstarter.com/docs/monetization), [Automation](https://dirstarter.com/docs/automation), [Payments](https://dirstarter.com/docs/integrations/payments)
+
+**Verdict:** The implementation extends Dirstarter's existing directory monetization machinery instead of creating parallel systems. `Tool` and `Ad` remain the near-term substrate, while MB-011 and D-014 explicitly block production use until the repo decides whether `Tool` is quarantined, promoted, or replaced. AI automation now follows the current AI Gateway env shape. Ads expose all documented placement types and `All` bookings now block against all existing booked dates. Verification is solid for docs, formatting, schema validity, and generated Prisma types, but live workflows still need owner credentials for Stripe, Jina, AI Gateway, ScreenshotOne, and email.
+
+### ROADMAP_DIRECTORY_MONETIZATION_REVIEW_02 — Full close ritual review
+
+**Reviewed tasks:** ROADMAP_DIRECTORY_MONETIZATION_TASK_04
+
+**Score: 9.5/10** — Full close evidence is present for the non-numbered roadmap artifact. No hard caps triggered; residual risk is explicitly tracked.
+
+**Dirstarter docs check:** cached docs sufficient — no new Dirstarter-owned code changed during the close step beyond documenting the prior live-doc-checked work.
+
+**Sources:** `docs/rituals/closing.md`, `docs/protocols/hostile-close-review.md`, `docs/protocols/review-recommend.md`, `docs/architecture/decisions/0005-legacy-coexistence.md`, prior live Dirstarter sources recorded in `ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01`.
+
+**Verdict:** The close is honest about the protocol exception: the owner asked for a roadmap rather than a numbered `SESSION_0029.md`, so the close artifact lives in the roadmap synthesis and Project Log. JETTY/frontmatter and backlinks are covered for the wiki/protocol layer. The accidental WordPress public directory is marked as MB-012 and not deleted without explicit approval. Next session is unblocked for the planned School Ops class schedules work.

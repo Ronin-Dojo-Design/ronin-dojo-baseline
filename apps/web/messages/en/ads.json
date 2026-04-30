@@ -18,6 +18,18 @@
     "tool_page": {
       "label": "Tool Page Ad",
       "description": "Visible on the sidebar of every tool page"
+    },
+    "blog_post": {
+      "label": "Blog Post Ad",
+      "description": "Visible beside long-form articles and guides"
+    },
+    "bottom": {
+      "label": "Bottom Ad",
+      "description": "Visible near the lower navigation area"
+    },
+    "all": {
+      "label": "All Placements",
+      "description": "Visible across banner, listings, detail pages, blog posts, and bottom placements"
     }
   },
   "default_ad": {

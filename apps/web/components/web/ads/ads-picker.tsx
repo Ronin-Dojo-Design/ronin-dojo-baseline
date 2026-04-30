@@ -53,6 +53,24 @@ export const AdsPicker = ({ className, ads, type, ...props }: AdsCalendarProps) 
       price: 15,
       preview: "https://share.cleanshot.com/dXDbZPFv",
     },
+    {
+      type: AdType.BlogPost,
+      label: t("spots.blog_post.label"),
+      description: t("spots.blog_post.description"),
+      price: 15,
+    },
+    {
+      type: AdType.Bottom,
+      label: t("spots.bottom.label"),
+      description: t("spots.bottom.description"),
+      price: 10,
+    },
+    {
+      type: AdType.All,
+      label: t("spots.all.label"),
+      description: t("spots.all.description"),
+      price: 75,
+    },
   ] satisfies AdSpot[]
 
   const { price, selections, hasSelections, findAdSpot, clearSelection, updateSelection } =

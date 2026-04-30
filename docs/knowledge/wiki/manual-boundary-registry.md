@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-04-29
+updated: 2026-04-30
 author: Brian + ChatGPT
-last_agent: codex-session-0025
+last_agent: codex-directory-monetization-roadmap
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -77,6 +77,8 @@ Blocker classes:
 | MB-008 | docs/wiki quality | Backlinks and doc health upgrades on key pages | Petey + Doug | docs_wiring | wiki lint pass + index updates | open |
 | MB-009 | content engine path | Decide current truth split: MDX-only now vs ContentAtom-backed intake-to-publish path | Petey + Iggy + owner | content_system_decision | written policy + phased adoption plan | open |
 | MB-010 | legacy migration | Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone | Petey + owner | brand_migration | updated program lane note | open |
+| MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | open |
+| MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
 
 ### 2. Notes by boundary
 
@@ -93,6 +95,10 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 **MB-005 — Dirstarter residue.** The schema literally marks template models for future removal before production. That should stay visible until handled.
 
 **MB-009 — Content system path.** The repo has MDX blog content now, ContentAtom-style schema direction, and a wiki/docs/session knowledge layer. This needs a crisp operating rule so the system does not fork into three half-truths.
+
+**MB-011 — Directory monetization model.** The roadmap intentionally reuses Dirstarter `Tool` and `Ad` for near-term paid listing proof. Before production, decide whether that remains the canonical paid listing substrate, gets renamed/promoted into a generic `DirectoryListing`, or is replaced by paid overlays on `Organization`, `Program`, and `Event`.
+
+**MB-012 — Local WordPress public directory cleanup.** The session began in `/Users/brianscott/Local Sites/ronin-dojo/app/public/` because VS Code was opened from the Local by Flywheel WordPress site. ADR 0005 already says that install is abandoned and irrelevant to the new stack. Do not delete it silently; verify the path and get owner approval first.
 
 ### 3. Closure rule
 

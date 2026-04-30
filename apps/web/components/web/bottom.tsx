@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import type { ComponentProps } from "react"
+import { Suspense } from "react"
 import { H6 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
+import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { Container } from "~/components/web/ui/container"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { Tile, TileCaption, TileDivider } from "~/components/web/ui/tile"
@@ -16,10 +18,6 @@ export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrap
     orderBy: { tools: { _count: "desc" } },
     take: 12,
   })
-
-  if (!categories?.length) {
-    return null
-  }
 
   return (
     <Container>
@@ -43,6 +41,10 @@ export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrap
             </div>
           </Stack>
         )}
+
+        <Suspense fallback={<AdCardSkeleton />}>
+          <AdCard type="Bottom" />
+        </Suspense>
       </Wrapper>
     </Container>
   )

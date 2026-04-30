@@ -13,11 +13,11 @@ const db = new PrismaClient({ adapter })
 const ADMIN_EMAIL = "admin@dirstarter.com"
 const USER_EMAIL = "user@dirstarter.com"
 
-const DUMMY_CONTENT = `This tool has revolutionized the way developers approach modern software development. With its **intuitive interface** and powerful features, it streamlines workflows and enhances productivity across teams of all sizes. Whether you're a beginner just starting your development journey or an experienced professional working on complex enterprise applications, this tool provides the flexibility and reliability you need to succeed.
+const DUMMY_CONTENT = `This listing gives visitors a quick way to understand what the resource offers, who it serves, and why it belongs in the directory. Use it as starter content for local development, then replace it with verified copy before publication.
 
-The platform offers a **comprehensive suite of features** designed to meet the diverse needs of today's development landscape. From advanced code editing capabilities to seamless integration with popular development tools and services, every aspect has been carefully crafted to provide an exceptional user experience. The robust plugin ecosystem further extends functionality, allowing teams to customize their workflow according to specific project requirements.
+For martial arts directory workflows, each listing should make the relationship clear: school, league, event, training resource, equipment supplier, software platform, or certification body. The most useful entries connect a visitor to a real next step without overstating affiliations or credentials.
 
-Setting up and getting started is remarkably straightforward, with detailed documentation and **community support** available to guide you through the process. The active community contributes to a wealth of tutorials, best practices, and real-world examples that help accelerate your learning curve. Regular updates and improvements ensure that you're always working with the latest features and security enhancements.`
+Automated content generation can enrich this text later with screenshots, favicons, and structured descriptions. Human review remains required before launch for brand accuracy, lineage claims, sanctioning claims, and payment-related listing benefits.`
 
 async function main() {
   const now = new Date()
@@ -94,6 +94,43 @@ async function main() {
         label: "AI & Machine Learning",
         description: "Tools for using AI and machine learning.",
       },
+      {
+        name: "Training Programs",
+        slug: "training-programs",
+        label: "Training Programs",
+        description: "Schools, curriculums, and multi-discipline training programs.",
+      },
+      {
+        name: "Lineage & Certification",
+        slug: "lineage-certification",
+        label: "Lineage & Certification",
+        description: "Rank lineage, instructor credentials, certificates, and education records.",
+      },
+      {
+        name: "Tournaments & Events",
+        slug: "tournaments-events",
+        label: "Tournaments & Events",
+        description: "Tournament platforms, event organizers, leagues, and competitive circuits.",
+      },
+      {
+        name: "School Operations",
+        slug: "school-operations",
+        label: "School Operations",
+        description:
+          "Software and services for memberships, billing, attendance, and school growth.",
+      },
+      {
+        name: "Equipment & Gear",
+        slug: "equipment-gear",
+        label: "Equipment & Gear",
+        description: "Training gear, uniforms, safety equipment, and weapons suppliers.",
+      },
+      {
+        name: "Media & Education",
+        slug: "media-education",
+        label: "Media & Education",
+        description: "Educational sites, videos, articles, and reference libraries.",
+      },
     ],
   })
 
@@ -123,6 +160,21 @@ async function main() {
       { name: "Open Source", slug: "open-source" },
       { name: "AI", slug: "ai" },
       { name: "API", slug: "api" },
+      { name: "Brazilian Jiu-Jitsu", slug: "bjj" },
+      { name: "Eskrima", slug: "eskrima" },
+      { name: "Muay Thai", slug: "muay-thai" },
+      { name: "Boxing", slug: "boxing" },
+      { name: "Self Defense", slug: "self-defense" },
+      { name: "Tournaments", slug: "tournaments" },
+      { name: "Curriculum", slug: "curriculum" },
+      { name: "Lineage", slug: "lineage" },
+      { name: "Certification", slug: "certification" },
+      { name: "Memberships", slug: "memberships" },
+      { name: "White Label", slug: "white-label" },
+      { name: "Software", slug: "software" },
+      { name: "Equipment", slug: "equipment" },
+      { name: "Youth", slug: "youth" },
+      { name: "Adult", slug: "adult" },
     ],
   })
 
@@ -361,6 +413,98 @@ async function main() {
       categories: ["devops"],
       tags: ["kubernetes", "free", "open-source"],
       owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "Baseline Martial Arts",
+      slug: "baseline-martial-arts",
+      websiteUrl: "https://baselinemartialarts.com",
+      tagline: "Multi-discipline martial arts training programs",
+      description:
+        "Baseline Martial Arts is the first public training brand for the Ronin Dojo platform, focused on practical classes, curriculum, memberships, and student progress.",
+      isFeatured: true,
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["training-programs"],
+      tags: ["bjj", "muay-thai", "boxing", "self-defense", "adult", "paid"],
+      owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "Black Belt Legacy",
+      slug: "black-belt-legacy",
+      websiteUrl: "https://blackbeltlegacy.com",
+      tagline: "Brazilian Jiu-Jitsu black belt lineage records",
+      description:
+        "Black Belt Legacy preserves lineage-centered Brazilian Jiu-Jitsu records and is a future migration target for profiles, credentials, and community trust signals.",
+      isFeatured: true,
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["lineage-certification"],
+      tags: ["bjj", "lineage", "certification", "paid"],
+      owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "WEKAF USA",
+      slug: "wekaf-usa",
+      websiteUrl: "https://wekafusa.com",
+      tagline: "Eskrima tournament and league operations",
+      description:
+        "WEKAF USA represents the tournament-operations lane for stick fighting, with event discovery, registration, brackets, officials, and results as launch-critical workflows.",
+      isFeatured: true,
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["tournaments-events"],
+      tags: ["eskrima", "tournaments", "certification"],
+      owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "Ronin Dojo Design",
+      slug: "ronin-dojo-design",
+      websiteUrl: "https://ronindojodesign.com",
+      tagline: "White-label martial arts software and launch support",
+      description:
+        "Ronin Dojo Design is the umbrella brand for assisted white-label onboarding, brand launches, school operations setup, and implementation support.",
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["school-operations"],
+      tags: ["software", "white-label", "memberships", "paid"],
+      owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "USA Stick Fighting",
+      slug: "usa-stick-fighting",
+      websiteUrl: "https://usastickfighting.com",
+      tagline: "Stick fighting event visibility and athlete pathway",
+      description:
+        "USA Stick Fighting is a companion domain for public-facing event visibility, athlete discovery, and tournament funnel testing in the WEKAF lane.",
+      status: ToolStatus.Scheduled,
+      publishedAt: addDays(now, 10),
+      categories: ["tournaments-events"],
+      tags: ["eskrima", "tournaments", "equipment"],
+      owner: { connect: { email: "admin@dirstarter.com" } },
+    },
+    {
+      name: "Black Belt Wiki",
+      slug: "black-belt-wiki",
+      websiteUrl: "https://blackbeltwiki.com",
+      tagline: "Martial arts reference library for students",
+      description:
+        "Black Belt Wiki is a public martial arts reference library covering styles, techniques, training ideas, and student-facing education resources.",
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["media-education"],
+      tags: ["free", "curriculum", "self-defense"],
+    },
+    {
+      name: "Smoothcomp",
+      slug: "smoothcomp",
+      websiteUrl: "https://smoothcomp.com",
+      tagline: "Competition registration and tournament software",
+      description:
+        "Smoothcomp is a competition operations platform that provides useful reference behavior for registration, brackets, check-in, and public tournament results.",
+      status: ToolStatus.Published,
+      publishedAt: now,
+      categories: ["tournaments-events"],
+      tags: ["tournaments", "software", "paid"],
     },
   ]
 
