@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-04-30
-last_agent: codex-directory-monetization-roadmap
+last_agent: codex-session-0030
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -19,6 +19,8 @@ backlinks:
   - docs/sprints/SESSION_0025.md
   - docs/sprints/SESSION_0026.md
   - docs/sprints/SESSION_0027.md
+  - docs/sprints/SESSION_0029.md
+  - docs/sprints/SESSION_0030.md
 ---
 
 # Project Log
@@ -154,6 +156,14 @@ Three sections:
 | SESSION_0028_TASK_01 | SESSION_0028 | School operations | Petey + Giddy | Re-sequence WORKFLOW_5.0 calendar | Calendar reflects actual sessions and current feature sequence | landed | SESSION_0028_REVIEW_01 |
 | SESSION_0028_TASK_02 | SESSION_0028 | School operations | Cody + Desi | Program CRUD pre-flight and implementation | `/programs` list/create/detail works with auth and brand scoping | landed | SESSION_0028_REVIEW_01 |
 | SESSION_0028_TASK_03 | SESSION_0028 | School operations | Doug + Giddy | Verification and close evidence | Checks and smoke evidence recorded in SESSION_0028 | landed | SESSION_0028_REVIEW_01 |
+| SESSION_0029_TASK_01 | SESSION_0029 | Core platform governance | Petey + Giddy | Preserve raw source and re-sequence session calendar | Raw source exists under `docs/architecture/source/raw/`; WORKFLOW_5.0 moves the planned School Ops CRUD continuation to SESSION_0030 | landed | SESSION_0029_REVIEW_01 |
+| SESSION_0029_TASK_02 | SESSION_0029 | Core platform governance | Cody + Giddy | Schema DRY and Dirstarter baseline review | Specs name existing models, duplication risks, current Dirstarter docs, and future deltas before any Prisma changes | landed | SESSION_0029_REVIEW_01 |
+| SESSION_0029_TASK_03 | SESSION_0029 | Content + curriculum / monetization | Petey + Cody + Doug | Create commerce learning path specs | Programs/curriculum/certification, monetization/entitlements, and Dirstarter commerce alignment docs exist with MVP cut line and review evidence | landed | SESSION_0029_REVIEW_01 |
+| SESSION_0029_TASK_04 | SESSION_0029 | Core platform governance | Petey + Giddy + Doug | Bow-out hardening and worktree cleanup | Merged clean worktrees removed; closing ritual requires worktree cleanup and ADR/Dirstarter proof; glossary and ADR 0011 updated | landed | SESSION_0029_REVIEW_02 |
+| SESSION_0030_TASK_00 | SESSION_0030 | School operations + security governance | Petey + Giddy + Doug | Preserve CGR source, stage SESSION_0030, run hostile security review, and full close | Raw source, staged plan, security/monitoring architecture doc, MB-013, Project Log review, and full close evidence exist | landed | SESSION_0030_REVIEW_01 |
+| SESSION_0030_TASK_01 | SESSION_0030 | School operations | Cody + Giddy | ClassSchedule CRUD substrate | Authorized org editor can create/edit/archive schedules; unauthorized/cross-brand attempts fail server-side | planned | SESSION_0030_REVIEW_01 |
+| SESSION_0030_TASK_02 | SESSION_0030 | School operations | Cody + Desi + Doug | Instructor assignments and ClassSession basics | Schedule shows assigned instructors and upcoming sessions without touching attendance | planned | SESSION_0030_REVIEW_01 |
+| SESSION_0030_TASK_03 | SESSION_0030 | School operations | Doug + Cody | Fixtures, smoke proof, and close evidence | Schedule slice has targeted fixtures, smoke script, and verification evidence | planned | SESSION_0030_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
@@ -252,6 +262,66 @@ Three sections:
 **Sources:** [Prisma setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Project structure](https://dirstarter.com/docs/codebase/structure)
 
 **Verdict:** Sound and merge-ready for a feature branch. Program code follows Dirstarter's feature-folder shape (`server/web/program/{actions,queries,payloads,schemas}`), Prisma client/seed flow, and action protection expectations. The implementation does not trust hidden brand input: writes derive the brand from the current request and selected organization, then enforce editable-org permission and discipline linkage. Verification is credible for this slice: Prisma validates, touched files pass Biome, the Program smoke script proves create/reject cases, and HTTP smoke proves the list/detail and auth redirects. Full-app typecheck remains red on pre-existing baseline issues, but filtered typecheck shows no Program-slice errors.
+
+### SESSION_0029_REVIEW_01 — Commerce learning path specs hostile review
+
+**Reviewed tasks:** SESSION_0029_TASK_01, SESSION_0029_TASK_02, SESSION_0029_TASK_03
+
+**Score: 9.6/10** — Docs/spec session followed WORKFLOW 5.0, preserved raw source, checked live Dirstarter docs, and avoided duplicate schema recommendations. Minor residual risk remains because entitlement/Product decisions are intentionally queued for a future implementation session.
+
+**Dirstarter docs check:** live docs checked on 2026-04-30.
+
+**Sources:** [Project Structure](https://dirstarter.com/docs/codebase/structure), [Prisma Setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Payments](https://dirstarter.com/docs/integrations/payments), [Content](https://dirstarter.com/docs/content), [Monetization](https://dirstarter.com/docs/monetization), [Automation](https://dirstarter.com/docs/automation), [Blog](https://dirstarter.com/docs/blog), [SEO](https://dirstarter.com/docs/seo), [Theming](https://dirstarter.com/docs/theming), [Cron Jobs](https://dirstarter.com/docs/cron-jobs)
+
+**Verdict:** Sound and ready to guide the next implementation sessions. The specs correctly treat raw ChatGPT Prisma blocks as source material, not accepted schema. They identify existing `Program`, `Course`, `PricingPlan`, `Certification`, certificate, and progress models before proposing deltas. The main architectural decision is explicit: build entitlements before paid UI so access does not leak into scattered plan checks. Verification passed for wiki lint, Prisma schema validation, and whitespace.
+
+### SESSION_0029_REVIEW_02 — Bow-out hardening and worktree cleanup review
+
+**Reviewed tasks:** SESSION_0029_TASK_04
+
+**Score: 9.7/10** — Governance cleanup landed with clean worktree state and explicit ADR/glossary discipline. No hard caps triggered.
+
+**Dirstarter docs check:** live docs checked on 2026-04-30.
+
+**Sources:** [Project Structure](https://dirstarter.com/docs/codebase/structure), [Prisma Setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Payments](https://dirstarter.com/docs/integrations/payments), [Monetization](https://dirstarter.com/docs/monetization)
+
+**Verdict:** The old feature worktrees were clean and already merged into `main`, so removing them and deleting their local branches was safe. `closing.md` now requires explicit worktree cleanup and an ADR/glossary check during close. ADR 0011 records the entitlement-first commerce decision with compact live Dirstarter proof links. `ubiquitous-language.md` now defines Product, PricingPlan, Entitlement, UserEntitlement, and EntitlementGrant.
+
+### SESSION_0030_REVIEW_01 — Plan security and Dirstarter compliance review
+
+**Reviewed tasks:** SESSION_0030_TASK_00, SESSION_0030_TASK_01, SESSION_0030_TASK_02, SESSION_0030_TASK_03
+
+**Score: 9.5/10 for planning close** — No Dirstarter or data-integrity hard cap triggered for docs/planning work. Future implementation score is capped at 8.9 if it omits security gates, server-side brand/org predicates, or payment/entitlement proof.
+
+**Dirstarter docs check:** live docs checked on 2026-04-30.
+
+**Sources:** [Project Structure](https://dirstarter.com/docs/codebase/structure), [Prisma Setup](https://dirstarter.com/docs/database/prisma), [Authentication](https://dirstarter.com/docs/authentication), [Environment Setup](https://dirstarter.com/docs/environment-setup), [Payments](https://dirstarter.com/docs/integrations/payments), [Monetization](https://dirstarter.com/docs/monetization), [Rate Limiting](https://dirstarter.com/docs/integrations/rate-limiting), [Analytics](https://dirstarter.com/docs/integrations/analytics), [Storage](https://dirstarter.com/docs/integrations/storage), [Deployment](https://dirstarter.com/docs/deployment), [Cron Jobs](https://dirstarter.com/docs/cron-jobs), [Content](https://dirstarter.com/docs/content)
+
+**Verdict:** The staged plan is acceptable as a planning/security close, not as implementation evidence. The hostile review caught that the original plan said auth/brand scope but did not define privacy, financial transaction, wireframe, or monitoring gates. `security-privacy-payments-monitoring-plan.md` and MB-013 now make those gates explicit. Class schedule implementation remains unshipped and must prove server-side auth, brand/org predicates, instructor enumeration protection, bounded session generation, and smoke tests before merge.
+
+#### SESSION_0030_FINDING_01 — Security gates were missing from the staged plan
+- **Severity:** high
+- **Task:** SESSION_0030_TASK_00
+- **Evidence:** `docs/sprints/SESSION_0030.md` initially staged class schedule tasks without a dedicated private-data/payment/monitoring gate.
+- **Impact:** Cody could implement schedule or later CGR surfaces with route-level protection but no explicit server-side privacy proof.
+- **Required follow-up:** Treat `docs/architecture/security-privacy-payments-monitoring-plan.md` as required input before class schedule implementation.
+- **Status:** addressed
+
+#### SESSION_0030_FINDING_02 — Financial transaction leak-proofing was only implied
+- **Severity:** high
+- **Task:** SESSION_0030_TASK_00
+- **Evidence:** Raw CGR source required entitlements before Stripe UI; the staged plan banned Stripe work but did not define payment monitoring or refund/revoke proof.
+- **Impact:** Future checkout could grant access directly from Stripe metadata and fail refund/cancel/revoke behavior.
+- **Required follow-up:** Entitlement-first services plus Stripe webhook idempotency, refund/revoke tests, and entitlement drift monitoring before paid UI.
+- **Status:** addressed in plan; implementation open under MB-013
+
+#### SESSION_0030_FINDING_03 — Private-data monitoring was not explicit
+- **Severity:** medium
+- **Task:** SESSION_0030_TASK_03
+- **Evidence:** Original expected verification listed smoke checks but not monitoring signals or alert thresholds.
+- **Impact:** Auth/brand failures, certificate verification abuse, webhook failures, and cron failures could go unnoticed.
+- **Required follow-up:** Add structured monitoring hooks during implementation and verify them before staging.
+- **Status:** addressed in plan; implementation open under MB-013
 
 ### ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 — Roadmap source + monetization reuse review
 

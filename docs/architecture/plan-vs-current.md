@@ -4,8 +4,8 @@ slug: plan-vs-current
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-28
-last_agent: copilot-session-0020-preflight
+updated: 2026-04-30
+last_agent: codex-session-0029
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/s1-schema-design.md
@@ -13,6 +13,7 @@ pairs_with:
   - docs/architecture/source/chatgpt-original-plan.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0029.md
 ---
 
 # Behavioral roadmap — plan spec vs current build
@@ -59,7 +60,7 @@ This model isn't optional — it's the spine of the data architecture and resolv
 
 ## Current schema (apps/web/prisma/schema.prisma) — what we have
 
-> **Updated SESSION_0020 (2026-04-28):** S1 schema rev is live (36 models). S2 schema additions designed (38 new models, 29 new enums across 3 passes). Migration pending sign-off. See [s2-schema-additions.md](s2-schema-additions.md).
+> **Updated SESSION_0029 (2026-04-30):** S1 schema rev and Schema Waves A-D are live in `schema.prisma` (97 models, 65 enums). Many feature slices are still pending route/action/UI work and production migration hardening. See [WORKFLOW_5.0](../protocols/WORKFLOW_5.0.md), [s2-schema-additions.md](s2-schema-additions.md), and [PETEY_PLAN_S2_SCHEMA_PASS4.md](PETEY_PLAN_S2_SCHEMA_PASS4.md).
 
 ### S1 models (live in schema)
 
@@ -79,25 +80,26 @@ This model isn't optional — it's the spine of the data architecture and resolv
 | Registration | `Registration` | ✅ reshaped from `TournamentRegistration` — has status, payment status, `submittedAt` |
 | RegistrationEntry | `RegistrationEntry` | ✅ exists — rank/org snapshot fields (`snapshotRankName`, `snapshotOrgName`) |
 
-### S2 models (designed, migration pending)
+### S2 and Wave D models (schema live; feature slices pending)
 
 | Model group | Models | Status |
 | --- | --- | --- |
-| Programs + scheduling | Program, ProgramCourse, ProgramEnrollment, ClassSchedule, ClassInstructorAssignment, ClassSession, CheckIn, Attendance | 📐 designed (Pass 1) |
-| Belt testing | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig | 📐 designed (Pass 1) |
-| Family / guardian | FamilyGroup, FamilyMember | 📐 designed (Pass 1) |
-| Payments / billing | PricingPlan, Invoice, InvoiceLineItem, Payment, StripeAccount, PayoutSplit, PromoCode | 📐 designed (Pass 1) |
-| Contracts | MembershipContract | 📐 designed (Pass 1) |
-| Notifications | NotificationPreference, Announcement | 📐 designed (Pass 1) |
-| Org network + settings | OrgRelationship, OrgSettings | 📐 designed (Pass 1) |
-| Invitations | Invite, InviteClaim | 📐 designed (Pass 2) |
-| Generic events | Event, EventRegistration | 📐 designed (Pass 2) |
-| Tournament execution | Bracket, Match, MatchCompetitor | 📐 designed (Pass 2) |
-| Fight records | FightRecord | 📐 designed (Pass 2) |
-| Audit log | AuditLog | 📐 designed (Pass 2) |
-| Lead / CRM | Lead, LeadFollowUp | 📐 designed (Pass 3) |
-| Tournament rules | RuleSet | 📐 designed (Pass 3) |
-| Tournament operations | WeighInRecord, MatAssignment | 📐 designed (Pass 3) |
+| Programs + scheduling | Program, ProgramCourse, ProgramEnrollment, ClassSchedule, ClassInstructorAssignment, ClassSession, CheckIn, Attendance | ✅ schema live; feature slices pending |
+| Belt testing | BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig | ✅ schema live; feature slice pending |
+| Family / guardian | FamilyGroup, FamilyMember | ✅ schema live; feature slice pending |
+| Payments / billing | PricingPlan, Invoice, InvoiceLineItem, Payment, StripeAccount, PayoutSplit, PromoCode | ✅ schema live; entitlement/payment feature slice pending |
+| Contracts | MembershipContract | ✅ schema live; feature slice pending |
+| Notifications | NotificationPreference, Announcement | ✅ schema live; feature slice pending |
+| Org network + settings | OrgRelationship, OrgSettings | ✅ schema live; feature slice pending |
+| Invitations | Invite, InviteClaim | ✅ schema live; feature slice pending |
+| Generic events | Event, EventRegistration | ✅ schema live; feature slice pending |
+| Tournament execution | Bracket, Match, MatchCompetitor | ✅ schema live; feature slice pending |
+| Fight records | FightRecord | ✅ schema live; feature slice pending |
+| Audit log | AuditLog | ✅ schema live; feature slice pending |
+| Lead / CRM | Lead, LeadFollowUp | ✅ schema live; feature slice pending |
+| Tournament rules | RuleSet | ✅ schema live; feature slice pending |
+| Tournament operations | WeighInRecord, MatAssignment | ✅ schema live; feature slice pending |
+| Media, techniques, certificates, lists | Media, MediaAttachment, Technique, TechniquePrerequisite, TechniqueCurriculumLink, TechniqueProgress, CertificateTemplate, CertificateOrder, CertificateIssuance, Favorite, StudentList, StudentListMember | ✅ schema live; content/certificate feature slices pending |
 
 ---
 
@@ -116,7 +118,7 @@ Practically: a `School` (or, post-rename, `Organization`) belongs to a `Brand`. 
 
 ## Plan's behavioral requirements — coverage after S1 + S2 design
 
-> **Updated SESSION_0020:** S1 behavioral requirements all met. S2 design (3 passes) covers 10 additional operational gaps identified as launch blockers.
+> **Updated SESSION_0029:** S1 behavioral requirements are met at schema/initial feature level. S2 and Wave D schema are live. The remaining work is vertical slices, entitlement access, production migration hardening, and cross-brand proof.
 
 ### Original plan requirements (S1 — all met)
 
@@ -132,30 +134,30 @@ Practically: a `School` (or, post-rename, `Organization`) belongs to a `Brand`. 
 
 | # | Requirement | Coverage | Status |
 | --- | --- | --- | --- |
-| 8 | Class scheduling + attendance | Program → ClassSchedule → ClassSession → CheckIn → Attendance | 📐 designed |
-| 9 | Belt testing + prerequisites | BeltTestEvent + Registration + PrerequisiteConfig | 📐 designed |
-| 10 | Family / guardian accounts | FamilyGroup + FamilyMember | 📐 designed |
-| 11 | Payments / invoicing / Stripe Connect | PricingPlan → Invoice → Payment + StripeAccount | 📐 designed |
-| 12 | Check-in / kiosk | CheckIn with QR/manual/kiosk/app methods | 📐 designed |
-| 13 | Notifications (per-category × channel × program) | NotificationPreference + Announcement | 📐 designed |
-| 14 | Membership contracts | MembershipContract (term, renewal, cooling-off) | 📐 designed |
-| 15 | Programs vs courses (M:N) | Program ↔ ProgramCourse ↔ Course | 📐 designed |
-| 16 | Instructor assignment + titles | ClassInstructorAssignment + displayTitle | 📐 designed |
-| 17 | Org configurability | OrgSettings (all operational toggles) | 📐 designed |
+| 8 | Class scheduling + attendance | Program → ClassSchedule → ClassSession → CheckIn → Attendance | ✅ schema live; feature slice pending |
+| 9 | Belt testing + prerequisites | BeltTestEvent + Registration + PrerequisiteConfig | ✅ schema live; feature slice pending |
+| 10 | Family / guardian accounts | FamilyGroup + FamilyMember | ✅ schema live; feature slice pending |
+| 11 | Payments / invoicing / Stripe Connect | PricingPlan → Invoice → Payment + StripeAccount | ✅ schema live; entitlement/payment feature slice pending |
+| 12 | Check-in / kiosk | CheckIn with QR/manual/kiosk/app methods | ✅ schema live; feature slice pending |
+| 13 | Notifications (per-category × channel × program) | NotificationPreference + Announcement | ✅ schema live; feature slice pending |
+| 14 | Membership contracts | MembershipContract (term, renewal, cooling-off) | ✅ schema live; feature slice pending |
+| 15 | Programs vs courses (M:N) | Program ↔ ProgramCourse ↔ Course | ✅ schema live; Program CRUD landed; enrollment/course slices pending |
+| 16 | Instructor assignment + titles | ClassInstructorAssignment + displayTitle | ✅ schema live; feature slice pending |
+| 17 | Org configurability | OrgSettings (all operational toggles) | ✅ schema live; feature slice pending |
 
 ### Extended requirements (S2 Passes 2–3)
 
 | # | Requirement | Coverage | Status |
 | --- | --- | --- | --- |
-| 18 | Invitations / QR invite | Invite + InviteClaim, universal type system | 📐 designed |
-| 19 | Generic events (seminars, camps) | Event + EventRegistration | 📐 designed |
-| 20 | Tournament brackets + matches | Bracket → Match → MatchCompetitor | 📐 designed |
-| 21 | Fight records | FightRecord per user × discipline × type | 📐 designed |
-| 22 | Audit trail | AuditLog append-only | 📐 designed |
-| 23 | Lead / CRM pipeline | Lead + LeadFollowUp + conversion tracking | 📐 designed |
-| 24 | Tournament rules engine | RuleSet with structured scoring config | 📐 designed |
-| 25 | Weigh-in tracking | WeighInRecord per registration | 📐 designed |
-| 26 | Mat/ring assignment | MatAssignment per match | 📐 designed |
+| 18 | Invitations / QR invite | Invite + InviteClaim, universal type system | ✅ schema live; feature slice pending |
+| 19 | Generic events (seminars, camps) | Event + EventRegistration | ✅ schema live; feature slice pending |
+| 20 | Tournament brackets + matches | Bracket → Match → MatchCompetitor | ✅ schema live; feature slice pending |
+| 21 | Fight records | FightRecord per user × discipline × type | ✅ schema live; feature slice pending |
+| 22 | Audit trail | AuditLog append-only | ✅ schema live; feature slice pending |
+| 23 | Lead / CRM pipeline | Lead + LeadFollowUp + conversion tracking | ✅ schema live; feature slice pending |
+| 24 | Tournament rules engine | RuleSet with structured scoring config | ✅ schema live; feature slice pending |
+| 25 | Weigh-in tracking | WeighInRecord per registration | ✅ schema live; feature slice pending |
+| 26 | Mat/ring assignment | MatAssignment per match | ✅ schema live; feature slice pending |
 
 ### Deferred (post-launch)
 
@@ -278,14 +280,14 @@ All five questions were resolved during SESSION_0003–0005:
 
 > **This section is a pointer, not a duplicate.** Full spec lives in [s2-schema-additions.md](s2-schema-additions.md).
 
-SESSION_0020 identified 10 operational gaps that were NOT covered by S1. All 10 are launch blockers. Three design passes produced 38 new models and 29 new enums covering:
+SESSION_0020 identified 10 operational gaps that were NOT covered by S1. All 10 are launch blockers. Three design passes produced the Wave A-C implementation plan, and SESSION_0026 landed Waves B-D in schema after the first School Ops wave.
 
 - Programs, scheduling, attendance, check-in (Pass 1)
 - Belt testing, family accounts, billing/Stripe Connect, contracts, notifications, org settings (Pass 1)
 - Invitations, generic events, tournament brackets/matches, fight records, audit logging (Pass 2)
 - Lead/CRM pipeline, tournament rules engine, weigh-ins, mat assignments (Pass 3)
 
-**Status:** Design complete, sign-off pending, migration not yet run. See [s2-schema-additions.md](s2-schema-additions.md) for the full implementation spec.
+**Status:** Design complete and schema landed locally through Waves A-D. Production migration artifacts and feature implementation remain scheduled in [WORKFLOW_5.0](../protocols/WORKFLOW_5.0.md). See [s2-schema-additions.md](s2-schema-additions.md) for the original implementation spec.
 
 ---
 

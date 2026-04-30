@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-04-30
 author: Brian + Copilot
-last_agent: codex-directory-monetization-roadmap
+last_agent: codex-session-0029
 ---
 
 # LLM Wiki Index
@@ -45,6 +45,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
+| [Architecture README](../../architecture/README.md) | file | active |
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active |
 | [Program Plan](../../architecture/program-plan.md) | file | active |
@@ -54,7 +55,13 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active |
 | [Dirstarter Architecture Map](../../architecture/dirstarter-architecture-map.md) | file | active |
+| [Programs, Curriculum, and Certification Spec](../../architecture/programs-curriculum-certification-spec.md) | file | active |
+| [Monetization and Entitlements Spec](../../architecture/monetization-entitlements-spec.md) | file | active |
+| [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) | file | active |
+| [Security, Privacy, Payments, and Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md) | file | active |
 | [Directory Monetization Roadmap Raw Source](../../architecture/source/directory-monetization-roadmap.md) | source | active |
+| [SESSION_0029 Commerce Learning Path Raw Source](../../architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md) | source | active |
+| [SESSION_0030 CGR File System and Wiring Map Raw Source](../../architecture/source/raw/SESSION_0030_cgr_file_system_wiring_map_chatgpt_raw.md) | source | active |
 | [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active |
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active |
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active |
@@ -68,6 +75,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [decisions/](../../architecture/decisions/) | decision | various |
 | [ADR 0009 Mobile Auth Strategy](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
 | [ADR 0010 Cache Strategy](../../architecture/decisions/0010-cache-strategy.md) | decision | proposed |
+| [ADR 0011 Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
 
 ## Sessions
 
@@ -101,6 +109,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0026](../../sprints/SESSION_0026.md) | session | closed-full |
 | [SESSION_0027](../../sprints/SESSION_0027.md) | session | closed-full |
 | [SESSION_0028](../../sprints/SESSION_0028.md) | session | closed-full |
+| [SESSION_0029](../../sprints/SESSION_0029.md) | session | closed-full |
+| [SESSION_0030](../../sprints/SESSION_0030.md) | session | closed-full |
 
 ## Protocols
 

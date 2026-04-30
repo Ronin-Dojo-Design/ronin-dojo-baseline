@@ -4,10 +4,13 @@ slug: auth
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-25
-last_agent: copilot-session-0002
+updated: 2026-04-30
+last_agent: codex-session-0030
+pairs_with:
+  - docs/architecture/security-privacy-payments-monitoring-plan.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0030.md
 ---
 
 # Auth

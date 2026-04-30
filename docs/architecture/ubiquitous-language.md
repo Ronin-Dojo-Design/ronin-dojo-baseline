@@ -4,15 +4,19 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-04-30
+last_agent: codex-session-0029
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
   - docs/rituals/closing.md
+  - docs/architecture/programs-curriculum-certification-spec.md
+  - docs/architecture/monetization-entitlements-spec.md
+  - docs/architecture/decisions/0011-entitlement-first-commerce.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
+  - docs/sprints/SESSION_0029.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -71,6 +75,24 @@ The reflection section of full close. It captures surprises, near misses, patter
 ### Hostile close review
 
 The Giddy + Doug close review that challenges plan sanity, Dirstarter alignment, security, data integrity, verification honesty, workflow compliance, and merge readiness.
+
+### ADR
+
+Architecture Decision Record. An ADR records an accepted, proposed, rejected, or superseded architecture choice that should outlive one session.
+
+If an ADR touches a Dirstarter baseline layer, it must include compact proof links to the relevant live `https://dirstarter.com/docs` pages.
+
+### Dirstarter docs proof
+
+The compact source-link evidence required when a session or ADR relies on current Dirstarter baseline behavior.
+
+Use links to the relevant live docs pages. Do not paste long excerpts into repo docs.
+
+### Worktree cleanup
+
+The git hygiene step that checks extra session worktrees at close.
+
+Clean worktrees whose branches are already merged into the active branch may be removed and their local branches deleted. Worktrees with unmerged commits or uncommitted files stay in place and are recorded in the SESSION file.
 
 ### Task plan log
 
@@ -279,6 +301,38 @@ Same `isSystem` + `brand` extensibility pattern as Role and TournamentRole.
 ### UserBrandSubscription
 
 A User's subscription to a specific tier within a Brand. One subscription per user per brand.
+
+## Commerce and entitlements
+
+### Product
+
+A sellable commercial offer, such as a Program, Course, Certification, Membership, Event, CertificateTemplate, or bundle.
+
+In SESSION_0029, Product is a domain concept, not yet a Prisma model. Do not add a `Product` table until the unified catalog need is proven by implementation.
+
+### PricingPlan
+
+The internal Ronin price and terms record for an organization and optional Program.
+
+PricingPlan is the right place to attach future Stripe Product/Price IDs and entitlement grants. Do not replace it with raw Stripe product metadata.
+
+### Entitlement
+
+A durable access key granted by purchase, subscription, manual grant, membership, or promo.
+
+Feature code should check Entitlements rather than hard-coded plan IDs, product IDs, or scattered paid booleans.
+
+### UserEntitlement
+
+A User's assignment of an Entitlement, with source, status, and time window.
+
+UserEntitlement is the user-facing access ledger. Refunds, cancellations, expirations, and manual revokes should update this ledger instead of deleting historical payment or progress records.
+
+### EntitlementGrant
+
+The mapping between a PricingPlan and the Entitlements it grants.
+
+EntitlementGrant keeps commercial packaging separate from access checks: a product can be sold one way while access remains keyed by stable entitlement names.
 
 ## Lineage
 

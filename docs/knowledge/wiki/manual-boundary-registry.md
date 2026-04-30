@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-04-30
 author: Brian + ChatGPT
-last_agent: codex-directory-monetization-roadmap
+last_agent: codex-session-0030
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -17,6 +17,7 @@ backlinks:
   - docs/protocols/task-review-log.md
   - docs/knowledge/wiki/baseline-docs-adoption-checklist.md
   - docs/knowledge/how-to-use-these-registries.md
+  - docs/sprints/SESSION_0030.md
 tags:
   - blockers
   - ops
@@ -79,6 +80,7 @@ Blocker classes:
 | MB-010 | legacy migration | Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone | Petey + owner | brand_migration | updated program lane note | open |
 | MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | open |
 | MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
+| MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, payment/entitlement drift audit, and launch-readiness signoff | open |
 
 ### 2. Notes by boundary
 
@@ -99,6 +101,8 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 **MB-011 — Directory monetization model.** The roadmap intentionally reuses Dirstarter `Tool` and `Ad` for near-term paid listing proof. Before production, decide whether that remains the canonical paid listing substrate, gets renamed/promoted into a generic `DirectoryListing`, or is replaced by paid overlays on `Organization`, `Program`, and `Event`.
 
 **MB-012 — Local WordPress public directory cleanup.** The session began in `/Users/brianscott/Local Sites/ronin-dojo/app/public/` because VS Code was opened from the Local by Flywheel WordPress site. ADR 0005 already says that install is abandoned and irrelevant to the new stack. Do not delete it silently; verify the path and get owner approval first.
+
+**MB-013 — Security and financial transaction readiness.** SESSION_0030 created `docs/architecture/security-privacy-payments-monitoring-plan.md` as the plan gate. This remains open until implementation proves the gates with tests/logging: schedule auth/brand rejection, instructor enumeration protection, entitlement-first payment access, Stripe webhook idempotency, refund/revoke behavior, certificate verification rate limiting, private storage policy, and monitoring alerts.
 
 ### 3. Closure rule
 

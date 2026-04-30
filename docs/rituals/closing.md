@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-04-30
+last_agent: codex-session-0029
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -13,8 +13,10 @@ pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/protocols/project-log.md
   - docs/protocols/hostile-close-review.md
+  - docs/architecture/ubiquitous-language.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0029.md
 ---
 
 # Closing ritual — bow out
@@ -64,6 +66,7 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - `Task log` — the `TASK_PLAN_LOG` IDs touched this session
 - `Review log` — the `TASK_REVIEW_LOG` entry for this session
 - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
+- `ADR / ubiquitous-language check` — any architectural decision or domain term created, updated, or explicitly marked not needed
 - `Status: closed-quick`
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
@@ -92,9 +95,10 @@ If wiki-lint fails, record the exact error/warning count and whether failures ar
 Before committing:
 
 1. **Branch check**: Verify you're on the expected branch (`git branch --show-current`). If you should be on a feature branch but you're on `main`, stop and discuss with the user.
-2. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
-3. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
-4. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
+2. **Worktree check**: Run `git worktree list`. If a session worktree is clean and its branch is already merged into the active branch, remove the worktree and delete the local branch. If it still has unique commits or uncommitted files, record the branch/path and leave it in place.
+3. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
+4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
+5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
 
 If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
 
@@ -136,7 +140,7 @@ For full close, add this block to the SESSION file before changing status to `cl
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
-| Git hygiene | <branch, status, commit/push result or explicit no-commit reason> |
+| Git hygiene | <branch, worktree list result, status, commit/push result or explicit no-commit reason> |
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
@@ -150,6 +154,23 @@ Run the [Review & Recommend protocol](../protocols/review-recommend.md). This re
 At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
 
 Append or update the current session entry in the [Project Log](../protocols/project-log.md) review section. The review entry must reference the numbered task IDs from the project log's task plan section and list unresolved findings as open follow-ups.
+
+### 6.6. ADR + ubiquitous-language check
+
+If the session made, changed, or rejected an architectural decision, create or update an ADR in `docs/architecture/decisions/`. If that decision touches a Dirstarter baseline layer, the ADR must include compact proof links to the relevant live Dirstarter docs. Do not paste long excerpts; one short `Dirstarter docs proof` table with URLs is enough.
+
+Baseline layers that require Dirstarter proof in the ADR:
+
+- project structure
+- Prisma/database
+- Better Auth/authentication
+- payments/Stripe
+- storage/media
+- deployment/cron
+- content/blog/SEO
+- theming/UI primitives
+
+If the session introduced or changed a domain term, update [Ubiquitous Language](../architecture/ubiquitous-language.md). If no ADR or glossary update is needed, record that explicitly in the SESSION file.
 
 ### 7. Memory sweep
 

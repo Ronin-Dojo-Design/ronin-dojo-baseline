@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-26
 updated: 2026-04-30
-last_agent: codex-directory-monetization-roadmap
+last_agent: codex-session-0029
 ---
 
 # Wiki Change Log
@@ -92,3 +92,31 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Created `content-engine/directory-monetization-roadmap.md` with the repo reuse audit, DRY guardrails, phased plan, and Dirstarter source links.
 - Updated the wiki index for SESSION_0028 closed-full status and the new roadmap page.
 - Added full-close evidence to the roadmap synthesis and marked Local by Flywheel WordPress cleanup as MB-012.
+
+## 2026-04-30 — SESSION_0029
+
+- Preserved the SESSION_0029 ChatGPT paste at `docs/architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md`.
+- Created the Programs/Curriculum/Certification, Monetization/Entitlements, and Dirstarter Commerce Alignment specs.
+- Updated `WORKFLOW_5.0.md` to insert SESSION_0029 as a spec session and push the School Ops CRUD continuation to SESSION_0030.
+- Patched stale schema-status notes in `data-model.md` and `plan-vs-current.md`.
+- Patched Dirstarter docs inventory URLs for current content and SEO docs.
+- Updated wiki index for the new specs, raw source, and SESSION_0029.
+- Removed merged local worktrees `wt-school-ops` and `wt-core-platform`.
+- Added ADR 0011 for entitlement-first commerce with compact Dirstarter docs proof links.
+- Updated `closing.md` so full close includes worktree cleanup and ADR/glossary checks.
+- Updated `ubiquitous-language.md` with commerce and entitlement terms.
+
+## 2026-04-30 — SESSION_0030 staged
+
+- Preserved the CGR file system and wiring map source at `docs/architecture/source/raw/SESSION_0030_cgr_file_system_wiring_map_chatgpt_raw.md`.
+- Created `docs/sprints/SESSION_0030.md` as the Petey execution packet for class schedules, class sessions, and instructor assignments.
+- Cross-reviewed the raw map against existing Dirstarter/Ronin routes, server folders, Prisma models, and SESSION_0029 entitlement-first decisions, then kept CGR as source material and scope guard.
+- Updated wiki index for the new raw source and staged SESSION_0030.
+
+## 2026-04-30 — SESSION_0030 hostile close
+
+- Ran hostile close review on the SESSION_0030 plan before implementation.
+- Created `docs/architecture/security-privacy-payments-monitoring-plan.md` with private-data, financial-transaction, wireframe, monitoring, and test gates.
+- Added MB-013 for security and financial transaction readiness.
+- Updated Dirstarter docs inventory with SESSION_0030 security review sources: structure, Prisma, auth, env, payments, monetization, rate limiting, analytics, storage, deployment, cron, and content.
+- Closed `docs/sprints/SESSION_0030.md` as `closed-full`; class schedule implementation is deferred to the next execution session.

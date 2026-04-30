@@ -4,9 +4,9 @@ slug: data-model
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-29
+updated: 2026-04-30
 author: Brian + Copilot
-last_agent: codex-session-0025
+last_agent: codex-session-0029
 pairs_with:
   - architecture/s1-schema-design
   - docs/architecture/s2-schema-additions.md
@@ -18,8 +18,9 @@ backlinks:
   - knowledge/wiki/files/schema-prisma
   - docs/knowledge/wiki/files/seed-ts.md
   - knowledge/wiki/content-engine/content-atoms
+  - docs/sprints/SESSION_0029.md
 wiring:
-  - "apps/web/prisma/schema.prisma — 36 existing models (live), 38 new models (s2-schema-additions, migration pending)"
+  - "apps/web/prisma/schema.prisma — 97 models and 65 enums live after Schema Waves A-D"
   - "apps/web/prisma/seed.ts — seed data for disciplines, ranks, roles, etc."
   - "apps/web/lib/authz.ts — permission checks reference Organization, Rank, Role"
 tags: [schema, prisma, data-model, s1, s2]
@@ -31,13 +32,13 @@ Source of truth: `apps/web/prisma/schema.prisma`. This document is the human-rea
 
 ## Summary
 
-36 Prisma models currently in schema, with 38 additional models designed in [s2-schema-additions.md](s2-schema-additions.md) (target: ~74 total). 29 new enums across 3 design passes. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage, waivers, certifications, substyle taxonomy, class scheduling, attendance tracking, belt testing, family/guardian accounts, invoicing/payments (Stripe Connect), CRM/lead pipeline, membership contracts, notification preferences, org network relationships, and audit logging.
+97 Prisma models and 65 enums are currently in schema after Schema Waves A-D. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage, waivers, certifications, substyle taxonomy, class scheduling, attendance tracking, belt testing, family/guardian accounts, invoicing/payments (Stripe Connect), CRM/lead pipeline, membership contracts, notification preferences, org network relationships, media, techniques, certificate products, favorites, student lists, and audit logging.
 
 ## Status
 
-Schema is live in local dev with 36 models. Migration via `prisma db push`. Seed file populates 12 disciplines, 13 rank systems (~194 ranks), 6 roles, 4 tournament roles, 6 gamification event types, 6 subscription tiers, and 5 Karate substyles.
+Schema is live in local dev with 97 models. Migration work is still local/dev-oriented; production migration hardening is tracked for SESSION_0039. Seed file populates disciplines, rank systems, roles, tournament roles, gamification event types, subscription tiers, styles, and current School Ops fixture data.
 
-**S2 additions (not yet migrated):** 38 new models across 3 passes covering programs, scheduling, attendance, belt testing, family, billing, contracts, notifications, org network, invitations, generic events, tournament brackets/matches, fight records, audit logging, CRM/leads, tournament rules engine, weigh-ins, and mat assignments. See [s2-schema-additions.md](s2-schema-additions.md) for full spec.
+**S2 additions:** Schema Waves A-D have landed in `schema.prisma`. Feature slices and production migration artifacts are still staged across `WORKFLOW_5.0.md`. See [s2-schema-additions.md](s2-schema-additions.md), [PETEY_PLAN_S2_SCHEMA_PASS4.md](PETEY_PLAN_S2_SCHEMA_PASS4.md), and [WORKFLOW_5.0](../protocols/WORKFLOW_5.0.md) for execution status.
 
 ---
 
@@ -346,9 +347,9 @@ TODO: remove before production (tracked in follow-up before BBL DNS cutover, see
 
 ---
 
-## S2 Schema Additions (38 new models — design complete, migration pending)
+## S2 Schema Additions (Schema Waves A-D landed)
 
-Full Prisma definitions in [s2-schema-additions.md](s2-schema-additions.md). Below is the human-readable rationale for each model group.
+Full design definitions live in [s2-schema-additions.md](s2-schema-additions.md), with Pass 4 certificate/media/technique additions in [PETEY_PLAN_S2_SCHEMA_PASS4.md](PETEY_PLAN_S2_SCHEMA_PASS4.md). Below is the human-readable rationale for each model group. The models are in schema; route/action/UI slices and production migration hardening are tracked separately in [WORKFLOW_5.0](../protocols/WORKFLOW_5.0.md).
 
 ### Programs & Scheduling (8 models)
 

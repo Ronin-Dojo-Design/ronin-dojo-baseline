@@ -4,12 +4,13 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-04-29
-last_agent: codex-session-0028
+updated: 2026-04-30
+last_agent: codex-session-0029
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/architecture/s2-schema-additions.md
+  - docs/architecture/dirstarter-commerce-alignment.md
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -148,7 +149,7 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 
 ## Session calendar (SESSION_0021–0040)
 
-This table is reality-adjusted as of SESSION_0028. Completed sessions show the actual outcome; future sessions show target outcomes. The May 18 launch target remains fixed.
+This table is reality-adjusted as of SESSION_0029. Completed sessions show the actual outcome; future sessions show target outcomes. The May 18 launch target remains fixed.
 
 | Date / target | Session | Primary lane | Main outcome |
 | --- | --- | --- | --- |
@@ -159,18 +160,18 @@ This table is reality-adjusted as of SESSION_0028. Completed sessions show the a
 | Apr 29 actual | 0025 | Core platform governance | Full-close proof contract, wiki-lint close evidence, branch push |
 | Apr 28 actual | 0026 | Core platform | Traceability cleanup; Schema Waves B/C/D landed; process failure logged |
 | Apr 28 actual | 0027 | Core platform governance | Governance audit; logs merged; FS-0006/FS-0007 mitigated |
-| Apr 29 target | 0028 | School operations | Calendar re-sequence; Program CRUD with auth and brand scoping |
-| Apr 30 target | 0029 | School operations | Class schedules, class sessions, instructor assignments |
-| May 1 target | 0030 | School operations | Attendance/check-in flows and staff class-control surface |
-| May 2 target | 0031 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
-| May 3 target | 0032 | School operations | Pricing plans, contracts, invoices, Stripe account wiring |
-| May 4 target | 0033 | School operations | Lead intake, trial conversion, CRM follow-up states |
-| May 5 target | 0034 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
-| May 6 target | 0035 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
-| May 7 target | 0036 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
-| May 8 target | 0037 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
-| May 9 target | 0038 | QA hardening | E2E lifecycle tests, fixtures, migration artifacts, auth regression |
-| May 10-17 target | 0039 | Launch + support | Staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
+| Apr 29 actual | 0028 | School operations | Calendar re-sequence; Program CRUD with auth and brand scoping |
+| Apr 30 actual | 0029 | Core platform governance + monetization | Commerce learning path specs; raw source preserved; School CRUD continuation pushed one session |
+| May 1 target | 0030 | School operations | Class schedules, class sessions, instructor assignments |
+| May 2 target | 0031 | School operations | Attendance/check-in flows and staff class-control surface |
+| May 3 target | 0032 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
+| May 4 target | 0033 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring |
+| May 5 target | 0034 | School operations | Lead intake, trial conversion, CRM follow-up states |
+| May 6 target | 0035 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
+| May 7 target | 0036 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
+| May 8 target | 0037 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
+| May 9 target | 0038 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
+| May 10-17 target | 0039 | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
 | May 18 target | 0040 | Launch day | Release execution, monitoring, support, post-launch triage |
 
 ---
@@ -219,12 +220,11 @@ BACKLOG
   [Ranking series] [Athlete journal/HealthKit]
 
 NOW
-  [Program CRUD]
+  [Class schedules + sessions]
+  [Entitlement layer]
   [School Ops auth predicates per feature]
-  [Calendar re-sequence cleanup]
 
 NEXT
-  [Class schedules + sessions]
   [Attendance/check-in]
   [Program enrollments + trials + family groups]
   [Pricing/contracts/invoices]
@@ -232,6 +232,7 @@ NEXT
 READY FOR LAUNCH
   [S1-S4 identity/org/directory foundation]
   [Schema Waves A-D validated locally]
+  [Commerce learning path specs]
   [Governance close gates restored]
   [Launch strategy Option A-plus]
 
