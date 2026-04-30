@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-29
-last_agent: codex-session-0023
+updated: 2026-04-30
+last_agent: codex-session-0030
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -18,6 +18,12 @@ backlinks:
 Run this at the start of every session, before any code is touched.
 
 > v5.0 refresh of the legacy `opening_v4.5.md`. Heavy machinery (JETTY metadata, multi-tier auto-load packs, session-numbered handoff packets) has been dropped. What remains is the operational core: load just enough context to act, then commit to one task.
+
+## Agent-agnostic
+
+This ritual is the source of truth for any agent that opens a session: Claude, Copilot, Codex, or otherwise. The ritual itself never depends on a specific LLM, IDE, or CLI. The trigger may differ per environment (Claude Code: `/bow-in` skill; Copilot/Codex chat: the words "bow in"; CLI script: a make target), but the steps below are identical and binding.
+
+Convention for the `last_agent` SESSION-file field is `<agent>-session-NNNN` where `<agent>` names the LLM/runtime that ran the session (e.g., `claude-session-0031`, `copilot-session-0028`, `codex-session-0030`). Past sessions in this repo use whichever agent actually executed; do not rewrite history, only record yours accurately on the new SESSION file.
 
 ## Trigger
 
@@ -104,7 +110,7 @@ type: session
 status: in-progress
 created: <today>
 updated: <today>
-last_agent: copilot-session-NNNN
+last_agent: <agent>-session-NNNN
 sprint: <current sprint, e.g. S2>
 pairs_with:
   - docs/sprints/SESSION_<previous>.md

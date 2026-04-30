@@ -18,6 +18,8 @@ backlinks:
   - docs/knowledge/wiki/baseline-docs-adoption-checklist.md
   - docs/knowledge/how-to-use-these-registries.md
   - docs/sprints/SESSION_0030.md
+  - docs/sprints/SESSION_0031.md
+  - docs/architecture/security-privacy-payments-monitoring-plan.md
 tags:
   - blockers
   - ops
@@ -81,6 +83,7 @@ Blocker classes:
 | MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | open |
 | MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
 | MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, payment/entitlement drift audit, and launch-readiness signoff | open |
+| MB-014 | production multi-domain + server action hardening | Production-only manual steps that block staging/launch but are out of code scope: register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, Plausible | owner + Cody | deploy_env | Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run | open |
 
 ### 2. Notes by boundary
 
@@ -103,6 +106,15 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 **MB-012 — Local WordPress public directory cleanup.** The session began in `/Users/brianscott/Local Sites/ronin-dojo/app/public/` because VS Code was opened from the Local by Flywheel WordPress site. ADR 0005 already says that install is abandoned and irrelevant to the new stack. Do not delete it silently; verify the path and get owner approval first.
 
 **MB-013 — Security and financial transaction readiness.** SESSION_0030 created `docs/architecture/security-privacy-payments-monitoring-plan.md` as the plan gate. This remains open until implementation proves the gates with tests/logging: schedule auth/brand rejection, instructor enumeration protection, entitlement-first payment access, Stripe webhook idempotency, refund/revoke behavior, certificate verification rate limiting, private storage policy, and monitoring alerts.
+
+**MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass and SESSION_0031 prep refactor identified four manual production gates the owner must close before staging deploy:
+
+1. Register all four public apex domains (Ronin Dojo Design, Baseline Martial Arts, Black Belt Legacy, WEKAF) and add them as Vercel custom domains per ADR 0006.
+2. Uncomment and fill the production rows in `HOST_TO_BRAND` inside `apps/web/lib/brand-context.ts` so unknown hosts no longer fall back to RONIN_DOJO_DESIGN in production.
+3. Add `experimental.serverActions.allowedOrigins` to `apps/web/next.config.ts` listing the four brand domains so Server Actions CSRF/Origin checks pass under multi-domain hosting.
+4. Verify env validation covers Better Auth, Postgres, Stripe (publishable + secret + webhook), Upstash Redis, S3 / private storage, cron secret, and Plausible before staging deploy. Live Dirstarter docs reference: `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/deployment`.
+
+This boundary stays `open` until those four steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
 
 ### 3. Closure rule
 

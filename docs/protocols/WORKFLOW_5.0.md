@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-04-30
-last_agent: codex-session-0029
+last_agent: codex-session-0030
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -162,17 +162,18 @@ This table is reality-adjusted as of SESSION_0029. Completed sessions show the a
 | Apr 28 actual | 0027 | Core platform governance | Governance audit; logs merged; FS-0006/FS-0007 mitigated |
 | Apr 29 actual | 0028 | School operations | Calendar re-sequence; Program CRUD with auth and brand scoping |
 | Apr 30 actual | 0029 | Core platform governance + monetization | Commerce learning path specs; raw source preserved; School CRUD continuation pushed one session |
-| May 1 target | 0030 | School operations | Class schedules, class sessions, instructor assignments |
-| May 2 target | 0031 | School operations | Attendance/check-in flows and staff class-control surface |
-| May 3 target | 0032 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
-| May 4 target | 0033 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring |
-| May 5 target | 0034 | School operations | Lead intake, trial conversion, CRM follow-up states |
-| May 6 target | 0035 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
-| May 7 target | 0036 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
-| May 8 target | 0037 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
-| May 9 target | 0038 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
-| May 10-17 target | 0039 | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
-| May 18 target | 0040 | Launch day | Release execution, monitoring, support, post-launch triage |
+| Apr 30 actual | 0030 | Core platform governance | Hostile review + security/privacy/payments/monitoring plan; `security-privacy-payments-monitoring-plan.md` and MB-013 landed; class schedule implementation pushed one session |
+| May 1 target | 0031 | School operations | Class schedules + sessions + instructor assignments execution with the SESSION_0030 security gates wired in |
+| May 2 target | 0032 | School operations | Attendance/check-in flows and staff class-control surface |
+| May 3 target | 0033 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
+| May 4 target | 0034 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring (entitlement-first per ADR 0011) |
+| May 5 target | 0035 | School operations | Lead intake, trial conversion, CRM follow-up states |
+| May 6 target | 0036 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
+| May 7 target | 0037 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
+| May 8 target | 0038 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
+| May 9 target | 0039 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
+| May 10-17 target | 0040 | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
+| May 18 target | 0041 | Launch day | Release execution, monitoring, support, post-launch triage |
 
 ---
 

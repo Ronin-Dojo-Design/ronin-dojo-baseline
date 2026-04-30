@@ -340,3 +340,43 @@ If CGR decisions surface, record them in `Open decisions / blockers`; do not imp
 ## Bow-out line
 
 Bowed out — SESSION_0030 closed-full. Next session goal: execute class schedule CRUD/session/instructor implementation with the security gates loaded first.
+
+## Post-close prep landed in tail of chat (2026-04-30)
+
+Recorded after `closed-full` because the chat continued into SESSION_0031 preparation rather than starting a new chat. Tracked under `SESSION_0030_TASK_04` in `docs/protocols/project-log.md`. The class schedule implementation itself is unchanged — these are pure prep so the next chat opens to a clean SESSION_0031 with security gates pre-wired.
+
+- Did one more hostile pass on `docs/architecture/security-privacy-payments-monitoring-plan.md`. Surfaced 11 gate gaps that needed to be folded into task done-criteria, not just listed in the plan.
+- Created `apps/web/lib/brand-context.ts` as the single source of truth for `HOST_TO_BRAND` / `resolveBrand` / `getRequestBrand`. Refactored `apps/web/proxy.ts` and `apps/web/server/web/program/actions.ts` to import from it. MB-002 now has one resolution path; the schedule slice cannot duplicate it.
+- Patched the WORKFLOW 5.0 calendar in `docs/protocols/WORKFLOW_5.0.md`: SESSION_0030 = planning close, SESSION_0031 = class schedule execution with security gates, downstream rows shifted by one (launch day moves to SESSION_0041).
+- Added MB-014 in `docs/knowledge/wiki/manual-boundary-registry.md` for production multi-domain + server-action hardening (production apex domains, `HOST_TO_BRAND` rows, `serverActions.allowedOrigins`, env validation). Owner-gated. Does not block SESSION_0031, blocks staging.
+- Created `docs/sprints/SESSION_0031.md` with status `planned`. All 11 hostile-review security gates are folded into TASK_01–03 done-criteria. Plan is spec-driven (lineage to commerce + security specs), DDD-framed (aggregates, bounded contexts, ubiquitous language), and Dirstarter-baseline-aligned with live doc references.
+- Updated `docs/knowledge/wiki/index.md`, `docs/knowledge/wiki/log.md`, and `docs/protocols/project-log.md` to reflect the prep work and supersede the SESSION_0030 task entries 01–03 to SESSION_0031.
+- Made `docs/rituals/opening.md` and `docs/rituals/closing.md` explicitly agent-agnostic. Added an "Agent-agnostic" section to each clarifying that the ritual is the source of truth for any LLM (Claude, Copilot, Codex, or otherwise), the trigger surface varies per environment (`/bow-in` skill in Claude Code, the phrase "bow in" in chat-only environments, a make target in CLI), and the `last_agent` convention is `<agent>-session-NNNN` recording who actually ran the work. Replaced the example `last_agent: copilot-session-NNNN` placeholder in `opening.md` with `last_agent: <agent>-session-NNNN`.
+
+Validations after prep:
+
+- `bunx prisma validate --schema apps/web/prisma/schema.prisma` — schema valid.
+- `bun run wiki:lint` — passed; 124 markdown files; no lint violations.
+- `git diff --check` — passed.
+- No commit/push performed; changes left uncommitted as is the project convention pending owner review.
+
+### Post-close prep reflections
+
+- Treating SESSION_0030 as `closed-full` and then continuing the chat into SESSION_0031 prep was a deliberate choice. Pro: SESSION_0031 opens cold with all 11 gates and the brand-context refactor already in place. Con: SESSION_0030's `closed-full` is now annotated with a postscript, which only works because SESSION_0030_TASK_04 is tracked in `project-log.md` — without that ledger entry, the prep would be invisible.
+- The hostile pass on the security plan was where the real value showed up. The plan as written was strong on intent but soft on done-criteria. Folding gates into task done-criteria (not just listing them in a separate doc) is the move that closes MB-002/MB-013 by construction rather than by promise.
+- Centralizing brand resolution before the schedule slice creates a third copy was cheap insurance. Once a duplicated host->brand map ships in two feature folders, removing it costs N times more than removing it now.
+- DDD framing in SESSION_0031 was the user's prompt mid-task — folding it in did not require new abstractions, only naming the existing slice as `Program` aggregate root with `ClassSchedule` as its sub-aggregate, and naming `ScheduleSessionGenerator` as a domain service. Doing this surface-only (without inventing repository abstractions or factories) keeps the slice Dirstarter-shaped.
+
+### Full close evidence — post-close prep overlay
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `apps/web/lib/brand-context.ts` is a code file (no JETTY frontmatter required); `proxy.ts` and `program/actions.ts` likewise. Doc files updated: `docs/sprints/SESSION_0030.md` `updated: 2026-04-30` (kept), `docs/sprints/SESSION_0031.md` new with full JETTY frontmatter and `last_agent: codex-session-0030`, `docs/protocols/WORKFLOW_5.0.md` `last_agent: codex-session-0030`, `docs/knowledge/wiki/index.md` and `docs/knowledge/wiki/log.md` `last_agent: codex-session-0030`. `docs/knowledge/wiki/manual-boundary-registry.md` `last_agent: codex-session-0030` and added `docs/sprints/SESSION_0031.md` + `docs/architecture/security-privacy-payments-monitoring-plan.md` to `backlinks`. |
+| Backlinks/index sweep | `wiki/index.md` lists SESSION_0031 as `planned`. `wiki/log.md` has a 2026-04-30 entry for SESSION_0031 plan + prep refactor. `manual-boundary-registry.md` adds MB-014 row + notes section. `SESSION_0031.md` lists pairs_with for the security plan, commerce specs, ADR 0004/0006/0011, MBR, Petey/Cody preflight, and WORKFLOW 5.0. `project-log.md` supersedes SESSION_0030 TASK_01–03 and adds TASK_04 + SESSION_0031_TASK_01–03. |
+| Wiki lint | `bun run wiki:lint` passed; 124 markdown files; no lint violations. |
+| Kaizen reflection | Post-close prep reflections added above; SESSION_0030 already had its primary reflections. |
+| Hostile close review | SESSION_0030_REVIEW_01 already recorded. The post-close prep itself was the act of dispatching the unaddressed findings from that review (specifically the gap that SESSION_0030_TASK_01 done-criteria did not cite the security gates). No new review entry needed; the new task plan in SESSION_0031 carries the gate verification responsibility. |
+| Review & Recommend | SESSION_0031 plan written with the next session goal, inputs to read, first task, scope guard, and rejection-matrix specification. Bow-in for the next chat is essentially zero-cost. |
+| Memory sweep | No project-scope memory update warranted: brand-context centralization is documented in the file itself (`Rule: never re-implement this map elsewhere`), the SESSION_0031 plan calls it out as gate #1, and MB-002 + MB-014 in the registry persist the implication. Existing memory (project_architecture, project_passport_shells, reference_dirstarter) remains correct. |
+| Next session unblock check | Unblocked. Next chat: `/bow-in`, create `wt-school-ops` on `session-0031-class-schedules`, run Cody backend pre-flight, execute TASK_01. MB-014 manual gates (production domains, allowedOrigins, env validation) do not block SESSION_0031 dev/local execution; they block staging/launch only. |
+| Git hygiene | Branch `main`; `git worktree list` shows only `/Users/brianscott/dev/ronin-dojo-app`; `git diff --check` passed; `git status --short` shows: M `apps/web/proxy.ts`, M `apps/web/server/web/program/actions.ts`, M `docs/knowledge/wiki/{index,log,manual-boundary-registry}.md`, M `docs/protocols/{WORKFLOW_5.0,project-log}.md`, M `docs/sprints/SESSION_0030.md`, ?? `apps/web/lib/brand-context.ts`, ?? `docs/sprints/SESSION_0031.md`. No commit/push performed — owner has not authorized commit on `main` for SESSION_0030 or this prep tail. |

@@ -1,6 +1,6 @@
 import { getSessionCookie } from "better-auth/cookies"
 import { type NextRequest, NextResponse } from "next/server"
-import { Brand } from "~/.generated/prisma/client"
+import { resolveBrand } from "~/lib/brand-context"
 
 /**
  * Map a request hostname to a Brand.
@@ -13,31 +13,8 @@ import { Brand } from "~/.generated/prisma/client"
  * Localhost and Vercel previews fall back to RONIN_DOJO_DESIGN (the umbrella).
  *
  * See ADR 0006 (multi-domain hosting) for the full rationale.
+ * Host -> Brand map lives in `~/lib/brand-context` and is shared with server actions.
  */
-const HOST_TO_BRAND: Record<string, Brand> = {
-  // Production / public domains — fill in once registered.
-  // "ronindojodesign.com": Brand.RONIN_DOJO_DESIGN,
-  // "baselinemartialarts.com": Brand.BASELINE_MARTIAL_ARTS,
-  // "blackbeltlegacy.com": Brand.BBL,
-  // "wekafusa.com": Brand.WEKAF,
-
-  // Local dev convention
-  "ronindojo.local": Brand.RONIN_DOJO_DESIGN,
-  "baseline.local": Brand.BASELINE_MARTIAL_ARTS,
-  "bbl.local": Brand.BBL,
-  "wekaf.local": Brand.WEKAF,
-
-  // localhost defaults to Baseline during MVP build (S1–S12)
-  "localhost": Brand.BASELINE_MARTIAL_ARTS,
-}
-
-const DEFAULT_BRAND: Brand = Brand.RONIN_DOJO_DESIGN
-
-export const resolveBrand = (host: string | null | undefined): Brand => {
-  if (!host) return DEFAULT_BRAND
-  const bare = host.split(":")[0].toLowerCase()
-  return HOST_TO_BRAND[bare] ?? DEFAULT_BRAND
-}
 
 export const config = {
   // Match everything except Next internals and static files
@@ -58,7 +35,9 @@ export default async function (req: NextRequest) {
     return NextResponse.redirect(new URL(`/auth/login?next=${pathname}${search}`, req.url))
   }
 
-  // Brand resolution — inject into headers + cookie for all requests
+  // Brand resolution — inject into headers + cookie for all requests.
+  // The header is set on the *forwarded request* and overwrites any client-supplied
+  // x-brand header so downstream code can trust it.
   const brand = resolveBrand(req.headers.get("host"))
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set("x-brand", brand)

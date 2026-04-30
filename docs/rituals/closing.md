@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-04-30
-last_agent: codex-session-0029
+last_agent: codex-session-0030
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -24,6 +24,12 @@ backlinks:
 Run this before ending any session. The point: leave the repo in a state where the next bow-in is cheap.
 
 > v5.0 refresh of the legacy `closing_v4.5.md`. Quick/full distinction is preserved. The legacy multi-file state machine (`CHAT_HANDOFF.md` + `GIDDY_BRANCH_MONITOR.md` + `PETEY_NEXT_SESSION_PROMPT_*.md`) is consolidated into one file: the current `SESSION_NNNN.md`.
+
+## Agent-agnostic
+
+This ritual is the source of truth for any agent that closes a session: Claude, Copilot, Codex, or otherwise. The ritual itself never depends on a specific LLM, IDE, or CLI. The trigger may differ per environment (Claude Code: `/bow-out` skill; Copilot/Codex chat: the words "bow out"; CLI script: a make target), but the steps below are identical and binding.
+
+When you record `last_agent` in the SESSION frontmatter or in this doc's frontmatter, name the agent that actually executed the work (e.g., `claude-session-0031`, `copilot-session-0028`, `codex-session-0030`). Do not rewrite past values; only stamp your own accurately on the artifacts you touched.
 
 ## Trigger
 

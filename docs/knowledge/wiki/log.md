@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-26
 updated: 2026-04-30
-last_agent: codex-session-0029
+last_agent: codex-session-0030
 ---
 
 # Wiki Change Log
@@ -120,3 +120,10 @@ Append-only log of wiki changes per CLAUDE.md rule 4.
 - Added MB-013 for security and financial transaction readiness.
 - Updated Dirstarter docs inventory with SESSION_0030 security review sources: structure, Prisma, auth, env, payments, monetization, rate limiting, analytics, storage, deployment, cron, and content.
 - Closed `docs/sprints/SESSION_0030.md` as `closed-full`; class schedule implementation is deferred to the next execution session.
+
+## 2026-04-30 — SESSION_0031 planned + prep refactor
+
+- Created `docs/sprints/SESSION_0031.md` (status `planned`) with all 11 SESSION_0030 hostile-review security gates folded into task done-criteria, DDD framing, and live Dirstarter docs references.
+- Added `apps/web/lib/brand-context.ts` as the single source of truth for `HOST_TO_BRAND` / `resolveBrand` / `getRequestBrand`; refactored `apps/web/proxy.ts` and `apps/web/server/web/program/actions.ts` to import from it. MB-002 brand-scope hardening now has one resolution path.
+- Patched `docs/protocols/WORKFLOW_5.0.md` calendar: SESSION_0030 = planning close, SESSION_0031 = class schedule execution with security gates, downstream rows shifted by one (launch day moves to SESSION_0041).
+- Added MB-014 in `docs/knowledge/wiki/manual-boundary-registry.md` for production multi-domain + server-action hardening (apex domains, `HOST_TO_BRAND` rows, `serverActions.allowedOrigins`, env validation). Owner-gated; does not block SESSION_0031, blocks staging.
