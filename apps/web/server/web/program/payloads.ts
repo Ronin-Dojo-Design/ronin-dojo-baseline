@@ -78,3 +78,30 @@ export type ProgramMany = Prisma.ProgramGetPayload<{
 export type ProgramDetail = Prisma.ProgramGetPayload<{
   select: typeof programDetailPayload
 }>
+
+/**
+ * Gate 11 (SESSION_0031): public schedule surface payload.
+ *
+ * Strict allowlist for unauthenticated / public consumers (brand-domain
+ * marketing pages). Exposes only day/time blocks, location summary, and
+ * capacity bucket. No instructor names, no notes, no enrollment counts.
+ *
+ * If a future surface needs more, add a new payload — do NOT widen this one.
+ */
+export const programPublicSchedulePayload = {
+  id: true,
+  name: true,
+  status: true,
+  daysOfWeek: true,
+  startTime: true,
+  endTime: true,
+  timezone: true,
+  effectiveFrom: true,
+  effectiveTo: true,
+  capacity: true,
+  locationName: true,
+} satisfies Prisma.ClassScheduleSelect
+
+export type ProgramPublicSchedule = Prisma.ClassScheduleGetPayload<{
+  select: typeof programPublicSchedulePayload
+}>

@@ -27,6 +27,19 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(5, "1 h"), // 5 attempts per hour
       }),
+      // SESSION_0031 gate 4: schedule mutations + instructor selector lookups.
+      // Failure mode = fail-open per `isRateLimited`; monitoring signal added to
+      // docs/architecture/security-privacy-payments-monitoring-plan.md.
+      schedule_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 schedule mutations per minute per actor
+      }),
+      instructor_search: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(30, "1 m"), // 30 instructor lookups per minute per actor
+      }),
     }
   : null
 

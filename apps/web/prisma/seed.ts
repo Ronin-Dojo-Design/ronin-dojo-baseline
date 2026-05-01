@@ -1406,6 +1406,43 @@ async function main() {
   })
   console.log("Created 2 Baseline programs")
 
+  // SESSION_0031: minimal schedule fixtures so the smoke and detail page have
+  // something to work with. Idempotent via upsert on (brand, programId, name).
+  const adultBjjProgram = await db.program.findFirst({
+    where: { brand: "BASELINE_MARTIAL_ARTS", slug: "adult-brazilian-jiu-jitsu" },
+    select: { id: true, organizationId: true, disciplineId: true },
+  })
+  if (adultBjjProgram) {
+    const existingSchedule = await db.classSchedule.findFirst({
+      where: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        programId: adultBjjProgram.id,
+        name: "Adult BJJ — Tue/Thu Evenings",
+      },
+      select: { id: true },
+    })
+    if (!existingSchedule) {
+      await db.classSchedule.create({
+        data: {
+          brand: "BASELINE_MARTIAL_ARTS",
+          organizationId: adultBjjProgram.organizationId,
+          programId: adultBjjProgram.id,
+          disciplineId: adultBjjProgram.disciplineId,
+          name: "Adult BJJ — Tue/Thu Evenings",
+          description: "Evening fundamentals and rolling for adult students.",
+          status: "ACTIVE",
+          daysOfWeek: ["TUE", "THU"],
+          startTime: "18:30",
+          endTime: "20:00",
+          timezone: "America/Denver",
+          locationName: "Main Mat",
+          capacity: 30,
+        },
+      })
+      console.log("Seeded 1 Baseline class schedule")
+    }
+  }
+
   console.log("Seeding completed!")
 }
 
