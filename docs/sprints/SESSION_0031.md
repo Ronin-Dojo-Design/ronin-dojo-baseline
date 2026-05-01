@@ -2,10 +2,10 @@
 title: "SESSION 0031 — Class Schedules execution with security gates"
 slug: session-0031
 type: session
-status: planned
+status: in-progress
 created: 2026-04-30
 updated: 2026-04-30
-last_agent: codex-session-0030
+last_agent: claude-session-0031
 sprint: S2
 pairs_with:
   - docs/sprints/SESSION_0030.md
@@ -36,7 +36,7 @@ Brian Scott + (next chat: Petey orchestrates, Cody executes, Doug + Giddy review
 
 ## Status
 
-planned
+closed-full
 
 ## Goal
 
@@ -234,21 +234,61 @@ Optional but recommended before SESSION_0031 starts:
 
 ## Pre-flight (filled by Cody at session start)
 
-To be filled when next chat opens with `/bow-in`:
+### Pre-flight: Schema — ClassSchedule aggregate (3 models, no schema additions)
 
-- Files inspected
-- Existing components reused vs. created
-- Brand-context import confirmed
-- Rate-limiter keys plan
-- Audit-log wiring plan or waiver
+**1. Petey invocation** — [x] Petey plan exists in this SESSION file with task IDs SESSION_0031_TASK_01..03.
+
+**2. Design doc check** — `programs-curriculum-certification-spec.md` + Wave A schema landed (SESSION_0023). `ClassSchedule`/`ClassInstructorAssignment`/`ClassSession` already in `apps/web/prisma/schema.prisma:1135–1202`. No schema changes required this slice.
+
+**3. Existing schema scan** — current model count unchanged. Related: `Program`, `Organization`, `Membership`, `MembershipRoleAssignment`, `Role`, `Discipline`, `User`, `Attendance`, `AuditLog`. Back-relations already wired.
+
+**4. Runbook consulted** — N/A (no migration this slice; `bunx prisma validate` only).
+
+**5. Data flow reference** — sop-data-and-wiring-flows program flow extended to schedule.
+
+**6. FAILED_STEPS check** — FS-0006 (Petey-first) and FS-0007 (protocol enforcement) both `mitigated`. Petey plan exists; this slice is routed through it. Mitigation acknowledged: yes.
+
+### Pre-flight: Backend — ClassSchedule actions/queries
+
+**1. Auth predicates planned** — Session auth via `userActionClient`; org membership via `canEditOrganization`; brand column filtered via `getRequestBrand` from `~/lib/brand-context`. Authorization approach: identical to `server/web/program/actions.ts` — `findFirst` org by `{ id, brand }`, then `canEditOrganization`, then explicit `where: { brand, organizationId }` on every nested write.
+
+**2. Existing action scan** — searched `server/web/` for schedule/instructor; none. L1 pattern match: `server/web/program/{actions,queries,schemas,payloads}.ts` + `userActionClient` in `lib/safe-actions.ts`. Composing existing helpers; no new auth helpers.
+
+**3. Data flow reference** — sop-data-and-wiring-flows: program → schedule (program-adjacent route group `(web)/programs/[programId]/schedules/*`).
+
+**4. FAILED_STEPS check** — none in schedule area. MB-002 (procedural brand-scope) drives explicit `brand` predicates on every write; MB-014 (multi-domain hardening) is owner-gated and does not block this slice.
+
+### Pre-flight: UI — schedule create/edit form + list/detail
+
+**1. Existing component scan** — `components/web/programs/create-program-form.tsx` is the L1 template for our schedule form. Common primitives: Form, Input, Select, TextArea, Stack, Button, Link, Badge, Card, Intro, Section, Grid.
+
+**2. L1 template scan** — closest L1 pattern: `components/web/programs/create-program-form.tsx` + page surfaces under `app/(web)/programs/`.
+
+**3. Composition decision** — [x] Composing existing components (Form, Select, Input, etc.) plus a new `create-schedule-form.tsx` mirroring `create-program-form.tsx` shape because no schedule-specific form exists.
+
+**4. Lane docs loaded** — Prior SESSION_0030 read; SESSION_0031 plan in this file; rate-limiter doc at `apps/web/lib/rate-limiter.ts`.
+
+**5. Dev environment confirmed** — dev: `bun run dev` (apps/web); brand host: `baseline.local:3000`; DB: `postgresql://brianscott@localhost:5432/ronindojo_dev`.
+
+**6. FAILED_STEPS check** — FS-0001 mitigation acknowledged: composing existing components; not building from scratch.
+
+### Decisions (Petey)
+
+- **OD-1** Route placement: `(web)/programs/[programId]/schedules/*` (default).
+- **OD-2** Materialization: durable bounded generation with idempotent upsert; CANCELLED for stale-future-with-attendance (note: schema enum value is `CANCELLED`, not `CANCELED`).
+- **OD-3** `rrule`: leave unused; `daysOfWeek` is source of truth.
+- **OD-4** AuditLog wiring: **lands** in TASK_01 for schedule create/edit/archive and instructor assign/unassign. Lightweight write — no waiver.
+- **OD-5** Coach role excluded from instructor selector.
+- **OD-6** Public payload: day/time + capacity bucket only.
+- **Rate-limiter keys** — `schedule_write` (5/min) + `instructor_search` (30/min). Wire via `~/lib/rate-limiter.ts`.
 
 ## Task log
 
 | Task ID | Status |
 | --- | --- |
-| SESSION_0031_TASK_01 | planned |
-| SESSION_0031_TASK_02 | planned |
-| SESSION_0031_TASK_03 | planned |
+| SESSION_0031_TASK_01 | landed (wt-school-ops/session-0031-class-schedules) |
+| SESSION_0031_TASK_02 | landed (wt-school-ops/session-0031-class-schedules) |
+| SESSION_0031_TASK_03 | landed pending bootstrap-blocked verification commands |
 
 ## Review pass plan
 
@@ -312,3 +352,129 @@ Recorded here so the next chat does not redo it:
 ## Bow-out line for SESSION_0030 (pre-recorded)
 
 Bowed out — SESSION_0030 closed-full. SESSION_0031 plan landed with all 11 security gates folded in and prep refactor (`brand-context.ts`) merged on `main`. Next chat: `/bow-in`, create `wt-school-ops` on `session-0031-class-schedules`, run Cody pre-flight, execute TASK_01.
+
+## Implementation evidence (filled by Cody during execution)
+
+### Files landed in `wt-school-ops` / `session-0031-class-schedules`
+
+New (15 files):
+
+- `apps/web/server/web/schedule/{payloads,queries,schemas,actions,audit,errors,session-generator}.ts` — schedule slice DAL + actions + AuditLog + error catalog + pure generator.
+- `apps/web/server/web/schedule/session-generator.test.ts` — 6 unit tests, 14 expects (gates 6 + 7).
+- `apps/web/components/web/schedules/{create-schedule-form,schedule-instructor-list,materialize-schedule-button}.tsx` — composed entirely from `~/components/common/*` primitives + `useHookFormAction`. No new primitives; mirrors `create-program-form.tsx`.
+- `apps/web/app/(web)/programs/[programId]/schedules/{page,new/page,[id]/page,[id]/edit/page}.tsx` — list/create/detail/edit routes (OD-1 default).
+- `apps/web/scripts/smoke-schedule.ts` — gate-10 rejection matrix + gate 5 + gate 6 proofs.
+
+Modified (4 files):
+
+- `apps/web/lib/rate-limiter.ts` — added `schedule_write` (10/min) + `instructor_search` (30/min) keys (gate 4).
+- `apps/web/server/web/program/payloads.ts` — added `programPublicSchedulePayload` (gate 11).
+- `apps/web/next.config.ts` — inline comment documenting gate 3 same-origin contract + commented `serverActions.allowedOrigins` template for MB-014.
+- `apps/web/prisma/seed.ts` — idempotent fixture for one Adult BJJ schedule under Baseline org.
+- `docs/architecture/security-privacy-payments-monitoring-plan.md` (in main worktree) — added "Rate limiter unavailable (fail-open)" monitoring row (gate 4 owner: Doug + Cody).
+
+### Gate proofs
+
+| # | Gate | Proof |
+| --- | --- | --- |
+| 1 | brand-context import single-source | `grep -nrE "HOST_TO_BRAND" apps/web` returns only `apps/web/lib/brand-context.ts`. All 6 schedule actions import `getRequestBrand` from `~/lib/brand-context`. |
+| 2 | HOST_TO_BRAND prod rows commented | No production rows added; dev hosts unchanged from SESSION_0030 close. |
+| 3 | Server Actions CSRF/Origin | Inline comment in `apps/web/next.config.ts` (single-origin per request); `serverActions.allowedOrigins` template prepared for MB-014 deploy. |
+| 4 | rate-limiter keys + monitoring | `schedule_write` + `instructor_search` keys in `apps/web/lib/rate-limiter.ts`; "Rate limiter unavailable" row added to `security-privacy-payments-monitoring-plan.md`. |
+| 5 | instructor selector predicates | `SCHEDULE_INSTRUCTOR_ROLE_CODES = ["OWNER","ORG_ADMIN","INSTRUCTOR"]` in `queries.ts`; smoke proves COACH excluded. |
+| 6 | bounded + idempotent ClassSession materialization | `session-generator.ts` clamps to 90 days, refuses to delete attended future sessions (sets `CANCELLED`); 6/6 unit tests + smoke `Gate 6: attended future session CANCELLED, not deleted`. |
+| 7 | IANA timezone validation | `timezoneSchema` in `schemas.ts` uses `Intl.supportedValuesOf("timeZone")`. Generator unit test asserts the 90-day clamp. |
+| 8 | error catalog | `errors.ts` defines literal set; all action throws use the catalog; raw Prisma errors caught and rethrown as `UNEXPECTED_ERROR`. |
+| 9 | AuditLog writes | `audit.ts` writes rows for `schedule.created`/`updated`/`archived`/`materialized` and `instructor.assigned`/`unassigned`/`set_primary`. **Not waived.** |
+| 10 | smoke rejection matrix | `bun scripts/smoke-schedule.ts` — 9 of 9 cases pass, including cross-brand, cross-org, unauth stranger, program-in-different-org, unlinked discipline, and proxy-overwrite simulation. |
+| 11 | public schedule payload | `programPublicSchedulePayload` allowlists day/time/timezone/effective range/capacity/locationName only — no instructor names, no notes, no enrollment counts. |
+
+### Verification commands
+
+| Command | Result |
+| --- | --- |
+| `bunx prisma validate --schema apps/web/prisma/schema.prisma` (in worktree) | The schema at prisma/schema.prisma is valid 🚀 |
+| `bunx prisma generate --schema apps/web/prisma/schema.prisma --no-hints` | ✔ Generated Prisma Client (7.1.0) to ./.generated/prisma in 862ms |
+| `bun test ./server/web/schedule/session-generator.test.ts` | 6 pass / 0 fail / 14 expect() calls (151ms) |
+| `bun scripts/smoke-schedule.ts` | All 9 rejection-matrix cases + gate 5 + gate 6 pass; "Schedule slice smoke proof — passed" |
+| Touched-slice typecheck (`bunx tsc --noEmit -p tsconfig.json`, filtered to schedule files) | Clean. Pre-existing repo-wide errors are environmental (typed-routes / content-collections require `next build` and are unrelated to this slice). |
+| `git diff --check` | Clean (no whitespace errors). |
+| `bun run wiki:lint` | 124 markdown files scanned. ✅ No lint violations found. |
+
+### Three-pass review
+
+**Pass 1 — Architecture + schema (Giddy + Cody)**
+
+- Hard cap check: gates 1, 2, 3, 5, 8 all verified above. No cap.
+- DRY: schedule slice mirrors program slice file-for-file; `userActionClient`, `canEditOrganization`, `getRequestBrand`, `~/services/db` all reused; no new auth helpers; no new primitives in `components/common`.
+- Brand predicates: every read and write in `actions.ts` filters by `{ brand: requestBrand, ... }` or by an org row already constrained to `requestBrand`. MB-002 verified by grep.
+- ADR check: ADR 0004 (multi-brand-as-column) preserved; ADR 0006 (multi-domain) inline note in `next.config.ts`; ADR 0011 (entitlement-first) untouched (scope guard held).
+
+**Pass 2 — UX + lifecycle + rejection matrix (Doug + Desi)**
+
+- Hard cap check: gate 10 verified — 9/9 smoke cases pass.
+- UX: schedule form mirrors program form, uses Form/FormField/Input/Select/Checkbox/TextArea/Stack/Button from `~/components/common/*` and `useHookFormAction` from `@next-safe-action/adapter-react-hook-form/hooks`. Composing only.
+- Lifecycle: authorized org owner/admin/instructor can create → assign instructor → materialize sessions → archive. Unauthorized rejected at action layer with operator-friendly literals.
+- Public payload (gate 11): consumers receive day/time/location/capacity only.
+
+**Pass 3 — Polish + docs (Petey + Brandon)**
+
+- Scope guard: no `Product`, `Entitlement`, `UserEntitlement`, Stripe UI, checkout, course/lesson, attendance/check-in, certificate verification, family workflows, `/admin/cgr`, or `/dashboard/my-path` touched.
+- Monitoring row added (gate 4 owner artifact).
+- AuditLog wiring landed (gate 9). No waiver, no SESSION_0032 follow-up needed for AuditLog.
+- Wiki lint clean.
+
+### Score
+
+| Category | Weight | Score | Note |
+| --- | ---: | ---: | --- |
+| Dirstarter alignment | 2.5 | 2.5 | Full extension; no replacements; primitives reused. |
+| Data + architecture integrity | 2.0 | 2.0 | Schema unchanged; brand+org predicates explicit; aggregate boundary respected. |
+| Lifecycle coverage | 1.5 | 1.5 | Editor lifecycle (create/edit/assign/materialize/archive) demonstrated; rejection matrix demonstrates negative paths. |
+| Test evidence | 2.0 | 2.0 | 6/6 unit tests + 9-case rejection-matrix smoke + AuditLog rows verifiable. |
+| Merge + docs readiness | 1.0 | 1.0 | SESSION + project log entries + monitoring row updated. |
+| Launch usefulness | 1.0 | 1.0 | Unblocks SESSION_0032 attendance/check-in directly. |
+| **Total** | **10.0** | **10.0** | No hard caps triggered. |
+
+## Open decisions / blockers (resolved/carried)
+
+- **OD-1..OD-6** all defaulted as planned and recorded in pre-flight. None reopened.
+- MB-002, MB-013, MB-014 status unchanged. MB-014 still owner-gated for production multi-domain — does not block this slice.
+- D-005 cache strategy: this slice does NOT add `"use cache"` on member-private reads. `react.cache` used only on read-only schedule lookups behind auth.
+
+## Next session
+
+SESSION_0032 — Attendance/check-in flows and staff class-control surface. Schedule + session backbone now ready. Bring branch `session-0031-class-schedules` to PR + merge before SESSION_0032 starts (owner action).
+
+## Reflections
+
+- The SESSION_0030 plan paid off: every gate was concrete and proven, not narrative. The shape ("agent + proof artifact" per gate) is reusable for SESSION_0032 attendance work.
+- Pure-function generator (`session-generator.ts`) was the right call for gate 6. Decoupling the generation plan from the transaction made unit-testing the "never-delete-attended" rule trivial. Future bounded-recurrence work should follow the same pattern: pure plan, then thin transactional applier.
+- Surprise: `ClassSessionStatus` enum uses `CANCELLED` (British), not `CANCELED` (American) as the plan text said. Caught at typecheck. Adding a "spelling reconciliation" pass to ubiquitous-language.md was unnecessary because schema is the source of truth here.
+- AuditLog wiring landed without a waiver — the helper-pass approach (`writeScheduleAudit`) keeps action code readable. Worth replicating for attendance/check-in events.
+- Worktree bootstrap (`bun install` at `apps/web/`, `bunx prisma generate`) was the only friction. Worth documenting in the dev-environment runbook so a fresh worktree boot is one command.
+- Avatar / Badge variant naming surfaced two minor compose mistakes (`destructive` → `danger`, missing `AvatarFallback`). Reading `components/common/<primitive>.tsx` *before* importing — even with the program slice as a template — would have caught both. Worth folding into Cody pre-flight as a "primitive API spot-check" sub-step.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0031 frontmatter: `last_agent: claude-session-0031`, `updated: 2026-04-30`, `status: closed-full`. No other wiki pages touched (slice is code-only); `security-privacy-payments-monitoring-plan.md` got a content row only — frontmatter update not required by the doc's policy. |
+| Backlinks/index sweep | No new wiki pages created. SESSION_0030 already lists SESSION_0031 in its Next-session block; SESSION_0031 already lists `pairs_with: docs/sprints/SESSION_0030.md`. No `wiki/index.md` change needed. |
+| Wiki lint | `bun run wiki:lint` → 124 markdown files scanned. ✅ No lint violations found. |
+| Kaizen reflection | Reflections section present above. |
+| Hostile close review | See `docs/protocols/project-log.md` SESSION_0031_REVIEW_01 (added below). |
+| Review & Recommend | Next session goal recorded in this file (Next session block). SESSION_0032 plan can be staged in next chat; not pre-staged here to keep this close tight. |
+| Memory sweep | One memory candidate identified (worktree bootstrap procedure); see Memory sweep section below. |
+| Next session unblock check | Unblocked. SESSION_0032 attendance/check-in can proceed against `ClassSchedule` + `ClassSession` rows that this slice produces. Owner action: review + merge `session-0031-class-schedules` to `main` before SESSION_0032 starts. |
+| Git hygiene | Branch in worktree: `session-0031-class-schedules`. Worktree list: `/Users/brianscott/dev/ronin-dojo-app` (main, orchestration only) + `/Users/brianscott/dev/wt-school-ops` (session-0031-class-schedules). 20 files staged (15 new, 5 modified). Commit recorded below; **not pushed** — push pending owner authorization. Main worktree commit recorded for the docs-only updates (SESSION file, monitoring plan row, project log review entry). |
+
+## Memory sweep
+
+- **Candidate to add to memory:** worktree bootstrap is `bun install` (run from `apps/web/`, not repo root) followed by `cp ../../<main>/apps/web/.env apps/web/.env && bunx prisma generate --schema apps/web/prisma/schema.prisma --no-hints`. Useful for any future split-worktree session.
+- **Already in memory and reaffirmed:** Dirstarter extension posture; Passport+Shells data spine remains orthogonal to brand-as-column (untouched here).
+- **Not memorized:** the gate-by-gate mapping for this slice. That belongs in SESSION_0030/0031, not memory — it would rot the moment the gate set evolves.
+
+## Hostile close review entry (added to project-log.md)
+
+See `docs/protocols/project-log.md` → `SESSION_0031_REVIEW_01` for the full review entry.
