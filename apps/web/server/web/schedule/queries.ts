@@ -1,5 +1,5 @@
 import { cache } from "react"
-import type { Brand } from "~/.generated/prisma/client"
+import type { Brand, ScheduleStatus } from "~/.generated/prisma/client"
 import {
   scheduleDetailPayload,
   scheduleManyPayload,
@@ -14,13 +14,59 @@ import { db } from "~/services/db"
  */
 export const SCHEDULE_INSTRUCTOR_ROLE_CODES = ["OWNER", "ORG_ADMIN", "INSTRUCTOR"] as const
 
-export const getSchedulesByProgram = cache(
-  async (brand: Brand, programId: string, organizationId: string) => {
-    return db.classSchedule.findMany({
-      where: { brand, programId, organizationId },
-      select: scheduleManyPayload,
-      orderBy: [{ status: "asc" }, { name: "asc" }],
-    })
+/**
+ * SESSION_0031.5 TASK_01 — paginated schedule list.
+ *
+ * Defaults per OD-1: pageSize 20, max 50.
+ * Defaults per OD-2: when `status` is undefined, exclude ARCHIVED (i.e. show
+ * all non-archived). Explicit `status` value (ACTIVE / PAUSED / ARCHIVED) is
+ * applied directly.
+ *
+ * MB-002: `{ brand, organizationId, programId }` are explicit predicates on
+ * every read; not derived solely from a context helper.
+ *
+ * react.cache only — auth-scoped per D-005; never "use cache".
+ */
+export const getSchedulesByProgramPaginated = cache(
+  async (
+    brand: Brand,
+    programId: string,
+    organizationId: string,
+    {
+      status,
+      page = 1,
+      pageSize = 20,
+    }: { status?: ScheduleStatus; page?: number; pageSize?: number } = {},
+  ) => {
+    const safePageSize = Math.min(Math.max(1, pageSize), 50)
+    const safePage = Math.max(1, page)
+    const skip = (safePage - 1) * safePageSize
+
+    const where = {
+      brand,
+      programId,
+      organizationId,
+      ...(status
+        ? { status }
+        : { status: { not: "ARCHIVED" as const } }),
+    }
+
+    const [items, total] = await db.$transaction([
+      db.classSchedule.findMany({
+        where,
+        select: scheduleManyPayload,
+        orderBy: [{ status: "asc" }, { name: "asc" }],
+        skip,
+        take: safePageSize,
+      }),
+      db.classSchedule.count({ where }),
+    ])
+
+    return {
+      items,
+      total,
+      hasMore: skip + items.length < total,
+    }
   },
 )
 
