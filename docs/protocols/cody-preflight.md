@@ -4,7 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-01
+last_agent: claude-session-0031-5
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -47,6 +48,12 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 ### 2. L1 template scan
 - Searched `dirstarter_template/components/` for: {search terms}
 - Closest L1 pattern: {file path and pattern name, or "none"}
+- **Primitive API spot-check:** Read each composed primitive's component file
+  (`components/common/<name>.tsx`) and record the exposed prop names + variant
+  string union (if any) in the pre-flight output. Importing a primitive without
+  listing its props is a FAILED_STEPS violation (see FS-0008). Example of
+  correct output: `Avatar (src, fallback, size: 'sm'|'md'|'lg')`,
+  `Badge (variant: 'default'|'secondary'|'destructive'|'outline', children)`.
 
 ### 3. Composition decision
 - [ ] Extending existing component: {which one}
@@ -97,6 +104,13 @@ For any task that adds or modifies Prisma models (3+ models = mandatory Petey fi
 - Current model count: {N}
 - Related existing models: {list}
 - Back-relations needed: {list}
+- **Schema spot-check:** Read each touched Prisma model and enum *from
+  `schema.prisma` directly*, not from plan prose. Paste the exact enum values
+  and back-relation field names into the pre-flight output. Inferring enum
+  spelling or field type from prose is a FAILED_STEPS violation (see FS-0008).
+  Example of correct output: `ClassSessionStatus enum: SCHEDULED, CANCELED,
+  COMPLETED, NO_SHOW` (note: `CANCELED`, not `CANCELLED`); `AuditLog.action` is
+  a free-form `String`, NOT an enum — use catalog constants from `errors.ts`.
 
 ### 4. Runbook consulted
 - [ ] `docs/runbooks/schema-migration.md` read

@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0014
+updated: 2026-05-01
+last_agent: claude-session-0031-5
 use_count: 0backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
@@ -21,6 +21,66 @@ tags:
 ## When to use
 
 At the start of every session. Cody pre-flight field 5 ("Dev environment confirmed") references this file.
+
+## Fresh worktree bootstrap
+
+Use this sequence when you spin up a brand-new git worktree off `main` (e.g.,
+to ship a feature slice in parallel with main). Each step has produced
+real-world friction in the past — copy-paste rather than improvise. This
+section is cross-linked from
+[`docs/protocols/cody-preflight.md`](../protocols/cody-preflight.md) step 5
+("Dev environment confirmed").
+
+```bash
+# 1. Create the worktree off main
+git worktree add ../<worktree-name> -b <branch> main
+
+# 2. Enter the app dir
+cd ../<worktree-name>/apps/web
+
+# 3. Install deps
+bun install
+
+# 4. Copy env vars from the canonical main worktree
+cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env apps/web/.env
+
+# 5. Generate the Prisma client
+bunx prisma generate --schema prisma/schema.prisma --no-hints
+
+# 6. Verify
+bun test ./server/web/schedule/
+```
+
+### Step 4 detail — env vars
+
+If the canonical `.env` is unavailable, the worktree needs at minimum:
+
+- `DATABASE_URL` — Postgres connection string (see "Database" below).
+- `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` — Better Auth keys.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate-limit backend.
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — only if Stripe surfaces are
+  exercised; otherwise stub values are acceptable in dev.
+- `CRON_SECRET` — required by any scheduled-cron route handler.
+- `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` — optional; analytics no-op without it.
+
+### Step 6 detail — pending Prisma migrations (dev only)
+
+If `bun test ./server/web/...` fails with table-missing errors (e.g.,
+`relation "ClassSchedule" does not exist`), the dev DB is behind the schema.
+Run:
+
+```bash
+bunx prisma db push --accept-data-loss
+```
+
+This applies the current `schema.prisma` to the **dev** database directly,
+without writing a migration. **Dev only** — production uses
+`bunx prisma migrate deploy` against versioned migration files. Never run
+`db push --accept-data-loss` against a production or shared staging DB.
+
+This step was the actual friction hit during SESSION_0031.5 TASK_02 — fresh
+worktrees inherit the schema but not the applied migrations, so `bun test`
+will fail until the dev DB is brought current.
 
 ## Dev server
 
