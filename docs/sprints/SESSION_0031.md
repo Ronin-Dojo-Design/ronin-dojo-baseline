@@ -444,7 +444,9 @@ Modified (4 files):
 
 ## Next session
 
-SESSION_0032 — Attendance/check-in flows and staff class-control surface. Schedule + session backbone now ready. Bring branch `session-0031-class-schedules` to PR + merge before SESSION_0032 starts (owner action).
+**SESSION_0031.5** ([`docs/sprints/SESSION_0031_5.md`](SESSION_0031_5.md)) — Schedule slice hardening before SESSION_0032 attendance. Six tasks: pagination + status filter, action-level test for gates 4/9, Cody pre-flight protocol update, dev-environment runbook update, materialize batch (deferred — instrumentation only), DST + concurrency tests (promoted from optional to required). Aggregate-confidence target ≥ 9/10 before SESSION_0032 may begin.
+
+SESSION_0032 (attendance/check-in) is gated on the SESSION_0031.5 Kaizen re-score. Bringing branch `session-0031-class-schedules` to PR + merge can wait until SESSION_0031.5 lands so reviewers see the slice + hardening as one logical change (per SESSION_0031_5 OD-5).
 
 ## Reflections
 

@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-01
+last_agent: claude-session-0031
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -163,8 +163,9 @@ This table is reality-adjusted as of SESSION_0029. Completed sessions show the a
 | Apr 29 actual | 0028 | School operations | Calendar re-sequence; Program CRUD with auth and brand scoping |
 | Apr 30 actual | 0029 | Core platform governance + monetization | Commerce learning path specs; raw source preserved; School CRUD continuation pushed one session |
 | Apr 30 actual | 0030 | Core platform governance | Hostile review + security/privacy/payments/monitoring plan; `security-privacy-payments-monitoring-plan.md` and MB-013 landed; class schedule implementation pushed one session |
-| May 1 target | 0031 | School operations | Class schedules + sessions + instructor assignments execution with the SESSION_0030 security gates wired in |
-| May 2 target | 0032 | School operations | Attendance/check-in flows and staff class-control surface |
+| Apr 30 actual | 0031 | School operations | Class schedules + sessions + instructor assignments executed with all 11 SESSION_0030 security gates verified; closed-full at WORKFLOW rubric 10/10 / Kaizen aggregate 7/10 |
+| May 1 target | 0031.5 | Core platform governance + School operations | Schedule slice hardening: pagination + status filter, action-level test for gates 4/9, Cody pre-flight protocol update, dev-environment runbook, materialize instrumentation, DST + concurrency tests. Kaizen aggregate must reach ≥ 9 before SESSION_0032 begins. |
+| May 1–2 target | 0032 | School operations | Attendance/check-in flows and staff class-control surface (gated on SESSION_0031.5 Kaizen ≥ 9) |
 | May 3 target | 0033 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
 | May 4 target | 0034 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring (entitlement-first per ADR 0011) |
 | May 5 target | 0035 | School operations | Lead intake, trial conversion, CRM follow-up states |

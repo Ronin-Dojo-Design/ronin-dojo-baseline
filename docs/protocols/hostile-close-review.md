@@ -4,8 +4,8 @@ slug: hostile-close-review
 type: protocol
 status: active
 created: 2026-04-29
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-05-01
+last_agent: claude-session-0031
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -92,6 +92,38 @@ Answer these in hostile-review language, then record findings in
    task IDs, review log, and score cap rules?
 8. **Merge readiness:** Is this ready to merge, or only ready to keep working?
 
+## Kaizen reflection triage (required, three questions)
+
+After the eight review questions, the closing agent answers these three Kaizen
+questions in plain prose. They are deliberately sharp; defensive answers fail
+the gate. Record the answers in the `TASK_REVIEW_LOG` entry directly under the
+review-questions verdict.
+
+1. **Is this safe and secure? What tests would prove me right?** Name what is
+   provably safe, what is *documented* but not behaviorally proven, and the
+   exact tests that would close each remaining gap.
+2. **How many failed steps could we have prevented? What would I do better
+   next time to plan for no failed steps or missed protocols?** Count concrete
+   process slips this session and the smallest protocol change that would
+   prevent each class.
+3. **Confidence 1–10 that the code does what it needs to do at scale of 100,
+   1,000, and 10,000 without breakage, leakage, and efficiently?** Score each
+   tier separately; aggregate is the lowest tier the slice will plausibly hit
+   before its next remediation window.
+
+### Score gate from Kaizen aggregate
+
+| Aggregate confidence | Required action |
+| --- | --- |
+| ≥ 9 | Proceed to the next implementation session as planned. |
+| 7 – 8 | Stage a remediation session (e.g., `SESSION_NNNN.5`) covering the gaps before the next implementation session. |
+| ≤ 6 | Do not advance. Open a hostile follow-up SESSION immediately. |
+
+The Kaizen aggregate is independent of the WORKFLOW 5.0 ten-point rubric. A
+slice may score 10/10 on plan gates and still earn a Kaizen aggregate of 7
+because the Kaizen view interrogates *what is not yet proven*, not *what was
+planned*. Treat both numbers as load-bearing.
+
 ## Required output
 
 Append one review entry to `TASK_REVIEW_LOG` using this shape:
@@ -126,3 +158,7 @@ Apply WORKFLOW 5.0 caps honestly:
 If a session scores under 9.5 after hostile review, do not hide the debt. Add it
 to `Open decisions / blockers`, `TASK_REVIEW_LOG`, and any relevant boundary
 registry entry.
+
+A WORKFLOW-rubric pass with a Kaizen aggregate ≤ 8 also counts as debt — record
+it the same way and stage a remediation session before any further
+implementation work in the same lane.
