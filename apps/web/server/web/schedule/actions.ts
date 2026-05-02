@@ -430,6 +430,7 @@ export const setPrimaryInstructor = userActionClient
 export const materializeSchedule = userActionClient
   .inputSchema(materializeScheduleSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const startedAt = Date.now()
     const requestBrand = await getRequestBrand()
 
     if (await isRateLimited(user.id, "schedule_write")) {
@@ -550,6 +551,15 @@ export const materializeSchedule = userActionClient
       console.error("materializeSchedule failed", error)
       throw new Error(SCHEDULE_ERROR.UNEXPECTED_ERROR)
     }
+
+    console.info(
+      "[schedule] materialize: created=%d cancelled=%d deleted=%d refreshed=%d duration=%dms",
+      result.created,
+      result.cancelled,
+      result.deleted,
+      result.refreshed,
+      Date.now() - startedAt,
+    )
 
     await writeScheduleAudit({
       brand: requestBrand,

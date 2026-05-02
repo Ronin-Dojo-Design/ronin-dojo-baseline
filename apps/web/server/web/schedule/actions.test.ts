@@ -211,19 +211,86 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  if (!fx) return
-  await db.auditLog.deleteMany({ where: { userId: { in: [fx.userId, fx.instructorUserId] } } })
-  await db.classSchedule.deleteMany({ where: { organizationId: fx.organizationId } })
-  await db.program.deleteMany({ where: { id: fx.programId } })
-  await db.organization.deleteMany({ where: { id: fx.organizationId } })
-  await db.user.deleteMany({ where: { id: { in: [fx.userId, fx.instructorUserId] } } })
-  await db.discipline.deleteMany({ where: { id: fx.disciplineId } })
-  const rolesToDelete: string[] = []
-  if (fx.createdOwnerRole) rolesToDelete.push(fx.ownerRoleId)
-  if (fx.createdInstructorRole) rolesToDelete.push(fx.instructorRoleId)
-  if (rolesToDelete.length > 0) {
-    await db.role.deleteMany({ where: { id: { in: rolesToDelete } } })
+  // Two-phase teardown:
+  //   1) Delete this run's specific fixtures (by id, fast, no false positives).
+  //   2) Sweep ANY leftover `actions-test-*` rows from this OR earlier crashed
+  //      runs in the dev DB. Without (2), zombie rows accumulate and break the
+  //      smoke script + future test reruns. Cascade order: assignments first,
+  //      then schedules / memberships, then orgs / disciplines / programs,
+  //      then users / roles. AuditLog has no FK cascade from User and is
+  //      separately scrubbed.
+  const TAG_PREFIX = "actions-test-"
+
+  if (fx) {
+    await db.auditLog.deleteMany({ where: { userId: { in: [fx.userId, fx.instructorUserId] } } })
   }
+
+  // (1) Targeted: this run.
+  if (fx) {
+    await db.classInstructorAssignment.deleteMany({
+      where: { classSchedule: { organizationId: fx.organizationId } },
+    })
+    await db.classSchedule.deleteMany({ where: { organizationId: fx.organizationId } })
+    await db.membershipRoleAssignment.deleteMany({
+      where: { membership: { organizationId: fx.organizationId } },
+    })
+    await db.membership.deleteMany({ where: { organizationId: fx.organizationId } })
+    await db.organizationDiscipline.deleteMany({
+      where: { organizationId: fx.organizationId },
+    })
+    await db.program.deleteMany({ where: { id: fx.programId } })
+    await db.organization.deleteMany({ where: { id: fx.organizationId } })
+    await db.user.deleteMany({ where: { id: { in: [fx.userId, fx.instructorUserId] } } })
+    await db.discipline.deleteMany({ where: { id: fx.disciplineId } })
+    const rolesToDelete: string[] = []
+    if (fx.createdOwnerRole) rolesToDelete.push(fx.ownerRoleId)
+    if (fx.createdInstructorRole) rolesToDelete.push(fx.instructorRoleId)
+    if (rolesToDelete.length > 0) {
+      await db.role.deleteMany({ where: { id: { in: rolesToDelete } } })
+    }
+  }
+
+  // (2) Sweep: any zombie `actions-test-*` rows left by prior crashed runs.
+  //     Order matters — leaves before edges before nodes.
+  const zombieOrgs = await db.organization.findMany({
+    where: { name: { startsWith: TAG_PREFIX } },
+    select: { id: true },
+  })
+  const zombieOrgIds = zombieOrgs.map(o => o.id)
+
+  const zombieUsers = await db.user.findMany({
+    where: { name: { startsWith: TAG_PREFIX } },
+    select: { id: true },
+  })
+  const zombieUserIds = zombieUsers.map(u => u.id)
+
+  if (zombieUserIds.length > 0) {
+    await db.auditLog.deleteMany({ where: { userId: { in: zombieUserIds } } })
+  }
+  if (zombieOrgIds.length > 0) {
+    await db.classInstructorAssignment.deleteMany({
+      where: { classSchedule: { organizationId: { in: zombieOrgIds } } },
+    })
+    await db.classSchedule.deleteMany({ where: { organizationId: { in: zombieOrgIds } } })
+    await db.membershipRoleAssignment.deleteMany({
+      where: { membership: { organizationId: { in: zombieOrgIds } } },
+    })
+    await db.membership.deleteMany({ where: { organizationId: { in: zombieOrgIds } } })
+    await db.organizationDiscipline.deleteMany({
+      where: { organizationId: { in: zombieOrgIds } },
+    })
+    await db.program.deleteMany({ where: { organizationId: { in: zombieOrgIds } } })
+    await db.organization.deleteMany({ where: { id: { in: zombieOrgIds } } })
+  }
+  if (zombieUserIds.length > 0) {
+    await db.user.deleteMany({ where: { id: { in: zombieUserIds } } })
+  }
+  await db.discipline.deleteMany({ where: { name: { startsWith: TAG_PREFIX } } })
+  // Roles created by this test family use a tagged `name` (e.g. "actions-test-...-OWNER")
+  // even when reusing canonical OWNER/INSTRUCTOR codes. Only delete tagged roles
+  // — never touch system roles whose names don't carry the prefix.
+  await db.role.deleteMany({ where: { name: { startsWith: TAG_PREFIX } } })
+
   await db.$disconnect()
 })
 

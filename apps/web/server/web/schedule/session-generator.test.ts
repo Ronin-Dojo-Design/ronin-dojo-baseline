@@ -159,6 +159,55 @@ describe("generateSessionPlan", () => {
     ])
   })
 
+  // DST contract: generator stores wall-clock time strings; transitions must not shift them.
+  it("DST spring-forward (US 2026-03-08) — wall-clock time strings unchanged across the boundary", () => {
+    // 2026-03-08 (Sun) is the US spring-forward; the affected MON is 2026-03-09.
+    // Schedule MON 17:00–18:00 in America/Denver. The generator stores the
+    // schedule's wall-clock strings on the ClassSession row; clocks springing
+    // forward one hour must NOT shift "17:00"/"18:00".
+    const plan = generateSessionPlan({
+      schedule: {
+        daysOfWeek: ["MON"],
+        startTime: "17:00",
+        endTime: "18:00",
+        effectiveFrom: utc("2026-03-09"),
+        effectiveTo: utc("2026-03-15"),
+        status: "ACTIVE",
+      },
+      existingSessions: [],
+      windowStart: utc("2026-03-09"),
+      windowEnd: utc("2026-03-15"),
+    })
+
+    expect(plan.toCreate.length).toBe(1)
+    expect(plan.toCreate[0].startTime).toBe("17:00")
+    expect(plan.toCreate[0].endTime).toBe("18:00")
+  })
+
+  // DST contract: generator stores wall-clock time strings; transitions must not shift them.
+  it("DST fall-back (US 2026-11-01) — wall-clock time strings unchanged across the boundary", () => {
+    // 2026-11-01 (Sun) is the US fall-back; the affected MON is 2026-11-02.
+    // Schedule MON 17:00–18:00 in America/Denver. Clocks falling back one hour
+    // must NOT shift the stored "17:00"/"18:00" wall-clock strings.
+    const plan = generateSessionPlan({
+      schedule: {
+        daysOfWeek: ["MON"],
+        startTime: "17:00",
+        endTime: "18:00",
+        effectiveFrom: utc("2026-11-02"),
+        effectiveTo: utc("2026-11-08"),
+        status: "ACTIVE",
+      },
+      existingSessions: [],
+      windowStart: utc("2026-11-02"),
+      windowEnd: utc("2026-11-08"),
+    })
+
+    expect(plan.toCreate.length).toBe(1)
+    expect(plan.toCreate[0].startTime).toBe("17:00")
+    expect(plan.toCreate[0].endTime).toBe("18:00")
+  })
+
   it("PAUSED schedule generates no new sessions but still cancels stale future with attendance", () => {
     const plan = generateSessionPlan({
       schedule: {
