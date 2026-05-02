@@ -40,6 +40,11 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(30, "1 m"), // 30 instructor lookups per minute per actor
       }),
+      attendance_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(30, "1 m"), // 30 attendance/check-in mutations per minute per actor
+      }),
     }
   : null
 

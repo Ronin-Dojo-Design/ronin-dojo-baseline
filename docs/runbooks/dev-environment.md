@@ -4,9 +4,10 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-01
-last_agent: claude-session-0031-5
-use_count: 0backlinks:
+updated: 2026-05-02
+last_agent: codex-session-0032
+use_count: 0
+backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
   - docs/protocols/failed-steps-log.md

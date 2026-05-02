@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-02
-last_agent: claude-session-0031-5
+last_agent: codex-session-0032
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -118,6 +118,14 @@ Three sections:
 - **Seed data:** yes — martial-arts `Tool` entries for Baseline Martial Arts, Black Belt Legacy, WEKAF USA, Ronin Dojo Design, USA Stick Fighting, Black Belt Wiki, and Smoothcomp
 - **Smoke test:** `bunx biome check --write` on touched code passed; `bun run db:generate` passed; `bunx prisma validate --schema prisma/schema.prisma` passed; `bun run wiki:lint` passed; `git diff --check` passed; `curl -H "Host: baseline.local" http://localhost:3000/submit` returned 200; `curl -H "Host: baseline.local" http://localhost:3000/advertise` returned 200. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues, with no errors reported in the roadmap-touched code paths after Prisma generate.
 
+### S32_ATTENDANCE_WRITE — Attendance/check-in write surface
+- **Session:** SESSION_0032
+- **Sprint:** S2 / School operations lane
+- **Status:** ✅ verified with known full-typecheck baseline debt
+- **Files:** `apps/web/server/web/attendance/*`, `apps/web/server/web/school-ops/audit.ts`, `apps/web/server/web/schedule/audit.ts`, `apps/web/lib/rate-limiter.ts`, `apps/web/scripts/smoke-attendance.ts`
+- **Seed data:** no durable seed changes; tests and smoke use tagged dev-DB fixtures with cleanup.
+- **Smoke test:** `bun test server/web/attendance/actions.test.ts` 7/7; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed allow/deny/idempotency matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the attendance/school-ops touched paths.
+
 ---
 
 ## Task plan log
@@ -174,6 +182,9 @@ Three sections:
 | SESSION_0031_5_TASK_04 | SESSION_0031.5 | Core platform governance | Cody + Petey | `dev-environment.md` fresh-worktree bootstrap section | Section exists with copy-pasteable `bun install` / `.env` copy / `bunx prisma generate` / verification commands; cross-linked from `cody-preflight.md` step 5 | landed | SESSION_0031_5_REVIEW_01 |
 | SESSION_0031_5_TASK_05 | SESSION_0031.5 | School operations | Cody + Doug | Materialize instrumentation (batch optimization deferred until evidence) | `materializeSchedule` logs `created/cancelled/deleted/refreshed/duration` per call; close evidence records that batch upserts were deferred per Kaizen reasoning | landed (instrumentation-only) | SESSION_0031_5_REVIEW_01 |
 | SESSION_0031_5_TASK_06 | SESSION_0031.5 | School operations | Doug + Cody + Giddy | DST + concurrency tests for schedule materialization | Two DST cases (spring-forward, fall-back) added to `session-generator.test.ts`; new `materialize.concurrency.test.ts` proves no duplicate `(classScheduleId, date)` rows under parallel `materializeSchedule` calls | landed | SESSION_0031_5_REVIEW_01 |
+| SESSION_0032_TASK_01 | SESSION_0032 | School operations | Cody + Giddy + Doug | Attendance actions, audit, and rate limits | `recordCheckIn`, `markAttendance`, and `voidCheckIn` exist under `server/web/attendance/*`; staff-only same-brand/org writes are catalog-error-only, idempotent, `attendance_write` rate-limited, and AuditLogged | landed | SESSION_0032_REVIEW_01 |
+| SESSION_0032_TASK_02 | SESSION_0032 | School operations | Doug + Cody | Rejection matrix smoke and monitoring row | Attendance action tests cover audit/rate-limit behavior; `smoke-attendance.ts` proves allow/deny matrix; monitoring doc names `attendance_write` | landed | SESSION_0032_REVIEW_01 |
+| SESSION_0032_TASK_03 | SESSION_0032 | School operations + close | Petey + Doug | Full close evidence and LLM-agnostic handoff | SESSION_0032 closed-full with verification commands, hostile review, WORKFLOW score, open findings, and SESSION_0033 recommendation | landed | SESSION_0032_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
@@ -419,3 +430,65 @@ Three sections:
 - **SESSION_0031_5_FINDING_03** — Instrumentation format not parsed by any test. **Severity:** low. **Task:** TASK_05. **Evidence:** `console.info` line emits a formatted string; no test asserts the format. **Impact:** a refactor could silently change the format. **Required follow-up:** add a format-shape assertion when Brian first needs to query the log. **Status:** accepted-risk.
 
 **Verdict:** Slice ships at WORKFLOW rubric **10.0/10** and Kaizen aggregate **9/10**. SESSION_0032 (attendance/check-in) is unblocked. The three findings above are low-severity; none block downstream work.
+
+### SESSION_0032_REVIEW_01 - Attendance/check-in write surface full close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0032_TASK_01, SESSION_0032_TASK_02, SESSION_0032_TASK_03.
+
+**Score: 10.0/10** - Attendance/check-in write surface landed with no schema
+changes, no UI scope creep, and no hard caps triggered.
+
+**Dirstarter docs check:** cached docs sufficient. This session extends the
+same Dirstarter-aligned layers already live in the schedule slice:
+`server/web/*` feature folders, `userActionClient`, Better Auth session, Prisma
+client, centralized rate limiter, and AuditLog. No Dirstarter-owned layer was
+replaced.
+
+**Sources:** `docs/sprints/SESSION_0032.md`,
+`apps/web/server/web/attendance/*`, `apps/web/server/web/school-ops/audit.ts`,
+`apps/web/server/web/schedule/audit.ts`, `apps/web/lib/rate-limiter.ts`,
+`apps/web/scripts/smoke-attendance.ts`,
+`docs/architecture/security-privacy-payments-monitoring-plan.md`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* Three-task plan held. The slice stayed write-surface
+  only: no UI, no roster page, no QR/kiosk UI, no waivers, no billing, no
+  entitlement checks, no schema changes.
+- *Dirstarter compliance (Giddy):* Pure extension of existing server feature
+  folder and safe-action patterns. Generic `writeSchoolOpsAudit` was added with
+  `writeScheduleAudit` re-exported for compatibility, so the schedule slice did
+  not regress.
+- *Security (Doug):* `recordCheckIn`, `markAttendance`, and `voidCheckIn` all
+  derive brand from `getRequestBrand`, resolve ClassSession through
+  ClassSchedule, check `canEditOrganization`, require active same-org target
+  membership, use `attendance_write`, and throw only `ATTENDANCE_ERROR`
+  literals.
+- *Data integrity (Doug):* Idempotency is anchored on
+  `Attendance @@unique([userId, classSessionId])` and
+  `CheckIn.matchedToAttendanceId @unique`. Repeated check-in keeps one
+  Attendance plus one matched CheckIn. Void unlinks the raw CheckIn and keeps
+  the Attendance row for correction.
+- *Verification honesty (Doug):* `bun test server/web/attendance/actions.test.ts`
+  7/7; `bun test server/web/schedule/ server/web/attendance/` 22/22;
+  `bun scripts/smoke-attendance.ts` passed; `bunx prisma validate --schema
+  prisma/schema.prisma` passed; `git diff --check` passed. Full
+  `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline
+  issues outside attendance/school-ops touched files.
+- *WORKFLOW 5.0 compliance (Petey):* Bow-in, Dirstarter alignment, Petey plan,
+  TASK_PLAN_LOG entries, schema/backend pre-flight, subagent budget note,
+  hostile close review, wiki/index sweep, and next-session handoff are recorded.
+
+**Findings:**
+
+- **SESSION_0032_FINDING_01** - Full app typecheck remains blocked by
+  pre-existing baseline debt (`PageProps`/`RouteContext`, content-collections
+  generated types, auth role typing, passport enum drift, S3 env typing). No
+  errors referenced `server/web/attendance`, `server/web/school-ops`,
+  `scripts/smoke-attendance.ts`, or the rate-limiter/audit touched files.
+  **Severity:** medium for repo health, low for this slice. **Status:** open.
+
+**Verdict:** SESSION_0032 ships at WORKFLOW rubric **10.0/10**. SESSION_0033
+can proceed to Program enrollments / family groups / waivers / trial lifecycle
+unless the owner chooses to spend the next session on the existing full
+typecheck baseline debt.
