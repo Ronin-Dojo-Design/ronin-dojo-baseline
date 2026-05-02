@@ -38,6 +38,8 @@ export const directoryProfileOnePayload = {
   showPhone: true,
   showOrgs: true,
   showRanks: true,
+  coverPhotoUrl: true,
+  videoIntroUrl: true,
   createdAt: true,
   updatedAt: true,
   userId: true,

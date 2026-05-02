@@ -4,8 +4,8 @@ slug: hostile-close-review
 type: protocol
 status: active
 created: 2026-04-29
-updated: 2026-05-01
-last_agent: claude-session-0031
+updated: 2026-05-02
+last_agent: codex-session-0032-5
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -77,7 +77,9 @@ Answer these in hostile-review language, then record findings in
 `TASK_REVIEW_LOG`.
 
 1. **Plan sanity:** Was the plan actually good, or did it paper over an
-   invalid assumption?
+   invalid assumption? If the work touched a Dirstarter-owned layer, did the
+   plan use the relevant live Dirstarter docs as the implementation template
+   before Cody started?
 2. **Dirstarter compliance:** Did this extend Dirstarter's baseline, or quietly
    replace/bypass it?
 3. **Security:** Did the work expose or prepare sensitive data paths without
@@ -105,7 +107,9 @@ review-questions verdict.
 2. **How many failed steps could we have prevented? What would I do better
    next time to plan for no failed steps or missed protocols?** Count concrete
    process slips this session and the smallest protocol change that would
-   prevent each class.
+   prevent each class. Also name any planning/process simplification that would
+   save time without reducing proof, security, Dirstarter alignment, or
+   workflow honesty.
 3. **Confidence 1–10 that the code does what it needs to do at scale of 100,
    1,000, and 10,000 without breakage, leakage, and efficiently?** Score each
    tier separately; aggregate is the lowest tier the slice will plausibly hit
