@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-28
-last_agent: copilot-session-0026
+updated: 2026-05-01
+last_agent: claude-session-0031-5
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -169,3 +169,50 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   - Protocol count reduced from 14 to 11 (3 merged into 1)
   - Every remaining protocol either active-enforced or explicitly wired into a ritual
 - **Status:** mitigated — SESSION_0027 reduced protocol surface, merged redundant logs, wired unenforced docs into active touchpoints, and expanded pre-flight to cover all work types.
+
+### FS-0008 — Primitive API and Prisma enum lookups skipped during pre-flight
+
+- **Session:** SESSION_0031
+- **Agent:** Cody
+- **Step failed:** Cody pre-flight Component checklist (L1 template scan) and
+  Schema checklist (Existing schema scan) — neither sub-step required reading
+  the actual primitive component files or the actual `schema.prisma` source
+  before composing/importing them. Cody inferred prop shapes and enum spellings
+  from plan prose instead of from source.
+- **SOP source:** `docs/protocols/cody-preflight.md` — Component checklist
+  field 2 (L1 template scan), Schema checklist field 3 (Existing schema scan).
+- **Root cause:** Pre-flight allowed "matched L1 pattern" / "related models
+  listed" without proof that the actual prop names, variant unions, enum
+  values, or field types had been read from source. Plan prose used the
+  human-natural spelling `CANCELLED` and described primitives by behavior
+  rather than by exact API; Cody copied that prose into the implementation.
+  Both classes of mistake were caught only at typecheck time, not at
+  pre-flight.
+- **Impact:** During SESSION_0031 schedule-slice work, two recurring slips
+  surfaced: (a) `Avatar` and `Badge variant` props were imported with the
+  wrong shape (e.g., a non-existent `size` value or a missing required prop)
+  and had to be reworked after typecheck failed; (b) a Prisma enum reference
+  used the spelling `CANCELLED` when the actual enum value defined in
+  `schema.prisma` was `CANCELED`. Both required edit-and-retypecheck loops
+  that pre-flight was supposed to prevent. Pattern matches FS-0001's class —
+  agent skipped a documented inspection step because the protocol allowed a
+  vague checkmark instead of a paste-from-source artifact.
+- **Corrective action:**
+  1. `docs/protocols/cody-preflight.md` Component checklist field 2 now
+     requires a "Primitive API spot-check" sub-step: read each composed
+     primitive's `components/common/<name>.tsx` file and paste the exposed
+     prop names + variant string union into the pre-flight output. Importing
+     a primitive without listing its props is itself a FAILED_STEPS violation.
+  2. `docs/protocols/cody-preflight.md` Schema checklist field 3 now requires
+     a "Schema spot-check" sub-step: read each touched Prisma model and enum
+     directly from `schema.prisma` and paste the exact enum values and back-
+     relation field names into the pre-flight output. Inferring enum spelling
+     from plan prose is itself a FAILED_STEPS violation.
+  3. Both sub-steps include concrete examples of correct pre-flight output so
+     the bar is unambiguous.
+- **Verification:** Future SESSION pre-flight artifacts must contain the
+  primitive-prop list and the enum-paste-from-source list. Doug's bow-out
+  scan flags any pre-flight that names a primitive or enum without those
+  fields. The cody-preflight update landed in SESSION_0031.5 TASK_03 is the
+  verification artifact.
+- **Status:** mitigated

@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-02
+last_agent: claude-session-0031-5
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -165,9 +165,15 @@ Three sections:
 | SESSION_0030_TASK_02 | SESSION_0030 | School operations | Cody + Desi + Doug | Instructor assignments and ClassSession basics | Schedule shows assigned instructors and upcoming sessions without touching attendance | superseded by SESSION_0031_TASK_02 | SESSION_0030_REVIEW_01 |
 | SESSION_0030_TASK_03 | SESSION_0030 | School operations | Doug + Cody | Fixtures, smoke proof, and close evidence | Schedule slice has targeted fixtures, smoke script, and verification evidence | superseded by SESSION_0031_TASK_03 | SESSION_0030_REVIEW_01 |
 | SESSION_0030_TASK_04 | SESSION_0030 | Core platform governance | Codex (Petey) | Bow-out prep refactor: centralize brand-context + add MB-014 + create SESSION_0031 plan | `apps/web/lib/brand-context.ts` exists; `proxy.ts` and `server/web/program/actions.ts` import from it; WORKFLOW_5.0 calendar patched; MB-014 registered; SESSION_0031.md planned with all 11 SESSION_0030 hostile-review gates folded in | landed | SESSION_0030_REVIEW_01 |
-| SESSION_0031_TASK_01 | SESSION_0031 | School operations | Cody + Giddy + Doug | ClassSchedule aggregate (Schedule + Instructor Assignment) with security gates 1-5, 7-9, 11 wired into done-criteria | Authorized org editor creates/edits/archives schedules; cross-brand/cross-org/unauthenticated all rejected; instructor selector limited to ACTIVE same-org OWNER/ORG_ADMIN/INSTRUCTOR; rate-limit + error-catalog + AuditLog (or written waiver) in place | planned | — |
-| SESSION_0031_TASK_02 | SESSION_0031 | School operations | Cody + Desi + Doug | ClassSession materialization (bounded + idempotent) with security gates 6 + 11 | 90-day bounded generation; never deletes a session with attached Attendance (sets CANCELED); public schedule surface exposes only safe fields | planned | — |
-| SESSION_0031_TASK_03 | SESSION_0031 | School operations | Doug + Cody | Fixtures, rejection-matrix smoke proof, monitoring update, close evidence; security gate 10 | `apps/web/scripts/smoke-schedule.ts` proves rejection matrix; `security-privacy-payments-monitoring-plan.md` adds rate-limiter-unavailable signal; full close evidence rendered | planned | — |
+| SESSION_0031_TASK_01 | SESSION_0031 | School operations | Cody + Giddy + Doug | ClassSchedule aggregate (Schedule + Instructor Assignment) with security gates 1-5, 7-9, 11 wired into done-criteria | Authorized org editor creates/edits/archives schedules; cross-brand/cross-org/unauthenticated all rejected; instructor selector limited to ACTIVE same-org OWNER/ORG_ADMIN/INSTRUCTOR; rate-limit + error-catalog + AuditLog (or written waiver) in place | landed | SESSION_0031_REVIEW_01 |
+| SESSION_0031_TASK_02 | SESSION_0031 | School operations | Cody + Desi + Doug | ClassSession materialization (bounded + idempotent) with security gates 6 + 11 | 90-day bounded generation; never deletes a session with attached Attendance (sets CANCELLED — schema spelling); public schedule surface exposes only safe fields | landed | SESSION_0031_REVIEW_01 |
+| SESSION_0031_TASK_03 | SESSION_0031 | School operations | Doug + Cody | Fixtures, rejection-matrix smoke proof, monitoring update, close evidence; security gate 10 | `apps/web/scripts/smoke-schedule.ts` proves rejection matrix; `security-privacy-payments-monitoring-plan.md` adds rate-limiter-unavailable signal; full close evidence rendered | landed | SESSION_0031_REVIEW_01 |
+| SESSION_0031_5_TASK_01 | SESSION_0031.5 | School operations | Cody + Giddy + Doug | Pagination + status filter on schedule list page | `getSchedulesByProgramPaginated` query exists with explicit `{brand,organizationId}` predicate; list page uses nuqs query params; default 20 / max 50; existing smoke still passes | landed | SESSION_0031_5_REVIEW_01 |
+| SESSION_0031_5_TASK_02 | SESSION_0031.5 | School operations | Doug + Cody | Action-level test proving gates 4 + 9 fire under the real action stack | `apps/web/server/web/schedule/actions.test.ts` covers `saveSchedule`/`assignInstructor`/`archiveSchedule`; asserts `AuditLog` row created and `RATE_LIMITED` literal thrown when limiter blocks | landed | SESSION_0031_5_REVIEW_01 |
+| SESSION_0031_5_TASK_03 | SESSION_0031.5 | Core platform governance | Petey + Doug | `cody-preflight.md` primitive + schema spot-check sub-steps | UI checklist requires reading `components/common/<name>.tsx` and recording exposed props; schema checklist requires reading enums + relation directions from `schema.prisma`; FAILED_STEPS entry mitigated | landed | SESSION_0031_5_REVIEW_01 |
+| SESSION_0031_5_TASK_04 | SESSION_0031.5 | Core platform governance | Cody + Petey | `dev-environment.md` fresh-worktree bootstrap section | Section exists with copy-pasteable `bun install` / `.env` copy / `bunx prisma generate` / verification commands; cross-linked from `cody-preflight.md` step 5 | landed | SESSION_0031_5_REVIEW_01 |
+| SESSION_0031_5_TASK_05 | SESSION_0031.5 | School operations | Cody + Doug | Materialize instrumentation (batch optimization deferred until evidence) | `materializeSchedule` logs `created/cancelled/deleted/refreshed/duration` per call; close evidence records that batch upserts were deferred per Kaizen reasoning | landed (instrumentation-only) | SESSION_0031_5_REVIEW_01 |
+| SESSION_0031_5_TASK_06 | SESSION_0031.5 | School operations | Doug + Cody + Giddy | DST + concurrency tests for schedule materialization | Two DST cases (spring-forward, fall-back) added to `session-generator.test.ts`; new `materialize.concurrency.test.ts` proves no duplicate `(classScheduleId, date)` rows under parallel `materializeSchedule` calls | landed | SESSION_0031_5_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
@@ -350,3 +356,66 @@ Three sections:
 **Sources:** `docs/rituals/closing.md`, `docs/protocols/hostile-close-review.md`, `docs/protocols/review-recommend.md`, `docs/architecture/decisions/0005-legacy-coexistence.md`, prior live Dirstarter sources recorded in `ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01`.
 
 **Verdict:** The close is honest about the protocol exception: the owner asked for a roadmap rather than a numbered `SESSION_0029.md`, so the close artifact lives in the roadmap synthesis and Project Log. JETTY/frontmatter and backlinks are covered for the wiki/protocol layer. The accidental WordPress public directory is marked as MB-012 and not deleted without explicit approval. Next session is unblocked for the planned School Ops class schedules work.
+
+### SESSION_0031_REVIEW_01 — Class schedules execution full close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0031_TASK_01, SESSION_0031_TASK_02, SESSION_0031_TASK_03
+
+**Score: 10.0/10** — All eleven security gates verified with concrete proof artifacts in `docs/sprints/SESSION_0031.md` (gate-by-gate table). No hard caps triggered.
+
+**Dirstarter docs check:** Live docs were re-verified at execution start per the SESSION plan. Slice extends `server/web/program/*` patterns, `userActionClient`, `services/db`, `~/components/common/*`, and Better Auth without replacing any baseline layer. Sources: [project structure](https://dirstarter.com/docs/codebase/structure), [Prisma](https://dirstarter.com/docs/database/prisma), [authentication](https://dirstarter.com/docs/authentication), [rate limiting](https://dirstarter.com/docs/integrations/rate-limiting), [environment setup](https://dirstarter.com/docs/environment-setup), [deployment](https://dirstarter.com/docs/deployment).
+
+**Sources:** `docs/sprints/SESSION_0031.md`, `docs/sprints/SESSION_0030.md`, `apps/web/server/web/schedule/*`, `apps/web/scripts/smoke-schedule.ts`, `apps/web/lib/rate-limiter.ts`, `apps/web/next.config.ts`, `docs/architecture/security-privacy-payments-monitoring-plan.md`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* slice followed the SESSION_0030 plan literally. No scope creep into attendance/billing/entitlements/CGR. Brand predicates explicit on every read and write — verified by grep. ✅
+- *Dirstarter alignment (Giddy):* extension only; no parallel `server/cgr/*` folder, no new route group, no duplicate brand resolution path. ✅
+- *Security (Doug):* all 11 gates green. Gate 10 rejection matrix passes 9/9 cases including the proxy-overwrite simulation. Gate 5 verified COACH role excluded from instructor selector. Gate 6 verified attended future sessions are CANCELLED, not deleted. Rate-limiter monitoring row added. ✅
+- *Data integrity (Doug):* schema unchanged this slice; aggregate boundary held — instructor and session writes go through the schedule action surface. AuditLog rows written for all 7 mutation types. ✅
+- *Verification honesty (Doug):* `bunx prisma validate` ✅, `bunx prisma generate` ✅, 6/6 unit tests ✅, smoke matrix 9/9 ✅, touched-slice typecheck clean (only env-only repo-wide PageProps/RouteContext errors remain — not introduced by this slice and known to require `next build`/typed-routes generation). `bun run wiki:lint` 124/124 clean. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Petey orchestrated; Cody pre-flight produced as artifact in SESSION file before code; three-pass review loop run; score recorded; next-session handoff written. ✅
+
+**Findings:**
+
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
+
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
+
+### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
+
+**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
+
+**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
+
+**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
+- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
+- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
+- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
+- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
+- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
+
+**Kaizen reflection triage (Q1/Q2/Q3):**
+
+- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
+- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
+
+**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
+
+**Findings:**
+
+- **SESSION_0031_5_FINDING_01** — Subagent tool-call ceiling not budgeted. **Severity:** low. **Task:** wave 2 dispatch (TASK_05/06 + teardown fix). **Evidence:** agent `a8b08a5daecab86fc` returned at 25 tool uses with no completion summary; orchestrator picked up partial work to finish verify + commit. **Impact:** ~10 minutes of orchestrator overhead. **Required follow-up:** when dispatching multi-task subagents, split work expected to exceed ~20 tool uses into sequential dispatches; record the budget in the prompt. Saved as a feedback memory in operator-side memory. **Status:** open.
+- **SESSION_0031_5_FINDING_02** — `dev-environment.md` has pre-existing malformed YAML at `use_count: 0backlinks:`. **Severity:** low. **Task:** discovered during TASK_04 (out of scope). **Evidence:** `docs/runbooks/dev-environment.md` line 9 — missing newline causes YAML parser to read `backlinks` as part of `use_count`'s value. **Impact:** invisible to wiki:lint; breaks any tool reading frontmatter via a strict YAML parser. **Required follow-up:** 1-line surgical patch in a future docs commit. **Status:** open.
+- **SESSION_0031_5_FINDING_03** — Instrumentation format not parsed by any test. **Severity:** low. **Task:** TASK_05. **Evidence:** `console.info` line emits a formatted string; no test asserts the format. **Impact:** a refactor could silently change the format. **Required follow-up:** add a format-shape assertion when Brian first needs to query the log. **Status:** accepted-risk.
+
+**Verdict:** Slice ships at WORKFLOW rubric **10.0/10** and Kaizen aggregate **9/10**. SESSION_0032 (attendance/check-in) is unblocked. The three findings above are low-severity; none block downstream work.
