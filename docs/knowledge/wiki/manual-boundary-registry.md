@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-03
 author: Brian + ChatGPT
-last_agent: codex-session-0030
+last_agent: copilot-session-0039
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -74,13 +74,13 @@ Blocker classes:
 | MB-002 | brand scope hardening | Decide and implement Prisma brand-scope enforcement layer | Cody | auth_decision | code path + test evidence + updated auth doc | open |
 | MB-003 | brand switcher | Finish `activeBrandId` persistence + switch flow + smoke proof | Cody | runtime_proof | working end-to-end flow, session survives reload | open |
 | MB-004 | S2 Passport bootstrap | Convert "code complete / smoke pending" into verified flow | Cody + Doug | qa_proof | signup -> Passport stub -> DirectoryProfile stub smoke proof | verified |
-| MB-005 | transitional cleanup | Remove Dirstarter reference models before prod or formally quarantine them | Petey + Cody | cleanup | tracked removal plan or quarantine ADR | open |
+| MB-005 | transitional cleanup | Remove Dirstarter reference models before prod or formally quarantine them | Petey + Cody | cleanup | tracked removal plan or quarantine ADR | verified — SESSION_0039: D-014 decided Option B (repurpose Tool → Directory Listing). No removal; relabel in future session. See `dirstarter-baseline-index.md` §14 |
 | MB-006 | Baseline rollout | Approve Baseline-first public rollout surfaces and alias rules | Brandon + owner | brand_migration | approved alias map + rollout checklist | open |
 | MB-007 | staging deploy | Vercel + Neon staging environment proof | Cody + Doug | deploy_env | deploy succeeds + smoke checklist passes | open |
 | MB-008 | docs/wiki quality | Backlinks and doc health upgrades on key pages | Petey + Doug | docs_wiring | wiki lint pass + index updates | open |
 | MB-009 | content engine path | Decide current truth split: MDX-only now vs ContentAtom-backed intake-to-publish path | Petey + Iggy + owner | content_system_decision | written policy + phased adoption plan | open |
 | MB-010 | legacy migration | Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone | Petey + owner | brand_migration | updated program lane note | open |
-| MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | open |
+| MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | verified — SESSION_0039: D-014 Option B. Tool stays and is repurposed as Directory Listing. Stripe tiers (Free/Standard/Premium) map to listing tiers. Relabel UI in future session. |
 | MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
 | MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, payment/entitlement drift audit, and launch-readiness signoff | open |
 | MB-014 | production multi-domain + server action hardening | Production-only manual steps that block staging/launch but are out of code scope: register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, Plausible | owner + Cody | deploy_env | Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run | open |
@@ -97,11 +97,11 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 
 **MB-004 — Passport bootstrap.** ~~Program plan notes this is code complete but still needs smoke proof. That makes this a perfect tracked manual boundary instead of a vague "almost done."~~ **VERIFIED SESSION_0011:** `scripts/smoke-passport.ts` proves User→Passport→DirectoryProfile creation, read, update, re-read, and default verification. Proof artifact: `apps/web/scripts/smoke-passport.ts` + passing run log.
 
-**MB-005 — Dirstarter residue.** The schema literally marks template models for future removal before production. That should stay visible until handled.
+**MB-005 — Dirstarter residue.** ~~The schema literally marks template models for future removal before production. That should stay visible until handled.~~ **VERIFIED SESSION_0039:** D-014 decided Option B — repurpose Tool as Directory Listing. The ~30 Tool-related files provide a complete CRUD + submission + Stripe pipeline that maps directly to the school directory. No removal; UI relabel in a future session. See `docs/architecture/dirstarter-baseline-index.md` §14.
 
 **MB-009 — Content system path.** The repo has MDX blog content now, ContentAtom-style schema direction, and a wiki/docs/session knowledge layer. This needs a crisp operating rule so the system does not fork into three half-truths.
 
-**MB-011 — Directory monetization model.** The roadmap intentionally reuses Dirstarter `Tool` and `Ad` for near-term paid listing proof. Before production, decide whether that remains the canonical paid listing substrate, gets renamed/promoted into a generic `DirectoryListing`, or is replaced by paid overlays on `Organization`, `Program`, and `Event`.
+**MB-011 — Directory monetization model.** ~~The roadmap intentionally reuses Dirstarter `Tool` and `Ad` for near-term paid listing proof. Before production, decide whether that remains the canonical paid listing substrate, gets renamed/promoted into a generic `DirectoryListing`, or is replaced by paid overlays on `Organization`, `Program`, and `Event`.~~ **VERIFIED SESSION_0039:** D-014 decided Option B — Tool stays as the paid directory listing substrate, repurposed with a UI relabel to "Listing" or "Directory Entry". Stripe tiers (Free/Standard/Premium) map to directory listing visibility tiers. The `Ad` system also stays as-is for sponsored placements.
 
 **MB-012 — Local WordPress public directory cleanup.** The session began in `/Users/brianscott/Local Sites/ronin-dojo/app/public/` because VS Code was opened from the Local by Flywheel WordPress site. ADR 0005 already says that install is abandoned and irrelevant to the new stack. Do not delete it silently; verify the path and get owner approval first.
 

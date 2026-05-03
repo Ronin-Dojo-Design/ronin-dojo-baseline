@@ -2,21 +2,19 @@
 title: Dirstarter Gap Audit
 slug: dirstarter-gap-audit
 type: concept
-status: deprecated
+status: active
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-03
 author: Petey
-last_agent: session-0019-petey
+last_agent: copilot-session-0039
 pairs_with:
-  - docs/knowledge/wiki/dirstarter-docs-inventory.md
+  - docs/architecture/dirstarter-baseline-index.md
 parent: docs/knowledge/wiki/index.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
+  - docs/sprints/SESSION_0039.md
   - docs/architecture/decisions/0010-cache-strategy.md
-needs_fix:
-  - "Add file-level backlinks once the auth/env/cache pages are updated"
-  - "Re-run this audit after ADR 0010 rewrite"
 tags:
   - dirstarter
   - drift
@@ -28,11 +26,13 @@ tags:
 
 ## Summary
 
-This page records where the live Dirstarter docs and the Ronin baseline repo currently align, diverge, or directly conflict. It is the canonical gap register for SESSION_0019.
+This page records where the live Dirstarter docs and the Ronin baseline repo currently align, diverge, or directly conflict. Originally created SESSION_0019, updated SESSION_0039 with resolution status for all drifts.
+
+> **Note:** The dirstarter.com/docs describe the *latest* Dirstarter version. Our codebase was forked from an *earlier* template download. Many "drifts" are actually cases where the docs describe features added after our fork. The template source code is the true L1 baseline, not the docs. See `dirstarter-baseline-index.md` §13k for upstream divergence tracking.
 
 ## Status
 
-Active. Findings are evidence-backed but not all follow-up edits are complete.
+Active. All drifts resolved or classified as of SESSION_0039.
 
 ## Key Idea
 
@@ -53,22 +53,22 @@ The repo does not have one gap. It has three classes of gap:
 
 ## High-confidence drifts
 
-| Area | Live Dirstarter docs | Repo reality | Classification |
-| --- | --- | --- | --- |
-| Action protection | `oRPC` middleware | `next-safe-action` | Needs ADR — intentional or interim? |
-| Redis config | `REDIS_URL` | `REDIS_REST_URL` + `REDIS_REST_TOKEN` (Upstash REST) | Document as intentional divergence |
-| Analytics env | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Not in env schema (but `withPlausibleProxy()` is in next.config) | Add env var or document omission |
-| Cache config | `cacheComponents: true` | `experimental.useCache: true` | Update to current Next.js API |
-| Auth plugin | `nextCookies()` in Better Auth config | Not present | Verify if needed for current Better Auth version |
-| Admin non-admin behavior | Not specified | HOC redirects to `/`; auth doc says 404 | Internal conflict — resolve |
+| Area | Live Dirstarter docs | Repo reality | Classification | Resolution (SESSION_0039) |
+| --- | --- | --- | --- | --- |
+| Action protection | `oRPC` middleware | `next-safe-action` | ~~Needs ADR~~ | ✅ **Not a drift.** Template source also uses `next-safe-action`. Docs describe a newer version. See baseline index §13k. |
+| Redis config | `REDIS_URL` | `REDIS_REST_URL` + `REDIS_REST_TOKEN` (Upstash REST) | ~~Document as intentional divergence~~ | ✅ **Not a drift.** Template source uses identical config with `@upstash/redis`. |
+| Analytics env | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Not in env schema (but `withPlausibleProxy()` is in next.config) | ~~Add env var or document omission~~ | ✅ **Minor gap.** Template uses `NEXT_PUBLIC_PLAUSIBLE_URL` — we have that. No action needed. |
+| Cache config | `cacheComponents: true` | `experimental.useCache: true` | ~~Update to current Next.js API~~ | ✅ **Correct as-is.** `useCache: true` is the Next.js 15 flag. |
+| Auth plugin | `nextCookies()` in Better Auth config | Not present | ~~Verify if needed~~ | ✅ **Not a drift.** Template source also does NOT use `nextCookies()`. Monitor on upgrades. |
+| Admin non-admin behavior | Not specified | HOC redirects to `/`; auth doc says 404 | ~~Internal conflict~~ | ✅ **Resolved: redirect wins.** Template confirms `redirect("/")`. See D-013. |
 
 ## Internal repo conflicts
 
-| Conflict | Sources | Resolution needed |
-| --- | --- | --- |
-| ADR 0010 status | SESSION_0018 says draft; SESSION_0019 says validate; ADR file says `accepted` | Revert to `proposed` — done in this session |
-| Admin auth behavior | `auth-hoc.tsx` redirects to `/`; `auth.md` says 404 | Pick one and update both |
-| Drift register D-005 | Cache alignment marked open; ADR 0010 marked accepted | Cannot both be true |
+| Conflict | Sources | Resolution needed | Resolution (SESSION_0039) |
+| --- | --- | --- | --- |
+| ADR 0010 status | SESSION_0018 says draft; SESSION_0019 says validate; ADR file says `accepted` | Revert to `proposed` — done in this session | ✅ Reverted to `proposed` in prior session. |
+| Admin auth behavior | `auth-hoc.tsx` redirects to `/`; `auth.md` says 404 | Pick one and update both | ✅ **Redirect wins.** Template source confirms `redirect("/")`. `auth.md` needs correction. See D-013. |
+| Drift register D-005 | Cache alignment marked open; ADR 0010 marked accepted | Cannot both be true | ✅ ADR 0010 is `proposed`. D-005 remains open until cache strategy is finalized. Consistent now. |
 
 ## Dirstarter-to-repo mapping (key pages)
 
@@ -83,12 +83,12 @@ The repo does not have one gap. It has three classes of gap:
 
 ## Template residue inventory
 
-The following Dirstarter models and routes are still present and should be classified:
+The following Dirstarter models and routes are still present. **Classified per D-014 (SESSION_0039):**
 
-- **Prisma models:** `Tool`, `Category`, `Tag`, `Report`, `Ad`
-- **Admin routes:** `/admin/tools`, `/admin/categories`, `/admin/tags`
-- **Server code:** `server/admin/tools/queries`, `server/web/tools/queries`
-- **Schema note:** Schema itself says "remove before production"
+- **Prisma models:** `Tool`, `Category`, `Tag`, `Report`, `Ad` → **Active use.** `Tool` repurposed as Directory Listing (D-014 Option B). `Category`/`Tag` retained as taxonomy. `Report` retained for moderation. `Ad` TBD (S10 Stripe sprint).
+- **Admin routes:** `/admin/tools`, `/admin/categories`, `/admin/tags` → **Active use.** Will be relabeled/extended for Directory Listing admin.
+- **Server code:** `server/admin/tools/queries`, `server/web/tools/queries` → **Active use.** Provides complete CRUD + submission pipeline for listings.
+- **Schema note:** "remove before production" comment should be **removed** — these models are now intentionally retained.
 
 Classification options: reference-only (keep but flag), scheduled removal, or active use.
 
@@ -118,8 +118,8 @@ Repo references to inspect from this page:
 - `docs/sprints/SESSION_0019.md`
 - `docs/knowledge/wiki/drift-register.md`
 
-## Open Questions
+## Open Questions — Resolved
 
-- Do we want "strict live-doc compliance," or "version-pinned compliance" against commit `c42e8bb`?
-- Is `next-safe-action` a deliberate long-term divergence, or an interim carry-over?
-- Should admin authorization return a 404 or redirect for non-admins?
+- **Live-doc compliance vs version-pinned?** → **Version-pinned** against template source (`c42e8bb`). Live docs describe a newer version (Next 16, oRPC, OXC) we haven't adopted. See baseline index §13k for upstream divergences.
+- **`next-safe-action` deliberate or interim?** → **Deliberate long-term choice.** Template source uses it. No migration to oRPC planned. See baseline index §13k.
+- **Admin auth: 404 or redirect?** → **Redirect to `/`.** Matches template source. `auth.md` doc was wrong. See D-013.

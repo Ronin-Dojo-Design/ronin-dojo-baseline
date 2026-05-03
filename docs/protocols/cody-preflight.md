@@ -4,8 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-01
-last_agent: claude-session-0031-5
+updated: 2026-05-03
+last_agent: copilot-session-0039
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -45,7 +45,8 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 - Searched `components/common/` for: {search terms}
 - Found: {list of relevant existing components, or "none"}
 
-### 2. L1 template scan
+### 2. L1 template scan (via Dirstarter Baseline Index)
+- Consulted `docs/architecture/dirstarter-baseline-index.md`: {yes}
 - Searched `dirstarter_template/components/` for: {search terms}
 - Closest L1 pattern: {file path and pattern name, or "none"}
 - **Primitive API spot-check:** Read each composed primitive's component file
@@ -140,6 +141,7 @@ For any task that adds server actions, queries, or API routes:
 - Authorization approach: {description}
 
 ### 2. Existing action scan
+- Consulted `docs/architecture/dirstarter-baseline-index.md`: {yes}
 - Searched `server/` for: {search terms}
 - Related existing actions: {list}
 - L1 pattern match: {dirstarter action client chain / custom}

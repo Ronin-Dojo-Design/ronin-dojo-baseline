@@ -4,8 +4,8 @@ slug: adr-0011-entitlement-first-commerce
 type: decision
 status: accepted
 created: 2026-04-30
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-03
+last_agent: copilot-session-0039
 pairs_with:
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/programs-curriculum-certification-spec.md
@@ -68,4 +68,4 @@ Payments, subscriptions, manual grants, memberships, and promos grant or revoke 
 - Add `Entitlement`, `EntitlementGrant`, and `UserEntitlement` in a future schema session.
 - Add Stripe IDs to `PricingPlan` before adding an internal `Product` table.
 - Keep certificate order/payment history immutable; revoke access by entitlement or certificate status, not deletion.
-- Do not use the Dirstarter `Tool` monetization residue as production access logic without resolving `D-014`.
+- Do not use the Dirstarter `Tool` monetization residue as production access logic without resolving `D-014`. **D-014 resolved SESSION_0039**: Tool repurposed as Directory Listing (Option B). Monetization tiers (Free/Standard/Premium) map to directory listing tiers, not entitlement access.

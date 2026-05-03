@@ -32,8 +32,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
-| [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | active |
-| [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | active |
+| [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
+| [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | superseded by baseline index |
+| [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | superseded by baseline index |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active |
 | [Curriculum Extract Schema](content-engine/curriculum-extract-schema.md) | concept | active |
 | [Command Center and Intake](content-engine/command-center-and-intake.md) | concept | active |
@@ -46,6 +47,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status |
 | --- | --- | --- |
 | [Architecture README](../../architecture/README.md) | file | active |
+| [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | file | active — **L1 source of truth for all Dirstarter patterns** |
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active |
 | [Program Plan](../../architecture/program-plan.md) | file | active |
@@ -121,7 +123,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0035](../../sprints/SESSION_0035.md) | session | closed-full |
 | [SESSION_0036](../../sprints/SESSION_0036.md) | session | closed-quick |
 | [SESSION_0037](../../sprints/SESSION_0037.md) | session | closed-quick |
-| [SESSION_0038](../../sprints/SESSION_0038.md) | session | pending |
+| [SESSION_0038](../../sprints/SESSION_0038.md) | session | closed-full |
+| [SESSION_0038.5](../../sprints/SESSION_0038_5.md) | session | closed-full |
+| [SESSION_0039](../../sprints/SESSION_0039.md) | session | in-progress |
 
 ## Protocols
 
@@ -185,85 +189,35 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [directory/directory-list.tsx](files/directory-list-component.md) | file | active |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
-## L1 Component Patterns (reference index)
+## L1 Component Patterns & UI Components
 
-Key Dirstarter L1 patterns and their reference implementations. **Check here before creating any new component.**
-
-| Pattern | Reference File | Used By |
-| --- | --- | --- |
-| Filter state (URL params) | `contexts/filter-context.tsx` + `nuqs` | All listing pages |
-| Search + filter bar | `components/web/filters/filters.tsx` | Tool listing, directory |
-| Sort dropdown | `components/web/filters/sort.tsx` | Tool listing |
-| Listing wrapper (FiltersProvider) | `components/web/tools/tool-listing.tsx` | Tool, directory |
-| Server query component | `components/web/tools/tool-query.tsx` | Tool, directory |
-| nuqs schema + cache | `server/web/tools/schema.ts` | Tool, directory |
-| Form (RHF + safe-action) | `components/web/feedback-widget.tsx` | Feedback, CTA, org create |
-| Data table + faceted filter | `components/data-table/` | Admin pages |
-
-## UI Components (Dirstarter common library)
-
-Components inherited from Dirstarter and used as-is by the Ronin Dojo build. These are **not modified** — they're the L1 code layer. Listed here for discoverability. Check here before creating anything new.
-
-| Component | Path | Notes |
-| --- | --- | --- |
-| Accordion | `components/common/accordion.tsx` | Radix collapsible sections |
-| AnimatedContainer | `components/common/animated-container.tsx` | Transition wrapper |
-| Avatar | `components/common/avatar.tsx` | User/entity avatar |
-| Badge | `components/common/badge.tsx` | Variants: primary, soft, outline, success, warning, info, danger |
-| Box | `components/common/box.tsx` | Focus/hover ring wrapper |
-| Button | `components/common/button.tsx` | Variants: fancy, primary, secondary, soft, ghost, destructive. Has `isPending`, `prefix`, `suffix`, `asChild` |
-| Calendar | `components/common/calendar.tsx` | Date picker calendar |
-| Card / CardHeader / CardDescription / CardFooter / CardBadges / CardBg / CardIcon | `components/common/card.tsx` | Card layout with hover, reveal, highlight states |
-| Checkbox | `components/common/checkbox.tsx` | Radix checkbox |
-| Command | `components/common/command.tsx` | Command palette (cmdk) |
-| Dialog | `components/common/dialog.tsx` | Radix modal dialog |
-| DropdownMenu | `components/common/dropdown-menu.tsx` | Radix dropdown |
-| Form / FormField / FormItem / FormLabel / FormControl / FormMessage / FormDescription | `components/common/form.tsx` | RHF + Radix Slot integration |
-| FormMedia | `components/common/form-media.tsx` | Media upload field |
-| Heading (H1–H6) | `components/common/heading.tsx` | Semantic headings |
-| Hint | `components/common/hint.tsx` | Inline hint/error text |
-| HoverCard | `components/common/hover-card.tsx` | Radix hover popover |
-| Input | `components/common/input.tsx` | Text input with size variants |
-| Kbd | `components/common/kbd.tsx` | Keyboard shortcut badge |
-| Label | `components/common/label.tsx` | Form label |
-| Link | `components/common/link.tsx` | Next.js link wrapper |
-| Note | `components/common/note.tsx` | Callout/note box |
-| Ping | `components/common/ping.tsx` | Animated ping indicator |
-| Popover | `components/common/popover.tsx` | Radix popover |
-| Prose | `components/common/prose.tsx` | MDX/rich text container |
-| RadioGroup | `components/common/radio-group.tsx` | Radix radio group |
-| Search | `components/common/search.tsx` | Search input |
-| Select / SelectTrigger / SelectContent / SelectItem / SelectValue / SelectGroup | `components/common/select.tsx` | Radix single-value select |
-| Separator | `components/common/separator.tsx` | Horizontal/vertical divider |
-| ShowMore | `components/common/show-more.tsx` | Truncated list with "show more" |
-| Skeleton | `components/common/skeleton.tsx` | Loading placeholder |
-| Slottable | `components/common/slottable.tsx` | Radix Slot helper |
-| Stack | `components/common/stack.tsx` | Flex row/column with gap |
-| Switch | `components/common/switch.tsx` | Radix toggle switch |
-| Table | `components/common/table.tsx` | Data table |
-| TextArea | `components/common/textarea.tsx` | Multi-line text input |
-| Toaster | `components/common/toaster.tsx` | Toast notification container |
-| Tooltip | `components/common/tooltip.tsx` | Radix tooltip |
-| Wrapper | `components/common/wrapper.tsx` | Max-width content wrapper |
-
-### Dirstarter web UI components
-
-| Component | Path | Notes |
-| --- | --- | --- |
-| Grid | `components/web/ui/grid.tsx` | Responsive card grid |
-| Intro / IntroTitle / IntroDescription | `components/web/ui/intro.tsx` | Page header |
-| Section / Section.Content | `components/web/ui/section.tsx` | Page section wrapper |
-| Container | `components/web/ui/container.tsx` | Centered container |
-| Breadcrumbs | `components/web/ui/breadcrumbs.tsx` | Navigation breadcrumbs |
-| Tag | `components/web/ui/tag.tsx` | Tag component |
-| NavLink | `components/web/ui/nav-link.tsx` | Active-aware nav link |
+> **Consolidated into [`dirstarter-baseline-index.md`](../../architecture/dirstarter-baseline-index.md)** (SESSION_0039).
+> That document contains the full inventory of all Dirstarter template files (300+ files), integration patterns from dirstarter.com/docs, and the D-014 decision (Tool → Directory Listing).
+>
+> Sections of interest:
+> - §2: Component library (common, admin, data-table, web)
+> - §3: Server layer patterns
+> - §10: Key patterns to follow (admin CRUD, web entity, action client chain, page shell)
+> - §13: dirstarter.com/docs integration patterns (auth, email, storage, payments, rate limiting, analytics, content, middleware)
+> - §14: D-014 decision — Tool → Directory Listing repurpose
 
 ## Custom components (Ronin Dojo additions)
 
-| Component | Path | Notes |
+See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline-index.md) for the full list (11+ components). Key additions:
+
+| Component | Path | Added |
 | --- | --- | --- |
-| CreateOrganizationForm | `components/web/organizations/create-organization-form.tsx` | RHF + Zod → createOrganization action |
-| JoinOrganizationButton | `components/web/organizations/join-organization-button.tsx` | useAction → joinOrganization action |
+| LeadCaptureForm | `components/web/lead-capture-form.tsx` | S2 |
+| CreateOrganizationForm | `components/web/organizations/create-organization-form.tsx` | S1–S2 |
+| InviteJoinForm | `components/web/organizations/invite-join-form.tsx` | S2 |
+| JoinOrganizationButton | `components/web/organizations/join-organization-button.tsx` | S2 |
+| MembershipActions | `components/web/organizations/membership-actions.tsx` | S2 |
+| CreateProgramForm | `components/web/programs/create-program-form.tsx` | S2 |
+| CreateScheduleForm | `components/web/schedules/create-schedule-form.tsx` | S2 |
+| MaterializeScheduleButton | `components/web/schedules/materialize-schedule-button.tsx` | S2 |
+| ScheduleInstructorList | `components/web/schedules/schedule-instructor-list.tsx` | S2 |
+| DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
+| PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |
 
 ## Obsidian Vault
 
