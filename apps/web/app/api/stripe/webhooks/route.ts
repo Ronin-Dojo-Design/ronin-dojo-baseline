@@ -7,6 +7,71 @@ import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
 /**
+ * Given a Stripe checkout session, look up the PricingPlan by stripePriceId
+ * and grant all linked entitlements to the user.
+ */
+async function grantEntitlementsFromCheckout(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId
+  if (!userId) return
+
+  // Expand line items to get price IDs
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id)
+
+  for (const item of lineItems.data) {
+    const priceId = item.price?.id
+    if (!priceId) continue
+
+    const plan = await db.pricingPlan.findFirst({
+      where: { stripePriceId: priceId },
+      include: { entitlementGrants: { include: { entitlement: true } } },
+    })
+
+    if (!plan) continue
+
+    for (const grant of plan.entitlementGrants) {
+      // Upsert: reactivate if revoked/expired, or create new
+      const existing = await db.userEntitlement.findFirst({
+        where: {
+          userId,
+          entitlementId: grant.entitlement.id,
+          sourceId: session.subscription as string | undefined,
+        },
+      })
+
+      if (existing) {
+        await db.userEntitlement.update({
+          where: { id: existing.id },
+          data: { status: "ACTIVE", startsAt: new Date() },
+        })
+      } else {
+        await db.userEntitlement.create({
+          data: {
+            userId,
+            entitlementId: grant.entitlement.id,
+            sourceType: session.mode === "subscription" ? "SUBSCRIPTION" : "PURCHASE",
+            sourceId: (session.subscription as string) ?? session.id,
+          },
+        })
+      }
+    }
+  }
+}
+
+/**
+ * Revoke all entitlements sourced from a deleted subscription.
+ */
+async function revokeEntitlementsFromSubscription(subscriptionId: string) {
+  await db.userEntitlement.updateMany({
+    where: {
+      sourceType: "SUBSCRIPTION",
+      sourceId: subscriptionId,
+      status: "ACTIVE",
+    },
+    data: { status: "REVOKED" },
+  })
+}
+
+/**
  * Handle the Stripe webhook
  * @param req - The request
  * @returns The response
@@ -31,7 +96,11 @@ export const POST = async (req: Request) => {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const { mode, subscription, metadata } = event.data.object
+        const session = event.data.object
+        const { mode, subscription, metadata } = session
+
+        // Grant entitlements linked to the purchased/subscribed plan
+        await grantEntitlementsFromCheckout(session)
 
         switch (mode) {
           case "payment": {
@@ -79,7 +148,10 @@ export const POST = async (req: Request) => {
       }
 
       case "customer.subscription.deleted": {
-        const { metadata } = event.data.object
+        const { id: subscriptionId, metadata } = event.data.object
+
+        // Revoke entitlements sourced from this subscription
+        await revokeEntitlementsFromSubscription(subscriptionId)
 
         // Handle tool featured listing
         if (metadata?.tool) {

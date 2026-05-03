@@ -83,25 +83,28 @@ model User {
   payoutSplits               PayoutSplit[]
 
   // Wave B relations
-  createdInvites             Invite[]                    @relation("InviteCreatedBy")
-  inviteClaims               InviteClaim[]
-  eventRegistrations         EventRegistration[]
-  fightRecords               FightRecord[]
-  auditLogs                  AuditLog[]
+  createdInvites     Invite[]            @relation("InviteCreatedBy")
+  inviteClaims       InviteClaim[]
+  eventRegistrations EventRegistration[]
+  fightRecords       FightRecord[]
+  auditLogs          AuditLog[]
 
   // Wave C relations
-  leadFollowUps              LeadFollowUp[]              @relation("FollowUpAssignee")
-  weighInRecords             WeighInRecord[]
+  leadFollowUps  LeadFollowUp[]  @relation("FollowUpAssignee")
+  weighInRecords WeighInRecord[]
 
   // Wave D relations
-  uploadedMedia              Media[]                     @relation("MediaUploadedBy")
-  favorites                  Favorite[]
-  studentListMemberships     StudentListMember[]
-  createdStudentLists        StudentList[]               @relation("ListCreatedBy")
-  techniqueProgress          TechniqueProgress[]
-  verifiedTechProgress       TechniqueProgress[]         @relation("TechProgressVerifiedBy")
-  certificateOrders          CertificateOrder[]
-  certificateIssuances       CertificateIssuance[]
+  uploadedMedia          Media[]               @relation("MediaUploadedBy")
+  favorites              Favorite[]
+  studentListMemberships StudentListMember[]
+  createdStudentLists    StudentList[]         @relation("ListCreatedBy")
+  techniqueProgress      TechniqueProgress[]
+  verifiedTechProgress   TechniqueProgress[]   @relation("TechProgressVerifiedBy")
+  certificateOrders      CertificateOrder[]
+  certificateIssuances   CertificateIssuance[]
+
+  // Entitlement layer
+  entitlements UserEntitlement[]
 
   // Indexes
   @@index([id])
@@ -781,6 +784,24 @@ enum ContentSourceType {
 }
 
 // ---------------------------------------------------------------------------
+// Enums — Entitlement layer (SESSION_0036)
+// ---------------------------------------------------------------------------
+
+enum EntitlementSourceType {
+  PURCHASE
+  SUBSCRIPTION
+  MANUAL_GRANT
+  MEMBERSHIP
+  PROMO
+}
+
+enum EntitlementStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+// ---------------------------------------------------------------------------
 // Models — Directory Profile
 // ---------------------------------------------------------------------------
 
@@ -869,18 +890,18 @@ model Organization {
   childRelationships    OrgRelationship[]            @relation("OrgParent")
 
   // Wave B relations
-  invites               Invite[]
-  events                Event[]
-  auditLogs             AuditLog[]
+  invites   Invite[]
+  events    Event[]
+  auditLogs AuditLog[]
 
   // Wave C relations
-  leads                 Lead[]
+  leads Lead[]
 
   // Wave D relations
-  media                 Media[]
-  techniques            Technique[]
-  studentLists          StudentList[]
-  certificateTemplates  CertificateTemplate[]
+  media                Media[]
+  techniques           Technique[]
+  studentLists         StudentList[]
+  certificateTemplates CertificateTemplate[]
 
   @@unique([brand, slug])
   @@index([brand])
@@ -910,10 +931,10 @@ model Discipline {
   contentAtoms          ContentAtom[]
 
   // Wave B/C/D relations
-  events                Event[]
-  fightRecords          FightRecord[]
-  ruleSets              RuleSet[]
-  techniques            Technique[]
+  events       Event[]
+  fightRecords FightRecord[]
+  ruleSets     RuleSet[]
+  techniques   Technique[]
 
   @@unique([code, brand])
   @@unique([name, brand])
@@ -1224,11 +1245,11 @@ model Attendance {
   notes     String?
   createdAt DateTime         @default(now())
 
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String
-  classSession   ClassSession @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
-  classSessionId String
-  checkIn        CheckIn?
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  classSession       ClassSession        @relation(fields: [classSessionId], references: [id], onDelete: Cascade)
+  classSessionId     String
+  checkIn            CheckIn?
   gamificationEvents GamificationEvent[]
 
   @@unique([userId, classSessionId])
@@ -1332,26 +1353,29 @@ model FamilyMember {
 }
 
 model PricingPlan {
-  id             String       @id @default(cuid())
-  brand          Brand
-  name           String
-  pricingModel   PricingModel
-  amountCents    Int
-  currency       String       @default("USD") @db.Char(3)
-  intervalMonths Int?
-  classCount     Int?
-  trialDays      Int?
-  isActive       Boolean      @default(true)
-  sortOrder      Int          @default(0)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  brand           Brand
+  name            String
+  pricingModel    PricingModel
+  amountCents     Int
+  currency        String       @default("USD") @db.Char(3)
+  intervalMonths  Int?
+  classCount      Int?
+  trialDays       Int?
+  isActive        Boolean      @default(true)
+  sortOrder       Int          @default(0)
+  stripeProductId String?
+  stripePriceId   String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String
   program        Program?     @relation(fields: [programId], references: [id])
   programId      String?
 
-  invoiceLineItems InvoiceLineItem[]
+  invoiceLineItems  InvoiceLineItem[]
+  entitlementGrants EntitlementGrant[]
 
   @@index([brand, organizationId])
   @@index([programId])
@@ -1650,9 +1674,9 @@ model CurriculumItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course      Course                     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId    String
-  completions CurriculumItemCompletion[]
+  course         Course                     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId       String
+  completions    CurriculumItemCompletion[]
   techniqueLinks TechniqueCurriculumLink[]
 
   @@index([courseId, order])
@@ -1795,7 +1819,7 @@ model Registration {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
 
-  entries RegistrationEntry[]
+  entries        RegistrationEntry[]
   weighInRecords WeighInRecord[]
 
   @@unique([tournamentId, userId])
@@ -1904,13 +1928,13 @@ model GamificationEvent {
   disciplineId   String?
 
   // Wave D relations
-  technique                  Technique?               @relation(fields: [techniqueId], references: [id])
+  technique                  Technique?                @relation(fields: [techniqueId], references: [id])
   techniqueId                String?
-  attendance                 Attendance?              @relation(fields: [attendanceId], references: [id])
+  attendance                 Attendance?               @relation(fields: [attendanceId], references: [id])
   attendanceId               String?
   curriculumItemCompletion   CurriculumItemCompletion? @relation(fields: [curriculumItemCompletionId], references: [id])
   curriculumItemCompletionId String?
-  beltTestRegistration       BeltTestRegistration?    @relation(fields: [beltTestRegistrationId], references: [id])
+  beltTestRegistration       BeltTestRegistration?     @relation(fields: [beltTestRegistrationId], references: [id])
   beltTestRegistrationId     String?
 
   @@index([userId, createdAt])
@@ -2117,11 +2141,11 @@ model Certification {
 // ---------------------------------------------------------------------------
 
 model ContentAtom {
-  id                String            @id @default(cuid())
-  canonicalId       String            @unique /// e.g. atom-2026-cross-training-001
+  id                String             @id @default(cuid())
+  canonicalId       String             @unique /// e.g. atom-2026-cross-training-001
   title             String
   slug              String
-  status            ContentAtomStatus @default(INBOX)
+  status            ContentAtomStatus  @default(INBOX)
   hook              String?
   promise           String?
   proof             String?
@@ -2137,8 +2161,8 @@ model ContentAtom {
   sourceType        ContentSourceType?
   sourceAssets      String[] /// URLs/paths to source media
   meta              Json? /// Extensible metadata
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   // Relations
   createdBy      User          @relation("AtomCreatedBy", fields: [createdById], references: [id])
@@ -2320,9 +2344,9 @@ model EventRegistration {
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
 
-  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId String
-  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String
 
   @@unique([eventId, userId])
@@ -2461,16 +2485,16 @@ model Lead {
 }
 
 model LeadFollowUp {
-  id           String    @id @default(cuid())
-  channel      String
-  notes        String?
-  scheduledAt  DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(cuid())
+  channel     String
+  notes       String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
-  lead         Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead         Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
   leadId       String
-  assignedTo   User?  @relation("FollowUpAssignee", fields: [assignedToId], references: [id])
+  assignedTo   User?   @relation("FollowUpAssignee", fields: [assignedToId], references: [id])
   assignedToId String?
 
   @@index([leadId])
@@ -2501,13 +2525,13 @@ model RuleSet {
 }
 
 model WeighInRecord {
-  id             String   @id @default(cuid())
-  weightKg       Decimal  @db.Decimal(5, 2)
-  recordedAt     DateTime @default(now())
-  recordedBy     String?
-  isOfficial     Boolean  @default(false)
-  notes          String?
-  createdAt      DateTime @default(now())
+  id         String   @id @default(cuid())
+  weightKg   Decimal  @db.Decimal(5, 2)
+  recordedAt DateTime @default(now())
+  recordedBy String?
+  isOfficial Boolean  @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
 
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId String
@@ -2519,13 +2543,13 @@ model WeighInRecord {
 }
 
 model MatAssignment {
-  id           String              @id @default(cuid())
-  matName      String
-  status       MatAssignmentStatus @default(PENDING)
-  startTime    DateTime?
-  endTime      DateTime?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id        String              @id @default(cuid())
+  matName   String
+  status    MatAssignmentStatus @default(PENDING)
+  startTime DateTime?
+  endTime   DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 
   match        Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
   matchId      String     @unique
@@ -2540,23 +2564,23 @@ model MatAssignment {
 // ---------------------------------------------------------------------------
 
 model Media {
-  id             String    @id @default(cuid())
-  brand          Brand
-  type           MediaType
-  url            String
-  thumbnailUrl   String?
-  title          String?
-  description    String?
-  altText        String?
-  mimeType       String?
-  sizeBytes      Int?
-  widthPx        Int?
-  heightPx       Int?
-  durationSec    Int?
-  sortOrder      Int       @default(0)
-  isPublic       Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  brand        Brand
+  type         MediaType
+  url          String
+  thumbnailUrl String?
+  title        String?
+  description  String?
+  altText      String?
+  mimeType     String?
+  sizeBytes    Int?
+  widthPx      Int?
+  heightPx     Int?
+  durationSec  Int?
+  sortOrder    Int       @default(0)
+  isPublic     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   uploadedBy     User          @relation("MediaUploadedBy", fields: [uploadedById], references: [id])
   uploadedById   String
@@ -2583,7 +2607,7 @@ model MediaAttachment {
   techniqueId           String?
   eventId               String?
   rankAwardId           String?
-  courseId               String?
+  courseId              String?
   organizationId        String?
   contentAtomId         String?
   certificateTemplateId String?
@@ -2603,7 +2627,7 @@ model MediaAttachment {
 }
 
 model Technique {
-  id                String              @id @default(cuid())
+  id                String             @id @default(cuid())
   brand             Brand
   name              String
   slug              String
@@ -2612,18 +2636,18 @@ model Technique {
   category          TechniqueCategory?
   difficultyLevel   DifficultyLevel?
   isGi              Boolean?
-  isFoundational    Boolean             @default(false)
-  requiresPartner   Boolean             @default(false)
-  requiresEquipment Boolean             @default(false)
+  isFoundational    Boolean            @default(false)
+  requiresPartner   Boolean            @default(false)
+  requiresEquipment Boolean            @default(false)
   movementPattern   String?
   rangeBand         String?
   teachingCues      String[]
   commonErrors      String[]
   safetyNotes       String?
-  isPublished       Boolean             @default(false)
-  sortOrder         Int                 @default(0)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  isPublished       Boolean            @default(false)
+  sortOrder         Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   discipline     Discipline   @relation(fields: [disciplineId], references: [id])
   disciplineId   String
@@ -2638,8 +2662,8 @@ model Technique {
 
   mediaAttachments   MediaAttachment[]
   curriculumLinks    TechniqueCurriculumLink[]
-  prerequisiteFor    TechniquePrerequisite[]    @relation("TechPrereqTarget")
-  prerequisites      TechniquePrerequisite[]    @relation("TechPrereqSource")
+  prerequisiteFor    TechniquePrerequisite[]   @relation("TechPrereqTarget")
+  prerequisites      TechniquePrerequisite[]   @relation("TechPrereqSource")
   progress           TechniqueProgress[]
   gamificationEvents GamificationEvent[]
 
@@ -2650,10 +2674,10 @@ model Technique {
 }
 
 model TechniquePrerequisite {
-  id             String   @id @default(cuid())
-  description    String?
-  isStrict       Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  id          String   @id @default(cuid())
+  description String?
+  isStrict    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   technique      Technique @relation("TechPrereqTarget", fields: [techniqueId], references: [id], onDelete: Cascade)
   techniqueId    String
@@ -2668,7 +2692,7 @@ model TechniquePrerequisite {
 model TechniqueCurriculumLink {
   techniqueId      String
   curriculumItemId String
-  sortOrder        Int @default(0)
+  sortOrder        Int    @default(0)
 
   technique      Technique      @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
   curriculumItem CurriculumItem @relation(fields: [curriculumItemId], references: [id], onDelete: Cascade)
@@ -2757,16 +2781,16 @@ model CertificateOrder {
 }
 
 model CertificateIssuance {
-  id                 String   @id @default(cuid())
-  certificateNumber  String   @unique
-  qrVerificationCode String   @unique
+  id                 String    @id @default(cuid())
+  certificateNumber  String    @unique
+  qrVerificationCode String    @unique
   pdfUrl             String?
-  issuedAt           DateTime @default(now())
+  issuedAt           DateTime  @default(now())
   expiresAt          DateTime?
   revokedAt          DateTime?
   meta               Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   certificateTemplate   CertificateTemplate @relation(fields: [certificateTemplateId], references: [id])
   certificateTemplateId String
@@ -2825,4 +2849,55 @@ model StudentListMember {
 
   @@unique([studentListId, userId])
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Entitlement layer (SESSION_0036)
+// ---------------------------------------------------------------------------
+
+model Entitlement {
+  id          String   @id @default(cuid())
+  brand       Brand
+  key         String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  grants      EntitlementGrant[]
+  assignments UserEntitlement[]
+
+  @@unique([brand, key])
+}
+
+model EntitlementGrant {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  pricingPlan   PricingPlan @relation(fields: [pricingPlanId], references: [id], onDelete: Cascade)
+  pricingPlanId String
+  entitlement   Entitlement @relation(fields: [entitlementId], references: [id], onDelete: Cascade)
+  entitlementId String
+
+  @@unique([pricingPlanId, entitlementId])
+}
+
+model UserEntitlement {
+  id         String                @id @default(cuid())
+  sourceType EntitlementSourceType
+  sourceId   String?
+  status     EntitlementStatus     @default(ACTIVE)
+  startsAt   DateTime              @default(now())
+  endsAt     DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  entitlement   Entitlement @relation(fields: [entitlementId], references: [id])
+  entitlementId String
+
+  @@index([userId, status])
+  @@index([entitlementId])
+  @@index([sourceType, sourceId])
 }
