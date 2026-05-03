@@ -77,3 +77,8 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
 
   return next()
 })
+
+// -----------------------------------------------------------------------------
+// 4. Public client (no auth required — for unauthenticated forms)
+// -----------------------------------------------------------------------------
+export const publicActionClient = actionClient

@@ -4,6 +4,7 @@ import { useMediaQuery } from "@mantine/hooks"
 import { cx } from "cva"
 import {
   CalendarIcon,
+  ContactIcon,
   DockIcon,
   ExternalLinkIcon,
   GalleryHorizontalEndIcon,
@@ -73,6 +74,11 @@ export const Sidebar = () => {
           title: "Tools",
           href: "/admin/tools",
           prefix: <GemIcon />,
+        },
+        {
+          title: "Leads",
+          href: "/admin/leads",
+          prefix: <ContactIcon />,
         },
         {
           title: "Categories",
