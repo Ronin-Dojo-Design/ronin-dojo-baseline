@@ -6,6 +6,24 @@ import { toolManyPayload, toolOnePayload } from "~/server/web/tools/payloads"
 import type { ToolFilterParams } from "~/server/web/tools/schema"
 import { db } from "~/services/db"
 
+type ToolOrderBy = Prisma.ToolOrderByWithRelationInput | Prisma.ToolOrderByWithRelationInput[]
+
+type PublicToolFindManyArgs = {
+  where?: Prisma.ToolWhereInput
+  orderBy?: ToolOrderBy
+  take?: number
+  skip?: number
+  cursor?: Prisma.ToolWhereUniqueInput
+  distinct?: Prisma.ToolScalarFieldEnum | Prisma.ToolScalarFieldEnum[]
+}
+
+type PublicToolFindFirstArgs = {
+  where?: Prisma.ToolWhereInput
+  orderBy?: ToolOrderBy
+  cursor?: Prisma.ToolWhereUniqueInput
+  skip?: number
+}
+
 export const searchTools = async (search: ToolFilterParams, where?: Prisma.ToolWhereInput) => {
   "use cache"
 
@@ -53,8 +71,10 @@ export const searchTools = async (search: ToolFilterParams, where?: Prisma.ToolW
 export const findRelatedTools = async ({
   where,
   slug,
-  ...args
-}: Prisma.ToolFindManyArgs & { slug: string }) => {
+}: {
+  where?: Prisma.ToolWhereInput
+  slug: string
+}) => {
   "use cache"
 
   cacheTag("related-tools")
@@ -77,7 +97,6 @@ export const findRelatedTools = async ({
   const orderDir = getRandomElement(["asc", "desc"] as const)
 
   return db.tool.findMany({
-    ...args,
     where: relatedWhereClause,
     select: toolManyPayload,
     orderBy: { [orderBy]: orderDir },
@@ -86,7 +105,7 @@ export const findRelatedTools = async ({
   })
 }
 
-export const findTools = async ({ where, orderBy, ...args }: Prisma.ToolFindManyArgs) => {
+export const findTools = async ({ where, orderBy, ...args }: PublicToolFindManyArgs = {}) => {
   "use cache"
 
   cacheTag("tools")
@@ -100,7 +119,7 @@ export const findTools = async ({ where, orderBy, ...args }: Prisma.ToolFindMany
   })
 }
 
-export const findToolSlugs = async ({ where, orderBy, ...args }: Prisma.ToolFindManyArgs) => {
+export const findToolSlugs = async ({ where, orderBy, ...args }: PublicToolFindManyArgs = {}) => {
   "use cache"
 
   cacheTag("tools")
@@ -125,7 +144,7 @@ export const countSubmittedTools = async ({ where, ...args }: Prisma.ToolCountAr
   })
 }
 
-export const findTool = async ({ where, ...args }: Prisma.ToolFindFirstArgs = {}) => {
+export const findTool = async ({ where, ...args }: PublicToolFindFirstArgs = {}) => {
   "use cache"
 
   cacheTag("tool", `tool-${where?.slug}`)

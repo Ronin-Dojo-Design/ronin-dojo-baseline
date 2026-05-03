@@ -14,16 +14,21 @@ import { sendEmail } from "~/lib/email"
 import { db } from "~/services/db"
 
 export const auth = betterAuth({
+  secret: env.BETTER_AUTH_SECRET,
+
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
 
-  socialProviders: {
-    google: {
-      clientId: env.AUTH_GOOGLE_ID,
-      clientSecret: env.AUTH_GOOGLE_SECRET,
-    },
-  },
+  socialProviders:
+    env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET
+      ? {
+          google: {
+            clientId: env.AUTH_GOOGLE_ID,
+            clientSecret: env.AUTH_GOOGLE_SECRET,
+          },
+        }
+      : {},
 
   session: {
     freshAge: 0,
@@ -58,7 +63,12 @@ export const auth = betterAuth({
 
       // On sign-up, create Passport + DirectoryProfile stubs in a transaction.
       // Better-Auth creates the User row; we extend with identity shell records.
-      if (path === "/sign-up/email" || path === "/sign-up/social" || path === "/callback/:id" || path.startsWith("/magic-link")) {
+      if (
+        path === "/sign-up/email" ||
+        path === "/sign-up/social" ||
+        path === "/callback/:id" ||
+        path.startsWith("/magic-link")
+      ) {
         const newUserId = context.body?.user?.id ?? context.body?.id
         if (newUserId && typeof newUserId === "string") {
           // Only create if not already present (idempotent for social re-auth)
@@ -99,7 +109,7 @@ export const auth = betterAuth({
     }),
 
     admin(),
-  ],
+  ] as const,
 })
 
 export const getServerSession = cache(async (request?: NextRequest) => {

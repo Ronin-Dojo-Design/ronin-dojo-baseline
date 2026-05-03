@@ -22,6 +22,26 @@ const nextConfig: NextConfig = {
     useCache: true,
     turbopackFileSystemCacheForDev: true,
 
+    // SESSION_0031 gate 3 — Server Actions CSRF/Origin contract on multi-domain.
+    // Each request enters from a single brand origin (e.g. baseline.local or
+    // baselinemartialarts.com), and Server Actions are POSTed back to that
+    // same origin. Single-origin per request is therefore safe under Next's
+    // default same-origin policy. Cross-brand action POSTs are not supported
+    // and would be blocked by Next before our code runs.
+    //
+    // Once the four production apex domains land (MB-014 / ADR 0006), uncomment
+    // and fill `serverActions.allowedOrigins` here. Until then, dev hosts use
+    // the implicit same-origin allow.
+    //
+    // serverActions: {
+    //   allowedOrigins: [
+    //     "ronindojodesign.com",
+    //     "baselinemartialarts.com",
+    //     "blackbeltlegacy.com",
+    //     "wekafusa.com",
+    //   ],
+    // },
+
     optimizePackageImports: [
       "@content-collections/core",
       "@content-collections/mdx",

@@ -9,6 +9,7 @@
     "build": "next build",
     "lint": "bun biome check --write .",
     "format": "bun biome format --write .",
+    "typecheck": "next typegen && tsc --noEmit --pretty false",
     "email": "SKIP_ENV_VALIDATION=1 email dev",
     "db:generate": "prisma generate --no-hints",
     "db:migrate": "prisma migrate",
