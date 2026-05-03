@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-30
-last_agent: codex-session-0029
+updated: 2026-05-03
+last_agent: codex-session-0033
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -17,6 +17,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
   - docs/sprints/SESSION_0029.md
+  - docs/sprints/SESSION_0033.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -333,6 +334,38 @@ UserEntitlement is the user-facing access ledger. Refunds, cancellations, expira
 The mapping between a PricingPlan and the Entitlements it grants.
 
 EntitlementGrant keeps commercial packaging separate from access checks: a product can be sold one way while access remains keyed by stable entitlement names.
+
+## School operations lifecycle
+
+### ProgramEnrollment
+
+A User's enrollment in a Program. ProgramEnrollment owns active, waitlisted, completed, withdrawn, or suspended enrollment state and waitlist position.
+
+ProgramEnrollment does not carry brand or organization columns; code must scope it through `Program.brand` and `Program.organizationId`.
+
+### FamilyGroup
+
+A household or family cluster that can contain members from more than one organization.
+
+FamilyGroup is intentionally cross-org. Reads and writes must scope through the action target's Membership rather than treating the family group itself as brand/org-scoped.
+
+### FamilyMember
+
+A User inside a FamilyGroup with a role such as `GUARDIAN`, `CHILD`, or `SPOUSE`.
+
+Guardian authority is the only parent-for-minor signing authority currently represented in the schema.
+
+### Lead
+
+A staff-managed prospect record for an Organization and Brand.
+
+A Lead can move through trial lifecycle states before conversion into a User, Membership, and optional ProgramEnrollment. Public lead intake is a separate future surface, not implied by the Lead model.
+
+### Trial booking
+
+The lifecycle event represented by `Lead.status = TRIAL_BOOKED` and `Lead.trialBookedAt`.
+
+Trial booking is not a paid entitlement and does not create billing state by itself.
 
 ## Lineage
 
