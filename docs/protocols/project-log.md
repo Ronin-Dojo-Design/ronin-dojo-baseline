@@ -630,3 +630,26 @@ SESSION_0033 bow-in.
 Kaizen aggregate **9/10**. The next session should start fresh from the
 pre-staged `SESSION_0033.md` on `session-0032-attendance` after PR #1 merge or
 owner-approved branch selection.
+## SESSION_0034_REVIEW_01 — Independent re-verification of SESSION_0033 hostile close
+
+**Reviewed tasks:** SESSION_0033_TASK_01, SESSION_0033_TASK_02, SESSION_0033_TASK_03
+**Reviewer:** copilot-session-0034 (Giddy + Doug personas — independent of codex-session-0033 author)
+**Dirstarter docs check:** cached docs sufficient (governance session, no Dirstarter-owned layer touched)
+**Sources:** local code review of `apps/web/server/web/{enrollment,family,waiver,lead}/*`, `apps/web/lib/rate-limiter.ts`, `apps/web/scripts/smoke-school-ops-extended.ts`
+
+**Score: 9.8/10** — no hard caps triggered.
+
+| Category | Weight | Score | Note |
+| --- | ---: | ---: | --- |
+| Dirstarter alignment | 2.5 | 2.5 | Feature folders, Prisma, Better Auth safe-actions, rate limiter extended |
+| Data and architecture integrity | 2.0 | 1.8 | Brand/org predicates explicit; F-01 waitlist not DB-enforced (accepted risk) |
+| Lifecycle coverage | 1.5 | 1.5 | Enrollment, family, waiver, Lead→Trial→Converted all proved |
+| Test evidence | 2.0 | 2.0 | 7 action tests, 22 regression, Prisma smoke, validate, grep proof |
+| Merge and docs readiness | 1.0 | 1.0 | Committed and pushed (improved from inline 0.9) |
+| Launch usefulness | 1.0 | 1.0 | Advances May 18 Baseline school-ops lifecycle |
+
+**Kaizen aggregate: 7** (100→9, 1k→8, 10k→7). Waitlist DB enforcement (F-01) and full-app typecheck (F-02) drag the 10k tier. Remediation recommended before public/self-serve enrollment opens. Does not block SESSION_0034 (governance) or SESSION_0035 (different lane focus).
+
+**Re-review delta vs inline (lines 528–548): +0.1. Confirm.** The 0.1 improvement reflects commit+push now complete (merge readiness 0.9→1.0). No new cap-triggering findings. Original 9.7 was honest and slightly conservative.
+
+**Verdict:** SESSION_0033 code is merge-ready. Proceed to PR (TASK_08). F-01 and F-02 remain visible debt carried forward.
