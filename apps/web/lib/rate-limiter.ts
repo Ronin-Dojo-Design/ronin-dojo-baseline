@@ -45,6 +45,31 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(30, "1 m"), // 30 attendance/check-in mutations per minute per actor
       }),
+      enrollment_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 enrollment/waitlist mutations per minute per actor
+      }),
+      family_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 family-group mutations per minute per actor
+      }),
+      waiver_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 waiver signature mutations per minute per actor
+      }),
+      lead_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 lead lifecycle mutations per minute per actor
+      }),
+      trial_book: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 trial booking mutations per minute per actor
+      }),
     }
   : null
 

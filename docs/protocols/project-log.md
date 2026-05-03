@@ -6,6 +6,8 @@ status: active
 created: 2026-04-28
 updated: 2026-05-02
 last_agent: codex-session-0032-5
+updated: 2026-05-03
+last_agent: codex-session-0033
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -21,6 +23,7 @@ backlinks:
   - docs/sprints/SESSION_0027.md
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0030.md
+  - docs/sprints/SESSION_0033.md
 ---
 
 # Project Log
@@ -133,6 +136,13 @@ Three sections:
 - **Files:** `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/lib/auth.ts`, `apps/web/lib/media.ts`, `apps/web/services/s3.ts`, `apps/web/lib/structured-data.ts`, `apps/web/server/web/passport/*`, `apps/web/server/web/tools/queries.ts`
 - **Seed data:** n/a.
 - **Smoke test:** `bun run typecheck` passed; `bunx tsc --noEmit --pretty false` passed after `next typegen`; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed; `bunx prisma validate --schema prisma/schema.prisma` passed.
+### S33_ENROLLMENT_FAMILY_WAIVER_LEAD — Enrollment, family, waiver, trial write surface
+- **Session:** SESSION_0033
+- **Sprint:** S2 / School operations lane
+- **Status:** ✅ verified with known full-typecheck baseline debt
+- **Files:** `apps/web/server/web/{enrollment,family,waiver,lead}/*`, `apps/web/scripts/smoke-school-ops-extended.ts`, `apps/web/lib/rate-limiter.ts`
+- **Seed data:** no durable seed changes; action tests and smoke use tagged dev-DB fixtures with cleanup.
+- **Smoke test:** `bun test server/web/enrollment server/web/family server/web/waiver server/web/lead` 7/7; `bun test server/web/schedule server/web/attendance` 22/22; `bun scripts/smoke-school-ops-extended.ts` passed enrollment/family/waiver/lead allow-deny-convert matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the SESSION_0033 touched paths.
 
 ---
 
@@ -195,6 +205,9 @@ Three sections:
 | SESSION_0032_TASK_03 | SESSION_0032 | School operations + close | Petey + Doug | Full close evidence and LLM-agnostic handoff | SESSION_0032 closed-full with verification commands, hostile review, WORKFLOW score, open findings, and SESSION_0033 recommendation | landed | SESSION_0032_REVIEW_01 |
 | SESSION_0032_5_TASK_01 | SESSION_0032.5 | QA hardening | Cody + Giddy | Full typecheck debt remediation | `bunx tsc --noEmit --pretty false` passes without starting SESSION_0033 product work | landed | — |
 | SESSION_0032_5_TASK_02 | SESSION_0032.5 | QA hardening + close | Doug + Petey | Verification evidence and pause gate | Full typecheck proof, touched-files summary, and owner runway decision point recorded | landed | SESSION_0032_5_REVIEW_01 |
+| SESSION_0033_TASK_01 | SESSION_0033 | School operations | Cody + Giddy + Doug | Enrollment write surface | Enrollment/waitlist actions exist under `server/web/enrollment/*`; active same-brand/org members only; capacity/waitlist idempotency, rate limit, audit, and tests/smoke prove the path | landed | SESSION_0033_REVIEW_01 |
+| SESSION_0033_TASK_02 | SESSION_0033 | School operations | Cody + Giddy + Doug | Family + waiver write surface | Family/waiver actions exist under `server/web/{family,waiver}/*`; FamilyGroup cross-org risk is target-membership gated; guardian waiver signatures require family authority + minor proof; rate limit, audit, and tests/smoke prove the path | landed | SESSION_0033_REVIEW_01 |
+| SESSION_0033_TASK_03 | SESSION_0033 | School operations + close | Cody + Doug + Petey | Lead/trial lifecycle, smoke proof, close evidence | Lead/trial actions exist under `server/web/lead/*`; convert is transactional; monitoring docs, Project Log, SESSION evidence, and closing ritual are complete | landed | SESSION_0033_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
@@ -203,6 +216,31 @@ Three sections:
 ---
 
 ## Task review log
+
+### SESSION_0033_REVIEW_01 — School ops enrollment/family/waiver/lead hostile review
+
+**Reviewed tasks:** SESSION_0033_TASK_01, SESSION_0033_TASK_02, SESSION_0033_TASK_03
+**Dirstarter docs check:** live docs checked
+**Sources:** `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/database/prisma`, `https://dirstarter.com/docs/authentication`, `https://dirstarter.com/docs/integrations/rate-limiting`, `https://dirstarter.com/docs/integrations/analytics`
+**Verdict:** Aligned with Dirstarter extension patterns and the SESSION_0033 scope guard. The new slices use feature folders, `userActionClient`, `getRequestBrand`, `canEditOrganization`, centralized rate-limit keys, Prisma select payloads, and `writeSchoolOpsAudit`. Verification is credible for the touched slices. Sidecar blockers found during close were fixed before handoff: conversion capacity/waitlist, existing-user identity preservation, converted/lost lead rebooking, and waiver signature scoping. Full-app typecheck remains blocked by pre-existing baseline debt, not by SESSION_0033 paths.
+
+#### SESSION_0033_FINDING_01 — Waitlist position is transactional but not DB-enforced
+- **Severity:** medium
+- **Task:** SESSION_0033_TASK_01
+- **Evidence:** `ProgramEnrollment.waitlistPosition` has no per-program unique constraint; SESSION_0033 uses Prisma `$transaction` and tests idempotency/capacity behavior.
+- **Impact:** Parallel high-volume waitlist writes could still race before a future DB-level constraint or serializable lock strategy lands.
+- **Required follow-up:** Add a pre-launch hardening candidate to revisit waitlist ordering with a DB-level guarantee or explicit serializable/row-lock strategy.
+- **Status:** accepted-risk
+
+#### SESSION_0033_FINDING_02 — Full-app typecheck debt still blocks global type confidence
+- **Severity:** medium
+- **Task:** SESSION_0033_TASK_03
+- **Evidence:** `bunx tsc --noEmit --pretty false` still fails on baseline `PageProps`/`RouteContext`, generated content collections, auth role typing, passport enum drift, and S3 env typing.
+- **Impact:** Touched-slice filtered typecheck is clean, but global refactor confidence remains capped until the baseline debt is retired.
+- **Required follow-up:** Keep `session-0032-typecheck-debt` / SESSION_0032_FINDING_01 visible as a dedicated hardening lane.
+- **Status:** open
+
+**Kaizen triage:** Safe/security confidence is strong for staff-managed actions because tests and smoke prove same-brand/org allow paths and cross-org/cross-brand rejection. Preventable slips: close review caught multiple conversion/waiver edge cases before handoff and regression-tested the repaired paths. Scale confidence: 100 users = 9.7, 1,000 = 9.3, 10,000 = 9.0 because this is staff-managed, low-contention school-ops flow; waitlist DB hardening and global type debt remain visible follow-ups. Aggregate 9.0; proceed to SESSION_0034 unless owner elects a hardening slot.
 
 ### SESSION_0023_REVIEW_01 — Schema Wave A hostile review
 
@@ -592,3 +630,26 @@ SESSION_0033 bow-in.
 Kaizen aggregate **9/10**. The next session should start fresh from the
 pre-staged `SESSION_0033.md` on `session-0032-attendance` after PR #1 merge or
 owner-approved branch selection.
+## SESSION_0034_REVIEW_01 — Independent re-verification of SESSION_0033 hostile close
+
+**Reviewed tasks:** SESSION_0033_TASK_01, SESSION_0033_TASK_02, SESSION_0033_TASK_03
+**Reviewer:** copilot-session-0034 (Giddy + Doug personas — independent of codex-session-0033 author)
+**Dirstarter docs check:** cached docs sufficient (governance session, no Dirstarter-owned layer touched)
+**Sources:** local code review of `apps/web/server/web/{enrollment,family,waiver,lead}/*`, `apps/web/lib/rate-limiter.ts`, `apps/web/scripts/smoke-school-ops-extended.ts`
+
+**Score: 9.8/10** — no hard caps triggered.
+
+| Category | Weight | Score | Note |
+| --- | ---: | ---: | --- |
+| Dirstarter alignment | 2.5 | 2.5 | Feature folders, Prisma, Better Auth safe-actions, rate limiter extended |
+| Data and architecture integrity | 2.0 | 1.8 | Brand/org predicates explicit; F-01 waitlist not DB-enforced (accepted risk) |
+| Lifecycle coverage | 1.5 | 1.5 | Enrollment, family, waiver, Lead→Trial→Converted all proved |
+| Test evidence | 2.0 | 2.0 | 7 action tests, 22 regression, Prisma smoke, validate, grep proof |
+| Merge and docs readiness | 1.0 | 1.0 | Committed and pushed (improved from inline 0.9) |
+| Launch usefulness | 1.0 | 1.0 | Advances May 18 Baseline school-ops lifecycle |
+
+**Kaizen aggregate: 7** (100→9, 1k→8, 10k→7). Waitlist DB enforcement (F-01) and full-app typecheck (F-02) drag the 10k tier. Remediation recommended before public/self-serve enrollment opens. Does not block SESSION_0034 (governance) or SESSION_0035 (different lane focus).
+
+**Re-review delta vs inline (lines 528–548): +0.1. Confirm.** The 0.1 improvement reflects commit+push now complete (merge readiness 0.9→1.0). No new cap-triggering findings. Original 9.7 was honest and slightly conservative.
+
+**Verdict:** SESSION_0033 code is merge-ready. Proceed to PR (TASK_08). F-01 and F-02 remain visible debt carried forward.

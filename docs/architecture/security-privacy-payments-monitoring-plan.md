@@ -4,8 +4,8 @@ slug: security-privacy-payments-monitoring-plan
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-05-02
-last_agent: codex-session-0032
+updated: 2026-05-03
+last_agent: codex-session-0033
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -15,6 +15,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/README.md
+  - docs/sprints/SESSION_0033.md
 ---
 
 # Security, Privacy, Payments, and Monitoring Plan
@@ -199,7 +200,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Cron failures | Detect missed publish/sync/revoke/expiry jobs. | Cody | Any failed scheduled run. |
 | Env validation failures | Detect missing production secrets or wrong URLs. | Cody | Any deploy with missing required secret. |
 | Private storage access failures | Detect bad signed URL or object policy. | Cody | Any private artifact served publicly or blocked incorrectly. |
-| Rate limiter unavailable (fail-open) | Detect when Upstash Redis is unreachable and `isRateLimited` falls back to allowing all calls. Important for `schedule_write` / `instructor_search` keys added in SESSION_0031, `attendance_write` added in SESSION_0032, and any future auth-adjacent limiter. | Doug + Cody | Any sustained `Rate limiter error:` log span > 5 min in production, or any consecutive failure during a deploy window. |
+| Rate limiter unavailable (fail-open) | Detect when Upstash Redis is unreachable and `isRateLimited` falls back to allowing all calls. Important for `schedule_write` / `instructor_search` keys added in SESSION_0031, `attendance_write` added in SESSION_0032, and SESSION_0033 keys `enrollment_write`, `family_write`, `waiver_write`, `lead_write`, `trial_book`, plus any future auth-adjacent limiter. | Doug + Cody | Any sustained `Rate limiter error:` log span > 5 min in production, or any consecutive failure during a deploy window. |
 
 ## Test Plan
 

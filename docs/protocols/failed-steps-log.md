@@ -216,3 +216,96 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   fields. The cody-preflight update landed in SESSION_0031.5 TASK_03 is the
   verification artifact.
 - **Status:** mitigated
+
+### FS-0010 — Blind `--theirs` conflict resolution without content inspection
+
+- **Date:** 2026-05-03
+- **Session:** SESSION_0034 (TASK_06 attendance PR merge)
+- **Class:** Process shortcut — conflict resolution skipped semantic review.
+- **SOP source:** `docs/protocols/merge-to-main.md` — Conflict heuristics table.
+- **Root cause:** During rebase conflict resolution, the operator accepted
+  `--theirs` (incoming branch) for all conflicts without inspecting whether
+  the "ours" side (main) contained newer content from a different session that
+  should be preserved. The assumption was "branch has the latest" without
+  verifying that main might have independently-landed parallel work.
+- **Impact:** In TASK_06, the attendance PR conflicts were ultimately correct
+  to resolve as "theirs" because the branch was the canonical source. But the
+  practice of blanket `--theirs` without `diff` inspection is dangerous when
+  multiple branches land concurrently. Caught by operator review before merge.
+- **Corrective action:**
+  1. Authored `docs/protocols/merge-to-main.md` with explicit conflict
+     heuristics: "doc-only files → keep both sides; code files → diff first."
+  2. Anti-pattern documented: "Never `git checkout --theirs .` without reading
+     the diff."
+- **Verification:** SESSION_0034 TASK_08 (session-0033 rebase) applied the
+  corrected approach — inspected conflicts, kept both sides of doc entries.
+- **Status:** mitigated
+
+### FS-0011 — Git editor hanging on rebase continue
+
+- **Date:** 2026-05-03
+- **Session:** SESSION_0034 (TASK_06, TASK_08)
+- **Class:** Tooling — automated agent blocked by interactive editor prompt.
+- **SOP source:** N/A (new discovery).
+- **Root cause:** `git rebase --continue` opens the configured editor
+  (`$GIT_EDITOR` or `$EDITOR`) for commit message confirmation. In an
+  automated/agent context this causes the process to hang indefinitely waiting
+  for user input that never arrives.
+- **Impact:** Rebase operations stalled until the operator manually identified
+  the editor was blocking and killed the process. Multiple minutes lost per
+  occurrence.
+- **Corrective action:**
+  1. Use `GIT_EDITOR=true git rebase --continue` to accept the default commit
+     message without opening an editor.
+  2. Documented in `merge-to-main.md` step 4.
+- **Verification:** TASK_08 rebase completed successfully with
+  `GIT_EDITOR=true`.
+- **Status:** mitigated
+
+### FS-0012 — Stacked branch rebase attempted on already-merged code
+
+- **Date:** 2026-05-03
+- **Session:** SESSION_0034 (TASK_07 session-0031 assessment)
+- **Class:** Process waste — unnecessary rebase of a branch whose code was
+  already on main via a different merge path.
+- **SOP source:** `docs/protocols/merge-to-main.md` — Step 1 (assess
+  divergence).
+- **Root cause:** The session-0031 branch was assumed to need rebasing because
+  it existed as an unmerged branch. Investigation revealed all its code changes
+  had already landed on main through the attendance squash merge (PR#1), making
+  the branch a subset of main with no unique commits.
+- **Impact:** Six file conflicts appeared during rebase that were all
+  no-ops (both sides identical). Time spent resolving before realizing the
+  branch was redundant.
+- **Corrective action:**
+  1. Before rebasing any branch, run `git diff main..<branch> -- <code paths>`
+     to confirm the branch actually carries unique changes not on main.
+  2. If diff is empty or trivial (docs only), the branch can be deleted without
+     merge.
+  3. Added to `merge-to-main.md` step 1 as "confirm branch carries unique
+     delta."
+- **Verification:** TASK_07 concluded by deleting the redundant remote branch
+  instead of forcing a merge.
+- **Status:** mitigated
+
+### FS-0013 — Doc-only conflicts resolved by dropping one side's entries
+
+- **Date:** 2026-05-03
+- **Session:** SESSION_0034 (TASK_08 session-0033 rebase)
+- **Class:** Data loss risk — doc conflict resolution defaulted to one side.
+- **SOP source:** `docs/protocols/merge-to-main.md` — Conflict heuristics:
+  "Append-only logs → keep both."
+- **Root cause:** `project-log.md` and `wiki/index.md` had conflicts where
+  main carried entries from SESSION_0032.5 and the branch carried entries from
+  SESSION_0033. A naive single-side resolution would drop one session's
+  documentation entries entirely.
+- **Impact:** Caught and resolved correctly by stripping conflict markers and
+  preserving both sets of entries. No data loss occurred.
+- **Corrective action:**
+  1. `merge-to-main.md` heuristics table explicitly states append-only log
+     files should keep both sides.
+  2. Used scripted regex to strip `<<<<<<<`/`=======`/`>>>>>>>` markers rather
+     than manual selection, reducing human error.
+- **Verification:** Post-rebase `project-log.md` and `wiki/index.md` contain
+  entries from both SESSION_0032.5 and SESSION_0033.
+- **Status:** mitigated
