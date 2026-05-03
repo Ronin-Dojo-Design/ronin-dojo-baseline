@@ -2,10 +2,10 @@
 title: "Lane Manifest: S040 — Tool → Directory Listing relabel"
 slug: lane-s040-listing-relabel
 type: lane-manifest
-status: ready
+status: backlog
 created: 2026-05-03
 author: Petey
-session_target: SESSION_0040
+session_target: BACKLOG
 primary_lane: Core platform
 worktree: wt-core-platform
 pairs_with:

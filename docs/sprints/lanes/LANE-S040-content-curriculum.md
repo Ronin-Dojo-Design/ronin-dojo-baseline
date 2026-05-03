@@ -5,7 +5,7 @@ type: lane-manifest
 status: ready
 created: 2026-05-03
 author: Petey
-session_target: SESSION_0041
+session_target: SESSION_0040
 primary_lane: Content and curriculum
 worktree: wt-core-platform
 pairs_with:

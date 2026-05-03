@@ -88,14 +88,13 @@ Brian's observation: we are building then fixing, instead of planning then build
 
 ## Next session
 
-**Goal**: Execute Tool → Listing relabel (D-014 migration plan §14) OR advance to next WORKFLOW 5.0 lane — Brian's call on priority.
+**Goal**: Content + Curriculum surfaces (Course CRUD, Technique library, Certificate templates) — see `docs/sprints/lanes/LANE-S040-content-curriculum.md`
 
 **Inputs to read**:
-- `docs/architecture/dirstarter-baseline-index.md` §14 (migration plan)
-- `docs/architecture/dirstarter-baseline-index.md` §13k (upstream divergence — any that need attention)
-- WORKFLOW 5.0 session calendar for next lane
+- `docs/sprints/lanes/LANE-S040-content-curriculum.md` (lane manifest — all recipes + template files listed)
+- `docs/architecture/dirstarter-baseline-index.md` §3 (server patterns) — only if manifest is insufficient
 
-**First task**: If relabel: update `components/admin/sidebar.tsx` "Tools" → "Listings" and cascade through admin routes. If next lane: consult WORKFLOW 5.0 and bow in normally.
+**First task**: Read lane manifest, confirm Course/Technique/CertificateTemplate models exist in schema, then start Recipe 1 (Course + CurriculumItem admin CRUD).
 
 ## Additional work (late session)
 

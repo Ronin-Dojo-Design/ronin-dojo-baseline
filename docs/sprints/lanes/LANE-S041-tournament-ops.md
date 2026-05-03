@@ -5,7 +5,7 @@ type: lane-manifest
 status: ready
 created: 2026-05-03
 author: Petey
-session_target: SESSION_0042
+session_target: SESSION_0041
 primary_lane: Tournament operations
 worktree: wt-tournaments
 pairs_with:
