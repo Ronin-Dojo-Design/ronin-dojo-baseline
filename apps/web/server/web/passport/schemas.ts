@@ -1,8 +1,8 @@
 import { z } from "zod"
 
 // Use string literals instead of Prisma enums to avoid pulling Prisma runtime into client bundle
-const DirectoryVisibility = z.enum(["PUBLIC", "MEMBERS_ONLY", "PRIVATE"])
-const Gender = z.enum(["MALE", "FEMALE", "NON_BINARY", "PREFER_NOT_TO_SAY"])
+const DirectoryVisibility = z.enum(["PUBLIC", "MEMBERS_ONLY", "HIDDEN"])
+const Gender = z.enum(["MALE", "FEMALE", "NONBINARY", "PREFER_NOT_TO_SAY"])
 
 export const updatePassportSchema = z.object({
   displayName: z.string().max(100).optional(),

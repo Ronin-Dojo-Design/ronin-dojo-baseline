@@ -5,6 +5,14 @@ import { fileTypeFromBuffer } from "file-type"
 import { env, isProd } from "~/env"
 import { s3Client } from "~/services/s3"
 
+const requireEnv = (value: string | undefined, name: string) => {
+  if (!value) {
+    throw new Error(`${name} is required`)
+  }
+
+  return value
+}
+
 /**
  * Uploads a file to S3 and returns the S3 location.
  * @param file - The file to upload.
@@ -12,14 +20,17 @@ import { s3Client } from "~/services/s3"
  * @returns The S3 location of the uploaded file.
  */
 export const uploadToS3Storage = async (file: Buffer, key: string) => {
-  const endpoint = env.S3_PUBLIC_URL ?? `https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com`
+  const bucket = requireEnv(env.S3_BUCKET, "S3_BUCKET")
+  const endpoint =
+    env.S3_PUBLIC_URL ??
+    `https://${bucket}.s3.${requireEnv(env.S3_REGION, "S3_REGION")}.amazonaws.com`
   const fileType = await fileTypeFromBuffer(file)
   const s3Key = `${key}.${fileType?.ext ?? "png"}`
 
   const upload = new Upload({
     client: s3Client,
     params: {
-      Bucket: env.S3_BUCKET,
+      Bucket: bucket,
       Key: s3Key,
       Body: file,
       StorageClass: "STANDARD",
@@ -61,8 +72,9 @@ export const removeS3Directory = async (directory: string) => {
   // Safety flag to prevent accidental deletion of S3 files
   if (!isProd) return
 
+  const bucket = requireEnv(env.S3_BUCKET, "S3_BUCKET")
   const listCommand = new ListObjectsV2Command({
-    Bucket: env.S3_BUCKET,
+    Bucket: bucket,
     Prefix: `${directory}/`,
   })
 
@@ -86,7 +98,7 @@ export const removeS3Directory = async (directory: string) => {
  */
 export const removeS3File = async (key: string) => {
   const deleteCommand = new DeleteObjectCommand({
-    Bucket: env.S3_BUCKET,
+    Bucket: requireEnv(env.S3_BUCKET, "S3_BUCKET"),
     Key: key,
   })
 
@@ -113,9 +125,10 @@ export const getFaviconFetchUrl = (url: string) => {
  * @returns The URL of the screenshot API endpoint.
  */
 export const getScreenshotFetchUrl = (url: string) => {
+  const accessKey = requireEnv(env.SCREENSHOTONE_ACCESS_KEY, "SCREENSHOTONE_ACCESS_KEY")
   const params = new URLSearchParams({
     url,
-    access_key: env.SCREENSHOTONE_ACCESS_KEY,
+    access_key: accessKey,
 
     // Blockers
     delay: "1",

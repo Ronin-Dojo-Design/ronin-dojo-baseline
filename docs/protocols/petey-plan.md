@@ -4,8 +4,8 @@ slug: petey-plan
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0012
+updated: 2026-05-02
+last_agent: codex-session-0032-5
 pairs_with:
   - docs/agents/petey.md
   - docs/protocols/review-recommend.md
@@ -37,6 +37,10 @@ A structured protocol for Petey to produce a session plan. Can be invoked at bow
 3. `docs/architecture/program-plan.md` — current sprint row + deliverable
 4. `docs/knowledge/wiki/manual-boundary-registry.md` — open boundaries that could be the next proof target
 5. Relevant ADRs / `plan-vs-current.md` — only if the task touches schema or architecture
+6. Live `https://dirstarter.com/docs` pages for every Dirstarter-owned layer
+   the task touches: project structure, Prisma/database, Better Auth,
+   payments/Stripe, storage/media, deployment/cron, content/blog/SEO,
+   rate limiting, analytics, or UI primitives.
 
 If any input is missing or stale, flag it in the plan under `## Risks`.
 
@@ -82,6 +86,14 @@ Anything that could block or derail.
 ### Scope guard
 If additional work surfaces during execution, note it in SESSION file under
 `Open decisions / blockers` — do NOT expand scope mid-task.
+
+### Dirstarter implementation template
+- **Docs read first:** <URLs + timestamp/date checked, or "not applicable">
+- **Baseline pattern to extend:** <feature folders, Prisma/service shape,
+  auth/action chain, integration helper, component primitive, etc.>
+- **Custom delta:** <what Ronin adds on top of the purchased boilerplate>
+- **No-bypass proof:** <why this is not replacing a Dirstarter capability
+  without reason>
 ```
 
 ## Rules
@@ -91,6 +103,13 @@ If additional work surfaces during execution, note it in SESSION file under
 3. **Petey does not execute.** Hand off to Cody (or Doug for QA) once the plan is approved.
 4. **Plans are disposable.** If the user overrides, adapt. Don't defend the plan.
 5. **Scope guard is mandatory.** Adjacent tech debt or ideas go into `Open decisions / blockers`, not inline fixes.
+6. **Dirstarter before custom.** When a task touches a Dirstarter-owned layer,
+   the plan must use the relevant live Dirstarter docs as the guiding template
+   before implementation starts. The hostile close review still re-checks those
+   same docs afterward.
+7. **Efficiency without regression.** If a plan adds protocol work, test work,
+   or extra review steps, it must name the effectiveness it protects. If a
+   lighter process gives the same proof, prefer the lighter process.
 
 ## Closing integration
 

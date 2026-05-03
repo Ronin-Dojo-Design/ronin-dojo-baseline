@@ -1,3 +1,4 @@
+import type { Post } from "content-collections"
 import type {
   AboutPage,
   AggregateRating,
@@ -13,7 +14,6 @@ import type {
   WebPage,
   WebSite,
 } from "schema-dts"
-import type { Post } from "~/.content-collections/generated"
 import { siteConfig } from "~/config/site"
 import type { ToolMany, ToolOne } from "~/server/web/tools/payloads"
 

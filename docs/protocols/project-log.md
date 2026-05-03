@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-02
-last_agent: codex-session-0032
+last_agent: codex-session-0032-5
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -126,6 +126,14 @@ Three sections:
 - **Seed data:** no durable seed changes; tests and smoke use tagged dev-DB fixtures with cleanup.
 - **Smoke test:** `bun test server/web/attendance/actions.test.ts` 7/7; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed allow/deny/idempotency matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the attendance/school-ops touched paths.
 
+### S32_5_TYPECHECK_DEBT — Full app typecheck baseline
+- **Session:** SESSION_0032.5
+- **Sprint:** S2 / QA hardening
+- **Status:** ✅ verified, pause-gated before SESSION_0033
+- **Files:** `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/lib/auth.ts`, `apps/web/lib/media.ts`, `apps/web/services/s3.ts`, `apps/web/lib/structured-data.ts`, `apps/web/server/web/passport/*`, `apps/web/server/web/tools/queries.ts`
+- **Seed data:** n/a.
+- **Smoke test:** `bun run typecheck` passed; `bunx tsc --noEmit --pretty false` passed after `next typegen`; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed; `bunx prisma validate --schema prisma/schema.prisma` passed.
+
 ---
 
 ## Task plan log
@@ -185,6 +193,8 @@ Three sections:
 | SESSION_0032_TASK_01 | SESSION_0032 | School operations | Cody + Giddy + Doug | Attendance actions, audit, and rate limits | `recordCheckIn`, `markAttendance`, and `voidCheckIn` exist under `server/web/attendance/*`; staff-only same-brand/org writes are catalog-error-only, idempotent, `attendance_write` rate-limited, and AuditLogged | landed | SESSION_0032_REVIEW_01 |
 | SESSION_0032_TASK_02 | SESSION_0032 | School operations | Doug + Cody | Rejection matrix smoke and monitoring row | Attendance action tests cover audit/rate-limit behavior; `smoke-attendance.ts` proves allow/deny matrix; monitoring doc names `attendance_write` | landed | SESSION_0032_REVIEW_01 |
 | SESSION_0032_TASK_03 | SESSION_0032 | School operations + close | Petey + Doug | Full close evidence and LLM-agnostic handoff | SESSION_0032 closed-full with verification commands, hostile review, WORKFLOW score, open findings, and SESSION_0033 recommendation | landed | SESSION_0032_REVIEW_01 |
+| SESSION_0032_5_TASK_01 | SESSION_0032.5 | QA hardening | Cody + Giddy | Full typecheck debt remediation | `bunx tsc --noEmit --pretty false` passes without starting SESSION_0033 product work | landed | — |
+| SESSION_0032_5_TASK_02 | SESSION_0032.5 | QA hardening + close | Doug + Petey | Verification evidence and pause gate | Full typecheck proof, touched-files summary, and owner runway decision point recorded | landed | SESSION_0032_5_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
@@ -492,3 +502,93 @@ replaced.
 can proceed to Program enrollments / family groups / waivers / trial lifecycle
 unless the owner chooses to spend the next session on the existing full
 typecheck baseline debt.
+
+### SESSION_0032_5_REVIEW_01 - Full typecheck debt hardening close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0032_5_TASK_01, SESSION_0032_5_TASK_02.
+
+**Score: 10.0/10** - Full generated app typecheck baseline is clean and
+SESSION_0033 product work was not started.
+
+**Dirstarter docs check:** live docs checked.
+
+**Sources:** `docs/sprints/SESSION_0032_5.md`,
+`https://dirstarter.com/docs/codebase/structure`,
+`https://dirstarter.com/docs/database/prisma`,
+`https://dirstarter.com/docs/authentication`,
+`https://dirstarter.com/docs/environment-setup`,
+`https://dirstarter.com/docs/integrations/media`,
+`apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/lib/auth.ts`,
+`apps/web/lib/media.ts`, `apps/web/services/s3.ts`,
+`apps/web/server/web/passport/*`, `apps/web/server/web/tools/queries.ts`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* The preemption was correct. It removed the compiler
+  noise before SESSION_0033's multi-aggregate school-ops work. The only scope
+  expansion was a protocol improvement requested by the owner during close.
+- *Dirstarter compliance (Giddy):* The fixes preserve the purchased
+  Dirstarter baseline: modular project shape, Prisma generated types, Better
+  Auth admin/one-time-token plugins, type-safe env handling, and media/S3
+  integration expectations. `petey-plan.md` now requires Dirstarter docs as the
+  implementation template before Cody starts when a Dirstarter layer is touched.
+- *Security (Doug):* Auth changes are typing/config alignment only:
+  `BETTER_AUTH_SECRET` is supplied to Better Auth, optional Google credentials
+  are gated, and role/API plugin inference is preserved. No authz predicate was
+  loosened.
+- *Data integrity (Doug):* No schema changes. Passport/Directory zod literals
+  now match `schema.prisma`; DirectoryProfile read payload now includes the
+  schema fields expected by the `/me` editor contract.
+- *Lifecycle proof (Doug):* The lifecycle served here is repo health before the
+  next product slice. The old `SESSION_0032_FINDING_01` gate is addressed.
+- *Verification honesty (Doug):* `bun run typecheck` passed; raw
+  `bunx tsc --noEmit --pretty false` passed after typegen generated ignored
+  artifacts; Prisma validate passed; schedule+attendance tests passed 22/22;
+  attendance smoke passed; wiki lint passed on 127 markdown files; diff check
+  passed.
+- *Workflow honesty (Petey):* SESSION_0032.5 has a Petey plan, task IDs,
+  Dirstarter alignment, subagent budgeted explorers, close evidence, review
+  entry, wiki/index update, and next-session recommendation.
+- *Merge readiness (Giddy):* Local branch `session-0032-typecheck-debt` is ready
+  for commit. Do not push without owner approval. Combine with the pushed
+  `session-0032-attendance` branch carefully because `SESSION_0033.md` was
+  pre-staged there at `d1981fa`.
+
+**Kaizen reflection triage (Q1/Q2/Q3):**
+
+- **Q1 (safe and secure?):** 10/10 for this QA-hardening gate. Auth config is
+  stricter, not looser, and school-ops regression tests still pass.
+- **Q2 (failed-step prevention?):** 9/10. One planning gap was exposed:
+  Dirstarter docs were previously enforced mainly at close. `petey-plan.md` now
+  requires Dirstarter docs as the planning template before implementation, and
+  `hostile-close-review.md` now checks whether that happened. Efficiency rule
+  added: simplify protocols only when proof/security/alignment do not regress.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 10 / 10 / 9. The generated typecheck
+  gate is clean at all codebase scales likely before launch; 10k gets 9 because
+  typed-routes validator cleanup remains a separate future `next build` gate if
+  the team promotes it.
+
+**Score-gate verdict:** Kaizen aggregate **9/10** -> proceed to fresh
+SESSION_0033 bow-in.
+
+**Findings:**
+
+- **SESSION_0032_FINDING_01** - Full app typecheck baseline debt.
+  **Severity:** medium. **Task:** SESSION_0032_5_TASK_01. **Evidence:**
+  `bun run typecheck` and `bunx tsc --noEmit --pretty false` passed in
+  `apps/web` after `next typegen`. **Impact:** the noisy compiler baseline no
+  longer blocks SESSION_0033 planning/execution. **Required follow-up:** use
+  `bun run typecheck` as the generated typecheck gate; run raw `tsc` after
+  typegen when reproducing. **Status:** addressed.
+- **SESSION_0032_5_FINDING_01** - Typed-routes validator debt remains outside
+  this gate. **Severity:** low. **Task:** SESSION_0032_5_TASK_01. **Evidence:**
+  including generated `.next/types/validator.ts` surfaces dynamic-link typing
+  errors, but `tsconfig.json` continues to exclude `.next` as before.
+  **Impact:** no impact on the raw generated typecheck gate; possible future
+  `next build` hardening target. **Required follow-up:** address in a dedicated
+  QA-hardening slice if `next build` becomes the launch gate. **Status:** open.
+
+**Verdict:** SESSION_0032.5 closes full at WORKFLOW rubric **10.0/10** and
+Kaizen aggregate **9/10**. The next session should start fresh from the
+pre-staged `SESSION_0033.md` on `session-0032-attendance` after PR #1 merge or
+owner-approved branch selection.
