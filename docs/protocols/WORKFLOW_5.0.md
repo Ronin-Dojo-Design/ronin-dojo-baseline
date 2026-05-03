@@ -166,13 +166,14 @@ This table is reality-adjusted as of SESSION_0029. Completed sessions show the a
 | Apr 30 actual | 0031 | School operations | Class schedules + sessions + instructor assignments executed with all 11 SESSION_0030 security gates verified; closed-full at WORKFLOW rubric 10/10 / Kaizen aggregate 7/10 |
 | May 1 target | 0031.5 | Core platform governance + School operations | Schedule slice hardening: pagination + status filter, action-level test for gates 4/9, Cody pre-flight protocol update, dev-environment runbook, materialize instrumentation, DST + concurrency tests. Kaizen aggregate must reach ≥ 9 before SESSION_0032 begins. |
 | May 1–2 target | 0032 | School operations | Attendance/check-in flows and staff class-control surface (gated on SESSION_0031.5 Kaizen ≥ 9) |
-| May 3 target | 0033 | School operations | Program enrollments, family groups, waivers, trial lifecycle |
-| May 4 target | 0034 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring (entitlement-first per ADR 0011) |
-| May 5 target | 0035 | School operations | Lead intake, trial conversion, CRM follow-up states |
-| May 6 target | 0036 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
-| May 7 target | 0037 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
-| May 8 target | 0038 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
-| May 9 target | 0039 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
+| May 3 actual | 0033 | School operations | Program enrollments, family groups, waivers, trial lifecycle; closed-full 9.7/10 |
+| May 3 actual | 0034 | Core platform governance | Merge-train: landed SESSION_0032+0033 branches, authored merge-to-main protocol, failed-steps FS-0010–0013, WORKFLOW calendar update. No feature code. |
+| May 4 target | 0035 | School operations | Entitlement layer, pricing plans, contracts, invoices, Stripe account wiring (entitlement-first per ADR 0011) |
+| May 5 target | 0036 | School operations | Lead intake, trial conversion, CRM follow-up states |
+| May 6 target | 0037 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
+| May 7 target | 0038 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
+| May 8 target | 0039 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
+| May 9 target | 0040 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
 | May 10-17 target | 0040 | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
 | May 18 target | 0041 | Launch day | Release execution, monitoring, support, post-launch triage |
 
