@@ -76,6 +76,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0009 Mobile Auth Strategy](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
 | [ADR 0010 Cache Strategy](../../architecture/decisions/0010-cache-strategy.md) | decision | proposed |
 | [ADR 0011 Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
+| [ADR 0012 Admin CRUD Routing Pattern](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
 
 ## Sessions
 
@@ -118,6 +119,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0033](../../sprints/SESSION_0033.md) | session | closed-full |
 | [SESSION_0034](../../sprints/SESSION_0034.md) | session | closed-full |
 | [SESSION_0035](../../sprints/SESSION_0035.md) | session | closed-full |
+| [SESSION_0036](../../sprints/SESSION_0036.md) | session | closed-quick |
+| [SESSION_0037](../../sprints/SESSION_0037.md) | session | closed-quick |
+| [SESSION_0038](../../sprints/SESSION_0038.md) | session | pending |
 
 ## Protocols
 

@@ -212,6 +212,15 @@ Three sections:
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_04 | Roadmap | Governance + close | Petey + Doug | Full closing ritual and cleanup boundary mark | Full close evidence recorded; MB-012 added for Local by Flywheel WordPress cleanup | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_02 |
+| SESSION_0037_TASK_01 | SESSION_0037 | School operations (planning) | Petey + Giddy | Dirstarter alignment audit + lead backend gap analysis | Entitlement completeness audited; Dirstarter admin CRUD pattern inventoried; lead backend gaps identified; flat vs nested routing resolved | landed | — |
+| SESSION_0037_TASK_02 | SESSION_0037 | School operations (planning) | Petey | Revised Petey plan (Dirstarter-aligned, 5 tasks) | SESSION_0037.md contains full task breakdown cloning Dirstarter tools pattern for leads | landed | — |
+| SESSION_0037_TASK_03 | SESSION_0037 | Core platform governance | Giddy | ADR 0012: admin CRUD flat routing | ADR exists at `docs/architecture/decisions/0012-admin-crud-routing-pattern.md` | landed | — |
+| SESSION_0037_TASK_04 | SESSION_0037 | School operations (planning) | Petey | Pre-stage SESSION_0038 with carried plan | SESSION_0038.md exists with status pending, full Petey plan, Dirstarter alignment table, pre-resolved decisions | landed | — |
+| SESSION_0038_TASK_01 | SESSION_0038 | School operations | Cody | Server layer: admin queries + schemas + missing actions | `server/admin/leads/{schema,queries,actions}.ts` compile and follow Dirstarter conventions | planned | — |
+| SESSION_0038_TASK_02 | SESSION_0038 | School operations | Cody | Admin lead list page + table | `/admin/leads` renders with filtering, sorting, pagination using DataTable | planned | — |
+| SESSION_0038_TASK_03 | SESSION_0038 | School operations | Cody | Admin lead create + edit forms | Create/edit leads from admin using shared form (RHF + Zod) | planned | — |
+| SESSION_0038_TASK_04 | SESSION_0038 | School operations | Cody | Lead detail: status transitions + follow-up panel | Full lead lifecycle operable from admin detail page | planned | — |
+| SESSION_0038_TASK_05 | SESSION_0038 | School operations | Cody + Doug | Public lead capture + smoke test | End-to-end lifecycle: public form → admin conversion → smoke test passes | planned | — |
 
 ---
 
