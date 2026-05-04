@@ -144,6 +144,30 @@ Three sections:
 - **Seed data:** no durable seed changes; action tests and smoke use tagged dev-DB fixtures with cleanup.
 - **Smoke test:** `bun test server/web/enrollment server/web/family server/web/waiver server/web/lead` 7/7; `bun test server/web/schedule server/web/attendance` 22/22; `bun scripts/smoke-school-ops-extended.ts` passed enrollment/family/waiver/lead allow-deny-convert matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the SESSION_0033 touched paths.
 
+### S58_TOURNAMENT_SNAPSHOTS_AUTH — Tournament registration snapshots + admin auth hardening
+- **Session:** SESSION_0058
+- **Sprint:** P0–P2 remediation
+- **Status:** ✅ verified
+- **Files:** `apps/web/server/web/tournaments/register.ts`, `apps/web/app/api/stripe/webhooks/route.ts`, `apps/web/components/admin/auth-hoc.tsx`
+- **Seed data:** no
+- **Smoke test:** `bunx tsc --noEmit` passes; code review confirmed snapshot fields populated in both free and paid registration paths; PricingPlanActions type mismatch investigated and closed as INVALID (TypeScript structural typing).
+
+### S59_CACHE_ENROLLMENT_DRIFT — Cache pattern upgrade + enrollment Passport check + drift close
+- **Session:** SESSION_0059
+- **Sprint:** P0–P2 remediation
+- **Status:** ✅ verified
+- **Files:** `apps/web/server/web/organization/queries.ts`, `apps/web/server/web/directory/queries.ts`, `apps/web/server/web/enrollment/actions.ts`, `apps/web/server/web/enrollment/errors.ts`
+- **Seed data:** no
+- **Smoke test:** `bunx tsc --noEmit` passes; public queries upgraded to `"use cache"` + `cacheTag` + `cacheLife`; auth-scoped queries kept with React `cache()`; enrollment Passport assertion added to both `enrollInProgram` and `joinProgramWaitlist`; D-005 and D-011 closed.
+
+### S60_HOSTILE_CLOSE_REVIEW — Cross-session hostile-close review (audit only, no code)
+- **Session:** SESSION_0060
+- **Sprint:** Hostile-close review
+- **Status:** ✅ review complete — 6 P1 + 1 P2 + 3 P3 findings documented
+- **Files:** no code changes (audit session)
+- **Seed data:** no
+- **Smoke test:** wiki:lint passed clean (169 files, 0 violations); D-006 and D-010 closed; `program-plan.md` marked `partially-superseded`.
+
 ---
 
 ## Task plan log
@@ -221,6 +245,13 @@ Three sections:
 | SESSION_0038_TASK_03 | SESSION_0038 | School operations | Cody | Admin lead create + edit forms | Create/edit leads from admin using shared form (RHF + Zod) | planned | — |
 | SESSION_0038_TASK_04 | SESSION_0038 | School operations | Cody | Lead detail: status transitions + follow-up panel | Full lead lifecycle operable from admin detail page | planned | — |
 | SESSION_0038_TASK_05 | SESSION_0038 | School operations | Cody + Doug | Public lead capture + smoke test | End-to-end lifecycle: public form → admin conversion → smoke test passes | planned | — |
+| SESSION_0058_TASK_01 | SESSION_0058 | P0–P2 remediation | Cody | Tournament registration snapshot fields | `snapshotRankName` + `snapshotOrgName` populated in free and paid paths | landed | — |
+| SESSION_0058_TASK_02 | SESSION_0058 | P0–P2 remediation | Doug | PricingPlanActions type investigation | Investigated and closed as INVALID — structural typing covers it | landed | — |
+| SESSION_0058_TASK_03 | SESSION_0058 | P0–P2 remediation | Cody | Admin auth HOC hardening (D-013) | `redirect("/")` → `notFound()` per auth.md | landed | — |
+| SESSION_0059_TASK_01 | SESSION_0059 | P0–P2 remediation | Cody | Cache pattern upgrade (D-005) | Public queries use `"use cache"` + `cacheTag` + `cacheLife` | landed | — |
+| SESSION_0059_TASK_02 | SESSION_0059 | P0–P2 remediation | Cody | D-011 close | Drift register updated, evidence recorded | landed | — |
+| SESSION_0059_TASK_03 | SESSION_0059 | P0–P2 remediation | Cody | Enrollment Passport assertion | `assertUserHasPassport` added to `enrollInProgram` + `joinProgramWaitlist` | landed | — |
+| SESSION_0060_TASK_01 | SESSION_0060 | Hostile-close review | Doug | Cross-session hostile-close audit | 6 P1 admin brand-scoping gaps found; D-006/D-010 closed; launch readiness assessed | landed | SESSION_0060_REVIEW_01 |
 
 ---
 
@@ -560,78 +591,6 @@ Three sections:
 
 **Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
 
-### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
-
-**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
-
-**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
-
-**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
-
-**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
-
-**Hostile review verdicts:**
-
-- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
-- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
-- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
-- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
-- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
-- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
-- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
-
-**Kaizen reflection triage (Q1/Q2/Q3):**
-
-- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
-- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
-- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
-
-**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
-
-**Findings:**
-
-- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
-- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
-- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
-
-**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
-
-### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
-
-**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
-
-**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
-
-**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
-
-**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
-
-**Hostile review verdicts:**
-
-- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
-- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
-- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
-- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
-- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
-- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
-- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
-
-**Kaizen reflection triage (Q1/Q2/Q3):**
-
-- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
-- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
-- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
-
-**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
-
-**Findings:**
-
-- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
-- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
-- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
-
-**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
-
 ## SESSION_0042_TO_0046_REVIEW_01 — Hostile Close: Tournament Ops + Registration Lifecycle (5-session batch)
 
 **Reviewed tasks:** SESSION_0042_TASK_01–09, SESSION_0043_TASK_01–05, SESSION_0044_TASK_01–04, SESSION_0045_TASK_01–06, SESSION_0046_TASK_01–05
@@ -741,3 +700,40 @@ Aggregate **7** → Stage a remediation session (SESSION_NNNN.5) covering:
 **Score: 9.2/10** (WORKFLOW rubric). Missing credible verification (no integration tests) caps at 9.4; all other rubric categories pass.
 
 **Verdict:** Sessions 0042–0046 deliver a complete tournament registration lifecycle from admin CRUD through cancellation with Stripe refund. Code is merge-ready with three open findings (F-01 medium, F-02 medium, F-03 low). Kaizen aggregate 7 requires a remediation session before this lane advances further. Recommended: SESSION_0046.5 to address F-01 (stripePaymentIntentId migration) and F-02 (serializable capacity check).
+
+### SESSION_0060_REVIEW_01 — Cross-session hostile-close review (SESSION_0057–0060)
+
+- **Reviewer:** Doug (hostile review persona)
+- **Sessions covered:** SESSION_0057, SESSION_0058, SESSION_0059, SESSION_0060
+- **Date:** 2025-07-13
+
+#### Scope
+
+Full hostile-close review across four remediation sessions. Audited all code changes for brand scoping, security, Dirstarter compliance, cache correctness, and admin authorization gaps.
+
+#### P1 findings (6) — Admin brand-scoping gaps
+
+1. `admin/tournaments/actions.ts` — Tournament CRUD does not filter by `getRequestBrand()` (create, update, delete)
+2. `admin/tournaments/queries.ts` — Tournament listing does not filter by brand
+3. `admin/courses/actions.ts` — Course CRUD does not filter by `getRequestBrand()` (create, update, delete)
+4. `admin/courses/queries.ts` — Course listing does not filter by brand
+5. `admin/certificates/actions.ts` — Certificate template CRUD does not filter by `getRequestBrand()`
+6. `admin/certificates/queries.ts` — Certificate template listing does not filter by brand
+
+**Root cause:** `adminActionClient` in `lib/safe-actions.ts` does not resolve brand into context. Each admin action must manually call `getRequestBrand()`, and three domains missed it.
+
+**Required fix:** Add `ctx.brand` to `adminActionClient` chain, then enforce in all admin actions/queries for brand-scoped models.
+
+#### P2 findings (1)
+
+- `program-plan.md` still referenced as canonical but partially superseded by actual implementation. Marked `partially-superseded` in SESSION_0060.
+
+#### P3 findings (3)
+
+- No integration tests for tournament registration Stripe flow
+- No e2e test for enrollment Passport guard
+- Cache invalidation not yet wired to mutations (future work)
+
+#### Verdict
+
+Sessions 0058–0059 shipped clean, correct code. SESSION_0060 identified 6 P1 brand-scoping gaps requiring a dedicated fix session (SESSION_0061). No protocol violations. Wiki-lint clean. All drift items resolved or consciously deferred.

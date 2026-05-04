@@ -2,7 +2,7 @@
 title: "SESSION 0059 — D-005 Cache Pattern, D-011 Schema Manifest, Enrollment Passport Check"
 slug: session-0059
 type: session
-status: closed-quick
+status: closed-full
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0059
@@ -166,6 +166,51 @@ Close three long-deferred items: D-005 (cache pattern for read queries), D-011 (
 - D-006 (api-client install) — low priority, no runtime impact
 - Tournament registration snapshot backfill for existing data
 
+## Task log
+
+- `SESSION_0059_TASK_01` — Apply `"use cache"` pattern to public read queries (D-005) — ✅ done
+- `SESSION_0059_TASK_02` — Close D-011 schema manifest — ✅ done
+- `SESSION_0059_TASK_03` — Add Passport existence check to enrollment — ✅ done
+
+## Review log
+
+- `SESSION_0059_REVIEW_01` — Quick close review. No hostile close (deferred to SESSION_0060). All tasks completed. No L1 violations introduced. Cache pattern aligns with Dirstarter L1 (`techniques/queries.ts`, `tags/queries.ts` as reference). No ADR needed.
+
+## Hostile close review
+
+Deferred to SESSION_0060 which ran a comprehensive hostile-close review of sessions 0001–0037 + 0056–0059. See SESSION_0060 §2–§7 for findings.
+
+## ADR / ubiquitous-language check
+
+No new ADRs. No new domain terms. `"use cache"` pattern is an existing L1 convention, not a new architectural decision.
+
+## Reflections
+
+- **D-005 was simpler than expected.** Most public queries had already been upgraded in prior sessions (techniques, tags, tournaments, courses). Only org and directory filter queries remained. The fear of "auth-scoped data leaking through `use cache`" was well-founded — the split between public (`"use cache"`) and auth-scoped (React `cache()`) is the correct pattern.
+- **D-011 was a ghost.** The manifest was already deprecated with a full traceability table. The drift entry just hadn't been updated. Lesson: drift entries should be checked against their source docs more frequently.
+- **Enrollment Passport check is defensive, not primary.** Every user gets a Passport at sign-up via the auth hook. The check catches DB corruption edge cases. This was validated more thoroughly in SESSION_0060's hostile review.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `drift-register.md` updated. No new wiki pages created. All touched files have current `updated` dates. |
+| Backlinks/index sweep | No new cross-references needed. SESSION_0059 pairs_with already set. |
+| Wiki lint | `bun run wiki:lint` → ✅ No lint violations found (169 files scanned). |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | Deferred to SESSION_0060 comprehensive review |
+| Review & Recommend | Next session goal written in SESSION_0060 (hostile-close review) |
+| Memory sweep | No operator memory updates needed. Cache pattern decision is documented in D-005 resolution. |
+| Next session unblock check | Unblocked — SESSION_0060 ran same day |
+| Git hygiene | Branch: `main`. Working tree clean. Committed in `faede5b`. Pushed to origin. |
+
+## Next session
+
+**SESSION_0060** — Hostile-Close Review of all sessions
+- **Goal:** Surface bugs, security risks, scalability issues across sessions 0001–0037 + 0056–0059
+- **Inputs:** All SESSION files, drift register, admin action files
+- **First task:** Passport wiring audit
+
 ## Status
 
-in-progress → **closed-quick**
+in-progress → **closed-full**

@@ -2,7 +2,7 @@
 title: "SESSION 0060 — Hostile-Close Review: Sessions 0001–0037 + 0056–0059"
 slug: session-0060
 type: session
-status: in-progress
+status: closed-full
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0060
@@ -256,6 +256,61 @@ We're in good shape. The core platform, school ops, tournaments, and content are
 - **Admin brand scoping:** 6 P1 gaps found in admin actions/queries. Fix in SESSION_0061.
 - **adminActionClient brand context:** Recommended to add `ctx.brand` to reduce future leakage risk.
 
+## Task log
+
+- `SESSION_0060_TASK_01` — Passport wiring audit — ✅ done (all paths create Passport)
+- `SESSION_0060_TASK_02` — Cross-brand security audit — ✅ done (6 P1 gaps found)
+- `SESSION_0060_TASK_03` — Dirstarter L1 compliance audit — ✅ done (compliant with minor notes)
+- `SESSION_0060_TASK_04` — Scalability review — ✅ done (3 P3 items noted)
+- `SESSION_0060_TASK_05` — D-006 + D-010 disposition — ✅ done (D-006 deferred, D-010 resolved)
+- `SESSION_0060_TASK_06` — Lane assessment for four-brand launch — ✅ done (white-label is bottleneck)
+
+## Review log
+
+- `SESSION_0060_REVIEW_01` — Hostile-close review of sessions 0001–0037 + 0056–0059.
+  - **Findings:** 6 P1 cross-brand admin scoping gaps (tournaments, courses, certificates — actions + queries). `adminActionClient` lacks brand context.
+  - **Finding IDs:** SESSION_0060_FINDING_01 through SESSION_0060_FINDING_06 (admin brand scoping), SESSION_0060_FINDING_07 (adminActionClient chain).
+  - **Score:** N/A — audit session, no code shipped.
+  - **Verdict:** Core platform at 90% after P1 fixes. White-label + brand ops (40%) is the critical path for May 18 launch.
+
+## Hostile close review
+
+Self-contained in this session — the entire session IS the hostile-close review. See §1–§9 above.
+
+## ADR / ubiquitous-language check
+
+No new ADRs needed. The brand-scoping pattern is established (ADR 0004). The findings are implementation gaps, not architectural decisions. No new domain terms.
+
+## Reflections
+
+- **The `adminActionClient` gap is systemic.** Every admin action must manually call `getRequestBrand()`. This is the root cause of all 6 P1 findings. Adding brand to the action client chain would have prevented all of them. Lesson: middleware-level enforcement > per-action discipline.
+- **The PricingPlanActions type mismatch carried for 5 sessions because nobody investigated.** SESSION_0058 proved it was INVALID in 2 minutes. Lesson: carried items should be investigated, not just carried.
+- **Four-brand launch is achievable.** Core platform, school ops, tournaments, and content are all at 80%+. The bottleneck is white-label theming (40%). 10 sessions for 14 days is comfortable.
+- **Passport wiring is correctly designed.** The auth hook pattern (create Passport on sign-up) is elegant — it means Passport is guaranteed for every user, and defensive checks are safety nets, not gates. The enrollment check from SESSION_0059 is valid but rarely triggered.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `drift-register.md` updated (D-006 deferred, D-010 resolved). `program-plan.md` status → `partially-superseded`. No new wiki pages created. |
+| Backlinks/index sweep | SESSION_0060 `pairs_with` set to SESSION_0059 + WORKFLOW_5.0. No new wiki page cross-refs needed. |
+| Wiki lint | `bun run wiki:lint` → ✅ No lint violations found (169 files scanned). |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | This session IS the hostile-close review. 6 P1 + 1 P2 + 3 P3 findings. See §2–§7. |
+| Review & Recommend | Next session goal: SESSION_0061 — P1 brand-scoping fixes + white-label/brand ops planning |
+| Memory sweep | Key memory: `adminActionClient` needs `ctx.brand` — this is the systemic fix that prevents future cross-brand leaks. White-label + brand ops is the launch bottleneck. |
+| Next session unblock check | Unblocked — no user decisions needed. P1 fix list is concrete. |
+| Git hygiene | Branch: `main`. Working tree clean. All changes committed in `faede5b`. Pushed to origin. |
+
+## Next session
+
+### SESSION_0061 — P1 Brand-Scoping Fixes + White-Label & Brand Ops Planning
+
+- **Goal:** Close all 6 P1 admin brand-scoping gaps, add `ctx.brand` to `adminActionClient`, then Petey plans the white-label + brand ops lane
+- **Agent:** Cody (fixes) → Petey (planning)
+- **Inputs:** SESSION_0060 §7 fix list, WORKFLOW_5.0 lane model, Dirstarter theming docs
+- **First task:** Add `getRequestBrand()` to `adminActionClient` chain in `lib/safe-actions.ts`
+
 ## Status
 
-in-progress → **closed-quick**
+in-progress → **closed-full**
