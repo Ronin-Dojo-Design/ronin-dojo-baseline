@@ -1,10 +1,14 @@
 "use server"
 
+import { after } from "next/server"
 import type { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
+import { sendEmail } from "~/lib/email"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
+import { siteConfig } from "~/config/site"
+import { EmailMagicLink } from "~/emails/magic-link"
 import { LEAD_ERROR } from "~/server/web/lead/errors"
 import { type LeadRecord, leadPayload, leadProgramPayload } from "~/server/web/lead/payloads"
 import {
@@ -341,6 +345,7 @@ export const convertLead = userActionClient
       membershipId: string
       enrollmentId: string | null
       waiverSignatureIds: string[]
+      isNewUser: boolean
     }
     try {
       result = await db.$transaction(async tx => {
@@ -531,6 +536,7 @@ export const convertLead = userActionClient
           membershipId: membership.id,
           enrollmentId: enrollment?.id ?? null,
           waiverSignatureIds,
+          isNewUser: !existingUser,
         }
       })
     } catch (error) {
@@ -584,6 +590,22 @@ export const convertLead = userActionClient
     }
 
     revalidate({ paths: REVALIDATE_LEAD_PATHS(lead.organizationId, lead.id) })
+
+    // Send welcome email to newly created users directing them to log in
+    if (result.isNewUser && lead.email) {
+      after(async () => {
+        try {
+          const loginUrl = `${siteConfig.url}/login`
+          await sendEmail({
+            to: lead.email as string,
+            subject: `Welcome to ${siteConfig.name} — Set Up Your Account`,
+            react: EmailMagicLink({ to: lead.email as string, url: loginUrl }),
+          })
+        } catch (err) {
+          console.error("Failed to send welcome email to converted lead", err)
+        }
+      })
+    }
 
     return result
   })

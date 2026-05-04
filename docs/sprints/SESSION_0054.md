@@ -2,7 +2,7 @@
 title: "SESSION 0054 — Commerce Wiring: Enrollment Checkout + Webhook Fulfillment + User Dashboard"
 slug: session-0054
 type: session
-status: in-progress
+status: closed-quick
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0054
@@ -26,7 +26,7 @@ Brian Scott + Copilot (Petey → Cody)
 
 ### Status
 
-in-progress
+closed-quick
 
 ### Goal
 
@@ -171,3 +171,33 @@ Pre-task (run Stripe script) → TASK_02 (enrollment page) → TASK_03 (webhook 
 - TASK_02 — ✅ COMPLETE
 - TASK_03 — ✅ COMPLETE
 - TASK_06 — ✅ COMPLETE
+
+## Next session
+
+### Goal 1 — Hostile-close remediation (P0–P2 fixes from Sessions 0052–0056 review)
+
+| Priority | Issue | Location | Detail |
+|----------|-------|----------|--------|
+| 🔴 P0 | `userEntitlement` model doesn't exist in schema | `server/web/dashboard/queries.ts:17` | Queries `db.userEntitlement` but schema has **no `UserEntitlement` model**. Will crash at runtime. |
+| 🔴 P1 | Dashboard queries have NO brand filter | `server/web/dashboard/queries.ts` | `findUserEnrollments`, `findUserEntitlements`, `findUserRegistrations` query by `userId` only — **cross-brand data leakage**. |
+| 🔴 P1 | Dashboard has no Passport display | `dashboard/membership.tsx` | Shows enrollments/entitlements but **never loads or displays Passport data** (displayName, rank, org, avatar). |
+| ⚠️ P2 | `searchTechniquesForPicker` client/server boundary violation | `curriculum-items-editor.tsx` | `"use client"` component imports server query without `"use server"` — **will fail at runtime**. |
+| ⚠️ P2 | Tournament registration snapshots empty | `webhooks/route.ts` L47-60 | `RegistrationEntry.snapshotRankName`/`snapshotOrgName` never populated from Passport/Membership. |
+| ⚠️ P2 | Program enrollment ignores Passport | `webhooks/route.ts` L13-39 | No check that user HAS a Passport before enrollment. |
+| ⚠️ P2 | Certificate issuance ignores Passport | `issuance-actions.ts` | No validation user has Passport; should include Passport displayName/legalName. |
+| ⚠️ P2 | Media admin queries unscoped | `server/admin/media/queries.ts` | `findMedia` accepts optional `brand` but admin page never passes it. |
+| ⚠️ P2 | Certificate issuance has no brand check | `issuance-actions.ts` | No brand validation — admin from one brand could issue for another brand's templates. |
+| ⚠️ P2 | `PricingPlanActions` type mismatch | Carried since SESSION_0053 | Still unresolved. |
+| ⚠️ MINOR | Media admin page uses raw `<div className="grid">` | `app/admin/media/page.tsx` | Should use L1 `<Grid>` component. |
+
+**Inputs to read:** Hostile-close review table above, `schema.prisma` (confirm UserEntitlement existence), `brand-context.ts`, dashboard queries.
+
+**First task:** Fix P0 `userEntitlement` crash, then P1 brand scoping + Passport display in dashboard.
+
+### Goal 2 — Lead intake, trial conversion, and CRM follow-up
+
+Admin CRUD for Leads + LeadFollowUps, public lead capture form, trial booking flow, conversion lifecycle.
+
+**Inputs to read:** `dirstarter-component-inventory.md`, L1 admin patterns (DataTable, HOC chains), `Lead`/`LeadFollowUp` schema models, WORKFLOW_5.0 session 0037 target.
+
+**First task:** Petey plan for lead intake CRUD + trial conversion lifecycle.

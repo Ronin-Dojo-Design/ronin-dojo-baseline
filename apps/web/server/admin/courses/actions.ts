@@ -4,6 +4,7 @@ import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 import { courseSchema, curriculumItemSchema, reorderCurriculumItemsSchema } from "~/server/admin/courses/schema"
+import { z } from "zod/v4"
 
 export const upsertCourse = adminActionClient
   .inputSchema(courseSchema)
@@ -97,6 +98,54 @@ export const reorderCurriculumItems = adminActionClient
         }),
       ),
     )
+
+    after(async () => {
+      revalidate({
+        tags: ["courses", `course-items-${courseId}`],
+      })
+    })
+
+    return true
+  })
+
+const linkTechniqueSchema = z.object({
+  techniqueId: z.string(),
+  curriculumItemId: z.string(),
+  courseId: z.string(),
+})
+
+export const linkTechniqueToCurriculum = adminActionClient
+  .inputSchema(linkTechniqueSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { techniqueId, curriculumItemId, courseId } = parsedInput
+
+    await db.techniqueCurriculumLink.upsert({
+      where: {
+        techniqueId_curriculumItemId: { techniqueId, curriculumItemId },
+      },
+      update: {},
+      create: { techniqueId, curriculumItemId },
+    })
+
+    after(async () => {
+      revalidate({
+        tags: ["courses", `course-items-${courseId}`],
+      })
+    })
+
+    return true
+  })
+
+export const unlinkTechniqueFromCurriculum = adminActionClient
+  .inputSchema(linkTechniqueSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { techniqueId, curriculumItemId, courseId } = parsedInput
+
+    await db.techniqueCurriculumLink.delete({
+      where: {
+        techniqueId_curriculumItemId: { techniqueId, curriculumItemId },
+      },
+    })
 
     after(async () => {
       revalidate({

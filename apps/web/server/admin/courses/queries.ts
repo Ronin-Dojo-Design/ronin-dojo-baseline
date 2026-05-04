@@ -53,6 +53,14 @@ export const findCourseById = async (id: string) => {
       rank: { select: { id: true, name: true } },
       curriculumItems: {
         orderBy: { order: "asc" },
+        include: {
+          techniqueLinks: {
+            include: {
+              technique: { select: { id: true, name: true, slug: true, category: true } },
+            },
+            orderBy: { sortOrder: "asc" },
+          },
+        },
       },
     },
   })
@@ -70,5 +78,22 @@ export const findCurriculumItems = async (courseId: string) => {
   return db.curriculumItem.findMany({
     where: { courseId },
     orderBy: { order: "asc" },
+  })
+}
+
+export const searchTechniquesForPicker = async (q: string, brand?: string) => {
+  const { db } = await import("~/services/db")
+
+  return db.technique.findMany({
+    where: {
+      ...(brand && { brand: brand as any }),
+      isPublished: true,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    select: { id: true, name: true, slug: true, category: true },
+    orderBy: { name: "asc" },
+    take: 20,
   })
 }

@@ -10,6 +10,7 @@ import {
   ExternalLinkIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
+  ImageIcon,
   LogOutIcon,
   ScrollTextIcon,
   SwordsIcon,
@@ -92,6 +93,11 @@ export const Sidebar = () => {
           title: "Certificates",
           href: "/admin/certificates",
           prefix: <ScrollTextIcon />,
+        },
+        {
+          title: "Media",
+          href: "/admin/media",
+          prefix: <ImageIcon />,
         },
         {
           title: "Leads",
