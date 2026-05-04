@@ -5,7 +5,7 @@ import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findLeads, findOrganizationList } from "~/server/admin/leads/queries"
 import { leadsTableParamsCache } from "~/server/admin/leads/schema"
 
-export default withAdminPage(async ({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) => {
+export default withAdminPage(async ({ searchParams }: PageProps<"/admin/leads">) => {
   const search = leadsTableParamsCache.parse(await searchParams)
   const leadsPromise = findLeads(search)
   const organizationsPromise = findOrganizationList()
