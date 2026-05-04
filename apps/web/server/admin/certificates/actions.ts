@@ -7,16 +7,19 @@ import { certificateTemplateSchema } from "~/server/admin/certificates/schema"
 
 export const upsertCertificateTemplate = adminActionClient
   .inputSchema(certificateTemplateSchema)
-  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, ...input } = parsedInput
 
     const template = id
       ? await db.certificateTemplate.update({
-          where: { id },
+          where: { id, brand },
           data: input,
         })
       : await db.certificateTemplate.create({
-          data: input,
+          data: {
+            ...input,
+            brand,
+          },
         })
 
     after(async () => {
@@ -31,9 +34,9 @@ export const upsertCertificateTemplate = adminActionClient
 
 export const deleteCertificateTemplates = adminActionClient
   .inputSchema(idsSchema)
-  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     await db.certificateTemplate.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, brand },
     })
 
     revalidate({

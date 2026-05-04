@@ -21,17 +21,18 @@ import {
 
 export const upsertTournament = adminActionClient
   .inputSchema(tournamentSchema)
-  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, ...input } = parsedInput
 
     const tournament = id
       ? await db.tournament.update({
-          where: { id },
+          where: { id, brand },
           data: input,
         })
       : await db.tournament.create({
           data: {
             ...input,
+            brand,
             slug: input.slug || "",
           },
         })
@@ -48,9 +49,9 @@ export const upsertTournament = adminActionClient
 
 export const deleteTournaments = adminActionClient
   .inputSchema(idsSchema)
-  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     await db.tournament.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, brand },
     })
 
     revalidate({
@@ -74,8 +75,8 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 export const updateTournamentStatus = adminActionClient
   .inputSchema(updateTournamentStatusSchema)
-  .action(async ({ parsedInput: { id, status }, ctx: { db, revalidate } }) => {
-    const tournament = await db.tournament.findUniqueOrThrow({ where: { id } })
+  .action(async ({ parsedInput: { id, status }, ctx: { db, revalidate, brand } }) => {
+    const tournament = await db.tournament.findUniqueOrThrow({ where: { id, brand } })
 
     const allowed = VALID_TRANSITIONS[tournament.status] ?? []
     if (!allowed.includes(status)) {

@@ -3,6 +3,7 @@ import { revalidatePath, updateTag } from "next/cache"
 import { createSafeActionClient } from "next-safe-action"
 import { Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 
 type RevalidateOptions = {
@@ -75,7 +76,9 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
     throw new Error("User not authorized")
   }
 
-  return next()
+  const brand = await getRequestBrand()
+
+  return next({ ctx: { brand } })
 })
 
 // -----------------------------------------------------------------------------

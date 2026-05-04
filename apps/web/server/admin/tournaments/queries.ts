@@ -2,6 +2,7 @@ import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
 import type { TournamentsTableSchema } from "~/server/admin/tournaments/schema"
+import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 
 export const findTournaments = async (
@@ -9,6 +10,7 @@ export const findTournaments = async (
   where?: Prisma.TournamentWhereInput,
 ) => {
   const { name, sort, page, perPage, from, to, operator, status } = search
+  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -23,6 +25,7 @@ export const findTournaments = async (
   ]
 
   const whereQuery: Prisma.TournamentWhereInput = {
+    brand,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -54,8 +57,10 @@ export const findTournaments = async (
 }
 
 export const findTournamentById = async (id: string) => {
+  const brand = await getRequestBrand()
+
   return db.tournament.findUnique({
-    where: { id },
+    where: { id, brand },
     include: {
       host: { select: { id: true, name: true } },
       disciplines: {

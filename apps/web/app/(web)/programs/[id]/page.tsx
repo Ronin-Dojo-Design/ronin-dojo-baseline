@@ -127,7 +127,7 @@ export default async function ProgramDetailPage({ params }: Props) {
               </Button>
 
               {canEdit && (
-                <Button size="md" variant="outline" prefix={<PencilIcon />} className="w-full" asChild>
+                <Button size="md" variant="secondary" prefix={<PencilIcon />} className="w-full" asChild>
                   <Link href={`/programs/${program.id}/edit`}>Edit Program</Link>
                 </Button>
               )}

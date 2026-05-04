@@ -8,17 +8,18 @@ import { z } from "zod/v4"
 
 export const upsertCourse = adminActionClient
   .inputSchema(courseSchema)
-  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, ...input } = parsedInput
 
     const course = id
       ? await db.course.update({
-          where: { id },
+          where: { id, brand },
           data: input,
         })
       : await db.course.create({
           data: {
             ...input,
+            brand,
             slug: input.slug || "",
           },
         })
@@ -35,9 +36,9 @@ export const upsertCourse = adminActionClient
 
 export const deleteCourses = adminActionClient
   .inputSchema(idsSchema)
-  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     await db.course.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, brand },
     })
 
     revalidate({

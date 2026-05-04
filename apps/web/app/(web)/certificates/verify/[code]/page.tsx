@@ -36,7 +36,7 @@ export default async function CertificateVerifyPage({ params }: PageProps) {
             {isValid ? (
               <Badge variant="success" className="text-lg px-4 py-2">✓ Valid Certificate</Badge>
             ) : isRevoked ? (
-              <Badge variant="destructive" className="text-lg px-4 py-2">✗ Revoked</Badge>
+              <Badge variant="danger" className="text-lg px-4 py-2">✗ Revoked</Badge>
             ) : (
               <Badge variant="outline" className="text-lg px-4 py-2">⏳ Expired</Badge>
             )}

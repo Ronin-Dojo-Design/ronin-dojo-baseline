@@ -33,7 +33,7 @@ export function CertificateIssuanceList({ templateId, issuances }: Props) {
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm">{issuance.certificateNumber}</span>
                   {issuance.revokedAt ? (
-                    <Badge variant="destructive">Revoked</Badge>
+                    <Badge variant="danger">Revoked</Badge>
                   ) : issuance.expiresAt && new Date(issuance.expiresAt) < new Date() ? (
                     <Badge variant="outline">Expired</Badge>
                   ) : (
@@ -49,7 +49,7 @@ export function CertificateIssuanceList({ templateId, issuances }: Props) {
               {!issuance.revokedAt && (
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   isPending={isPending}
                   onClick={() => revokeAction({ id: issuance.id })}
                 >

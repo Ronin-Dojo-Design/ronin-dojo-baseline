@@ -34,7 +34,7 @@ export default async function CoursesPage({ searchParams }: PageProps) {
       </Intro>
 
       <Section>
-        <Grid size="lg">
+        <Grid>
           {courses.map(course => (
             <Link
               key={course.id}
