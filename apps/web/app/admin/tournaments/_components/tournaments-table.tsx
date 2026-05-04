@@ -5,6 +5,7 @@ import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import type { Tournament } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/admin/tournaments/_components/tournaments-table-columns"
+import { TournamentsTableToolbarActions } from "~/app/admin/tournaments/_components/tournaments-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
@@ -64,6 +65,7 @@ export function TournamentsTable({ tournamentsPromise }: TournamentsTableProps) 
         }
       >
         <DataTableToolbar table={table} filterFields={filterFields}>
+          <TournamentsTableToolbarActions table={table} />
           <DateRangePicker align="end" />
           <DataTableViewOptions table={table} />
         </DataTableToolbar>

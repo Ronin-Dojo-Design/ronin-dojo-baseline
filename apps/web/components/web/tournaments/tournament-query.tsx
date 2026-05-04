@@ -1,8 +1,10 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
+import { EmptyList } from "~/components/web/empty-list"
 import { TournamentList } from "~/components/web/tournaments/tournament-list"
 import { searchTournaments } from "~/server/web/tournaments/queries"
 import { tournamentFilterParamsCache } from "~/server/admin/tournaments/schema"
+import { Stack } from "~/components/common/stack"
 
 type TournamentQueryProps = {
   searchParams: Promise<SearchParams>
@@ -14,11 +16,11 @@ const TournamentQuery = async ({ searchParams, brand }: TournamentQueryProps) =>
   const { tournaments, total, page, perPage } = await searchTournaments(parsedParams, brand)
 
   return (
-    <div className="space-y-6">
+    <Stack direction="column" size="lg">
       {tournaments.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">
+        <EmptyList>
           No upcoming tournaments at this time. Check back soon!
-        </p>
+        </EmptyList>
       ) : (
         <TournamentList tournaments={tournaments} />
       )}
@@ -28,7 +30,7 @@ const TournamentQuery = async ({ searchParams, brand }: TournamentQueryProps) =>
           Showing {tournaments.length} of {total} tournaments
         </p>
       )}
-    </div>
+    </Stack>
   )
 }
 

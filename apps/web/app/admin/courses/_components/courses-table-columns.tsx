@@ -1,22 +1,21 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { EllipsisIcon } from "lucide-react"
 import type { Course } from "~/.generated/prisma/browser"
-import { Button } from "~/components/common/button"
+import { CourseActions } from "~/app/admin/courses/_components/course-actions"
 import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
 import { formatDateTime } from "@primoui/utils"
 
-export function getColumns(): ColumnDef<Course & { _count?: { curriculumItems: number; enrollments: number }; organization?: { name: string } }>[] {
+export type CourseRow = Course & {
+  organization: { name: string; id: string }
+  discipline: { name: string; id: string } | null
+  _count: { curriculumItems: number; enrollments: number }
+}
+
+export function getColumns(): ColumnDef<CourseRow>[] {
   return [
     {
       id: "select",
@@ -49,17 +48,17 @@ export function getColumns(): ColumnDef<Course & { _count?: { curriculumItems: n
     {
       id: "organization",
       header: "Organization",
-      cell: ({ row }) => (row.original as any).organization?.name ?? "—",
+      cell: ({ row }) => row.original.organization?.name ?? "—",
     },
     {
       id: "items",
       header: "Items",
-      cell: ({ row }) => (row.original as any)._count?.curriculumItems ?? 0,
+      cell: ({ row }) => row.original._count?.curriculumItems ?? 0,
     },
     {
       id: "enrollments",
       header: "Enrollments",
-      cell: ({ row }) => (row.original as any)._count?.enrollments ?? 0,
+      cell: ({ row }) => row.original._count?.enrollments ?? 0,
     },
     {
       accessorKey: "isPublished",
@@ -78,16 +77,7 @@ export function getColumns(): ColumnDef<Course & { _count?: { curriculumItems: n
     {
       id: "actions",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" prefix={<EllipsisIcon />} aria-label="Actions" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/courses/${row.original.id}`}>Edit</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <CourseActions course={row.original as Course} />
       ),
     },
   ]

@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
@@ -48,13 +49,10 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
         <Card key={profile.id}>
           <CardHeader>
             <Stack direction="row" className="items-center gap-3">
-              {profile.image && (
-                <img
-                  src={profile.image}
-                  alt={profile.name ?? ""}
-                  className="size-10 rounded-full object-cover"
-                />
-              )}
+              <Avatar>
+                {profile.image && <AvatarImage src={profile.image} alt={profile.name ?? ""} />}
+                <AvatarFallback>{(profile.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
               <div>
                 <H4>{profile.name ?? "Anonymous"}</H4>
                 {(profile.locationCity || profile.locationRegion) && (

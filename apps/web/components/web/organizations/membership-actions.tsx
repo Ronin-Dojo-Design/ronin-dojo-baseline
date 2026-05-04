@@ -66,7 +66,7 @@ export const MembershipActions = ({
   })
 
   return (
-    <div className="px-4 pb-3 space-y-2">
+    <Stack direction="column" size="sm" className="px-4 pb-3">
       {/* Status transitions */}
       {transitions.length > 0 && (
         <Stack size="sm">
@@ -114,6 +114,6 @@ export const MembershipActions = ({
             })}
         </Stack>
       )}
-    </div>
+    </Stack>
   )
 }

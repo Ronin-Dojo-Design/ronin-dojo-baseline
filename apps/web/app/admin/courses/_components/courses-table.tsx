@@ -5,6 +5,7 @@ import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import type { Course } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/admin/courses/_components/courses-table-columns"
+import { CoursesTableToolbarActions } from "~/app/admin/courses/_components/courses-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
@@ -64,6 +65,7 @@ export function CoursesTable({ coursesPromise }: CoursesTableProps) {
         }
       >
         <DataTableToolbar table={table} filterFields={filterFields}>
+          <CoursesTableToolbarActions table={table} />
           <DateRangePicker align="end" />
           <DataTableViewOptions table={table} />
         </DataTableToolbar>

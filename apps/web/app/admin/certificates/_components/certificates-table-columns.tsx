@@ -1,22 +1,17 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { EllipsisIcon } from "lucide-react"
 import type { CertificateTemplate } from "~/.generated/prisma/browser"
-import { Button } from "~/components/common/button"
+import { CertificateActions } from "~/app/admin/certificates/_components/certificate-actions"
 import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
 import { formatDateTime } from "@primoui/utils"
 
-export function getColumns(): ColumnDef<CertificateTemplate & { organization?: { name: string } }>[] {
+export type CertificateRow = CertificateTemplate & { organization: { name: string; id: string } | null }
+
+export function getColumns(): ColumnDef<CertificateRow>[] {
   return [
     {
       id: "select",
@@ -81,16 +76,7 @@ export function getColumns(): ColumnDef<CertificateTemplate & { organization?: {
     {
       id: "actions",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" prefix={<EllipsisIcon />} aria-label="Actions" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/certificates/${row.original.id}`}>Edit</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <CertificateActions template={row.original as CertificateTemplate} />
       ),
     },
   ]

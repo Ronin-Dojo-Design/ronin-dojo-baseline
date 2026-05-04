@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import type { SearchParams } from "nuqs"
 import { TournamentQuery } from "~/components/web/tournaments/tournament-query"
 import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Skeleton } from "~/components/common/skeleton"
 import { getRequestBrand } from "~/lib/brand-context"
 
 export const metadata = {
@@ -25,7 +26,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
         </IntroDescription>
       </Intro>
 
-      <Suspense fallback={<div className="animate-pulse h-96" />}>
+      <Suspense fallback={<Skeleton className="h-96" />}>
         <TournamentQuery searchParams={searchParams} brand={brand} />
       </Suspense>
     </>

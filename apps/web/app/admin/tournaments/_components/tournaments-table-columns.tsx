@@ -1,26 +1,16 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { EllipsisIcon } from "lucide-react"
 import type { Tournament } from "~/.generated/prisma/browser"
-import { Button } from "~/components/common/button"
+import type { findTournaments } from "~/server/admin/tournaments/queries"
+import { TournamentActions } from "~/app/admin/tournaments/_components/tournament-actions"
 import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
 import { formatDateTime } from "@primoui/utils"
 
-type TournamentRow = Tournament & {
-  host?: { name: string }
-  disciplines?: { discipline: { name: string }; _count: { divisions: number } }[]
-  _count?: { registrations: number }
-}
+export type TournamentRow = Awaited<ReturnType<typeof findTournaments>>["tournaments"][number]
 
 export function getColumns(): ColumnDef<TournamentRow>[] {
   return [
@@ -95,16 +85,7 @@ export function getColumns(): ColumnDef<TournamentRow>[] {
     {
       id: "actions",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" prefix={<EllipsisIcon />} aria-label="Actions" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/tournaments/${row.original.id}`}>Edit</Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <TournamentActions tournament={row.original as Tournament} />
       ),
     },
   ]

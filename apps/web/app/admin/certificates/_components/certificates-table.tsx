@@ -5,6 +5,7 @@ import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import type { CertificateTemplate } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/admin/certificates/_components/certificates-table-columns"
+import { CertificatesTableToolbarActions } from "~/app/admin/certificates/_components/certificates-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
@@ -64,6 +65,7 @@ export function CertificatesTable({ templatesPromise }: CertificatesTableProps) 
         }
       >
         <DataTableToolbar table={table} filterFields={filterFields}>
+          <CertificatesTableToolbarActions table={table} />
           <DateRangePicker align="end" />
           <DataTableViewOptions table={table} />
         </DataTableToolbar>
