@@ -69,6 +69,25 @@ export const createRegistrationCheckout = userActionClient
 
         const totalFeeCents = divisions.reduce((sum, d) => sum + d.feeCents, 0)
 
+        // Snapshot the user's current rank and org for registration entries
+        let snapshotRankName: string | null = null
+        let snapshotOrgName: string | null = null
+
+        if (input.representingMembershipId) {
+          const membership = await tx.membership.findUnique({
+            where: { id: input.representingMembershipId },
+            select: {
+              rank: { select: { name: true } },
+              organization: { select: { name: true } },
+            },
+          })
+
+          if (membership) {
+            snapshotRankName = membership.rank?.name ?? null
+            snapshotOrgName = membership.organization?.name ?? null
+          }
+        }
+
         // If free, create registration inside the transaction
         if (totalFeeCents === 0) {
           const registration = await tx.registration.create({
@@ -84,6 +103,8 @@ export const createRegistrationCheckout = userActionClient
                   divisionId,
                   tournamentRoleId: role.id,
                   representingMembershipId: input.representingMembershipId ?? null,
+                  snapshotRankName,
+                  snapshotOrgName,
                 })),
               },
             },

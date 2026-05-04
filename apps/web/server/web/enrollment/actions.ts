@@ -55,6 +55,23 @@ const assertTargetIsActiveMember = async ({
   }
 }
 
+const assertUserHasPassport = async ({
+  db,
+  userId,
+}: {
+  db: DbLike
+  userId: string
+}) => {
+  const passport = await db.passport.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+
+  if (!passport) {
+    throw new Error(ENROLLMENT_ERROR.NO_PASSPORT)
+  }
+}
+
 const resolveProgramForEnrollment = async ({
   db,
   brand,
@@ -192,6 +209,7 @@ export const enrollInProgram = userActionClient
       userId: parsedInput.userId,
       disciplineId: program.disciplineId,
     })
+    await assertUserHasPassport({ db, userId: parsedInput.userId })
 
     let enrollment: ProgramEnrollmentRecord
     try {
@@ -264,6 +282,7 @@ export const joinProgramWaitlist = userActionClient
       userId: parsedInput.userId,
       disciplineId: program.disciplineId,
     })
+    await assertUserHasPassport({ db, userId: parsedInput.userId })
 
     let enrollment: ProgramEnrollmentRecord
     try {

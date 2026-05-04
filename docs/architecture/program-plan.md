@@ -2,7 +2,7 @@
 title: Program Plan
 slug: program-plan
 type: file
-status: active
+status: partially-superseded
 created: 2026-04-25
 updated: 2026-04-28
 last_agent: copilot-session-0020-preflight

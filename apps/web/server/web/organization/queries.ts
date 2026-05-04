@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import { db } from "~/services/db"
 import {
@@ -13,12 +14,17 @@ export const getOrganizationById = cache(async (id: string) => {
   })
 })
 
-export const getOrganizationBySlug = cache(async (brand: string, slug: string) => {
+export const getOrganizationBySlug = async (brand: string, slug: string) => {
+  "use cache"
+
+  cacheTag(`organization-${slug}`)
+  cacheLife("minutes")
+
   return db.organization.findUnique({
     where: { brand_slug: { brand: brand as any, slug } },
     select: organizationDetailPayload,
   })
-})
+}
 
 export const getOrganizationByInviteCode = cache(async (inviteCode: string) => {
   return db.organization.findUnique({
@@ -27,13 +33,18 @@ export const getOrganizationByInviteCode = cache(async (inviteCode: string) => {
   })
 })
 
-export const getOrganizationsByBrand = cache(async (brand: string) => {
+export const getOrganizationsByBrand = async (brand: string) => {
+  "use cache"
+
+  cacheTag("organizations")
+  cacheLife("minutes")
+
   return db.organization.findMany({
     where: { brand: brand as any },
     select: organizationManyPayload,
     orderBy: { name: "asc" },
   })
-})
+}
 
 export const getUserMemberships = cache(async (userId: string) => {
   return db.membership.findMany({
@@ -51,9 +62,14 @@ export const getUserMemberships = cache(async (userId: string) => {
   })
 })
 
-export const getSystemRoles = cache(async () => {
+export const getSystemRoles = async () => {
+  "use cache"
+
+  cacheTag("system-roles")
+  cacheLife("infinite")
+
   return db.role.findMany({
     where: { isSystem: true },
     orderBy: { name: "asc" },
   })
-})
+}

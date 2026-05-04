@@ -73,6 +73,25 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
 
   const totalFeeCents = session.amount_total ?? 0
 
+  // Snapshot the user's current rank and org for registration entries
+  let snapshotRankName: string | null = null
+  let snapshotOrgName: string | null = null
+
+  if (representingMembershipId) {
+    const membership = await db.membership.findUnique({
+      where: { id: representingMembershipId },
+      select: {
+        rank: { select: { name: true } },
+        organization: { select: { name: true } },
+      },
+    })
+
+    if (membership) {
+      snapshotRankName = membership.rank?.name ?? null
+      snapshotOrgName = membership.organization?.name ?? null
+    }
+  }
+
   await db.registration.create({
     data: {
       tournamentId,
@@ -90,6 +109,8 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
           divisionId,
           tournamentRoleId: roleId,
           representingMembershipId: representingMembershipId || null,
+          snapshotRankName,
+          snapshotOrgName,
         })),
       },
     },

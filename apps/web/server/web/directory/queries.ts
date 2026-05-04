@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
@@ -118,7 +119,12 @@ export const getDirectoryProfiles = cache(
 /**
  * Available filter options for the directory within a brand.
  */
-export const getDirectoryFilterOptions = cache(async (brand: Brand) => {
+export const getDirectoryFilterOptions = async (brand: Brand) => {
+  "use cache"
+
+  cacheTag("directory-filters")
+  cacheLife("minutes")
+
   const [organizations, disciplines, ranks] = await Promise.all([
     db.organization.findMany({
       where: { brand },
@@ -138,4 +144,4 @@ export const getDirectoryFilterOptions = cache(async (brand: Brand) => {
   ])
 
   return { organizations, disciplines, ranks }
-})
+}

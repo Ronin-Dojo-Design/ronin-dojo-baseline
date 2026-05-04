@@ -5,6 +5,7 @@ export const ENROLLMENT_ERROR = {
   PROGRAM_NOT_FOUND: "Program not found for the active brand",
   ENROLLMENT_NOT_FOUND: "Enrollment not found for the active brand",
   USER_NOT_ELIGIBLE: "Selected user is not an active member for this program",
+  NO_PASSPORT: "User must have a Passport before enrolling in a program",
   NOT_AUTHORIZED: "You are not authorized to manage enrollments for this organization",
   CAPACITY_FULL: "Program is at capacity and no waitlisted member can be promoted",
   WAITLIST_EMPTY: "No waitlisted enrollment is available for this program",
