@@ -7,6 +7,38 @@ import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
 /**
+ * Fulfill a program enrollment after successful Stripe checkout.
+ * Creates ProgramEnrollment record.
+ */
+async function fulfillProgramEnrollment(session: Stripe.Checkout.Session) {
+  const { programId, userId } = session.metadata ?? {}
+
+  if (!programId || !userId) return
+
+  // Upsert: if enrollment exists (race condition), just update status
+  const existing = await db.programEnrollment.findFirst({
+    where: { programId, userId },
+  })
+
+  if (existing) {
+    await db.programEnrollment.update({
+      where: { id: existing.id },
+      data: { status: "ACTIVE", enrolledAt: new Date() },
+    })
+    return
+  }
+
+  await db.programEnrollment.create({
+    data: {
+      programId,
+      userId,
+      status: "ACTIVE",
+      enrolledAt: new Date(),
+    },
+  })
+}
+
+/**
  * Fulfill a tournament registration after successful Stripe checkout.
  * Creates Registration + RegistrationEntry records.
  */
@@ -162,6 +194,13 @@ export const POST = async (req: Request) => {
 
         switch (mode) {
           case "payment": {
+            // Handle program enrollment payment
+            if (metadata?.type === "program_enrollment") {
+              await fulfillProgramEnrollment(session)
+              revalidateTag("programs", "infinite")
+              break
+            }
+
             // Handle tournament registration payment
             if (metadata?.type === "tournament_registration") {
               await fulfillTournamentRegistration(session)

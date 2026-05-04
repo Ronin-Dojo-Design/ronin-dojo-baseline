@@ -122,8 +122,12 @@ export default async function ProgramDetailPage({ params }: Props) {
             </div>
 
             <aside className="space-y-4">
+              <Button size="md" className="w-full" asChild>
+                <Link href={`/programs/${program.id}/enroll`}>Enroll Now</Link>
+              </Button>
+
               {canEdit && (
-                <Button size="md" prefix={<PencilIcon />} className="w-full" asChild>
+                <Button size="md" variant="outline" prefix={<PencilIcon />} className="w-full" asChild>
                   <Link href={`/programs/${program.id}/edit`}>Edit Program</Link>
                 </Button>
               )}

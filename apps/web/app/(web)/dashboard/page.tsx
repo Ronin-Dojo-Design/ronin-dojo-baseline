@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import { DashboardToolListing } from "~/app/(web)/dashboard/listing"
+import { DashboardMembership } from "~/app/(web)/dashboard/membership"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
+import { Skeleton } from "~/components/common/skeleton"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { siteConfig } from "~/config/site"
 import { getPageData, getPageMetadata } from "~/lib/pages"
@@ -37,7 +39,11 @@ export default async function ({ searchParams }: PageProps<"/dashboard">) {
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-8">
+        <Suspense fallback={<Skeleton className="h-64" />}>
+          <DashboardMembership />
+        </Suspense>
+
         <Suspense fallback={<DataTableSkeleton />}>
           <DashboardToolListing searchParams={searchParams} />
         </Suspense>
