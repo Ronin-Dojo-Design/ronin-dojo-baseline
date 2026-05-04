@@ -173,13 +173,13 @@ No new ADRs needed. `getBrandSiteConfig` is a config utility, not an architectur
 | --- | --- |
 | JETTY/frontmatter sweep | SESSION_0062.md: `updated` set to 2026-05-04, `last_agent` = `copilot-session-0062`. Code files touched are not wiki pages — no frontmatter needed. |
 | Backlinks/index sweep | SESSION_0062.md `pairs_with` references SESSION_0061 + WORKFLOW_5.0. No new wiki pages created. |
-| Wiki lint | Pending — will run below |
+| Wiki lint | `bun run wiki:lint` → ✅ No lint violations found (171 files scanned). |
 | Kaizen reflection | Reflections section present: yes |
 | Hostile close review | SESSION_0062_REVIEW_02: backend wiring audit. 1 P1, 3 P2, 2 P3. All approved for SESSION_0063. |
 | Review & Recommend | Next session goal written: yes (SESSION_0063 backend wiring) |
 | Memory sweep | Key memory: SubscriptionTier + UserBrandSubscription + EntitlementGrant have zero runtime code. `checkEntitlement()` exists but is never called. These are the last major backend gaps before front-end polish. |
 | Next session unblock check | Unblocked — all 6 items have concrete fix plans, no user decisions needed. |
-| Git hygiene | Pending — will run below |
+| Git hygiene | Branch: `main`. Single worktree. 8 files changed. Committed `d378ad8`. Pushed to origin. |
 
 ## Next session
 
