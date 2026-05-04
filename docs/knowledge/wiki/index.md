@@ -191,13 +191,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 ## L1 Component Patterns & UI Components
 
-> **Consolidated into [`dirstarter-baseline-index.md`](../../architecture/dirstarter-baseline-index.md)** (SESSION_0039).
-> That document contains the full inventory of all Dirstarter template files (300+ files), integration patterns from dirstarter.com/docs, and the D-014 decision (Tool → Directory Listing).
+> **MANDATORY PRE-FLIGHT: [`dirstarter-component-inventory.md`](dirstarter-component-inventory.md)** (SESSION_0051).
+> Exhaustive per-component API inventory of every L1 component, hook, HOC, admin pattern, data-table system, and web component. Includes L1 violation audit, refactoring priority queue, and pre-flight checklist.
 >
-> Sections of interest:
-> - §2: Component library (common, admin, data-table, web)
-> - §3: Server layer patterns
-> - §10: Key patterns to follow (admin CRUD, web entity, action client chain, page shell)
+> Also see [`dirstarter-baseline-index.md`](../../architecture/dirstarter-baseline-index.md) (SESSION_0039) for architecture-level integration patterns.
 > - §13: dirstarter.com/docs integration patterns (auth, email, storage, payments, rate limiting, analytics, content, middleware)
 > - §14: D-014 decision — Tool → Directory Listing repurpose
 

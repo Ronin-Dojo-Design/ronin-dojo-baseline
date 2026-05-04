@@ -91,6 +91,7 @@ Every session has one file: `docs/sprints/SESSION_NNNN.md` (4-digit zero-padded)
 
 | File | Purpose |
 |---|---|
+| `docs/knowledge/wiki/dirstarter-component-inventory.md` | **MANDATORY PRE-FLIGHT.** Exhaustive inventory of every L1 component, hook, HOC, and admin pattern. Consult BEFORE planning or building any UI. |
 | `docs/architecture/program-plan.md` | 12-sprint MVP plan, current sprint scope |
 | `docs/architecture/s1-schema-design.md` | S1 schema design doc (31 models, all enums) |
 | `docs/architecture/plan-vs-current.md` | Gap analysis: plan spec vs current schema |
