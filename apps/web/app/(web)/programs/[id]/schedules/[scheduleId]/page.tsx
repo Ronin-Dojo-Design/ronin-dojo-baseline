@@ -21,25 +21,25 @@ import {
 } from "~/server/web/schedule/queries"
 
 interface Props {
-  params: Promise<{ programId: string; id: string }>
+  params: Promise<{ id: string; scheduleId: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
+  const { scheduleId } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
-  const schedule = await getScheduleById(brand, id)
+  const schedule = await getScheduleById(brand, scheduleId)
 
   if (!schedule) return { title: "Schedule Not Found" }
   return { title: schedule.name, description: `${schedule.daysOfWeek.join(", ")}` }
 }
 
 export default async function ScheduleDetailPage({ params }: Props) {
-  const { programId, id } = await params
+  const { id: programId, scheduleId } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
 
-  const schedule = await getScheduleById(brand, id)
+  const schedule = await getScheduleById(brand, scheduleId)
   if (!schedule || schedule.programId !== programId) notFound()
 
   const session = await getServerSession()

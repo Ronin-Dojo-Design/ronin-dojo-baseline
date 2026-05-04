@@ -11,7 +11,7 @@ import { getManageableProgramById } from "~/server/web/program/queries"
 import { db } from "~/services/db"
 
 interface Props {
-  params: Promise<{ programId: string }>
+  params: Promise<{ id: string }>
 }
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CreateSchedulePage({ params }: Props) {
-  const { programId } = await params
+  const { id: programId } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
 

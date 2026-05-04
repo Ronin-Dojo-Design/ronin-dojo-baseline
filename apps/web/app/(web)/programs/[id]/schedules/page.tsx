@@ -29,13 +29,14 @@ const scheduleListParams = createSearchParamsCache({
   status: parseAsStringEnum<ScheduleStatus>([...STATUS_VALUES]),
 })
 
+
 interface Props {
-  params: Promise<{ programId: string }>
+  params: Promise<{ id: string }>
   searchParams: Promise<SearchParams>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { programId } = await params
+  const { id: programId } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
   const program = await getManageableProgramById(brand, programId)
@@ -57,7 +58,7 @@ function buildStatusHref(programId: string, status: ScheduleStatus | "") {
 }
 
 export default async function ProgramSchedulesPage({ params, searchParams }: Props) {
-  const { programId } = await params
+  const { id: programId } = await params
   const headersList = await headers()
   const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
   const program = await getManageableProgramById(brand, programId)
