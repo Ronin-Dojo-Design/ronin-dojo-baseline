@@ -790,7 +790,7 @@ Every admin entity below was audited for gold-standard compliance (6-file patter
 
 ### Notable Patterns in Courses
 
-- `curriculum-items-editor.tsx` uses `useOptimistic` + `useTransition` for inline CRUD — **intentional optimistic UI pattern**, not a standard form. Uses `Button` + `Input` + `Stack` + `H3` correctly. Similar pattern to `divisions-editor.tsx` but cleaner.
+- `curriculum-items-editor.tsx` uses `useOptimistic` + `useTransition` for inline CRUD — **same violation class as `divisions-editor.tsx` (P1).** `passport-editor.tsx` proves `useHookFormAction`/`useAction` works for multi-field mutations. Both editors need refactoring.
 
 ---
 

@@ -147,15 +147,11 @@ SESSION_0050 reflections identified that 3 sessions (0014, 0031, 0049) were wast
 
 1. **`(web)/tournaments/page.tsx`** — raw `<div className="animate-pulse h-96">` as Suspense fallback instead of `Skeleton`. Should be a trivial fix: replace with `<Skeleton className="h-96" />`. But review whether this is a one-off or a pattern used elsewhere.
 
-2. **`(web)/me/passport-editor.tsx`** — marked COMPLIANT but operator wants to verify. It uses `useHookFormAction` with two independent sub-forms (PassportForm + DirectoryProfileForm) in one page component. Question: is the dual-form pattern correct L1 usage, or should these be tabbed/stepped? Read the full file and compare against Dirstarter patterns.
+2. **`admin/courses/_components/curriculum-items-editor.tsx`** — uses `useTransition` + `useOptimistic` + direct action calls. This is the SAME violation class as `divisions-editor.tsx` (P1). Both bypass `useHookFormAction`/`useAction`. `passport-editor.tsx` proves the compliant pattern works for multi-field mutations — `curriculum-items-editor.tsx` should follow suit. Refactor both `curriculum-items-editor.tsx` and `divisions-editor.tsx` to use `useAction` for mutations.
 
-3. **`admin/courses/_components/curriculum-items-editor.tsx`** — flagged as "intentional `useOptimistic` pattern, not a violation." **Operator challenges this.** The component uses `useTransition` + `useOptimistic` + direct action calls for inline CRUD of ordered list items. `passport-editor.tsx` is COMPLIANT because it uses `useHookFormAction`. So why is `curriculum-items-editor.tsx` acceptable when it bypasses the form pattern entirely?
-   - **Real question**: Can `useHookFormAction` handle optimistic inline list CRUD (add/delete/reorder/rename)? If yes, refactor. If no, document WHY the optimistic pattern is the exception and add it to the inventory as a named pattern ("Optimistic List Editor") with clear guidance on when to use it vs. `useHookFormAction`.
-   - Compare against `divisions-editor.tsx` which was flagged P1 for the same pattern — if one is a violation, the other should be too.
+3. **`admin/certificates/` + `admin/courses/`** — missing delete-dialog, actions, toolbar-actions scaffolding (P2). Decide: fix now or defer?
 
-4. **`admin/certificates/` + `admin/courses/`** — missing delete-dialog, actions, toolbar-actions scaffolding (P2). Decide: fix now or defer?
-
-5. **`admin/schedule/calendar.tsx`** — raw `<td>`, `<h6>` in calendar grid. Decide: acceptable custom UI or needs L1 alignment?
+4. **`admin/schedule/calendar.tsx`** — raw `<td>`, `<h6>` in calendar grid. Decide: acceptable custom UI or needs L1 alignment?
 
 ---
 
@@ -175,7 +171,7 @@ The first sweep missed 15+ directories. The second sweep missed another 10+. The
 
 - **Gold standard is deeply consistent.** Every L1-compliant admin entity (users, tools, tags, reports, leads, categories) follows the exact same 6-file scaffolding pattern. This is Dirstarter's greatest strength — once you know one entity, you know them all.
 - **Custom code diverges in predictable ways.** Every violation is the same class: `useTransition` instead of `useAction`/`useHookFormAction`, raw HTML instead of L1 components, manual state instead of DataTable hooks. The fix is always the same too — which means it's automatable.
-- **The `useOptimistic` question is unresolved.** `curriculum-items-editor.tsx` and `divisions-editor.tsx` both use `useOptimistic` + `useTransition` for inline list CRUD. One was flagged as "intentional," the other as P1 violation. This inconsistency needs resolution in SESSION_0052 — either both are acceptable (and we document the pattern) or neither is (and we refactor both).
+- **The `useOptimistic` question is resolved.** `curriculum-items-editor.tsx` and `divisions-editor.tsx` both use `useOptimistic` + `useTransition` for inline list CRUD. Both are violations — `passport-editor.tsx` proves `useHookFormAction` works for multi-field mutations. Both editors need refactoring to `useAction` in SESSION_0052.
 
 ### What I'd tell myself starting again
 
