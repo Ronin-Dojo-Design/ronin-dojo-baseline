@@ -15,7 +15,25 @@ export const findBracketsByDivisionId = async (divisionId: string) => {
                 include: {
                   registration: {
                     include: {
-                      user: { select: { id: true, name: true } },
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          passport: {
+                            select: {
+                              displayName: true,
+                              avatarUrl: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  representingMembership: {
+                    select: {
+                      organization: {
+                        select: { name: true, type: true },
+                      },
                     },
                   },
                 },

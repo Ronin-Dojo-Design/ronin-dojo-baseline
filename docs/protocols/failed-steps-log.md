@@ -309,3 +309,20 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** Post-rebase `project-log.md` and `wiki/index.md` contain
   entries from both SESSION_0032.5 and SESSION_0033.
 - **Status:** mitigated
+
+### FS-0014 — Cody built hand-rolled HTML form components instead of using Dirstarter L1 primitives (REPEAT of FS-0001)
+
+- **Session:** SESSION_0049
+- **Agent:** Cody (Copilot)
+- **Step failed:** Cody pre-flight Component checklist — L1 template scan, Primitive API spot-check. Agent created `ScoreMatchForm` and `MatchCard` using raw `<input type="radio">`, `<select>`, `<input type="text">`, `<form>` with manual `useState`, and raw `<div>` wrappers instead of Dirstarter's `Dialog`, `RadioGroup`, `Select`, `Input`, `Form`/`FormField`, and `Card` components.
+- **SOP source:** `docs/protocols/cody-preflight.md` — Component checklist field 2 (L1 template scan); `docs/protocols/code-guardrails.md`; `.github/copilot-instructions.md` — "Dirstarter patterns: Match existing conventions"; `docs/architecture/program-plan.md` — L1 layer definition ("How files are organized; framework choices; HOC patterns")
+- **Root cause:** Despite FS-0001 documenting this exact failure class (SESSION_0014, directory-filters built from scratch), FS-0008 adding primitive API spot-check requirements, and copilot-instructions.md explicitly stating "Match existing conventions — don't invent new patterns," the agent still jumped from "clear task" to "implement" without inspecting `components/common/` for existing primitives. The L1 rule is documented in at minimum 5 places: copilot-instructions.md, program-plan.md L1 table, cody-preflight.md, code-guardrails.md, and this log (FS-0001). **The mitigation from FS-0001 (pre-flight with proof) was not executed.** No pre-flight output appears in SESSION_0049.
+- **Impact:** All 6 form/layout components in `bracket-viewer.tsx` (263 lines) must be refactored. Raw HTML `<input>`, `<select>`, `<form>`, `<label>`, and `<div>` wrappers must be replaced with `RadioGroup`, `Select`, `Input`, `Form`/`FormField`/`FormItem`, `Label`, `Dialog`, and `Card`. SESSION_0050 is now a refactor session instead of pure feature work. Operator trust further eroded — this is the third time (FS-0001, FS-0008, now FS-0014) the same class of violation has occurred.
+- **Corrective action:**
+  1. SESSION_0050 TASK_01 + TASK_02 refactors all hand-rolled components to Dirstarter primitives
+  2. **Escalation**: The existing mitigations (pre-flight checklist, primitive API spot-check) are clearly insufficient. They exist but are not consulted. A stronger mechanism is needed:
+     - Add an explicit `## L1 component inventory` section to copilot-instructions.md listing every `components/common/*.tsx` file so it's in the system prompt for every agent invocation — not just discoverable via protocol
+     - Cody pre-flight must include a `grep` for raw HTML form elements (`<input`, `<select`, `<form`, `<label`) in any new component file — if found, the pre-flight fails
+  3. Future sessions: any PR containing raw HTML form elements when a Dirstarter primitive exists is an automatic failed-step, no excuses
+- **Verification:** SESSION_0050 bracket-viewer refactor eliminates all raw HTML form elements. Post-refactor `grep -n '<input\|<select\|<form' bracket-viewer.tsx` returns zero matches. Doug verifies at bow-out.
+- **Status:** open — refactor in progress (SESSION_0050)

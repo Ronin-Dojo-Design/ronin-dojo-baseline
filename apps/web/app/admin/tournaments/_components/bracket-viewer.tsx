@@ -1,129 +1,352 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import { Avatar, AvatarImage, AvatarFallback } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
+import { Card, CardHeader, CardFooter } from "~/components/common/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "~/components/common/dialog"
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
+import { Input } from "~/components/common/input"
+import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
+import { Label } from "~/components/common/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
+import { Tooltip } from "~/components/common/tooltip"
 import { MatchResult } from "~/.generated/prisma/browser"
 import { scoreMatch } from "~/server/admin/tournaments/actions"
+import { scoreMatchSchema, type ScoreMatchInput } from "~/server/admin/tournaments/schema"
 import type {
   BracketWithMatches,
   MatchWithCompetitors,
 } from "~/server/admin/tournaments/bracket-queries"
+import { TenPointMustForm, PointsScoreForm } from "./score-forms"
 
 // -----------------------------------------------------------------------------
-// Score match dialog (inline form)
+// Constants
 // -----------------------------------------------------------------------------
 
-function ScoreMatchForm({
+/** Result types that use 10-point must scoring */
+const TEN_POINT_MUST_RESULTS = new Set([
+  "WIN_DECISION",
+  "WIN_KO_TKO",
+])
+
+/** Result types that use points scoring */
+const POINTS_RESULTS = new Set([
+  "WIN_POINTS",
+])
+
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+function getCompetitorName(c: MatchWithCompetitors["competitors"][number]) {
+  return (
+    c.registrationEntry.registration.user.passport?.displayName ??
+    c.registrationEntry.registration.user.name ??
+    "Unknown"
+  )
+}
+
+function getCompetitorAvatar(c: MatchWithCompetitors["competitors"][number]) {
+  return c.registrationEntry.registration.user.passport?.avatarUrl ?? undefined
+}
+
+function getCompetitorOrg(c: MatchWithCompetitors["competitors"][number]) {
+  return c.registrationEntry.representingMembership?.organization?.name ?? undefined
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+const STATUS_TOOLTIPS: Record<string, string> = {
+  SCHEDULED: "Waiting for match to begin",
+  IN_PROGRESS: "Match is currently underway",
+  COMPLETED: "Match finished — winner determined",
+  BYE: "Auto-advanced — no opponent",
+}
+
+// -----------------------------------------------------------------------------
+// Score match dialog
+// -----------------------------------------------------------------------------
+
+function ScoreMatchDialog({
   match,
-  onClose,
+  children,
 }: {
   match: MatchWithCompetitors
-  onClose: () => void
+  children: React.ReactNode
 }) {
-  const [winnerEntryId, setWinnerEntryId] = useState("")
-  const [result, setResult] = useState<string>("WIN_POINTS")
-  const [notes, setNotes] = useState("")
-  const [isPending, setIsPending] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  const competitors = match.competitors
+  const form = useForm<ScoreMatchInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 .default() output type mismatch with RHF resolver
+    resolver: zodResolver(scoreMatchSchema) as any,
+    defaultValues: {
+      matchId: match.id,
+      winnerEntryId: "",
+      result: "WIN_POINTS",
+      notes: "",
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsPending(true)
+  const onSubmit = async (values: ScoreMatchInput) => {
     try {
-      const res = await scoreMatch({
-        matchId: match.id,
-        winnerEntryId,
-        result: result as any,
-        notes: notes || undefined,
-      })
+      const res = await scoreMatch(values)
       if (res?.data) {
         toast.success(
-          `Match scored — ${res.data.advancement ? "winner advanced to next round" : "bracket champion determined!"}`,
+          res.data.advancement
+            ? "Match scored — winner advanced to next round"
+            : "Match scored — bracket champion determined!",
         )
-        onClose()
+        setOpen(false)
+        form.reset()
       } else if (res?.serverError) {
         toast.error(res.serverError)
       }
     } catch (err: any) {
       toast.error(err.message ?? "Failed to score match")
-    } finally {
-      setIsPending(false)
     }
   }
 
+  const selectedResult = form.watch("result")
+
+  const handleTkoDetected = useCallback(
+    (competitorIndex: 1 | 2) => {
+      if (form.getValues("result") !== "WIN_KO_TKO") {
+        form.setValue("result", "WIN_KO_TKO")
+        toast.info(
+          `Auto-TKO detected for competitor ${competitorIndex} — result set to KO/TKO (you can override)`,
+        )
+      }
+    },
+    [form],
+  )
+
+  const competitor1Name = match.competitors[0]
+    ? getCompetitorName(match.competitors[0])
+    : "Competitor 1"
+  const competitor2Name = match.competitors[1]
+    ? getCompetitorName(match.competitors[1])
+    : "Competitor 2"
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-lg border bg-card p-4 space-y-3 mt-2"
-    >
-      <div className="text-sm font-medium">Score Match</div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
 
-      {/* Winner selection */}
-      <fieldset className="space-y-1">
-        <legend className="text-xs text-muted-foreground">Winner</legend>
-        {competitors.map((c) => (
-          <label key={c.id} className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="winner"
-              value={c.registrationEntryId}
-              checked={winnerEntryId === c.registrationEntryId}
-              onChange={() => setWinnerEntryId(c.registrationEntryId)}
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Score Match {match.matchNumber}</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Winner selection */}
+            <FormField
+              control={form.control}
+              name="winnerEntryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel isRequired>Winner</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      {match.competitors.map((c) => (
+                        <div key={c.id} className="flex items-center gap-3">
+                          <RadioGroupItem
+                            value={c.registrationEntryId}
+                            id={`winner-${c.id}`}
+                          />
+                          <Label htmlFor={`winner-${c.id}`} className="flex items-center gap-2 cursor-pointer">
+                            <Avatar className="size-6">
+                              {getCompetitorAvatar(c) ? (
+                                <AvatarImage src={getCompetitorAvatar(c)!} alt={getCompetitorName(c)} />
+                              ) : null}
+                              <AvatarFallback>{getInitials(getCompetitorName(c))}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{getCompetitorName(c)}</span>
+                            {getCompetitorOrg(c) && (
+                              <Badge variant="soft" size="sm">{getCompetitorOrg(c)}</Badge>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <span>
-              Slot {c.slot}:{" "}
-              {c.registrationEntry.registration.user.name ?? "Unknown"}
-            </span>
-          </label>
-        ))}
-      </fieldset>
 
-      {/* Result type */}
-      <label className="block space-y-1">
-        <span className="text-xs text-muted-foreground">Result</span>
-        <select
-          value={result}
-          onChange={(e) => setResult(e.target.value)}
-          className="block w-full rounded border bg-background px-2 py-1 text-sm"
-        >
-          {Object.values(MatchResult).map((r) => (
-            <option key={r} value={r}>
-              {r.replace(/_/g, " ")}
-            </option>
-          ))}
-        </select>
-      </label>
+            {/* Result type */}
+            <FormField
+              control={form.control}
+              name="result"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Result</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select result type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(MatchResult).map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r.replace(/_/g, " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      {/* Notes */}
-      <label className="block space-y-1">
-        <span className="text-xs text-muted-foreground">Notes (optional)</span>
-        <input
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="block w-full rounded border bg-background px-2 py-1 text-sm"
-        />
-      </label>
+            {/* Conditional score forms */}
+            {TEN_POINT_MUST_RESULTS.has(selectedResult) && (
+              <TenPointMustForm
+                competitor1Name={competitor1Name}
+                competitor2Name={competitor2Name}
+                onTkoDetected={handleTkoDetected}
+              />
+            )}
 
-      <div className="flex gap-2">
-        <Button type="submit" size="sm" disabled={!winnerEntryId || isPending}>
-          {isPending ? "Saving…" : "Save Score"}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
-      </div>
-    </form>
+            {POINTS_RESULTS.has(selectedResult) && (
+              <PointsScoreForm
+                competitor1Name={competitor1Name}
+                competitor2Name={competitor2Name}
+              />
+            )}
+
+            {/* Custom label for WIN_OTHER */}
+            {selectedResult === "WIN_OTHER" && (
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel isRequired>Custom result label</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g. Walkover, Technical Draw, etc."
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Notes (hidden when WIN_OTHER since notes field is used for custom label) */}
+            {selectedResult !== "WIN_OTHER" && (
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Optional match notes..."
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Saving…" : "Save Score"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Competitor row
+// -----------------------------------------------------------------------------
+
+function CompetitorRow({
+  competitor,
+  isWinner,
+}: {
+  competitor: MatchWithCompetitors["competitors"][number]
+  isWinner: boolean
+}) {
+  const name = getCompetitorName(competitor)
+  const avatarUrl = getCompetitorAvatar(competitor)
+  const orgName = getCompetitorOrg(competitor)
+
+  return (
+    <div className={`flex items-center gap-2 ${isWinner ? "font-semibold" : ""}`}>
+      <Avatar className="size-7">
+        {avatarUrl ? <AvatarImage src={avatarUrl} alt={name} /> : null}
+        <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
+      </Avatar>
+
+      <Tooltip tooltip={name}>
+        <span className="text-sm truncate max-w-30">{name}</span>
+      </Tooltip>
+
+      {isWinner && <span className="text-green-600 text-xs">✓</span>}
+
+      {orgName && (
+        <Badge variant="soft" size="sm" className="ml-auto">
+          {orgName}
+        </Badge>
+      )}
+    </div>
   )
 }
 
@@ -132,88 +355,71 @@ function ScoreMatchForm({
 // -----------------------------------------------------------------------------
 
 function MatchCard({ match }: { match: MatchWithCompetitors }) {
-  const [showScoring, setShowScoring] = useState(false)
   const canScore =
     match.status === "SCHEDULED" || match.status === "IN_PROGRESS"
   const isBye = match.status === "BYE"
   const isCompleted = match.status === "COMPLETED"
 
+  const statusVariant = isCompleted
+    ? "success"
+    : isBye
+      ? "warning"
+      : ("soft" as const)
+
   return (
-    <div
-      className={`rounded-lg border p-3 space-y-1 text-sm ${
+    <Card
+      hover={false}
+      className={
         isCompleted
           ? "border-green-500/40 bg-green-50 dark:bg-green-950/20"
           : isBye
             ? "border-amber-500/40 bg-amber-50 dark:bg-amber-950/20"
-            : "border-border"
-      }`}
+            : undefined
+      }
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          Match {match.matchNumber}
-        </span>
-        <Badge
-          variant="soft"
-          className={
-            isCompleted
-              ? "text-green-700"
-              : isBye
-                ? "text-amber-700"
-                : undefined
-          }
-        >
-          {match.status}
-        </Badge>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2 w-full">
+          <span className="text-xs text-muted-foreground">
+            Match {match.matchNumber}
+          </span>
+          <Tooltip tooltip={STATUS_TOOLTIPS[match.status] ?? match.status}>
+            <Badge variant={statusVariant} size="sm">
+              {match.status}
+            </Badge>
+          </Tooltip>
+        </div>
+      </CardHeader>
+
+      <div className="space-y-1.5">
+        {match.competitors.map((c) => (
+          <CompetitorRow
+            key={c.id}
+            competitor={c}
+            isWinner={match.winnerEntryId === c.registrationEntryId}
+          />
+        ))}
+
+        {isBye && match.competitors.length === 1 && (
+          <Badge variant="warning" size="sm">BYE — auto-advanced</Badge>
+        )}
       </div>
 
-      {match.competitors.map((c) => {
-        const isWinner = match.winnerEntryId === c.registrationEntryId
-        return (
-          <div
-            key={c.id}
-            className={`flex items-center gap-2 ${isWinner ? "font-semibold" : ""}`}
-          >
-            <span className="w-4 text-xs text-muted-foreground">
-              {c.slot}
-            </span>
-            <span>
-              {c.registrationEntry.registration.user.name ?? "Unknown"}
-            </span>
-            {isWinner && <span className="text-green-600 text-xs">✓</span>}
-          </div>
-        )
-      })}
+      <CardFooter>
+        {isCompleted && match.result && (
+          <Badge variant="outline" size="sm">
+            {match.result.replace(/_/g, " ")}
+          </Badge>
+        )}
 
-      {isBye && match.competitors.length === 1 && (
-        <div className="text-xs text-amber-600">BYE — auto-advanced</div>
-      )}
-
-      {isCompleted && match.result && (
-        <div className="text-xs text-muted-foreground">
-          Result: {match.result.replace(/_/g, " ")}
-        </div>
-      )}
-
-      {canScore && match.competitors.length === 2 && (
-        <>
-          {!showScoring ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowScoring(true)}
-              className="mt-1"
-            >
+        {canScore && match.competitors.length === 2 && (
+          <ScoreMatchDialog match={match}>
+            <Button variant="secondary" size="sm">
               Score
             </Button>
-          ) : (
-            <ScoreMatchForm
-              match={match}
-              onClose={() => setShowScoring(false)}
-            />
-          )}
-        </>
-      )}
-    </div>
+          </ScoreMatchDialog>
+        )}
+      </CardFooter>
+    </Card>
   )
 }
 
