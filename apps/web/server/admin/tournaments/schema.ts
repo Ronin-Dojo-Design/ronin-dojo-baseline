@@ -138,3 +138,14 @@ export const tournamentFilterParamsCache = createSearchParamsCache(tournamentFil
 
 export type TournamentFilterSchema = typeof tournamentFilterParams
 export type TournamentFilterParams = inferParserType<typeof tournamentFilterParams>
+
+// -----------------------------------------------------------------------------
+// Bracket generation
+// -----------------------------------------------------------------------------
+
+export const generateBracketSchema = z.object({
+  divisionId: z.string().min(1, "Division ID is required"),
+  bracketName: z.string().optional(),
+})
+
+export type GenerateBracketInput = z.infer<typeof generateBracketSchema>

@@ -1,6 +1,6 @@
 "use client"
 
-import { PlusIcon, TrashIcon } from "lucide-react"
+import { PlusIcon, TrashIcon, SwordsIcon } from "lucide-react"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
@@ -11,6 +11,7 @@ import { Badge } from "~/components/common/badge"
 import {
   deleteDivision,
   deleteTournamentDiscipline,
+  generateBracket,
 } from "~/server/admin/tournaments/actions"
 import type { findTournamentById } from "~/server/admin/tournaments/queries"
 
@@ -37,6 +38,19 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
       const result = await deleteTournamentDiscipline({ id })
       if (result?.data) {
         toast.success("Discipline removed")
+      }
+    })
+  }
+
+  const handleGenerateBracket = (divisionId: string, divisionName: string) => {
+    startTransition(async () => {
+      const result = await generateBracket({ divisionId })
+      if (result?.data) {
+        toast.success(
+          `Bracket generated for ${divisionName}: ${result.data.competitorCount} competitors, ${result.data.totalRounds} rounds${result.data.byeCount > 0 ? `, ${result.data.byeCount} byes` : ""}`,
+        )
+      } else if (result?.serverError) {
+        toast.error(result.serverError)
       }
     })
   }
@@ -87,6 +101,16 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
                     )}
                   </div>
                 </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  prefix={<SwordsIcon className="size-4" />}
+                  onClick={() => handleGenerateBracket(div.id, div.name)}
+                  disabled={isPending}
+                  aria-label="Generate bracket"
+                >
+                  Bracket
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

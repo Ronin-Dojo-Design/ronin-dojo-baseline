@@ -11,6 +11,7 @@ import {
   registrationStatusUpdateSchema,
   bulkRegistrationStatusUpdateSchema,
   REGISTRATION_STATUS_TRANSITIONS,
+  generateBracketSchema,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
@@ -265,4 +266,189 @@ export const bulkUpdateRegistrationStatus = adminActionClient
     })
 
     return { updated: registrationIds.length }
+  })
+
+// -----------------------------------------------------------------------------
+// Bracket generation
+// -----------------------------------------------------------------------------
+
+export const generateBracket = adminActionClient
+  .inputSchema(generateBracketSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { divisionId, bracketName } = parsedInput
+
+    // 1. Fetch the division and its tournament for revalidation
+    const division = await db.division.findUnique({
+      where: { id: divisionId },
+      include: {
+        tournamentDiscipline: {
+          include: { tournament: { select: { id: true, slug: true } } },
+        },
+      },
+    })
+
+    if (!division) {
+      throw new Error("Division not found")
+    }
+
+    // 2. Check no bracket already exists for this division
+    const existingBracket = await db.bracket.findFirst({
+      where: { divisionId },
+    })
+
+    if (existingBracket) {
+      throw new Error("A bracket already exists for this division. Delete it first to regenerate.")
+    }
+
+    // 3. Fetch approved registration entries for this division
+    const entries = await db.registrationEntry.findMany({
+      where: {
+        divisionId,
+        status: "ACTIVE",
+        registration: { status: "APPROVED" },
+      },
+      include: {
+        registration: {
+          include: { user: { select: { id: true, name: true } } },
+        },
+      },
+      orderBy: { createdAt: "asc" }, // Default seed order: registration order
+    })
+
+    if (entries.length < 2) {
+      throw new Error(`Need at least 2 approved entries to generate a bracket. Found ${entries.length}.`)
+    }
+
+    // 4. Calculate single-elimination bracket structure
+    const competitorCount = entries.length
+    const totalRounds = Math.ceil(Math.log2(competitorCount))
+    const bracketSize = Math.pow(2, totalRounds) // Next power of 2
+    const byeCount = bracketSize - competitorCount
+
+    // 5. Create bracket, matches, and competitors in a transaction
+    const bracket = await db.$transaction(async (tx) => {
+      // Create the bracket
+      const bracket = await tx.bracket.create({
+        data: {
+          name: bracketName || `${division.name} — Single Elimination`,
+          divisionId,
+          sortOrder: 0,
+          seedData: {
+            type: "SINGLE_ELIMINATION",
+            competitorCount,
+            bracketSize,
+            totalRounds,
+            byeCount,
+          },
+        },
+      })
+
+      // Build all rounds and matches
+      let matchNumber = 0
+
+      // Round 1: pair competitors, assign byes
+      const round1MatchCount = bracketSize / 2
+      const round1Matches: { id: string; matchNumber: number }[] = []
+
+      for (let i = 0; i < round1MatchCount; i++) {
+        matchNumber++
+        const match = await tx.match.create({
+          data: {
+            bracketId: bracket.id,
+            roundNumber: 1,
+            matchNumber,
+            status: "SCHEDULED",
+          },
+        })
+        round1Matches.push({ id: match.id, matchNumber })
+      }
+
+      // Seed competitors into round 1 using standard bracket seeding
+      // Slot 1 = top, Slot 2 = bottom
+      let entryIndex = 0
+      for (let i = 0; i < round1MatchCount; i++) {
+        const match = round1Matches[i]!
+
+        // Slot 1: always has a competitor
+        if (entryIndex < entries.length) {
+          await tx.matchCompetitor.create({
+            data: {
+              matchId: match.id,
+              registrationEntryId: entries[entryIndex]!.id,
+              slot: 1,
+              seed: entryIndex + 1,
+            },
+          })
+          entryIndex++
+        }
+
+        // Slot 2: competitor or BYE
+        if (entryIndex < entries.length) {
+          // Check if this is a bye slot (byes go at the bottom of the bracket)
+          const isByeSlot = i >= round1MatchCount - byeCount
+
+          if (isByeSlot && byeCount > 0 && entryIndex >= competitorCount) {
+            // This match is a BYE — mark it
+            await tx.match.update({
+              where: { id: match.id },
+              data: { status: "BYE" },
+            })
+          } else {
+            await tx.matchCompetitor.create({
+              data: {
+                matchId: match.id,
+                registrationEntryId: entries[entryIndex]!.id,
+                slot: 2,
+                seed: entryIndex + 1,
+              },
+            })
+            entryIndex++
+          }
+        } else {
+          // No more competitors — this is a BYE
+          await tx.match.update({
+            where: { id: match.id },
+            data: { status: "BYE" },
+          })
+        }
+      }
+
+      // Create empty matches for subsequent rounds
+      for (let round = 2; round <= totalRounds; round++) {
+        const matchesInRound = bracketSize / Math.pow(2, round)
+        for (let i = 0; i < matchesInRound; i++) {
+          matchNumber++
+          await tx.match.create({
+            data: {
+              bracketId: bracket.id,
+              roundNumber: round,
+              matchNumber,
+              status: "SCHEDULED",
+            },
+          })
+        }
+      }
+
+      return bracket
+    })
+
+    const tournamentSlug = division.tournamentDiscipline.tournament.slug
+
+    after(async () => {
+      revalidate({
+        tags: [
+          "tournaments",
+          `tournament-${tournamentSlug}`,
+          `division-${divisionId}`,
+        ],
+      })
+    })
+
+    return {
+      bracketId: bracket.id,
+      bracketName: bracket.name,
+      totalRounds,
+      competitorCount,
+      byeCount,
+    }
   })

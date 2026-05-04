@@ -1,8 +1,15 @@
+import type { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
-export const findRegistrationsByTournamentId = async (tournamentId: string) => {
+export const findRegistrationsByTournamentId = async (
+  tournamentId: string,
+  brand?: Brand,
+) => {
   return db.registration.findMany({
-    where: { tournamentId },
+    where: {
+      tournamentId,
+      ...(brand ? { tournament: { brand } } : {}),
+    },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
