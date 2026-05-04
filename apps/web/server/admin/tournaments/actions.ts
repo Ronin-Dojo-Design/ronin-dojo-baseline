@@ -8,6 +8,9 @@ import {
   tournamentDisciplineSchema,
   divisionSchema,
   updateTournamentStatusSchema,
+  registrationStatusUpdateSchema,
+  bulkRegistrationStatusUpdateSchema,
+  REGISTRATION_STATUS_TRANSITIONS,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
@@ -174,4 +177,92 @@ export const deleteDivision = adminActionClient
     })
 
     return true
+  })
+
+// -----------------------------------------------------------------------------
+// Registration status transitions (admin)
+// -----------------------------------------------------------------------------
+
+export const updateRegistrationStatus = adminActionClient
+  .inputSchema(registrationStatusUpdateSchema)
+  .action(async ({ parsedInput: { registrationId, status }, ctx: { db, revalidate } }) => {
+    const registration = await db.registration.findUniqueOrThrow({
+      where: { id: registrationId },
+      select: { id: true, status: true, tournamentId: true },
+    })
+
+    const allowed = REGISTRATION_STATUS_TRANSITIONS[registration.status] ?? []
+    if (!allowed.includes(status)) {
+      throw new Error(
+        `Cannot transition registration from ${registration.status} to ${status}. Allowed: ${allowed.join(", ") || "none"}`,
+      )
+    }
+
+    const updated = await db.registration.update({
+      where: { id: registrationId },
+      data: { status },
+    })
+
+    // If cancelled, also cancel all entries
+    if (status === "CANCELLED") {
+      await db.registrationEntry.updateMany({
+        where: { registrationId },
+        data: { status: "CANCELLED" },
+      })
+    }
+
+    after(async () => {
+      revalidate({
+        tags: ["tournaments", `tournament-registrations-${registration.tournamentId}`],
+      })
+    })
+
+    return updated
+  })
+
+export const bulkUpdateRegistrationStatus = adminActionClient
+  .inputSchema(bulkRegistrationStatusUpdateSchema)
+  .action(async ({ parsedInput: { registrationIds, status }, ctx: { db, revalidate } }) => {
+    const registrations = await db.registration.findMany({
+      where: { id: { in: registrationIds } },
+      select: { id: true, status: true, tournamentId: true },
+    })
+
+    // Validate all transitions before applying any
+    const invalid = registrations.filter((r) => {
+      const allowed = REGISTRATION_STATUS_TRANSITIONS[r.status] ?? []
+      return !allowed.includes(status)
+    })
+
+    if (invalid.length > 0) {
+      throw new Error(
+        `Cannot transition ${invalid.length} registration(s): ${invalid.map((r) => `${r.id} (${r.status})`).join(", ")}`,
+      )
+    }
+
+    await db.registration.updateMany({
+      where: { id: { in: registrationIds } },
+      data: { status },
+    })
+
+    // If cancelled, also cancel all entries
+    if (status === "CANCELLED") {
+      await db.registrationEntry.updateMany({
+        where: { registrationId: { in: registrationIds } },
+        data: { status: "CANCELLED" },
+      })
+    }
+
+    const tournamentIds = [...new Set(registrations.map((r) => r.tournamentId))]
+
+    after(async () => {
+      revalidate({
+        tags: [
+          "tournaments",
+          ...tournamentIds.map((tid) => `tournament-registrations-${tid}`),
+        ],
+      })
+    })
+
+    return { updated: registrationIds.length }
   })

@@ -1,4 +1,14 @@
+import type React from "react"
 import { Badge } from "~/components/common/badge"
+import { Note } from "~/components/common/note"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/common/table"
 
 type Division = {
   id: string
@@ -23,54 +33,52 @@ type DivisionTableProps = {
 
 export function DivisionTable({ divisions }: DivisionTableProps) {
   if (divisions.length === 0) {
-    return <p className="text-sm text-muted-foreground">No divisions configured yet.</p>
+    return <Note>No divisions configured yet.</Note>
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="pb-2 font-medium">Division</th>
-            <th className="pb-2 font-medium">Format</th>
-            <th className="pb-2 font-medium">Gender</th>
-            <th className="pb-2 font-medium">Age</th>
-            <th className="pb-2 font-medium">Weight</th>
-            <th className="pb-2 font-medium">Fee</th>
-            <th className="pb-2 font-medium">Spots</th>
-          </tr>
-        </thead>
-        <tbody>
-          {divisions.map(div => {
-            const spotsUsed = div._count?.entries ?? 0
-            const spotsText = div.capacity ? `${spotsUsed}/${div.capacity}` : `${spotsUsed}`
+    <Table style={{ "--table-columns": "repeat(7, minmax(0, 1fr))" } as React.CSSProperties}>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Division</TableHead>
+          <TableHead>Format</TableHead>
+          <TableHead>Gender</TableHead>
+          <TableHead>Age</TableHead>
+          <TableHead>Weight</TableHead>
+          <TableHead>Fee</TableHead>
+          <TableHead>Spots</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {divisions.map(div => {
+          const spotsUsed = div._count?.entries ?? 0
+          const spotsText = div.capacity ? `${spotsUsed}/${div.capacity}` : `${spotsUsed}`
 
-            return (
-              <tr key={div.id} className="border-b last:border-0">
-                <td className="py-2 font-medium">{div.name}</td>
-                <td className="py-2">
-                  <Badge variant="soft">{div.format.replace(/_/g, " ")}</Badge>
-                </td>
-                <td className="py-2">{div.gender}</td>
-                <td className="py-2">
-                  {div.ageMin != null || div.ageMax != null
-                    ? `${div.ageMin ?? "—"}–${div.ageMax ?? "—"}`
-                    : "Open"}
-                </td>
-                <td className="py-2">
-                  {div.weightMinKg != null || div.weightMaxKg != null
-                    ? `${div.weightMinKg ?? "—"}–${div.weightMaxKg ?? "—"} kg`
-                    : "Open"}
-                </td>
-                <td className="py-2">
-                  {div.feeCents > 0 ? `$${(div.feeCents / 100).toFixed(2)}` : "Free"}
-                </td>
-                <td className="py-2">{spotsText}</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+          return (
+            <TableRow key={div.id}>
+              <TableCell className="font-medium">{div.name}</TableCell>
+              <TableCell>
+                <Badge variant="soft">{div.format.replace(/_/g, " ")}</Badge>
+              </TableCell>
+              <TableCell>{div.gender}</TableCell>
+              <TableCell>
+                {div.ageMin != null || div.ageMax != null
+                  ? `${div.ageMin ?? "—"}–${div.ageMax ?? "—"}`
+                  : "Open"}
+              </TableCell>
+              <TableCell>
+                {div.weightMinKg != null || div.weightMaxKg != null
+                  ? `${div.weightMinKg ?? "—"}–${div.weightMaxKg ?? "—"} kg`
+                  : "Open"}
+              </TableCell>
+              <TableCell>
+                {div.feeCents > 0 ? `$${(div.feeCents / 100).toFixed(2)}` : "Free"}
+              </TableCell>
+              <TableCell>{spotsText}</TableCell>
+            </TableRow>
+          )
+        })}
+      </TableBody>
+    </Table>
   )
 }

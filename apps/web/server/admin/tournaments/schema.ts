@@ -98,6 +98,31 @@ export const updateTournamentStatusSchema = z.object({
 })
 
 // -----------------------------------------------------------------------------
+// Registration status update
+// -----------------------------------------------------------------------------
+
+import { RegistrationStatus } from "~/.generated/prisma/browser"
+
+/** Valid admin-driven registration status transitions */
+export const REGISTRATION_STATUS_TRANSITIONS: Record<string, string[]> = {
+  SUBMITTED: ["APPROVED", "WAITLISTED", "CANCELLED"],
+  WAITLISTED: ["APPROVED", "CANCELLED"],
+  APPROVED: ["CANCELLED"],
+  STARTED: ["CANCELLED"],
+  CANCELLED: [],
+}
+
+export const registrationStatusUpdateSchema = z.object({
+  registrationId: z.string().min(1),
+  status: z.enum(RegistrationStatus),
+})
+
+export const bulkRegistrationStatusUpdateSchema = z.object({
+  registrationIds: z.array(z.string().min(1)).min(1),
+  status: z.enum(RegistrationStatus),
+})
+
+// -----------------------------------------------------------------------------
 // Public filter params
 // -----------------------------------------------------------------------------
 

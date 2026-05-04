@@ -1819,12 +1819,15 @@ model Registration {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
 
+  stripePaymentIntentId String?
+
   entries        RegistrationEntry[]
   weighInRecords WeighInRecord[]
 
   @@unique([tournamentId, userId])
   @@index([tournamentId, status])
   @@index([userId])
+  @@index([stripePaymentIntentId])
 }
 
 model RegistrationEntry {

@@ -2,6 +2,10 @@
 
 import { useState } from "react"
 import { createRegistrationCheckout, cancelRegistration } from "~/server/web/tournaments/register"
+import { Button } from "~/components/common/button"
+import { Badge } from "~/components/common/badge"
+import { Checkbox } from "~/components/common/checkbox"
+import { Note } from "~/components/common/note"
 
 interface Division {
   id: string
@@ -54,25 +58,24 @@ export function RegisterButton({
     }
 
     return (
-      <div className="space-y-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4">
-        <p className="font-semibold text-green-700 dark:text-green-400">
-          You are registered
-        </p>
-        <p className="text-sm text-muted-foreground">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+        <Badge variant="success" size="lg">Registered</Badge>
+        <Note>
           Divisions: {existingRegistration.entries.map((e) => e.division.name).join(", ")}
-        </p>
-        <p className="text-xs text-muted-foreground">
+        </Note>
+        <Note className="text-xs">
           Status: {existingRegistration.status} · Payment: {existingRegistration.paymentStatus}
-        </p>
+        </Note>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <button
-          type="button"
+        <Button
+          variant="destructive"
+          size="md"
           onClick={handleCancel}
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
+          isPending={loading}
         >
           {loading ? "Cancelling…" : "Cancel Registration"}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -128,27 +131,26 @@ export function RegisterButton({
       <div className="space-y-2">
         {divisions.map((div) => {
           const atCapacity = div.capacity != null && (div._count?.entries ?? 0) >= div.capacity
+          const isSelected = selectedIds.includes(div.id)
           return (
             <label
               key={div.id}
               className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
                 atCapacity
                   ? "cursor-not-allowed opacity-50"
-                  : selectedIds.includes(div.id)
+                  : isSelected
                     ? "border-primary bg-primary/5"
                     : "hover:border-muted-foreground/50"
               }`}
             >
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(div.id)}
+              <Checkbox
+                checked={isSelected}
                 disabled={atCapacity}
-                onChange={() => toggle(div.id)}
-                className="size-4"
+                onCheckedChange={() => toggle(div.id)}
               />
               <span className="flex-1">
                 {div.name}
-                {atCapacity && <span className="ml-2 text-xs text-destructive">(Full)</span>}
+                {atCapacity && <Badge variant="danger" size="sm" className="ml-2">Full</Badge>}
               </span>
               <span className="text-sm text-muted-foreground">
                 {div.feeCents > 0 ? `$${(div.feeCents / 100).toFixed(2)}` : "Free"}
@@ -166,14 +168,15 @@ export function RegisterButton({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        size="lg"
         onClick={handleRegister}
         disabled={selectedIds.length === 0 || loading}
-        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+        isPending={loading}
       >
         {loading ? "Processing…" : selectedIds.length === 0 ? "Select a division" : "Register"}
-      </button>
+      </Button>
     </div>
   )
 }

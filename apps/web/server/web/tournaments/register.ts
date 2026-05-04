@@ -49,47 +49,59 @@ export const createRegistrationCheckout = userActionClient
       throw new Error(`Role "${input.roleCode}" not found`)
     }
 
-    // 5. Fetch divisions + check capacity
-    const divisions = await db.division.findMany({
-      where: { id: { in: input.divisionIds } },
-      include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
-    })
+    // 5. Fetch divisions + check capacity (inside serializable transaction to prevent races)
+    const capacityResult = await db.$transaction(
+      async (tx) => {
+        const divisions = await tx.division.findMany({
+          where: { id: { in: input.divisionIds } },
+          include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
+        })
 
-    if (divisions.length !== input.divisionIds.length) {
-      throw new Error("One or more selected divisions not found")
+        if (divisions.length !== input.divisionIds.length) {
+          throw new Error("One or more selected divisions not found")
+        }
+
+        for (const div of divisions) {
+          if (div.capacity && div._count.entries >= div.capacity) {
+            throw new Error(`Division "${div.name}" is at capacity`)
+          }
+        }
+
+        const totalFeeCents = divisions.reduce((sum, d) => sum + d.feeCents, 0)
+
+        // If free, create registration inside the transaction
+        if (totalFeeCents === 0) {
+          const registration = await tx.registration.create({
+            data: {
+              tournamentId: input.tournamentId,
+              userId,
+              status: "SUBMITTED",
+              paymentStatus: "PAID",
+              totalFeeCents: 0,
+              submittedAt: new Date(),
+              entries: {
+                create: input.divisionIds.map((divisionId) => ({
+                  divisionId,
+                  tournamentRoleId: role.id,
+                  representingMembershipId: input.representingMembershipId ?? null,
+                })),
+              },
+            },
+          })
+
+          return { type: "free" as const, registrationId: registration.id, divisions: [] }
+        }
+
+        return { type: "paid" as const, registrationId: null, divisions, totalFeeCents }
+      },
+      { isolationLevel: "Serializable" },
+    )
+
+    if (capacityResult.type === "free") {
+      return { type: "free" as const, registrationId: capacityResult.registrationId! }
     }
 
-    for (const div of divisions) {
-      if (div.capacity && div._count.entries >= div.capacity) {
-        throw new Error(`Division "${div.name}" is at capacity`)
-      }
-    }
-
-    // 6. Calculate total fee
-    const totalFeeCents = divisions.reduce((sum, d) => sum + d.feeCents, 0)
-
-    // 7. If free, create registration directly (no Stripe needed)
-    if (totalFeeCents === 0) {
-      const registration = await db.registration.create({
-        data: {
-          tournamentId: input.tournamentId,
-          userId,
-          status: "SUBMITTED",
-          paymentStatus: "PAID",
-          totalFeeCents: 0,
-          submittedAt: new Date(),
-          entries: {
-            create: input.divisionIds.map((divisionId) => ({
-              divisionId,
-              tournamentRoleId: role.id,
-              representingMembershipId: input.representingMembershipId ?? null,
-            })),
-          },
-        },
-      })
-
-      return { type: "free" as const, registrationId: registration.id }
-    }
+    const { divisions, totalFeeCents } = capacityResult
 
     // 8. Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -139,6 +151,7 @@ export const cancelRegistration = userActionClient
         totalFeeCents: true,
         userId: true,
         tournamentId: true,
+        stripePaymentIntentId: true,
       },
     })
 
@@ -150,28 +163,17 @@ export const cancelRegistration = userActionClient
       throw new Error("Registration is already cancelled")
     }
 
-    // 2. If paid, issue Stripe refund via checkout session lookup
+    // 2. If paid, issue Stripe refund using stored payment intent ID
     let newPaymentStatus = registration.paymentStatus
     if (registration.paymentStatus === "PAID" && registration.totalFeeCents > 0) {
-      const allSessions = await stripe.checkout.sessions.list({ limit: 100 })
-      const matchingSession = allSessions.data.find(
-        (s) =>
-          s.metadata?.type === "tournament_registration" &&
-          s.metadata?.tournamentId === registration.tournamentId &&
-          s.metadata?.userId === userId,
-      )
-
-      if (matchingSession?.payment_intent) {
-        const paymentIntentId =
-          typeof matchingSession.payment_intent === "string"
-            ? matchingSession.payment_intent
-            : matchingSession.payment_intent.id
-
-        await stripe.refunds.create({
-          payment_intent: paymentIntentId,
-        })
-        newPaymentStatus = "REFUNDED"
+      if (!registration.stripePaymentIntentId) {
+        throw new Error("Cannot refund: no payment intent ID stored on registration")
       }
+
+      await stripe.refunds.create({
+        payment_intent: registration.stripePaymentIntentId,
+      })
+      newPaymentStatus = "REFUNDED"
     }
 
     // 3. Update registration status

@@ -26,7 +26,15 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
   if (existing) {
     await db.registration.update({
       where: { id: existing.id },
-      data: { paymentStatus: "PAID", status: "SUBMITTED", submittedAt: new Date() },
+      data: {
+        paymentStatus: "PAID",
+        status: "SUBMITTED",
+        submittedAt: new Date(),
+        stripePaymentIntentId:
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : session.payment_intent?.id ?? null,
+      },
     })
     return
   }
@@ -41,6 +49,10 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
       paymentStatus: "PAID",
       totalFeeCents,
       submittedAt: new Date(),
+      stripePaymentIntentId:
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id ?? null,
       entries: {
         create: parsedDivisionIds.map((divisionId) => ({
           divisionId,
