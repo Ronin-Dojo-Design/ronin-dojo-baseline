@@ -7,6 +7,52 @@ import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
 /**
+ * Fulfill a tournament registration after successful Stripe checkout.
+ * Creates Registration + RegistrationEntry records.
+ */
+async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
+  const { tournamentId, userId, divisionIds, roleId, representingMembershipId } =
+    session.metadata ?? {}
+
+  if (!tournamentId || !userId || !divisionIds || !roleId) return
+
+  const parsedDivisionIds: string[] = JSON.parse(divisionIds)
+
+  // Upsert: if registration exists (race condition), just update payment status
+  const existing = await db.registration.findUnique({
+    where: { tournamentId_userId: { tournamentId, userId } },
+  })
+
+  if (existing) {
+    await db.registration.update({
+      where: { id: existing.id },
+      data: { paymentStatus: "PAID", status: "SUBMITTED", submittedAt: new Date() },
+    })
+    return
+  }
+
+  const totalFeeCents = session.amount_total ?? 0
+
+  await db.registration.create({
+    data: {
+      tournamentId,
+      userId,
+      status: "SUBMITTED",
+      paymentStatus: "PAID",
+      totalFeeCents,
+      submittedAt: new Date(),
+      entries: {
+        create: parsedDivisionIds.map((divisionId) => ({
+          divisionId,
+          tournamentRoleId: roleId,
+          representingMembershipId: representingMembershipId || null,
+        })),
+      },
+    },
+  })
+}
+
+/**
  * Given a Stripe checkout session, look up the PricingPlan by stripePriceId
  * and grant all linked entitlements to the user.
  */
@@ -104,6 +150,13 @@ export const POST = async (req: Request) => {
 
         switch (mode) {
           case "payment": {
+            // Handle tournament registration payment
+            if (metadata?.type === "tournament_registration") {
+              await fulfillTournamentRegistration(session)
+              revalidateTag("tournaments", "infinite")
+              break
+            }
+
             // Handle tool expedited payment
             if (metadata?.tool) {
               const tool = await db.tool.findUniqueOrThrow({
