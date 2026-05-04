@@ -1,8 +1,8 @@
 import { siteConfig } from "~/config/site"
 
 export const linksConfig = {
-  author: "https://kulpinski.pl",
-  builtWith: "https://dirstarter.com",
-  github: "https://github.com/dirstarter/dirstarter",
+  author: "https://ronindojodesign.com",
+  builtWith: "https://ronindojodesign.com",
+  github: "https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline",
   feed: `${siteConfig.url}/rss.xml`,
 }

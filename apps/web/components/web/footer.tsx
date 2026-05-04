@@ -14,7 +14,6 @@ import { CTAForm } from "~/components/web/cta-form"
 import { ExternalLink } from "~/components/web/external-link"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { NavLink, navLinkVariants } from "~/components/web/ui/nav-link"
-import { adsConfig } from "~/config/ads"
 import { linksConfig } from "~/config/links"
 import { siteConfig } from "~/config/site"
 import { cx } from "~/lib/utils"
@@ -76,18 +75,17 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
         <Stack direction="column" className="text-sm md:col-span-3 md:col-start-8">
           <H6 as="strong">{t("navigation.browse")}:</H6>
 
-          <NavLink href="/">{t("navigation.tools")}</NavLink>
-          <NavLink href="/categories">{t("navigation.categories")}</NavLink>
-          <NavLink href="/tags">{t("navigation.tags")}</NavLink>
-          <NavLink href="/blog">{t("navigation.blog")}</NavLink>
+          <NavLink href="/programs">{t("navigation.programs")}</NavLink>
+          <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+          <NavLink href="/courses">{t("navigation.courses")}</NavLink>
+          <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
         </Stack>
 
         <Stack direction="column" className="text-sm md:col-span-3">
           <H6 as="strong">{t("navigation.quick_links")}:</H6>
 
-          <NavLink href="/submit">{t("navigation.submit")}</NavLink>
+          <NavLink href="/blog">{t("navigation.blog")}</NavLink>
           <NavLink href="/about">{t("navigation.about")}</NavLink>
-          {adsConfig.enabled && <NavLink href="/advertise">{t("navigation.advertise")}</NavLink>}
         </Stack>
       </div>
 

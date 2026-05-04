@@ -2,11 +2,12 @@
 
 import { useHotkeys } from "@mantine/hooks"
 import {
-  CalendarDaysIcon,
+  BookOpenIcon,
   ChevronDownIcon,
-  GalleryHorizontalEndIcon,
+  GraduationCapIcon,
   SearchIcon,
-  TagIcon,
+  SwordsIcon,
+  UsersIcon,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -26,7 +27,6 @@ import { Hamburger } from "~/components/web/ui/hamburger"
 import { Logo } from "~/components/web/ui/logo"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserMenu } from "~/components/web/user-menu"
-import { adsConfig } from "~/config/ads"
 import { useSearch } from "~/contexts/search-context"
 import { cx } from "~/lib/utils"
 
@@ -63,6 +63,9 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           </Stack>
 
           <nav className="flex flex-wrap gap-x-4 gap-y-0.5 flex-1 max-lg:hidden">
+            <NavLink href="/programs">{t("navigation.programs")}</NavLink>
+            <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+
             <DropdownMenu>
               <NavLink
                 className="gap-1"
@@ -74,25 +77,24 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
 
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
-                  <NavLink href="/?sort=publishedAt.desc" prefix={<CalendarDaysIcon />}>
-                    {t("navigation.latest_tools")}
+                  <NavLink href="/courses" prefix={<GraduationCapIcon />}>
+                    {t("navigation.courses")}
                   </NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <NavLink href="/categories" prefix={<GalleryHorizontalEndIcon />}>
-                    {t("navigation.categories")}
+                  <NavLink href="/techniques" prefix={<SwordsIcon />}>
+                    {t("navigation.techniques")}
                   </NavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <NavLink href="/tags" prefix={<TagIcon />}>
-                    {t("navigation.tags")}
+                  <NavLink href="/blog" prefix={<BookOpenIcon />}>
+                    {t("navigation.blog")}
                   </NavLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             <NavLink href="/about">{t("navigation.about")}</NavLink>
-            {adsConfig.enabled && <NavLink href="/advertise">{t("navigation.advertise")}</NavLink>}
           </nav>
 
           <Stack size="sm" wrap={false} className="justify-end max-lg:grow">
@@ -105,7 +107,7 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
             </Button>
 
             <Button size="sm" variant="secondary" asChild>
-              <Link href="/submit">{t("navigation.submit")}</Link>
+              <Link href="/programs">{t("navigation.programs")}</Link>
             </Button>
 
             <UserMenu />
@@ -118,12 +120,12 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
             isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
-          <NavLink href="/?sort=publishedAt.desc">{t("navigation.latest_tools")}</NavLink>
-          <NavLink href="/categories">{t("navigation.categories")}</NavLink>
-          <NavLink href="/tags">{t("navigation.tags")}</NavLink>
-          <NavLink href="/submit">{t("navigation.submit")}</NavLink>
+          <NavLink href="/programs">{t("navigation.programs")}</NavLink>
+          <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+          <NavLink href="/courses">{t("navigation.courses")}</NavLink>
+          <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
+          <NavLink href="/blog">{t("navigation.blog")}</NavLink>
           <NavLink href="/about">{t("navigation.about")}</NavLink>
-          {adsConfig.enabled && <NavLink href="/advertise">{t("navigation.advertise")}</NavLink>}
         </nav>
       </Container>
     </header>

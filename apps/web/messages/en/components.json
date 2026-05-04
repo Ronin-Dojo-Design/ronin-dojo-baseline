@@ -13,15 +13,15 @@
     "popular_categories": "Popular Categories:"
   },
   "footer": {
-    "cta_title": "Subscribe to our newsletter",
-    "cta_description": "Join {count}+ other members and get updates straight to your inbox."
+    "cta_title": "Stay in the loop",
+    "cta_description": "Join {count}+ martial artists and get updates on programs, tournaments, and events."
   },
   "count_badge": {
-    "new_tools": "{count} new {count, plural, =0 {tools} =1 {tool} other {tools}} added",
-    "total_tools": "{count} {count, plural, =0 {tools} =1 {tool} other {tools}} listed"
+    "new_tools": "{count} new {count, plural, =0 {programs} =1 {program} other {programs}} added",
+    "total_tools": "{count} {count, plural, =0 {programs} =1 {program} other {programs}} listed"
   },
   "cta_proof": {
-    "message": "Join {count}+ directory enthusiasts"
+    "message": "Join {count}+ martial artists"
   },
   "feature_nudge": {
     "message": "{name} has already been published on {siteName}. You can feature it for extra exposure.",
