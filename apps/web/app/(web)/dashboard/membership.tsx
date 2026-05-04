@@ -7,9 +7,11 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import {
   findUserEnrollments,
   findUserEntitlements,
+  findUserPassport,
   findUserRegistrations,
 } from "~/server/web/dashboard/queries"
 
@@ -20,21 +22,45 @@ export const DashboardMembership = async () => {
     throw redirect("/auth/login?next=/dashboard")
   }
 
-  const [enrollments, entitlements, registrations] = await Promise.all([
-    findUserEnrollments(session.user.id),
-    findUserEntitlements(session.user.id),
-    findUserRegistrations(session.user.id),
+  const brand = await getRequestBrand()
+
+  const [enrollments, entitlements, registrations, passport] = await Promise.all([
+    findUserEnrollments(session.user.id, brand),
+    findUserEntitlements(session.user.id, brand),
+    findUserRegistrations(session.user.id, brand),
+    findUserPassport(session.user.id),
   ])
 
   const hasData = enrollments.length > 0 || entitlements.length > 0 || registrations.length > 0
 
-  if (!hasData) {
+  if (!hasData && !passport) {
     return null
   }
 
   return (
     <Section>
       <Section.Content>
+        {/* Passport */}
+        {passport && (
+          <div className="mb-6 flex items-center gap-4">
+            {passport.avatarUrl && (
+              <img
+                src={passport.avatarUrl}
+                alt={passport.displayName || "Avatar"}
+                className="size-14 rounded-full object-cover"
+              />
+            )}
+            <div>
+              {passport.displayName && (
+                <p className="text-lg font-semibold">{passport.displayName}</p>
+              )}
+              {passport.bio && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{passport.bio}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 @lg:grid-cols-3">
           {/* Enrollments */}
           {enrollments.length > 0 && (

@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto"
 import { z } from "zod/v4"
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
+import { getRequestBrand } from "~/lib/brand-context"
 
 const issueCertificateSchema = z.object({
   certificateTemplateId: z.string(),
@@ -26,6 +27,16 @@ export const issueCertificate = adminActionClient
   .inputSchema(issueCertificateSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { certificateTemplateId, userId, certificationId, expiresAt } = parsedInput
+
+    // Brand validation: ensure template belongs to admin's current brand
+    const brand = await getRequestBrand()
+    const template = await db.certificateTemplate.findUnique({
+      where: { id: certificateTemplateId },
+      select: { brand: true },
+    })
+    if (!template || template.brand !== brand) {
+      throw new Error("Certificate template not found or does not belong to this brand")
+    }
 
     const certificateNumber = generateCertificateNumber()
     const qrVerificationCode = generateQrCode()

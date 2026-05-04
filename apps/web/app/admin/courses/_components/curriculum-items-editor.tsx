@@ -17,7 +17,7 @@ import {
   unlinkTechniqueFromCurriculum,
   upsertCurriculumItem,
 } from "~/server/admin/courses/actions"
-import { searchTechniquesForPicker } from "~/server/admin/courses/queries"
+import { searchTechniquesForPickerAction } from "~/server/admin/courses/technique-search-action"
 
 type TechniqueLink = {
   techniqueId: string
@@ -191,7 +191,7 @@ function TechniqueSearchPicker({
       return
     }
     startSearch(async () => {
-      const techniques = await searchTechniquesForPicker(value)
+      const techniques = await searchTechniquesForPickerAction(value)
       setResults(techniques)
     })
   }

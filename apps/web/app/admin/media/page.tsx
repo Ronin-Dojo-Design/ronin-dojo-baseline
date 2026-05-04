@@ -4,10 +4,13 @@ import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { H2 } from "~/components/common/heading"
 import { findMedia } from "~/server/admin/media/queries"
+import { getRequestBrand } from "~/lib/brand-context"
 
 export default withAdminPage(async ({ searchParams }) => {
   const sp = await searchParams
+  const brand = await getRequestBrand()
   const { media, total, page, perPage } = await findMedia({
+    brand,
     q: sp?.q as string | undefined,
     page: Number(sp?.page) || 1,
   })
