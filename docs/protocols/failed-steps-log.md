@@ -326,3 +326,30 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   3. Future sessions: any PR containing raw HTML form elements when a Dirstarter primitive exists is an automatic failed-step, no excuses
 - **Verification:** SESSION_0050 bracket-viewer refactor eliminates all raw HTML form elements. Post-refactor `grep -n '<input\|<select\|<form' bracket-viewer.tsx` returns zero matches. Doug verifies at bow-out.
 - **Status:** open — refactor in progress (SESSION_0050)
+
+### FS-0015 — Project-log entries missing for 20 sessions (SESSION_0038.5–0057)
+
+- **Detected:** SESSION_0060 full-close (2026-05-04)
+- **Session range:** SESSION_0038.5 through SESSION_0057 (~20 sessions)
+- **Rule violated:** Project Log Rules 1 + 2 — "Every Cody task that touches code gets a build log entry" and "Every planned task gets a task plan entry"
+- **Root cause:** Agent context switches. Sessions 0038–0057 were executed by different agent contexts (Copilot, Codex) that created SESSION files with task tables but did not append to `docs/protocols/project-log.md`. The closing ritual does not have a hard gate that verifies project-log entries exist before allowing `closed-quick` or `closed-full`.
+- **Impact:** 20 sessions of product work (lead intake, Dirstarter baseline index, course/technique/certificate admin CRUD, tournament ops lifecycle, bracket/scoring, L1 audit + refactoring, commerce wiring, enrollment checkout, content/curriculum gaps, hostile-close remediation) have no task plan or build log entries in the project-log. The project-log is incomplete as a historical record and cannot fulfill its purpose as "unified append-only ledger" for these sessions.
+- **Corrective action:**
+  1. Backfill build log + task plan entries from SESSION files (SESSION_0061 task)
+  2. Add project-log verification to closing ritual: closing.md must require `grep "SESSION_NNNN" docs/protocols/project-log.md` returns at least one hit before close is accepted
+  3. Consider splitting project-log into archive (≤ SESSION_0033) + active (SESSION_0038+) to reduce file size and context window cost
+- **Verification:** Backfill entries exist; closing.md updated with project-log gate
+- **Status:** open — backfill planned for SESSION_0061
+
+### FS-0016 — Duplicate review block appended to project-log (SESSION_0031_5_REVIEW_01 ×4)
+
+- **Detected:** SESSION_0060 full-close (2026-05-04)
+- **Session:** Unknown — corruption introduced by a prior agent context
+- **Rule violated:** Project Log Rule 5 — "Entries are never edited after creation (append-only)"
+- **Root cause:** An agent appended the same `SESSION_0031_5_REVIEW_01` review block 4 times instead of once. Likely caused by a retry loop or context loss during a previous closing ritual. The append-only design means no agent checked for pre-existing entries before appending.
+- **Impact:** ~210 lines of duplicated content inflated the project-log from ~530 to ~740 lines. Wastes LLM context window on redundant data.
+- **Corrective action:**
+  1. Owner manually removed 3 duplicate blocks (2026-05-04) — file reduced to 667 lines
+  2. Future append operations should `grep` for the entry ID before appending: `grep -c "SESSION_NNNN_REVIEW_XX" project-log.md` must return 0 before write
+- **Verification:** `grep -c "^### SESSION_0031_5_REVIEW_01" docs/protocols/project-log.md` returns 1
+- **Status:** resolved
