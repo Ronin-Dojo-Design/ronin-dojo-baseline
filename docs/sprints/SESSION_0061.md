@@ -218,11 +218,11 @@ Courses | Techniques | Directory
 2. **i18n key sprawl:** Keep martial arts nav keys in `navigation.json`, not scattered across feature-specific files.
 3. **Theme flash:** `data-brand` must be set server-side in the root layout, not client-side, to avoid FOUC.
 
-### Open decisions for operator
+### Open decisions for operator — RESOLVED
 
-1. **Logo assets:** Do we have SVG/PNG logos for each brand, or should WP-4 use text-only wordmarks initially?
-2. **Homepage content strategy:** Should WP-3 show real seeded data (programs, tournaments) or static marketing copy?
-3. **"Tools" concept:** Keep Dirstarter's Tools model as a secondary feature (e.g., "Training Resources"), or remove entirely?
+1. **Logo assets:** Text-only wordmarks for now. Real SVG/PNG assets exist but deferred to polish pass.
+2. **Homepage content strategy:** Static marketing copy first. Real seeded data (programs, tournaments) in a later session.
+3. **"Tools" concept:** Keep as "Training Resources." Explore renaming/repositioning in SESSION_0062.
 
 ---
 
