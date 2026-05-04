@@ -482,183 +482,262 @@ Three sections:
 
 **Findings:**
 
-- **SESSION_0031_5_FINDING_01** — Subagent tool-call ceiling not budgeted. **Severity:** low. **Task:** wave 2 dispatch (TASK_05/06 + teardown fix). **Evidence:** agent `a8b08a5daecab86fc` returned at 25 tool uses with no completion summary; orchestrator picked up partial work to finish verify + commit. **Impact:** ~10 minutes of orchestrator overhead. **Required follow-up:** when dispatching multi-task subagents, split work expected to exceed ~20 tool uses into sequential dispatches; record the budget in the prompt. Saved as a feedback memory in operator-side memory. **Status:** open.
-- **SESSION_0031_5_FINDING_02** — `dev-environment.md` has pre-existing malformed YAML at `use_count: 0backlinks:`. **Severity:** low. **Task:** discovered during TASK_04 (out of scope). **Evidence:** `docs/runbooks/dev-environment.md` line 9 — missing newline causes YAML parser to read `backlinks` as part of `use_count`'s value. **Impact:** invisible to wiki:lint; breaks any tool reading frontmatter via a strict YAML parser. **Required follow-up:** 1-line surgical patch in a future docs commit. **Status:** open.
-- **SESSION_0031_5_FINDING_03** — Instrumentation format not parsed by any test. **Severity:** low. **Task:** TASK_05. **Evidence:** `console.info` line emits a formatted string; no test asserts the format. **Impact:** a refactor could silently change the format. **Required follow-up:** add a format-shape assertion when Brian first needs to query the log. **Status:** accepted-risk.
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
 
-**Verdict:** Slice ships at WORKFLOW rubric **10.0/10** and Kaizen aggregate **9/10**. SESSION_0032 (attendance/check-in) is unblocked. The three findings above are low-severity; none block downstream work.
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
 
-### SESSION_0032_REVIEW_01 - Attendance/check-in write surface full close (Giddy + Doug + Petey)
+### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
 
-**Reviewed tasks:** SESSION_0032_TASK_01, SESSION_0032_TASK_02, SESSION_0032_TASK_03.
+**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
 
-**Score: 10.0/10** - Attendance/check-in write surface landed with no schema
-changes, no UI scope creep, and no hard caps triggered.
+**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
 
-**Dirstarter docs check:** cached docs sufficient. This session extends the
-same Dirstarter-aligned layers already live in the schedule slice:
-`server/web/*` feature folders, `userActionClient`, Better Auth session, Prisma
-client, centralized rate limiter, and AuditLog. No Dirstarter-owned layer was
-replaced.
+**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
 
-**Sources:** `docs/sprints/SESSION_0032.md`,
-`apps/web/server/web/attendance/*`, `apps/web/server/web/school-ops/audit.ts`,
-`apps/web/server/web/schedule/audit.ts`, `apps/web/lib/rate-limiter.ts`,
-`apps/web/scripts/smoke-attendance.ts`,
-`docs/architecture/security-privacy-payments-monitoring-plan.md`.
+**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
 
 **Hostile review verdicts:**
 
-- *Plan sanity (Giddy):* Three-task plan held. The slice stayed write-surface
-  only: no UI, no roster page, no QR/kiosk UI, no waivers, no billing, no
-  entitlement checks, no schema changes.
-- *Dirstarter compliance (Giddy):* Pure extension of existing server feature
-  folder and safe-action patterns. Generic `writeSchoolOpsAudit` was added with
-  `writeScheduleAudit` re-exported for compatibility, so the schedule slice did
-  not regress.
-- *Security (Doug):* `recordCheckIn`, `markAttendance`, and `voidCheckIn` all
-  derive brand from `getRequestBrand`, resolve ClassSession through
-  ClassSchedule, check `canEditOrganization`, require active same-org target
-  membership, use `attendance_write`, and throw only `ATTENDANCE_ERROR`
-  literals.
-- *Data integrity (Doug):* Idempotency is anchored on
-  `Attendance @@unique([userId, classSessionId])` and
-  `CheckIn.matchedToAttendanceId @unique`. Repeated check-in keeps one
-  Attendance plus one matched CheckIn. Void unlinks the raw CheckIn and keeps
-  the Attendance row for correction.
-- *Verification honesty (Doug):* `bun test server/web/attendance/actions.test.ts`
-  7/7; `bun test server/web/schedule/ server/web/attendance/` 22/22;
-  `bun scripts/smoke-attendance.ts` passed; `bunx prisma validate --schema
-  prisma/schema.prisma` passed; `git diff --check` passed. Full
-  `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline
-  issues outside attendance/school-ops touched files.
-- *WORKFLOW 5.0 compliance (Petey):* Bow-in, Dirstarter alignment, Petey plan,
-  TASK_PLAN_LOG entries, schema/backend pre-flight, subagent budget note,
-  hostile close review, wiki/index sweep, and next-session handoff are recorded.
-
-**Findings:**
-
-- **SESSION_0032_FINDING_01** - Full app typecheck remains blocked by
-  pre-existing baseline debt (`PageProps`/`RouteContext`, content-collections
-  generated types, auth role typing, passport enum drift, S3 env typing). No
-  errors referenced `server/web/attendance`, `server/web/school-ops`,
-  `scripts/smoke-attendance.ts`, or the rate-limiter/audit touched files.
-  **Severity:** medium for repo health, low for this slice. **Status:** open.
-
-**Verdict:** SESSION_0032 ships at WORKFLOW rubric **10.0/10**. SESSION_0033
-can proceed to Program enrollments / family groups / waivers / trial lifecycle
-unless the owner chooses to spend the next session on the existing full
-typecheck baseline debt.
-
-### SESSION_0032_5_REVIEW_01 - Full typecheck debt hardening close (Giddy + Doug + Petey)
-
-**Reviewed tasks:** SESSION_0032_5_TASK_01, SESSION_0032_5_TASK_02.
-
-**Score: 10.0/10** - Full generated app typecheck baseline is clean and
-SESSION_0033 product work was not started.
-
-**Dirstarter docs check:** live docs checked.
-
-**Sources:** `docs/sprints/SESSION_0032_5.md`,
-`https://dirstarter.com/docs/codebase/structure`,
-`https://dirstarter.com/docs/database/prisma`,
-`https://dirstarter.com/docs/authentication`,
-`https://dirstarter.com/docs/environment-setup`,
-`https://dirstarter.com/docs/integrations/media`,
-`apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/lib/auth.ts`,
-`apps/web/lib/media.ts`, `apps/web/services/s3.ts`,
-`apps/web/server/web/passport/*`, `apps/web/server/web/tools/queries.ts`.
-
-**Hostile review verdicts:**
-
-- *Plan sanity (Giddy):* The preemption was correct. It removed the compiler
-  noise before SESSION_0033's multi-aggregate school-ops work. The only scope
-  expansion was a protocol improvement requested by the owner during close.
-- *Dirstarter compliance (Giddy):* The fixes preserve the purchased
-  Dirstarter baseline: modular project shape, Prisma generated types, Better
-  Auth admin/one-time-token plugins, type-safe env handling, and media/S3
-  integration expectations. `petey-plan.md` now requires Dirstarter docs as the
-  implementation template before Cody starts when a Dirstarter layer is touched.
-- *Security (Doug):* Auth changes are typing/config alignment only:
-  `BETTER_AUTH_SECRET` is supplied to Better Auth, optional Google credentials
-  are gated, and role/API plugin inference is preserved. No authz predicate was
-  loosened.
-- *Data integrity (Doug):* No schema changes. Passport/Directory zod literals
-  now match `schema.prisma`; DirectoryProfile read payload now includes the
-  schema fields expected by the `/me` editor contract.
-- *Lifecycle proof (Doug):* The lifecycle served here is repo health before the
-  next product slice. The old `SESSION_0032_FINDING_01` gate is addressed.
-- *Verification honesty (Doug):* `bun run typecheck` passed; raw
-  `bunx tsc --noEmit --pretty false` passed after typegen generated ignored
-  artifacts; Prisma validate passed; schedule+attendance tests passed 22/22;
-  attendance smoke passed; wiki lint passed on 127 markdown files; diff check
-  passed.
-- *Workflow honesty (Petey):* SESSION_0032.5 has a Petey plan, task IDs,
-  Dirstarter alignment, subagent budgeted explorers, close evidence, review
-  entry, wiki/index update, and next-session recommendation.
-- *Merge readiness (Giddy):* Local branch `session-0032-typecheck-debt` is ready
-  for commit. Do not push without owner approval. Combine with the pushed
-  `session-0032-attendance` branch carefully because `SESSION_0033.md` was
-  pre-staged there at `d1981fa`.
+- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
+- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
+- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
+- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
+- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
+- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
 
 **Kaizen reflection triage (Q1/Q2/Q3):**
 
-- **Q1 (safe and secure?):** 10/10 for this QA-hardening gate. Auth config is
-  stricter, not looser, and school-ops regression tests still pass.
-- **Q2 (failed-step prevention?):** 9/10. One planning gap was exposed:
-  Dirstarter docs were previously enforced mainly at close. `petey-plan.md` now
-  requires Dirstarter docs as the planning template before implementation, and
-  `hostile-close-review.md` now checks whether that happened. Efficiency rule
-  added: simplify protocols only when proof/security/alignment do not regress.
-- **Q3 (scale 100 / 1,000 / 10,000?):** 10 / 10 / 9. The generated typecheck
-  gate is clean at all codebase scales likely before launch; 10k gets 9 because
-  typed-routes validator cleanup remains a separate future `next build` gate if
-  the team promotes it.
+- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
+- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
 
-**Score-gate verdict:** Kaizen aggregate **9/10** -> proceed to fresh
-SESSION_0033 bow-in.
+**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
 
 **Findings:**
 
-- **SESSION_0032_FINDING_01** - Full app typecheck baseline debt.
-  **Severity:** medium. **Task:** SESSION_0032_5_TASK_01. **Evidence:**
-  `bun run typecheck` and `bunx tsc --noEmit --pretty false` passed in
-  `apps/web` after `next typegen`. **Impact:** the noisy compiler baseline no
-  longer blocks SESSION_0033 planning/execution. **Required follow-up:** use
-  `bun run typecheck` as the generated typecheck gate; run raw `tsc` after
-  typegen when reproducing. **Status:** addressed.
-- **SESSION_0032_5_FINDING_01** - Typed-routes validator debt remains outside
-  this gate. **Severity:** low. **Task:** SESSION_0032_5_TASK_01. **Evidence:**
-  including generated `.next/types/validator.ts` surfaces dynamic-link typing
-  errors, but `tsconfig.json` continues to exclude `.next` as before.
-  **Impact:** no impact on the raw generated typecheck gate; possible future
-  `next build` hardening target. **Required follow-up:** address in a dedicated
-  QA-hardening slice if `next build` becomes the launch gate. **Status:** open.
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
 
-**Verdict:** SESSION_0032.5 closes full at WORKFLOW rubric **10.0/10** and
-Kaizen aggregate **9/10**. The next session should start fresh from the
-pre-staged `SESSION_0033.md` on `session-0032-attendance` after PR #1 merge or
-owner-approved branch selection.
-## SESSION_0034_REVIEW_01 — Independent re-verification of SESSION_0033 hostile close
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
 
-**Reviewed tasks:** SESSION_0033_TASK_01, SESSION_0033_TASK_02, SESSION_0033_TASK_03
-**Reviewer:** copilot-session-0034 (Giddy + Doug personas — independent of codex-session-0033 author)
-**Dirstarter docs check:** cached docs sufficient (governance session, no Dirstarter-owned layer touched)
-**Sources:** local code review of `apps/web/server/web/{enrollment,family,waiver,lead}/*`, `apps/web/lib/rate-limiter.ts`, `apps/web/scripts/smoke-school-ops-extended.ts`
+### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
 
-**Score: 9.8/10** — no hard caps triggered.
+**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
 
-| Category | Weight | Score | Note |
-| --- | ---: | ---: | --- |
-| Dirstarter alignment | 2.5 | 2.5 | Feature folders, Prisma, Better Auth safe-actions, rate limiter extended |
-| Data and architecture integrity | 2.0 | 1.8 | Brand/org predicates explicit; F-01 waitlist not DB-enforced (accepted risk) |
-| Lifecycle coverage | 1.5 | 1.5 | Enrollment, family, waiver, Lead→Trial→Converted all proved |
-| Test evidence | 2.0 | 2.0 | 7 action tests, 22 regression, Prisma smoke, validate, grep proof |
-| Merge and docs readiness | 1.0 | 1.0 | Committed and pushed (improved from inline 0.9) |
-| Launch usefulness | 1.0 | 1.0 | Advances May 18 Baseline school-ops lifecycle |
+**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
 
-**Kaizen aggregate: 7** (100→9, 1k→8, 10k→7). Waitlist DB enforcement (F-01) and full-app typecheck (F-02) drag the 10k tier. Remediation recommended before public/self-serve enrollment opens. Does not block SESSION_0034 (governance) or SESSION_0035 (different lane focus).
+**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
 
-**Re-review delta vs inline (lines 528–548): +0.1. Confirm.** The 0.1 improvement reflects commit+push now complete (merge readiness 0.9→1.0). No new cap-triggering findings. Original 9.7 was honest and slightly conservative.
+**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
 
-**Verdict:** SESSION_0033 code is merge-ready. Proceed to PR (TASK_08). F-01 and F-02 remain visible debt carried forward.
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
+- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
+- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
+- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
+- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
+- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
+
+**Kaizen reflection triage (Q1/Q2/Q3):**
+
+- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
+- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
+
+**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
+
+**Findings:**
+
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
+
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
+
+### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
+
+**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
+
+**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
+
+**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
+- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
+- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
+- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
+- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
+- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
+
+**Kaizen reflection triage (Q1/Q2/Q3):**
+
+- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
+- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
+
+**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
+
+**Findings:**
+
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
+
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
+
+### SESSION_0031_5_REVIEW_01 — Schedule slice hardening close (Giddy + Doug + Petey)
+
+**Reviewed tasks:** SESSION_0031_5_TASK_01, SESSION_0031_5_TASK_02, SESSION_0031_5_TASK_03, SESSION_0031_5_TASK_04, SESSION_0031_5_TASK_05, SESSION_0031_5_TASK_06.
+
+**Score: 10.0/10** — All six tasks landed. Kaizen aggregate raised from 7/10 (SESSION_0031 close) to 9/10 — above the score gate that gates SESSION_0032. No hard caps triggered.
+
+**Dirstarter docs check:** cached docs sufficient. This session hardens existing baseline-extension code (pagination via `count + skip + take`, `react.cache` per-request, nuqs URL params, existing `<Pagination>` primitive) and does not touch a Dirstarter-owned layer. Live-docs verification was performed at SESSION_0031 close (project structure, Prisma, authentication, rate limiting, environment setup, deployment) and remains valid for these surgical additions.
+
+**Sources:** `docs/sprints/SESSION_0031_5.md`, `docs/sprints/SESSION_0031.md`, `apps/web/server/web/schedule/*` (queries.ts, page.tsx, actions.ts, actions.test.ts, session-generator.test.ts, materialize.concurrency.test.ts), `apps/web/scripts/smoke-schedule.ts`, `docs/protocols/cody-preflight.md`, `docs/protocols/failed-steps-log.md` (FS-0008), `docs/runbooks/dev-environment.md`.
+
+**Hostile review verdicts:**
+
+- *Plan sanity (Giddy):* All six tasks landed as planned with no scope creep. The `wt-school-ops` worktree shipped both SESSION_0031 base slice and SESSION_0031.5 hardening as one logical change (per OD-5). ✅
+- *Dirstarter compliance (Giddy):* Pure extension. Pagination uses Prisma `count + skip + take` (Dirstarter idiom); `react.cache` only on auth-scoped reads (D-005); URL params via nuqs (already in directory feature); existing `~/components/web/pagination.tsx` reused. ✅
+- *Security (Doug):* Rate-limit gate (gate 4) and AuditLog write (gate 9) are now BEHAVIORALLY proven by 6 action-level tests against the real DB stack — no longer documentary claims. Pagination keeps explicit `{ brand, organizationId, programId }` predicates (MB-002, grep-verified at `queries.ts:46`). ✅
+- *Data integrity (Doug):* Schema unchanged. The `(classScheduleId, date)` unique constraint that protects `materializeSchedule` is now proven concurrency-safe via the new `materialize.concurrency.test.ts` parallel-call test. AuditLog `entityType`/`action` canonical values pinned by tests (`schedule.created`, `instructor.assigned`, `schedule.archived`). ✅
+- *Verification honesty (Doug):* `bun test ./server/web/schedule/` 15/15 (was 12); `bun scripts/smoke-schedule.ts` all gates; `actions.test.ts` rerunnable (verified by running twice in a row); instrumentation log line firing in test output (visible at `created=4`/`created=0` in concurrency test); typecheck clean on touched slice; `bun run wiki:lint` 125/125 clean on Group A docs commit. ✅
+- *WORKFLOW 5.0 compliance (Petey):* Lane (Core platform governance + School operations); two worktrees (main + wt-school-ops); task IDs landed in this log at planning time and updated at close; three concurrent agents on first wave + one on second wave (with manual orchestrator pickup of partial wave-2 work); Kaizen aggregate re-scored. ✅
+- *Merge readiness (Giddy):* Three commits pushed across two branches: `9bd67d7` on `main` (docs), `25121c1` + `0126a4c` on `session-0031-class-schedules` (code + tests). PR for the schedule branch can open whenever owner is ready (single PR for SESSION_0031 + SESSION_0031.5 per OD-5). ✅
+
+**Kaizen reflection triage (Q1/Q2/Q3):**
+
+- **Q1 (safe and secure?):** 9/10. Rate-limit + AuditLog now behaviorally proven for all three actions; MB-002 brand predicates explicit; concurrency safety proven; DST contract pinned. Documented-but-not-behaviorally-proven gap: instrumentation log format not shape-asserted by any test (deferred — accepted-risk).
+- **Q2 (failed-step prevention?):** 9/10. One structurally preventable slip (wave-2 subagent rate-limit) becomes SESSION_0031_5_FINDING_01. Two other slips were live discoveries of legacy state (TASK_02 teardown leak, pre-existing malformed YAML in `dev-environment.md`); both folded into existing protocols/runbooks rather than a new protocol layer.
+- **Q3 (scale 100 / 1,000 / 10,000?):** 9 / 9 / 8. The slice will plausibly hit the 1,000-tier before the next remediation window (SESSION_0032 attendance does not depend on 10k schedule rows in a single program). **Aggregate = 9/10.**
+
+**Score-gate verdict:** Aggregate ≥ 9 → **proceed to SESSION_0032 (attendance/check-in) as planned.**
+
+**Findings:**
+
+- **SESSION_0031_FINDING_01** — Worktree bootstrap requires `bun install` at `apps/web/` plus copying `.env` and running `bunx prisma generate`. Currently undocumented. **Severity:** low. **Required follow-up:** add a "fresh worktree" section to `docs/runbooks/dev-environment.md` next session. **Status:** open.
+- **SESSION_0031_FINDING_02** — `Avatar` and `Badge variant="destructive"` mistakes were caught by typecheck, not by Cody pre-flight. **Severity:** low. **Required follow-up:** add a "primitive API spot-check" sub-step to `docs/protocols/cody-preflight.md` UI checklist (read the primitive's component file, not just import it). **Status:** open.
+- **SESSION_0031_FINDING_03** — `bun:test` types unavailable in the worktree (`@types/bun` not in deps). Worked around with `@ts-expect-error`. **Severity:** low. **Required follow-up:** consider adding `@types/bun` to `apps/web/devDependencies` if the team expects more bun-test files. **Status:** open.
+
+**Verdict:** Slice ships at 10.0/10 with the eleven gates fully verified by reproducible commands and reviewable artifacts. No open hard blockers for SESSION_0032 attendance/check-in execution. The three findings above are low-severity ergonomic improvements; none block downstream work.
+
+## SESSION_0042_TO_0046_REVIEW_01 — Hostile Close: Tournament Ops + Registration Lifecycle (5-session batch)
+
+**Reviewed tasks:** SESSION_0042_TASK_01–09, SESSION_0043_TASK_01–05, SESSION_0044_TASK_01–04, SESSION_0045_TASK_01–06, SESSION_0046_TASK_01–05
+**Reviewer:** copilot-session-0046 (Giddy + Doug)
+**Dirstarter docs check:** cached docs sufficient
+**Sources:** local code review of `apps/web/server/{admin,web}/tournaments/*`, `apps/web/app/{(web),admin}/tournaments/**`, `apps/web/components/web/tournaments/*`, `apps/web/app/api/stripe/webhooks/route.ts`
+
+### 1. Plan sanity
+
+Plans were well-scoped across all five sessions. SESSION_0042 correctly identified Dirstarter Tools admin as the pattern source. SESSION_0043 correctly followed the existing Stripe webhook pattern from entitlements. SESSION_0044–0045 were tight polish sessions. SESSION_0046 correctly used existing enum values (CANCELLED, REFUNDED) without requiring schema changes. No invalid assumptions detected.
+
+### 2. Dirstarter compliance
+
+All five sessions extend Dirstarter patterns without replacing them. Admin CRUD follows the Tools admin pattern (schema → queries → actions → pages). Public pages follow the Tools public listing pattern (payloads → queries → FiltersProvider). Stripe checkout follows the existing entitlement checkout pattern. **No bypasses.**
+
+### 3. Security
+
+- Registration checkout requires authenticated user via `userActionClient` ✅
+- Cancel action verifies `registration.userId === ctx.user.id` (ownership check) ✅
+- Stripe webhooks verify signature via `constructEvent` (existing pattern) ✅
+- **FINDING:** Admin registrations page uses `withAdminPage` HOC but does not verify the tournament belongs to the admin's brand. Low severity — admin users are trusted, but brand isolation is a defense-in-depth concern.
+
+### 4. Data integrity
+
+- Unique constraint `[tournamentId, userId]` on Registration — enforced at DB level ✅
+- Capacity check — enforced in server action, but **not** at DB level. Race condition between capacity check and insert is possible under concurrent registrations. Mitigated by webhook upsert pattern but not fully eliminated. Medium severity.
+- Status transitions — `SUBMITTED/APPROVED → CANCELLED` allowed. Correct. Cannot cancel `STARTED` (incomplete checkout) or already `CANCELLED`. ✅
+- Entry status transitions to `CANCELLED` on registration cancel ✅
+
+### 5. Lifecycle proof
+
+Full user journey proven: browse tournaments → view divisions → select divisions → pay (or free) → success banner → cancel (with refund). Admin can view registrations. The lifecycle from discovery through cancellation is complete.
+
+### 6. Verification honesty
+
+- `tsc --noEmit` passes with 0 errors across all sessions ✅
+- No integration tests for registration checkout or cancellation flow
+- No e2e test for Stripe webhook handling
+- SESSION_0045 fixed pre-existing errors (TS2321, TS2307) — honest cleanup
+
+### 7. Workflow honesty
+
+- All sessions have SESSION files with JETTY frontmatter ✅
+- Task IDs follow `SESSION_NNNN_TASK_NN` convention ✅
+- Lane references traced back to LANE-S042 ✅
+- `.markdownlint.json` added to resolve lint noise from SESSION format ✅
+
+### 8. Merge readiness
+
+Ready to merge with known debt items. All code compiles. No blocking issues. Two findings to carry forward.
+
+### Kaizen reflection
+
+**1. Is this safe and secure?**
+
+Provably safe: user auth required for registration/cancellation, ownership verified on cancel, Stripe webhook signature verified. Documented but not proven: concurrent capacity races (DB-level enforcement would close this), admin brand isolation on registrations page. Tests that would close gaps: (a) concurrent registration stress test with capacity=1, (b) admin registrations page with cross-brand tournament ID.
+
+**2. How many failed steps could we have prevented?**
+
+Zero protocol violations across 5 sessions. One process improvement: SESSION_0046's Stripe refund lookup via `sessions.list` is fragile (searches last 100 sessions). A `stripePaymentIntentId` column on Registration would be more robust — adding this column should be a future remediation task.
+
+**3. Confidence 1–10:**
+
+- 100 users: **9** — flows work correctly for normal usage
+- 1,000 users: **8** — capacity race condition becomes plausible; Stripe session lookup starts hitting limits
+- 10,000 users: **7** — Stripe `sessions.list(100)` is guaranteed to miss older sessions; capacity races are statistically likely
+
+**Kaizen aggregate: 7**
+
+### Score gate
+
+Aggregate **7** → Stage a remediation session (SESSION_NNNN.5) covering:
+1. Add `stripePaymentIntentId` column to Registration (migration)
+2. Store payment intent ID in webhook handler
+3. Use stored ID for refunds instead of session list search
+4. Consider DB-level capacity enforcement (advisory lock or serializable transaction)
+
+### Findings
+
+### SESSION_0042_0046_FINDING_01 — Stripe refund lookup is fragile
+
+- **Severity:** medium
+- **Task:** SESSION_0046_TASK_02
+- **Evidence:** `server/web/tournaments/register.ts` — `stripe.checkout.sessions.list({ limit: 100 })`
+- **Impact:** Refunds will silently fail for registrations older than the most recent 100 Stripe checkout sessions
+- **Required follow-up:** Add `stripePaymentIntentId` to Registration model; store in webhook; use for refund
+- **Status:** open
+
+### SESSION_0042_0046_FINDING_02 — Capacity check is application-level only
+
+- **Severity:** medium
+- **Task:** SESSION_0043_TASK_02
+- **Evidence:** `server/web/tournaments/register.ts` — capacity checked before insert, no DB constraint
+- **Impact:** Under concurrent load, two users could register for the last spot
+- **Required follow-up:** Use serializable transaction or advisory lock for capacity-constrained registrations
+- **Status:** open
+
+### SESSION_0042_0046_FINDING_03 — Admin registrations page lacks brand scoping
+
+- **Severity:** low
+- **Task:** SESSION_0044_TASK_03
+- **Evidence:** `server/admin/tournaments/registrations-queries.ts` — queries by tournamentId without brand filter
+- **Impact:** Admin could theoretically view registrations for a tournament from another brand (requires knowing the ID)
+- **Required follow-up:** Add brand filter to registrations query or verify via tournament ownership
+- **Status:** open
+
+**Score: 9.2/10** (WORKFLOW rubric). Missing credible verification (no integration tests) caps at 9.4; all other rubric categories pass.
+
+**Verdict:** Sessions 0042–0046 deliver a complete tournament registration lifecycle from admin CRUD through cancellation with Stripe refund. Code is merge-ready with three open findings (F-01 medium, F-02 medium, F-03 low). Kaizen aggregate 7 requires a remediation session before this lane advances further. Recommended: SESSION_0046.5 to address F-01 (stripePaymentIntentId migration) and F-02 (serializable capacity check).

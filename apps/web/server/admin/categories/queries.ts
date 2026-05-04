@@ -51,9 +51,9 @@ export const findCategories = async (
   return { categories, categoriesTotal, pageCount }
 }
 
-export const findCategoryList = async ({ ...args }: Prisma.CategoryFindManyArgs = {}) => {
+export const findCategoryList = async (args?: { where?: Prisma.CategoryWhereInput }) => {
   return db.category.findMany({
-    ...args,
+    where: args?.where,
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })

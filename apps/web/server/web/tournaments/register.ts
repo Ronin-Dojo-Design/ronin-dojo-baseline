@@ -1,6 +1,6 @@
 "use server"
 
-import { registrationCheckoutSchema } from "~/server/web/tournaments/schema"
+import { registrationCheckoutSchema, registrationCancelSchema } from "~/server/web/tournaments/schema"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { db } from "~/services/db"
@@ -118,4 +118,76 @@ export const createRegistrationCheckout = userActionClient
     })
 
     return { type: "checkout" as const, url: session.url }
+  })
+
+/**
+ * Cancel a tournament registration.
+ * If the registration was paid, issues a Stripe refund.
+ */
+export const cancelRegistration = userActionClient
+  .schema(registrationCancelSchema)
+  .action(async ({ parsedInput: input, ctx }) => {
+    const userId = ctx.user.id
+
+    // 1. Find the registration and verify ownership
+    const registration = await db.registration.findUnique({
+      where: { id: input.registrationId },
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        totalFeeCents: true,
+        userId: true,
+        tournamentId: true,
+      },
+    })
+
+    if (!registration || registration.userId !== userId) {
+      throw new Error("Registration not found")
+    }
+
+    if (registration.status === "CANCELLED") {
+      throw new Error("Registration is already cancelled")
+    }
+
+    // 2. If paid, issue Stripe refund via checkout session lookup
+    let newPaymentStatus = registration.paymentStatus
+    if (registration.paymentStatus === "PAID" && registration.totalFeeCents > 0) {
+      const allSessions = await stripe.checkout.sessions.list({ limit: 100 })
+      const matchingSession = allSessions.data.find(
+        (s) =>
+          s.metadata?.type === "tournament_registration" &&
+          s.metadata?.tournamentId === registration.tournamentId &&
+          s.metadata?.userId === userId,
+      )
+
+      if (matchingSession?.payment_intent) {
+        const paymentIntentId =
+          typeof matchingSession.payment_intent === "string"
+            ? matchingSession.payment_intent
+            : matchingSession.payment_intent.id
+
+        await stripe.refunds.create({
+          payment_intent: paymentIntentId,
+        })
+        newPaymentStatus = "REFUNDED"
+      }
+    }
+
+    // 3. Update registration status
+    await db.registration.update({
+      where: { id: registration.id },
+      data: {
+        status: "CANCELLED",
+        paymentStatus: newPaymentStatus,
+      },
+    })
+
+    // 4. Mark all entries as withdrawn
+    await db.registrationEntry.updateMany({
+      where: { registrationId: registration.id },
+      data: { status: "CANCELLED" },
+    })
+
+    return { success: true }
   })

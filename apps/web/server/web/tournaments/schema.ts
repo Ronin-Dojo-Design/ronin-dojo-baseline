@@ -16,3 +16,12 @@ export const registrationCheckoutSchema = z.object({
 })
 
 export type RegistrationCheckoutInput = z.infer<typeof registrationCheckoutSchema>
+
+/**
+ * Input schema for cancelling a tournament registration.
+ */
+export const registrationCancelSchema = z.object({
+  registrationId: z.string().cuid(),
+})
+
+export type RegistrationCancelInput = z.infer<typeof registrationCancelSchema>

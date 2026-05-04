@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createRegistrationCheckout } from "~/server/web/tournaments/register"
+import { createRegistrationCheckout, cancelRegistration } from "~/server/web/tournaments/register"
 
 interface Division {
   id: string
@@ -12,21 +11,79 @@ interface Division {
   _count?: { entries: number }
 }
 
+interface ExistingRegistration {
+  id: string
+  status: string
+  paymentStatus: string
+  entries: { division: { name: string } }[]
+}
+
 interface RegisterButtonProps {
   tournamentId: string
   divisions: Division[]
   roleCode?: string
+  existingRegistration?: ExistingRegistration | null
 }
 
 export function RegisterButton({
   tournamentId,
   divisions,
   roleCode = "COMPETITOR",
+  existingRegistration,
 }: RegisterButtonProps) {
-  const router = useRouter()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cancelled, setCancelled] = useState(false)
+
+  // If user already has a non-cancelled registration, show status + cancel
+  if (existingRegistration && existingRegistration.status !== "CANCELLED" && !cancelled) {
+    const handleCancel = async () => {
+      if (!confirm("Are you sure you want to cancel your registration? This cannot be undone.")) return
+      setLoading(true)
+      setError(null)
+
+      try {
+        await cancelRegistration({ registrationId: existingRegistration.id })
+        setCancelled(true)
+      } catch (e: any) {
+        setError(e.message ?? "Cancellation failed")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    return (
+      <div className="space-y-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+        <p className="font-semibold text-green-700 dark:text-green-400">
+          You are registered
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Divisions: {existingRegistration.entries.map((e) => e.division.name).join(", ")}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Status: {existingRegistration.status} · Payment: {existingRegistration.paymentStatus}
+        </p>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={loading}
+          className="inline-flex items-center justify-center rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:pointer-events-none disabled:opacity-50"
+        >
+          {loading ? "Cancelling…" : "Cancel Registration"}
+        </button>
+      </div>
+    )
+  }
+
+  if (cancelled) {
+    return (
+      <div className="rounded-lg border border-muted p-4">
+        <p className="text-sm text-muted-foreground">Your registration has been cancelled.</p>
+      </div>
+    )
+  }
 
   const toggle = (id: string) => {
     setSelectedIds((prev) =>
@@ -53,7 +110,9 @@ export function RegisterButton({
       if (result?.data?.type === "checkout" && result.data.url) {
         window.location.href = result.data.url
       } else if (result?.data?.type === "free") {
-        router.refresh()
+        const url = new URL(window.location.href)
+        url.searchParams.set("registered", "true")
+        window.location.href = url.toString()
       }
     } catch (e: any) {
       setError(e.message ?? "Registration failed")

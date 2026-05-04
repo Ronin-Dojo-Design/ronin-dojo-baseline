@@ -7,6 +7,7 @@
 
 // @ts-expect-error - bun:test is a Bun runtime module
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+// @ts-expect-error - bun:test is a Bun runtime module
 import { mock } from "bun:test"
 
 mock.module("next/cache", () => ({
