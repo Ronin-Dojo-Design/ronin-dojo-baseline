@@ -67,6 +67,7 @@ export const findTournamentById = async (id: string) => {
               roleRequired: { select: { id: true, name: true } },
               rankMin: { select: { id: true, name: true } },
               rankMax: { select: { id: true, name: true } },
+              brackets: { select: { id: true, name: true }, take: 1 },
             },
           },
           ruleSet: { select: { id: true, name: true } },

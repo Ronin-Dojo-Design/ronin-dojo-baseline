@@ -1,7 +1,8 @@
 "use client"
 
-import { PlusIcon, TrashIcon, SwordsIcon } from "lucide-react"
+import { PlusIcon, TrashIcon, SwordsIcon, EyeIcon } from "lucide-react"
 import { useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
@@ -23,6 +24,7 @@ type DivisionsEditorProps = {
 
 export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleDeleteDivision = (id: string) => {
     startTransition(async () => {
@@ -49,6 +51,7 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
         toast.success(
           `Bracket generated for ${divisionName}: ${result.data.competitorCount} competitors, ${result.data.totalRounds} rounds${result.data.byeCount > 0 ? `, ${result.data.byeCount} byes` : ""}`,
         )
+        router.push(`/admin/tournaments/${tournament.id}/brackets/${result.data.bracketId}`)
       } else if (result?.serverError) {
         toast.error(result.serverError)
       }
@@ -111,6 +114,22 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
                 >
                   Bracket
                 </Button>
+                {(div as any).brackets?.[0] && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    prefix={<EyeIcon className="size-4" />}
+                    onClick={() =>
+                      router.push(
+                        `/admin/tournaments/${tournament.id}/brackets/${(div as any).brackets[0].id}`,
+                      )
+                    }
+                    disabled={isPending}
+                    aria-label="View bracket"
+                  >
+                    View
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"

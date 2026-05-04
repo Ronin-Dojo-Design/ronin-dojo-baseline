@@ -12,6 +12,7 @@ import {
   bulkRegistrationStatusUpdateSchema,
   REGISTRATION_STATUS_TRANSITIONS,
   generateBracketSchema,
+  scoreMatchSchema,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
@@ -429,6 +430,36 @@ export const generateBracket = adminActionClient
         }
       }
 
+      // Auto-advance BYE winners into round 2
+      if (byeCount > 0 && totalRounds > 1) {
+        const byeMatches = await tx.match.findMany({
+          where: { bracketId: bracket.id, roundNumber: 1, status: "BYE" },
+          include: { competitors: true },
+          orderBy: { matchNumber: "asc" },
+        })
+
+        for (const byeMatch of byeMatches) {
+          const soloCompetitor = byeMatch.competitors[0]
+          if (soloCompetitor) {
+            // Mark winner on BYE match
+            await tx.match.update({
+              where: { id: byeMatch.id },
+              data: { winnerEntryId: soloCompetitor.registrationEntryId },
+            })
+
+            // Advance to round 2
+            await advanceWinner(
+              tx as any,
+              bracket.id,
+              1,
+              byeMatch.matchNumber,
+              soloCompetitor.registrationEntryId,
+              totalRounds,
+            )
+          }
+        }
+      }
+
       return bracket
     })
 
@@ -450,5 +481,161 @@ export const generateBracket = adminActionClient
       totalRounds,
       competitorCount,
       byeCount,
+    }
+  })
+
+// -----------------------------------------------------------------------------
+// Match scoring + bracket advancement
+// -----------------------------------------------------------------------------
+
+/**
+ * Advance a winner into the next round of a single-elimination bracket.
+ * Calculates the target match and slot based on the completed match's position.
+ */
+async function advanceWinner(
+  tx: any,
+  bracketId: string,
+  completedRoundNumber: number,
+  completedMatchNumber: number,
+  winnerEntryId: string,
+  totalRounds: number,
+) {
+  if (completedRoundNumber >= totalRounds) {
+    // Final match — no advancement needed, this is the champion
+    return null
+  }
+
+  // Find all matches in the completed round to determine position within round
+  const roundMatches = await (tx as any).match.findMany({
+    where: { bracketId, roundNumber: completedRoundNumber },
+    orderBy: { matchNumber: "asc" },
+    select: { id: true, matchNumber: true },
+  })
+
+  const positionInRound = roundMatches.findIndex(
+    (m: any) => m.matchNumber === completedMatchNumber,
+  )
+
+  // Next round match: pair of matches feed into one
+  const nextRoundMatchIndex = Math.floor(positionInRound / 2)
+  // Slot: odd position (0-indexed) in round → slot 1, even → slot 2
+  const slot = (positionInRound % 2 === 0) ? 1 : 2
+
+  // Find the target match in the next round
+  const nextRoundMatches = await (tx as any).match.findMany({
+    where: { bracketId, roundNumber: completedRoundNumber + 1 },
+    orderBy: { matchNumber: "asc" },
+    select: { id: true, matchNumber: true },
+  })
+
+  const targetMatch = nextRoundMatches[nextRoundMatchIndex]
+  if (!targetMatch) {
+    throw new Error(`Could not find next-round match for advancement`)
+  }
+
+  // Create the MatchCompetitor in the next round
+  await (tx as any).matchCompetitor.create({
+    data: {
+      matchId: targetMatch.id,
+      registrationEntryId: winnerEntryId,
+      slot,
+    },
+  })
+
+  return { matchId: targetMatch.id, slot }
+}
+
+export const scoreMatch = adminActionClient
+  .inputSchema(scoreMatchSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { matchId, winnerEntryId, result, scoreData, notes } = parsedInput
+
+    // 1. Fetch match with bracket info and competitors
+    const match = await db.match.findUnique({
+      where: { id: matchId },
+      include: {
+        bracket: {
+          select: {
+            id: true,
+            divisionId: true,
+            seedData: true,
+            division: {
+              select: {
+                tournamentDiscipline: {
+                  select: { tournament: { select: { slug: true } } },
+                },
+              },
+            },
+          },
+        },
+        competitors: { select: { registrationEntryId: true } },
+      },
+    })
+
+    if (!match) throw new Error("Match not found")
+
+    // 2. Validate status
+    if (match.status !== "SCHEDULED" && match.status !== "IN_PROGRESS") {
+      throw new Error(`Match cannot be scored — current status is ${match.status}`)
+    }
+
+    // 3. Validate winner is a competitor in this match
+    const isValidWinner = match.competitors.some(
+      (c) => c.registrationEntryId === winnerEntryId,
+    )
+    if (!isValidWinner) {
+      throw new Error("Winner must be a competitor in this match")
+    }
+
+    // 4. Get total rounds from bracket seedData
+    const seedData = match.bracket.seedData as any
+    const totalRounds = seedData?.totalRounds ?? 1
+
+    // 5. Score + advance in transaction
+    const scored = await db.$transaction(async (tx) => {
+      // Update match
+      const updated = await tx.match.update({
+        where: { id: matchId },
+        data: {
+          status: "COMPLETED",
+          result,
+          winnerEntryId,
+          scoreData: scoreData ?? undefined,
+          notes,
+          endedAt: new Date(),
+        },
+      })
+
+      // Advance winner to next round
+      const advancement = await advanceWinner(
+        tx as any,
+        match.bracket.id,
+        match.roundNumber,
+        match.matchNumber,
+        winnerEntryId,
+        totalRounds,
+      )
+
+      return { match: updated, advancement }
+    })
+
+    const tournamentSlug =
+      match.bracket.division.tournamentDiscipline.tournament.slug
+
+    after(async () => {
+      revalidate({
+        tags: [
+          "tournaments",
+          `tournament-${tournamentSlug}`,
+          `bracket-${match.bracket.id}`,
+        ],
+      })
+    })
+
+    return {
+      matchId: scored.match.id,
+      status: scored.match.status,
+      result: scored.match.result,
+      advancement: scored.advancement,
     }
   })

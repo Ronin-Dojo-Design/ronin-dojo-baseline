@@ -6,7 +6,7 @@ import {
   type inferParserType,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Tournament, Brand, TournamentStatus, DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
+import { type Tournament, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 // -----------------------------------------------------------------------------
@@ -149,3 +149,59 @@ export const generateBracketSchema = z.object({
 })
 
 export type GenerateBracketInput = z.infer<typeof generateBracketSchema>
+
+// -----------------------------------------------------------------------------
+// Score data schemas (per scoring system)
+// -----------------------------------------------------------------------------
+
+/** Points-based scoring: Karate, TKD, Fencing, etc. */
+export const pointsScoreDataSchema = z.object({
+  type: z.literal("POINTS"),
+  competitor1Points: z.number().int().min(0),
+  competitor2Points: z.number().int().min(0),
+})
+
+/** 10-point must round score for a single round */
+export const tenPointRoundSchema = z.object({
+  competitor1Score: z.number().int().min(0).max(10),
+  competitor2Score: z.number().int().min(0).max(10),
+  competitor1Deductions: z.number().int().min(0).default(0),
+  competitor2Deductions: z.number().int().min(0).default(0),
+  /** Knockdowns (Boxing/MT) or Disarms (Eskrima) this round */
+  competitor1Knockdowns: z.number().int().min(0).default(0),
+  competitor2Knockdowns: z.number().int().min(0).default(0),
+})
+
+/** 10-point must scoring: Boxing, Muay Thai, MMA, Eskrima (WEKAF) */
+export const tenPointMustScoreDataSchema = z.object({
+  type: z.literal("TEN_POINT_MUST"),
+  rounds: z.array(tenPointRoundSchema).min(1),
+  /** Total knockdowns/disarms per competitor (for 3-knockdown/disarm TKO rule) */
+  competitor1TotalKnockdowns: z.number().int().min(0).default(0),
+  competitor2TotalKnockdowns: z.number().int().min(0).default(0),
+})
+
+/** Union of all scoring types */
+export const scoreDataSchema = z.discriminatedUnion("type", [
+  pointsScoreDataSchema,
+  tenPointMustScoreDataSchema,
+])
+
+export type PointsScoreData = z.infer<typeof pointsScoreDataSchema>
+export type TenPointMustScoreData = z.infer<typeof tenPointMustScoreDataSchema>
+export type ScoreData = z.infer<typeof scoreDataSchema>
+
+// -----------------------------------------------------------------------------
+// Score match
+// -----------------------------------------------------------------------------
+
+export const scoreMatchSchema = z.object({
+  matchId: z.string().min(1, "Match ID is required"),
+  winnerEntryId: z.string().min(1, "Winner is required"),
+  result: z.enum(MatchResult),
+  scoreData: scoreDataSchema.optional(),
+  notes: z.string().optional(),
+})
+
+export type ScoreMatchInput = z.infer<typeof scoreMatchSchema>
+
