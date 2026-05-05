@@ -3,6 +3,7 @@ import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
   directoryProfileListPayload,
+  directoryProfileDetailPayload,
   filterDisciplinePayload,
   filterOrganizationPayload,
   filterRankPayload,
@@ -144,4 +145,72 @@ export const getDirectoryFilterOptions = async (brand: Brand) => {
   ])
 
   return { organizations, disciplines, ranks }
+}
+
+/**
+ * Find a single directory profile by slug for the detail page.
+ *
+ * Privacy rules:
+ * - HIDDEN profiles → never returned
+ * - MEMBERS_ONLY → only if viewerUserId is provided (authenticated)
+ * - PUBLIC → always returned
+ * - Per-field flags strip sensitive data at this layer
+ */
+export const findProfileBySlug = async ({
+  slug,
+  brand,
+  viewerUserId,
+}: {
+  slug: string
+  brand: Brand
+  viewerUserId?: string | null
+}) => {
+  const allowedVisibility: DirectoryVisibility[] = viewerUserId
+    ? ["PUBLIC", "MEMBERS_ONLY"]
+    : ["PUBLIC"]
+
+  const profile = await db.directoryProfile.findFirst({
+    where: {
+      slug,
+      visibility: { in: allowedVisibility },
+      user: {
+        memberships: { some: { organization: { brand } } },
+      },
+    },
+    select: directoryProfileDetailPayload,
+  })
+
+  if (!profile) return null
+
+  // Apply per-field privacy flags
+  return {
+    id: profile.id,
+    slug: profile.slug,
+    coverPhotoUrl: profile.coverPhotoUrl,
+    videoIntroUrl: profile.videoIntroUrl,
+    locationCity: profile.locationCity,
+    locationRegion: profile.locationRegion,
+    locationCountry: profile.locationCountry,
+    user: {
+      id: profile.user.id,
+      name: profile.user.name,
+      image: profile.user.image,
+      bio: profile.user.passport?.bio ?? null,
+      socialLinks: profile.user.passport?.socialLinks ?? null,
+      email: profile.showEmail ? profile.user.email : null,
+      organizations: profile.showOrgs
+        ? profile.user.memberships
+            .filter((m) => m.organization)
+            .map((m) => ({
+              id: m.organization.id,
+              name: m.organization.name,
+              slug: m.organization.slug,
+              discipline: m.discipline,
+              joinedAt: m.joinedAt,
+            }))
+        : [],
+      ranks: profile.showRanks ? profile.user.rankAwards : [],
+      techniqueProgress: profile.user.techniqueProgress,
+    },
+  }
 }

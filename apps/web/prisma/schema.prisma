@@ -829,6 +829,7 @@ model Passport {
 
 model DirectoryProfile {
   id              String              @id @default(cuid())
+  slug            String?             @unique
   visibility      DirectoryVisibility @default(MEMBERS_ONLY)
   locationCity    String?
   locationRegion  String?

@@ -60,6 +60,60 @@ export type DirectoryProfileList = Prisma.DirectoryProfileGetPayload<{
 }>
 
 // ---------------------------------------------------------------------------
+// Detail payload — single profile page
+// ---------------------------------------------------------------------------
+
+export const directoryProfileDetailPayload = {
+  id: true,
+  slug: true,
+  visibility: true,
+  locationCity: true,
+  locationRegion: true,
+  locationCountry: true,
+  showEmail: true,
+  showPhone: true,
+  showOrgs: true,
+  showRanks: true,
+  coverPhotoUrl: true,
+  videoIntroUrl: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      email: true,
+      passport: {
+        select: {
+          bio: true,
+          socialLinks: true,
+        },
+      },
+      memberships: {
+        select: {
+          ...directoryMembershipPayload,
+          joinedAt: true,
+        },
+      },
+      rankAwards: {
+        select: directoryRankAwardPayload,
+        orderBy: { rank: { sortOrder: "desc" as const } },
+      },
+      techniqueProgress: {
+        select: {
+          id: true,
+          status: true,
+          verifiedById: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.DirectoryProfileSelect
+
+export type DirectoryProfileDetail = Prisma.DirectoryProfileGetPayload<{
+  select: typeof directoryProfileDetailPayload
+}>
+
+// ---------------------------------------------------------------------------
 // Filter options payloads
 // ---------------------------------------------------------------------------
 
