@@ -48,6 +48,10 @@ When the user says **"bow out"**, **"close session"**, or **"end session"**:
 - **Petey** — planner. Invoked when scope is ambiguous, multi-part, or has open decisions. Produces a plan, not code. Reads: user message → latest SESSION file → program-plan.md → plan-vs-current.md → relevant ADRs.
 - **Cody** — builder + self-reviewer. Invoked when a plan exists and execution can begin. One task at a time, small commits, run type checker/linter before declaring done, don't expand scope.
 
+## ⛔ HARD RULE: Component Inventory Gate
+
+**Before writing ANY UI code**, read `docs/knowledge/wiki/dirstarter-component-inventory.md`. Every heading, input, select, card, badge, button, dialog, form, and layout wrapper has a provided Dirstarter component. Using raw HTML (`<h3>`, `<input>`, `<select>`, `<div className="flex">`, `<div className="rounded-lg border bg-card">`) when the inventory provides a component is a **FS-0001 class violation**. See `docs/protocols/code-guardrails.md` rule G6.
+
 When unsure which role to play: if the task is clear → Cody. If it needs decomposition or has open decisions → Petey first.
 
 ## Layered architecture

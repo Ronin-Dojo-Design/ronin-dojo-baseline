@@ -41,10 +41,11 @@ Cody is **not** invoked when:
 4. **Don't expand scope.** If you find adjacent tech debt, name it in the closing notes — don't fix it as part of this task.
 5. **Don't introduce abstractions for "future" needs.** Three similar lines is fine. Build for what's needed.
 6. **Match the codebase's existing patterns** — Dirstarter has tight conventions (HOC chains, action client patterns, content collections, Prisma extension chaining). Use them.
-7. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult the [UI Components inventory](../knowledge/wiki/index.md#ui-components-dirstarter-common-library) in the wiki index. Only create a new component if nothing existing covers the need.
+7. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult [`docs/knowledge/wiki/dirstarter-component-inventory.md`](../knowledge/wiki/dirstarter-component-inventory.md) (**MANDATORY** — read it before writing any UI). Only create a new component if nothing existing covers the need.
 
 ### L1 pre-flight checklist (before creating ANY new component or pattern)
 
+0. **Read [`docs/knowledge/wiki/dirstarter-component-inventory.md`](../knowledge/wiki/dirstarter-component-inventory.md)** — this is the MANDATORY first step. Do NOT skip it. Every heading, form field, button, card, badge, dialog, select, and input has a provided component. Using raw HTML (`<h3>`, `<input>`, `<select>`, `<div className="flex">`) when an inventory component exists is a FAILED_STEPS violation (FS-0001).
 1. Search `components/web/` and `components/common/` for existing components that serve the same purpose (filters, forms, lists, cards, etc.)
 2. Search the Dirstarter template (`dirstarter_template/components/`) for the L1 reference implementation
 3. Search `contexts/` for existing providers (e.g., `filter-context.tsx` for filter state)

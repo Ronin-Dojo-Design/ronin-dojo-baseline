@@ -102,3 +102,21 @@ socialLinks: z.record(z.string().url()),
 - [Closing ritual](../rituals/closing.md) — embeds G5 as step 3
 - [Cody agent](../agents/cody.md) — follows these rules during execution
 - [Wiki lint](wiki-lint.md) — automates G5 checks for docs
+
+### G6 — No raw HTML when a Dirstarter component exists
+
+Consult [`dirstarter-component-inventory.md`](../knowledge/wiki/dirstarter-component-inventory.md) before writing any UI. The following raw elements are NEVER acceptable when the inventory provides a component:
+
+| ❌ Raw HTML | ✅ Use instead |
+|---|---|
+| `<h1>` – `<h6>` | `H1` – `H6` from `components/common/heading.tsx` |
+| `<input>` | `Input` from `components/common/input.tsx` |
+| `<select>` | `Select` from `components/common/select.tsx` |
+| `<label>` | `Label` / `FormLabel` from `components/common/label.tsx` / `form.tsx` |
+| `<form>` (with manual state) | `Form` + React Hook Form from `components/common/form.tsx` |
+| `<textarea>` | `TextArea` from `components/common/textarea.tsx` |
+| `<div className="flex ...">` | `Stack` from `components/common/stack.tsx` |
+| `<div className="rounded-lg border bg-card">` | `Card` from `components/common/card.tsx` |
+| `<a href=...>` | `Link` from `components/common/link.tsx` |
+
+Violations are classified as **FS-0001** in the failed-steps log.

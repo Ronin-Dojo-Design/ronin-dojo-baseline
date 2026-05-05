@@ -45,8 +45,8 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 - Searched `components/common/` for: {search terms}
 - Found: {list of relevant existing components, or "none"}
 
-### 2. L1 template scan (via Dirstarter Baseline Index)
-- Consulted `docs/architecture/dirstarter-baseline-index.md`: {yes}
+### 2. L1 template scan (via Dirstarter Component Inventory)
+- Consulted `docs/knowledge/wiki/dirstarter-component-inventory.md`: {yes}
 - Searched `dirstarter_template/components/` for: {search terms}
 - Closest L1 pattern: {file path and pattern name, or "none"}
 - **Primitive API spot-check:** Read each composed primitive's component file

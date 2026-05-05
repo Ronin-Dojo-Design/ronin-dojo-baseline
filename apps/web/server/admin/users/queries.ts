@@ -59,3 +59,10 @@ export const findUserById = async (id: string) => {
     where: { id },
   })
 }
+
+export const findUserList = async () => {
+  return db.user.findMany({
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  })
+}

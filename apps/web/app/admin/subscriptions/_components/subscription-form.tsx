@@ -30,10 +30,12 @@ import { upsertSubscription } from "~/server/admin/subscriptions/actions"
 import type { findSubscriptionById } from "~/server/admin/subscriptions/queries"
 import { subscriptionSchema } from "~/server/admin/subscriptions/schema"
 import type { findSubscriptionTierList } from "~/server/admin/subscription-tiers/queries"
+import type { findUserList } from "~/server/admin/users/queries"
 
 type SubscriptionFormProps = ComponentProps<"form"> & {
   subscription?: Awaited<ReturnType<typeof findSubscriptionById>>
   tiersPromise: ReturnType<typeof findSubscriptionTierList>
+  usersPromise?: ReturnType<typeof findUserList>
 }
 
 export function SubscriptionForm({
@@ -42,11 +44,13 @@ export function SubscriptionForm({
   title,
   subscription,
   tiersPromise,
+  usersPromise,
   ...props
 }: SubscriptionFormProps) {
   const router = useRouter()
   const resolver = zodResolver(subscriptionSchema)
   const tiers = use(tiersPromise)
+  const users = usersPromise ? use(usersPromise) : []
 
   const { form, action, handleSubmitWithAction } = useHookFormAction(
     upsertSubscription,
@@ -104,10 +108,21 @@ export function SubscriptionForm({
             name="userId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>User ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="User CUID" className="font-mono text-sm" {...field} />
-                </FormControl>
+                <FormLabel>User</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {users.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name ?? user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

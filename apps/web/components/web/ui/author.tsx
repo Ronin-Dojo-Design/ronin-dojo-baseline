@@ -1,5 +1,6 @@
 import Image from "next/image"
 import type { ComponentProps, ReactNode } from "react"
+import { H6 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { ExternalLink } from "~/components/web/external-link"
 
@@ -22,10 +23,10 @@ export const Author = ({ name, image, title, prefix, url, note, ...props }: Auth
       />
 
       <div className="flex-1 text-sm/normal text-secondary-foreground">
-        <h3 className="truncate *:font-medium *:[[href]]:hover:text-foreground">
+        <H6 as="h3" className="truncate *:font-medium *:[[href]]:hover:text-foreground">
           {prefix ? `${prefix} ` : ""}
           {url ? <ExternalLink href={url}>{name}</ExternalLink> : <span>{name}</span>}
-        </h3>
+        </H6>
 
         {note && <span className="opacity-50 truncate">{note}</span>}
       </div>

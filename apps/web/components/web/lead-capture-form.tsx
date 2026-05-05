@@ -7,6 +7,8 @@ import { toast } from "sonner"
 import { useState } from "react"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
+import { Card } from "~/components/common/card"
+import { H3 } from "~/components/common/heading"
 import {
   Form,
   FormControl,
@@ -70,12 +72,12 @@ export function LeadCaptureForm({ organizationId, programId, onSuccess }: LeadCa
 
   if (submitted) {
     return (
-      <div className="rounded-lg border bg-card p-8 text-center">
-        <h3 className="text-lg font-semibold mb-2">You're all set!</h3>
+      <Card className="p-8 text-center">
+        <H3>You're all set!</H3>
         <p className="text-muted-foreground">
           We've received your info and will reach out shortly to get you started.
         </p>
-      </div>
+      </Card>
     )
   }
 
