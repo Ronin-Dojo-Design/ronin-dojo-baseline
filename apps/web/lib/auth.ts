@@ -11,6 +11,7 @@ import { siteConfig } from "~/config/site"
 import { EmailMagicLink } from "~/emails/magic-link"
 import { env } from "~/env"
 import { sendEmail } from "~/lib/email"
+import { generateUniqueProfileSlug } from "~/lib/slug"
 import { db } from "~/services/db"
 
 export const auth = betterAuth({
@@ -74,16 +75,23 @@ export const auth = betterAuth({
           // Only create if not already present (idempotent for social re-auth)
           const existing = await db.passport.findUnique({ where: { userId: newUserId } })
           if (!existing) {
+            const displayName = context.body?.user?.name ?? null
+            const slug = await generateUniqueProfileSlug(
+              displayName,
+              async (s) =>
+                (await db.directoryProfile.count({ where: { slug: s } })) > 0,
+            )
             await db.$transaction([
               db.passport.create({
                 data: {
                   userId: newUserId,
-                  displayName: context.body?.user?.name ?? null,
+                  displayName,
                 },
               }),
               db.directoryProfile.create({
                 data: {
                   userId: newUserId,
+                  slug,
                   // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
                 },
               }),

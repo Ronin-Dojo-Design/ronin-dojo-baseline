@@ -31,8 +31,8 @@ tags:
 
 This document explains how the Dirstarter `Tool` directory listing pattern is repurposed into three Ronin Dojo domain listing types: **Technique**, **Public Profile**, and **School**. It covers data flow, privacy model, authorization, component mapping, wireframes, and implementation tasks.
 
-Governing decision: [ADR 0013](../../architecture/decisions/0013-tool-listing-repurposing.md).
-Planning session: [SESSION_0066](../../sprints/SESSION_0066.md).
+Governing decision: [ADR 0013](../../../architecture/decisions/0013-tool-listing-repurposing.md).
+Planning session: [SESSION_0066](../../../sprints/SESSION_0066.md).
 
 ---
 
@@ -336,7 +336,7 @@ All three are additive (no data loss risk). Can be done in a single Prisma migra
 
 ## 9. Implementation Tasks (Cody Assignments)
 
-Full task breakdown in [SESSION_0066](../../sprints/SESSION_0066.md) § Task Decomposition.
+Full task breakdown in [SESSION_0066](../../../sprints/SESSION_0066.md) § Task Decomposition.
 
 **Execution order:**
 
@@ -358,8 +358,8 @@ Full task breakdown in [SESSION_0066](../../sprints/SESSION_0066.md) § Task Dec
 
 ## Cross-references
 
-- [ADR 0013 — Tool→Listing Pattern Repurposing](../../architecture/decisions/0013-tool-listing-repurposing.md)
-- [SESSION 0066](../../sprints/SESSION_0066.md) — planning session
-- [Dirstarter Component Inventory](dirstarter-component-inventory.md) — L1 component pre-flight
-- [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) — L1 docs reference
-- [ADR 0004 — Multi-brand as column](../../architecture/decisions/0004-multi-brand-as-column.md) — brand scoping
+- [ADR 0013 — Tool→Listing Pattern Repurposing](../../../architecture/decisions/0013-tool-listing-repurposing.md)
+- [SESSION 0066](../../../sprints/SESSION_0066.md) — planning session
+- [Dirstarter Component Inventory](../dirstarter-component-inventory.md) — L1 component pre-flight
+- [Dirstarter Docs Inventory](../dirstarter-docs-inventory.md) — L1 docs reference
+- [ADR 0004 — Multi-brand as column](../../../architecture/decisions/0004-multi-brand-as-column.md) — brand scoping

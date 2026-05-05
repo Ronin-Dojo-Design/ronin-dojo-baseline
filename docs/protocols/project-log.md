@@ -260,6 +260,10 @@ Three sections:
 | SESSION_0063_TASK_06 | SESSION_0063 | Auth hardening | Cody | Wire isInSameBrand() into tournament reg + org join | Brand membership verified before reg/join | landed | SESSION_0063_REVIEW_01 |
 | SESSION_0063_TASK_07 | SESSION_0063 | Auth hardening | Cody | Passport defensive checks | Passport required for tournament reg + org join | landed | SESSION_0063_REVIEW_01 |
 | SESSION_0063_TASK_08 | SESSION_0063 | Performance | Cody | getUserMemberships include → select | Reduced payload — select only needed fields | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0073_TASK_01 | SESSION_0073 | Core platform governance | Cody | Unclean-close recovery for SESSION_0061, 0062, 0066, 0067, 0068 | All 5 frontmatter+body Status fields = closed-unclean with reason; 6 entries logged in incidents.md | landed | SESSION_0073_REVIEW_01 |
+| SESSION_0073_TASK_02 | SESSION_0073 | Schema | Cody | Add Organization.description + revert search-organizations workaround | Migration 20260505034540 applied; payloads include description; search returns real value | landed | SESSION_0073_REVIEW_01 |
+| SESSION_0073_TASK_03 | SESSION_0073 | Directory | Cody | Dedicated member/school filter actions | filter-actions.ts exists with findMember/findSchool variants; both filter components updated | landed | SESSION_0073_REVIEW_01 |
+| SESSION_0073_TASK_04 | SESSION_0073 | Directory | Cody | DirectoryProfile slug auto-generation | lib/slug.ts + auth sign-up hook + lead conversion both call generateUniqueProfileSlug; tsc clean | landed | SESSION_0073_REVIEW_01 |
 
 ---
 

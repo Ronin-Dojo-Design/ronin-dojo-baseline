@@ -11,7 +11,7 @@ import {
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { useFilters } from "~/contexts/filter-context"
-import { findTechniqueFilterOptions } from "~/server/web/techniques/actions"
+import { findSchoolFilterOptions } from "~/server/web/directory/filter-actions"
 import type { SchoolFilterSchema } from "~/server/web/directory/school-schema"
 
 const orgTypeOptions = [
@@ -24,7 +24,7 @@ const orgTypeOptions = [
 
 export const SchoolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   const { filters, updateFilters } = useFilters<SchoolFilterSchema>()
-  const { result, execute } = useAction(findTechniqueFilterOptions)
+  const { result, execute } = useAction(findSchoolFilterOptions)
 
   useEffect(execute, [execute])
 

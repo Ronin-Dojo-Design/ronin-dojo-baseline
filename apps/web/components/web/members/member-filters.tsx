@@ -12,12 +12,12 @@ import {
 import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
 import { useFilters } from "~/contexts/filter-context"
-import { findTechniqueFilterOptions } from "~/server/web/techniques/actions"
+import { findMemberFilterOptions } from "~/server/web/directory/filter-actions"
 import type { MemberFilterSchema } from "~/server/web/directory/member-schema"
 
 export const MemberFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   const { filters, updateFilters } = useFilters<MemberFilterSchema>()
-  const { result, execute } = useAction(findTechniqueFilterOptions)
+  const { result, execute } = useAction(findMemberFilterOptions)
 
   useEffect(execute, [execute])
 

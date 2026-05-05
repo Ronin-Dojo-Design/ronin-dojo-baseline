@@ -2,7 +2,7 @@
 title: "SESSION 0066 — Petey Plan: Tool→Listing Pattern Repurposing (Techniques, Profiles, Schools)"
 slug: session-0066
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0066
@@ -28,7 +28,9 @@ Brian Scott + Copilot (Petey)
 
 ### Status
 
-in-progress
+closed-unclean
+
+**Reason for unclean close:** Body indicates `in-progress → closed-full` was intended (ADR 0013, listing-pattern-repurposing wiki, full close evidence, next session entry all present) but frontmatter status field was never updated. Recovered SESSION_0073.
 
 ### Goal
 

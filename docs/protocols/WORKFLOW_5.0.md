@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-03
-last_agent: copilot-session-0035
+updated: 2026-05-04
+last_agent: claude-session-0073
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -147,9 +147,9 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 
 ---
 
-## Session calendar (SESSION_0021–0040)
+## Session calendar (SESSION_0021–0073, with forward plan)
 
-This table is reality-adjusted as of SESSION_0029. Completed sessions show the actual outcome; future sessions show target outcomes. The May 18 launch target remains fixed.
+> **Calendar drift warning (recorded SESSION_0073):** the table below was last reality-adjusted at SESSION_0035. Sessions 0036–0073 happened but the calendar never tracked them — `target` rows past 0035 are historical fiction. SESSION_0074 will do a full backfill from `docs/sprints/SESSION_NNNN.md` titles. The skeleton update below corrects the most-misleading "tournament operations" rows (0038/0039) which were repurposed at execution time, plus stamps actuals for the 38 sessions that ran without calendar updates. The May 18 launch target is no longer a firm date — to be re-set in SESSION_0074.
 
 | Date / target | Session | Primary lane | Main outcome |
 | --- | --- | --- | --- |
@@ -169,14 +169,29 @@ This table is reality-adjusted as of SESSION_0029. Completed sessions show the a
 | May 3 actual | 0033 | School operations | Program enrollments, family groups, waivers, trial lifecycle; closed-full 9.7/10 |
 | May 3 actual | 0034 | Core platform governance | Merge-train: landed SESSION_0032+0033 branches, authored merge-to-main protocol, failed-steps FS-0010–0013, WORKFLOW calendar update. No feature code. |
 | May 3 actual | 0035 | School operations (planning) | Entitlement-first commerce plan: resolved 4 open questions, 7-task breakdown for implementation. No code. |
-| May 4 target | 0036 | School operations | Entitlement implementation: schema (Entitlement/EntitlementGrant/UserEntitlement), service layer (grant/revoke/check), Stripe webhook wiring, smoke test |
-| May 5 target | 0037 | School operations | Lead intake, trial conversion, CRM follow-up states |
-| May 6 target | 0038 | Tournament operations | Event discovery, registration checkout, rosters, check-in |
-| May 7 target | 0039 | Tournament operations | Brackets, match ops, mat assignment, scoring, live results |
-| May 8 target | 0040 | Content + curriculum | Curriculum, techniques, media, certificates, publishing surfaces |
-| May 9 target | 0041 | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces, sample orgs, seed content |
-| May 10-17 target | 0042 | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, email/storage/analytics, rollback drill, launch calendar lock |
-| May 18 target | 0043 | Launch day | Release execution, monitoring, support, post-launch triage |
+| May 3–4 actual | 0036 | School operations | Entitlement implementation (schema + service layer + webhook wiring) |
+| May 4 actual | 0037 | School operations | Lead intake + trial conversion + CRM follow-up |
+| May 4 actual | 0038 | School operations *(repurposed from "Tournament operations")* | Lead intake admin UI implementation. **Tournament ops slot was never executed.** |
+| May 4 actual | 0039 | Core platform governance *(repurposed from "Tournament operations")* | Planning review + Dirstarter baseline index. **Tournament ops slot was never executed.** |
+| 0040–0060 actual | 0040–0060 | Mixed — see SESSION files | School ops continuation, tournament registration UI on existing schema, gamification, brand monetization, observability work. **Calendar entries to be backfilled in SESSION_0074.** |
+| May 4 actual | 0061 | School operations governance | P1 brand-scoping fixes + white-label/brand-ops Petey plan. *(closed-unclean — recovered SESSION_0073)* |
+| May 4 actual | 0062 | Brand launch | Brand-aware site config + martial-arts navigation overhaul (WP-1 + WP-2). *(closed-unclean — recovered SESSION_0073)* |
+| May 4 actual | 0063 | Core platform | SubscriptionTier + UserBrandSubscription admin CRUD; entitlement wiring |
+| May 4 actual | 0064 | Core platform governance | Defensive wiring close-out + component inventory enforcement |
+| May 4 actual | 0065 | Brand launch | Homepage + hero overhaul (Baseline Martial Arts) (WP-3) |
+| May 4 actual | 0066 | Core platform (planning) | Petey plan: Tool→Listing pattern repurposing (Techniques/Profiles/Schools) + ADR 0013. *(closed-unclean — recovered SESSION_0073)* |
+| May 4 actual | 0067 | Directory | DirectoryProfile slug field + member detail page. *(closed-unclean — recovered SESSION_0073)* |
+| May 4 actual | 0068 | Dashboard | Dashboard tabs (Profile, School, Techniques). *(closed-unclean — recovered SESSION_0073)* |
+| May 4 actual | 0069 | Directory | Technique CRUD + card components + filters |
+| May 4 actual | 0070 | Directory | Public listing pages + server queries |
+| May 4 actual | 0071 | Directory | Member/school detail pages + auth integration |
+| May 4 actual | 0072 | Core platform governance | Card-to-detail link verification + 20 pre-existing TS errors fixed (closed-full 7/10) |
+| May 4 actual | 0073 | Core platform governance | **This session.** Unclean-close recovery (5 sessions); Organization.description schema; member/school filter actions; DirectoryProfile slug auto-generation; hostile review of last 12 sessions; calendar reconciliation skeleton. |
+| **May 5 target** | **0074** | **Core platform governance** | **Slug backfill script + Organization slug auto-gen + closing.md atomicity amendment + WORKFLOW 5.0 calendar full backfill (0040–0060). Closes S2 sprint.** |
+| May 6+ target | 0075–0078 | Tournament operations | Multi-session lane: events admin CRUD → public registration + checkout → bracket/mat assignment → live scoring + results. Opens S3 sprint. |
+| TBD | 00xx | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces (originally 0041 target) — to be re-sequenced in SESSION_0074 |
+| TBD | 00xx | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, rollback drill (originally 0042 target) — to be re-sequenced in SESSION_0074 |
+| TBD | 00xx | Launch day | Release execution, monitoring, support, post-launch triage (originally 0043 target) — to be re-sequenced in SESSION_0074 |
 
 ---
 

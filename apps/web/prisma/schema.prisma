@@ -856,6 +856,7 @@ model Organization {
   brand        Brand
   name         String
   slug         String
+  description  String?
   type         OrganizationType @default(DOJO)
   addressLine1 String?
   addressLine2 String?

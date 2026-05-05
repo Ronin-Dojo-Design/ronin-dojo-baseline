@@ -2,7 +2,7 @@
 title: "SESSION 0067 — Cody: DirectoryProfile Slug + Member Detail Page"
 slug: session-0067
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0067
@@ -27,7 +27,9 @@ Brian Scott + Copilot (Cody, orchestrated by Petey)
 
 ### Status
 
-closed-quick
+closed-unclean
+
+**Reason for unclean close:** Body Status said `closed-quick` and full handoff content was written, but frontmatter status field was never updated to match. Recovered SESSION_0073.
 
 ### Goal
 

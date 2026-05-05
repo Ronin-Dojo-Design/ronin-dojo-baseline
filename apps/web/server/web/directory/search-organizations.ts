@@ -57,7 +57,7 @@ export const searchOrganizations = async (
   const mappedSchools = schools.map((org) => ({
     slug: org.slug,
     name: org.name,
-    description: null,
+    description: org.description,
     city: org.city,
     region: org.state,
     type: org.type,

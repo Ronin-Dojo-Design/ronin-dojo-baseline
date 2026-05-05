@@ -2,7 +2,7 @@
 title: "SESSION 0062 — Brand Config + Navigation Overhaul (WP-1 + WP-2)"
 slug: session-0062
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0062
@@ -26,7 +26,9 @@ Brian Scott + Copilot (Petey → Cody)
 
 ### Status
 
-in-progress
+closed-unclean
+
+**Reason for unclean close:** Body indicates `in-progress → closed-full` was intended (Reflections, Full close evidence, hostile-close review, next session entry all present) but frontmatter status field was never updated. Recovered SESSION_0073.
 
 ### Goal
 

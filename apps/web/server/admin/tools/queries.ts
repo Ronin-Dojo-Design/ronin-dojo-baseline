@@ -51,8 +51,9 @@ export const findTools = async (search: ToolsTableSchema, where?: Prisma.ToolWhe
 }
 
 export const findScheduledTools = async ({ where, ...args }: Prisma.ToolFindManyArgs = {}) => {
+  // Prisma 7 hits TS2321 "excessive stack depth" on ToolInclude here — upstream issue.
   return db.tool.findMany({
-    ...args,
+    ...(args as any),
     where: { status: { in: [ToolStatus.Published, ToolStatus.Scheduled] }, ...where },
     select: { slug: true, name: true, status: true, publishedAt: true },
     orderBy: { publishedAt: "asc" },
@@ -60,8 +61,9 @@ export const findScheduledTools = async ({ where, ...args }: Prisma.ToolFindMany
 }
 
 export const findToolList = async ({ ...args }: Prisma.ToolFindManyArgs = {}) => {
+  // Prisma 7 hits TS2321 "excessive stack depth" on ToolInclude here — upstream issue.
   return db.tool.findMany({
-    ...args,
+    ...(args as any),
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })

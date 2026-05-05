@@ -2,7 +2,7 @@
 title: "SESSION 0061 — P1 Brand-Scoping Fixes + White-Label & Brand Ops Planning"
 slug: session-0061
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0061
@@ -26,7 +26,9 @@ Brian Scott + Copilot (Cody → Petey)
 
 ### Status
 
-in-progress
+closed-unclean
+
+**Reason for unclean close:** Bow-out frontmatter/status field never updated; work was completed (P1 brand-scoping fixes landed, white-label Petey plan produced, SESSION_0062 staged) but close ritual was interrupted before the status field reached `closed-quick`/`closed-full`. Recovered SESSION_0073.
 
 ### Goal
 
