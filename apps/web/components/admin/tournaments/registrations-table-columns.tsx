@@ -3,6 +3,7 @@
 import { formatDate } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { EllipsisIcon } from "lucide-react"
+import Link from "next/link"
 import type { RegistrationStatus, PaymentStatus } from "~/.generated/prisma/browser"
 import { RegistrationActions } from "~/components/admin/tournaments/registration-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
@@ -13,6 +14,7 @@ import { DataTableColumnHeader } from "~/components/data-table/data-table-column
 
 export type RegistrationRow = {
   id: string
+  tournamentId: string
   status: RegistrationStatus
   paymentStatus: PaymentStatus
   totalFeeCents: number
@@ -71,7 +73,12 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       size: 160,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
-        <span className="font-medium">{row.original.user.name ?? "—"}</span>
+        <Link
+          href={`/admin/tournaments/${row.original.tournamentId}/registrations/${row.original.id}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {row.original.user.name ?? "—"}
+        </Link>
       ),
     },
     {

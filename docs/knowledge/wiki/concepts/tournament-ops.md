@@ -96,26 +96,28 @@ Single lookup page for the tournament-ops feature lane. Prevents the SESSION_007
 | Division | ✅ Active | Nested CRUD within tournament |
 | Registration | ✅ Active | Full lifecycle: create → approve → cancel with Stripe |
 | RegistrationEntry | ✅ Active | Per-division registration entries |
-| TournamentRole | ⚠️ Schema only | Model exists, no server actions or UI |
-| TournamentStaffAssignment | ⚠️ Schema only | Model exists, no server actions or UI |
+| TournamentRole | ✅ Active | Full admin CRUD (SESSION_0075 server + SESSION_0076 UI) |
+| TournamentStaffAssignment | ✅ Active | Staff panel on tournament detail page (SESSION_0075 server + SESSION_0076 UI) |
 | Bracket | ✅ Active | Generation + viewer |
 | Match | ✅ Active | Scoring + advancement |
 | MatchCompetitor | ✅ Active | Per-match competitor tracking |
-| FightRecord | ⚠️ Partial | Model exists, scoring writes to Match but FightRecord publication (official record with judge signatures) not implemented |
-| RuleSet | ⚠️ Schema only | Model exists, no CRUD or assignment UI |
-| WeighInRecord | ⚠️ Schema only | Model exists, no weigh-in workflow |
-| MatAssignment | ⚠️ Schema only | Model exists, no mat/ring assignment UI |
+| FightRecord | ✅ Active | Publication action upserts W/L/D from completed matches (SESSION_0077) |
+| RuleSet | ✅ Active | Full admin CRUD (SESSION_0075 server + SESSION_0076 UI) |
+| WeighInRecord | ✅ Partial | Panel component built (SESSION_0076), embedded on registration detail page (SESSION_0077) |
+| MatAssignment | ✅ Active | Panel on tournament detail page with match→mat assignment (SESSION_0077) |
 
-## Open work (S3 completion lane — SESSION_0075–0078)
+## Open work (S3 completion lane — remaining)
 
-1. **TournamentRole + StaffAssignment CRUD** — assign judges, referees, mat coordinators
-2. **WeighInRecord workflow** — weigh-in station UI, weight class validation
-3. **MatAssignment UI** — assign matches to mats/rings, day-of scheduling
-4. **FightRecord publication** — official fight records with judge scores, winner certification
-5. **RuleSet CRUD + assignment** — define scoring rules per division, wire into match scoring
+1. ~~**TournamentRole + StaffAssignment CRUD**~~ ✅ Done (SESSION_0075 + SESSION_0076)
+2. ~~**WeighInRecord workflow**~~ ✅ Panel built (SESSION_0076), embedded on registration detail (SESSION_0077)
+3. ~~**MatAssignment UI**~~ ✅ Done (SESSION_0077) — panel on tournament detail page
+4. ~~**FightRecord publication**~~ ✅ Done (SESSION_0077) — publish from completed matches, upserts W/L/D
+5. ~~**RuleSet CRUD + assignment**~~ ✅ CRUD done (SESSION_0075 + SESSION_0076) — wire into match scoring TBD
 6. **Tournament results page** — public bracket results, medal standings
 7. **Integration tests** — registration capacity race conditions, cross-brand isolation
 8. **Seeding algorithm** — rank-based seeding for bracket generation
+9. ~~**Registration detail page**~~ ✅ Done (SESSION_0077) — overview, entries, WeighIn panel
+10. **RuleSet → Division wiring** — assign rule sets to divisions, enforce during match scoring
 
 ## Key decisions
 

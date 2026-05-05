@@ -190,6 +190,44 @@ export const findTournamentStaff = async (tournamentId: string) => {
 }
 
 // -----------------------------------------------------------------------------
+// Registration detail query
+// -----------------------------------------------------------------------------
+
+export const findRegistrationById = async (id: string) => {
+  return db.registration.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      status: true,
+      paymentStatus: true,
+      totalFeeCents: true,
+      currency: true,
+      stripePaymentIntentId: true,
+      submittedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      user: {
+        select: { id: true, name: true, email: true, image: true },
+      },
+      tournament: {
+        select: { id: true, name: true },
+      },
+      entries: {
+        select: {
+          id: true,
+          snapshotRankName: true,
+          snapshotOrgName: true,
+          status: true,
+          division: { select: { id: true, name: true } },
+          tournamentRole: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  })
+}
+
+// -----------------------------------------------------------------------------
 // WeighInRecord queries
 // -----------------------------------------------------------------------------
 
@@ -290,5 +328,67 @@ export const findRuleSetById = async (id: string) => {
         take: 10,
       },
     },
+  })
+}
+
+// -----------------------------------------------------------------------------
+// MatAssignment queries
+// -----------------------------------------------------------------------------
+
+export const findMatAssignmentsByTournament = async (tournamentId: string) => {
+  return db.matAssignment.findMany({
+    where: { tournamentId },
+    include: {
+      match: {
+        select: {
+          id: true,
+          roundNumber: true,
+          matchNumber: true,
+          status: true,
+          bracket: {
+            select: {
+              division: { select: { id: true, name: true } },
+            },
+          },
+          competitors: {
+            include: {
+              registrationEntry: {
+                include: {
+                  registration: {
+                    include: { user: { select: { name: true } } },
+                  },
+                },
+              },
+            },
+            orderBy: { slot: "asc" as const },
+          },
+        },
+      },
+    },
+    orderBy: [{ matName: "asc" }, { startTime: "asc" }],
+  })
+}
+
+// -----------------------------------------------------------------------------
+// FightRecord queries
+// -----------------------------------------------------------------------------
+
+export const findFightRecordsByTournament = async (tournamentId: string) => {
+  // Get all users who competed in this tournament, then their fight records
+  const registrations = await db.registration.findMany({
+    where: { tournamentId, status: "APPROVED" },
+    select: { userId: true },
+  })
+  const userIds = [...new Set(registrations.map(r => r.userId))]
+
+  if (userIds.length === 0) return []
+
+  return db.fightRecord.findMany({
+    where: { userId: { in: userIds } },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      discipline: { select: { id: true, name: true } },
+    },
+    orderBy: [{ userId: "asc" }, { disciplineId: "asc" }],
   })
 }

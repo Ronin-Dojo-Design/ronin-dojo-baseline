@@ -17,6 +17,8 @@ import {
   tournamentStaffAssignmentSchema,
   weighInRecordSchema,
   ruleSetSchema,
+  matAssignmentSchema,
+  publishFightRecordSchema,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
@@ -837,4 +839,123 @@ export const deleteRuleSets = adminActionClient
     })
 
     return true
+  })
+
+// -----------------------------------------------------------------------------
+// MatAssignment CRUD
+// -----------------------------------------------------------------------------
+
+export const upsertMatAssignment = adminActionClient
+  .inputSchema(matAssignmentSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { id, ...input } = parsedInput
+
+    const assignment = id
+      ? await db.matAssignment.update({
+          where: { id },
+          data: input,
+        })
+      : await db.matAssignment.create({
+          data: input,
+        })
+
+    after(async () => {
+      revalidate({ tags: ["tournaments", `tournament-mats-${input.tournamentId}`] })
+    })
+
+    return assignment
+  })
+
+export const deleteMatAssignment = adminActionClient
+  .inputSchema(idSchema)
+  .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
+    const assignment = await db.matAssignment.delete({
+      where: { id },
+    })
+
+    after(async () => {
+      revalidate({ tags: ["tournaments", `tournament-mats-${assignment.tournamentId}`] })
+    })
+
+    return true
+  })
+
+// -----------------------------------------------------------------------------
+// FightRecord publication
+// -----------------------------------------------------------------------------
+
+export const publishFightRecord = adminActionClient
+  .inputSchema(publishFightRecordSchema)
+  .action(async ({ parsedInput: { matchId }, ctx: { db, revalidate } }) => {
+    // Load the match with competitors and division discipline
+    const match = await db.match.findUniqueOrThrow({
+      where: { id: matchId },
+      include: {
+        bracket: {
+          include: {
+            division: {
+              include: {
+                tournamentDiscipline: {
+                  select: { disciplineId: true },
+                },
+              },
+            },
+          },
+        },
+        competitors: {
+          include: {
+            registrationEntry: {
+              include: {
+                registration: { select: { userId: true } },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (match.status !== "COMPLETED" || !match.winnerEntryId) {
+      throw new Error("Match must be completed with a winner before publishing fight records")
+    }
+
+    const disciplineId = match.bracket.division.tournamentDiscipline.disciplineId
+
+    // Update fight records for each competitor
+    for (const competitor of match.competitors) {
+      const userId = competitor.registrationEntry.registration.userId
+      const isWinner = competitor.registrationEntryId === match.winnerEntryId
+      const isDraw = match.result === "DRAW"
+      const isNoContest = match.result === "NO_CONTEST"
+
+      await db.fightRecord.upsert({
+        where: {
+          userId_disciplineId_type: {
+            userId,
+            disciplineId,
+            type: "TOURNAMENT",
+          },
+        },
+        create: {
+          userId,
+          disciplineId,
+          type: "TOURNAMENT",
+          wins: isWinner ? 1 : 0,
+          losses: !isWinner && !isDraw && !isNoContest ? 1 : 0,
+          draws: isDraw ? 1 : 0,
+          noContests: isNoContest ? 1 : 0,
+        },
+        update: {
+          wins: isWinner ? { increment: 1 } : undefined,
+          losses: !isWinner && !isDraw && !isNoContest ? { increment: 1 } : undefined,
+          draws: isDraw ? { increment: 1 } : undefined,
+          noContests: isNoContest ? { increment: 1 } : undefined,
+        },
+      })
+    }
+
+    after(async () => {
+      revalidate({ tags: ["tournaments", "fight-records"] })
+    })
+
+    return { published: match.competitors.length }
   })

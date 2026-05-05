@@ -13,6 +13,7 @@ export const findRegistrationsByTournamentId = async (
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
+      tournamentId: true,
       status: true,
       paymentStatus: true,
       totalFeeCents: true,

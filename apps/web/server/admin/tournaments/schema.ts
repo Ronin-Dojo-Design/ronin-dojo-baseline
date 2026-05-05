@@ -301,3 +301,28 @@ export const ruleSetSchema = z.object({
 
 export type RuleSetSchema = z.infer<typeof ruleSetSchema>
 
+// -----------------------------------------------------------------------------
+// MatAssignment schema
+// -----------------------------------------------------------------------------
+
+export const matAssignmentSchema = z.object({
+  id: z.string().optional(),
+  matchId: z.string().min(1, "Match is required"),
+  tournamentId: z.string().min(1, "Tournament is required"),
+  matName: z.string().min(1, "Mat/ring name is required"),
+  startTime: z.coerce.date().optional().nullable(),
+  endTime: z.coerce.date().optional().nullable(),
+})
+
+export type MatAssignmentSchema = z.infer<typeof matAssignmentSchema>
+
+// -----------------------------------------------------------------------------
+// FightRecord publication schema
+// -----------------------------------------------------------------------------
+
+export const publishFightRecordSchema = z.object({
+  matchId: z.string().min(1, "Match is required"),
+})
+
+export type PublishFightRecordSchema = z.infer<typeof publishFightRecordSchema>
+
