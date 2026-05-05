@@ -6,7 +6,7 @@ import {
   type inferParserType,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Tournament, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus } from "~/.generated/prisma/browser"
+import { type Tournament, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 // -----------------------------------------------------------------------------
@@ -204,4 +204,66 @@ export const scoreMatchSchema = z.object({
 })
 
 export type ScoreMatchInput = z.infer<typeof scoreMatchSchema>
+
+// -----------------------------------------------------------------------------
+// TournamentRole schema
+// -----------------------------------------------------------------------------
+
+export const tournamentRoleSchema = z.object({
+  id: z.string().optional(),
+  code: z.string().min(1, "Code is required"),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  isSystem: z.boolean().default(false),
+})
+
+export type TournamentRoleSchema = z.infer<typeof tournamentRoleSchema>
+
+// -----------------------------------------------------------------------------
+// TournamentStaffAssignment schema
+// -----------------------------------------------------------------------------
+
+export const tournamentStaffAssignmentSchema = z.object({
+  id: z.string().optional(),
+  tournamentId: z.string().min(1, "Tournament is required"),
+  userId: z.string().min(1, "User is required"),
+  tournamentRoleId: z.string().min(1, "Role is required"),
+  divisionId: z.string().optional().or(z.literal("")),
+  notes: z.string().optional(),
+})
+
+export type TournamentStaffAssignmentSchema = z.infer<typeof tournamentStaffAssignmentSchema>
+
+// -----------------------------------------------------------------------------
+// WeighInRecord schema
+// -----------------------------------------------------------------------------
+
+export const weighInRecordSchema = z.object({
+  id: z.string().optional(),
+  registrationId: z.string().min(1, "Registration is required"),
+  userId: z.string().min(1, "User is required"),
+  weightKg: z.coerce.number().positive("Weight must be positive"),
+  isOfficial: z.boolean().default(false),
+  notes: z.string().optional(),
+})
+
+export type WeighInRecordSchema = z.infer<typeof weighInRecordSchema>
+
+// -----------------------------------------------------------------------------
+// RuleSet schema
+// -----------------------------------------------------------------------------
+
+export const ruleSetSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  matchDurationSec: z.coerce.number().int().positive().optional().nullable(),
+  overtimeSec: z.coerce.number().int().positive().optional().nullable(),
+  scoringMethod: z.enum(ScoringMethod).default("POINTS"),
+  scoringConfig: z.any().optional(),
+  isSystem: z.boolean().default(false),
+  disciplineId: z.string().optional().or(z.literal("")),
+})
+
+export type RuleSetSchema = z.infer<typeof ruleSetSchema>
 

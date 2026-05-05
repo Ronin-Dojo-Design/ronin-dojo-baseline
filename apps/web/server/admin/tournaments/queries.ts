@@ -105,3 +105,115 @@ export const findTournamentBySlug = async (slug: string, brand: string) => {
     },
   })
 }
+
+// -----------------------------------------------------------------------------
+// TournamentRole queries
+// -----------------------------------------------------------------------------
+
+export const findTournamentRoles = async () => {
+  const brand = await getRequestBrand()
+
+  return db.tournamentRole.findMany({
+    where: {
+      OR: [{ brand }, { brand: null, isSystem: true }],
+    },
+    orderBy: [{ isSystem: "desc" }, { name: "asc" }],
+  })
+}
+
+export const findTournamentRoleById = async (id: string) => {
+  return db.tournamentRole.findUnique({
+    where: { id },
+    include: {
+      staffAssignments: {
+        include: {
+          user: { select: { id: true, name: true } },
+          tournament: { select: { id: true, name: true } },
+        },
+        take: 10,
+      },
+    },
+  })
+}
+
+// -----------------------------------------------------------------------------
+// TournamentStaffAssignment queries
+// -----------------------------------------------------------------------------
+
+export const findTournamentStaff = async (tournamentId: string) => {
+  return db.tournamentStaffAssignment.findMany({
+    where: { tournamentId },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      tournamentRole: { select: { id: true, name: true, code: true } },
+      division: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  })
+}
+
+// -----------------------------------------------------------------------------
+// WeighInRecord queries
+// -----------------------------------------------------------------------------
+
+export const findWeighInRecords = async (registrationId: string) => {
+  return db.weighInRecord.findMany({
+    where: { registrationId },
+    include: {
+      user: { select: { id: true, name: true } },
+    },
+    orderBy: { recordedAt: "desc" },
+  })
+}
+
+export const findWeighInRecordsByTournament = async (tournamentId: string) => {
+  return db.weighInRecord.findMany({
+    where: {
+      registration: { tournamentId },
+    },
+    include: {
+      user: { select: { id: true, name: true } },
+      registration: {
+        select: {
+          id: true,
+          user: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy: { recordedAt: "desc" },
+  })
+}
+
+// -----------------------------------------------------------------------------
+// RuleSet queries
+// -----------------------------------------------------------------------------
+
+export const findRuleSets = async () => {
+  const brand = await getRequestBrand()
+
+  return db.ruleSet.findMany({
+    where: {
+      OR: [{ brand }, { brand: null, isSystem: true }],
+    },
+    include: {
+      discipline: { select: { id: true, name: true } },
+      _count: { select: { tournamentDisciplines: true } },
+    },
+    orderBy: [{ isSystem: "desc" }, { name: "asc" }],
+  })
+}
+
+export const findRuleSetById = async (id: string) => {
+  return db.ruleSet.findUnique({
+    where: { id },
+    include: {
+      discipline: { select: { id: true, name: true } },
+      tournamentDisciplines: {
+        include: {
+          tournament: { select: { id: true, name: true } },
+        },
+        take: 10,
+      },
+    },
+  })
+}

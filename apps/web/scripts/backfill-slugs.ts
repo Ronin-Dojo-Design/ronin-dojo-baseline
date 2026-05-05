@@ -7,22 +7,26 @@
  * SESSION_0074_TASK_08
  */
 
-import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "../.generated/prisma/client.js"
 import { slugify, generateUniqueProfileSlug } from "../lib/slug"
 
-const prisma = new PrismaClient()
+const DATABASE_URL =
+  process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
+const adapter = new PrismaPg({ connectionString: DATABASE_URL })
+const prisma = new PrismaClient({ adapter })
 
 async function backfillProfileSlugs() {
   const profiles = await prisma.directoryProfile.findMany({
     where: { slug: null },
-    select: { id: true, displayName: true },
+    select: { id: true, user: { select: { name: true } } },
   })
 
   console.log(`[DirectoryProfile] Found ${profiles.length} rows with null slug`)
 
   for (const profile of profiles) {
     const slug = await generateUniqueProfileSlug(
-      profile.displayName,
+      profile.user.name ?? "user",
       async (candidate) => {
         const existing = await prisma.directoryProfile.findUnique({
           where: { slug: candidate },

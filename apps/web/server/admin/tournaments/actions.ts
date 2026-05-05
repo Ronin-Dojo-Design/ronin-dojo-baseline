@@ -13,6 +13,10 @@ import {
   REGISTRATION_STATUS_TRANSITIONS,
   generateBracketSchema,
   scoreMatchSchema,
+  tournamentRoleSchema,
+  tournamentStaffAssignmentSchema,
+  weighInRecordSchema,
+  ruleSetSchema,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
@@ -639,4 +643,198 @@ export const scoreMatch = adminActionClient
       result: scored.match.result,
       advancement: scored.advancement,
     }
+  })
+
+// -----------------------------------------------------------------------------
+// TournamentRole CRUD
+// -----------------------------------------------------------------------------
+
+export const upsertTournamentRole = adminActionClient
+  .inputSchema(tournamentRoleSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
+    const { id, ...input } = parsedInput
+
+    const role = id
+      ? await db.tournamentRole.update({
+          where: { id },
+          data: input,
+        })
+      : await db.tournamentRole.create({
+          data: { ...input, brand },
+        })
+
+    after(async () => {
+      revalidate({ tags: ["tournament-roles"] })
+    })
+
+    return role
+  })
+
+export const deleteTournamentRoles = adminActionClient
+  .inputSchema(idsSchema)
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    await db.tournamentRole.deleteMany({
+      where: { id: { in: ids }, isSystem: false },
+    })
+
+    after(async () => {
+      revalidate({ tags: ["tournament-roles"] })
+    })
+
+    return true
+  })
+
+// -----------------------------------------------------------------------------
+// TournamentStaffAssignment CRUD
+// -----------------------------------------------------------------------------
+
+export const upsertTournamentStaffAssignment = adminActionClient
+  .inputSchema(tournamentStaffAssignmentSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { id, divisionId, ...input } = parsedInput
+
+    const data = {
+      ...input,
+      divisionId: divisionId || null,
+    }
+
+    const assignment = id
+      ? await db.tournamentStaffAssignment.update({
+          where: { id },
+          data,
+        })
+      : await db.tournamentStaffAssignment.create({
+          data,
+        })
+
+    after(async () => {
+      revalidate({
+        tags: ["tournaments", `tournament-staff-${input.tournamentId}`],
+      })
+    })
+
+    return assignment
+  })
+
+export const deleteTournamentStaffAssignments = adminActionClient
+  .inputSchema(idsSchema)
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    await db.tournamentStaffAssignment.deleteMany({
+      where: { id: { in: ids } },
+    })
+
+    after(async () => {
+      revalidate({ tags: ["tournaments"] })
+    })
+
+    return true
+  })
+
+// -----------------------------------------------------------------------------
+// WeighInRecord CRUD
+// -----------------------------------------------------------------------------
+
+export const createWeighInRecord = adminActionClient
+  .inputSchema(weighInRecordSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate, user } }) => {
+    const { id: _id, ...input } = parsedInput
+
+    const record = await db.weighInRecord.create({
+      data: {
+        ...input,
+        recordedBy: user.id,
+      },
+    })
+
+    after(async () => {
+      revalidate({
+        tags: ["tournaments", `registration-weighins-${input.registrationId}`],
+      })
+    })
+
+    return record
+  })
+
+export const markWeighInOfficial = adminActionClient
+  .inputSchema(idSchema)
+  .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
+    const record = await db.weighInRecord.update({
+      where: { id },
+      data: { isOfficial: true },
+    })
+
+    // Un-mark other records for the same registration
+    await db.weighInRecord.updateMany({
+      where: {
+        registrationId: record.registrationId,
+        id: { not: id },
+      },
+      data: { isOfficial: false },
+    })
+
+    after(async () => {
+      revalidate({
+        tags: ["tournaments", `registration-weighins-${record.registrationId}`],
+      })
+    })
+
+    return record
+  })
+
+export const deleteWeighInRecords = adminActionClient
+  .inputSchema(idsSchema)
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    await db.weighInRecord.deleteMany({
+      where: { id: { in: ids } },
+    })
+
+    after(async () => {
+      revalidate({ tags: ["tournaments"] })
+    })
+
+    return true
+  })
+
+// -----------------------------------------------------------------------------
+// RuleSet CRUD
+// -----------------------------------------------------------------------------
+
+export const upsertRuleSet = adminActionClient
+  .inputSchema(ruleSetSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
+    const { id, disciplineId, ...input } = parsedInput
+
+    const data = {
+      ...input,
+      disciplineId: disciplineId || null,
+    }
+
+    const ruleSet = id
+      ? await db.ruleSet.update({
+          where: { id },
+          data,
+        })
+      : await db.ruleSet.create({
+          data: { ...data, brand },
+        })
+
+    after(async () => {
+      revalidate({ tags: ["rule-sets"] })
+    })
+
+    return ruleSet
+  })
+
+export const deleteRuleSets = adminActionClient
+  .inputSchema(idsSchema)
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    await db.ruleSet.deleteMany({
+      where: { id: { in: ids }, isSystem: false },
+    })
+
+    after(async () => {
+      revalidate({ tags: ["rule-sets"] })
+    })
+
+    return true
   })
