@@ -3,6 +3,7 @@ import type { SearchParams } from "nuqs"
 import { MemberQuery } from "~/components/web/members/member-query"
 import { MemberListingSkeleton } from "~/components/web/members/member-listing"
 import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 
 export const metadata = {
@@ -16,6 +17,8 @@ type PageProps = {
 
 export default async function MembersPage({ searchParams }: PageProps) {
   const brand = await getRequestBrand()
+  const session = await getServerSession()
+  const viewerUserId = session?.user?.id ?? null
 
   return (
     <>
@@ -30,6 +33,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
         <MemberQuery
           searchParams={searchParams}
           brand={brand}
+          viewerUserId={viewerUserId}
           options={{ enableFilters: true, enableSort: true }}
         />
       </Suspense>
