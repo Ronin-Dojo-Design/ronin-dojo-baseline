@@ -23,7 +23,7 @@ export const updateOrganization = userActionClient
 
     // Verify user is owner of this org
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId, role: "OWNER" },
+      where: { userId: user.id, organizationId, roleAssignments: { some: { role: { code: "OWNER" } } } },
     })
 
     if (!membership) {

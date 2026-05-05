@@ -140,7 +140,7 @@ export function SubscriptionTierForm({
             <FormItem>
               <FormLabel>Level</FormLabel>
               <FormControl>
-                <Input type="number" min={0} placeholder="0" {...field} />
+                <Input type="number" min={0} placeholder="0" {...field} value={field.value as number ?? ""} />
               </FormControl>
               <FormMessage />
             </FormItem>

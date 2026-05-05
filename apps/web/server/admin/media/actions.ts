@@ -23,10 +23,12 @@ const createMediaSchema = z.object({
 export const createMedia = adminActionClient
   .inputSchema(createMediaSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, user } }) => {
+    const { brand, type, ...rest } = parsedInput
     const media = await db.media.create({
       data: {
-        ...parsedInput,
-        brand: parsedInput.brand as any,
+        ...rest,
+        brand: brand as any,
+        type: type as any,
         uploadedBy: { connect: { id: user.id } },
       },
     })

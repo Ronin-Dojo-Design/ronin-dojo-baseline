@@ -30,6 +30,7 @@ export type PassportOne = Prisma.PassportGetPayload<{ select: typeof passportOne
 
 export const directoryProfileOnePayload = {
   id: true,
+  slug: true,
   visibility: true,
   locationCity: true,
   locationRegion: true,

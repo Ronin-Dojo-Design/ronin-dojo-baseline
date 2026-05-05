@@ -52,7 +52,7 @@ export const createTechnique = userActionClient
 
     // Verify user is owner or instructor
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId, role: { in: ["OWNER", "INSTRUCTOR"] } },
+      where: { userId: user.id, organizationId, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
     })
     if (!membership) {
       throw new Error("You are not authorized to create techniques for this organization")
@@ -86,7 +86,7 @@ export const updateTechnique = userActionClient
     })
 
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId: technique.organization.id, role: { in: ["OWNER", "INSTRUCTOR"] } },
+      where: { userId: user.id, organizationId: technique.organization.id, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
     })
     if (!membership) {
       throw new Error("You are not authorized to edit this technique")
@@ -112,7 +112,7 @@ export const deleteTechnique = userActionClient
     })
 
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId: technique.organization.id, role: { in: ["OWNER", "INSTRUCTOR"] } },
+      where: { userId: user.id, organizationId: technique.organization.id, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
     })
     if (!membership) {
       throw new Error("You are not authorized to delete this technique")

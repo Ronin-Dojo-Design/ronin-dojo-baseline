@@ -12,6 +12,7 @@ import {
 import { Stack } from "~/components/common/stack"
 import { useFilters } from "~/contexts/filter-context"
 import { findTechniqueFilterOptions } from "~/server/web/techniques/actions"
+import type { SchoolFilterSchema } from "~/server/web/directory/school-schema"
 
 const orgTypeOptions = [
   { value: "DOJO", label: "Dojo" },
@@ -20,16 +21,6 @@ const orgTypeOptions = [
   { value: "CLUB", label: "Club" },
   { value: "ASSOCIATION", label: "Association" },
 ]
-
-type SchoolFilterSchema = {
-  q: string
-  type: string
-  discipline: string
-  location: string
-  sort: string
-  page: number
-  perPage: number
-}
 
 export const SchoolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   const { filters, updateFilters } = useFilters<SchoolFilterSchema>()

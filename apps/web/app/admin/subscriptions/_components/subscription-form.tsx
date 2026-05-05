@@ -187,7 +187,7 @@ export function SubscriptionForm({
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                  value={field.value ? new Date(field.value as string | number).toISOString().split("T")[0] : ""}
                   onChange={e =>
                     field.onChange(e.target.value ? new Date(e.target.value) : null)
                   }

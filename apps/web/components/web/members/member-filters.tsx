@@ -13,15 +13,7 @@ import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
 import { useFilters } from "~/contexts/filter-context"
 import { findTechniqueFilterOptions } from "~/server/web/techniques/actions"
-
-type MemberFilterSchema = {
-  q: string
-  discipline: string
-  location: string
-  sort: string
-  page: number
-  perPage: number
-}
+import type { MemberFilterSchema } from "~/server/web/directory/member-schema"
 
 export const MemberFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   const { filters, updateFilters } = useFilters<MemberFilterSchema>()

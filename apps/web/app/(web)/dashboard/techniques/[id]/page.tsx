@@ -42,7 +42,7 @@ export default async function EditTechniquePage({ params }: Props) {
     where: {
       userId: session.user.id,
       organizationId: technique.organizationId,
-      role: { in: ["OWNER", "INSTRUCTOR"] },
+      roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
     },
   })
 

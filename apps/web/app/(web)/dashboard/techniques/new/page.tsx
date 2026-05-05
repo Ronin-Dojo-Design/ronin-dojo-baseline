@@ -14,7 +14,7 @@ export default async function NewTechniquePage() {
   const membership = await db.membership.findFirst({
     where: {
       userId: session.user.id,
-      role: { in: ["OWNER", "INSTRUCTOR"] },
+      roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
       organization: { brand },
     },
     include: { organization: { select: { id: true } } },

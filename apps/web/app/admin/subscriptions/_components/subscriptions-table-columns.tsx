@@ -15,11 +15,11 @@ export type SubscriptionRow = UserBrandSubscription & {
   tier: { id: string; name: string; code: string; level: number }
 }
 
-const statusVariant: Record<SubscriptionStatus, "default" | "outline" | "destructive"> = {
-  ACTIVE: "default",
+const statusVariant: Record<SubscriptionStatus, "soft" | "outline" | "danger"> = {
+  ACTIVE: "soft",
   EXPIRED: "outline",
-  CANCELLED: "destructive",
-  PAST_DUE: "destructive",
+  CANCELLED: "danger",
+  PAST_DUE: "danger",
 }
 
 export const getColumns = (): ColumnDef<SubscriptionRow>[] => {

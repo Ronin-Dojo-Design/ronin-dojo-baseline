@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Avatar } from "~/components/common/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
@@ -28,11 +28,14 @@ export const MemberCard = ({ member, ...props }: MemberCardProps) => {
     <Card isRevealed {...props}>
       <CardHeader wrap={false}>
         <Stack size="sm" direction="row" className="items-center">
-          <Avatar
-            src={member.avatarUrl}
-            alt={member.displayName ?? "Member"}
-            className="size-10"
-          />
+          <Avatar className="size-10">
+            {member.avatarUrl && (
+              <AvatarImage src={member.avatarUrl} alt={member.displayName ?? "Member"} />
+            )}
+            <AvatarFallback>
+              {(member.displayName ?? "?").charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <H4 as="h3" className="truncate">
             <Link href={`/members/${member.slug}`}>
               <span className="absolute inset-0 z-10" />

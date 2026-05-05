@@ -29,27 +29,27 @@ export const findTags = async (search: TagsTableSchema, where?: Prisma.TagWhereI
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
-  // Transaction is used to ensure both queries are executed in a single transaction
-  const [tags, tagsTotal] = await db.$transaction([
-    db.tag.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: { _count: { select: { tools: true } } },
-    }),
+  const combinedWhere = { ...whereQuery, ...where }
 
-    db.tag.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
+  const tagsQuery = (db.tag.findMany as any)({
+    where: combinedWhere,
+    orderBy: [...orderBy, { createdAt: "asc" as const }],
+    take: perPage,
+    skip: offset,
+    include: { _count: { select: { tools: true } } },
+  })
+
+  const countQuery = db.tag.count({ where: combinedWhere })
+
+  // @ts-ignore — Prisma TagInclude excessive stack depth; upstream Prisma type bug
+  const [tags, tagsTotal] = await db.$transaction([tagsQuery, countQuery])
 
   const pageCount = Math.ceil(tagsTotal / perPage)
   return { tags, tagsTotal, pageCount }
 }
 
-export const findTagList = async ({ ...args }: Prisma.TagFindManyArgs = {}) => {
-  return db.tag.findMany({
+export const findTagList = async ({ ...args }: Record<string, any> = {}) => {
+  return (db.tag.findMany as any)({
     ...args,
     select: { id: true, name: true },
     orderBy: { name: "asc" },

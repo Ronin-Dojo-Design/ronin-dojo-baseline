@@ -13,7 +13,7 @@ type TechniqueRow = {
   name: string
   slug: string
   isPublished: boolean
-  difficulty: number | null
+  difficultyLevel: string | null
   createdAt: Date
   discipline: { id: string; name: string } | null
   organization: { id: string; name: string } | null
@@ -66,7 +66,7 @@ export function TechniquesTable({ techniques }: TechniquesTableProps) {
                   {t.isPublished ? "Published" : "Draft"}
                 </Badge>
               </TableCell>
-              <TableCell>{t.difficulty ?? "—"}</TableCell>
+              <TableCell>{t.difficultyLevel ?? "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

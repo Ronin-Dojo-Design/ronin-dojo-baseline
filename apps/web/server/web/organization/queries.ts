@@ -65,7 +65,7 @@ export const getUserMemberships = cache(async (userId: string) => {
         select: { id: true, name: true },
       },
       rank: {
-        select: { id: true, name: true, level: true },
+        select: { id: true, name: true, sortOrder: true },
       },
       roleAssignments: {
         select: {

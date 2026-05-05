@@ -57,7 +57,7 @@ export const findUserOrganization = cache(async (userId: string, brand: Brand) =
       memberships: {
         some: {
           userId,
-          role: "OWNER",
+          roleAssignments: { some: { role: { code: "OWNER" } } },
         },
       },
     },
@@ -78,7 +78,7 @@ export const findUserTechniques = cache(async (userId: string, brand: Brand) => 
         memberships: {
           some: {
             userId,
-            role: { in: ["OWNER", "INSTRUCTOR"] },
+            roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
           },
         },
       },
@@ -88,7 +88,7 @@ export const findUserTechniques = cache(async (userId: string, brand: Brand) => 
       name: true,
       slug: true,
       isPublished: true,
-      difficulty: true,
+      difficultyLevel: true,
       createdAt: true,
       updatedAt: true,
       discipline: { select: { id: true, name: true } },

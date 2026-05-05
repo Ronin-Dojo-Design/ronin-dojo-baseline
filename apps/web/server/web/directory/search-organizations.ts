@@ -43,7 +43,6 @@ export const searchOrganizations = async (
       where: where as any,
       select: {
         ...organizationManyPayload,
-        description: true,
       },
       orderBy: sortBy ? { [sortBy]: sortOrder } : { name: "asc" },
       take,
@@ -58,7 +57,7 @@ export const searchOrganizations = async (
   const mappedSchools = schools.map((org) => ({
     slug: org.slug,
     name: org.name,
-    description: (org as any).description ?? null,
+    description: null,
     city: org.city,
     region: org.state,
     type: org.type,
