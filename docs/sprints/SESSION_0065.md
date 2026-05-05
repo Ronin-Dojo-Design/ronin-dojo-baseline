@@ -2,7 +2,7 @@
 title: "SESSION 0065 — WP-3: Homepage + Hero Overhaul (Baseline Martial Arts)"
 slug: session-0065
 type: session
-status: in-progress
+status: closed-quick
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0065

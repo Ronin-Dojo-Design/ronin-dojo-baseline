@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-03
+updated: 2026-05-04
 author: Brian + Copilot
 last_agent: codex-session-0033
 ---
@@ -41,6 +41,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Video Shortcuts and Iggy Flow](content-engine/video-shortcuts-and-iggy-flow.md) | concept | active |
 | [Directory Monetization Roadmap](content-engine/directory-monetization-roadmap.md) | concept | active |
 | [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active |
+| [Listing Pattern Repurposing](concepts/listing-pattern-repurposing.md) | concept | active |
 
 ## Architecture
 
