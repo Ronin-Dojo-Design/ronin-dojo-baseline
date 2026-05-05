@@ -1,5 +1,6 @@
 "use server"
 
+import { isInSameBrand } from "~/lib/authz"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   createOrganizationSchema,
@@ -71,6 +72,18 @@ export const joinOrganization = userActionClient
   .inputSchema(joinOrganizationSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const { organizationId, disciplineId, brand } = parsedInput
+
+    // Verify user belongs to this brand
+    const userInBrand = await isInSameBrand(user, brand)
+    if (!userInBrand) {
+      throw new Error("You are not a member of this brand")
+    }
+
+    // Verify user has a Passport
+    const passport = await db.passport.findUnique({ where: { userId: user.id } })
+    if (!passport) {
+      throw new Error("Please complete your Passport profile before joining an organization")
+    }
 
     const org = await db.organization.findUnique({ where: { id: organizationId } })
     if (!org) throw new Error("Organization not found")

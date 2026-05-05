@@ -6,11 +6,13 @@ import {
   BookOpenIcon,
   CalendarIcon,
   ContactIcon,
+  CreditCardIcon,
   DockIcon,
   ExternalLinkIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
   ImageIcon,
+  LayersIcon,
   LogOutIcon,
   ScrollTextIcon,
   SwordsIcon,
@@ -123,6 +125,19 @@ export const Sidebar = () => {
           title: "Reports",
           href: "/admin/reports",
           prefix: <TriangleAlertIcon />,
+        },
+
+        undefined, // Separator
+
+        {
+          title: "Tiers",
+          href: "/admin/subscription-tiers",
+          prefix: <LayersIcon />,
+        },
+        {
+          title: "Subscriptions",
+          href: "/admin/subscriptions",
+          prefix: <CreditCardIcon />,
         },
 
         undefined, // Separator

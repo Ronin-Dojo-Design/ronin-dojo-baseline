@@ -49,13 +49,28 @@ export const getOrganizationsByBrand = async (brand: string) => {
 export const getUserMemberships = cache(async (userId: string) => {
   return db.membership.findMany({
     where: { userId },
-    include: {
-      organization: true,
-      discipline: true,
-      style: true,
-      rank: true,
+    select: {
+      id: true,
+      brand: true,
+      status: true,
+      joinedAt: true,
+      createdAt: true,
+      organization: {
+        select: { id: true, name: true, slug: true, brand: true },
+      },
+      discipline: {
+        select: { id: true, name: true, slug: true },
+      },
+      style: {
+        select: { id: true, name: true },
+      },
+      rank: {
+        select: { id: true, name: true, level: true },
+      },
       roleAssignments: {
-        include: { role: { select: { id: true, code: true, name: true } } },
+        select: {
+          role: { select: { id: true, code: true, name: true } },
+        },
       },
     },
     orderBy: { createdAt: "desc" },

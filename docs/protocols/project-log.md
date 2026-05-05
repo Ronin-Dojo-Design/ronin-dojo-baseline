@@ -252,6 +252,14 @@ Three sections:
 | SESSION_0059_TASK_02 | SESSION_0059 | P0–P2 remediation | Cody | D-011 close | Drift register updated, evidence recorded | landed | — |
 | SESSION_0059_TASK_03 | SESSION_0059 | P0–P2 remediation | Cody | Enrollment Passport assertion | `assertUserHasPassport` added to `enrollInProgram` + `joinProgramWaitlist` | landed | — |
 | SESSION_0060_TASK_01 | SESSION_0060 | Hostile-close review | Doug | Cross-session hostile-close audit | 6 P1 admin brand-scoping gaps found; D-006/D-010 closed; launch readiness assessed | landed | SESSION_0060_REVIEW_01 |
+| SESSION_0063_TASK_01 | SESSION_0063 | Backend wiring | Cody | SubscriptionTier admin CRUD (server) | actions, queries, schema — brand-scoped, follows entitlements pattern | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_02 | SESSION_0063 | Backend wiring | Cody | SubscriptionTier admin pages | List table, create/edit forms, sidebar link | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_03 | SESSION_0063 | Backend wiring | Cody | UserBrandSubscription admin CRUD (server) | actions, queries, schema — brand-scoped | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_04 | SESSION_0063 | Backend wiring | Cody | UserBrandSubscription admin pages | List table, create/edit forms with tier selector | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_05 | SESSION_0063 | Auth hardening | Cody | Wire checkEntitlement() into tournament reg | tournament-registration entitlement gate added | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_06 | SESSION_0063 | Auth hardening | Cody | Wire isInSameBrand() into tournament reg + org join | Brand membership verified before reg/join | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_07 | SESSION_0063 | Auth hardening | Cody | Passport defensive checks | Passport required for tournament reg + org join | landed | SESSION_0063_REVIEW_01 |
+| SESSION_0063_TASK_08 | SESSION_0063 | Performance | Cody | getUserMemberships include → select | Reduced payload — select only needed fields | landed | SESSION_0063_REVIEW_01 |
 
 ---
 

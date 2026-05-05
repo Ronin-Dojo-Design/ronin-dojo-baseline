@@ -2,6 +2,8 @@
 
 import { registrationCheckoutSchema, registrationCancelSchema } from "~/server/web/tournaments/schema"
 import { getRequestBrand } from "~/lib/brand-context"
+import { checkEntitlement } from "~/server/web/entitlement/check-entitlement"
+import { isInSameBrand } from "~/lib/authz"
 import { userActionClient } from "~/lib/safe-actions"
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
@@ -29,6 +31,29 @@ export const createRegistrationCheckout = userActionClient
 
     if (!tournament) {
       throw new Error("Tournament not found or not open for registration")
+    }
+
+    // 2. Verify user holds the tournament-registration entitlement for this brand
+    const hasEntitlement = await checkEntitlement({
+      userId,
+      entitlementKey: "tournament-registration",
+      brand,
+    })
+
+    if (!hasEntitlement) {
+      throw new Error("Your subscription does not include tournament registration. Please upgrade your plan.")
+    }
+
+    // 2b. Verify user belongs to this brand
+    const userInBrand = await isInSameBrand(ctx.user, brand)
+    if (!userInBrand) {
+      throw new Error("You are not a member of this brand")
+    }
+
+    // 2c. Verify user has a Passport (required for tournament registration)
+    const passport = await db.passport.findUnique({ where: { userId } })
+    if (!passport) {
+      throw new Error("Please complete your Passport profile before registering for a tournament")
     }
 
     // 3. Check user doesn't already have a registration
