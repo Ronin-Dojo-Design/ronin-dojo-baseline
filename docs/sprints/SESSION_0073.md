@@ -141,17 +141,22 @@ Findings from a Petey + Giddy + Doug pass over the work landed since SESSION_006
 
 ## Decisions resolved
 
-- **Tournament ops lane is open.** Recorded in this session's audit. Copilot was right; user's recall was wrong.
-- **Unclean-close pattern documented.** Six new entries in incidents.md, including the cross-session pattern.
+- **Tournament ops lane is mid-stream, not empty.** *Initial ruling reversed post-bow-out.* Sessions 0042–0050 shipped admin CRUD, Stripe registration, brackets, and scoring. Both Claude and Copilot read the stale WORKFLOW 5.0 calendar and concluded "never started" — wrong. Memory saved cross-session: `project_tournament_ops_status`, `feedback_session_lookup`.
+- **Unclean-close pattern documented.** Six new entries in `incidents.md`, including the cross-session pattern. *Scope correction:* repo actually has 17 in-progress sessions, not 5; SESSION_0073 closed 5 of them, the other 12 (0015, 0016, 0018, 0031, 0037, 0038_5, 0039, 0040, 0041, 0041_5, 0044, 0045, 0046_5, 0047, 0048, 0057) are queued for SESSION_0074_TASK_07.
 - **Slug generation strategy.** Display-name slugify with random-suffix collision recovery; DB unique constraint is the final gate.
+- **Lookup-system rebuild is the next priority, not new feature lanes.** The repo currently can't reliably answer "did we do X?" — proven this session. Fixing that beats opening any new lane.
 
 ## Open decisions / blockers
 
-- **Backfill plan for null DirectoryProfile slugs.** Recommend a one-shot Prisma script (read all `slug = null`, generate via `generateUniqueProfileSlug`, update). Run once locally + in any prod copy.
-- **Tournament-ops scope decision.** If we want it for launch, it's a multi-session lane (events admin, public registration UI, brackets, scoring, results). If we don't, defer post-launch and remove from WORKFLOW 5.0 launch board.
-- **Closing.md amendment.** Need to add an explicit "frontmatter `status:` and body `### Status` must match" step.
-- **WORKFLOW 5.0 calendar refresh.** Lines 156–179 are mostly historical fiction past SESSION_0035. Needs a one-time backfill of actuals + new forward plan.
-- **`as any` triage session.** Distinguish "Prisma 7 codegen bug" casts from "we skipped input validation" casts.
+- **Backfill plan for null DirectoryProfile slugs.** One-shot Prisma script (read all `slug = null`, generate via `generateUniqueProfileSlug`, update). Run once locally + in any prod copy. → SESSION_0074_TASK_08.
+- **Tournament-ops gap audit.** Read SESSION_0042–0050 + tournament server/admin code; produce the missing `wiki/concepts/tournament-ops.md` with shipped vs open surfaces. → SESSION_0074_TASK_03.
+- **Closing.md status atomicity amendment.** Frontmatter `status:` and body `### Status` must move together; needs a wiki-lint rule too. → SESSION_0074_TASK_09.
+- **WORKFLOW 5.0 calendar full reconciliation.** Lines 156–179 are mostly historical fiction past SESSION_0035; SESSION_0073 only patched the most-misleading rows. → SESSION_0074_TASK_04.
+- **`as any` triage session.** Distinguish "Prisma 7 codegen bug" casts from "we skipped input validation" casts. *(Deferred — not in SESSION_0074 scope; flag for a later S3 governance pass.)*
+- **Project-log gap (FS-0015 still open).** Task plan log stops at SESSION_0063; ~70 rows missing for 0038–0072. → SESSION_0074_TASK_01.
+- **Failed-steps-log audit.** Re-verify open/mitigated entries; cluster recurring patterns (FS-0001 + FS-0014 are the same root cause). → SESSION_0074_TASK_02.
+- **Wiki YAML frontmatter design pass.** Add `lane`, `feature_area`, `key_models`, `key_files`, `last_verified`, `supersedes`/`superseded_by`. Build derived `topic_index.md` so "did we do X?" becomes a single grep. → SESSION_0074_TASK_05.
+- **Dirstarter-pack uplift inventory.** User explicitly flagged: this is a paid boilerplate, we're under-using it. Produce `dirstarter-uplift-backlog.md` (skeletons, tooltips, command palette, MDX, OG images, sitemap, etc.) with L1 references and session-size estimates. → SESSION_0074_TASK_06.
 
 ## Review log
 
@@ -164,9 +169,11 @@ Findings from a Petey + Giddy + Doug pass over the work landed since SESSION_006
 
 ## Reflections
 
-- The five unclosed sessions all had completed work and a written next-session entry; the only thing missing was a 1-line YAML edit. That's a textbook hooks-vs-memory failure: we trust the operator to remember a two-field update at close time, and on five out of twelve sessions, they didn't. This is what hooks (or a wiki-lint rule) exist for.
-- Tournament ops being "done" in the user's mind but absent in the code is the most expensive kind of drift — a launch-scope phantom. The WORKFLOW 5.0 calendar's "target" rows aged into "actual" rows in the operator's mental model without ever being executed. **Lesson:** target rows in the calendar should age out or get marked `superseded` once the date passes without execution.
+- The five unclosed sessions all had completed work and a written next-session entry; the only thing missing was a 1-line YAML edit. That's a textbook hooks-vs-memory failure: we trust the operator to remember a two-field update at close time, and on five out of twelve sessions, they didn't. This is what hooks (or a wiki-lint rule) exist for. *(Scope was even worse than that — 17 unclosed sessions across the repo, not 5.)*
+- **Biggest lesson of this session, recorded only after the user caught it:** I authored a confident "tournament ops was never done" ruling by reading the WORKFLOW 5.0 calendar instead of grepping SESSION titles. Copilot independently made the same call earlier. **Two LLMs reaching the same wrong conclusion from the same stale document means the document failed, not just the agents.** The wiki has zero `concepts/tournament-ops.md` page despite nine sessions of feature work; FS-0015 already flagged the project-log gap a session ago and nothing was done. The lookup system is the bug. SESSION_0074 prioritizes rebuilding it before any new feature lane opens.
+- Tournament ops *was* indeed a calendar phantom — but not in the way I first wrote. The ghost was in the calendar's *unupdated state*, not in the code. **Lesson:** trust the code paths and SESSION titles as primary truth; treat WORKFLOW 5.0 calendar past SESSION_0035 as historical fiction until it gets reality-adjusted.
 - The `getPrismaClientClass` runtime error during this session (Next.js dev server picking up a partially-written generated client) is a reminder that `bun run db:generate` is not safe to run while `next dev` is hot. **Lesson:** stop the dev server before regenerating Prisma.
+- **Meta-pattern (worth saving):** governance debt accelerates the cost of feature debt. A 38-session calendar gap is annoying alone; combined with a thin `wiki/concepts/` dir and a stale failed-steps-log, it makes every "is X done?" question a multi-grep investigation. This is exactly what SESSION_0074 fixes — and why governance comes before the next feature session.
 
 ## Review & Recommend — next session
 
@@ -224,18 +231,28 @@ Not because tournament ops is empty — it's mid-stream — but because **we don
 | Backlinks/index sweep | `pairs_with` updated on SESSION_0073 (→ SESSION_0072 + closing.md); incidents.md cross-references the recovery in SESSION_0073; no new wiki pages created so wiki/index.md unchanged |
 | Wiki lint | `bun run scripts/wiki-lint.ts` — **0 errors, 0 warnings** across 184 files. Pre-existing 8-error cluster on listing-pattern-repurposing.md fixed during this session |
 | Kaizen reflection | Reflections section present: yes |
-| Hostile close review | `SESSION_0073_REVIEW_01` — Petey + Giddy + Doug across 12 sessions; 4 P1 + 5 P2 + 3 P3 findings; score 6.5/10 |
-| Review & Recommend | Next session goal written: yes — SESSION_0074 governance hardening + slug backfill, with tournament-ops staged for 0075–0078 (S3 sprint) |
-| Memory sweep | 1 new feedback memory candidate: "Stop dev server before `bun run db:generate` — Next.js Turbopack cached an empty module mid-regenerate this session." Flag rather than auto-save; user to confirm if worth persisting |
-| Next session unblock check | **Unblocked.** SESSION_0074_TASK_01 (slug backfill script) needs no user input. Closing.md amendment and calendar refresh are pure doc edits |
+| Hostile close review | `SESSION_0073_REVIEW_01` — Petey + Giddy + Doug across 12 sessions; 4 P1 + 5 P2 + 3 P3 findings; score 6.5/10. **Post-bow-out correction:** P1 #2 ("tournament-ops feature lane is empty") was wrong — sessions 0042–0050 shipped admin CRUD + Stripe registration + brackets + scoring. Audit was bound by the stale WORKFLOW 5.0 calendar; fix is a wiki/concepts/tournament-ops.md page, assigned SESSION_0074_TASK_03 |
+| Review & Recommend | Next session goal written: yes — SESSION_0074 expanded to 9 tasks: project-log backfill, failed-steps audit, tournament-ops concept page, calendar reconciliation, frontmatter design pass, Dirstarter uplift backlog, residual unclean-close (12 sessions), slug backfill, closing.md atomicity |
+| Memory sweep | **3 cross-session memories saved:** `project_tournament_ops_status` (tournament feature shipped 0042–0050, calendar drift hides this), `feedback_session_lookup` (grep SESSION titles to answer "did we do X?", never the calendar past 0035), and the existing dev-server-restart-before-db-generate caveat folded into Reflections |
+| Next session unblock check | **Unblocked.** SESSION_0074_TASK_01 (project-log backfill) is mechanical and needs no user input. Each subsequent task is independently startable |
 | Git hygiene | Branch: `main`; clean before this session, 18 modified + 4 new files staged after; 1 new Prisma migration directory; no `.env`/secrets; user authorization for commit pending |
 
 ## Next session
 
-### SESSION_0074 — Petey/Cody: Governance hardening + slug backfill
+### SESSION_0074 — Petey/Cody: Lookup-system rebuild + governance hardening + slug backfill
 
-- **Goal:** Close all 4 SESSION_0073 P1 findings: backfill DirectoryProfile slugs, add Organization slug auto-gen, amend closing.md status atomicity, refresh WORKFLOW_5.0 calendar with actuals 0040–0073 + new forward plan. Closes S2 sprint.
-- **Agent:** Petey (calendar refresh) → Cody (script + doc edits)
-- **Inputs:** SESSION_0073 hostile review §P1, `prisma/seed.ts` (1181–1268), `lib/slug.ts`, `docs/rituals/closing.md`, `docs/protocols/WORKFLOW_5.0.md`, `scripts/wiki-lint.ts`
-- **First task:** SESSION_0074_TASK_01 — write `scripts/backfill-directory-slugs.ts` (idempotent: skip non-null, generate unique slug from displayName/name, update). Run locally; verify all `/members/[slug]` URLs resolve.
+- **Goal:** Make the repo answer "did we do X?" reliably (project-log backfill, failed-steps audit, tournament-ops concept page, frontmatter design pass, Dirstarter uplift backlog), close the SESSION_0073 P1s (slug backfill, Organization auto-slug, closing.md atomicity), and finish the unclean-close recovery (12 remaining sessions). Closes S2 sprint.
+- **Agent:** Petey (planning-heavy first half: failed-steps audit, frontmatter design, Dirstarter dive) → Cody (mechanical fills: backfill scripts, calendar reconciliation, unclean-close pass)
+- **Inputs:** SESSION_0073 (this file) §Review & Recommend, `docs/protocols/failed-steps-log.md` (FS-0014/FS-0015 especially), `docs/protocols/project-log.md` (task plan log gap 0038–0072), `docs/knowledge/wiki/dirstarter-component-inventory.md`, live `https://dirstarter.com/docs`, `apps/web/server/{web,admin}/tournaments/*` + `apps/web/app/admin/tournaments/*`, the 12 remaining in-progress SESSION files.
+- **Task list (9 numbered tasks — see §Review & Recommend for detail):**
+  1. Project-log backfill (closes FS-0015) — adds ~70 rows for SESSION_0038–0072.
+  2. Failed-steps audit + recurring-pattern clustering.
+  3. Tournament-ops gap audit + new `wiki/concepts/tournament-ops.md`.
+  4. WORKFLOW 5.0 calendar full reconciliation (rows 0036–0073) + forward plan reset.
+  5. Wiki YAML frontmatter design pass (`lane`, `feature_area`, `key_models`, `key_files`, `last_verified`, `supersedes`/`superseded_by`) + derived `topic_index.md` + wiki-lint enforcement.
+  6. Dirstarter pack deeper dive — produce `dirstarter-uplift-backlog.md` (skeletons, tooltips, command palette, MDX, OG images, sitemap, blog/newsletter scaffolding) with L1 references and session-size estimates.
+  7. Unclean-close recovery pass on the remaining 12 in-progress sessions.
+  8. Slug backfill script + `prisma/seed.ts` slug update + Organization slug auto-gen on lead-conversion + admin org-create.
+  9. `closing.md` atomicity amendment + wiki-lint rule for `status: in-progress` on populated session files.
+- **First task:** SESSION_0074_TASK_01 — project-log backfill. Mechanical scrape of each `SESSION_NNNN.md` `Task log` block into the project-log task table. No decisions needed; lets Cody warm up while Petey reads failed-steps + Dirstarter docs in parallel.
 - **Prerequisite:** Unblocked.
