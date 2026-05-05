@@ -18,6 +18,7 @@ import {
   SwordsIcon,
   TagIcon,
   TriangleAlertIcon,
+  TrophyIcon,
   UsersIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -146,6 +147,11 @@ export const Sidebar = () => {
           title: "Schedule",
           href: "/admin/schedule",
           prefix: <CalendarIcon />,
+        },
+        {
+          title: "Tournaments",
+          href: "/admin/tournaments",
+          prefix: <TrophyIcon />,
         },
 
         undefined, // Separator

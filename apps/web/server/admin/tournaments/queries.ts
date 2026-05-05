@@ -1,7 +1,7 @@
 import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
-import type { TournamentsTableSchema } from "~/server/admin/tournaments/schema"
+import type { TournamentsTableSchema, TournamentRolesTableSchema, RuleSetsTableSchema } from "~/server/admin/tournaments/schema"
 import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 
@@ -121,6 +121,43 @@ export const findTournamentRoles = async () => {
   })
 }
 
+export const findTournamentRolesPaginated = async (search: TournamentRolesTableSchema) => {
+  const { name, sort, page, perPage, from, to, operator } = search
+  const brand = await getRequestBrand()
+
+  const offset = (page - 1) * perPage
+  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
+
+  const fromDate = from ? startOfDay(new Date(from)) : undefined
+  const toDate = to ? endOfDay(new Date(to)) : undefined
+
+  const expressions: (Prisma.TournamentRoleWhereInput | undefined)[] = [
+    name ? { name: { contains: name, mode: "insensitive" } } : undefined,
+    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+  ]
+
+  const whereQuery: Prisma.TournamentRoleWhereInput = {
+    OR: [{ brand }, { brand: null, isSystem: true }],
+    [operator.toUpperCase()]: expressions.filter(isTruthy),
+  }
+
+  const [roles, total] = await db.$transaction([
+    db.tournamentRole.findMany({
+      where: whereQuery,
+      include: {
+        _count: { select: { staffAssignments: true } },
+      },
+      orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
+      take: perPage,
+      skip: offset,
+    }),
+    db.tournamentRole.count({ where: whereQuery }),
+  ])
+
+  const pageCount = Math.ceil(total / perPage)
+  return { roles, total, pageCount }
+}
+
 export const findTournamentRoleById = async (id: string) => {
   return db.tournamentRole.findUnique({
     where: { id },
@@ -201,6 +238,44 @@ export const findRuleSets = async () => {
     },
     orderBy: [{ isSystem: "desc" }, { name: "asc" }],
   })
+}
+
+export const findRuleSetsPaginated = async (search: RuleSetsTableSchema) => {
+  const { name, sort, page, perPage, from, to, operator } = search
+  const brand = await getRequestBrand()
+
+  const offset = (page - 1) * perPage
+  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
+
+  const fromDate = from ? startOfDay(new Date(from)) : undefined
+  const toDate = to ? endOfDay(new Date(to)) : undefined
+
+  const expressions: (Prisma.RuleSetWhereInput | undefined)[] = [
+    name ? { name: { contains: name, mode: "insensitive" } } : undefined,
+    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+  ]
+
+  const whereQuery: Prisma.RuleSetWhereInput = {
+    OR: [{ brand }, { brand: null, isSystem: true }],
+    [operator.toUpperCase()]: expressions.filter(isTruthy),
+  }
+
+  const [ruleSets, total] = await db.$transaction([
+    db.ruleSet.findMany({
+      where: whereQuery,
+      include: {
+        discipline: { select: { id: true, name: true } },
+        _count: { select: { tournamentDisciplines: true } },
+      },
+      orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
+      take: perPage,
+      skip: offset,
+    }),
+    db.ruleSet.count({ where: whereQuery }),
+  ])
+
+  const pageCount = Math.ceil(total / perPage)
+  return { ruleSets, total, pageCount }
 }
 
 export const findRuleSetById = async (id: string) => {

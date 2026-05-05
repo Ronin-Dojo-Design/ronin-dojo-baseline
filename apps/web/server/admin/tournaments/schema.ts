@@ -6,7 +6,7 @@ import {
   type inferParserType,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Tournament, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod } from "~/.generated/prisma/browser"
+import { type Tournament, type TournamentRole, type RuleSet, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 // -----------------------------------------------------------------------------
@@ -26,6 +26,40 @@ export const tournamentsTableParamsSchema = {
 
 export const tournamentsTableParamsCache = createSearchParamsCache(tournamentsTableParamsSchema)
 export type TournamentsTableSchema = Awaited<ReturnType<typeof tournamentsTableParamsCache.parse>>
+
+// -----------------------------------------------------------------------------
+// TournamentRole admin table params
+// -----------------------------------------------------------------------------
+
+export const tournamentRolesTableParamsSchema = {
+  name: parseAsString.withDefault(""),
+  sort: getSortingStateParser<TournamentRole>().withDefault([{ id: "name", desc: false }]),
+  page: parseAsInteger.withDefault(1),
+  perPage: parseAsInteger.withDefault(25),
+  from: parseAsString.withDefault(""),
+  to: parseAsString.withDefault(""),
+  operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
+}
+
+export const tournamentRolesTableParamsCache = createSearchParamsCache(tournamentRolesTableParamsSchema)
+export type TournamentRolesTableSchema = Awaited<ReturnType<typeof tournamentRolesTableParamsCache.parse>>
+
+// -----------------------------------------------------------------------------
+// RuleSet admin table params
+// -----------------------------------------------------------------------------
+
+export const ruleSetsTableParamsSchema = {
+  name: parseAsString.withDefault(""),
+  sort: getSortingStateParser<RuleSet>().withDefault([{ id: "name", desc: false }]),
+  page: parseAsInteger.withDefault(1),
+  perPage: parseAsInteger.withDefault(25),
+  from: parseAsString.withDefault(""),
+  to: parseAsString.withDefault(""),
+  operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
+}
+
+export const ruleSetsTableParamsCache = createSearchParamsCache(ruleSetsTableParamsSchema)
+export type RuleSetsTableSchema = Awaited<ReturnType<typeof ruleSetsTableParamsCache.parse>>
 
 // -----------------------------------------------------------------------------
 // Division schema

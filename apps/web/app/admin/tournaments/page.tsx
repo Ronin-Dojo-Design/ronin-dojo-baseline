@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { TournamentsTable } from "~/app/admin/tournaments/_components/tournaments-table"
+import { TournamentsSubNav } from "~/app/admin/tournaments/_components/tournaments-sub-nav"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findTournaments } from "~/server/admin/tournaments/queries"
@@ -10,8 +11,12 @@ export default withAdminPage(async ({ searchParams }) => {
   const tournamentsPromise = findTournaments(search)
 
   return (
-    <Suspense fallback={<DataTableSkeleton title="Tournaments" />}>
-      <TournamentsTable tournamentsPromise={tournamentsPromise} />
-    </Suspense>
+    <>
+      <TournamentsSubNav />
+
+      <Suspense fallback={<DataTableSkeleton title="Tournaments" />}>
+        <TournamentsTable tournamentsPromise={tournamentsPromise} />
+      </Suspense>
+    </>
   )
 })
