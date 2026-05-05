@@ -42,3 +42,58 @@ export const findUserPassport = cache(async (userId: string) => {
     where: { userId },
   })
 })
+
+export const findUserDirectoryProfile = cache(async (userId: string) => {
+  return db.directoryProfile.findUnique({
+    where: { userId },
+  })
+})
+
+export const findUserOrganization = cache(async (userId: string, brand: Brand) => {
+  // Find organization where user is owner
+  return db.organization.findFirst({
+    where: {
+      brand,
+      memberships: {
+        some: {
+          userId,
+          role: "OWNER",
+        },
+      },
+    },
+    include: {
+      disciplines: {
+        include: { discipline: { select: { id: true, name: true } } },
+      },
+    },
+  })
+})
+
+export const findUserTechniques = cache(async (userId: string, brand: Brand) => {
+  // Find techniques for organizations the user owns/instructs
+  return db.technique.findMany({
+    where: {
+      organization: {
+        brand,
+        memberships: {
+          some: {
+            userId,
+            role: { in: ["OWNER", "INSTRUCTOR"] },
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      isPublished: true,
+      difficulty: true,
+      createdAt: true,
+      updatedAt: true,
+      discipline: { select: { id: true, name: true } },
+      organization: { select: { id: true, name: true } },
+    },
+    orderBy: { name: "asc" },
+  })
+})

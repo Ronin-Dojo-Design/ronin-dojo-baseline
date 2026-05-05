@@ -19,6 +19,7 @@ export const updatePassportSchema = z.object({
 })
 
 export const updateDirectoryProfileSchema = z.object({
+  slug: z.string().max(100).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes").optional(),
   visibility: DirectoryVisibility.optional(),
   locationCity: z.string().max(100).optional(),
   locationRegion: z.string().max(100).optional(),
