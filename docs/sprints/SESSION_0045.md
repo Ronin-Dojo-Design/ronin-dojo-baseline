@@ -2,7 +2,7 @@
 title: "SESSION 0045 — Registration Polish + Error Cleanup"
 slug: session-0045
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0045

@@ -2,7 +2,7 @@
 title: "SESSION 0042 — Tournament Operations: Admin CRUD + Public Discovery"
 slug: session-0042
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0042
@@ -26,7 +26,7 @@ Brian Scott + Copilot (Petey — planner)
 
 ## Status
 
-in-progress
+closed-unclean
 
 ## Dirstarter alignment table
 

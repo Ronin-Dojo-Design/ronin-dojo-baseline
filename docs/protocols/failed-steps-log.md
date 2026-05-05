@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-01
-last_agent: claude-session-0031-5
+updated: 2026-05-05
+last_agent: copilot-session-0074
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -325,7 +325,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
      - Cody pre-flight must include a `grep` for raw HTML form elements (`<input`, `<select`, `<form`, `<label`) in any new component file — if found, the pre-flight fails
   3. Future sessions: any PR containing raw HTML form elements when a Dirstarter primitive exists is an automatic failed-step, no excuses
 - **Verification:** SESSION_0050 bracket-viewer refactor eliminates all raw HTML form elements. Post-refactor `grep -n '<input\|<select\|<form' bracket-viewer.tsx` returns zero matches. Doug verifies at bow-out.
-- **Status:** open — refactor in progress (SESSION_0050)
+- **Status:** closed — SESSION_0050 TASK_01+02 refactored all hand-rolled components to Dirstarter L1 primitives. FS-0014 is a repeat of FS-0001; root cause cluster: "L1 component inventory gate" (see pattern summary below).
 
 ### FS-0015 — Project-log entries missing for 20 sessions (SESSION_0038.5–0057)
 
@@ -339,7 +339,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. Add project-log verification to closing ritual: closing.md must require `grep "SESSION_NNNN" docs/protocols/project-log.md` returns at least one hit before close is accepted
   3. Consider splitting project-log into archive (≤ SESSION_0033) + active (SESSION_0038+) to reduce file size and context window cost
 - **Verification:** Backfill entries exist; closing.md updated with project-log gate
-- **Status:** open — backfill planned for SESSION_0061
+- **Status:** closed — 2026-05-05, SESSION_0074_TASK_01 backfilled task plan log rows for SESSION_0038 through SESSION_0072 (including half-numbered 0038.5, 0041.5, 0046.5). Block prefixed with `<!-- Backfilled SESSION_0074_TASK_01 (FS-0015) -->` in `docs/protocols/project-log.md`. Sessions still in YAML `status: in-progress` were marked `unknown`; closed sessions marked `landed`. Closing.md project-log gate is the next layer (SESSION_0074_TASK_09).
 
 ### FS-0016 — Duplicate review block appended to project-log (SESSION_0031_5_REVIEW_01 ×4)
 
@@ -353,3 +353,27 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. Future append operations should `grep` for the entry ID before appending: `grep -c "SESSION_NNNN_REVIEW_XX" project-log.md` must return 0 before write
 - **Verification:** `grep -c "^### SESSION_0031_5_REVIEW_01" docs/protocols/project-log.md` returns 1
 - **Status:** resolved
+
+---
+
+## Top failure modes — live risk surface
+
+<!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
+
+Read this section at bow-in instead of skimming all 16 entries.
+
+### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
+
+**3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
+
+### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015)
+
+**3 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09).
+
+### Pattern 3: Governance artifacts drift (FS-0006 → FS-0007)
+
+**2 occurrences.** Root cause: protocols exist but aren't in the execution path. WORKFLOW 5.0 calendar drifted 38 sessions behind; pre-flight wasn't run for non-UI work. **Current status: mitigated.** Protocol surface reduced SESSION_0027; pre-flight expanded to all work types.
+
+### Pattern 4: Git operation footguns (FS-0010 → FS-0011 → FS-0012 → FS-0013)
+
+**4 occurrences** in one session (SESSION_0034). Root cause: first time running multi-branch rebase in automated context. All mitigated via `merge-to-main.md`. **Current status: mitigated, low recurrence risk.**

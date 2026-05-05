@@ -2,7 +2,7 @@
 title: "SESSION 0018 — ADR 0010 cache strategy for auth-scoped queries, S6 prep"
 slug: session-0018
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0018

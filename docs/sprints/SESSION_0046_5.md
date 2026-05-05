@@ -2,7 +2,7 @@
 title: "SESSION 0046.5 — Remediation: stripePaymentIntentId + Capacity Race Fix"
 slug: session-0046-5
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0046-5

@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-04
-last_agent: claude-session-0073
+updated: 2026-05-05
+last_agent: copilot-session-0074
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -147,9 +147,9 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 
 ---
 
-## Session calendar (SESSION_0021–0073, with forward plan)
+## Session calendar (SESSION_0021–0074, with forward plan)
 
-> **Calendar drift warning (recorded SESSION_0073):** the table below was last reality-adjusted at SESSION_0035. Sessions 0036–0073 happened but the calendar never tracked them — `target` rows past 0035 are historical fiction. SESSION_0074 will do a full backfill from `docs/sprints/SESSION_NNNN.md` titles. The skeleton update below corrects the most-misleading "tournament operations" rows (0038/0039) which were repurposed at execution time, plus stamps actuals for the 38 sessions that ran without calendar updates. The May 18 launch target is no longer a firm date — to be re-set in SESSION_0074.
+> **Calendar reconciled SESSION_0074_TASK_04.** All rows 0021–0074 now reflect actuals. Forward plan re-set for S3 (Tournament Operations completion lane).
 
 | Date / target | Session | Primary lane | Main outcome |
 | --- | --- | --- | --- |
@@ -171,9 +171,32 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 3 actual | 0035 | School operations (planning) | Entitlement-first commerce plan: resolved 4 open questions, 7-task breakdown for implementation. No code. |
 | May 3–4 actual | 0036 | School operations | Entitlement implementation (schema + service layer + webhook wiring) |
 | May 4 actual | 0037 | School operations | Lead intake + trial conversion + CRM follow-up |
-| May 4 actual | 0038 | School operations *(repurposed from "Tournament operations")* | Lead intake admin UI implementation. **Tournament ops slot was never executed.** |
-| May 4 actual | 0039 | Core platform governance *(repurposed from "Tournament operations")* | Planning review + Dirstarter baseline index. **Tournament ops slot was never executed.** |
-| 0040–0060 actual | 0040–0060 | Mixed — see SESSION files | School ops continuation, tournament registration UI on existing schema, gamification, brand monetization, observability work. **Calendar entries to be backfilled in SESSION_0074.** |
+| May 4 actual | 0038 | School operations | Lead intake admin UI (admin CRUD + DataTable + forms + detail) |
+| May 4 actual | 0038.5 | School operations | Lead intake hostile review remediation (publicActionClient, brand scoping, audit, smoke script, email template) |
+| May 4 actual | 0039 | Core platform governance | Dirstarter Baseline Index (300+ template files cataloged, divergence audit) |
+| May 4 actual | 0040 | Content + curriculum | Course + CurriculumItem admin CRUD, Certificate template admin CRUD |
+| May 4 actual | 0041 | Content + curriculum | Technique library public pages (list + detail + filters + components) |
+| May 4 actual | 0041.5 | Content + curriculum | Integration tests for technique queries (brand isolation, filter combos) |
+| May 4 actual | 0042 | Tournament ops | Admin CRUD (tournaments + divisions) + public list + detail |
+| May 4 actual | 0043 | Tournament ops | Registration checkout: capacity check + Stripe + webhook fulfillment |
+| May 4 actual | 0044 | Tournament ops | RegisterButton wiring + success banner + admin registration list |
+| May 4 actual | 0045 | Tournament ops | Free-path registration + admin links + TS fixes |
+| May 4 actual | 0046 | Tournament ops | Cancel registration + Stripe refund |
+| May 4 actual | 0046.5 | Tournament ops | stripePaymentIntentId storage + serializable transaction capacity fix |
+| May 4 actual | 0047 | Tournament ops | Admin registration approval workflow (status transitions + bulk actions + L1 rewrite) |
+| May 4 actual | 0048 | Tournament ops | Bracket/match generation + F-03 brand-scoping remediation |
+| May 4 actual | 0049 | Tournament ops | Match scoring + bracket advancement + auto-BYE |
+| May 4 actual | 0050 | Tournament ops | L1 refactor: ScoreMatchForm + MatchCard → Dirstarter primitives, 10-point must scoring, auto-TKO |
+| May 4 actual | 0051 | Core platform governance | Deep Dirstarter L1 audit + component inventory |
+| May 4 actual | 0052 | L1 refactor | P1+P2+P3 L1 violation fixes (divisions-editor, registrations-table, tournament-card, admin scaffolding) |
+| May 4 actual | 0053 | Commerce | Stripe products (16) + entitlement admin CRUD + PricingPlan admin CRUD |
+| May 4 actual | 0054 | Commerce | Enrollment checkout + webhook fulfillment + user dashboard |
+| May 4 actual | 0055 | School operations | Lead intake + trial conversion + CRM follow-up |
+| May 4 actual | 0056 | Content + curriculum | Course publishing + certificate issuance + technique→curriculum linking + media gallery |
+| May 4 actual | 0057 | P0–P2 remediation | Hostile-close remediation: brand scoping, Passport display, server boundaries |
+| May 4 actual | 0058 | P0–P2 remediation | Registration snapshot fields + admin auth HOC hardening |
+| May 4 actual | 0059 | P0–P2 remediation | Cache pattern upgrade + enrollment Passport check + drift close |
+| May 4 actual | 0060 | Hostile-close review | Cross-session hostile-close audit (6 P1, 1 P2, 3 P3) |
 | May 4 actual | 0061 | School operations governance | P1 brand-scoping fixes + white-label/brand-ops Petey plan. *(closed-unclean — recovered SESSION_0073)* |
 | May 4 actual | 0062 | Brand launch | Brand-aware site config + martial-arts navigation overhaul (WP-1 + WP-2). *(closed-unclean — recovered SESSION_0073)* |
 | May 4 actual | 0063 | Core platform | SubscriptionTier + UserBrandSubscription admin CRUD; entitlement wiring |
@@ -187,11 +210,11 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 4 actual | 0071 | Directory | Member/school detail pages + auth integration |
 | May 4 actual | 0072 | Core platform governance | Card-to-detail link verification + 20 pre-existing TS errors fixed (closed-full 7/10) |
 | May 4 actual | 0073 | Core platform governance | **This session.** Unclean-close recovery (5 sessions); Organization.description schema; member/school filter actions; DirectoryProfile slug auto-generation; hostile review of last 12 sessions; calendar reconciliation skeleton. |
-| **May 5 target** | **0074** | **Core platform governance** | **Slug backfill script + Organization slug auto-gen + closing.md atomicity amendment + WORKFLOW 5.0 calendar full backfill (0040–0060). Closes S2 sprint.** |
-| May 6+ target | 0075–0078 | Tournament operations | Multi-session lane: events admin CRUD → public registration + checkout → bracket/mat assignment → live scoring + results. Opens S3 sprint. |
-| TBD | 00xx | Brand launch | Baseline/BBL/WEKAF/RDD public surfaces (originally 0041 target) — to be re-sequenced in SESSION_0074 |
-| TBD | 00xx | QA hardening + launch support | E2E lifecycle tests, fixtures, migration artifacts, staging deploy, rollback drill (originally 0042 target) — to be re-sequenced in SESSION_0074 |
-| TBD | 00xx | Launch day | Release execution, monitoring, support, post-launch triage (originally 0043 target) — to be re-sequenced in SESSION_0074 |
+| **May 5 actual** | **0074** | **Core platform governance** | **Lookup-system rebuild: project-log backfill, failed-steps audit, tournament-ops concept page, calendar reconciliation, 17 unclean-close recoveries, closing.md atomicity, slug backfill, Dirstarter uplift backlog. Closes S2.** |
+| May 6+ target | 0075–0078 | Tournament operations (S3) | Completion lane: TournamentRole/StaffAssignment CRUD → WeighIn workflow → MatAssignment UI → FightRecord publication → RuleSet CRUD → results page. See `wiki/concepts/tournament-ops.md` open-work list. |
+| TBD | 00xx | Brand launch | Baseline public surfaces polish — to be sequenced after S3 |
+| TBD | 00xx | QA hardening + launch | E2E tests, staging deploy, migration artifacts, rollback drill |
+| TBD | 00xx | Launch day | Release execution + monitoring |
 
 ---
 

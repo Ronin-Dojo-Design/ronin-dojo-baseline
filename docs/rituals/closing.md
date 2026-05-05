@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-05
+last_agent: copilot-session-0074
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -74,6 +74,10 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
 - `ADR / ubiquitous-language check` — any architectural decision or domain term created, updated, or explicitly marked not needed
 - `Status: closed-quick`
+
+**Atomicity rule (FS-0015 / SESSION_0074_TASK_09):** The YAML frontmatter `status:` field and the body `### Status` line must be updated together in the same edit pass. Never change one without the other. A session file with `status: in-progress` in YAML but `closed-quick` in the body (or vice versa) is a data integrity violation.
+
+**Project-log gate:** Before setting any closed status, verify the current session has at least one entry in `docs/protocols/project-log.md`: `grep -c "SESSION_NNNN" docs/protocols/project-log.md` must return ≥ 1. If it returns 0, append the task plan entries before closing.
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
 

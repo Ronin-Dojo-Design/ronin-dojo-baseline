@@ -2,7 +2,7 @@
 title: "SESSION 0041.5 — Integration tests for technique queries (remediation)"
 slug: session-0041-5
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0041-5

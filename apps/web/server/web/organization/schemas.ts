@@ -6,7 +6,7 @@ const OrganizationType = z.enum(["DOJO", "LEAGUE", "SCHOOL", "CLUB"])
 export const createOrganizationSchema = z.object({
   brand: Brand,
   name: z.string().min(1).max(200),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens"),
+  slug: z.string().max(200).regex(/^[a-z0-9-]*$/, "Slug must be lowercase alphanumeric with hyphens").optional().default(""),
   type: OrganizationType.default("DOJO"),
   addressLine1: z.string().max(500).optional(),
   addressLine2: z.string().max(500).optional(),

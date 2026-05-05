@@ -2,7 +2,7 @@
 title: "SESSION 0057 — Hostile-Close Remediation: P0–P2 Fixes from Sessions 0052–0056"
 slug: session-0057
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0057

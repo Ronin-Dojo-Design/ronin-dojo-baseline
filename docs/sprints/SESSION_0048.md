@@ -2,7 +2,7 @@
 title: "SESSION 0048 — Bracket/Match Generation + F-03 Brand Scoping"
 slug: session-0048
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0048

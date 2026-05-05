@@ -2,7 +2,7 @@
 title: "SESSION 0040 — Content + Curriculum surfaces (Recipe 1: Course admin CRUD)"
 slug: session-0040
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0040

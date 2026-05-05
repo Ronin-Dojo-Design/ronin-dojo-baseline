@@ -2,7 +2,7 @@
 title: "SESSION 0037 — Lead intake UI, trial conversion, CRM follow-up surfaces"
 slug: session-0037
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0037

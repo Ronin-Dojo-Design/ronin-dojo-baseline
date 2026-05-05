@@ -1,6 +1,7 @@
 "use server"
 
 import { isInSameBrand } from "~/lib/authz"
+import { slugify } from "~/lib/slug"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   createOrganizationSchema,
@@ -21,6 +22,18 @@ export const createOrganization = userActionClient
   .inputSchema(createOrganizationSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const { disciplineIds, ...orgData } = parsedInput
+
+    // Auto-generate slug from name if not provided or empty
+    if (!orgData.slug) {
+      const base = slugify(orgData.name) || "org"
+      let candidate = base
+      let attempt = 0
+      while (await db.organization.findFirst({ where: { slug: candidate }, select: { id: true } })) {
+        candidate = `${base}-${Math.random().toString(36).slice(2, 8)}`
+        if (++attempt > 5) break
+      }
+      orgData.slug = candidate
+    }
 
     // 1. Create the organization
     const org = await db.organization.create({

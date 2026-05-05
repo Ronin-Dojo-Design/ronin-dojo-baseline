@@ -2,7 +2,7 @@
 title: "SESSION 0041 — Technique library public pages"
 slug: session-0041
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0041

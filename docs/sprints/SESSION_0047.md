@@ -2,7 +2,7 @@
 title: "SESSION 0047 — Admin Registration Approval Workflow"
 slug: session-0047
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0047

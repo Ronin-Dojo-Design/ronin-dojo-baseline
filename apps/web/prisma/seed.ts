@@ -1179,6 +1179,7 @@ async function main() {
         bio: "Head instructor at Baseline Academy.",
       },
       directory: {
+        slug: "sensei-demo",
         visibility: "PUBLIC" as const,
         locationCity: "Boulder",
         locationRegion: "CO",
@@ -1202,6 +1203,7 @@ async function main() {
         bio: "BJJ and Muay Thai student.",
       },
       directory: {
+        slug: "student-alpha",
         visibility: "PUBLIC" as const,
         locationCity: "Boulder",
         locationRegion: "CO",
@@ -1225,6 +1227,7 @@ async function main() {
         bio: "Eskrima practitioner.",
       },
       directory: {
+        slug: "student-beta",
         visibility: "MEMBERS_ONLY" as const,
         locationCity: "Denver",
         locationRegion: "CO",
@@ -1243,6 +1246,7 @@ async function main() {
       role: "user",
       passport: { displayName: "Ghost User", legalFirstName: "Ghost", legalLastName: "Hidden" },
       directory: {
+        slug: "ghost-user",
         visibility: "HIDDEN" as const,
         locationCity: "Boulder",
         locationRegion: "CO",
@@ -1266,6 +1270,7 @@ async function main() {
         bio: "Just signed up!",
       },
       directory: {
+        slug: "pending-patty",
         visibility: "PUBLIC" as const,
         locationCity: "Longmont",
         locationRegion: "CO",

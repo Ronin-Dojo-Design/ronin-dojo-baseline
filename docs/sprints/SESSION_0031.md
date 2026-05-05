@@ -2,7 +2,7 @@
 title: "SESSION 0031 — Class Schedules execution with security gates"
 slug: session-0031
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-30
 updated: 2026-04-30
 last_agent: claude-session-0031

@@ -2,7 +2,7 @@
 title: "SESSION 0038.5 — Lead intake hostile review remediation"
 slug: session-0038-5
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0038-5

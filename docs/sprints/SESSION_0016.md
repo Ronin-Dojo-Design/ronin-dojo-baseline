@@ -2,7 +2,7 @@
 title: "SESSION 0016 — Browser-verify S4 directory, execute TASK_05 + TASK_06 (mobile auth)"
 slug: session-0016
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0016

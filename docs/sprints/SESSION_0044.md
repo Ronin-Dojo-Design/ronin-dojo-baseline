@@ -2,7 +2,7 @@
 title: "SESSION 0044 — Tournament Registration Wiring + Admin List"
 slug: session-0044
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-04
 updated: 2026-05-04
 last_agent: copilot-session-0044
@@ -25,7 +25,7 @@ Brian Scott + Copilot (Petey → Cody)
 
 ## Status
 
-in-progress
+closed-unclean
 
 ## Goal
 

@@ -2,7 +2,7 @@
 title: "SESSION 0015 — Verify S4 directory, close S4, begin S5"
 slug: session-0015
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-04-27
 updated: 2026-04-27
 last_agent: copilot-session-0015

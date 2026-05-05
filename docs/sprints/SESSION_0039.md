@@ -2,7 +2,7 @@
 title: "SESSION 0039 — Planning review + Dirstarter baseline index"
 slug: session-0039
 type: session
-status: in-progress
+status: closed-unclean
 created: 2026-05-03
 updated: 2026-05-03
 last_agent: copilot-session-0039
