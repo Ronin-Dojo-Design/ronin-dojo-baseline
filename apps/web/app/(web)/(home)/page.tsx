@@ -1,9 +1,10 @@
 import { getTranslations } from "next-intl/server"
-import { cache, Suspense } from "react"
+import { cache } from "react"
+import { BottomCTA } from "~/app/(web)/(home)/bottom-cta"
+import { FeatureCards } from "~/app/(web)/(home)/feature-cards"
 import { Hero } from "~/app/(web)/(home)/hero"
+import { ValueProp } from "~/app/(web)/(home)/value-prop"
 import { StructuredData } from "~/components/web/structured-data"
-import { ToolListingSkeleton } from "~/components/web/tools/tool-listing"
-import { ToolQuery } from "~/components/web/tools/tool-query"
 import { siteConfig } from "~/config/site"
 import { getPageData } from "~/lib/pages"
 
@@ -22,11 +23,9 @@ export default async function (props: PageProps<"/">) {
   return (
     <>
       <Hero />
-
-      <Suspense fallback={<ToolListingSkeleton />}>
-        <ToolQuery searchParams={props.searchParams} options={{ enableFilters: true }} ad="Tools" />
-      </Suspense>
-
+      <FeatureCards />
+      <ValueProp />
+      <BottomCTA />
       <StructuredData data={structuredData} />
     </>
   )

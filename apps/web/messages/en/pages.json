@@ -133,5 +133,36 @@
     "current_package": "Current Package",
     "upgrade_listing": "Upgrade Listing",
     "choose_plan": "Choose {name}"
+  },
+
+  "home": {
+    "hero": {
+      "subtitle": "Martial arts training, tournaments, and community — all in one place."
+    },
+    "features": {
+      "title": "Everything Your Dojo Needs",
+      "programs": {
+        "title": "Programs & Classes",
+        "description": "Structured curriculum for all ages and skill levels. Track progress from white belt to black belt."
+      },
+      "tournaments": {
+        "title": "Tournaments",
+        "description": "Register, compete, and track rankings across local and national events."
+      },
+      "community": {
+        "title": "Community",
+        "description": "Connect with fellow martial artists. Share knowledge, find training partners, and grow together."
+      }
+    },
+    "value": {
+      "title": "Why Baseline?",
+      "point1": "Built by martial artists, for martial artists",
+      "point2": "Modern platform — no outdated paper forms or spreadsheets",
+      "point3": "One membership, full access to programs, events, and community"
+    },
+    "cta": {
+      "title": "Ready to Train?",
+      "description": "Join the community and start your martial arts journey today."
+    }
   }
 }
