@@ -3,6 +3,7 @@
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
+import { seedEntries } from "~/server/admin/tournaments/bracket-seeding"
 import {
   tournamentSchema,
   tournamentDisciplineSchema,
@@ -156,13 +157,21 @@ export const upsertDivision = adminActionClient
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, ...input } = parsedInput
 
+    // Normalize empty FK strings to null
+    const data = {
+      ...input,
+      rankMinId: input.rankMinId || null,
+      rankMaxId: input.rankMaxId || null,
+      ruleSetId: input.ruleSetId || null,
+    }
+
     const division = id
       ? await db.division.update({
           where: { id },
-          data: input,
+          data,
         })
       : await db.division.create({
-          data: input,
+          data,
         })
 
     after(async () => {
@@ -283,7 +292,7 @@ export const bulkUpdateRegistrationStatus = adminActionClient
 export const generateBracket = adminActionClient
   .inputSchema(generateBracketSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
-    const { divisionId, bracketName } = parsedInput
+    const { divisionId, bracketName, seedingMethod, manualSeeds } = parsedInput
 
     // 1. Fetch the division and its tournament for revalidation
     const division = await db.division.findUnique({
@@ -317,10 +326,29 @@ export const generateBracket = adminActionClient
       },
       include: {
         registration: {
-          include: { user: { select: { id: true, name: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                rankAwards: {
+                  where: {
+                    rank: {
+                      rankSystem: {
+                        disciplineId: division.tournamentDiscipline.disciplineId,
+                      },
+                    },
+                  },
+                  select: { rank: { select: { sortOrder: true } } },
+                  orderBy: { awardedAt: "desc" },
+                  take: 1,
+                },
+              },
+            },
+          },
         },
       },
-      orderBy: { createdAt: "asc" }, // Default seed order: registration order
+      orderBy: { createdAt: "asc" },
     })
 
     if (entries.length < 2) {
@@ -343,6 +371,7 @@ export const generateBracket = adminActionClient
           sortOrder: 0,
           seedData: {
             type: "SINGLE_ELIMINATION",
+            seedingMethod,
             competitorCount,
             bracketSize,
             totalRounds,
@@ -371,49 +400,61 @@ export const generateBracket = adminActionClient
         round1Matches.push({ id: match.id, matchNumber })
       }
 
-      // Seed competitors into round 1 using standard bracket seeding
-      // Slot 1 = top, Slot 2 = bottom
-      let entryIndex = 0
-      for (let i = 0; i < round1MatchCount; i++) {
-        const match = round1Matches[i]!
-
-        // Slot 1: always has a competitor
-        if (entryIndex < entries.length) {
-          await tx.matchCompetitor.create({
-            data: {
-              matchId: match.id,
-              registrationEntryId: entries[entryIndex]!.id,
-              slot: 1,
-              seed: entryIndex + 1,
-            },
-          })
-          entryIndex++
-        }
-
-        // Slot 2: competitor or BYE
-        if (entryIndex < entries.length) {
-          // Check if this is a bye slot (byes go at the bottom of the bracket)
-          const isByeSlot = i >= round1MatchCount - byeCount
-
-          if (isByeSlot && byeCount > 0 && entryIndex >= competitorCount) {
-            // This match is a BYE — mark it
-            await tx.match.update({
-              where: { id: match.id },
-              data: { status: "BYE" },
-            })
-          } else {
-            await tx.matchCompetitor.create({
-              data: {
-                matchId: match.id,
-                registrationEntryId: entries[entryIndex]!.id,
-                slot: 2,
-                seed: entryIndex + 1,
+      // Seed competitors into round 1 using selected seeding method
+      // Build FightRecord lookup for TOURNAMENT_RANKING
+      const userIds = entries.map((e) => e.registration.user.id)
+      const fightRecords =
+        seedingMethod === "TOURNAMENT_RANKING"
+          ? await tx.fightRecord.findMany({
+              where: {
+                userId: { in: userIds },
+                disciplineId: division.tournamentDiscipline.disciplineId,
               },
+              select: { userId: true, wins: true, losses: true, draws: true },
             })
-            entryIndex++
-          }
-        } else {
-          // No more competitors — this is a BYE
+          : []
+
+      const fightRecordMap = new Map(
+        fightRecords.map((fr) => [
+          fr.userId,
+          fr.wins - fr.losses + fr.draws * 0.5,
+        ]),
+      )
+
+      const manualSeedMap = new Map(
+        (manualSeeds ?? []).map((ms) => [ms.entryId, ms.seed]),
+      )
+
+      const seedable = entries.map((e, i) => ({
+        id: e.id,
+        registrationOrder: i,
+        tournamentRankingScore: fightRecordMap.get(e.registration.user.id) ?? null,
+        martialArtsRankOrdinal:
+          e.registration.user.rankAwards?.[0]?.rank?.sortOrder ?? null,
+        manualSeed: manualSeedMap.get(e.id) ?? null,
+      }))
+      const seeded = seedEntries(seedable, bracketSize, seedingMethod)
+
+      // Place seeded entries into bracket slots (2 per match: slot 1 = even index, slot 2 = odd)
+      for (const { entryId, seed, bracketSlotIndex } of seeded) {
+        const matchIndex = Math.floor(bracketSlotIndex / 2)
+        const slot = (bracketSlotIndex % 2) + 1 // 1 or 2
+        const match = round1Matches[matchIndex]!
+
+        await tx.matchCompetitor.create({
+          data: {
+            matchId: match.id,
+            registrationEntryId: entryId,
+            slot,
+            seed,
+          },
+        })
+      }
+
+      // Mark BYE matches (matches with only 1 competitor)
+      for (const match of round1Matches) {
+        const compCount = await tx.matchCompetitor.count({ where: { matchId: match.id } })
+        if (compCount < 2) {
           await tx.match.update({
             where: { id: match.id },
             data: { status: "BYE" },
@@ -568,8 +609,16 @@ export const scoreMatch = adminActionClient
             seedData: true,
             division: {
               select: {
+                ruleSet: {
+                  select: { id: true, scoringMethod: true, matchDurationSec: true, overtimeSec: true, scoringConfig: true },
+                },
                 tournamentDiscipline: {
-                  select: { tournament: { select: { slug: true } } },
+                  select: {
+                    ruleSet: {
+                      select: { id: true, scoringMethod: true, matchDurationSec: true, overtimeSec: true, scoringConfig: true },
+                    },
+                    tournament: { select: { slug: true } },
+                  },
                 },
               },
             },

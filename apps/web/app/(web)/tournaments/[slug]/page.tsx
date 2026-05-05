@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation"
+import { TrophyIcon } from "lucide-react"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
@@ -76,6 +79,9 @@ export default async function TournamentDetailPage({ params, searchParams }: Pag
           </Badge>
           {location && <Badge variant="soft">{location}</Badge>}
           <Badge variant="soft">{tournament.host.name}</Badge>
+          <Button variant="ghost" size="sm" asChild prefix={<TrophyIcon className="size-4" />}>
+            <Link href={`/tournaments/${slug}/results`}>View Results</Link>
+          </Button>
         </Stack>
       </Section>
 

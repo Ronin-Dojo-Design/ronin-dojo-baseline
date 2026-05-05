@@ -243,31 +243,6 @@ Three sections:
 | SESSION_0038_TASK_03 | SESSION_0038 | School operations | Cody | Admin lead create + edit forms | Create/edit leads from admin using shared form (RHF + Zod) | planned | — |
 | SESSION_0038_TASK_04 | SESSION_0038 | School operations | Cody | Lead detail: status transitions + follow-up panel | Full lead lifecycle operable from admin detail page | planned | — |
 | SESSION_0038_TASK_05 | SESSION_0038 | School operations | Cody + Doug | Public lead capture + smoke test | End-to-end lifecycle: public form → admin conversion → smoke test passes | planned | — |
-| SESSION_0058_TASK_01 | SESSION_0058 | P0–P2 remediation | Cody | Tournament registration snapshot fields | `snapshotRankName` + `snapshotOrgName` populated in free and paid paths | landed | — |
-| SESSION_0058_TASK_02 | SESSION_0058 | P0–P2 remediation | Doug | PricingPlanActions type investigation | Investigated and closed as INVALID — structural typing covers it | landed | — |
-| SESSION_0058_TASK_03 | SESSION_0058 | P0–P2 remediation | Cody | Admin auth HOC hardening (D-013) | `redirect("/")` → `notFound()` per auth.md | landed | — |
-| SESSION_0059_TASK_01 | SESSION_0059 | P0–P2 remediation | Cody | Cache pattern upgrade (D-005) | Public queries use `"use cache"` + `cacheTag` + `cacheLife` | landed | — |
-| SESSION_0059_TASK_02 | SESSION_0059 | P0–P2 remediation | Cody | D-011 close | Drift register updated, evidence recorded | landed | — |
-| SESSION_0059_TASK_03 | SESSION_0059 | P0–P2 remediation | Cody | Enrollment Passport assertion | `assertUserHasPassport` added to `enrollInProgram` + `joinProgramWaitlist` | landed | — |
-| SESSION_0060_TASK_01 | SESSION_0060 | Hostile-close review | Doug | Cross-session hostile-close audit | 6 P1 admin brand-scoping gaps found; D-006/D-010 closed; launch readiness assessed | landed | SESSION_0060_REVIEW_01 |
-| SESSION_0063_TASK_01 | SESSION_0063 | Backend wiring | Cody | SubscriptionTier admin CRUD (server) | actions, queries, schema — brand-scoped, follows entitlements pattern | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_02 | SESSION_0063 | Backend wiring | Cody | SubscriptionTier admin pages | List table, create/edit forms, sidebar link | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_03 | SESSION_0063 | Backend wiring | Cody | UserBrandSubscription admin CRUD (server) | actions, queries, schema — brand-scoped | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_04 | SESSION_0063 | Backend wiring | Cody | UserBrandSubscription admin pages | List table, create/edit forms with tier selector | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_05 | SESSION_0063 | Auth hardening | Cody | Wire checkEntitlement() into tournament reg | tournament-registration entitlement gate added | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_06 | SESSION_0063 | Auth hardening | Cody | Wire isInSameBrand() into tournament reg + org join | Brand membership verified before reg/join | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_07 | SESSION_0063 | Auth hardening | Cody | Passport defensive checks | Passport required for tournament reg + org join | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0063_TASK_08 | SESSION_0063 | Performance | Cody | getUserMemberships include → select | Reduced payload — select only needed fields | landed | SESSION_0063_REVIEW_01 |
-| SESSION_0073_TASK_01 | SESSION_0073 | Core platform governance | Cody | Unclean-close recovery for SESSION_0061, 0062, 0066, 0067, 0068 | All 5 frontmatter+body Status fields = closed-unclean with reason; 6 entries logged in incidents.md | landed | SESSION_0073_REVIEW_01 |
-| SESSION_0073_TASK_02 | SESSION_0073 | Schema | Cody | Add Organization.description + revert search-organizations workaround | Migration 20260505034540 applied; payloads include description; search returns real value | landed | SESSION_0073_REVIEW_01 |
-| SESSION_0073_TASK_03 | SESSION_0073 | Directory | Cody | Dedicated member/school filter actions | filter-actions.ts exists with findMember/findSchool variants; both filter components updated | landed | SESSION_0073_REVIEW_01 |
-| SESSION_0073_TASK_04 | SESSION_0073 | Directory | Cody | DirectoryProfile slug auto-generation | lib/slug.ts + auth sign-up hook + lead conversion both call generateUniqueProfileSlug; tsc clean | landed | SESSION_0073_REVIEW_01 |
-<!-- Backfilled SESSION_0074_TASK_01 (FS-0015) -->
-| SESSION_0038_TASK_01 | SESSION_0038 | School operations | Cody | Server layer: admin queries + schemas + missing actions for leads | `server/admin/leads/{schema,queries,actions}.ts` exist following Dirstarter conventions | unknown | — |
-| SESSION_0038_TASK_02 | SESSION_0038 | School operations | Cody | Admin lead list page + DataTable | `/admin/leads` renders with filtering, sorting, pagination | unknown | — |
-| SESSION_0038_TASK_03 | SESSION_0038 | School operations | Cody | Admin lead create + edit forms (RHF + Zod) | Shared lead-form, new/page.tsx, [id]/page.tsx | unknown | — |
-| SESSION_0038_TASK_04 | SESSION_0038 | School operations | Cody | Lead detail: status transitions + follow-up panel | Full lead lifecycle operable from admin detail page | unknown | — |
-| SESSION_0038_TASK_05 | SESSION_0038 | School operations | Cody + Doug | Public lead capture + smoke test | End-to-end lifecycle: public form → admin conversion → smoke test passes | unknown | — |
 | SESSION_0038_5_TASK_01 | SESSION_0038.5 | School operations | Cody | Public lead capture: publicActionClient + createPublicLead with IP rate limit | publicActionClient exists; LeadCaptureForm uses it; 5/hour IP rate limit | unknown | — |
 | SESSION_0038_5_TASK_02 | SESSION_0038.5 | School operations | Cody | Add Leads sidebar nav entry | components/admin/sidebar.tsx contains Leads with ContactIcon | unknown | — |
 | SESSION_0038_5_TASK_03 | SESSION_0038.5 | School operations | Cody | Brand scoping on findLeads + findLeadById | getRequestBrand wired into both queries | unknown | — |

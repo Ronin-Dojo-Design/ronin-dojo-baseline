@@ -13,7 +13,14 @@ export default withAdminPage(async ({ params }) => {
     where: { id: bracketId },
     include: {
       division: {
-        select: { name: true, tournamentDisciplineId: true },
+        select: {
+          name: true,
+          tournamentDisciplineId: true,
+          ruleSet: { select: { id: true, name: true, scoringMethod: true } },
+          tournamentDiscipline: {
+            select: { ruleSet: { select: { id: true, name: true, scoringMethod: true } } },
+          },
+        },
       },
       matches: {
         orderBy: [{ roundNumber: "asc" }, { matchNumber: "asc" }],
@@ -41,6 +48,10 @@ export default withAdminPage(async ({ params }) => {
     return notFound()
   }
 
+  // Resolve rule set: division-level overrides discipline-level
+  const ruleSet = bracket.division.ruleSet ?? bracket.division.tournamentDiscipline.ruleSet ?? null
+  const scoringMethod = ruleSet?.scoringMethod ?? "POINTS"
+
   return (
     <Wrapper size="md" gap="sm">
       <div className="flex items-center justify-between">
@@ -54,7 +65,7 @@ export default withAdminPage(async ({ params }) => {
           ← Back to Tournament
         </Link>
       </div>
-      <BracketViewer bracket={bracket} />
+      <BracketViewer bracket={bracket} scoringMethod={scoringMethod} />
     </Wrapper>
   )
 })

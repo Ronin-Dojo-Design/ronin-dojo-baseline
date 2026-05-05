@@ -5,7 +5,7 @@ type: concept
 status: active
 created: 2026-05-05
 updated: 2026-05-05
-last_agent: copilot-session-0074
+last_agent: copilot-session-0078
 feature_area: tournament-ops
 key_models:
   - Tournament
@@ -62,6 +62,7 @@ Single lookup page for the tournament-ops feature lane. Prevents the SESSION_007
 | SESSION_0051 | Component inventory audit (L1 violations documented) |
 | SESSION_0052 | L1 refactor: divisions-editor, registrations-table, tournament-card, tournament admin scaffolding |
 | SESSION_0058 | Registration snapshot fields (snapshotRankName, snapshotOrgName), admin auth HOC hardening |
+| SESSION_0078 | Public results page, RuleSet→Division wiring, 4-strategy seeding algorithm (17 tests) |
 
 ## Shipped surfaces
 
@@ -112,12 +113,12 @@ Single lookup page for the tournament-ops feature lane. Prevents the SESSION_007
 2. ~~**WeighInRecord workflow**~~ ✅ Panel built (SESSION_0076), embedded on registration detail (SESSION_0077)
 3. ~~**MatAssignment UI**~~ ✅ Done (SESSION_0077) — panel on tournament detail page
 4. ~~**FightRecord publication**~~ ✅ Done (SESSION_0077) — publish from completed matches, upserts W/L/D
-5. ~~**RuleSet CRUD + assignment**~~ ✅ CRUD done (SESSION_0075 + SESSION_0076) — wire into match scoring TBD
-6. **Tournament results page** — public bracket results, medal standings
+5. ~~**RuleSet CRUD + assignment**~~ ✅ CRUD done (SESSION_0075 + SESSION_0076), wired to Division + scoring (SESSION_0078)
+6. ~~**Tournament results page**~~ ✅ Done (SESSION_0078) — public bracket results, medal standings at `/tournaments/[slug]/results`
 7. **Integration tests** — registration capacity race conditions, cross-brand isolation
-8. **Seeding algorithm** — rank-based seeding for bracket generation
+8. ~~**Seeding algorithm**~~ ✅ Done (SESSION_0078) — 4 strategies: registration order, tournament ranking, martial arts rank, manual. 17 unit tests.
 9. ~~**Registration detail page**~~ ✅ Done (SESSION_0077) — overview, entries, WeighIn panel
-10. **RuleSet → Division wiring** — assign rule sets to divisions, enforce during match scoring
+10. ~~**RuleSet → Division wiring**~~ ✅ Done (SESSION_0078) — `ruleSetId` on Division, scoring method enforcement, UI badge
 
 ## Key decisions
 

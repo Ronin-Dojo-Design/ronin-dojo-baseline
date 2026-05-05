@@ -692,6 +692,13 @@ enum ScoringMethod {
   CUSTOM
 }
 
+enum SeedingMethod {
+  REGISTRATION_ORDER
+  TOURNAMENT_RANKING
+  MARTIAL_ARTS_RANK
+  MANUAL
+}
+
 enum MatAssignmentStatus {
   PENDING
   ACTIVE
@@ -1800,6 +1807,9 @@ model Division {
   rankMax   Rank?   @relation("DivisionRankMax", fields: [rankMaxId], references: [id])
   rankMaxId String?
 
+  ruleSet   RuleSet? @relation("DivisionRuleSet", fields: [ruleSetId], references: [id])
+  ruleSetId String?
+
   entries          RegistrationEntry[]
   staffAssignments TournamentStaffAssignment[]
   brackets         Bracket[]
@@ -2525,6 +2535,7 @@ model RuleSet {
   disciplineId String?
 
   tournamentDisciplines TournamentDiscipline[]
+  divisions             Division[]             @relation("DivisionRuleSet")
 
   @@unique([name, brand])
   @@index([brand])

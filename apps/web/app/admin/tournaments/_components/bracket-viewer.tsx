@@ -102,12 +102,17 @@ const STATUS_TOOLTIPS: Record<string, string> = {
 
 function ScoreMatchDialog({
   match,
+  scoringMethod,
   children,
 }: {
   match: MatchWithCompetitors
+  scoringMethod: string
   children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
+
+  // Default result type based on scoring method
+  const defaultResult = scoringMethod === "TEN_POINT_MUST" ? "WIN_DECISION" : "WIN_POINTS"
 
   const form = useForm<ScoreMatchInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 .default() output type mismatch with RHF resolver
@@ -115,7 +120,7 @@ function ScoreMatchDialog({
     defaultValues: {
       matchId: match.id,
       winnerEntryId: "",
-      result: "WIN_POINTS",
+      result: defaultResult,
       notes: "",
     },
   })
@@ -354,7 +359,7 @@ function CompetitorRow({
 // Match card
 // -----------------------------------------------------------------------------
 
-function MatchCard({ match }: { match: MatchWithCompetitors }) {
+function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scoringMethod: string }) {
   const canScore =
     match.status === "SCHEDULED" || match.status === "IN_PROGRESS"
   const isBye = match.status === "BYE"
@@ -412,7 +417,7 @@ function MatchCard({ match }: { match: MatchWithCompetitors }) {
         )}
 
         {canScore && match.competitors.length === 2 && (
-          <ScoreMatchDialog match={match}>
+          <ScoreMatchDialog match={match} scoringMethod={scoringMethod}>
             <Button variant="secondary" size="sm">
               Score
             </Button>
@@ -427,7 +432,7 @@ function MatchCard({ match }: { match: MatchWithCompetitors }) {
 // Bracket viewer (round-by-round columns)
 // -----------------------------------------------------------------------------
 
-export function BracketViewer({ bracket }: { bracket: BracketWithMatches }) {
+export function BracketViewer({ bracket, scoringMethod = "POINTS" }: { bracket: BracketWithMatches; scoringMethod?: string }) {
   // Group matches by round
   const matchesByRound = new Map<number, MatchWithCompetitors[]>()
   for (const match of bracket.matches) {
@@ -458,7 +463,7 @@ export function BracketViewer({ bracket }: { bracket: BracketWithMatches }) {
               {roundLabel(roundNum)}
             </div>
             {matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
+              <MatchCard key={match.id} match={match} scoringMethod={scoringMethod} />
             ))}
           </div>
         ))}

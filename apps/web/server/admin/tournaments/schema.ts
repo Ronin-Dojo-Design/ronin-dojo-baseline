@@ -6,7 +6,7 @@ import {
   type inferParserType,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Tournament, type TournamentRole, type RuleSet, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod } from "~/.generated/prisma/browser"
+import { type Tournament, type TournamentRole, type RuleSet, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod, SeedingMethod } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 // -----------------------------------------------------------------------------
@@ -81,6 +81,7 @@ export const divisionSchema = z.object({
   roleRequiredId: z.string().min(1, "Role is required"),
   rankMinId: z.string().optional().or(z.literal("")),
   rankMaxId: z.string().optional().or(z.literal("")),
+  ruleSetId: z.string().optional().or(z.literal("")),
 })
 
 export type DivisionSchema = z.infer<typeof divisionSchema>
@@ -180,6 +181,11 @@ export type TournamentFilterParams = inferParserType<typeof tournamentFilterPara
 export const generateBracketSchema = z.object({
   divisionId: z.string().min(1, "Division ID is required"),
   bracketName: z.string().optional(),
+  seedingMethod: z.enum(SeedingMethod).default("REGISTRATION_ORDER"),
+  /** For MANUAL seeding: array of { entryId, seed } pairs */
+  manualSeeds: z
+    .array(z.object({ entryId: z.string(), seed: z.number().int().min(1) }))
+    .optional(),
 })
 
 export type GenerateBracketInput = z.infer<typeof generateBracketSchema>

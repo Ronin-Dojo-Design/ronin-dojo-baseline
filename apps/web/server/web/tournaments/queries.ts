@@ -63,3 +63,94 @@ export const findTournamentBySlug = async (slug: string, brand: Brand) => {
     select: tournamentDetailPayload,
   })
 }
+
+export const findTournamentResults = async (slug: string, brand: Brand) => {
+  "use cache"
+
+  cacheTag(`tournament-results-${slug}`)
+  cacheLife("minutes")
+
+  const tournament = await db.tournament.findFirst({
+    where: { slug, brand, status: "PUBLISHED" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      startDate: true,
+      endDate: true,
+      venueName: true,
+      venueCity: true,
+      venueRegion: true,
+      host: { select: { name: true } },
+      disciplines: {
+        select: {
+          id: true,
+          discipline: { select: { id: true, name: true, slug: true } },
+          rulesetName: true,
+          divisions: {
+            orderBy: { sortOrder: "asc" as const },
+            select: {
+              id: true,
+              name: true,
+              format: true,
+              gender: true,
+              brackets: {
+                select: {
+                  id: true,
+                  name: true,
+                  matches: {
+                    where: { status: "COMPLETED" },
+                    orderBy: [{ roundNumber: "desc" as const }, { matchNumber: "asc" as const }],
+                    select: {
+                      id: true,
+                      roundNumber: true,
+                      matchNumber: true,
+                      status: true,
+                      result: true,
+                      winnerEntryId: true,
+                      competitors: {
+                        orderBy: { slot: "asc" as const },
+                        select: {
+                          id: true,
+                          slot: true,
+                          seed: true,
+                          registrationEntry: {
+                            select: {
+                              id: true,
+                              registration: {
+                                select: {
+                                  user: {
+                                    select: {
+                                      id: true,
+                                      name: true,
+                                      passport: {
+                                        select: { displayName: true },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                              representingMembership: {
+                                select: {
+                                  organization: {
+                                    select: { name: true },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return tournament
+}
