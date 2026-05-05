@@ -131,7 +131,7 @@ Wire slug links from member-card/school-card to detail pages; fix all pre-existi
 | Review & Recommend | Next session goal written: yes — SESSION_0073: Governance + Gap Remediation |
 | Memory sweep | Key learning: run full `tsc --noEmit` every session; 5 unclosed sessions need recovery |
 | Next session unblock check | Unblocked |
-| Git hygiene | Pending — see below |
+| Git hygiene | Branch: main; single worktree; 17 modified + 1 new file staged; no secrets/env; committed, push pending user auth |
 
 ## Next session
 
