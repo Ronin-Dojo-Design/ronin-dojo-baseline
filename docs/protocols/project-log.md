@@ -430,6 +430,9 @@ Three sections:
 | SESSION_0083_TASK_02 | SESSION_0083 | Tournament ops (hardening) | Cody (Claude) | Capacity race test — 1 slot remaining, users B vs C parallel via AsyncLocalStorage | Exactly one call returns `data.type === "free"`, one returns `serverError` matching `/at capacity/`; final ACTIVE count = 1; 5/5 stable runs | landed | SESSION_0083_REVIEW_01 |
 | SESSION_0083_TASK_03 | SESSION_0083 | Tournament ops (hardening) | Cody (Claude) | Capacity race test — division pre-filled by user A, B vs C parallel | Both callers return `serverError` matching `/at capacity/`; final ACTIVE count unchanged at 1; 5/5 stable runs | landed | SESSION_0083_REVIEW_01 |
 | SESSION_0083_TASK_04 | SESSION_0083 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0083 closed-full with reflections + evidence artifact | landed | SESSION_0083_REVIEW_01 |
+| SESSION_0084_TASK_01 | SESSION_0084 | Tournament ops (hardening) | Cody (Claude) | Stripe webhook test harness — mock `stripe.webhooks.constructEvent` + `stripe.checkout.sessions.create`; helper synthesizes `checkout.session.completed` events with metadata mirroring `register.ts` (`tournamentId`, `userId`, `divisionIds`, `roleId`, `representingMembershipId`); smoke test asserts one POST → one PAID `Registration` with ACTIVE entries | Webhook test file compiles; smoke run lands a single PAID Registration end-to-end against the dev DB; reruns clean (5/5 stable) | landed | SESSION_0084_REVIEW_01 |
+| SESSION_0084_TASK_02 | SESSION_0084 | Tournament ops (hardening) | Cody (Claude) | Paid-path capacity oversubscription proof — sequential webhook POSTs for distinct users against the same `capacity=1` division | Test PASSES asserting current (broken) behavior: 2 ACTIVE entries on `capacity=1` division → P0 architectural finding confirmed. SESSION_0085 Petey plan flagged in Next session; assertion to flip on fix | landed | SESSION_0084_REVIEW_01 |
+| SESSION_0084_TASK_03 | SESSION_0084 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean (3 pre-existing unrelated errors unchanged); 5/5 stable test runs; wiki-lint 0 errors / 3 pre-existing warnings (after deleting `docs/graphify-out/`); SESSION_0084 closed-full with reflections + evidence + next-session unblock | landed | SESSION_0084_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -855,3 +858,29 @@ Three integration tests in `apps/web/server/web/tournaments/register.concurrency
 All 4 tasks landed cleanly. Verification is honest: 5/5 stable runs, scoped typecheck clean (3 pre-existing unrelated errors confirmed not introduced), wiki-lint 0/3 pre-existing warnings. The Serializable transaction guarantee is proven for the free path; the paid-path gap is correctly deferred and explicitly handed off as the next session's primary deliverable. Code is merge-ready.
 
 **Kaizen triage:** Safe/security confidence is strong for the free path. Preventable slips: caught the same-user race trap before writing it; chose real fixtures over mocks before user push. Scale confidence: 100 users = 9.7, 1,000 = 9.5, 10,000 = 9.0 — bounded by the unproven paid-path window. Aggregate 9.3; proceed to next session focused on the paid flow.
+
+---
+
+### SESSION_0084_REVIEW_01 — Stripe webhook test harness + paid-path oversubscription proof (self-review)
+
+- **Reviewer:** Cody → Petey (self-review)
+- **Date:** 2026-05-06
+- **Reviewed tasks:** SESSION_0084_TASK_01, SESSION_0084_TASK_02, SESSION_0084_TASK_03
+- **Dirstarter docs check:** not applicable (test-only addition, no L1 baseline files modified)
+
+#### Scope
+
+Two integration tests in `apps/web/app/api/stripe/webhooks/route.test.ts` driving the real `POST` handler against the real dev Postgres DB with the Stripe SDK mocked (signature bypass + outbound no-ops) and `~/env` mocked via a Proxy delegating to `process.env` (workaround for t3-env caching the empty `STRIPE_WEBHOOK_SECRET=""` from local `.env`). Smoke test proves the webhook fulfills a paid Registration end-to-end. P0 oversubscription test proves `fulfillTournamentRegistration` does not enforce division capacity — two sequential webhook POSTs for distinct users against a `capacity=1` division both succeed, leaving 2 ACTIVE entries.
+
+#### Findings
+
+- **P0 — paid-path oversubscription confirmed:** `fulfillTournamentRegistration` (`apps/web/app/api/stripe/webhooks/route.ts:45–117`) checks `(tournamentId, userId)` Registration uniqueness only; division capacity is never re-checked at write time. Test asserts current behavior (`expect(activeEntries).toBe(2)`) with explicit comment naming the SESSION_0085 fix-time flip. Architectural decision (webhook re-check vs. up-front reservation) deferred to SESSION_0085 Petey plan.
+- **P2 — t3-env value caching trap:** `emptyStringAsUndefined: true` plus an empty `.env` value resolves to `undefined` and stays cached. Mutating `process.env` post-load has no effect. Workaround documented in feedback memory.
+- **P3 — `docs/graphify-out/` poisons wiki-lint:** running `graphify update docs/` writes auto-generated reports inside the docs tree, which trips wiki-lint on broken cross-references. Deleted at close; feedback memory recommends running graphify from repo root by default.
+- **P3 — sequential vs. parallel test choice:** sequential POSTs are sufficient to prove the architectural defect; race timing is not required since each webhook call sees no prior Registration for its own userId. Parallel variant deferred to SESSION_0085 (post-fix; strengthens the proof under concurrency once capacity enforcement exists).
+
+#### Verdict
+
+All 3 tasks landed cleanly. Verification is honest: 5/5 stable runs, scoped typecheck clean for the new file (3 pre-existing unrelated errors unchanged), wiki-lint 0/3 pre-existing warnings (after deleting the graphify artifact). The session's deliverable is a confirmed P0 architectural finding with a passing test that documents the bug and an explicit path to flip the assertion once SESSION_0085 lands the fix. Code is merge-ready as a "regression-proving" test.
+
+**Kaizen triage:** Safe/security confidence is degraded — the paid-path oversubscription is a real data-integrity risk for live tournaments. Preventable slips: should have audited env-access in the route's import path during pre-flight (would have surfaced the t3-env caching issue before the debug loop). Should have run graphify from repo root rather than `docs/`. Scale confidence: this finding bounds confidence at any scale until SESSION_0085 ships — 100 users could trigger it during a popular registration window; 10,000 users will. Aggregate 8.5; SESSION_0085 must be Petey-led and ship the fix before May 18 launch.
