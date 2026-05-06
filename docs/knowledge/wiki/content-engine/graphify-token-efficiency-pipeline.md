@@ -8,6 +8,7 @@ updated: 2026-05-06
 author: Brian + ChatGPT
 last_agent: codex-graphify-trial
 pairs_with:
+  - docs/runbooks/graphify-repo-memory.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/knowledge/wiki/index.md
 backlinks:

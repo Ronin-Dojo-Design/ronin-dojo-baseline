@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-06
 author: Brian + Copilot
-last_agent: codex-session-0080-review
+last_agent: codex-graphify-runbook
 ---
 
 # LLM Wiki Index
@@ -175,6 +175,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SOP — Agent Workflows and Rituals](../../runbooks/sop-agent-workflows-and-rituals.md) | runbook | active |
 | [Dev Environment](../../runbooks/dev-environment.md) | runbook | active |
 | [React to Next Component Porting Runbook](../../runbooks/react-to-next-component-porting-runbook.md) | runbook | active |
+| [Graphify Repo Memory Runbook](../../runbooks/graphify-repo-memory.md) | runbook | active |
 
 ## Code files (annotated)
 

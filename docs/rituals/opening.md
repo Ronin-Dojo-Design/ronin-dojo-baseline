@@ -4,11 +4,12 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-06
+last_agent: codex-graphify-runbook
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
+  - docs/runbooks/graphify-repo-memory.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -63,6 +64,14 @@ Don't bulk-read. Reach for these as the work surfaces a need.
 Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). Check for any `open` or `mitigated` entries in the area you're about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.
 
 Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) for open drift entries relevant to today's lane. If a drift item directly affects the task, note it in the SESSION file.
+
+### 3c. Optional Graphify check for search-heavy lanes
+
+Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/graphify-repo-memory.md) only when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, or old-monorepo mapping.
+
+If `graphify-out/GRAPH_REPORT.md` exists and is current, read its high-signal sections and run one targeted query before raw grep. Record the query and selected files in the SESSION file if Graphify changes what you open.
+
+Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
 
 ### 4. Identify ONE task for this session
 
@@ -145,6 +154,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
+- [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
 - [Project Log](../protocols/project-log.md) — unified build, task plan, and review ledger.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
