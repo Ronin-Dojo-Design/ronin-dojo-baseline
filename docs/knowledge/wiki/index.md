@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-04
+updated: 2026-05-06
 author: Brian + Copilot
-last_agent: codex-session-0033
+last_agent: codex-session-0080-review
 ---
 
 # LLM Wiki Index
@@ -42,6 +42,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Directory Monetization Roadmap](content-engine/directory-monetization-roadmap.md) | concept | active |
 | [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active |
 | [Listing Pattern Repurposing](concepts/listing-pattern-repurposing.md) | concept | active |
+| [Graphify Component Port Map](component-porting/graphify-component-port-map.md) | concept | active |
+| [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 
 ## Architecture
 
@@ -62,6 +64,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Monetization and Entitlements Spec](../../architecture/monetization-entitlements-spec.md) | file | active |
 | [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) | file | active |
 | [Security, Privacy, Payments, and Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md) | file | active |
+| [Component Porting SOP](../../architecture/component-porting-sop.md) | file | active draft |
 | [Directory Monetization Roadmap Raw Source](../../architecture/source/directory-monetization-roadmap.md) | source | active |
 | [SESSION_0029 Commerce Learning Path Raw Source](../../architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md) | source | active |
 | [SESSION_0030 CGR File System and Wiring Map Raw Source](../../architecture/source/raw/SESSION_0030_cgr_file_system_wiring_map_chatgpt_raw.md) | source | active |
@@ -139,6 +142,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
 | [Project Log](../../protocols/project-log.md) | protocol | active |
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
+| [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
@@ -170,6 +174,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |
 | [SOP — Agent Workflows and Rituals](../../runbooks/sop-agent-workflows-and-rituals.md) | runbook | active |
 | [Dev Environment](../../runbooks/dev-environment.md) | runbook | active |
+| [React to Next Component Porting Runbook](../../runbooks/react-to-next-component-porting-runbook.md) | runbook | active |
 
 ## Code files (annotated)
 
