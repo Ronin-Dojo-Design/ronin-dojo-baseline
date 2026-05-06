@@ -6,7 +6,7 @@ status: active
 created: 2026-05-06
 updated: 2026-05-06
 author: Brian + ChatGPT
-last_agent: chatgpt-hostile-review-pack
+last_agent: codex-graphify-trial
 pairs_with:
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/knowledge/wiki/index.md
@@ -48,7 +48,7 @@ A good graph/report/cache layer should answer:
 
 ```text
 .graphifyignore
-graphify_out/
+graphify-out/
   graph.html
   GRAPH_REPORT.md
   graph.json
@@ -65,7 +65,15 @@ build/
 coverage/
 .git/
 apps/web/.next/
+apps/web/.content-collections/
+apps/web/.generated/
+apps/web/public/content/
+apps/web/bun.lock
+apps/web/prisma/migrations/
 apps/mobile/.expo/
+docs/sprints/
+docs/architecture/source/
+docs/_archive/
 ```
 
 ### Pipeline
@@ -97,7 +105,7 @@ Before component porting, the agent should read:
 1. `docs/knowledge/wiki/index.md`
 2. `docs/knowledge/wiki/dirstarter-component-inventory.md`
 3. `docs/knowledge/wiki/component-porting/graphify-component-port-map.md`
-4. `graphify_out/GRAPH_REPORT.md` if present
+4. `graphify-out/GRAPH_REPORT.md` if present
 
 Only then should it open raw source files.
 
@@ -120,6 +128,32 @@ Use this page and the component port map manually.
 
 Run Graphify locally on the new repo only.
 
+Trial result, 2026-05-06:
+
+- Runtime: Python 3.14 venv under `/tmp/graphify-venv`
+- Package: `graphifyy==0.7.8`
+- Command: `/tmp/graphify-venv/bin/graphify update .`
+- Mode: AST/code update path, no LLM API key, no assistant hooks
+- Output: `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.json`, `graphify-out/graph.html`, local cache
+- Scoped result after excluding sessions/source archives: 861 files, 4,715 nodes, 8,477 edges, 378 communities
+- Benchmark: ~314,333 naive corpus tokens vs ~2,174 average graph-query tokens, about 144.6x reduction
+
+Important finding:
+
+- `graphify extract` needs an LLM API key, even for a small slice.
+- `graphify update .` can bootstrap an AST/code graph without an API key.
+- Markdown headings are extracted in this mode, but deep semantic docs/wiki extraction should be treated as a later opt-in run with an explicit backend.
+- Default graph should exclude session history and raw source archives; the first broad run produced thousands of weakly connected historical nodes.
+
+Useful local commands:
+
+```bash
+/tmp/graphify-venv/bin/graphify update .
+/tmp/graphify-venv/bin/graphify query "brand context admin authorization tournament registration" --budget 2000
+/tmp/graphify-venv/bin/graphify benchmark graphify-out/graph.json
+open graphify-out/graph.html
+```
+
 ### Phase 3 — Old monorepo + new repo dual graph
 
 Generate graphs for both repos and compare component clusters.
@@ -136,7 +170,7 @@ Make graph/report read mandatory for component-port sessions.
 ## Open Questions
 
 - Which Graphify tool/repo/version will be adopted?
-- Should graph outputs live in `docs/graphs/`, `.graphify/`, or local-only?
+- Should graph outputs stay local-only, or should a curated `GRAPH_REPORT.md` excerpt be committed?
 - Should old monorepo graph artifacts be kept outside this repo?
 - What is the smallest useful report format for Codex/Claude/ChatGPT?
 
