@@ -434,9 +434,9 @@ Three sections:
 | SESSION_0084_TASK_02 | SESSION_0084 | Tournament ops (hardening) | Cody (Claude) | Paid-path capacity oversubscription proof — sequential webhook POSTs for distinct users against the same `capacity=1` division | Test PASSES asserting current (broken) behavior: 2 ACTIVE entries on `capacity=1` division → P0 architectural finding confirmed. SESSION_0085 Petey plan flagged in Next session; assertion to flip on fix | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0084_TASK_03 | SESSION_0084 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean (3 pre-existing unrelated errors unchanged); 5/5 stable test runs; wiki-lint 0 errors / 3 pre-existing warnings (after deleting `docs/graphify-out/`); SESSION_0084 closed-full with reflections + evidence + next-session unblock | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0085_TASK_01 | SESSION_0085 | Tournament ops (hardening) | Petey (Claude) | Petey plan for paid-path capacity oversubscription fix; decide strategy (a) webhook re-check + refund vs. (b) up-front slot reservation; decompose into Cody-executable tasks; surface open decisions for Brian's go | `SESSION_0085.md` Petey plan block landed with strategy choice + 4-task breakdown + open-decisions block; project-log task plan rows appended; gate held on Brian's approval before TASK_02 | landed | — |
-| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Claude) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route.ts` updated; webhook returns 200 in all paths; rejected-create path produces a Registration row visible to admin with REFUNDED payment status; `bun tsc --noEmit` clean for the file | pending | — |
-| SESSION_0085_TASK_03 | SESSION_0085 | Tournament ops (hardening) | Cody (Claude) | Flip SESSION_0084 oversubscription test from `toBe(2)` to `toBe(1)`; assert one Registration ends CANCELLED/REFUNDED; assert `stripe.refunds.create` called exactly once with the loser's `payment_intent`; add NEW parallel-race test using `Promise.all([postWebhook, postWebhook])` to prove the fix under concurrency | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | pending | — |
-| SESSION_0085_TASK_04 | SESSION_0085 | Close | Cody → Petey (Claude) | Verification + full close: scoped typecheck, full test re-run, free-path concurrency regression check, wiki-lint, project-log review block, memory update (paid oversubscription window resolved) | Scoped typecheck clean; route.test.ts 5/5 stable; register.concurrency.test.ts unchanged; wiki-lint 0/≤3 pre-existing; SESSION_0085_REVIEW_01 in project-log; memory `project_paid_registration_oversubscription_window` flipped to "resolved" | pending | — |
+| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route.ts` updated; webhook returns 200 in all paths; rejected-create path produces a Registration row visible to admin with REFUNDED payment status; refund call happens after transaction commit and does not throw on failure | landed | SESSION_0085_REVIEW_01 |
+| SESSION_0085_TASK_03 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Flip SESSION_0084 oversubscription test from `toBe(2)` to `toBe(1)`; assert one Registration ends CANCELLED/REFUNDED; assert `stripe.refunds.create` called exactly once with the loser's `payment_intent`; add NEW parallel-race test using `Promise.all([postWebhook, postWebhook])` to prove the fix under concurrency | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | landed | SESSION_0085_REVIEW_01 |
+| SESSION_0085_TASK_04 | SESSION_0085 | Close | Cody → Petey (Codex) | Verification + full close: scoped typecheck, full test re-run, free-path concurrency regression check, wiki-lint, project-log review block, memory update (paid oversubscription window resolved) | Webhook test 5/5 stable; free-path concurrency regression passed; `bunx tsc --noEmit --pretty false` reports only pre-existing unrelated errors in 3 files; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0085_REVIEW_01 appended | landed | SESSION_0085_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -888,3 +888,34 @@ Two integration tests in `apps/web/app/api/stripe/webhooks/route.test.ts` drivin
 All 3 tasks landed cleanly. Verification is honest: 5/5 stable runs, scoped typecheck clean for the new file (3 pre-existing unrelated errors unchanged), wiki-lint 0/3 pre-existing warnings (after deleting the graphify artifact). The session's deliverable is a confirmed P0 architectural finding with a passing test that documents the bug and an explicit path to flip the assertion once SESSION_0085 lands the fix. Code is merge-ready as a "regression-proving" test.
 
 **Kaizen triage:** Safe/security confidence is degraded — the paid-path oversubscription is a real data-integrity risk for live tournaments. Preventable slips: should have audited env-access in the route's import path during pre-flight (would have surfaced the t3-env caching issue before the debug loop). Should have run graphify from repo root rather than `docs/`. Scale confidence: this finding bounds confidence at any scale until SESSION_0085 ships — 100 users could trigger it during a popular registration window; 10,000 users will. Aggregate 8.5; SESSION_0085 must be Petey-led and ship the fix before May 18 launch.
+
+---
+
+### SESSION_0085_REVIEW_01 — Paid-path capacity oversubscription fix + refund path
+
+- **Reviewer:** Cody/Petey (Codex self-review)
+- **Date:** 2026-05-06
+- **Reviewed tasks:** SESSION_0085_TASK_01, SESSION_0085_TASK_02, SESSION_0085_TASK_03, SESSION_0085_TASK_04
+- **Dirstarter docs check:** server-side Stripe webhook + Prisma transaction only; no L1 UI surfaces touched. Stripe docs checked via official docs and Dashboard Blueprints.
+
+#### Scope
+
+`fulfillTournamentRegistration` now re-checks division capacity inside a Serializable transaction at webhook fulfillment time. The first paid webhook creates a normal SUBMITTED/PAID Registration with ACTIVE entries. A later webhook for a filled division creates a CANCELLED/REFUNDED Registration with CANCELLED entries, then issues `stripe.refunds.create({ payment_intent })` after the DB transaction commits. Refund failures log context and do not throw, preserving Stripe webhook 200 behavior.
+
+#### Findings
+
+- **P0 resolved — paid-path oversubscription:** SESSION_0084's confirmed 2 ACTIVE entries on capacity=1 is fixed. Sequential and parallel webhook tests now prove final ACTIVE count = 1.
+- **P2 deferred — rejected-paid customer UI smoke:** Database state and refund call are proven, but user-facing copy/success-banner handling for the refunded customer remains TASK_05 for SESSION_0086.
+- **P3 process note — temporary parallel worktrees:** Codex used two disjoint worktrees/subagents after user direction. Both worktrees lacked dependencies, so worker-local verification was limited; final verification ran in the primary checkout.
+
+#### Verification
+
+- `cd apps/web && bun test app/api/stripe/webhooks/route.test.ts` — 3 pass.
+- 5 consecutive `bun test app/api/stripe/webhooks/route.test.ts` runs — 5/5 stable.
+- `cd apps/web && bun test server/web/tournaments/register.concurrency.test.ts` — 3 pass.
+- `cd apps/web && bunx tsc --noEmit --pretty false` — failed only on pre-existing unrelated errors in `app/admin/tournaments/roles/[id]/page.tsx`, `app/admin/tournaments/rule-sets/_components/rule-set-form.tsx`, and `server/web/categories/queries.ts`.
+- `bun run wiki:lint` — 0 errors, 3 pre-existing orphan warnings.
+
+#### Verdict
+
+SESSION_0085 lands the launch-window strategy (a) cleanly: no schema migration, no new enum values, webhook-local capacity enforcement, and refund via PaymentIntent. Score: 9.6/10. The only material follow-up is SESSION_0086 TASK_05 for refunded-paid UI smoke and cancel/refund regression polish.

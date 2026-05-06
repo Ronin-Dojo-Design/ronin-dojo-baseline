@@ -12,8 +12,9 @@
  * TASK_01 — smoke: one synthesized `checkout.session.completed` event →
  * exactly one PAID Registration with one ACTIVE entry.
  *
- * TASK_02 (later commit) will race two synthesized events against the same
- * `capacity = 1` division and assert what the webhook actually does.
+ * SESSION_0085 flips the paid-capacity proof to assert the fixed behavior:
+ * only one ACTIVE entry is written and the rejected paid registration is
+ * marked CANCELLED/REFUNDED with a Stripe refund request.
  *
  * Run: cd apps/web && bun test app/api/stripe/webhooks/route.test.ts
  */
@@ -21,6 +22,8 @@
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 import type Stripe from "stripe"
+
+const createRefundMock = mock(async () => ({}))
 
 // -----------------------------------------------------------------------------
 // Module mocks — must be installed before importing `route.ts`.
@@ -63,7 +66,7 @@ mock.module("~/services/stripe", () => ({
       retrieve: async () => ({ metadata: {} }),
     },
     refunds: {
-      create: async () => ({}),
+      create: createRefundMock,
     },
   },
 }))
@@ -288,6 +291,8 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
+  createRefundMock.mockClear()
+
   if (!fx) return
   await db.registrationEntry.deleteMany({ where: { divisionId: fx.divisionId } })
   await db.registration.deleteMany({ where: { tournamentId: fx.tournamentId } })
@@ -482,30 +487,13 @@ describe("stripe webhook — tournament registration fulfillment (smoke)", () =>
     expect(registration.entries).toHaveLength(1)
     expect(registration.entries[0]!.divisionId).toBe(fx.divisionId)
     expect(registration.entries[0]!.status).toBe("ACTIVE")
+    expect(createRefundMock).not.toHaveBeenCalled()
   })
 })
 
-// SESSION_0084 TASK_02 — paid-path capacity oversubscription proof.
-//
-// Architectural finding flagged in SESSION_0083: `register.ts` checks division
-// capacity inside a Serializable transaction at *checkout-create* time, but the
-// Registration row is written later by `fulfillTournamentRegistration` in the
-// webhook. The webhook checks for existing Registration uniqueness on
-// `(tournamentId, userId)` only — it does NOT re-check division capacity.
-//
-// This test documents the current (broken) behavior: two paid checkouts for
-// the same `capacity=1` division can both fulfill, leaving 2 ACTIVE entries.
-//
-// Sequential POSTs are sufficient to prove the defect; race timing is not
-// required (each call sees no prior Registration for its own userId, so each
-// independently writes). Adding a parallel race would prove the same fact.
-//
-// Once SESSION_0085 lands the fix (re-check capacity in the webhook, or move
-// Registration creation into the checkout-create transaction), the final
-// assertion must flip from 2 → 1, and one of the two POSTs should surface a
-// failure (likely 409 + a non-OK response body, or a REJECTED Registration).
-describe("stripe webhook — paid-path capacity oversubscription (P0; current behavior)", () => {
-  it("two sequential webhooks for the same capacity=1 division → 2 ACTIVE entries (BUG)", async () => {
+// SESSION_0085 TASK_03 — paid-path capacity enforcement.
+describe("stripe webhook — paid-path capacity enforcement", () => {
+  it("two sequential webhooks for the same capacity=1 division → winner stays active, loser is refunded", async () => {
     const sessionB = makeTournamentRegistrationCheckoutSession({
       tournamentId: fx.tournamentId,
       userId: fx.racerB.userId,
@@ -528,7 +516,6 @@ describe("stripe webhook — paid-path capacity oversubscription (P0; current be
     const responseB = await postWebhook(makeCheckoutSessionCompletedEvent(sessionB))
     const responseC = await postWebhook(makeCheckoutSessionCompletedEvent(sessionC))
 
-    // The webhook is currently fail-open: both POSTs return 200.
     expect(responseB.status).toBe(200)
     expect(responseC.status).toBe(200)
 
@@ -538,16 +525,87 @@ describe("stripe webhook — paid-path capacity oversubscription (P0; current be
       orderBy: { submittedAt: "asc" },
     })
     expect(registrations).toHaveLength(2)
-    expect(registrations.every(r => r.paymentStatus === "PAID")).toBe(true)
+    expect(
+      registrations.filter(r => r.paymentStatus === "PAID" && r.status === "SUBMITTED"),
+    ).toHaveLength(1)
+    expect(
+      registrations.filter(r => r.paymentStatus === "REFUNDED" && r.status === "CANCELLED"),
+    ).toHaveLength(1)
+
+    const winner = registrations.find(r => r.userId === fx.racerB.userId)
+    const loser = registrations.find(r => r.userId === fx.racerC.userId)
+    expect(winner?.paymentStatus).toBe("PAID")
+    expect(winner?.status).toBe("SUBMITTED")
+    expect(winner?.entries).toHaveLength(1)
+    expect(winner?.entries[0]?.status).toBe("ACTIVE")
+    expect(loser?.paymentStatus).toBe("REFUNDED")
+    expect(loser?.status).toBe("CANCELLED")
+    expect(loser?.entries).toHaveLength(1)
+    expect(loser?.entries[0]?.status).toBe("CANCELLED")
 
     const activeEntries = await db.registrationEntry.count({
       where: { divisionId: fx.divisionId, status: "ACTIVE" },
     })
+    expect(activeEntries).toBe(1)
 
-    // BUG: division has capacity=1 but 2 ACTIVE entries got written.
-    // SESSION_0085 fix must flip this assertion to `toBe(1)` and assert that
-    // exactly one of the two webhook responses surfaces the rejected
-    // registration (or that one Registration ends up REJECTED/REFUNDED).
-    expect(activeEntries).toBe(2)
+    expect(createRefundMock).toHaveBeenCalledTimes(1)
+    expect(createRefundMock.mock.calls[0]?.[0]).toEqual({
+      payment_intent: "pi_test_oversub_C",
+    })
+  })
+
+  it("parallel webhooks for the same capacity=1 division → one active entry and one refunded loser", async () => {
+    const sessionB = makeTournamentRegistrationCheckoutSession({
+      tournamentId: fx.tournamentId,
+      userId: fx.racerB.userId,
+      divisionIds: [fx.divisionId],
+      roleId: fx.roleId,
+      amountTotalCents: fx.divisionFeeCents,
+      sessionId: "cs_test_oversub_parallel_B",
+      paymentIntentId: "pi_test_oversub_parallel_B",
+    })
+    const sessionC = makeTournamentRegistrationCheckoutSession({
+      tournamentId: fx.tournamentId,
+      userId: fx.racerC.userId,
+      divisionIds: [fx.divisionId],
+      roleId: fx.roleId,
+      amountTotalCents: fx.divisionFeeCents,
+      sessionId: "cs_test_oversub_parallel_C",
+      paymentIntentId: "pi_test_oversub_parallel_C",
+    })
+
+    const [responseB, responseC] = await Promise.all([
+      postWebhook(makeCheckoutSessionCompletedEvent(sessionB)),
+      postWebhook(makeCheckoutSessionCompletedEvent(sessionC)),
+    ])
+
+    expect(responseB.status).toBe(200)
+    expect(responseC.status).toBe(200)
+
+    const registrations = await db.registration.findMany({
+      where: { tournamentId: fx.tournamentId },
+      include: { entries: true },
+    })
+    expect(registrations).toHaveLength(2)
+
+    const activeEntries = await db.registrationEntry.count({
+      where: { divisionId: fx.divisionId, status: "ACTIVE" },
+    })
+    expect(activeEntries).toBe(1)
+
+    const cancelledRegistrations = registrations.filter(
+      r => r.paymentStatus === "REFUNDED" && r.status === "CANCELLED",
+    )
+    expect(cancelledRegistrations).toHaveLength(1)
+
+    const cancelledRegistration = cancelledRegistrations[0]!
+    expect(cancelledRegistration.entries).toHaveLength(1)
+    expect(cancelledRegistration.entries[0]?.status).toBe("CANCELLED")
+    expect(cancelledRegistration.stripePaymentIntentId).toBeTruthy()
+
+    expect(createRefundMock).toHaveBeenCalledTimes(1)
+    expect(createRefundMock.mock.calls[0]?.[0]).toEqual({
+      payment_intent: cancelledRegistration.stripePaymentIntentId,
+    })
   })
 })

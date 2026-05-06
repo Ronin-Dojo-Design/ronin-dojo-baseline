@@ -49,6 +49,10 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
   if (!tournamentId || !userId || !divisionIds || !roleId) return
 
   const parsedDivisionIds: string[] = JSON.parse(divisionIds)
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null
 
   // Upsert: if registration exists (race condition), just update payment status
   const existing = await db.registration.findUnique({
@@ -62,10 +66,7 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
         paymentStatus: "PAID",
         status: "SUBMITTED",
         submittedAt: new Date(),
-        stripePaymentIntentId:
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : session.payment_intent?.id ?? null,
+        stripePaymentIntentId: paymentIntentId,
       },
     })
     return
@@ -73,48 +74,124 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
 
   const totalFeeCents = session.amount_total ?? 0
 
-  // Snapshot the user's current rank and org for registration entries
-  let snapshotRankName: string | null = null
-  let snapshotOrgName: string | null = null
+  const result = await db.$transaction(
+    async (tx) => {
+      const divisions = await tx.division.findMany({
+        where: { id: { in: parsedDivisionIds } },
+        include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
+      })
 
-  if (representingMembershipId) {
-    const membership = await db.membership.findUnique({
-      where: { id: representingMembershipId },
-      select: {
-        rank: { select: { name: true } },
-        organization: { select: { name: true } },
-      },
-    })
+      if (divisions.length !== parsedDivisionIds.length) {
+        throw new Error("One or more selected divisions not found")
+      }
 
-    if (membership) {
-      snapshotRankName = membership.rank?.name ?? null
-      snapshotOrgName = membership.organization?.name ?? null
-    }
-  }
+      // Snapshot the user's current rank and org for registration entries
+      let snapshotRankName: string | null = null
+      let snapshotOrgName: string | null = null
 
-  await db.registration.create({
-    data: {
+      if (representingMembershipId) {
+        const membership = await tx.membership.findUnique({
+          where: { id: representingMembershipId },
+          select: {
+            rank: { select: { name: true } },
+            organization: { select: { name: true } },
+          },
+        })
+
+        if (membership) {
+          snapshotRankName = membership.rank?.name ?? null
+          snapshotOrgName = membership.organization?.name ?? null
+        }
+      }
+
+      const isAtCapacity = divisions.some(
+        (division) =>
+          division.capacity !== null &&
+          division.capacity > 0 &&
+          division._count.entries >= division.capacity,
+      )
+
+      if (isAtCapacity) {
+        const registration = await tx.registration.create({
+          data: {
+            tournamentId,
+            userId,
+            status: "CANCELLED",
+            paymentStatus: "REFUNDED",
+            totalFeeCents,
+            submittedAt: new Date(),
+            stripePaymentIntentId: paymentIntentId,
+            entries: {
+              create: parsedDivisionIds.map((divisionId) => ({
+                divisionId,
+                tournamentRoleId: roleId,
+                representingMembershipId: representingMembershipId || null,
+                snapshotRankName,
+                snapshotOrgName,
+                status: "CANCELLED",
+              })),
+            },
+          },
+        })
+
+        return {
+          type: "refund-needed" as const,
+          registrationId: registration.id,
+          paymentIntentId,
+        }
+      }
+
+      const registration = await tx.registration.create({
+        data: {
+          tournamentId,
+          userId,
+          status: "SUBMITTED",
+          paymentStatus: "PAID",
+          totalFeeCents,
+          submittedAt: new Date(),
+          stripePaymentIntentId: paymentIntentId,
+          entries: {
+            create: parsedDivisionIds.map((divisionId) => ({
+              divisionId,
+              tournamentRoleId: roleId,
+              representingMembershipId: representingMembershipId || null,
+              snapshotRankName,
+              snapshotOrgName,
+            })),
+          },
+        },
+      })
+
+      return {
+        type: "registered" as const,
+        registrationId: registration.id,
+      }
+    },
+    { isolationLevel: "Serializable" },
+  )
+
+  if (result.type !== "refund-needed") return
+
+  if (!result.paymentIntentId) {
+    console.log("Tournament registration rejected at capacity but no payment intent found", {
+      registrationId: result.registrationId,
       tournamentId,
       userId,
-      status: "SUBMITTED",
-      paymentStatus: "PAID",
-      totalFeeCents,
-      submittedAt: new Date(),
-      stripePaymentIntentId:
-        typeof session.payment_intent === "string"
-          ? session.payment_intent
-          : session.payment_intent?.id ?? null,
-      entries: {
-        create: parsedDivisionIds.map((divisionId) => ({
-          divisionId,
-          tournamentRoleId: roleId,
-          representingMembershipId: representingMembershipId || null,
-          snapshotRankName,
-          snapshotOrgName,
-        })),
-      },
-    },
-  })
+    })
+    return
+  }
+
+  try {
+    await stripe.refunds.create({ payment_intent: result.paymentIntentId })
+  } catch (error) {
+    console.log("Failed to refund at-capacity tournament registration", {
+      error,
+      registrationId: result.registrationId,
+      paymentIntentId: result.paymentIntentId,
+      tournamentId,
+      userId,
+    })
+  }
 }
 
 /**

@@ -2,10 +2,10 @@
 title: "SESSION 0085 — Paid-path capacity oversubscription fix (Petey plan + Cody implementation)"
 slug: session-0085
 type: session
-status: in-progress
+status: closed-full
 created: 2026-05-06
 updated: 2026-05-06
-last_agent: claude-session-0085
+last_agent: codex-session-0085
 sprint: S3
 pairs_with:
   - docs/sprints/SESSION_0084.md
@@ -21,11 +21,11 @@ backlinks:
 
 ### Operator
 
-Brian Scott + Claude (Petey → Cody)
+Brian Scott + Claude (Petey plan) + Codex (Cody implementation)
 
 ### Status
 
-in-progress
+closed-full
 
 ### Goal
 
@@ -67,8 +67,11 @@ Close the paid-path capacity oversubscription window confirmed in SESSION_0084. 
 ### Branch + tree state
 
 - Branch: `main`
-- Tree: clean (HEAD `f175418`)
-- Worktree: `wt-tournaments` lane, **primary repo, no worktree split required.** The fix is one production-code file (route.ts) plus its colocated test (route.test.ts). Both live in community 138; there is no parallel work that benefits from isolation. (Per `feedback_subagent_dispatch`: budget is per-window; a single coupled change on two files does not justify worktree overhead.)
+- Tree at Codex execution start: clean at HEAD `d7607a9`
+- Worktree plan changed during execution: Brian explicitly asked to assign subagents/worktrees if possible. Codex created two temporary worktrees:
+  - `/Users/brianscott/dev/ronin-dojo-app-wt-0085-route` for `route.ts`
+  - `/Users/brianscott/dev/ronin-dojo-app-wt-0085-tests` for `route.test.ts`
+  Both patches were integrated into the primary checkout; temporary worktrees remain with duplicate uncommitted patches and can be removed after review.
 
 ---
 
@@ -193,42 +196,159 @@ If TASK_03's parallel-race test reveals a different concurrency defect (e.g., th
 
 ---
 
-## Pre-flight (Cody — to be filled at TASK_02 start)
+## Pre-flight (Cody)
 
-Cody must produce a `## Pre-flight output` block here before editing route.ts. Required fields per `cody-preflight.md` Schema/Backend track:
+### Pre-flight output — TASK_02 start
 
-- **Existing-schema spot-check:** paste from `prisma/schema.prisma` — `RegistrationStatus`, `PaymentStatus`, `EntryStatus` enum values verbatim.
-- **Module-import spot-check:** paste the actual signature of `stripe.refunds.create` from `~/services/stripe` (or its type from `@types/stripe`).
-- **Pattern fidelity check:** paste lines `register.ts:219–222` (the canonical refund call) to confirm the shape is being reused, not reinvented.
+**Existing-schema spot-check (`apps/web/prisma/schema.prisma`):**
 
-This block stays empty until Cody starts TASK_02.
+```prisma
+enum RegistrationStatus {
+  STARTED
+  SUBMITTED
+  APPROVED
+  WAITLISTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIAL
+}
+
+enum EntryStatus {
+  ACTIVE
+  CANCELLED
+}
+```
+
+**Module-import spot-check (`apps/web/services/stripe.ts`):**
+
+```ts
+export const stripe = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-08-27.basil",
+    })
+  : (null as unknown as Stripe)
+```
+
+Stripe dashboard Blueprint URL check: `https://dashboard.stripe.com/acct_1T065aPm73j3q757/workbench/blueprints` was accessible after Brian logged in. Searches for `inventory`, `limited inventory`, `refund`, and `idempotent` returned no targeted Blueprints. The available "Accept a one-time payment with Checkout" Blueprint confirms the existing flow shape: create product/price, create a Checkout Session in `payment` mode, then handle a `checkout.session.completed` webhook. Stripe integration recommender returned transient errors 3/3 attempts; fallback is official Stripe docs/API search.
+
+Stripe docs/API check:
+
+- [Manage limited inventory](https://docs.stripe.com/payments/checkout/managing-limited-inventory) recommends the reservation-style pattern for limited inventory: shorten/expire Checkout Sessions and listen for `checkout.session.expired` to return reserved inventory. This validates strategy (b) as Stripe's canonical inventory-reservation pattern but does not contradict the no-migration launch-window strategy (a).
+- [Checkout fulfillment](https://docs.stripe.com/checkout/fulfillment) says the fulfillment function must be safe if called more than once, including concurrently, for the same Checkout Session, and should record fulfillment status. This supports the idempotent transaction shape and keeping outbound refund work outside the DB transaction.
+- [Refunds API](https://docs.stripe.com/api/refunds/create?lang=nodejs) and [Refund and cancel payments](https://docs.stripe.com/refunds) confirm a refund can be created with a PaymentIntent ID, matching `stripe.refunds.create({ payment_intent })`.
+
+**Pattern fidelity check (`apps/web/server/web/tournaments/register.ts`):**
+
+```ts
+await stripe.refunds.create({
+  payment_intent: registration.stripePaymentIntentId,
+})
+newPaymentStatus = "REFUNDED"
+```
+
+**Backend checklist:**
+
+- Auth predicates planned: N/A for Stripe webhook; Stripe signature validation remains the guard in `POST`.
+- Existing action scan: extending existing `fulfillTournamentRegistration` webhook path and existing `cancelRegistration` refund pattern.
+- Data flow reference: Athlete -> Event lifecycle, paid tournament registration fulfillment.
+- FAILED_STEPS check: FS-0008 mitigated by enum paste above; FS-0015 mitigated because SESSION_0085 task plan rows already exist in `docs/protocols/project-log.md`.
 
 ## What landed
 
-(Fills in during/after TASK_02–04.)
+- ✅ **TASK_02 — webhook capacity re-check + refund.** `fulfillTournamentRegistration` now re-checks requested division capacity inside a Serializable transaction before writing a new paid Registration. If capacity is gone, it writes the Registration as `CANCELLED`/`REFUNDED`, writes entries as `CANCELLED`, then attempts `stripe.refunds.create({ payment_intent })` after the transaction commits. Refund failures log context and do not throw.
+- ✅ **TASK_03 — oversubscription test flipped + parallel proof added.** SESSION_0084's bug assertion now expects one ACTIVE entry. The sequential test proves B wins/C refunds; the new parallel test proves one active entry and one refunded loser without assuming which racer wins.
+- ✅ **Stripe Blueprint/doc check completed.** Dashboard Blueprints had no targeted limited-inventory/refund/idempotency blueprint; "Accept a one-time payment with Checkout" matches the app's Checkout Session + `checkout.session.completed` flow. Official Stripe docs confirmed reservation+expiry as the canonical full inventory pattern, idempotent fulfillment requirements, and refund-by-PaymentIntent.
+- ✅ **Component conversion pipeline docs JETTY sweep.** Per Brian's bow-out note, added JETTY 3.0 frontmatter and wiki index links to the new component-porting Markdown files. The pipeline now documents Playwright capture as the primary method and old source inspection as the secondary fallback when behavior cannot be inferred.
 
 ## Files touched
 
-(Fills in during TASK_04.)
+| File | Note |
+| --- | --- |
+| `apps/web/app/api/stripe/webhooks/route.ts` | Webhook capacity transaction + post-commit refund path |
+| `apps/web/app/api/stripe/webhooks/route.test.ts` | Refund mock tracking, fixed sequential test, new parallel race test |
+| `docs/sprints/SESSION_0085.md` | Pre-flight, execution notes, full-close evidence |
+| `docs/protocols/project-log.md` | SESSION_0085 task statuses + review block |
+| `docs/knowledge/wiki/index.md` | Linked new component-porting pages |
+| `docs/knowledge/wiki/component-porting/component-porting-pipeline-ASCII.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/graphify-report-panel.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/ronin-component-port-command-center.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-mermaid-code.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-ASCII-flow-component-port-pipeline.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/component-port-spec.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PW-proof-gate.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-discovery-command-center.md` | Added JETTY 3.0 frontmatter |
+| `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/simple-pipeline.md` | Added JETTY 3.0 frontmatter |
 
 ## Decisions resolved
 
-(Fills in as work proceeds.)
+- Strategy (a) confirmed and implemented: webhook re-check + refund.
+- Refund-failure policy: log and continue; do not throw from the webhook.
+- No schema migration: reused `CANCELLED` + `REFUNDED`.
+- TASK_05 remains deferred: refunded-paid UI smoke and cancel/refund flow tests go to SESSION_0086.
+- Dashboard Blueprint check did not contradict the strategy; Stripe's reservation+expiry docs remain the future strategy (b) reference if the product later needs pre-payment slot holds.
 
 ## Open decisions / blockers
 
-- **TASK_01 awaiting Brian's go on:** strategy (a) confirmation + refund-failure policy + schema-unchanged confirmation + TASK_05 deferral. See `## Petey plan → Open decisions` above.
+- No blockers for the paid-path capacity fix.
+- Follow-up: TASK_05 for rejected-paid UI smoke and cancel/refund regression polish.
+- Git note: changes are intentionally uncommitted; no push/commit was requested. There are also user-dropped untracked component-porting assets and one content-engine image in the working tree.
 
 ## Next session
 
-Filled at bow-out via Review & Recommend protocol. Likely staging:
-- TASK_05 (deferred): cancel/refund flow tests + Registration UI smoke for the rejected-paid customer experience.
-- Any P2/P3 findings surfaced during SESSION_0085 hostile close.
+**Goal:** TASK_05 — prove the refunded-paid customer experience end-to-end and harden cancel/refund regressions.
+
+**Inputs to read:**
+
+- `apps/web/app/api/stripe/webhooks/route.ts`
+- `apps/web/app/api/stripe/webhooks/route.test.ts`
+- `apps/web/server/web/tournaments/register.ts`
+- Registration success/banner UI under `apps/web/app/(web)/tournaments/` and related registration display components.
+
+**First task:** Add a UI smoke path for a paid registration that lands `CANCELLED`/`REFUNDED` because capacity filled before webhook fulfillment; the customer should not see a silent success.
 
 ## Task log
 
-SESSION_0085_TASK_01 (Petey plan, in this turn), SESSION_0085_TASK_02, SESSION_0085_TASK_03, SESSION_0085_TASK_04 (queued, gated on Brian's go).
+SESSION_0085_TASK_01, SESSION_0085_TASK_02, SESSION_0085_TASK_03, SESSION_0085_TASK_04
 
 ## Review log
 
-(Filled at TASK_04 — `SESSION_0085_REVIEW_01` will live in project-log.md.)
+SESSION_0085_REVIEW_01 — appended to `docs/protocols/project-log.md`.
+
+## Hostile close review
+
+- **Plan sanity:** The implemented behavior matches the approved strategy (a). No schema migration or enum addition was introduced.
+- **Dirstarter alignment:** Extends existing Stripe webhook + Prisma/service layer behavior. No UI primitive or Dirstarter route pattern touched.
+- **Data integrity:** Paid webhook write now enforces capacity at fulfillment time; sequential and parallel tests both prove `ACTIVE entries <= capacity`.
+- **Lifecycle coverage:** Athlete paid registration bad path is now represented in DB and Stripe refund call. UI smoke remains explicit follow-up.
+- **Verification honesty:** Webhook test 5/5 stable, free-path concurrency regression passed, wiki-lint clean apart from 3 pre-existing warnings. Typecheck still has pre-existing unrelated errors in 3 files; no changed-file type errors observed.
+- **Score:** 9.6/10. Follow-up UI smoke prevents a 10/10 close.
+
+## ADR / ubiquitous-language check
+
+No ADR needed. Strategy (a) is an implementation of the existing tournament capacity policy, not a new architectural rule. No new domain terms introduced.
+
+## Reflections
+
+- Stripe Dashboard Blueprints were useful as a sanity check but did not contain the targeted inventory/refund/idempotency guides Claude hoped for. Official Stripe docs carried the actual decision support.
+- The parallel webhook test is a strong guard: it would have caught either oversubscription or a leaked serialization failure. It passed without adding a retry wrapper.
+- Temporary worktrees helped split route and test edits, but dependency installs were not available there. Final verification still needs to happen in the primary checkout unless worktree bootstrap is standardized.
+- The component-porting docs fit the existing wiki model after a light JETTY sweep. The important distinction is now preserved: Playwright observation first; old source inspection only when observation leaves behavior unclear.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | Added JETTY 3.0 frontmatter to 9 new component-porting Markdown pages; code files need no frontmatter; SESSION frontmatter updated to `closed-full`. |
+| Backlinks/index sweep | Added all 9 new component-porting Markdown pages to `docs/knowledge/wiki/index.md`; each new page backlinks `wiki/index.md` and `graphify-component-port-map.md`. |
+| Wiki lint | `bun run wiki:lint` → 0 errors, 3 pre-existing orphan warnings (`topic-index.md`, `concepts/tournament-ops.md`, `dirstarter-uplift-backlog.md`). |
+| Kaizen reflection | Reflections section present above. |
+| Hostile close review | `SESSION_0085_REVIEW_01` appended to `docs/protocols/project-log.md`. |
+| Review & Recommend | Next session goal written above: TASK_05 refunded-paid UI smoke + cancel/refund regressions. |
+| Memory sweep | Project record updated: paid-path oversubscription is resolved in SESSION_0085 via webhook re-check + refund; durable note lives here and in project-log. |
+| Next session unblock check | Unblocked; first task has code inputs and no user decision dependency. |
+| Git hygiene | Branch `main`; no commit/push requested. `git diff --check` clean. Temporary route/test worktrees remain with duplicate uncommitted patches; primary checkout contains integrated changes. |

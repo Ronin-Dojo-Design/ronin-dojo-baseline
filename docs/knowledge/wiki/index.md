@@ -43,6 +43,15 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Open Brain Repo Memory](concepts/open-brain-repo-memory.md) | concept | active |
 | [Listing Pattern Repurposing](concepts/listing-pattern-repurposing.md) | concept | active |
 | [Graphify Component Port Map](component-porting/graphify-component-port-map.md) | concept | active |
+| [Component Porting Pipeline ASCII](component-porting/component-porting-pipeline-ASCII.md) | concept | active |
+| [Graphify Report Panel](component-porting/graphify-report-panel.md) | concept | active |
+| [Ronin Component Port Command Center](component-porting/ronin-component-port-command-center.md) | concept | active |
+| [PWCC Mermaid Code](component-porting/plawywright-component-conversion-method/PWCC-mermaid-code.md) | concept | active |
+| [PWCC ASCII Flow Component Port Pipeline](component-porting/plawywright-component-conversion-method/PWCC-ASCII-flow-component-port-pipeline.md) | concept | active |
+| [Component Port Spec](component-porting/plawywright-component-conversion-method/component-port-spec.md) | concept | active |
+| [Playwright Proof Gate](component-porting/plawywright-component-conversion-method/PW-proof-gate.md) | concept | active |
+| [PWCC Discovery Command Center](component-porting/plawywright-component-conversion-method/PWCC-discovery-command-center.md) | concept | active |
+| [Simple Playwright Component Port Pipeline](component-porting/plawywright-component-conversion-method/simple-pipeline.md) | concept | active |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 
 ## Architecture

@@ -1,0 +1,32 @@
+┌──────────────────────────────────────────────────────────────┐
+│ PORTMAP-0001 — ProfileBubble → ProfileCard                   │
+├──────────────────────────────────────────────────────────────┤
+│ Status: mapped                                               │
+│ Legacy path: old-monorepo/src/components/ProfileBubble.jsx   │
+│ Target path: components/web/profile/profile-card.tsx         │
+│ Target route: app/(web)/profile/[slug]/page.tsx              │
+├──────────────────────────────────────────────────────────────┤
+│ Legacy purpose                                               │
+│ - show avatar, rank, school, arts, short bio                  │
+│ - clickable card into public profile                          │
+├──────────────────────────────────────────────────────────────┤
+│ Dirstarter fit                                               │
+│ - Card                                                       │
+│ - Avatar                                                     │
+│ - Badge                                                      │
+│ - Stack                                                      │
+│ - Link                                                       │
+├──────────────────────────────────────────────────────────────┤
+│ Strategy                                                     │
+│ [ ] direct port                                              │
+│ [x] rewrite with Dirstarter primitives                       │
+│ [ ] wrap existing component                                  │
+│ [ ] archive                                                  │
+├──────────────────────────────────────────────────────────────┤
+│ Proof                                                        │
+│ [ ] renders                                                  │
+│ [ ] mobile layout                                            │
+│ [ ] brand scoped                                             │
+│ [ ] profile route works                                      │
+│ [ ] no duplicate primitives                                  │
+└──────────────────────────────────────────────────────────────┘
