@@ -81,13 +81,14 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 **What:** Test parallel registration when division has exactly 1 slot remaining.
 
 **Steps:**
-1. In `beforeAll`, create one ACTIVE registration entry to consume capacity-1 slots (so `_count.entries === capacity - 1`)
-2. Add test: "two parallel registrations when division has 1 slot remaining"
-3. Fire two parallel `createRegistrationCheckout` calls with same `divisionIds: [divisionId]`, `roleCode: "COMPETITOR"`, `tournamentId`, no `representingMembershipId`
-4. Assert: exactly one call succeeds (`data.type === "free"`)
-5. Assert: exactly one call fails with `serverError` containing "at capacity"
-6. Query `registrationEntry` table: count ACTIVE entries for division
-7. Assert: `_count.entries === division.capacity` (no oversubscription)
+1. Add test: "two parallel registrations when division has 1 slot remaining"
+2. Fire two parallel `createRegistrationCheckout` calls with same `divisionIds: [divisionId]`, `roleCode: "COMPETITOR"`, `tournamentId`, no `representingMembershipId`
+3. Assert: exactly one call succeeds (`data.type === "free"`)
+4. Assert: exactly one call fails with `serverError` containing "at capacity"
+5. Query `registrationEntry` table: count ACTIVE entries for division
+6. Assert: `_count.entries === division.capacity` (no oversubscription)
+
+**Note:** The division created in TASK_01 with `capacity: 1` should remain empty (no pre-filled entries) so that `_count.entries === 0`, leaving exactly 1 slot available for this race test.
 
 **Done means:**
 - Test passes consistently (run 5+ times)
