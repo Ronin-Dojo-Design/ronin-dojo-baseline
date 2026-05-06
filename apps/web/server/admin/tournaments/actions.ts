@@ -308,7 +308,7 @@ export const listDivisionSeedEntries = tournamentAdminActionClient
 
     return entries.map(e => ({
       entryId: e.id,
-      competitorName: e.registration.user.name,
+      competitorName: e.registration.user.name ?? "Unknown Competitor",
     }))
   })
 
