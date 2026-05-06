@@ -89,7 +89,14 @@ function SortableSeedRow({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={isDragging ? "opacity-70" : undefined}>
+    // biome-ignore lint/a11y/useSemanticElements: dnd-kit requires div wrapper for drag functionality
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={isDragging ? "opacity-70" : undefined}
+      role="listitem"
+      aria-label={`Seed ${seedNumber}: ${competitorName}`}
+    >
       <Card className="px-3 py-2">
         <Stack direction="row" size="sm" className="w-full items-center justify-between">
           <Stack direction="row" size="sm" className="items-center">
@@ -121,6 +128,7 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const [seedEntries, setSeedEntries] = useState<SeedEntry[] | null>(null)
   const [seedOrder, setSeedOrder] = useState<string[]>([])
   const [seedEntriesDivisionId, setSeedEntriesDivisionId] = useState<string | null>(null)
+  const [seedEntriesError, setSeedEntriesError] = useState<string | null>(null)
 
   const deleteDivisionAction = useAction(deleteDivision, {
     onSuccess: () => toast.success("Division removed"),
@@ -139,6 +147,7 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
         setSeedEntries(null)
         setSeedOrder([])
         setSeedEntriesDivisionId(null)
+        setSeedEntriesError(null)
         toast.success(
           `Bracket generated: ${data.competitorCount} competitors, ${data.totalRounds} rounds${data.byeCount > 0 ? `, ${data.byeCount} byes` : ""}`,
         )
@@ -155,9 +164,12 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
       if (!data) return
       setSeedEntries(data)
       setSeedOrder(data.map(e => e.entryId))
+      setSeedEntriesError(null)
     },
     onError: ({ error }) => {
-      toast.error(error.serverError ?? "Failed to load division entries")
+      setSeedEntriesError(error.serverError ?? "Failed to load division entries")
+      setSeedEntries(null)
+      setSeedOrder([])
     },
   })
 
@@ -184,15 +196,11 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
 
     setSeedEntries(null)
     setSeedOrder([])
+    setSeedEntriesError(null)
     setSeedEntriesDivisionId(seedingDialogDivisionId)
     listSeedEntriesAction.execute({ id: seedingDialogDivisionId })
-  }, [
-    listSeedEntriesAction,
-    seedingDialogDivisionId,
-    seedEntries,
-    seedEntriesDivisionId,
-    selectedSeedingMethod,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seedingDialogDivisionId, seedEntries, seedEntriesDivisionId, selectedSeedingMethod])
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over) return
@@ -317,6 +325,7 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
             setSeedEntries(null)
             setSeedOrder([])
             setSeedEntriesDivisionId(null)
+            setSeedEntriesError(null)
           }
         }}
       >
@@ -349,6 +358,8 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
             {isManualSeeding && (
               <Stack direction="column" size="sm" className="w-full">
                 <Note>Drag competitors to set seed order. Top = Seed 1.</Note>
+
+                {seedEntriesError && <Note className="text-destructive">{seedEntriesError}</Note>}
 
                 <Stack direction="row" size="sm" className="w-full items-center justify-between">
                   <Badge variant="soft" size="sm">
