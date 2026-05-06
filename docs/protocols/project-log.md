@@ -426,6 +426,10 @@ Three sections:
 | SESSION_0079_TASK_03 | SESSION_0079 | Core platform governance | Petey (Claude) | Document porting awareness (curriculum paths, cross-brand reqs, no-design-tokens, Path B appendix) | All 4 awareness sections present in SESSION_0079.md | landed | SESSION_0079_REVIEW_01 |
 | SESSION_0080_TASK_01 | SESSION_0080 | Tournament ops | Cody (Codex) | Manual seed editor UI (drag-and-drop reorder + persist) | Tournament admin UI supports manual seed order editing and persists via existing `manualSeeds` contract | in-progress | — |
 | SESSION_0080_TASK_02 | SESSION_0080 | Tournament ops + close | Cody (Codex) | Verification + quick close | Scoped checks recorded; SESSION_0080.md closed-quick with next session handoff | planned | — |
+| SESSION_0083_TASK_01 | SESSION_0083 | Tournament ops (hardening) | Cody (Claude) | Create `register.concurrency.test.ts` skeleton + real fixtures (user A/B/C with passport/membership/UserEntitlement, org, discipline, tournament, division capacity=1 feeCents=0) + smoke test | Test file compiles; fixtures + teardown clean across reruns; 1 free registration ends with ACTIVE entry count = 1 | landed | SESSION_0083_REVIEW_01 |
+| SESSION_0083_TASK_02 | SESSION_0083 | Tournament ops (hardening) | Cody (Claude) | Capacity race test — 1 slot remaining, users B vs C parallel via AsyncLocalStorage | Exactly one call returns `data.type === "free"`, one returns `serverError` matching `/at capacity/`; final ACTIVE count = 1; 5/5 stable runs | landed | SESSION_0083_REVIEW_01 |
+| SESSION_0083_TASK_03 | SESSION_0083 | Tournament ops (hardening) | Cody (Claude) | Capacity race test — division pre-filled by user A, B vs C parallel | Both callers return `serverError` matching `/at capacity/`; final ACTIVE count unchanged at 1; 5/5 stable runs | landed | SESSION_0083_REVIEW_01 |
+| SESSION_0083_TASK_04 | SESSION_0083 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0083 closed-full with reflections + evidence artifact | landed | SESSION_0083_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -825,3 +829,29 @@ Full hostile-close review across four remediation sessions. Audited all code cha
 #### Verdict
 
 Sessions 0058–0059 shipped clean, correct code. SESSION_0060 identified 6 P1 brand-scoping gaps requiring a dedicated fix session (SESSION_0061). No protocol violations. Wiki-lint clean. All drift items resolved or consciously deferred.
+
+---
+
+### SESSION_0083_REVIEW_01 — Tournament registration capacity race tests (self-review + Giddy/Doug hostile pass)
+
+- **Reviewer:** Cody → Petey (self-review)
+- **Date:** 2026-05-06
+- **Reviewed tasks:** SESSION_0083_TASK_01, SESSION_0083_TASK_02, SESSION_0083_TASK_03, SESSION_0083_TASK_04
+- **Dirstarter docs check:** not applicable (test-only addition, no L1 baseline files modified)
+
+#### Scope
+
+Three integration tests in `apps/web/server/web/tournaments/register.concurrency.test.ts` proving the Serializable transaction in `register.ts:78-144` prevents oversubscription on the free-registration path. Real Postgres fixtures (no auth/entitlement mocks); AsyncLocalStorage propagates per-call user identity for parallel races between distinct users.
+
+#### Findings
+
+- **P1 / P2:** none. Tests pass 5/5 with no flakiness; capacity invariant (`ACTIVE entries ≤ capacity`) holds in both 1-slot-remaining and at-capacity scenarios.
+- **P3 — paid path uncovered:** `register.ts` paid flow checks capacity at checkout-create time, but the registration row is written later in the Stripe webhook. Two paid checkouts could both succeed and oversubscribe if the webhook doesn't re-check capacity. Flagged as the headline scenario for the next session (`Next session` in SESSION_0083 + open architectural question logged).
+- **P3 — same-user race not tested:** intentional. Same-user parallel calls would race on the `Registration` `(tournamentId, userId)` unique constraint, masquerading as the capacity protection. The plan's "exactly one succeeds, one fails 'at capacity'" assertion is only meaningful with different users.
+- **P3 — global mock state risk:** documented in feedback memory. AsyncLocalStorage is now the standard pattern for parallel-call action tests with multiple identities.
+
+#### Verdict
+
+All 4 tasks landed cleanly. Verification is honest: 5/5 stable runs, scoped typecheck clean (3 pre-existing unrelated errors confirmed not introduced), wiki-lint 0/3 pre-existing warnings. The Serializable transaction guarantee is proven for the free path; the paid-path gap is correctly deferred and explicitly handed off as the next session's primary deliverable. Code is merge-ready.
+
+**Kaizen triage:** Safe/security confidence is strong for the free path. Preventable slips: caught the same-user race trap before writing it; chose real fixtures over mocks before user push. Scale confidence: 100 users = 9.7, 1,000 = 9.5, 10,000 = 9.0 — bounded by the unproven paid-path window. Aggregate 9.3; proceed to next session focused on the paid flow.

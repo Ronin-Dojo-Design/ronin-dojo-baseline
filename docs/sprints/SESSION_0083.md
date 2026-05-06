@@ -26,7 +26,7 @@ Brian Scott + Claude (Cody → Petey)
 
 ### Status
 
-closed-quick
+closed-full
 
 ### Goal
 
@@ -147,3 +147,44 @@ SESSION_0083_REVIEW_01 — Self-review by Cody (Claude)
 ## ADR / ubiquitous-language check
 
 No ADRs needed. No new domain terms introduced. Test-only session.
+
+## Reflections
+
+**Surprises:**
+
+- **The same-user race trap.** My initial instinct from the plan was "fire two parallel calls" — same user, simplest setup. Caught before writing it that the `Registration` `@@unique([tournamentId, userId])` would short-circuit the race before the capacity check ever ran, so the test would have been measuring the wrong invariant. Different-user races + AsyncLocalStorage are the only honest way to prove the Serializable capacity transaction.
+- **Stripe import poisoned the test runtime.** `register.ts` imports `~/services/stripe` at module top-level. Even though the free path never calls Stripe, module load fails without `STRIPE_SECRET_KEY`. Mocking `~/services/stripe` was a one-line fix but nothing in the materialize.concurrency pattern hinted at this — every action's import surface needs its own mock audit.
+- **Graphify saved real time.** Two queries against the registration cluster confirmed the pattern was portable from `materialize.concurrency.test.ts` and surfaced the shared infra (`db.ts`, `auth.ts`, `rate-limiter.ts`, `brand-context.ts`, `safe-actions.ts`) — that's the mock surface I needed to replicate, delivered without grep'ing 5+ files.
+
+**Things that almost broke (and what saved them):**
+
+- **AsyncLocalStorage vs global mock state.** First write would have used `sessionUserState.id` for both racers; both would have authenticated as user B (or both as C, depending on microtask ordering). ALS makes per-promise identity safe; this is now a feedback memory.
+- **Entitlement uniqueness.** Almost created a tagged Entitlement that would have collided with the literal `tournament-registration` key the action looks up. Switched to upsert + don't-delete; tests are idempotent across reruns and don't fight with each other.
+- **Pre-existing typecheck noise.** `bun tsc` produces 3 unrelated errors. Nearly missed verifying they were pre-existing — confirmed by file-path filter before claiming "clean."
+
+**Patterns to reuse:**
+
+- **AsyncLocalStorage for per-call identity in parallel action tests** — saved as feedback memory.
+- **Real fixtures > mocked guards for integration tests** — the user pushed me here, and they were right. Mocking entitlement + brand checks would have undercut the test's whole reason for existing.
+- **Two-phase teardown with tag prefix** — works as well for tournament fixtures as for schedule fixtures; the pattern generalizes.
+
+**What I'd tell myself starting over:**
+
+- Read the schema unique constraints on the racing table *first*, before deciding which entities the parallel calls should differ on. That observation alone would have saved a re-design loop.
+- Map the action's full import graph (top-level imports in the file under test) into the mock plan before writing the first `mock.module` call. Every external service module needs a mock or a real implementation; missing one shows up as a runtime module-load failure that looks unrelated.
+
+**Graphify takeaway:** This was the first session where graphify materially shaped my work. The two queries together cost ~0 LLM tokens (no graph extraction needed; cached). Recommend refreshing the graph on the new commit so next session inherits a graph that includes `register.concurrency.test.ts` as a node, and considering a wiki-only pass (`graphify update docs/`) to enrich the `pairs_with` / `backlinks` graph for documentation lookups.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0083.md frontmatter present (title, slug, type=session, status=closed-full, created/updated 2026-05-06, last_agent=claude-session-0083, sprint=S3, pairs_with SESSION_0082 + petey-plan-0082, backlinks wiki/index). No other docs files touched. Test file is code (no JETTY frontmatter expected). |
+| Backlinks/index sweep | No new wiki pages created. No `pairs_with`/`backlinks` updates required on existing pages. `wiki/index.md` not affected. |
+| Wiki lint | `bun run wiki:lint` → 0 errors, 3 warnings (orphans: `topic-index.md`, `concepts/tournament-ops.md`, `dirstarter-uplift-backlog.md`) — all **pre-existing**, not introduced by this session. |
+| Kaizen reflection | Reflections section present above (surprises, near-misses, patterns, retrospective notes). |
+| Hostile close review | `SESSION_0083_REVIEW_01` appended to `docs/protocols/project-log.md` covering all 4 tasks; one P3 (paid-path window) deferred to next session. |
+| Review & Recommend | Next session goal written: "Get the whole registration flow set" — paid-path capacity + Stripe webhook tests + cancel/refund + UI smoke. 5 suggested tasks queued in `Next session` block. |
+| Memory sweep | New feedback memory: AsyncLocalStorage for per-call user identity in parallel-call action tests. New project memory: paid registration capacity has an unproven oversubscription window between checkout-create and webhook arrival (priority for next session). |
+| Next session unblock check | Unblocked. First task (Stripe webhook test infrastructure) requires no user input; reads are all in-repo. |
+| Git hygiene | Branch `main`, commit `af7d2e8` (`test: add tournament registration capacity race condition tests`) committed; project-log + SESSION_0083 closed-full edits will be a follow-up commit before bow-out. Not pushed (push not authorized). Worktree list: not run — single-repo session, no worktree shifted. |
