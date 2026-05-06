@@ -424,6 +424,8 @@ Three sections:
 | SESSION_0079_TASK_01 | SESSION_0079 | Core platform governance | Petey (Claude) | Pull Giddy persona from monorepo into `docs/agents/giddy.md` | `docs/agents/giddy.md` exists with v5.0 frontmatter, voice matched to petey/cody | landed | SESSION_0079_REVIEW_01 |
 | SESSION_0079_TASK_02 | SESSION_0079 | Tournament ops | Cody (Claude) | Tournament director role: schema enum + HOC + action client + admin UI + sidebar gating | Role value added (no migration), HOC + client added, 12 pages re-HOC'd, 10 actions re-clienthd, user form Role select live, sidebar filters for tournament_director | landed | SESSION_0079_REVIEW_01 |
 | SESSION_0079_TASK_03 | SESSION_0079 | Core platform governance | Petey (Claude) | Document porting awareness (curriculum paths, cross-brand reqs, no-design-tokens, Path B appendix) | All 4 awareness sections present in SESSION_0079.md | landed | SESSION_0079_REVIEW_01 |
+| SESSION_0080_TASK_01 | SESSION_0080 | Tournament ops | Cody (Codex) | Manual seed editor UI (drag-and-drop reorder + persist) | Tournament admin UI supports manual seed order editing and persists via existing `manualSeeds` contract | in-progress | — |
+| SESSION_0080_TASK_02 | SESSION_0080 | Tournament ops + close | Cody (Codex) | Verification + quick close | Scoped checks recorded; SESSION_0080.md closed-quick with next session handoff | planned | — |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 

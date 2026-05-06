@@ -1,21 +1,40 @@
 "use client"
 
-import { useState } from "react"
-import { PlusIcon, TrashIcon, SwordsIcon, EyeIcon } from "lucide-react"
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { EyeIcon, GripVerticalIcon, RotateCcwIcon, SwordsIcon, TrashIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
+import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "~/components/common/dialog"
 import { H3 } from "~/components/common/heading"
 import { Label } from "~/components/common/label"
+import { Note } from "~/components/common/note"
 import {
   Select,
   SelectContent,
@@ -24,14 +43,14 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
-import { Badge } from "~/components/common/badge"
 import {
   deleteDivision,
   deleteTournamentDiscipline,
   generateBracket,
+  listDivisionSeedEntries,
 } from "~/server/admin/tournaments/actions"
-import type { findTournamentById } from "~/server/admin/tournaments/queries"
 import type { SeedingMethod } from "~/server/admin/tournaments/bracket-seeding"
+import type { findTournamentById } from "~/server/admin/tournaments/queries"
 
 type Tournament = NonNullable<Awaited<ReturnType<typeof findTournamentById>>>
 type TournamentDivision = Tournament["disciplines"][number]["divisions"][number] & {
@@ -43,10 +62,65 @@ type DivisionsEditorProps = {
   tournament: Tournament
 }
 
+type SeedEntry = {
+  entryId: string
+  competitorName: string
+}
+
+type SortableSeedRowProps = SeedEntry & {
+  seedNumber: number
+  isDragDisabled: boolean
+}
+
+function SortableSeedRow({
+  entryId,
+  competitorName,
+  seedNumber,
+  isDragDisabled,
+}: SortableSeedRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: entryId,
+    disabled: isDragDisabled,
+  })
+
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className={isDragging ? "opacity-70" : undefined}>
+      <Card className="px-3 py-2">
+        <Stack direction="row" size="sm" className="w-full items-center justify-between">
+          <Stack direction="row" size="sm" className="items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              prefix={<GripVerticalIcon className="size-4" />}
+              aria-label="Drag to reorder"
+              disabled={isDragDisabled}
+              {...attributes}
+              {...listeners}
+            />
+            <Badge variant="primary" size="sm">
+              Seed {seedNumber}
+            </Badge>
+            <span className="text-sm font-medium">{competitorName}</span>
+          </Stack>
+        </Stack>
+      </Card>
+    </div>
+  )
+}
+
 export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const router = useRouter()
   const [seedingDialogDivisionId, setSeedingDialogDivisionId] = useState<string | null>(null)
-  const [selectedSeedingMethod, setSelectedSeedingMethod] = useState<SeedingMethod>("REGISTRATION_ORDER")
+  const [selectedSeedingMethod, setSelectedSeedingMethod] =
+    useState<SeedingMethod>("REGISTRATION_ORDER")
+  const [seedEntries, setSeedEntries] = useState<SeedEntry[] | null>(null)
+  const [seedOrder, setSeedOrder] = useState<string[]>([])
+  const [seedEntriesDivisionId, setSeedEntriesDivisionId] = useState<string | null>(null)
 
   const deleteDivisionAction = useAction(deleteDivision, {
     onSuccess: () => toast.success("Division removed"),
@@ -62,6 +136,9 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
     onSuccess: ({ data }) => {
       if (data) {
         setSeedingDialogDivisionId(null)
+        setSeedEntries(null)
+        setSeedOrder([])
+        setSeedEntriesDivisionId(null)
         toast.success(
           `Bracket generated: ${data.competitorCount} competitors, ${data.totalRounds} rounds${data.byeCount > 0 ? `, ${data.byeCount} byes` : ""}`,
         )
@@ -73,10 +150,67 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
     },
   })
 
+  const listSeedEntriesAction = useAction(listDivisionSeedEntries, {
+    onSuccess: ({ data }) => {
+      if (!data) return
+      setSeedEntries(data)
+      setSeedOrder(data.map(e => e.entryId))
+    },
+    onError: ({ error }) => {
+      toast.error(error.serverError ?? "Failed to load division entries")
+    },
+  })
+
   const isPending =
     deleteDivisionAction.isPending ||
     deleteDisciplineAction.isPending ||
-    generateBracketAction.isPending
+    generateBracketAction.isPending ||
+    listSeedEntriesAction.isPending
+
+  const seedEntryMap = useMemo(() => {
+    return new Map((seedEntries ?? []).map(e => [e.entryId, e] as const))
+  }, [seedEntries])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  useEffect(() => {
+    if (!seedingDialogDivisionId) return
+    if (selectedSeedingMethod !== "MANUAL") return
+
+    if (seedEntriesDivisionId === seedingDialogDivisionId && seedEntries) return
+
+    setSeedEntries(null)
+    setSeedOrder([])
+    setSeedEntriesDivisionId(seedingDialogDivisionId)
+    listSeedEntriesAction.execute({ id: seedingDialogDivisionId })
+  }, [
+    listSeedEntriesAction,
+    seedingDialogDivisionId,
+    seedEntries,
+    seedEntriesDivisionId,
+    selectedSeedingMethod,
+  ])
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over) return
+    if (active.id === over.id) return
+
+    setSeedOrder(items => {
+      const oldIndex = items.indexOf(String(active.id))
+      const newIndex = items.indexOf(String(over.id))
+      if (oldIndex === -1 || newIndex === -1) return items
+      return arrayMove(items, oldIndex, newIndex)
+    })
+  }
+
+  const isManualSeeding = selectedSeedingMethod === "MANUAL"
+  const canGenerate =
+    !!seedingDialogDivisionId &&
+    !generateBracketAction.isPending &&
+    (!isManualSeeding || (seedEntries != null && seedOrder.length >= 2))
 
   return (
     <Stack direction="column" size="md">
@@ -120,11 +254,11 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
                         <Badge variant="soft">{div.format}</Badge>
                         <Badge variant="soft">{div.gender}</Badge>
                         {div.ageMin != null && div.ageMax != null && (
-                          <Badge variant="soft">Ages {div.ageMin}–{div.ageMax}</Badge>
+                          <Badge variant="soft">
+                            Ages {div.ageMin}–{div.ageMax}
+                          </Badge>
                         )}
-                        {div.capacity != null && (
-                          <Badge variant="soft">Cap: {div.capacity}</Badge>
-                        )}
+                        {div.capacity != null && <Badge variant="soft">Cap: {div.capacity}</Badge>}
                         {(div as TournamentDivision).ruleSet && (
                           <Badge variant="info">{(div as TournamentDivision).ruleSet!.name}</Badge>
                         )}
@@ -177,7 +311,14 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
 
       <Dialog
         open={seedingDialogDivisionId != null}
-        onOpenChange={(open) => { if (!open) setSeedingDialogDivisionId(null) }}
+        onOpenChange={open => {
+          if (!open) {
+            setSeedingDialogDivisionId(null)
+            setSeedEntries(null)
+            setSeedOrder([])
+            setSeedEntriesDivisionId(null)
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -189,19 +330,74 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
               <Label>Seeding Method</Label>
               <Select
                 value={selectedSeedingMethod}
-                onValueChange={(v) => setSelectedSeedingMethod(v as SeedingMethod)}
+                onValueChange={v => setSelectedSeedingMethod(v as SeedingMethod)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="REGISTRATION_ORDER">Registration Order</SelectItem>
-                  <SelectItem value="TOURNAMENT_RANKING">Tournament Ranking (W/L record)</SelectItem>
+                  <SelectItem value="TOURNAMENT_RANKING">
+                    Tournament Ranking (W/L record)
+                  </SelectItem>
                   <SelectItem value="MARTIAL_ARTS_RANK">Martial Arts Rank</SelectItem>
                   <SelectItem value="MANUAL">Manual (custom seeding)</SelectItem>
                 </SelectContent>
               </Select>
             </Stack>
+
+            {isManualSeeding && (
+              <Stack direction="column" size="sm" className="w-full">
+                <Note>Drag competitors to set seed order. Top = Seed 1.</Note>
+
+                <Stack direction="row" size="sm" className="w-full items-center justify-between">
+                  <Badge variant="soft" size="sm">
+                    {seedEntries ? `${seedEntries.length} competitors` : "Loading competitors…"}
+                  </Badge>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    prefix={<RotateCcwIcon className="size-4" />}
+                    onClick={() => {
+                      if (seedEntries) {
+                        setSeedOrder(seedEntries.map(e => e.entryId))
+                      }
+                    }}
+                    disabled={!seedEntries || listSeedEntriesAction.isPending}
+                  >
+                    Reset
+                  </Button>
+                </Stack>
+
+                {seedEntries && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                  >
+                    <SortableContext items={seedOrder} strategy={verticalListSortingStrategy}>
+                      <Stack direction="column" size="xs" className="w-full">
+                        {seedOrder.map((entryId, index) => {
+                          const entry = seedEntryMap.get(entryId)
+                          if (!entry) return null
+                          return (
+                            <SortableSeedRow
+                              key={entryId}
+                              entryId={entryId}
+                              competitorName={entry.competitorName}
+                              seedNumber={index + 1}
+                              isDragDisabled={
+                                listSeedEntriesAction.isPending || generateBracketAction.isPending
+                              }
+                            />
+                          )
+                        })}
+                      </Stack>
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </Stack>
+            )}
           </Stack>
 
           <DialogFooter>
@@ -218,10 +414,14 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
                   generateBracketAction.execute({
                     divisionId: seedingDialogDivisionId,
                     seedingMethod: selectedSeedingMethod,
+                    manualSeeds: isManualSeeding
+                      ? seedOrder.map((entryId, i) => ({ entryId, seed: i + 1 }))
+                      : undefined,
                   })
                 }
               }}
               isPending={generateBracketAction.isPending}
+              disabled={!canGenerate}
             >
               Generate
             </Button>

@@ -286,6 +286,32 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
 // Bracket generation
 // -----------------------------------------------------------------------------
 
+export const listDivisionSeedEntries = tournamentAdminActionClient
+  .inputSchema(idSchema)
+  .action(async ({ parsedInput: { id: divisionId }, ctx: { db } }) => {
+    const entries = await db.registrationEntry.findMany({
+      where: {
+        divisionId,
+        status: "ACTIVE",
+        registration: { status: "APPROVED" },
+      },
+      select: {
+        id: true,
+        registration: {
+          select: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    })
+
+    return entries.map(e => ({
+      entryId: e.id,
+      competitorName: e.registration.user.name,
+    }))
+  })
+
 export const generateBracket = tournamentAdminActionClient
   .inputSchema(generateBracketSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
