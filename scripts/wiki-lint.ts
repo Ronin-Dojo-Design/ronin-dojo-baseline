@@ -135,12 +135,15 @@ async function findAllMarkdownFiles(dir: string): Promise<string[]> {
     const fullPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
       // Skip raw imports/source archives; active docs are checked elsewhere.
+      // graphify-out is generated navigation aid (per docs/runbooks/graphify-repo-memory.md)
+      // — its auto-generated cross-references aren't authored wiki content.
       if (
         entry.name === "templates" ||
         entry.name === "node_modules" ||
         entry.name === "_imports" ||
         entry.name === "source" ||
-        entry.name === "ronin_dojo_baseline_systems_pack"
+        entry.name === "ronin_dojo_baseline_systems_pack" ||
+        entry.name === "graphify-out"
       ) continue
       results.push(...await findAllMarkdownFiles(fullPath))
     } else if (entry.name.endsWith(".md") && !entry.name.startsWith("_template")) {
