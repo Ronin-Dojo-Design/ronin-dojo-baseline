@@ -154,6 +154,78 @@ Useful local commands:
 open graphify-out/graph.html
 ```
 
+### Command reference
+
+Slash commands are the AI-assistant skill form. Local terminal usage generally calls the `graphify` CLI directly. Check `graphify --help` after upgrades because command flags may vary by installed version.
+
+```bash
+/graphify                          # run on current directory
+/graphify ./raw                    # run on a specific folder
+/graphify ./raw --mode deep        # more aggressive relationship extraction
+/graphify ./raw --update           # re-extract only changed files
+/graphify ./raw --directed         # preserve edge direction
+/graphify ./raw --cluster-only     # rerun clustering on existing graph
+/graphify ./raw --no-viz           # skip HTML visualization
+/graphify ./raw --obsidian         # generate Obsidian vault
+/graphify ./raw --wiki             # build agent-crawlable markdown wiki
+/graphify ./raw --svg              # export graph.svg
+/graphify ./raw --graphml          # export for Gephi / yEd
+/graphify ./raw --neo4j            # generate cypher.txt for Neo4j
+/graphify ./raw --neo4j-push bolt://localhost:7687
+/graphify ./raw --watch            # auto-sync as files change
+/graphify ./raw --mcp              # start MCP stdio server
+
+/graphify add https://arxiv.org/abs/1706.03762
+/graphify add <video-url>
+/graphify add https://... --author "Name" --contributor "Name"
+
+/graphify query "what connects attention to the optimizer?"
+/graphify query "..." --dfs --budget 1500
+/graphify path "DigestAuth" "Response"
+/graphify explain "SwinTransformer"
+
+graphify hook install              # post-commit + post-checkout hooks
+graphify hook uninstall
+graphify hook status
+
+graphify claude install / uninstall
+graphify codex install / uninstall
+graphify opencode install
+graphify cursor install / uninstall
+graphify gemini install / uninstall
+graphify copilot install / uninstall
+graphify aider install / uninstall
+graphify claw install / uninstall
+graphify droid install / uninstall
+graphify trae install / uninstall
+graphify trae-cn install / uninstall
+graphify hermes install / uninstall
+graphify kiro install / uninstall
+graphify antigravity install / uninstall
+
+graphify extract ./docs                        # headless LLM extraction for CI (no IDE needed)
+graphify extract ./docs --backend gemini       # explicit backend: gemini, kimi, claude, openai, or ollama
+graphify extract ./docs --backend gemini --model gemini-3.1-pro-preview
+graphify extract ./docs --backend ollama       # local Ollama (set OLLAMA_BASE_URL / OLLAMA_MODEL)
+graphify extract ./docs --no-cluster           # raw extraction only, skip clustering
+graphify extract ./docs --dedup-llm            # LLM tiebreaker for ambiguous entity pairs (uses same API key)
+graphify extract ./docs --global --as myrepo   # extract and register into the cross-project global graph
+GRAPHIFY_MAX_OUTPUT_TOKENS=32768 graphify extract ./docs --backend claude  # raise output cap for dense corpora
+
+graphify global add graphify-out/graph.json myrepo   # register a project graph into ~/.graphify/global.json
+graphify global remove myrepo                         # remove a project from the global graph
+graphify global list                                  # show all registered repos + node/edge counts
+graphify global path                                  # print path to the global graph file
+
+graphify clone https://github.com/karpathy/nanoGPT
+graphify merge-graphs a.json b.json --out merged.json
+graphify watch ./src
+graphify check-update ./src
+graphify update ./src
+graphify cluster-only ./my-project
+graphify cluster-only ./my-project --graph path/to/graph.json  # custom graph location
+```
+
 ### Phase 3 — Old monorepo + new repo dual graph
 
 Generate graphs for both repos and compare component clusters.
