@@ -115,7 +115,7 @@ Single lookup page for the tournament-ops feature lane. Prevents the SESSION_007
 4. ~~**FightRecord publication**~~ ✅ Done (SESSION_0077) — publish from completed matches, upserts W/L/D
 5. ~~**RuleSet CRUD + assignment**~~ ✅ CRUD done (SESSION_0075 + SESSION_0076), wired to Division + scoring (SESSION_0078)
 6. ~~**Tournament results page**~~ ✅ Done (SESSION_0078) — public bracket results, medal standings at `/tournaments/[slug]/results`
-7. **Integration tests** — registration capacity race conditions, cross-brand isolation
+7. ~~**Integration tests**~~ ✅ Done — registration capacity race (SESSION_0082–0086), cross-brand isolation (SESSION_0087)
 8. ~~**Seeding algorithm**~~ ✅ Done (SESSION_0078) — 4 strategies: registration order, tournament ranking, martial arts rank, manual. 17 unit tests.
 9. ~~**Registration detail page**~~ ✅ Done (SESSION_0077) — overview, entries, WeighIn panel
 10. ~~**RuleSet → Division wiring**~~ ✅ Done (SESSION_0078) — `ruleSetId` on Division, scoring method enforcement, UI badge

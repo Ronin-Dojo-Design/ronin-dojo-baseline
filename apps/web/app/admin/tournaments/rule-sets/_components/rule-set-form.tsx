@@ -141,7 +141,7 @@ export function RuleSetForm({
                 <Input
                   type="number"
                   {...field}
-                  value={field.value ?? ""}
+                  value={(field.value as number | null) ?? ""}
                   onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
                 />
               </FormControl>
@@ -160,7 +160,7 @@ export function RuleSetForm({
                 <Input
                   type="number"
                   {...field}
-                  value={field.value ?? ""}
+                  value={(field.value as number | null) ?? ""}
                   onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
                 />
               </FormControl>

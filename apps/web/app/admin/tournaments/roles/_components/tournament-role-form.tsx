@@ -27,7 +27,7 @@ import { upsertTournamentRole } from "~/server/admin/tournaments/actions"
 import type { findTournamentRoleById } from "~/server/admin/tournaments/queries"
 import { tournamentRoleSchema } from "~/server/admin/tournaments/schema"
 
-type TournamentRoleFormProps = ComponentProps<"form"> & {
+type TournamentRoleFormProps = Omit<ComponentProps<"form">, "role"> & {
   role?: Awaited<ReturnType<typeof findTournamentRoleById>>
 }
 
