@@ -1,16 +1,17 @@
-import { notFound } from "next/navigation"
 import { TrophyIcon } from "lucide-react"
+import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
 import { DivisionTable } from "~/components/web/tournaments/division-table"
 import { RegisterButton } from "~/components/web/tournaments/register-button"
-import { getRequestBrand } from "~/lib/brand-context"
+import { RegistrationNotice } from "~/components/web/tournaments/registration-notice"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { findTournamentBySlug } from "~/server/web/tournaments/queries"
 import { db } from "~/services/db"
 
@@ -50,7 +51,12 @@ export default async function TournamentDetailPage({ params, searchParams }: Pag
       })
     : null
 
-  const location = [tournament.venueName, tournament.venueCity, tournament.venueRegion, tournament.venueCountry]
+  const location = [
+    tournament.venueName,
+    tournament.venueCity,
+    tournament.venueRegion,
+    tournament.venueCountry,
+  ]
     .filter(Boolean)
     .join(", ")
 
@@ -58,24 +64,20 @@ export default async function TournamentDetailPage({ params, searchParams }: Pag
     <>
       <Intro>
         <IntroTitle>{tournament.name}</IntroTitle>
-        {tournament.description && (
-          <IntroDescription>{tournament.description}</IntroDescription>
-        )}
+        {tournament.description && <IntroDescription>{tournament.description}</IntroDescription>}
       </Intro>
 
       {registered === "true" && (
         <Section>
-          <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-green-700 dark:text-green-400">
-            <p className="font-semibold">Registration confirmed!</p>
-            <p className="text-sm mt-1">You have been successfully registered for this tournament.</p>
-          </div>
+          <RegistrationNotice registered={registered} existingRegistration={existingRegistration} />
         </Section>
       )}
 
       <Section>
         <Stack size="sm" className="flex-wrap">
           <Badge variant="outline">
-            {new Date(tournament.startDate).toLocaleDateString()} – {new Date(tournament.endDate).toLocaleDateString()}
+            {new Date(tournament.startDate).toLocaleDateString()} –{" "}
+            {new Date(tournament.endDate).toLocaleDateString()}
           </Badge>
           {location && <Badge variant="soft">{location}</Badge>}
           <Badge variant="soft">{tournament.host.name}</Badge>

@@ -437,6 +437,10 @@ Three sections:
 | SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route.ts` updated; webhook returns 200 in all paths; rejected-create path produces a Registration row visible to admin with REFUNDED payment status; refund call happens after transaction commit and does not throw on failure | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0085_TASK_03 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Flip SESSION_0084 oversubscription test from `toBe(2)` to `toBe(1)`; assert one Registration ends CANCELLED/REFUNDED; assert `stripe.refunds.create` called exactly once with the loser's `payment_intent`; add NEW parallel-race test using `Promise.all([postWebhook, postWebhook])` to prove the fix under concurrency | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0085_TASK_04 | SESSION_0085 | Close | Cody → Petey (Codex) | Verification + full close: scoped typecheck, full test re-run, free-path concurrency regression check, wiki-lint, project-log review block, memory update (paid oversubscription window resolved) | Webhook test 5/5 stable; free-path concurrency regression passed; `bunx tsc --noEmit --pretty false` reports only pre-existing unrelated errors in 3 files; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0085_REVIEW_01 appended | landed | SESSION_0085_REVIEW_01 |
+| SESSION_0086_TASK_01 | SESSION_0086 | Tournament ops (hardening) | Petey + Giddy (Codex) | Bow in, graphify TASK_05 inputs, create SESSION_0086 plan, split work into UI/refund-test worktrees, and keep docs/log orchestration in the main checkout | `SESSION_0086.md` exists with graphify queries, Dirstarter alignment, task split, and agent/worktree assignments; project-log rows appended before implementation | landed | SESSION_0086_REVIEW_01 |
+| SESSION_0086_TASK_02 | SESSION_0086 | Tournament ops (UI smoke) | Cody + Desi worker | Refunded-paid customer notice: when `registered=true` resolves to an existing `CANCELLED`/`REFUNDED` Registration, show rejected/refunded copy instead of the success banner; display persisted cancelled/refunded state without offering an impossible re-registration form | Tournament detail/RegisterButton UI updated; `registration-notice.test.tsx` covers `CANCELLED`/`REFUNDED`, success, and processing copy; UI test passes | landed | SESSION_0086_REVIEW_01 |
+| SESSION_0086_TASK_03 | SESSION_0086 | Tournament ops (refund tests) | Cody + Doug worker | Add cancel/refund regression tests around `cancelRegistration`: paid Registration refunds by stored `stripePaymentIntentId`, free Registration cancels without refund, paid Registration missing PaymentIntent fails without mutation | `register.concurrency.test.ts` asserts refund mock calls and DB state for paid/free/error branches; test file passes 6/6 | landed | SESSION_0086_REVIEW_01 |
+| SESSION_0086_TASK_04 | SESSION_0086 | Close | Petey + Doug (Codex) | Integrate worker patches, run focused tests/typecheck/wiki-lint, append SESSION_0086 review, and record close evidence/worktree cleanup status | Focused tests pass; Biome clean; typecheck has only pre-existing unrelated errors; 0086 worktrees removed; SESSION_0086 closed-full | landed | SESSION_0086_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -919,3 +923,35 @@ All 3 tasks landed cleanly. Verification is honest: 5/5 stable runs, scoped type
 #### Verdict
 
 SESSION_0085 lands the launch-window strategy (a) cleanly: no schema migration, no new enum values, webhook-local capacity enforcement, and refund via PaymentIntent. Score: 9.6/10. The only material follow-up is SESSION_0086 TASK_05 for refunded-paid UI smoke and cancel/refund regression polish.
+
+---
+
+### SESSION_0086_REVIEW_01 — Refunded-paid UI smoke + cancel/refund regressions
+
+- **Reviewer:** Petey/Doug (Codex self-review)
+- **Date:** 2026-05-06
+- **Reviewed tasks:** SESSION_0086_TASK_01, SESSION_0086_TASK_02, SESSION_0086_TASK_03, SESSION_0086_TASK_04
+- **Dirstarter docs check:** existing UI primitives and safe-action/test patterns only; no Dirstarter layer replaced
+
+#### Scope
+
+SESSION_0086 closes SESSION_0085 TASK_05. The tournament detail page no longer treats `?registered=true` as unconditional proof of success. It now renders status-aware copy: success for a real non-cancelled Registration, refunded rejection for `CANCELLED`/`REFUNDED`, and processing copy when the Stripe redirect beats webhook fulfillment. Persisted cancelled registrations render a cancelled/refunded card instead of an impossible re-registration form. Cancel/refund regression tests now cover paid, free, and missing-PaymentIntent branches.
+
+#### Findings
+
+- **P0/P1:** none.
+- **P2 resolved — rejected-paid customer UI smoke:** `RegistrationNotice` proves the refunded-paid bad path does not show "Registration confirmed!".
+- **P2 resolved — cancel/refund regression gap:** paid cancellation refund-by-PaymentIntent, free cancellation no-refund behavior, and missing-PaymentIntent no-mutation behavior are all covered by real-DB tests.
+- **P3 remaining product decision:** persisted `CANCELLED` Registration rows still block re-registration through the unique `(tournamentId, userId)` constraint. SESSION_0086 correctly avoids showing a re-registration form; a future session can decide whether to reopen/update existing rows or model registration attempts.
+
+#### Verification
+
+- `cd apps/web && bun test components/web/tournaments/registration-notice.test.tsx` — 3 pass.
+- `cd apps/web && bun test server/web/tournaments/register.concurrency.test.ts` — 6 pass.
+- `cd apps/web && bun test app/api/stripe/webhooks/route.test.ts` — 3 pass.
+- `cd apps/web && bun biome check 'app/(web)/tournaments/[slug]/page.tsx' components/web/tournaments/register-button.tsx components/web/tournaments/registration-notice.tsx components/web/tournaments/registration-notice.test.tsx server/web/tournaments/register.concurrency.test.ts` — 0 errors after formatting.
+- `cd apps/web && bunx tsc --noEmit --pretty false` — fails only on the same pre-existing unrelated errors recorded in SESSION_0085.
+
+#### Verdict
+
+TASK_05 is closed. Data/refund behavior from SESSION_0085 now has user-facing proof, and cancel/refund regressions are locked by tests. Score: 9.7/10.

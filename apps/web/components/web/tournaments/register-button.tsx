@@ -1,27 +1,28 @@
 "use client"
 
-import { useState } from "react"
 import { useAction } from "next-safe-action/hooks"
+import { useState } from "react"
 import { toast } from "sonner"
-import { createRegistrationCheckout, cancelRegistration } from "~/server/web/tournaments/register"
-import { Button } from "~/components/common/button"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { Checkbox } from "~/components/common/checkbox"
-import { H3 } from "~/components/common/heading"
-import { Label } from "~/components/common/label"
-import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from "~/components/common/dialog"
+import { H3 } from "~/components/common/heading"
+import { Label } from "~/components/common/label"
+import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
+import { cancelRegistration, createRegistrationCheckout } from "~/server/web/tournaments/register"
+import { isCancelledRegistration, isRefundedRegistration } from "./registration-notice"
 
 interface Division {
   id: string
@@ -78,13 +79,15 @@ export function RegisterButton({
   const isPending = cancelAction.isPending || registerAction.isPending
 
   // If user already has a non-cancelled registration, show status + cancel
-  if (existingRegistration && existingRegistration.status !== "CANCELLED" && !cancelled) {
+  if (existingRegistration && !isCancelledRegistration(existingRegistration) && !cancelled) {
     return (
       <Card className="p-4">
         <Stack direction="column" size="sm">
-          <Badge variant="success" size="lg">Registered</Badge>
+          <Badge variant="success" size="lg">
+            Registered
+          </Badge>
           <Note>
-            Divisions: {existingRegistration.entries.map((e) => e.division.name).join(", ")}
+            Divisions: {existingRegistration.entries.map(e => e.division.name).join(", ")}
           </Note>
           <Note className="text-xs">
             Status: {existingRegistration.status} · Payment: {existingRegistration.paymentStatus}
@@ -122,6 +125,27 @@ export function RegisterButton({
     )
   }
 
+  if (existingRegistration && isCancelledRegistration(existingRegistration)) {
+    const refunded = isRefundedRegistration(existingRegistration)
+    const cancellationNote = refunded
+      ? "This registration was cancelled and the payment was refunded. No tournament slot was taken."
+      : "This registration has been cancelled. Contact the tournament host if you need help."
+
+    return (
+      <Card className="p-4">
+        <Stack direction="column" size="sm">
+          <Badge variant={refunded ? "warning" : "danger"} size="lg">
+            {refunded ? "Refunded" : "Cancelled"}
+          </Badge>
+          <Note>{cancellationNote}</Note>
+          <Note className="text-xs">
+            Status: {existingRegistration.status} · Payment: {existingRegistration.paymentStatus}
+          </Note>
+        </Stack>
+      </Card>
+    )
+  }
+
   if (cancelled) {
     return (
       <Card className="p-4">
@@ -131,13 +155,11 @@ export function RegisterButton({
   }
 
   const toggle = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    )
+    setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
   }
 
   const totalCents = divisions
-    .filter((d) => selectedIds.includes(d.id))
+    .filter(d => selectedIds.includes(d.id))
     .reduce((sum, d) => sum + d.feeCents, 0)
 
   const handleRegister = () => {
@@ -154,7 +176,7 @@ export function RegisterButton({
       <H3>Select Divisions</H3>
 
       <Stack direction="column" size="sm">
-        {divisions.map((div) => {
+        {divisions.map(div => {
           const atCapacity = div.capacity != null && (div._count?.entries ?? 0) >= div.capacity
           const isSelected = selectedIds.includes(div.id)
           return (
@@ -176,7 +198,11 @@ export function RegisterButton({
                 />
                 <span className="flex-1">
                   {div.name}
-                  {atCapacity && <Badge variant="danger" size="sm" className="ml-2">Full</Badge>}
+                  {atCapacity && (
+                    <Badge variant="danger" size="sm" className="ml-2">
+                      Full
+                    </Badge>
+                  )}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {div.feeCents > 0 ? `$${(div.feeCents / 100).toFixed(2)}` : "Free"}

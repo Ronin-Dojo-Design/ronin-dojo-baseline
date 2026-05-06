@@ -29,13 +29,13 @@ import { AsyncLocalStorage } from "node:async_hooks"
 const sessionUserState = { id: "" }
 const rateLimitState = { limited: false }
 const requestBrand = "BASELINE_MARTIAL_ARTS"
+const createRefundMock = mock(async () => ({}))
 
 // Per-call user identity, propagated through async context so two parallel
 // `createRegistrationCheckout` invocations can authenticate as different users.
 // Falls back to `sessionUserState.id` when no ALS context is set.
 const userIdALS = new AsyncLocalStorage<string>()
-const callAs = <T>(userId: string, fn: () => Promise<T>): Promise<T> =>
-  userIdALS.run(userId, fn)
+const callAs = <T>(userId: string, fn: () => Promise<T>): Promise<T> => userIdALS.run(userId, fn)
 
 // -----------------------------------------------------------------------------
 // Module mocks — must be installed before importing `register.ts`.
@@ -79,7 +79,7 @@ mock.module("~/lib/rate-limiter", () => ({
 mock.module("~/services/stripe", () => ({
   stripe: {
     checkout: { sessions: { create: async () => ({ url: "https://stripe.test/never-called" }) } },
-    refunds: { create: async () => ({}) },
+    refunds: { create: createRefundMock },
   },
 }))
 
@@ -87,8 +87,8 @@ mock.module("~/services/stripe", () => ({
 // Real imports happen *after* the mocks are registered.
 // -----------------------------------------------------------------------------
 
+import { cancelRegistration, createRegistrationCheckout } from "~/server/web/tournaments/register"
 import { db } from "~/services/db"
-import { createRegistrationCheckout } from "~/server/web/tournaments/register"
 
 // -----------------------------------------------------------------------------
 // Fixture set
@@ -301,6 +301,7 @@ beforeAll(async () => {
 // tournament. Capacity-shaping per test is done inside the test itself.
 beforeEach(async () => {
   if (!fx) return
+  createRefundMock.mockClear()
   await db.registrationEntry.deleteMany({ where: { divisionId: fx.divisionId } })
   await db.registration.deleteMany({ where: { tournamentId: fx.tournamentId } })
 })
@@ -501,5 +502,146 @@ describe("createRegistrationCheckout — capacity race", () => {
       where: { divisionId: fx.divisionId, status: "ACTIVE" },
     })
     expect(activeEntries).toBe(1)
+  })
+})
+
+describe("cancelRegistration — refunds", () => {
+  it("refunds a paid cancellation and cancels the registration and entry", async () => {
+    rateLimitState.limited = false
+
+    const registration = await db.registration.create({
+      data: {
+        tournamentId: fx.tournamentId,
+        userId: fx.userId,
+        status: "SUBMITTED",
+        paymentStatus: "PAID",
+        totalFeeCents: 2500,
+        stripePaymentIntentId: "pi_test_cancel_refund",
+        submittedAt: new Date(),
+        entries: {
+          create: [
+            {
+              divisionId: fx.divisionId,
+              tournamentRoleId: fx.roleId,
+              status: "ACTIVE",
+            },
+          ],
+        },
+      },
+      include: { entries: true },
+    })
+
+    const result = await callAs(fx.userId, () =>
+      cancelRegistration({ registrationId: registration.id }),
+    )
+
+    expect(result?.serverError).toBeUndefined()
+    expect(createRefundMock).toHaveBeenCalledTimes(1)
+    expect(createRefundMock).toHaveBeenCalledWith({
+      payment_intent: "pi_test_cancel_refund",
+    })
+
+    const updatedRegistration = await db.registration.findUniqueOrThrow({
+      where: { id: registration.id },
+      select: { status: true, paymentStatus: true },
+    })
+    expect(updatedRegistration.status).toBe("CANCELLED")
+    expect(updatedRegistration.paymentStatus).toBe("REFUNDED")
+
+    const updatedEntry = await db.registrationEntry.findUniqueOrThrow({
+      where: { id: registration.entries[0].id },
+      select: { status: true },
+    })
+    expect(updatedEntry.status).toBe("CANCELLED")
+  })
+
+  it("cancels a zero-fee paid registration without refunding and leaves payment status paid", async () => {
+    rateLimitState.limited = false
+
+    const registration = await db.registration.create({
+      data: {
+        tournamentId: fx.tournamentId,
+        userId: fx.userId,
+        status: "SUBMITTED",
+        paymentStatus: "PAID",
+        totalFeeCents: 0,
+        submittedAt: new Date(),
+        entries: {
+          create: [
+            {
+              divisionId: fx.divisionId,
+              tournamentRoleId: fx.roleId,
+              status: "ACTIVE",
+            },
+          ],
+        },
+      },
+      include: { entries: true },
+    })
+
+    const result = await callAs(fx.userId, () =>
+      cancelRegistration({ registrationId: registration.id }),
+    )
+
+    expect(result?.serverError).toBeUndefined()
+    expect(createRefundMock).not.toHaveBeenCalled()
+
+    const updatedRegistration = await db.registration.findUniqueOrThrow({
+      where: { id: registration.id },
+      select: { status: true, paymentStatus: true },
+    })
+    expect(updatedRegistration.status).toBe("CANCELLED")
+    expect(updatedRegistration.paymentStatus).toBe("PAID")
+
+    const updatedEntry = await db.registrationEntry.findUniqueOrThrow({
+      where: { id: registration.entries[0].id },
+      select: { status: true },
+    })
+    expect(updatedEntry.status).toBe("CANCELLED")
+  })
+
+  it("rejects a paid cancellation that needs a refund but has no payment intent", async () => {
+    rateLimitState.limited = false
+
+    const registration = await db.registration.create({
+      data: {
+        tournamentId: fx.tournamentId,
+        userId: fx.userId,
+        status: "SUBMITTED",
+        paymentStatus: "PAID",
+        totalFeeCents: 2500,
+        submittedAt: new Date(),
+        entries: {
+          create: [
+            {
+              divisionId: fx.divisionId,
+              tournamentRoleId: fx.roleId,
+              status: "ACTIVE",
+            },
+          ],
+        },
+      },
+      include: { entries: true },
+    })
+
+    const result = await callAs(fx.userId, () =>
+      cancelRegistration({ registrationId: registration.id }),
+    )
+
+    expect(result?.serverError).toMatch(/no payment intent ID/)
+    expect(createRefundMock).not.toHaveBeenCalled()
+
+    const updatedRegistration = await db.registration.findUniqueOrThrow({
+      where: { id: registration.id },
+      select: { status: true, paymentStatus: true },
+    })
+    expect(updatedRegistration.status).toBe("SUBMITTED")
+    expect(updatedRegistration.paymentStatus).toBe("PAID")
+
+    const updatedEntry = await db.registrationEntry.findUniqueOrThrow({
+      where: { id: registration.entries[0].id },
+      select: { status: true },
+    })
+    expect(updatedEntry.status).toBe("ACTIVE")
   })
 })
