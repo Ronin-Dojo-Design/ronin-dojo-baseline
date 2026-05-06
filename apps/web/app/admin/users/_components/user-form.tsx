@@ -19,6 +19,13 @@ import { FormMedia } from "~/components/common/form-media"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import { Link } from "~/components/common/link"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
 import { updateUser } from "~/server/admin/users/actions"
@@ -40,6 +47,7 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
         name: user.name,
         email: user.email,
         image: user.image ?? "",
+        role: (user.role as "admin" | "tournament_director" | "user") ?? "user",
       },
     },
 
@@ -99,6 +107,29 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="tournament_director">Tournament Director</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

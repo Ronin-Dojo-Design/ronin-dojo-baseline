@@ -1,32 +1,32 @@
 "use server"
 
 import { after } from "next/server"
-import { adminActionClient } from "~/lib/safe-actions"
+import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 import { seedEntries } from "~/server/admin/tournaments/bracket-seeding"
 import {
-  tournamentSchema,
-  tournamentDisciplineSchema,
-  divisionSchema,
-  updateTournamentStatusSchema,
-  registrationStatusUpdateSchema,
   bulkRegistrationStatusUpdateSchema,
-  REGISTRATION_STATUS_TRANSITIONS,
+  divisionSchema,
   generateBracketSchema,
-  scoreMatchSchema,
-  tournamentRoleSchema,
-  tournamentStaffAssignmentSchema,
-  weighInRecordSchema,
-  ruleSetSchema,
   matAssignmentSchema,
   publishFightRecordSchema,
+  REGISTRATION_STATUS_TRANSITIONS,
+  registrationStatusUpdateSchema,
+  ruleSetSchema,
+  scoreMatchSchema,
+  tournamentDisciplineSchema,
+  tournamentRoleSchema,
+  tournamentSchema,
+  tournamentStaffAssignmentSchema,
+  updateTournamentStatusSchema,
+  weighInRecordSchema,
 } from "~/server/admin/tournaments/schema"
 
 // -----------------------------------------------------------------------------
 // Tournament CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertTournament = adminActionClient
+export const upsertTournament = tournamentAdminActionClient
   .inputSchema(tournamentSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, ...input } = parsedInput
@@ -54,7 +54,7 @@ export const upsertTournament = adminActionClient
     return tournament
   })
 
-export const deleteTournaments = adminActionClient
+export const deleteTournaments = tournamentAdminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     await db.tournament.deleteMany({
@@ -80,7 +80,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   ARCHIVED: [],
 }
 
-export const updateTournamentStatus = adminActionClient
+export const updateTournamentStatus = tournamentAdminActionClient
   .inputSchema(updateTournamentStatusSchema)
   .action(async ({ parsedInput: { id, status }, ctx: { db, revalidate, brand } }) => {
     const tournament = await db.tournament.findUniqueOrThrow({ where: { id, brand } })
@@ -111,7 +111,7 @@ export const updateTournamentStatus = adminActionClient
 // Tournament Discipline CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertTournamentDiscipline = adminActionClient
+export const upsertTournamentDiscipline = tournamentAdminActionClient
   .inputSchema(tournamentDisciplineSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, ...input } = parsedInput
@@ -134,7 +134,7 @@ export const upsertTournamentDiscipline = adminActionClient
     return td
   })
 
-export const deleteTournamentDiscipline = adminActionClient
+export const deleteTournamentDiscipline = tournamentAdminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
     const td = await db.tournamentDiscipline.delete({ where: { id } })
@@ -152,7 +152,7 @@ export const deleteTournamentDiscipline = adminActionClient
 // Division CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertDivision = adminActionClient
+export const upsertDivision = tournamentAdminActionClient
   .inputSchema(divisionSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, ...input } = parsedInput
@@ -183,7 +183,7 @@ export const upsertDivision = adminActionClient
     return division
   })
 
-export const deleteDivision = adminActionClient
+export const deleteDivision = tournamentAdminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
     const division = await db.division.delete({ where: { id } })
@@ -201,7 +201,7 @@ export const deleteDivision = adminActionClient
 // Registration status transitions (admin)
 // -----------------------------------------------------------------------------
 
-export const updateRegistrationStatus = adminActionClient
+export const updateRegistrationStatus = tournamentAdminActionClient
   .inputSchema(registrationStatusUpdateSchema)
   .action(async ({ parsedInput: { registrationId, status }, ctx: { db, revalidate } }) => {
     const registration = await db.registration.findUniqueOrThrow({
@@ -238,7 +238,7 @@ export const updateRegistrationStatus = adminActionClient
     return updated
   })
 
-export const bulkUpdateRegistrationStatus = adminActionClient
+export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
   .inputSchema(bulkRegistrationStatusUpdateSchema)
   .action(async ({ parsedInput: { registrationIds, status }, ctx: { db, revalidate } }) => {
     const registrations = await db.registration.findMany({
@@ -247,14 +247,14 @@ export const bulkUpdateRegistrationStatus = adminActionClient
     })
 
     // Validate all transitions before applying any
-    const invalid = registrations.filter((r) => {
+    const invalid = registrations.filter(r => {
       const allowed = REGISTRATION_STATUS_TRANSITIONS[r.status] ?? []
       return !allowed.includes(status)
     })
 
     if (invalid.length > 0) {
       throw new Error(
-        `Cannot transition ${invalid.length} registration(s): ${invalid.map((r) => `${r.id} (${r.status})`).join(", ")}`,
+        `Cannot transition ${invalid.length} registration(s): ${invalid.map(r => `${r.id} (${r.status})`).join(", ")}`,
       )
     }
 
@@ -271,14 +271,11 @@ export const bulkUpdateRegistrationStatus = adminActionClient
       })
     }
 
-    const tournamentIds = [...new Set(registrations.map((r) => r.tournamentId))]
+    const tournamentIds = [...new Set(registrations.map(r => r.tournamentId))]
 
     after(async () => {
       revalidate({
-        tags: [
-          "tournaments",
-          ...tournamentIds.map((tid) => `tournament-registrations-${tid}`),
-        ],
+        tags: ["tournaments", ...tournamentIds.map(tid => `tournament-registrations-${tid}`)],
       })
     })
 
@@ -289,7 +286,7 @@ export const bulkUpdateRegistrationStatus = adminActionClient
 // Bracket generation
 // -----------------------------------------------------------------------------
 
-export const generateBracket = adminActionClient
+export const generateBracket = tournamentAdminActionClient
   .inputSchema(generateBracketSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { divisionId, bracketName, seedingMethod, manualSeeds } = parsedInput
@@ -352,17 +349,19 @@ export const generateBracket = adminActionClient
     })
 
     if (entries.length < 2) {
-      throw new Error(`Need at least 2 approved entries to generate a bracket. Found ${entries.length}.`)
+      throw new Error(
+        `Need at least 2 approved entries to generate a bracket. Found ${entries.length}.`,
+      )
     }
 
     // 4. Calculate single-elimination bracket structure
     const competitorCount = entries.length
     const totalRounds = Math.ceil(Math.log2(competitorCount))
-    const bracketSize = Math.pow(2, totalRounds) // Next power of 2
+    const bracketSize = 2 ** totalRounds // Next power of 2
     const byeCount = bracketSize - competitorCount
 
     // 5. Create bracket, matches, and competitors in a transaction
-    const bracket = await db.$transaction(async (tx) => {
+    const bracket = await db.$transaction(async tx => {
       // Create the bracket
       const bracket = await tx.bracket.create({
         data: {
@@ -402,7 +401,7 @@ export const generateBracket = adminActionClient
 
       // Seed competitors into round 1 using selected seeding method
       // Build FightRecord lookup for TOURNAMENT_RANKING
-      const userIds = entries.map((e) => e.registration.user.id)
+      const userIds = entries.map(e => e.registration.user.id)
       const fightRecords =
         seedingMethod === "TOURNAMENT_RANKING"
           ? await tx.fightRecord.findMany({
@@ -415,22 +414,16 @@ export const generateBracket = adminActionClient
           : []
 
       const fightRecordMap = new Map(
-        fightRecords.map((fr) => [
-          fr.userId,
-          fr.wins - fr.losses + fr.draws * 0.5,
-        ]),
+        fightRecords.map(fr => [fr.userId, fr.wins - fr.losses + fr.draws * 0.5]),
       )
 
-      const manualSeedMap = new Map(
-        (manualSeeds ?? []).map((ms) => [ms.entryId, ms.seed]),
-      )
+      const manualSeedMap = new Map((manualSeeds ?? []).map(ms => [ms.entryId, ms.seed]))
 
       const seedable = entries.map((e, i) => ({
         id: e.id,
         registrationOrder: i,
         tournamentRankingScore: fightRecordMap.get(e.registration.user.id) ?? null,
-        martialArtsRankOrdinal:
-          e.registration.user.rankAwards?.[0]?.rank?.sortOrder ?? null,
+        martialArtsRankOrdinal: e.registration.user.rankAwards?.[0]?.rank?.sortOrder ?? null,
         manualSeed: manualSeedMap.get(e.id) ?? null,
       }))
       const seeded = seedEntries(seedable, bracketSize, seedingMethod)
@@ -464,7 +457,7 @@ export const generateBracket = adminActionClient
 
       // Create empty matches for subsequent rounds
       for (let round = 2; round <= totalRounds; round++) {
-        const matchesInRound = bracketSize / Math.pow(2, round)
+        const matchesInRound = bracketSize / 2 ** round
         for (let i = 0; i < matchesInRound; i++) {
           matchNumber++
           await tx.match.create({
@@ -515,11 +508,7 @@ export const generateBracket = adminActionClient
 
     after(async () => {
       revalidate({
-        tags: [
-          "tournaments",
-          `tournament-${tournamentSlug}`,
-          `division-${divisionId}`,
-        ],
+        tags: ["tournaments", `tournament-${tournamentSlug}`, `division-${divisionId}`],
       })
     })
 
@@ -560,14 +549,12 @@ async function advanceWinner(
     select: { id: true, matchNumber: true },
   })
 
-  const positionInRound = roundMatches.findIndex(
-    (m: any) => m.matchNumber === completedMatchNumber,
-  )
+  const positionInRound = roundMatches.findIndex((m: any) => m.matchNumber === completedMatchNumber)
 
   // Next round match: pair of matches feed into one
   const nextRoundMatchIndex = Math.floor(positionInRound / 2)
   // Slot: odd position (0-indexed) in round → slot 1, even → slot 2
-  const slot = (positionInRound % 2 === 0) ? 1 : 2
+  const slot = positionInRound % 2 === 0 ? 1 : 2
 
   // Find the target match in the next round
   const nextRoundMatches = await (tx as any).match.findMany({
@@ -578,7 +565,7 @@ async function advanceWinner(
 
   const targetMatch = nextRoundMatches[nextRoundMatchIndex]
   if (!targetMatch) {
-    throw new Error(`Could not find next-round match for advancement`)
+    throw new Error("Could not find next-round match for advancement")
   }
 
   // Create the MatchCompetitor in the next round
@@ -593,7 +580,7 @@ async function advanceWinner(
   return { matchId: targetMatch.id, slot }
 }
 
-export const scoreMatch = adminActionClient
+export const scoreMatch = tournamentAdminActionClient
   .inputSchema(scoreMatchSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { matchId, winnerEntryId, result, scoreData, notes } = parsedInput
@@ -610,12 +597,24 @@ export const scoreMatch = adminActionClient
             division: {
               select: {
                 ruleSet: {
-                  select: { id: true, scoringMethod: true, matchDurationSec: true, overtimeSec: true, scoringConfig: true },
+                  select: {
+                    id: true,
+                    scoringMethod: true,
+                    matchDurationSec: true,
+                    overtimeSec: true,
+                    scoringConfig: true,
+                  },
                 },
                 tournamentDiscipline: {
                   select: {
                     ruleSet: {
-                      select: { id: true, scoringMethod: true, matchDurationSec: true, overtimeSec: true, scoringConfig: true },
+                      select: {
+                        id: true,
+                        scoringMethod: true,
+                        matchDurationSec: true,
+                        overtimeSec: true,
+                        scoringConfig: true,
+                      },
                     },
                     tournament: { select: { slug: true } },
                   },
@@ -636,9 +635,7 @@ export const scoreMatch = adminActionClient
     }
 
     // 3. Validate winner is a competitor in this match
-    const isValidWinner = match.competitors.some(
-      (c) => c.registrationEntryId === winnerEntryId,
-    )
+    const isValidWinner = match.competitors.some(c => c.registrationEntryId === winnerEntryId)
     if (!isValidWinner) {
       throw new Error("Winner must be a competitor in this match")
     }
@@ -648,7 +645,7 @@ export const scoreMatch = adminActionClient
     const totalRounds = seedData?.totalRounds ?? 1
 
     // 5. Score + advance in transaction
-    const scored = await db.$transaction(async (tx) => {
+    const scored = await db.$transaction(async tx => {
       // Update match
       const updated = await tx.match.update({
         where: { id: matchId },
@@ -675,16 +672,11 @@ export const scoreMatch = adminActionClient
       return { match: updated, advancement }
     })
 
-    const tournamentSlug =
-      match.bracket.division.tournamentDiscipline.tournament.slug
+    const tournamentSlug = match.bracket.division.tournamentDiscipline.tournament.slug
 
     after(async () => {
       revalidate({
-        tags: [
-          "tournaments",
-          `tournament-${tournamentSlug}`,
-          `bracket-${match.bracket.id}`,
-        ],
+        tags: ["tournaments", `tournament-${tournamentSlug}`, `bracket-${match.bracket.id}`],
       })
     })
 
@@ -700,7 +692,7 @@ export const scoreMatch = adminActionClient
 // TournamentRole CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertTournamentRole = adminActionClient
+export const upsertTournamentRole = tournamentAdminActionClient
   .inputSchema(tournamentRoleSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, ...input } = parsedInput
@@ -721,7 +713,7 @@ export const upsertTournamentRole = adminActionClient
     return role
   })
 
-export const deleteTournamentRoles = adminActionClient
+export const deleteTournamentRoles = tournamentAdminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
     await db.tournamentRole.deleteMany({
@@ -739,7 +731,7 @@ export const deleteTournamentRoles = adminActionClient
 // TournamentStaffAssignment CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertTournamentStaffAssignment = adminActionClient
+export const upsertTournamentStaffAssignment = tournamentAdminActionClient
   .inputSchema(tournamentStaffAssignmentSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, divisionId, ...input } = parsedInput
@@ -767,7 +759,7 @@ export const upsertTournamentStaffAssignment = adminActionClient
     return assignment
   })
 
-export const deleteTournamentStaffAssignments = adminActionClient
+export const deleteTournamentStaffAssignments = tournamentAdminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
     await db.tournamentStaffAssignment.deleteMany({
@@ -785,7 +777,7 @@ export const deleteTournamentStaffAssignments = adminActionClient
 // WeighInRecord CRUD
 // -----------------------------------------------------------------------------
 
-export const createWeighInRecord = adminActionClient
+export const createWeighInRecord = tournamentAdminActionClient
   .inputSchema(weighInRecordSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, user } }) => {
     const { id: _id, ...input } = parsedInput
@@ -806,7 +798,7 @@ export const createWeighInRecord = adminActionClient
     return record
   })
 
-export const markWeighInOfficial = adminActionClient
+export const markWeighInOfficial = tournamentAdminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
     const record = await db.weighInRecord.update({
@@ -832,7 +824,7 @@ export const markWeighInOfficial = adminActionClient
     return record
   })
 
-export const deleteWeighInRecords = adminActionClient
+export const deleteWeighInRecords = tournamentAdminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
     await db.weighInRecord.deleteMany({
@@ -850,7 +842,7 @@ export const deleteWeighInRecords = adminActionClient
 // RuleSet CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertRuleSet = adminActionClient
+export const upsertRuleSet = tournamentAdminActionClient
   .inputSchema(ruleSetSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
     const { id, disciplineId, ...input } = parsedInput
@@ -876,7 +868,7 @@ export const upsertRuleSet = adminActionClient
     return ruleSet
   })
 
-export const deleteRuleSets = adminActionClient
+export const deleteRuleSets = tournamentAdminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
     await db.ruleSet.deleteMany({
@@ -894,7 +886,7 @@ export const deleteRuleSets = adminActionClient
 // MatAssignment CRUD
 // -----------------------------------------------------------------------------
 
-export const upsertMatAssignment = adminActionClient
+export const upsertMatAssignment = tournamentAdminActionClient
   .inputSchema(matAssignmentSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, ...input } = parsedInput
@@ -915,7 +907,7 @@ export const upsertMatAssignment = adminActionClient
     return assignment
   })
 
-export const deleteMatAssignment = adminActionClient
+export const deleteMatAssignment = tournamentAdminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { db, revalidate } }) => {
     const assignment = await db.matAssignment.delete({
@@ -933,7 +925,7 @@ export const deleteMatAssignment = adminActionClient
 // FightRecord publication
 // -----------------------------------------------------------------------------
 
-export const publishFightRecord = adminActionClient
+export const publishFightRecord = tournamentAdminActionClient
   .inputSchema(publishFightRecordSchema)
   .action(async ({ parsedInput: { matchId }, ctx: { db, revalidate } }) => {
     // Load the match with competitors and division discipline

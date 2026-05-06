@@ -1,8 +1,8 @@
 import { TournamentRoleForm } from "~/app/admin/tournaments/roles/_components/tournament-role-form"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 
-export default withAdminPage(() => {
+export default withTournamentAdminPage(() => {
   return (
     <Wrapper size="md" gap="sm">
       <TournamentRoleForm title="Create tournament role" />

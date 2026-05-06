@@ -19,3 +19,20 @@ export const withAdminPage = (Component: FunctionComponent<any>) => {
     return <Component {...props} />
   }
 }
+
+/**
+ * Wraps a page component with tournament-admin authentication.
+ * Allows users with role "admin" or "tournament_director". Others get a 404.
+ */
+export const withTournamentAdminPage = (Component: FunctionComponent<any>) => {
+  return async function TournamentAdminProtectedPage(props: any) {
+    const session = await getServerSession()
+    const role = session?.user.role
+
+    if (role !== "admin" && role !== "tournament_director") {
+      notFound()
+    }
+
+    return <Component {...props} />
+  }
+}

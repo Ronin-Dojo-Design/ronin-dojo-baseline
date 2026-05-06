@@ -22,6 +22,7 @@ import {
   UsersIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import type { MouseEvent, ReactNode } from "react"
 import { toast } from "sonner"
 import { Nav } from "~/components/admin/nav"
 import { Button } from "~/components/common/button"
@@ -32,12 +33,19 @@ import { siteConfig } from "~/config/site"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
 
-export const Sidebar = () => {
+type SidebarProps = {
+  userRole?: string
+}
+
+const TOURNAMENT_DIRECTOR_HREFS = new Set(["/admin", "/admin/tournaments"])
+
+export const Sidebar = ({ userRole }: SidebarProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
   const search = useSearch()
+  const isTournamentDirector = userRole === "tournament_director"
 
-  const handleOpenSite = (e: React.MouseEvent<HTMLElement>) => {
+  const handleOpenSite = (e: MouseEvent<HTMLElement>) => {
     e.preventDefault()
     window.open(siteConfig.url, "_self")
   }
@@ -53,123 +61,170 @@ export const Sidebar = () => {
     })
   }
 
+  const allLinks: (NavLinkInput | undefined)[] = [
+    {
+      title: "Dashboard",
+      href: "/admin",
+      prefix: <LogoSymbol />,
+      suffix: (
+        <Tooltip tooltip="Visit site">
+          <Button
+            variant="ghost"
+            onClick={handleOpenSite}
+            className="-my-0.5 -mx-[0.21425em] px-1 py-[0.2em] text-xs/tight rounded-sm hover:bg-background"
+          >
+            <ExternalLinkIcon className="size-3" />
+          </Button>
+        </Tooltip>
+      ),
+    },
+
+    undefined, // Separator
+
+    {
+      title: "Tools",
+      href: "/admin/tools",
+      prefix: <GemIcon />,
+    },
+    {
+      title: "Courses",
+      href: "/admin/courses",
+      prefix: <BookOpenIcon />,
+    },
+    {
+      title: "Techniques",
+      href: "/admin/techniques",
+      prefix: <SwordsIcon />,
+    },
+    {
+      title: "Certificates",
+      href: "/admin/certificates",
+      prefix: <ScrollTextIcon />,
+    },
+    {
+      title: "Media",
+      href: "/admin/media",
+      prefix: <ImageIcon />,
+    },
+    {
+      title: "Leads",
+      href: "/admin/leads",
+      prefix: <ContactIcon />,
+    },
+    {
+      title: "Categories",
+      href: "/admin/categories",
+      prefix: <GalleryHorizontalEndIcon />,
+    },
+    {
+      title: "Tags",
+      href: "/admin/tags",
+      prefix: <TagIcon />,
+    },
+    {
+      title: "Users",
+      href: "/admin/users",
+      prefix: <UsersIcon />,
+    },
+    {
+      title: "Reports",
+      href: "/admin/reports",
+      prefix: <TriangleAlertIcon />,
+    },
+
+    undefined, // Separator
+
+    {
+      title: "Tiers",
+      href: "/admin/subscription-tiers",
+      prefix: <LayersIcon />,
+    },
+    {
+      title: "Subscriptions",
+      href: "/admin/subscriptions",
+      prefix: <CreditCardIcon />,
+    },
+
+    undefined, // Separator
+
+    {
+      title: "Schedule",
+      href: "/admin/schedule",
+      prefix: <CalendarIcon />,
+    },
+    {
+      title: "Tournaments",
+      href: "/admin/tournaments",
+      prefix: <TrophyIcon />,
+    },
+
+    undefined, // Separator
+
+    {
+      title: "Quick Menu",
+      href: "#",
+      onClick: search.open,
+      prefix: <DockIcon />,
+      suffix: <Kbd meta>K</Kbd>,
+    },
+    {
+      title: "Logout",
+      href: "#",
+      onClick: handleSignOut,
+      prefix: <LogOutIcon />,
+    },
+  ]
+
+  const links = isTournamentDirector
+    ? collapseSeparators(
+        allLinks.map(link => {
+          if (link === undefined) return undefined
+          const allowed =
+            TOURNAMENT_DIRECTOR_HREFS.has(link.href) ||
+            link.title === "Quick Menu" ||
+            link.title === "Logout"
+          return allowed ? link : null
+        }),
+      )
+    : allLinks
+
   return (
     <Nav
       isCollapsed={!!isMobile}
       className={cx("sticky top-0 h-dvh z-40 border-r", isMobile ? "w-12" : "w-48")}
-      links={[
-        {
-          title: "Dashboard",
-          href: "/admin",
-          prefix: <LogoSymbol />,
-          suffix: (
-            <Tooltip tooltip="Visit site">
-              <Button
-                variant="ghost"
-                onClick={handleOpenSite}
-                className="-my-0.5 -mx-[0.21425em] px-1 py-[0.2em] text-xs/tight rounded-sm hover:bg-background"
-              >
-                <ExternalLinkIcon className="size-3" />
-              </Button>
-            </Tooltip>
-          ),
-        },
-
-        undefined, // Separator
-
-        {
-          title: "Tools",
-          href: "/admin/tools",
-          prefix: <GemIcon />,
-        },
-        {
-          title: "Courses",
-          href: "/admin/courses",
-          prefix: <BookOpenIcon />,
-        },
-        {
-          title: "Techniques",
-          href: "/admin/techniques",
-          prefix: <SwordsIcon />,
-        },
-        {
-          title: "Certificates",
-          href: "/admin/certificates",
-          prefix: <ScrollTextIcon />,
-        },
-        {
-          title: "Media",
-          href: "/admin/media",
-          prefix: <ImageIcon />,
-        },
-        {
-          title: "Leads",
-          href: "/admin/leads",
-          prefix: <ContactIcon />,
-        },
-        {
-          title: "Categories",
-          href: "/admin/categories",
-          prefix: <GalleryHorizontalEndIcon />,
-        },
-        {
-          title: "Tags",
-          href: "/admin/tags",
-          prefix: <TagIcon />,
-        },
-        {
-          title: "Users",
-          href: "/admin/users",
-          prefix: <UsersIcon />,
-        },
-        {
-          title: "Reports",
-          href: "/admin/reports",
-          prefix: <TriangleAlertIcon />,
-        },
-
-        undefined, // Separator
-
-        {
-          title: "Tiers",
-          href: "/admin/subscription-tiers",
-          prefix: <LayersIcon />,
-        },
-        {
-          title: "Subscriptions",
-          href: "/admin/subscriptions",
-          prefix: <CreditCardIcon />,
-        },
-
-        undefined, // Separator
-
-        {
-          title: "Schedule",
-          href: "/admin/schedule",
-          prefix: <CalendarIcon />,
-        },
-        {
-          title: "Tournaments",
-          href: "/admin/tournaments",
-          prefix: <TrophyIcon />,
-        },
-
-        undefined, // Separator
-
-        {
-          title: "Quick Menu",
-          href: "#",
-          onClick: search.open,
-          prefix: <DockIcon />,
-          suffix: <Kbd meta>K</Kbd>,
-        },
-        {
-          title: "Logout",
-          href: "#",
-          onClick: handleSignOut,
-          prefix: <LogOutIcon />,
-        },
-      ]}
+      links={links}
     />
   )
+}
+
+type NavLinkInput = {
+  title: string
+  href: string
+  prefix?: ReactNode
+  suffix?: ReactNode
+  onClick?: (e: MouseEvent<HTMLElement>) => void
+}
+
+// Drop nulls (filtered links) and collapse adjacent/trailing separators (undefined).
+function collapseSeparators(
+  items: (NavLinkInput | undefined | null)[],
+): (NavLinkInput | undefined)[] {
+  const kept = items.filter((item): item is NavLinkInput | undefined => item !== null)
+  const out: (NavLinkInput | undefined)[] = []
+  let lastWasSeparator = false
+  for (const item of kept) {
+    if (item === undefined) {
+      if (!lastWasSeparator && out.length > 0) {
+        out.push(undefined)
+        lastWasSeparator = true
+      }
+    } else {
+      out.push(item)
+      lastWasSeparator = false
+    }
+  }
+  if (out.length > 0 && out[out.length - 1] === undefined) {
+    out.pop()
+  }
+  return out
 }

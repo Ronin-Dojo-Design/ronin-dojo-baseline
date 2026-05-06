@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
+import { RegistrationsTable } from "~/components/admin/tournaments/registrations-table"
 import { H4 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
-import { RegistrationsTable } from "~/components/admin/tournaments/registrations-table"
+import { getRequestBrand } from "~/lib/brand-context"
 import { findTournamentById } from "~/server/admin/tournaments/queries"
 import { findRegistrationsByTournamentId } from "~/server/admin/tournaments/registrations-queries"
-import { getRequestBrand } from "~/lib/brand-context"
 
-export default withAdminPage(async ({ params }) => {
+export default withTournamentAdminPage(async ({ params }) => {
   const { id } = await params
   const brand = await getRequestBrand()
   const tournament = await findTournamentById(id)
@@ -21,10 +21,7 @@ export default withAdminPage(async ({ params }) => {
   return (
     <Wrapper size="md" gap="sm">
       <H4>Registrations — {tournament.name}</H4>
-      <RegistrationsTable
-        registrations={registrations}
-        tournamentName={tournament.name}
-      />
+      <RegistrationsTable registrations={registrations} tournamentName={tournament.name} />
     </Wrapper>
   )
 })

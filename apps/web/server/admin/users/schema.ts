@@ -26,7 +26,7 @@ export const userSchema = z.object({
   name: z.string().optional(),
   email: z.email("Invalid email").optional().or(z.literal("")),
   image: z.url().optional().or(z.literal("")),
-  role: z.enum(["admin", "user"]).optional(),
+  role: z.enum(["admin", "tournament_director", "user"]).optional(),
 })
 
 export type UserSchema = z.infer<typeof userSchema>

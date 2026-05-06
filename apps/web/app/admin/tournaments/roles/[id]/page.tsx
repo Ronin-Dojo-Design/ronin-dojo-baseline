@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
 import { TournamentRoleForm } from "~/app/admin/tournaments/roles/_components/tournament-role-form"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { findTournamentRoleById } from "~/server/admin/tournaments/queries"
 
-export default withAdminPage(async ({ params }) => {
+export default withTournamentAdminPage(async ({ params }) => {
   const { id } = await params
   const role = await findTournamentRoleById(id)
 

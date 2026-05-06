@@ -82,6 +82,19 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
 })
 
 // -----------------------------------------------------------------------------
-// 4. Public client (no auth required — for unauthenticated forms)
+// 4. Tournament-admin client (allows "admin" or "tournament_director")
+// -----------------------------------------------------------------------------
+export const tournamentAdminActionClient = userActionClient.use(async ({ next, ctx }) => {
+  if (ctx.user.role !== "admin" && ctx.user.role !== "tournament_director") {
+    throw new Error("User not authorized")
+  }
+
+  const brand = await getRequestBrand()
+
+  return next({ ctx: { brand } })
+})
+
+// -----------------------------------------------------------------------------
+// 5. Public client (no auth required — for unauthenticated forms)
 // -----------------------------------------------------------------------------
 export const publicActionClient = actionClient

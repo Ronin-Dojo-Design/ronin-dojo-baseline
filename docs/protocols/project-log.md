@@ -418,6 +418,12 @@ Three sections:
 | SESSION_0077_TASK_04 | SESSION_0077 | Core platform | Cody | MatAssignment panel (assign matches to mats/rings) | MatAssignment panel implemented for assigning matches | ✅ Done | — |
 | SESSION_0077_TASK_05 | SESSION_0077 | Core platform | Cody | FightRecord publication (W/L/D from completed matches) | FightRecord publication feature implemented | ✅ Done | — |
 | SESSION_0077_TASK_06 | SESSION_0077 | Core platform | Cody | Deployment runbook + pre-flight script | Runbook and script for deployment pre-flight checks created | ✅ Done | — |
+| SESSION_0078_TASK_01 | SESSION_0078 | Tournament ops | Cody (Copilot) | Public tournament results page (medal standings + bracket results) | `/tournaments/[slug]/results` route with medal standings + bracket results | landed | — |
+| SESSION_0078_TASK_02 | SESSION_0078 | Tournament ops | Cody (Copilot) | RuleSet → Division wiring | Division-level ruleSet override; scoringMethod threaded through bracket UI | landed | — |
+| SESSION_0078_TASK_03 | SESSION_0078 | Tournament ops | Cody (Copilot) | Seeding algorithm + tests | 4 seeding strategies + 17 unit tests passing | landed | — |
+| SESSION_0079_TASK_01 | SESSION_0079 | Core platform governance | Petey (Claude) | Pull Giddy persona from monorepo into `docs/agents/giddy.md` | `docs/agents/giddy.md` exists with v5.0 frontmatter, voice matched to petey/cody | landed | SESSION_0079_REVIEW_01 |
+| SESSION_0079_TASK_02 | SESSION_0079 | Tournament ops | Cody (Claude) | Tournament director role: schema enum + HOC + action client + admin UI + sidebar gating | Role value added (no migration), HOC + client added, 12 pages re-HOC'd, 10 actions re-clienthd, user form Role select live, sidebar filters for tournament_director | landed | SESSION_0079_REVIEW_01 |
+| SESSION_0079_TASK_03 | SESSION_0079 | Core platform governance | Petey (Claude) | Document porting awareness (curriculum paths, cross-brand reqs, no-design-tokens, Path B appendix) | All 4 awareness sections present in SESSION_0079.md | landed | SESSION_0079_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 

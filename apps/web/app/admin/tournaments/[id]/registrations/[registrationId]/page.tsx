@@ -1,15 +1,15 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
 import { formatDate } from "@primoui/utils"
 import { ArrowLeftIcon } from "lucide-react"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { WeighInPanel } from "~/app/admin/tournaments/_components/weigh-in-panel"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
 import { H3, H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { Wrapper } from "~/components/common/wrapper"
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
-import { WeighInPanel } from "~/app/admin/tournaments/_components/weigh-in-panel"
+import { Wrapper } from "~/components/common/wrapper"
 import { findRegistrationById, findWeighInRecords } from "~/server/admin/tournaments/queries"
 
 const STATUS_VARIANT: Record<string, "success" | "warning" | "danger" | "soft"> = {
@@ -36,7 +36,7 @@ const PAYMENT_VARIANT: Record<string, "success" | "warning" | "danger" | "soft">
   WAIVED: "soft",
 }
 
-export default withAdminPage(async ({ params }) => {
+export default withTournamentAdminPage(async ({ params }) => {
   const { id, registrationId } = await params
   const registration = await findRegistrationById(registrationId)
 
@@ -84,10 +84,7 @@ export default withAdminPage(async ({ params }) => {
             <div>
               <Note className="text-xs font-medium uppercase tracking-wider">Tournament</Note>
               <p className="mt-1">
-                <Link
-                  href={`/admin/tournaments/${id}`}
-                  className="text-primary hover:underline"
-                >
+                <Link href={`/admin/tournaments/${id}`} className="text-primary hover:underline">
                   {registration.tournament.name}
                 </Link>
               </p>
@@ -102,7 +99,9 @@ export default withAdminPage(async ({ params }) => {
             </div>
             <div>
               <Note className="text-xs font-medium uppercase tracking-wider">Submitted</Note>
-              <p className="mt-1">{registration.submittedAt ? formatDate(registration.submittedAt) : "—"}</p>
+              <p className="mt-1">
+                {registration.submittedAt ? formatDate(registration.submittedAt) : "—"}
+              </p>
             </div>
             <div>
               <Note className="text-xs font-medium uppercase tracking-wider">Created</Note>

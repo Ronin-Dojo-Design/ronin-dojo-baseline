@@ -1,16 +1,22 @@
-import { notFound } from "next/navigation"
 import Link from "next/link"
-import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
+import { notFound } from "next/navigation"
 import { DivisionsEditor } from "~/app/admin/tournaments/_components/divisions-editor"
-import { StaffPanel } from "~/app/admin/tournaments/_components/staff-panel"
-import { MatAssignmentPanel } from "~/app/admin/tournaments/_components/mat-assignment-panel"
 import { FightRecordPanel } from "~/app/admin/tournaments/_components/fight-record-panel"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { MatAssignmentPanel } from "~/app/admin/tournaments/_components/mat-assignment-panel"
+import { StaffPanel } from "~/app/admin/tournaments/_components/staff-panel"
+import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
-import { findTournamentById, findTournamentStaff, findTournamentRoles, findMatAssignmentsByTournament, findFightRecordsByTournament } from "~/server/admin/tournaments/queries"
+import {
+  findFightRecordsByTournament,
+  findMatAssignmentsByTournament,
+  findTournamentById,
+  findTournamentRoles,
+  findTournamentStaff,
+} from "~/server/admin/tournaments/queries"
 import { db } from "~/services/db"
 
-export default withAdminPage(async ({ params }) => {
+export default withTournamentAdminPage(async ({ params }) => {
   const { id } = await params
   const tournament = await findTournamentById(id)
 

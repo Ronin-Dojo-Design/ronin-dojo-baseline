@@ -1,12 +1,11 @@
-import { notFound } from "next/navigation"
 import Link from "next/link"
-import { withAdminPage } from "~/components/admin/auth-hoc"
-import { Wrapper } from "~/components/common/wrapper"
+import { notFound } from "next/navigation"
 import { BracketViewer } from "~/app/admin/tournaments/_components/bracket-viewer"
-import { findBracketsByDivisionId } from "~/server/admin/tournaments/bracket-queries"
+import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
+import { Wrapper } from "~/components/common/wrapper"
 import { db } from "~/services/db"
 
-export default withAdminPage(async ({ params }) => {
+export default withTournamentAdminPage(async ({ params }) => {
   const { id, bracketId } = await params
 
   const bracket = await db.bracket.findUnique({
@@ -55,13 +54,8 @@ export default withAdminPage(async ({ params }) => {
   return (
     <Wrapper size="md" gap="sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">
-          Bracket: {bracket.division.name}
-        </h2>
-        <Link
-          href={`/admin/tournaments/${id}`}
-          className="text-sm text-primary hover:underline"
-        >
+        <h2 className="text-lg font-semibold">Bracket: {bracket.division.name}</h2>
+        <Link href={`/admin/tournaments/${id}`} className="text-sm text-primary hover:underline">
           ← Back to Tournament
         </Link>
       </div>
