@@ -25,3 +25,7 @@ prisma/migrations/dev/
 ios/build/
 android/build/
 android/.gradle/
+
+# Playwright artifacts
+test-results/
+playwright-report/
