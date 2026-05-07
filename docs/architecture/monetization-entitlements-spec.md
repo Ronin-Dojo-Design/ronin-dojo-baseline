@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-30
 updated: 2026-05-07
-last_agent: codex-session-0094
+last_agent: codex-session-0095
 pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
@@ -17,6 +17,7 @@ backlinks:
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0030.md
   - docs/sprints/SESSION_0094.md
+  - docs/sprints/SESSION_0095.md
   - docs/knowledge/wiki/index.md
 ---
 
@@ -26,7 +27,7 @@ backlinks:
 
 Define the commercial access contract that connects Stripe, pricing, invoices, subscriptions, program enrollments, course access, certificate issuance, refunds, and revocation.
 
-This doc started as a SESSION_0029 spec. SESSION_0094 reconciles it against the current code: the entitlement schema and Stripe Price mapping now exist, but launch proof for one-time course/certification purchases, subscriptions, Customer Portal, and ledger projection is still open.
+This doc started as a SESSION_0029 spec. SESSION_0094 reconciled it against the current code: the entitlement schema and Stripe Price mapping now exist. SESSION_0095 proved one-time and subscription Checkout entitlement grant/revoke behavior in the webhook harness; Customer Portal/customer identity, ledger projection, and subscription policy gaps remain open.
 
 ## Authority
 
@@ -74,7 +75,7 @@ Payment succeeds
 | Promo codes | `PromoCode` | Discount record exists but is not an entitlement source yet. |
 | Brand subscriptions | `SubscriptionTier`, `UserBrandSubscription` | Useful for BBL/directory-style tiers, but not enough for program/course access. |
 | Entitlements | `Entitlement`, `EntitlementGrant`, `UserEntitlement`, `server/web/entitlement/*` | The schema bridge now exists; current helpers check active brand-scoped access and grant manually by entitlement key. |
-| Stripe webhook | `app/api/stripe/webhooks/route.ts` | Handles `checkout.session.completed`, grants entitlements by `PricingPlan.stripePriceId`, fulfills program/tournament projections, and revokes subscription-sourced entitlements on `customer.subscription.deleted`. |
+| Stripe webhook | `app/api/stripe/webhooks/route.ts` | Handles `checkout.session.completed`, grants entitlements by `PricingPlan.stripePriceId`, fulfills program/tournament projections, and revokes subscription-sourced entitlements on `customer.subscription.deleted`. SESSION_0095 tests prove one-time replay/source isolation and subscription grant/revoke by source id. |
 | Dirstarter product UI | `server/web/products/*`, `apps/web/scripts/setup-stripe-products.ts`, `app/api/stripe/webhooks/route.ts` | Uses Stripe Products/Prices directly for listing plans and updates Dirstarter `Tool.isFeatured`; generic checkout action is not the protected Ronin paid-access template. |
 | Certificates | `CertificateTemplate.priceCents`, `CertificateOrder.stripePaymentIntentId` | Inline certificate pricing already exists from Pass 4. |
 
@@ -347,12 +348,11 @@ Use the tournament webhook harness as the proof shape for every launch-critical 
 | --- | --- | --- |
 | Stripe Customer ID storage | Customer Portal sessions require a customer identifier, and webhook/customer correlation is fragile without one. | SESSION_0096 decision/implementation. |
 | Generic checkout action accepts caller-supplied metadata | Fine for Dirstarter listing flow, but protected Ronin paid access must derive user/brand/org/metadata server-side. | Protected checkout action before paid learning surfaces. |
-| One-time entitlement proof missing | Current tournament proof is strong, but course/certification access needs its own `PricingPlan.stripePriceId` grant test. | SESSION_0095. |
-| Subscription lifecycle proof incomplete | Current webhook handles checkout completion and deletion; update, failed-payment, grace, refund, and dispute policy are not launch-solid. | SESSION_0095 proof plus SESSION_0096 policy. |
-| Non-tournament ledger projection incomplete | `Invoice`/`Payment` exist but are not consistently created from entitlement Checkout success. | SESSION_0095/0096 depending on scope. |
+| One-time ledger projection incomplete | SESSION_0095 proves a mapped one-time Stripe Price grants one PURCHASE entitlement and activates `ProgramEnrollment`; it does not create `Invoice`/`Payment` ledger rows yet. | SESSION_0096 ledger decision/implementation. |
+| Subscription policy coverage incomplete | SESSION_0095 proves subscription Checkout grant, replay idempotency, and `customer.subscription.deleted` revoke by subscription id; update, failed-payment, grace, refund, and dispute policy are not launch-solid. | SESSION_0096 policy. |
+| Non-tournament ledger projection incomplete | `Invoice`/`Payment` exist but are not consistently created from entitlement Checkout success. | SESSION_0096 decision/implementation. |
 | Certificate pricing bridge unresolved | `CertificateTemplate.priceCents` exists while entitlement-oriented paid certificates may need `PricingPlan`. | Owner/Petey decision before paid certificate launch. |
-| Entitlement idempotency is app-level | `UserEntitlement` has lookup indexes but no DB unique constraint for user/entitlement/source. | Decide whether launch needs a DB constraint or accepted-risk note. |
-| One-time entitlement replay edge | Current webhook lookup checks `sourceId` from `session.subscription` but one-time creation stores `session.id`; a replay of the same one-time Checkout session may not reactivate the existing row. | SESSION_0095 test should expose/fix or explicitly defer. |
+| Entitlement idempotency is app-level | SESSION_0095 proves sequential replay for one-time and subscription checkout events, but `UserEntitlement` has lookup indexes rather than a DB unique constraint for user/entitlement/source. | Decide whether launch needs a DB constraint or accepted-risk note. |
 
 ## What Not To Build Yet
 

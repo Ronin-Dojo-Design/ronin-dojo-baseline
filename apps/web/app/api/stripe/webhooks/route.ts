@@ -6,6 +6,33 @@ import { notifyAdminOfPremiumTool, notifySubmitterOfPremiumTool } from "~/lib/no
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
+const isPrismaWriteConflict = (error: unknown) => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2034"
+  )
+}
+
+const retryOnSerializableWriteConflict = async <T>(operation: () => Promise<T>): Promise<T> => {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+
+      if (!isPrismaWriteConflict(error) || attempt === 3) {
+        throw error
+      }
+    }
+  }
+
+  throw lastError
+}
+
 /**
  * Fulfill a program enrollment after successful Stripe checkout.
  * Creates ProgramEnrollment record.
@@ -52,7 +79,7 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
-      : session.payment_intent?.id ?? null
+      : (session.payment_intent?.id ?? null)
 
   // Upsert: if registration exists (race condition), just update payment status
   const existing = await db.registration.findUnique({
@@ -74,100 +101,102 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
 
   const totalFeeCents = session.amount_total ?? 0
 
-  const result = await db.$transaction(
-    async (tx) => {
-      const divisions = await tx.division.findMany({
-        where: { id: { in: parsedDivisionIds } },
-        include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
-      })
-
-      if (divisions.length !== parsedDivisionIds.length) {
-        throw new Error("One or more selected divisions not found")
-      }
-
-      // Snapshot the user's current rank and org for registration entries
-      let snapshotRankName: string | null = null
-      let snapshotOrgName: string | null = null
-
-      if (representingMembershipId) {
-        const membership = await tx.membership.findUnique({
-          where: { id: representingMembershipId },
-          select: {
-            rank: { select: { name: true } },
-            organization: { select: { name: true } },
-          },
+  const result = await retryOnSerializableWriteConflict(() =>
+    db.$transaction(
+      async tx => {
+        const divisions = await tx.division.findMany({
+          where: { id: { in: parsedDivisionIds } },
+          include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
         })
 
-        if (membership) {
-          snapshotRankName = membership.rank?.name ?? null
-          snapshotOrgName = membership.organization?.name ?? null
+        if (divisions.length !== parsedDivisionIds.length) {
+          throw new Error("One or more selected divisions not found")
         }
-      }
 
-      const isAtCapacity = divisions.some(
-        (division) =>
-          division.capacity !== null &&
-          division.capacity > 0 &&
-          division._count.entries >= division.capacity,
-      )
+        // Snapshot the user's current rank and org for registration entries
+        let snapshotRankName: string | null = null
+        let snapshotOrgName: string | null = null
 
-      if (isAtCapacity) {
+        if (representingMembershipId) {
+          const membership = await tx.membership.findUnique({
+            where: { id: representingMembershipId },
+            select: {
+              rank: { select: { name: true } },
+              organization: { select: { name: true } },
+            },
+          })
+
+          if (membership) {
+            snapshotRankName = membership.rank?.name ?? null
+            snapshotOrgName = membership.organization?.name ?? null
+          }
+        }
+
+        const isAtCapacity = divisions.some(
+          division =>
+            division.capacity !== null &&
+            division.capacity > 0 &&
+            division._count.entries >= division.capacity,
+        )
+
+        if (isAtCapacity) {
+          const registration = await tx.registration.create({
+            data: {
+              tournamentId,
+              userId,
+              status: "CANCELLED",
+              paymentStatus: "REFUNDED",
+              totalFeeCents,
+              submittedAt: new Date(),
+              stripePaymentIntentId: paymentIntentId,
+              entries: {
+                create: parsedDivisionIds.map(divisionId => ({
+                  divisionId,
+                  tournamentRoleId: roleId,
+                  representingMembershipId: representingMembershipId || null,
+                  snapshotRankName,
+                  snapshotOrgName,
+                  status: "CANCELLED",
+                })),
+              },
+            },
+          })
+
+          return {
+            type: "refund-needed" as const,
+            registrationId: registration.id,
+            paymentIntentId,
+          }
+        }
+
         const registration = await tx.registration.create({
           data: {
             tournamentId,
             userId,
-            status: "CANCELLED",
-            paymentStatus: "REFUNDED",
+            status: "SUBMITTED",
+            paymentStatus: "PAID",
             totalFeeCents,
             submittedAt: new Date(),
             stripePaymentIntentId: paymentIntentId,
             entries: {
-              create: parsedDivisionIds.map((divisionId) => ({
+              create: parsedDivisionIds.map(divisionId => ({
                 divisionId,
                 tournamentRoleId: roleId,
                 representingMembershipId: representingMembershipId || null,
                 snapshotRankName,
                 snapshotOrgName,
-                status: "CANCELLED",
               })),
             },
           },
         })
 
         return {
-          type: "refund-needed" as const,
+          type: "registered" as const,
           registrationId: registration.id,
-          paymentIntentId,
         }
-      }
-
-      const registration = await tx.registration.create({
-        data: {
-          tournamentId,
-          userId,
-          status: "SUBMITTED",
-          paymentStatus: "PAID",
-          totalFeeCents,
-          submittedAt: new Date(),
-          stripePaymentIntentId: paymentIntentId,
-          entries: {
-            create: parsedDivisionIds.map((divisionId) => ({
-              divisionId,
-              tournamentRoleId: roleId,
-              representingMembershipId: representingMembershipId || null,
-              snapshotRankName,
-              snapshotOrgName,
-            })),
-          },
-        },
-      })
-
-      return {
-        type: "registered" as const,
-        registrationId: registration.id,
-      }
-    },
-    { isolationLevel: "Serializable" },
+      },
+      { isolationLevel: "Serializable" },
+    ),
   )
 
   if (result.type !== "refund-needed") return
@@ -217,12 +246,20 @@ async function grantEntitlementsFromCheckout(session: Stripe.Checkout.Session) {
     if (!plan) continue
 
     for (const grant of plan.entitlementGrants) {
+      const sourceType = session.mode === "subscription" ? "SUBSCRIPTION" : "PURCHASE"
+      const subscriptionId =
+        typeof session.subscription === "string" ? session.subscription : session.subscription?.id
+      const sourceId = sourceType === "SUBSCRIPTION" ? subscriptionId : session.id
+
+      if (!sourceId) continue
+
       // Upsert: reactivate if revoked/expired, or create new
       const existing = await db.userEntitlement.findFirst({
         where: {
           userId,
           entitlementId: grant.entitlement.id,
-          sourceId: session.subscription as string | undefined,
+          sourceType,
+          sourceId,
         },
       })
 
@@ -236,8 +273,8 @@ async function grantEntitlementsFromCheckout(session: Stripe.Checkout.Session) {
           data: {
             userId,
             entitlementId: grant.entitlement.id,
-            sourceType: session.mode === "subscription" ? "SUBSCRIPTION" : "PURCHASE",
-            sourceId: (session.subscription as string) ?? session.id,
+            sourceType,
+            sourceId,
           },
         })
       }

@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-05-07
+last_agent: codex-session-0095
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -22,6 +22,7 @@ backlinks:
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0030.md
   - docs/sprints/SESSION_0033.md
+  - docs/sprints/SESSION_0095.md
 ---
 
 # Project Log
@@ -448,6 +449,9 @@ Three sections:
 | SESSION_0094_TASK_01 | SESSION_0094 | Commerce | Petey + Giddy (Codex) | Bow in, refresh Graphify, query commerce/doc needs, and create active SESSION_0094 plan | `SESSION_0094.md` records bow-in, Graphify update/query output, Dirstarter alignment, and selected source files | landed | SESSION_0094_REVIEW_01 |
 | SESSION_0094_TASK_02 | SESSION_0094 | Commerce | Cody (Codex) | Reconcile commerce truth docs with landed entitlement schema and payment webhook behavior | `monetization-entitlements-spec.md` no longer claims entitlements are missing and includes the launch-safe payment flow/proof matrix | landed | SESSION_0094_REVIEW_01 |
 | SESSION_0094_TASK_03 | SESSION_0094 | Commerce governance | Doug + Giddy + Petey (Codex) | Update MB-013, verify docs, run hostile/full close, and stage SESSION_0095 | MB-013 names concrete one-time/subscription proof requirements; Project Log review and full-close evidence exist | landed | SESSION_0094_REVIEW_01 |
+| SESSION_0095_TASK_01 | SESSION_0095 | Commerce QA | Petey + Giddy (Codex) | Bow in, run targeted Graphify query without refresh, confirm Dirstarter alignment, create SESSION_0095, and record Cody backend pre-flight | `SESSION_0095.md` exists with bow-in, Graphify note, source-selected files, task IDs, worktree decision, and backend pre-flight | landed | SESSION_0095_REVIEW_01 |
+| SESSION_0095_TASK_02 | SESSION_0095 | Commerce QA | Cody (Codex) | Add one-time Checkout entitlement webhook proof and close replay/source-id idempotency edge if exposed | Focused webhook test proves mapped `PricingPlan.stripePriceId` creates exactly one PURCHASE `UserEntitlement`, preserves manual grants, activates `ProgramEnrollment`, and replay does not duplicate it | landed | SESSION_0095_REVIEW_01 |
+| SESSION_0095_TASK_03 | SESSION_0095 | Commerce QA + close | Cody + Doug (Codex) | Add subscription Checkout grant/revoke proof, run focused verification, update MB-013, append review, and full close | Focused webhook test proves subscription-sourced access is granted once and revoked by subscription id; MB-013 and full-close evidence record remaining launch gaps | landed | SESSION_0095_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -1007,3 +1011,39 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Status:** open
 
 **Kaizen triage:** Safe for docs and planning because no production code changed and the claims are source-checked. Not behaviorally safe for paid launch yet: one-time, subscription, Customer Portal, failed-payment, refund/dispute, and ledger proof remain open. Process slips: one large patch failed due context mismatch; smaller patches fixed it with no file loss. Confidence: 100 users 9.0 for documentation accuracy, 1,000 users 8.0 for payment readiness until SESSION_0095 proof lands, 10,000 users 7.5 because subscription lifecycle and ledger drift remain unproven. Kaizen aggregate: 7.5, which means stay in commerce remediation/proof before PWCC.
+
+### SESSION_0095_REVIEW_01 — Commerce QA entitlement proof full close
+
+**Reviewed tasks:** SESSION_0095_TASK_01, SESSION_0095_TASK_02, SESSION_0095_TASK_03
+**Dirstarter docs check:** live docs checked on 2026-05-07
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://docs.stripe.com/payments/checkout, https://docs.stripe.com/billing/subscriptions/design-an-integration, https://docs.stripe.com/webhooks
+**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Focused webhook tests now prove one-time `PricingPlan.stripePriceId -> EntitlementGrant -> UserEntitlement`, one-time replay/source isolation, `ProgramEnrollment` projection, subscription grant replay, and `customer.subscription.deleted` revoke by subscription source id. The webhook also retries Prisma `P2034` serializable write conflicts so the paid tournament capacity proof remains stable. WORKFLOW score: 9.6/10. No Dirstarter or data-integrity hard cap triggered; MB-013 remains open for launch gaps outside this slice.
+
+#### SESSION_0095_FINDING_01 — Stripe event-id dedupe is still not persisted
+
+- **Severity:** medium
+- **Task:** SESSION_0095_TASK_02
+- **Evidence:** The proof covers idempotent source rows for replayed Checkout objects, but `POST` still does not persist processed Stripe event IDs.
+- **Impact:** Stripe retries and duplicate Event objects are safer for proven entitlement paths, but event-level replay/audit posture is not complete.
+- **Required follow-up:** SESSION_0096 or launch hardening should add processed-event storage or record an explicit accepted bridge.
+- **Status:** open
+
+#### SESSION_0095_FINDING_02 — Ledger projection remains open
+
+- **Severity:** medium
+- **Task:** SESSION_0095_TASK_03
+- **Evidence:** One-time Checkout proof grants access and activates `ProgramEnrollment`, but no non-tournament `Invoice`/`Payment` row is created by this path.
+- **Impact:** Access can be correct while internal accounting still depends on Stripe/dashboard state.
+- **Required follow-up:** SESSION_0096 must implement ledger projection or document a launch bridge under MB-013.
+- **Status:** open
+
+#### SESSION_0095_FINDING_03 — Customer Portal and subscription policy remain launch blockers
+
+- **Severity:** medium
+- **Task:** SESSION_0095_TASK_03
+- **Evidence:** Subscription grant/revoke by deletion is proven, but customer ID storage, Customer Portal sessions, failed payment, update, refund, dispute, and grace policy are not implemented in this slice.
+- **Impact:** Recurring access is not launch-complete beyond checkout success and subscription deletion.
+- **Required follow-up:** SESSION_0096 should close or explicitly defer customer/subscription launch gaps before PWCC and brand rollout work.
+- **Status:** open
+
+**Kaizen triage:** Safe for 100 users at 9.2 on the specific webhook proof because real Prisma fixtures and repeated runs passed. Safe for 1,000 users at 8.3 until event-id persistence, DB uniqueness, and ledger projection are handled. Safe for 10,000 users at 7.6 because subscription policy, Customer Portal, drift audit, and manual payment parity remain open. Kaizen aggregate: 7.6, which keeps the next session in commerce implementation before PWCC.

@@ -24,6 +24,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun
 import type Stripe from "stripe"
 
 const createRefundMock = mock(async () => ({}))
+let mockedLineItems: Stripe.LineItem[] = []
+const listLineItemsMock = mock(async () => ({ data: mockedLineItems }))
 
 // -----------------------------------------------------------------------------
 // Module mocks — must be installed before importing `route.ts`.
@@ -48,9 +50,8 @@ mock.module("~/env", () => ({
 
 // Stripe SDK: bypass signature verification (constructEvent returns the parsed
 // body verbatim) and no-op every outbound call the route makes during the
-// `checkout.session.completed` path. `listLineItems` returns an empty array so
-// `grantEntitlementsFromCheckout` is a no-op for tournament fixtures (no
-// PricingPlan linkage).
+// `checkout.session.completed` path. Tests can set `mockedLineItems`; it
+// defaults empty so tournament fixtures have no PricingPlan linkage.
 mock.module("~/services/stripe", () => ({
   stripe: {
     webhooks: {
@@ -58,7 +59,7 @@ mock.module("~/services/stripe", () => ({
     },
     checkout: {
       sessions: {
-        listLineItems: async () => ({ data: [] }),
+        listLineItems: listLineItemsMock,
         create: async () => ({ id: "cs_test_unused", url: "https://stripe.test/unused" }),
       },
     },
@@ -99,8 +100,8 @@ mock.module("~/lib/notifications", () => ({
 // Real imports happen *after* the mocks are registered.
 // -----------------------------------------------------------------------------
 
-import { db } from "~/services/db"
 import { POST } from "~/app/api/stripe/webhooks/route"
+import { db } from "~/services/db"
 
 // -----------------------------------------------------------------------------
 // Fixture set
@@ -126,6 +127,13 @@ type Fixtures = {
   disciplineId: string
   membershipId: string
   userEntitlementId: string
+  programId: string
+  oneTimePricingPlanId: string
+  subscriptionPricingPlanId: string
+  oneTimeEntitlementId: string
+  subscriptionEntitlementId: string
+  oneTimePriceId: string
+  subscriptionPriceId: string
   tournamentId: string
   tournamentDisciplineId: string
   roleId: string
@@ -174,6 +182,76 @@ beforeAll(async () => {
       status: "ACTIVE",
       joinedAt: new Date(),
     },
+  })
+
+  const program = await db.program.create({
+    data: {
+      brand: requestBrand,
+      name: tag("program"),
+      slug: tag("program"),
+      status: "ACTIVE",
+      organizationId: organization.id,
+      disciplineId: discipline.id,
+    },
+  })
+
+  const oneTimePriceId = `price_test_one_time_${TS}`
+  const subscriptionPriceId = `price_test_subscription_${TS}`
+  const [oneTimeEntitlement, subscriptionEntitlement] = await Promise.all([
+    db.entitlement.create({
+      data: {
+        brand: requestBrand,
+        key: tag("one-time-access"),
+        name: tag("one-time-access"),
+      },
+    }),
+    db.entitlement.create({
+      data: {
+        brand: requestBrand,
+        key: tag("subscription-access"),
+        name: tag("subscription-access"),
+      },
+    }),
+  ])
+
+  const oneTimePricingPlan = await db.pricingPlan.create({
+    data: {
+      brand: requestBrand,
+      organizationId: organization.id,
+      programId: program.id,
+      name: tag("one-time-plan"),
+      pricingModel: "DROP_IN",
+      amountCents: 9900,
+      stripeProductId: `prod_test_one_time_${TS}`,
+      stripePriceId: oneTimePriceId,
+    },
+  })
+
+  const subscriptionPricingPlan = await db.pricingPlan.create({
+    data: {
+      brand: requestBrand,
+      organizationId: organization.id,
+      programId: program.id,
+      name: tag("subscription-plan"),
+      pricingModel: "MONTHLY",
+      amountCents: 12900,
+      intervalMonths: 1,
+      stripeProductId: `prod_test_subscription_${TS}`,
+      stripePriceId: subscriptionPriceId,
+    },
+  })
+
+  await db.entitlementGrant.createMany({
+    data: [
+      {
+        pricingPlanId: oneTimePricingPlan.id,
+        entitlementId: oneTimeEntitlement.id,
+      },
+      {
+        pricingPlanId: subscriptionPricingPlan.id,
+        entitlementId: subscriptionEntitlement.id,
+      },
+    ],
   })
 
   const entitlement = await db.entitlement.upsert({
@@ -279,6 +357,13 @@ beforeAll(async () => {
     disciplineId: discipline.id,
     membershipId: membership.id,
     userEntitlementId: userEntitlement.id,
+    programId: program.id,
+    oneTimePricingPlanId: oneTimePricingPlan.id,
+    subscriptionPricingPlanId: subscriptionPricingPlan.id,
+    oneTimeEntitlementId: oneTimeEntitlement.id,
+    subscriptionEntitlementId: subscriptionEntitlement.id,
+    oneTimePriceId,
+    subscriptionPriceId,
     tournamentId: tournament.id,
     tournamentDisciplineId: tournamentDiscipline.id,
     roleId: role.id,
@@ -292,10 +377,19 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   createRefundMock.mockClear()
+  listLineItemsMock.mockClear()
+  mockedLineItems = []
 
   if (!fx) return
   await db.registrationEntry.deleteMany({ where: { divisionId: fx.divisionId } })
   await db.registration.deleteMany({ where: { tournamentId: fx.tournamentId } })
+  await db.programEnrollment.deleteMany({ where: { programId: fx.programId } })
+  await db.userEntitlement.deleteMany({
+    where: {
+      userId: fx.userId,
+      entitlementId: { in: [fx.oneTimeEntitlementId, fx.subscriptionEntitlementId] },
+    },
+  })
 })
 
 afterAll(async () => {
@@ -305,6 +399,24 @@ afterAll(async () => {
     await db.division.deleteMany({ where: { id: fx.divisionId } })
     await db.tournamentDiscipline.deleteMany({ where: { id: fx.tournamentDisciplineId } })
     await db.tournament.deleteMany({ where: { id: fx.tournamentId } })
+    await db.programEnrollment.deleteMany({ where: { programId: fx.programId } })
+    await db.userEntitlement.deleteMany({
+      where: {
+        entitlementId: { in: [fx.oneTimeEntitlementId, fx.subscriptionEntitlementId] },
+      },
+    })
+    await db.entitlementGrant.deleteMany({
+      where: {
+        pricingPlanId: { in: [fx.oneTimePricingPlanId, fx.subscriptionPricingPlanId] },
+      },
+    })
+    await db.pricingPlan.deleteMany({
+      where: { id: { in: [fx.oneTimePricingPlanId, fx.subscriptionPricingPlanId] } },
+    })
+    await db.program.deleteMany({ where: { id: fx.programId } })
+    await db.entitlement.deleteMany({
+      where: { id: { in: [fx.oneTimeEntitlementId, fx.subscriptionEntitlementId] } },
+    })
     const racerUserIds = [fx.racerB.userId, fx.racerC.userId]
     const racerUEIds = [fx.racerB.userEntitlementId, fx.racerC.userEntitlementId]
     const racerMembershipIds = [fx.racerB.membershipId, fx.racerC.membershipId]
@@ -356,6 +468,44 @@ afterAll(async () => {
       where: { tournamentId: { in: zombieTournamentIds } },
     })
     await db.tournament.deleteMany({ where: { id: { in: zombieTournamentIds } } })
+  }
+  const zombiePrograms = await db.program.findMany({
+    where: { name: { startsWith: TAG_PREFIX } },
+    select: { id: true },
+  })
+  const zombieProgramIds = zombiePrograms.map(p => p.id)
+  const zombiePricingPlans = await db.pricingPlan.findMany({
+    where: { name: { startsWith: TAG_PREFIX } },
+    select: { id: true },
+  })
+  const zombiePricingPlanIds = zombiePricingPlans.map(p => p.id)
+  const zombieCommerceEntitlements = await db.entitlement.findMany({
+    where: { name: { startsWith: TAG_PREFIX } },
+    select: { id: true },
+  })
+  const zombieCommerceEntitlementIds = zombieCommerceEntitlements.map(e => e.id)
+  if (zombieProgramIds.length > 0) {
+    await db.programEnrollment.deleteMany({ where: { programId: { in: zombieProgramIds } } })
+  }
+  if (zombieCommerceEntitlementIds.length > 0) {
+    await db.userEntitlement.deleteMany({
+      where: { entitlementId: { in: zombieCommerceEntitlementIds } },
+    })
+    await db.entitlementGrant.deleteMany({
+      where: { entitlementId: { in: zombieCommerceEntitlementIds } },
+    })
+  }
+  if (zombiePricingPlanIds.length > 0) {
+    await db.entitlementGrant.deleteMany({
+      where: { pricingPlanId: { in: zombiePricingPlanIds } },
+    })
+    await db.pricingPlan.deleteMany({ where: { id: { in: zombiePricingPlanIds } } })
+  }
+  if (zombieProgramIds.length > 0) {
+    await db.program.deleteMany({ where: { id: { in: zombieProgramIds } } })
+  }
+  if (zombieCommerceEntitlementIds.length > 0) {
+    await db.entitlement.deleteMany({ where: { id: { in: zombieCommerceEntitlementIds } } })
   }
   const zombieOrgs = await db.organization.findMany({
     where: { name: { startsWith: TAG_PREFIX } },
@@ -429,9 +579,7 @@ const makeTournamentRegistrationCheckoutSession = (
   } as unknown as Stripe.Checkout.Session
 }
 
-const makeCheckoutSessionCompletedEvent = (
-  session: Stripe.Checkout.Session,
-): Stripe.Event => {
+const makeCheckoutSessionCompletedEvent = (session: Stripe.Checkout.Session): Stripe.Event => {
   return {
     id: `evt_test_${session.id}`,
     object: "event",
@@ -439,6 +587,65 @@ const makeCheckoutSessionCompletedEvent = (
     api_version: "2025-08-27.basil",
     created: Math.floor(Date.now() / 1000),
     data: { object: session },
+    livemode: false,
+    pending_webhooks: 0,
+    request: { id: null, idempotency_key: null },
+  } as unknown as Stripe.Event
+}
+
+type EntitlementCheckoutSessionInput = {
+  userId: string
+  mode: "payment" | "subscription"
+  sessionId: string
+  subscriptionId?: string
+  metadata?: Record<string, string>
+}
+
+const setMockedLineItemPriceIds = (...priceIds: string[]) => {
+  mockedLineItems = priceIds.map(priceId => {
+    return {
+      object: "item",
+      price: {
+        id: priceId,
+        object: "price",
+      },
+    } as unknown as Stripe.LineItem
+  })
+}
+
+const makeEntitlementCheckoutSession = ({
+  userId,
+  mode,
+  sessionId,
+  subscriptionId,
+  metadata,
+}: EntitlementCheckoutSessionInput): Stripe.Checkout.Session => {
+  return {
+    id: sessionId,
+    object: "checkout.session",
+    mode,
+    payment_status: "paid",
+    subscription: subscriptionId ?? null,
+    amount_total: 9900,
+    currency: "usd",
+    metadata: metadata ?? { userId },
+  } as unknown as Stripe.Checkout.Session
+}
+
+const makeSubscriptionDeletedEvent = (subscriptionId: string): Stripe.Event => {
+  return {
+    id: `evt_test_${subscriptionId}_deleted`,
+    object: "event",
+    type: "customer.subscription.deleted",
+    api_version: "2025-08-27.basil",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: subscriptionId,
+        object: "subscription",
+        metadata: {},
+      },
+    },
     livemode: false,
     pending_webhooks: 0,
     request: { id: null, idempotency_key: null },
@@ -457,6 +664,130 @@ const postWebhook = async (event: Stripe.Event): Promise<Response> => {
 // -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
+
+describe("stripe webhook — entitlement fulfillment", () => {
+  it("one-time Checkout grants a mapped entitlement once without overwriting a manual grant", async () => {
+    setMockedLineItemPriceIds(fx.oneTimePriceId)
+
+    const manualGrant = await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.oneTimeEntitlementId,
+        sourceType: "MANUAL_GRANT",
+        status: "ACTIVE",
+      },
+    })
+    const session = makeEntitlementCheckoutSession({
+      userId: fx.userId,
+      mode: "payment",
+      sessionId: "cs_test_entitlement_one_time",
+      metadata: {
+        userId: fx.userId,
+        type: "program_enrollment",
+        programId: fx.programId,
+      },
+    })
+    const event = makeCheckoutSessionCompletedEvent(session)
+
+    const response = await postWebhook(event)
+    const replayResponse = await postWebhook(event)
+
+    expect(response.status).toBe(200)
+    expect(replayResponse.status).toBe(200)
+
+    const userEntitlements = await db.userEntitlement.findMany({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.oneTimeEntitlementId,
+      },
+      orderBy: { createdAt: "asc" },
+    })
+    expect(userEntitlements).toHaveLength(2)
+
+    const persistedManualGrant = userEntitlements.find(row => row.id === manualGrant.id)
+    expect(persistedManualGrant?.sourceType).toBe("MANUAL_GRANT")
+    expect(persistedManualGrant?.sourceId).toBeNull()
+    expect(persistedManualGrant?.status).toBe("ACTIVE")
+
+    const purchaseGrant = userEntitlements.find(row => row.sourceType === "PURCHASE")
+    expect(purchaseGrant?.sourceId).toBe(session.id)
+    expect(purchaseGrant?.status).toBe("ACTIVE")
+
+    const programEnrollments = await db.programEnrollment.findMany({
+      where: { programId: fx.programId, userId: fx.userId },
+    })
+    expect(programEnrollments).toHaveLength(1)
+    expect(programEnrollments[0]?.status).toBe("ACTIVE")
+  })
+
+  it("subscription Checkout grants access once and subscription deletion revokes only matching access", async () => {
+    setMockedLineItemPriceIds(fx.subscriptionPriceId)
+
+    const subscriptionId = "sub_test_entitlement_0095"
+    const session = makeEntitlementCheckoutSession({
+      userId: fx.userId,
+      mode: "subscription",
+      sessionId: "cs_test_entitlement_subscription",
+      subscriptionId,
+    })
+    const event = makeCheckoutSessionCompletedEvent(session)
+
+    const response = await postWebhook(event)
+    const replayResponse = await postWebhook(event)
+
+    expect(response.status).toBe(200)
+    expect(replayResponse.status).toBe(200)
+
+    const subscriptionGrants = await db.userEntitlement.findMany({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+    expect(subscriptionGrants).toHaveLength(1)
+    expect(subscriptionGrants[0]?.status).toBe("ACTIVE")
+
+    const otherSubscriptionGrant = await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: "sub_test_entitlement_other",
+      },
+    })
+    const purchaseGrant = await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "PURCHASE",
+        sourceId: "cs_test_entitlement_purchase_control",
+      },
+    })
+
+    const revokeResponse = await postWebhook(makeSubscriptionDeletedEvent(subscriptionId))
+
+    expect(revokeResponse.status).toBe(200)
+
+    const revokedGrant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+    expect(revokedGrant?.status).toBe("REVOKED")
+
+    const controls = await db.userEntitlement.findMany({
+      where: { id: { in: [otherSubscriptionGrant.id, purchaseGrant.id] } },
+      orderBy: { sourceId: "asc" },
+    })
+    expect(controls).toHaveLength(2)
+    expect(controls.every(row => row.status === "ACTIVE")).toBe(true)
+  })
+})
 
 describe("stripe webhook — tournament registration fulfillment (smoke)", () => {
   it("checkout.session.completed → one PAID Registration with one ACTIVE entry", async () => {

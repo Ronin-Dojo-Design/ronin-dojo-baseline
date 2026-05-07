@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-30
 updated: 2026-05-07
-last_agent: codex-session-0094
+last_agent: codex-session-0095
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -17,6 +17,7 @@ backlinks:
   - docs/architecture/README.md
   - docs/sprints/SESSION_0033.md
   - docs/sprints/SESSION_0094.md
+  - docs/sprints/SESSION_0095.md
 ---
 
 # Security, Privacy, Payments, and Monitoring Plan
@@ -158,7 +159,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Authorization | Server actions and queries enforce auth, brand, org, and role. | No route is accepted with middleware-only protection. |
 | Instructor eligibility | ACTIVE same-org memberships with owner/admin/instructor role codes. | Add coach/staff roles only after roles are defined in seed and authz docs. |
 | ClassSession materialization | Bounded generation from `daysOfWeek`, `startTime`, `endTime`, effective dates, and timezone. | Add `rrule` engine only when recurring edge cases exceed the MVP shape. |
-| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service now exists; do not launch protected paid access before one-time and subscription webhook proofs exist. |
+| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service and one-time/subscription webhook proofs now exist; do not launch protected paid access before ledger/customer/policy gaps are closed or explicitly bridged. |
 | Stripe webhook handling | Signature verification, idempotent event processing, no raw secrets/log payloads. | Revisit when adding Connect or multi-org payouts. |
 | Public certificate verification | Lookup by `qrVerificationCode`; return verification-safe fields only. | Revisit if certificate fraud/abuse requires stronger proof or captcha/rate limits. |
 | Storage | Public assets may use public URLs; private certificates/media require signed/private access. | Revisit when certificate PDFs are implemented. |
@@ -182,8 +183,8 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 - Entitlement schema/service exists and is the access bridge for paid learning/certification/membership surfaces.
 - Protected checkout starts derive user, brand, org, and metadata server-side; do not reuse generic caller-supplied metadata for paid-access grants.
 - Stripe webhook route verifies signature and either stores processed event ids or has explicit idempotency proof for every state-changing path.
-- One-time Checkout success grants entitlement through `PricingPlan.stripePriceId`, creates the required projection, and writes internal `Invoice`/`Payment` ledger rows or documents a launch bridge.
-- Subscription Checkout success grants subscription-sourced entitlement; cancellation revokes or expires it by Stripe subscription id.
+- One-time Checkout success grants entitlement through `PricingPlan.stripePriceId`, creates the required projection, and writes internal `Invoice`/`Payment` ledger rows or documents a launch bridge. SESSION_0095 proves the entitlement grant and `ProgramEnrollment` projection, but not ledger rows.
+- Subscription Checkout success grants subscription-sourced entitlement; cancellation revokes or expires it by Stripe subscription id. SESSION_0095 proves checkout grant, replay, and subscription-deleted revoke by source id.
 - Refund/cancel/dispute/failed-renewal events revoke, expire, or grace entitlements according to a written policy.
 - Stripe Customer ID storage supports Customer Portal sessions and reliable customer/subscription correlation.
 - Invoices/payments never store card numbers or secrets.
@@ -219,7 +220,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 ## Launch Blockers
 
 - MB-002 brand-scope enforcement remains open.
-- Entitlement implementation exists, but one-time and subscription payment proof must pass before Stripe UI unlocks protected learning/certification/membership access.
+- Entitlement implementation plus one-time and subscription webhook proof exists; protected paid access still needs Customer Portal/customer ID, ledger, failed-payment/refund/dispute policy, and manual payment decisions before launch.
 - Payment/entitlement drift audit and non-tournament ledger projection must exist, or an explicit launch bridge must be accepted, before paid curriculum launch.
 - Private certificate/media storage policy must be decided before certificate PDFs launch.
 - Production env/secret verification must pass before staging or launch.

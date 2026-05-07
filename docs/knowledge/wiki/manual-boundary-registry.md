@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-05-07
 author: Brian + ChatGPT
-last_agent: codex-session-0094
+last_agent: codex-session-0095
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -21,6 +21,7 @@ backlinks:
   - docs/sprints/SESSION_0031.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
   - docs/sprints/SESSION_0094.md
+  - docs/sprints/SESSION_0095.md
 tags:
   - blockers
   - ops
@@ -83,7 +84,7 @@ Blocker classes:
 | MB-010 | legacy migration | Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone | Petey + owner | brand_migration | updated program lane note | open |
 | MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | verified — SESSION_0039: D-014 Option B. Tool stays and is repurposed as Directory Listing. Stripe tiers (Free/Standard/Premium) map to listing tiers. Relabel UI in future session. |
 | MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
-| MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, one-time Checkout entitlement proof, subscription grant/revoke proof, payment/entitlement drift audit, and launch-readiness signoff | open |
+| MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, Customer Portal/customer ID path, non-tournament ledger projection, subscription policy proof, manual payment entitlement path, payment/entitlement drift audit, and launch-readiness signoff | open |
 | MB-014 | production multi-domain + server action hardening | Production-only manual steps that block staging/launch but are out of code scope: register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, Plausible | owner + Cody | deploy_env | Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run | open |
 
 ### 2. Notes by boundary
@@ -110,15 +111,17 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 
 SESSION_0094 update: the entitlement bridge now exists (`PricingPlan.stripeProductId`, `PricingPlan.stripePriceId`, `Entitlement`, `EntitlementGrant`, `UserEntitlement`) and tournament paid-registration webhook tests are the proof template. MB-013 still requires concrete payment proof before protected paid learning/certification/membership launch:
 
-1. One-time Checkout proof where a mapped `PricingPlan.stripePriceId` grants a `UserEntitlement` and creates the required projection/ledger row.
-2. Subscription Checkout proof where a recurring plan grants subscription-sourced access.
-3. Subscription cancellation/revocation proof where access is removed or expired by subscription source id.
-4. Stripe Customer ID / Customer Portal decision and implementation path.
-5. Explicit handling or accepted deferral for subscription update, failed payment, refund, dispute, and grace-policy events.
-6. Non-tournament `Invoice`/`Payment` ledger projection for paid access, or an explicit launch bridge with risk accepted.
-7. Certificate pricing decision: migrate paid certificates to `PricingPlan` or keep `CertificateTemplate.priceCents` as a launch bridge.
-8. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe.
-9. Idempotency and mapping proof for `PricingPlan.stripePriceId` and one-time Checkout replay, because current schema indexes do not enforce a unique Stripe Price mapping or unique `UserEntitlement` source row.
+SESSION_0095 update: focused webhook proof landed for one-time and subscription access. A mapped one-time `PricingPlan.stripePriceId` now grants one PURCHASE `UserEntitlement`, preserves a pre-existing manual grant, survives replay, and activates `ProgramEnrollment`. A mapped subscription Checkout grants one SUBSCRIPTION `UserEntitlement`, survives replay, and `customer.subscription.deleted` revokes only rows matching the subscription source id. The webhook also retries Prisma `P2034` serializable write conflicts for paid tournament capacity enforcement.
+
+MB-013 still requires these launch gates:
+
+1. Stripe Customer ID / Customer Portal decision and implementation path.
+2. Explicit handling or accepted deferral for subscription update, failed payment, refund, dispute, and grace-policy events.
+3. Non-tournament `Invoice`/`Payment` ledger projection for paid access, or an explicit launch bridge with risk accepted.
+4. Certificate pricing decision: migrate paid certificates to `PricingPlan` or keep `CertificateTemplate.priceCents` as a launch bridge.
+5. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe.
+6. DB-enforced or explicitly accepted-risk handling for non-unique `PricingPlan.stripePriceId` and non-unique `UserEntitlement` source rows.
+7. Payment/entitlement drift audit and launch-readiness signoff.
 
 **MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass and SESSION_0031 prep refactor identified four manual production gates the owner must close before staging deploy:
 
