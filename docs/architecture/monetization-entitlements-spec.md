@@ -4,8 +4,8 @@ slug: monetization-entitlements-spec
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-07
+last_agent: codex-session-0094
 pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
@@ -16,6 +16,7 @@ pairs_with:
 backlinks:
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0030.md
+  - docs/sprints/SESSION_0094.md
   - docs/knowledge/wiki/index.md
 ---
 
@@ -25,7 +26,7 @@ backlinks:
 
 Define the commercial access contract that connects Stripe, pricing, invoices, subscriptions, program enrollments, course access, certificate issuance, refunds, and revocation.
 
-This doc is intentionally a spec, not an implementation patch. SESSION_0029 does not add Prisma models or Stripe products.
+This doc started as a SESSION_0029 spec. SESSION_0094 reconciles it against the current code: the entitlement schema and Stripe Price mapping now exist, but launch proof for one-time course/certification purchases, subscriptions, Customer Portal, and ledger projection is still open.
 
 ## Authority
 
@@ -54,24 +55,27 @@ Payment succeeds
 | Concept | Definition | Current schema status |
 | --- | --- | --- |
 | Product | The sellable commercial offer: program, course, certification, membership, event, certificate print, or bundle. | No internal Prisma `Product` model exists. Dirstarter currently uses live Stripe `Product`/`Price` objects for listing plans. |
-| PricingPlan | Ronin's internal price/terms row for an organization and optional Program. | Exists with brand, org, program, pricing model, amount, interval/class/trial fields, and invoice line item relation. |
+| PricingPlan | Ronin's internal price/terms row for an organization and optional Program. | Exists with brand, org, program, pricing model, amount, interval/class/trial fields, Stripe Product/Price IDs, invoice line item relation, and entitlement grants. |
 | Subscription | Ongoing paid relationship that renews and can expire/cancel/past-due. | `UserBrandSubscription` exists for brand-tier access. Dirstarter Stripe subscriptions exist through checkout/webhook code for premium listings. A school-ops subscription table does not yet exist. |
 | Payment | Record of actual money movement. | Exists as invoice-linked `Payment` with Stripe payment intent id and manual payment methods. |
 | Invoice | Billing document with line items and payment records. | `Invoice` and `InvoiceLineItem` exist. |
-| Entitlement | Durable permission key granted by purchase, subscription, manual grant, membership, or promo. | Not yet modeled. This is the key missing commercial bridge. |
-| UserEntitlement | A user's assignment of one entitlement, with source, status, and time window. | Not yet modeled. |
+| Entitlement | Durable permission key granted by purchase, subscription, manual grant, membership, or promo. | Exists with `brand`, stable `key`, name, description, grants, and assignments. |
+| EntitlementGrant | Join row from `PricingPlan` to the entitlement(s) it grants. | Exists with unique `[pricingPlanId, entitlementId]`. |
+| UserEntitlement | A user's assignment of one entitlement, with source, status, and time window. | Exists with source type/id, active/revoked/expired status, start/end window, and indexes for user/status and source lookup. |
 
 ## Current Schema Inventory
 
 | Area | Existing model/code | Notes |
 | --- | --- | --- |
-| Pricing | `PricingPlan` | Program-scoped today; no Stripe Product/Price IDs yet. |
+| Pricing | `PricingPlan` | Program-scoped today with `stripeProductId`, `stripePriceId`, and `entitlementGrants`. `stripePriceId` is nullable and not unique, so launch code must not claim DB-enforced one-to-one Price mapping yet. |
 | Invoices | `Invoice`, `InvoiceLineItem` | Good internal ledger shape for school billing. |
-| Payments | `Payment` | Stores `stripePaymentIntentId`; does not yet grant access. |
+| Payments | `Payment` | Stores `stripePaymentIntentId`; non-tournament Checkout entitlement grants do not yet consistently write ledger rows. |
 | Stripe Connect | `StripeAccount`, `PayoutSplit` | Organization-level Connect foundation exists. |
 | Promo codes | `PromoCode` | Discount record exists but is not an entitlement source yet. |
 | Brand subscriptions | `SubscriptionTier`, `UserBrandSubscription` | Useful for BBL/directory-style tiers, but not enough for program/course access. |
-| Dirstarter product UI | `server/web/products/*`, `apps/web/scripts/setup-stripe-products.ts`, `app/api/stripe/webhooks/route.ts` | Uses Stripe Products/Prices directly for listing plans and updates Dirstarter `Tool.isFeatured`. |
+| Entitlements | `Entitlement`, `EntitlementGrant`, `UserEntitlement`, `server/web/entitlement/*` | The schema bridge now exists; current helpers check active brand-scoped access and grant manually by entitlement key. |
+| Stripe webhook | `app/api/stripe/webhooks/route.ts` | Handles `checkout.session.completed`, grants entitlements by `PricingPlan.stripePriceId`, fulfills program/tournament projections, and revokes subscription-sourced entitlements on `customer.subscription.deleted`. |
+| Dirstarter product UI | `server/web/products/*`, `apps/web/scripts/setup-stripe-products.ts`, `app/api/stripe/webhooks/route.ts` | Uses Stripe Products/Prices directly for listing plans and updates Dirstarter `Tool.isFeatured`; generic checkout action is not the protected Ronin paid-access template. |
 | Certificates | `CertificateTemplate.priceCents`, `CertificateOrder.stripePaymentIntentId` | Inline certificate pricing already exists from Pass 4. |
 
 ## DRY Findings
@@ -135,14 +139,15 @@ Current fields cover:
 - `intervalMonths`
 - `classCount`
 - `trialDays`
+- `stripeProductId`
+- `stripePriceId`
 - active/sort metadata
+- `entitlementGrants`
 
-Future fields before Stripe checkout wiring:
+Remaining hardening fields/decisions:
 
 | Field | Reason |
 | --- | --- |
-| `stripeProductId` | Map internal plan/package to Stripe Product. |
-| `stripePriceId` | Avoid price lookup by name or metadata. |
 | `status` enum or current `isActive` hardening | Archive plans without deleting historical invoices. |
 | optional `productId` | Only if internal `Product` is added. |
 
@@ -173,7 +178,7 @@ Invoices remain the internal billing ledger. Stripe remains the external payment
 
 ## Entitlement Model
 
-This is the P0 future schema addition.
+The P0 entitlement schema addition has landed. Source of truth is `apps/web/prisma/schema.prisma`; the excerpt below reflects the SESSION_0094 spot-check.
 
 ```prisma
 model Entitlement {
@@ -182,6 +187,8 @@ model Entitlement {
   key         String
   name        String
   description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   grants      EntitlementGrant[]
   assignments UserEntitlement[]
@@ -191,6 +198,7 @@ model Entitlement {
 
 model EntitlementGrant {
   id              String @id @default(cuid())
+  createdAt       DateTime @default(now())
   pricingPlanId   String
   entitlementId   String
 
@@ -209,11 +217,15 @@ model UserEntitlement {
   startsAt       DateTime @default(now())
   endsAt         DateTime?
   status         EntitlementStatus @default(ACTIVE)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   entitlement    Entitlement @relation(fields: [entitlementId], references: [id])
 
   @@index([userId, status])
   @@index([entitlementId])
+  @@index([sourceType, sourceId])
 }
 ```
 
@@ -269,14 +281,27 @@ Rules:
 
 | Stripe object/event | Ronin mapping |
 | --- | --- |
-| Stripe Product | External representation of Product/PricingPlan package. Store `stripeProductId` on `PricingPlan` or future `Product`. |
-| Stripe Price | External representation of a price/interval. Store `stripePriceId` on `PricingPlan`. |
-| Checkout Session completed | Create/update `Invoice`, `Payment`, and `UserEntitlement`; optionally create `ProgramEnrollment`. |
-| Subscription created/updated | Keep payment provider status in sync; set entitlement window and status. |
-| Subscription deleted/cancelled | Expire/revoke entitlement at the correct effective date. |
-| Refund | Mark payment/invoice refund state and revoke or shorten entitlement. |
+| Stripe Product | External representation of Product/PricingPlan package. `PricingPlan.stripeProductId` exists. |
+| Stripe Price | External representation of a price/interval. `PricingPlan.stripePriceId` exists and is used by the webhook to find entitlement grants. |
+| Checkout Session completed | Current webhook grants `UserEntitlement` first by line-item price; program enrollment and tournament registration are projection paths. Ledger creation for non-tournament purchases remains open. |
+| Subscription created/updated | Checkout subscription completion grants subscription-sourced entitlements when the line item maps to a `PricingPlan`; update/failure lifecycle handling remains open. |
+| Subscription deleted/cancelled | Current webhook revokes active `UserEntitlement` rows where `sourceType = SUBSCRIPTION` and `sourceId` matches the subscription id. |
+| Refund | Tournament paid registration has refund proof for at-capacity rejection. General purchase refund/dispute entitlement revocation remains open. |
 
 MVP mapping should reuse Dirstarter's Stripe service/client and checkout session pattern. Do not create a second payment provider abstraction in this slice.
+
+Implementation caution: the current webhook finds plans with `findFirst({ stripePriceId })`, and `stripePriceId` is nullable/non-unique in the schema. Do not present Stripe Price mapping as DB-enforced until that is changed or intentionally accepted as a launch bridge.
+
+## Launch-Safe Payment Flow Matrix
+
+| Purchase type | Stripe mode | Ronin source of truth | Fulfillment projection | Required proof before launch |
+| --- | --- | --- | --- | --- |
+| Tournament/event registration | `payment` | `Registration` + `RegistrationEntry` | Registration submitted, or cancelled/refunded after webhook capacity re-check | Existing webhook tests remain the template: synthesized Checkout event, real DB state, active count invariant, refund call assertion. |
+| Course/curriculum one-time access | `payment` | `PricingPlan` -> `EntitlementGrant` -> `UserEntitlement` | `ProgramEnrollment` or `CourseEnrollment` activation after entitlement grant | Synthesized Checkout event with mapped `stripePriceId` creates entitlement, projection, and ledger row. |
+| Certification/certificate order | `payment` | `PricingPlan` or `CertificateOrder` during launch bridge | `CertificateOrder` paid; optional `CertificateIssuance` only after approval | Checkout event creates order/payment and entitlement if applicable; certificate issuance remains approval-gated. |
+| Class or school membership | `subscription` | Recurring `PricingPlan` + subscription-sourced `UserEntitlement` | Membership/class/program access active while entitlement is active | Subscription checkout grants access; cancellation revokes or expires access; Customer Portal path uses stored Stripe Customer ID. |
+| Brand/directory tier | `subscription` or `payment` | `SubscriptionTier`/`UserBrandSubscription` plus Dirstarter listing monetization where applicable | Featured listing or premium brand/directory access | Keep listing monetization separate unless protected access requires entitlement. |
+| Manual/cash/check/barter/comp | none | `Invoice` + `Payment` plus admin grant/revoke service | Same `UserEntitlement` result as Stripe purchase | Admin-only proof grants/revokes entitlement without Stripe dependency and records audit/ledger state. |
 
 ## Refund and Revoke Behavior
 
@@ -305,6 +330,30 @@ Public Program Page
   -> optional CertificateOrder
 ```
 
+## Payment Proof Template
+
+Use the tournament webhook harness as the proof shape for every launch-critical paid-access path:
+
+1. Mock Stripe signature verification and outbound Stripe calls; never hit live Stripe in tests.
+2. Synthesize the exact `checkout.session.completed` or subscription lifecycle event payload the webhook reads.
+3. Build real Prisma fixtures with the same brand, user, organization, price, and entitlement relationships production uses.
+4. POST to the real webhook handler.
+5. Assert durable database state, not only response status: entitlement, projection, payment/ledger row where required, cancellation/revocation, and refund calls.
+6. Include a negative or lifecycle proof where money and access can drift, such as cancellation, failed renewal, refund, dispute, or capacity rejection.
+
+## Remaining Gaps Before Paid Launch
+
+| Gap | Why it matters | Target |
+| --- | --- | --- |
+| Stripe Customer ID storage | Customer Portal sessions require a customer identifier, and webhook/customer correlation is fragile without one. | SESSION_0096 decision/implementation. |
+| Generic checkout action accepts caller-supplied metadata | Fine for Dirstarter listing flow, but protected Ronin paid access must derive user/brand/org/metadata server-side. | Protected checkout action before paid learning surfaces. |
+| One-time entitlement proof missing | Current tournament proof is strong, but course/certification access needs its own `PricingPlan.stripePriceId` grant test. | SESSION_0095. |
+| Subscription lifecycle proof incomplete | Current webhook handles checkout completion and deletion; update, failed-payment, grace, refund, and dispute policy are not launch-solid. | SESSION_0095 proof plus SESSION_0096 policy. |
+| Non-tournament ledger projection incomplete | `Invoice`/`Payment` exist but are not consistently created from entitlement Checkout success. | SESSION_0095/0096 depending on scope. |
+| Certificate pricing bridge unresolved | `CertificateTemplate.priceCents` exists while entitlement-oriented paid certificates may need `PricingPlan`. | Owner/Petey decision before paid certificate launch. |
+| Entitlement idempotency is app-level | `UserEntitlement` has lookup indexes but no DB unique constraint for user/entitlement/source. | Decide whether launch needs a DB constraint or accepted-risk note. |
+| One-time entitlement replay edge | Current webhook lookup checks `sourceId` from `session.subscription` but one-time creation stores `session.id`; a replay of the same one-time Checkout session may not reactivate the existing row. | SESSION_0095 test should expose/fix or explicitly defer. |
+
 ## What Not To Build Yet
 
 - Full LMS quiz engine.
@@ -316,7 +365,8 @@ Public Program Page
 
 ## Open Questions
 
-1. Should internal `Product` be added in the same migration as entitlements, or should `PricingPlan` carry Stripe IDs first?
-2. Should `CertificateTemplate.priceCents` remain inline after entitlements, or should paid certificates become `PricingPlan` rows?
+1. Should Stripe customer identity live on `User`, or in a separate billing/customer mapping model?
+2. Should `CertificateTemplate.priceCents` remain inline for launch, or should paid certificates become `PricingPlan` rows immediately?
 3. Should `UserBrandSubscription` be folded into the entitlement model or remain a separate brand-tier concept?
 4. What grace policy applies to failed subscription renewals for school memberships?
+5. Should tournament paid registration also write `Invoice`/`Payment` before launch, or stay registration-local until after launch?

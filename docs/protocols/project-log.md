@@ -445,6 +445,9 @@ Three sections:
 | SESSION_0093_TASK_02 | SESSION_0093 | Commerce planning | Petey + Giddy (Codex) | Solidify launch-safe payment structure across tournament registration, one-time course/certification, subscriptions, class memberships, brand tiers, and manual payments | Payment flow matrix and open decisions recorded in `SESSION_0093.md` | landed | — |
 | SESSION_0093_TASK_03 | SESSION_0093 | WORKFLOW calendar | Petey (Codex) | Reconcile WORKFLOW 5.0 forward plan around commerce-first, PWCC-second, brand-rollout-third sequencing | `WORKFLOW_5.0.md` calendar updated through SESSION_0092 actuals and SESSION_0093-0098 forward plan | landed | — |
 | SESSION_0093_TASK_04 | SESSION_0093 | Workspace cleanup | Petey (Codex) | Remove the WordPress public root from the active workspace pattern and keep only `ronin-dojo-app` plus clean `dirstarter_template` reference access | `/Users/brianscott/dev/ronin-dojo.code-workspace` created with exactly two folders; empty accidental WP `public/docs` folders removed; `.playwright-mcp` moved to repo root and ignored | landed | — |
+| SESSION_0094_TASK_01 | SESSION_0094 | Commerce | Petey + Giddy (Codex) | Bow in, refresh Graphify, query commerce/doc needs, and create active SESSION_0094 plan | `SESSION_0094.md` records bow-in, Graphify update/query output, Dirstarter alignment, and selected source files | landed | SESSION_0094_REVIEW_01 |
+| SESSION_0094_TASK_02 | SESSION_0094 | Commerce | Cody (Codex) | Reconcile commerce truth docs with landed entitlement schema and payment webhook behavior | `monetization-entitlements-spec.md` no longer claims entitlements are missing and includes the launch-safe payment flow/proof matrix | landed | SESSION_0094_REVIEW_01 |
+| SESSION_0094_TASK_03 | SESSION_0094 | Commerce governance | Doug + Giddy + Petey (Codex) | Update MB-013, verify docs, run hostile/full close, and stage SESSION_0095 | MB-013 names concrete one-time/subscription proof requirements; Project Log review and full-close evidence exist | landed | SESSION_0094_REVIEW_01 |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -968,3 +971,39 @@ Four-session arc to build Playwright E2E test infrastructure: fix schema bug →
 #### Verdict
 
 E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signing is the key project-scoped learning. Score: 9.5/10 (0.5 deducted for CI webServer command remaining open).
+
+### SESSION_0094_REVIEW_01 — Commerce truth reconciliation full close
+
+**Reviewed tasks:** SESSION_0094_TASK_01, SESSION_0094_TASK_02, SESSION_0094_TASK_03
+**Dirstarter docs check:** live docs checked on 2026-05-07
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://dirstarter.com/docs/authentication, https://docs.stripe.com/payments/checkout, https://docs.stripe.com/billing/subscriptions/design-an-integration, https://docs.stripe.com/customer-management/integrate-customer-portal
+**Verdict:** Aligned. This was a docs/governance reconciliation session, not payment implementation. The docs now match source reality: entitlement schema and `PricingPlan` Stripe IDs exist, the webhook grants/revokes entitlements, and tournament paid-registration tests are the payment proof template. The session deliberately left production payment code untouched and staged `SESSION_0095` for focused one-time/subscription webhook proof. WORKFLOW score: 9.6/10. No Dirstarter or data-integrity hard cap triggered; residual risk is explicitly tracked under MB-013.
+
+#### SESSION_0094_FINDING_01 — Stripe Price mapping is not DB-enforced
+
+- **Severity:** medium
+- **Task:** SESSION_0094_TASK_02
+- **Evidence:** `PricingPlan.stripePriceId` is nullable/non-unique in `apps/web/prisma/schema.prisma`; webhook uses `findFirst({ stripePriceId })`.
+- **Impact:** Duplicate or missing Stripe Price mappings could grant the wrong entitlement or no entitlement unless admin data stays clean.
+- **Required follow-up:** SESSION_0095 proof should include one mapped price fixture and document whether a DB constraint is needed before launch.
+- **Status:** open
+
+#### SESSION_0094_FINDING_02 — One-time Checkout replay idempotency is unproven
+
+- **Severity:** medium
+- **Task:** SESSION_0094_TASK_02
+- **Evidence:** `grantEntitlementsFromCheckout` looks for existing rows by `sourceId: session.subscription`, but one-time creates use `sourceId: session.id`.
+- **Impact:** Replayed one-time checkout events can create duplicate entitlement rows unless the test/fix closes the gap.
+- **Required follow-up:** SESSION_0095 should add the one-time replay case to the webhook proof or record an accepted launch bridge.
+- **Status:** open
+
+#### SESSION_0094_FINDING_03 — Ledger projection remains a launch bridge decision
+
+- **Severity:** medium
+- **Task:** SESSION_0094_TASK_03
+- **Evidence:** `Invoice` and `Payment` exist, but current non-tournament entitlement webhook path does not consistently write internal ledger rows.
+- **Impact:** Access can become correct while money-ledger reconciliation remains incomplete.
+- **Required follow-up:** SESSION_0095/0096 must either create ledger rows for paid access or record an explicit launch bridge under MB-013.
+- **Status:** open
+
+**Kaizen triage:** Safe for docs and planning because no production code changed and the claims are source-checked. Not behaviorally safe for paid launch yet: one-time, subscription, Customer Portal, failed-payment, refund/dispute, and ledger proof remain open. Process slips: one large patch failed due context mismatch; smaller patches fixed it with no file loss. Confidence: 100 users 9.0 for documentation accuracy, 1,000 users 8.0 for payment readiness until SESSION_0095 proof lands, 10,000 users 7.5 because subscription lifecycle and ledger drift remain unproven. Kaizen aggregate: 7.5, which means stay in commerce remediation/proof before PWCC.

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-07
-last_agent: codex-session-0093
+last_agent: codex-session-0094
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -230,7 +230,7 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 6 actual | 0091 | QA hardening | Full E2E suite triage: 9 pass, 3 skips, 0 fail |
 | May 6 actual | 0092 | QA hardening | Seed tournament fixture + Better-Auth cookie signing; 12/12 E2E passing |
 | May 7 actual | 0093 | Commerce planning | Petey plan: commerce structures first, then PWCC, then brand/content rollouts; workspace normalized away from WP public root |
-| May 7 target | 0094 | Commerce | Reconcile commerce docs and payment structure matrix against current entitlement code |
+| May 7 actual | 0094 | Commerce | Commerce truth reconciliation: monetization spec and MB-013 now match landed entitlement schema; payment proof targets staged |
 | May 7–8 target | 0095 | Commerce QA | Add one-time and subscription Checkout/webhook proof tests using tournament harness as template |
 | May 8 target | 0096 | Commerce implementation | Close customer/subscription launch gaps or document explicit deferrals |
 | May 9–10 target | 0097 | PWCC | First Playwright-first component discovery and component port-map records |

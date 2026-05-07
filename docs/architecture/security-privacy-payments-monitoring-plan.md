@@ -4,8 +4,8 @@ slug: security-privacy-payments-monitoring-plan
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-05-03
-last_agent: codex-session-0033
+updated: 2026-05-07
+last_agent: codex-session-0094
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/README.md
   - docs/sprints/SESSION_0033.md
+  - docs/sprints/SESSION_0094.md
 ---
 
 # Security, Privacy, Payments, and Monitoring Plan
@@ -28,7 +29,7 @@ This is a plan and gate document. It does not claim the system is impossible to 
 
 ## Dirstarter Docs Proof
 
-Live Dirstarter docs checked on 2026-04-30:
+Live Dirstarter docs checked on 2026-04-30 and re-checked for the commerce lane on 2026-05-07:
 
 | Baseline area | Source | Ronin security implication |
 | --- | --- | --- |
@@ -157,7 +158,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Authorization | Server actions and queries enforce auth, brand, org, and role. | No route is accepted with middleware-only protection. |
 | Instructor eligibility | ACTIVE same-org memberships with owner/admin/instructor role codes. | Add coach/staff roles only after roles are defined in seed and authz docs. |
 | ClassSession materialization | Bounded generation from `daysOfWeek`, `startTime`, `endTime`, effective dates, and timezone. | Add `rrule` engine only when recurring edge cases exceed the MVP shape. |
-| Paid access | Entitlement-first, per ADR 0011. | Do not build Stripe UI before entitlement schema/service exists. |
+| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service now exists; do not launch protected paid access before one-time and subscription webhook proofs exist. |
 | Stripe webhook handling | Signature verification, idempotent event processing, no raw secrets/log payloads. | Revisit when adding Connect or multi-org payouts. |
 | Public certificate verification | Lookup by `qrVerificationCode`; return verification-safe fields only. | Revisit if certificate fraud/abuse requires stronger proof or captcha/rate limits. |
 | Storage | Public assets may use public URLs; private certificates/media require signed/private access. | Revisit when certificate PDFs are implemented. |
@@ -178,10 +179,13 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 
 ### Future CGR commerce
 
-- Entitlement schema/service lands before Stripe UI.
-- Stripe webhook route verifies signature and stores processed event ids.
-- Payment success grants entitlement inside a DB transaction or explicit idempotent sequence.
-- Refund/cancel/dispute revokes or expires entitlement.
+- Entitlement schema/service exists and is the access bridge for paid learning/certification/membership surfaces.
+- Protected checkout starts derive user, brand, org, and metadata server-side; do not reuse generic caller-supplied metadata for paid-access grants.
+- Stripe webhook route verifies signature and either stores processed event ids or has explicit idempotency proof for every state-changing path.
+- One-time Checkout success grants entitlement through `PricingPlan.stripePriceId`, creates the required projection, and writes internal `Invoice`/`Payment` ledger rows or documents a launch bridge.
+- Subscription Checkout success grants subscription-sourced entitlement; cancellation revokes or expires it by Stripe subscription id.
+- Refund/cancel/dispute/failed-renewal events revoke, expire, or grace entitlements according to a written policy.
+- Stripe Customer ID storage supports Customer Portal sessions and reliable customer/subscription correlation.
 - Invoices/payments never store card numbers or secrets.
 - Logs redact emails, addresses, webhook payloads, access tokens, and payment method details.
 - Public certificate verification returns only safe fields and is rate-limited.
@@ -208,14 +212,14 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | --- | --- |
 | Unit | Permission truth tables for schedule edit, instructor eligibility, entitlement access, certificate verification response shaping. |
 | Integration | Program -> schedule create/edit/archive; instructor assignment; bounded session generation; cross-brand rejection. |
-| Payment simulation | Stripe CLI webhook signature success/failure; duplicate event id; refund/cancel entitlement revoke. |
+| Payment simulation | Stripe CLI or synthesized webhook signature success/failure; duplicate/idempotent event behavior; one-time Checkout entitlement grant; subscription grant and cancellation/revoke; refund/cancel/dispute entitlement revoke. |
 | Security smoke | Anonymous cannot access staff pages; wrong-brand user cannot mutate; member cannot enumerate instructors; public verify endpoint hides private fields. |
 | Monitoring smoke | Synthetic log event for brand-scope reject, webhook failure, rate-limit hit, cron failure. |
 
 ## Launch Blockers
 
 - MB-002 brand-scope enforcement remains open.
-- Entitlement implementation must exist before Stripe UI.
-- Payment/entitlement drift audit must exist before paid curriculum launch.
+- Entitlement implementation exists, but one-time and subscription payment proof must pass before Stripe UI unlocks protected learning/certification/membership access.
+- Payment/entitlement drift audit and non-tournament ledger projection must exist, or an explicit launch bridge must be accepted, before paid curriculum launch.
 - Private certificate/media storage policy must be decided before certificate PDFs launch.
 - Production env/secret verification must pass before staging or launch.
