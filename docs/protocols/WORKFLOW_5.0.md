@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-05-07
+last_agent: codex-session-0093
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -147,9 +147,9 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 
 ---
 
-## Session calendar (SESSION_0021–0074, with forward plan)
+## Session calendar (SESSION_0021–0093, with forward plan)
 
-> **Calendar reconciled SESSION_0074_TASK_04.** All rows 0021–0074 now reflect actuals. Forward plan re-set for S3 (Tournament Operations completion lane).
+> **Calendar reconciled SESSION_0093_TASK_03.** Rows 0021–0092 reflect actuals at a planning-summary level. Forward plan re-set for commerce hardening → PWCC → four-brand launch surfaces before the May 18, 2026 launch goal.
 
 | Date / target | Session | Primary lane | Main outcome |
 | --- | --- | --- | --- |
@@ -211,10 +211,34 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 4 actual | 0072 | Core platform governance | Card-to-detail link verification + 20 pre-existing TS errors fixed (closed-full 7/10) |
 | May 4 actual | 0073 | Core platform governance | **This session.** Unclean-close recovery (5 sessions); Organization.description schema; member/school filter actions; DirectoryProfile slug auto-generation; hostile review of last 12 sessions; calendar reconciliation skeleton. |
 | **May 5 actual** | **0074** | **Core platform governance** | **Lookup-system rebuild: project-log backfill, failed-steps audit, tournament-ops concept page, calendar reconciliation, 17 unclean-close recoveries, closing.md atomicity, slug backfill, Dirstarter uplift backlog. Closes S2.** |
-| May 6+ target | 0075–0078 | Tournament operations (S3) | Completion lane: TournamentRole/StaffAssignment CRUD → WeighIn workflow → MatAssignment UI → FightRecord publication → RuleSet CRUD → results page. See `wiki/concepts/tournament-ops.md` open-work list. |
-| TBD | 00xx | Brand launch | Baseline public surfaces polish — to be sequenced after S3 |
-| TBD | 00xx | QA hardening + launch | E2E tests, staging deploy, migration artifacts, rollback drill |
-| TBD | 00xx | Launch day | Release execution + monitoring |
+| May 5 actual | 0075 | Tournament operations (S3) | TournamentRole/StaffAssignment, WeighIn, and RuleSet CRUD completion lane started |
+| May 5 actual | 0076 | Tournament operations (S3) | Admin UI for TournamentRole, StaffAssignment, WeighIn, and RuleSet |
+| May 5 actual | 0077 | Core platform + tournament ops | Google OAuth setup plus remaining S3/tournament work assessment and deployment prep |
+| May 5 actual | 0078 | Tournament operations (S3) | Results page, RuleSet wiring, and seeding strategies landed |
+| May 5 actual | 0079 | Tournament ops + governance | Tournament director role, Giddy import, and porting-awareness notes |
+| May 6 actual | 0080 | Tournament operations (S3) | Manual seed editor UI |
+| May 6 actual | 0081 | Tournament operations (S3) | Manual seed editor polish and integration tests |
+| May 6 actual | 0082 | Tournament operations hardening | Tournament registration capacity-race planning/test lane |
+| May 6 actual | 0083 | Tournament operations hardening | Free-path capacity race tests with real fixtures |
+| May 6 actual | 0084 | Tournament operations hardening | Stripe webhook harness plus paid-path oversubscription proof |
+| May 6 actual | 0085 | Tournament operations hardening | Paid-path webhook capacity re-check + refund fix |
+| May 6 actual | 0086 | Tournament operations hardening | Refunded-paid customer UI smoke and cancel/refund regressions |
+| May 6 actual | 0087 | QA hardening | S3 tournament launch hardening: TS fixes, brand isolation tests, WeighIn integration, results smoke |
+| May 6 actual | 0088 | QA hardening | Playwright E2E infrastructure and first athlete lifecycle tests |
+| May 6 actual | 0089 | QA hardening | Fixed `register.ts` schema `"use server"` export bug |
+| May 6 actual | 0090 | QA hardening | Admin bracket and scoring E2E tests |
+| May 6 actual | 0091 | QA hardening | Full E2E suite triage: 9 pass, 3 skips, 0 fail |
+| May 6 actual | 0092 | QA hardening | Seed tournament fixture + Better-Auth cookie signing; 12/12 E2E passing |
+| May 7 actual | 0093 | Commerce planning | Petey plan: commerce structures first, then PWCC, then brand/content rollouts; workspace normalized away from WP public root |
+| May 7 target | 0094 | Commerce | Reconcile commerce docs and payment structure matrix against current entitlement code |
+| May 7–8 target | 0095 | Commerce QA | Add one-time and subscription Checkout/webhook proof tests using tournament harness as template |
+| May 8 target | 0096 | Commerce implementation | Close customer/subscription launch gaps or document explicit deferrals |
+| May 9–10 target | 0097 | PWCC | First Playwright-first component discovery and component port-map records |
+| May 10–12 target | 0098 | Brand launch | Four-brand launch-definition matrix and content checklist |
+| May 13–15 target | 0099 | Brand launch + PWCC | First launch-surface component/content port with Playwright proof |
+| May 16 target | 0100 | QA hardening + launch | Cross-brand UAT, payment/entitlement drift audit, migration/deploy rehearsal |
+| May 17 target | 0101 | Launch readiness | Freeze, rollback drill, support playbook, env/domain proof |
+| May 18 target | 0102 | Launch day | Release execution, monitoring, and triage for all four brands |
 
 ---
 
