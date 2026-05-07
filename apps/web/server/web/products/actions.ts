@@ -2,19 +2,39 @@
 
 import { redirect } from "next/navigation"
 import { siteConfig } from "~/config/site"
+import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { actionClient } from "~/lib/safe-actions"
+import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { checkoutSchema } from "~/server/web/products/schema"
 import { stripe } from "~/services/stripe"
 
 export const createStripeCheckout = actionClient
   .inputSchema(checkoutSchema)
   .action(async ({ parsedInput: { lineItems, successUrl, cancelUrl, mode, metadata, coupon } }) => {
+    const session = await getServerSession()
+    const shouldAttachCustomer = Boolean(session?.user?.id && metadata?.userId === session.user.id)
+    const requestBrand = shouldAttachCustomer ? await getRequestBrand() : null
+    const existingCustomer =
+      session?.user?.id && requestBrand
+        ? await findStripeCustomerForCheckout({
+            userId: session.user.id,
+            brand: requestBrand,
+          })
+        : null
+
     const checkout = await stripe.checkout.sessions.create({
       mode,
       line_items: lineItems,
       automatic_tax: { enabled: true },
       tax_id_collection: { enabled: true },
-      customer_creation: mode === "payment" ? "if_required" : undefined,
+      customer: existingCustomer?.stripeCustomerId,
+      customer_creation:
+        mode === "payment" && !existingCustomer
+          ? shouldAttachCustomer
+            ? "always"
+            : "if_required"
+          : undefined,
       invoice_creation: mode === "payment" ? { enabled: true } : undefined,
       metadata: mode === "payment" ? metadata : undefined,
       subscription_data: mode === "subscription" && metadata ? { metadata } : undefined,

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-07
-last_agent: codex-session-0095
+last_agent: codex-session-0096
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -23,6 +23,8 @@ backlinks:
   - docs/sprints/SESSION_0030.md
   - docs/sprints/SESSION_0033.md
   - docs/sprints/SESSION_0095.md
+  - docs/sprints/SESSION_0096.md
+  - docs/sprints/SESSION_0097.md
 ---
 
 # Project Log
@@ -166,6 +168,14 @@ Three sections:
 - **Files:** no code changes (audit session)
 - **Seed data:** no
 - **Smoke test:** wiki:lint passed clean (169 files, 0 violations); D-006 and D-010 closed; `program-plan.md` marked `partially-superseded`.
+
+### S96_BILLING_LAUNCH_GAPS — Customer billing, webhook idempotency, and lifecycle proof
+- **Session:** SESSION_0096
+- **Sprint:** S3 / Commerce implementation
+- **Status:** ✅ verified with known full-typecheck baseline debt
+- **Files:** `apps/web/prisma/schema.prisma`, `apps/web/prisma/migrations/20260507140933_add_stripe_customer_ledger_event_tracking/migration.sql`, `apps/web/app/api/stripe/webhooks/route.ts`, `apps/web/app/api/stripe/webhooks/route.test.ts`, `apps/web/server/web/billing/*`, `apps/web/server/web/products/actions.ts`, `apps/web/server/web/tournaments/register.ts`, `apps/web/server/web/dashboard/queries.ts`, `apps/web/app/(web)/dashboard/*`
+- **Seed data:** no durable seed changes; tests create and clean real Prisma fixtures.
+- **Smoke test:** `bun test app/api/stripe/webhooks/route.test.ts server/web/billing/actions.test.ts server/web/tournaments/register.concurrency.test.ts` passed 18/18; scoped Biome check passed. Full `bun run typecheck` still fails only on pre-existing unrelated errors from SESSION_0095.
 
 ---
 
@@ -452,6 +462,12 @@ Three sections:
 | SESSION_0095_TASK_01 | SESSION_0095 | Commerce QA | Petey + Giddy (Codex) | Bow in, run targeted Graphify query without refresh, confirm Dirstarter alignment, create SESSION_0095, and record Cody backend pre-flight | `SESSION_0095.md` exists with bow-in, Graphify note, source-selected files, task IDs, worktree decision, and backend pre-flight | landed | SESSION_0095_REVIEW_01 |
 | SESSION_0095_TASK_02 | SESSION_0095 | Commerce QA | Cody (Codex) | Add one-time Checkout entitlement webhook proof and close replay/source-id idempotency edge if exposed | Focused webhook test proves mapped `PricingPlan.stripePriceId` creates exactly one PURCHASE `UserEntitlement`, preserves manual grants, activates `ProgramEnrollment`, and replay does not duplicate it | landed | SESSION_0095_REVIEW_01 |
 | SESSION_0095_TASK_03 | SESSION_0095 | Commerce QA + close | Cody + Doug (Codex) | Add subscription Checkout grant/revoke proof, run focused verification, update MB-013, append review, and full close | Focused webhook test proves subscription-sourced access is granted once and revoked by subscription id; MB-013 and full-close evidence record remaining launch gaps | landed | SESSION_0095_REVIEW_01 |
+| SESSION_0096_TASK_01 | SESSION_0096 | Commerce implementation | Petey + Giddy (Codex) | Bow in, run stale Graphify query without refresh, confirm Dirstarter alignment, create SESSION_0096, and record Cody pre-flight | `SESSION_0096.md` exists with bow-in, Graphify note, source-selected files, task IDs, worktree decision, Petey plan, and backend/schema pre-flight | landed | SESSION_0096_REVIEW_01 |
+| SESSION_0096_TASK_02 | SESSION_0096 | Commerce implementation | Cody (Codex) | Implement Stripe Customer ID storage, Customer Portal action/dashboard path, and processed webhook event-id dedupe | Authenticated Checkout/webhook paths persist/reuse current-brand `StripeCustomer`; Customer Portal session action exists; duplicate Stripe event IDs do not reprocess state | landed | SESSION_0096_REVIEW_01 |
+| SESSION_0096_TASK_03 | SESSION_0096 | Commerce implementation + close | Cody + Doug (Codex) | Implement non-tournament ledger projection and subscription failed-payment/refund/dispute policy, verify, update MB-013/specs, append review, and full close | Focused tests prove `Invoice`/`Payment` projection, lifecycle policy behavior, and docs/project log record closed versus remaining MB-013 gates | landed | SESSION_0096_REVIEW_01 |
+| SESSION_0097_TASK_01 | SESSION_0097 | Commerce hardening | Petey + Giddy (Codex) | Bow in, reconcile WORKFLOW/MB-013, and define protected paid-access checkout contract | SESSION_0097 confirms protected checkout input shape before code and keeps generic Dirstarter checkout separate | planned | — |
+| SESSION_0097_TASK_02 | SESSION_0097 | Commerce hardening | Cody (Codex) | Implement protected program enrollment Checkout with server-derived user/brand/org/plan metadata | User-authenticated action validates current-brand active `PricingPlan`/`Program`, derives Stripe line item and metadata server-side, and reuses/request Stripe Customer correctly | planned | — |
+| SESSION_0097_TASK_03 | SESSION_0097 | Commerce hardening + QA | Cody + Doug (Codex) | Wire program enrollment UI to protected checkout and prove metadata cannot be forged | Program enrollment page no longer sends entitlement metadata to generic checkout; tests reject forged metadata, cross-brand/wrong-plan, inactive/unmapped/no-entitlement plans | planned | — |
 
 ### SESSION_0077_REVIEW_01 — Self-review
 
@@ -1047,3 +1063,54 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Status:** open
 
 **Kaizen triage:** Safe for 100 users at 9.2 on the specific webhook proof because real Prisma fixtures and repeated runs passed. Safe for 1,000 users at 8.3 until event-id persistence, DB uniqueness, and ledger projection are handled. Safe for 10,000 users at 7.6 because subscription policy, Customer Portal, drift audit, and manual payment parity remain open. Kaizen aggregate: 7.6, which keeps the next session in commerce implementation before PWCC.
+
+### SESSION_0096_REVIEW_01 — Customer billing and subscription launch gaps full close
+
+**Reviewed tasks:** SESSION_0096_TASK_01, SESSION_0096_TASK_02, SESSION_0096_TASK_03
+**Dirstarter docs check:** live docs checked on 2026-05-07
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://docs.stripe.com/customer-management/integrate-customer-portal, https://docs.stripe.com/webhooks, https://docs.stripe.com/billing/subscriptions/webhooks
+**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Stripe Customer mapping, authenticated Customer Portal session creation, processed-event dedupe, non-tournament ledger projection, subscription update/delete policy, failed-payment grace, paid-renewal recovery, full refund revoke, and dispute revoke now have focused proof against the real Prisma webhook harness. WORKFLOW score: 9.3/10. No Dirstarter or data-integrity hard cap triggered, but launch remains gated by the open findings below.
+
+#### Prior finding disposition
+
+- `SESSION_0094_FINDING_02` and `SESSION_0095_FINDING_01` are closed by persisted Stripe event-id dedupe plus replay proof.
+- `SESSION_0094_FINDING_03` and `SESSION_0095_FINDING_02` are closed for mapped non-tournament Checkout by `Invoice`/`Payment` ledger projection.
+- `SESSION_0095_FINDING_03` is closed for Customer Portal, Customer ID storage, subscription update/delete, failed payment, paid renewal, full refund, and dispute policy. New residual launch gates are split into the SESSION_0096 findings below.
+
+#### SESSION_0096_FINDING_01 — Protected paid checkout action still needs server-derived metadata
+
+- **Severity:** medium
+- **Task:** SESSION_0096_TASK_02
+- **Evidence:** `server/web/products/actions.ts` still exposes the inherited generic checkout action with caller-supplied `metadata`. SESSION_0096 only attaches a stored Stripe Customer when the authenticated session user matches `metadata.userId`.
+- **Impact:** Protected learning/certification access should not depend on client-provided entitlement metadata, even though the webhook still maps through server-side `PricingPlan` and `EntitlementGrant`.
+- **Required follow-up:** Add a dedicated authenticated Ronin paid-access checkout action that derives user, brand, org, plan, and metadata server-side.
+- **Status:** open
+
+#### SESSION_0096_FINDING_02 — Webhook event monitoring and drift audit are not wired
+
+- **Severity:** medium
+- **Task:** SESSION_0096_TASK_03
+- **Evidence:** `StripeWebhookEvent` records processed/failed event state and attempts, but no alerting, dashboard, or scheduled reconciliation job reads those records.
+- **Impact:** Access/money drift or repeated webhook failure could go unnoticed until manual inspection.
+- **Required follow-up:** Add monitoring/alert thresholds for failed/duplicate events and a Stripe/ledger/entitlement drift audit before paid curriculum launch.
+- **Status:** open
+
+#### SESSION_0096_FINDING_03 — Stripe mapping/idempotency remains partially app-level
+
+- **Severity:** medium
+- **Task:** SESSION_0096_TASK_03
+- **Evidence:** `PricingPlan.stripePriceId` remains nullable/non-unique, and `UserEntitlement` still relies on lookup/update logic instead of a DB unique constraint for user/entitlement/source rows.
+- **Impact:** SESSION_0095/0096 tests prove the launch-critical paths, but bad admin data or a future handler branch could still create ambiguous price mapping or duplicate source rows.
+- **Required follow-up:** Decide whether launch requires DB uniqueness constraints or an accepted-risk note plus admin validation.
+- **Status:** open
+
+#### SESSION_0096_FINDING_04 — Manual/admin payment parity remains a launch gate
+
+- **Severity:** medium
+- **Task:** SESSION_0096_TASK_03
+- **Evidence:** Stripe one-time/subscription paths now write access and ledger state; manual/cash/check/barter/comp paths do not yet prove equivalent entitlement grant/revoke and audit behavior.
+- **Impact:** Offline payments could diverge from Stripe-paid access unless excluded from launch or implemented with the same entitlement-first contract.
+- **Required follow-up:** Build or explicitly exclude manual/admin payment grants before protected paid curriculum launch.
+- **Status:** open
+
+**Kaizen triage:** Safe for 100 users at 9.4 on the implemented payment paths because customer mapping, event dedupe, ledger projection, lifecycle events, and tournament concurrency proof pass against real Prisma fixtures. Safe for 1,000 users at 8.6 until protected checkout metadata, monitoring, drift audit, and uniqueness policy are closed. Safe for 10,000 users at 7.9 because webhook monitoring/manual payment parity/certificate pricing are still not launch-complete. Kaizen aggregate: 7.9, which keeps the next session in commerce hardening before PWCC.

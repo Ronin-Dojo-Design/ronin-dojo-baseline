@@ -81,6 +81,7 @@ model User {
   contracts                  MembershipContract[]
   notificationPreferences    NotificationPreference[]
   payoutSplits               PayoutSplit[]
+  stripeCustomers            StripeCustomer[]
 
   // Wave B relations
   createdInvites     Invite[]            @relation("InviteCreatedBy")
@@ -1396,6 +1397,9 @@ model Invoice {
   id            String        @id @default(cuid())
   brand         Brand
   invoiceNumber String?
+  stripeInvoiceId String?       @unique
+  stripeCheckoutSessionId String?       @unique
+  stripeSubscriptionId String?
   status        InvoiceStatus @default(DRAFT)
   subtotalCents Int           @default(0)
   discountCents Int           @default(0)
@@ -1420,6 +1424,7 @@ model Invoice {
   @@index([brand, organizationId])
   @@index([userId])
   @@index([status])
+  @@index([stripeSubscriptionId])
 }
 
 model InvoiceLineItem {
@@ -1443,6 +1448,7 @@ model Payment {
   currency              String            @default("USD") @db.Char(3)
   method                PaymentMethodType
   stripePaymentIntentId String?
+  stripeCheckoutSessionId String?            @unique
   barterNote            String?
   paidAt                DateTime          @default(now())
   createdAt             DateTime          @default(now())
@@ -1452,6 +1458,37 @@ model Payment {
 
   @@index([invoiceId])
   @@index([stripePaymentIntentId])
+}
+
+model StripeCustomer {
+  id               String   @id @default(cuid())
+  brand            Brand
+  stripeCustomerId String   @unique
+  accountScope     String   @default("platform")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([userId, brand, accountScope])
+  @@index([brand, stripeCustomerId])
+  @@index([userId])
+}
+
+model StripeWebhookEvent {
+  id          String    @id
+  type        String
+  objectId    String?
+  status      String    @default("PROCESSING")
+  attempts    Int       @default(1)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type, objectId])
+  @@index([status])
 }
 
 model StripeAccount {

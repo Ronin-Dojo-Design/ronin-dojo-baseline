@@ -26,6 +26,18 @@ import type Stripe from "stripe"
 const createRefundMock = mock(async () => ({}))
 let mockedLineItems: Stripe.LineItem[] = []
 const listLineItemsMock = mock(async () => ({ data: mockedLineItems }))
+const mockedSubscriptions = new Map<string, Partial<Stripe.Subscription>>()
+const retrieveSubscriptionMock = mock(async (subscriptionId: string) => {
+  return {
+    id: subscriptionId,
+    object: "subscription",
+    status: "active",
+    metadata: {},
+    customer: null,
+    items: { data: [] },
+    ...mockedSubscriptions.get(subscriptionId),
+  } as unknown as Stripe.Subscription
+})
 
 // -----------------------------------------------------------------------------
 // Module mocks — must be installed before importing `route.ts`.
@@ -64,7 +76,7 @@ mock.module("~/services/stripe", () => ({
       },
     },
     subscriptions: {
-      retrieve: async () => ({ metadata: {} }),
+      retrieve: retrieveSubscriptionMock,
     },
     refunds: {
       create: createRefundMock,
@@ -378,12 +390,30 @@ beforeAll(async () => {
 beforeEach(async () => {
   createRefundMock.mockClear()
   listLineItemsMock.mockClear()
+  retrieveSubscriptionMock.mockClear()
   mockedLineItems = []
+  mockedSubscriptions.clear()
 
   if (!fx) return
+  await db.stripeWebhookEvent.deleteMany({ where: { id: { startsWith: "evt_test_" } } })
   await db.registrationEntry.deleteMany({ where: { divisionId: fx.divisionId } })
   await db.registration.deleteMany({ where: { tournamentId: fx.tournamentId } })
   await db.programEnrollment.deleteMany({ where: { programId: fx.programId } })
+  const invoices = await db.invoice.findMany({
+    where: { organizationId: fx.organizationId, userId: fx.userId },
+    select: { id: true },
+  })
+  const invoiceIds = invoices.map(invoice => invoice.id)
+  if (invoiceIds.length > 0) {
+    await db.payment.deleteMany({ where: { invoiceId: { in: invoiceIds } } })
+    await db.invoiceLineItem.deleteMany({ where: { invoiceId: { in: invoiceIds } } })
+    await db.invoice.deleteMany({ where: { id: { in: invoiceIds } } })
+  }
+  await db.stripeCustomer.deleteMany({
+    where: {
+      OR: [{ userId: fx.userId }, { stripeCustomerId: { startsWith: "cus_test_" } }],
+    },
+  })
   await db.userEntitlement.deleteMany({
     where: {
       userId: fx.userId,
@@ -394,12 +424,28 @@ beforeEach(async () => {
 
 afterAll(async () => {
   if (fx) {
+    await db.stripeWebhookEvent.deleteMany({ where: { id: { startsWith: "evt_test_" } } })
     await db.registrationEntry.deleteMany({ where: { divisionId: fx.divisionId } })
     await db.registration.deleteMany({ where: { tournamentId: fx.tournamentId } })
     await db.division.deleteMany({ where: { id: fx.divisionId } })
     await db.tournamentDiscipline.deleteMany({ where: { id: fx.tournamentDisciplineId } })
     await db.tournament.deleteMany({ where: { id: fx.tournamentId } })
     await db.programEnrollment.deleteMany({ where: { programId: fx.programId } })
+    const invoices = await db.invoice.findMany({
+      where: { organizationId: fx.organizationId, userId: fx.userId },
+      select: { id: true },
+    })
+    const invoiceIds = invoices.map(invoice => invoice.id)
+    if (invoiceIds.length > 0) {
+      await db.payment.deleteMany({ where: { invoiceId: { in: invoiceIds } } })
+      await db.invoiceLineItem.deleteMany({ where: { invoiceId: { in: invoiceIds } } })
+      await db.invoice.deleteMany({ where: { id: { in: invoiceIds } } })
+    }
+    await db.stripeCustomer.deleteMany({
+      where: {
+        OR: [{ userId: fx.userId }, { stripeCustomerId: { startsWith: "cus_test_" } }],
+      },
+    })
     await db.userEntitlement.deleteMany({
       where: {
         entitlementId: { in: [fx.oneTimeEntitlementId, fx.subscriptionEntitlementId] },
@@ -484,6 +530,18 @@ afterAll(async () => {
     select: { id: true },
   })
   const zombieCommerceEntitlementIds = zombieCommerceEntitlements.map(e => e.id)
+  if (zombiePricingPlanIds.length > 0) {
+    const zombieInvoiceLineItems = await db.invoiceLineItem.findMany({
+      where: { pricingPlanId: { in: zombiePricingPlanIds } },
+      select: { invoiceId: true },
+    })
+    const zombieInvoiceIds = [...new Set(zombieInvoiceLineItems.map(item => item.invoiceId))]
+    if (zombieInvoiceIds.length > 0) {
+      await db.payment.deleteMany({ where: { invoiceId: { in: zombieInvoiceIds } } })
+      await db.invoiceLineItem.deleteMany({ where: { invoiceId: { in: zombieInvoiceIds } } })
+      await db.invoice.deleteMany({ where: { id: { in: zombieInvoiceIds } } })
+    }
+  }
   if (zombieProgramIds.length > 0) {
     await db.programEnrollment.deleteMany({ where: { programId: { in: zombieProgramIds } } })
   }
@@ -526,9 +584,14 @@ afterAll(async () => {
   const zombieUserIds = zombieUsers.map(u => u.id)
   if (zombieUserIds.length > 0) {
     await db.userEntitlement.deleteMany({ where: { userId: { in: zombieUserIds } } })
+    await db.stripeCustomer.deleteMany({ where: { userId: { in: zombieUserIds } } })
     await db.passport.deleteMany({ where: { userId: { in: zombieUserIds } } })
     await db.user.deleteMany({ where: { id: { in: zombieUserIds } } })
   }
+  await db.stripeWebhookEvent.deleteMany({ where: { id: { startsWith: "evt_test_" } } })
+  await db.stripeCustomer.deleteMany({
+    where: { stripeCustomerId: { startsWith: "cus_test_" } },
+  })
   await db.discipline.deleteMany({ where: { name: { startsWith: TAG_PREFIX } } })
   await db.tournamentRole.deleteMany({ where: { name: { startsWith: TAG_PREFIX } } })
 
@@ -598,6 +661,10 @@ type EntitlementCheckoutSessionInput = {
   mode: "payment" | "subscription"
   sessionId: string
   subscriptionId?: string
+  customerId?: string
+  paymentIntentId?: string
+  invoiceId?: string
+  amountTotalCents?: number
   metadata?: Record<string, string>
 }
 
@@ -618,6 +685,10 @@ const makeEntitlementCheckoutSession = ({
   mode,
   sessionId,
   subscriptionId,
+  customerId,
+  paymentIntentId,
+  invoiceId,
+  amountTotalCents,
   metadata,
 }: EntitlementCheckoutSessionInput): Stripe.Checkout.Session => {
   return {
@@ -626,7 +697,10 @@ const makeEntitlementCheckoutSession = ({
     mode,
     payment_status: "paid",
     subscription: subscriptionId ?? null,
-    amount_total: 9900,
+    customer: customerId ?? null,
+    payment_intent: paymentIntentId ?? null,
+    invoice: invoiceId ?? null,
+    amount_total: amountTotalCents ?? 9900,
     currency: "usd",
     metadata: metadata ?? { userId },
   } as unknown as Stripe.Checkout.Session
@@ -644,6 +718,151 @@ const makeSubscriptionDeletedEvent = (subscriptionId: string): Stripe.Event => {
         id: subscriptionId,
         object: "subscription",
         metadata: {},
+      },
+    },
+    livemode: false,
+    pending_webhooks: 0,
+    request: { id: null, idempotency_key: null },
+  } as unknown as Stripe.Event
+}
+
+const makeSubscriptionUpdatedEvent = ({
+  subscriptionId,
+  customerId,
+  priceId,
+  status = "active",
+  cancelAtPeriodEnd = false,
+  currentPeriodEnd,
+}: {
+  subscriptionId: string
+  customerId: string
+  priceId: string
+  status?: string
+  cancelAtPeriodEnd?: boolean
+  currentPeriodEnd?: number
+}): Stripe.Event => {
+  return {
+    id: `evt_test_${subscriptionId}_updated_${currentPeriodEnd ?? Date.now()}`,
+    object: "event",
+    type: "customer.subscription.updated",
+    api_version: "2025-08-27.basil",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: subscriptionId,
+        object: "subscription",
+        status,
+        customer: customerId,
+        cancel_at_period_end: cancelAtPeriodEnd,
+        current_period_end: currentPeriodEnd,
+        metadata: { userId: fx.userId },
+        items: {
+          data: [
+            {
+              price: { id: priceId, object: "price" },
+              quantity: 1,
+            },
+          ],
+        },
+      },
+    },
+    livemode: false,
+    pending_webhooks: 0,
+    request: { id: null, idempotency_key: null },
+  } as unknown as Stripe.Event
+}
+
+const makeInvoiceEvent = ({
+  eventType,
+  invoiceId,
+  subscriptionId,
+  customerId,
+  priceId,
+  paymentIntentId,
+  periodEnd,
+  amountPaid = 12900,
+}: {
+  eventType: "invoice.payment_failed" | "invoice.paid"
+  invoiceId: string
+  subscriptionId: string
+  customerId: string
+  priceId: string
+  paymentIntentId?: string
+  periodEnd?: number
+  amountPaid?: number
+}): Stripe.Event => {
+  return {
+    id: `evt_test_${invoiceId}_${eventType.replace(".", "_")}`,
+    object: "event",
+    type: eventType,
+    api_version: "2025-08-27.basil",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: invoiceId,
+        object: "invoice",
+        number: invoiceId.toUpperCase(),
+        subscription: subscriptionId,
+        customer: customerId,
+        payment_intent: paymentIntentId ?? null,
+        amount_paid: amountPaid,
+        subtotal: amountPaid,
+        total: amountPaid,
+        currency: "usd",
+        created: Math.floor(Date.now() / 1000),
+        metadata: { userId: fx.userId },
+        lines: {
+          data: [
+            {
+              price: { id: priceId, object: "price" },
+              quantity: 1,
+              period: { end: periodEnd },
+            },
+          ],
+        },
+      },
+    },
+    livemode: false,
+    pending_webhooks: 0,
+    request: { id: null, idempotency_key: null },
+  } as unknown as Stripe.Event
+}
+
+const makeChargeRefundedEvent = (paymentIntentId: string): Stripe.Event => {
+  return {
+    id: `evt_test_${paymentIntentId}_refunded`,
+    object: "event",
+    type: "charge.refunded",
+    api_version: "2025-08-27.basil",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: `ch_test_${paymentIntentId}`,
+        object: "charge",
+        payment_intent: paymentIntentId,
+        amount: 9900,
+        amount_refunded: 9900,
+        refunded: true,
+      },
+    },
+    livemode: false,
+    pending_webhooks: 0,
+    request: { id: null, idempotency_key: null },
+  } as unknown as Stripe.Event
+}
+
+const makeDisputeCreatedEvent = (paymentIntentId: string): Stripe.Event => {
+  return {
+    id: `evt_test_${paymentIntentId}_dispute`,
+    object: "event",
+    type: "charge.dispute.created",
+    api_version: "2025-08-27.basil",
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: `dp_test_${paymentIntentId}`,
+        object: "dispute",
+        payment_intent: paymentIntentId,
       },
     },
     livemode: false,
@@ -681,6 +900,9 @@ describe("stripe webhook — entitlement fulfillment", () => {
       userId: fx.userId,
       mode: "payment",
       sessionId: "cs_test_entitlement_one_time",
+      customerId: "cus_test_entitlement_one_time",
+      paymentIntentId: "pi_test_entitlement_one_time",
+      invoiceId: "in_test_entitlement_one_time",
       metadata: {
         userId: fx.userId,
         type: "program_enrollment",
@@ -694,6 +916,7 @@ describe("stripe webhook — entitlement fulfillment", () => {
 
     expect(response.status).toBe(200)
     expect(replayResponse.status).toBe(200)
+    expect(listLineItemsMock).toHaveBeenCalledTimes(1)
 
     const userEntitlements = await db.userEntitlement.findMany({
       where: {
@@ -718,17 +941,56 @@ describe("stripe webhook — entitlement fulfillment", () => {
     })
     expect(programEnrollments).toHaveLength(1)
     expect(programEnrollments[0]?.status).toBe("ACTIVE")
+
+    const stripeCustomer = await db.stripeCustomer.findUnique({
+      where: { stripeCustomerId: "cus_test_entitlement_one_time" },
+    })
+    expect(stripeCustomer?.userId).toBe(fx.userId)
+    expect(stripeCustomer?.brand).toBe(requestBrand)
+
+    const invoice = await db.invoice.findUnique({
+      where: { stripeCheckoutSessionId: session.id },
+      include: { lineItems: true, payments: true },
+    })
+    expect(invoice?.status).toBe("PAID")
+    expect(invoice?.totalCents).toBe(9900)
+    expect(invoice?.currency).toBe("USD")
+    expect(invoice?.stripeInvoiceId).toBe("in_test_entitlement_one_time")
+    expect(invoice?.lineItems).toHaveLength(1)
+    expect(invoice?.lineItems[0]?.pricingPlanId).toBe(fx.oneTimePricingPlanId)
+    expect(invoice?.payments).toHaveLength(1)
+    expect(invoice?.payments[0]?.stripePaymentIntentId).toBe("pi_test_entitlement_one_time")
+
+    const processedEvent = await db.stripeWebhookEvent.findUnique({
+      where: { id: event.id },
+    })
+    expect(processedEvent?.status).toBe("PROCESSED")
   })
 
   it("subscription Checkout grants access once and subscription deletion revokes only matching access", async () => {
     setMockedLineItemPriceIds(fx.subscriptionPriceId)
 
     const subscriptionId = "sub_test_entitlement_0095"
+    mockedSubscriptions.set(subscriptionId, {
+      id: subscriptionId,
+      status: "active",
+      customer: "cus_test_entitlement_subscription",
+      metadata: { userId: fx.userId },
+      items: {
+        data: [
+          {
+            price: { id: fx.subscriptionPriceId, object: "price" },
+            quantity: 1,
+          },
+        ],
+      } as Stripe.ApiList<Stripe.SubscriptionItem>,
+    })
     const session = makeEntitlementCheckoutSession({
       userId: fx.userId,
       mode: "subscription",
       sessionId: "cs_test_entitlement_subscription",
       subscriptionId,
+      customerId: "cus_test_entitlement_subscription",
     })
     const event = makeCheckoutSessionCompletedEvent(session)
 
@@ -786,6 +1048,214 @@ describe("stripe webhook — entitlement fulfillment", () => {
     })
     expect(controls).toHaveLength(2)
     expect(controls.every(row => row.status === "ACTIVE")).toBe(true)
+  })
+
+  it("subscription update keeps cancel-at-period-end access active until the period end", async () => {
+    const subscriptionId = "sub_test_entitlement_updated"
+    const periodEnd = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60
+
+    await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+
+    const response = await postWebhook(
+      makeSubscriptionUpdatedEvent({
+        subscriptionId,
+        customerId: "cus_test_entitlement_updated",
+        priceId: fx.subscriptionPriceId,
+        cancelAtPeriodEnd: true,
+        currentPeriodEnd: periodEnd,
+      }),
+    )
+
+    expect(response.status).toBe(200)
+
+    const grant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+    expect(grant?.status).toBe("ACTIVE")
+    expect(grant?.endsAt?.toISOString()).toBe(new Date(periodEnd * 1000).toISOString())
+  })
+
+  it("failed subscription payment applies a finite access grace window", async () => {
+    const subscriptionId = "sub_test_entitlement_failed_payment"
+
+    await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+
+    const before = Date.now()
+    const response = await postWebhook(
+      makeInvoiceEvent({
+        eventType: "invoice.payment_failed",
+        invoiceId: "in_test_failed_payment",
+        subscriptionId,
+        customerId: "cus_test_entitlement_failed_payment",
+        priceId: fx.subscriptionPriceId,
+      }),
+    )
+    const after = Date.now()
+
+    expect(response.status).toBe(200)
+
+    const grant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+    expect(grant?.status).toBe("ACTIVE")
+    expect(grant?.endsAt?.getTime()).toBeGreaterThanOrEqual(before + 6 * 24 * 60 * 60 * 1000)
+    expect(grant?.endsAt?.getTime()).toBeLessThanOrEqual(after + 8 * 24 * 60 * 60 * 1000)
+  })
+
+  it("paid subscription invoice restores access and records renewal ledger rows", async () => {
+    const subscriptionId = "sub_test_entitlement_invoice_paid"
+    const periodEnd = Math.floor(Date.now() / 1000) + 31 * 24 * 60 * 60
+
+    await db.userEntitlement.create({
+      data: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+        status: "EXPIRED",
+      },
+    })
+
+    const response = await postWebhook(
+      makeInvoiceEvent({
+        eventType: "invoice.paid",
+        invoiceId: "in_test_invoice_paid",
+        subscriptionId,
+        customerId: "cus_test_entitlement_invoice_paid",
+        priceId: fx.subscriptionPriceId,
+        paymentIntentId: "pi_test_invoice_paid",
+        periodEnd,
+        amountPaid: 12900,
+      }),
+    )
+
+    expect(response.status).toBe(200)
+
+    const grant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.subscriptionEntitlementId,
+        sourceType: "SUBSCRIPTION",
+        sourceId: subscriptionId,
+      },
+    })
+    expect(grant?.status).toBe("ACTIVE")
+    expect(grant?.endsAt?.toISOString()).toBe(new Date(periodEnd * 1000).toISOString())
+
+    const invoice = await db.invoice.findUnique({
+      where: { stripeInvoiceId: "in_test_invoice_paid" },
+      include: { lineItems: true, payments: true },
+    })
+    expect(invoice?.status).toBe("PAID")
+    expect(invoice?.stripeSubscriptionId).toBe(subscriptionId)
+    expect(invoice?.totalCents).toBe(12900)
+    expect(invoice?.lineItems[0]?.pricingPlanId).toBe(fx.subscriptionPricingPlanId)
+    expect(invoice?.payments[0]?.stripePaymentIntentId).toBe("pi_test_invoice_paid")
+  })
+
+  it("full refund revokes purchased access, suspends projection, and marks ledger refunded", async () => {
+    setMockedLineItemPriceIds(fx.oneTimePriceId)
+
+    const session = makeEntitlementCheckoutSession({
+      userId: fx.userId,
+      mode: "payment",
+      sessionId: "cs_test_refunded_purchase",
+      customerId: "cus_test_refunded_purchase",
+      paymentIntentId: "pi_test_refunded_purchase",
+      metadata: {
+        userId: fx.userId,
+        type: "program_enrollment",
+        programId: fx.programId,
+      },
+    })
+    const checkoutResponse = await postWebhook(makeCheckoutSessionCompletedEvent(session))
+    const refundResponse = await postWebhook(makeChargeRefundedEvent("pi_test_refunded_purchase"))
+
+    expect(checkoutResponse.status).toBe(200)
+    expect(refundResponse.status).toBe(200)
+
+    const grant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.oneTimeEntitlementId,
+        sourceType: "PURCHASE",
+        sourceId: session.id,
+      },
+    })
+    expect(grant?.status).toBe("REVOKED")
+
+    const enrollment = await db.programEnrollment.findUnique({
+      where: { userId_programId: { userId: fx.userId, programId: fx.programId } },
+    })
+    expect(enrollment?.status).toBe("SUSPENDED")
+
+    const invoice = await db.invoice.findUnique({
+      where: { stripeCheckoutSessionId: session.id },
+    })
+    expect(invoice?.status).toBe("REFUNDED")
+  })
+
+  it("charge dispute revokes purchased access without deleting ledger history", async () => {
+    setMockedLineItemPriceIds(fx.oneTimePriceId)
+
+    const session = makeEntitlementCheckoutSession({
+      userId: fx.userId,
+      mode: "payment",
+      sessionId: "cs_test_disputed_purchase",
+      customerId: "cus_test_disputed_purchase",
+      paymentIntentId: "pi_test_disputed_purchase",
+      metadata: {
+        userId: fx.userId,
+        type: "program_enrollment",
+        programId: fx.programId,
+      },
+    })
+    const checkoutResponse = await postWebhook(makeCheckoutSessionCompletedEvent(session))
+    const disputeResponse = await postWebhook(makeDisputeCreatedEvent("pi_test_disputed_purchase"))
+
+    expect(checkoutResponse.status).toBe(200)
+    expect(disputeResponse.status).toBe(200)
+
+    const grant = await db.userEntitlement.findFirst({
+      where: {
+        userId: fx.userId,
+        entitlementId: fx.oneTimeEntitlementId,
+        sourceType: "PURCHASE",
+        sourceId: session.id,
+      },
+    })
+    expect(grant?.status).toBe("REVOKED")
+
+    const invoice = await db.invoice.findUnique({
+      where: { stripeCheckoutSessionId: session.id },
+      include: { payments: true },
+    })
+    expect(invoice?.status).toBe("PAID")
+    expect(invoice?.payments).toHaveLength(1)
   })
 })
 

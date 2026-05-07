@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { BillingPortalButton } from "~/app/(web)/dashboard/billing-portal-button"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
@@ -13,6 +14,7 @@ import {
   findUserEntitlements,
   findUserPassport,
   findUserRegistrations,
+  findUserStripeCustomer,
 } from "~/server/web/dashboard/queries"
 
 export const DashboardMembership = async () => {
@@ -24,14 +26,19 @@ export const DashboardMembership = async () => {
 
   const brand = await getRequestBrand()
 
-  const [enrollments, entitlements, registrations, passport] = await Promise.all([
+  const [enrollments, entitlements, registrations, passport, stripeCustomer] = await Promise.all([
     findUserEnrollments(session.user.id, brand),
     findUserEntitlements(session.user.id, brand),
     findUserRegistrations(session.user.id, brand),
     findUserPassport(session.user.id),
+    findUserStripeCustomer(session.user.id, brand),
   ])
 
-  const hasData = enrollments.length > 0 || entitlements.length > 0 || registrations.length > 0
+  const hasData =
+    enrollments.length > 0 ||
+    entitlements.length > 0 ||
+    registrations.length > 0 ||
+    Boolean(stripeCustomer)
 
   if (!hasData && !passport) {
     return null
@@ -67,7 +74,7 @@ export const DashboardMembership = async () => {
             <div className="space-y-3">
               <H4>My Enrollments</H4>
               <div className="grid gap-2">
-                {enrollments.map((enrollment) => (
+                {enrollments.map(enrollment => (
                   <Card key={enrollment.id} hover={false}>
                     <CardHeader>
                       <Stack size="sm" className="justify-between">
@@ -96,7 +103,7 @@ export const DashboardMembership = async () => {
             <div className="space-y-3">
               <H4>Active Entitlements</H4>
               <div className="grid gap-2">
-                {entitlements.map((ue) => (
+                {entitlements.map(ue => (
                   <Card key={ue.id} hover={false}>
                     <CardHeader>
                       <Stack size="sm" className="justify-between">
@@ -112,9 +119,7 @@ export const DashboardMembership = async () => {
                       </Stack>
                     </CardHeader>
                     {ue.endsAt && (
-                      <CardDescription>
-                        Expires {ue.endsAt.toLocaleDateString()}
-                      </CardDescription>
+                      <CardDescription>Expires {ue.endsAt.toLocaleDateString()}</CardDescription>
                     )}
                   </Card>
                 ))}
@@ -127,7 +132,7 @@ export const DashboardMembership = async () => {
             <div className="space-y-3">
               <H4>Tournament Registrations</H4>
               <div className="grid gap-2">
-                {registrations.map((reg) => (
+                {registrations.map(reg => (
                   <Card key={reg.id} hover={false}>
                     <CardHeader>
                       <Stack size="sm" className="justify-between">
@@ -162,6 +167,7 @@ export const DashboardMembership = async () => {
           <Button variant="secondary" size="sm" asChild>
             <Link href="/tournaments">Browse Tournaments</Link>
           </Button>
+          {stripeCustomer && <BillingPortalButton />}
         </div>
       </Section.Content>
     </Section>

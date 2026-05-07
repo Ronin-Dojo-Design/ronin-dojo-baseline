@@ -24,6 +24,18 @@ export const findUserEntitlements = cache(async (userId: string, brand: Brand) =
   })
 })
 
+export const findUserStripeCustomer = cache(async (userId: string, brand: Brand) => {
+  return db.stripeCustomer.findUnique({
+    where: {
+      userId_brand_accountScope: {
+        userId,
+        brand,
+        accountScope: "platform",
+      },
+    },
+  })
+})
+
 export const findUserRegistrations = cache(async (userId: string, brand: Brand) => {
   return db.registration.findMany({
     where: { userId, tournament: { brand } },

@@ -1,13 +1,17 @@
 "use server"
 
-import { registrationCheckoutSchema, registrationCancelSchema } from "~/server/web/tournaments/schema"
-import { getRequestBrand } from "~/lib/brand-context"
-import { checkEntitlement } from "~/server/web/entitlement/check-entitlement"
+import { env } from "~/env"
 import { isInSameBrand } from "~/lib/authz"
+import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
+import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
+import { checkEntitlement } from "~/server/web/entitlement/check-entitlement"
+import {
+  registrationCancelSchema,
+  registrationCheckoutSchema,
+} from "~/server/web/tournaments/schema"
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
-import { env } from "~/env"
 
 /**
  * Create a Stripe checkout session for tournament registration.
@@ -41,7 +45,9 @@ export const createRegistrationCheckout = userActionClient
     })
 
     if (!hasEntitlement) {
-      throw new Error("Your subscription does not include tournament registration. Please upgrade your plan.")
+      throw new Error(
+        "Your subscription does not include tournament registration. Please upgrade your plan.",
+      )
     }
 
     // 2b. Verify user belongs to this brand
@@ -76,7 +82,7 @@ export const createRegistrationCheckout = userActionClient
 
     // 5. Fetch divisions + check capacity (inside serializable transaction to prevent races)
     const capacityResult = await db.$transaction(
-      async (tx) => {
+      async tx => {
         const divisions = await tx.division.findMany({
           where: { id: { in: input.divisionIds } },
           include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
@@ -124,7 +130,7 @@ export const createRegistrationCheckout = userActionClient
               totalFeeCents: 0,
               submittedAt: new Date(),
               entries: {
-                create: input.divisionIds.map((divisionId) => ({
+                create: input.divisionIds.map(divisionId => ({
                   divisionId,
                   tournamentRoleId: role.id,
                   representingMembershipId: input.representingMembershipId ?? null,
@@ -147,13 +153,16 @@ export const createRegistrationCheckout = userActionClient
       return { type: "free" as const, registrationId: capacityResult.registrationId! }
     }
 
-    const { divisions, totalFeeCents } = capacityResult
+    const { divisions } = capacityResult
+    const existingCustomer = await findStripeCustomerForCheckout({ userId, brand })
 
     // 8. Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      line_items: divisions.map((div) => ({
+      customer: existingCustomer?.stripeCustomerId,
+      customer_creation: existingCustomer ? undefined : "always",
+      line_items: divisions.map(div => ({
         price_data: {
           currency: "usd",
           unit_amount: div.feeCents,
