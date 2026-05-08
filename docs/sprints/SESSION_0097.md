@@ -2,10 +2,10 @@
 title: "SESSION 0097 - Protected Paid Access Checkout Hardening"
 slug: session-0097
 type: session
-status: planned
+status: closed-quick
 created: 2026-05-07
-updated: 2026-05-07
-last_agent: codex-session-0097-prep
+updated: 2026-05-08
+last_agent: codex-session-0097
 sprint: S3
 pairs_with:
   - docs/sprints/SESSION_0096.md
@@ -27,7 +27,7 @@ Brian Scott + Codex acting as Petey for staging only
 
 ## Status
 
-planned
+closed-quick
 
 ## Goal
 
@@ -208,3 +208,81 @@ Playwright is optional for SESSION_0097. Use it only if the Product card/enrollm
 ## Handoff Prompt for Fresh Chat
 
 Bow in with `docs/rituals/opening.md`, act as Petey, and execute `docs/sprints/SESSION_0097.md`. Start with the protected paid-access checkout action; do not start PWCC until `SESSION_0096_FINDING_01` is closed or Brian explicitly accepts the risk. Use the refreshed Graphify index if needed, then follow the Petey plan above.
+
+## Quick Close
+
+### What landed
+
+- Added `createProgramEnrollmentCheckout`, an authenticated program enrollment Checkout action that accepts only `programId`, selected `stripePriceId`, and optional `coupon`.
+- The action derives request brand, user, PricingPlan, Program, organization, line item, Checkout mode, Stripe Customer handling, metadata, and success/cancel URLs server-side.
+- Kept generic Dirstarter `createStripeCheckout` unchanged for listing/product monetization flows.
+- Wired `/programs/[id]/enroll` to the protected action so the client no longer sends paid-learning metadata, arbitrary line items, or redirect URLs.
+- Added hostile action tests proving forged metadata/line items/URLs are ignored and invalid plan mappings fail closed.
+
+### Files touched
+
+- `apps/web/server/web/billing/actions.ts` — protected program enrollment Checkout action.
+- `apps/web/server/web/billing/checkout-actions.test.ts` — focused valid/hostile/rejection tests.
+- `apps/web/components/web/products/product.tsx` — optional protected checkout executor for Product cards.
+- `apps/web/components/web/products/product-list.tsx` — forwards protected checkout data.
+- `apps/web/components/web/products/product-query.tsx` — exposes optional protected checkout data.
+- `apps/web/app/(web)/programs/[id]/enroll/page.tsx` — sends only `programId` to protected checkout.
+- `docs/protocols/project-log.md` — SESSION_0097 build/task/review entries.
+- `docs/knowledge/wiki/manual-boundary-registry.md` — MB-013 protected checkout gate disposition.
+- `docs/architecture/monetization-entitlements-spec.md` — commerce contract update.
+- `docs/architecture/security-privacy-payments-monitoring-plan.md` — paid-access gate update.
+- `docs/sprints/SESSION_0097.md` — quick-close record.
+
+### Decisions resolved
+
+- Input selector uses `stripePriceId` because the current Product card flow already operates on Stripe Prices.
+- Optional coupon support stays enabled and is passed through as a Stripe coupon id from the existing discount-code query flow.
+- Checkout mode is derived from trusted internal plan recurrence fields (`intervalMonths`, `MONTHLY`, `ANNUAL`).
+- Duplicate active current-brand plan mappings for the same program/price fail closed until the DB uniqueness policy is decided.
+
+### Open decisions / blockers
+
+- MB-013 remains open for webhook monitoring/alerting, payment-entitlement drift audit, manual/admin payment parity, certificate pricing, DB uniqueness policy, and customer notification paths.
+- Full `bun run typecheck` still fails on known unrelated baseline errors: `server/web/tags/queries.ts(67,10)` excessive stack depth and existing tournament test `bun:test` typings.
+- Changes are uncommitted because no commit/push authorization was given in this turn.
+
+### Verification
+
+- `cd apps/web && bun test server/web/billing/checkout-actions.test.ts` — 4/4 pass.
+- `cd apps/web && bun test server/web/billing/actions.test.ts` — 2/2 pass.
+- `cd apps/web && bun test app/api/stripe/webhooks/route.test.ts` — 10/10 pass.
+- `cd apps/web && bun biome check server/web/billing/actions.ts server/web/billing/checkout-actions.test.ts components/web/products/product.tsx components/web/products/product-list.tsx components/web/products/product-query.tsx 'app/(web)/programs/[id]/enroll/page.tsx'` — pass.
+- `cd apps/web && bunx prisma validate --schema prisma/schema.prisma` — pass.
+- `git diff --check` — pass.
+- `bun run wiki:lint` — pass with 0 errors and 3 existing orphan-page warnings (`knowledge/wiki/topic-index.md`, `knowledge/wiki/concepts/tournament-ops.md`, `knowledge/wiki/dirstarter-uplift-backlog.md`).
+- `cd apps/web && bun run typecheck` — fails only on known unrelated baseline errors listed above.
+- Project-log gate — `SESSION_0097` appears in `docs/protocols/project-log.md`.
+- Git hygiene — branch `main`; existing extra worktrees `ronin-dojo-app-wt-0085-route` and `ronin-dojo-app-wt-0085-tests` left in place; changes uncommitted because no commit/push authorization was given.
+
+### Task log
+
+- `SESSION_0097_TASK_01` — landed.
+- `SESSION_0097_TASK_02` — landed.
+- `SESSION_0097_TASK_03` — landed.
+
+### Review log
+
+- `SESSION_0097_REVIEW_01` — quick close review recorded in Project Log.
+- `SESSION_0097_FINDING_01` — remaining MB-013 gates are outside protected Checkout.
+
+### Hostile close review
+
+- Giddy/Doug local verdict: pass for SESSION_0097 scope.
+- No fresh Dirstarter browsing was performed per locked operator instruction; this session relied on the SESSION_0097 prep record that live Dirstarter Payments, Monetization, Prisma, and Stripe Checkout/webhook docs were checked on 2026-05-07.
+- Score cap: 9.2/10 because MB-013 monitoring, drift audit, manual payment parity, certificate pricing, and uniqueness policy remain open.
+
+### ADR / ubiquitous-language check
+
+- No ADR needed; this implements ADR 0011's entitlement-first checkout hardening rather than creating a new architecture decision.
+- No Ubiquitous Language update needed; no new domain term was introduced.
+
+### Next session
+
+- **Goal:** Execute `docs/sprints/SESSION_0098.md` for webhook monitoring and payment/entitlement drift audit.
+- **Inputs to read:** `docs/sprints/SESSION_0098.md`, `docs/knowledge/wiki/manual-boundary-registry.md` MB-013, `docs/protocols/project-log.md` `SESSION_0097_REVIEW_01`, `docs/architecture/security-privacy-payments-monitoring-plan.md`, and the Stripe webhook route/tests.
+- **First task:** Confirm Brian's manual checklist decisions in SESSION_0098, especially alert destination, audit schedule, Stripe Price inventory, manual payment exclusion/parity, and certificate pricing bridge.

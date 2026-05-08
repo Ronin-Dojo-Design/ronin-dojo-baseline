@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-07
-last_agent: codex-session-0096
+updated: 2026-05-08
+last_agent: codex-session-0098-plan
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -233,11 +233,12 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 7 actual | 0094 | Commerce | Commerce truth reconciliation: monetization spec and MB-013 now match landed entitlement schema; payment proof targets staged |
 | May 7 actual | 0095 | Commerce QA | One-time and subscription Checkout/webhook entitlement proof landed; tournament webhook now retries serializable write conflicts |
 | May 7 actual | 0096 | Commerce implementation | Stripe customer mapping, Customer Portal action, processed-event dedupe, non-tournament ledger projection, and subscription/refund/dispute lifecycle proof landed |
-| May 8 target | 0097 | Commerce hardening | Protected Ronin paid-access checkout action with server-derived user/brand/org/plan metadata proof |
-| May 9–10 target | 0098 | PWCC | First Playwright-first component discovery and component port-map records |
-| May 10–12 target | 0099 | Brand launch | Four-brand launch-definition matrix and content checklist |
-| May 13–15 target | 0100 | Brand launch + PWCC | First launch-surface component/content port with Playwright proof |
-| May 16 target | 0101 | QA hardening + launch | Cross-brand UAT, payment/entitlement drift audit, migration/deploy rehearsal |
+| May 8 actual | 0097 | Commerce hardening | Protected Ronin paid-access checkout action with server-derived user/brand/org/plan metadata proof |
+| May 9 target | 0098 | Commerce hardening | Stripe webhook operations monitor plus payment/entitlement drift audit; manual MB-013 launch checklist staged |
+| May 10–11 target | 0099 | Commerce hardening or PWCC | Manual/admin payment parity if Brian keeps it in paid launch scope; otherwise first PWCC component discovery and port-map records |
+| May 11–12 target | 0100 | Brand launch | Four-brand launch-definition matrix and content checklist |
+| May 13–15 target | 0101 | Brand launch + PWCC | First launch-surface component/content port with Playwright proof |
+| May 16 target | 0102 | QA hardening + launch | Cross-brand UAT, remaining MB-013 signoff, migration/deploy rehearsal |
 | May 17 target | 0102 | Launch readiness | Freeze, rollback drill, support playbook, env/domain proof |
 | May 18 target | 0103 | Launch day | Release execution, monitoring, and triage for all four brands |
 

@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-07
+updated: 2026-05-08
 author: Brian + ChatGPT
-last_agent: codex-session-0096
+last_agent: codex-session-0097
 pairs_with:
   - repo-truth-index
 backlinks:
@@ -23,6 +23,8 @@ backlinks:
   - docs/sprints/SESSION_0094.md
   - docs/sprints/SESSION_0095.md
   - docs/sprints/SESSION_0096.md
+  - docs/sprints/SESSION_0097.md
+  - docs/sprints/SESSION_0098.md
 tags:
   - blockers
   - ops
@@ -116,15 +118,29 @@ SESSION_0095 update: focused webhook proof landed for one-time and subscription 
 
 SESSION_0096 update: current-brand `StripeCustomer` mapping, authenticated Customer Portal session creation, processed Stripe event-id storage, non-tournament `Invoice`/`Payment` projection for mapped Checkout, subscription update/failed-payment/paid-renewal handling, and full refund/dispute revocation proof landed. Failed renewal now keeps subscription access active only through a seven-day `endsAt` grace window; paid renewal restores active access and writes ledger rows; full refund and dispute revoke matching Stripe-sourced access and suspend program enrollment projections. The paid tournament parallel webhook retry was widened to include Prisma adapter `40001` transaction conflicts.
 
+SESSION_0097 update: protected program enrollment Checkout now uses an authenticated action that accepts only `programId`, selected `stripePriceId`, and optional coupon, then derives user, brand, organization, pricing plan, line item, mode, Stripe Customer handling, URLs, and metadata server-side. Hostile tests prove caller-supplied metadata, line items, and redirect URLs cannot drive protected paid-learning access. This closes `SESSION_0096_FINDING_01` for the program enrollment Checkout surface while leaving the non-checkout MB-013 launch gates open.
+
 MB-013 still requires these launch gates:
 
-1. Protected checkout action hardening for paid learning surfaces so user/brand/org/metadata are fully server-derived instead of using the generic Dirstarter listing action.
-2. Stripe event-id monitoring/alert wiring for duplicate/failed webhook events.
-3. Nightly or admin-triggered payment/entitlement drift audit and launch-readiness signoff.
-4. Certificate pricing decision: migrate paid certificates to `PricingPlan` or keep `CertificateTemplate.priceCents` as a launch bridge.
-5. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe.
-6. DB-enforced or explicitly accepted-risk handling for non-unique `PricingPlan.stripePriceId` and non-unique `UserEntitlement` source rows.
-7. Customer email/notification path for failed-renewal grace, refund, and dispute events.
+1. Stripe event-id monitoring/alert wiring for duplicate/failed webhook events.
+2. Nightly or admin-triggered payment/entitlement drift audit and launch-readiness signoff.
+3. Certificate pricing decision: migrate paid certificates to `PricingPlan` or keep `CertificateTemplate.priceCents` as a launch bridge.
+4. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe.
+5. DB-enforced or explicitly accepted-risk handling for non-unique `PricingPlan.stripePriceId` and non-unique `UserEntitlement` source rows.
+6. Customer email/notification path for failed-renewal grace, refund, and dispute events.
+
+SESSION_0098 planned owner checklist before this boundary can close:
+
+- Confirm Stripe test mode first for monitor/audit proof; do not use live mode for local verification.
+- Confirm where alerting should land after the admin monitor exists: dashboard only, email, Slack, or another channel.
+- Provide alert recipient emails or explicitly defer outbound alerts to a post-monitoring follow-up.
+- Approve the proposed daily drift-audit schedule, defaulting to 03:00 America/Denver.
+- Approve launch thresholds: any blocking drift count above zero blocks paid curriculum launch.
+- Provide or approve the launch Stripe Price inventory: brand, org, program, plan, Stripe product id, Stripe price id, mode, allowed coupon ids.
+- Decide whether manual/cash/check/comp paid-curriculum access is excluded from launch or must be implemented with entitlement parity before launch.
+- Decide certificate pricing bridge: keep `CertificateTemplate.priceCents` warning-only or migrate paid certificate orders into `PricingPlan`.
+- Decide whether customer emails for failed-renewal grace, refund, and dispute events are required before paid curriculum launch.
+- Decide whether SESSION_0098 proof is local-only or must include staging evidence.
 
 **MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass and SESSION_0031 prep refactor identified four manual production gates the owner must close before staging deploy:
 

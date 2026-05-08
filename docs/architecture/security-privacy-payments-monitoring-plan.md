@@ -4,8 +4,8 @@ slug: security-privacy-payments-monitoring-plan
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-05-07
-last_agent: codex-session-0096
+updated: 2026-05-08
+last_agent: codex-session-0097
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -19,6 +19,7 @@ backlinks:
   - docs/sprints/SESSION_0094.md
   - docs/sprints/SESSION_0095.md
   - docs/sprints/SESSION_0096.md
+  - docs/sprints/SESSION_0097.md
 ---
 
 # Security, Privacy, Payments, and Monitoring Plan
@@ -160,7 +161,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Authorization | Server actions and queries enforce auth, brand, org, and role. | No route is accepted with middleware-only protection. |
 | Instructor eligibility | ACTIVE same-org memberships with owner/admin/instructor role codes. | Add coach/staff roles only after roles are defined in seed and authz docs. |
 | ClassSession materialization | Bounded generation from `daysOfWeek`, `startTime`, `endTime`, effective dates, and timezone. | Add `rrule` engine only when recurring edge cases exceed the MVP shape. |
-| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service, one-time/subscription webhook proofs, Customer Portal path, non-tournament ledger projection, and failed-payment/refund/dispute policy now exist; do not launch protected paid access before remaining hardening gates are closed or explicitly bridged. |
+| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service, one-time/subscription webhook proofs, Customer Portal path, non-tournament ledger projection, failed-payment/refund/dispute policy, and protected program enrollment Checkout now exist; do not launch protected paid access before remaining MB-013 monitoring, drift-audit, manual-payment, certificate-pricing, and uniqueness-policy gates are closed or explicitly bridged. |
 | Stripe webhook handling | Signature verification, persisted processed-event records, idempotent state changes, no raw secrets/log payloads. | Revisit when adding Connect or multi-org payouts. |
 | Public certificate verification | Lookup by `qrVerificationCode`; return verification-safe fields only. | Revisit if certificate fraud/abuse requires stronger proof or captcha/rate limits. |
 | Storage | Public assets may use public URLs; private certificates/media require signed/private access. | Revisit when certificate PDFs are implemented. |
@@ -182,7 +183,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 ### Future CGR commerce
 
 - Entitlement schema/service exists and is the access bridge for paid learning/certification/membership surfaces.
-- Protected checkout starts derive user, brand, org, and metadata server-side; do not reuse generic caller-supplied metadata for paid-access grants.
+- Protected checkout starts derive user, brand, org, and metadata server-side; SESSION_0097 proves this for program enrollment Checkout. Do not reuse generic caller-supplied metadata for paid-access grants.
 - Stripe webhook route verifies signature, persists processed event ids, and has idempotency proof for launch-critical state-changing paths.
 - One-time Checkout success grants entitlement through `PricingPlan.stripePriceId`, creates the required access projection, and writes internal `Invoice`/`Payment` ledger rows. SESSION_0096 proves this path with customer mapping and processed-event replay.
 - Subscription Checkout success grants subscription-sourced entitlement; cancellation revokes or expires it by Stripe subscription id. SESSION_0096 proves checkout grant, replay, update, deletion, failed-payment grace, and paid-renewal ledger recovery.
@@ -222,7 +223,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 
 - MB-002 brand-scope enforcement remains open.
 - Entitlement implementation plus one-time and subscription webhook proof exists, including Customer Portal/customer ID, non-tournament ledger projection, and failed-payment/refund/dispute policy from SESSION_0096.
-- Protected paid access still needs a dedicated checkout action that derives user/brand/org/metadata server-side instead of relying on the generic Dirstarter caller-metadata action.
+- Protected program enrollment Checkout now derives user/brand/org/metadata server-side; any future protected paid-access surface must use the same contract instead of generic Dirstarter caller metadata.
 - Payment/entitlement drift audit and Stripe webhook monitoring/alerting must exist, or an explicit launch bridge must be accepted, before paid curriculum launch.
 - Manual/admin payment parity must either grant/revoke the same entitlement and ledger state as Stripe or be excluded from launch.
 - Private certificate/media storage policy must be decided before certificate PDFs launch.

@@ -20,6 +20,7 @@ import { siteConfig } from "~/config/site"
 import { useProductPrices } from "~/hooks/use-product-prices"
 import { getProductFeatures, type ProductInterval } from "~/lib/products"
 import { cx } from "~/lib/utils"
+import { createProgramEnrollmentCheckout } from "~/server/web/billing/actions"
 import { createStripeCheckout } from "~/server/web/products/actions"
 
 const productClassName = "items-stretch gap-8 basis-72 grow max-w-80 bg-transparent overflow-clip"
@@ -35,9 +36,15 @@ type ProductCheckoutData = Omit<
   "lineItems" | "mode" | "coupon"
 >
 
+type ProgramEnrollmentCheckoutData = Omit<
+  InferSafeActionFnInput<typeof createProgramEnrollmentCheckout>["parsedInput"],
+  "stripePriceId" | "coupon"
+>
+
 type ProductProps = ComponentProps<typeof Card> & {
   data: ProductData
-  checkoutData: ProductCheckoutData
+  checkoutData?: ProductCheckoutData
+  programEnrollmentCheckoutData?: ProgramEnrollmentCheckoutData
   isFeatured?: boolean
   buttonLabel?: ReactNode
 }
@@ -46,6 +53,7 @@ const Product = ({
   className,
   data,
   checkoutData,
+  programEnrollmentCheckoutData,
   isFeatured,
   buttonLabel,
   ...props
@@ -59,16 +67,37 @@ const Product = ({
     defaultValue: "month",
   })
 
-  const { execute, isPending } = useAction(createStripeCheckout, {
+  const genericCheckout = useAction(createStripeCheckout, {
     onError: ({ error }) => {
       console.error("Checkout error:", error)
       toast.error(error.serverError)
     },
   })
 
+  const programEnrollmentCheckout = useAction(createProgramEnrollmentCheckout, {
+    onError: ({ error }) => {
+      console.error("Program enrollment checkout error:", error)
+      toast.error(error.serverError)
+    },
+  })
+
   const onSubmit = () => {
     if (currentPrice?.id) {
-      execute({
+      if (programEnrollmentCheckoutData) {
+        programEnrollmentCheckout.execute({
+          ...programEnrollmentCheckoutData,
+          stripePriceId: currentPrice.id,
+          coupon: coupon?.id,
+        })
+        return
+      }
+
+      if (!checkoutData) {
+        toast.error("Checkout is not configured.")
+        return
+      }
+
+      genericCheckout.execute({
         lineItems: [{ price: currentPrice.id }],
         mode: isSubscription ? "subscription" : "payment",
         coupon: coupon?.id,
@@ -79,6 +108,7 @@ const Product = ({
 
   const priceCalculations = useProductPrices(prices, coupon, interval)
   const { isSubscription, currentPrice, price, fullPrice, discount } = priceCalculations
+  const isPending = genericCheckout.isPending || programEnrollmentCheckout.isPending
 
   return (
     <Card

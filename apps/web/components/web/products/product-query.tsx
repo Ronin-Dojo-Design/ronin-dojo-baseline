@@ -7,7 +7,8 @@ import { getProductsForListing } from "~/lib/products"
 
 type ProductQueryProps = Omit<ComponentProps<typeof ProductList>, "products" | "urls"> & {
   searchParams: Promise<SearchParams>
-  checkoutData: ComponentProps<typeof Product>["checkoutData"]
+  checkoutData?: ComponentProps<typeof Product>["checkoutData"]
+  programEnrollmentCheckoutData?: ComponentProps<typeof Product>["programEnrollmentCheckoutData"]
   productFilter?: (product: Stripe.Product) => boolean
   productMapper?: (product: Stripe.Product) => Stripe.Product
 }

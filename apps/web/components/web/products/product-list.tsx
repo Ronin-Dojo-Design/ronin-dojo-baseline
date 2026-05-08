@@ -6,7 +6,8 @@ import { cx } from "~/lib/utils"
 
 type ProductListProps = ComponentProps<"div"> & {
   products: ProductWithPrices[]
-  checkoutData: ComponentProps<typeof Product>["checkoutData"]
+  checkoutData?: ComponentProps<typeof Product>["checkoutData"]
+  programEnrollmentCheckoutData?: ComponentProps<typeof Product>["programEnrollmentCheckoutData"]
   buttonLabel?: (product: Stripe.Product) => ReactNode
 }
 
@@ -14,6 +15,7 @@ export const ProductList = ({
   className,
   products,
   checkoutData,
+  programEnrollmentCheckoutData,
   buttonLabel,
   ...props
 }: ProductListProps) => {
@@ -28,6 +30,7 @@ export const ProductList = ({
           key={product.id}
           data={{ product, prices, coupon }}
           checkoutData={checkoutData}
+          programEnrollmentCheckoutData={programEnrollmentCheckoutData}
           isFeatured={isFeatured}
           buttonLabel={buttonLabel?.(product)}
         />

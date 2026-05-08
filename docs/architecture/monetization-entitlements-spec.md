@@ -4,8 +4,8 @@ slug: monetization-entitlements-spec
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-05-07
-last_agent: codex-session-0096
+updated: 2026-05-08
+last_agent: codex-session-0097
 pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
@@ -19,6 +19,7 @@ backlinks:
   - docs/sprints/SESSION_0094.md
   - docs/sprints/SESSION_0095.md
   - docs/sprints/SESSION_0096.md
+  - docs/sprints/SESSION_0097.md
   - docs/knowledge/wiki/index.md
 ---
 
@@ -28,7 +29,7 @@ backlinks:
 
 Define the commercial access contract that connects Stripe, pricing, invoices, subscriptions, program enrollments, course access, certificate issuance, refunds, and revocation.
 
-This doc started as a SESSION_0029 spec. SESSION_0094 reconciled it against the current code: the entitlement schema and Stripe Price mapping now exist. SESSION_0095 proved one-time and subscription Checkout entitlement grant/revoke behavior in the webhook harness. SESSION_0096 added current-brand Stripe customer mapping, Customer Portal session creation, processed-event storage, non-tournament ledger projection, and subscription/refund/dispute lifecycle proof; protected checkout hardening, manual/admin payment parity, certificate pricing, and drift audit remain open.
+This doc started as a SESSION_0029 spec. SESSION_0094 reconciled it against the current code: the entitlement schema and Stripe Price mapping now exist. SESSION_0095 proved one-time and subscription Checkout entitlement grant/revoke behavior in the webhook harness. SESSION_0096 added current-brand Stripe customer mapping, Customer Portal session creation, processed-event storage, non-tournament ledger projection, and subscription/refund/dispute lifecycle proof. SESSION_0097 added protected program enrollment Checkout with server-derived user, brand, organization, plan, line item, metadata, and URLs; manual/admin payment parity, certificate pricing, monitoring, and drift audit remain open.
 
 ## Authority
 
@@ -77,7 +78,7 @@ Payment succeeds
 | Brand subscriptions | `SubscriptionTier`, `UserBrandSubscription` | Useful for BBL/directory-style tiers, but not enough for program/course access. |
 | Entitlements | `Entitlement`, `EntitlementGrant`, `UserEntitlement`, `server/web/entitlement/*` | The schema bridge now exists; current helpers check active brand-scoped access and grant manually by entitlement key. |
 | Stripe webhook | `app/api/stripe/webhooks/route.ts` | Handles `checkout.session.completed`, customer subscription update/delete, invoice paid/payment-failed, full charge refund, and charge dispute creation. SESSION_0095 tests prove one-time replay/source isolation and subscription grant/revoke by source id. SESSION_0096 tests prove processed-event dedupe, customer persistence, ledger projection, failed-payment grace, paid-renewal recovery, refund revoke, and dispute revoke. |
-| Dirstarter product UI | `server/web/products/*`, `apps/web/scripts/setup-stripe-products.ts`, `app/api/stripe/webhooks/route.ts` | Uses Stripe Products/Prices directly for listing plans and updates Dirstarter `Tool.isFeatured`; generic checkout action is not the protected Ronin paid-access template. |
+| Dirstarter product UI | `server/web/products/*`, `server/web/billing/actions.ts`, `apps/web/scripts/setup-stripe-products.ts`, `app/api/stripe/webhooks/route.ts` | Uses Stripe Products/Prices directly for listing plans and updates Dirstarter `Tool.isFeatured`; generic checkout action remains for listing monetization. Protected program enrollment now uses `createProgramEnrollmentCheckout` to validate the selected Stripe Price against one active current-brand `PricingPlan` with entitlement grants before Checkout. |
 | Certificates | `CertificateTemplate.priceCents`, `CertificateOrder.stripePaymentIntentId` | Inline certificate pricing already exists from Pass 4. |
 
 ## DRY Findings

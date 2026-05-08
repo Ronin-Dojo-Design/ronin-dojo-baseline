@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-07
-last_agent: codex-session-0096
+updated: 2026-05-08
+last_agent: codex-session-0097
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1114,3 +1114,97 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Status:** open
 
 **Kaizen triage:** Safe for 100 users at 9.4 on the implemented payment paths because customer mapping, event dedupe, ledger projection, lifecycle events, and tournament concurrency proof pass against real Prisma fixtures. Safe for 1,000 users at 8.6 until protected checkout metadata, monitoring, drift audit, and uniqueness policy are closed. Safe for 10,000 users at 7.9 because webhook monitoring/manual payment parity/certificate pricing are still not launch-complete. Kaizen aggregate: 7.9, which keeps the next session in commerce hardening before PWCC.
+
+### S97_PROTECTED_CHECKOUT — Protected paid learning Checkout hardening
+
+- **Session:** SESSION_0097
+- **Sprint:** S3 / Commerce implementation
+- **Status:** ✅ verified with known full-typecheck baseline debt
+- **Files:** `apps/web/server/web/billing/actions.ts`, `apps/web/server/web/billing/checkout-actions.test.ts`, `apps/web/components/web/products/*`, `apps/web/app/(web)/programs/[id]/enroll/page.tsx`
+- **Seed data:** no durable seed changes; tests create and clean real Prisma fixtures.
+- **Smoke test:** `bun test server/web/billing/checkout-actions.test.ts` passed 4/4; `bun test server/web/billing/actions.test.ts` passed 2/2; `bun test app/api/stripe/webhooks/route.test.ts` passed 10/10; scoped Biome check passed; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bun run typecheck` still fails on pre-existing baseline errors in `server/web/tags/queries.ts` and existing tournament test `bun:test` typings.
+
+### SESSION_0097_TASK_01 — Protected checkout contract and active task rows
+
+- **ID:** SESSION_0097_TASK_01
+- **Owner:** Petey + Giddy
+- **Session:** SESSION_0097
+- **Date:** 2026-05-08
+- **Done criteria:** Contract accepts only `programId`, `stripePriceId`, and optional `coupon`; all sensitive Checkout fields are server-derived.
+- **Status:** ✅ Done
+- **What shipped:** Contract recorded in code and tests; Project Log rows appended during quick close.
+- **Verification:** SESSION_0097 closeout and `createProgramEnrollmentCheckout` schema.
+
+### SESSION_0097_TASK_02 — Protected program enrollment Checkout action
+
+- **ID:** SESSION_0097_TASK_02
+- **Owner:** Cody
+- **Session:** SESSION_0097
+- **Date:** 2026-05-08
+- **Done criteria:** Authenticated action derives user, brand, org, plan, line item, mode, URLs, customer, and metadata server-side.
+- **Status:** ✅ Done
+- **What shipped:** `createProgramEnrollmentCheckout` under `server/web/billing/actions.ts`; generic Dirstarter `createStripeCheckout` remains unchanged.
+- **Verification:** `bun test server/web/billing/checkout-actions.test.ts`.
+
+### SESSION_0097_TASK_03 — UI wiring and hostile checkout proof
+
+- **ID:** SESSION_0097_TASK_03
+- **Owner:** Cody + Doug
+- **Session:** SESSION_0097
+- **Date:** 2026-05-08
+- **Done criteria:** Enrollment UI no longer sends caller metadata/URLs/line items; tests prove forged inputs cannot drive paid-learning access.
+- **Status:** ✅ Done
+- **What shipped:** Product cards accept a protected program-enrollment executor; `/programs/[id]/enroll` sends only `programId`; tests cover valid, forged, subscription, cross-brand, wrong-program, inactive, unmapped, no-entitlement, and duplicate-plan cases.
+- **Verification:** `bun test server/web/billing/checkout-actions.test.ts`; existing billing and webhook tests passed.
+
+### SESSION_0097_REVIEW_01 — Protected paid learning Checkout quick close
+
+**Reviewed tasks:** SESSION_0097_TASK_01, SESSION_0097_TASK_02, SESSION_0097_TASK_03
+**Dirstarter docs check:** No fresh browsing per locked operator instruction; SESSION_0097 prep recorded live Dirstarter Payments, Monetization, Prisma, and Stripe Checkout/webhook docs checked on 2026-05-07.
+**Verdict:** Aligned. The protected Ronin paid-learning path now extends the Dirstarter Stripe Checkout baseline without replacing the generic listing monetization action. Client-selected price IDs are accepted only as selectors and must map to exactly one active current-brand `PricingPlan` for the requested active `Program` with entitlement grants. Checkout line items, user, brand, organization, metadata, mode, success/cancel URLs, and Stripe Customer handling are server-derived. WORKFLOW score: 9.2/10; residual MB-013 gates remain for webhook monitoring/drift audit, manual payment parity, certificate pricing, and DB uniqueness policy.
+
+#### Prior finding disposition
+
+- `SESSION_0096_FINDING_01` is closed for protected program enrollment Checkout by `createProgramEnrollmentCheckout` and hostile action tests.
+
+#### SESSION_0097_FINDING_01 — Remaining MB-013 gates are outside protected Checkout
+
+- **Severity:** medium
+- **Task:** SESSION_0097_TASK_03
+- **Evidence:** Protected Checkout is now server-derived, but monitoring/drift audit, manual/admin payment parity, certificate pricing, and DB uniqueness policy are still listed under MB-013.
+- **Impact:** Paid curriculum launch remains gated even though caller-forged Checkout metadata is closed.
+- **Required follow-up:** Continue MB-013 with webhook monitoring/drift audit or manual payment parity before PWCC unless Brian explicitly accepts the risk.
+- **Status:** open
+
+### SESSION_0098_TASK_01 — MB-013 checkpoint and monitoring contract
+
+- **ID:** SESSION_0098_TASK_01
+- **Owner:** Petey + Giddy
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Blocking thresholds for webhook health, duplicate Stripe Price mappings, paid invoice/access drift, paid enrollment/access drift, and certificate-pricing warnings are explicit before code edits.
+- **Status:** planned
+- **What should ship:** SESSION_0098 kickoff confirms Brian's manual checklist decisions and records any scope change before implementation.
+- **Verification:** SESSION_0098 task log plus updated MB-013 notes.
+
+### SESSION_0098_TASK_02 — Stripe webhook operations monitor
+
+- **ID:** SESSION_0098_TASK_02
+- **Owner:** Cody
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Admin-only monitor reports webhook status/type counts, failed events, stale processing events, repeated attempts, recent processed volume, and a launch-readiness status without exposing Stripe payloads or secrets.
+- **Status:** planned
+- **What should ship:** Admin billing monitor query/page or equivalent operations surface.
+- **Verification:** Focused monitor query tests and scoped Biome check.
+
+### SESSION_0098_TASK_03 — Payment and entitlement drift audit
+
+- **ID:** SESSION_0098_TASK_03
+- **Owner:** Cody + Doug
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Repeatable audit reports blocking drift for duplicate plan/price mappings, plans without grants, paid invoice/access mismatches, orphan Stripe-sourced entitlements, paid enrollment/access mismatches, and webhook failures; exits non-zero on blocking drift.
+- **Status:** planned
+- **What should ship:** Drift audit service, script, and real-fixture tests.
+- **Verification:** `bun test server/web/billing/drift-audit.test.ts` and `bun scripts/audit-payment-entitlements.ts`.

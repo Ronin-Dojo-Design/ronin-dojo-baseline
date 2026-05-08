@@ -60,15 +60,7 @@ export default async function ProgramEnrollPage(props: Props) {
       <Suspense fallback={<ProductListSkeleton />}>
         <ProductQuery
           searchParams={props.searchParams}
-          checkoutData={{
-            successUrl: `${url}/success`,
-            cancelUrl: url,
-            metadata: {
-              type: "program_enrollment",
-              programId: program.id,
-              userId: session.user.id,
-            },
-          }}
+          programEnrollmentCheckoutData={{ programId: program.id }}
           productFilter={({ name }) => name.includes("Enrollment")}
           productMapper={({ name, ...product }) => ({
             ...product,
