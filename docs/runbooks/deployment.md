@@ -4,11 +4,12 @@ slug: deployment
 type: runbook
 status: active
 created: 2026-05-05
-updated: 2026-05-05
-last_agent: copilot-session-0077
+updated: 2026-05-08
+last_agent: codex-session-0099
 pairs_with:
   - docs/runbooks/dev-environment.md
   - docs/runbooks/schema-migration.md
+  - docs/runbooks/aws-s3-operator-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -57,7 +58,7 @@ Set these in **Vercel → Settings → Environment Variables** for Production (a
 | `RESEND_SENDER_EMAIL` | Email from address |
 | `STRIPE_SECRET_KEY` | Payments |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook verification |
-| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY` | Media uploads |
+| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `NEXT_PUBLIC_MEDIA_BASE_URL` | Media uploads and public media delivery; see [AWS S3 Operator Runbook](aws-s3-operator-runbook.md) |
 
 ## Google OAuth — Production Client
 

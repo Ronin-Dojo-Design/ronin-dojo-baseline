@@ -12,6 +12,7 @@ import {
   ExternalLinkIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
+  HardDriveIcon,
   ImageIcon,
   LayersIcon,
   LogOutIcon,
@@ -149,6 +150,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Billing Monitor",
       href: "/admin/billing/monitoring",
       prefix: <ActivityIcon />,
+    },
+    {
+      title: "Storage Monitor",
+      href: "/admin/storage/monitoring",
+      prefix: <HardDriveIcon />,
     },
 
     undefined, // Separator

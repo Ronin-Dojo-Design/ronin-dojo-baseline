@@ -17,6 +17,7 @@ import { Stack } from "~/components/common/stack"
 import { Tooltip } from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { AffiliateGearCard } from "~/components/web/tuffbuffs/affiliate-gear-card"
+import { resolvePublicMediaUrl } from "~/lib/public-media-url"
 import { formatGearPrice, type TuffBuffsAffiliateGearProduct } from "~/lib/tuffbuffs/affiliate-gear"
 import { cx } from "~/lib/utils"
 
@@ -102,16 +103,14 @@ function AffiliateGearViewToggle({
 
 function AffiliateGearListItem({ item }: AffiliateGearListItemProps) {
   const { product, badge } = item
+  const imageSrc =
+    resolvePublicMediaUrl(product.imagePath ?? "/images/merch/placeholder.svg") ??
+    "/images/merch/placeholder.svg"
 
   return (
     <Card hover className="grid gap-4 p-4 sm:grid-cols-[8rem_1fr_auto] sm:items-center">
       <div className="flex h-28 w-full items-center justify-center rounded-md bg-muted/50 p-3 sm:w-32">
-        <img
-          src={product.imagePath ?? "/images/merch/placeholder.svg"}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-contain"
-        />
+        <img src={imageSrc} alt="" loading="lazy" className="h-full w-full object-contain" />
       </div>
 
       <div className="min-w-0 space-y-2">

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-08
-last_agent: codex-session-0097
+last_agent: codex-session-0099
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -25,6 +25,8 @@ backlinks:
   - docs/sprints/SESSION_0095.md
   - docs/sprints/SESSION_0096.md
   - docs/sprints/SESSION_0097.md
+  - docs/sprints/SESSION_0098.md
+  - docs/sprints/SESSION_0099.md
 ---
 
 # Project Log
@@ -176,6 +178,14 @@ Three sections:
 - **Files:** `apps/web/prisma/schema.prisma`, `apps/web/prisma/migrations/20260507140933_add_stripe_customer_ledger_event_tracking/migration.sql`, `apps/web/app/api/stripe/webhooks/route.ts`, `apps/web/app/api/stripe/webhooks/route.test.ts`, `apps/web/server/web/billing/*`, `apps/web/server/web/products/actions.ts`, `apps/web/server/web/tournaments/register.ts`, `apps/web/server/web/dashboard/queries.ts`, `apps/web/app/(web)/dashboard/*`
 - **Seed data:** no durable seed changes; tests create and clean real Prisma fixtures.
 - **Smoke test:** `bun test app/api/stripe/webhooks/route.test.ts server/web/billing/actions.test.ts server/web/tournaments/register.concurrency.test.ts` passed 18/18; scoped Biome check passed. Full `bun run typecheck` still fails only on pre-existing unrelated errors from SESSION_0095.
+
+### S99_STORAGE_MEDIA_BRIDGE — S3 public media bridge and admin cost monitor
+- **Session:** SESSION_0099
+- **Sprint:** S3 / Launch support
+- **Status:** ✅ verified with full typecheck inconclusive
+- **Files:** `apps/web/lib/public-media-url.ts`, `apps/web/components/web/tuffbuffs/*`, `apps/web/server/admin/storage/monitoring/queries.ts`, `apps/web/app/admin/storage/monitoring/page.tsx`, `apps/web/components/admin/sidebar.tsx`, `apps/web/env.ts`, `docs/runbooks/aws-s3-operator-runbook.md`
+- **Seed data:** no
+- **Smoke test:** `bun test lib/public-media-url.test.ts server/admin/storage/monitoring/queries.test.ts` passed 6/6; scoped Biome passed; `bun run wiki:lint` passed with 0 errors and 3 existing orphan warnings; `git diff --check` passed. `bun run typecheck` generated route types but was manually terminated after several minutes without TypeScript output.
 
 ---
 
@@ -1272,4 +1282,76 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Evidence:** `/gear` now displays Amazon affiliate links, and a local shippable merch catalog bridge exists, but certificates, memberships, tournament registration fees, shippable merch checkout, fulfillment, and outbound payment/product emails are not wired into Stripe or Resend.
 - **Impact:** Creating Stripe products or email flows ad hoc could mix affiliate display, paid access, shippable goods, and certificates without a clear entitlement/fulfillment contract.
 - **Required follow-up:** Start the next session with a PWCC/TuffBuffs commerce port map that separates affiliate links, Stripe products/prices, fulfillment/order state, certificate orders, memberships, tournament fees, and outbound email responsibilities.
+- **Status:** open
+
+### SESSION_0099_TASK_01 — Storage/media bow-in and task setup
+
+- **ID:** SESSION_0099_TASK_01
+- **Owner:** Petey + Giddy
+- **Session:** SESSION_0099
+- **Date:** 2026-05-08
+- **Done criteria:** SESSION_0099 exists with storage/media scope, Dirstarter alignment, source facts, pre-flight, owner action list, and task IDs before code edits.
+- **Status:** landed
+- **What should ship:** Bow-in artifact and project-log rows for the S3 public media bridge session.
+- **Verification:** `docs/sprints/SESSION_0099.md` and Project Log task rows created before code edits.
+
+### SESSION_0099_TASK_02 — Public media URL resolver and gear wiring
+
+- **ID:** SESSION_0099_TASK_02
+- **Owner:** Cody + Desi
+- **Session:** SESSION_0099
+- **Date:** 2026-05-08
+- **Done criteria:** Root-relative public media paths remain local in dev/test and resolve to `NEXT_PUBLIC_MEDIA_BASE_URL` in staging/prod; gear cards use resolved URLs; helper tests cover absolute passthrough and slash normalization.
+- **Status:** landed
+- **What should ship:** Public media URL helper, gear component/catalog wiring, and focused tests.
+- **Verification:** `bun test lib/public-media-url.test.ts`; scoped Biome check.
+
+### SESSION_0099_TASK_03 — Admin storage monitor and cost projection
+
+- **ID:** SESSION_0099_TASK_03
+- **Owner:** Cody + Doug
+- **Session:** SESSION_0099
+- **Date:** 2026-05-08
+- **Done criteria:** Admin-only storage monitor shows configured/missing S3 state, projected monthly cost, storage/request/transfer assumptions, and setup warnings without exposing secrets.
+- **Status:** landed
+- **What should ship:** Storage monitoring query, admin route/sidebar link, and tests for projection math.
+- **Verification:** `bun test server/admin/storage/monitoring/queries.test.ts`; local monitor query reported 59 objects, 0 missing paths, and `NEEDS_SETUP` until AWS/Vercel env vars are configured.
+
+### SESSION_0099_TASK_04 — AWS S3 Operator Runbook
+
+- **ID:** SESSION_0099_TASK_04
+- **Owner:** Doug + Petey
+- **Session:** SESSION_0099
+- **Date:** 2026-05-08
+- **Done criteria:** `docs/runbooks/aws-s3-operator-runbook.md` tells Brian how to create/configure S3, IAM, public delivery, uploads, env vars, verification, and costs using current AWS pricing sources.
+- **Status:** landed
+- **What should ship:** Operator runbook with setup checklist, AWS/Vercel env values to set, cost model, and admin display assumptions.
+- **Verification:** Runbook created and cross-linked from deployment docs, wiki index, manual boundary registry, and SESSION_0099.
+
+### SESSION_0099_TASK_05 — Verification and close
+
+- **ID:** SESSION_0099_TASK_05
+- **Owner:** Cody + Doug + Petey
+- **Session:** SESSION_0099
+- **Date:** 2026-05-08
+- **Done criteria:** Focused tests/checks pass or baseline failures are recorded; SESSION_0099 and Project Log review close the session with residual storage/media gates.
+- **Status:** landed
+- **What should ship:** Verification evidence, SESSION_0099 closeout, and review entry.
+- **Verification:** Focused tests, scoped Biome, wiki lint, and whitespace checks passed; full typecheck was inconclusive after route type generation and manual termination.
+
+### SESSION_0099_REVIEW_01 — S3 media bridge and storage cost monitor full close
+
+**Reviewed tasks:** SESSION_0099_TASK_01, SESSION_0099_TASK_02, SESSION_0099_TASK_03, SESSION_0099_TASK_04, SESSION_0099_TASK_05
+**Dirstarter docs check:** live docs checked on 2026-05-08
+**Sources:** https://dirstarter.com/docs/environment-setup, https://dirstarter.com/docs/integrations, https://dirstarter.com/docs/deployment
+**AWS sources:** https://aws.amazon.com/s3/pricing/, https://aws.amazon.com/cloudfront/pricing/, https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html, https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+**Verdict:** Aligned. SESSION_0099 extends the inherited Dirstarter S3/media layer instead of replacing it. Local public assets stay in `apps/web/public`; staging/prod can set `NEXT_PUBLIC_MEDIA_BASE_URL`/`S3_PUBLIC_URL` to serve the same catalog paths from S3 or CloudFront. The admin Storage Monitor is read-only and does not expose secrets. The operator runbook gives Brian the AWS/Vercel setup steps and records current pricing assumptions.
+
+#### SESSION_0099_FINDING_01 — AWS bucket/distribution setup remains owner-side
+
+- **Severity:** medium
+- **Task:** SESSION_0099_TASK_04
+- **Evidence:** Local monitor output reports `NEEDS_SETUP` because local `.env` intentionally leaves S3 values blank. No AWS bucket, CloudFront distribution, IAM key, or Vercel env vars were created by Codex.
+- **Impact:** Staging/prod will continue using local-style URLs until Brian creates/syncs the AWS media bucket and sets environment variables.
+- **Required follow-up:** Brian should complete `docs/runbooks/aws-s3-operator-runbook.md`: create S3/CloudFront or approved direct S3 delivery, create least-privilege IAM credentials, sync `apps/web/public/images/merch`, set Vercel `S3_*` and `NEXT_PUBLIC_MEDIA_BASE_URL`, then verify `/gear` and `/admin/storage/monitoring` in staging.
 - **Status:** open

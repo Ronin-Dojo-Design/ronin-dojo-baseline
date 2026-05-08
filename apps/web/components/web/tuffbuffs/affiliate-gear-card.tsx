@@ -5,6 +5,7 @@ import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { ExternalLink } from "~/components/web/external-link"
+import { resolvePublicMediaUrl } from "~/lib/public-media-url"
 import { formatGearPrice, type TuffBuffsAffiliateGearProduct } from "~/lib/tuffbuffs/affiliate-gear"
 
 type AffiliateGearCardProps = {
@@ -19,15 +20,14 @@ const categoryLabel: Record<TuffBuffsAffiliateGearProduct["category"], string> =
 }
 
 export function AffiliateGearCard({ product, badge }: AffiliateGearCardProps) {
+  const imageSrc =
+    resolvePublicMediaUrl(product.imagePath ?? "/images/merch/placeholder.svg") ??
+    "/images/merch/placeholder.svg"
+
   return (
     <Card hover className="h-full overflow-hidden p-0">
       <div data-gear-media className="flex h-52 w-full items-center justify-center bg-muted/50 p-4">
-        <img
-          src={product.imagePath ?? "/images/merch/placeholder.svg"}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-contain"
-        />
+        <img src={imageSrc} alt="" loading="lazy" className="h-full w-full object-contain" />
       </div>
 
       <div className="flex flex-1 flex-col gap-4 p-5">

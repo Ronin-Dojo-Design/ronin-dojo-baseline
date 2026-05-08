@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-08
 author: Brian + Copilot
-last_agent: codex-stripe-runbook
+last_agent: codex-session-0099
 ---
 
 # LLM Wiki Index
@@ -141,6 +141,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0039](../../sprints/SESSION_0039.md) | session | in-progress |
 | [SESSION_0071](../../sprints/SESSION_0071.md) | session | closed-quick |
 | [SESSION_0072](../../sprints/SESSION_0072.md) | session | closed-full |
+| [SESSION_0098](../../sprints/SESSION_0098.md) | session | closed-full |
+| [SESSION_0099](../../sprints/SESSION_0099.md) | session | in-progress |
 
 ## Protocols
 
@@ -186,6 +188,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [React to Next Component Porting Runbook](../../runbooks/react-to-next-component-porting-runbook.md) | runbook | active |
 | [Graphify Repo Memory Runbook](../../runbooks/graphify-repo-memory.md) | runbook | active |
 | [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) | runbook | active |
+| [AWS S3 Operator Runbook](../../runbooks/aws-s3-operator-runbook.md) | runbook | active |
 
 ## Code files (annotated)
 

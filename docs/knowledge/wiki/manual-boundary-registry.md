@@ -6,10 +6,11 @@ status: active
 created: 2026-04-27
 updated: 2026-05-08
 author: Brian + ChatGPT
-last_agent: codex-session-0098
+last_agent: codex-session-0099
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
+  - docs/runbooks/aws-s3-operator-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/chat-handoff.md
@@ -26,6 +27,7 @@ backlinks:
   - docs/sprints/SESSION_0096.md
   - docs/sprints/SESSION_0097.md
   - docs/sprints/SESSION_0098.md
+  - docs/sprints/SESSION_0099.md
 tags:
   - blockers
   - ops
@@ -223,6 +225,8 @@ SESSION_0098 update: local Stripe test-mode proof added an admin-only billing mo
 
 SESSION_0098 late update: `/gear` now displays TuffBuffs/Amazon affiliate gear using local legacy assets and Grid/List/Carousel modes. This is not a Stripe product setup, not shippable merch checkout, not certificate/membership/tournament fee productization, and not outbound email implementation. Those decisions must be handled in a follow-up commerce/PWCC session before new Stripe products or customer emails are wired.
 
+SESSION_0099 update: public gear/catalog images now have a local-dev-to-S3 public media bridge. Local dev keeps `/images/...` from `apps/web/public`; staging/prod must set `NEXT_PUBLIC_MEDIA_BASE_URL` and `S3_PUBLIC_URL` to the approved S3/CloudFront media base. Owner-side AWS setup remains manual and is documented in `docs/runbooks/aws-s3-operator-runbook.md`. Until Brian creates the bucket/distribution, syncs `apps/web/public/images/merch`, and sets Vercel env vars, `/admin/storage/monitoring` should report `NEEDS_SETUP`.
+
 MB-013 still requires these launch gates:
 
 1. Production/staging alert destination, recipients, and audit schedule setup for the new monitor/audit surfaces.
@@ -252,14 +256,15 @@ Future Stripe event-destination backlog, not to be subscribed until handlers exi
 - BBL lineage payout pipeline: add a separate Connect/payout webhook destination, likely `/api/stripe/connect/webhooks` with `STRIPE_CONNECT_WEBHOOK_SECRET`, when Connect handlers exist. Candidate connected-account events are `account.updated`, `account.external_account.updated`, `payout.created`, `payout.updated`, `payout.paid`, and `payout.failed`; candidate platform transfer events after transfer tracking exists are `transfer.created`, `transfer.updated`, and `transfer.reversed`.
 - BBL payout manual decisions: decide whether BBL receives one org payout or individual lineage recipients get connected accounts; exact Premium/Elite split percentages; payout timing; refund/dispute clawback rules; and recipient onboarding/KYC responsibility.
 
-**MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass and SESSION_0031 prep refactor identified four manual production gates the owner must close before staging deploy:
+**MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass, SESSION_0031 prep refactor, and SESSION_0099 storage work identified five manual production gates the owner must close before staging deploy:
 
 1. Register all four public apex domains (Ronin Dojo Design, Baseline Martial Arts, Black Belt Legacy, WEKAF) and add them as Vercel custom domains per ADR 0006.
 2. Uncomment and fill the production rows in `HOST_TO_BRAND` inside `apps/web/lib/brand-context.ts` so unknown hosts no longer fall back to RONIN_DOJO_DESIGN in production.
 3. Add `experimental.serverActions.allowedOrigins` to `apps/web/next.config.ts` listing the four brand domains so Server Actions CSRF/Origin checks pass under multi-domain hosting.
 4. Verify env validation covers Better Auth, Postgres, Stripe (publishable + secret + webhook), Upstash Redis, S3 / private storage, cron secret, and Plausible before staging deploy. Live Dirstarter docs reference: `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/deployment`.
+5. Configure public media storage per `docs/runbooks/aws-s3-operator-runbook.md`: bucket, CloudFront/OAC or approved direct S3 public delivery, least-privilege upload IAM key, synced merch assets, and Vercel `S3_*` / `NEXT_PUBLIC_MEDIA_BASE_URL` variables.
 
-This boundary stays `open` until those four steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
+This boundary stays `open` until those five steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
 
 ### 3. Closure rule
 

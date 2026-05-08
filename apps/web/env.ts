@@ -54,6 +54,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: z.url().min(1),
     NEXT_PUBLIC_SITE_EMAIL: z.email().min(1),
     NEXT_PUBLIC_PLAUSIBLE_URL: z.url().optional(),
+    NEXT_PUBLIC_MEDIA_BASE_URL: z.url().optional(),
   },
 
   /**
@@ -65,6 +66,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_SITE_EMAIL: process.env.NEXT_PUBLIC_SITE_EMAIL,
     NEXT_PUBLIC_PLAUSIBLE_URL: process.env.NEXT_PUBLIC_PLAUSIBLE_URL,
+    NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   },
 
   /**
