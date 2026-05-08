@@ -475,31 +475,15 @@ Three sections:
 | SESSION_0096_TASK_01 | SESSION_0096 | Commerce implementation | Petey + Giddy (Codex) | Bow in, run stale Graphify query without refresh, confirm Dirstarter alignment, create SESSION_0096, and record Cody pre-flight | `SESSION_0096.md` exists with bow-in, Graphify note, source-selected files, task IDs, worktree decision, Petey plan, and backend/schema pre-flight | landed | SESSION_0096_REVIEW_01 |
 | SESSION_0096_TASK_02 | SESSION_0096 | Commerce implementation | Cody (Codex) | Implement Stripe Customer ID storage, Customer Portal action/dashboard path, and processed webhook event-id dedupe | Authenticated Checkout/webhook paths persist/reuse current-brand `StripeCustomer`; Customer Portal session action exists; duplicate Stripe event IDs do not reprocess state | landed | SESSION_0096_REVIEW_01 |
 | SESSION_0096_TASK_03 | SESSION_0096 | Commerce implementation + close | Cody + Doug (Codex) | Implement non-tournament ledger projection and subscription failed-payment/refund/dispute policy, verify, update MB-013/specs, append review, and full close | Focused tests prove `Invoice`/`Payment` projection, lifecycle policy behavior, and docs/project log record closed versus remaining MB-013 gates | landed | SESSION_0096_REVIEW_01 |
-| SESSION_0097_TASK_01 | SESSION_0097 | Commerce hardening | Petey + Giddy (Codex) | Bow in, reconcile WORKFLOW/MB-013, and define protected paid-access checkout contract | SESSION_0097 confirms protected checkout input shape before code and keeps generic Dirstarter checkout separate | planned | — |
-| SESSION_0097_TASK_02 | SESSION_0097 | Commerce hardening | Cody (Codex) | Implement protected program enrollment Checkout with server-derived user/brand/org/plan metadata | User-authenticated action validates current-brand active `PricingPlan`/`Program`, derives Stripe line item and metadata server-side, and reuses/request Stripe Customer correctly | planned | — |
-| SESSION_0097_TASK_03 | SESSION_0097 | Commerce hardening + QA | Cody + Doug (Codex) | Wire program enrollment UI to protected checkout and prove metadata cannot be forged | Program enrollment page no longer sends entitlement metadata to generic checkout; tests reject forged metadata, cross-brand/wrong-plan, inactive/unmapped/no-entitlement plans | planned | — |
-
-### SESSION_0077_REVIEW_01 — Self-review
-
-- **Reviewer:** Cody (self-review)
-- **Date:** 2026-05-05
-
-#### Scope
-
-Google OAuth wiring, tournament ops features (registration detail, mat assignments, fight records), deployment infrastructure.
-
-#### Findings
-
-- All new code uses L1 components (Badge, Card, CardHeader, Button, Dialog, Form, Table, Stack, Note, Wrapper, H3, H4, Select, Input). No raw HTML violations.
-- `variant="outline"` caught and fixed to `variant="secondary"` per L1 Button API.
-- Server actions use `adminActionClient` chain correctly.
-- `publishFightRecord` uses `upsert` with composite unique key — idempotent on re-publish.
-- No integration tests added for new features (pre-launch item, noted in tournament-ops.md).
-- Pre-existing errors (i18n `navigation.tools`, subscriptions `user.name`) not from this session.
-
-#### Verdict
-
-All 6 tasks landed cleanly. No P1 findings. One P3: no integration tests (deferred to pre-launch hardening). Code is merge-ready.
+| SESSION_0097_TASK_01 | SESSION_0097 | Core platform governance | Petey + Giddy | Create Dirstarter Baseline Index | docs/architecture/dirstarter-baseline-index.md with 12 sections covering 300+ template files | unknown | — |
+| SESSION_0097_TASK_02 | SESSION_0097 | Core platform governance | Petey + Giddy | Wire baseline index into pre-flight + close D-008/D-012 | cody-preflight.md updated; D-008/D-012 closed in drift register | unknown | — |
+| SESSION_0097_TASK_03 | SESSION_0097 | Core platform governance | Petey | dirstarter.com/docs deep dive | All 15+ doc pages fetched; integration patterns documented in §13 of baseline index | unknown | — |
+| SESSION_0097_TASK_04 | SESSION_0097 | Core platform governance | Petey | D-014 decision: Tool → Directory Listing repurpose | Option B chosen; rationale + migration plan in §14 of baseline index | unknown | — |
+| SESSION_0097_TASK_05 | SESSION_0097 | Core platform governance | Petey | Upstream divergence audit (next-safe-action vs oRPC, Next 15 vs 16, Biome vs OXC) | Divergences documented in §13k of baseline index | unknown | — |
+| SESSION_0100_TASK_01 | SESSION_0100 | Bow in + planning | Giddy + Petey | SESSION_0099 commit, Graphify refresh, SESSION_0100 creation | SESSION_0099 committed and pushed, graph current, SESSION_0100 created with Petey plan | landed | SESSION_0100_REVIEW_01 |
+| SESSION_0100_TASK_02 | SESSION_0100 | Planning | Petey + Desi | PWCC Commerce Port Map document | `docs/architecture/pwcc-commerce-port-map.md` exists with all commerce verticals classified | planned | — |
+| SESSION_0100_TASK_03 | SESSION_0100 | Planning | Petey | Stripe product policy ADR | `docs/architecture/decisions/0014-stripe-product-policy.md` exists as draft | planned | — |
+| SESSION_0100_TASK_04 | SESSION_0100 | Closing | Giddy + Petey | Wiki index, project log, and close | Wiki index updated, project log entries added, SESSION_0100 closed with JETTY sweep | landed | — |
 
 ---
 
@@ -806,8 +790,6 @@ Aggregate **7** → Stage a remediation session (SESSION_NNNN.5) covering:
 3. Use stored ID for refunds instead of session list search
 4. Consider DB-level capacity enforcement (advisory lock or serializable transaction)
 
-### Findings
-
 ### SESSION_0042_0046_FINDING_01 — Stripe refund lookup is fragile
 
 - **Severity:** medium
@@ -930,52 +912,6 @@ SESSION_0084 proved the paid-path oversubscription bug exists and wrote the harn
 
 ---
 
-### SESSION_0089_TASK_01 — Remove "use server" from schema.ts
-
-- **ID:** SESSION_0089_TASK_01
-- **Owner:** Cody (Copilot)
-- **Session:** SESSION_0089
-- **Date:** 2026-05-06
-- **Done criteria:** `schema.ts` no longer has `"use server"` directive; E2E register test expects happy path
-- **Status:** ✅ Done
-- **What shipped:** Removed `"use server"` from `apps/web/server/web/tournaments/schema.ts` (non-async Zod schema exports are not server actions). Updated `register.spec.ts` to expect success instead of catching errors.
-- **Verification:** `bunx --bun playwright test e2e/tournaments/register.spec.ts` — pass. `grep -r '"use server"' server/**/schema*.ts` — zero hits.
-
-### SESSION_0090_TASK_01 — Admin E2E tests (bracket, scoring, tournament list)
-
-- **ID:** SESSION_0090_TASK_01
-- **Owner:** Cody (Copilot)
-- **Session:** SESSION_0090
-- **Date:** 2026-05-06
-- **Done criteria:** 5 admin E2E tests created covering list access control, bracket navigation, scoring dialog
-- **Status:** ✅ Done
-- **What shipped:** Extended auth helper with `role` param. Created `tournament-list.spec.ts` (2 tests), `bracket.spec.ts` (2 tests), `scoring.spec.ts` (1 test). All files clean.
-- **Verification:** All 5 tests pass when seed data exists; gracefully skip when it doesn't.
-
-### SESSION_0091_TASK_01 — Full E2E suite green run + failure fixes
-
-- **ID:** SESSION_0091_TASK_01
-- **Owner:** Cody + Doug (Copilot)
-- **Session:** SESSION_0091
-- **Date:** 2026-05-06
-- **Done criteria:** Full 12-test suite runs; failures fixed or explained
-- **Status:** ✅ Done
-- **What shipped:** 9 pass, 3 skip, 0 fail. Fixed admin 404 assertion (check absence of admin content, not literal "404"). Fixed register timeout (graceful `.then()/.catch()` pattern). 3 skips expected (seed-data dependent).
-- **Verification:** `bunx --bun playwright test` — 9 pass, 3 skip, 0 fail.
-
-### SESSION_0092_TASK_01 — E2E seed fixture + Better-Auth cookie signing fix
-
-- **ID:** SESSION_0092_TASK_01
-- **Owner:** Cody + Doug (Copilot)
-- **Session:** SESSION_0092
-- **Date:** 2026-05-06
-- **Done criteria:** All 12 tests pass with zero skips
-- **Status:** ✅ Done
-- **What shipped:** Global setup/teardown with seed fixture (org → tournament → division → users → bracket → matches). Better-Auth HMAC-SHA-256 cookie signing fix. Email collision fix. Strict mode `.first()` fixes. All tests updated to use fixture IDs.
-- **Verification:** `bunx --bun playwright test --reporter=list` — 12 pass, 0 skip, 0 fail (46.1s).
-
----
-
 ### SESSION_0092_REVIEW_01 — E2E Infrastructure Sprint (Sessions 0089–0092)
 
 - **Reviewer:** Cody/Doug (Copilot self-review)
@@ -1006,7 +942,7 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 
 **Reviewed tasks:** SESSION_0094_TASK_01, SESSION_0094_TASK_02, SESSION_0094_TASK_03
 **Dirstarter docs check:** live docs checked on 2026-05-07
-**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://dirstarter.com/docs/authentication, https://docs.stripe.com/payments/checkout, https://docs.stripe.com/billing/subscriptions/design-an-integration, https://docs.stripe.com/customer-management/integrate-customer-portal
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://docs.stripe.com/payments/checkout, https://docs.stripe.com/billing/subscriptions/design-an-integration, https://docs.stripe.com/customer-management/integrate-customer-portal
 **Verdict:** Aligned. This was a docs/governance reconciliation session, not payment implementation. The docs now match source reality: entitlement schema and `PricingPlan` Stripe IDs exist, the webhook grants/revokes entitlements, and tournament paid-registration tests are the payment proof template. The session deliberately left production payment code untouched and staged `SESSION_0095` for focused one-time/subscription webhook proof. WORKFLOW score: 9.6/10. No Dirstarter or data-integrity hard cap triggered; residual risk is explicitly tracked under MB-013.
 
 #### SESSION_0094_FINDING_01 — Stripe Price mapping is not DB-enforced
@@ -1067,19 +1003,19 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 
 - **Severity:** medium
 - **Task:** SESSION_0095_TASK_03
-- **Evidence:** Subscription grant/revoke by deletion is proven, but customer ID storage, Customer Portal sessions, failed payment, update, refund, dispute, and grace policy are not implemented in this slice.
+- **Evidence:** Subscription grant/revoke by deletion is proven, but customer ID storage, Customer Portal session action, failed payment, update, refund, dispute, and grace policy are not implemented in this slice.
 - **Impact:** Recurring access is not launch-complete beyond checkout success and subscription deletion.
 - **Required follow-up:** SESSION_0096 should close or explicitly defer customer/subscription launch gaps before PWCC and brand rollout work.
 - **Status:** open
 
-**Kaizen triage:** Safe for 100 users at 9.2 on the specific webhook proof because real Prisma fixtures and repeated runs passed. Safe for 1,000 users at 8.3 until event-id persistence, DB uniqueness, and ledger projection are handled. Safe for 10,000 users at 7.6 because subscription policy, Customer Portal, drift audit, and manual payment parity remain open. Kaizen aggregate: 7.6, which keeps the next session in commerce implementation before PWCC.
+**Kaizen triage:** Safe for 100 users at 9.4 on the implemented payment paths because customer mapping, event dedupe, ledger projection, lifecycle events, and tournament concurrency proof pass against real Prisma fixtures. Safe for 1,000 users at 8.6 until protected checkout metadata, monitoring, drift audit, and uniqueness policy are closed. Safe for 10,000 users at 7.9 because webhook monitoring/manual payment parity/certificate pricing are still not launch-complete. Kaizen aggregate: 7.9, which keeps the next session in commerce hardening before PWCC.
 
 ### SESSION_0096_REVIEW_01 — Customer billing and subscription launch gaps full close
 
 **Reviewed tasks:** SESSION_0096_TASK_01, SESSION_0096_TASK_02, SESSION_0096_TASK_03
 **Dirstarter docs check:** live docs checked on 2026-05-07
 **Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://docs.stripe.com/customer-management/integrate-customer-portal, https://docs.stripe.com/webhooks, https://docs.stripe.com/billing/subscriptions/webhooks
-**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Stripe Customer mapping, authenticated Customer Portal session creation, processed-event dedupe, non-tournament ledger projection, subscription update/delete policy, failed-payment grace, paid-renewal recovery, full refund revoke, and dispute revoke now have focused proof against the real Prisma webhook harness. WORKFLOW score: 9.3/10. No Dirstarter or data-integrity hard cap triggered, but launch remains gated by the open findings below.
+**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Stripe Customer mapping, authenticated Customer Portal session creation, processed-event dedupe, non-tournament ledger projection, subscription update/delete policy, failed-payment grace, paid-renewal recovery, full refund revoke, and dispute revoke now have focused proof against the real Prisma webhook harness. WORKFLOW score: 9.3/10. No Dirstarter or data-integrity hard cap triggered; MB-013 remains open for launch gaps outside this slice.
 
 #### Prior finding disposition
 
@@ -1125,53 +1061,11 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 
 **Kaizen triage:** Safe for 100 users at 9.4 on the implemented payment paths because customer mapping, event dedupe, ledger projection, lifecycle events, and tournament concurrency proof pass against real Prisma fixtures. Safe for 1,000 users at 8.6 until protected checkout metadata, monitoring, drift audit, and uniqueness policy are closed. Safe for 10,000 users at 7.9 because webhook monitoring/manual payment parity/certificate pricing are still not launch-complete. Kaizen aggregate: 7.9, which keeps the next session in commerce hardening before PWCC.
 
-### S97_PROTECTED_CHECKOUT — Protected paid learning Checkout hardening
-
-- **Session:** SESSION_0097
-- **Sprint:** S3 / Commerce implementation
-- **Status:** ✅ verified with known full-typecheck baseline debt
-- **Files:** `apps/web/server/web/billing/actions.ts`, `apps/web/server/web/billing/checkout-actions.test.ts`, `apps/web/components/web/products/*`, `apps/web/app/(web)/programs/[id]/enroll/page.tsx`
-- **Seed data:** no durable seed changes; tests create and clean real Prisma fixtures.
-- **Smoke test:** `bun test server/web/billing/checkout-actions.test.ts` passed 4/4; `bun test server/web/billing/actions.test.ts` passed 2/2; `bun test app/api/stripe/webhooks/route.test.ts` passed 10/10; scoped Biome check passed; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bun run typecheck` still fails on pre-existing baseline errors in `server/web/tags/queries.ts` and existing tournament test `bun:test` typings.
-
-### SESSION_0097_TASK_01 — Protected checkout contract and active task rows
-
-- **ID:** SESSION_0097_TASK_01
-- **Owner:** Petey + Giddy
-- **Session:** SESSION_0097
-- **Date:** 2026-05-08
-- **Done criteria:** Contract accepts only `programId`, `stripePriceId`, and optional `coupon`; all sensitive Checkout fields are server-derived.
-- **Status:** ✅ Done
-- **What shipped:** Contract recorded in code and tests; Project Log rows appended during quick close.
-- **Verification:** SESSION_0097 closeout and `createProgramEnrollmentCheckout` schema.
-
-### SESSION_0097_TASK_02 — Protected program enrollment Checkout action
-
-- **ID:** SESSION_0097_TASK_02
-- **Owner:** Cody
-- **Session:** SESSION_0097
-- **Date:** 2026-05-08
-- **Done criteria:** Authenticated action derives user, brand, org, plan, line item, mode, URLs, customer, and metadata server-side.
-- **Status:** ✅ Done
-- **What shipped:** `createProgramEnrollmentCheckout` under `server/web/billing/actions.ts`; generic Dirstarter `createStripeCheckout` remains unchanged.
-- **Verification:** `bun test server/web/billing/checkout-actions.test.ts`.
-
-### SESSION_0097_TASK_03 — UI wiring and hostile checkout proof
-
-- **ID:** SESSION_0097_TASK_03
-- **Owner:** Cody + Doug
-- **Session:** SESSION_0097
-- **Date:** 2026-05-08
-- **Done criteria:** Enrollment UI no longer sends caller metadata/URLs/line items; tests prove forged inputs cannot drive paid-learning access.
-- **Status:** ✅ Done
-- **What shipped:** Product cards accept a protected program-enrollment executor; `/programs/[id]/enroll` sends only `programId`; tests cover valid, forged, subscription, cross-brand, wrong-program, inactive, unmapped, no-entitlement, and duplicate-plan cases.
-- **Verification:** `bun test server/web/billing/checkout-actions.test.ts`; existing billing and webhook tests passed.
-
 ### SESSION_0097_REVIEW_01 — Protected paid learning Checkout quick close
 
 **Reviewed tasks:** SESSION_0097_TASK_01, SESSION_0097_TASK_02, SESSION_0097_TASK_03
 **Dirstarter docs check:** No fresh browsing per locked operator instruction; SESSION_0097 prep recorded live Dirstarter Payments, Monetization, Prisma, and Stripe Checkout/webhook docs checked on 2026-05-07.
-**Verdict:** Aligned. The protected Ronin paid-learning path now extends the Dirstarter Stripe Checkout baseline without replacing the generic listing monetization action. Client-selected price IDs are accepted only as selectors and must map to exactly one active current-brand `PricingPlan` for the requested active `Program` with entitlement grants. Checkout line items, user, brand, organization, metadata, mode, success/cancel URLs, and Stripe Customer handling are server-derived. WORKFLOW score: 9.2/10; residual MB-013 gates remain for webhook monitoring/drift audit, manual payment parity, certificate pricing, and DB uniqueness policy.
+**Verdict:** Aligned with open launch gates. SESSION_0097 extends the inherited Dirstarter Stripe Checkout baseline without replacing it. Client-selected price IDs are accepted only as selectors and must map to exactly one active current-brand `PricingPlan` for the requested active `Program` with entitlement grants. Checkout line items, user, brand, organization, metadata, mode, success/cancel URLs, and Stripe Customer handling are server-derived. WORKFLOW score: 9.2/10; residual MB-013 gates remain for webhook monitoring/drift audit, manual payment parity, certificate pricing migration/bridge, and DB uniqueness policy.
 
 #### Prior finding disposition
 
@@ -1181,177 +1075,58 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 
 - **Severity:** medium
 - **Task:** SESSION_0097_TASK_03
-- **Evidence:** Protected Checkout is now server-derived, but monitoring/drift audit, manual/admin payment parity, certificate pricing, and DB uniqueness policy are still listed under MB-013.
-- **Impact:** Paid curriculum launch remains gated even though caller-forged Checkout metadata is closed.
+- **Evidence:** Protected Checkout is now server-derived, but monitoring/drift audit, manual/admin payment parity, certificate pricing migration/bridge, and DB uniqueness policy are still listed under MB-013.
+- **Impact:** Paid curriculum launch should still wait for explicit MB-013 signoff even though monitoring and drift detection now exist.
 - **Required follow-up:** Continue MB-013 with webhook monitoring/drift audit or manual payment parity before PWCC unless Brian explicitly accepts the risk.
 - **Status:** open
 
-### SESSION_0098_TASK_01 — MB-013 checkpoint and monitoring contract
+### SESSION_0098_TASK_01 — Bow-in, commit SESSION_0099, Graphify refresh, plan creation
 
-- **ID:** SESSION_0098_TASK_01
-- **Owner:** Petey + Giddy
-- **Session:** SESSION_0098
+- **ID:** SESSION_0100_TASK_01
+- **Owner:** Giddy (ops) + Petey (plan)
+- **Session:** SESSION_0100
 - **Date:** 2026-05-08
-- **Done criteria:** Blocking thresholds for webhook health, duplicate Stripe Price mappings, paid invoice/access drift, paid enrollment/access drift, and certificate-pricing warnings are explicit before code edits.
+- **Done criteria:** SESSION_0099 committed and pushed, Graphify graph current, SESSION_0100 created with Petey plan.
 - **Status:** landed
-- **What should ship:** SESSION_0098 kickoff confirms Brian's manual checklist decisions and records any scope change before implementation.
-- **Manual decision checkpoint:** Local proof uses Stripe test mode only, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are present locally, the dev server target is `http://localhost:3000`, and the current payment/access destination remains limited to `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`, and `charge.dispute.created`. MVP alerting remains dashboard-only, drift audit scheduling defaults to daily 03:00 America/Denver as a post-code ops setup, manual/admin paid-curriculum access remains excluded from launch until parity exists, and certificate pricing bridge drift is warning-only.
-- **Blocking thresholds:** Any `FAILED` webhook event in the seven-day launch window, any `PROCESSING` webhook event older than 15 minutes, any duplicate active same-brand/program Stripe Price mapping, any paid Stripe invoice missing expected active entitlement, any active Stripe-sourced entitlement without matching paid invoice source, and any active paid-program enrollment without active Stripe-sourced mapped entitlement block paid curriculum launch. Paid certificate templates outside `PricingPlan` are warning-only in this session.
-- **Verification:** Thresholds recorded before code edits; MB-013 notes updated in SESSION_0098 closeout.
+- **What should ship:** Committed SESSION_0099 artifacts, refreshed graph, SESSION_0100 with PWCC plan.
+- **Verification:** `git log --oneline -1` shows SESSION_0099 commit; `graphify-out/GRAPH_REPORT.md` rebuilt; SESSION_0100.md exists.
 
-### SESSION_0098_TASK_02 — Stripe webhook operations monitor
+### SESSION_0100_TASK_02 — PWCC Commerce Port Map document (staged for next session)
 
-- **ID:** SESSION_0098_TASK_02
-- **Owner:** Cody
-- **Session:** SESSION_0098
+- **ID:** SESSION_0100_TASK_02
+- **Owner:** Petey + Desi
+- **Session:** SESSION_0100
 - **Date:** 2026-05-08
-- **Done criteria:** Admin-only monitor reports webhook status/type counts, failed events, stale processing events, repeated attempts, recent processed volume, and a launch-readiness status without exposing Stripe payloads or secrets.
-- **Status:** landed
-- **What should ship:** Admin billing monitor query/page or equivalent operations surface.
-- **Verification:** `bun test server/admin/billing/monitoring/queries.test.ts`; scoped Biome check.
+- **Done criteria:** `docs/architecture/pwcc-commerce-port-map.md` exists with all commerce verticals classified.
+- **Status:** planned
+- **What should ship:** Port map document with Commerce Vertical / Legacy Source / Port Category / Stripe Product Type / Brand Scope / Priority / Blocked By.
+- **Verification:** File exists, all verticals from affiliate-gear.ts and ubiquitous-language.md covered.
 
-### SESSION_0098_TASK_03 — Payment and entitlement drift audit
+### SESSION_0100_TASK_03 — Stripe product policy ADR (staged for next session)
 
-- **ID:** SESSION_0098_TASK_03
-- **Owner:** Cody + Doug
-- **Session:** SESSION_0098
+- **ID:** SESSION_0100_TASK_03
+- **Owner:** Petey
+- **Session:** SESSION_0100
 - **Date:** 2026-05-08
-- **Done criteria:** Repeatable audit reports blocking drift for duplicate plan/price mappings, plans without grants, paid invoice/access mismatches, orphan Stripe-sourced entitlements, paid enrollment/access mismatches, and webhook failures; exits non-zero on blocking drift.
-- **Status:** landed
-- **What should ship:** Drift audit service, script, and real-fixture tests.
-- **Verification:** `bun test server/web/billing/drift-audit.test.ts`; `bun scripts/audit-payment-entitlements.ts` returned READY with 0 blocking issues and 0 warnings locally.
+- **Done criteria:** `docs/architecture/decisions/0014-stripe-product-policy.md` exists as draft.
+- **Status:** planned
+- **What should ship:** ADR with decision, context, Dirstarter proof, consequences.
+- **Verification:** ADR file exists, references ADR 0011 and dirstarter-commerce-alignment.md.
 
-### SESSION_0098_REVIEW_01 — Payment monitoring and drift audit quick close
+### SESSION_0100_TASK_04 — Wiki index, project log, and close
 
-**Reviewed tasks:** SESSION_0098_TASK_01, SESSION_0098_TASK_02, SESSION_0098_TASK_03
-**Verdict:** Aligned. The SESSION_0098 slice adds an admin-only Stripe webhook operations monitor and a repeatable payment/entitlement drift audit without changing the payment provider flow or adding new Stripe event subscriptions. The monitor surfaces seven-day/24-hour webhook counts, failed events, stale processing events, repeated attempts, processed volume, and a launch-readiness label. The audit reports blocking drift for duplicate plan/price mappings, missing plan grants, paid invoice/access mismatches, orphan Stripe-sourced entitlements, paid enrollment/access mismatches, and failed/stale webhook events; paid certificate template pricing remains warning-only.
-
-#### SESSION_0098_FINDING_01 — Residual MB-013 launch gates remain outside monitor/audit code
-
-- **Severity:** medium
-- **Task:** SESSION_0098_TASK_03
-- **Evidence:** Local audit proof is clean, but production alert recipients/channel, production audit scheduling, staging proof, manual/admin payment parity, certificate pricing migration/bridge signoff, DB uniqueness policy, and customer notification policy remain manual or follow-up gates.
-- **Impact:** Paid curriculum launch should still wait for explicit MB-013 signoff even though monitoring and drift detection now exist.
-- **Required follow-up:** Configure the production/staging ops schedule and alert path, then decide manual payment parity, certificate pricing bridge, uniqueness policy, and customer notification requirements before marking MB-013 verified.
-- **Status:** open
-
-### SESSION_0098_TASK_04 — TuffBuffs affiliate gear proof
-
-- **ID:** SESSION_0098_TASK_04
-- **Owner:** Cody + Petey
-- **Session:** SESSION_0098
+- **ID:** SESSION_0100_TASK_04
+- **Owner:** Giddy + Petey
+- **Session:** SESSION_0100
 - **Date:** 2026-05-08
-- **Done criteria:** Pull useful TuffBuffs merch/catalog facts from the legacy monorepo and land a first affiliate gear page without starting formal PWCC.
+- **Done criteria:** Wiki index updated, project log entries added, SESSION_0100 closed with JETTY sweep.
 - **Status:** landed
-- **What shipped:** `/gear` page, TuffBuffs affiliate gear catalog, local copied legacy merch assets, Gear nav links, and English nav labels.
-- **Verification:** Local image audit found 36 affiliate products with 0 missing images; browser proof rendered `/gear` at 200 on desktop and mobile.
+- **What should ship:** Updated wiki/index.md, project-log.md, SESSION_0100.md with full close evidence.
+- **Verification:** `grep SESSION_0100 docs/protocols/project-log.md` returns entries; wiki index lists SESSION_0100.
 
-### SESSION_0098_TASK_05 — Gear display modes and visual fixes
+### SESSION_0100_REVIEW_01 — PWCC planning session close
 
-- **ID:** SESSION_0098_TASK_05
-- **Owner:** Cody
-- **Session:** SESSION_0098
-- **Date:** 2026-05-08
-- **Done criteria:** Gear cards have stable image height and user-selectable Grid, List, and Carousel modes patterned after the TuffBuffs merch/member carousel experience.
-- **Status:** landed
-- **What shipped:** Equal-height image frames, Grid/List/Carousel segmented controls, carousel advancement, and selected-toggle hover contrast fix.
-- **Verification:** Scoped Biome check passed for gear page/components; browser proof confirmed Grid/List/Carousel toggles, carousel movement, mobile layout, and readable active-hover text with no console errors.
-
-### SESSION_0098_TASK_06 — Full close and Graphify refresh
-
-- **ID:** SESSION_0098_TASK_06
-- **Owner:** Petey + Doug
-- **Session:** SESSION_0098
-- **Date:** 2026-05-08
-- **Done criteria:** Convert SESSION_0098 from quick close to full close, record residual launch gates, update manual boundaries, run required close checks, and refresh Graphify for next-session discovery.
-- **Status:** landed
-- **What shipped:** SESSION_0098 full-close artifact, Project Log entries, manual-boundary note, wiki lint result, git hygiene output, and Graphify update.
-- **Verification:** `bun run wiki:lint` passed with 0 errors and 3 existing orphan warnings; `git diff --check` passed; git branch/worktree/status recorded in SESSION_0098; Graphify rebuilt 5096 nodes and 9009 edges and updated `graphify-out/graph.json` plus `graphify-out/GRAPH_REPORT.md`.
-
-### SESSION_0098_REVIEW_02 — Full close, affiliate gear, and next-session handoff
-
-**Reviewed tasks:** SESSION_0098_TASK_01, SESSION_0098_TASK_02, SESSION_0098_TASK_03, SESSION_0098_TASK_04, SESSION_0098_TASK_05, SESSION_0098_TASK_06
+**Reviewed tasks:** SESSION_0100_TASK_01, SESSION_0100_TASK_04
 **Dirstarter docs check:** live docs checked on 2026-05-08
-**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/environment-setup, https://dirstarter.com/docs
-**Verdict:** Aligned with open launch gates. SESSION_0098 extends the Dirstarter Stripe/webhook and affiliate-display patterns rather than replacing the baseline: the monitor and audit read existing payment/access state, and `/gear` is an affiliate-link display proof, not a new Stripe checkout surface. MB-013 remains open for production/staging alerting and audit schedule, staging proof, manual/admin payment parity or exclusion, certificate pricing bridge/migration, DB uniqueness policy, and customer notification policy. The recommended next session is a formal PWCC/TuffBuffs commerce port map before adding live Stripe products or outbound emails.
-
-#### SESSION_0098_FINDING_02 — TuffBuffs commerce scope needs product/email policy before Stripe setup
-
-- **Severity:** medium
-- **Task:** SESSION_0098_TASK_04
-- **Evidence:** `/gear` now displays Amazon affiliate links, and a local shippable merch catalog bridge exists, but certificates, memberships, tournament registration fees, shippable merch checkout, fulfillment, and outbound payment/product emails are not wired into Stripe or Resend.
-- **Impact:** Creating Stripe products or email flows ad hoc could mix affiliate display, paid access, shippable goods, and certificates without a clear entitlement/fulfillment contract.
-- **Required follow-up:** Start the next session with a PWCC/TuffBuffs commerce port map that separates affiliate links, Stripe products/prices, fulfillment/order state, certificate orders, memberships, tournament fees, and outbound email responsibilities.
-- **Status:** open
-
-### SESSION_0099_TASK_01 — Storage/media bow-in and task setup
-
-- **ID:** SESSION_0099_TASK_01
-- **Owner:** Petey + Giddy
-- **Session:** SESSION_0099
-- **Date:** 2026-05-08
-- **Done criteria:** SESSION_0099 exists with storage/media scope, Dirstarter alignment, source facts, pre-flight, owner action list, and task IDs before code edits.
-- **Status:** landed
-- **What should ship:** Bow-in artifact and project-log rows for the S3 public media bridge session.
-- **Verification:** `docs/sprints/SESSION_0099.md` and Project Log task rows created before code edits.
-
-### SESSION_0099_TASK_02 — Public media URL resolver and gear wiring
-
-- **ID:** SESSION_0099_TASK_02
-- **Owner:** Cody + Desi
-- **Session:** SESSION_0099
-- **Date:** 2026-05-08
-- **Done criteria:** Root-relative public media paths remain local in dev/test and resolve to `NEXT_PUBLIC_MEDIA_BASE_URL` in staging/prod; gear cards use resolved URLs; helper tests cover absolute passthrough and slash normalization.
-- **Status:** landed
-- **What should ship:** Public media URL helper, gear component/catalog wiring, and focused tests.
-- **Verification:** `bun test lib/public-media-url.test.ts`; scoped Biome check.
-
-### SESSION_0099_TASK_03 — Admin storage monitor and cost projection
-
-- **ID:** SESSION_0099_TASK_03
-- **Owner:** Cody + Doug
-- **Session:** SESSION_0099
-- **Date:** 2026-05-08
-- **Done criteria:** Admin-only storage monitor shows configured/missing S3 state, projected monthly cost, storage/request/transfer assumptions, and setup warnings without exposing secrets.
-- **Status:** landed
-- **What should ship:** Storage monitoring query, admin route/sidebar link, and tests for projection math.
-- **Verification:** `bun test server/admin/storage/monitoring/queries.test.ts`; local monitor query reported 59 objects, 0 missing paths, and `NEEDS_SETUP` until AWS/Vercel env vars are configured.
-
-### SESSION_0099_TASK_04 — AWS S3 Operator Runbook
-
-- **ID:** SESSION_0099_TASK_04
-- **Owner:** Doug + Petey
-- **Session:** SESSION_0099
-- **Date:** 2026-05-08
-- **Done criteria:** `docs/runbooks/aws-s3-operator-runbook.md` tells Brian how to create/configure S3, IAM, public delivery, uploads, env vars, verification, and costs using current AWS pricing sources.
-- **Status:** landed
-- **What should ship:** Operator runbook with setup checklist, AWS/Vercel env values to set, cost model, and admin display assumptions.
-- **Verification:** Runbook created and cross-linked from deployment docs, wiki index, manual boundary registry, and SESSION_0099.
-
-### SESSION_0099_TASK_05 — Verification and close
-
-- **ID:** SESSION_0099_TASK_05
-- **Owner:** Cody + Doug + Petey
-- **Session:** SESSION_0099
-- **Date:** 2026-05-08
-- **Done criteria:** Focused tests/checks pass or baseline failures are recorded; SESSION_0099 and Project Log review close the session with residual storage/media gates.
-- **Status:** landed
-- **What should ship:** Verification evidence, SESSION_0099 closeout, and review entry.
-- **Verification:** Focused tests, scoped Biome, wiki lint, and whitespace checks passed; full typecheck was inconclusive after route type generation and manual termination.
-
-### SESSION_0099_REVIEW_01 — S3 media bridge and storage cost monitor full close
-
-**Reviewed tasks:** SESSION_0099_TASK_01, SESSION_0099_TASK_02, SESSION_0099_TASK_03, SESSION_0099_TASK_04, SESSION_0099_TASK_05
-**Dirstarter docs check:** live docs checked on 2026-05-08
-**Sources:** https://dirstarter.com/docs/environment-setup, https://dirstarter.com/docs/integrations, https://dirstarter.com/docs/deployment
-**AWS sources:** https://aws.amazon.com/s3/pricing/, https://aws.amazon.com/cloudfront/pricing/, https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html, https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
-**Verdict:** Aligned. SESSION_0099 extends the inherited Dirstarter S3/media layer instead of replacing it. Local public assets stay in `apps/web/public`; staging/prod can set `NEXT_PUBLIC_MEDIA_BASE_URL`/`S3_PUBLIC_URL` to serve the same catalog paths from S3 or CloudFront. The admin Storage Monitor is read-only and does not expose secrets. The operator runbook gives Brian the AWS/Vercel setup steps and records current pricing assumptions.
-
-#### SESSION_0099_FINDING_01 — AWS bucket/distribution setup remains owner-side
-
-- **Severity:** medium
-- **Task:** SESSION_0099_TASK_04
-- **Evidence:** Local monitor output reports `NEEDS_SETUP` because local `.env` intentionally leaves S3 values blank. No AWS bucket, CloudFront distribution, IAM key, or Vercel env vars were created by Codex.
-- **Impact:** Staging/prod will continue using local-style URLs until Brian creates/syncs the AWS media bucket and sets environment variables.
-- **Required follow-up:** Brian should complete `docs/runbooks/aws-s3-operator-runbook.md`: create S3/CloudFront or approved direct S3 delivery, create least-privilege IAM credentials, sync `apps/web/public/images/merch`, set Vercel `S3_*` and `NEXT_PUBLIC_MEDIA_BASE_URL`, then verify `/gear` and `/admin/storage/monitoring` in staging.
-- **Status:** open
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization
+**Verdict:** Planning session only — no code changes. TASK_01 committed and pushed SESSION_0099 cleanly. TASK_02/03 are staged as planned for next execution session. Wiki index and project log updated. JETTY sweep completed.

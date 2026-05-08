@@ -155,10 +155,40 @@ TASK_02 and TASK_03 are sequential (TASK_03 depends on TASK_02's classifications
 - SESSION_0099 committed and pushed (16 files, 1134 insertions).
 - Graphify graph refreshed (5154 nodes, 9089 edges, 383 communities).
 - SESSION_0100 created with Petey plan for PWCC Commerce Port Map.
+- ADR 0014 research runbook created at `docs/runbooks/adr-0014-stripe-product-policy-research.md`.
+- Wiki index updated: SESSION_0099 status corrected, SESSION_0100 added, research runbook added.
+- Project log updated with SESSION_0100 task plan and review entries.
+- JETTY 3.0 sweep completed on all touched files.
 
 ## Files Touched
 
 - `docs/sprints/SESSION_0100.md` — this session file.
+- `docs/runbooks/adr-0014-stripe-product-policy-research.md` — ADR research runbook (new).
+- `docs/knowledge/wiki/index.md` — SESSION_0099 status fix, SESSION_0100 + research runbook added, last_agent updated.
+- `docs/protocols/project-log.md` — SESSION_0100 task plan and review entries.
+
+## Task Log
+
+- `SESSION_0100_TASK_01` — landed (commit, graphify, plan).
+- `SESSION_0100_TASK_02` — planned (PWCC port map — next session).
+- `SESSION_0100_TASK_03` — planned (Stripe ADR — next session).
+- `SESSION_0100_TASK_04` — landed (wiki, project log, JETTY sweep, close).
+
+## Review Log
+
+- `SESSION_0100_REVIEW_01` recorded in Project Log.
+
+## Hostile Close Review
+
+- **Giddy:** No code changes — planning session only. SESSION_0099 commit was clean (no secrets). Wiki index and project log updated correctly.
+- **Doug:** Research runbook covers all commerce-relevant files, existing ADRs, schema models, and Dirstarter docs. Open questions are well-scoped for ADR 0014 drafting.
+- **Score:** 9.5/10 for planning completeness. Cap: execution (TASK_02/03) still pending.
+
+## ADR / Ubiquitous Language Check
+
+- No new ADR created this session (research runbook is pre-work for ADR 0014).
+- No new domain terms introduced.
+- Existing ADR 0011 (Entitlement-First Commerce) confirmed as predecessor to ADR 0014.
 
 ## Decisions Resolved
 

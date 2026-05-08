@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-08
 author: Brian + Copilot
-last_agent: codex-session-0099
+last_agent: copilot-session-0100
 ---
 
 # LLM Wiki Index
@@ -142,7 +142,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0071](../../sprints/SESSION_0071.md) | session | closed-quick |
 | [SESSION_0072](../../sprints/SESSION_0072.md) | session | closed-full |
 | [SESSION_0098](../../sprints/SESSION_0098.md) | session | closed-full |
-| [SESSION_0099](../../sprints/SESSION_0099.md) | session | in-progress |
+| [SESSION_0099](../../sprints/SESSION_0099.md) | session | closed-full |
+| [SESSION_0100](../../sprints/SESSION_0100.md) | session | closed-quick |
 
 ## Protocols
 
@@ -189,6 +190,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Graphify Repo Memory Runbook](../../runbooks/graphify-repo-memory.md) | runbook | active |
 | [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) | runbook | active |
 | [AWS S3 Operator Runbook](../../runbooks/aws-s3-operator-runbook.md) | runbook | active |
+| [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
 
 ## Code files (annotated)
 
