@@ -12,6 +12,7 @@ pairs_with:
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
   - docs/architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md
+  - docs/runbooks/stripe-setup-runbook.md
   - apps/web/prisma/schema.prisma
 backlinks:
   - docs/sprints/SESSION_0029.md

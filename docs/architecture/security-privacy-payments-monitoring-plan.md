@@ -12,6 +12,7 @@ pairs_with:
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
+  - docs/runbooks/stripe-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/README.md

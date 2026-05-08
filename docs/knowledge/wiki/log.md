@@ -2,15 +2,28 @@
 title: Wiki Change Log
 slug: log
 type: protocol
-status: active
+status: superseded
 created: 2026-04-26
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-05-08
+last_agent: codex-stripe-runbook
 ---
 
 # Wiki Change Log
 
-Append-only log of wiki changes per CLAUDE.md rule 4.
+Superseded append-only log of early wiki changes per the original `CLAUDE.md` rule 4.
+
+## Superseded Status
+
+This file was last maintained during the SESSION_0030/0031 era and is no longer the operating change log for normal project work. Do not append routine docs/runbook/session changes here.
+
+Current source of truth:
+
+- `docs/sprints/SESSION_NNNN.md` for session-local work and closeout evidence.
+- `docs/protocols/project-log.md` for build, task, and review accountability.
+- `docs/knowledge/wiki/index.md` for discoverability of wiki/runbook/architecture pages.
+- `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
+
+Use this file only as historical context for early wiki adoption.
 
 ## 2026-04-26 — SESSION_0004
 

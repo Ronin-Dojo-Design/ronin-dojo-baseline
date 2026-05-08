@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-06
+updated: 2026-05-08
 author: Brian + Copilot
-last_agent: codex-graphify-runbook
+last_agent: codex-stripe-runbook
 ---
 
 # LLM Wiki Index
@@ -185,6 +185,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Dev Environment](../../runbooks/dev-environment.md) | runbook | active |
 | [React to Next Component Porting Runbook](../../runbooks/react-to-next-component-porting-runbook.md) | runbook | active |
 | [Graphify Repo Memory Runbook](../../runbooks/graphify-repo-memory.md) | runbook | active |
+| [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) | runbook | active |
 
 ## Code files (annotated)
 

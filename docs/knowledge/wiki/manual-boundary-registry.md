@@ -6,9 +6,10 @@ status: active
 created: 2026-04-27
 updated: 2026-05-08
 author: Brian + ChatGPT
-last_agent: codex-session-0097
+last_agent: codex-readable-registers
 pairs_with:
   - repo-truth-index
+  - docs/runbooks/stripe-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/chat-handoff.md
@@ -73,22 +74,118 @@ Blocker classes:
 
 ### 1. Read the registry
 
-| ID | Lane | Boundary | Owner | Blocker class | Proof required | Status |
-|---|---|---|---|---|---|---|
-| MB-001 | S2 auth | Lock mobile auth path: Better-Auth mobile SDK vs JWT bridge fallback | owner + Cody | mobile_contract | one explicit architecture decision + implementation target | open |
-| MB-002 | brand scope hardening | Decide and implement Prisma brand-scope enforcement layer | Cody | auth_decision | code path + test evidence + updated auth doc | open |
-| MB-003 | brand switcher | Finish `activeBrandId` persistence + switch flow + smoke proof | Cody | runtime_proof | working end-to-end flow, session survives reload | open |
-| MB-004 | S2 Passport bootstrap | Convert "code complete / smoke pending" into verified flow | Cody + Doug | qa_proof | signup -> Passport stub -> DirectoryProfile stub smoke proof | verified |
-| MB-005 | transitional cleanup | Remove Dirstarter reference models before prod or formally quarantine them | Petey + Cody | cleanup | tracked removal plan or quarantine ADR | verified — SESSION_0039: D-014 decided Option B (repurpose Tool → Directory Listing). No removal; relabel in future session. See `dirstarter-baseline-index.md` §14 |
-| MB-006 | Baseline rollout | Approve Baseline-first public rollout surfaces and alias rules | Brandon + owner | brand_migration | approved alias map + rollout checklist | open |
-| MB-007 | staging deploy | Vercel + Neon staging environment proof | Cody + Doug | deploy_env | deploy succeeds + smoke checklist passes | open |
-| MB-008 | docs/wiki quality | Backlinks and doc health upgrades on key pages | Petey + Doug | docs_wiring | wiki lint pass + index updates | open |
-| MB-009 | content engine path | Decide current truth split: MDX-only now vs ContentAtom-backed intake-to-publish path | Petey + Iggy + owner | content_system_decision | written policy + phased adoption plan | open |
-| MB-010 | legacy migration | Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone | Petey + owner | brand_migration | updated program lane note | open |
-| MB-011 | directory monetization | Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model | Petey + Cody + Brandon | content_system_decision | ADR or roadmap decision plus migration/quarantine plan | verified — SESSION_0039: D-014 Option B. Tool stays and is repurposed as Directory Listing. Stripe tiers (Free/Standard/Premium) map to listing tiers. Relabel UI in future session. |
-| MB-012 | local environment cleanup | Remove or archive accidental Local by Flywheel WordPress public directory from the working context | owner + Cody | cleanup | explicit owner approval + path verification before delete/archive | open |
-| MB-013 | security and financial transaction readiness | Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch | Cody + Doug + Giddy | qa_proof | security test matrix, monitoring hooks, Customer Portal/customer ID path, non-tournament ledger projection, subscription policy proof, manual payment entitlement path, payment/entitlement drift audit, and launch-readiness signoff | open |
-| MB-014 | production multi-domain + server action hardening | Production-only manual steps that block staging/launch but are out of code scope: register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, Plausible | owner + Cody | deploy_env | Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run | open |
+#### MB-001 — S2 auth
+
+- **Boundary:** Lock mobile auth path: Better-Auth mobile SDK vs JWT bridge fallback.
+- **Owner:** owner + Cody
+- **Blocker class:** `mobile_contract`
+- **Proof required:** one explicit architecture decision + implementation target
+- **Status:** open
+
+#### MB-002 — brand scope hardening
+
+- **Boundary:** Decide and implement Prisma brand-scope enforcement layer.
+- **Owner:** Cody
+- **Blocker class:** `auth_decision`
+- **Proof required:** code path + test evidence + updated auth doc
+- **Status:** open
+
+#### MB-003 — brand switcher
+
+- **Boundary:** Finish `activeBrandId` persistence + switch flow + smoke proof.
+- **Owner:** Cody
+- **Blocker class:** `runtime_proof`
+- **Proof required:** working end-to-end flow, session survives reload
+- **Status:** open
+
+#### MB-004 — S2 Passport bootstrap
+
+- **Boundary:** Convert "code complete / smoke pending" into verified flow.
+- **Owner:** Cody + Doug
+- **Blocker class:** `qa_proof`
+- **Proof required:** signup -> Passport stub -> DirectoryProfile stub smoke proof
+- **Status:** verified
+
+#### MB-005 — transitional cleanup
+
+- **Boundary:** Remove Dirstarter reference models before prod or formally quarantine them.
+- **Owner:** Petey + Cody
+- **Blocker class:** `cleanup`
+- **Proof required:** tracked removal plan or quarantine ADR
+- **Status:** verified; SESSION_0039 resolved D-014 as Option B, repurpose Tool to Directory Listing. No removal. Relabel in a future session. See `dirstarter-baseline-index.md` section 14.
+
+#### MB-006 — Baseline rollout
+
+- **Boundary:** Approve Baseline-first public rollout surfaces and alias rules.
+- **Owner:** Brandon + owner
+- **Blocker class:** `brand_migration`
+- **Proof required:** approved alias map + rollout checklist
+- **Status:** open
+
+#### MB-007 — staging deploy
+
+- **Boundary:** Vercel + Neon staging environment proof.
+- **Owner:** Cody + Doug
+- **Blocker class:** `deploy_env`
+- **Proof required:** deploy succeeds + smoke checklist passes
+- **Status:** open
+
+#### MB-008 — docs/wiki quality
+
+- **Boundary:** Backlinks and doc health upgrades on key pages.
+- **Owner:** Petey + Doug
+- **Blocker class:** `docs_wiring`
+- **Proof required:** wiki lint pass + index updates
+- **Status:** open
+
+#### MB-009 — content engine path
+
+- **Boundary:** Decide current truth split: MDX-only now vs ContentAtom-backed intake-to-publish path.
+- **Owner:** Petey + Iggy + owner
+- **Blocker class:** `content_system_decision`
+- **Proof required:** written policy + phased adoption plan
+- **Status:** open
+
+#### MB-010 — legacy migration
+
+- **Boundary:** Clarify when BBL/WEKAF porting resumes relative to Baseline-first milestone.
+- **Owner:** Petey + owner
+- **Blocker class:** `brand_migration`
+- **Proof required:** updated program lane note
+- **Status:** open
+
+#### MB-011 — directory monetization
+
+- **Boundary:** Decide whether paid listings stay on Dirstarter `Tool` or become a Ronin-native listing model.
+- **Owner:** Petey + Cody + Brandon
+- **Blocker class:** `content_system_decision`
+- **Proof required:** ADR or roadmap decision plus migration/quarantine plan
+- **Status:** verified; SESSION_0039 resolved D-014 as Option B. Tool stays and is repurposed as Directory Listing. Stripe tiers map to listing tiers. Relabel UI in a future session.
+
+#### MB-012 — local environment cleanup
+
+- **Boundary:** Remove or archive accidental Local by Flywheel WordPress public directory from the working context.
+- **Owner:** owner + Cody
+- **Blocker class:** `cleanup`
+- **Proof required:** explicit owner approval + path verification before delete/archive
+- **Status:** open
+
+#### MB-013 — security and financial transaction readiness
+
+- **Boundary:** Prove private-data and payment-access controls before CGR commerce or protected learning surfaces launch.
+- **Owner:** Cody + Doug + Giddy
+- **Blocker class:** `qa_proof`
+- **Proof required:** security test matrix, monitoring hooks, Customer Portal/customer ID path, non-tournament ledger projection, subscription policy proof, manual payment entitlement path, payment/entitlement drift audit, and launch-readiness signoff
+- **Status:** open
+
+#### MB-014 — production multi-domain + server action hardening
+
+- **Boundary:** Production-only manual steps that block staging/launch but are out of code scope.
+- **Owner:** owner + Cody
+- **Blocker class:** `deploy_env`
+- **Proof required:** Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run
+- **Status:** open
+- **Specific gates:** register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, and Plausible.
 
 ### 2. Notes by boundary
 
@@ -141,6 +238,13 @@ SESSION_0098 planned owner checklist before this boundary can close:
 - Decide certificate pricing bridge: keep `CertificateTemplate.priceCents` warning-only or migrate paid certificate orders into `PricingPlan`.
 - Decide whether customer emails for failed-renewal grace, refund, and dispute events are required before paid curriculum launch.
 - Decide whether SESSION_0098 proof is local-only or must include staging evidence.
+
+Future Stripe event-destination backlog, not to be subscribed until handlers exist:
+
+- Setup runbook: `docs/runbooks/stripe-setup-runbook.md`.
+- Coupon/promotion-code sync: add handlers for `coupon.created`, `coupon.updated`, `coupon.deleted`, `promotion_code.created`, and `promotion_code.updated` only if Ronin needs to sync Stripe coupon administration into app-side allowlists/audit. Applying coupons in Checkout does not require these events.
+- BBL lineage payout pipeline: add a separate Connect/payout webhook destination, likely `/api/stripe/connect/webhooks` with `STRIPE_CONNECT_WEBHOOK_SECRET`, when Connect handlers exist. Candidate connected-account events are `account.updated`, `account.external_account.updated`, `payout.created`, `payout.updated`, `payout.paid`, and `payout.failed`; candidate platform transfer events after transfer tracking exists are `transfer.created`, `transfer.updated`, and `transfer.reversed`.
+- BBL payout manual decisions: decide whether BBL receives one org payout or individual lineage recipients get connected accounts; exact Premium/Elite split percentages; payout timing; refund/dispute clawback rules; and recipient onboarding/KYC responsibility.
 
 **MB-014 — Production multi-domain + server action hardening.** SESSION_0030 hostile pass and SESSION_0031 prep refactor identified four manual production gates the owner must close before staging deploy:
 

@@ -12,6 +12,7 @@ pairs_with:
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
   - docs/architecture/monetization-entitlements-spec.md
+  - docs/runbooks/stripe-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/project-log.md
@@ -47,6 +48,7 @@ PWCC remains deferred until Brian explicitly accepts the residual MB-013 launch 
   - `/tmp/graphify-venv/bin/graphify query "SESSION_0098 MB-013 StripeWebhookEvent payment entitlement drift audit monitoring PricingPlan UserEntitlement Invoice Payment admin billing" --budget 3000`
   - Useful hits: Monetization and Entitlements Spec, Ubiquitous Language commerce terms, S2 payment/billing schema notes, `Payment`, `PricingPlan`, `UserEntitlement`, `Invoice`, `InvoiceLineItem`.
 - Discovery rule for execution: use `graphify query` first for code/document discovery. Use direct source reads for authoritative details. Avoid text search unless Graphify does not surface enough context.
+- Stripe setup reference: `docs/runbooks/stripe-setup-runbook.md`.
 - `StripeWebhookEvent` records event id, type, object id, status, attempts, last error, and processed timestamp, but no alerting or dashboard reads it yet.
 - `Invoice` records `stripeInvoiceId`, `stripeCheckoutSessionId`, `stripeSubscriptionId`, line items, payments, and status.
 - `Payment` records payment method, Stripe payment intent id, and Stripe Checkout session id.
@@ -139,6 +141,42 @@ These are owner-side decisions or artifacts needed to close MB-013 cleanly. Do n
 | Certificate pricing | Decide whether paid certificates stay on `CertificateTemplate.priceCents` as a bridge or migrate to `PricingPlan`. | Keep bridge for physical certificate orders; warning-only in SESSION_0098 audit. | Certificate paid launch |
 | Customer notifications | Decide whether failed-renewal grace/refund/dispute customer emails are required before paid curriculum launch. | Not in SESSION_0098; stage as follow-up if launch includes subscriptions. | MB-013 notification gate |
 | Staging proof | Decide whether SESSION_0098 must include staging proof or only local DB/test proof. | Local proof in SESSION_0098, staging proof before MB-013 verified. | Launch-readiness signoff |
+
+## Future Stripe Event Handler Backlog
+
+Do not subscribe these events in Stripe until handlers and tests exist. Record them now so the event-destination plan is explicit.
+
+### Coupon and promotion-code sync
+
+- **Destination:** existing payment/access destination only after handler exists, or a separate admin-sync destination if operationally cleaner.
+- **Likely URL:** `/api/stripe/webhooks` if folded into the current route.
+- **Candidate events:**
+  - `coupon.created`
+  - `coupon.updated`
+  - `coupon.deleted`
+  - `promotion_code.created`
+  - `promotion_code.updated`
+- **Handler contract:** maintain a Ronin coupon/promotion allowlist or cache, mark deleted/inactive codes unavailable, and audit coupon availability changes.
+- **Not needed for:** applying an already-known coupon in Checkout. SESSION_0097 already passes coupon ids into Checkout and the paid Checkout/invoice events carry resulting totals.
+
+### BBL Connect lineage payout pipeline
+
+- **Destination:** separate Connect/payout event destination, not the current payment/access destination.
+- **Likely URL:** `/api/stripe/connect/webhooks`.
+- **Likely env var:** `STRIPE_CONNECT_WEBHOOK_SECRET`.
+- **Candidate connected-account events:**
+  - `account.updated`
+  - `account.external_account.updated`
+  - `payout.created`
+  - `payout.updated`
+  - `payout.paid`
+  - `payout.failed`
+- **Candidate platform transfer events after transfer handlers exist:**
+  - `transfer.created`
+  - `transfer.updated`
+  - `transfer.reversed`
+- **Handler contract:** connected-account onboarding state, payout state, transfer creation/reversal tracking, refund/dispute clawback policy, and lineage-recipient split audit.
+- **Manual decisions needed first:** whether BBL receives one org payout and handles downstream splits manually, or individual lineage recipients get connected accounts; exact Premium/Elite split percentages; payout timing; clawback rules for refunds/disputes; recipient KYC/onboarding responsibility.
 
 ## Manual Mapping Template
 
