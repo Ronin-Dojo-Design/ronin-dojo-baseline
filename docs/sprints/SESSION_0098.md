@@ -2,10 +2,10 @@
 title: "SESSION 0098 - Payment Monitoring and Drift Audit"
 slug: session-0098
 type: session
-status: planned
+status: closed-full
 created: 2026-05-08
 updated: 2026-05-08
-last_agent: codex-session-0098-plan
+last_agent: codex-session-0098
 sprint: S3
 pairs_with:
   - docs/sprints/SESSION_0097.md
@@ -22,7 +22,7 @@ backlinks:
 
 ## Date
 
-2026-05-08 prep for next execution session
+2026-05-08 execution session
 
 ## Operator
 
@@ -30,7 +30,7 @@ Brian Scott + Codex acting as Petey for staging
 
 ## Status
 
-planned
+closed-full
 
 ## Goal
 
@@ -212,3 +212,109 @@ Playwright is optional. Use it only if an admin monitor page is added and needs 
 ## Handoff Prompt
 
 Act as Petey and execute `docs/sprints/SESSION_0098.md`. Keep SESSION_0098 in MB-013 commerce hardening: webhook operations monitor plus payment/entitlement drift audit. Confirm Brian's manual checklist decisions first, especially alert destination, audit schedule, Stripe Price inventory, manual payment exclusion/parity, and certificate pricing bridge. Do not start PWCC unless Brian explicitly accepts the remaining MB-013 risk.
+
+## Full Close
+
+### What landed
+
+- Added an admin-only Stripe webhook operations monitor at `/admin/billing/monitoring`.
+- Added `getStripeWebhookOperationsMonitor`, which reports 24-hour and seven-day status/type counts, failed events, stale processing events, repeated attempts, recent processed volume, and a launch-readiness label.
+- Added `runPaymentEntitlementDriftAudit` plus `scripts/audit-payment-entitlements.ts`, producing human-readable and JSON audit output and exiting non-zero on blocking drift.
+- Added real Prisma fixture tests for clean and hostile payment/access drift paths.
+- Added a late owner-approved TuffBuffs affiliate gear proof at `/gear`, using local copied legacy merch assets plus Amazon affiliate gear metadata.
+- Added Grid, List, and Carousel display modes for `/gear`; equalized image frames and fixed selected-toggle hover contrast.
+
+### Files touched
+
+- `apps/web/server/web/billing/monitoring-thresholds.ts`
+- `apps/web/server/admin/billing/monitoring/queries.ts`
+- `apps/web/server/admin/billing/monitoring/queries.test.ts`
+- `apps/web/app/admin/billing/monitoring/page.tsx`
+- `apps/web/components/admin/sidebar.tsx`
+- `apps/web/server/web/billing/drift-audit.ts`
+- `apps/web/server/web/billing/drift-audit.test.ts`
+- `apps/web/scripts/audit-payment-entitlements.ts`
+- `apps/web/app/(web)/gear/page.tsx`
+- `apps/web/components/web/tuffbuffs/affiliate-gear-browser.tsx`
+- `apps/web/components/web/tuffbuffs/affiliate-gear-card.tsx`
+- `apps/web/components/web/tuffbuffs/affiliate-gear-grid.tsx`
+- `apps/web/lib/tuffbuffs/affiliate-gear.ts`
+- `apps/web/lib/tuffbuffs/merch-catalog.ts`
+- `apps/web/components/web/header.tsx`
+- `apps/web/components/web/footer.tsx`
+- `apps/web/messages/en/navigation.json`
+- `apps/web/public/images/merch/*`
+- `docs/protocols/project-log.md`
+- `docs/knowledge/wiki/manual-boundary-registry.md`
+- `docs/architecture/monetization-entitlements-spec.md`
+- `docs/architecture/security-privacy-payments-monitoring-plan.md`
+- `docs/sprints/SESSION_0098.md`
+
+### Decisions recorded
+
+- Local proof uses Stripe test mode only with local `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+- The payment/access destination remains limited to the current seven events listed in the runbook.
+- MVP alerting is dashboard-only for SESSION_0098; outbound alerts need a follow-up owner decision.
+- Daily drift audit scheduling defaults to 03:00 America/Denver as an ops setup follow-up.
+- Manual/admin paid-curriculum access remains excluded from launch until parity exists.
+- `CertificateTemplate.priceCents` drift is warning-only in SESSION_0098.
+- The current payment/access Stripe destination remains limited to `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`, and `charge.dispute.created`.
+- Outbound customer/admin emails, shippable merch checkout, product fulfillment, certificate productization, membership products, tournament registration fee setup, and formal PWCC are follow-up work; SESSION_0098 did not wire those into Stripe.
+- The `/gear` page is an affiliate-link display proof and not a Stripe product/checkout surface.
+
+### Verification
+
+- `cd apps/web && bun test server/admin/billing/monitoring/queries.test.ts` — 1/1 pass.
+- `cd apps/web && bun test server/web/billing/drift-audit.test.ts` — 2/2 pass.
+- `cd apps/web && bun test app/api/stripe/webhooks/route.test.ts` — 10/10 pass.
+- `cd apps/web && bun scripts/audit-payment-entitlements.ts` — READY, 0 blocking issues, 0 warnings.
+- `cd apps/web && bun biome check server/web/billing/monitoring-thresholds.ts server/admin/billing/monitoring/queries.ts server/admin/billing/monitoring/queries.test.ts server/web/billing/drift-audit.ts server/web/billing/drift-audit.test.ts scripts/audit-payment-entitlements.ts app/admin/billing/monitoring/page.tsx components/admin/sidebar.tsx` — pass.
+- `cd apps/web && bunx prisma validate --schema prisma/schema.prisma` — pass.
+- `git diff --check` — pass.
+- `cd apps/web && bun run typecheck` — fails only on known unrelated baseline errors: `server/web/tags/queries.ts(67,10)` excessive stack depth and existing `bun:test` typing gaps in tournament tests.
+- `/gear` image URL audit — 36 affiliate products, 0 missing images.
+- `cd apps/web && bun biome check app/(web)/gear/page.tsx components/web/tuffbuffs/affiliate-gear-browser.tsx components/web/tuffbuffs/affiliate-gear-card.tsx components/web/tuffbuffs/affiliate-gear-grid.tsx` — pass.
+- Browser proof on `http://localhost:3000/gear` — desktop and mobile rendered 200; Grid/List/Carousel toggles worked; Carousel advanced; no console errors.
+- Browser hover proof — selected Grid/List/Carousel hover text stayed readable on the dark active background.
+
+### Full close evidence
+
+| Check | Result |
+| --- | --- |
+| Live Dirstarter docs check | Checked 2026-05-08: `https://dirstarter.com/docs/integrations/payments`, `https://dirstarter.com/docs/monetization`, `https://dirstarter.com/docs/environment-setup`, and `https://dirstarter.com/docs`. Alignment: extensions only; Stripe/affiliate work follows Dirstarter's Stripe and affiliate guidance. |
+| Wiki lint | `bun run wiki:lint` passed with 0 errors and 3 existing orphan warnings: `knowledge/wiki/topic-index.md`, `knowledge/wiki/concepts/tournament-ops.md`, `knowledge/wiki/dirstarter-uplift-backlog.md`. |
+| Git branch | `main`. |
+| Worktree list | Main worktree at `/Users/brianscott/dev/ronin-dojo-app` plus existing `codex/session-0085-route` and `codex/session-0085-tests` worktrees. |
+| Git status | Modified/untracked SESSION_0098 implementation and docs files remain uncommitted; no commit was requested or authorized. |
+| Whitespace | `git diff --check` passed. |
+| Graphify | `/tmp/graphify-venv/bin/graphify update /Users/brianscott/dev/ronin-dojo-app` completed during final close: rebuilt 5096 nodes and 9009 edges; `graph.json` and `GRAPH_REPORT.md` updated. `graph.html` was skipped because the graph exceeded the default 5000-node viz limit. |
+
+### Hostile close review
+
+- **Giddy:** The MB-013 monitor/audit code does not close the full launch gate by itself. Production alert routing, production/staging audit scheduling, staging webhook proof, manual/admin payment parity, certificate pricing signoff, DB uniqueness policy, and customer notification policy remain open and must not be hidden behind the clean local audit.
+- **Doug:** The affiliate `/gear` page is visually and interactively proven locally, but it is not a formal PWCC session, not a shippable merch checkout system, and not a Stripe product catalog. Treat it as a first pipeline probe and carry the remaining merch/payment/email decisions forward explicitly.
+- **Verdict:** Full close is acceptable with SESSION_0098 marked `closed-full`, MB-013 still open, and the next session starting from this record.
+
+### Review log
+
+- `SESSION_0098_REVIEW_01` recorded in Project Log.
+- `SESSION_0098_REVIEW_02` recorded in Project Log for full close and affiliate gear proof.
+- `SESSION_0098_FINDING_01` remains open for production alert/schedule setup, staging proof, manual/admin payment parity, certificate pricing signoff, DB uniqueness policy, and customer notification policy.
+
+### Review and recommend
+
+- **Recommended next session goal:** Run a formal PWCC pass for TuffBuffs commerce/content surfaces, starting from `/gear`, then decide the Stripe/email split for certificates, memberships, tournament fees, and shippable merch.
+- **Inputs to read first:** `docs/sprints/SESSION_0098.md`, `docs/protocols/project-log.md`, `docs/knowledge/wiki/manual-boundary-registry.md`, `apps/web/app/(web)/gear/page.tsx`, `apps/web/components/web/tuffbuffs/affiliate-gear-browser.tsx`, `apps/web/lib/tuffbuffs/affiliate-gear.ts`, `apps/web/lib/tuffbuffs/merch-catalog.ts`, `/Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/data/merchandise.js`, and `/Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/components/MerchStorePage.jsx`.
+- **First task:** Use Graphify query first for local discovery; produce the TuffBuffs commerce/PWCC port map before wiring more products or emails.
+- **Do not start with:** live Stripe product creation, production webhook subscriptions, or outbound customer emails until the product/email policy is written.
+- **MB-013 carry-forward:** Configure the production/staging alert destination and scheduled audit run; decide manual/admin payment parity versus launch exclusion; decide whether certificate paid launch keeps the warning-only bridge or migrates into `PricingPlan`; decide DB uniqueness policy for Stripe Price mappings and Stripe-sourced `UserEntitlement` rows.
+
+### ADR and language check
+
+- No new ADR needed for SESSION_0098. The monitor/audit extends the existing entitlement-first commerce architecture, and `/gear` is a content/affiliate display proof.
+- No glossary update needed. Existing commerce terms remain valid: `PricingPlan`, `EntitlementGrant`, `UserEntitlement`, `Invoice`, `Payment`, `StripeWebhookEvent`, and `ProgramEnrollment`.
+
+### Reflection
+
+- The clean local drift audit is useful, but it should not be mistaken for production readiness until schedule, alerting, staging, and owner policy decisions are in place.
+- The `/gear` pass showed that the TuffBuffs legacy code can be mined quickly for catalog structure and UI behavior, but the next session should slow down enough to separate affiliate display, Stripe checkout, fulfillment, and outbound email responsibilities.

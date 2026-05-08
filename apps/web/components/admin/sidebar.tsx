@@ -3,6 +3,7 @@
 import { useMediaQuery } from "@mantine/hooks"
 import { cx } from "cva"
 import {
+  ActivityIcon,
   BookOpenIcon,
   CalendarIcon,
   ContactIcon,
@@ -143,6 +144,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Subscriptions",
       href: "/admin/subscriptions",
       prefix: <CreditCardIcon />,
+    },
+    {
+      title: "Billing Monitor",
+      href: "/admin/billing/monitoring",
+      prefix: <ActivityIcon />,
     },
 
     undefined, // Separator

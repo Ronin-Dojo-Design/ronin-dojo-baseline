@@ -30,7 +30,7 @@ backlinks:
 
 Define the commercial access contract that connects Stripe, pricing, invoices, subscriptions, program enrollments, course access, certificate issuance, refunds, and revocation.
 
-This doc started as a SESSION_0029 spec. SESSION_0094 reconciled it against the current code: the entitlement schema and Stripe Price mapping now exist. SESSION_0095 proved one-time and subscription Checkout entitlement grant/revoke behavior in the webhook harness. SESSION_0096 added current-brand Stripe customer mapping, Customer Portal session creation, processed-event storage, non-tournament ledger projection, and subscription/refund/dispute lifecycle proof. SESSION_0097 added protected program enrollment Checkout with server-derived user, brand, organization, plan, line item, metadata, and URLs; manual/admin payment parity, certificate pricing, monitoring, and drift audit remain open.
+This doc started as a SESSION_0029 spec. SESSION_0094 reconciled it against the current code: the entitlement schema and Stripe Price mapping now exist. SESSION_0095 proved one-time and subscription Checkout entitlement grant/revoke behavior in the webhook harness. SESSION_0096 added current-brand Stripe customer mapping, Customer Portal session creation, processed-event storage, non-tournament ledger projection, and subscription/refund/dispute lifecycle proof. SESSION_0097 added protected program enrollment Checkout with server-derived user, brand, organization, plan, line item, metadata, and URLs. SESSION_0098 added a Stripe webhook operations monitor and local payment/entitlement drift audit; manual/admin payment parity, certificate pricing signoff, production alert/schedule setup, staging proof, customer notifications, and DB uniqueness policy remain open.
 
 ## Authority
 
@@ -351,10 +351,10 @@ Use the tournament webhook harness as the proof shape for every launch-critical 
 | Gap | Why it matters | Target |
 | --- | --- | --- |
 | Generic checkout action accepts caller-supplied metadata | Fine for Dirstarter listing flow, but protected Ronin paid access should derive user/brand/org/metadata server-side. SESSION_0096 attaches stored customers only when authenticated session metadata matches the current user. | Protected checkout action before paid learning surfaces. |
-| Stripe event monitoring | Processed event IDs now persist, but alerting/dashboarding for duplicate or failed webhook events is not wired. | Launch hardening / monitoring. |
+| Production alert/schedule setup | SESSION_0098 adds an admin monitor and local drift audit command, but production/staging alert recipients, channel, and audit schedule still need owner-side setup. | Ops setup before MB-013 signoff. |
 | Certificate pricing bridge unresolved | `CertificateTemplate.priceCents` exists while entitlement-oriented paid certificates may need `PricingPlan`. | Owner/Petey decision before paid certificate launch. |
 | Manual/admin payment parity incomplete | Manual/cash/check/barter/comp payments do not yet write the same entitlement and ledger state as Stripe. | Dedicated admin payment session. |
-| Payment/entitlement drift audit missing | Webhook paths are proven, but no scheduled or admin-triggered audit reconciles Stripe/ledger/entitlement state. | Launch hardening. |
+| Staging payment/entitlement drift proof | SESSION_0098 local audit proof is clean; staging must still run the same monitor/audit evidence before launch signoff. | Staging launch readiness. |
 | Entitlement idempotency is app-level | SESSION_0095 proves sequential replay for one-time and subscription checkout events, and SESSION_0096 adds event-id dedupe, but `UserEntitlement` still has lookup indexes rather than a DB unique constraint for user/entitlement/source. | Decide whether launch needs a DB constraint or accepted-risk note. |
 
 ## What Not To Build Yet

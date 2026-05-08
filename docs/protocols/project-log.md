@@ -1183,9 +1183,11 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Session:** SESSION_0098
 - **Date:** 2026-05-08
 - **Done criteria:** Blocking thresholds for webhook health, duplicate Stripe Price mappings, paid invoice/access drift, paid enrollment/access drift, and certificate-pricing warnings are explicit before code edits.
-- **Status:** planned
+- **Status:** landed
 - **What should ship:** SESSION_0098 kickoff confirms Brian's manual checklist decisions and records any scope change before implementation.
-- **Verification:** SESSION_0098 task log plus updated MB-013 notes.
+- **Manual decision checkpoint:** Local proof uses Stripe test mode only, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are present locally, the dev server target is `http://localhost:3000`, and the current payment/access destination remains limited to `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`, and `charge.dispute.created`. MVP alerting remains dashboard-only, drift audit scheduling defaults to daily 03:00 America/Denver as a post-code ops setup, manual/admin paid-curriculum access remains excluded from launch until parity exists, and certificate pricing bridge drift is warning-only.
+- **Blocking thresholds:** Any `FAILED` webhook event in the seven-day launch window, any `PROCESSING` webhook event older than 15 minutes, any duplicate active same-brand/program Stripe Price mapping, any paid Stripe invoice missing expected active entitlement, any active Stripe-sourced entitlement without matching paid invoice source, and any active paid-program enrollment without active Stripe-sourced mapped entitlement block paid curriculum launch. Paid certificate templates outside `PricingPlan` are warning-only in this session.
+- **Verification:** Thresholds recorded before code edits; MB-013 notes updated in SESSION_0098 closeout.
 
 ### SESSION_0098_TASK_02 — Stripe webhook operations monitor
 
@@ -1194,9 +1196,9 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Session:** SESSION_0098
 - **Date:** 2026-05-08
 - **Done criteria:** Admin-only monitor reports webhook status/type counts, failed events, stale processing events, repeated attempts, recent processed volume, and a launch-readiness status without exposing Stripe payloads or secrets.
-- **Status:** planned
+- **Status:** landed
 - **What should ship:** Admin billing monitor query/page or equivalent operations surface.
-- **Verification:** Focused monitor query tests and scoped Biome check.
+- **Verification:** `bun test server/admin/billing/monitoring/queries.test.ts`; scoped Biome check.
 
 ### SESSION_0098_TASK_03 — Payment and entitlement drift audit
 
@@ -1205,6 +1207,69 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Session:** SESSION_0098
 - **Date:** 2026-05-08
 - **Done criteria:** Repeatable audit reports blocking drift for duplicate plan/price mappings, plans without grants, paid invoice/access mismatches, orphan Stripe-sourced entitlements, paid enrollment/access mismatches, and webhook failures; exits non-zero on blocking drift.
-- **Status:** planned
+- **Status:** landed
 - **What should ship:** Drift audit service, script, and real-fixture tests.
-- **Verification:** `bun test server/web/billing/drift-audit.test.ts` and `bun scripts/audit-payment-entitlements.ts`.
+- **Verification:** `bun test server/web/billing/drift-audit.test.ts`; `bun scripts/audit-payment-entitlements.ts` returned READY with 0 blocking issues and 0 warnings locally.
+
+### SESSION_0098_REVIEW_01 — Payment monitoring and drift audit quick close
+
+**Reviewed tasks:** SESSION_0098_TASK_01, SESSION_0098_TASK_02, SESSION_0098_TASK_03
+**Verdict:** Aligned. The SESSION_0098 slice adds an admin-only Stripe webhook operations monitor and a repeatable payment/entitlement drift audit without changing the payment provider flow or adding new Stripe event subscriptions. The monitor surfaces seven-day/24-hour webhook counts, failed events, stale processing events, repeated attempts, processed volume, and a launch-readiness label. The audit reports blocking drift for duplicate plan/price mappings, missing plan grants, paid invoice/access mismatches, orphan Stripe-sourced entitlements, paid enrollment/access mismatches, and failed/stale webhook events; paid certificate template pricing remains warning-only.
+
+#### SESSION_0098_FINDING_01 — Residual MB-013 launch gates remain outside monitor/audit code
+
+- **Severity:** medium
+- **Task:** SESSION_0098_TASK_03
+- **Evidence:** Local audit proof is clean, but production alert recipients/channel, production audit scheduling, staging proof, manual/admin payment parity, certificate pricing migration/bridge signoff, DB uniqueness policy, and customer notification policy remain manual or follow-up gates.
+- **Impact:** Paid curriculum launch should still wait for explicit MB-013 signoff even though monitoring and drift detection now exist.
+- **Required follow-up:** Configure the production/staging ops schedule and alert path, then decide manual payment parity, certificate pricing bridge, uniqueness policy, and customer notification requirements before marking MB-013 verified.
+- **Status:** open
+
+### SESSION_0098_TASK_04 — TuffBuffs affiliate gear proof
+
+- **ID:** SESSION_0098_TASK_04
+- **Owner:** Cody + Petey
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Pull useful TuffBuffs merch/catalog facts from the legacy monorepo and land a first affiliate gear page without starting formal PWCC.
+- **Status:** landed
+- **What shipped:** `/gear` page, TuffBuffs affiliate gear catalog, local copied legacy merch assets, Gear nav links, and English nav labels.
+- **Verification:** Local image audit found 36 affiliate products with 0 missing images; browser proof rendered `/gear` at 200 on desktop and mobile.
+
+### SESSION_0098_TASK_05 — Gear display modes and visual fixes
+
+- **ID:** SESSION_0098_TASK_05
+- **Owner:** Cody
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Gear cards have stable image height and user-selectable Grid, List, and Carousel modes patterned after the TuffBuffs merch/member carousel experience.
+- **Status:** landed
+- **What shipped:** Equal-height image frames, Grid/List/Carousel segmented controls, carousel advancement, and selected-toggle hover contrast fix.
+- **Verification:** Scoped Biome check passed for gear page/components; browser proof confirmed Grid/List/Carousel toggles, carousel movement, mobile layout, and readable active-hover text with no console errors.
+
+### SESSION_0098_TASK_06 — Full close and Graphify refresh
+
+- **ID:** SESSION_0098_TASK_06
+- **Owner:** Petey + Doug
+- **Session:** SESSION_0098
+- **Date:** 2026-05-08
+- **Done criteria:** Convert SESSION_0098 from quick close to full close, record residual launch gates, update manual boundaries, run required close checks, and refresh Graphify for next-session discovery.
+- **Status:** landed
+- **What shipped:** SESSION_0098 full-close artifact, Project Log entries, manual-boundary note, wiki lint result, git hygiene output, and Graphify update.
+- **Verification:** `bun run wiki:lint` passed with 0 errors and 3 existing orphan warnings; `git diff --check` passed; git branch/worktree/status recorded in SESSION_0098; Graphify rebuilt 5096 nodes and 9009 edges and updated `graphify-out/graph.json` plus `graphify-out/GRAPH_REPORT.md`.
+
+### SESSION_0098_REVIEW_02 — Full close, affiliate gear, and next-session handoff
+
+**Reviewed tasks:** SESSION_0098_TASK_01, SESSION_0098_TASK_02, SESSION_0098_TASK_03, SESSION_0098_TASK_04, SESSION_0098_TASK_05, SESSION_0098_TASK_06
+**Dirstarter docs check:** live docs checked on 2026-05-08
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/environment-setup, https://dirstarter.com/docs
+**Verdict:** Aligned with open launch gates. SESSION_0098 extends the Dirstarter Stripe/webhook and affiliate-display patterns rather than replacing the baseline: the monitor and audit read existing payment/access state, and `/gear` is an affiliate-link display proof, not a new Stripe checkout surface. MB-013 remains open for production/staging alerting and audit schedule, staging proof, manual/admin payment parity or exclusion, certificate pricing bridge/migration, DB uniqueness policy, and customer notification policy. The recommended next session is a formal PWCC/TuffBuffs commerce port map before adding live Stripe products or outbound emails.
+
+#### SESSION_0098_FINDING_02 — TuffBuffs commerce scope needs product/email policy before Stripe setup
+
+- **Severity:** medium
+- **Task:** SESSION_0098_TASK_04
+- **Evidence:** `/gear` now displays Amazon affiliate links, and a local shippable merch catalog bridge exists, but certificates, memberships, tournament registration fees, shippable merch checkout, fulfillment, and outbound payment/product emails are not wired into Stripe or Resend.
+- **Impact:** Creating Stripe products or email flows ad hoc could mix affiliate display, paid access, shippable goods, and certificates without a clear entitlement/fulfillment contract.
+- **Required follow-up:** Start the next session with a PWCC/TuffBuffs commerce port map that separates affiliate links, Stripe products/prices, fulfillment/order state, certificate orders, memberships, tournament fees, and outbound email responsibilities.
+- **Status:** open

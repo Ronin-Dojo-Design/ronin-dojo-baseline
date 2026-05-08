@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-05-08
 author: Brian + ChatGPT
-last_agent: codex-readable-registers
+last_agent: codex-session-0098
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
@@ -203,6 +203,8 @@ SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `Me
 
 **MB-009 — Content system path.** The repo has MDX blog content now, ContentAtom-style schema direction, and a wiki/docs/session knowledge layer. This needs a crisp operating rule so the system does not fork into three half-truths.
 
+**MB-010 — Legacy migration.** SESSION_0098 added an owner-approved first TuffBuffs affiliate gear proof at `/gear` after the MB-013 monitor/audit work landed. This does not start formal PWCC or close the legacy migration boundary. It proves the repo can mine the TuffBuffs legacy monorepo for catalog/UI facts and should feed the next formal PWCC/TuffBuffs commerce port map.
+
 **MB-011 — Directory monetization model.** ~~The roadmap intentionally reuses Dirstarter `Tool` and `Ad` for near-term paid listing proof. Before production, decide whether that remains the canonical paid listing substrate, gets renamed/promoted into a generic `DirectoryListing`, or is replaced by paid overlays on `Organization`, `Program`, and `Event`.~~ **VERIFIED SESSION_0039:** D-014 decided Option B — Tool stays as the paid directory listing substrate, repurposed with a UI relabel to "Listing" or "Directory Entry". Stripe tiers (Free/Standard/Premium) map to directory listing visibility tiers. The `Ad` system also stays as-is for sponsored placements.
 
 **MB-012 — Local WordPress public directory cleanup.** The session began in `/Users/brianscott/Local Sites/ronin-dojo/app/public/` because VS Code was opened from the Local by Flywheel WordPress site. ADR 0005 already says that install is abandoned and irrelevant to the new stack. Do not delete it silently; verify the path and get owner approval first.
@@ -217,12 +219,16 @@ SESSION_0096 update: current-brand `StripeCustomer` mapping, authenticated Custo
 
 SESSION_0097 update: protected program enrollment Checkout now uses an authenticated action that accepts only `programId`, selected `stripePriceId`, and optional coupon, then derives user, brand, organization, pricing plan, line item, mode, Stripe Customer handling, URLs, and metadata server-side. Hostile tests prove caller-supplied metadata, line items, and redirect URLs cannot drive protected paid-learning access. This closes `SESSION_0096_FINDING_01` for the program enrollment Checkout surface while leaving the non-checkout MB-013 launch gates open.
 
+SESSION_0098 update: local Stripe test-mode proof added an admin-only billing monitor at `/admin/billing/monitoring` and a repeatable payment/entitlement drift audit script. The monitor treats any `FAILED` webhook in the seven-day launch window and any `PROCESSING` webhook older than 15 minutes as blocking. The audit treats duplicate active same-brand/program Stripe Price mappings, active paid Stripe plans without grants, paid Stripe invoices missing active entitlements, orphan active Stripe-sourced entitlements, active paid program enrollments without Stripe-sourced entitlements, and failed/stale webhook events as blocking. `CertificateTemplate.priceCents > 0` remains warning-only. Local audit output on 2026-05-08 was READY with 0 blocking issues and 0 warnings.
+
+SESSION_0098 late update: `/gear` now displays TuffBuffs/Amazon affiliate gear using local legacy assets and Grid/List/Carousel modes. This is not a Stripe product setup, not shippable merch checkout, not certificate/membership/tournament fee productization, and not outbound email implementation. Those decisions must be handled in a follow-up commerce/PWCC session before new Stripe products or customer emails are wired.
+
 MB-013 still requires these launch gates:
 
-1. Stripe event-id monitoring/alert wiring for duplicate/failed webhook events.
-2. Nightly or admin-triggered payment/entitlement drift audit and launch-readiness signoff.
+1. Production/staging alert destination, recipients, and audit schedule setup for the new monitor/audit surfaces.
+2. Staging proof that `/api/stripe/webhooks`, `/admin/billing/monitoring`, and the audit command run against the deployed environment.
 3. Certificate pricing decision: migrate paid certificates to `PricingPlan` or keep `CertificateTemplate.priceCents` as a launch bridge.
-4. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe.
+4. Manual/admin payment entitlement path that grants/revokes the same `UserEntitlement` result without Stripe, or explicit launch exclusion.
 5. DB-enforced or explicitly accepted-risk handling for non-unique `PricingPlan.stripePriceId` and non-unique `UserEntitlement` source rows.
 6. Customer email/notification path for failed-renewal grace, refund, and dispute events.
 

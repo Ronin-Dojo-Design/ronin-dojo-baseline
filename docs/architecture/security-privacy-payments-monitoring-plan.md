@@ -162,11 +162,11 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Authorization | Server actions and queries enforce auth, brand, org, and role. | No route is accepted with middleware-only protection. |
 | Instructor eligibility | ACTIVE same-org memberships with owner/admin/instructor role codes. | Add coach/staff roles only after roles are defined in seed and authz docs. |
 | ClassSession materialization | Bounded generation from `daysOfWeek`, `startTime`, `endTime`, effective dates, and timezone. | Add `rrule` engine only when recurring edge cases exceed the MVP shape. |
-| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service, one-time/subscription webhook proofs, Customer Portal path, non-tournament ledger projection, failed-payment/refund/dispute policy, and protected program enrollment Checkout now exist; do not launch protected paid access before remaining MB-013 monitoring, drift-audit, manual-payment, certificate-pricing, and uniqueness-policy gates are closed or explicitly bridged. |
+| Paid access | Entitlement-first, per ADR 0011. | Entitlement schema/service, one-time/subscription webhook proofs, Customer Portal path, non-tournament ledger projection, failed-payment/refund/dispute policy, protected program enrollment Checkout, admin webhook monitoring, and local drift audit now exist; do not launch protected paid access before production alert/schedule setup, staging proof, manual-payment, certificate-pricing, notification, and uniqueness-policy gates are closed or explicitly bridged. |
 | Stripe webhook handling | Signature verification, persisted processed-event records, idempotent state changes, no raw secrets/log payloads. | Revisit when adding Connect or multi-org payouts. |
 | Public certificate verification | Lookup by `qrVerificationCode`; return verification-safe fields only. | Revisit if certificate fraud/abuse requires stronger proof or captcha/rate limits. |
 | Storage | Public assets may use public URLs; private certificates/media require signed/private access. | Revisit when certificate PDFs are implemented. |
-| Monitoring | Start with structured logs and threshold alerts; graduate to dashboards before staging. | Revisit at staging deploy and launch-readiness sessions. |
+| Monitoring | Start with structured logs and threshold alerts; graduate to dashboards before staging. | SESSION_0098 adds `/admin/billing/monitoring` plus local drift audit proof; revisit at staging deploy to configure alert destination, recipients, and scheduled audit execution. |
 
 ## Required Security Gates
 
@@ -225,7 +225,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 - MB-002 brand-scope enforcement remains open.
 - Entitlement implementation plus one-time and subscription webhook proof exists, including Customer Portal/customer ID, non-tournament ledger projection, and failed-payment/refund/dispute policy from SESSION_0096.
 - Protected program enrollment Checkout now derives user/brand/org/metadata server-side; any future protected paid-access surface must use the same contract instead of generic Dirstarter caller metadata.
-- Payment/entitlement drift audit and Stripe webhook monitoring/alerting must exist, or an explicit launch bridge must be accepted, before paid curriculum launch.
+- Payment/entitlement drift audit and Stripe webhook monitoring now exist locally; production alert/schedule setup and staging proof must be completed, or an explicit launch bridge must be accepted, before paid curriculum launch.
 - Manual/admin payment parity must either grant/revoke the same entitlement and ledger state as Stripe or be excluded from launch.
 - Private certificate/media storage policy must be decided before certificate PDFs launch.
 - Production env/secret verification must pass before staging or launch.

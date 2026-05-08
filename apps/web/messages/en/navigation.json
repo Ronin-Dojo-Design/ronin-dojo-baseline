@@ -1,9 +1,11 @@
 {
   "home": "Home",
+  "tools": "Tools",
   "programs": "Programs",
   "tournaments": "Tournaments",
   "techniques": "Techniques",
   "courses": "Courses",
+  "gear": "Gear",
   "directory": "Directory",
   "schedules": "Schedules",
   "categories": "Categories",
