@@ -979,7 +979,7 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 **Reviewed tasks:** SESSION_0095_TASK_01, SESSION_0095_TASK_02, SESSION_0095_TASK_03
 **Dirstarter docs check:** live docs checked on 2026-05-07
 **Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization, https://dirstarter.com/docs/database/prisma, https://docs.stripe.com/payments/checkout, https://docs.stripe.com/billing/subscriptions/design-an-integration, https://docs.stripe.com/webhooks
-**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Focused webhook tests now prove one-time `PricingPlan.stripePriceId -> EntitlementGrant -> UserEntitlement`, one-time replay/source isolation, `ProgramEnrollment` projection, subscription grant replay, and `customer.subscription.deleted` revoke by subscription source id. The webhook also retries Prisma `P2034` serializable write conflicts so the paid tournament capacity proof remains stable. WORKFLOW score: 9.6/10. No Dirstarter or data-integrity hard cap triggered; MB-013 remains open for launch gaps outside this slice.
+**Verdict:** Aligned. The session extends Dirstarter's Stripe Checkout/webhook and Prisma baseline instead of replacing it. Focused webhook tests now prove one-time `PricingPlan.stripePriceId` creates exactly one PURCHASE `UserEntitlement`, one-time replay/source isolation, `ProgramEnrollment` projection, subscription grant replay, and `customer.subscription.deleted` revoke by subscription source id. The webhook also retries Prisma `P2034` serializable write conflicts so the paid tournament capacity proof remains stable. WORKFLOW score: 9.6/10. No Dirstarter or data-integrity hard cap triggered; MB-013 remains open for launch gaps outside this slice.
 
 #### SESSION_0095_FINDING_01 — Stripe event-id dedupe is still not persisted
 
@@ -1080,13 +1080,13 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Required follow-up:** Continue MB-013 with webhook monitoring/drift audit or manual payment parity before PWCC unless Brian explicitly accepts the risk.
 - **Status:** open
 
-### SESSION_0098_TASK_01 — Bow-in, commit SESSION_0099, Graphify refresh, plan creation
+### SESSION_0100_TASK_01 — Bow-in, commit SESSION_0099, Graphify refresh, plan creation
 
 - **ID:** SESSION_0100_TASK_01
 - **Owner:** Giddy (ops) + Petey (plan)
 - **Session:** SESSION_0100
 - **Date:** 2026-05-08
-- **Done criteria:** SESSION_0099 committed and pushed, Graphify graph current, SESSION_0100 created with Petey plan.
+- **Done criteria:** SESSION_0099 committed and pushed, graph current, SESSION_0100 created with Petey plan.
 - **Status:** landed
 - **What should ship:** Committed SESSION_0099 artifacts, refreshed graph, SESSION_0100 with PWCC plan.
 - **Verification:** `git log --oneline -1` shows SESSION_0099 commit; `graphify-out/GRAPH_REPORT.md` rebuilt; SESSION_0100.md exists.
@@ -1130,3 +1130,43 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 **Dirstarter docs check:** live docs checked on 2026-05-08
 **Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization
 **Verdict:** Planning session only — no code changes. TASK_01 committed and pushed SESSION_0099 cleanly. TASK_02/03 are staged as planned for next execution session. Wiki index and project log updated. JETTY sweep completed.
+
+### SESSION_0101_TASK_01 — PWCC Commerce Port Map document
+
+- **ID:** SESSION_0101_TASK_01
+- **Owner:** Petey + Desi
+- **Session:** SESSION_0101
+- **Date:** 2026-05-08
+- **Done criteria:** `docs/architecture/pwcc-commerce-port-map.md` exists with all commerce verticals classified.
+- **Status:** landed
+- **What should ship:** Port map with 9 commerce verticals, port categories, entitlement keys, naming conventions.
+- **Verification:** File exists with all verticals from affiliate-gear.ts and ubiquitous-language.md covered.
+
+### SESSION_0101_TASK_02 — ADR 0014 Stripe Product Policy
+
+- **ID:** SESSION_0101_TASK_02
+- **Owner:** Petey
+- **Session:** SESSION_0101
+- **Date:** 2026-05-08
+- **Done criteria:** `docs/architecture/decisions/0014-stripe-product-policy.md` exists as draft.
+- **Status:** landed
+- **What should ship:** ADR with 8 policy decisions, Dirstarter proof table, consequences, open questions.
+- **Verification:** ADR file exists, references ADR 0011, PWCC port map, and Dirstarter live docs.
+
+### SESSION_0101_TASK_03 — Full close: wiki, project log, JETTY sweep, commit
+
+- **ID:** SESSION_0101_TASK_03
+- **Owner:** Giddy + Petey
+- **Session:** SESSION_0101
+- **Date:** 2026-05-08
+- **Done criteria:** All closing.md steps completed, SESSION_0101 at closed-full.
+- **Status:** landed
+- **What should ship:** Updated wiki/index.md, project-log.md, wiki-lint pass, committed and pushed.
+- **Verification:** Wiki-lint 0 errors; `grep SESSION_0101 docs/protocols/project-log.md` returns entries; SESSION_0101 has full close evidence.
+
+### SESSION_0101_REVIEW_01 — PWCC port map and ADR 0014 full close
+
+**Reviewed tasks:** SESSION_0101_TASK_01, SESSION_0101_TASK_02, SESSION_0101_TASK_03
+**Dirstarter docs check:** live docs checked on 2026-05-08
+**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization
+**Verdict:** PWCC port map classifies all 9 commerce verticals with clear port categories, entitlement key conventions, and Stripe product naming. ADR 0014 formalizes 8 policy decisions with Dirstarter proof. Both documents cross-reference existing architecture (ADR 0011, monetization spec, security plan). No code changes — planning/docs only. FS-0017 pattern acknowledged and full close executed per closing.md ritual.

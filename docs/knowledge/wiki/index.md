@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-08
 author: Brian + Copilot
-last_agent: copilot-session-0100
+last_agent: copilot-session-0101
 ---
 
 # LLM Wiki Index
@@ -73,6 +73,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Monetization and Entitlements Spec](../../architecture/monetization-entitlements-spec.md) | file | active |
 | [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) | file | active |
 | [Security, Privacy, Payments, and Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md) | file | active |
+| [PWCC Commerce Port Map](../../architecture/pwcc-commerce-port-map.md) | file | active |
 | [Component Porting SOP](../../architecture/component-porting-sop.md) | file | active draft |
 | [Directory Monetization Roadmap Raw Source](../../architecture/source/directory-monetization-roadmap.md) | source | active |
 | [SESSION_0029 Commerce Learning Path Raw Source](../../architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md) | source | active |
@@ -92,6 +93,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0010 Cache Strategy](../../architecture/decisions/0010-cache-strategy.md) | decision | proposed |
 | [ADR 0011 Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
 | [ADR 0012 Admin CRUD Routing Pattern](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
+| [ADR 0014 Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | proposed |
 
 ## Sessions
 
@@ -144,6 +146,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0098](../../sprints/SESSION_0098.md) | session | closed-full |
 | [SESSION_0099](../../sprints/SESSION_0099.md) | session | closed-full |
 | [SESSION_0100](../../sprints/SESSION_0100.md) | session | closed-full |
+| [SESSION_0101](../../sprints/SESSION_0101.md) | session | closed-full |
 
 ## Protocols
 
