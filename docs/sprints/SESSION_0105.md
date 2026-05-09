@@ -169,9 +169,9 @@ Do NOT build: merch checkout flow, Amazon affiliate tracking, inventory manageme
 
 ## Open Decisions / Blockers
 
-- Brian: Product model vs PricingPlan metadata JSON for merch details (see Open Decisions above).
-- Brian: Scope of affiliate product seeding (all ~30+ or category-level only).
-- Brian: Affiliate URL editability from admin.
+- ✅ Brian: Product model vs PricingPlan metadata JSON → **Approved: `metadata Json?` on PricingPlan.**
+- ✅ Brian: Scope of affiliate product seeding → **Approved: All ~30+ TuffBuffs products.**
+- ✅ Brian: Affiliate URL editability from admin → **Approved: Yes, store in metadata JSON, editable from admin.**
 - Carry-forward: ADR 0014 upgrade from `proposed` to `accepted`.
 
 ## Next Session
