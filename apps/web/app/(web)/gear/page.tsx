@@ -16,6 +16,8 @@ import {
   tuffBuffsAffiliateGearCollections,
 } from "~/lib/tuffbuffs/affiliate-gear"
 
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: "Training Gear",
   description: "Amazon affiliate gear links for BJJ, Muay Thai, boxing, Eskrima, and self-defense.",

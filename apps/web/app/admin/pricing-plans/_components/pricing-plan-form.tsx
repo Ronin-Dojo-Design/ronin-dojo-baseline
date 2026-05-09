@@ -27,6 +27,7 @@ import {
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
+import { TextArea } from "~/components/common/textarea"
 import { cx } from "~/lib/utils"
 import { upsertPricingPlan } from "~/server/admin/pricing-plans/actions"
 import type { findPricingPlanById, findOrganizationList, findProgramList } from "~/server/admin/pricing-plans/queries"
@@ -89,6 +90,7 @@ export function PricingPlanForm({
           organizationId: pricingPlan?.organizationId ?? "",
           programId: pricingPlan?.programId ?? "",
           entitlementIds: pricingPlan?.entitlementGrants.map(g => g.entitlementId) ?? [],
+          metadata: pricingPlan?.metadata ? JSON.stringify(pricingPlan.metadata, null, 2) : "",
         },
       },
 
@@ -367,6 +369,31 @@ export function PricingPlanForm({
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
               <FormLabel className="mt-0!">Active</FormLabel>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Metadata JSON */}
+        <FormField
+          control={form.control}
+          name="metadata"
+          render={({ field }) => (
+            <FormItem className="sm:col-span-2">
+              <FormLabel>Metadata (JSON)</FormLabel>
+              <FormControl>
+                <TextArea
+                  placeholder='{"key": "value"}'
+                  rows={6}
+                  className="font-mono text-xs"
+                  {...field}
+                  value={(field.value as string) ?? ""}
+                  onChange={e => {
+                    const raw = e.target.value
+                    field.onChange(raw)
+                  }}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

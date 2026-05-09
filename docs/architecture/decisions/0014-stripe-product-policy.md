@@ -2,10 +2,10 @@
 title: "ADR 0014 — Stripe Product Policy"
 slug: adr-0014-stripe-product-policy
 type: decision
-status: proposed
+status: accepted
 created: 2026-05-08
 updated: 2026-05-08
-last_agent: copilot-session-0103
+last_agent: copilot-session-0106
 pairs_with:
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/pwcc-commerce-port-map.md
@@ -18,14 +18,18 @@ backlinks:
   - docs/sprints/SESSION_0101.md
   - docs/sprints/SESSION_0102.md
   - docs/sprints/SESSION_0103.md
+  - docs/sprints/SESSION_0104.md
+  - docs/sprints/SESSION_0105.md
+  - docs/sprints/SESSION_0106.md
   - docs/knowledge/wiki/index.md
 ---
 
 # ADR 0014 — Stripe Product Policy
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-08
 **Deciders:** Brian + Copilot acting as Petey
+**Accepted:** 2026-05-08 (SESSION_0106). Implementation proved across SESSION_0102 (Stripe product script), SESSION_0103 (22-product inventory), SESSION_0104 (entitlement wiring), SESSION_0105 (merch catalog to DB migration).
 **Related:** ADR 0011, SESSION_0101, PWCC Commerce Port Map
 
 ## Context
