@@ -2,7 +2,7 @@
 title: "SESSION 0100 - PWCC Commerce Port Map and Stripe Product Policy"
 slug: session-0100
 type: session
-status: closed-quick
+status: closed-full
 created: 2026-05-08
 updated: 2026-05-08
 last_agent: copilot-session-0100
@@ -29,7 +29,7 @@ Brian Scott + Copilot acting as Giddy (staging/ops), Petey (planning)
 
 ## Status
 
-closed-quick
+closed-full
 
 ## Goal
 
@@ -189,6 +189,20 @@ TASK_02 and TASK_03 are sequential (TASK_03 depends on TASK_02's classifications
 - No new ADR created this session (research runbook is pre-work for ADR 0014).
 - No new domain terms introduced.
 - Existing ADR 0011 (Entitlement-First Commerce) confirmed as predecessor to ADR 0014.
+
+## Full Close Evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0100.md frontmatter complete; wiki/index.md `last_agent` and `updated` bumped to `copilot-session-0100` / `2026-05-08`; SESSION_0099 status corrected from `in-progress` to `closed-full` in index. |
+| Backlinks/index sweep | Wiki index: SESSION_0100 added, research runbook added to Runbooks section. SESSION_0100 `pairs_with` lists SESSION_0099, SESSION_0098, commerce alignment, security plan. Research runbook `pairs_with` lists ADR 0011, commerce alignment, monetization spec, security plan. |
+| Wiki lint | `bun run wiki:lint` — 0 errors, 3 pre-existing orphan warnings (topic-index.md, tournament-ops.md, dirstarter-uplift-backlog.md). No new warnings introduced. |
+| Kaizen reflection | Planning-only session — no reflections warranted beyond noting the prior close was incomplete. |
+| Hostile close review | SESSION_0100_REVIEW_01 recorded in project-log.md. No code changes; planning artifacts verified. |
+| Review & Recommend | Next session goal written in Next Session section. |
+| Memory sweep | No operator memory update needed — all context is in SESSION file and research runbook. |
+| Next session unblock check | Unblocked for PWCC port map execution. AWS staging proof remains blocked on Brian. |
+| Git hygiene | Branch: main. Committed and pushed. No secrets. No uncommitted changes. |
 
 ## Decisions Resolved
 

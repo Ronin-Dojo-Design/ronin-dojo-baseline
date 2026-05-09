@@ -143,7 +143,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0072](../../sprints/SESSION_0072.md) | session | closed-full |
 | [SESSION_0098](../../sprints/SESSION_0098.md) | session | closed-full |
 | [SESSION_0099](../../sprints/SESSION_0099.md) | session | closed-full |
-| [SESSION_0100](../../sprints/SESSION_0100.md) | session | closed-quick |
+| [SESSION_0100](../../sprints/SESSION_0100.md) | session | closed-full |
 
 ## Protocols
 
