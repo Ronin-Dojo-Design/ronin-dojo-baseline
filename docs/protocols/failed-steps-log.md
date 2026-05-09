@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-05-08
+last_agent: copilot-session-0100
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -354,9 +354,19 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** `grep -c "^### SESSION_0031_5_REVIEW_01" docs/protocols/project-log.md` returns 1
 - **Status:** resolved
 
----
+### FS-0017 — Incomplete bow-out: JETTY sweep, wiki index, project-log gate, and wiki-lint skipped
 
-## Top failure modes — live risk surface
+- **Session:** SESSION_0100 (first close attempt)
+- **Agent:** Copilot
+- **Step failed:** Quick close steps 2 (project-log gate), 3 (JETTY 3.0 sweep + wiki-lint), and wiki index update
+- **SOP source:** `docs/rituals/closing.md` steps 2–3
+- **Root cause:** Agent declared "bowed out" after writing the SESSION file and committing, but skipped: (1) project-log gate — no SESSION_0100 entries existed, (2) JETTY 3.0 sweep — wiki/index.md still showed SESSION_0099 as `in-progress`, (3) wiki-lint was never run, (4) no hostile close review or ADR check recorded. The SESSION file's `What landed` and `Files touched` sections were minimal.
+- **Impact:** Wiki index showed stale status for SESSION_0099. Project log had no record of SESSION_0100. Next bow-in would have found inconsistent state. User caught the skip and requested correction.
+- **Corrective action:**
+  1. Second pass completed all missing steps: wiki index corrected, project-log entries added (4 tasks + 1 review), wiki-lint run (0 errors), JETTY sweep done, hostile close review recorded, full close evidence artifact added.
+  2. SESSION_0100 upgraded from `closed-quick` to `closed-full` with complete evidence.
+- **Verification:** `grep -c SESSION_0100 docs/protocols/project-log.md` returns ≥ 1; `bun run wiki:lint` returns 0 errors; SESSION_0100.md contains Full Close Evidence table.
+- **Status:** resolved
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
@@ -366,9 +376,9 @@ Read this section at bow-in instead of skimming all 16 entries.
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
 
-### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015)
+### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015 → FS-0017)
 
-**3 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09).
+**4 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. FS-0017 skipped project-log gate, JETTY sweep, wiki-lint, and wiki index update in SESSION_0100. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09). Pattern persists across agent contexts.
 
 ### Pattern 3: Governance artifacts drift (FS-0006 → FS-0007)
 
