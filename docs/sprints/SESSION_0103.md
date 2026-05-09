@@ -103,7 +103,7 @@ Extend `setup-ronin-stripe-products.ts` with: (1) missing subscription intervals
 | --- | --- |
 | JETTY/frontmatter sweep | SESSION_0103.md has complete JETTY 3.0 frontmatter. Wiki/index.md `last_agent` bumped to `copilot-session-0103`. |
 | Backlinks/index sweep | Wiki index: SESSION_0103 added. SESSION_0103 `pairs_with` lists SESSION_0102, ADR 0014, PWCC port map. |
-| Wiki lint | `bun run wiki:lint` — to be verified. |
+| Wiki lint | `bun run wiki:lint` — 0 violations found (241 files scanned). |
 | Kaizen reflection | Reflections section present: yes. |
 | Hostile close review | SESSION_0103_REVIEW_01 recorded in project-log.md. |
 | Review & Recommend | Next session goal written: yes. |
