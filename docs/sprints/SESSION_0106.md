@@ -4,7 +4,7 @@ slug: session-0106
 type: session
 status: closed-full
 created: 2026-05-08
-updated: 2026-05-08
+updated: 2026-05-09
 last_agent: copilot-session-0106
 sprint: S3
 pairs_with:
@@ -126,20 +126,22 @@ Change status from `proposed` to `accepted`. Add implementation notes referencin
 
 ## Open Decisions / Blockers
 
-- Carry-forward: Hardcoded catalog removal blocked by `storage/monitoring/queries.ts` dependency and gear page collections import. Future session.
+- ✅ Resolved: Monitoring queries now use DB instead of hardcoded catalogs (TASK_06).
+- Carry-forward: `affiliate-gear.ts` still imported by gear page components for types (`TuffBuffsAffiliateGearProduct`, `TuffBuffsGearCategory`, `TuffBuffsProgramGearKey`), `formatGearPrice`, and `tuffBuffsAffiliateGearCollections`. Future session: extract types/utils to shared module, move collections to DB.
+- Carry-forward: `merch-catalog.ts` no longer imported by monitoring queries. Still used by seed script only. Can be removed when seed uses DB.
 - Carry-forward: Structured metadata sub-form for TuffBuffs keys (affiliateUrl, imagePath, etc.) — nice-to-have, not blocking.
 
 ## Next Session
 
 ### Goal
 
-Browser QA: boot dev server, test admin metadata editor round-trip (edit metadata JSON → save → verify on gear page). Test gear page caching. Begin hardcoded catalog dependency resolution (update monitoring queries to use DB).
+Browser QA: boot dev server, test admin metadata editor round-trip (edit metadata JSON → save → verify on gear page). Test gear page caching. Verify monitoring queries work with DB-sourced asset paths. Evaluate remaining `affiliate-gear.ts` type/function dependencies for extraction.
 
 ### Inputs to read
 
-- `apps/web/server/admin/storage/monitoring/queries.ts` — resolve `tuffBuffsAffiliateGearProducts` + `tuffBuffsMerchProducts` imports
 - `apps/web/components/web/tuffbuffs/affiliate-gear-card.tsx` — verify renders with DB data shape
 - `apps/web/components/web/tuffbuffs/affiliate-gear-browser.tsx` — verify renders with DB data shape
+- `apps/web/lib/tuffbuffs/affiliate-gear.ts` — evaluate which exports (types, `formatGearPrice`, collections) can move to shared util
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — **MANDATORY** if building structured sub-form
 
 ### First task
@@ -157,16 +159,47 @@ Boot dev server, navigate to `/admin/pricing-plans`, open a TuffBuffs product, v
 
 | Step | Proof |
 | --- | --- |
-| JETTY/frontmatter sweep | SESSION_0106.md: status→closed-full, updated→2026-05-08. ADR 0014: status→accepted, updated→2026-05-08, last_agent→copilot-session-0106, backlinks updated. |
-| Backlinks/index sweep | ADR 0014 backlinks updated with SESSION_0104, 0105, 0106. No new wiki pages created. |
-| Wiki lint | Pre-existing MD032/MD055/MD056 warnings in project-log.md and ADR 0014 — not introduced this session. |
-| Kaizen reflection | Reflections section present: yes. Four observations recorded. |
-| Hostile close review | SESSION_0106_REVIEW_01 complete. 8 review questions answered. Kaizen aggregate: 8. No findings logged — FINDING_01 from 0105 resolved. |
-| Review & Recommend | Next session goal written: yes. Inputs + first task specified. |
-| Memory sweep | None needed — no project-wide workflow changes. |
-| Next session unblock check | Unblocked. All code compiles. Next session can execute immediately. |
-| Git hygiene | Pending commit — changes ready to stage. |
+| JETTY/frontmatter sweep | SESSION_0106.md: status→closed-full, updated→2026-05-09. ADR 0014: status→accepted (unchanged from pre-plan). monitoring/queries.ts: no frontmatter (code file). |
+| Backlinks/index sweep | ADR 0014 backlinks unchanged. No new wiki pages created. |
+| Wiki lint | MD032 warnings in SESSION file — pre-existing list formatting, not introduced. |
+| Kaizen reflection | Reflections section present: yes. Four observations from pre-plan + TASK_06 notes appended. |
+| Hostile close review | SESSION_0106_REVIEW_01 complete (pre-plan). TASK_05/06 verified: zero type errors, DB query replaces hardcoded imports. |
+| Review & Recommend | Next session goal written: yes. Browser QA + remaining catalog cleanup. |
+| Memory sweep | None needed — monitoring query refactor is local, no project-wide workflow change. |
+| Next session unblock check | Unblocked. All code compiles. Monitoring queries use DB. |
+| Git hygiene | Branch: main. Changes uncommitted — pending user authorization. |
 
 ## ADR / ubiquitous-language check
 
 ADR 0014 updated: `proposed` → `accepted`. No new ADRs created. No new domain terms introduced.
+
+---
+
+## SESSION_0106 — Continued Execution (2026-05-09)
+
+### Additional Work Performed
+
+**TASK_05 — Verified all TASK_01–04 changes in place.**
+- TASK_01: `export const revalidate = 3600` confirmed at line 19 of `apps/web/app/(web)/gear/page.tsx`
+- TASK_02: `TextArea` import, metadata default value, and metadata JSON field confirmed in `pricing-plan-form.tsx`; `z.union` confirmed in `schema.ts`
+- TASK_03: Catalog dependency audit confirmed — monitoring queries and seed script still import hardcoded catalogs
+- TASK_04: ADR 0014 `status: accepted` confirmed in frontmatter
+
+**TASK_06 — Hardcoded catalog dependency resolution (monitoring queries → DB).**
+Refactored `apps/web/server/admin/storage/monitoring/queries.ts`:
+- Removed imports of `tuffBuffsAffiliateGearProducts` from `affiliate-gear.ts` and `tuffBuffsMerchProducts` from `merch-catalog.ts`
+- Added `import { db } from "~/services/db"`
+- Rewrote `collectTuffBuffsPublicAssetPaths()` from sync (reading hardcoded arrays) to async (querying `PricingPlan.metadata` for `imagePath`/`imagePaths` fields)
+- Updated `getPublicAssetStorageSummary` signature to accept optional `string[]` and await the default
+- Zero type errors after refactor
+- **Result:** `merch-catalog.ts` is no longer imported by any server code outside seed scripts. `affiliate-gear.ts` monitoring import eliminated. Remaining imports are gear page components (types/formatGearPrice) and seed script — both expected, not in scope for removal yet.
+
+### Additional Files Touched
+
+- `apps/web/server/admin/storage/monitoring/queries.ts` — removed hardcoded catalog imports, refactored to query DB via Prisma
+- `docs/sprints/SESSION_0106.md` — appended continued execution notes
+
+### Additional Task Log
+
+- `SESSION_0106_TASK_05` — ✅ complete (verification of TASK_01–04)
+- `SESSION_0106_TASK_06` — ✅ complete (monitoring queries → DB refactor)

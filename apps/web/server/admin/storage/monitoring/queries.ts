@@ -1,8 +1,7 @@
 import { access, stat } from "node:fs/promises"
 import path from "node:path"
 import { env } from "~/env"
-import { tuffBuffsAffiliateGearProducts } from "~/lib/tuffbuffs/affiliate-gear"
-import { tuffBuffsMerchProducts } from "~/lib/tuffbuffs/merch-catalog"
+import { db } from "~/services/db"
 
 const BYTES_PER_GB = 1024 ** 3
 const BYTES_PER_MB = 1024 ** 2
@@ -92,22 +91,29 @@ const defaultUsageScenarios = [
   },
 ] as const satisfies readonly StorageUsageScenarioInput[]
 
-const collectTuffBuffsPublicAssetPaths = () => {
+const collectTuffBuffsPublicAssetPaths = async () => {
+  const plans = await db.pricingPlan.findMany({
+    where: { metadata: { not: undefined } },
+    select: { metadata: true },
+  })
+
   const paths = new Set<string>()
 
-  for (const product of tuffBuffsAffiliateGearProducts) {
-    if (product.imagePath?.startsWith("/")) {
-      paths.add(product.imagePath)
-    }
-  }
+  for (const plan of plans) {
+    const meta = plan.metadata as Record<string, unknown> | null
+    if (!meta) continue
 
-  for (const product of tuffBuffsMerchProducts) {
-    if (product.imagePath.startsWith("/")) {
-      paths.add(product.imagePath)
+    const imagePath = meta.imagePath as string | undefined
+    if (imagePath?.startsWith("/")) {
+      paths.add(imagePath)
     }
-    for (const imagePath of product.imagePaths ?? []) {
-      if (imagePath.startsWith("/")) {
-        paths.add(imagePath)
+
+    const imagePaths = meta.imagePaths as string[] | undefined
+    if (Array.isArray(imagePaths)) {
+      for (const p of imagePaths) {
+        if (p.startsWith("/")) {
+          paths.add(p)
+        }
       }
     }
   }
@@ -134,13 +140,14 @@ const getPublicRoot = async () => {
 }
 
 export const getPublicAssetStorageSummary = async (
-  publicPaths = collectTuffBuffsPublicAssetPaths(),
+  publicPaths?: string[],
 ): Promise<StorageAssetSummary> => {
+  const resolvedPaths = publicPaths ?? (await collectTuffBuffsPublicAssetPaths())
   const publicRoot = await getPublicRoot()
   let localByteTotal = 0
   const missingLocalPaths: string[] = []
 
-  for (const publicPath of publicPaths) {
+  for (const publicPath of resolvedPaths) {
     const localPath = path.join(publicRoot, publicPath.replace(/^\/+/, ""))
 
     try {
@@ -151,10 +158,10 @@ export const getPublicAssetStorageSummary = async (
     }
   }
 
-  const foundCount = publicPaths.length - missingLocalPaths.length
+  const foundCount = resolvedPaths.length - missingLocalPaths.length
 
   return {
-    objectCount: publicPaths.length,
+    objectCount: resolvedPaths.length,
     localByteTotal,
     localGbTotal: localByteTotal / BYTES_PER_GB,
     averageObjectBytes: foundCount > 0 ? localByteTotal / foundCount : 0,
