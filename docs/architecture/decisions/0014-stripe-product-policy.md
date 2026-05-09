@@ -5,7 +5,7 @@ type: decision
 status: proposed
 created: 2026-05-08
 updated: 2026-05-08
-last_agent: copilot-session-0101
+last_agent: copilot-session-0103
 pairs_with:
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/pwcc-commerce-port-map.md
@@ -16,6 +16,8 @@ pairs_with:
   - docs/runbooks/adr-0014-stripe-product-policy-research.md
 backlinks:
   - docs/sprints/SESSION_0101.md
+  - docs/sprints/SESSION_0102.md
+  - docs/sprints/SESSION_0103.md
   - docs/knowledge/wiki/index.md
 ---
 
@@ -68,11 +70,17 @@ All Stripe Product names follow:
 
 | Vertical | Code | Examples |
 | --- | --- | --- |
-| Membership | `membership` | `BMA_membership_monthly`, `BMA_membership_annual` |
-| Program | `program` | `BMA_program_fundamentals_bjj` |
+| Membership | `membership` | `BMA_membership_monthly`, `BMA_membership_quarterly`, `BMA_membership_annual` |
+| Program | `program` | `BMA_program_enrollment_standard`, `BMA_program_enrollment_premium` |
 | Tournament | `tournament` | `BBL_tournament_spring_open_2026_adult_black` |
 | Certificate | `certificate` | `BMA_certificate_bjj_blue_belt` |
+| Course | `course` | `BMA_course_free`, `BMA_course_standard` |
+| Belt Test | `belt_test` | `BMA_belt_test_registration` |
+| Event | `event` | `BMA_event_free`, `BMA_event_paid` |
+| Org/League Fee | `org_fee` | `BMA_org_annual_fee` |
+| Branded Merch | `merch` | `BMA_merch_training_gear`, `BMA_merch_accessories`, `BMA_merch_recovery` |
 | Directory Listing | `directory` | `BMA_directory_listing_premium` |
+| Platform Maintenance | `platform` | `RDD_platform_maintenance_basic`, `RDD_platform_maintenance_pro` |
 | Brand Tier | `tier` | `BBL_tier_premium_monthly` |
 
 ### 3. Product metadata schema
@@ -147,11 +155,15 @@ Brand routing uses `event.data.object.metadata.brand` to scope all database oper
 
 ### 8. Product creation script
 
-Extend Dirstarter's `scripts/setup-stripe-products.ts` pattern. Create `scripts/setup-ronin-stripe-products.ts` that:
-1. Reads `PricingPlan` rows from the database
-2. Creates corresponding Stripe Products and Prices
-3. Writes `stripeProductId` and `stripePriceId` back to `PricingPlan`
-4. Is idempotent (checks for existing products by metadata before creating)
+Extend Dirstarter's `scripts/setup-stripe-products.ts` pattern. Created `scripts/setup-ronin-stripe-products.ts` that:
+1. Defines products per brand using parameterized `getSharedProducts(brand, code)` + brand-specific extensions (e.g., `getRddProducts()`)
+2. Creates corresponding Stripe Products and Prices via Stripe SDK
+3. Is idempotent (checks for existing products by name before creating)
+4. Supports `--brand BMA|RDD` filter to target a single brand
+5. Supports `--dry-run` to preview all products without Stripe API calls
+6. Future: DB-driven mode that reads `PricingPlan` rows and writes `stripeProductId`/`stripePriceId` back
+
+**Current product inventory (SESSION_0103):** 22 products — 20 shared per brand (membership ×3, program ×3, course ×2, tournament, certificate, belt test, event ×2, org fee, merch ×3, directory ×3) + 2 RDD-only (platform maintenance basic/pro). All subscription-eligible verticals have monthly, quarterly (3-month), and annual pricing.
 
 ## Dirstarter Docs Proof
 
