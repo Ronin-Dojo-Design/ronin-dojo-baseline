@@ -46,6 +46,7 @@ export const pricingPlanSchema = z.object({
   organizationId: z.string().min(1, "Organization is required"),
   programId: z.string().optional().nullable(),
   entitlementIds: z.array(z.string()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 })
 
 export type PricingPlanSchema = z.infer<typeof pricingPlanSchema>

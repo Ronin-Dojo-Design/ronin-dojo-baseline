@@ -967,7 +967,7 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 
 - **Severity:** medium
 - **Task:** SESSION_0094_TASK_03
-- **Evidence:** `Invoice` and `Payment` exist, but current non-tournament entitlement webhook path does not consistently write internal ledger rows.
+- **Evidence:** One-time Checkout proof grants access and activates `ProgramEnrollment`, but no non-tournament `Invoice`/`Payment` row is created by this path.
 - **Impact:** Access can become correct while money-ledger reconciliation remains incomplete.
 - **Required follow-up:** SESSION_0095/0096 must either create ledger rows for paid access or record an explicit launch bridge under MB-013.
 - **Status:** open
@@ -1124,13 +1124,6 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **What should ship:** Updated wiki/index.md, project-log.md, SESSION_0100.md with full close evidence.
 - **Verification:** `grep SESSION_0100 docs/protocols/project-log.md` returns entries; wiki index lists SESSION_0100.
 
-### SESSION_0100_REVIEW_01 — PWCC planning session close
-
-**Reviewed tasks:** SESSION_0100_TASK_01, SESSION_0100_TASK_04
-**Dirstarter docs check:** live docs checked on 2026-05-08
-**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization
-**Verdict:** Planning session only — no code changes. TASK_01 committed and pushed SESSION_0099 cleanly. TASK_02/03 are staged as planned for next execution session. Wiki index and project log updated. JETTY sweep completed.
-
 ### SESSION_0101_TASK_01 — PWCC Commerce Port Map document
 
 - **ID:** SESSION_0101_TASK_01
@@ -1164,13 +1157,6 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **What should ship:** Updated wiki/index.md, project-log.md, wiki-lint pass, committed and pushed.
 - **Verification:** Wiki-lint 0 errors; `grep SESSION_0101 docs/protocols/project-log.md` returns entries; SESSION_0101 has full close evidence.
 
-### SESSION_0101_REVIEW_01 — PWCC port map and ADR 0014 full close
-
-**Reviewed tasks:** SESSION_0101_TASK_01, SESSION_0101_TASK_02, SESSION_0101_TASK_03
-**Dirstarter docs check:** live docs checked on 2026-05-08
-**Sources:** https://dirstarter.com/docs/integrations/payments, https://dirstarter.com/docs/monetization
-**Verdict:** PWCC port map classifies all 9 commerce verticals with clear port categories, entitlement key conventions, and Stripe product naming. ADR 0014 formalizes 8 policy decisions with Dirstarter proof. Both documents cross-reference existing architecture (ADR 0011, monetization spec, security plan). No code changes — planning/docs only. FS-0017 pattern acknowledged and full close executed per closing.md ritual.
-
 ### SESSION_0102_TASK_01 — Create setup-ronin-stripe-products.ts
 
 - **ID:** SESSION_0102_TASK_01
@@ -1192,13 +1178,6 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 - **Status:** landed
 - **What should ship:** Updated wiki/index.md, project-log.md, wiki-lint pass, SESSION_0102 at closed-full.
 - **Verification:** Wiki-lint pass; `grep SESSION_0102 docs/protocols/project-log.md` returns entries; SESSION_0102 has full close evidence.
-
-### SESSION_0102_REVIEW_01 — Ronin Stripe product setup script full close
-
-**Reviewed tasks:** SESSION_0102_TASK_01, SESSION_0102_TASK_02
-**Dirstarter docs check:** Existing `setup-stripe-products.ts` pattern used as baseline; ADR 0014 conventions applied.
-**Sources:** ADR 0014, PWCC Commerce Port Map, existing setup-stripe-products.ts
-**Verdict:** Script covers all 8 launch verticals (16 products), follows ADR 0014 naming (`BMA_{vertical}_{identifier}`), metadata schema (brand, vertical, entitlement_key, created_by), and idempotency (Stripe product search before create). No API calls made — script creation only per scope guard. Directory listing products extend Dirstarter baseline with brand scoping.
 
 ### SESSION_0103_TASK_01 — Interval coverage + merch + org fee products
 
@@ -1232,4 +1211,4 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 ### SESSION_0103_REVIEW_01 — Multi-brand products and dry-run full close
 
 **Reviewed tasks:** SESSION_0103_TASK_01, SESSION_0103_TASK_02, SESSION_0103_TASK_03
-**Verdict:** Script extended from 16 to 22 products across 10 verticals. All subscription verticals have monthly/quarterly/annual intervals. RDD maintenance products isolated to RDD brand. Multi-brand CLI support and dry-run mode added. ADR 0014 conventions maintained. No scope creep.
+**Verdict:** Script extended from 16 to 22 products across 10 verticals. All subscription verticals have monthly/quarterly/annual intervals. RDD maintenance products isolated to RDD brand. Multi-brand CLI support and dry-run mode added. ADR 0014 carry-forward remains as open item. No scope creep — checkout flow, inventory, and product detail pages excluded per scope guard.

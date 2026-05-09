@@ -1378,6 +1378,7 @@ model PricingPlan {
   sortOrder       Int          @default(0)
   stripeProductId String?
   stripePriceId   String?
+  metadata        Json?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 

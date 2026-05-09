@@ -1,6 +1,7 @@
 "use server"
 
 import { after } from "next/server"
+import type { Prisma } from "~/.generated/prisma/client"
 import { getRequestBrand } from "~/lib/brand-context"
 import { adminActionClient } from "~/lib/safe-actions"
 import { pricingPlanSchema } from "~/server/admin/pricing-plans/schema"
@@ -8,7 +9,7 @@ import { idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertPricingPlan = adminActionClient
   .inputSchema(pricingPlanSchema)
-  .action(async ({ parsedInput: { id, entitlementIds, ...input }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { id, entitlementIds, metadata, ...input }, ctx: { db, revalidate } }) => {
     const brand = await getRequestBrand()
 
     const pricingPlan = id
@@ -28,6 +29,7 @@ export const upsertPricingPlan = adminActionClient
             stripePriceId: input.stripePriceId ?? null,
             organizationId: input.organizationId,
             programId: input.programId ?? null,
+            metadata: (metadata as Prisma.InputJsonValue) ?? undefined,
           },
         })
       : await db.pricingPlan.create({
@@ -46,6 +48,7 @@ export const upsertPricingPlan = adminActionClient
             stripePriceId: input.stripePriceId ?? null,
             organizationId: input.organizationId,
             programId: input.programId ?? null,
+            metadata: (metadata as Prisma.InputJsonValue) ?? undefined,
           },
         })
 
