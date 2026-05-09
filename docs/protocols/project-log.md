@@ -1199,3 +1199,37 @@ E2E infrastructure sprint complete. 12/12 tests green. Better-Auth cookie signin
 **Dirstarter docs check:** Existing `setup-stripe-products.ts` pattern used as baseline; ADR 0014 conventions applied.
 **Sources:** ADR 0014, PWCC Commerce Port Map, existing setup-stripe-products.ts
 **Verdict:** Script covers all 8 launch verticals (16 products), follows ADR 0014 naming (`BMA_{vertical}_{identifier}`), metadata schema (brand, vertical, entitlement_key, created_by), and idempotency (Stripe product search before create). No API calls made — script creation only per scope guard. Directory listing products extend Dirstarter baseline with brand scoping.
+
+### SESSION_0103_TASK_01 — Interval coverage + merch + org fee products
+
+- **ID:** SESSION_0103_TASK_01
+- **Owner:** Cody
+- **Session:** SESSION_0103
+- **Date:** 2026-05-08
+- **Done criteria:** Membership quarterly, program/course subscription intervals, org fee, and merch products added.
+- **Status:** landed
+- **Verification:** 20 shared products with monthly/quarterly/annual intervals on all subscription-eligible verticals.
+
+### SESSION_0103_TASK_02 — RDD maintenance + multi-brand + dry-run
+
+- **ID:** SESSION_0103_TASK_02
+- **Owner:** Cody
+- **Session:** SESSION_0103
+- **Date:** 2026-05-08
+- **Done criteria:** RDD maintenance basic/pro products, --brand filter, --dry-run flag.
+- **Status:** landed
+- **Verification:** 22 total products (20 shared + 2 RDD-only). --dry-run previews without API calls. --brand filters by brand code.
+
+### SESSION_0103_TASK_03 — Full close
+
+- **ID:** SESSION_0103_TASK_03
+- **Owner:** Giddy + Petey
+- **Session:** SESSION_0103
+- **Date:** 2026-05-08
+- **Done criteria:** All closing.md steps completed.
+- **Status:** landed
+
+### SESSION_0103_REVIEW_01 — Multi-brand products and dry-run full close
+
+**Reviewed tasks:** SESSION_0103_TASK_01, SESSION_0103_TASK_02, SESSION_0103_TASK_03
+**Verdict:** Script extended from 16 to 22 products across 10 verticals. All subscription verticals have monthly/quarterly/annual intervals. RDD maintenance products isolated to RDD brand. Multi-brand CLI support and dry-run mode added. ADR 0014 conventions maintained. No scope creep.

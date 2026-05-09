@@ -5,22 +5,41 @@ import { stripe } from "~/services/stripe"
  * setup-ronin-stripe-products.ts
  *
  * Idempotent Stripe product creation script following ADR 0014 policy.
- * Creates products for Baseline Martial Arts launch verticals with:
+ * Creates products for Ronin Dojo platform brands with:
  *   - Naming: {BRAND_CODE}_{vertical}_{identifier}
  *   - Metadata: brand, vertical, entitlement_key, created_by
  *   - Idempotency: checks existing products by name before creating
  *
- * Usage: bun run apps/web/scripts/setup-ronin-stripe-products.ts
+ * Usage:
+ *   bun run apps/web/scripts/setup-ronin-stripe-products.ts              # all brands
+ *   bun run apps/web/scripts/setup-ronin-stripe-products.ts --brand BMA  # one brand
+ *   bun run apps/web/scripts/setup-ronin-stripe-products.ts --dry-run    # preview only
+ *
  * NOTE: Requires STRIPE_SECRET_KEY in environment.
  *
  * @see docs/architecture/decisions/0014-stripe-product-policy.md
  * @see docs/architecture/pwcc-commerce-port-map.md
  */
 
+// ── CLI args ──
+
+const args = process.argv.slice(2)
+const DRY_RUN = args.includes("--dry-run")
+const brandFilter = args.includes("--brand")
+  ? args[args.indexOf("--brand") + 1]?.toUpperCase()
+  : null
+
 // ── Brand codes (ADR 0014 §2) ──
 
-const BRAND = "BASELINE_MARTIAL_ARTS" as const
-const BRAND_CODE = "BMA" as const
+type BrandConfig = {
+  brand: string
+  code: string
+}
+
+const BRANDS: BrandConfig[] = [
+  { brand: "BASELINE_MARTIAL_ARTS", code: "BMA" },
+  { brand: "RONIN_DOJO_DESIGN", code: "RDD" },
+]
 
 // ── Types ──
 
@@ -31,7 +50,7 @@ interface RoninProductDef {
   active: boolean
   /** ADR 0014 §3 metadata */
   metadata: {
-    brand: typeof BRAND
+    brand: string
     vertical: string
     entitlement_key: string
     created_by: "script"
@@ -58,7 +77,10 @@ interface RoninProductDef {
 
 // ── Product definitions (ADR 0014 naming + PWCC port map verticals) ──
 
-const products: RoninProductDef[] = [
+// ── Shared product definitions (parameterized by brand) ──
+
+function getSharedProducts(BRAND: string, BRAND_CODE: string): RoninProductDef[] {
+  return [
   // ── Vertical 2: Organization Membership Dues (Stripe Subscription) ──
   {
     name: `${BRAND_CODE}_membership_monthly`,
@@ -578,7 +600,97 @@ const products: RoninProductDef[] = [
       },
     ],
   },
-]
+  ]
+}
+
+// ── RDD-only products (whitelabel maintenance packages) ──
+
+function getRddProducts(): RoninProductDef[] {
+  const BRAND = "RONIN_DOJO_DESIGN"
+  const BRAND_CODE = "RDD"
+  return [
+    {
+      name: `${BRAND_CODE}_platform_maintenance_basic`,
+      description: "Basic whitelabel maintenance — hosting, platform updates, and email support.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "platform",
+        entitlement_key: "platform:maintenance:basic",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Platform hosting" },
+        { name: "✓ Monthly template updates" },
+        { name: "✓ Email support (48h response)" },
+        { name: "✓ SSL certificate included" },
+        { name: "✗ No priority support" },
+      ],
+      default_price_data: {
+        unit_amount: 9900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      additional_prices: [
+        {
+          unit_amount: 27900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+        {
+          unit_amount: 99900,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
+    },
+    {
+      name: `${BRAND_CODE}_platform_maintenance_pro`,
+      description: "Pro whitelabel maintenance — priority support, custom domain, and advanced config.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "platform",
+        entitlement_key: "platform:maintenance:pro",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Platform hosting" },
+        { name: "✓ Weekly template updates" },
+        { name: "✓ Priority support (12h response)" },
+        { name: "✓ Custom domain setup" },
+        { name: "✓ Advanced configuration" },
+      ],
+      default_price_data: {
+        unit_amount: 24900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      additional_prices: [
+        {
+          unit_amount: 69900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+        {
+          unit_amount: 249900,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
+    },
+  ]
+}
+
+// ── Build product list for a brand ──
+
+function getProductsForBrand(brandConfig: BrandConfig): RoninProductDef[] {
+  const shared = getSharedProducts(brandConfig.brand, brandConfig.code)
+  if (brandConfig.code === "RDD") {
+    return [...shared, ...getRddProducts()]
+  }
+  return shared
+}
 
 // ── Idempotent creation logic ──
 
@@ -590,46 +702,77 @@ async function findExistingProduct(name: string): Promise<Stripe.Product | null>
 }
 
 async function main() {
-  console.log(`🥋 Setting up Ronin Stripe products for ${BRAND}...`)
-  console.log(`   Products to process: ${products.length}`)
-  console.log()
+  const activeBrands = brandFilter
+    ? BRANDS.filter((b) => b.code === brandFilter)
+    : BRANDS
 
-  let created = 0
-  let skipped = 0
-
-  for (const productDef of products) {
-    const existing = await findExistingProduct(productDef.name)
-
-    if (existing) {
-      console.log(`⏭️  Skipped (exists): ${productDef.name} [${existing.id}]`)
-      skipped++
-      continue
-    }
-
-    // Create the product with default price
-    const { additional_prices, ...createParams } = productDef
-    const product = await stripe.products.create(createParams)
-    console.log(`✅ Created: ${productDef.name} [${product.id}]`)
-
-    // Create additional prices if defined
-    if (additional_prices) {
-      for (const priceData of additional_prices) {
-        const price = await stripe.prices.create({
-          ...priceData,
-          product: product.id,
-          metadata: {
-            currency: priceData.currency,
-          },
-        })
-        console.log(`   └─ Additional price: ${price.id} (${priceData.recurring?.interval ?? "one-time"})`)
-      }
-    }
-
-    created++
+  if (activeBrands.length === 0) {
+    console.error(`❌ Unknown brand code: ${brandFilter}. Available: ${BRANDS.map((b) => b.code).join(", ")}`)
+    process.exit(1)
   }
 
-  console.log()
-  console.log(`🎉 Done! Created: ${created}, Skipped: ${skipped}, Total: ${products.length}`)
+  if (DRY_RUN) {
+    console.log("🏜️  DRY RUN — no Stripe API calls will be made.\n")
+  }
+
+  let totalCreated = 0
+  let totalSkipped = 0
+  let totalProducts = 0
+
+  for (const brandConfig of activeBrands) {
+    const products = getProductsForBrand(brandConfig)
+    totalProducts += products.length
+
+    console.log(`🥋 ${brandConfig.brand} (${brandConfig.code}) — ${products.length} products`)
+    console.log()
+
+    for (const productDef of products) {
+      if (DRY_RUN) {
+        console.log(`   🔍 Would create: ${productDef.name}`)
+        if (productDef.additional_prices?.length) {
+          for (const p of productDef.additional_prices) {
+            console.log(`      └─ Additional price: $${(p.unit_amount / 100).toFixed(2)} (${p.recurring?.interval ?? "one-time"})`)
+          }
+        }
+        totalCreated++
+        continue
+      }
+
+      const existing = await findExistingProduct(productDef.name)
+
+      if (existing) {
+        console.log(`   ⏭️  Skipped (exists): ${productDef.name} [${existing.id}]`)
+        totalSkipped++
+        continue
+      }
+
+      // Create the product with default price
+      const { additional_prices, ...createParams } = productDef
+      const product = await stripe.products.create(createParams)
+      console.log(`   ✅ Created: ${productDef.name} [${product.id}]`)
+
+      // Create additional prices if defined
+      if (additional_prices) {
+        for (const priceData of additional_prices) {
+          const price = await stripe.prices.create({
+            ...priceData,
+            product: product.id,
+            metadata: {
+              currency: priceData.currency,
+            },
+          })
+          console.log(`      └─ Additional price: ${price.id} (${priceData.recurring?.interval ?? "one-time"})`)
+        }
+      }
+
+      totalCreated++
+    }
+
+    console.log()
+  }
+
+  const mode = DRY_RUN ? "Would create" : "Created"
+  console.log(`🎉 Done! ${mode}: ${totalCreated}, Skipped: ${totalSkipped}, Total: ${totalProducts}`)
 }
 
 main().catch((error) => {
