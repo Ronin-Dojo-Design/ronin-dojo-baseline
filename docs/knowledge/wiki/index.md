@@ -53,6 +53,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [PWCC Discovery Command Center](component-porting/plawywright-component-conversion-method/PWCC-discovery-command-center.md) | concept | active |
 | [Simple Playwright Component Port Pipeline](component-porting/plawywright-component-conversion-method/simple-pipeline.md) | concept | active |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
+| [Topic Index](topic-index.md) | index | active |
+| [Tournament Operations](concepts/tournament-ops.md) | concept | active |
+| [Dirstarter Uplift Backlog](dirstarter-uplift-backlog.md) | backlog | active |
 
 ## Architecture
 
