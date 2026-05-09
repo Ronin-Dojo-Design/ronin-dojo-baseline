@@ -36,11 +36,20 @@ Dirstarter's baseline is simple: three listing-tier products (Free/Standard/Prem
 
 ## Decision
 
-### 1. Platform-level Stripe account (not Connect per org) for launch
+### 1. Platform-level Stripe account (not Connect per org) for Baseline launch
 
-The platform owns one Stripe account. Organizations do not get individual Stripe Connect accounts at launch. Revenue splitting is handled internally via the existing `StripeAccount` + `PayoutSplit` schema, activated post-launch.
+The platform owns one Stripe account for the Baseline Martial Arts launch. Organizations do not get individual Stripe Connect accounts at Baseline launch.
 
-**Rationale:** Stripe Connect adds onboarding friction, KYC complexity, and payout delays. For launch with one active brand (Baseline), a single platform account is sufficient. Connect is a future upgrade when multi-org revenue splitting is needed.
+**Brand-specific Connect plan (signed off 2026-05-08):**
+
+| Brand | Stripe Model | Rationale |
+| --- | --- | --- |
+| Baseline Martial Arts | Platform-level account (no Connect) | Prototype school site; Connect added later before whitelabel |
+| BBL | Individual Stripe Connect account | Separate revenue stream and banking |
+| WEKAF | Individual Stripe Connect account (likely) | Separate revenue stream and banking |
+| Ronin Dojo Design | Platform/umbrella account | Baseline template whitelabeled with Connect before RDD clients use it |
+
+**Sequencing:** Baseline proves all commerce flows on a single platform account. Connect is added to the Baseline template before it becomes the whitelabel product for Ronin Dojo Design school clients. BBL and WEKAF each get Connect accounts when their brands port. The existing `StripeAccount` + `PayoutSplit` schema supports this progression.
 
 ### 2. Product naming convention
 
@@ -182,4 +191,4 @@ Extend Dirstarter's `scripts/setup-stripe-products.ts` pattern. Create `scripts/
 
 1. **Tournament fee model:** One Stripe Product per tournament (with Division fees as line items), or one Product per Division? Recommendation: per-tournament with line items.
 2. **Certificate pricing:** Flat fee per certificate type, or variable based on rank level? Recommendation: flat fee per template initially.
-3. **Connect timeline:** When does org-level Stripe Connect become necessary? Recommendation: post-launch, when second org onboards with separate banking.
+3. ~~**Connect timeline:**~~ **Resolved 2026-05-08.** Baseline launches without Connect; Connect added before whitelabel. BBL and WEKAF get individual Connect accounts at port time.
