@@ -1,4 +1,6 @@
+import { PrismaPg } from "@prisma/adapter-pg"
 import type { Stripe } from "stripe"
+import { PrismaClient } from "~/.generated/prisma/client"
 import { stripe } from "~/services/stripe"
 
 /**
@@ -25,6 +27,7 @@ import { stripe } from "~/services/stripe"
 
 const args = process.argv.slice(2)
 const DRY_RUN = args.includes("--dry-run")
+const FROM_DB = args.includes("--from-db")
 const brandFilter = args.includes("--brand")
   ? args[args.indexOf("--brand") + 1]?.toUpperCase()
   : null
@@ -701,7 +704,128 @@ async function findExistingProduct(name: string): Promise<Stripe.Product | null>
   return existing.data[0] ?? null
 }
 
+// ── DB-driven mode ──
+
+const BRAND_ENUM_MAP: Record<string, string> = {
+  BMA: "BASELINE_MARTIAL_ARTS",
+  RDD: "RONIN_DOJO_DESIGN",
+}
+
+const BRAND_CODE_MAP: Record<string, string> = {
+  BASELINE_MARTIAL_ARTS: "BMA",
+  RONIN_DOJO_DESIGN: "RDD",
+}
+
+async function runFromDb() {
+  const adapter = new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  })
+  const db = new PrismaClient({ adapter })
+
+  try {
+    const brandEnumValue = brandFilter ? BRAND_ENUM_MAP[brandFilter] : undefined
+
+    const plans = await db.pricingPlan.findMany({
+      where: {
+        ...(brandEnumValue ? { brand: brandEnumValue as any } : {}),
+        stripeProductId: null,
+        isActive: true,
+      },
+      include: { organization: { select: { name: true } } },
+      orderBy: [{ brand: "asc" }, { name: "asc" }],
+    })
+
+    if (plans.length === 0) {
+      console.log("✅ No unlinked PricingPlan rows found. All plans already have Stripe products.")
+      return
+    }
+
+    console.log(`📦 Found ${plans.length} PricingPlan rows without Stripe products.\n`)
+
+    let created = 0
+    let skipped = 0
+
+    for (const plan of plans) {
+      const brandCode = BRAND_CODE_MAP[plan.brand] ?? plan.brand
+      // Build ADR 0014-style product name
+      const slugName = plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "")
+      const productName = `${brandCode}_db_${slugName}`
+
+      const isRecurring = plan.intervalMonths !== null && plan.intervalMonths > 0
+      const interval: "month" | "year" = plan.intervalMonths === 12 ? "year" : "month"
+      const intervalCount = plan.intervalMonths === 12 ? 1 : (plan.intervalMonths ?? 1)
+
+      if (DRY_RUN) {
+        console.log(`   🔍 Would create: ${productName} ($${(plan.amountCents / 100).toFixed(2)}, ${isRecurring ? `${plan.intervalMonths}mo` : "one-time"})`)
+        console.log(`      └─ PricingPlan ID: ${plan.id} → will write back stripeProductId + stripePriceId`)
+        created++
+        continue
+      }
+
+      // Check if Stripe product already exists
+      const existing = await findExistingProduct(productName)
+      if (existing) {
+        // Write back IDs even if product exists
+        const defaultPrice = typeof existing.default_price === "string" ? existing.default_price : existing.default_price?.id
+        await db.pricingPlan.update({
+          where: { id: plan.id },
+          data: {
+            stripeProductId: existing.id,
+            stripePriceId: defaultPrice ?? null,
+          },
+        })
+        console.log(`   ⏭️  Linked existing: ${productName} [${existing.id}] → PricingPlan ${plan.id}`)
+        skipped++
+        continue
+      }
+
+      // Create Stripe product
+      const productParams: Stripe.ProductCreateParams = {
+        name: productName,
+        description: plan.name,
+        active: true,
+        metadata: {
+          brand: plan.brand,
+          pricing_plan_id: plan.id,
+          created_by: "script:from-db",
+        },
+        default_price_data: {
+          unit_amount: plan.amountCents,
+          currency: "usd",
+          ...(isRecurring ? { recurring: { interval, interval_count: intervalCount } } : {}),
+        },
+      }
+
+      const product = await stripe.products.create(productParams)
+
+      // Write back to DB
+      const defaultPriceId = typeof product.default_price === "string" ? product.default_price : product.default_price?.id
+      await db.pricingPlan.update({
+        where: { id: plan.id },
+        data: {
+          stripeProductId: product.id,
+          stripePriceId: defaultPriceId ?? null,
+        },
+      })
+
+      console.log(`   ✅ Created: ${productName} [${product.id}] → PricingPlan ${plan.id}`)
+      created++
+    }
+
+    const mode = DRY_RUN ? "Would create" : "Created"
+    console.log(`\n🎉 Done! ${mode}: ${created}, Linked existing: ${skipped}, Total: ${plans.length}`)
+  } finally {
+    await db.$disconnect()
+  }
+}
+
 async function main() {
+  if (FROM_DB) {
+    console.log("📂 Running in DB-driven mode (--from-db)\n")
+    return runFromDb()
+  }
+
   const activeBrands = brandFilter
     ? BRANDS.filter((b) => b.code === brandFilter)
     : BRANDS
