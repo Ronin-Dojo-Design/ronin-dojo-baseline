@@ -84,6 +84,29 @@ const products: RoninProductDef[] = [
     },
   },
   {
+    name: `${BRAND_CODE}_membership_quarterly`,
+    description: "Quarterly school membership — save 5% vs monthly, billed every 3 months.",
+    active: true,
+    metadata: {
+      brand: BRAND,
+      vertical: "membership",
+      entitlement_key: "membership:org:active",
+      created_by: "script",
+    },
+    marketing_features: [
+      { name: "✓ Unlimited class attendance" },
+      { name: "✓ Online scheduling" },
+      { name: "✓ Progress tracking" },
+      { name: "✓ Belt testing eligibility" },
+      { name: "✓ 5% savings vs monthly" },
+    ],
+    default_price_data: {
+      unit_amount: 42500,
+      currency: "usd",
+      recurring: { interval: "month", interval_count: 3 },
+    },
+  },
+  {
     name: `${BRAND_CODE}_membership_annual`,
     description: "Annual school membership — save over 15% compared to monthly.",
     active: true,
@@ -151,6 +174,23 @@ const products: RoninProductDef[] = [
       unit_amount: 4900,
       currency: "usd",
     },
+    additional_prices: [
+      {
+        unit_amount: 4900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      {
+        unit_amount: 13900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 3 },
+      },
+      {
+        unit_amount: 49900,
+        currency: "usd",
+        recurring: { interval: "year", interval_count: 1 },
+      },
+    ],
   },
   {
     name: `${BRAND_CODE}_program_enrollment_premium`,
@@ -173,6 +213,23 @@ const products: RoninProductDef[] = [
       unit_amount: 9900,
       currency: "usd",
     },
+    additional_prices: [
+      {
+        unit_amount: 9900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      {
+        unit_amount: 27900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 3 },
+      },
+      {
+        unit_amount: 99900,
+        currency: "usd",
+        recurring: { interval: "year", interval_count: 1 },
+      },
+    ],
   },
 
   // ── Vertical 4: Tournament Registration (Stripe One-Time) ──
@@ -263,6 +320,23 @@ const products: RoninProductDef[] = [
       unit_amount: 2900,
       currency: "usd",
     },
+    additional_prices: [
+      {
+        unit_amount: 2900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      {
+        unit_amount: 7900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 3 },
+      },
+      {
+        unit_amount: 29900,
+        currency: "usd",
+        recurring: { interval: "year", interval_count: 1 },
+      },
+    ],
   },
 
   // ── Vertical 7: Belt Test Registration (Stripe One-Time) ──
@@ -327,6 +401,104 @@ const products: RoninProductDef[] = [
     ],
     default_price_data: {
       unit_amount: 4900,
+      currency: "usd",
+    },
+  },
+
+  // ── Vertical: Org/League Annual Fee (Stripe Subscription) ──
+  {
+    name: `${BRAND_CODE}_org_annual_fee`,
+    description: "Annual organization or league affiliation fee.",
+    active: true,
+    metadata: {
+      brand: BRAND,
+      vertical: "org_fee",
+      entitlement_key: "org:affiliation:active",
+      created_by: "script",
+    },
+    marketing_features: [
+      { name: "✓ Organization listing in directory" },
+      { name: "✓ Tournament sanctioning eligibility" },
+      { name: "✓ Member rank verification" },
+      { name: "✓ Platform admin tools" },
+    ],
+    default_price_data: {
+      unit_amount: 29900,
+      currency: "usd",
+      recurring: { interval: "year", interval_count: 1 },
+    },
+    additional_prices: [
+      {
+        unit_amount: 2900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
+      {
+        unit_amount: 7900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 3 },
+      },
+    ],
+  },
+
+  // ── Vertical: Branded Merch (Stripe One-Time / Stripe + Fulfillment) ──
+  {
+    name: `${BRAND_CODE}_merch_training_gear`,
+    description: "Training gear — gi, rash guards, shorts, gloves, and protective equipment.",
+    active: true,
+    metadata: {
+      brand: BRAND,
+      vertical: "merch",
+      entitlement_key: "merch:order:training",
+      created_by: "script",
+    },
+    marketing_features: [
+      { name: "✓ Quality training equipment" },
+      { name: "✓ School-approved gear" },
+      { name: "✓ Ships direct" },
+    ],
+    default_price_data: {
+      unit_amount: 5999,
+      currency: "usd",
+    },
+  },
+  {
+    name: `${BRAND_CODE}_merch_accessories`,
+    description: "Accessories — bags, water bottles, wraps, tape, and training aids.",
+    active: true,
+    metadata: {
+      brand: BRAND,
+      vertical: "merch",
+      entitlement_key: "merch:order:accessories",
+      created_by: "script",
+    },
+    marketing_features: [
+      { name: "✓ Essential training accessories" },
+      { name: "✓ School-branded options available" },
+      { name: "✓ Ships direct" },
+    ],
+    default_price_data: {
+      unit_amount: 2499,
+      currency: "usd",
+    },
+  },
+  {
+    name: `${BRAND_CODE}_merch_recovery`,
+    description: "Recovery gear — foam rollers, massage tools, supplements, and rehab aids.",
+    active: true,
+    metadata: {
+      brand: BRAND,
+      vertical: "merch",
+      entitlement_key: "merch:order:recovery",
+      created_by: "script",
+    },
+    marketing_features: [
+      { name: "✓ Recovery and conditioning tools" },
+      { name: "✓ Instructor-recommended" },
+      { name: "✓ Ships direct" },
+    ],
+    default_price_data: {
+      unit_amount: 2999,
       currency: "usd",
     },
   },
