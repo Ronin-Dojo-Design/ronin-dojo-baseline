@@ -52,7 +52,7 @@ Do not use it for tiny, obvious, single-file work.
 Prefer the local CLI if available:
 
 ```bash
-graphify update .
+GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 graphify query "brand context admin authorization tournament registration" --budget 2000
 graphify benchmark graphify-out/graph.json
 open graphify-out/graph.html
@@ -90,6 +90,12 @@ If stale and the task depends on current code, refresh:
 
 ```bash
 graphify update .
+```
+
+If the graph exceeds the default HTML viz node limit (5000), set the env var:
+
+```bash
+GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
 If Graphify is not installed, do not block the session. Use the wiki index and normal file search.

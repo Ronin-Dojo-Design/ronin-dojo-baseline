@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-05-09
+last_agent: copilot-session-0106
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -111,6 +111,16 @@ Before committing:
 5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
 
 If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
+
+### 4b. Graphify update (if installed)
+
+If the session touched code files and Graphify is installed locally, refresh the repo graph so the next bow-in starts with a current graph:
+
+```bash
+GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
+```
+
+Skip if Graphify is not installed or if the session only touched docs. Record the node/edge count in the SESSION file if you run it. See [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) for full usage.
 
 ### 5. Bow-out line
 
@@ -224,6 +234,7 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning for staging the next session at bow-out.
 - [Review & Recommend protocol](../protocols/review-recommend.md) — the review + next-target recommendation cycle run at full close.
+- [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — local repo graph for cross-domain navigation.
 
 ---
 
