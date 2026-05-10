@@ -1,12 +1,14 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
-import { tuffBuffsAffiliateGearCollections } from "~/lib/tuffbuffs/affiliate-gear"
+import type { TuffBuffsAffiliateGearCollection } from "~/types/tuffbuffs-gear"
 
 /**
  * seed-gear-recommendations.ts
  *
  * Seeds GearRecommendation rows linking Disciplines to PricingPlans (gear products).
- * Maps the hardcoded tuffBuffsAffiliateGearCollections data into DB rows.
+ *
+ * Collection data is self-contained in this file (Phase 3 extraction — SESSION_0110).
+ * Previously imported from ~/lib/tuffbuffs/affiliate-gear.ts.
  *
  * Prerequisites: seed-tuffbuffs-affiliate.ts must have run first (PricingPlan rows exist).
  *
@@ -14,7 +16,167 @@ import { tuffBuffsAffiliateGearCollections } from "~/lib/tuffbuffs/affiliate-gea
  *   bun run apps/web/prisma/seed-gear-recommendations.ts
  *
  * @see docs/sprints/SESSION_0109.md TASK_03
+ * @see docs/sprints/SESSION_0110.md TASK_03
  */
+
+const tuffBuffsAffiliateGearCollections: readonly TuffBuffsAffiliateGearCollection[] = [
+  {
+    id: "bjj",
+    name: "BJJ",
+    requiredProductIds: ["amz-bjj-gi"],
+    recommendedProductIds: [
+      "amz-bjj-gi-elite-sports-men",
+      "amz-bjj-gi-hayabusa-ultra-light",
+      "amz-bjj-gi-elite-sports-women",
+      "amz-bjj-rashguard-gold-men",
+      "amz-bjj-rashguard-gold-women",
+      "amz-bjj-shorts-men",
+      "amz-bjj-shorts-gold-women",
+      "amz-bjj-spats-runhit",
+      "amz-mouthguard-safejawz",
+      "amz-mouthguard-bulletproof",
+      "amz-mouthguard-sisu-aero",
+      "amz-mouthguard-case-sisu",
+      "amz-cup-shorts-shock-doctor",
+      "amz-cup-shorts-diamond-mma",
+      "amz-jump-rope",
+      "amz-kettlebells",
+      "amz-kettlebells-cast-iron",
+      "amz-defense-soap-wipes",
+      "amz-defense-soap-body-wash",
+      "amz-focus-mitts",
+      "amz-focus-mitts-hayabusa",
+    ],
+  },
+  {
+    id: "muay-thai",
+    name: "Muay Thai",
+    requiredProductIds: [],
+    recommendedProductIds: [
+      "amz-thai-shorts",
+      "amz-bjj-rashguard-gold-men",
+      "amz-bjj-rashguard-gold-women",
+      "amz-bjj-shorts-men",
+      "amz-bjj-shorts-gold-women",
+      "amz-bjj-spats-runhit",
+      "amz-boxing-gloves",
+      "amz-boxing-gloves-white",
+      "amz-hand-wraps",
+      "amz-hand-wraps-rdx",
+      "amz-hand-wraps-jenaai",
+      "amz-mouthguard-safejawz",
+      "amz-mouthguard-bulletproof",
+      "amz-mouthguard-sisu-aero",
+      "amz-mouthguard-case-sisu",
+      "amz-cup-shorts-shock-doctor",
+      "amz-cup-shorts-diamond-mma",
+      "amz-shin-pads",
+      "amz-shin-pads-alt",
+      "amz-jump-rope",
+      "amz-kettlebells",
+      "amz-kettlebells-cast-iron",
+      "amz-defense-soap-wipes",
+      "amz-defense-soap-body-wash",
+      "amz-focus-mitts",
+      "amz-focus-mitts-hayabusa",
+      "amz-thai-pads-fairtex",
+      "amz-headgear-hayabusa-pro",
+      "amz-headgear-hayabusa-t3-lx",
+      "amz-headgear-ringside-competition",
+    ],
+  },
+  {
+    id: "boxing",
+    name: "Boxing",
+    requiredProductIds: [],
+    recommendedProductIds: [
+      "amz-bjj-rashguard-gold-men",
+      "amz-bjj-rashguard-gold-women",
+      "amz-bjj-shorts-men",
+      "amz-bjj-shorts-gold-women",
+      "amz-bjj-spats-runhit",
+      "amz-boxing-gloves",
+      "amz-boxing-gloves-white",
+      "amz-hand-wraps",
+      "amz-hand-wraps-rdx",
+      "amz-hand-wraps-jenaai",
+      "amz-mouthguard-safejawz",
+      "amz-mouthguard-bulletproof",
+      "amz-mouthguard-sisu-aero",
+      "amz-mouthguard-case-sisu",
+      "amz-cup-shorts-shock-doctor",
+      "amz-cup-shorts-diamond-mma",
+      "amz-jump-rope",
+      "amz-kettlebells",
+      "amz-kettlebells-cast-iron",
+      "amz-defense-soap-wipes",
+      "amz-defense-soap-body-wash",
+      "amz-focus-mitts",
+      "amz-focus-mitts-hayabusa",
+      "amz-headgear-hayabusa-pro",
+      "amz-headgear-hayabusa-t3-lx",
+      "amz-headgear-ringside-competition",
+    ],
+  },
+  {
+    id: "eskrima",
+    name: "Eskrima",
+    requiredProductIds: [],
+    recommendedProductIds: [
+      "amz-bjj-rashguard-gold-men",
+      "amz-bjj-rashguard-gold-women",
+      "amz-bjj-shorts-men",
+      "amz-bjj-shorts-gold-women",
+      "amz-bjj-spats-runhit",
+      "amz-mouthguard-safejawz",
+      "amz-mouthguard-bulletproof",
+      "amz-mouthguard-sisu-aero",
+      "amz-mouthguard-case-sisu",
+      "amz-cup-shorts-shock-doctor",
+      "amz-cup-shorts-diamond-mma",
+      "amz-jump-rope",
+      "amz-kettlebells",
+      "amz-kettlebells-cast-iron",
+      "amz-defense-soap-wipes",
+      "amz-defense-soap-body-wash",
+      "amz-focus-mitts",
+      "amz-focus-mitts-hayabusa",
+      "amz-thai-pads-fairtex",
+    ],
+  },
+  {
+    id: "self-defense",
+    name: "Self-defense",
+    requiredProductIds: [],
+    recommendedProductIds: [
+      "amz-bjj-rashguard-gold-men",
+      "amz-bjj-rashguard-gold-women",
+      "amz-bjj-shorts-men",
+      "amz-bjj-shorts-gold-women",
+      "amz-bjj-spats-runhit",
+      "amz-boxing-gloves",
+      "amz-boxing-gloves-white",
+      "amz-hand-wraps",
+      "amz-hand-wraps-rdx",
+      "amz-hand-wraps-jenaai",
+      "amz-mouthguard-safejawz",
+      "amz-mouthguard-bulletproof",
+      "amz-mouthguard-sisu-aero",
+      "amz-mouthguard-case-sisu",
+      "amz-cup-shorts-shock-doctor",
+      "amz-cup-shorts-diamond-mma",
+      "amz-jump-rope",
+      "amz-kettlebells",
+      "amz-kettlebells-cast-iron",
+      "amz-defense-soap-wipes",
+      "amz-defense-soap-body-wash",
+      "amz-focus-mitts",
+      "amz-focus-mitts-hayabusa",
+      "amz-thai-pads-fairtex",
+      "amz-theragun",
+    ],
+  },
+]
 
 const adapter = new PrismaPg({
   connectionString:
