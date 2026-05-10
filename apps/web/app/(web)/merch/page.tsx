@@ -65,7 +65,7 @@ export default async function MerchPage() {
           accessories built for fighters.
         </IntroDescription>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Stripe checkout coming soon. Browse the catalog and stay tuned for launch.
+          Free shipping on orders over $75. Flat rate $4.99 shipping on all other orders.
         </p>
       </Intro>
 

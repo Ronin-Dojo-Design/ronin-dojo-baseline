@@ -25,10 +25,19 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
     resolvePublicMediaUrl(metadata.imagePath ?? "/images/merch/placeholder.svg") ??
     "/images/merch/placeholder.svg"
 
+  const isPlaceholder = metadata.imagePath === "/images/merch/placeholder.svg" || !metadata.imagePath
+
   return (
     <Card hover className="h-full overflow-hidden p-0">
       <div className="flex h-52 w-full items-center justify-center bg-muted/50 p-4">
-        <img src={imageSrc} alt="" loading="lazy" className="h-full w-full object-contain" />
+        {isPlaceholder ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-muted-foreground/30">
+            <span className="text-2xl font-bold text-muted-foreground/40">TB</span>
+            <span className="text-xs text-muted-foreground/50">Image coming soon</span>
+          </div>
+        ) : (
+          <img src={imageSrc} alt="" loading="lazy" className="h-full w-full object-contain" />
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-4 p-5">
@@ -66,7 +75,7 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
         <Stack className="mt-auto w-full justify-between gap-3" wrap={false}>
           <span className="text-sm font-semibold">{formatGearPrice(product.amountCents)}</span>
           <Button size="sm" variant="primary" disabled={!metadata.inStock}>
-            {metadata.inStock ? "Coming Soon" : "Sold Out"}
+            {metadata.inStock ? "Buy Now" : "Sold Out"}
           </Button>
         </Stack>
       </div>
