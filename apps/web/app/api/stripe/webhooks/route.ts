@@ -3,7 +3,7 @@ import { after } from "next/server"
 import type Stripe from "stripe"
 import type { Brand } from "~/.generated/prisma/client"
 import { env } from "~/env"
-import { notifyAdminOfPremiumTool, notifySubmitterOfPremiumTool } from "~/lib/notifications"
+import { notifyAdminOfPremiumTool, notifyCustomerOfMerchOrder, notifySubmitterOfPremiumTool } from "~/lib/notifications"
 import { upsertStripeCustomerMapping } from "~/server/web/billing/stripe-customers"
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
@@ -989,6 +989,44 @@ export const POST = async (req: Request) => {
               )
               // Ledger already created by createLedgerFromCheckout above
               // Shipping address is on the Stripe session (session.shipping_details)
+
+              // Send order confirmation email
+              const customerEmail = session.customer_details?.email
+              if (customerEmail && metadata.pricingPlanId) {
+                const plan = await db.pricingPlan.findUnique({
+                  where: { id: metadata.pricingPlanId },
+                  select: { name: true, amountCents: true },
+                })
+                const shipping = (session as any).shipping_details as {
+                  name?: string | null
+                  address?: {
+                    line1?: string | null
+                    line2?: string | null
+                    city?: string | null
+                    state?: string | null
+                    postal_code?: string | null
+                  } | null
+                } | null
+
+                after(async () =>
+                  notifyCustomerOfMerchOrder({
+                    customerEmail,
+                    productName: plan?.name ?? "TuffBuffs Merch",
+                    amountCents: plan?.amountCents ?? 0,
+                    shippingCents: 499,
+                    totalCents: session.amount_total ?? 0,
+                    size: metadata.size,
+                    color: metadata.color,
+                    shippingName: shipping?.name,
+                    shippingLine1: shipping?.address?.line1,
+                    shippingLine2: shipping?.address?.line2,
+                    shippingCity: shipping?.address?.city,
+                    shippingState: shipping?.address?.state,
+                    shippingPostalCode: shipping?.address?.postal_code,
+                  }),
+                )
+              }
+
               revalidateTag("merch", "infinite")
               break
             }

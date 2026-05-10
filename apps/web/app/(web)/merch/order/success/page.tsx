@@ -7,6 +7,7 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { findMerchProductById } from "~/server/web/merch/queries"
 import { stripe } from "~/services/stripe"
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
   let session
   try {
     session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items", "shipping_details"],
+      expand: ["line_items.data.price.product"],
     })
   } catch {
     return (
@@ -71,6 +72,10 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
   const lineItems = session.line_items?.data ?? []
   const totalCents = session.amount_total ?? 0
 
+  // Resolve friendly product name from DB if available
+  const pricingPlanId = session.metadata?.pricingPlanId
+  const dbProduct = pricingPlanId ? await findMerchProductById(pricingPlanId) : null
+
   return (
     <Wrapper gap="lg">
       <Intro className="max-w-2xl">
@@ -88,17 +93,27 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
         <Card className="space-y-4 p-6">
           <H3>Order Summary</H3>
           <div className="divide-y">
-            {lineItems.map(item => (
-              <div key={item.id} className="flex justify-between py-3 text-sm">
-                <span>
-                  {item.description}
-                  {item.quantity && item.quantity > 1 ? ` × ${item.quantity}` : ""}
-                </span>
-                <span className="font-medium">
-                  ${((item.amount_total ?? 0) / 100).toFixed(2)}
-                </span>
-              </div>
-            ))}
+            {lineItems.map((item, index) => {
+              // Prefer DB product name → Stripe product name → line item description
+              const stripeProduct = item.price?.product
+              const stripeProductName =
+                typeof stripeProduct === "object" && stripeProduct && "name" in stripeProduct
+                  ? (stripeProduct as { name: string }).name
+                  : null
+              const displayName =
+                (index === 0 && dbProduct?.name) || stripeProductName || item.description || "Item"
+              return (
+                <div key={item.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                  <span>
+                    {displayName}
+                    {item.quantity && item.quantity > 1 ? ` × ${item.quantity}` : ""}
+                  </span>
+                  <span className="shrink-0 font-medium">
+                    ${((item.amount_total ?? 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+              )
+            })}
           </div>
           <div className="flex justify-between border-t pt-3 text-base font-semibold">
             <span>Total</span>

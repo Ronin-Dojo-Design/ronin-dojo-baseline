@@ -149,12 +149,14 @@ async function main() {
       }
 
       // Build Stripe Product params (ADR 0014 §2–3)
+      // Use friendly display name for Stripe product; store ADR 0014 internal name as metadata
       const productParams: Stripe.ProductCreateParams = {
-        name: productName,
+        name: plan.name,
         description,
         active: true,
         images: [resolveImageUrl(imagePath)],
         metadata: {
+          adr0014_name: productName,
           brand: BRAND_ENUM,
           vertical: "merch",
           category,

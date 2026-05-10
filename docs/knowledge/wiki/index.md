@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-08
+updated: 2026-05-09
 author: Brian + Copilot
 last_agent: copilot-session-0103
 ---
@@ -152,6 +152,16 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0101](../../sprints/SESSION_0101.md) | session | closed-full |
 | [SESSION_0102](../../sprints/SESSION_0102.md) | session | closed-full |
 | [SESSION_0103](../../sprints/SESSION_0103.md) | session | closed-full |
+| [SESSION_0104](../../sprints/SESSION_0104.md) | session | closed-full |
+| [SESSION_0105](../../sprints/SESSION_0105.md) | session | closed-full |
+| [SESSION_0106](../../sprints/SESSION_0106.md) | session | closed-full |
+| [SESSION_0107](../../sprints/SESSION_0107.md) | session | closed-full |
+| [SESSION_0108](../../sprints/SESSION_0108.md) | session | closed-full |
+| [SESSION_0109](../../sprints/SESSION_0109.md) | session | closed-full |
+| [SESSION_0110](../../sprints/SESSION_0110.md) | session | closed-full |
+| [SESSION_0111](../../sprints/SESSION_0111.md) | session | closed-full |
+| [SESSION_0112](../../sprints/SESSION_0112.md) | session | closed-full |
+| [SESSION_0113](../../sprints/SESSION_0113.md) | session | closed-full |
 
 ## Protocols
 

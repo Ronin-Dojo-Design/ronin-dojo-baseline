@@ -1,6 +1,7 @@
 import { type Tool, ToolStatus } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
 import { EmailSubmission } from "~/emails/submission"
 import { EmailSubmissionPremium } from "~/emails/submission-premium"
 import { EmailSubmissionPublished } from "~/emails/submission-published"
@@ -108,5 +109,52 @@ export const notifyAdminOfPremiumTool = async (tool: Tool) => {
     subject,
     replyTo: tool.submitterEmail ?? undefined,
     react: EmailAdminSubmissionPremium({ to, tool }),
+  })
+}
+
+/**
+ * Notify a customer of a merch order confirmation
+ *
+ * @param params - Order details from Stripe checkout session
+ * @returns The email that was sent
+ */
+export type MerchOrderNotificationParams = {
+  customerEmail: string
+  productName: string
+  amountCents: number
+  shippingCents: number
+  totalCents: number
+  size?: string | null
+  color?: string | null
+  shippingName?: string | null
+  shippingLine1?: string | null
+  shippingLine2?: string | null
+  shippingCity?: string | null
+  shippingState?: string | null
+  shippingPostalCode?: string | null
+}
+
+export const notifyCustomerOfMerchOrder = async (params: MerchOrderNotificationParams) => {
+  const to = params.customerEmail
+  const subject = `🛍️ Your TuffBuffs order is confirmed — ${params.productName}`
+
+  return await sendEmail({
+    to,
+    subject,
+    react: EmailMerchOrderConfirmation({
+      to,
+      productName: params.productName,
+      amountCents: params.amountCents,
+      shippingCents: params.shippingCents,
+      totalCents: params.totalCents,
+      size: params.size ?? undefined,
+      color: params.color ?? undefined,
+      shippingName: params.shippingName ?? undefined,
+      shippingLine1: params.shippingLine1 ?? undefined,
+      shippingLine2: params.shippingLine2 ?? undefined,
+      shippingCity: params.shippingCity ?? undefined,
+      shippingState: params.shippingState ?? undefined,
+      shippingPostalCode: params.shippingPostalCode ?? undefined,
+    }),
   })
 }

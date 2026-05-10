@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-09
 author: Brian + ChatGPT
-last_agent: codex-session-0099
+last_agent: copilot-session-0113
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
@@ -188,6 +188,16 @@ Blocker classes:
 - **Proof required:** Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run
 - **Status:** open
 - **Specific gates:** register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, and Plausible.
+
+#### MB-015 — Resend transactional email setup
+
+- **Boundary:** Resend account creation, sending domain DNS verification, and `.env` population with live API key + verified sender email.
+- **Owner:** owner (Brian)
+- **Blocker class:** `deploy_env`
+- **Proof required:** (1) Resend dashboard shows verified domain, (2) `.env` has live `RESEND_API_KEY` + `RESEND_SENDER_EMAIL`, (3) test email delivered to real inbox (merch order confirmation or magic link).
+- **Status:** open
+- **Specific gates:** Create Resend account → add sending domain (baselinemartialarts.com) → add DNS records (SPF, DKIM, DMARC) → verify → update `.env` → test delivery. Current sandbox key `re_DGuMPeUi_*` is placeholder. Magic link auth and merch order confirmation emails are both wired and waiting.
+- **Added:** SESSION_0113
 
 ### 2. Notes by boundary
 

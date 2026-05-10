@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-08
-last_agent: copilot-session-0100
+updated: 2026-05-09
+last_agent: copilot-session-0113
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -367,6 +367,20 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. SESSION_0100 upgraded from `closed-quick` to `closed-full` with complete evidence.
 - **Verification:** `grep -c SESSION_0100 docs/protocols/project-log.md` returns ≥ 1; `bun run wiki:lint` returns 0 errors; SESSION_0100.md contains Full Close Evidence table.
 - **Status:** resolved
+
+### FS-0018 — Invalid Stripe expand parameter broke merch order success page
+
+- **Session:** SESSION_0112 (TASK_04), caught SESSION_0113
+- **Agent:** Copilot (Cody)
+- **Step failed:** Stripe API call validation during implementation — invalid `expand` field passed to `stripe.checkout.sessions.retrieve`
+- **SOP source:** Stripe API docs — `shipping_details` is a top-level property, not an expandable sub-resource
+- **Root cause:** `expand: ["line_items", "shipping_details"]` was used in the success page. `shipping_details` is not a valid expandable field on Checkout Sessions, so Stripe threw an error. The `catch` block swallowed the error and rendered "Order Not Found" instead of the order summary.
+- **Impact:** Merch checkout completed successfully (Stripe payment processed, webhook fired) but the success page always showed "Order Not Found" — poor customer UX on the confirmation screen.
+- **Corrective action:**
+  1. Removed `shipping_details` from the `expand` array — it's already returned as a top-level property.
+  2. Fix applied in SESSION_0113 smoke test.
+- **Verification:** Refresh the success page URL with existing `sessionId` — should render order summary with line items, total, size/color badges, and shipping address.
+- **Status:** mitigated
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
