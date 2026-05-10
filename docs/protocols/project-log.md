@@ -874,8 +874,8 @@ Three sections:
 | SESSION_0086_TASK_01 | SESSION_0086 | Tournament ops (hardening) | Petey + Giddy (Codex) | Bow in, graphify TASK_05 inputs, create SESSION_0086 plan, split work into UI/refund-test worktrees, and keep docs/log orchestration in the main checkout | `SESSION_0086.md` exists with graphify queries, Dirstarter alignment, task split, and agent/worktree assignments; project-log rows appended before implementation | landed | SESSION_0086_REVIEW_01 |
 | SESSION_0086_TASK_02 | SESSION_0086 | Tournament ops (UI smoke) | Cody + Desi worker | Refunded-paid customer notice: when `registered=true` resolves to an existing `CANCELLED`/`REFUNDED` Registration, show rejected/refunded copy instead of the success banner; display persisted cancelled/refunded state without offering an impossible re-registration form | Tournament detail/RegisterButton UI updated; `registration-notice.test.tsx` covers `CANCELLED`/`REFUNDED`, success, and processing copy; UI test passes | landed | SESSION_0086_REVIEW_01 |
 | SESSION_0086_TASK_03 | SESSION_0086 | Tournament ops (refund tests) | Cody + Doug worker | Add cancel/refund regression tests around `cancelRegistration`: paid Registration refunds by stored `stripePaymentIntentId`, free Registration cancels without refund, paid Registration missing PaymentIntent fails without mutation | `register.concurrency.test.ts` asserts refund mock calls and DB state for paid/free/error branches; test file passes 6/6 | landed | SESSION_0086_REVIEW_01 |
-| SESSION_0086_TASK_04 | SESSION_0086 | Close | Petey + Doug (Codex) | Integrate worker patches, run focused tests/typecheck/wiki-lint, append SESSION_0086 review, and record close evidence/worktree cleanup status | Focused
-### SESSION_0111_TASK_01 — Create merch seed script
+| SESSION_0086_TASK_04 | SESSION_0086 | Close | Petey + Doug (Codex) | Integrate worker patches, run focused tests/typecheck/wiki-lint, append SESSION_0086 review, and record close evidence/worktree cleanup status | Focused tests pass; Biome clean; typecheck has only pre-existing unrelated errors; 0086 worktrees removed; SESSION_0086 closed-full | landed | SESSION_0086_REVIEW_01 |
+| SESSION_0111_TASK_01 | SESSION_0111 | Create merch seed script
 
 - **ID:** SESSION_0111_TASK_01
 - **Owner:** Cody
@@ -919,3 +919,13 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0111_TASK_01, SESSION_0111_TASK_02, SESSION_0111_PHASE_02, SESSION_0111_PHASE_04
 **Verdict:** All phases landed. Merch catalog fully DB-driven. Store page uses L1 components. Seed script self-contained. Kaizen aggregate: 9.
+
+### SESSION_0112_TASK_01 — Create Stripe Products + Prices for merch items
+
+**Script:** `apps/web/scripts/setup-merch-stripe-products.ts`
+**Result:** 24 Stripe Products + one-time Prices created following ADR 0014 naming (`BMA_merch_{id}`). All PricingPlan rows updated with `stripeProductId` + `stripePriceId`. Dry-run mode verified first. Products with placeholder images use branded fallback URL.
+
+### SESSION_0112_REVIEW_01 — Full close review
+
+**Reviewed tasks:** SESSION_0112_TASK_01
+**Verdict:** TASK_01 landed cleanly. 24/24 merch products created in Stripe, all DB rows linked. ADR 0014 naming convention followed. Script is idempotent (re-run links existing). Remaining tasks (TASK_02–07) carry forward to next session.

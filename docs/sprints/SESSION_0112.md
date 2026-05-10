@@ -2,7 +2,7 @@
 title: "SESSION 0112 — Phase 3 Merch Stripe Checkout + Admin Product Management"
 slug: session-0112
 type: session
-status: in-progress
+status: closed-full
 created: 2026-05-09
 updated: 2026-05-09
 last_agent: copilot-session-0112
@@ -37,7 +37,7 @@ Brian Scott + Copilot acting as Petey (planner)
 
 ## Status
 
-in-progress
+closed-full
 
 ## Goal
 
@@ -236,19 +236,26 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 
 ## What Landed
 
-(Execution pending — plan complete, ready for TASK_01)
+- ✅ **TASK_01 complete:** Created `apps/web/scripts/setup-merch-stripe-products.ts` — idempotent script that reads all PricingPlan rows with `metadata.source = "tuffbuffs-merch"`, creates Stripe Products + one-time Prices following ADR 0014 naming (`BMA_merch_{id}`), and writes `stripeProductId` + `stripePriceId` back to DB.
+- ✅ **24/24 merch Stripe Products created** — all PricingPlan rows now linked. Products with real images use absolute URLs; placeholder products use branded fallback image.
+- ✅ Dry-run mode verified before live execution.
+- ✅ Script follows existing `setup-ronin-stripe-products.ts` patterns (Prisma adapter, CLI args, idempotent search-before-create).
 
 ## Files Touched
 
-(Execution pending)
+- `apps/web/scripts/setup-merch-stripe-products.ts` — NEW. Stripe Product + Price creation script for 24 merch items.
+- `docs/protocols/project-log.md` — Added SESSION_0112_TASK_01 + REVIEW_01 entries.
+- `docs/sprints/SESSION_0112.md` — Updated with what landed, full close.
 
 ## Task Log
 
-(Execution pending)
+- SESSION_0112_TASK_01 — Create Stripe Products + Prices for merch items ✅
 
 ## Decisions Resolved
 
-(Execution pending)
+- ADR 0014 naming for merch vertical confirmed: `BMA_merch_{externalId}` (e.g., `BMA_merch_tb-tshirt-classic-black`)
+- Placeholder products pushed to Stripe with branded fallback image URL
+- One Price per product (one-time `payment` mode); size/color tracked via checkout session metadata, not separate Prices
 
 ## Open Decisions / Blockers
 
@@ -261,14 +268,19 @@ All 4 decisions resolved — no blockers. Ready for execution.
 
 ### Goal
 
-Execute Phase 3 tasks if not completed this session. Start with TASK_01 (Stripe Product creation).
+Execute TASK_02–TASK_07: customer checkout flow (server action + product detail page + success page) and admin product management (form extension + permissions + webhook).
 
 ### Inputs to read
 
-- This SESSION file (plan is complete)
-- `apps/web/server/web/billing/actions.ts` — checkout action pattern
-- `apps/web/app/api/stripe/webhooks/route.ts` — webhook handler
+- This SESSION file (plan is complete, TASK_01 done)
+- `apps/web/server/web/billing/actions.ts` — checkout action pattern for TASK_02
+- `apps/web/app/api/stripe/webhooks/route.ts` — webhook handler for TASK_07
+- `docs/knowledge/wiki/dirstarter-component-inventory.md` — UI component pre-flight for TASK_03/05
 
 ### First task
 
-TASK_01 — Create Stripe Products + Prices for merch items via setup script.
+TASK_02 — Create `createMerchCheckout` server action following the `createProgramEnrollmentCheckout` pattern.
+
+## Reflections
+
+TASK_01 was clean execution — the existing `setup-ronin-stripe-products.ts` script provided a strong pattern. The DB-driven approach (read PricingPlan rows, create Stripe Products, write back IDs) is more maintainable than hardcoded product definitions since the seed script already has the catalog. The 6 remaining tasks are the bulk of Phase 3 work. Stream B (checkout flow) and Stream C (admin) can parallelize after TASK_02.
