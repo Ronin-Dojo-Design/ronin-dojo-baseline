@@ -556,7 +556,7 @@ Three sections:
 ### SESSION_0112_REVIEW_02 — Full close review (all tasks)
 
 **Reviewed tasks:** SESSION_0112_TASK_01, SESSION_0112_TASK_02, SESSION_0112_TASK_03, SESSION_0112_TASK_04, SESSION_0112_TASK_05, SESSION_0112_TASK_06, SESSION_0112_TASK_07
-**Verdict:** All 7 tasks landed. Full Phase 3 merch checkout flow implemented: Stripe Products (TASK_01) → server action (TASK_02) → product detail UI (TASK_03) → success page (TASK_04) → admin form (TASK_05) → permissions (TASK_06) → webhook (TASK_07). All follow gold-standard patterns. No Dirstarter bypasses. Kaizen aggregate: 9.
+**Verdict:** All 7 tasks landed. Full Phase 3 merch checkout flow implemented: Stripe Products (TASK_01) → server action (TASK_02) → product detail UI (TASK_03) → success page (TASK_04) → admin form (TASK_05) → permissions (TASK_06) → webhook (TASK_07). All follow gold-standard patterns. No Dirstarter bypasses. No schema changes. Kaizen aggregate: 9.
 
 ### SESSION_0113_TASK_01 — End-to-end merch smoke test
 
@@ -606,3 +606,28 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0114_TASK_00, SESSION_0114_TASK_01, SESSION_0114_TASK_02
 **Verdict:** All 3 tasks landed as spec/doc work. No code changes — pure documentation session. Infrastructure folder well-structured with ASCII + Mermaid diagrams. Resend runbook ready for operator execution. Printful spec has 7 open decisions needing Brian sign-off. Wiki index updated with all new entries. Graphify query confirmed integration points. Kaizen aggregate: 8.
+
+### SESSION_0115_TASK_01 — Resend DNS setup (operator)
+
+**Files:** Bluehost cPanel (external — 5 DNS records added)
+**Result:** 2 CNAME records (DKIM, return-path) and 1 TXT record (DMARC) propagated successfully. 2 TXT records (resend-verification, SPF) still propagating. Bluehost "Other Host" UI pattern documented.
+
+### SESSION_0115_TASK_02 — Printful spec decisions review
+
+**Files:** `docs/architecture/printful-pod-spec.md` (MODIFIED)
+**Result:** All 7 open decisions resolved by Brian. Key changes: #2 added order pull for admin dashboard (future), #4 architect for per-brand option, #6 added admin media UI need, #7 changed to calculated shipping at checkout. Decision table updated from "Open Decisions" to "Decisions (Resolved SESSION_0115)" with RESOLVED status on all 7. Future work section added.
+
+### SESSION_0115_TASK_03 — Printful spec wireframes, flows, charts
+
+**Files:** `docs/architecture/printful-pod-spec.md` (MODIFIED)
+**Result:** Added 8 lo-fi wireframes (browse, detail, checkout, success, order tracking ×2, admin order list/detail, admin media), 4 user flows (customer, system, admin, error recovery), MerchOrder state machine (PAID→SUBMITTED→PRINTING→SHIPPED→DELIVERED + FAILED/CANCELED/RETURNED/REFUNDED), 2 Mermaid charts (complete flow with color subgraphs, shipping rate sequence).
+
+### SESSION_0115_TASK_04 — Scaffold services/printful.ts
+
+**Files:** `apps/web/services/printful.ts` (NEW), `apps/web/env.ts` (MODIFIED)
+**Result:** Printful API client following L1 pattern (matches stripe.ts/resend.ts). Types: PrintfulOrder, Recipient, OrderItem, ShippingRate, Shipment, WebhookEvent. Methods: createOrder, getOrder, getOrderByExternalId, getShippingRates, cancelOrder, estimateOrderCosts, verifyWebhookSignature. Env vars: PRINTFUL_API_KEY, PRINTFUL_WEBHOOK_SECRET, PRINTFUL_CONFIRM_ORDERS (draft/confirm toggle).
+
+### SESSION_0115_REVIEW_01 — Full close review
+
+**Reviewed tasks:** SESSION_0115_TASK_01, SESSION_0115_TASK_02, SESSION_0115_TASK_03, SESSION_0115_TASK_04
+**Verdict:** All 4 tasks landed. TASK_01 partially blocked on DNS propagation (3/5 records live). TASK_02 efficient — all 7 decisions resolved in one pass with meaningful refinements. TASK_03 comprehensive — wireframes cover customer and admin paths, state machine covers happy + error paths. TASK_04 follows L1 patterns exactly. No Dirstarter baseline layers touched. No schema changes. Kaizen aggregate: 8.

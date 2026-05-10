@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-09
+updated: 2026-05-10
 author: Brian + Copilot
-last_agent: copilot-session-0114
+last_agent: copilot-session-0115
 ---
 
 # LLM Wiki Index
@@ -170,6 +170,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0112](../../sprints/SESSION_0112.md) | session | closed-full |
 | [SESSION_0113](../../sprints/SESSION_0113.md) | session | closed-full |
 | [SESSION_0114](../../sprints/SESSION_0114.md) | session | closed-full |
+| [SESSION_0115](../../sprints/SESSION_0115.md) | session | closed-full |
 
 ## Protocols
 
