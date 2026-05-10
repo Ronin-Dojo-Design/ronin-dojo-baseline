@@ -659,6 +659,14 @@ enum FightRecordType {
   PROFESSIONAL
 }
 
+// @added   SESSION_0109 (2026-05-09)
+// @why     Distinguish required vs recommended gear for a discipline
+// @wired   GearRecommendation.type
+enum GearRecommendationType {
+  REQUIRED
+  RECOMMENDED
+}
+
 // ---------------------------------------------------------------------------
 // Enums — Wave C (Pass 3: CRM, Tournament Rules, Weigh-in, Mat Assignment)
 // ---------------------------------------------------------------------------
@@ -947,6 +955,8 @@ model Discipline {
   fightRecords FightRecord[]
   ruleSets     RuleSet[]
   techniques   Technique[]
+
+  gearRecommendations GearRecommendation[]
 
   @@unique([code, brand])
   @@unique([name, brand])
@@ -1389,6 +1399,7 @@ model PricingPlan {
 
   invoiceLineItems  InvoiceLineItem[]
   entitlementGrants EntitlementGrant[]
+  gearRecommendations GearRecommendation[]
 
   @@index([brand, organizationId])
   @@index([programId])
@@ -2956,4 +2967,29 @@ model UserEntitlement {
   @@index([userId, status])
   @@index([entitlementId])
   @@index([sourceType, sourceId])
+}
+
+// ---------------------------------------------------------------------------
+// Gear Recommendations (SESSION_0109 — Phase 2 affiliate-gear extraction)
+// ---------------------------------------------------------------------------
+
+// @added   SESSION_0109 (2026-05-09)
+// @why     Replace hardcoded gear collections with DB-managed discipline→product mappings
+// @wired   server/web/affiliate-products/queries.ts, app/(web)/gear/page.tsx, prisma/seed-gear-recommendations.ts
+model GearRecommendation {
+  id            String                 @id @default(cuid())
+  brand         Brand
+  type          GearRecommendationType
+  sortOrder     Int                    @default(0)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  discipline    Discipline  @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  disciplineId  String
+  pricingPlan   PricingPlan @relation(fields: [pricingPlanId], references: [id], onDelete: Cascade)
+  pricingPlanId String
+
+  @@unique([disciplineId, pricingPlanId, type])
+  @@index([brand, disciplineId])
+  @@index([pricingPlanId])
 }

@@ -10,11 +10,9 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/types/tuffbuffs-gear"
 import {
   findAffiliateProducts,
+  findAllGearRecommendations,
   getMetadata,
 } from "~/server/web/affiliate-products/queries"
-import {
-  tuffBuffsAffiliateGearCollections,
-} from "~/lib/tuffbuffs/affiliate-gear"
 
 export const revalidate = 3600
 
@@ -43,7 +41,10 @@ type DbProduct = {
 }
 
 export default async function GearPage() {
-  const rows = await findAffiliateProducts()
+  const [rows, gearByDiscipline] = await Promise.all([
+    findAffiliateProducts(),
+    findAllGearRecommendations(),
+  ])
 
   // Convert DB rows to the product shape the browser component expects
   const dbProducts: DbProduct[] = []
@@ -64,29 +65,40 @@ export default async function GearPage() {
 
   const productById = new Map(dbProducts.map(p => [p.id, p]))
 
-  const getProductsByIds = (ids: readonly string[]) =>
-    ids.map(id => productById.get(id)).filter((p): p is DbProduct => !!p)
-
-  const programSections: AffiliateGearViewSection[] = tuffBuffsAffiliateGearCollections.map(collection => {
-    const requiredProducts = getProductsByIds(collection.requiredProductIds)
-    const recommendedProducts = getProductsByIds(collection.recommendedProductIds)
+  // Build program sections from DB gear recommendations
+  const programSections: AffiliateGearViewSection[] = []
+  for (const [slug, group] of gearByDiscipline) {
+    const requiredProducts: DbProduct[] = []
+    for (const row of group.required) {
+      const meta = getMetadata(row)
+      if (!meta) continue
+      const p = productById.get(meta.externalId)
+      if (p) requiredProducts.push(p)
+    }
+    const recommendedProducts: DbProduct[] = []
+    for (const row of group.recommended) {
+      const meta = getMetadata(row)
+      if (!meta) continue
+      const p = productById.get(meta.externalId)
+      if (p) recommendedProducts.push(p)
+    }
     const previewProducts = recommendedProducts.slice(0, 6)
     const items = [
       ...requiredProducts.map(product => ({ product, badge: "Required" as const })),
       ...previewProducts.map(product => ({ product, badge: "Recommended" as const })),
     ]
 
-    return {
-      id: collection.id,
-      title: collection.name,
+    programSections.push({
+      id: slug,
+      title: group.name,
       description:
         requiredProducts.length > 0
           ? `${requiredProducts.length} required Amazon item and ${recommendedProducts.length} recommended options. Showing starter picks here.`
           : `${recommendedProducts.length} recommended Amazon options. Showing starter picks here.`,
       countLabel: `${items.length} shown`,
       items,
-    }
-  })
+    })
+  }
 
   const categorySections: AffiliateGearViewSection[] = categoryOrder.map(category => {
     const products = dbProducts.filter(product => product.category === category)

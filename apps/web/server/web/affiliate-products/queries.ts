@@ -56,3 +56,94 @@ export const getMetadata = (row: AffiliateProductRow): AffiliateProductMetadata 
   if (!row.metadata || typeof row.metadata !== "object") return null
   return row.metadata as unknown as AffiliateProductMetadata
 }
+
+/**
+ * Fetches gear recommendations for a discipline, grouped by type.
+ * Returns PricingPlan rows joined through GearRecommendation.
+ *
+ * @see docs/sprints/SESSION_0109.md TASK_04
+ */
+export const findGearRecommendations = async (disciplineSlug: string) => {
+  const brand = await getRequestBrand()
+
+  const recommendations = await db.gearRecommendation.findMany({
+    where: {
+      brand,
+      discipline: { slug: disciplineSlug },
+    },
+    select: {
+      type: true,
+      sortOrder: true,
+      pricingPlan: {
+        select: {
+          id: true,
+          name: true,
+          amountCents: true,
+          metadata: true,
+          isActive: true,
+          sortOrder: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" },
+  })
+
+  const required = recommendations
+    .filter((r) => r.type === "REQUIRED")
+    .map((r) => r.pricingPlan)
+
+  const recommended = recommendations
+    .filter((r) => r.type === "RECOMMENDED")
+    .map((r) => r.pricingPlan)
+
+  return { required, recommended }
+}
+
+/**
+ * Fetches all gear recommendations grouped by discipline slug.
+ *
+ * @see docs/sprints/SESSION_0109.md TASK_04
+ */
+export const findAllGearRecommendations = async () => {
+  const brand = await getRequestBrand()
+
+  const recommendations = await db.gearRecommendation.findMany({
+    where: { brand },
+    select: {
+      type: true,
+      sortOrder: true,
+      discipline: { select: { slug: true, name: true } },
+      pricingPlan: {
+        select: {
+          id: true,
+          name: true,
+          amountCents: true,
+          metadata: true,
+          isActive: true,
+          sortOrder: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" },
+  })
+
+  const byDiscipline = new Map<
+    string,
+    { name: string; required: AffiliateProductRow[]; recommended: AffiliateProductRow[] }
+  >()
+
+  for (const rec of recommendations) {
+    const slug = rec.discipline.slug
+    if (!byDiscipline.has(slug)) {
+      byDiscipline.set(slug, { name: rec.discipline.name, required: [], recommended: [] })
+    }
+    const group = byDiscipline.get(slug)!
+    if (rec.type === "REQUIRED") {
+      group.required.push(rec.pricingPlan)
+    } else {
+      group.recommended.push(rec.pricingPlan)
+    }
+  }
+
+  return byDiscipline
+}
