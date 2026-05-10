@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-05-09
-last_agent: copilot-session-0106
+last_agent: copilot-session-0113
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -83,12 +83,26 @@ If the session didn't accomplish its `Goal`, note that explicitly in `What lande
 
 ### 3. JETTY 3.0 sweep on touched files
 
-For every file listed in `Files touched`:
+For every file listed in `Files touched`, run this dual sweep:
+
+#### 3a. Doc frontmatter sweep
 
 - If it's a wiki page or architecture doc: verify JETTY 3.0 frontmatter is present and `updated` date is current.
 - If it's a code file with a wiki annotation (e.g., `wiki/files/schema-prisma.md`): bump `updated`, re-evaluate `health`.
-- Update `backlinks` on any page that references or is referenced by touched files. Both directions.
-- Update `wiki/index.md` if any new wiki pages were created, or any page status/health changed.
+- Set `last_agent` to the current agent identity on every doc you touched.
+
+#### 3b. Bidirectional backlinks audit
+
+- Update `backlinks` on any page that references or is referenced by touched files. **Both directions** — if A references B, both A's and B's frontmatter must reflect the link.
+- Update `pairs_with` on any page that was newly cross-referenced during the session. Verify both pages list each other.
+
+#### 3c. Wiki index completeness check (FS-0019 gate)
+
+- Open `docs/knowledge/wiki/index.md`.
+- Verify the **current session** has an entry in the session table with correct status.
+- Verify no prior sessions are missing (spot-check the last 5 session numbers). If gaps exist, fill them before closing.
+- If any new wiki pages were created, or any page status/health changed, add/update the relevant rows.
+- Bump `updated` on `wiki/index.md` itself.
 
 If you created new cross-references during the session, verify both pages list each other in `pairs_with` or `backlinks`.
 

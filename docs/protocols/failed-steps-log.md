@@ -382,6 +382,16 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** Refresh the success page URL with existing `sessionId` — should render order summary with line items, total, size/color badges, and shipping address.
 - **Status:** mitigated
 
+### FS-0019 — Wiki index gap and JETTY frontmatter drift (SESSION_0104–0113)
+
+- **Session:** SESSION_0113 (discovered during full close)
+- **What happened:** Ten sessions (SESSION_0104 through SESSION_0113) were never added to `docs/knowledge/wiki/index.md`. Multiple docs touched across those sessions had stale `updated` dates and `last_agent` values. Backlinks were not audited bidirectionally.
+- **Root cause:** The JETTY 3.0 sweep step in `closing.md` lists the sweep actions but does not explicitly require (a) wiki index completeness verification for session entries, or (b) a bidirectional backlinks audit on all touched files. Agents treated the sweep as "update frontmatter on files I remember" rather than a systematic check.
+- **Impact:** Wiki index drifted 10 sessions behind. Any agent doing bow-in and consulting the wiki index would miss recent session context. Backlinks may be one-directional in several docs.
+- **Fix:** Added SESSION_0104–0113 to `wiki/index.md`. Updated stale JETTY frontmatter on `failed-steps-log.md`, `manual-boundary-registry.md`, `project-log.md`. Hardened `closing.md` step 3 with explicit sub-steps for wiki index completeness and bidirectional backlinks audit.
+- **Verification:** `grep -c "SESSION_0104\|SESSION_0113" docs/knowledge/wiki/index.md` returns ≥ 1 for both. Closing.md step 3 now has numbered sub-steps.
+- **Status:** mitigated
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.
@@ -390,9 +400,9 @@ Read this section at bow-in instead of skimming all 16 entries.
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
 
-### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015 → FS-0017)
+### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015 → FS-0017 → FS-0019)
 
-**4 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. FS-0017 skipped project-log gate, JETTY sweep, wiki-lint, and wiki index update in SESSION_0100. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09). Pattern persists across agent contexts.
+**5 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. FS-0017 skipped project-log gate, JETTY sweep, wiki-lint, and wiki index update in SESSION_0100. FS-0019: wiki index and JETTY frontmatter drifted across 10 sessions (SESSION_0104–0113) because the sweep step lacked explicit sub-steps for index completeness and bidirectional backlinks. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09); closing.md step 3 hardened with explicit sub-steps (SESSION_0113).
 
 ### Pattern 3: Governance artifacts drift (FS-0006 → FS-0007)
 

@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-05-03
-last_agent: codex-session-0033
+updated: 2026-05-09
+last_agent: copilot-session-0113
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -52,6 +52,10 @@ If the user asks for quick close, do not silently perform or claim full close.
 The complete bow-out mode. Full close includes every quick close step plus Kaizen reflections, hostile close review, review/recommend, memory sweep, next-session unblock check, JETTY/backlink proof, and wiki-lint proof.
 
 If the user asks for full close, the SESSION file must include a `## Full close evidence` table before status becomes `closed-full`.
+
+### Full-close all steps
+
+Shorthand for invoking the complete closing ritual as defined in `docs/rituals/closing.md`. When the user says "full-close all steps" or "full close all steps in closing.md ritual," the agent must execute every numbered step in closing.md — quick close steps 1–5 **and** full close steps 6–8 — without skipping any sub-step. This includes the dual JETTY 3.0 sweep (step 3a–3c: doc frontmatter, bidirectional backlinks audit, and wiki index completeness check), project-log gate, Graphify update, reflections, evidence artifact, and hostile review. Declaring `closed-full` without completing all steps is a Pattern 2 violation (see `failed-steps-log.md`).
 
 ### JETTY 3.0 sweep
 
