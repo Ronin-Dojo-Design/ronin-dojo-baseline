@@ -1,5 +1,5 @@
 import { AffiliateGearCard } from "~/components/web/tuffbuffs/affiliate-gear-card"
-import type { TuffBuffsAffiliateGearProduct } from "~/lib/tuffbuffs/affiliate-gear"
+import type { TuffBuffsAffiliateGearProduct } from "~/types/tuffbuffs-gear"
 
 type AffiliateGearGridProps = {
   products: readonly TuffBuffsAffiliateGearProduct[]

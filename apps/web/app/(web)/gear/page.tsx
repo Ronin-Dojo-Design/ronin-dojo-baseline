@@ -7,7 +7,7 @@ import {
   type AffiliateGearViewSection,
 } from "~/components/web/tuffbuffs/affiliate-gear-browser"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/lib/tuffbuffs/affiliate-gear"
+import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/types/tuffbuffs-gear"
 import {
   findAffiliateProducts,
   getMetadata,

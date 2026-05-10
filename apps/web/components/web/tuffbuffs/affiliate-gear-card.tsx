@@ -6,7 +6,8 @@ import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { ExternalLink } from "~/components/web/external-link"
 import { resolvePublicMediaUrl } from "~/lib/public-media-url"
-import { formatGearPrice, type TuffBuffsAffiliateGearProduct } from "~/lib/tuffbuffs/affiliate-gear"
+import { formatGearPrice } from "~/lib/tuffbuffs/gear-utils"
+import type { TuffBuffsAffiliateGearProduct } from "~/types/tuffbuffs-gear"
 
 type AffiliateGearCardProps = {
   product: TuffBuffsAffiliateGearProduct

@@ -1,23 +1,16 @@
-export type TuffBuffsGearCategory = "training" | "accessories" | "recovery"
-export type TuffBuffsProgramGearKey = "bjj" | "muay-thai" | "boxing" | "eskrima" | "self-defense"
+// Types extracted to ~/types/tuffbuffs-gear.ts — re-exported for backward compatibility
+export type {
+  TuffBuffsGearCategory,
+  TuffBuffsProgramGearKey,
+  TuffBuffsAffiliateGearProduct,
+  TuffBuffsAffiliateGearCollection,
+} from "~/types/tuffbuffs-gear"
 
-export type TuffBuffsAffiliateGearProduct = {
-  id: string
-  name: string
-  description: string
-  amountCents: number
-  category: TuffBuffsGearCategory
-  affiliateUrl: string
-  imagePath?: string
-  recommendedFor: readonly TuffBuffsProgramGearKey[]
-}
-
-export type TuffBuffsAffiliateGearCollection = {
-  id: TuffBuffsProgramGearKey
-  name: string
-  requiredProductIds: readonly string[]
-  recommendedProductIds: readonly string[]
-}
+import type {
+  TuffBuffsAffiliateGearProduct,
+  TuffBuffsAffiliateGearCollection,
+  TuffBuffsProgramGearKey,
+} from "~/types/tuffbuffs-gear"
 
 export const tuffBuffsAffiliateGearProducts = [
   {
@@ -567,11 +560,8 @@ const isAffiliateGearProduct = (
   product: TuffBuffsAffiliateGearProduct | undefined,
 ): product is TuffBuffsAffiliateGearProduct => Boolean(product)
 
-export const formatGearPrice = (amountCents: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amountCents / 100)
+// formatGearPrice extracted to ~/lib/tuffbuffs/gear-utils.ts — re-exported for backward compatibility
+export { formatGearPrice } from "~/lib/tuffbuffs/gear-utils"
 
 export const getTuffBuffsAffiliateGearByIds = (ids: readonly string[]) =>
   ids.map(id => affiliateProductById.get(id)).filter(isAffiliateGearProduct)
