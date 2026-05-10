@@ -240,16 +240,37 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 - ✅ **24/24 merch Stripe Products created** — all PricingPlan rows now linked. Products with real images use absolute URLs; placeholder products use branded fallback image.
 - ✅ Dry-run mode verified before live execution.
 - ✅ Script follows existing `setup-ronin-stripe-products.ts` patterns (Prisma adapter, CLI args, idempotent search-before-create).
+- ✅ **TASK_02 complete:** Created `server/web/merch/actions.ts` with `createMerchCheckout` server action. Follows `createProgramEnrollmentCheckout` pattern exactly. Includes input validation (brand, active, in-stock, has Stripe price), shipping address collection (US only), flat $4.99 shipping rate, one-time payment mode, merch-specific metadata (`type: "merch_purchase"`, size, color).
+- ✅ **TASK_03 complete:** Created `/merch/[id]/page.tsx` product detail page with `MerchProductDetail` client component (size/color selectors, Buy Now → Stripe Checkout) and `MerchImageGallery` (main image + thumbnail navigation, branded placeholder fallback). Updated `MerchCard` to link to detail page.
+- ✅ **TASK_04 complete:** Created `/merch/order/success/page.tsx` — retrieves Stripe session, shows order summary with line items, size/color badges, shipping address, and "Continue Shopping" CTA.
+- ✅ **TASK_05 complete:** Extended `pricing-plan-form.tsx` with merch-specific settings section that appears conditionally for `tuffbuffs-merch` products. Added `useMemo` for merch detection.
+- ✅ **TASK_06 complete:** Added `canManageMerch(user, brand)` to `lib/authz.ts`. Checks admin OR OWNER/ORG_ADMIN role at any org in the brand. No new models or enums needed.
+- ✅ **TASK_07 complete:** Extended webhook handler in `stripe/webhooks/route.ts` to handle `metadata.type === "merch_purchase"`. Logs order details (user, plan, size, color). Ledger already created by `createLedgerFromCheckout`. No entitlement grant (physical goods). Revalidates merch cache tag.
 
 ## Files Touched
 
 - `apps/web/scripts/setup-merch-stripe-products.ts` — NEW. Stripe Product + Price creation script for 24 merch items.
-- `docs/protocols/project-log.md` — Added SESSION_0112_TASK_01 + REVIEW_01 entries.
-- `docs/sprints/SESSION_0112.md` — Updated with what landed, full close.
+- `apps/web/server/web/merch/actions.ts` — NEW. `createMerchCheckout` server action for merch Stripe Checkout.
+- `apps/web/components/web/tuffbuffs/merch-image-gallery.tsx` — NEW. Image gallery with thumbnail navigation.
+- `apps/web/components/web/tuffbuffs/merch-product-detail.tsx` — NEW. Client component with size/color selectors + checkout.
+- `apps/web/app/(web)/merch/[id]/page.tsx` — NEW. Product detail page.
+- `apps/web/app/(web)/merch/order/success/page.tsx` — NEW. Order confirmation page.
+- `apps/web/components/web/tuffbuffs/merch-card.tsx` — MODIFIED. Added Link wrapper to product detail page.
+- `apps/web/app/admin/pricing-plans/_components/pricing-plan-form.tsx` — MODIFIED. Added conditional merch settings section.
+- `apps/web/lib/authz.ts` — MODIFIED. Added `canManageMerch` permission check.
+- `apps/web/app/api/stripe/webhooks/route.ts` — MODIFIED. Added `merch_purchase` handler in checkout.session.completed.
+- `docs/protocols/project-log.md` — Added SESSION_0112 TASK_02–07 entries.
+- `docs/sprints/SESSION_0112.md` — Updated with full what-landed, full close.
 
 ## Task Log
 
 - SESSION_0112_TASK_01 — Create Stripe Products + Prices for merch items ✅
+- SESSION_0112_TASK_02 — Create `createMerchCheckout` server action ✅
+- SESSION_0112_TASK_03 — Merch product detail + checkout UI ✅
+- SESSION_0112_TASK_04 — Order success page ✅
+- SESSION_0112_TASK_05 — Extend pricing-plan-form for merch fields ✅
+- SESSION_0112_TASK_06 — Role-based merch management permissions ✅
+- SESSION_0112_TASK_07 — Webhook extension for merch purchases ✅
 
 ## Decisions Resolved
 
@@ -268,19 +289,33 @@ All 4 decisions resolved — no blockers. Ready for execution.
 
 ### Goal
 
-Execute TASK_02–TASK_07: customer checkout flow (server action + product detail page + success page) and admin product management (form extension + permissions + webhook).
+Phase 3 smoke test: end-to-end merch checkout flow verification (browse → detail → Stripe Checkout → webhook → success page). Then Printful POD integration planning.
 
 ### Inputs to read
 
-- This SESSION file (plan is complete, TASK_01 done)
-- `apps/web/server/web/billing/actions.ts` — checkout action pattern for TASK_02
-- `apps/web/app/api/stripe/webhooks/route.ts` — webhook handler for TASK_07
-- `docs/knowledge/wiki/dirstarter-component-inventory.md` — UI component pre-flight for TASK_03/05
+- This SESSION file (all 7 tasks complete)
+- `apps/web/server/web/merch/actions.ts` — verify checkout flow
+- `apps/web/app/api/stripe/webhooks/route.ts` — verify webhook handling
+- Stripe Dashboard — confirm products, test checkout
 
 ### First task
 
-TASK_02 — Create `createMerchCheckout` server action following the `createProgramEnrollmentCheckout` pattern.
+Smoke test: navigate to `/merch`, click a product, select size/color, click "Buy Now", complete Stripe test checkout, verify webhook fires and success page renders.
 
 ## Reflections
 
-TASK_01 was clean execution — the existing `setup-ronin-stripe-products.ts` script provided a strong pattern. The DB-driven approach (read PricingPlan rows, create Stripe Products, write back IDs) is more maintainable than hardcoded product definitions since the seed script already has the catalog. The 6 remaining tasks are the bulk of Phase 3 work. Stream B (checkout flow) and Stream C (admin) can parallelize after TASK_02.
+TASK_01 was clean execution — the existing `setup-ronin-stripe-products.ts` script provided a strong pattern. The DB-driven approach (read PricingPlan rows, create Stripe Products, write back IDs) is more maintainable than hardcoded product definitions since the seed script already has the catalog. TASK_02–07 execution was fast because the gold-standard patterns were already in place: `createProgramEnrollmentCheckout` for the server action, the existing webhook handler switch for merch_purchase, and the component inventory for UI. Key insight: the existing `createLedgerFromCheckout` already handles merch purchases because it works on any `payment` mode checkout with mapped pricing plans — no new ledger code needed. The `canManageMerch` authz check follows the existing `canEditOrganization` pattern exactly.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0112.md updated field set; new files are code (no frontmatter). authz.ts, webhook route, merch-card, pricing-plan-form are existing code — no frontmatter needed. |
+| Backlinks/index sweep | SESSION_0112.md pairs_with already includes all relevant files. No new wiki pages created. |
+| Wiki lint | Not run — session touched only code files + session doc. No wiki pages created or modified. |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | 7/7 tasks verified against plan. All follow gold-standard patterns from billing/actions.ts, webhook handler, authz.ts, component inventory. No Dirstarter bypasses. |
+| Review & Recommend | Next session goal written: yes — smoke test + Printful POD planning |
+| Memory sweep | None needed — no new architectural decisions, constraints, or preferences beyond what's in ADR 0014. |
+| Next session unblock check | Unblocked — all tasks complete, no user decisions needed |
+| Git hygiene | Changes uncommitted pending user review |

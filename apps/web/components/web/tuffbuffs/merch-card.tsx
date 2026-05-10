@@ -2,6 +2,7 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { resolvePublicMediaUrl } from "~/lib/public-media-url"
 import { formatGearPrice } from "~/lib/tuffbuffs/gear-utils"
@@ -28,6 +29,7 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
   const isPlaceholder = metadata.imagePath === "/images/merch/placeholder.svg" || !metadata.imagePath
 
   return (
+    <Link href={`/merch/${product.id}`} className="block">
     <Card hover className="h-full overflow-hidden p-0">
       <div className="flex h-52 w-full items-center justify-center bg-muted/50 p-4">
         {isPlaceholder ? (
@@ -80,5 +82,6 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
         </Stack>
       </div>
     </Card>
+    </Link>
   )
 }

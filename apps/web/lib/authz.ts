@@ -162,6 +162,28 @@ export const canViewOrgRoster = async (
   return Boolean(membership)
 }
 
+/**
+ * True if user can manage merch products for the brand:
+ * admin, OR holds OWNER/ORG_ADMIN at any organization in the brand.
+ *
+ * @see docs/sprints/SESSION_0112.md TASK_06
+ */
+export const canManageMerch = async (user: AuthzUser, brand: Brand): Promise<boolean> => {
+  if (isAdmin(user)) return true
+  const membership = await db.membership.findFirst({
+    where: {
+      userId: user.id,
+      brand,
+      status: "ACTIVE",
+      roleAssignments: {
+        some: { role: { code: { in: ["OWNER", "ORG_ADMIN"] } } },
+      },
+    },
+    select: { id: true },
+  })
+  return Boolean(membership)
+}
+
 // -----------------------------------------------------------------------------
 // Internal
 // -----------------------------------------------------------------------------

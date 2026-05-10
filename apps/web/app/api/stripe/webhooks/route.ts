@@ -980,6 +980,19 @@ export const POST = async (req: Request) => {
               break
             }
 
+            // Handle merch purchase — create ledger only, no entitlement grant
+            // Physical goods: no digital access to provision
+            // @see docs/sprints/SESSION_0112.md TASK_07
+            if (metadata?.type === "merch_purchase") {
+              console.log(
+                `🛍️ Merch purchase: user=${metadata.userId} plan=${metadata.pricingPlanId} size=${metadata.size ?? "n/a"} color=${metadata.color ?? "n/a"}`,
+              )
+              // Ledger already created by createLedgerFromCheckout above
+              // Shipping address is on the Stripe session (session.shipping_details)
+              revalidateTag("merch", "infinite")
+              break
+            }
+
             // Handle tool expedited payment
             if (metadata?.tool) {
               const tool = await db.tool.findUniqueOrThrow({

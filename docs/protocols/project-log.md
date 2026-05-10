@@ -929,3 +929,38 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0112_TASK_01
 **Verdict:** TASK_01 landed cleanly. 24/24 merch products created in Stripe, all DB rows linked. ADR 0014 naming convention followed. Script is idempotent (re-run links existing). Remaining tasks (TASK_02–07) carry forward to next session.
+
+### SESSION_0112_TASK_02 — Create `createMerchCheckout` server action
+
+**File:** `apps/web/server/web/merch/actions.ts`
+**Result:** Server action follows `createProgramEnrollmentCheckout` pattern exactly. Input validation (brand, active, in-stock, has Stripe price). Shipping address collection (US), flat $4.99 shipping, one-time payment mode. Metadata: `type: "merch_purchase"`, userId, pricingPlanId, organizationId, brand, size, color.
+
+### SESSION_0112_TASK_03 — Merch product detail + checkout UI
+
+**Files:** `app/(web)/merch/[id]/page.tsx`, `components/web/tuffbuffs/merch-product-detail.tsx`, `components/web/tuffbuffs/merch-image-gallery.tsx`, `components/web/tuffbuffs/merch-card.tsx`
+**Result:** Product detail page with image gallery, size/color selectors, Buy Now → Stripe Checkout. MerchCard now links to detail page. All L1 components used.
+
+### SESSION_0112_TASK_04 — Order success page
+
+**File:** `app/(web)/merch/order/success/page.tsx`
+**Result:** Retrieves Stripe session by sessionId, shows order summary (line items, total, size/color badges), shipping address, Continue Shopping CTA.
+
+### SESSION_0112_TASK_05 — Extend pricing-plan-form for merch fields
+
+**File:** `app/admin/pricing-plans/_components/pricing-plan-form.tsx`
+**Result:** Conditional merch settings section appears for `tuffbuffs-merch` products. Uses `useMemo` for detection.
+
+### SESSION_0112_TASK_06 — Role-based merch management permissions
+
+**File:** `apps/web/lib/authz.ts`
+**Result:** Added `canManageMerch(user, brand)`. Admin OR OWNER/ORG_ADMIN at any org in the brand. No new models or enums.
+
+### SESSION_0112_TASK_07 — Webhook extension for merch purchases
+
+**File:** `apps/web/app/api/stripe/webhooks/route.ts`
+**Result:** Added `merch_purchase` handler in `checkout.session.completed` payment mode switch. Logs order details. Ledger already created by `createLedgerFromCheckout`. Revalidates merch cache tag. No entitlement grant (physical goods).
+
+### SESSION_0112_REVIEW_02 — Full close review (all tasks)
+
+**Reviewed tasks:** SESSION_0112_TASK_01, SESSION_0112_TASK_02, SESSION_0112_TASK_03, SESSION_0112_TASK_04, SESSION_0112_TASK_05, SESSION_0112_TASK_06, SESSION_0112_TASK_07
+**Verdict:** All 7 tasks landed. Full Phase 3 merch checkout flow implemented: Stripe Products (TASK_01) → server action (TASK_02) → product detail UI (TASK_03) → success page (TASK_04) → admin form (TASK_05) → permissions (TASK_06) → webhook (TASK_07). All follow gold-standard patterns. No Dirstarter bypasses. Kaizen aggregate: 9.

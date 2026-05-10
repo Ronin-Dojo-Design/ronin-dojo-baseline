@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { useRouter } from "next/navigation"
-import { type ComponentProps, use } from "react"
+import { type ComponentProps, use, useMemo } from "react"
 import { toast } from "sonner"
 import { PricingPlanActions } from "~/app/admin/pricing-plans/_components/pricing-plan-actions"
 import { RelationSelector } from "~/components/admin/relation-selector"
@@ -68,6 +68,16 @@ export function PricingPlanForm({
   const programs = use(programsPromise)
   const entitlements = use(entitlementsPromise)
   const resolver = zodResolver(pricingPlanSchema)
+
+  /** Detect if this is a merch product by checking metadata */
+  const isMerchProduct = useMemo(() => {
+    try {
+      const meta = pricingPlan?.metadata as Record<string, unknown> | null
+      return meta?.source === "tuffbuffs-merch"
+    } catch {
+      return false
+    }
+  }, [pricingPlan])
 
   const { form, action, handleSubmitWithAction } = useHookFormAction(
     upsertPricingPlan,
@@ -375,6 +385,18 @@ export function PricingPlanForm({
         />
 
         {/* Metadata JSON */}
+        {isMerchProduct && (
+          <div className="space-y-3 rounded-lg border bg-muted/30 p-4 sm:col-span-2">
+            <H3 className="text-sm">Merch Product Settings</H3>
+            <p className="text-xs text-muted-foreground">
+              These fields are stored in the metadata JSON. Edit the JSON directly below for advanced changes.
+            </p>
+            <Stack size="sm" className="flex-wrap text-xs text-secondary-foreground">
+              <span>Edit sizes, colors, features, stock, and category in the Metadata JSON field below.</span>
+            </Stack>
+          </div>
+        )}
+
         <FormField
           control={form.control}
           name="metadata"
