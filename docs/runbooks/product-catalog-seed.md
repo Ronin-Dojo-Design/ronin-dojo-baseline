@@ -4,13 +4,14 @@ slug: product-catalog-seed
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-05-08
-last_agent: copilot-session-0105
+updated: 2026-05-09
+last_agent: copilot-session-0111
 pairs_with:
   - docs/runbooks/schema-migration.md
   - docs/runbooks/stripe-setup-runbook.md
   - docs/architecture/decisions/0014-stripe-product-policy.md
   - apps/web/prisma/seed-tuffbuffs-affiliate.ts
+  - apps/web/prisma/seed-tuffbuffs-merch.ts
   - apps/web/prisma/seed-pricing-plans.ts
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -21,6 +22,7 @@ tags:
   - pricing-plans
   - tuffbuffs
   - affiliate
+  - merch
   - metadata
 ---
 
@@ -69,6 +71,7 @@ metadata: {
 |---|---|---|
 | `prisma/seed-pricing-plans.ts` | Operational BMA plans (memberships, enrollments, etc.) | 32 rows |
 | `prisma/seed-tuffbuffs-affiliate.ts` | TuffBuffs affiliate gear catalog | 36 rows |
+| `prisma/seed-tuffbuffs-merch.ts` | TuffBuffs own-brand merch (shirts, rash guards, hoodies, gear, accessories) | 24 rows |
 
 ## Steps
 
@@ -116,6 +119,16 @@ bun run prisma/seed-tuffbuffs-affiliate.ts --org-id <cuid>
 
 Idempotent — skips rows that already exist (matched by brand + org + name).
 
+### 4b. Seed TuffBuffs merch products
+
+```bash
+bun run prisma/seed-tuffbuffs-merch.ts
+# Or with explicit org:
+bun run prisma/seed-tuffbuffs-merch.ts --org-id <cuid>
+```
+
+Idempotent — skips rows that already exist (matched by brand + org + name). Seeds 24 own-brand merch products (shirts, rash guards, hoodies, gear, accessories) with `metadata.source = "tuffbuffs-merch"`.
+
 ### 5. Verify in admin
 
 Navigate to `/admin/pricing-plans` and confirm:
@@ -132,16 +145,22 @@ Navigate to `/gear` and confirm:
 - Category tabs show correct product counts
 - Affiliate links point to correct Amazon URLs
 
+Navigate to `/merch` and confirm:
+
+- Merch products render with correct names, prices, sizes, and images
+- Category tabs filter correctly (Apparel, Rash Guards, Training Gear, Accessories)
+- Featured products appear in the Featured section
+
 ## Adding new products
 
 ### Adding to the hardcoded catalog first
 
-1. Add the product to `apps/web/lib/tuffbuffs/affiliate-gear.ts` in the `tuffBuffsAffiliateGearProducts` array.
-2. If the product belongs to program collections, add its ID to the relevant `tuffBuffsAffiliateGearCollections` entries.
-3. Add the product image to `apps/web/public/images/merch/`.
-4. Update the seed script if it reads from the catalog, or add the product directly to the seed.
-5. Run the seed script.
-6. Verify in admin and on the gear page.
+> **Note (SESSION_0111):** Both `affiliate-gear.ts` and `merch-catalog.ts` have been deleted. Product data is now inlined in the seed scripts. To add new products, add them directly to the relevant seed script's inline array.
+
+1. Add the product to the inline array in the appropriate seed script (`seed-tuffbuffs-affiliate.ts` or `seed-tuffbuffs-merch.ts`).
+2. Add the product image to `apps/web/public/images/merch/`.
+3. Run the seed script.
+4. Verify in admin and on the public page (`/gear` or `/merch`).
 
 ### Adding directly to the DB via admin
 
@@ -176,6 +195,9 @@ bun run prisma/seed-pricing-plans.ts
 
 # 4. Affiliate products
 bun run prisma/seed-tuffbuffs-affiliate.ts
+
+# 5. Merch products
+bun run prisma/seed-tuffbuffs-merch.ts
 ```
 
 ## Troubleshooting
@@ -192,3 +214,10 @@ bun run prisma/seed-tuffbuffs-affiliate.ts
 - [Schema Migration Runbook](schema-migration.md) — for schema changes
 - [Stripe Setup Runbook](stripe-setup-runbook.md) — for Stripe product/price sync
 - [ADR 0014 — Stripe Product Policy](../architecture/decisions/0014-stripe-product-policy.md) — naming conventions
+
+## Lessons learned
+
+- **Three-phase extraction pattern:** Proven twice (affiliate-gear SESSION_0107→0110, merch SESSION_0111). The playbook: Phase 1 (seed from hardcoded source → DB), Phase 2 (build public page reading from DB), Phase 4 (inline data into seed script, delete hardcoded source). This is the standard approach for any new product catalog.
+- **`as const satisfies` friction:** When a product array uses `as const satisfies readonly Type[]`, optional fields become absent on items that omit them, creating a discriminated union. This requires type casts in consumers. For seed data, prefer explicit `readonly Type[]` annotation instead.
+- **Seed script self-containment:** After Phase 4, seed scripts carry their own product data inline. This makes them independently runnable after a DB reset without depending on any library module. Trade-off: larger files (~500 lines), but seed data changes rarely.
+- **Metadata JSON pattern:** Both affiliate and merch products use `PricingPlan.metadata` with a `source` discriminator (`"tuffbuffs-affiliate"`, `"tuffbuffs-merch"`). Query functions filter by `metadata.path.source`. If metadata gets unwieldy, consider a dedicated model — but for <50 products per vertical, JSON is fine.

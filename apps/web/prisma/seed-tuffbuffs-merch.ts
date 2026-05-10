@@ -1,18 +1,34 @@
-export const TUFFBUFFS_MERCH_SOURCE_PATH =
-  "/Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/data/merchandise.js"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "~/.generated/prisma/client"
 
-export const TUFFBUFFS_MERCH_SHIPPING_FEE_CENTS = 499
+/**
+ * seed-tuffbuffs-merch.ts
+ *
+ * Seeds all TuffBuffs merch products (shirts, rash guards, hoodies, gear,
+ * accessories) as PricingPlan rows with metadata JSON containing merch-specific
+ * fields: colors, sizes, features, imagePaths, classType, inStock, etc.
+ *
+ * Product data is self-contained in this file (Phase 4 extraction — SESSION_0111).
+ * Previously imported from ~/lib/tuffbuffs/merch-catalog.ts.
+ *
+ * Follows the same pattern as seed-tuffbuffs-affiliate.ts.
+ *
+ * Usage:
+ *   bun run apps/web/prisma/seed-tuffbuffs-merch.ts
+ *   bun run apps/web/prisma/seed-tuffbuffs-merch.ts --org-id <cuid>
+ *
+ * @see docs/sprints/SESSION_0111.md TASK_01
+ * @see docs/sprints/SESSION_0111.md Phase 4
+ */
 
-export type TuffBuffsMerchCategoryId = "apparel" | "rashguards" | "gear" | "accessories"
+const TUFFBUFFS_MERCH_SHIPPING_FEE_CENTS = 499
 
-export type TuffBuffsClassType = "bjj" | "boxing" | "eskrima" | "muay-thai"
-
-export type TuffBuffsMerchProduct = {
+type TuffBuffsMerchProduct = {
   id: string
   name: string
-  category: TuffBuffsMerchCategoryId
+  category: "apparel" | "rashguards" | "gear" | "accessories"
   type: string
-  classType?: TuffBuffsClassType
+  classType?: "bjj" | "boxing" | "eskrima" | "muay-thai"
   amountCents: number
   currency: "usd"
   colors?: readonly string[]
@@ -25,16 +41,9 @@ export type TuffBuffsMerchProduct = {
   inStock: boolean
 }
 
-export const tuffBuffsMerchCategories = [
-  { id: "apparel", name: "Apparel" },
-  { id: "rashguards", name: "Rash Guards" },
-  { id: "gear", name: "Training Gear" },
-  { id: "accessories", name: "Accessories" },
-] as const satisfies readonly { id: TuffBuffsMerchCategoryId; name: string }[]
-
 const PLACEHOLDER_IMAGE_PATH = "/images/merch/placeholder.svg"
 
-export const tuffBuffsMerchProducts = [
+const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
   {
     id: "tb-tshirt-classic-black",
     name: "TuffBuffs Classic Tee",
@@ -104,11 +113,9 @@ export const tuffBuffsMerchProducts = [
     currency: "usd",
     colors: ["Black", "White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
-    description:
-      "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
+    description: "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
     features: ["Moisture-wicking jersey", "Breathable fabric", "Athletic fit", "Durable print"],
-    imagePath:
-      "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
+    imagePath: "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-back-698dda8dd888e.png",
@@ -133,11 +140,9 @@ export const tuffBuffsMerchProducts = [
     currency: "usd",
     colors: ["Black", "White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
-    description:
-      "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
+    description: "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
     features: ["Moisture-wicking jersey", "Breathable fabric", "Athletic fit", "Durable print"],
-    imagePath:
-      "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
+    imagePath: "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd81d6.png",
@@ -164,8 +169,7 @@ export const tuffBuffsMerchProducts = [
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Cotton heritage pullover hoodie with TuffBuffs branding.",
     features: ["Soft fleece interior", "Pullover fit", "Kangaroo pocket", "Drawstring hood"],
-    imagePath:
-      "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
+    imagePath: "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
       "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-right-front-698dd20f65916.png",
@@ -185,8 +189,7 @@ export const tuffBuffsMerchProducts = [
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Cotton heritage pullover hoodie with TuffBuffs branding.",
     features: ["Soft fleece interior", "Pullover fit", "Kangaroo pocket", "Drawstring hood"],
-    imagePath:
-      "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
+    imagePath: "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
       "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-left-front-698dd20f6707f.png",
@@ -205,14 +208,8 @@ export const tuffBuffsMerchProducts = [
     colors: ["Black", "Gold"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "All-over print long sleeve rash guard with TuffBuffs branding.",
-    features: [
-      "Compression fit",
-      "Anti-microbial fabric",
-      "Sublimated design",
-      "Reinforced stitching",
-    ],
-    imagePath:
-      "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
+    features: ["Compression fit", "Anti-microbial fabric", "Sublimated design", "Reinforced stitching"],
+    imagePath: "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
       "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-back-68bb1b3d6a895.png",
@@ -232,12 +229,7 @@ export const tuffBuffsMerchProducts = [
     colors: ["White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "IBJJF-compliant white ranked rash guard for BJJ competition.",
-    features: [
-      "4-way stretch fabric",
-      "Flatlock stitching",
-      "Sublimated graphics",
-      "IBJJF compliant",
-    ],
+    features: ["4-way stretch fabric", "Flatlock stitching", "Sublimated graphics", "IBJJF compliant"],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -252,12 +244,7 @@ export const tuffBuffsMerchProducts = [
     colors: ["Black"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "IBJJF-compliant black ranked rash guard for BJJ competition.",
-    features: [
-      "4-way stretch fabric",
-      "Flatlock stitching",
-      "Sublimated graphics",
-      "IBJJF compliant",
-    ],
+    features: ["4-way stretch fabric", "Flatlock stitching", "Sublimated graphics", "IBJJF compliant"],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -272,12 +259,7 @@ export const tuffBuffsMerchProducts = [
     colors: ["Black/Gold"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Premium no-gi rash guard with full TuffBuffs branding.",
-    features: [
-      "Compression fit",
-      "Anti-microbial fabric",
-      "Sublimated design",
-      "Reinforced stitching",
-    ],
+    features: ["Compression fit", "Anti-microbial fabric", "Sublimated design", "Reinforced stitching"],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     featured: true,
     inStock: true,
@@ -305,12 +287,7 @@ export const tuffBuffsMerchProducts = [
     currency: "usd",
     sizes: ["12oz", "14oz", "16oz"],
     description: "Quality boxing gloves with TuffBuffs branding.",
-    features: [
-      "Multi-layer foam padding",
-      "Velcro wrist closure",
-      "Synthetic leather",
-      "Thumb lock",
-    ],
+    features: ["Multi-layer foam padding", "Velcro wrist closure", "Synthetic leather", "Thumb lock"],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -350,12 +327,7 @@ export const tuffBuffsMerchProducts = [
     currency: "usd",
     sizes: ["S", "M", "L", "XL"],
     description: "Protective headgear for sparring sessions.",
-    features: [
-      "Full face protection",
-      "Adjustable chin strap",
-      "Open top design",
-      "Synthetic leather",
-    ],
+    features: ["Full face protection", "Adjustable chin strap", "Open top design", "Synthetic leather"],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -456,13 +428,102 @@ export const tuffBuffsMerchProducts = [
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
-] as const satisfies readonly TuffBuffsMerchProduct[]
+]
 
-export const getTuffBuffsStripePriceLookupKey = (product: Pick<TuffBuffsMerchProduct, "id">) =>
-  `tuffbuffs_merch_${product.id.replaceAll("-", "_")}`
+const adapter = new PrismaPg({
+  connectionString:
+    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+})
+const db = new PrismaClient({ adapter })
 
-export const getTuffBuffsMerchProductsByCategory = (category: TuffBuffsMerchCategoryId) =>
-  tuffBuffsMerchProducts.filter(product => product.category === category)
+const args = process.argv.slice(2)
+const orgIdFlag = args.includes("--org-id")
+  ? args[args.indexOf("--org-id") + 1]
+  : null
 
-export const getTuffBuffsMerchProductById = (id: string) =>
-  tuffBuffsMerchProducts.find(product => product.id === id)
+async function main() {
+  // Resolve org
+  let organizationId = orgIdFlag
+  if (!organizationId) {
+    const org = await db.organization.findFirst({
+      where: { brand: "BASELINE_MARTIAL_ARTS" },
+      select: { id: true, name: true },
+    })
+    if (!org) {
+      console.error(
+        "❌ No BASELINE_MARTIAL_ARTS organization found. Run main seed first or pass --org-id.",
+      )
+      process.exit(1)
+    }
+    organizationId = org.id
+    console.log(`📍 Using org: ${org.name} (${org.id})`)
+  }
+
+  console.log(
+    `\n🌱 Seeding ${tuffBuffsMerchProducts.length} TuffBuffs merch products as PricingPlan rows...\n`,
+  )
+
+  let created = 0
+  let skipped = 0
+
+  for (const product of tuffBuffsMerchProducts) {
+    // Idempotent: skip if a row with this name already exists for this org
+    const existing = await db.pricingPlan.findFirst({
+      where: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        organizationId,
+        name: product.name,
+      },
+    })
+
+    if (existing) {
+      console.log(`   ⏭️  Skipped (exists): ${product.name}`)
+      skipped++
+      continue
+    }
+
+    await db.pricingPlan.create({
+      data: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        name: product.name,
+        pricingModel: "CUSTOM",
+        amountCents: product.amountCents,
+        isActive: true,
+        organizationId,
+        sortOrder: created,
+        metadata: {
+          externalId: product.id,
+          description: product.description,
+          category: product.category,
+          type: product.type,
+          classType: product.classType ?? null,
+          colors: product.colors ? [...product.colors] : [],
+          sizes: product.sizes ? [...product.sizes] : [],
+          features: [...product.features],
+          imagePath: product.imagePath,
+          imagePaths: product.imagePaths ? [...product.imagePaths] : [],
+          featured: product.featured ?? false,
+          inStock: product.inStock,
+          currency: product.currency,
+          shippingFeeCents: TUFFBUFFS_MERCH_SHIPPING_FEE_CENTS,
+          source: "tuffbuffs-merch",
+        },
+      },
+    })
+    console.log(
+      `   ✅ Created: ${product.name} ($${(product.amountCents / 100).toFixed(2)})`,
+    )
+    created++
+  }
+
+  console.log(
+    `\n🎉 Done! Created: ${created}, Skipped: ${skipped}, Total: ${tuffBuffsMerchProducts.length}`,
+  )
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Seed error:", e)
+    process.exit(1)
+  })
+  .finally(() => db.$disconnect())
