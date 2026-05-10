@@ -586,3 +586,23 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0113_TASK_01, SESSION_0113_TASK_02, SESSION_0113_TASK_03, SESSION_0113_TASK_04, SESSION_0113_TASK_05
 **Verdict:** All 5 tasks landed. Smoke test passed end-to-end. FS-0018 caught and fixed. Stripe display names corrected. Email wired but waiting on Resend (MB-015). Petey plan pre-staged for SESSION_0114 (Printful POD + Resend setup). Kaizen aggregate: 9.
+
+### SESSION_0114_TASK_00 — Infrastructure documentation folder
+
+**Files:** `docs/architecture/infrastructure/README.md` (NEW), `domain-hosting-registry.md` (NEW), `dns-verification-spec.md` (NEW), `email-delivery-spec.md` (NEW), `hosting-data-flow.md` (NEW), `docs/architecture/decisions/0015-domain-hosting-infrastructure.md` (NEW)
+**Result:** Created infrastructure docs folder with master domain registry (6 domains), DNS record matrix per service, email delivery architecture, hosting data flow diagrams (ASCII + Mermaid). ADR 0015 documents SSH scripts as dead scope, Bluehost retained as DNS registrar only.
+
+### SESSION_0114_TASK_01 — Resend setup runbook (spec only)
+
+**Files:** `docs/runbooks/resend-setup-runbook.md` (NEW)
+**Result:** 8-step operator runbook for Resend account creation, domain verification in Bluehost cPanel, env var config, test flow, troubleshooting, Vercel production config. Execution deferred — Brian needs to create Resend account and do DNS verification.
+
+### SESSION_0114_TASK_02 — Printful POD integration spec (spec only)
+
+**Files:** `docs/architecture/printful-pod-spec.md` (NEW)
+**Result:** Full integration spec with current vs target state flows, Printful API overview, product mapping strategy (metadata.printfulVariantId), order creation flow, fulfillment webhook design, file structure, 7 open decisions with leanings, Mermaid sequence diagram, 3-phase implementation priority. Execution deferred to next session pending Brian sign-off on open decisions.
+
+### SESSION_0114_REVIEW_01 — Full close review
+
+**Reviewed tasks:** SESSION_0114_TASK_00, SESSION_0114_TASK_01, SESSION_0114_TASK_02
+**Verdict:** All 3 tasks landed as spec/doc work. No code changes — pure documentation session. Infrastructure folder well-structured with ASCII + Mermaid diagrams. Resend runbook ready for operator execution. Printful spec has 7 open decisions needing Brian sign-off. Wiki index updated with all new entries. Graphify query confirmed integration points. Kaizen aggregate: 8.

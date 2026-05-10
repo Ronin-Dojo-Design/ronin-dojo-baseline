@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-09
 author: Brian + Copilot
-last_agent: copilot-session-0103
+last_agent: copilot-session-0114
 ---
 
 # LLM Wiki Index
@@ -82,6 +82,12 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0029 Commerce Learning Path Raw Source](../../architecture/source/raw/SESSION_0029_programs_curriculum_monetization_chatgpt_raw.md) | source | active |
 | [SESSION_0030 CGR File System and Wiring Map Raw Source](../../architecture/source/raw/SESSION_0030_cgr_file_system_wiring_map_chatgpt_raw.md) | source | active |
 | [S2–S4 Pattern Compliance Audit](../../architecture/s2-s4-pattern-audit.md) | file | active |
+| [Printful POD Integration Spec](../../architecture/printful-pod-spec.md) | spec | draft |
+| [Infrastructure README](../../architecture/infrastructure/README.md) | index | active |
+| [Domain Hosting Registry](../../architecture/infrastructure/domain-hosting-registry.md) | spec | active |
+| [DNS Verification Spec](../../architecture/infrastructure/dns-verification-spec.md) | spec | active |
+| [Email Delivery Spec](../../architecture/infrastructure/email-delivery-spec.md) | spec | active |
+| [Hosting Data Flow](../../architecture/infrastructure/hosting-data-flow.md) | spec | active |
 | [Cache Risk Register](../../architecture/cache-risk-register.md) | file | active |
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active |
 | [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated |
@@ -97,6 +103,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0011 Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
 | [ADR 0012 Admin CRUD Routing Pattern](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
 | [ADR 0014 Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | proposed |
+| [ADR 0015 Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
 
 ## Sessions
 
@@ -162,6 +169,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0111](../../sprints/SESSION_0111.md) | session | closed-full |
 | [SESSION_0112](../../sprints/SESSION_0112.md) | session | closed-full |
 | [SESSION_0113](../../sprints/SESSION_0113.md) | session | closed-full |
+| [SESSION_0114](../../sprints/SESSION_0114.md) | session | closed-full |
 
 ## Protocols
 
@@ -209,6 +217,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) | runbook | active |
 | [AWS S3 Operator Runbook](../../runbooks/aws-s3-operator-runbook.md) | runbook | active |
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
+| [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
+| [Deployment](../../runbooks/deployment.md) | runbook | active |
 
 ## Code files (annotated)
 
