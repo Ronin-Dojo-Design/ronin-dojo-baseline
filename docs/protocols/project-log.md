@@ -593,3 +593,22 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0106_TASK_01, SESSION_0106_TASK_02, SESSION_0106_TASK_03, SESSION_0106_TASK_04
 **Verdict:** All tasks landed. Gear page caching added (ISR 1hr). Metadata JSON editor uses Dirstarter TextArea component with JSON parse/validate. Catalog removal audited — dependencies documented, cannot remove yet. ADR 0014 accepted with implementation provenance. No scope creep. No new security surfaces. No cross-brand leakage risk.
+
+---
+
+## SESSION_VIDEO_R001 — Video Components System: Review & Recommend (off-number planning session)
+
+### VIDEO_R001_TASK_PLAN_01 — Petey Plan: Video System Architecture
+
+- **ID:** VIDEO_R001_TASK_PLAN_01
+- **Owner:** Petey
+- **Session:** SESSION_VIDEO_R001
+- **Date:** 2026-05-10
+- **Done criteria:** Complete plan with schema design, player stack decision, component architecture, admin routes, 7 tasks defined.
+- **Status:** landed
+- **Verification:** SESSION_VIDEO_R001.md created with full Petey plan block. framecn research complete. Schema designs documented. All 7 execution tasks defined with agent assignments and parallelism map. Pending user sign-off on schema before TASK_01 execution.
+
+### VIDEO_R001_REVIEW_01 — Hostile Close Review (planning session)
+
+**Reviewed tasks:** VIDEO_R001_TASK_PLAN_01
+**Verdict:** Planning session only — no code executed. Plan is aligned to Dirstarter Gold Standard (§9), uses existing Entitlement system for gating, follows ADR 0004 brand column convention. framecn correctly identified as wrong tool. Open decisions documented. Schema sign-off gated before execution. Safe to proceed.
