@@ -161,6 +161,41 @@ TASK_05 (verify — final gate)
 - Carried: Athletic tee women's variant — same unisex A4 N3142
 - **Migration not yet applied** — `statusHistory` field + indexes need `bun db:migrate dev` run. Schema is ready, migration deferred to Brian's discretion (requires DB access).
 
+## Task Log
+
+- SESSION_0121_TASK_01 — ✅ done
+- SESSION_0121_TASK_02 — ✅ done
+- SESSION_0121_TASK_03 — ✅ done
+- SESSION_0121_TASK_04 — ✅ done
+- SESSION_0121_TASK_05 — ✅ done
+
+## Review Log
+
+SESSION_0121_REVIEW_01 — Merch Order Remediation. All 5 tasks completed. All SESSION_0120 findings remediated. No new findings. Migration pending.
+
+## Hostile Close Review
+
+Not applicable — quick close. No Dirstarter baseline layer touched (backend-only remediation). No security or auth changes beyond documenting existing webhook behavior.
+
+## ADR / Ubiquitous-Language Check
+
+- No new ADRs needed. Existing ADR 0004 (brand scoping) reaffirmed in TASK_04 webhook documentation.
+- No new domain terms introduced.
+
+## JETTY 3.0 Sweep
+
+- `docs/knowledge/wiki/files/schema-prisma.md` — bumped `updated` to 2026-05-10, `last_agent` to `copilot-session-0121`
+- `docs/knowledge/wiki/index.md` — added SESSION_0119, 0120, 0121 entries; fixed 0120 status to `closed-full`
+- `docs/sprints/SESSION_0120.md` — added backlink to SESSION_0121
+- Wiki lint: ✅ 0 violations (270 files scanned)
+
+## Git Hygiene
+
+- Branch: `main`
+- Worktrees: 2 stale worktrees from SESSION_0085 (`codex/session-0085-route`, `codex/session-0085-tests`) — both on same commit `d7607a9`, likely mergeable. Recorded for cleanup.
+- Code changes committed in `297f861`
+- Closing ritual file updates uncommitted (wiki/index, schema-prisma wiki, SESSION_0120 backlink)
+
 ## Next Session
 
 **Goal:** SESSION_0122 — Build `/disciplines` list + detail pages as the Dirstarter-pattern reference implementation for the entity page arc.

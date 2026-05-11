@@ -11,9 +11,7 @@ pairs_with:
   - docs/sprints/SESSION_0119.md
 backlinks:
   - docs/knowledge/wiki/index.md
----
-
-# SESSION 0120 — Printful Phase 3: Admin Merch Order Dashboard
+  - docs/sprints/SESSION_0121.md
 
 ## Date
 

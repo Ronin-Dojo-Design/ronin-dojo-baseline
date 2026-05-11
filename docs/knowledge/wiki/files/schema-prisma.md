@@ -4,9 +4,9 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-29
+updated: 2026-05-10
 author: Brian + Copilot
-last_agent: codex-session-0025
+last_agent: copilot-session-0121
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
