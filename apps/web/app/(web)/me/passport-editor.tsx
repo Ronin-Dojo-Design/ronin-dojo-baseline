@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/common/form"
+import { FormMedia } from "~/components/common/form-media"
 import { H2 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import {
@@ -32,6 +33,7 @@ import {
   updatePassportSchema,
   updateDirectoryProfileSchema,
 } from "~/server/web/passport/schemas"
+import { SocialLinksEditor } from "./_components/social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
 const str = (v: string | null | undefined) => v ?? ""
@@ -39,13 +41,15 @@ const str = (v: string | null | undefined) => v ?? ""
 type Props = {
   passport: Passport
   directoryProfile: DirectoryProfile
+  userId: string
+  canUploadVideo: boolean
 }
 
-export function PassportEditor({ passport, directoryProfile }: Props) {
+export function PassportEditor({ passport, directoryProfile, userId, canUploadVideo }: Props) {
   return (
     <div className="flex flex-col gap-10">
-      <PassportForm passport={passport} />
-      <DirectoryProfileForm directoryProfile={directoryProfile} />
+      <PassportForm passport={passport} userId={userId} />
+      <DirectoryProfileForm directoryProfile={directoryProfile} userId={userId} canUploadVideo={canUploadVideo} />
     </div>
   )
 }
@@ -54,7 +58,7 @@ export function PassportEditor({ passport, directoryProfile }: Props) {
 // Passport form
 // ---------------------------------------------------------------------------
 
-function PassportForm({ passport }: { passport: Passport }) {
+function PassportForm({ passport, userId }: { passport: Passport; userId: string }) {
   const { form, handleSubmitWithAction } = useHookFormAction(
     updatePassport,
     zodResolver(updatePassportSchema),
@@ -71,6 +75,9 @@ function PassportForm({ passport }: { passport: Passport }) {
           emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
           avatarUrl: str(passport.avatarUrl),
           bio: str(passport.bio),
+          socialLinks: Array.isArray(passport.socialLinks)
+            ? (passport.socialLinks as Array<{ platform: string; url: string }>)
+            : [],
         },
       },
       actionProps: {
@@ -217,13 +224,15 @@ function PassportForm({ passport }: { passport: Passport }) {
             control={form.control}
             name="avatarUrl"
             render={({ field }) => (
-              <FormItem className="@md:col-span-2">
-                <FormLabel>Avatar URL</FormLabel>
-                <FormControl>
-                  <Input type="url" placeholder="https://example.com/avatar.jpg" {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormMedia form={form} field={field} path={`passports/${userId}/avatar`} className="@md:col-span-2">
+                {field.value && (
+                  <img
+                    src={field.value}
+                    alt="Avatar preview"
+                    className="size-20 rounded-full object-cover"
+                  />
+                )}
+              </FormMedia>
             )}
           />
 
@@ -242,6 +251,10 @@ function PassportForm({ passport }: { passport: Passport }) {
           />
 
           <div className="@md:col-span-2">
+            <SocialLinksEditor form={form} />
+          </div>
+
+          <div className="@md:col-span-2">
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "Saving…" : "Save passport"}
             </Button>
@@ -256,7 +269,7 @@ function PassportForm({ passport }: { passport: Passport }) {
 // Directory profile form
 // ---------------------------------------------------------------------------
 
-function DirectoryProfileForm({ directoryProfile }: { directoryProfile: DirectoryProfile }) {
+function DirectoryProfileForm({ directoryProfile, userId, canUploadVideo }: { directoryProfile: DirectoryProfile; userId: string; canUploadVideo: boolean }) {
   const { form, handleSubmitWithAction } = useHookFormAction(
     updateDirectoryProfile,
     zodResolver(updateDirectoryProfileSchema),
@@ -272,6 +285,8 @@ function DirectoryProfileForm({ directoryProfile }: { directoryProfile: Director
           showPhone: directoryProfile.showPhone,
           showOrgs: directoryProfile.showOrgs,
           showRanks: directoryProfile.showRanks,
+          coverPhotoUrl: str(directoryProfile.coverPhotoUrl),
+          videoIntroUrl: str(directoryProfile.videoIntroUrl),
         },
       },
       actionProps: {
@@ -361,6 +376,49 @@ function DirectoryProfileForm({ directoryProfile }: { directoryProfile: Director
                 <FormControl>
                   <Input maxLength={2} placeholder="US" {...field} value={str(field.value)} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="coverPhotoUrl"
+            render={({ field }) => (
+              <FormMedia form={form} field={field} path={`profiles/${userId}/cover`} className="@md:col-span-2">
+                {field.value && (
+                  <img
+                    src={field.value}
+                    alt="Cover photo preview"
+                    className="h-32 w-full rounded-md object-cover"
+                  />
+                )}
+              </FormMedia>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="videoIntroUrl"
+            render={({ field }) => (
+              <FormItem className="@md:col-span-2">
+                <FormLabel>Video intro</FormLabel>
+                {canUploadVideo ? (
+                  <FormMedia form={form} field={field} path={`profiles/${userId}/video`}>
+                    {field.value && (
+                      <p className="text-muted-foreground text-sm truncate">{field.value}</p>
+                    )}
+                  </FormMedia>
+                ) : (
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="YouTube or Vimeo URL"
+                      {...field}
+                      value={str(field.value)}
+                    />
+                  </FormControl>
+                )}
                 <FormMessage />
               </FormItem>
             )}

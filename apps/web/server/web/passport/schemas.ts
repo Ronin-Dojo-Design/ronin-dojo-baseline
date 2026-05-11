@@ -15,7 +15,10 @@ export const updatePassportSchema = z.object({
   emergencyContactPhoneE164: z.string().max(20).optional(),
   avatarUrl: z.string().url().max(2048).optional(),
   bio: z.string().max(2000).optional(),
-  socialLinks: z.record(z.string(), z.string().url()).optional(),
+  socialLinks: z.array(z.object({
+    platform: z.string(),
+    url: z.string().url(),
+  })).optional(),
 })
 
 export const updateDirectoryProfileSchema = z.object({
@@ -28,4 +31,6 @@ export const updateDirectoryProfileSchema = z.object({
   showPhone: z.boolean().optional(),
   showOrgs: z.boolean().optional(),
   showRanks: z.boolean().optional(),
+  coverPhotoUrl: z.string().url().max(2048).optional(),
+  videoIntroUrl: z.string().url().max(2048).optional(),
 })

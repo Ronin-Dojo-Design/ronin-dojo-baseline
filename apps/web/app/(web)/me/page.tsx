@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
+import { canUploadMedia } from "~/server/web/entitlements/queries"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
 import { PassportEditor } from "./passport-editor"
 
@@ -28,6 +30,9 @@ export default async function MePage() {
     redirect("/auth/login")
   }
 
+  const brand = await getRequestBrand()
+  const canUpload = await canUploadMedia(session.user.id, brand)
+
   return (
     <>
       <Intro>
@@ -39,7 +44,12 @@ export default async function MePage() {
 
       <Section>
         <Section.Content>
-          <PassportEditor passport={passport} directoryProfile={directoryProfile} />
+          <PassportEditor
+            passport={passport}
+            directoryProfile={directoryProfile}
+            userId={session.user.id}
+            canUploadVideo={canUpload}
+          />
         </Section.Content>
       </Section>
     </>

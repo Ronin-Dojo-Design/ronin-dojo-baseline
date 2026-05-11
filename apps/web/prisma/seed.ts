@@ -976,6 +976,21 @@ async function main() {
   console.log("Created 6 system roles")
 
   // ---------------------------------------------------------------------------
+  // Entitlements (system defaults — SESSION_0128)
+  // ---------------------------------------------------------------------------
+  const brands = ["RONIN_DOJO_DESIGN", "BASELINE_MARTIAL_ARTS", "BBL", "WEKAF"] as const
+  await db.entitlement.createMany({
+    data: brands.map(brand => ({
+      brand,
+      key: "S3_UPLOAD",
+      name: "Media Upload",
+      description: "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
+    })),
+    skipDuplicates: true,
+  })
+  console.log("Created S3_UPLOAD entitlements for all brands")
+
+  // ---------------------------------------------------------------------------
   // Tournament Roles (4 system defaults)
   // ---------------------------------------------------------------------------
   await db.tournamentRole.createMany({
