@@ -5,6 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import type { DirectoryProfile, Passport } from "~/.generated/prisma/client"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
+import { Checkbox } from "~/components/common/checkbox"
 import {
   Form,
   FormControl,
@@ -13,7 +14,15 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/common/form"
+import { H2 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
 import {
   updatePassport,
@@ -55,9 +64,12 @@ function PassportForm({ passport }: { passport: Passport }) {
           displayName: str(passport.displayName),
           legalFirstName: str(passport.legalFirstName),
           legalLastName: str(passport.legalLastName),
+          dob: passport.dob ? new Date(passport.dob) : undefined,
+          gender: passport.gender ?? undefined,
           phoneE164: str(passport.phoneE164),
           emergencyContactName: str(passport.emergencyContactName),
           emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
+          avatarUrl: str(passport.avatarUrl),
           bio: str(passport.bio),
         },
       },
@@ -70,10 +82,10 @@ function PassportForm({ passport }: { passport: Passport }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Identity</h2>
+      <H2>Identity</H2>
 
       <Form {...form}>
-        <form onSubmit={handleSubmitWithAction} className="grid gap-4 @md:grid-cols-2" noValidate>
+        <form onSubmit={handleSubmitWithAction} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
           <FormField
             control={form.control}
             name="displayName"
@@ -111,6 +123,49 @@ function PassportForm({ passport }: { passport: Passport }) {
                 <FormControl>
                   <Input {...field} value={str(field.value)} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dob"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of birth</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : str(field.value as string)}
+                    onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Gender</FormLabel>
+                <Select value={field.value ?? ""} onValueChange={v => field.onChange(v || undefined)}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="NONBINARY">Non-binary</SelectItem>
+                    <SelectItem value="PREFER_NOT_TO_SAY">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -160,6 +215,20 @@ function PassportForm({ passport }: { passport: Passport }) {
 
           <FormField
             control={form.control}
+            name="avatarUrl"
+            render={({ field }) => (
+              <FormItem className="@md:col-span-2">
+                <FormLabel>Avatar URL</FormLabel>
+                <FormControl>
+                  <Input type="url" placeholder="https://example.com/avatar.jpg" {...field} value={str(field.value)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="bio"
             render={({ field }) => (
               <FormItem className="@md:col-span-2">
@@ -194,6 +263,7 @@ function DirectoryProfileForm({ directoryProfile }: { directoryProfile: Director
     {
       formProps: {
         values: {
+          slug: str(directoryProfile.slug),
           visibility: directoryProfile.visibility,
           locationCity: str(directoryProfile.locationCity),
           locationRegion: str(directoryProfile.locationRegion),
@@ -213,26 +283,42 @@ function DirectoryProfileForm({ directoryProfile }: { directoryProfile: Director
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Directory profile</h2>
+      <H2>Directory Profile</H2>
 
       <Form {...form}>
-        <form onSubmit={handleSubmitWithAction} className="grid gap-4 @md:grid-cols-2" noValidate>
+        <form onSubmit={handleSubmitWithAction} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
+          <FormField
+            control={form.control}
+            name="slug"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Profile slug</FormLabel>
+                <FormControl>
+                  <Input placeholder="your-name" {...field} value={str(field.value)} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="visibility"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Visibility</FormLabel>
-                <FormControl>
-                  <select
-                    className="w-full rounded-md border px-3 py-2 text-sm"
-                    {...field}
-                  >
-                    <option value="HIDDEN">Hidden</option>
-                    <option value="MEMBERS_ONLY">Members only</option>
-                    <option value="PUBLIC">Public</option>
-                  </select>
-                </FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select visibility" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="HIDDEN">Hidden</SelectItem>
+                    <SelectItem value="MEMBERS_ONLY">Members only</SelectItem>
+                    <SelectItem value="PUBLIC">Public</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -289,15 +375,13 @@ function DirectoryProfileForm({ directoryProfile }: { directoryProfile: Director
                 render={({ field }) => (
                   <FormItem className="flex items-center gap-2">
                     <FormControl>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={field.value}
-                        onChange={field.onChange}
+                        onCheckedChange={field.onChange}
                         aria-label={name.replace("show", "Show ")}
-                        className="size-4 rounded border"
                       />
                     </FormControl>
-                    <FormLabel className="!mt-0 capitalize">
+                    <FormLabel className="mt-0! capitalize">
                       {name.replace("show", "Show ")}
                     </FormLabel>
                   </FormItem>
