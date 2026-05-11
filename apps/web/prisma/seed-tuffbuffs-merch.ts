@@ -97,7 +97,7 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     classType: "eskrima",
     amountCents: 3000,
     currency: "usd",
-    colors: ["Black", "Green"],
+    colors: ["Black", "Red", "Navy", "Yellow", "White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Filipino Martial Arts shirt with crossed sticks emblem.",
     features: ["Moisture-wicking blend", "Athletic fit", "Side vents"],

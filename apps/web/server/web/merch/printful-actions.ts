@@ -55,11 +55,11 @@ const PRINTFUL_VARIANT_MAP: Record<string, Record<string, Record<string, number>
     "2XL": { "Black": 4020, "Gold": 4085 },
   },
   "tb-tshirt-eskrima": {
-    "S":   { "Black": 4016, "Green": 17203 },
-    "M":   { "Black": 4017, "Green": 17204 },
-    "L":   { "Black": 4018, "Green": 17205 },
-    "XL":  { "Black": 4019, "Green": 17206 },
-    "2XL": { "Black": 4020, "Green": 17209 },
+    "S":   { "Black": 4016, "Red": 4141, "Navy": 4111, "Yellow": 4181, "White": 4011 },
+    "M":   { "Black": 4017, "Red": 4142, "Navy": 4112, "Yellow": 4182, "White": 4012 },
+    "L":   { "Black": 4018, "Red": 4143, "Navy": 4113, "Yellow": 4183, "White": 4013 },
+    "XL":  { "Black": 4019, "Red": 4144, "Navy": 4114, "Yellow": 4184, "White": 4014 },
+    "2XL": { "Black": 4020, "Red": 4145, "Navy": 4115, "Yellow": 4185, "White": 4015 },
   },
 
   // ──────────────────────────────────────────────────────────────
