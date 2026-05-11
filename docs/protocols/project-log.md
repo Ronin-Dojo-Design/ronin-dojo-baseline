@@ -646,3 +646,18 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0116_TASK_01, SESSION_0116_TASK_02
 **Verdict:** Both tasks landed. TASK_01 partially blocked on Resend DNS propagation (self-resolving). TASK_02 fully complete — API key wired and 3 sandbox tests passed. No Dirstarter baseline layers touched. No schema/auth/payment code changes. Only `.env` modified (gitignored). Score: 9/10. Kaizen aggregate: 9.
+
+### SESSION_0117_TASK_01 — Resend domain verification check
+
+**Files:** none (DNS check only)
+**Result:** Domain still pending verification after re-sending. Blocked on Bluehost DNS propagation for `send` subdomain MX/TXT records. Deferred to next session.
+
+### SESSION_0117_TASK_02 — Printful Phase 1 implementation
+
+**Files:** `apps/web/prisma/schema.prisma` (MODIFIED), `apps/web/prisma/migrations/20260511011048_add_merch_order_fulfillment/migration.sql` (NEW), `apps/web/server/web/merch/printful-actions.ts` (NEW), `apps/web/app/api/stripe/webhooks/route.ts` (MODIFIED), `docs/runbooks/printful-setup-runbook.md` (MODIFIED)
+**Result:** Full Phase 1 delivered. FulfillmentStatus enum (9 states) + MerchOrder model + migration applied. createPrintfulOrder() with variant map populated from live Printful API (13 POD products mapped across 4 catalog products: BC 3001, A4 N3142, BC 3719, Men's Rash Guard). Stripe webhook wired to create MerchOrder + trigger Printful via after(). Runbook updated with implementation status.
+
+### SESSION_0117_REVIEW_01 — Full close review
+
+**Reviewed tasks:** SESSION_0117_TASK_01, SESSION_0117_TASK_02
+**Verdict:** TASK_01 blocked on DNS — expected, no action possible. TASK_02 fully delivered — schema, migration, server action, webhook wiring, variant map, runbook all landed. Dirstarter alignment: extends existing Stripe/Prisma patterns (no baseline bypass). Schema change follows Invoice/Payment model conventions. No auth/security changes. Hostile close review deferred — recommend batching sessions 0114–0117 for Printful integration arc review. Score: 9.5/10. Deduction: wiki-lint not run (-0.5).

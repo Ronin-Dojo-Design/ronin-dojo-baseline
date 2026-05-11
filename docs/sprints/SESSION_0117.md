@@ -139,4 +139,4 @@ TASK_01: Check Resend domain verification → send test email if verified. Then 
 | Review & Recommend | Next session goal written: yes — Resend test email + Printful Phase 2 webhook handler |
 | Memory sweep | Printful catalog product IDs: BC 3001 = 71, A4 N3142 = 679, BC 3719 = 294, Men's Rash Guard = 301. Rash guards are all-over-print CUT-SEW on White base — design via print files. Gear/accessories (11 items) are NOT POD-fulfillable. |
 | Next session unblock check | Partially blocked on Resend DNS (self-resolving). Printful Phase 2 webhook work is fully unblocked. |
-| Git hygiene | Pending — see below |
+| Git hygiene | On `main`, clean working tree. Two commits: `2560747` (feat: MerchOrder + Printful Phase 1), `25e2101` (docs: full close artifacts). No secrets staged. Graphify incremental update run (35 new nodes, 102 edges). |
