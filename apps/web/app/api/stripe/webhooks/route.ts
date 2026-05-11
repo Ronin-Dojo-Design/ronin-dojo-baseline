@@ -4,6 +4,7 @@ import type Stripe from "stripe"
 import type { Brand } from "~/.generated/prisma/client"
 import { env } from "~/env"
 import { notifyAdminOfPremiumTool, notifyCustomerOfMerchOrder, notifySubmitterOfPremiumTool } from "~/lib/notifications"
+import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
 import { upsertStripeCustomerMapping } from "~/server/web/billing/stripe-customers"
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
@@ -980,9 +981,10 @@ export const POST = async (req: Request) => {
               break
             }
 
-            // Handle merch purchase — create ledger only, no entitlement grant
+            // Handle merch purchase — create MerchOrder + trigger Printful POD
             // Physical goods: no digital access to provision
-            // @see docs/sprints/SESSION_0112.md TASK_07
+            // @see docs/architecture/printful-pod-spec.md — Order Creation Flow
+            // @see docs/sprints/SESSION_0112.md TASK_07, SESSION_0117 TASK_02
             if (metadata?.type === "merch_purchase") {
               console.log(
                 `🛍️ Merch purchase: user=${metadata.userId} plan=${metadata.pricingPlanId} size=${metadata.size ?? "n/a"} color=${metadata.color ?? "n/a"}`,
@@ -990,24 +992,65 @@ export const POST = async (req: Request) => {
               // Ledger already created by createLedgerFromCheckout above
               // Shipping address is on the Stripe session (session.shipping_details)
 
-              // Send order confirmation email
               const customerEmail = session.customer_details?.email
-              if (customerEmail && metadata.pricingPlanId) {
-                const plan = await db.pricingPlan.findUnique({
-                  where: { id: metadata.pricingPlanId },
-                  select: { name: true, amountCents: true },
-                })
-                const shipping = (session as any).shipping_details as {
-                  name?: string | null
-                  address?: {
-                    line1?: string | null
-                    line2?: string | null
-                    city?: string | null
-                    state?: string | null
-                    postal_code?: string | null
-                  } | null
-                } | null
+              const plan = metadata.pricingPlanId
+                ? await db.pricingPlan.findUnique({
+                    where: { id: metadata.pricingPlanId },
+                    select: { name: true, amountCents: true, organizationId: true, metadata: true },
+                  })
+                : null
 
+              const shipping = (session as any).shipping_details as {
+                name?: string | null
+                address?: {
+                  line1?: string | null
+                  line2?: string | null
+                  city?: string | null
+                  state?: string | null
+                  postal_code?: string | null
+                  country?: string | null
+                } | null
+              } | null
+
+              // Create MerchOrder record
+              const merchProductId = (plan?.metadata as any)?.merchProductId ?? metadata.pricingPlanId
+              const merchOrder = await db.merchOrder.create({
+                data: {
+                  brand: (metadata.brand as Brand) ?? "BASELINE_MARTIAL_ARTS",
+                  stripeCheckoutSessionId: session.id,
+                  stripePaymentIntentId: typeof session.payment_intent === "string"
+                    ? session.payment_intent
+                    : session.payment_intent?.id ?? null,
+                  fulfillmentStatus: "PAID",
+                  customerEmail: customerEmail ?? "",
+                  customerName: session.customer_details?.name ?? shipping?.name ?? null,
+                  amountCents: plan?.amountCents ?? 0,
+                  shippingCents: 499,
+                  totalCents: session.amount_total ?? 0,
+                  lineItems: [{
+                    merchProductId,
+                    productName: plan?.name ?? "TuffBuffs Merch",
+                    size: metadata.size ?? null,
+                    color: metadata.color ?? null,
+                    quantity: 1,
+                  }],
+                  shippingName: shipping?.name ?? null,
+                  shippingAddress1: shipping?.address?.line1 ?? null,
+                  shippingAddress2: shipping?.address?.line2 ?? null,
+                  shippingCity: shipping?.address?.city ?? null,
+                  shippingState: shipping?.address?.state ?? null,
+                  shippingPostalCode: shipping?.address?.postal_code ?? null,
+                  shippingCountryCode: shipping?.address?.country ?? "US",
+                  userId: metadata.userId,
+                  organizationId: plan?.organizationId ?? "",
+                  pricingPlanId: metadata.pricingPlanId ?? null,
+                },
+              })
+
+              console.log(`📝 MerchOrder created: ${merchOrder.id}`)
+
+              // Send order confirmation email
+              if (customerEmail) {
                 after(async () =>
                   notifyCustomerOfMerchOrder({
                     customerEmail,
@@ -1025,6 +1068,33 @@ export const POST = async (req: Request) => {
                     shippingPostalCode: shipping?.address?.postal_code,
                   }),
                 )
+              }
+
+              // Trigger Printful order creation (non-blocking)
+              if (shipping?.address?.line1 && shipping?.address?.city && shipping?.address?.state && shipping?.address?.postal_code) {
+                after(async () =>
+                  createPrintfulOrder({
+                    merchOrderId: merchOrder.id,
+                    recipient: {
+                      name: shipping?.name ?? session.customer_details?.name ?? "Customer",
+                      email: customerEmail ?? "",
+                      address1: shipping.address!.line1!,
+                      address2: shipping.address?.line2,
+                      city: shipping.address!.city!,
+                      state: shipping.address!.state!,
+                      postalCode: shipping.address!.postal_code!,
+                      countryCode: shipping.address?.country ?? "US",
+                    },
+                    items: [{
+                      merchProductId,
+                      size: metadata.size,
+                      color: metadata.color,
+                      quantity: 1,
+                    }],
+                  }),
+                )
+              } else {
+                console.warn(`⚠️ MerchOrder ${merchOrder.id}: No shipping address — Printful order skipped`)
               }
 
               revalidateTag("merch", "infinite")

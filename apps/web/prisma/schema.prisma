@@ -107,6 +107,9 @@ model User {
   // Entitlement layer
   entitlements UserEntitlement[]
 
+  // Merch / POD
+  merchOrders MerchOrder[]
+
   // Indexes
   @@index([id])
 }
@@ -738,6 +741,20 @@ enum ShippingStatus {
   DELIVERED
 }
 
+/// Printful POD fulfillment lifecycle.
+/// @see docs/architecture/printful-pod-spec.md — MerchOrder State Machine
+enum FulfillmentStatus {
+  PAID               /// Stripe payment received, Printful order not yet created
+  SUBMITTED          /// Printful API accepted the order
+  PRINTING           /// Printful is producing the item
+  SHIPPED            /// Package shipped, tracking available
+  DELIVERED          /// Carrier confirmed delivery (terminal — happy path)
+  FAILED             /// Printful could not fulfill (out of stock, print error)
+  CANCELED           /// Admin or customer canceled before fulfillment
+  RETURNED           /// Package returned to sender
+  REFUNDED           /// Stripe refund issued (terminal)
+}
+
 enum TechniqueCategory {
   STRIKE
   KICK
@@ -922,6 +939,9 @@ model Organization {
   techniques           Technique[]
   studentLists         StudentList[]
   certificateTemplates CertificateTemplate[]
+
+  // Merch / POD
+  merchOrders MerchOrder[]
 
   @@unique([brand, slug])
   @@index([brand])
@@ -1400,6 +1420,7 @@ model PricingPlan {
   invoiceLineItems  InvoiceLineItem[]
   entitlementGrants EntitlementGrant[]
   gearRecommendations GearRecommendation[]
+  merchOrders       MerchOrder[]
 
   @@index([brand, organizationId])
   @@index([programId])
@@ -2992,4 +3013,67 @@ model GearRecommendation {
   @@unique([disciplineId, pricingPlanId, type])
   @@index([brand, disciplineId])
   @@index([pricingPlanId])
+}
+
+/// Merch order with Printful POD fulfillment tracking.
+/// Created by the Stripe webhook merch_purchase handler.
+/// @see docs/architecture/printful-pod-spec.md
+model MerchOrder {
+  id                      String            @id @default(cuid())
+  brand                   Brand
+
+  /// Stripe checkout session that created this order
+  stripeCheckoutSessionId String            @unique
+  stripePaymentIntentId   String?
+
+  /// Printful integration
+  printfulOrderId         Int?              /// Printful's internal order ID
+  printfulExternalId      String?           /// Our ID sent to Printful (= this record's id)
+  fulfillmentStatus       FulfillmentStatus @default(PAID)
+
+  /// Order details
+  customerEmail           String
+  customerName            String?
+  amountCents             Int               @default(0)
+  shippingCents           Int               @default(0)
+  totalCents              Int               @default(0)
+  currency                String            @default("USD") @db.Char(3)
+
+  /// Line item snapshot (JSON — product name, size, color, qty, printfulVariantId)
+  lineItems               Json?
+
+  /// Shipping address snapshot
+  shippingName            String?
+  shippingAddress1        String?
+  shippingAddress2        String?
+  shippingCity            String?
+  shippingState           String?
+  shippingPostalCode      String?
+  shippingCountryCode     String?
+
+  /// Fulfillment tracking (populated by Printful webhook)
+  trackingNumber          String?
+  trackingUrl             String?
+  carrier                 String?
+  shippedAt               DateTime?
+  deliveredAt             DateTime?
+
+  /// Error handling
+  failureReason           String?
+
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  /// Relations
+  user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                  String
+  organization            Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId          String
+  pricingPlan             PricingPlan?      @relation(fields: [pricingPlanId], references: [id])
+  pricingPlanId           String?
+
+  @@index([brand, organizationId])
+  @@index([userId])
+  @@index([fulfillmentStatus])
+  @@index([createdAt])
 }

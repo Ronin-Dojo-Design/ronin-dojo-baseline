@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-10
 updated: 2026-05-10
-last_agent: copilot-session-0116
+last_agent: copilot-session-0117
 pairs_with:
   - docs/architecture/printful-pod-spec.md
   - docs/runbooks/stripe-setup-runbook.md
@@ -188,3 +188,46 @@ curl -X POST 'https://api.printful.com/webhooks' \
 - [Stripe Setup Runbook](stripe-setup-runbook.md) — Stripe integration (payments flow into Printful orders)
 - [Resend Setup Runbook](resend-setup-runbook.md) — transactional email (order confirmations)
 - [`services/printful.ts`](../../apps/web/services/printful.ts) — API client implementation
+- [`server/web/merch/printful-actions.ts`](../../apps/web/server/web/merch/printful-actions.ts) — `createPrintfulOrder()` server action
+- [`app/api/stripe/webhooks/route.ts`](../../apps/web/app/api/stripe/webhooks/route.ts) — Stripe webhook merch_purchase handler (creates MerchOrder + triggers Printful)
+
+## Implementation Status
+
+### Phase 1 (SESSION_0117)
+
+| Component | Status | Notes |
+|---|---|---|
+| `services/printful.ts` — API client | ✅ Done | createOrder, getOrder, getShippingRates, cancelOrder, estimateOrderCosts, verifyWebhookSignature |
+| `MerchOrder` model + `FulfillmentStatus` enum | ✅ Done | Migration `20260511011048_add_merch_order_fulfillment` |
+| `printful-actions.ts` — `createPrintfulOrder()` | ✅ Done | Variant mapping stubbed — needs Printful catalog variant IDs |
+| Stripe webhook wiring | ✅ Done | `merch_purchase` handler creates MerchOrder + calls `createPrintfulOrder()` via `after()` |
+| Product mapping (variant IDs) | ⬜ Blocked | Need to map each merch PricingPlan to Printful catalog `variant_id` |
+
+### Mapping Printful Variant IDs
+
+To complete the integration, populate `PRINTFUL_VARIANT_MAP` in `server/web/merch/printful-actions.ts`.
+
+**How to find variant IDs:**
+
+```bash
+# List all Printful catalog products (find the product ID for your base product)
+curl -s 'https://api.printful.com/products' \
+  --header 'Authorization: Bearer <your-token>' | python3 -m json.tool | grep -A2 '"id"'
+
+# Get variants for a specific product (e.g., Bella+Canvas 3001 = product 71)
+curl -s 'https://api.printful.com/products/71' \
+  --header 'Authorization: Bearer <your-token>' | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for v in data['result']['variants']:
+    print(f\"  id={v['id']}  size={v['size']}  color={v['color']}  name={v['name']}\")
+"
+```
+
+Each size/color combo has a unique `variant_id`. Map these into the `PRINTFUL_VARIANT_MAP` keyed by the merch product ID from `seed-tuffbuffs-merch.ts`.
+
+### Phase 2 (future)
+
+- Printful webhook handler (`app/api/printful/webhooks/route.ts`)
+- Shipment notification email template
+- MerchOrder status lifecycle UI
