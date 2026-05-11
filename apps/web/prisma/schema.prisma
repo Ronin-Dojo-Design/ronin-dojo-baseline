@@ -704,6 +704,9 @@ enum ScoringMethod {
   CUSTOM
 }
 
+// @added   SESSION_0105 (2026-05-05)
+// @why     Bracket seeding strategies for tournament divisions
+// @wired   server/admin/tournaments/, app/admin/tournaments/
 enum SeedingMethod {
   REGISTRATION_ORDER
   TOURNAMENT_RANKING
@@ -741,6 +744,9 @@ enum ShippingStatus {
   DELIVERED
 }
 
+// @added   SESSION_0111 (2026-05-11)
+// @why     Printful POD fulfillment lifecycle states for merch orders
+// @wired   MerchOrder.fulfillmentStatus, server/web/merch/, app/(web)/merch/
 /// Printful POD fulfillment lifecycle.
 /// @see docs/architecture/printful-pod-spec.md — MerchOrder State Machine
 enum FulfillmentStatus {
@@ -956,6 +962,9 @@ model Discipline {
   isSystem               Boolean  @default(false)
   brand                  Brand?
   defaultInstructorTitle String?
+  // @added   SESSION_0124 (2026-05-11)
+  // @why     Discipline enrichment: founder, year, history for detail page
+  // @wired   server/web/disciplines/queries.ts, app/(web)/disciplines/[slug]/page.tsx
   foundedBy              String?
   yearEstablished        Int?
   history                String?
@@ -1083,6 +1092,8 @@ model Membership {
   @@index([organizationId, status])
   @@index([userId])
   @@index([styleId])
+  // @added SESSION_0125 (2026-05-11) — member-by-rank carousel query perf
+  @@index([disciplineId, status, rankId])
 }
 
 model MembershipRoleAssignment {
@@ -1496,6 +1507,9 @@ model Payment {
   @@index([stripePaymentIntentId])
 }
 
+// @added   SESSION_0107 (2026-05-07)
+// @why     Map Stripe customer IDs to users per brand + account scope (platform vs connect)
+// @wired   server/web/payments/, app/api/webhooks/stripe/
 model StripeCustomer {
   id               String   @id @default(cuid())
   brand            Brand
@@ -3018,6 +3032,9 @@ model GearRecommendation {
   @@index([pricingPlanId])
 }
 
+// @added   SESSION_0111 (2026-05-11)
+// @why     Track Printful POD merch orders from Stripe checkout through fulfillment
+// @wired   server/web/merch/, app/api/webhooks/stripe/, app/(web)/merch/orders/
 /// Merch order with Printful POD fulfillment tracking.
 /// Created by the Stripe webhook merch_purchase handler.
 /// @see docs/architecture/printful-pod-spec.md

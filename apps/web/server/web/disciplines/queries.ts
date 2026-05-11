@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
+import { DirectoryVisibility, MembershipStatus } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**
@@ -135,4 +136,91 @@ export const findDisciplineBySlug = async (brand: Brand, slug: string) => {
     },
     select: disciplineDetailPayload,
   })
+}
+
+/**
+ * Find videos for a discipline via ContentAtom → ContentVariant.
+ * Returns variants that have a videoUrl, mapped to a simple shape.
+ */
+export const findDisciplineVideos = async (disciplineId: string) => {
+  "use cache"
+
+  cacheTag(`discipline-videos-${disciplineId}`)
+  cacheLife("minutes")
+
+  const atoms = await db.contentAtom.findMany({
+    where: { disciplineId },
+    select: {
+      id: true,
+      title: true,
+      variants: {
+        where: { videoUrl: { not: null } },
+        select: {
+          id: true,
+          publicTitle: true,
+          thumbnailUrl: true,
+          videoUrl: true,
+        },
+        take: 20,
+      },
+    },
+  })
+
+  return atoms.flatMap((atom) =>
+    atom.variants.map((v) => ({
+      id: v.id,
+      title: v.publicTitle ?? atom.title,
+      thumbnailUrl: v.thumbnailUrl,
+    })),
+  )
+}
+
+/**
+ * Find active members for a discipline with rank data.
+ * Respects DirectoryProfile visibility (PUBLIC only).
+ * Sorted by rank sortOrder ascending.
+ */
+export const findDisciplineMembersByRank = async (disciplineId: string) => {
+  "use cache"
+
+  cacheTag(`discipline-members-${disciplineId}`)
+  cacheLife("minutes")
+
+  const memberships = await db.membership.findMany({
+    where: {
+      disciplineId,
+      status: MembershipStatus.ACTIVE,
+      rankId: { not: null },
+      user: {
+        directoryProfile: {
+          visibility: DirectoryVisibility.PUBLIC,
+        },
+      },
+    },
+    select: {
+      id: true,
+      user: {
+        select: {
+          passport: {
+            select: { displayName: true },
+          },
+        },
+      },
+      rank: {
+        select: {
+          name: true,
+          sortOrder: true,
+        },
+      },
+    },
+    orderBy: { rank: { sortOrder: "asc" } },
+    take: 50,
+  })
+
+  return memberships.map((m) => ({
+    id: m.id,
+    name: m.user.passport?.displayName ?? null,
+    rankName: m.rank!.name,
+    rankSortOrder: m.rank!.sortOrder,
+  }))
 }

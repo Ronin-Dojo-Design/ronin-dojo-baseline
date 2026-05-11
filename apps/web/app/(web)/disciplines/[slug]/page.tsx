@@ -12,12 +12,14 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { generateCollectionPage } from "~/lib/structured-data"
-import { findDisciplineBySlug } from "~/server/web/disciplines/queries"
+import { findDisciplineBySlug, findDisciplineVideos, findDisciplineMembersByRank } from "~/server/web/disciplines/queries"
 import { BlackBeltRail } from "../_components/black-belt-rail"
 import { ContentAtomsSection } from "../_components/content-atoms-section"
 import { CoursesSection } from "../_components/courses-section"
 import { FounderCarousel } from "../_components/founder-carousel"
+import { MemberCarouselByRank } from "../_components/member-carousel-by-rank"
 import { SchoolsSection } from "../_components/schools-section"
+import { VideoCarousel } from "../_components/video-carousel"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -44,6 +46,11 @@ export default async function DisciplineDetailPage({ params }: Props) {
   const discipline = await findDisciplineBySlug(brand, slug)
 
   if (!discipline) notFound()
+
+  const [videos, membersByRank] = await Promise.all([
+    findDisciplineVideos(discipline.id),
+    findDisciplineMembersByRank(discipline.id),
+  ])
 
   return (
     <>
@@ -202,6 +209,24 @@ export default async function DisciplineDetailPage({ params }: Props) {
           <ContentAtomsSection disciplineId={discipline.id} brand={brand} />
         </Section.Content>
       </Section>
+
+      {/* Videos */}
+      {videos.length > 0 && (
+        <Section>
+          <Section.Content>
+            <VideoCarousel videos={videos} />
+          </Section.Content>
+        </Section>
+      )}
+
+      {/* Members by Rank */}
+      {membersByRank.length > 0 && (
+        <Section>
+          <Section.Content>
+            <MemberCarouselByRank members={membersByRank} />
+          </Section.Content>
+        </Section>
+      )}
 
       <StructuredData
         data={{
