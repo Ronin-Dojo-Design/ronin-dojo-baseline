@@ -956,6 +956,9 @@ model Discipline {
   isSystem               Boolean  @default(false)
   brand                  Brand?
   defaultInstructorTitle String?
+  foundedBy              String?
+  yearEstablished        Int?
+  history                String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
