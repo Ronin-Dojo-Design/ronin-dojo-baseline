@@ -183,6 +183,8 @@ Aggregate confidence: **7** → Stage a remediation session covering:
 
 - `SESSION_0125.md`: status → closed-quick, updated → 2026-05-11
 - Schema: JETTY annotations added for `SeedingMethod`, `FulfillmentStatus`, `StripeCustomer`, `MerchOrder`, `Discipline` enrichment fields, `Membership` composite index
+- `docs/knowledge/wiki/index.md`: added SESSION_0122–0125 entries (0123 as in-progress, rest as closed-quick)
+- Graphify: refreshed after all changes
 - No other frontmatter files touched
 
 ## Next Session
