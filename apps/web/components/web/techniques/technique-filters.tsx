@@ -10,16 +10,27 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { useFilters } from "~/contexts/filter-context"
-import { TechniqueCategory, TechniquePosition } from "~/.generated/prisma/client"
 import type { TechniqueFilterSchema } from "~/server/web/techniques/schema"
 import { findTechniqueFilterOptions } from "~/server/web/techniques/actions"
 
-const categoryOptions = Object.values(TechniqueCategory).map(v => ({
+// Enum values inlined to avoid importing Prisma client in a client component
+// (Prisma client bundles Node.js-only modules that can't run in the browser)
+const TechniqueCategory = [
+  "STRIKE", "KICK", "THROW", "SUBMISSION", "SWEEP", "ESCAPE",
+  "BLOCK", "FORM", "DRILL", "CONDITIONING", "TRANSITION", "TAKEDOWN",
+] as const
+
+const TechniquePosition = [
+  "STANDING", "GUARD", "HALF_GUARD", "MOUNT", "SIDE_CONTROL",
+  "BACK", "TURTLE", "CLINCH", "OPEN",
+] as const
+
+const categoryOptions = TechniqueCategory.map(v => ({
   value: v,
   label: v.replace(/_/g, " "),
 }))
 
-const positionOptions = Object.values(TechniquePosition).map(v => ({
+const positionOptions = TechniquePosition.map(v => ({
   value: v,
   label: v.replace(/_/g, " "),
 }))

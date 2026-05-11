@@ -1385,6 +1385,195 @@ async function main() {
 
   console.log("Created 5 test users with full identity graph")
 
+  // =========================================================================
+  // MUAY THAI PUBLIC MEMBER (SESSION_0126 — TASK_02)
+  // =========================================================================
+  // Ghost User is HIDDEN, so MemberCarouselByRank has no Muay Thai data.
+  // Add a PUBLIC Muay Thai member with a rank.
+  // =========================================================================
+
+  const muayThaiPrajioud = await db.rank.findFirst({
+    where: { rankSystem: { discipline: { code: "muay-thai" } }, sortOrder: 3 },
+  })
+
+  const mtMike = await db.user.create({
+    data: {
+      name: "Muay Thai Mike",
+      email: "mtmike@baseline.test",
+      emailVerified: true,
+      role: "user",
+      lastActiveBrandId: "BASELINE_MARTIAL_ARTS",
+    },
+  })
+  await db.passport.create({
+    data: {
+      userId: mtMike.id,
+      displayName: "Muay Thai Mike",
+      legalFirstName: "Mike",
+      legalLastName: "Nak Muay",
+      bio: "Muay Thai enthusiast and pad holder.",
+    },
+  })
+  await db.directoryProfile.create({
+    data: {
+      userId: mtMike.id,
+      slug: "muay-thai-mike",
+      visibility: "PUBLIC",
+      locationCity: "Boulder",
+      locationRegion: "CO",
+      locationCountry: "US",
+      showEmail: false,
+      showPhone: false,
+      showOrgs: true,
+      showRanks: true,
+    },
+  })
+  const mtMikeMembership = await db.membership.create({
+    data: {
+      brand: "BASELINE_MARTIAL_ARTS",
+      status: "ACTIVE",
+      userId: mtMike.id,
+      organizationId: baselineOrg.id,
+      disciplineId: muayThai.id,
+      joinedAt: now,
+      rankId: muayThaiPrajioud?.id,
+    },
+  })
+  if (muayThaiPrajioud) {
+    await db.rankAward.create({
+      data: { userId: mtMike.id, rankId: muayThaiPrajioud.id, awardedAt: now },
+    })
+  }
+  console.log("Created Muay Thai Mike (PUBLIC, ACTIVE, ranked)")
+
+  // =========================================================================
+  // CONTENT ATOMS + VARIANTS WITH VIDEO (SESSION_0126 — TASK_01)
+  // =========================================================================
+  // Seed ContentAtom records scoped to 3 disciplines, each with ContentVariant
+  // records that have videoUrl populated, so findDisciplineVideos() returns data
+  // and VideoCarousel renders populated.
+  // =========================================================================
+
+  if (!senseiUser) throw new Error("Sensei user not found for content seeding")
+
+  const contentAtoms = [
+    // BJJ atoms
+    {
+      canonicalId: "atom-2026-bjj-guard-passing-001",
+      title: "Guard Passing Fundamentals",
+      slug: "guard-passing-fundamentals",
+      status: "PUBLISHED" as const,
+      hook: "The #1 skill white belts need",
+      teachingTruth: "Guard passing starts with posture and grips, not speed.",
+      disciplineId: bjj.id,
+      createdById: senseiUser.id,
+      siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
+      channelTargets: ["YOUTUBE_LONG" as const],
+      variants: [
+        {
+          brand: "BASELINE_MARTIAL_ARTS" as const,
+          channel: "YOUTUBE_LONG" as const,
+          status: "PUBLISHED" as const,
+          publicTitle: "Guard Passing 101 — Full Breakdown",
+          publicSlug: "guard-passing-101",
+          videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-001",
+          thumbnailUrl: "https://placehold.co/640x360?text=Guard+Passing",
+        },
+        {
+          brand: "BASELINE_MARTIAL_ARTS" as const,
+          channel: "YOUTUBE_SHORT" as const,
+          status: "PUBLISHED" as const,
+          publicTitle: "Guard Passing in 60 Seconds",
+          publicSlug: "guard-passing-60s",
+          videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-002",
+          thumbnailUrl: "https://placehold.co/640x360?text=Guard+Pass+Short",
+        },
+      ],
+    },
+    {
+      canonicalId: "atom-2026-bjj-mount-escapes-001",
+      title: "Mount Escapes for Beginners",
+      slug: "mount-escapes-beginners",
+      status: "PUBLISHED" as const,
+      hook: "Stop getting stuck on bottom",
+      teachingTruth: "Hip escape (shrimp) is the foundation of all mount escapes.",
+      disciplineId: bjj.id,
+      createdById: senseiUser.id,
+      siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
+      channelTargets: ["YOUTUBE_LONG" as const],
+      variants: [
+        {
+          brand: "BASELINE_MARTIAL_ARTS" as const,
+          channel: "YOUTUBE_LONG" as const,
+          status: "PUBLISHED" as const,
+          publicTitle: "3 Mount Escapes Every White Belt Needs",
+          publicSlug: "mount-escapes-white-belt",
+          videoUrl: "https://www.youtube.com/watch?v=example-bjj-mount-001",
+          thumbnailUrl: "https://placehold.co/640x360?text=Mount+Escapes",
+        },
+      ],
+    },
+    // Muay Thai atom
+    {
+      canonicalId: "atom-2026-muay-thai-clinch-001",
+      title: "Muay Thai Clinch Basics",
+      slug: "muay-thai-clinch-basics",
+      status: "PUBLISHED" as const,
+      hook: "Control the clinch, control the fight",
+      teachingTruth: "Double collar tie with proper posture is the starting point for all clinch work.",
+      disciplineId: muayThai.id,
+      createdById: senseiUser.id,
+      siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
+      channelTargets: ["YOUTUBE_LONG" as const],
+      variants: [
+        {
+          brand: "BASELINE_MARTIAL_ARTS" as const,
+          channel: "YOUTUBE_LONG" as const,
+          status: "PUBLISHED" as const,
+          publicTitle: "Muay Thai Clinch — Complete Beginner Guide",
+          publicSlug: "muay-thai-clinch-guide",
+          videoUrl: "https://www.youtube.com/watch?v=example-mt-clinch-001",
+          thumbnailUrl: "https://placehold.co/640x360?text=MT+Clinch",
+        },
+      ],
+    },
+    // Eskrima atom
+    {
+      canonicalId: "atom-2026-eskrima-sinawali-001",
+      title: "Sinawali Double Stick Drills",
+      slug: "sinawali-double-stick-drills",
+      status: "PUBLISHED" as const,
+      hook: "The partner drill that builds timing and flow",
+      teachingTruth: "Heaven Six is the foundational sinawali pattern — master it before moving to variations.",
+      disciplineId: eskrima.id,
+      createdById: senseiUser.id,
+      siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
+      channelTargets: ["YOUTUBE_LONG" as const],
+      variants: [
+        {
+          brand: "BASELINE_MARTIAL_ARTS" as const,
+          channel: "YOUTUBE_LONG" as const,
+          status: "PUBLISHED" as const,
+          publicTitle: "Heaven Six Sinawali — Step by Step",
+          publicSlug: "heaven-six-sinawali",
+          videoUrl: "https://www.youtube.com/watch?v=example-eskrima-sinawali-001",
+          thumbnailUrl: "https://placehold.co/640x360?text=Sinawali+Drill",
+        },
+      ],
+    },
+  ]
+
+  for (const atom of contentAtoms) {
+    const { variants, ...atomData } = atom
+    const created = await db.contentAtom.create({ data: atomData })
+    for (const v of variants) {
+      await db.contentVariant.create({
+        data: { ...v, atomId: created.id },
+      })
+    }
+  }
+  console.log(`Seeded ${contentAtoms.length} content atoms with video variants`)
+
   await db.program.createMany({
     data: [
       {

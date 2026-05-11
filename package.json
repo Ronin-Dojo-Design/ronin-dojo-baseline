@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "pnpm --filter web dev",
+    "dev": "pnpm --filter dirstarter dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "wiki:lint": "bun run scripts/wiki-lint.ts",
