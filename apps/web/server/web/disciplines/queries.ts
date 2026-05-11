@@ -34,6 +34,9 @@ const disciplineDetailPayload = {
   isSystem: true,
   brand: true,
   defaultInstructorTitle: true,
+  foundedBy: true,
+  yearEstablished: true,
+  history: true,
   createdAt: true,
   updatedAt: true,
   _count: {

@@ -536,36 +536,36 @@ async function main() {
   // ---------------------------------------------------------------------------
   const disciplines = await Promise.all([
     db.discipline.create({
-      data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true },
+      data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true, foundedBy: "Hélio Gracie, Carlos Gracie", yearEstablished: 1925, history: "Developed in Brazil from Kodokan judo ground fighting (newaza) fundamentals by the Gracie family. Emphasizes leverage-based submissions and positional control." },
     }),
     db.discipline.create({
-      data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true },
+      data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true, foundedBy: "Lorenzo Saavedra", yearEstablished: 1932, history: "Founded in Cebu City, Philippines. One of the oldest and most influential Filipino martial arts organizations, blending stick, blade, and empty-hand combat." },
     }),
     db.discipline.create({
-      data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true },
+      data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true, yearEstablished: 1238, history: "Thailand's national combat sport, known as the Art of Eight Limbs for its use of fists, elbows, knees, and shins. Evolved from ancient Muay Boran battlefield techniques." },
     }),
     db.discipline.create({
-      data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true },
+      data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true, yearEstablished: 1867, history: "Western boxing codified under the Marquess of Queensberry Rules. Focuses on footwork, head movement, and punching combinations." },
     }),
     db.discipline.create({
-      data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true },
+      data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true, history: "Practical self-defense training drawing from multiple martial arts disciplines, situational awareness, and de-escalation techniques." },
     }),
-    db.discipline.create({ data: { name: "Judo", slug: "judo", code: "judo", isSystem: true } }),
+    db.discipline.create({ data: { name: "Judo", slug: "judo", code: "judo", isSystem: true, foundedBy: "Kanō Jigorō", yearEstablished: 1882, history: "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964." } }),
     db.discipline.create({
-      data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true },
-    }),
-    db.discipline.create({
-      data: { name: "Karate", slug: "karate", code: "karate", isSystem: true },
-    }),
-    db.discipline.create({ data: { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true } }),
-    db.discipline.create({
-      data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true },
+      data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true, foundedBy: "Adriano Emperado, Peter Choo, Joe Holck, Frank Ordonez, Clarence Chang", yearEstablished: 1947, history: "Hybrid martial art founded in Honolulu, Hawaii by the Black Belt Society. Name derives from KA-rate, JU-do/jujitsu, KEN-po, BO-xing." },
     }),
     db.discipline.create({
-      data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true },
+      data: { name: "Karate", slug: "karate", code: "karate", isSystem: true, foundedBy: "Gichin Funakoshi", yearEstablished: 1922, history: "Okinawan striking art brought to mainland Japan. Emphasizes kata, kihon, and kumite across numerous styles including Shotokan, Goju-Ryu, and Shito-Ryu." },
+    }),
+    db.discipline.create({ data: { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true, foundedBy: "Choi Hong-hi", yearEstablished: 1955, history: "Korean martial art known for dynamic kicking techniques. Olympic sport since 2000." } }),
+    db.discipline.create({
+      data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true, yearEstablished: -708, history: "One of the oldest combat sports, dating to ancient Greece. Modern styles include folkstyle, freestyle, and Greco-Roman." },
     }),
     db.discipline.create({
-      data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true },
+      data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true, foundedBy: "Imi Lichtenfeld", yearEstablished: 1948, history: "Developed for the Israel Defense Forces. Emphasizes real-world threat neutralization, combining techniques from boxing, wrestling, judo, and aikido." },
+    }),
+    db.discipline.create({
+      data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true, foundedBy: "Ng Mui (legendary)", yearEstablished: 1700, history: "Southern Chinese kung fu style emphasizing close-range combat, centerline theory, and simultaneous attack-defense. Popularized by Ip Man and Bruce Lee." },
     }),
   ])
 

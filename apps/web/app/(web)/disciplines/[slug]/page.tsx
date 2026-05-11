@@ -13,6 +13,11 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { generateCollectionPage } from "~/lib/structured-data"
 import { findDisciplineBySlug } from "~/server/web/disciplines/queries"
+import { BlackBeltRail } from "../_components/black-belt-rail"
+import { ContentAtomsSection } from "../_components/content-atoms-section"
+import { CoursesSection } from "../_components/courses-section"
+import { FounderCarousel } from "../_components/founder-carousel"
+import { SchoolsSection } from "../_components/schools-section"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -147,6 +152,54 @@ export default async function DisciplineDetailPage({ params }: Props) {
               <dd className="font-medium">{discipline._count.techniques}</dd>
             </div>
           </dl>
+        </Section.Content>
+      </Section>
+
+      {/* Founder / History */}
+      {(discipline.foundedBy || discipline.yearEstablished || discipline.history) && (
+        <Section>
+          <Section.Content>
+            <H4>History</H4>
+            <Stack size="sm" direction="column" className="mt-4">
+              {discipline.foundedBy && (
+                <FounderCarousel founders={discipline.foundedBy} />
+              )}
+              {discipline.yearEstablished && (
+                <p className="text-sm text-muted-foreground">Established {discipline.yearEstablished}</p>
+              )}
+              {discipline.history && (
+                <p className="text-sm">{discipline.history}</p>
+              )}
+            </Stack>
+          </Section.Content>
+        </Section>
+      )}
+
+      {/* Courses & Certifications */}
+      <Section>
+        <Section.Content>
+          <CoursesSection disciplineId={discipline.id} brand={brand} />
+        </Section.Content>
+      </Section>
+
+      {/* Schools */}
+      <Section>
+        <Section.Content>
+          <SchoolsSection disciplineId={discipline.id} brand={brand} />
+        </Section.Content>
+      </Section>
+
+      {/* Black Belt Rail */}
+      <Section>
+        <Section.Content>
+          <BlackBeltRail disciplineId={discipline.id} brand={brand} />
+        </Section.Content>
+      </Section>
+
+      {/* Content Atoms */}
+      <Section>
+        <Section.Content>
+          <ContentAtomsSection disciplineId={discipline.id} brand={brand} />
         </Section.Content>
       </Section>
 

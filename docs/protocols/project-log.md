@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-09
-last_agent: copilot-session-0113
+updated: 2026-05-11
+last_agent: copilot-session-0117
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -461,7 +461,7 @@ Three sections:
 | SESSION_0084_TASK_02 | SESSION_0084 | Tournament ops (hardening) | Cody (Claude) | Paid-path capacity oversubscription proof — sequential webhook POSTs for distinct users against the same `capacity=1` division | Test PASSES asserting current (broken) behavior: 2 ACTIVE entries on `capacity=1` division → P0 architectural finding confirmed. SESSION_0085 Petey plan flagged in Next session; assertion to flip on fix | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0084_TASK_03 | SESSION_0084 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean (3 pre-existing unrelated errors unchanged); 5/5 stable test runs; wiki-lint 0 errors / 3 pre-existing warnings (after deleting `docs/graphify-out/`); SESSION_0084 closed-full with reflections + evidence + next-session unblock | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0085_TASK_01 | SESSION_0085 | Tournament ops (hardening) | Petey (Claude) | Petey plan for paid-path capacity oversubscription fix; decide strategy (a) webhook re-check + refund vs. (b) up-front slot reservation; decompose into Cody-executable tasks; surface open decisions for Brian's go | `SESSION_0085.md` Petey plan block landed with strategy choice + 4-task breakdown + open-decisions block; project-log task plan rows appended; gate held on Brian's approval before TASK_02 | landed | — |
-| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route.ts` updated; webhook returns 200 in all paths; rejected-create path produces a Registration row visible to admin with REFUNDED payment status; refund call happens after transaction commit and does not throw on failure | landed | SESSION_0085_REVIEW_01 |
+| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route
 | SESSION_0085_TASK_03 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Flip SESSION_0084 oversubscription test from `toBe(2)` to `toBe(1)`; assert one Registration ends CANCELLED/REFUNDED; assert `stripe.refunds.create` called exactly once with the loser's `payment_intent`; add NEW parallel-race test using `Promise.all([postWebhook, postWebhook])` to prove the fix under concurrency | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0085_TASK_04 | SESSION_0085 | Close | Cody → Petey (Codex) | Verification + full close: scoped typecheck, full test re-run, free-path concurrency regression check, wiki-lint, project-log review block, memory update (paid oversubscription window resolved) | Webhook test 5/5 stable; free-path concurrency regression passed; `bunx tsc --noEmit --pretty false` reports only pre-existing unrelated errors in 3 files; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0085_REVIEW_01 appended | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0086_TASK_01 | SESSION_0086 | Tournament ops (hardening) | Petey + Giddy (Codex) | Bow in, graphify TASK_05 inputs, create SESSION_0086 plan, split work into UI/refund-test worktrees, and keep docs/log orchestration in the main checkout | `SESSION_0086.md` exists with graphify queries, Dirstarter alignment, task split, and agent/worktree assignments; project-log rows appended before implementation | landed | SESSION_0086_REVIEW_01 |
@@ -812,3 +812,26 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Dirstarter docs check:** N/A (backend-only, no UI)
 - **Findings:** None — all SESSION_0120 findings remediated
 - **Migration note:** Schema changes (statusHistory + indexes) ready but migration not yet applied (`bun db:migrate dev` pending)
+
+### SESSION_0124 — Wire Enrichment Components + Fix Prisma/Turbopack Build Error (2026-05-11)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0124_TASK_01 | Fix Prisma/Turbopack CJS build error (cache clear + Prisma 7.1→7.8) | ✅ done |
+| SESSION_0124_TASK_02 | Update findDisciplineBySlug query with foundedBy, yearEstablished, history | ✅ done |
+| SESSION_0124_TASK_03 | Wire enrichment components into [slug]/page.tsx | ✅ done |
+| SESSION_0124_TASK_04 | Carousel comparison (embla vs gear page manual) | ✅ done |
+| SESSION_0124_TASK_05 | Seed enrichment data for 12 disciplines | ✅ done |
+| SESSION_0124_TASK_06 | Visual QA — dev server + /disciplines/bjj renders all sections | ✅ done |
+| SESSION_0124_TASK_07 | Type check (0 errors) | ✅ done |
+
+**Result:** All 7 tasks completed. Prisma upgraded 7.1→7.8 fixing Turbopack CJS error. Five enrichment components wired into discipline detail page. Embla carousel confirmed as standard. All 12 disciplines seeded with historical data. Visual QA confirmed rendering.
+
+#### Review
+
+**SESSION_0124_REVIEW_01 — Discipline Enrichment Wiring**
+
+- **Reviewed tasks:** SESSION_0124_TASK_01–07
+- **Dirstarter docs check:** `prisma/browser` import pattern confirmed as L1 canonical. No divergence.
+- **Findings:** VideoCarousel and MemberCarouselByRank not yet wired (need parent-level data fetching). Deferred to SESSION_0125.
+- **Carousel decision:** Embla is the standard reusable component. Gear page manual carousel acceptable legacy.
