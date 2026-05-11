@@ -40,6 +40,7 @@ export const env = createEnv({
     PRINTFUL_API_KEY: z.string().optional(),
     PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
     PRINTFUL_CONFIRM_ORDERS: z.enum(["true", "false"]).default("false"),
+    DEV_LOGIN_USER_ID: z.string().optional(),
     SCREENSHOTONE_ACCESS_KEY: z.string().optional(),
     PLAUSIBLE_API_KEY: z.string().optional(),
     AI_GATEWAY_API_KEY: z.string().optional(),

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-11
-last_agent: copilot-session-0117
+last_agent: copilot-session-0131
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -921,3 +921,14 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Reviewed tasks:** SESSION_0130_TASK_01–06
 - **Dirstarter docs check:** live docs checked — `dirstarter.com/docs/integrations/payments` for webhook pattern (ADR 0012). `"use cache"` pattern confirmed from existing query files.
 - **Findings:** None — all SESSION_0129 findings remediated. Revised aggregate: 9.
+
+### SESSION_0131 — S3 Bucket Provisioning + Authenticated Visual QA + S4 Planning
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0131_TASK_01 | MinIO docker-compose + S3 env vars + dev-login auth bypass | ✅ done |
+| SESSION_0131_TASK_02 | Authenticated visual QA (/me, admin, tournament admin) | ✅ done |
+| SESSION_0131_TASK_03 | S4 scope drafted (Tournament Ops, sessions 0132–0135) | ✅ done |
+| SESSION_0131_TASK_04 | Runbook: local-dev-auth-storage.md (diagrams + troubleshooting) | ✅ done |
+
+**Result:** Local dev auth + storage stack fully operational. Dev-login bypass eliminates 17-session Resend DNS blocker for local testing. S4 scope locked: Tournament Operations lane (3 recipes, 4 sessions). Comprehensive runbook cross-linked to 3 docs.

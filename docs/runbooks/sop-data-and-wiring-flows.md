@@ -8,6 +8,7 @@ updated: 2026-04-27
 last_agent: copilot-session-0015
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
+  - docs/runbooks/local-dev-auth-storage.md
   - docs/protocols/cody-preflight.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -377,7 +378,76 @@ Publication log / next iteration
 
 ---
 
-## 11. What not to do
+## 11. Local dev auth + storage flow (SESSION_0131)
+
+See full runbook: [`docs/runbooks/local-dev-auth-storage.md`](./local-dev-auth-storage.md)
+
+```text
+GET /api/auth/dev-login
+  |
+  v
+Guard: isDev && DEV_LOGIN_USER_ID?
+  |
+  v
+auth.api.signInMagicLink({ email })
+  |  creates Verification row
+  v
+Read Verification.identifier from DB
+  |
+  v
+auth.api.magicLinkVerify({ token })
+  |  BA throws APIError(302) with signed cookies
+  v
+Catch error → extract Set-Cookie headers
+  |
+  v
+307 redirect to /me (cookies forwarded)
+  |
+  v
+getServerSession() reads signed cookie → user
+  |
+  v
+/me checks Passport + DirectoryProfile exist → 200
+```
+
+```mermaid
+flowchart TD
+    DL[GET /api/auth/dev-login] --> G{isDev &&\nDEV_LOGIN_USER_ID?}
+    G -->|No| N[404 Not available]
+    G -->|Yes| ML[auth.api.signInMagicLink]
+    ML --> VR[Read Verification row from DB]
+    VR --> MV[auth.api.magicLinkVerify]
+    MV -->|BA throws 302 APIError| CATCH[Catch error\nextract Set-Cookie]
+    CATCH --> REDIR[307 → /me\nwith signed cookies]
+    REDIR --> GS[getServerSession\nvalidates HMAC]
+    GS --> PP{Passport +\nDirectoryProfile?}
+    PP -->|Yes| OK[200 /me renders]
+    PP -->|No| LOGIN[307 → /auth/login]
+```
+
+### Storage wiring (MinIO local → S3 prod)
+
+```text
+Upload request
+  |
+  v
+lib/media.ts → uploadToS3Storage(file, key)
+  |
+  v
+services/s3.ts → S3Client({
+  endpoint: S3_ENDPOINT,         ← "http://localhost:9000" (local)
+  forcePathStyle: true,          ← required for MinIO
+  credentials: { accessKeyId, secretAccessKey }
+})
+  |
+  v
+MinIO :9000 (local) | S3/R2 (staging/prod)
+  |
+  v
+Public URL: S3_PUBLIC_URL/key.ext
+```
+
+## 12. What not to do
 
 - do not let host brand logic replace active brand logic
 - do not let public blog output pretend to be the whole content system

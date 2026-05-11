@@ -19,6 +19,10 @@ tags:
 
 # Dev Environment Runbook
 
+## See also
+
+- **[Local Dev Auth + Storage Runbook](./local-dev-auth-storage.md)** — MinIO setup, dev-login bypass, Better-Auth session debugging, troubleshooting guide with decision trees and flow diagrams. Created SESSION_0131.
+
 ## When to use
 
 At the start of every session. Cody pre-flight field 5 ("Dev environment confirmed") references this file.
