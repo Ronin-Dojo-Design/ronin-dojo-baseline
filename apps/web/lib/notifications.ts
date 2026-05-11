@@ -2,6 +2,7 @@ import { type Tool, ToolStatus } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
+import { EmailMerchShipmentNotification } from "~/emails/merch-shipment-notification"
 import { EmailSubmission } from "~/emails/submission"
 import { EmailSubmissionPremium } from "~/emails/submission-premium"
 import { EmailSubmissionPublished } from "~/emails/submission-published"
@@ -155,6 +156,66 @@ export const notifyCustomerOfMerchOrder = async (params: MerchOrderNotificationP
       shippingCity: params.shippingCity ?? undefined,
       shippingState: params.shippingState ?? undefined,
       shippingPostalCode: params.shippingPostalCode ?? undefined,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Printful fulfillment notifications
+// ---------------------------------------------------------------------------
+
+export type ShipmentNotificationParams = {
+  customerEmail: string
+  customerName?: string | null
+  trackingNumber?: string | null
+  trackingUrl?: string | null
+  carrier?: string | null
+}
+
+/**
+ * Notify a customer that their merch order has shipped.
+ *
+ * @see app/api/printful/webhooks/route.ts — package_shipped handler
+ */
+export const notifyCustomerOfShipment = async (params: ShipmentNotificationParams) => {
+  const to = params.customerEmail
+  const subject = "📦 Your TuffBuffs order has shipped!"
+
+  return await sendEmail({
+    to,
+    subject,
+    react: EmailMerchShipmentNotification({
+      to,
+      customerName: params.customerName,
+      trackingNumber: params.trackingNumber,
+      trackingUrl: params.trackingUrl,
+      carrier: params.carrier,
+    }),
+  })
+}
+
+export type PrintfulFailureNotificationParams = {
+  merchOrderId: string
+  customerEmail: string
+  reason: string
+}
+
+/**
+ * Notify admin when a Printful order fails or a package is returned.
+ *
+ * @see app/api/printful/webhooks/route.ts — order_failed / package_returned handlers
+ */
+export const notifyAdminOfPrintfulFailure = async (params: PrintfulFailureNotificationParams) => {
+  const to = siteConfig.email
+  const subject = `⚠️ Printful order issue: ${params.merchOrderId}`
+
+  return await sendEmail({
+    to,
+    subject,
+    react: EmailMerchShipmentNotification({
+      to,
+      customerName: `ADMIN ALERT — Customer: ${params.customerEmail}`,
+      trackingNumber: `Reason: ${params.reason}`,
     }),
   })
 }
