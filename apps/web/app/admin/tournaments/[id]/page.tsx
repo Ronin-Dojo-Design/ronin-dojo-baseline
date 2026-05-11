@@ -14,6 +14,7 @@ import {
   findTournamentRoles,
   findTournamentStaff,
 } from "~/server/admin/tournaments/queries"
+import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 
 export default withTournamentAdminPage(async ({ params }) => {
@@ -28,6 +29,19 @@ export default withTournamentAdminPage(async ({ params }) => {
   const rolesPromise = findTournamentRoles()
   const matAssignmentsPromise = findMatAssignmentsByTournament(id)
   const fightRecordsPromise = findFightRecordsByTournament(id)
+
+  const brand = await getRequestBrand()
+  const organizations = await db.organization.findMany({
+    where: { brand },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+
+  const disciplines = await db.discipline.findMany({
+    where: { OR: [{ brand }, { brand: null, isSystem: true }] },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
 
   const users = await db.user.findMany({
     select: { id: true, name: true, email: true },
@@ -95,8 +109,8 @@ export default withTournamentAdminPage(async ({ params }) => {
           View Registrations →
         </Link>
       </div>
-      <TournamentForm title={`Edit ${tournament.name}`} tournament={tournament} />
-      <DivisionsEditor tournament={tournament} />
+      <TournamentForm title={`Edit ${tournament.name}`} tournament={tournament} organizations={organizations} />
+      <DivisionsEditor tournament={tournament} availableDisciplines={disciplines} />
       <StaffPanel
         tournamentId={id}
         staffPromise={staffPromise}

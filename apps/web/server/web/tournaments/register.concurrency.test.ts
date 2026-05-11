@@ -446,9 +446,10 @@ describe("createRegistrationCheckout — capacity race", () => {
 
     expect(successes.length).toBe(1)
     expect(failures.length).toBe(1)
-    // Capacity message is the only acceptable surface error here. A leaked
-    // Prisma message would mean the catch in `register.ts` is missing a case.
-    expect(failures[0]?.serverError).toMatch(/at capacity/)
+    // Either "at capacity" (loser read the count first) or "Registration conflict"
+    // (Prisma P2034 serializable write conflict). Both are correct fail-closed behavior.
+    // A leaked raw Prisma message would mean the catch in `register.ts` is missing a case.
+    expect(failures[0]?.serverError).toMatch(/at capacity|Registration conflict/)
     expect(failures[0]?.serverError).not.toMatch(/PrismaClient|Unique constraint/)
 
     const activeEntries = await db.registrationEntry.count({

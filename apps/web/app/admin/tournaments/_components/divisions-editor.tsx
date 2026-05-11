@@ -17,20 +17,21 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { EyeIcon, GripVerticalIcon, RotateCcwIcon, SwordsIcon, TrashIcon } from "lucide-react"
+import { EyeIcon, GripVerticalIcon, PlusIcon, RotateCcwIcon, SwordsIcon, TrashIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Card } from "~/components/common/card"
+import { Card, CardHeader } from "~/components/common/card"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "~/components/common/dialog"
 import { H3 } from "~/components/common/heading"
 import { Label } from "~/components/common/label"
@@ -48,6 +49,7 @@ import {
   deleteTournamentDiscipline,
   generateBracket,
   listDivisionSeedEntries,
+  upsertTournamentDiscipline,
 } from "~/server/admin/tournaments/actions"
 import type { SeedingMethod } from "~/server/admin/tournaments/bracket-seeding"
 import type { findTournamentById } from "~/server/admin/tournaments/queries"
@@ -60,6 +62,7 @@ type TournamentDivision = Tournament["disciplines"][number]["divisions"][number]
 
 type DivisionsEditorProps = {
   tournament: Tournament
+  availableDisciplines?: { id: string; name: string }[]
 }
 
 type SeedEntry = {
@@ -120,7 +123,7 @@ function SortableSeedRow({
   )
 }
 
-export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
+export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsEditorProps) {
   const router = useRouter()
   const [seedingDialogDivisionId, setSeedingDialogDivisionId] = useState<string | null>(null)
   const [selectedSeedingMethod, setSelectedSeedingMethod] =
@@ -129,6 +132,8 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const [seedOrder, setSeedOrder] = useState<string[]>([])
   const [seedEntriesDivisionId, setSeedEntriesDivisionId] = useState<string | null>(null)
   const [seedEntriesError, setSeedEntriesError] = useState<string | null>(null)
+  const [addDisciplineOpen, setAddDisciplineOpen] = useState(false)
+  const [selectedDisciplineId, setSelectedDisciplineId] = useState("")
 
   const deleteDivisionAction = useAction(deleteDivision, {
     onSuccess: () => toast.success("Division removed"),
@@ -138,6 +143,16 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const deleteDisciplineAction = useAction(deleteTournamentDiscipline, {
     onSuccess: () => toast.success("Discipline removed"),
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to delete discipline"),
+  })
+
+  const addDisciplineAction = useAction(upsertTournamentDiscipline, {
+    onSuccess: () => {
+      toast.success("Discipline added")
+      setAddDisciplineOpen(false)
+      setSelectedDisciplineId("")
+      router.refresh()
+    },
+    onError: ({ error }) => toast.error(error.serverError ?? "Failed to add discipline"),
   })
 
   const generateBracketAction = useAction(generateBracket, {
@@ -176,6 +191,7 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
   const isPending =
     deleteDivisionAction.isPending ||
     deleteDisciplineAction.isPending ||
+    addDisciplineAction.isPending ||
     generateBracketAction.isPending ||
     listSeedEntriesAction.isPending
 
@@ -221,101 +237,155 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
     (!isManualSeeding || (seedEntries != null && seedOrder.length >= 2))
 
   return (
-    <Stack direction="column" size="md">
-      <div className="flex items-center justify-between">
-        <H3>Disciplines & Divisions</H3>
-      </div>
+    <Card>
+      <CardHeader>
+        <Stack className="justify-between">
+          <H3>Disciplines & Divisions</H3>
 
-      {tournament.disciplines.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No disciplines added yet. Add a discipline to start creating divisions.
-        </p>
-      )}
-
-      {tournament.disciplines.map(td => (
-        <Card key={td.id} className="p-4 space-y-3">
-          <Stack direction="row" size="sm" className="justify-between items-center">
-            <span className="font-medium">{td.discipline.name}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              prefix={<TrashIcon className="size-4" />}
-              onClick={() => deleteDisciplineAction.execute({ id: td.id })}
-              disabled={isPending}
-              aria-label="Remove discipline"
-            />
-          </Stack>
-
-          {td.divisions.length === 0 && (
-            <p className="text-sm text-muted-foreground pl-2">No divisions yet.</p>
+          {availableDisciplines && availableDisciplines.length > 0 && (
+            <Dialog open={addDisciplineOpen} onOpenChange={setAddDisciplineOpen}>
+              <DialogTrigger asChild>
+                <Button variant="primary" size="sm" prefix={<PlusIcon />} disabled={isPending}>
+                  Add Discipline
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Discipline</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Discipline</Label>
+                    <Select value={selectedDisciplineId} onValueChange={setSelectedDisciplineId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a discipline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableDisciplines
+                          ?.filter(d => !tournament.disciplines.some(td => td.discipline.id === d.id))
+                          .map(d => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setAddDisciplineOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    disabled={!selectedDisciplineId || addDisciplineAction.isPending}
+                    onClick={() =>
+                      addDisciplineAction.execute({
+                        tournamentId: tournament.id,
+                        disciplineId: selectedDisciplineId,
+                      })
+                    }
+                  >
+                    Add
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
+        </Stack>
+      </CardHeader>
 
-          <Stack direction="column" size="sm" className="pl-2">
-            {td.divisions.map(div => {
-              const division = div as TournamentDivision
-              return (
-                <Card key={div.id} className="px-3 py-2">
-                  <Stack direction="row" size="sm" className="items-center">
-                    <div className="flex-1">
-                      <span className="font-medium text-sm">{div.name}</span>
-                      <Stack direction="row" size="sm" className="mt-1">
-                        <Badge variant="soft">{div.format}</Badge>
-                        <Badge variant="soft">{div.gender}</Badge>
-                        {div.ageMin != null && div.ageMax != null && (
-                          <Badge variant="soft">
-                            Ages {div.ageMin}–{div.ageMax}
-                          </Badge>
-                        )}
-                        {div.capacity != null && <Badge variant="soft">Cap: {div.capacity}</Badge>}
-                        {(div as TournamentDivision).ruleSet && (
-                          <Badge variant="info">{(div as TournamentDivision).ruleSet!.name}</Badge>
-                        )}
-                      </Stack>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      prefix={<SwordsIcon className="size-4" />}
-                      onClick={() => {
-                        setSelectedSeedingMethod("REGISTRATION_ORDER")
-                        setSeedingDialogDivisionId(div.id)
-                      }}
-                      disabled={isPending}
-                      aria-label="Generate bracket"
-                    >
-                      Bracket
-                    </Button>
-                    {division.brackets?.[0] && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        prefix={<EyeIcon className="size-4" />}
-                        onClick={() =>
-                          router.push(
-                            `/admin/tournaments/${tournament.id}/brackets/${division.brackets![0].id}`,
-                          )
-                        }
-                        disabled={isPending}
-                        aria-label="View bracket"
-                      >
-                        View
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      prefix={<TrashIcon className="size-4" />}
-                      onClick={() => deleteDivisionAction.execute({ id: div.id })}
-                      disabled={isPending}
-                      aria-label="Remove division"
-                    />
-                  </Stack>
-                </Card>
-              )
-            })}
+      <div className="p-4 pt-0">
+        {tournament.disciplines.length === 0 ? (
+          <Note>No disciplines added yet. Add a discipline to start creating divisions.</Note>
+        ) : (
+          <Stack direction="column" size="md">
+            {tournament.disciplines.map(td => (
+              <Card key={td.id} className="p-4 space-y-3">
+                <Stack direction="row" size="sm" className="justify-between items-center">
+                  <span className="font-medium">{td.discipline.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    prefix={<TrashIcon className="size-4" />}
+                    onClick={() => deleteDisciplineAction.execute({ id: td.id })}
+                    disabled={isPending}
+                    aria-label="Remove discipline"
+                  />
+                </Stack>
+
+                {td.divisions.length === 0 && (
+                  <p className="text-sm text-muted-foreground pl-2">No divisions yet.</p>
+                )}
+
+                <Stack direction="column" size="sm" className="pl-2">
+                  {td.divisions.map(div => {
+                    const division = div as TournamentDivision
+                    return (
+                      <Card key={div.id} className="px-3 py-2">
+                        <Stack direction="row" size="sm" className="items-center">
+                          <div className="flex-1">
+                            <span className="font-medium text-sm">{div.name}</span>
+                            <Stack direction="row" size="sm" className="mt-1">
+                              <Badge variant="soft">{div.format}</Badge>
+                              <Badge variant="soft">{div.gender}</Badge>
+                              {div.ageMin != null && div.ageMax != null && (
+                                <Badge variant="soft">
+                                  Ages {div.ageMin}–{div.ageMax}
+                                </Badge>
+                              )}
+                              {div.capacity != null && <Badge variant="soft">Cap: {div.capacity}</Badge>}
+                              {(div as TournamentDivision).ruleSet && (
+                                <Badge variant="info">{(div as TournamentDivision).ruleSet!.name}</Badge>
+                              )}
+                            </Stack>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            prefix={<SwordsIcon className="size-4" />}
+                            onClick={() => {
+                              setSelectedSeedingMethod("REGISTRATION_ORDER")
+                              setSeedingDialogDivisionId(div.id)
+                            }}
+                            disabled={isPending}
+                            aria-label="Generate bracket"
+                          >
+                            Bracket
+                          </Button>
+                          {division.brackets?.[0] && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              prefix={<EyeIcon className="size-4" />}
+                              onClick={() =>
+                                router.push(
+                                  `/admin/tournaments/${tournament.id}/brackets/${division.brackets![0].id}`,
+                                )
+                              }
+                              disabled={isPending}
+                              aria-label="View bracket"
+                            >
+                              View
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            prefix={<TrashIcon className="size-4" />}
+                            onClick={() => deleteDivisionAction.execute({ id: div.id })}
+                            disabled={isPending}
+                            aria-label="Remove division"
+                          />
+                        </Stack>
+                      </Card>
+                    )
+                  })}
+                </Stack>
+              </Card>
+            ))}
           </Stack>
-        </Card>
-      ))}
+        )}
+      </div>
 
       <Dialog
         open={seedingDialogDivisionId != null}
@@ -439,6 +509,6 @@ export function DivisionsEditor({ tournament }: DivisionsEditorProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Stack>
+    </Card>
   )
 }

@@ -81,7 +81,27 @@ export const createRegistrationCheckout = userActionClient
     }
 
     // 5. Fetch divisions + check capacity (inside serializable transaction to prevent races)
-    const capacityResult = await db.$transaction(
+    // Prisma throws P2034 on serializable transaction conflicts (write conflict / deadlock).
+    // This is expected under concurrent registration — treat it as a capacity conflict.
+    let capacityResult: Awaited<ReturnType<typeof runCapacityTransaction>>
+    try {
+      capacityResult = await runCapacityTransaction()
+    } catch (err: unknown) {
+      if (
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        (err as { code: string }).code === "P2034"
+      ) {
+        throw new Error(
+          "Registration conflict — another registration was processed at the same time. Please try again.",
+        )
+      }
+      throw err
+    }
+
+    async function runCapacityTransaction() {
+      return db.$transaction(
       async tx => {
         const divisions = await tx.division.findMany({
           where: { id: { in: input.divisionIds } },
@@ -148,6 +168,7 @@ export const createRegistrationCheckout = userActionClient
       },
       { isolationLevel: "Serializable" },
     )
+    }
 
     if (capacityResult.type === "free") {
       return { type: "free" as const, registrationId: capacityResult.registrationId! }

@@ -30,9 +30,10 @@ import { tournamentSchema } from "~/server/admin/tournaments/schema"
 type TournamentFormProps = ComponentProps<"form"> & {
   tournament?: NonNullable<Awaited<ReturnType<typeof findTournamentById>>>
   title?: string
+  organizations?: { id: string; name: string }[]
 }
 
-export function TournamentForm({ children, className, title, tournament, ...props }: TournamentFormProps) {
+export function TournamentForm({ children, className, title, tournament, organizations, ...props }: TournamentFormProps) {
   const router = useRouter()
   const resolver = zodResolver(tournamentSchema)
 
@@ -182,10 +183,27 @@ export function TournamentForm({ children, className, title, tournament, ...prop
               name="hostId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Host Organization ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Organization ID" {...field} />
-                  </FormControl>
+                  <FormLabel>Host Organization</FormLabel>
+                  {organizations && organizations.length > 0 ? (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select host organization" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {organizations.map(org => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <FormControl>
+                      <Input placeholder="Organization ID" {...field} />
+                    </FormControl>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
