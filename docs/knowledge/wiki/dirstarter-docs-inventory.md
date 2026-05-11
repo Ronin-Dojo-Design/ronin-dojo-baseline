@@ -4,9 +4,9 @@ slug: dirstarter-docs-inventory
 type: concept
 status: active
 created: 2026-04-28
-updated: 2026-04-30
+updated: 2026-05-11
 author: Petey
-last_agent: codex-session-0030
+last_agent: copilot-session-0134
 pairs_with:
   - docs/knowledge/wiki/dirstarter-gap-audit.md
 parent: docs/knowledge/wiki/index.md
@@ -63,6 +63,23 @@ Live Dirstarter docs checked on 2026-04-30 for the SESSION_0030 hostile close se
 - [Content Management](https://dirstarter.com/docs/content)
 
 Security interpretation is captured in [Security, Privacy, Payments, and Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md).
+
+## Alignment URLs (SESSION_0134)
+
+These 10 live doc pages are the **mandatory alignment targets** for every sprint. Before building any feature that touches these areas, verify our implementation matches the current Dirstarter guidance.
+
+| Area | URL |
+|---|---|
+| Storage | <https://dirstarter.com/docs/integrations/storage> |
+| Payments | <https://dirstarter.com/docs/integrations/payments> |
+| Media | <https://dirstarter.com/docs/integrations/media> |
+| Content | <https://dirstarter.com/docs/content> |
+| Monetization | <https://dirstarter.com/docs/monetization> |
+| Blog | <https://dirstarter.com/docs/blog> |
+| Authentication | <https://dirstarter.com/docs/authentication> |
+| Theming | <https://dirstarter.com/docs/theming> |
+| Prisma | <https://dirstarter.com/docs/database/prisma> |
+| Hosting | <https://dirstarter.com/docs/database/hosting> |
 
 ## Key Idea
 

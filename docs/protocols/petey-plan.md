@@ -41,6 +41,7 @@ A structured protocol for Petey to produce a session plan. Can be invoked at bow
    the task touches: project structure, Prisma/database, Better Auth,
    payments/Stripe, storage/media, deployment/cron, content/blog/SEO,
    rate limiting, analytics, or UI primitives.
+   **Canonical URL list:** see `docs/knowledge/wiki/dirstarter-docs-inventory.md` → "Alignment URLs (SESSION_0134)" section for the 10 mandatory alignment targets.
 
 If any input is missing or stale, flag it in the plan under `## Risks`.
 

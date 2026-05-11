@@ -41,6 +41,7 @@ In order:
 3. `docs/architecture/program-plan.md` — current sprint scope, sequencing, open decisions.
 4. `docs/architecture/plan-vs-current.md` — only if the task touches schema/data.
 5. The relevant ADRs (`docs/architecture/decisions/`) — only the ones that bear on this task.
+6. `docs/knowledge/wiki/dirstarter-docs-inventory.md` — alignment URLs section. If the task touches any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting), verify alignment before planning.
 
 If any of these are missing or stale, flag that as part of the plan.
 

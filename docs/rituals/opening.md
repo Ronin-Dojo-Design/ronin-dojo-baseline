@@ -56,6 +56,7 @@ Only the ones that bear on today's task:
 - [`docs/architecture/plan-vs-current.md`](../architecture/plan-vs-current.md) — if the task touches schema or data behavior.
 - [`docs/architecture/decisions/`](../architecture/decisions/) — if the task touches an architectural choice.
 - [`docs/runbooks/`](../runbooks/) — if the task involves the database, deploys, or environment.
+- [`docs/knowledge/wiki/dirstarter-docs-inventory.md`](../knowledge/wiki/dirstarter-docs-inventory.md) — **Alignment URLs section.** If the task touches any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting), check alignment before proceeding.
 
 Don't bulk-read. Reach for these as the work surfaces a need.
 
