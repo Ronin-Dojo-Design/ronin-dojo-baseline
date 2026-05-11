@@ -681,3 +681,79 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0118_TASK_01, SESSION_0118_TASK_02, SESSION_0118_BONUS
 **Verdict:** TASK_01 blocked on Resend dashboard verification — DNS confirmed, manual step needed. TASK_02 fully delivered — webhook handler follows Stripe webhook pattern (claim/process), uses existing `verifyWebhookSignature()` + `after()` for non-blocking notifications. BONUS: tech debt cleanup, zero tsc errors. Dirstarter alignment: extends existing webhook + email notification patterns. No schema changes. No auth/security changes. Score: 9.5/10. Deduction: Resend test email still not sent (-0.5, external blocker).
+
+---
+
+## Hostile close review
+
+### SESSION_0119_TASK_01 — Resend domain verification + test email
+
+**Files:** none
+**Result:** DNS still pending verification in Resend dashboard (3rd session blocked: 0117→0118→0119). No action possible until Resend processes DNS.
+
+### SESSION_0119_TASK_02 — Hostile close review batch (sessions 0114–0118)
+
+**Files:** `docs/protocols/project-log.md` (MODIFIED), `docs/sprints/SESSION_0119.md` (MODIFIED)
+**Result:** Full Giddy + Doug hostile close review of Printful integration arc. See SESSION_0119_REVIEW_01 below.
+
+### SESSION_0119_TASK_03 — Printful Phase 3 plan: admin merch order dashboard
+
+**Files:** `docs/sprints/SESSION_0119.md` (MODIFIED)
+**Result:** Plan produced for Cody execution in SESSION_0120. See SESSION_0119 plan section.
+
+### SESSION_0119_REVIEW_01 — Hostile Close Batch Review: Printful Integration Arc (Sessions 0114–0118)
+
+**Reviewed tasks:** SESSION_0114_TASK_00, SESSION_0114_TASK_01, SESSION_0114_TASK_02, SESSION_0115_TASK_01, SESSION_0115_TASK_02, SESSION_0115_TASK_03, SESSION_0115_TASK_04, SESSION_0116_TASK_01, SESSION_0116_TASK_02, SESSION_0117_TASK_01, SESSION_0117_TASK_02, SESSION_0118_TASK_01, SESSION_0118_TASK_02, SESSION_0118_BONUS
+
+**Dirstarter docs check:** cached docs sufficient
+**Sources:** `docs/knowledge/wiki/dirstarter-component-inventory.md`, Dirstarter `services/stripe.ts` pattern, Dirstarter `app/api/stripe/webhooks/route.ts` pattern
+**Verdict:** The Printful integration arc is well-executed. Code follows L1 patterns faithfully: `services/printful.ts` mirrors `services/stripe.ts` structure (lazy client, thin fetch wrappers, server-only). Webhook handler at `app/api/printful/webhooks/route.ts` follows the Stripe webhook pattern (claim body → verify signature → parse → switch on event type → DB update → non-blocking notification via `after()`). `printful-actions.ts` correctly uses `"use server"` directive. Schema extension (MerchOrder + FulfillmentStatus) follows existing Invoice/Payment model patterns. Email template follows existing React Email patterns. Spec doc is unusually thorough — wireframes, state machine, Mermaid diagrams, and all 7 decisions resolved with rationale. Two concerns flagged below.
+
+### SESSION_0119_FINDING_01 — Webhook signature verification is weak
+
+- **Severity:** medium
+- **Task:** SESSION_0115_TASK_04, SESSION_0118_TASK_02
+- **Evidence:** `apps/web/services/printful.ts:219-225` — `verifyWebhookSignature()` does a plain string comparison of `signature === secret`. No HMAC, no timing-safe comparison.
+- **Impact:** If the secret leaks, replay attacks are trivial. Timing side-channel on string comparison is a theoretical risk. In practice, Printful's webhook auth is simpler than Stripe's (they send the secret as a header value, not an HMAC), so the implementation is correct for the current Printful API. But it's weaker than Stripe's `constructEvent()` pattern.
+- **Required follow-up:** Add `timingSafeEqual` from `node:crypto` for the comparison. Low priority — Printful's own auth model is the real limitation.
+- **Status:** accepted-risk
+
+### SESSION_0119_FINDING_02 — Rash guard print files not uploaded
+
+- **Severity:** medium
+- **Task:** SESSION_0117_TASK_02
+- **Evidence:** `apps/web/server/web/merch/printful-actions.ts:108-115` — Rash guard variants all map to White base (product 301). Design is applied via `files: [{ url: printFileUrl }]`. But print files are not yet in S3.
+- **Impact:** Any rash guard order will submit to Printful with a blank/white design. Customer gets a plain white rash guard instead of branded art.
+- **Required follow-up:** Brian must upload rash guard print files to S3 before rash guards go live. Could also add a guard in `createPrintfulOrder()` that fails early if a product requires a print file and none is provided.
+- **Status:** open
+
+### SESSION_0119_FINDING_03 — No brand scoping on MerchOrder queries
+
+- **Severity:** medium
+- **Task:** SESSION_0117_TASK_02
+- **Evidence:** `apps/web/app/api/printful/webhooks/route.ts:53` — `db.merchOrder.findUnique({ where: { id: externalId } })` has no brand filter.
+- **Impact:** In a multi-brand scenario, a Printful webhook for one brand's order could theoretically match another brand's MerchOrder if IDs collide (unlikely with cuid but violates the architectural rule from ADR 0004). The Prisma client extension should enforce this, but webhook routes may bypass the extension since they don't have an authenticated session.
+- **Required follow-up:** Verify that the Prisma brand-scoping extension applies to webhook-context queries. If not, add explicit brand filter or document the exemption.
+- **Status:** open
+
+### Kaizen Reflection
+
+**1. Is this safe and secure? What tests would prove me right?**
+
+The integration is safe for Baseline-only launch. Webhook signature verification works correctly for Printful's auth model (shared secret as header). No customer PII is logged beyond email in console statements. The Printful API key is server-only and env-gated. What's *not* proven: no integration test exercises the full Stripe→MerchOrder→Printful→Webhook→StatusUpdate pipeline end-to-end. The smoke tests in the repo don't cover this flow. A Printful sandbox end-to-end test would close this gap.
+
+**2. How many failed steps could we have prevented?**
+
+Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propagation delay (3 sessions) is external and unavoidable. One process improvement: starting DNS changes 24–48h before the session that needs them (already noted in SESSION_0115 reflections, should become a standing practice).
+
+**3. Confidence 1–10 at scale of 100, 1,000, 10,000?**
+
+- **100 orders:** 9/10 — code is correct, patterns are sound, variant map is populated. Missing: rash guard print files, Resend not yet verified.
+- **1,000 orders:** 7/10 — no rate limiting on Printful API calls, no retry logic for transient Printful failures (just marks FAILED), no dead letter queue for failed webhooks. Would need a retry mechanism.
+- **10,000 orders:** 6/10 — single Printful account becomes bottleneck, no order batching, no async job queue for Printful submissions (currently inline in `after()`). Would need per-brand accounts and a proper job queue.
+
+**Kaizen aggregate: 6** (lowest tier = 10,000).
+
+**However:** The 10,000 tier is not plausible before remediation. Baseline launch targets <100 orders/month. **Adjusted aggregate for current launch window: 7** (1,000 tier is the realistic ceiling before next remediation window).
+
+**Score gate action:** Aggregate 7 → stage a remediation session covering retry logic + rate limiting before scaling past ~500 orders/month. Phase 3 admin dashboard implementation may proceed — it's a visibility tool, not a scaling concern.
