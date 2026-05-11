@@ -4,8 +4,8 @@ slug: program-plan
 type: file
 status: partially-superseded
 created: 2026-04-25
-updated: 2026-04-28
-last_agent: copilot-session-0020-preflight
+updated: 2026-05-11
+last_agent: copilot-session-0134
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md
@@ -74,7 +74,7 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 | **S1** ✅ | Phase 1 schema rev: rename `Style→Discipline`, `School→Organization`, `Profile→Passport`; add `RankSystem`, `Rank` (replacing `Belt`), `DirectoryProfile`, `MembershipRoleAssignment`; expand `Membership` with `disciplineId` + `status` enum; reshape `Tournament` into `Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry`. Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank. | Done — 31 models, all enums, seed data loaded (12 disciplines, 13 rank systems, 194 ranks). Sessions 0003–0005. |
 | **S2** ✅ | Better-Auth + Passport bootstrap | Sign-up creates `User + Passport + DirectoryProfile` stubs. `/me` route renders the Passport editor. Brand cookie wired through middleware. Session 0007. |
 | **S3** ✅ | Organization create + join flow | Create org (DOJO/LEAGUE/SCHOOL/CLUB) + owner ACTIVE membership + discipline links. Join button creates PENDING membership. Pages: list, create, detail. Smoke-tested SESSION_0013. **Deferred to future sprint:** invite link flow, multi-role assignment UI, status lifecycle transitions, address field expansion. Sessions 0008–0013. |
-| **S4** ✅ | Directory search with privacy | List view honoring `DirectoryProfile.visibility` and per-field flags. Filters by org/discipline/rank/location. Browser-verified SESSION_0017. **Plan Milestone 1 ✅** |
+| **S4** ✅ | Directory search with privacy | List view honoring `DirectoryProfile.visibility` and per-field flags. Filters by org/discipline/rank/location. Browser-verified SESSION_0017. Tournament CRUD (admin + public + registration) completed SESSION_0132–0133. E2E verified SESSION_0134. **Plan Milestone 1 ✅** |
 | **S5** ✅ | RankSystem + Rank seed data | Done — pulled forward into S1. 12 disciplines, 13 rank systems, 194 ranks seeded. Admin UI to add new rank systems deferred to future sprint. |
 | **S6** | Course + CurriculumItem CRUD | **Superseded →** SESSION_0026 (Content + curriculum lane) |
 | **S7** | Progress awarding + gamification ledger | **Superseded →** SESSION_0026 (Content + curriculum lane) |

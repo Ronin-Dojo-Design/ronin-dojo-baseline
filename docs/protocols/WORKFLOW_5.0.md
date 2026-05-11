@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-08
-last_agent: codex-session-0098-plan
+updated: 2026-05-11
+last_agent: copilot-session-0134
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -241,6 +241,17 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 16 target | 0102 | QA hardening + launch | Cross-brand UAT, remaining MB-013 signoff, migration/deploy rehearsal |
 | May 17 target | 0102 | Launch readiness | Freeze, rollback drill, support playbook, env/domain proof |
 | May 18 target | 0103 | Launch day | Release execution, monitoring, and triage for all four brands |
+| **S5 forward plan (approved SESSION_0134)** | | | |
+| May 11 actual | 0134 | Governance + QA | Dirstarter 10-area alignment audit, hostile review (0130+0133), E2E tournament QA, S5 scope planning. Closed-full. |
+| May 12 target | 0135 | QA hardening | Dev-login guard test, upsertDivision test, registration concurrency test. Close findings 0133-01/02/03 + 0134-02. |
+| May 12 target | 0136 | Blog DB migration | Add Post model to schema, run migration, migrate MDX content, wire admin CRUD |
+| May 13 target | 0137 | QA hardening | Fix school-ops test failure (triage + fix) |
+| May 13–14 target | 0138–0139 | Content + curriculum | Course + CurriculumItem admin CRUD (server actions + admin pages) |
+| May 14–15 target | 0140–0141 | Content + curriculum | Public course pages + course enrollment (entitlement-gated) |
+| May 15–16 target | 0142–0143 | Brand launch | Multi-brand theme polish (per-brand tokens, branded nav/footer for all 4 brands) |
+| May 16–17 target | 0144–0145 | School operations | Membership lifecycle transitions + invite flow |
+| May 17 target | 0146 | QA hardening + launch | Full hostile review + QA hardening pass (all brands) |
+| May 18 target | 0147 | Launch day | Vercel/Neon staging deploy, final smoke test, go/no-go for all four brands |
 
 ---
 
@@ -288,21 +299,24 @@ BACKLOG
   [Ranking series] [Athlete journal/HealthKit]
 
 NOW
-  [Class schedules + sessions]
-  [Entitlement layer]
-  [School Ops auth predicates per feature]
+  [QA hardening — close carried findings]
+  [Blog DB migration — Dirstarter alignment]
+  [Fix school-ops test failure]
 
 NEXT
-  [Attendance/check-in]
-  [Program enrollments + trials + family groups]
-  [Pricing/contracts/invoices]
+  [Course + CurriculumItem admin CRUD]
+  [Public course pages + enrollment]
+  [Multi-brand theme polish (all 4 brands)]
+  [Membership lifecycle + invite flow]
 
 READY FOR LAUNCH
-  [S1-S4 identity/org/directory foundation]
+  [S1-S4 identity/org/directory/tournament foundation]
   [Schema Waves A-D validated locally]
-  [Commerce learning path specs]
+  [Commerce entitlement layer landed]
   [Governance close gates restored]
   [Launch strategy Option A-plus]
+  [Dirstarter alignment: 8/10 confirmed]
+  [E2E tournament flow verified]
 
 POST-LAUNCH
   [Full self-serve white-label templating]
