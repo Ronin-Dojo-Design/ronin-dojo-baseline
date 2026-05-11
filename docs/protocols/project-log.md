@@ -461,8 +461,7 @@ Three sections:
 | SESSION_0084_TASK_02 | SESSION_0084 | Tournament ops (hardening) | Cody (Claude) | Paid-path capacity oversubscription proof — sequential webhook POSTs for distinct users against the same `capacity=1` division | Test PASSES asserting current (broken) behavior: 2 ACTIVE entries on `capacity=1` division → P0 architectural finding confirmed. SESSION_0085 Petey plan flagged in Next session; assertion to flip on fix | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0084_TASK_03 | SESSION_0084 | Close | Cody → Petey (Claude) | Verification + full close | Scoped typecheck clean (3 pre-existing unrelated errors unchanged); 5/5 stable test runs; wiki-lint 0 errors / 3 pre-existing warnings (after deleting `docs/graphify-out/`); SESSION_0084 closed-full with reflections + evidence + next-session unblock | landed | SESSION_0084_REVIEW_01 |
 | SESSION_0085_TASK_01 | SESSION_0085 | Tournament ops (hardening) | Petey (Claude) | Petey plan for paid-path capacity oversubscription fix; decide strategy (a) webhook re-check + refund vs. (b) up-front slot reservation; decompose into Cody-executable tasks; surface open decisions for Brian's go | `SESSION_0085.md` Petey plan block landed with strategy choice + 4-task breakdown + open-decisions block; project-log task plan rows appended; gate held on Brian's approval before TASK_02 | landed | — |
-| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route
-| SESSION_0085_TASK_03 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Flip SESSION_0084 oversubscription test from `toBe(2)` to `toBe(1)`; assert one Registration ends CANCELLED/REFUNDED; assert `stripe.refunds.create` called exactly once with the loser's `payment_intent`; add NEW parallel-race test using `Promise.all([postWebhook, postWebhook])` to prove the fix under concurrency | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | landed | SESSION_0085_REVIEW_01 |
+| SESSION_0085_TASK_02 | SESSION_0085 | Tournament ops (hardening) | Cody (Codex) | Webhook capacity re-check + refund (strategy a). Wrap `fulfillTournamentRegistration` in a Serializable transaction; if any requested division is at capacity, write Registration in CANCELLED/REFUNDED state with CANCELLED entries; after commit, call `stripe.refunds.create({ payment_intent: session.payment_intent })` (refund failure logs but does not throw) | `apps/web/app/api/stripe/webhooks/route.test.ts` updated with flipped assertion + refund-call tracking + parallel-race variant; 5/5 stable runs; refunds-tracked mock asserts call count = 1 | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0085_TASK_04 | SESSION_0085 | Close | Cody → Petey (Codex) | Verification + full close: scoped typecheck, full test re-run, free-path concurrency regression check, wiki-lint, project-log review block, memory update (paid oversubscription window resolved) | Webhook test 5/5 stable; free-path concurrency regression passed; `bunx tsc --noEmit --pretty false` reports only pre-existing unrelated errors in 3 files; wiki-lint 0 errors / 3 pre-existing warnings; SESSION_0085_REVIEW_01 appended | landed | SESSION_0085_REVIEW_01 |
 | SESSION_0086_TASK_01 | SESSION_0086 | Tournament ops (hardening) | Petey + Giddy (Codex) | Bow in, graphify TASK_05 inputs, create SESSION_0086 plan, split work into UI/refund-test worktrees, and keep docs/log orchestration in the main checkout | `SESSION_0086.md` exists with graphify queries, Dirstarter alignment, task split, and agent/worktree assignments; project-log rows appended before implementation | landed | SESSION_0086_REVIEW_01 |
 | SESSION_0086_TASK_02 | SESSION_0086 | Tournament ops (UI smoke) | Cody + Desi worker | Refunded-paid customer notice: when `registered=true` resolves to an existing `CANCELLED`/`REFUNDED` Registration, show rejected/refunded copy instead of the success banner; display persisted cancelled/refunded state without offering an impossible re-registration form | Tournament detail/RegisterButton UI updated; `registration-notice.test.tsx` covers `CANCELLED`/`REFUNDED`, success, and processing copy; UI test passes | landed | SESSION_0086_REVIEW_01 |
@@ -795,7 +794,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 ### SESSION_0121 — Remediation: Merch Order Findings + Webhook Brand Scoping
 
 | Task ID | Description | Status |
-|---|---|---|
+| --- | --- | --- |
 | SESSION_0121_TASK_01 | Create MerchLineItem Zod schema (FINDING_01) | ✅ done |
 | SESSION_0121_TASK_02 | Add statusHistory JSON audit trail (FINDING_02) | ✅ done |
 | SESSION_0121_TASK_03 | Add composite DB indexes (FINDING_03) | ✅ done |
@@ -835,3 +834,90 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Dirstarter docs check:** `prisma/browser` import pattern confirmed as L1 canonical. No divergence.
 - **Findings:** VideoCarousel and MemberCarouselByRank not yet wired (need parent-level data fetching). Deferred to SESSION_0125.
 - **Carousel decision:** Embla is the standard reusable component. Gear page manual carousel acceptable legacy.
+
+### SESSION_0125 — Wire Remaining Carousels + Hostile Review + Graphify Update
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0125_TASK_01 | Wire VideoCarousel into discipline detail page | ✅ done |
+| SESSION_0125_TASK_02 | Wire MemberCarouselByRank into discipline detail page | ✅ done |
+| SESSION_0125_TASK_03 | Hostile close review (sessions 0123–0125) | ✅ done |
+| SESSION_0125_TASK_04 | Graphify update | ✅ done |
+| SESSION_0125_TASK_05 | Visual QA | ✅ done |
+| SESSION_0125_TASK_06 | Type check | ✅ done |
+
+**Result:** Both carousels wired. Hostile review completed with Kaizen aggregate 7 → remediated to 9 in-session (integration test + composite index added).
+
+### SESSION_0126 — Seed Enrichment QA Data + Passport Profile Editor
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0126_TASK_01 | Seed ContentAtom + ContentVariant (video) for 3 disciplines | ✅ done |
+| SESSION_0126_TASK_02 | Add Muay Thai Mike test user (PUBLIC/ACTIVE/ranked) | ✅ done |
+| SESSION_0126_TASK_03 | Visual QA — carousels populated | ✅ done |
+| SESSION_0126_TASK_04 | Type check | ✅ done |
+
+**Result:** QA data gap from hostile review closed. VideoCarousel, MemberCarouselByRank, Related Content all populated.
+
+### SESSION_0127 — Passport Profile Editor Improvements
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0127_TASK_01 | Fix FS-0001 violations (raw HTML → L1 components) | ✅ done |
+| SESSION_0127_TASK_02 | Add missing Passport fields (dob, gender, avatarUrl) | ✅ done |
+| SESSION_0127_TASK_03 | Add missing DirectoryProfile fields (slug, visibility) | ✅ done |
+| SESSION_0127_TASK_04 | Type check | ✅ done |
+
+**Result:** All FS-0001 violations remediated. Missing L2 Passport fields exposed in editor UI.
+
+### SESSION_0128 — Media Upload + socialLinks Editor + Admin Upload Grant
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0128_TASK_01 | Wire FormMedia for avatar upload | ✅ done |
+| SESSION_0128_TASK_02 | Add coverPhotoUrl + videoIntroUrl to DirectoryProfile form | ✅ done |
+| SESSION_0128_TASK_03 | Build SocialLinksEditor component | ✅ done |
+| SESSION_0128_TASK_04 | Seed S3_UPLOAD entitlement + wire canUploadMedia | ✅ done |
+| SESSION_0128_TASK_05 | Admin UI: UploadGrantToggle | ✅ done |
+| SESSION_0128_TASK_06 | Type check | ✅ done |
+
+**Result:** Full media upload integration. FormMedia for avatar/cover/video. SocialLinksEditor with 7 platforms. Entitlement system with role-based auto-grant + admin grant/revoke.
+
+### SESSION_0129 — Hostile Close Batch Review (0126–0128)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0129_TASK_01 | Hostile close review batch (sessions 0126–0128) | ✅ done |
+| SESSION_0129_TASK_02 | Plan SESSION_0130 | ✅ done |
+
+**Result:** 3 findings identified (sequential queries, uncached reads, missing integration test). Kaizen aggregate: 7.
+
+#### Review
+
+**SESSION_0129_REVIEW_01 — Hostile Close Batch Review: Passport Profile Editor Arc (Sessions 0126–0128)**
+
+- **Reviewed tasks:** SESSION_0126–0128 (all tasks)
+- **Dirstarter docs check:** cached docs sufficient — FormMedia, Select, Checkbox, H2, Button, Input, Stack from inventory
+- **Findings:** FINDING_01 (3 sequential queries), FINDING_02 ("use server" on reads), FINDING_03 (no integration test)
+- **Kaizen aggregate:** 7 → remediation staged for SESSION_0130
+
+### SESSION_0130 — Remediate Hostile Review Findings + Visual QA + Tier Auto-Grant Architecture
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0130_TASK_01 | Consolidate canUploadMedia (Promise.all) | ✅ done |
+| SESSION_0130_TASK_02 | Cache entitlement queries ("use cache" + cacheTag) | ✅ done |
+| SESSION_0130_TASK_03 | Integration test for canUploadMedia (5/5 passing) | ✅ done |
+| SESSION_0130_TASK_04 | Visual QA (structural audit, zero FS-0001 violations) | ✅ done |
+| SESSION_0130_TASK_05 | ADR 0012: Tier auto-grant via Stripe webhook | ✅ done |
+| SESSION_0130_TASK_06 | Type check | ✅ done |
+
+**Result:** All 3 hostile review findings remediated. Revised Kaizen aggregate: 9. ADR 0012 accepted.
+
+#### Review
+
+**SESSION_0130_REVIEW_01 — Remediation of SESSION_0129 Findings**
+
+- **Reviewed tasks:** SESSION_0130_TASK_01–06
+- **Dirstarter docs check:** live docs checked — `dirstarter.com/docs/integrations/payments` for webhook pattern (ADR 0012). `"use cache"` pattern confirmed from existing query files.
+- **Findings:** None — all SESSION_0129 findings remediated. Revised aggregate: 9.

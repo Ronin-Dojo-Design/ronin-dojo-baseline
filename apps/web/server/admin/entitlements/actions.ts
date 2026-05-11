@@ -96,7 +96,7 @@ export const grantUserEntitlement = adminActionClient
 
     revalidate({
       paths: ["/admin/users", `/admin/users/${userId}`],
-      tags: ["user-entitlements"],
+      tags: ["user-entitlements", `user-entitlements-${userId}`],
     })
   })
 
@@ -120,6 +120,6 @@ export const revokeUserEntitlement = adminActionClient
 
     revalidate({
       paths: ["/admin/users", `/admin/users/${userId}`],
-      tags: ["user-entitlements"],
+      tags: ["user-entitlements", `user-entitlements-${userId}`],
     })
   })

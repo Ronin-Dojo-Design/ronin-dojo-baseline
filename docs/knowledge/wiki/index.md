@@ -181,6 +181,11 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0123](../../sprints/SESSION_0123.md) | session | in-progress |
 | [SESSION_0124](../../sprints/SESSION_0124.md) | session | closed-quick |
 | [SESSION_0125](../../sprints/SESSION_0125.md) | session | closed-quick |
+| [SESSION_0126](../../sprints/SESSION_0126.md) | session | closed-quick |
+| [SESSION_0127](../../sprints/SESSION_0127.md) | session | closed-quick |
+| [SESSION_0128](../../sprints/SESSION_0128.md) | session | closed |
+| [SESSION_0129](../../sprints/SESSION_0129.md) | session | closed-quick |
+| [SESSION_0130](../../sprints/SESSION_0130.md) | session | closed-full |
 
 ## Protocols
 

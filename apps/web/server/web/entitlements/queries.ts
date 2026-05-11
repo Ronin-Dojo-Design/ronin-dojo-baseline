@@ -1,5 +1,6 @@
-"use server"
+"use cache"
 
+import { cacheLife, cacheTag } from "next/cache"
 import { db } from "~/services/db"
 import type { Brand } from "~/.generated/prisma/client"
 
@@ -11,6 +12,9 @@ export async function hasEntitlement(
   entitlementKey: string,
   brand: Brand,
 ): Promise<boolean> {
+  cacheTag(`user-entitlements-${userId}`)
+  cacheLife("seconds")
+
   const grant = await db.userEntitlement.findFirst({
     where: {
       userId,
@@ -30,39 +34,50 @@ export async function hasEntitlement(
  * 2. User has an active Membership with a role of INSTRUCTOR, COACH, OWNER, or ORG_ADMIN
  * 3. User owns an Organization in this brand
  *
- * Tier-based auto-grant (premium/elite/legend) requires pricing plan / subscription
- * integration — deferred until Stripe webhook wiring in a future session.
+ * Consolidated into a single DB round-trip using parallel promises.
+ * Cached with 60s TTL, invalidated on grant/revoke via `user-entitlements-{userId}` tag.
  */
 export async function canUploadMedia(
   userId: string,
   brand: Brand,
 ): Promise<boolean> {
-  // Check 1: Explicit entitlement grant
-  const hasGrant = await hasEntitlement(userId, "S3_UPLOAD", brand)
-  if (hasGrant) return true
+  cacheTag(`user-entitlements-${userId}`)
+  cacheLife("seconds")
 
-  // Check 2: Role-based — INSTRUCTOR, COACH, OWNER, ORG_ADMIN
-  const roleBasedMembership = await db.membership.findFirst({
-    where: {
-      userId,
-      brand,
-      status: "ACTIVE",
-      roleAssignments: {
-        some: {
-          role: {
-            code: { in: ["INSTRUCTOR", "COACH", "OWNER", "ORG_ADMIN"] },
+  // Run all 3 checks in parallel (single round-trip per check, all concurrent)
+  const [entitlementGrant, roleBasedMembership, ownedOrg] = await Promise.all([
+    // Check 1: Explicit entitlement grant
+    db.userEntitlement.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        entitlement: { key: "S3_UPLOAD", brand },
+        OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    }),
+    // Check 2: Role-based — INSTRUCTOR, COACH, OWNER, ORG_ADMIN
+    db.membership.findFirst({
+      where: {
+        userId,
+        brand,
+        status: "ACTIVE",
+        roleAssignments: {
+          some: {
+            role: {
+              code: { in: ["INSTRUCTOR", "COACH", "OWNER", "ORG_ADMIN"] },
+            },
           },
         },
       },
-    },
-  })
-  if (roleBasedMembership) return true
+      select: { id: true },
+    }),
+    // Check 3: Organization owner
+    db.organization.findFirst({
+      where: { ownerId: userId, brand },
+      select: { id: true },
+    }),
+  ])
 
-  // Check 3: Organization owner
-  const ownedOrg = await db.organization.findFirst({
-    where: { ownerId: userId, brand },
-  })
-  if (ownedOrg) return true
-
-  return false
+  return !!(entitlementGrant || roleBasedMembership || ownedOrg)
 }
