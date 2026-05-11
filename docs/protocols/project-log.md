@@ -631,3 +631,18 @@ Three sections:
 
 **Reviewed tasks:** SESSION_0115_TASK_01, SESSION_0115_TASK_02, SESSION_0115_TASK_03, SESSION_0115_TASK_04
 **Verdict:** All 4 tasks landed. TASK_01 partially blocked on DNS propagation (3/5 records live). TASK_02 efficient — all 7 decisions resolved in one pass with meaningful refinements. TASK_03 comprehensive — wireframes cover customer and admin paths, state machine covers happy + error paths. TASK_04 follows L1 patterns exactly. No Dirstarter baseline layers touched. No schema changes. Kaizen aggregate: 8.
+
+### SESSION_0116_TASK_01 — Resend env wiring + test email
+
+**Files:** `apps/web/.env` (MODIFIED — gitignored)
+**Result:** Confirmed DNS propagation for original 5 records. Discovered Resend requires additional `send` subdomain records (MX + TXT) + inbound MX — Brian added all in Bluehost. Updated `RESEND_SENDER_EMAIL` to `welcome@baselinemartialarts.com`. Test email blocked on domain verification (propagation pending).
+
+### SESSION_0116_TASK_02 — Printful API key + sandbox test
+
+**Files:** `apps/web/.env` (MODIFIED — gitignored)
+**Result:** Brian generated Private Token via Printful Developer Portal. Wired 3 env vars. Tested: stores endpoint ✅, catalog ✅, shipping rates ✅ ($4.75 flat rate Bella Canvas 3001 → Denver CO).
+
+### SESSION_0116_REVIEW_01 — Full close review
+
+**Reviewed tasks:** SESSION_0116_TASK_01, SESSION_0116_TASK_02
+**Verdict:** Both tasks landed. TASK_01 partially blocked on Resend DNS propagation (self-resolving). TASK_02 fully complete — API key wired and 3 sandbox tests passed. No Dirstarter baseline layers touched. No schema/auth/payment code changes. Only `.env` modified (gitignored). Score: 9/10. Kaizen aggregate: 9.
