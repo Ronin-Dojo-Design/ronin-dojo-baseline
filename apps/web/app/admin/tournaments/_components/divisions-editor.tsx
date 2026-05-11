@@ -44,15 +44,18 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
+import { Input } from "~/components/common/input"
 import {
   deleteDivision,
   deleteTournamentDiscipline,
   generateBracket,
   listDivisionSeedEntries,
+  upsertDivision,
   upsertTournamentDiscipline,
 } from "~/server/admin/tournaments/actions"
 import type { SeedingMethod } from "~/server/admin/tournaments/bracket-seeding"
 import type { findTournamentById } from "~/server/admin/tournaments/queries"
+import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
 
 type Tournament = NonNullable<Awaited<ReturnType<typeof findTournamentById>>>
 type TournamentDivision = Tournament["disciplines"][number]["divisions"][number] & {
@@ -63,6 +66,8 @@ type TournamentDivision = Tournament["disciplines"][number]["divisions"][number]
 type DivisionsEditorProps = {
   tournament: Tournament
   availableDisciplines?: { id: string; name: string }[]
+  tournamentRoles?: { id: string; name: string; code: string }[]
+  ruleSets?: { id: string; name: string }[]
 }
 
 type SeedEntry = {
@@ -123,7 +128,7 @@ function SortableSeedRow({
   )
 }
 
-export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsEditorProps) {
+export function DivisionsEditor({ tournament, availableDisciplines, tournamentRoles, ruleSets }: DivisionsEditorProps) {
   const router = useRouter()
   const [seedingDialogDivisionId, setSeedingDialogDivisionId] = useState<string | null>(null)
   const [selectedSeedingMethod, setSelectedSeedingMethod] =
@@ -134,6 +139,43 @@ export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsE
   const [seedEntriesError, setSeedEntriesError] = useState<string | null>(null)
   const [addDisciplineOpen, setAddDisciplineOpen] = useState(false)
   const [selectedDisciplineId, setSelectedDisciplineId] = useState("")
+
+  // Add Division dialog state
+  const [addDivisionOpen, setAddDivisionOpen] = useState(false)
+  const [addDivisionTdId, setAddDivisionTdId] = useState("")
+  const [divForm, setDivForm] = useState({
+    name: "",
+    format: "SINGLE_ELIMINATION" as string,
+    gender: "ANY" as string,
+    ageMin: "",
+    ageMax: "",
+    weightMinKg: "",
+    weightMaxKg: "",
+    feeCents: "0",
+    capacity: "",
+    roleRequiredId: "",
+    rankMinId: "",
+    rankMaxId: "",
+    ruleSetId: "",
+  })
+
+  const resetDivForm = () => {
+    setDivForm({
+      name: "",
+      format: "SINGLE_ELIMINATION",
+      gender: "ANY",
+      ageMin: "",
+      ageMax: "",
+      weightMinKg: "",
+      weightMaxKg: "",
+      feeCents: "0",
+      capacity: "",
+      roleRequiredId: "",
+      rankMinId: "",
+      rankMaxId: "",
+      ruleSetId: "",
+    })
+  }
 
   const deleteDivisionAction = useAction(deleteDivision, {
     onSuccess: () => toast.success("Division removed"),
@@ -153,6 +195,17 @@ export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsE
       router.refresh()
     },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to add discipline"),
+  })
+
+  const upsertDivisionAction = useAction(upsertDivision, {
+    onSuccess: () => {
+      toast.success("Division added")
+      setAddDivisionOpen(false)
+      setAddDivisionTdId("")
+      resetDivForm()
+      router.refresh()
+    },
+    onError: ({ error }) => toast.error(error.serverError ?? "Failed to add division"),
   })
 
   const generateBracketAction = useAction(generateBracket, {
@@ -192,6 +245,7 @@ export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsE
     deleteDivisionAction.isPending ||
     deleteDisciplineAction.isPending ||
     addDisciplineAction.isPending ||
+    upsertDivisionAction.isPending ||
     generateBracketAction.isPending ||
     listSeedEntriesAction.isPending
 
@@ -303,14 +357,29 @@ export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsE
               <Card key={td.id} className="p-4 space-y-3">
                 <Stack direction="row" size="sm" className="justify-between items-center">
                   <span className="font-medium">{td.discipline.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    prefix={<TrashIcon className="size-4" />}
-                    onClick={() => deleteDisciplineAction.execute({ id: td.id })}
-                    disabled={isPending}
-                    aria-label="Remove discipline"
-                  />
+                  <Stack direction="row" size="sm">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      prefix={<PlusIcon className="size-4" />}
+                      onClick={() => {
+                        setAddDivisionTdId(td.id)
+                        resetDivForm()
+                        setAddDivisionOpen(true)
+                      }}
+                      disabled={isPending}
+                    >
+                      Add Division
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      prefix={<TrashIcon className="size-4" />}
+                      onClick={() => deleteDisciplineAction.execute({ id: td.id })}
+                      disabled={isPending}
+                      aria-label="Remove discipline"
+                    />
+                  </Stack>
                 </Stack>
 
                 {td.divisions.length === 0 && (
@@ -505,6 +574,145 @@ export function DivisionsEditor({ tournament, availableDisciplines }: DivisionsE
               disabled={!canGenerate}
             >
               Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Division Dialog */}
+      <Dialog open={addDivisionOpen} onOpenChange={open => {
+        if (!open) {
+          setAddDivisionOpen(false)
+          setAddDivisionTdId("")
+          resetDivForm()
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Division</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input
+                placeholder="e.g. Men's Lightweight Single Stick"
+                value={divForm.name}
+                onChange={e => setDivForm(f => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Format</Label>
+                <Select value={divForm.format} onValueChange={v => setDivForm(f => ({ ...f, format: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DivisionFormat).map(f => (
+                      <SelectItem key={f} value={f}>{f.replace(/_/g, " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <Select value={divForm.gender} onValueChange={v => setDivForm(f => ({ ...f, gender: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DivisionGender).map(g => (
+                      <SelectItem key={g} value={g}>{g.replace(/_/g, " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Age Min</Label>
+                <Input type="number" placeholder="e.g. 18" value={divForm.ageMin} onChange={e => setDivForm(f => ({ ...f, ageMin: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Age Max</Label>
+                <Input type="number" placeholder="e.g. 35" value={divForm.ageMax} onChange={e => setDivForm(f => ({ ...f, ageMax: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Weight Min (kg)</Label>
+                <Input type="number" placeholder="e.g. 60" value={divForm.weightMinKg} onChange={e => setDivForm(f => ({ ...f, weightMinKg: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Weight Max (kg)</Label>
+                <Input type="number" placeholder="e.g. 75" value={divForm.weightMaxKg} onChange={e => setDivForm(f => ({ ...f, weightMaxKg: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Fee (cents)</Label>
+                <Input type="number" placeholder="0" value={divForm.feeCents} onChange={e => setDivForm(f => ({ ...f, feeCents: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Capacity</Label>
+                <Input type="number" placeholder="e.g. 32" value={divForm.capacity} onChange={e => setDivForm(f => ({ ...f, capacity: e.target.value }))} />
+              </div>
+            </div>
+
+            {tournamentRoles && tournamentRoles.length > 0 && (
+              <div className="space-y-2">
+                <Label>Required Role</Label>
+                <Select value={divForm.roleRequiredId} onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                  <SelectContent>
+                    {tournamentRoles.map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.name} ({r.code})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {ruleSets && ruleSets.length > 0 && (
+              <div className="space-y-2">
+                <Label>Rule Set (optional)</Label>
+                <Select value={divForm.ruleSetId} onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v }))}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    {ruleSets.map(rs => (
+                      <SelectItem key={rs.id} value={rs.id}>{rs.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAddDivisionOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!divForm.name || !divForm.roleRequiredId || upsertDivisionAction.isPending}
+              onClick={() => {
+                upsertDivisionAction.execute({
+                  name: divForm.name,
+                  format: divForm.format as (typeof DivisionFormat)[keyof typeof DivisionFormat],
+                  gender: divForm.gender as (typeof DivisionGender)[keyof typeof DivisionGender],
+                  ageMin: divForm.ageMin ? Number(divForm.ageMin) : null,
+                  ageMax: divForm.ageMax ? Number(divForm.ageMax) : null,
+                  weightMinKg: divForm.weightMinKg ? Number(divForm.weightMinKg) : null,
+                  weightMaxKg: divForm.weightMaxKg ? Number(divForm.weightMaxKg) : null,
+                  feeCents: Number(divForm.feeCents) || 0,
+                  capacity: divForm.capacity ? Number(divForm.capacity) : null,
+                  sortOrder: 0,
+                  tournamentDisciplineId: addDivisionTdId,
+                  roleRequiredId: divForm.roleRequiredId,
+                  rankMinId: divForm.rankMinId || "",
+                  rankMaxId: divForm.rankMaxId || "",
+                  ruleSetId: divForm.ruleSetId || "",
+                })
+              }}
+            >
+              Add Division
             </Button>
           </DialogFooter>
         </DialogContent>
