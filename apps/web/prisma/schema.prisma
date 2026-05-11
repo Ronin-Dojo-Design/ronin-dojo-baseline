@@ -3061,6 +3061,11 @@ model MerchOrder {
   /// Error handling
   failureReason           String?
 
+  /// Append-only audit trail for admin status overrides (JSON array)
+  /// Each entry: { timestamp, adminUserId, oldStatus, newStatus, reason? }
+  /// @see docs/sprints/SESSION_0121.md — TASK_02 (FINDING_02 remediation)
+  statusHistory           Json?
+
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
 
@@ -3073,6 +3078,8 @@ model MerchOrder {
   pricingPlanId           String?
 
   @@index([brand, organizationId])
+  @@index([brand, customerEmail])
+  @@index([brand, fulfillmentStatus])
   @@index([userId])
   @@index([fulfillmentStatus])
   @@index([createdAt])

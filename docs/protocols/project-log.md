@@ -680,7 +680,7 @@ Three sections:
 ### SESSION_0118_REVIEW_01 — Full close review
 
 **Reviewed tasks:** SESSION_0118_TASK_01, SESSION_0118_TASK_02, SESSION_0118_BONUS
-**Verdict:** TASK_01 blocked on Resend dashboard verification — DNS confirmed, manual step needed. TASK_02 fully delivered — webhook handler follows Stripe webhook pattern (claim/process), uses existing `verifyWebhookSignature()` + `after()` for non-blocking notifications. BONUS: tech debt cleanup, zero tsc errors. Dirstarter alignment: extends existing webhook + email notification patterns. No schema changes. No auth/security changes. Score: 9.5/10. Deduction: Resend test email still not sent (-0.5, external blocker).
+**Verdict:** TASK_01 blocked on Resend dashboard verification — DNS confirmed, manual step needed. TASK_02 fully delivered — webhook handler follows Stripe webhook pattern (claim/process), uses existing `verifyWebhookSignature()` + `after()` for non-blocking notifications. BONUS: tech debt cleanup, zero tsc errors. Dirstarter alignment: extends existing webhook + email notification patterns. No schema changes. No auth/security changes. Score: 9.5/10. Deduction: Resend test email still not sent (-0.5).
 
 ---
 
@@ -791,3 +791,24 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Score gate:** Aggregate 7 → remediation session staged for DB indexes + lineItems typing
 - **Findings:** 3 low-severity (lineItems `as any`, no audit trail for status overrides, no DB indexes on search fields). All open, queued for next session.
 - **Printful API:** Verified against https://developers.printful.com/docs — `sync_variant_id`, `externalId`/`external_id` mapping, `@` prefix for external ID lookups, `?confirm=true` all confirmed correct.
+
+### SESSION_0121 — Remediation: Merch Order Findings + Webhook Brand Scoping
+
+| Task ID | Description | Status |
+|---|---|---|
+| SESSION_0121_TASK_01 | Create MerchLineItem Zod schema (FINDING_01) | ✅ done |
+| SESSION_0121_TASK_02 | Add statusHistory JSON audit trail (FINDING_02) | ✅ done |
+| SESSION_0121_TASK_03 | Add composite DB indexes (FINDING_03) | ✅ done |
+| SESSION_0121_TASK_04 | Verify webhook brand scoping (SESSION_0119 FINDING_03) | ✅ done |
+| SESSION_0121_TASK_05 | Type check + verify | ✅ done |
+
+**Result:** All 5 tasks completed. Zod schema replaces `as any` cast. Full JSON audit trail for admin status overrides. Two composite indexes added. Webhook brand scoping verified-acceptable with documentation. `tsc --noEmit` passes.
+
+#### Review
+
+**SESSION_0121_REVIEW_01 — Merch Order Remediation**
+
+- **Reviewed tasks:** SESSION_0121_TASK_01–05
+- **Dirstarter docs check:** N/A (backend-only, no UI)
+- **Findings:** None — all SESSION_0120 findings remediated
+- **Migration note:** Schema changes (statusHistory + indexes) ready but migration not yet applied (`bun db:migrate dev` pending)

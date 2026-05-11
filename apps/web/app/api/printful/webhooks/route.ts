@@ -45,7 +45,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  // Look up our MerchOrder by external_id (= our MerchOrder.id)
+  // Look up our MerchOrder by external_id (= our MerchOrder.id).
+  //
+  // BRAND SCOPING NOTE (SESSION_0121 TASK_04, SESSION_0119 FINDING_03):
+  // This lookup is intentionally NOT brand-scoped. Printful webhooks are
+  // server-to-server callbacks that don't carry brand context. The lookup key
+  // is a cuid that we originally sent to Printful as `external_id` — Printful
+  // can only know valid IDs we provided. Filtering by brand here would require
+  // maintaining a brand→Printful-store mapping and is unnecessary given:
+  //   1. cuid IDs are unguessable (122-bit entropy)
+  //   2. Webhook signature verification gates entry to this handler
+  //   3. Printful only sends webhooks for orders we created
+  // Verified-acceptable per ADR 0004 cross-brand policy.
   const merchOrder = await db.merchOrder.findUnique({
     where: { id: externalId },
   })
@@ -54,6 +65,8 @@ export async function POST(req: NextRequest) {
     console.warn(`⚠️ Printful webhook: no MerchOrder found for external_id=${externalId}`)
     return NextResponse.json({ received: true })
   }
+
+  console.log(`📦 Printful webhook: processing ${event.type} for MerchOrder ${merchOrder.id} (brand: ${merchOrder.brand})`)
 
   switch (event.type) {
     case "package_shipped": {

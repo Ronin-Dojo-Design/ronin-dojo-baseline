@@ -138,6 +138,7 @@ const MERCH_ORDER_SELECT = {
   shippedAt: true,
   deliveredAt: true,
   failureReason: true,
+  statusHistory: true,
   createdAt: true,
   updatedAt: true,
   userId: true,

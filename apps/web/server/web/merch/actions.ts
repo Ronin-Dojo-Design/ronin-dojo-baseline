@@ -148,6 +148,43 @@ import { adminActionClient } from "~/lib/safe-actions"
 import { db } from "~/services/db"
 import { createOrder } from "~/services/printful"
 
+// ---------------------------------------------------------------------------
+// Shared schemas
+// ---------------------------------------------------------------------------
+
+/**
+ * Zod schema for a single line item in a MerchOrder's `lineItems` JSON field.
+ * Used to validate the JSON before mapping to Printful order items.
+ *
+ * @see docs/sprints/SESSION_0121.md — TASK_01 (FINDING_01 remediation)
+ */
+const merchLineItemSchema = z.object({
+  printfulVariantId: z.number(),
+  quantity: z.number().int().min(1).default(1),
+  name: z.string().optional(),
+  size: z.string().optional(),
+  color: z.string().optional(),
+  files: z.array(z.object({ url: z.string().url() })).optional(),
+})
+
+type MerchLineItem = z.infer<typeof merchLineItemSchema>
+
+/**
+ * Schema for a status history entry in MerchOrder's `statusHistory` JSON field.
+ * Append-only audit trail for admin status overrides.
+ *
+ * @see docs/sprints/SESSION_0121.md — TASK_02 (FINDING_02 remediation)
+ */
+const statusHistoryEntrySchema = z.object({
+  timestamp: z.string(),
+  adminUserId: z.string(),
+  oldStatus: z.string(),
+  newStatus: z.string(),
+  reason: z.string().optional(),
+})
+
+type StatusHistoryEntry = z.infer<typeof statusHistoryEntrySchema>
+
 const updateMerchOrderStatusSchema = z.object({
   id: z.string().min(1),
   status: z.nativeEnum(FulfillmentStatus),
@@ -162,7 +199,7 @@ const updateMerchOrderStatusSchema = z.object({
  */
 export const updateMerchOrderStatus = adminActionClient
   .inputSchema(updateMerchOrderStatusSchema)
-  .action(async ({ parsedInput: { id, status, reason } }) => {
+  .action(async ({ parsedInput: { id, status, reason }, ctx: { user } }) => {
     const brand = await getRequestBrand()
 
     const order = await db.merchOrder.findFirst({ where: { id, brand } })
@@ -170,10 +207,21 @@ export const updateMerchOrderStatus = adminActionClient
       throw new Error("Order not found.")
     }
 
+    // Build audit trail entry (append-only JSON array)
+    const existingHistory = Array.isArray(order.statusHistory) ? order.statusHistory : []
+    const entry: StatusHistoryEntry = {
+      timestamp: new Date().toISOString(),
+      adminUserId: user.id,
+      oldStatus: order.fulfillmentStatus,
+      newStatus: status,
+      ...(reason ? { reason } : {}),
+    }
+
     await db.merchOrder.update({
       where: { id },
       data: {
         fulfillmentStatus: status,
+        statusHistory: [...existingHistory, entry],
         ...(reason ? { failureReason: reason } : {}),
       },
     })
@@ -208,16 +256,21 @@ export const retryPrintfulOrder = adminActionClient
       throw new Error(`Cannot retry order in ${order.fulfillmentStatus} status.`)
     }
 
-    // Parse line items for Printful submission
+    // Parse and validate line items using Zod schema (FINDING_01 remediation)
     const lineItems = Array.isArray(order.lineItems) ? order.lineItems : []
     if (lineItems.length === 0) {
       throw new Error("Order has no line items.")
     }
 
-    const printfulItems = lineItems.map((item: any) => ({
-      sync_variant_id: item.printfulVariantId as number,
-      quantity: (item.quantity ?? 1) as number,
-      files: item.files as { url: string }[] | undefined,
+    const parseResult = z.array(merchLineItemSchema).safeParse(lineItems)
+    if (!parseResult.success) {
+      throw new Error(`Invalid line items: ${parseResult.error.message}`)
+    }
+
+    const printfulItems = parseResult.data.map((item: MerchLineItem) => ({
+      sync_variant_id: item.printfulVariantId,
+      quantity: item.quantity,
+      files: item.files,
     }))
 
     const recipient = {
