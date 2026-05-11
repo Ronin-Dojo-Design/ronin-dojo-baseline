@@ -138,3 +138,128 @@ export const createMerchCheckout = userActionClient
 
     redirect(checkout.url)
   })
+
+// ---------------------------------------------------------------------------
+// Admin: Merch Order actions (Phase 3)
+// ---------------------------------------------------------------------------
+
+import { FulfillmentStatus } from "~/.generated/prisma/client"
+import { adminActionClient } from "~/lib/safe-actions"
+import { db } from "~/services/db"
+import { createOrder } from "~/services/printful"
+
+const updateMerchOrderStatusSchema = z.object({
+  id: z.string().min(1),
+  status: z.nativeEnum(FulfillmentStatus),
+  reason: z.string().optional(),
+})
+
+/**
+ * Admin: manually override a merch order's fulfillment status.
+ * Brand-scoped via getRequestBrand().
+ *
+ * @see docs/sprints/SESSION_0120.md — TASK_07
+ */
+export const updateMerchOrderStatus = adminActionClient
+  .inputSchema(updateMerchOrderStatusSchema)
+  .action(async ({ parsedInput: { id, status, reason } }) => {
+    const brand = await getRequestBrand()
+
+    const order = await db.merchOrder.findFirst({ where: { id, brand } })
+    if (!order) {
+      throw new Error("Order not found.")
+    }
+
+    await db.merchOrder.update({
+      where: { id },
+      data: {
+        fulfillmentStatus: status,
+        ...(reason ? { failureReason: reason } : {}),
+      },
+    })
+
+    return { success: true }
+  })
+
+const retryPrintfulOrderSchema = z.object({
+  merchOrderId: z.string().min(1),
+})
+
+/**
+ * Admin: retry submitting a failed merch order to Printful.
+ * Only allowed when current status is PAID or FAILED.
+ *
+ * @see docs/sprints/SESSION_0120.md — TASK_07
+ */
+export const retryPrintfulOrder = adminActionClient
+  .inputSchema(retryPrintfulOrderSchema)
+  .action(async ({ parsedInput: { merchOrderId } }) => {
+    const brand = await getRequestBrand()
+
+    const order = await db.merchOrder.findFirst({
+      where: { id: merchOrderId, brand },
+    })
+
+    if (!order) {
+      throw new Error("Order not found.")
+    }
+
+    if (order.fulfillmentStatus !== "PAID" && order.fulfillmentStatus !== "FAILED") {
+      throw new Error(`Cannot retry order in ${order.fulfillmentStatus} status.`)
+    }
+
+    // Parse line items for Printful submission
+    const lineItems = Array.isArray(order.lineItems) ? order.lineItems : []
+    if (lineItems.length === 0) {
+      throw new Error("Order has no line items.")
+    }
+
+    const printfulItems = lineItems.map((item: any) => ({
+      sync_variant_id: item.printfulVariantId as number,
+      quantity: (item.quantity ?? 1) as number,
+      files: item.files as { url: string }[] | undefined,
+    }))
+
+    const recipient = {
+      name: order.shippingName ?? order.customerName ?? "",
+      email: order.customerEmail,
+      address1: order.shippingAddress1 ?? "",
+      address2: order.shippingAddress2 ?? undefined,
+      city: order.shippingCity ?? "",
+      state_code: order.shippingState ?? "",
+      zip: order.shippingPostalCode ?? "",
+      country_code: order.shippingCountryCode ?? "US",
+    }
+
+    try {
+      const printfulOrder = await createOrder({
+        externalId: order.id,
+        recipient,
+        items: printfulItems,
+      })
+
+      await db.merchOrder.update({
+        where: { id: merchOrderId },
+        data: {
+          fulfillmentStatus: "SUBMITTED",
+          printfulOrderId: printfulOrder.id,
+          printfulExternalId: order.id,
+          failureReason: null,
+        },
+      })
+
+      return { success: true, printfulOrderId: printfulOrder.id }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown Printful error"
+
+      await db.merchOrder.update({
+        where: { id: merchOrderId },
+        data: {
+          fulfillmentStatus: "FAILED",
+          failureReason: `Retry failed: ${message}`,
+        },
+      })
+
+      throw new Error(`Printful submission failed: ${message}`)
+    }
+  })

@@ -757,3 +757,37 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 **However:** The 10,000 tier is not plausible before remediation. Baseline launch targets <100 orders/month. **Adjusted aggregate for current launch window: 7** (1,000 tier is the realistic ceiling before next remediation window).
 
 **Score gate action:** Aggregate 7 → stage a remediation session covering retry logic + rate limiting before scaling past ~500 orders/month. Phase 3 admin dashboard implementation may proceed — it's a visibility tool, not a scaling concern.
+
+---
+
+### SESSION_0120 — Printful Phase 3: Admin Merch Order Dashboard
+
+**Date:** 2026-05-10
+**Sprint:** S3
+**Agent:** Copilot (Petey → Cody)
+
+#### Task plan
+
+| ID | Task | Status |
+| --- | --- | --- |
+| SESSION_0120_TASK_01 | Pre-flight: read component inventory + admin patterns | ✅ done |
+| SESSION_0120_TASK_02 | Create brand-scoped merch order queries | ✅ done |
+| SESSION_0120_TASK_03 | Create order-status-badge component | ✅ done |
+| SESSION_0120_TASK_04 | Create orders DataTable columns | ✅ done |
+| SESSION_0120_TASK_05 | Create list page `/admin/merch/orders` | ✅ done |
+| SESSION_0120_TASK_06 | Create detail page `/admin/merch/orders/[id]` | ✅ done |
+| SESSION_0120_TASK_07 | Add server actions (retry + status override) | ✅ done |
+| SESSION_0120_TASK_08 | Type check + manual verify | ✅ done |
+
+**Result:** All 8 tasks completed. Admin merch order dashboard with list page, detail page, status badge, brand-scoped queries, and admin actions (retry + status override). Zero type errors. Printful API alignment verified against live developer docs.
+
+#### Review
+
+**SESSION_0120_REVIEW_01 — Printful Phase 3 Admin Dashboard**
+
+- **Reviewed tasks:** SESSION_0120_TASK_01–08
+- **Dirstarter docs check:** cached docs sufficient
+- **Kaizen aggregate:** 7 (100→9, 1K→8, 10K→7)
+- **Score gate:** Aggregate 7 → remediation session staged for DB indexes + lineItems typing
+- **Findings:** 3 low-severity (lineItems `as any`, no audit trail for status overrides, no DB indexes on search fields). All open, queued for next session.
+- **Printful API:** Verified against https://developers.printful.com/docs — `sync_variant_id`, `externalId`/`external_id` mapping, `@` prefix for external ID lookups, `?confirm=true` all confirmed correct.
