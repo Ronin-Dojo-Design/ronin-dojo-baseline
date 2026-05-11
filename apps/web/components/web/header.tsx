@@ -6,6 +6,7 @@ import {
   ChevronDownIcon,
   GraduationCapIcon,
   SearchIcon,
+  ShieldIcon,
   ShoppingBagIcon,
   SwordsIcon,
 } from "lucide-react"
@@ -77,6 +78,11 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
 
               <DropdownMenuContent align="start">
                 <DropdownMenuItem asChild>
+                  <NavLink href="/disciplines" prefix={<ShieldIcon />}>
+                    {t("navigation.disciplines")}
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <NavLink href="/courses" prefix={<GraduationCapIcon />}>
                     {t("navigation.courses")}
                   </NavLink>
@@ -127,6 +133,7 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
         >
           <NavLink href="/programs">{t("navigation.programs")}</NavLink>
           <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+          <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
           <NavLink href="/courses">{t("navigation.courses")}</NavLink>
           <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
           <NavLink href="/gear">{t("navigation.gear")}</NavLink>
