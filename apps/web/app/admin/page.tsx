@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { NetworkIcon } from "lucide-react"
 import { RevenueMetric } from "~/app/admin/_components/revenue-metric"
 import { SubscriberMetric } from "~/app/admin/_components/subscriber-metric"
 import { UserMetric } from "~/app/admin/_components/user-metric"
@@ -6,7 +7,9 @@ import { VisitorMetric } from "~/app/admin/_components/visitor-metric"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { MetricChartSkeleton } from "~/components/admin/metrics/metric-chart"
 import { MetricValue, MetricValueSkeleton } from "~/components/admin/metrics/metric-value"
+import { Card } from "~/components/common/card"
 import { H3 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Wrapper } from "~/components/common/wrapper"
 import { db } from "~/services/db"
 
@@ -47,6 +50,16 @@ export default withAdminPage(() => {
             <UserMetric />
           </Suspense>
         </div>
+
+        <Card className="p-4">
+          <Link href="/graphify.html" target="_blank" className="flex items-center gap-3 no-underline">
+            <NetworkIcon className="size-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium text-sm">Repo Graph</p>
+              <p className="text-xs text-muted-foreground">Interactive Graphify visualization of the codebase</p>
+            </div>
+          </Link>
+        </Card>
       </div>
     </Wrapper>
   )

@@ -7,6 +7,7 @@ import { type ComponentProps, use, useMemo } from "react"
 import { toast } from "sonner"
 import { PricingPlanActions } from "~/app/admin/pricing-plans/_components/pricing-plan-actions"
 import { RelationSelector } from "~/components/admin/relation-selector"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
 import {
   Form,
@@ -185,20 +186,16 @@ export function PricingPlanForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Organization</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select organization" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {organizations.map(org => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={organizations}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select organization"
+                  searchPlaceholder="Search organizations..."
+                  emptyMessage="No organizations found."
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -211,21 +208,17 @@ export function PricingPlanForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Program (optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All programs" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="">All programs</SelectItem>
-                  {programs.map(prog => (
-                    <SelectItem key={prog.id} value={prog.id}>
-                      {prog.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={programs}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="All programs"
+                  searchPlaceholder="Search programs..."
+                  emptyMessage="No programs found."
+                  clearable
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

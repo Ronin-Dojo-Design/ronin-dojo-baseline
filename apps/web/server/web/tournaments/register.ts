@@ -80,6 +80,9 @@ export const createRegistrationCheckout = userActionClient
       throw new Error(`Role "${input.roleCode}" not found`)
     }
 
+    // Capture narrowed non-null role for use inside transaction closure
+    const validatedRole = role
+
     // 5. Fetch divisions + check capacity (inside serializable transaction to prevent races)
     // Prisma throws P2034 on serializable transaction conflicts (write conflict / deadlock).
     // This is expected under concurrent registration — treat it as a capacity conflict.
@@ -152,7 +155,7 @@ export const createRegistrationCheckout = userActionClient
               entries: {
                 create: input.divisionIds.map(divisionId => ({
                   divisionId,
-                  tournamentRoleId: role.id,
+                  tournamentRoleId: validatedRole.id,
                   representingMembershipId: input.representingMembershipId ?? null,
                   snapshotRankName,
                   snapshotOrgName,
@@ -198,7 +201,7 @@ export const createRegistrationCheckout = userActionClient
         tournamentId: input.tournamentId,
         userId,
         divisionIds: JSON.stringify(input.divisionIds),
-        roleId: role.id,
+        roleId: validatedRole.id,
         representingMembershipId: input.representingMembershipId ?? "",
       },
       success_url: `${env.NEXT_PUBLIC_SITE_URL}/tournaments/${tournament.slug}?registered=true`,

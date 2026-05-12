@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { ScoringMethod } from "~/.generated/prisma/browser"
 import { RuleSetActions } from "~/app/admin/tournaments/rule-sets/_components/rule-set-actions"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import {
   Form,
   FormControl,
@@ -175,21 +176,17 @@ export function RuleSetForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Discipline (optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All disciplines" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="">All disciplines</SelectItem>
-                  {disciplines.map(d => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={disciplines}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="All disciplines"
+                  searchPlaceholder="Search disciplines..."
+                  emptyMessage="No disciplines found."
+                  clearable
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

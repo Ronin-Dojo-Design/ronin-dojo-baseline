@@ -23,6 +23,7 @@ import { useAction } from "next-safe-action/hooks"
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
 import {
@@ -310,20 +311,14 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Discipline</Label>
-                    <Select value={selectedDisciplineId} onValueChange={setSelectedDisciplineId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a discipline" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableDisciplines
-                          ?.filter(d => !tournament.disciplines.some(td => td.discipline.id === d.id))
-                          .map(d => (
-                            <SelectItem key={d.id} value={d.id}>
-                              {d.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <ComboboxSelector
+                      options={availableDisciplines?.filter(d => !tournament.disciplines.some(td => td.discipline.id === d.id)) ?? []}
+                      value={selectedDisciplineId}
+                      onValueChange={setSelectedDisciplineId}
+                      placeholder="Select a discipline"
+                      searchPlaceholder="Search disciplines..."
+                      emptyMessage="No disciplines found."
+                    />
                   </div>
                 </div>
                 <DialogFooter>

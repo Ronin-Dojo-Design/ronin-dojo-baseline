@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import {
   Form,
   FormControl,
@@ -12,13 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/common/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
 import { upsertTournamentStaffAssignment } from "~/server/admin/tournaments/actions"
 import { tournamentStaffAssignmentSchema } from "~/server/admin/tournaments/schema"
@@ -77,20 +71,16 @@ export function StaffAssignmentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel isRequired>User</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {users.map(u => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name ?? u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={users.map(u => ({ id: u.id, name: u.name ?? u.email }))}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select user"
+                  searchPlaceholder="Search users..."
+                  emptyMessage="No users found."
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -102,20 +92,16 @@ export function StaffAssignmentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel isRequired>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {roles.map(r => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={roles}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select role"
+                  searchPlaceholder="Search roles..."
+                  emptyMessage="No roles found."
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -127,21 +113,17 @@ export function StaffAssignmentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Division (optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All divisions" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="">All divisions</SelectItem>
-                  {divisions.map(d => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ComboboxSelector
+                  options={divisions}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="All divisions"
+                  searchPlaceholder="Search divisions..."
+                  emptyMessage="No divisions found."
+                  clearable
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
