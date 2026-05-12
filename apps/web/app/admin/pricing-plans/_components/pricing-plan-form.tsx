@@ -51,6 +51,8 @@ const pricingModelOptions = [
   { value: "PER_TEST", label: "Per Test" },
   { value: "FREE_TRIAL", label: "Free Trial" },
   { value: "INTRO_PACK", label: "Intro Pack" },
+  { value: "PUNCH_CARD", label: "Punch Card" },
+  { value: "PRIVATE_LESSON", label: "Private Lesson" },
   { value: "CUSTOM", label: "Custom" },
 ] as const
 
@@ -101,6 +103,9 @@ export function PricingPlanForm({
           organizationId: pricingPlan?.organizationId ?? "",
           programId: pricingPlan?.programId ?? "",
           entitlementIds: pricingPlan?.entitlementGrants.map(g => g.entitlementId) ?? [],
+          punchCardSize: pricingPlan?.punchCardSize ?? null,
+          bonusSessions: pricingPlan?.bonusSessions ?? null,
+          isPrivateLesson: pricingPlan?.isPrivateLesson ?? false,
           metadata: pricingPlan?.metadata ? JSON.stringify(pricingPlan.metadata, null, 2) : "",
         },
       },
@@ -117,6 +122,10 @@ export function PricingPlanForm({
       },
     },
   )
+
+  const selectedModel = form.watch("pricingModel")
+  const showPunchCardFields = selectedModel === "PUNCH_CARD"
+  const showPrivateLessonToggle = selectedModel === "PRIVATE_LESSON"
 
   return (
     <Form {...form}>
@@ -295,6 +304,68 @@ export function PricingPlanForm({
             </FormItem>
           )}
         />
+
+        {/* Punch Card Size — visible when PUNCH_CARD */}
+        {showPunchCardFields && (
+          <>
+            <FormField
+              control={form.control}
+              name="punchCardSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Punch Card Size</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="e.g. 5 (total sessions included)"
+                      {...field}
+                      value={(field.value as number) ?? ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bonusSessions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bonus Sessions</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="e.g. 1 (buy 4 get 5th free)"
+                      {...field}
+                      value={(field.value as number) ?? ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        {/* Private Lesson Toggle — visible when PRIVATE_LESSON */}
+        {showPrivateLessonToggle && (
+          <FormField
+            control={form.control}
+            name="isPrivateLesson"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-3">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel className="mt-0!">Private Lesson</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Trial Days */}
         <FormField

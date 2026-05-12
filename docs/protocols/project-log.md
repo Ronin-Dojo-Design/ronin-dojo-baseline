@@ -836,4 +836,21 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Dirstarter docs check:** All L1 components used. ComboboxSelector reuses Popover + Command (L1). Lead form raw `<select>` replaced with L1 Select + ComboboxSelector.
 - **Findings:** 1 info — 6 admin forms identified for potential ComboboxSelector upgrade (future session)
 - **Verdict:** Clean. Brand-scoped queries/actions. Zero type errors in new code. signedOnBehalfId fully aligned.
-- **Kaizen aggregate:** 9 (maintained)
+
+---
+
+### SESSION_0145 — PricingPlan Form UI + Membership Lifecycle Transitions
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0145
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0145_TASK_01 | PricingPlan form: add PUNCH_CARD/PRIVATE_LESSON options, conditional punchCardSize/bonusSessions/isPrivateLesson fields, update action to persist | ✅ done |
+| SESSION_0145_TASK_02 | Admin CRUD for Roles: server module + admin pages (list/new/edit) + form + DataTable | ✅ done |
+| SESSION_0145_TASK_03 | Membership status transition server actions: state machine enforcement + queries with relation includes | ✅ done |
+
+**Result:** All 3 tasks completed. PricingPlan form now supports punch card and private lesson pricing. Full Role CRUD following AgeGroup pattern. Membership transition actions enforce valid state machine. Zero TS errors.
