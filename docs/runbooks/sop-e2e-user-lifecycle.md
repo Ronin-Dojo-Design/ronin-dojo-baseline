@@ -4,8 +4,8 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0015
+updated: 2026-05-12
+last_agent: copilot-session-0146
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -127,13 +127,19 @@ flowchart TD
 
 ---
 
-# 4. Course / curriculum lifecycle
+# 4. Course / curriculum lifecycle (updated SESSION_0146)
 
 ```text
 Membership
    |
    v
-Eligible for course / curriculum path
+Browse programs (filtered by AgeGroup + SkillLevel eligibility)
+   |
+   v
+Select PricingPlan (monthly / drop-in / punch card / private lesson)
+   |
+   v
+Payment (Stripe checkout → webhook → entitlement created)
    |
    v
 CourseEnrollment
@@ -143,6 +149,17 @@ CurriculumItemCompletion
    |
    v
 Rank / certification readiness
+```
+
+```mermaid
+flowchart TD
+    MEM[Membership] --> BROWSE[Browse programs\nAgeGroup + SkillLevel filter]
+    BROWSE --> PLAN[Select PricingPlan]
+    PLAN --> PAY[Stripe checkout → webhook]
+    PAY --> ENT[Entitlement created]
+    ENT --> CE[CourseEnrollment]
+    CE --> CIC[CurriculumItemCompletion]
+    CIC --> RANK[Rank / certification readiness]
 ```
 
 ## Outcome
@@ -236,13 +253,106 @@ TournamentStaffAssignment / admin pages
 ```text
 User
  |
- +--> UserBrandSubscription
+ +--> UserBrandSubscription (site-level FREE/PREMIUM/PRO)
  |
- +--> Certification
+ +--> Certification (issued on rank award, course completion, seminar)
+ |      |
+ |      +--> status: ACTIVE / EXPIRED / REVOKED
+ |      +--> expiresAt (optional)
  |
  v
 access / entitlement / proof / expiry states
 ```
+
+---
+
+# 8b. Invite lifecycle (SESSION_0146)
+
+```text
+Admin creates Invite
+  |
+  +--> org + role + email (optional) + expiry + maxUses
+  |
+  v
+Invite link sent / shared
+  |
+  v
+Recipient visits link → auth gate
+  |
+  v
+InviteClaim created (validates: not expired, not over max, not duplicate)
+  |
+  v
+Membership created (INVITED → PENDING or ACTIVE)
+  |
+  v
+MembershipRoleAssignment (if role specified)
+  |
+  v
+User appears in org membership list
+```
+
+```mermaid
+flowchart TD
+    INV[Admin creates Invite] --> LINK[Link sent/shared]
+    LINK --> VISIT[Recipient visits → auth gate]
+    VISIT --> CLAIM[InviteClaim created\nvalidation checks]
+    CLAIM --> MEM[Membership: INVITED → PENDING/ACTIVE]
+    MEM --> ROLE[MembershipRoleAssignment]
+    ROLE --> LIST[User in org membership list]
+```
+
+---
+
+# 8c. Payment lifecycle (SESSION_0146)
+
+```text
+User selects program / membership / tournament
+  |
+  v
+PricingPlan lookup (amountCents, Stripe IDs)
+  |
+  v
+Stripe Checkout Session
+  |
+  +--> success: webhook → create Membership/Enrollment/Entitlement
+  +--> cancel: return to selection
+  |
+  v
+Ongoing: subscription renewals / punch card tracking / expiry
+  |
+  v
+Cancellation: webhook → transition to EXPIRED
+```
+
+### Lifecycle variants by pricing model
+
+| PricingModel | Payment type | Ongoing tracking |
+| --- | --- | --- |
+| MONTHLY / ANNUAL | Recurring subscription | Stripe manages renewals; webhook on cancel |
+| DROP_IN | One-time per class | No ongoing tracking |
+| PUNCH_CARD | One-time prepay | Session count tracked via Entitlement |
+| PRIVATE_LESSON | One-time per lesson | No ongoing tracking |
+| FREE_TRIAL | No charge | Expiry date on Entitlement |
+
+---
+
+# 8d. Punch card / drop-in lifecycle (SESSION_0146)
+
+```text
+User purchases punch card (e.g., buy 4 get 5th free)
+  |
+  v
+Entitlement: 5 sessions of Program X
+  |
+  v
+Attend class → ClassAttendance record → decrement
+  |
+  v
+Sessions exhausted → prompt repurchase
+```
+
+This differs from monthly members who have unlimited access during their subscription period.
 
 ---
 
@@ -350,6 +460,62 @@ flowchart TD
 - directory hidden but membership active
 - subscription expired but account still valid
 - mobile auth path differs from web until final decision is locked
+- punch card exhausted but membership still active
+- invite expired or max uses reached
+- certification expired but rank still valid
+- discipline removed from program after enrollment exists
+
+---
+
+# 13. Listing types and their lifecycles (SESSION_0146)
+
+Different entity types have different listing/submission/approval flows:
+
+```text
+Organization listing (school/dojo/gym)
+  |
+  +--> self-register or admin-create
+  +--> claim flow (verify ownership — maps to Dirstarter Tool claiming)
+  +--> Free / Premium placement tiers
+  +--> appears in directory (filtered by discipline, location)
+
+Course listing
+  |
+  +--> admin-created under a Program
+  +--> public browse (filtered by discipline, AgeGroup, SkillLevel)
+  +--> enrollment = paid or free (via PricingPlan)
+
+Program listing
+  |
+  +--> admin-created under an Organization
+  +--> links to Disciplines, AgeGroups, SkillLevels, Courses
+  +--> public browse page (not yet built)
+
+Tournament listing
+  |
+  +--> admin-created
+  +--> public view + registration
+  +--> divisions filtered by Discipline
+  +--> registration fees via PricingPlan
+
+Discipline listing (reference data)
+  |
+  +--> system-seeded + admin-extensible
+  +--> used as filter on directory, programs, tournaments
+  +--> no "submission" flow — admin-only
+```
+
+### Discipline as a cross-cutting filter
+
+```mermaid
+flowchart TD
+    DISC[Discipline] --> DIR[Directory: filter members/orgs]
+    DISC --> PROG[Programs: filter by discipline]
+    DISC --> TOURN[Tournaments: TournamentDiscipline → Divisions]
+    DISC --> RANK[RankSystem: progression per discipline]
+    DISC --> CERT[Certifications: issued per discipline]
+    DISC --> GEAR[Affiliate links: discipline-specific gear]
+```
 
 ---
 
