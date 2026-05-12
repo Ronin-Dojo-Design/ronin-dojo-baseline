@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-12
-last_agent: copilot-session-0139
+last_agent: copilot-session-0141
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -810,3 +810,29 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Verdict:** Clean. Brand filter proven. All L1 components used.
 - **Kaizen aggregate:** 9 (maintained)
 
+
+### SESSION_0141 — Program Admin UX Polish: Picker Components + ProgramCourse Join
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0141
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0141_TASK_01 | ComboboxSelector component + Organization/Discipline pickers on Program form | ✅ done |
+| SESSION_0141_TASK_02 | AnimatedContainer for conditional age fields (enforceAgeCap toggle) | ✅ done |
+| SESSION_0141_TASK_03 | ProgramCourse join editor with AnimatedContainer + ComboboxSelector | ✅ done |
+
+**Result:** All 3 tasks completed. New reusable `ComboboxSelector` component created. Program form upgraded from raw ID inputs to searchable pickers. Conditional age fields with smooth animation. ProgramCourse join editor with add/remove/animated list. Zero type errors.
+
+#### Review
+
+**SESSION_0141_REVIEW_01 — Hostile Close Review of 0141**
+
+- **Reviewed tasks:** SESSION_0141_TASK_01, TASK_02, TASK_03
+- **Dirstarter docs check:** All L1 components used (Popover, Command, Button, Card, Badge, Stack, AnimatedContainer, Separator, Switch, Note). No raw HTML.
+- **Findings:** 2 info-level — ComboboxSelector placement (admin vs common), ProgramWaiver not yet built
+- **Verdict:** Clean. Brand-scoped queries/actions. Full L1 compliance.
+- **Kaizen aggregate:** 9 (maintained)

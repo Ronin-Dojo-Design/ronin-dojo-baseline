@@ -74,3 +74,44 @@ export const findProgramList = async (where?: Prisma.ProgramWhereInput) => {
     orderBy: { name: "asc" },
   })
 }
+
+export const findOrganizationOptions = async () => {
+  const brand = await getRequestBrand()
+
+  return db.organization.findMany({
+    where: { brand },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+}
+
+export const findDisciplineOptions = async () => {
+  const brand = await getRequestBrand()
+
+  return db.discipline.findMany({
+    where: { OR: [{ isSystem: true }, { brand }] },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+}
+
+export const findAvailableCourses = async (programId: string) => {
+  const brand = await getRequestBrand()
+
+  // Get courses not already linked to this program
+  const linkedCourseIds = await db.programCourse.findMany({
+    where: { programId },
+    select: { courseId: true },
+  })
+
+  const excludeIds = linkedCourseIds.map(c => c.courseId)
+
+  return db.course.findMany({
+    where: {
+      brand,
+      ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
+    },
+    select: { id: true, title: true },
+    orderBy: { title: "asc" },
+  })
+}

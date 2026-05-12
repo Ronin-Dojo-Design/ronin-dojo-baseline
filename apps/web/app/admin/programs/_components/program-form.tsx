@@ -22,18 +22,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
+import { AnimatedContainer } from "~/components/common/animated-container"
 import type { FieldValues } from "react-hook-form"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { useComputedField } from "~/hooks/use-computed-field"
 import { upsertProgram } from "~/server/admin/programs/actions"
 import type { findProgramById } from "~/server/admin/programs/queries"
+import type { findOrganizationOptions, findDisciplineOptions } from "~/server/admin/programs/queries"
 import { programSchema } from "~/server/admin/programs/schema"
 
 type ProgramFormProps = ComponentProps<"form"> & {
   program?: NonNullable<Awaited<ReturnType<typeof findProgramById>>>
+  organizations: Awaited<ReturnType<typeof findOrganizationOptions>>
+  disciplines: Awaited<ReturnType<typeof findDisciplineOptions>>
   title?: string
 }
 
-export function ProgramForm({ children, className, title, program, ...props }: ProgramFormProps) {
+export function ProgramForm({ children, className, title, program, organizations, disciplines, ...props }: ProgramFormProps) {
   const router = useRouter()
   const resolver = zodResolver(programSchema)
 
@@ -185,9 +190,16 @@ export function ProgramForm({ children, className, title, program, ...props }: P
               name="organizationId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Organization ID</FormLabel>
+                  <FormLabel>Organization</FormLabel>
                   <FormControl>
-                    <Input placeholder="Organization ID" {...field} />
+                    <ComboboxSelector
+                      options={organizations}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select organization"
+                      searchPlaceholder="Search organizations..."
+                      emptyMessage="No organizations found."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,7 +215,15 @@ export function ProgramForm({ children, className, title, program, ...props }: P
                 <FormItem>
                   <FormLabel>Discipline (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Discipline ID" {...field} />
+                    <ComboboxSelector
+                      options={disciplines}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select discipline"
+                      searchPlaceholder="Search disciplines..."
+                      emptyMessage="No disciplines found."
+                      clearable
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,47 +245,68 @@ export function ProgramForm({ children, className, title, program, ...props }: P
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <FormField
-              control={form.control}
-              name="ageMin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Min Age</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="—"
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="enforceAgeCap"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel>Enforce age cap</FormLabel>
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="ageMax"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Max Age</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="—"
-                      {...field}
-                      value={field.value ?? ""}
-                      onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <AnimatedContainer height>
+            <div>
+              {form.watch("enforceAgeCap") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="ageMin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Min Age</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="—"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={form.control}
+                    name="ageMax"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Age</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="—"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          </AnimatedContainer>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="minEnrollment"
@@ -306,19 +347,6 @@ export function ProgramForm({ children, className, title, program, ...props }: P
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="enforceAgeCap"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <FormLabel>Enforce age cap</FormLabel>
-              </FormItem>
-            )}
-          />
 
           <Stack direction="row" size="sm" className="pt-4">
             <Button type="submit" variant="primary" disabled={action.isPending}>

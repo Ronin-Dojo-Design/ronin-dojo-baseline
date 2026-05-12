@@ -41,3 +41,13 @@ export const programSchema = z.object({
 })
 
 export type ProgramSchema = z.infer<typeof programSchema>
+
+export const programCourseSchema = z.object({
+  programId: z.string().min(1),
+  courseId: z.string().min(1),
+})
+
+export const programCourseRemoveSchema = z.object({
+  programId: z.string().min(1),
+  courseIds: z.array(z.string().min(1)).min(1),
+})
