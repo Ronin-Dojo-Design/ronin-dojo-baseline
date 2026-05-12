@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-09
-last_agent: copilot-session-0113
+updated: 2026-05-12
+last_agent: copilot-session-0140
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -116,6 +116,8 @@ If wiki-lint fails, record the exact error/warning count and whether failures ar
 
 ### 4. Git hygiene
 
+> **Sequencing note (SESSION_0140):** In full close mode, defer this step until after steps 6–8 (Reflections, Review & Recommend, ADR check, Memory sweep, Next session unblock). This lets the evidence artifact (step 6a) and all review content be written *before* the first commit, avoiding a two-pass commit cycle. In quick close mode, run git hygiene here as written.
+
 Before committing:
 
 1. **Branch check**: Verify you're on the expected branch (`git branch --show-current`). If you should be on a feature branch but you're on `main`, stop and discuss with the user.
@@ -144,7 +146,24 @@ That's quick close done.
 
 ## Full close — additional steps
 
-After the quick-close steps:
+Run these after quick close steps 1–3. **In full close mode, defer steps 4/4b/5 (git hygiene, Graphify, bow-out line) until after step 8.** This lets all content, reviews, and evidence be written before the first commit — avoiding a two-pass commit cycle.
+
+### Execution order for full close
+
+1. Pause (step 1)
+2. Update SESSION file (step 2)
+3. JETTY/backlinks/wiki-lint sweep (step 3)
+4. Reflections (step 6)
+5. Review & Recommend + hostile close (step 6.5)
+6. Full close evidence artifact — draft with "pending" for git/Graphify fields (step 6a)
+7. ADR + ubiquitous-language check (step 6.6)
+8. Memory sweep (step 7)
+9. Confirm next session unblocked (step 8)
+10. Git hygiene — single commit covering all content (step 4)
+11. Graphify update (step 4b)
+12. Finalize evidence artifact — fill in commit hash + Graphify stats (step 6a update)
+13. Final commit + push of evidence (step 4, second pass — or amend)
+14. Bow-out line (step 5)
 
 ### 6. Reflections (in the SESSION file)
 
@@ -175,6 +194,7 @@ For full close, add this block to the SESSION file before changing status to `cl
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
 | Git hygiene | <branch, worktree list result, status, commit/push result or explicit no-commit reason> |
+| Graphify update | <node/edge/community count or "skipped — docs-only session"> |
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
