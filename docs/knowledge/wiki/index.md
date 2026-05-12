@@ -201,7 +201,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0143](../../sprints/SESSION_0143.md) | session--implement | closed-quick |
 | [SESSION_0144](../../sprints/SESSION_0144.md) | session--implement | closed-quick |
 | [SESSION_0145](../../sprints/SESSION_0145.md) | session--implement | closed-quick |
-| [SESSION_0146](../../sprints/SESSION_0146.md) | session--review | in-progress |
+| [SESSION_0146](../../sprints/SESSION_0146.md) | session--review | closed-full |
+| [SESSION_0147](../../sprints/SESSION_0147.md) | session--implement | closed-full |
 
 ## Protocols
 
@@ -236,9 +237,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
-| [Database](../../_archive/database.md) | runbook | archived |
+| [Database](../../runbooks/database.md) | runbook | active |
 | [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
-| [Prisma Workflow](../../_archive/prisma-workflow.md) | runbook | archived |
+| [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |

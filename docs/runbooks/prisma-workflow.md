@@ -4,9 +4,10 @@ slug: prisma-workflow
 type: runbook
 status: active
 created: 2026-04-26
-updated: 2026-04-26
-last_agent: copilot-session-0005
-use_count: 0backlinks:
+updated: 2026-05-12
+last_agent: copilot-session-0147
+use_count: 0
+backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
