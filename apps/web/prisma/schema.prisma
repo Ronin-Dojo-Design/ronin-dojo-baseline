@@ -313,6 +313,7 @@ enum MembershipStatus {
   PENDING
   ACTIVE
   SUSPENDED
+  CANCELLED
   EXPIRED
 }
 
@@ -556,6 +557,8 @@ enum PricingModel {
   ANNUAL
   DROP_IN
   CLASS_PACK
+  PUNCH_CARD
+  PRIVATE_LESSON
   PER_TEST
   FREE_TRIAL
   INTRO_PACK
@@ -1141,6 +1144,45 @@ model Role {
 // Models — School operations
 // ---------------------------------------------------------------------------
 
+// @added   SESSION_0144 (2026-05-12)
+// @why     Admin-customizable age groups for program categorization
+model AgeGroup {
+  id        String   @id @default(cuid())
+  brand     Brand?
+  isSystem  Boolean  @default(false)
+  name      String
+  code      String
+  ageMin    Int
+  ageMax    Int?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  programs ProgramAgeGroup[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+
+// @added   SESSION_0144 (2026-05-12)
+// @why     Admin-customizable skill/experience levels for program categorization
+model SkillLevel {
+  id          String   @id @default(cuid())
+  brand       Brand?
+  isSystem    Boolean  @default(false)
+  name        String
+  code        String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  programs ProgramSkillLevel[]
+
+  @@unique([code, brand])
+  @@index([brand])
+}
+
 model Program {
   id            String        @id @default(cuid())
   brand         Brand
@@ -1168,6 +1210,8 @@ model Program {
   courses                 ProgramCourse[]
   pricingPlans            PricingPlan[]
   waivers                 ProgramWaiver[]
+  ageGroups               ProgramAgeGroup[]
+  skillLevels             ProgramSkillLevel[]
   notificationPreferences NotificationPreference[]
   announcements           Announcement[]
   leads                   Lead[]
@@ -1198,6 +1242,28 @@ model ProgramWaiver {
 
   @@id([programId, waiverId])
   @@index([waiverId])
+}
+
+// @added   SESSION_0144 (2026-05-12)
+model ProgramAgeGroup {
+  programId  String
+  ageGroupId String
+
+  program  Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  ageGroup AgeGroup @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
+
+  @@id([programId, ageGroupId])
+}
+
+// @added   SESSION_0144 (2026-05-12)
+model ProgramSkillLevel {
+  programId    String
+  skillLevelId String
+
+  program    Program    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  skillLevel SkillLevel @relation(fields: [skillLevelId], references: [id], onDelete: Cascade)
+
+  @@id([programId, skillLevelId])
 }
 
 model ProgramEnrollment {
@@ -1427,6 +1493,9 @@ model PricingPlan {
   currency        String       @default("USD") @db.Char(3)
   intervalMonths  Int?
   classCount      Int?
+  punchCardSize   Int?
+  bonusSessions   Int?
+  isPrivateLesson Boolean      @default(false)
   trialDays       Int?
   isActive        Boolean      @default(true)
   sortOrder       Int          @default(0)

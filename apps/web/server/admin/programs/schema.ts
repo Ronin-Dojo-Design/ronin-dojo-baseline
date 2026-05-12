@@ -38,6 +38,8 @@ export const programSchema = z.object({
   imageUrl: z.string().optional(),
   organizationId: z.string().min(1, "Organization is required"),
   disciplineId: z.string().optional().or(z.literal("")),
+  ageGroupIds: z.array(z.string()).optional(),
+  skillLevelIds: z.array(z.string()).optional(),
 })
 
 export type ProgramSchema = z.infer<typeof programSchema>

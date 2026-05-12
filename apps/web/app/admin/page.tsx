@@ -18,6 +18,8 @@ export default withAdminPage(() => {
     { label: "Tools", href: "/admin/tools", query: db.tool.count() },
     { label: "Categories", href: "/admin/categories", query: db.category.count() },
     { label: "Users", href: "/admin/users", query: db.user.count() },
+    { label: "Age Groups", href: "/admin/age-groups", query: db.ageGroup.count() },
+    { label: "Skill Levels", href: "/admin/skill-levels", query: db.skillLevel.count() },
   ]
 
   return (

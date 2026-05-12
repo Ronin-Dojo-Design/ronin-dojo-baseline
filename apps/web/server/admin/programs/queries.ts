@@ -56,6 +56,12 @@ export const findProgramById = async (id: string) => {
     include: {
       organization: { select: { id: true, name: true } },
       discipline: { select: { id: true, name: true } },
+      ageGroups: {
+        include: { ageGroup: { select: { id: true, name: true } } },
+      },
+      skillLevels: {
+        include: { skillLevel: { select: { id: true, name: true } } },
+      },
       courses: {
         include: {
           course: { select: { id: true, title: true, slug: true } },

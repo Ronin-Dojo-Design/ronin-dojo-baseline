@@ -6,15 +6,19 @@ import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { Separator } from "~/components/common/separator"
 import { findAvailableCourses, findAvailableWaivers, findDisciplineOptions, findOrganizationOptions, findProgramById } from "~/server/admin/programs/queries"
+import { findAgeGroupList } from "~/server/admin/age-groups/queries"
+import { findSkillLevelList } from "~/server/admin/skill-levels/queries"
 
 export default withAdminPage(async ({ params }) => {
   const { id } = await params
-  const [program, organizations, disciplines, availableCourses, availableWaivers] = await Promise.all([
+  const [program, organizations, disciplines, availableCourses, availableWaivers, ageGroups, skillLevels] = await Promise.all([
     findProgramById(id),
     findOrganizationOptions(),
     findDisciplineOptions(),
     findAvailableCourses(id),
     findAvailableWaivers(id),
+    findAgeGroupList(),
+    findSkillLevelList(),
   ])
 
   if (!program) {
@@ -36,7 +40,7 @@ export default withAdminPage(async ({ params }) => {
 
   return (
     <Wrapper size="md" gap="sm">
-      <ProgramForm title={`Edit ${program.name}`} program={program} organizations={organizations} disciplines={disciplines} />
+      <ProgramForm title={`Edit ${program.name}`} program={program} organizations={organizations} disciplines={disciplines} ageGroups={ageGroups} skillLevels={skillLevels} />
       <Separator />
       <ProgramCoursesEditor programId={program.id} linkedCourses={linkedCourses} availableCourses={availableCourses} />
       <Separator />

@@ -8,18 +8,36 @@ import { programSchema, programCourseSchema, programCourseRemoveSchema, programW
 export const upsertProgram = adminActionClient
   .inputSchema(programSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
-    const { id, ...input } = parsedInput
+    const { id, ageGroupIds, skillLevelIds, ...input } = parsedInput
+
+    const ageGroupData = ageGroupIds?.length
+      ? { deleteMany: {}, create: ageGroupIds.map(ageGroupId => ({ ageGroupId })) }
+      : undefined
+
+    const skillLevelData = skillLevelIds?.length
+      ? { deleteMany: {}, create: skillLevelIds.map(skillLevelId => ({ skillLevelId })) }
+      : undefined
 
     const program = id
       ? await db.program.update({
           where: { id, brand },
-          data: input,
+          data: {
+            ...input,
+            ageGroups: ageGroupData,
+            skillLevels: skillLevelData,
+          },
         })
       : await db.program.create({
           data: {
             ...input,
             brand,
             slug: input.slug || "",
+            ageGroups: ageGroupIds?.length
+              ? { create: ageGroupIds.map(ageGroupId => ({ ageGroupId })) }
+              : undefined,
+            skillLevels: skillLevelIds?.length
+              ? { create: skillLevelIds.map(skillLevelId => ({ skillLevelId })) }
+              : undefined,
           },
         })
 

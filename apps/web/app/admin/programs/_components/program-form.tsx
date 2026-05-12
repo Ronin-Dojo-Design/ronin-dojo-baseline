@@ -25,20 +25,25 @@ import { TextArea } from "~/components/common/textarea"
 import { AnimatedContainer } from "~/components/common/animated-container"
 import type { FieldValues } from "react-hook-form"
 import { ComboboxSelector } from "~/components/admin/combobox-selector"
+import { RelationSelector } from "~/components/admin/relation-selector"
 import { useComputedField } from "~/hooks/use-computed-field"
 import { upsertProgram } from "~/server/admin/programs/actions"
 import type { findProgramById } from "~/server/admin/programs/queries"
 import type { findOrganizationOptions, findDisciplineOptions } from "~/server/admin/programs/queries"
 import { programSchema } from "~/server/admin/programs/schema"
+import type { findAgeGroupList } from "~/server/admin/age-groups/queries"
+import type { findSkillLevelList } from "~/server/admin/skill-levels/queries"
 
 type ProgramFormProps = ComponentProps<"form"> & {
   program?: NonNullable<Awaited<ReturnType<typeof findProgramById>>>
   organizations: Awaited<ReturnType<typeof findOrganizationOptions>>
   disciplines: Awaited<ReturnType<typeof findDisciplineOptions>>
+  ageGroups: Awaited<ReturnType<typeof findAgeGroupList>>
+  skillLevels: Awaited<ReturnType<typeof findSkillLevelList>>
   title?: string
 }
 
-export function ProgramForm({ children, className, title, program, organizations, disciplines, ...props }: ProgramFormProps) {
+export function ProgramForm({ children, className, title, program, organizations, disciplines, ageGroups, skillLevels, ...props }: ProgramFormProps) {
   const router = useRouter()
   const resolver = zodResolver(programSchema)
 
@@ -60,6 +65,8 @@ export function ProgramForm({ children, className, title, program, organizations
         imageUrl: program?.imageUrl ?? "",
         organizationId: program?.organizationId ?? "",
         disciplineId: program?.disciplineId ?? "",
+        ageGroupIds: program?.ageGroups?.map(ag => ag.ageGroupId) ?? [],
+        skillLevelIds: program?.skillLevels?.map(sl => sl.skillLevelId) ?? [],
       },
     },
     actionProps: {
@@ -239,6 +246,40 @@ export function ProgramForm({ children, className, title, program, organizations
                   <FormControl>
                     <Input placeholder="https://..." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="ageGroupIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Groups</FormLabel>
+                  <RelationSelector
+                    relations={ageGroups.map(ag => ({ id: ag.id, name: `${ag.name} (${ag.ageMin}–${ag.ageMax ?? "∞"})` }))}
+                    selectedIds={field.value ?? []}
+                    setSelectedIds={field.onChange}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="skillLevelIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skill Levels</FormLabel>
+                  <RelationSelector
+                    relations={skillLevels.map(sl => ({ id: sl.id, name: sl.name }))}
+                    selectedIds={field.value ?? []}
+                    setSelectedIds={field.onChange}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
