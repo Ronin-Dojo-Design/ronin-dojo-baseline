@@ -30,7 +30,7 @@ Execute SESSION_0139 plan TASK_02–05: Course admin smoke test, Program admin s
 
 ## Status
 
-in-progress
+closed-full
 
 ## Failed Steps / Drift Check
 
@@ -183,8 +183,8 @@ Clean Cody execution session — all 4 tasks from SESSION_0139 Petey plan comple
 | Review & Recommend | Next session goal written: yes |
 | Memory sweep | No operator memory update needed. No new protocols or conventions introduced. |
 | Next session unblock check | Unblocked — picker component work is independent |
-| Git hygiene | Pending — user to authorize commit |
-| Graphify update | Pending — run after git commit |
+| Git hygiene | Branch: main. Committed `b97ec68`. Pushed to origin. 17 files (14 new, 3 modified). No secrets. |
+| Graphify update | `graphify update .` → 5415 nodes, 10382 edges, 632 communities. |
 
 ## Next Session
 
