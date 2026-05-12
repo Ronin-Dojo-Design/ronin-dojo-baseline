@@ -198,6 +198,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0140](../../sprints/SESSION_0140.md) | session--implement | closed-full |
 | [SESSION_0141](../../sprints/SESSION_0141.md) | session--implement | closed-full |
 | [SESSION_0142](../../sprints/SESSION_0142.md) | session--implement | closed-quick |
+| [SESSION_0143](../../sprints/SESSION_0143.md) | session--implement | closed-quick |
+| [SESSION_0144](../../sprints/SESSION_0144.md) | session--implement | closed-quick |
+| [SESSION_0145](../../sprints/SESSION_0145.md) | session--implement | closed-quick |
+| [SESSION_0146](../../sprints/SESSION_0146.md) | session--review | in-progress |
 
 ## Protocols
 

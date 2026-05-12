@@ -14,6 +14,10 @@ last_a| Task ID | Description | Agent | Done criteria |
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0145.md
+  - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/runbooks/sop-e2e-user-lifecycle.md
+  - docs/knowledge/wiki/dirstarter-docs-inventory.md
+  - docs/protocols/hostile-close-review.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

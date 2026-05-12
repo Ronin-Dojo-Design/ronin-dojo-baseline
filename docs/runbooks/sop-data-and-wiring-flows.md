@@ -13,6 +13,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/ronin_dojo_baseline_systems_pack/08_SOP_DATA_AND_WIRING_FLOWS_BASELINE.md
+  - docs/sprints/SESSION_0146.md
 ---
 
 # SOP — Data Flows and Wiring Flows
