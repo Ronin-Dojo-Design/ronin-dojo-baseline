@@ -61,6 +61,11 @@ export const findProgramById = async (id: string) => {
           course: { select: { id: true, title: true, slug: true } },
         },
       },
+      waivers: {
+        include: {
+          waiver: { select: { id: true, title: true, type: true } },
+        },
+      },
     },
   })
 }
@@ -112,6 +117,27 @@ export const findAvailableCourses = async (programId: string) => {
       ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
     },
     select: { id: true, title: true },
+    orderBy: { title: "asc" },
+  })
+}
+
+export const findAvailableWaivers = async (programId: string) => {
+  const brand = await getRequestBrand()
+
+  const linkedWaiverIds = await db.programWaiver.findMany({
+    where: { programId },
+    select: { waiverId: true },
+  })
+
+  const excludeIds = linkedWaiverIds.map(w => w.waiverId)
+
+  return db.waiver.findMany({
+    where: {
+      isActive: true,
+      OR: [{ brand }, { brand: null }],
+      ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
+    },
+    select: { id: true, title: true, type: true },
     orderBy: { title: "asc" },
   })
 }

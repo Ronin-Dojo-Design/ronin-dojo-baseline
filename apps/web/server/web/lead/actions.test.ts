@@ -342,10 +342,10 @@ describe("SESSION_0033 school-ops actions", () => {
       organizationId: fx.organizationId,
       programId: fx.programId,
       waiverId: fx.waiverId,
-      signedOnBehalfOfId: fx.childId,
+      signedOnBehalfId: fx.childId,
     })
     expect(signature?.serverError).toBeUndefined()
-    expect(signature?.data?.signedOnBehalfOfId).toBe(fx.childId)
+    expect(signature?.data?.signedOnBehalfId).toBe(fx.childId)
 
     sessionUserState.id = fx.ownerId
     const revoked = await revokeWaiverSignature({
@@ -363,7 +363,7 @@ describe("SESSION_0033 school-ops actions", () => {
       organizationId: fx.organizationId,
       programId: fx.programId,
       waiverId: fx.waiverId,
-      signedOnBehalfOfId: fx.childId,
+      signedOnBehalfId: fx.childId,
     })
 
     expect(signature?.serverError).toBe(WAIVER_ERROR.GUARDIAN_NOT_AUTHORIZED)

@@ -45,7 +45,7 @@ export const getWaiverSignaturesForOrganization = async ({
   return db.waiverSignature.findMany({
     where: {
       AND: [
-        { OR: [{ userId }, { signedOnBehalfOfId: userId }] },
+        { OR: [{ userId }, { signedOnBehalfId: userId }] },
         {
           OR: [
             {

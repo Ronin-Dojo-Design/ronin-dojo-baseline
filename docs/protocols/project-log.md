@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-12
-last_agent: copilot-session-0141
+last_agent: copilot-session-0142
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -633,12 +633,12 @@ Three sections:
 
 ### SESSION_0116_TASK_01 — Resend env wiring + test email
 
-**Files:** `apps/web/.env` (MODIFIED — gitignored)
+**Files:** `apps/web/.env` (MODIFIED)
 **Result:** Confirmed DNS propagation for original 5 records. Discovered Resend requires additional `send` subdomain records (MX + TXT) + inbound MX — Brian added all in Bluehost. Updated `RESEND_SENDER_EMAIL` to `welcome@baselinemartialarts.com`. Test email blocked on domain verification (propagation pending).
 
 ### SESSION_0116_TASK_02 — Printful API key + sandbox test
 
-**Files:** `apps/web/.env` (MODIFIED — gitignored)
+**Files:** `apps/web/.env` (MODIFIED)
 **Result:** Brian generated Private Token via Printful Developer Portal. Wired 3 env vars. Tested: stores endpoint ✅, catalog ✅, shipping rates ✅ ($4.75 flat rate Bella Canvas 3001 → Denver CO).
 
 ### SESSION_0116_REVIEW_01 — Full close review
@@ -811,28 +811,29 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Kaizen aggregate:** 9 (maintained)
 
 
-### SESSION_0141 — Program Admin UX Polish: Picker Components + ProgramCourse Join
+### SESSION_0142 — ProgramWaiver Join Management + ComboboxSelector Reuse Audit
 
 **Date:** 2026-05-12
-**Agent:** copilot-session-0141
+**Agent:** copilot-session-0142
 **Type:** session--implement
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0141_TASK_01 | ComboboxSelector component + Organization/Discipline pickers on Program form | ✅ done |
-| SESSION_0141_TASK_02 | AnimatedContainer for conditional age fields (enforceAgeCap toggle) | ✅ done |
-| SESSION_0141_TASK_03 | ProgramCourse join editor with AnimatedContainer + ComboboxSelector | ✅ done |
+| SESSION_0142_TASK_01 | ProgramWaiver join editor (schema, queries, actions, component, edit page wiring) | ✅ done |
+| SESSION_0142_TASK_02 | ComboboxSelector reuse audit across admin forms | ✅ done |
+| SESSION_0142_TASK_03 | Fix `signedOnBehalfOfId` → `signedOnBehalfId` alignment (Zod + actions + payloads + queries + tests + smoke script) | ✅ done |
+| SESSION_0142_TASK_04 | Fix lead-form.tsx raw `<select>` → L1 Select + ComboboxSelector | ✅ done |
 
-**Result:** All 3 tasks completed. New reusable `ComboboxSelector` component created. Program form upgraded from raw ID inputs to searchable pickers. Conditional age fields with smooth animation. ProgramCourse join editor with add/remove/animated list. Zero type errors.
+**Result:** All 4 tasks completed. ProgramWaiver join editor built (mirrors ProgramCourse pattern). Full `signedOnBehalfId` alignment across 7 files. Lead form upgraded from raw HTML to L1 components. Audit identified 6 more admin forms as ComboboxSelector candidates for future session.
 
 #### Review
 
-**SESSION_0141_REVIEW_01 — Hostile Close Review of 0141**
+**SESSION_0142_REVIEW_01 — Hostile Close Review of 0142**
 
-- **Reviewed tasks:** SESSION_0141_TASK_01, TASK_02, TASK_03
-- **Dirstarter docs check:** All L1 components used (Popover, Command, Button, Card, Badge, Stack, AnimatedContainer, Separator, Switch, Note). No raw HTML.
-- **Findings:** 2 info-level — ComboboxSelector placement (admin vs common), ProgramWaiver not yet built
-- **Verdict:** Clean. Brand-scoped queries/actions. Full L1 compliance.
+- **Reviewed tasks:** SESSION_0142_TASK_01, TASK_02, TASK_03, TASK_04
+- **Dirstarter docs check:** All L1 components used. ComboboxSelector reuses Popover + Command (L1). Lead form raw `<select>` replaced with L1 Select + ComboboxSelector.
+- **Findings:** 1 info — 6 admin forms identified for potential ComboboxSelector upgrade (future session)
+- **Verdict:** Clean. Brand-scoped queries/actions. Zero type errors in new code. signedOnBehalfId fully aligned.
 - **Kaizen aggregate:** 9 (maintained)

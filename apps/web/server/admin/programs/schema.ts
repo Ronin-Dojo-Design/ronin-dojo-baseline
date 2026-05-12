@@ -51,3 +51,14 @@ export const programCourseRemoveSchema = z.object({
   programId: z.string().min(1),
   courseIds: z.array(z.string().min(1)).min(1),
 })
+
+export const programWaiverSchema = z.object({
+  programId: z.string().min(1),
+  waiverId: z.string().min(1),
+  required: z.boolean().default(true),
+})
+
+export const programWaiverRemoveSchema = z.object({
+  programId: z.string().min(1),
+  waiverIds: z.array(z.string().min(1)).min(1),
+})

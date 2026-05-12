@@ -180,7 +180,7 @@ async function main() {
       organizationId: org.id,
       waiverId: waiver.id,
       programId: program.id,
-      signedOnBehalfOfId: child.id,
+      signedOnBehalfId: child.id,
     })
     console.log("✓ Guardian can sign a program waiver for a minor family member")
 
@@ -192,7 +192,7 @@ async function main() {
           organizationId: org.id,
           waiverId: waiver.id,
           programId: program.id,
-          signedOnBehalfOfId: child.id,
+          signedOnBehalfId: child.id,
         }),
       "non-guardian minor waiver signature rejected",
     )
@@ -418,17 +418,17 @@ async function signWaiverLikeAction({
   organizationId,
   waiverId,
   programId,
-  signedOnBehalfOfId,
+  signedOnBehalfId,
 }: {
   actor: Actor
   activeBrand: Brand
   organizationId: string
   waiverId: string
   programId: string
-  signedOnBehalfOfId: string
+  signedOnBehalfId: string
 }) {
   await assertActiveMember(activeBrand, organizationId, actor.userId)
-  await assertActiveMember(activeBrand, organizationId, signedOnBehalfOfId)
+  await assertActiveMember(activeBrand, organizationId, signedOnBehalfId)
   const waiver = await db.waiver.findFirst({
     where: {
       id: waiverId,
@@ -443,22 +443,22 @@ async function signWaiverLikeAction({
   })
   if (!waiver) throw new Error("waiver not found")
   const target = await db.user.findFirst({
-    where: { id: signedOnBehalfOfId },
+    where: { id: signedOnBehalfId },
     select: { passport: { select: { dob: true } } },
   })
   if (!isMinorDob(target?.passport?.dob)) throw new Error("target not minor")
   const family = await db.familyGroup.findFirst({
     where: {
       members: { some: { userId: actor.userId, role: "GUARDIAN" } },
-      AND: { members: { some: { userId: signedOnBehalfOfId } } },
+      AND: { members: { some: { userId: signedOnBehalfId } } },
     },
     select: { id: true },
   })
   if (!family) throw new Error("guardian not authorized")
   return db.waiverSignature.upsert({
     where: { waiverId_userId: { waiverId, userId: actor.userId } },
-    update: { signedAt: new Date(), signedOnBehalfOfId },
-    create: { waiverId, userId: actor.userId, signedOnBehalfOfId },
+    update: { signedAt: new Date(), signedOnBehalfId },
+    create: { waiverId, userId: actor.userId, signedOnBehalfId },
   })
 }
 

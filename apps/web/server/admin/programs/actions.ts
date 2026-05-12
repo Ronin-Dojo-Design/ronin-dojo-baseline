@@ -3,7 +3,7 @@
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
-import { programSchema, programCourseSchema, programCourseRemoveSchema } from "~/server/admin/programs/schema"
+import { programSchema, programCourseSchema, programCourseRemoveSchema, programWaiverSchema, programWaiverRemoveSchema } from "~/server/admin/programs/schema"
 
 export const upsertProgram = adminActionClient
   .inputSchema(programSchema)
@@ -90,6 +90,59 @@ export const removeProgramCourses = adminActionClient
       where: {
         programId: parsedInput.programId,
         courseId: { in: parsedInput.courseIds },
+      },
+    })
+
+    revalidate({
+      paths: ["/admin/programs"],
+      tags: ["programs", `program-${program.slug}`],
+    })
+
+    return true
+  })
+
+export const addProgramWaiver = adminActionClient
+  .inputSchema(programWaiverSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
+    const program = await db.program.findUnique({
+      where: { id: parsedInput.programId, brand },
+    })
+
+    if (!program) {
+      throw new Error("Program not found")
+    }
+
+    await db.programWaiver.create({
+      data: {
+        programId: parsedInput.programId,
+        waiverId: parsedInput.waiverId,
+        required: parsedInput.required,
+      },
+    })
+
+    revalidate({
+      paths: ["/admin/programs"],
+      tags: ["programs", `program-${program.slug}`],
+    })
+
+    return true
+  })
+
+export const removeProgramWaivers = adminActionClient
+  .inputSchema(programWaiverRemoveSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate, brand } }) => {
+    const program = await db.program.findUnique({
+      where: { id: parsedInput.programId, brand },
+    })
+
+    if (!program) {
+      throw new Error("Program not found")
+    }
+
+    await db.programWaiver.deleteMany({
+      where: {
+        programId: parsedInput.programId,
+        waiverId: { in: parsedInput.waiverIds },
       },
     })
 

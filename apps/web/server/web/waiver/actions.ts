@@ -166,7 +166,7 @@ const auditSignatureSnapshot = (signature: WaiverSignatureRecord) => ({
   id: signature.id,
   waiverId: signature.waiverId,
   userId: signature.userId,
-  signedOnBehalfOfId: signature.signedOnBehalfOfId,
+  signedOnBehalfId: signature.signedOnBehalfId,
   signedAt: signature.signedAt,
 })
 
@@ -199,13 +199,13 @@ export const signWaiver = userActionClient
       userId: user.id,
     })
 
-    const signedOnBehalfOfId = parsedInput.signedOnBehalfOfId
-    if (signedOnBehalfOfId) {
+    const signedOnBehalfId = parsedInput.signedOnBehalfId
+    if (signedOnBehalfId) {
       const target = await assertActiveMemberWithPassport({
         db,
         brand: requestBrand,
         organizationId: organization.id,
-        userId: signedOnBehalfOfId,
+        userId: signedOnBehalfId,
       })
       if (!isMinorDob(target.passport?.dob)) {
         throw new Error(WAIVER_ERROR.TARGET_NOT_MINOR)
@@ -213,7 +213,7 @@ export const signWaiver = userActionClient
       await assertGuardianAuthority({
         db,
         guardianUserId: user.id,
-        targetUserId: signedOnBehalfOfId,
+        targetUserId: signedOnBehalfId,
       })
     }
 
@@ -228,12 +228,12 @@ export const signWaiver = userActionClient
         },
         update: {
           signedAt: new Date(),
-          signedOnBehalfOfId: signedOnBehalfOfId ?? null,
+          signedOnBehalfId: signedOnBehalfId ?? null,
         },
         create: {
           waiverId: waiver.id,
           userId: user.id,
-          signedOnBehalfOfId,
+          signedOnBehalfId,
         },
         select: waiverSignaturePayload,
       })

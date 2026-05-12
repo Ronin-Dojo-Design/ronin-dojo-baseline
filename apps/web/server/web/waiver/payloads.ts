@@ -25,7 +25,7 @@ export const waiverSignaturePayload = {
   createdAt: true,
   waiverId: true,
   userId: true,
-  signedOnBehalfOfId: true,
+  signedOnBehalfId: true,
   waiver: { select: waiverPayload },
 } satisfies Prisma.WaiverSignatureSelect
 

@@ -17,8 +17,10 @@ import {
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { upsertLead } from "~/server/admin/leads/actions"
 import type { findLeadById, findOrganizationList } from "~/server/admin/leads/queries"
 import { leadFormSchema } from "~/server/admin/leads/schema"
@@ -142,17 +144,14 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
               <FormItem>
                 <FormLabel>Organization *</FormLabel>
                 <FormControl>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                    {...field}
-                  >
-                    <option value="">Select organization...</option>
-                    {organizations.map(org => (
-                      <option key={org.id} value={org.id}>
-                        {org.name}
-                      </option>
-                    ))}
-                  </select>
+                  <ComboboxSelector
+                    options={organizations.map(org => ({ id: org.id, name: org.name }))}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select organization..."
+                    searchPlaceholder="Search organizations..."
+                    emptyMessage="No organizations found."
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -165,18 +164,20 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source</FormLabel>
-                <FormControl>
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                    {...field}
-                  >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select source..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
                     {Object.values(LeadSource).map(s => (
-                      <option key={s} value={s}>
+                      <SelectItem key={s} value={s}>
                         {s.replace(/_/g, " ")}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                </FormControl>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
