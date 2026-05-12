@@ -850,3 +850,26 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Sources:** dirstarter.com/docs/blog (checked 2026-05-11)
 - **Verdict:** Fully aligned. Upstream docs explicitly bless content-collections removal after DB migration. Post model shape matches upstream (except cuid vs cuid2 — tracked as 0136-02). No findings.
 - **Kaizen aggregate:** 9
+
+### SESSION 0138 — QA Hardening: Admin Posts Brand Filter Test + Stale Worktree Cleanup
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0138_TASK_01 | Integration test for `findPosts` brand filtering | ✅ done |
+| SESSION_0138_TASK_02 | Visual QA of blog pages | ✅ done |
+| SESSION_0138_TASK_03 | Clean up stale worktrees (codex/session-0085-*) | ✅ done |
+
+**Result:** Brand filter integration test passes (3 tests, 8 assertions). Blog pages confirmed rendering. Stale worktrees and branches removed.
+
+#### Review
+
+**SESSION_0138_REVIEW_01 — Hostile Close Review of 0138**
+
+- **Reviewed tasks:** SESSION_0138_TASK_01–03
+- **Dirstarter docs check:** not applicable — test-only session, no Dirstarter layer touched
+- **Sources:** N/A
+- **Verdict:** Clean. Brand filter proven via mock-based integration test. No new features, no schema changes, no UI. Kaizen gap from SESSION_0137 (aggregate 8 → missing test) is now closed.
+- **Kaizen aggregate:** 9
+
