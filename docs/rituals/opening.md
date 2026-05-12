@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-06
-last_agent: codex-graphify-runbook
+updated: 2026-05-12
+last_agent: copilot-session-0139
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -116,7 +116,7 @@ In `docs/sprints/`, create `SESSION_NNNN.md` (next number after the previous one
 ---
 title: "SESSION NNNN — <short description>"
 slug: session-NNNN
-type: session
+type: session--open
 status: in-progress
 created: <today>
 updated: <today>
@@ -128,6 +128,18 @@ backlinks:
   - docs/knowledge/wiki/index.md
 ---
 ```
+
+**Session type values (SESSION_0139+):**
+
+| Type | When to use |
+| --- | --- |
+| `session--open` | **Default at bow-in.** Use when the session scope isn't clear yet, or when it ends up being a mix of planning, implementation, and review. Stays as-is at bow-out if the session was mixed. |
+| `session--plan` | Petey-led planning, gap analysis, task staging — no code written. Set at bow-out if the session was purely planning. |
+| `session--implement` | Cody-led code execution against an existing plan. Set at bow-out. |
+| `session--review` | Doug/Giddy-led QA, hostile review, test-only sessions. Set at bow-out. |
+| `session` | Legacy (pre-0139). Do not use for new sessions. |
+
+Refine `type` at bow-out: if the session was clearly one mode, narrow it. If it was mixed, leave it `session--open`. No backfill needed — old sessions stay `type: session`.
 
 Then fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. The rest gets filled during/at end of session.
 

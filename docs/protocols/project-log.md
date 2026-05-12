@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-11
-last_agent: copilot-session-0134
+updated: 2026-05-12
+last_agent: copilot-session-0139
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -759,117 +759,27 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 ---
 
-### SESSION_0120 — Printful Phase 3: Admin Merch Order Dashboard
-
-**Date:** 2026-05-10
-**Sprint:** S3
-**Agent:** Copilot (Petey → Cody)
-
-#### Task plan
-
-| ID | Task | Status |
-| --- | --- | --- |
-| SESSION_0120_TASK_01 | Pre-flight: read component inventory + admin patterns | ✅ done |
-| SESSION_0120_TASK_02 | Create brand-scoped merch order queries | ✅ done |
-| SESSION_0120_TASK_03 | Create order-status-badge component | ✅ done |
-| SESSION_0120_TASK_04 | Create orders DataTable columns | ✅ done |
-| SESSION_0120_TASK_05 | Create list page `/admin/merch/orders` | ✅ done |
-| SESSION_0120_TASK_06 | Create detail page `/admin/merch/orders/[id]` | ✅ done |
-| SESSION_0120_TASK_07 | Add server actions (retry + status override) | ✅ done |
-| SESSION_0120_TASK_08 | Type check + manual verify | ✅ done |
-
-**Result:** All 8 tasks completed. Admin merch order dashboard with list page, detail page, status badge, brand-scoped queries, and admin actions (retry + status override). Zero type errors. Printful API alignment verified against live developer docs.
-
-#### Review
-
-**SESSION_0120_REVIEW_01 — Printful Phase 3 Admin Dashboard**
-
-- **Reviewed tasks:** SESSION_0120_TASK_01–08
-- **Dirstarter docs check:** cached docs sufficient
-- **Kaizen aggregate:** 7 (100→9, 1K→8, 10K→7)
-- **Score gate:** Aggregate 7 → remediation session staged for DB indexes + lineItems typing
-- **Findings:** 3 low-severity (lineItems `as any`, no audit trail for status overrides, no DB indexes on search fields). All open, queued for next session.
-- **Printful API:** Verified against https://developers.printful.com/docs — `sync_variant_id`, `externalId`/`external_id` mapping, `@` prefix for external ID lookups, `?confirm=true` all confirmed correct.
-
-### SESSION_0131 — Remediation: Merch Order Findings + Webhook Brand Scoping
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0131_TASK_01 | Create MerchLineItem Zod schema (FINDING_01) | ✅ done |
-| SESSION_0131_TASK_02 | Add statusHistory JSON audit trail (FINDING_02) | ✅ done |
-| SESSION_0131_TASK_03 | Add composite DB indexes (FINDING_03) | ✅ done |
-| SESSION_0131_TASK_04 | Verify webhook brand scoping (SESSION_0119 FINDING_03) | ✅ done |
-| SESSION_0131_TASK_05 | Type check + verify | ✅ done |
-
-**Result:** All 5 tasks completed. Zod schema replaces `as any` cast. Full JSON audit trail for admin status overrides. Two composite indexes added. Webhook brand scoping verified-acceptable with documentation. `tsc --noEmit` passes.
-
-#### Review
-
-**SESSION_0131_REVIEW_01 — Remediation of SESSION_0130 Findings**
-
-- **Reviewed tasks:** SESSION_0131_TASK_01–05
-- **Dirstarter docs check:** N/A (backend-only, no UI)
-- **Findings:** None — all SESSION_0130 findings remediated
-- **Migration note:** Schema changes (statusHistory + indexes) ready but migration not yet applied (`bun db:migrate dev` pending)
-
-### SESSION_0134 — Dirstarter Alignment Audit + Hostile Review (0130, 0133) + E2E Tournament QA + S5 Planning
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0134_TASK_01 | Dirstarter live docs alignment audit (10 areas) + hostile close review (0130, 0133) | ✅ done |
-| SESSION_0134_TASK_02 | E2E tournament flow visual QA | ✅ done |
-| SESSION_0134_TASK_03 | S5 scope planning | ✅ done |
-
-**Result:** Dirstarter alignment: 8/10 aligned, 1 intentional divergence, 1 gap (blog DB migration). Hostile review aggregate: 8. E2E tournament flow confirmed working. S5 scope approved: QA hardening → blog migration → school-ops fix → Course CRUD → brand polish → May 18 launch.
-
-#### Review
-
-**SESSION_0134_REVIEW_01 — Hostile Close Review of 0130 + 0133**
-
-- **Reviewed tasks:** SESSION_0130_TASK_01–06, SESSION_0133_TASK_01–04
-- **Dirstarter docs check:** live docs checked (all 10 areas)
-- **Sources:** dirstarter.com/docs/{storage,payments,media,content,monetization,blog,authentication,theming,database/prisma,database/hosting}
-- **Findings:** 2 findings (blog MDX gap, division form test gap). Kaizen aggregate: 8.
-
-### SESSION_0137 — Content-Collections Removal + Admin Brand Filter Fix
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0137_TASK_01 | Fix admin posts brand filter (finding 0136-04) | ✅ done |
-| SESSION_0137_TASK_02 | Remove content-collections dependency | ✅ done |
-| SESSION_0137_TASK_03 | Visual QA of blog pages | ✅ done |
-
-**Result:** Content-collections fully removed (config, packages, files, utilities). Admin posts list now brand-filtered. Blog pages confirmed rendering from DB. Post layout templates preserved in `docs/knowledge/templates/`.
-
-#### Review
-
-**SESSION_0137_REVIEW_01 — Hostile Close Review of 0137**
-
-- **Reviewed tasks:** SESSION_0137_TASK_01–03
-- **Dirstarter docs check:** live docs checked
-- **Sources:** dirstarter.com/docs/blog (checked 2026-05-11)
-- **Verdict:** Fully aligned. Upstream docs explicitly bless content-collections removal after DB migration. Post model shape matches upstream (except cuid vs cuid2 — tracked as 0136-02). No findings.
-- **Kaizen aggregate:** 9
-
-### SESSION 0138 — QA Hardening: Admin Posts Brand Filter Test + Stale Worktree Cleanup
+### SESSION 0139 — Petey Plan: Course + Program Admin CRUD Gap Analysis & Task Staging
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0138_TASK_01 | Integration test for `findPosts` brand filtering | ✅ done |
-| SESSION_0138_TASK_02 | Visual QA of blog pages | ✅ done |
-| SESSION_0138_TASK_03 | Clean up stale worktrees (codex/session-0085-*) | ✅ done |
+| SESSION_0139_TASK_01 | Petey plan: gap analysis & task decomposition | ✅ done |
+| SESSION_0139_TASK_02 | Course admin CRUD smoke test | ⏳ staged for Cody |
+| SESSION_0139_TASK_03 | Program admin CRUD: server layer (queries + actions + schema) | ⏳ staged for Cody |
+| SESSION_0139_TASK_04 | Program admin CRUD: pages + components | ⏳ staged for Cody |
+| SESSION_0139_TASK_05 | Integration test for Program admin brand filtering | ⏳ staged for Cody |
 
-**Result:** Brand filter integration test passes (3 tests, 8 assertions). Blog pages confirmed rendering. Stale worktrees and branches removed.
+**Result:** Petey plan complete. Discovered Course admin CRUD already exists (6 components + server layer). Program admin CRUD is the real gap — no admin pages or server layer exist despite web-facing pages being built. Tasks staged for Cody execution in SESSION_0140+.
 
 #### Review
 
-**SESSION_0138_REVIEW_01 — Hostile Close Review of 0138**
+**SESSION_0139_REVIEW_01 — Hostile Close Review of 0139**
 
-- **Reviewed tasks:** SESSION_0138_TASK_01–03
-- **Dirstarter docs check:** not applicable — test-only session, no Dirstarter layer touched
+- **Reviewed tasks:** SESSION_0139_TASK_01
+- **Dirstarter docs check:** not applicable — planning-only session, no code written
 - **Sources:** N/A
-- **Verdict:** Clean. Brand filter proven via mock-based integration test. No new features, no schema changes, no UI. Kaizen gap from SESSION_0137 (aggregate 8 → missing test) is now closed.
-- **Kaizen aggregate:** 9
+- **Verdict:** Clean. Plan-only session. Gap analysis via Graphify confirmed Course admin exists, Program admin does not. Tasks properly decomposed with dependencies and scope guard.
+- **Kaizen aggregate:** 9 (maintained — no code changes to evaluate)
 

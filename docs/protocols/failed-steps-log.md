@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-09
-last_agent: copilot-session-0113
+updated: 2026-05-12
+last_agent: copilot-session-0139
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -13,6 +13,7 @@ backlinks:
   - docs/agents/cody.md
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
+  - docs/sprints/SESSION_0139.md
 ---
 
 # FAILED_STEPS Log
@@ -391,6 +392,18 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Fix:** Added SESSION_0104–0113 to `wiki/index.md`. Updated stale JETTY frontmatter on `failed-steps-log.md`, `manual-boundary-registry.md`, `project-log.md`. Hardened `closing.md` step 3 with explicit sub-steps for wiki index completeness and bidirectional backlinks audit.
 - **Verification:** `grep -c "SESSION_0104\|SESSION_0113" docs/knowledge/wiki/index.md` returns ≥ 1 for both. Closing.md step 3 now has numbered sub-steps.
 - **Status:** mitigated
+
+### FS-0020 — Grep-first navigation instead of Graphify queries at bow-in
+
+- **Session:** SESSION_0139
+- **Agent:** Copilot (Petey)
+- **Step failed:** Opening ritual step 3c ("Optional Graphify check for search-heavy lanes") — agent ran 5+ individual `grep`/`find` commands before using Graphify, despite the session being a cross-domain gap analysis (Course + Program admin CRUD across server, admin, web, and architecture layers).
+- **SOP source:** `docs/runbooks/graphify-repo-memory.md` §1–4, `docs/rituals/opening.md` step 3c
+- **Root cause:** Agent defaulted to familiar `grep`/`find` patterns instead of treating Graphify as the primary navigation tool for cross-domain work. The runbook says "use Graphify when the task is cross-domain" — this task clearly was.
+- **Impact:** ~5 unnecessary grep/find calls before the user intervened. Wasted tokens and time. The 3 Graphify queries that followed answered all questions faster and surfaced connections (ADR 0012, feature-data-prerequisites.md) that grep would have missed.
+- **Corrective action:** At bow-in, if the session touches 2+ repo areas (admin + server + architecture + web), run Graphify queries FIRST. Use grep only for pinpoint verification after graph narrows the file set.
+- **Verification:** Next session bow-in: count grep calls before first Graphify query. Target: 0 greps before Graphify for any cross-domain session.
+- **Status:** open
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
