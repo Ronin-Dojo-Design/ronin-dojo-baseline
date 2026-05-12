@@ -1,6 +1,6 @@
 /**
  * @added   SESSION_0147 (2026-05-12)
- * @why     Public claim action: validates invite, creates InviteClaim + Membership in transaction
+ * @why     Public claim action — validates invite, creates InviteClaim + Membership in transaction
  * @wired   app/(web)/invite/[code]/claim-form.tsx
  */
 "use server"

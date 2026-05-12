@@ -13,14 +13,15 @@ const getSubscribers = async () => {
   cacheTag("subscribers")
   cacheLife("minutes")
 
-  const { data, error } = await resend.contacts.list({
-    audienceId: env.RESEND_AUDIENCE_ID,
-  })
+  try {
+    const { data, error } = await resend.contacts.list({
+      audienceId: env.RESEND_AUDIENCE_ID,
+    })
 
-  if (error) {
-    console.error("Subscribers error:", error)
-    return { results: [], totalSubscribers: 0, averageSubscribers: 0 }
-  }
+    if (error) {
+      console.error("Subscribers error:", error)
+      return { results: [], totalSubscribers: 0, averageSubscribers: 0 }
+    }
 
   const thirtyDaysAgo = startOfDay(subDays(new Date(), 30))
 
@@ -55,6 +56,10 @@ const getSubscribers = async () => {
   const averageSubscribers = results.reduce((sum, day) => sum + day.value, 0) / results.length
 
   return { results, totalSubscribers, averageSubscribers }
+  } catch (err) {
+    console.error("Subscribers fetch error:", err)
+    return { results: [], totalSubscribers: 0, averageSubscribers: 0 }
+  }
 }
 
 const SubscriberMetric = async ({ ...props }: ComponentProps<typeof Card>) => {

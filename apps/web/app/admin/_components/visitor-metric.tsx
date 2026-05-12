@@ -10,7 +10,12 @@ const getVisitors = async () => {
   cacheTag("analytics")
   cacheLife("minutes")
 
-  return await getTotalVisitors()
+  try {
+    return await getTotalVisitors()
+  } catch (err) {
+    console.error("Analytics fetch error:", err)
+    return { results: [], totalVisitors: 0, averageVisitors: 0 }
+  }
 }
 
 const VisitorMetric = async ({ ...props }: ComponentProps<typeof Card>) => {
