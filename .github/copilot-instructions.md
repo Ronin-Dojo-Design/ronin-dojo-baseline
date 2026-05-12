@@ -43,6 +43,20 @@ When the user says **"bow out"**, **"close session"**, or **"end session"**:
 3. Default to **quick close** (`Status: closed-quick`). Escalate to **full close** (`Status: closed-full`) when the user says "full close", at end of day, end of sprint, or before context loss. Full close adds a `## Reflections` section.
 4. State: "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
 
+### Session macro (standard operating prompt)
+
+The typical session follows this chain. Apply it automatically when the user says "bow in":
+
+1. **Bow in** per `docs/rituals/opening.md`.
+2. **Graphify-first navigation** — use `graphify query` and `graphify explain` for finding files and docs. Do NOT use raw grep for task planning or file discovery. Only fall back to grep for exact-string edits within a known file. If the graph is ≤1 commit behind HEAD and was updated at end of the last session, skip `graphify update`; otherwise run it. See `docs/runbooks/graphify-repo-memory.md`.
+3. **Petey plans** — act as Petey (`docs/agents/petey.md`) to read the previous session's staged tasks, decompose if needed, then orchestrate and assign suitable agents (Cody for implementation, Doug for review). Manage handoffs between agents within the session.
+4. **Cody executes** — hand off to Cody for implementation tasks, one at a time, type-check between tasks. Cody runs `docs/protocols/cody-preflight.md` before writing code.
+5. **Petey closes** — hand back to Petey for `docs/rituals/closing.md` bow-out:
+   - **Full close** if docs were touched, or if the user requests it, or at end of day/sprint/milestone.
+   - **Quick close** if only code files were touched in a `session--implement` or `session--review`.
+   - In full close mode, defer git hygiene until after all content/review steps (see closing.md execution order).
+   - Run `graphify update .` **after** git commit so the graph has the latest work.
+
 ## Agent roles
 
 - **Petey** — planner. Invoked when scope is ambiguous, multi-part, or has open decisions. Produces a plan, not code. Reads: user message → latest SESSION file → program-plan.md → plan-vs-current.md → relevant ADRs.
