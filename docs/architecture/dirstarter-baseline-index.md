@@ -12,6 +12,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0039.md
+  - docs/sprints/SESSION_0137.md
 ---
 
 # Dirstarter Baseline Index
@@ -485,7 +486,7 @@ Complete reusable data table system. **Never build a custom table — always use
 | File | Purpose |
 |---|---|
 | `biome.json` | Linting/formatting (NOT ESLint) |
-| `content-collections.ts` | MDX content collection definitions |
+| `content-collections.ts` | ~~MDX content collection definitions~~ — **Removed (SESSION_0137).** Blog now DB-backed via Post model. |
 | `env.ts` | Environment variable validation |
 | `next.config.ts` | Next.js configuration |
 | `postcss.config.mjs` | PostCSS for Tailwind |

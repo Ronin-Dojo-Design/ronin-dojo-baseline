@@ -14,6 +14,7 @@ parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0005
   - knowledge/wiki/content-engine/curriculum-extract-schema
+  - sprints/SESSION_0137
 needs_fix:
   - "Seed data for sample content atoms not yet written"
   - "Admin UI for content atom CRUD not yet built"
@@ -157,4 +158,4 @@ This architecture replaces the Obsidian Content Engine Pack (`ronin_obsidian_con
 
 - [ ] Should `curriculumExtract` and `videoExtract` be structured JSON or separate related models? (2026-04-26)
 - [ ] Do we need a Campaign model to group atoms for launches/seminars? (2026-04-26)
-- [ ] Should content atoms support MDX rendering via content-collections, or stay DB-only? (2026-04-26)
+- [x] ~~Should content atoms support MDX rendering via content-collections, or stay DB-only?~~ — **Resolved (SESSION_0137):** DB-only. Content-collections removed; blog posts are DB-backed via Post model.

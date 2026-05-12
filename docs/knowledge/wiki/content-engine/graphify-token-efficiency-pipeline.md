@@ -66,7 +66,6 @@ build/
 coverage/
 .git/
 apps/web/.next/
-apps/web/.content-collections/
 apps/web/.generated/
 apps/web/public/content/
 apps/web/bun.lock

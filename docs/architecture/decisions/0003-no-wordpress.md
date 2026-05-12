@@ -11,7 +11,7 @@ Original framing assumed WordPress hosting at the apex domain, with a React app 
 
 Drop WordPress entirely from the new architecture. The exploratory WP Local install (originally at `/Users/brianscott/Local Sites/ronin-dojo/app/public/` during planning) is not part of the deployment path and can be deleted from the planning machine.
 
-Blog/marketing content lives as **MDX in `apps/web/content/blog/`**, rendered via Dirstarter's `content-collections.ts` setup. Editorial UX deferred — add **Keystatic** (git-backed) or **TinaCMS** (visual editing) later if and only if a non-dev co-author joins.
+Blog/marketing content ~~lives as **MDX in `apps/web/content/blog/`**, rendered via Dirstarter's `content-collections.ts` setup~~ is now **DB-backed via the `Post` model** with Markdown content rendered by `react-markdown` (SESSION_0136–0137; content-collections removed). Editorial UX deferred — Tiptap rich text editor planned for a future session.
 
 ## Consequences
 

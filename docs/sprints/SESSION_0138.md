@@ -202,6 +202,7 @@ Cody: begin with TASK_03 (30 seconds), then TASK_01 (main deliverable).
 - **Visual QA passed** — `/blog` and `/admin/posts` confirmed functional
 - **Stale worktrees cleaned** — 2 worktrees removed, 2 branches deleted
 - **Kaizen aggregate raised** from 8 → 9 (test gap closed)
+- **Stale content-collections references cleaned** — 4 docs updated to reflect DB-backed blog (SESSION_0136–0137)
 
 ## Files Touched
 
@@ -210,6 +211,11 @@ Cody: begin with TASK_03 (30 seconds), then TASK_01 (main deliverable).
 | `apps/web/server/admin/posts/queries.test.ts` | New — brand filter integration test (3 tests) |
 | `docs/sprints/SESSION_0138.md` | New — this session file |
 | `docs/protocols/project-log.md` | Modified — SESSION_0138 task plan + review |
+| `docs/architecture/dirstarter-baseline-index.md` | Modified — marked `content-collections.ts` as removed |
+| `docs/architecture/decisions/0003-no-wordpress.md` | Modified — updated blog description to DB-backed Post model |
+| `docs/knowledge/wiki/content-engine/content-atoms.md` | Modified — resolved open question re: content-collections vs DB-only |
+| `docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md` | Modified — removed stale `.content-collections/` exclusion |
+| `docs/knowledge/wiki/index.md` | Modified — added SESSION_0138 |
 
 ## Decisions Resolved
 
@@ -225,7 +231,7 @@ Cody: begin with TASK_03 (30 seconds), then TASK_01 (main deliverable).
 
 ## Reflections
 
-Lightweight session that punched above its weight. The brand filter test closes a real gap — without it, the admin posts brand filter fix from SESSION_0137 was code-correct but unproven. The test pattern (mock `db.$transaction` + capture args + assert `where` clause) is reusable for any future admin query brand-filter tests. Worktree cleanup was overdue — those codex/0085 branches were stale since well before SESSION_0100. Context was warm enough to consider additional work but nothing quick and high-value was available — the right call was to close clean rather than force scope.
+Lightweight session that punched above its weight. The brand filter test closes a real gap — without it, the admin posts brand filter fix from SESSION_0137 was code-correct but unproven. The test pattern (mock `db.$transaction` + capture args + assert `where` clause) is reusable for any future admin query brand-filter tests. Worktree cleanup was overdue — those codex/0085 branches were stale since well before SESSION_0100. Post-close doc sweep caught 4 stale content-collections references across architecture and wiki docs — worth the extra pass since these are active reference docs that could mislead future sessions.
 
 ## Full Close Evidence
 
