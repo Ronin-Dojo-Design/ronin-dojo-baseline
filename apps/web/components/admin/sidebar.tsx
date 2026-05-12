@@ -5,6 +5,7 @@ import { cx } from "cva"
 import {
   ActivityIcon,
   BookOpenIcon,
+  BoxIcon,
   CalendarIcon,
   ContactIcon,
   CreditCardIcon,
@@ -92,6 +93,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Courses",
       href: "/admin/courses",
       prefix: <BookOpenIcon />,
+    },
+    {
+      title: "Programs",
+      href: "/admin/programs",
+      prefix: <BoxIcon />,
     },
     {
       title: "Techniques",

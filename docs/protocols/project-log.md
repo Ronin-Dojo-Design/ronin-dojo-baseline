@@ -766,10 +766,10 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | Task ID | Description | Status |
 | --- | --- | --- |
 | SESSION_0139_TASK_01 | Petey plan: gap analysis & task decomposition | ✅ done |
-| SESSION_0139_TASK_02 | Course admin CRUD smoke test | ⏳ staged for Cody |
-| SESSION_0139_TASK_03 | Program admin CRUD: server layer (queries + actions + schema) | ⏳ staged for Cody |
-| SESSION_0139_TASK_04 | Program admin CRUD: pages + components | ⏳ staged for Cody |
-| SESSION_0139_TASK_05 | Integration test for Program admin brand filtering | ⏳ staged for Cody |
+| SESSION_0139_TASK_02 | Course admin CRUD smoke test | ✅ done (SESSION_0140) |
+| SESSION_0139_TASK_03 | Program admin CRUD: server layer (queries + actions + schema) | ✅ done (SESSION_0140) |
+| SESSION_0139_TASK_04 | Program admin CRUD: pages + components | ✅ done (SESSION_0140) |
+| SESSION_0139_TASK_05 | Integration test for Program admin brand filtering | ✅ done (SESSION_0140) |
 
 **Result:** Petey plan complete. Discovered Course admin CRUD already exists (6 components + server layer). Program admin CRUD is the real gap — no admin pages or server layer exist despite web-facing pages being built. Tasks staged for Cody execution in SESSION_0140+.
 
@@ -782,4 +782,31 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Sources:** N/A
 - **Verdict:** Clean. Plan-only session. Gap analysis via Graphify confirmed Course admin exists, Program admin does not. Tasks properly decomposed with dependencies and scope guard.
 - **Kaizen aggregate:** 9 (maintained — no code changes to evaluate)
+
+### SESSION_0140 — Program Admin CRUD: Server Layer + Pages
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0140
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0139_TASK_02 | Course admin CRUD smoke test | ✅ done |
+| SESSION_0139_TASK_03 | Program admin server layer (schema + queries + actions) | ✅ done |
+| SESSION_0139_TASK_04 | Program admin pages + components + sidebar nav | ✅ done |
+| SESSION_0139_TASK_05 | Brand filter integration test (3 tests) | ✅ done |
+
+**Result:** All 4 tasks from SESSION_0139 plan executed. Program admin CRUD fully built: 4 server files, 3 pages, 6 components, sidebar nav entry. Brand filter proven by 3 passing tests. Zero type errors in new code.
+
+#### Review
+
+**SESSION_0140_REVIEW_01 — Hostile Close Review of 0140**
+
+- **Reviewed tasks:** SESSION_0139_TASK_02, TASK_03, TASK_04, TASK_05
+- **Dirstarter docs check:** Admin CRUD routing pattern (ADR 0012) followed. L1 components used throughout.
+- **Findings:** 1 low — org/discipline fields use raw ID input (deferred to future session)
+- **Verdict:** Clean. Brand filter proven. All L1 components used.
+- **Kaizen aggregate:** 9 (maintained)
 
