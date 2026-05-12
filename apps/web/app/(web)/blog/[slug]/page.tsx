@@ -1,13 +1,12 @@
 import { getReadTime } from "@primoui/utils"
-import { allPosts } from "content-collections"
 import type { Metadata } from "next"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
+import Markdown from "react-markdown"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
-import { MDX } from "~/components/web/mdx"
 import { Nav } from "~/components/web/nav"
 import { StructuredData } from "~/components/web/structured-data"
 import { TableOfContents } from "~/components/web/table-of-contents"
@@ -15,29 +14,32 @@ import { Author } from "~/components/web/ui/author"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Favicon } from "~/components/web/ui/favicon"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Prose } from "~/components/common/prose"
 import { Section } from "~/components/web/ui/section"
 import { blogConfig } from "~/config/blog"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateArticle } from "~/lib/structured-data"
-import { findTools } from "~/server/web/tools/queries"
+import { findPublishedPostBySlug } from "~/server/web/posts/queries"
 
-export const dynamicParams = false
+export const dynamicParams = true
 
 type Props = PageProps<"/blog/[slug]">
 
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
-  const post = allPosts.find(({ _meta }) => _meta.path === slug)
+  const brand = await getRequestBrand()
+  const post = await findPublishedPostBySlug(slug, brand)
 
   if (!post) {
     notFound()
   }
 
   const t = await getTranslations()
-  const url = `/blog/${post._meta.path}`
+  const url = `/blog/${post.slug}`
 
-  const data = getPageData(url, post.title, post.description, {
+  const data = getPageData(url, post.title, post.description ?? "", {
     breadcrumbs: [
       { url: "/blog", title: t("navigation.blog") },
       { url, title: post.title },
@@ -48,10 +50,6 @@ const getData = cache(async ({ params }: Props) => {
   return { post, ...data }
 })
 
-export const generateStaticParams = () => {
-  return allPosts.map(({ _meta }) => ({ slug: _meta.path }))
-}
-
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
   return getPageMetadata({ url, metadata })
@@ -61,13 +59,6 @@ export default async function (props: Props) {
   const { post, breadcrumbs, structuredData } = await getData(props)
   const t = await getTranslations()
   const format = await getFormatter()
-
-  // Find the tools and sort them by the order they appear in the post
-  const tools = post.tools?.length
-    ? await findTools({ where: { slug: { in: post.tools } } }).then(tools =>
-        tools.sort((a, b) => post.tools.indexOf(a.slug) - post.tools.indexOf(b.slug)),
-      )
-    : []
 
   return (
     <>
@@ -88,20 +79,21 @@ export default async function (props: Props) {
                   </time>
                 )}
                 <span className="px-1.5">&bull;</span>
-                <span>{t("posts.read_time", { count: getReadTime(post.content) })}</span>
+                <span>{t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}</span>
               </>
             }
             className="mt-4"
-            {...post.author}
+            name={post.author.name}
+            image={post.author.image || ""}
           />
         )}
       </Intro>
 
       <Section>
         <Section.Content>
-          {post.image && (
+          {post.imageUrl && (
             <Image
-              src={post.image}
+              src={post.imageUrl}
               alt={post.title}
               width={1200}
               height={630}
@@ -110,7 +102,9 @@ export default async function (props: Props) {
             />
           )}
 
-          <MDX code={post.content} />
+          <Prose>
+            <Markdown>{post.content}</Markdown>
+          </Prose>
         </Section.Content>
 
         <Section.Sidebar className="max-h-(--sidebar-max-height)">
@@ -118,15 +112,11 @@ export default async function (props: Props) {
             <AdCard type="BlogPost" />
           </Suspense>
 
-          {blogConfig.tableOfContents.enabled && !!post.headings?.length && (
-            <TableOfContents headings={post.headings} />
-          )}
-
-          {blogConfig.toolsMentioned.enabled && !!tools.length && (
+          {blogConfig.toolsMentioned.enabled && !!post.tools.length && (
             <TableOfContents
               title={t("posts.tools_mentioned")}
               headings={[
-                ...tools.map(({ slug, name, faviconUrl }) => ({
+                ...post.tools.map(({ slug, name, faviconUrl }) => ({
                   id: slug,
                   level: 1,
                   text: (

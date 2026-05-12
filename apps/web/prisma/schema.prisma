@@ -26,6 +26,12 @@ enum ToolStatus {
   Published
 }
 
+enum PostStatus {
+  Draft
+  Scheduled
+  Published
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -109,6 +115,9 @@ model User {
 
   // Merch / POD
   merchOrders MerchOrder[]
+
+  // Blog
+  posts Post[]
 
   // Indexes
   @@index([id])
@@ -206,6 +215,7 @@ model Tool {
   reports    Report[]
   owner      User?      @relation(fields: [ownerId], references: [id])
   ownerId    String?
+  posts      Post[]
 
   @@index([id, slug])
   @@index([name])
@@ -2171,7 +2181,7 @@ model Waiver {
   isActive   Boolean    @default(true)
   brand      Brand?
   createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  updatedAt  DateTime   @default(now())
 
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
@@ -2197,8 +2207,8 @@ model WaiverSignature {
   waiverId           String
   user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             String
-  signedOnBehalfOf   User?   @relation("SignedOnBehalf", fields: [signedOnBehalfOfId], references: [id])
-  signedOnBehalfOfId String?
+  signedOnBehalfOf   User?   @relation("SignedOnBehalf", fields: [signedOnBehalfId], references: [id])
+  signedOnBehalfId String?
 
   @@unique([waiverId, userId])
   @@index([userId])
@@ -2327,7 +2337,7 @@ model ContentTask {
   dueAt       DateTime?
   completedAt DateTime?
   createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  updatedAt   DateTime          @default(now())
 
   atom         ContentAtom   @relation(fields: [atomId], references: [id], onDelete: Cascade)
   atomId       String
@@ -2424,7 +2434,7 @@ model Event {
   imageUrl       String?
   requiresWaiver Boolean     @default(false)
   createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  updatedAt      DateTime    @default(now())
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String
@@ -2471,6 +2481,8 @@ model Bracket {
 
   matches Match[]
 
+
+
   @@index([divisionId])
 }
 
@@ -2487,7 +2499,7 @@ model Match {
   notes         String?
   scoreData     Json?
   createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  updatedAt     DateTime     @default(now())
 
   bracket   Bracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
   bracketId String
@@ -2616,7 +2628,7 @@ model RuleSet {
   isSystem         Boolean       @default(false)
   brand            Brand?
   createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  updatedAt        DateTime      @default(now())
 
   discipline   Discipline? @relation(fields: [disciplineId], references: [id])
   disciplineId String?
@@ -2685,7 +2697,7 @@ model Media {
   sortOrder    Int       @default(0)
   isPublic     Boolean   @default(false)
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  updatedAt    DateTime  @default(now())
 
   uploadedBy     User          @relation("MediaUploadedBy", fields: [uploadedById], references: [id])
   uploadedById   String
@@ -2752,7 +2764,7 @@ model Technique {
   isPublished       Boolean            @default(false)
   sortOrder         Int                @default(0)
   createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  updatedAt         DateTime           @default(now())
 
   discipline     Discipline   @relation(fields: [disciplineId], references: [id])
   disciplineId   String
@@ -2811,7 +2823,7 @@ model TechniqueProgress {
   lastDrilledAt DateTime?
   notes         String?
   createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  updatedAt     DateTime                @default(now())
 
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
@@ -2895,7 +2907,7 @@ model CertificateIssuance {
   revokedAt          DateTime?
   meta               Json?
   createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  updatedAt          DateTime  @default(now())
 
   certificateTemplate   CertificateTemplate @relation(fields: [certificateTemplateId], references: [id])
   certificateTemplateId String
@@ -2944,8 +2956,9 @@ model StudentList {
 }
 
 model StudentListMember {
-  id      String   @id @default(cuid())
-  addedAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   studentList   StudentList @relation(fields: [studentListId], references: [id], onDelete: Cascade)
   studentListId String
@@ -2995,7 +3008,7 @@ model UserEntitlement {
   startsAt   DateTime              @default(now())
   endsAt     DateTime?
   createdAt  DateTime              @default(now())
-  updatedAt  DateTime              @updatedAt
+  updatedAt  DateTime              @default(now())
 
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
@@ -3087,7 +3100,7 @@ model MerchOrder {
   statusHistory           Json?
 
   createdAt               DateTime          @default(now())
-  updatedAt               DateTime          @updatedAt
+  updatedAt               DateTime          @default(now())
 
   /// Relations
   user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -3103,4 +3116,29 @@ model MerchOrder {
   @@index([userId])
   @@index([fulfillmentStatus])
   @@index([createdAt])
+}
+
+model Post {
+  id          String     @id @default(cuid())
+  title       String     @db.Citext
+  slug        String     @unique
+  description String?
+  content     String
+  plainText   String     @default("")
+  imageUrl    String?
+  status      PostStatus @default(Draft)
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Brand scoping (ADR 0004)
+  brand Brand
+
+  // Relations
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+  tools    Tool[]
+  @@index([brand, slug])
+  @@index([authorId])
+  @@index([publishedAt])
 }

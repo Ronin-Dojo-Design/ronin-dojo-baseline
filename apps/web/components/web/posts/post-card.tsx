@@ -1,7 +1,7 @@
 "use client"
 
 import { getReadTime } from "@primoui/utils"
-import type { Post } from "content-collections"
+import type { Post } from "~/.generated/prisma/client"
 import Image from "next/image"
 import { useFormatter, useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
@@ -19,10 +19,10 @@ export const PostCard = ({ className, post, ...props }: PostCardProps) => {
 
   return (
     <Card className="overflow-clip" asChild {...props}>
-      <Link href={`/blog/${post._meta.path}`}>
-        {post.image && (
+      <Link href={`/blog/${post.slug}`}>
+        {post.imageUrl && (
           <Image
-            src={post.image}
+            src={post.imageUrl}
             alt={post.title}
             width={1200}
             height={630}
@@ -44,7 +44,7 @@ export const PostCard = ({ className, post, ...props }: PostCardProps) => {
               {format.dateTime(post.publishedAt, { dateStyle: "medium" })}
             </time>
             <span>&bull;</span>
-            <span>{t("posts.read_time", { count: getReadTime(post.content) })}</span>
+            <span>{t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}</span>
           </CardFooter>
         )}
       </Link>

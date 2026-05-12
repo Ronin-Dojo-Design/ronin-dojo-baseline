@@ -1,4 +1,4 @@
-import type { Post } from "content-collections"
+import type { Post } from "~/.generated/prisma/client"
 import type {
   AboutPage,
   AggregateRating,
@@ -217,34 +217,33 @@ export const generateFAQ = (questions: Array<{ question: string; answer: string 
 /**
  * Generates article/blog posting schema
  */
-export const generateArticle = (url: string, post: Post): Article => {
-  const { title, description, publishedAt, author, image, content, locale } = post
+export const generateArticle = (url: string, post: Post & { author?: { name: string; image?: string | null } | null }): Article => {
+  const { title, description, publishedAt, author, imageUrl, content } = post
 
   return {
     "@type": "Article",
     headline: title,
-    description,
+    description: description || undefined,
     url: toAbsoluteUrl(url),
-    datePublished: publishedAt.toISOString(),
-    dateModified: publishedAt.toISOString(),
+    datePublished: publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
     publisher: getOrganization(),
     author: author
       ? {
           "@type": "Person",
           name: author.name,
-          url: author.url ? toAbsoluteUrl(author.url) : undefined,
         }
       : getOrganization(),
-    image: image
+    image: imageUrl
       ? {
           "@type": "ImageObject",
-          url: image,
+          url: imageUrl,
           width: "1200",
           height: "630",
         }
       : undefined,
     wordCount: content.split(/\s+/).length,
-    inLanguage: locale,
+    inLanguage: "en-US",
   }
 }
 
@@ -291,8 +290,8 @@ export const generateBlog = (
       "@type": "BlogPosting",
       headline: post.title,
       description: post.description || undefined,
-      url: toAbsoluteUrl(`/blog/${post._meta.path}`),
-      datePublished: post.publishedAt.toISOString(),
+      url: toAbsoluteUrl(`/blog/${post.slug}`),
+      datePublished: post.publishedAt?.toISOString(),
     })),
   }
 }

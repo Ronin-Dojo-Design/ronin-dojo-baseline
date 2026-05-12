@@ -1,4 +1,4 @@
-import type { Post } from "content-collections"
+import type { Post } from "~/.generated/prisma/client"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { EmptyList } from "~/components/web/empty-list"
@@ -15,7 +15,7 @@ export const PostList = ({ posts, ...props }: PostListProps) => {
   return (
     <Grid {...props}>
       {posts.map(post => (
-        <PostCard key={post._meta.path} post={post} />
+        <PostCard key={post.slug} post={post} />
       ))}
 
       {!posts.length && <EmptyList>{t("posts.no_posts")}</EmptyList>}

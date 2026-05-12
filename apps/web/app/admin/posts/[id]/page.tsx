@@ -1,0 +1,21 @@
+import { notFound } from "next/navigation"
+import { PostForm } from "~/app/admin/posts/_components/post-form"
+import { withAdminPage } from "~/components/admin/auth-hoc"
+import { Wrapper } from "~/components/common/wrapper"
+import { findPostById } from "~/server/admin/posts/queries"
+import { findToolList } from "~/server/admin/tools/queries"
+
+export default withAdminPage(async ({ params }: PageProps<"/admin/posts/[id]">) => {
+  const { id } = await params
+  const post = await findPostById(id)
+
+  if (!post) {
+    return notFound()
+  }
+
+  return (
+    <Wrapper size="md" gap="sm">
+      <PostForm title={`Edit ${post.title}`} post={post} toolsPromise={findToolList()} />
+    </Wrapper>
+  )
+})
