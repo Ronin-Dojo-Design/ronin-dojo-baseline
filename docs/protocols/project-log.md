@@ -258,7 +258,7 @@ Three sections:
 | SESSION_0033_TASK_02 | SESSION_0033 | School operations | Cody + Giddy + Doug | Family + waiver write surface | Family/waiver actions exist under `server/web/{family,waiver}/*`; FamilyGroup cross-org risk is target-membership gated; guardian waiver signatures require family authority + minor proof; rate limit, audit, and tests/smoke prove the path | landed | SESSION_0033_REVIEW_01 |
 | SESSION_0033_TASK_03 | SESSION_0033 | School operations + close | Cody + Doug + Petey | Lead/trial lifecycle, smoke proof, close evidence | Lead/trial actions exist under `server/web/lead/*`; convert is transactional; monitoring docs, Project Log, SESSION evidence, and closing ritual are complete | landed | SESSION_0033_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_01 | Roadmap | Content + monetization | Petey + Giddy | Preserve raw roadmap source in canonical home | Source file exists under `docs/architecture/source/` | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
-| ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
+| ROADMAP_DIRECTORY_MONETIZATION_TASK_02 | Roadmap | Content + monetization | Petey + Cody | Audit roadmap against repo for DRY risks | Wiki synthesis maps plan areas to existing Dirstarter surfaces and records MB-011/D-014 | landed | ROADMAP_DIRECTORY_MONNETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_03 | Roadmap | Content + monetization | Cody + Rei | Implement low-risk Dirstarter-aligned reuse points | AI Gateway env/model wiring, martial-arts seed entries, Free/Standard/Premium product script, six ad placements, Bottom ad surface | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_01 |
 | ROADMAP_DIRECTORY_MONETIZATION_TASK_04 | Roadmap | Governance + close | Petey + Doug | Full closing ritual and cleanup boundary mark | Full close evidence recorded; MB-012 added for Local by Flywheel WordPress cleanup | landed | ROADMAP_DIRECTORY_MONETIZATION_REVIEW_02 |
 | SESSION_0037_TASK_01 | SESSION_0037 | School operations (planning) | Petey + Giddy | Dirstarter alignment audit + lead backend gap analysis | Entitlement completeness audited; Dirstarter admin CRUD pattern inventoried; lead backend gaps identified; flat vs nested routing resolved | landed | — |
@@ -791,176 +791,26 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Findings:** 3 low-severity (lineItems `as any`, no audit trail for status overrides, no DB indexes on search fields). All open, queued for next session.
 - **Printful API:** Verified against https://developers.printful.com/docs — `sync_variant_id`, `externalId`/`external_id` mapping, `@` prefix for external ID lookups, `?confirm=true` all confirmed correct.
 
-### SESSION_0121 — Remediation: Merch Order Findings + Webhook Brand Scoping
+### SESSION_0131 — Remediation: Merch Order Findings + Webhook Brand Scoping
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0121_TASK_01 | Create MerchLineItem Zod schema (FINDING_01) | ✅ done |
-| SESSION_0121_TASK_02 | Add statusHistory JSON audit trail (FINDING_02) | ✅ done |
-| SESSION_0121_TASK_03 | Add composite DB indexes (FINDING_03) | ✅ done |
-| SESSION_0121_TASK_04 | Verify webhook brand scoping (SESSION_0119 FINDING_03) | ✅ done |
-| SESSION_0121_TASK_05 | Type check + verify | ✅ done |
+| SESSION_0131_TASK_01 | Create MerchLineItem Zod schema (FINDING_01) | ✅ done |
+| SESSION_0131_TASK_02 | Add statusHistory JSON audit trail (FINDING_02) | ✅ done |
+| SESSION_0131_TASK_03 | Add composite DB indexes (FINDING_03) | ✅ done |
+| SESSION_0131_TASK_04 | Verify webhook brand scoping (SESSION_0119 FINDING_03) | ✅ done |
+| SESSION_0131_TASK_05 | Type check + verify | ✅ done |
 
 **Result:** All 5 tasks completed. Zod schema replaces `as any` cast. Full JSON audit trail for admin status overrides. Two composite indexes added. Webhook brand scoping verified-acceptable with documentation. `tsc --noEmit` passes.
 
 #### Review
 
-**SESSION_0121_REVIEW_01 — Merch Order Remediation**
+**SESSION_0131_REVIEW_01 — Remediation of SESSION_0130 Findings**
 
-- **Reviewed tasks:** SESSION_0121_TASK_01–05
+- **Reviewed tasks:** SESSION_0131_TASK_01–05
 - **Dirstarter docs check:** N/A (backend-only, no UI)
-- **Findings:** None — all SESSION_0120 findings remediated
+- **Findings:** None — all SESSION_0130 findings remediated
 - **Migration note:** Schema changes (statusHistory + indexes) ready but migration not yet applied (`bun db:migrate dev` pending)
-
-### SESSION_0124 — Wire Enrichment Components + Fix Prisma/Turbopack Build Error (2026-05-11)
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0124_TASK_01 | Fix Prisma/Turbopack CJS build error (cache clear + Prisma 7.1→7.8) | ✅ done |
-| SESSION_0124_TASK_02 | Update findDisciplineBySlug query with foundedBy, yearEstablished, history | ✅ done |
-| SESSION_0124_TASK_03 | Wire enrichment components into [slug]/page.tsx | ✅ done |
-| SESSION_0124_TASK_04 | Carousel comparison (embla vs gear page manual) | ✅ done |
-| SESSION_0124_TASK_05 | Seed enrichment data for 12 disciplines | ✅ done |
-| SESSION_0124_TASK_06 | Visual QA — dev server + /disciplines/bjj renders all sections | ✅ done |
-| SESSION_0124_TASK_07 | Type check (0 errors) | ✅ done |
-
-**Result:** All 7 tasks completed. Prisma upgraded 7.1→7.8 fixing Turbopack CJS error. Five enrichment components wired into discipline detail page. Embla carousel confirmed as standard. All 12 disciplines seeded with historical data. Visual QA confirmed rendering.
-
-#### Review
-
-**SESSION_0124_REVIEW_01 — Discipline Enrichment Wiring**
-
-- **Reviewed tasks:** SESSION_0124_TASK_01–07
-- **Dirstarter docs check:** `prisma/browser` import pattern confirmed as L1 canonical. No divergence.
-- **Findings:** VideoCarousel and MemberCarouselByRank not yet wired (need parent-level data fetching). Deferred to SESSION_0125.
-- **Carousel decision:** Embla is the standard reusable component. Gear page manual carousel acceptable legacy.
-
-### SESSION_0125 — Wire Remaining Carousels + Hostile Review + Graphify Update
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0125_TASK_01 | Wire VideoCarousel into discipline detail page | ✅ done |
-| SESSION_0125_TASK_02 | Wire MemberCarouselByRank into discipline detail page | ✅ done |
-| SESSION_0125_TASK_03 | Hostile close review (sessions 0123–0125) | ✅ done |
-| SESSION_0125_TASK_04 | Graphify update | ✅ done |
-| SESSION_0125_TASK_05 | Visual QA | ✅ done |
-| SESSION_0125_TASK_06 | Type check | ✅ done |
-
-**Result:** Both carousels wired. Hostile review completed with Kaizen aggregate 7 → remediated to 9 in-session (integration test + composite index added).
-
-### SESSION_0126 — Seed Enrichment QA Data + Passport Profile Editor
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0126_TASK_01 | Seed ContentAtom + ContentVariant (video) for 3 disciplines | ✅ done |
-| SESSION_0126_TASK_02 | Add Muay Thai Mike test user (PUBLIC/ACTIVE/ranked) | ✅ done |
-| SESSION_0126_TASK_03 | Visual QA — carousels populated | ✅ done |
-| SESSION_0126_TASK_04 | Type check | ✅ done |
-
-**Result:** QA data gap from hostile review closed. VideoCarousel, MemberCarouselByRank, Related Content all populated.
-
-### SESSION_0127 — Passport Profile Editor Improvements
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0127_TASK_01 | Fix FS-0001 violations (raw HTML → L1 components) | ✅ done |
-| SESSION_0127_TASK_02 | Add missing Passport fields (dob, gender, avatarUrl) | ✅ done |
-| SESSION_0127_TASK_03 | Add missing DirectoryProfile fields (slug, visibility) | ✅ done |
-| SESSION_0127_TASK_04 | Type check | ✅ done |
-
-**Result:** All FS-0001 violations remediated. Missing L2 Passport fields exposed in editor UI.
-
-### SESSION_0128 — Media Upload + socialLinks Editor + Admin Upload Grant
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0128_TASK_01 | Wire FormMedia for avatar upload | ✅ done |
-| SESSION_0128_TASK_02 | Add coverPhotoUrl + videoIntroUrl to DirectoryProfile form | ✅ done |
-| SESSION_0128_TASK_03 | Build SocialLinksEditor component | ✅ done |
-| SESSION_0128_TASK_04 | Seed S3_UPLOAD entitlement + wire canUploadMedia | ✅ done |
-| SESSION_0128_TASK_05 | Admin UI: UploadGrantToggle | ✅ done |
-| SESSION_0128_TASK_06 | Type check | ✅ done |
-
-**Result:** Full media upload integration. FormMedia for avatar/cover/video. SocialLinksEditor with 7 platforms. Entitlement system with role-based auto-grant + admin grant/revoke.
-
-### SESSION_0129 — Hostile Close Batch Review (0126–0128)
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0129_TASK_01 | Hostile close review batch (sessions 0126–0128) | ✅ done |
-| SESSION_0129_TASK_02 | Plan SESSION_0130 | ✅ done |
-
-**Result:** 3 findings identified (sequential queries, uncached reads, missing integration test). Kaizen aggregate: 7.
-
-#### Review
-
-**SESSION_0129_REVIEW_01 — Hostile Close Batch Review: Passport Profile Editor Arc (Sessions 0126–0128)**
-
-- **Reviewed tasks:** SESSION_0126–0128 (all tasks)
-- **Dirstarter docs check:** cached docs sufficient — FormMedia, Select, Checkbox, H2, Button, Input, Stack from inventory
-- **Findings:** FINDING_01 (3 sequential queries), FINDING_02 ("use server" on reads), FINDING_03 (no integration test)
-- **Kaizen aggregate:** 7 → remediation staged for SESSION_0130
-
-### SESSION_0130 — Remediate Hostile Review Findings + Visual QA + Tier Auto-Grant Architecture
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0130_TASK_01 | Consolidate canUploadMedia (Promise.all) | ✅ done |
-| SESSION_0130_TASK_02 | Cache entitlement queries ("use cache" + cacheTag) | ✅ done |
-| SESSION_0130_TASK_03 | Integration test for canUploadMedia (5/5 passing) | ✅ done |
-| SESSION_0130_TASK_04 | Visual QA (structural audit, zero FS-0001 violations) | ✅ done |
-| SESSION_0130_TASK_05 | ADR 0012: Tier auto-grant via Stripe webhook | ✅ done |
-| SESSION_0130_TASK_06 | Type check | ✅ done |
-
-**Result:** All 3 hostile review findings remediated. Revised Kaizen aggregate: 9. ADR 0012 accepted.
-
-#### Review
-
-**SESSION_0130_REVIEW_01 — Remediation of SESSION_0129 Findings**
-
-- **Reviewed tasks:** SESSION_0130_TASK_01–06
-- **Dirstarter docs check:** live docs checked — `dirstarter.com/docs/integrations/payments` for webhook pattern (ADR 0012). `"use cache"` pattern confirmed from existing query files.
-- **Findings:** None — all SESSION_0129 findings remediated. Revised aggregate: 9.
-
-### SESSION_0131 — S3 Bucket Provisioning + Authenticated Visual QA + S4 Planning
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0131_TASK_01 | MinIO docker-compose + S3 env vars + dev-login auth bypass | ✅ done |
-| SESSION_0131_TASK_02 | Authenticated visual QA (/me, admin, tournament admin) | ✅ done |
-| SESSION_0131_TASK_03 | S4 scope drafted (Tournament Ops, sessions 0132–0135) | ✅ done |
-| SESSION_0131_TASK_04 | Runbook: local-dev-auth-storage.md (diagrams + troubleshooting) | ✅ done |
-
-**Result:** Local dev auth + storage stack fully operational. Dev-login bypass eliminates 17-session Resend DNS blocker for local testing. S4 scope locked: Tournament Operations lane (3 recipes, 4 sessions). Comprehensive runbook cross-linked to 3 docs.
-
-### SESSION_0132 — Tournament Ops QA + Gap Assessment
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0132_TASK_01 | Validate existing tournament CRUD code (type check + test pass) | ✅ done |
-| SESSION_0132_TASK_02 | Gap analysis: admin CRUD vs registration vs public pages | ✅ done |
-| SESSION_0132_TASK_03 | hostId Select refactor + P2034 race condition fix | ✅ done |
-
-**Result:** Tournament ops code validated (37 tests passing). Gap analysis identified Add Division UI as the only remaining Recipe 1 gap. P2034 race condition fix prevents Prisma error leakage.
-
-### SESSION_0133 — Hostile Close Review (0131–0132) + Add Division UI
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0133_TASK_01 | Hostile close review of sessions 0131–0132 | ✅ done |
-| SESSION_0133_TASK_02 | Build Add Division dialog in DivisionsEditor | ✅ done |
-| SESSION_0133_TASK_03 | Visual QA of Add Division flow | ✅ done |
-| SESSION_0133_TASK_04 | Update LANE-S042 Recipe 1 status | ✅ done |
-
-**Result:** Hostile review: 3 findings, Kaizen aggregate 7. Add Division dialog built with full form. LANE-S042 all 3 recipes code-complete. 37/37 tests passing.
-
-#### Review
-
-**SESSION_0133_REVIEW_01 — Hostile Close Review of 0131–0132**
-
-- **Reviewed tasks:** SESSION_0131_TASK_01–04, SESSION_0132_TASK_01–03
-- **Dirstarter docs check:** cached docs sufficient
-- **Findings:** 3 findings (dev-login guard test, registration concurrency mock, MinIO e2e). Kaizen aggregate: 7.
 
 ### SESSION_0134 — Dirstarter Alignment Audit + Hostile Review (0130, 0133) + E2E Tournament QA + S5 Planning
 
@@ -980,3 +830,23 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Dirstarter docs check:** live docs checked (all 10 areas)
 - **Sources:** dirstarter.com/docs/{storage,payments,media,content,monetization,blog,authentication,theming,database/prisma,database/hosting}
 - **Findings:** 2 findings (blog MDX gap, division form test gap). Kaizen aggregate: 8.
+
+### SESSION_0137 — Content-Collections Removal + Admin Brand Filter Fix
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0137_TASK_01 | Fix admin posts brand filter (finding 0136-04) | ✅ done |
+| SESSION_0137_TASK_02 | Remove content-collections dependency | ✅ done |
+| SESSION_0137_TASK_03 | Visual QA of blog pages | ✅ done |
+
+**Result:** Content-collections fully removed (config, packages, files, utilities). Admin posts list now brand-filtered. Blog pages confirmed rendering from DB. Post layout templates preserved in `docs/knowledge/templates/`.
+
+#### Review
+
+**SESSION_0137_REVIEW_01 — Hostile Close Review of 0137**
+
+- **Reviewed tasks:** SESSION_0137_TASK_01–03
+- **Dirstarter docs check:** live docs checked
+- **Sources:** dirstarter.com/docs/blog (checked 2026-05-11)
+- **Verdict:** Fully aligned. Upstream docs explicitly bless content-collections removal after DB migration. Post model shape matches upstream (except cuid vs cuid2 — tracked as 0136-02). No findings.
+- **Kaizen aggregate:** 9

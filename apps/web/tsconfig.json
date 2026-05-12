@@ -16,8 +16,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      "~/*": ["./*"],
-      "content-collections": ["./.content-collections/generated"]
+      "~/*": ["./*"]
     }
   },
   "include": [
@@ -25,8 +24,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    ".content-collections/generated/**/*.ts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules", ".next"]
 }

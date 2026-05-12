@@ -1,4 +1,3 @@
-import { withContentCollections } from "@content-collections/next"
 import type { NextConfig } from "next"
 import createNextIntlPlugin from "next-intl/plugin"
 import { withPlausibleProxy } from "next-plausible"
@@ -41,13 +40,7 @@ const nextConfig: NextConfig = {
     //     "wekafusa.com",
     //   ],
     // },
-
-    optimizePackageImports: [
-      "@content-collections/core",
-      "@content-collections/mdx",
-      "@content-collections/next",
-    ],
   },
 }
 
-export default withContentCollections(withNextIntl(withPlausible(nextConfig)))
+export default withNextIntl(withPlausible(nextConfig))
