@@ -68,21 +68,25 @@ All ~20 Dirstarter admin query files use `db.$transaction([findMany, count])` wi
 ### Tasks
 
 #### TASK_01 — Replace `$transaction` with `Promise.all` in `findMemberships`
+
 - **Agent:** Cody
 - **What:** In `server/admin/memberships/queries.ts`, replace `db.$transaction([...])` with `Promise.all([...])`. No other changes needed.
 - **Done means:** Query returns same shape. No P2028 risk. Type check passes.
 
 #### TASK_02 — Add `version` column to Registration model
+
 - **Agent:** Cody
 - **What:** Add `version Int @default(1)` to the Registration model in `schema.prisma`. Run migration.
 - **Done means:** Migration applies cleanly. `tsc --noEmit` passes.
 
 #### TASK_03 — Update Registration status transition to use versioned writes
+
 - **Agent:** Cody
 - **What:** Find the Registration status transition action (likely in `server/admin/tournaments/actions.ts` or similar). Add version check + increment on update, matching the Membership pattern from SESSION_0152.
 - **Done means:** Transition action uses `where: { id, version }` and increments version. Throws on stale version.
 
 #### TASK_04 — Type check + existing tests pass
+
 - **Agent:** Cody
 - **Done means:** `tsc --noEmit` zero errors, existing tests pass.
 
@@ -138,7 +142,7 @@ TASK_01 (independent) | TASK_02 → TASK_03 → TASK_04
 
 ## Review Log
 
-**SESSION_0154_REVIEW_01 — Doug Review + Full Close Review**
+### SESSION_0154_REVIEW_01 — Doug Review + Full Close Review
 
 - **Reviewer:** Doug
 - **Dirstarter docs check:** `Promise.all` replacement is safe — Dirstarter's `$transaction` for list+count is a convenience, not a correctness requirement for read-only queries. Optimistic locking pattern matches SESSION_0152's Membership implementation exactly.

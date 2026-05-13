@@ -69,6 +69,7 @@ Deliver admin Invite CRUD (list, create, revoke, delete) and public invite claim
 ### Tasks
 
 #### TASK_01 — Server layer: `server/admin/invites/` (schema + actions + queries)
+
 - **Agent:** Cody
 - **What:** Create `schema.ts` (Zod schema + table params), `actions.ts` (createInvite, revokeInvite, deleteInvites), `queries.ts` (findInvites with org/status filters, findInviteByCode)
 - **Steps:**
@@ -79,6 +80,7 @@ Deliver admin Invite CRUD (list, create, revoke, delete) and public invite claim
 - **Depends on:** nothing
 
 #### TASK_02 — Admin pages: `app/admin/invites/`
+
 - **Agent:** Cody
 - **What:** List page with data table, create page with form, detail page with claims list
 - **Steps:**
@@ -93,6 +95,7 @@ Deliver admin Invite CRUD (list, create, revoke, delete) and public invite claim
 - **Depends on:** TASK_01
 
 #### TASK_03 — Public claim flow: `app/(web)/invite/[code]/page.tsx`
+
 - **Agent:** Cody
 - **What:** Public page that validates invite code, checks auth, creates InviteClaim + Membership
 - **Steps:**
@@ -103,6 +106,7 @@ Deliver admin Invite CRUD (list, create, revoke, delete) and public invite claim
 - **Depends on:** TASK_01
 
 #### TASK_04 — Admin nav link + type check
+
 - **Agent:** Cody
 - **What:** Add Invites to admin sidebar nav, run full type check
 - **Steps:**

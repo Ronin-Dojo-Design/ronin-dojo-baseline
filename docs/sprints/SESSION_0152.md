@@ -65,26 +65,31 @@ Deliver: (1) `version` column on Membership, (2) optimistic locking in `transiti
 ### Tasks
 
 #### TASK_01 — Add `version` column to Membership model
+
 - **Agent:** Cody
 - **What:** Add `version Int @default(0)` to Membership in `schema.prisma`, run migration
 - **Done means:** Migration applied, Prisma client regenerated
 
 #### TASK_02 — Implement optimistic locking in `transitionMembershipStatus`
+
 - **Agent:** Cody
 - **What:** Read `version` in findUnique, use `where: { id, version }` on update, increment version, catch P2025 as conflict
 - **Done means:** Only one concurrent caller succeeds, losers get a typed conflict error
 
 #### TASK_03 — Update concurrency test
+
 - **Agent:** Cody
 - **What:** Verify exactly 1 of 5 parallel callers succeeds, exactly 1 AuditLog entry, 4 get conflict error
 - **Done means:** Test passes with optimistic locking behavior
 
 #### TASK_04 — Verify Passport/profile unaffected
+
 - **Agent:** Cody
 - **What:** Type check — `version` column is internal, no UI surface
 - **Done means:** Zero TS errors
 
 #### TASK_05 — Type check + all tests pass
+
 - **Agent:** Cody
 - **Done means:** Zero TS errors, all tests pass
 
@@ -143,7 +148,7 @@ TASK_01 → TASK_02 + TASK_03 → TASK_04 + TASK_05
 
 ## Review Log
 
-**SESSION_0152_REVIEW_01 — Full Close Review**
+### SESSION_0152_REVIEW_01 — Full Close Review
 
 - **Reviewer:** Giddy + Doug (hostile close)
 - **Dirstarter docs check:** Checked `dirstarter.com/docs/database/prisma` — confirmed both `db push` and `migrate dev` are valid. Production deploy uses `prebuild: db:migrate deploy` per L1 `package.json`.

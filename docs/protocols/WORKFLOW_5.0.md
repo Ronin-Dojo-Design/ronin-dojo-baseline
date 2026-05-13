@@ -4,8 +4,8 @@ slug: workflow-5
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-11
-last_agent: copilot-session-0134
+updated: 2026-05-13
+last_agent: copilot-session-0155
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -252,6 +252,23 @@ All brands go publicly live on May 18, 2026, with **differentiated depth**:
 | May 16–17 target | 0144–0145 | School operations | Membership lifecycle transitions + invite flow |
 | May 17 target | 0146 | QA hardening + launch | Full hostile review + QA hardening pass (all brands) |
 | May 18 target | 0147 | Launch day | Vercel/Neon staging deploy, final smoke test, go/no-go for all four brands |
+| **S6 actuals (SESSION_0134+)** | | | |
+| May 12 actual | 0140 | School operations | Program Admin CRUD server layer + pages |
+| May 12 actual | 0141 | School operations | Program Admin UX Polish: Picker Components + ProgramCourse Join |
+| May 12 actual | 0142 | School operations | ProgramWaiver Join Management + ComboboxSelector Reuse Audit |
+| May 12 actual | 0143 | School operations | ComboboxSelector Upgrade for Admin FK Fields + TS Error Fixes |
+| May 12 actual | 0144 | School operations | Program Structure + Pricing Architecture (AgeGroup, SkillLevel, Punch Cards) |
+| May 12 actual | 0145 | School operations | PricingPlan Form UI + Membership Lifecycle Transitions |
+| May 12 actual | 0146 | Governance | Hostile Close Review + SOP Cross-Reference (0140–0145) |
+| May 12 actual | 0147 | School operations | Invite Admin CRUD + Claim Flow |
+| May 12 actual | 0148 | School operations | Membership Admin List Page + Invite Email |
+| May 12 actual | 0149 | School operations | Membership Detail Page + Role Assignment Management |
+| May 12 actual | 0150 | School operations | Membership Transition Audit Trail + Integration Tests |
+| May 12 actual | 0151 | School operations | Membership Scalability Hardening: Concurrency + Audit Resilience + E2E Plan |
+| May 12 actual | 0152 | School operations | Optimistic Locking for Membership Transitions |
+| May 12 actual | 0153 | QA hardening | E2E Playwright Tests for Membership Admin |
+| May 13 actual | 0154 | Tournament ops + governance | P2028 Transaction Fix + Registration Optimistic Locking |
+| May 13 actual | 0155 | Tournament ops + planning | Bulk Registration Optimistic Locking + Course CRUD Planning |
 
 ---
 
@@ -299,15 +316,13 @@ BACKLOG
   [Ranking series] [Athlete journal/HealthKit]
 
 NOW
-  [QA hardening — close carried findings]
-  [Blog DB migration — Dirstarter alignment]
-  [Fix school-ops test failure]
+  [Course enrollment + curriculum completion server layer]
+  [Public course pages + enrollment UI]
 
 NEXT
-  [Course + CurriculumItem admin CRUD]
-  [Public course pages + enrollment]
   [Multi-brand theme polish (all 4 brands)]
-  [Membership lifecycle + invite flow]
+  [Membership lifecycle + invite flow — LANDED 0145–0149]
+  [Invoice optimistic locking]
 
 READY FOR LAUNCH
   [S1-S4 identity/org/directory/tournament foundation]
@@ -317,6 +332,13 @@ READY FOR LAUNCH
   [Launch strategy Option A-plus]
   [Dirstarter alignment: 8/10 confirmed]
   [E2E tournament flow verified]
+  [Course + CurriculumItem admin CRUD — landed SESSION_0040]
+  [Membership lifecycle transitions — landed SESSION_0145]
+  [Invite CRUD + claim flow — landed SESSION_0147]
+  [Membership admin list/detail + role assignment — landed SESSION_0148–0149]
+  [Membership transition audit trail + tests — landed SESSION_0150–0151]
+  [Optimistic locking: Membership (0152) + Registration (0154) + Bulk registration (0155)]
+  [P2028 transaction fix — landed SESSION_0154]
 
 POST-LAUNCH
   [Full self-serve white-label templating]

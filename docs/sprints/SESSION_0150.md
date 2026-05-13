@@ -81,18 +81,22 @@ Deliver: (1) audit trail logging on membership status transitions via existing `
 ### Tasks
 
 #### TASK_01 — Wire audit trail into transitionMembershipStatus
+
 - **Agent:** Cody
 - **What:** Add `AuditLog` creation to `transitionMembershipStatus` action
 - **Steps:**
+
   1. In `transitionMembershipStatus`, after the `db.membership.update`, add `db.auditLog.create` inside the `after()` callback
   2. Fields: `brand` from ctx, `action: "STATUS_TRANSITION"`, `entityType: "Membership"`, `entityId: id`, `before: { status: membership.status }`, `after: { status: toStatus }`, `userId` from ctx
 - **Done means:** Every status transition creates an AuditLog entry
 - **Depends on:** nothing
 
 #### TASK_02 — Integration tests for membership actions
+
 - **Agent:** Cody
 - **What:** Create `apps/web/server/admin/memberships/actions.test.ts`
 - **Steps:**
+
   1. Follow `lead/actions.test.ts` mock pattern (next/headers, next/cache, ~/lib/auth)
   2. Test `transitionMembershipStatus`: valid transition succeeds, invalid transition throws, audit log is created
   3. Test `assignRoleToMembership`: creates assignment, duplicate is idempotent (upsert)
@@ -101,9 +105,11 @@ Deliver: (1) audit trail logging on membership status transitions via existing `
 - **Depends on:** TASK_01 (audit log must be wired before testing it)
 
 #### TASK_03 — Add code guardrail G7
+
 - **Agent:** Cody
 - **What:** Add G7 to `docs/protocols/code-guardrails.md`
 - **Steps:**
+
   1. Add `### G7 — No nuqs/server imports in client components` section
   2. Document the pattern: extract shared constants to a separate `constants.ts` file
   3. Reference SESSION_0149 as the discovery session
@@ -111,6 +117,7 @@ Deliver: (1) audit trail logging on membership status transitions via existing `
 - **Depends on:** nothing
 
 #### TASK_04 — Type check + verification
+
 - **Agent:** Cody
 - **What:** Run `bunx tsc --noEmit`, verify zero errors
 - **Done means:** Zero TS errors
@@ -221,9 +228,11 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 **Goal:** Close remaining scalability and verification gaps from SESSION_0149 Kaizen + SESSION_0150 confidence assessment. Prioritized by risk.
 
 #### TASK_01 — Concurrency test for membership transitions (1,000-user gap)
+
 - **Agent:** Cody
 - **What:** Create `server/admin/memberships/actions.concurrency.test.ts`
 - **Steps:**
+
   1. Two parallel `transitionMembershipStatus` calls on same membership (both PENDING → ACTIVE)
   2. Assert: exactly one succeeds with status ACTIVE, the other either succeeds (idempotent) or fails gracefully
   3. Assert: no duplicate AuditLog entries for the same transition
@@ -232,9 +241,11 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 - **Depends on:** nothing
 
 #### TASK_02 — Wrap `after()` audit write with error handling (1,000-user gap)
+
 - **Agent:** Cody
 - **What:** Add try/catch around `db.auditLog.create` inside the `after()` callback in `transitionMembershipStatus`
 - **Steps:**
+
   1. Wrap audit write in try/catch
   2. On failure: `console.error` with context (entityId, action, error) — don't throw (transition already succeeded)
   3. Consider: add a `failedAuditWrites` counter metric for monitoring (scope-guard if too complex)
@@ -242,9 +253,11 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 - **Depends on:** nothing
 
 #### TASK_03 — E2E test plan for membership admin arc (10,000-user gap)
+
 - **Agent:** Petey (plan only, no implementation)
 - **What:** Write an E2E test plan document covering membership list → detail → status transition → role assignment → audit log display
 - **Steps:**
+
   1. Define Playwright test scenarios: navigate to membership list, click into detail, perform transition, verify status change, assign/remove role
   2. Identify prerequisite: admin auth in Playwright (dev-login route or seed admin user)
   3. Estimate complexity and session count for implementation
@@ -252,15 +265,18 @@ If additional work surfaces during execution, note it in SESSION file under `Ope
 - **Depends on:** nothing
 
 #### TASK_04 — Brand isolation documentation for transition action (10,000-user gap)
+
 - **Agent:** Cody
 - **What:** Document that `transitionMembershipStatus` finds by global `id` (not brand-scoped), which is acceptable because `cuid()` IDs are globally unique and the `adminActionClient` already gates admin access
 - **Steps:**
+
   1. Add inline comment in `actions.ts` explaining the brand-scoping rationale
   2. Note in SESSION file as a resolved decision
 - **Done means:** Documented — no code change needed
 - **Depends on:** nothing
 
 #### TASK_05 — Type check + verification
+
 - **Agent:** Cody
 - **Done means:** Zero TS errors
 - **Depends on:** TASK_01–04
@@ -305,14 +321,17 @@ TASK_01, TASK_02, TASK_03, TASK_04 can all run in parallel (no dependencies). TA
 ### Kaizen Reflection
 
 **1. Is this safe and secure?**
+
 - AuditLog writes are admin-only, append-only, with userId provenance. ✅
 - State machine transitions are server-enforced with before/after capture. ✅
 - What's documented but not proven: concurrent admin access behavior. Staged for 0151.
 
 **2. How many failed steps could we have prevented?**
+
 - 0 failed steps this session. The test writing runbook established clear patterns that prevented mock ordering bugs and fixture leaks.
 
 **3. Confidence at scale:**
+
 - 10 users: 9/10 — full test coverage of all action paths
 - 100 users: 8/10 — upsert + server-side state machine + fire-and-forget audit
 - 1,000 users: 7/10 — needs concurrency test + audit error resilience

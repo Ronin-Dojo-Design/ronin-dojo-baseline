@@ -213,6 +213,7 @@ enum MembershipStatus {
 ### Doce Pares Eskrima pricing model
 
 Per Brian's spec, Doce Pares is **all-levels** (no skill-level segmentation within a class). Pricing:
+
 - **Drop-in**: $10/class → `PricingModel.DROP_IN`, `amountCents: 1000`
 - **5-class punch card**: Buy 4 get 5th free → `PricingModel.PUNCH_CARD`, `amountCents: 4000`, `punchCardSize: 5`, `bonusSessions: 1`
 - **Private lessons**: Price varies by instructor → `PricingModel.PRIVATE_LESSON`, `amountCents` set per plan, `isPrivateLesson: true`
@@ -223,6 +224,7 @@ This same pattern applies to any program's drop-in and private lesson options.
 ### Admin customizability
 
 All of the following are admin-editable (no code change required to add new values):
+
 - **AgeGroup** — `isSystem: false` rows can be created/edited/deleted by admin
 - **SkillLevel** — same pattern
 - **PricingPlan** — fully admin-managed per program per org

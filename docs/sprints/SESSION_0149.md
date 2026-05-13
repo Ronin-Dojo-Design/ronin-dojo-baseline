@@ -84,9 +84,11 @@ Deliver Membership admin detail page with: (1) read-only membership info display
 ### Tasks
 
 #### TASK_01 — Role assignment server actions
+
 - **Agent:** Cody
 - **What:** Add `assignRoleToMembership` and `removeRoleFromMembership` actions to `server/admin/memberships/actions.ts`. Add Zod schemas for both.
 - **Steps:**
+
   1. Add `assignRoleSchema` (membershipId + roleId) and `removeRoleSchema` (membershipId + roleId) to `server/admin/memberships/schema.ts`
   2. Add `assignRoleToMembership` action — creates `MembershipRoleAssignment`, revalidates
   3. Add `removeRoleFromMembership` action — deletes `MembershipRoleAssignment`, revalidates
@@ -94,18 +96,22 @@ Deliver Membership admin detail page with: (1) read-only membership info display
 - **Depends on:** nothing
 
 #### TASK_02 — Membership detail page
+
 - **Agent:** Cody
 - **What:** Create `app/admin/memberships/[id]/page.tsx` with membership info display
 - **Steps:**
+
   1. Create `app/admin/memberships/[id]/page.tsx` — `withAdminPage`, fetch `findMembershipById` + `findRoleList`, render `Wrapper` with status actions + info grid + role panel
   2. Info grid: member name/email, organization, discipline, status badge, rank, member number, joined/left dates
 - **Done means:** Detail page renders with full membership info
 - **Depends on:** nothing (can parallel with TASK_01 — page shell doesn't need role actions yet)
 
 #### TASK_03 — Membership status actions component
+
 - **Agent:** Cody
 - **What:** Create `app/admin/memberships/[id]/_components/membership-status-actions.tsx` following `lead-status-actions.tsx` pattern
 - **Steps:**
+
   1. Client component with `useAction` hooks for `transitionMembershipStatus`
   2. Show valid transition buttons from `VALID_TRANSITIONS[membership.status]`
   3. Toast on success/error, `router.refresh()`
@@ -114,9 +120,11 @@ Deliver Membership admin detail page with: (1) read-only membership info display
 - **Depends on:** TASK_02
 
 #### TASK_04 — Role assignment management component
+
 - **Agent:** Cody
 - **What:** Create `app/admin/memberships/[id]/_components/role-assignment-panel.tsx`
 - **Steps:**
+
   1. Client component showing current role assignments as badges/chips with remove button
   2. Role selector (dropdown/select from `roleList` prop, filtering out already-assigned roles)
   3. `useAction` for `assignRoleToMembership` and `removeRoleFromMembership`
@@ -125,14 +133,17 @@ Deliver Membership admin detail page with: (1) read-only membership info display
 - **Depends on:** TASK_01, TASK_02
 
 #### TASK_05 — Wire list page row link to detail
+
 - **Agent:** Cody
 - **What:** Update `memberships-table-columns.tsx` — make member name column link to `/admin/memberships/[id]`
 - **Steps:**
-  1. Wrap member name cell in `<Link href={/admin/memberships/${row.original.id}}>` 
+
+  1. Wrap member name cell in `<Link href={/admin/memberships/${row.original.id}}>`
 - **Done means:** Clicking a membership in the list navigates to detail page
 - **Depends on:** TASK_02
 
 #### TASK_06 — Type check + verification
+
 - **Agent:** Cody
 - **What:** Run `bunx tsc --noEmit`, verify zero errors
 - **Done means:** Zero TS errors
@@ -256,6 +267,7 @@ TASK_01 and TASK_02 can run in parallel (no dependency). TASK_03 after TASK_02. 
 **1. Plan sanity:** Plans for 0147–0149 were well-scoped, single-concern sessions. Each followed the pattern: Petey plan → Cody executes → type check. No invalid assumptions found — each session built on verified server layer from prior sessions.
 
 **2. Dirstarter compliance:** All three sessions extended L1 patterns without replacing them:
+
 - 0147: Invite CRUD followed tools/leads admin page pattern exactly (withAdminPage, DataTable, form, detail page)
 - 0148: Membership list page followed identical pattern with faceted filters
 - 0149: Membership detail page followed leads `[id]/page.tsx` pattern (Wrapper + status actions + info grid)
@@ -282,14 +294,17 @@ TASK_01 and TASK_02 can run in parallel (no dependency). TASK_03 after TASK_02. 
 ### Kaizen Reflection
 
 **1. Is this safe and secure?**
+
 - Admin-only access is provably enforced (HOC + action client). Brand scoping is enforced by `adminActionClient` context.
 - What's documented but not proven: actual runtime behavior of role assignment panel (no browser screenshot). Tests that would close gaps: E2E test for assign/remove role, E2E test for status transition from detail page.
 
 **2. How many failed steps could we have prevented?**
+
 - 1 failed step: Turbopack chunk error from `VALID_TRANSITIONS` in `schema.ts`. Prevention: establish a code guardrail rule — "never import from a `schema.ts` file that uses `nuqs/server` in a `"use client"` component; use a separate `constants.ts` for shared values."
 - 1 process gap: 7 sessions without project-log entries. Prevention: add project-log check to quick-close checklist (it's in the protocol but wasn't enforced).
 
 **3. Confidence at scale:**
+
 - 100 users: 8/10 — admin pages work, role assignment is idempotent (upsert), state machine is server-enforced
 - 1,000 users: 7/10 — no pagination on role assignments per membership (unlikely to be >10 roles, but unverified), no transition audit trail
 - 10,000 users: 6/10 — no E2E tests, no load testing on membership queries with joins, no transition audit trail for compliance
@@ -301,6 +316,7 @@ TASK_01 and TASK_02 can run in parallel (no dependency). TASK_03 after TASK_02. 
 Kaizen aggregate 7 → per protocol: "Stage a remediation session covering the gaps before the next implementation session."
 
 **Recommendation:** SESSION_0150 should be a remediation session adding:
+
 1. Transition audit trail model + wiring
 2. E2E test for membership detail page + role assignment
 3. Code guardrail G-NEW: "no nuqs/server imports in client components"

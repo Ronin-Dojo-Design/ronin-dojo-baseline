@@ -67,11 +67,13 @@ Resolves SESSION_0150_FINDING_03, carried through 3 sessions. Membership admin h
 ### Tasks
 
 #### TASK_01 — Create membership E2E seed helper
+
 - **Agent:** Cody
 - **What:** Create `e2e/helpers/seed-membership.ts` — seeds an Organization, Discipline, and Membership for a test user. Returns IDs for cleanup.
 - **Done means:** Helper exports `seedMembership()` and `cleanupMembership()` functions
 
 #### TASK_02 — Scaffold membership admin list E2E spec
+
 - **Agent:** Cody
 - **What:** Create `e2e/admin/membership-list.spec.ts` with tests:
   - Admin can access `/admin/memberships` and sees a table
@@ -79,6 +81,7 @@ Resolves SESSION_0150_FINDING_03, carried through 3 sessions. Membership admin h
 - **Done means:** Both tests pass against dev server
 
 #### TASK_03 — Membership detail page E2E spec
+
 - **Agent:** Cody
 - **What:** Create `e2e/admin/membership-detail.spec.ts` with tests:
   - Admin navigates to `/admin/memberships/[id]`, sees member info (name, org, discipline, status badge)
@@ -87,11 +90,13 @@ Resolves SESSION_0150_FINDING_03, carried through 3 sessions. Membership admin h
 - **Done means:** Tests pass, cover detail page rendering
 
 #### TASK_04 — Status transition E2E test
+
 - **Agent:** Cody
 - **What:** In the detail spec, add a test that clicks a transition button (e.g., PENDING → ACTIVE) and verifies the status badge updates
 - **Done means:** Transition test passes
 
 #### TASK_05 — Type check + all E2E tests pass
+
 - **Agent:** Cody
 - **Done means:** `tsc --noEmit` zero errors, all membership E2E tests pass
 
@@ -144,7 +149,7 @@ TASK_01 → TASK_02 + TASK_03 → TASK_04 → TASK_05
 
 ## Review Log
 
-**SESSION_0153_REVIEW_01 — Doug Review + Full Close Review**
+### SESSION_0153_REVIEW_01 — Doug Review + Full Close Review
 
 - **Reviewer:** Doug
 - **Dirstarter docs check:** E2E tests follow existing pattern from `e2e/admin/tournament-list.spec.ts`. Auth helper, standalone PrismaClient, `createAuthenticatedUser` — all match L1 patterns.

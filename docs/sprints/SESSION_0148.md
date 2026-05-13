@@ -83,6 +83,7 @@ Deliver Membership admin list page with faceted filters (status, org, discipline
 ### Tasks
 
 #### TASK_01 — Enhance membership schema with status filter params
+
 - **Agent:** Cody
 - **What:** Add `parseAsArrayOf(parseAsStringEnum<MembershipStatus>(...))` for status filter to `membershipsTableParamsSchema`. Update `findMemberships` query to handle status array filter.
 - **Steps:**
@@ -92,6 +93,7 @@ Deliver Membership admin list page with faceted filters (status, org, discipline
 - **Depends on:** nothing
 
 #### TASK_02 — Membership admin list page + data table
+
 - **Agent:** Cody
 - **What:** Create `app/admin/memberships/page.tsx`, `memberships-table.tsx`, `memberships-table-columns.tsx` following invites pattern
 - **Steps:**
@@ -103,6 +105,7 @@ Deliver Membership admin list page with faceted filters (status, org, discipline
 - **Depends on:** TASK_01
 
 #### TASK_03 — Admin nav link for Memberships
+
 - **Agent:** Cody
 - **What:** Add Memberships to admin sidebar nav (if not already present)
 - **Steps:**
@@ -112,6 +115,7 @@ Deliver Membership admin list page with faceted filters (status, org, discipline
 - **Depends on:** TASK_02
 
 #### TASK_04 — Invite notification email template
+
 - **Agent:** Cody
 - **What:** Create `emails/invite-notification.tsx` React Email template. Wire into `createInvite` action (send on invite creation).
 - **Steps:**
@@ -121,6 +125,7 @@ Deliver Membership admin list page with faceted filters (status, org, discipline
 - **Depends on:** nothing (parallel with TASK_01/02)
 
 #### TASK_05 — Type check + verification
+
 - **Agent:** Cody
 - **What:** Run `bunx tsc --noEmit`, verify zero errors
 - **Done means:** Zero TS errors

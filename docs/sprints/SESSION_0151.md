@@ -71,6 +71,7 @@ Deliver: (1) concurrency test for membership transitions, (2) `after()` audit wr
 Per SESSION_0150 staged plan — all tasks pre-designed.
 
 #### TASK_01 — Concurrency test for membership transitions
+
 - **Agent:** Cody
 - **What:** Create `apps/web/server/admin/memberships/actions.concurrency.test.ts`
 - **Pattern:** `sop-test-writing.md` §8 (concurrency test)
@@ -84,6 +85,7 @@ Per SESSION_0150 staged plan — all tasks pre-designed.
 - **Depends on:** nothing
 
 #### TASK_02 — Wrap `after()` audit write with error handling
+
 - **Agent:** Cody
 - **What:** Add try/catch around `db.auditLog.create` in `transitionMembershipStatus`
 - **Steps:**
@@ -94,18 +96,21 @@ Per SESSION_0150 staged plan — all tasks pre-designed.
 - **Depends on:** nothing
 
 #### TASK_03 — E2E test plan for membership admin arc
+
 - **Agent:** Petey (plan only, no implementation)
 - **What:** Write E2E test plan covering membership list → detail → transition → role → audit display
 - **Done means:** Plan written in SESSION file
 - **Depends on:** nothing
 
 #### TASK_04 — Brand isolation documentation for transition action
+
 - **Agent:** Cody
 - **What:** Add inline comment in `actions.ts` explaining brand-scoping rationale
 - **Done means:** Documented
 - **Depends on:** nothing
 
 #### TASK_05 — Type check + verification
+
 - **Agent:** Cody
 - **Done means:** Zero TS errors, all tests pass
 - **Depends on:** TASK_01–04
