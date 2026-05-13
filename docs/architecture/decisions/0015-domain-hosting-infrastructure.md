@@ -4,13 +4,16 @@ slug: adr-0015
 type: adr
 status: accepted
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-05-13
+last_agent: claude-session-0160
 pairs_with:
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
+  - docs/runbooks/vercel-domain-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0159.md
+  - docs/sprints/SESSION_0160.md
 ---
 
 # ADR 0015 — Domain Hosting Infrastructure

@@ -4,14 +4,18 @@ slug: dns-verification-spec
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-05-13
+last_agent: claude-session-0160
 pairs_with:
   - docs/architecture/infrastructure/domain-hosting-registry.md
   - docs/architecture/infrastructure/email-delivery-spec.md
+  - docs/runbooks/vercel-domain-setup-runbook.md
+  - docs/runbooks/resend-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/infrastructure/README.md
+  - docs/sprints/SESSION_0159.md
+  - docs/sprints/SESSION_0160.md
 tags:
   - infrastructure
   - dns
