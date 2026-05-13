@@ -20,36 +20,49 @@ This is a **multi-brand martial arts SaaS platform** built on the Dirstarter tem
 
 ## Session rituals
 
+The rituals are agent-agnostic. The trigger differs per environment (Copilot/Codex chat: the words; Claude Code: `/bow-in` / `/bow-out` skills; CLI: a make target), but the steps are identical and binding. Source of truth lives in `docs/rituals/opening.md` and `docs/rituals/closing.md` — those files override anything restated here if they ever drift.
+
+When you stamp `last_agent` on touched docs, name the agent that actually executed (e.g., `copilot-session-NNNN`, `claude-session-NNNN`, `codex-session-NNNN`).
+
 ### Bow in (opening)
 
-When the user says **"bow in"**, **"start session"**, or **"open session"**:
+Trigger: **"bow in"**, **"start session"**, or **"open session"**. Execute `docs/rituals/opening.md` (or `.github/prompts/bow-in.prompt.md`). Minimum binding steps:
 
-1. Find the highest-numbered `docs/sprints/SESSION_NNNN.md`. Read its `Goal`, `Open decisions / blockers`, and `Next session` section.
-2. Skim `docs/architecture/program-plan.md` — find the current sprint row and its deliverable.
-3. Create the next `SESSION_NNNN.md` with `Date`, `Operator`, `Goal`, `Status: in-progress`.
-4. State the session goal and first task before starting work.
+1. Read the latest `docs/sprints/SESSION_NNNN.md` — `Goal`, `Open decisions / blockers`, `Next session`.
+2. Read `docs/protocols/WORKFLOW_5.0.md` — today's session-calendar row, primary lane, worktree; fill the Dirstarter alignment table. Skim `docs/architecture/program-plan.md` for context.
+3. Skim cross-references on demand only (plan-vs-current, ADRs, runbooks, dirstarter-docs-inventory Alignment URLs).
+4. Check `docs/protocols/failed-steps-log.md` and `docs/knowledge/wiki/drift-register.md` for `open` / `mitigated` entries in today's lane.
+5. Graphify-first discovery for cross-area lanes (`graphify stats` + `graphify query "<lane nouns>" --budget 2000`). No repo-wide `grep` / `rg` / `find` for task planning. If a path is known, Read it directly.
+6. Identify ONE task with explicit "done" criteria. If unclear or multi-part, invoke Petey (`docs/protocols/petey-plan.md`) first.
+7. Number tasks in `docs/protocols/project-log.md` TASK_PLAN_LOG (`SESSION_NNNN_TASK_01`, …) before implementation starts.
+8. Branch check: `git branch --show-current` + `git status --short`. Raise uncommitted changes or stale feature branches before starting.
+9. Create `docs/sprints/SESSION_{NEXT}.md` with **full JETTY 3.0 frontmatter** — `title`, `slug`, `type: session--open`, `status: in-progress`, `created`, `updated`, `last_agent: <agent>-session-NNNN`, `sprint`, `pairs_with`, `backlinks`. Fill `Date`, `Operator: Brian + <agent>`, `Goal`.
+10. State the goal and first task before any work. Proceed as Petey or Cody (Cody must complete `docs/protocols/cody-preflight.md` before writing code).
 
 ### Bow out (closing)
 
-When the user says **"bow out"**, **"close session"**, or **"end session"**:
+Trigger: **"bow out"**, **"close session"**, or **"end session"**. Execute `docs/rituals/closing.md` (or `.github/prompts/bow-out.prompt.md`). Default to **quick close**; escalate to **full close** when the user says "full close", at end of day / sprint / milestone, or when the session touched schema, auth, payments, deployment, production data, or governance protocols.
 
-1. Stop new work. Let any in-flight tool calls finish.
-2. Update the current `SESSION_NNNN.md`:
-   - `What landed` — bullets of completed work
-   - `Files touched` — paths + one-line note
-   - `Decisions resolved` — anything signed off
-   - `Open decisions / blockers` — anything unresolved
-   - `Next session: Goal + Inputs to read + First task`
-3. Default to **quick close** (`Status: closed-quick`). Escalate to **full close** (`Status: closed-full`) when the user says "full close", at end of day, end of sprint, or before context loss. Full close adds a `## Reflections` section.
-4. State: "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
+Quick close minimum binding steps:
+
+1. Pause the work; let in-flight tool calls finish.
+2. Update the current `SESSION_NNNN.md`: `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session: Goal + Inputs to read + First task`, `Task Log` (TASK_PLAN_LOG IDs), `Review Log`, `Hostile close review`, `ADR / ubiquitous-language check`. **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line update together in one edit pass.
+3. **Project-log gate.** Verify current session has at least one entry in `docs/protocols/project-log.md` via Graphify discovery + exact-file count (`awk 'index($0, "SESSION_NNNN") { count++ } END { print count + 0 }' docs/protocols/project-log.md`). Must return >= 1 before any closed status. No repo-wide text search for this gate.
+4. JETTY 3.0 sweep on touched files — frontmatter, bidirectional backlinks, wiki-index completeness (FS-0019), `bun run wiki:lint` (record exact count + whether failures are pre-existing), G8/R8 incremental markdown fix.
+5. Refine session type if clearly one mode: `session--plan`, `session--implement`, or `session--review`. Mixed sessions stay `session--open`.
+6. Git hygiene — branch check, worktree check, stage/review, conventional commit, push only if authorized. *(Full close defers this to the end.)*
+7. `graphify update .` after git hygiene (if installed and files changed); report node/edge/community counts.
+8. State: "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
+
+Full close adds: `## Reflections`, Giddy + Doug Hostile Close Review + Review & Recommend, `## Full close evidence` table with proof per row, ADR/ubiquitous-language check, memory sweep, next-session unblock confirmation. Full close execution order defers git hygiene + Graphify + bow-out line to the very end to avoid a two-pass commit cycle. `closed-full` is a proof state — missing evidence means status stays `in-progress` or `closed-quick`.
 
 ### Session macro (standard operating prompt)
 
 The typical session follows this chain. Apply it automatically when the user says "bow in":
 
 1. **Bow in** per `docs/rituals/opening.md`.
-2. **Graphify-first navigation** — use `graphify query` and `graphify explain` for finding files and docs. Do NOT use raw grep for task planning or file discovery. Only fall back to grep for exact-string edits within a known file. If the graph is ≤1 commit behind HEAD and was updated at end of the last session, skip `graphify update`; otherwise run it. See `docs/runbooks/graphify-repo-memory.md`.
-3. **Petey plans** — act as Petey (`docs/agents/petey.md`) to read the previous session's staged tasks, decompose if needed, then orchestrate and assign suitable agents (Cody for implementation, Doug for review). Manage handoffs between agents within the session.
+2. **Graphify-first navigation** — `graphify query` and `graphify explain` for finding files and docs. No raw `grep` / `rg` / `find` for task planning or file discovery. Only fall back to text search for exact-string edits within a known file. If the graph is ≤1 commit behind HEAD and was updated at end of the last session, skip `graphify update`; otherwise run it. See `docs/runbooks/graphify-repo-memory.md`.
+3. **Petey plans** — act as Petey (`docs/agents/petey.md`) to read the previous session's staged tasks, decompose if needed, then orchestrate and assign suitable agents (Cody for implementation, Doug for review). Manage handoffs between agents within the session. Parallelize independent reads/searches via subagents or worktrees when it pays off.
 4. **Cody executes** — hand off to Cody for implementation tasks, one at a time, type-check between tasks. Cody runs `docs/protocols/cody-preflight.md` before writing code.
 5. **Petey closes** — hand back to Petey for `docs/rituals/closing.md` bow-out:
    - **Full close** if docs were touched, or if the user requests it, or at end of day/sprint/milestone.

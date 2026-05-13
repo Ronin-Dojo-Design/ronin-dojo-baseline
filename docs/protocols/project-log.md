@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-13
-last_agent: codex-session-0158
+last_agent: claude-session-0159
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -35,6 +35,7 @@ backlinks:
   - docs/sprints/SESSION_0111.md
   - docs/sprints/SESSION_0157.md
   - docs/sprints/SESSION_0158.md
+  - docs/sprints/SESSION_0159.md
 ---
 
 # Project Log
@@ -1127,3 +1128,38 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Sources:** Local `opening.md`, `closing.md`, `graphify-repo-memory.md`, `failed-steps-log.md`; Vercel CLI `vercel --version`.
 - **Verdict:** Aligned. The patch addresses FS-0020 directly, keeps Graphify as navigation rather than proof, and preserves exact-file verification after graph selection. DNS repair remains intentionally unmodified until dashboard-specific records are available.
 - **Kaizen aggregate:** 9 — process patch is narrow and removes the known close-order loop.
+
+### SESSION_0159 — Copilot Prompt Sync + Vercel/Resend DNS Repair
+
+**Date:** 2026-05-13
+**Agent:** claude-session-0159
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0159_TASK_01 | Sync Copilot ritual surface (`.github/copilot-instructions.md` + `bow-in.prompt.md` + `bow-out.prompt.md`) to `opening.md` / `closing.md` v5.0 as thin pointers + minimum binding steps | ✅ done |
+| SESSION_0159_TASK_02 | DNS repair for `baselinemartialarts.com`: Vercel CLI auth + `vercel domains inspect`, dig diff vs. Resend dashboard, 10 Bluehost edits applied and verified | ✅ done |
+
+**Result:** Copilot ritual surface now matches `opening.md` / `closing.md` v5.0; drift between Copilot path and Claude/Codex paths eliminated. Bluehost DNS for `baselinemartialarts.com` fully aligned to Vercel (apex A + www CNAME) and Resend (DKIM TXT + send MX/SPF + kept inbound MX); stale records cleared. Discovered pre-existing production build pipeline regression (no committed `pnpm-lock.yaml` → Vercel falls back to npm install → `next: command not found`); fixed in same close pass by committing the lockfile (Part A) so the next session can verify a successful production deploy and Let's Encrypt cert issuance.
+
+#### Findings
+
+**SESSION_0159_FINDING_01 — `dns-verification-spec.md` is stale**
+
+- **File:** `docs/architecture/infrastructure/dns-verification-spec.md`
+- **Issue:** Documents a Resend verification flow using `resend-verification=rv_<token>` TXT at apex + `CNAME em.<domain>`. Neither is in Resend's current dashboard. Actual pattern: DKIM TXT at `resend._domainkey` + MX/TXT at `send` + MX at apex (already in spec for inbound).
+- **Impact:** During SESSION_0159 the spec misled requirement extraction; the Resend dashboard screenshot caught the mismatch before bad records were applied.
+- **Required follow-up:** Refresh spec to match current Resend dashboard pattern, with a "verified against Resend UI on `YYYY-MM-DD`" stamp.
+- **Status:** open
+
+#### Review
+
+**SESSION_0159_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0159_TASK_01, SESSION_0159_TASK_02
+- **Dirstarter docs check:** Not applicable — Copilot prompts (project-config files) + DNS infrastructure; no L1 Dirstarter baseline layer touched. Component Inventory Gate references (G6, FS-0001, `dirstarter-component-inventory.md`, `code-guardrails.md`) verified current via `graphify query` and left unchanged.
+- **Sources:** Local `opening.md`, `closing.md`, `.github/copilot-instructions.md`, `dns-verification-spec.md`, `resend-setup-runbook.md`; live `dig` (incl. authoritative `@ns1.bluehost.com`, public `@1.1.1.1`, `@8.8.8.8`); Vercel CLI `vercel domains inspect`, `vercel project ls`, `vercel teams ls`; Resend dashboard screenshot; ADR 0006 + ADR 0015.
+- **Verdict:** Aligned. Copilot ritual surface now single-source-of-truth-disciplined via thin-pointer pattern; DNS work followed ADR 0015 (Bluehost-as-DNS) and ADR 0006 (multi-domain Vercel); stale spec doc tracked as finding (scope discipline preserved); build pipeline regression fixed as part of close so the next session opens unblocked.
+- **Kaizen aggregate:** 8 — well-scoped, surfaced one important finding, and resolved an adjacent regression without scope creep (single Part-A commit, explicit user authorization).
