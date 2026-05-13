@@ -18,6 +18,7 @@ backlinks:
 # SOP — End-to-End User Lifecycle
 
 ## Purpose
+
 Show the intended lifecycle from first visit through active membership, training, competition, and publication/state touchpoints.
 
 This is low-fi by design.
@@ -46,7 +47,9 @@ flowchart LR
 ```
 
 ## Outcome
+
 The user now exists as:
+
 - account
 - Passport
 - DirectoryProfile
@@ -89,6 +92,7 @@ flowchart TD
 ```
 
 ## Outcome
+
 The same person now has a contextual shell inside one organization and one discipline.
 
 ---
@@ -120,7 +124,8 @@ flowchart TD
     PRIV & PUB --> DIR[Searchable directory]
 ```
 
-### Visibility knobs
+## Visibility knobs
+
 - show email?
 - show phone?
 - show orgs?
@@ -164,6 +169,7 @@ flowchart TD
 ```
 
 ## Outcome
+
 The user can progress in a structured training path.
 
 ---
@@ -186,7 +192,8 @@ Membership rank updates
 Directory / tournament eligibility can change
 ```
 
-### Important rule
+## Important rule
+
 Historic tournament entries must not be rewritten by later rank changes.
 
 ---
@@ -326,7 +333,7 @@ Ongoing: subscription renewals / punch card tracking / expiry
 Cancellation: webhook → transition to EXPIRED
 ```
 
-### Lifecycle variants by pricing model
+## Lifecycle variants by pricing model
 
 | PricingModel | Payment type | Ongoing tracking |
 | --- | --- | --- |
@@ -371,7 +378,8 @@ One user
 same account, different app context
 ```
 
-### Key rule
+## Key rule
+
 One human can move across brands without needing a separate backend identity.
 
 ---
@@ -506,7 +514,7 @@ Discipline listing (reference data)
   +--> no "submission" flow — admin-only
 ```
 
-### Discipline as a cross-cutting filter
+## Discipline as a cross-cutting filter
 
 ```mermaid
 flowchart TD

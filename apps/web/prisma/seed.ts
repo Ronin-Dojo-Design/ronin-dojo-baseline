@@ -1652,6 +1652,155 @@ async function main() {
     }
   }
 
+  // =========================================================================
+  // COURSES — Safety, Fundamentals (per rank), Coaches (SESSION_0156)
+  // =========================================================================
+  // For each discipline, generate:
+  //   1 × Safety School Course (SAFETY)
+  //   N × Fundamentals Course — one per rank in each rank system (BELT_RANK)
+  //   1 × Coaches Course (COACH)
+  // Each course gets 3 starter curriculum items.
+  // =========================================================================
+
+  const allDisciplines = [
+    bjj, eskrima, muayThai, boxing, selfDefense,
+    judo, kajukenbo, karate, tkd, wrestling, kravMaga, wingChun,
+  ]
+
+  let courseCount = 0
+  let curriculumItemCount = 0
+
+  for (const discipline of allDisciplines) {
+    const disc = await db.discipline.findUnique({
+      where: { id: discipline.id },
+      select: { name: true, slug: true },
+    })
+    if (!disc) continue
+
+    // --- Safety School Course ---
+    const safetyCourse = await db.course.create({
+      data: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        organizationId: baselineOrg.id,
+        disciplineId: discipline.id,
+        title: `${disc.name} — Safety School`,
+        slug: `${disc.slug}-safety-school`,
+        description: `Mandatory safety orientation for ${disc.name} students. Covers training etiquette, injury prevention, emergency procedures, and facility rules.`,
+        certificationType: "SAFETY",
+        isPublished: true,
+        publishedAt: now,
+      },
+    })
+    const safetyItems = [
+      { order: 1, title: "Training Etiquette & Dojo Rules", notes: "Proper behavior, bowing protocols, hygiene standards, and respect for training partners." },
+      { order: 2, title: "Injury Prevention & Warm-Up Protocol", notes: "Dynamic stretching, joint preparation, and common injury patterns specific to this discipline." },
+      { order: 3, title: "Emergency Procedures & First Aid Basics", notes: "Emergency contacts, concussion protocol, when to stop training, and basic first aid." },
+    ]
+    for (const item of safetyItems) {
+      await db.curriculumItem.create({
+        data: { courseId: safetyCourse.id, ...item },
+      })
+      curriculumItemCount++
+    }
+    courseCount++
+
+    // --- Fundamentals Courses (per rank system, per rank) ---
+    const rankSystems = await db.rankSystem.findMany({
+      where: { disciplineId: discipline.id },
+      include: { ranks: { orderBy: { sortOrder: "asc" } } },
+    })
+
+    for (const rs of rankSystems) {
+      const rsSlug = rs.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")
+      const rsPrefix = rankSystems.length > 1 ? `${rsSlug}-` : ""
+      for (const rank of rs.ranks) {
+        const rankSlug = (rank.shortName ?? rank.name).toLowerCase().replace(/[^a-z0-9]/g, "-")
+        const fundamentalsCourse = await db.course.create({
+          data: {
+            brand: "BASELINE_MARTIAL_ARTS",
+            organizationId: baselineOrg.id,
+            disciplineId: discipline.id,
+            rankId: rank.id,
+            title: rankSystems.length > 1
+              ? `${disc.name} Fundamentals (${rs.name}) — ${rank.name}`
+              : `${disc.name} Fundamentals — ${rank.name}`,
+            slug: `${disc.slug}-fundamentals-${rsPrefix}${rankSlug}`,
+            description: `Fundamentals curriculum for ${disc.name} students working toward ${rank.name}. Covers required techniques, concepts, and competency standards.`,
+            certificationType: "BELT_RANK",
+            isPublished: true,
+            publishedAt: now,
+          },
+        })
+        const fundItems = [
+          { order: 1, title: "Core Techniques & Drills", notes: `Required techniques for ${rank.name} proficiency. Includes partner drills and solo practice.` },
+          { order: 2, title: "Concepts & Principles", notes: `Foundational concepts expected at the ${rank.name} level. Covers strategy, timing, and positioning.` },
+          { order: 3, title: "Competency Assessment Criteria", notes: `Evaluation standards for ${rank.name}. What the student must demonstrate to progress.` },
+        ]
+        for (const item of fundItems) {
+          await db.curriculumItem.create({
+            data: { courseId: fundamentalsCourse.id, ...item },
+          })
+          curriculumItemCount++
+        }
+        courseCount++
+      }
+    }
+
+    // --- Coaches Course ---
+    const coachesCourse = await db.course.create({
+      data: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        organizationId: baselineOrg.id,
+        disciplineId: discipline.id,
+        title: `${disc.name} — Coaches Certification`,
+        slug: `${disc.slug}-coaches-certification`,
+        description: `Coaches certification course for ${disc.name}. Covers teaching methodology, class management, student safety, and curriculum delivery.`,
+        certificationType: "COACH",
+        isPublished: true,
+        publishedAt: now,
+      },
+    })
+    const coachItems = [
+      { order: 1, title: "Teaching Methodology & Class Structure", notes: "How to plan and deliver effective classes. Warm-up, technique blocks, drilling, and cool-down." },
+      { order: 2, title: "Student Safety & Risk Management", notes: "Spotting fatigue, managing sparring intensity, handling injuries, and safeguarding minors." },
+      { order: 3, title: "Curriculum Delivery & Assessment", notes: "How to use the rank curriculum, track student progress, and conduct fair evaluations." },
+    ]
+    for (const item of coachItems) {
+      await db.curriculumItem.create({
+        data: { courseId: coachesCourse.id, ...item },
+      })
+      curriculumItemCount++
+    }
+    courseCount++
+  }
+
+  console.log(`Seeded ${courseCount} courses with ${curriculumItemCount} curriculum items`)
+
+  // --- Test enrollment + completion fixtures ---
+  // Enroll sensei in BJJ Safety course, complete first item
+  const bjjSafetyCourse = await db.course.findFirst({
+    where: { brand: "BASELINE_MARTIAL_ARTS", slug: "bjj-safety-school" },
+    include: { curriculumItems: { orderBy: { order: "asc" } } },
+  })
+  if (bjjSafetyCourse && senseiUser) {
+    const enrollment = await db.courseEnrollment.create({
+      data: {
+        userId: senseiUser.id,
+        courseId: bjjSafetyCourse.id,
+      },
+    })
+    if (bjjSafetyCourse.curriculumItems[0]) {
+      await db.curriculumItemCompletion.create({
+        data: {
+          enrollmentId: enrollment.id,
+          curriculumItemId: bjjSafetyCourse.curriculumItems[0].id,
+          verifiedById: senseiUser.id,
+        },
+      })
+    }
+    console.log("Seeded 1 CourseEnrollment + 1 CurriculumItemCompletion (sensei → BJJ Safety)")
+  }
+
   console.log("Seeding completed!")
 }
 

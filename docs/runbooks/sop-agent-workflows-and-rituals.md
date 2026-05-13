@@ -41,17 +41,20 @@ active, adopted SESSION_0010 (2026-04-27)
 ### 1. Active agent posture
 
 #### Core active triangle
+
 - **Petey** = orchestrator / planner / compression
 - **Cody** = builder / implementer
 - **Doug** = QA / proof / closure discipline
 
 #### Extended support lanes
+
 - **Iggy** = automation / evidence / runner support
 - **Brandon** = brand strategy / copy / rollout language
 - **Desi** = design system / UI polish / surface clarity
 - **Giddy** = repo-health / governance / canonical reduction
 
 #### Practical rule
+
 Only load the extra personas when the task really needs them.
 
 ---
@@ -87,6 +90,7 @@ begin work
 ```
 
 #### Bow-in outputs
+
 - clear session goal
 - one task
 - one new SESSION file
@@ -118,6 +122,7 @@ bow out line
 ```
 
 #### Bow-out outputs
+
 - clean session record
 - touched files listed
 - blockers named
@@ -147,6 +152,7 @@ user asks for change / plan / direction
 ```
 
 #### Petey rule
+
 Compression before expansion.
 
 ---
@@ -173,6 +179,7 @@ hand back to Doug / Petey closeout
 ```
 
 #### Cody rule
+
 Build the smallest thing that proves the path.
 
 ---
@@ -201,6 +208,7 @@ close lane only if proof exists
 ```
 
 #### Doug rule
+
 No imaginary readiness.
 
 ---
@@ -231,6 +239,7 @@ is this safe to automate?
 ```
 
 #### Iggy rule
+
 Automate repeatable proof first, not product ownership.
 
 ---
@@ -238,6 +247,7 @@ Automate repeatable proof first, not product ownership.
 ### 8. Folder map recommendation
 
 #### Existing repo-native folders
+
 - `docs/agents/`
 - `docs/protocols/`
 - `docs/rituals/`
@@ -248,14 +258,18 @@ Automate repeatable proof first, not product ownership.
 #### Recommended stable role for each
 
 ##### `docs/agents/`
+
 Persona definitions:
+
 - Petey
 - Cody
 - Doug
 - optional support personas
 
 ##### `docs/protocols/`
+
 Workflow procedures:
+
 - chat handoff
 - code guardrails
 - wiki lint
@@ -263,18 +277,24 @@ Workflow procedures:
 - future content review gates
 
 ##### `docs/rituals/`
+
 Human/agent session rituals:
+
 - opening
 - closing
 
 ##### `docs/sprints/`
+
 Chronological session state:
+
 - `SESSION_0001.md`
 - `SESSION_0002.md`
 - etc.
 
 ##### `docs/runbooks/`
+
 Operational procedures:
+
 - database
 - prisma workflow
 - deploy
@@ -283,7 +303,9 @@ Operational procedures:
 - incident recovery
 
 ##### `docs/knowledge/wiki/`
+
 Structured repo memory:
+
 - index
 - concepts
 - file explainers
@@ -297,6 +319,7 @@ Structured repo memory:
 Do **not** import the whole old protocol machine at once.
 
 #### Keep active now
+
 - opening ritual
 - closing ritual
 - chat handoff
@@ -305,6 +328,7 @@ Do **not** import the whole old protocol machine at once.
 - prisma/database runbooks
 
 #### Add next only if needed
+
 - content publish protocol
 - staging proof protocol
 - release cut protocol
@@ -312,6 +336,7 @@ Do **not** import the whole old protocol machine at once.
 - media proof bundle protocol
 
 #### Defer until complexity earns it
+
 - heavy branch-monitor systems
 - massive persona loops
 - multi-file redundant state packs
@@ -322,6 +347,7 @@ Do **not** import the whole old protocol machine at once.
 ### 10. Quick-start operator stack
 
 For most sessions:
+
 1. bow in
 2. latest session
 3. program plan

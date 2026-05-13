@@ -1,4 +1,4 @@
--re--
+---
 title: "Stripe Setup Runbook"
 slug: stripe-setup-runbook
 type: runbook
@@ -7,19 +7,21 @@ created: 2026-05-08
 updated: 2026-05-08
 last_agent: codex-session-0098-plan
 pairs_with:
-  - docs/sprints/SESSION_0098.md
-  - docs/knowledge/wiki/manual-boundary-registry.md
-  - docs/architecture/monetization-entitlements-spec.md
-  - docs/architecture/security-privacy-payments-monitoring-plan.md
+
+- docs/sprints/SESSION_0098.md
+- docs/knowledge/wiki/manual-boundary-registry.md
+- docs/architecture/monetization-entitlements-spec.md
+- docs/architecture/security-privacy-payments-monitoring-plan.md
 backlinks:
-  - docs/knowledge/wiki/index.md
+- docs/knowledge/wiki/index.md
 tags:
-  - stripe
-  - payments
-  - webhooks
-  - subscriptions
-  - coupons
-  - connect
+- stripe
+- payments
+- webhooks
+- subscriptions
+- coupons
+- connect
+
 ---
 
 # Stripe Setup Runbook
@@ -38,13 +40,13 @@ Do not subscribe events before the app has a handler and test coverage for them.
 
 ## Source Docs
 
-- Stripe API keys: https://docs.stripe.com/keys
-- Stripe webhooks: https://docs.stripe.com/webhooks
-- Stripe webhook signatures: https://docs.stripe.com/webhooks/signature
-- Stripe CLI: https://docs.stripe.com/stripe-cli/use-cli
-- Stripe subscriptions webhooks: https://docs.stripe.com/billing/subscriptions/webhooks
-- Stripe Connect webhooks: https://docs.stripe.com/connect/webhooks
-- Connected-account payouts: https://docs.stripe.com/connect/payouts-connected-accounts
+- Stripe API keys: <https://docs.stripe.com/keys>
+- Stripe webhooks: <https://docs.stripe.com/webhooks>
+- Stripe webhook signatures: <https://docs.stripe.com/webhooks/signature>
+- Stripe CLI: <https://docs.stripe.com/stripe-cli/use-cli>
+- Stripe subscriptions webhooks: <https://docs.stripe.com/billing/subscriptions/webhooks>
+- Stripe Connect webhooks: <https://docs.stripe.com/connect/webhooks>
+- Connected-account payouts: <https://docs.stripe.com/connect/payouts-connected-accounts>
 
 ## Environment Variables
 
@@ -181,16 +183,16 @@ Restart the dev server after changing `.env`.
 https://<domain>/api/stripe/webhooks
 ```
 
-6. Select only the current seven payment/access events listed above.
-7. Create the destination.
-8. Open the destination and reveal/copy the signing secret.
-9. Add the secret to the deployed environment:
+1. Select only the current seven payment/access events listed above.
+2. Create the destination.
+3. Open the destination and reveal/copy the signing secret.
+4. Add the secret to the deployed environment:
 
 ```env
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-10. Trigger a test Checkout or use Stripe test events to verify delivery.
+1. Trigger a test Checkout or use Stripe test events to verify delivery.
 
 ## Coupons and Promotion Codes
 

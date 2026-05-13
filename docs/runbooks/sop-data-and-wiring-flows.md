@@ -19,7 +19,9 @@ backlinks:
 # SOP — Data Flows and Wiring Flows
 
 ## Purpose
+
 Document the major system flows in low-fi ASCII so:
+
 - humans can reason about the repo quickly
 - future agents do not rebuild the same mental model from scratch
 - product, auth, content, and brand wiring stay separate
@@ -104,6 +106,7 @@ flowchart TD
 ```
 
 ### Key rule
+
 Host brand and active app brand may align, but they are not always the same thing.
 
 ---
@@ -258,6 +261,7 @@ flowchart TD
 ```
 
 ### Why snapshot matters
+
 Registration history must not be rewritten by later promotions or organization changes.
 
 ---
@@ -265,6 +269,7 @@ Registration history must not be rewritten by later promotions or organization c
 ## 7. Content truth flow (current + emerging)
 
 ## Current public long-form content
+
 ```text
 Authoring in repo
    |
@@ -279,6 +284,7 @@ public blog/article output
 ```
 
 ## Emerging structured editorial flow
+
 ```text
 Capture / draft / knowledge
    |
@@ -294,7 +300,9 @@ render / publish / campaign outputs
 ```
 
 ### Key rule
+
 Do not confuse:
+
 - wiki knowledge pages
 - current live MDX blog content
 - future reusable content-atom operational flow
