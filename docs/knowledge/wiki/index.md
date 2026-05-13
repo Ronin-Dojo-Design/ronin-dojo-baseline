@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-12
 author: Brian + Copilot
-last_agent: copilot-session-0142
+last_agent: copilot-session-0150
 ---
 
 # LLM Wiki Index
@@ -205,6 +205,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0147](../../sprints/SESSION_0147.md) | session--implement | closed-full |
 | [SESSION_0148](../../sprints/SESSION_0148.md) | session--implement | closed-quick |
 | [SESSION_0149](../../sprints/SESSION_0149.md) | session--implement | closed-full |
+| [SESSION_0150](../../sprints/SESSION_0150.md) | session--implement | closed-full |
 
 ## Protocols
 
@@ -254,6 +255,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deployment.md) | runbook | active |
+| [SOP — Test Writing Patterns](../../runbooks/sop-test-writing.md) | runbook | active |
 
 ## Code files (annotated)
 

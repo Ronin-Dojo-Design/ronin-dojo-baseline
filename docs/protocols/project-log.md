@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-12
-last_agent: copilot-session-0142
+last_agent: copilot-session-0150
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -970,3 +970,57 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** Audit trail gap; hostile reviews can't reference task IDs
 - **Required follow-up:** Enforce project-log gate in quick-close ritual
 - **Status:** addressed (backfilled)
+
+### SESSION_0150 — Membership Transition Audit Trail + Integration Tests
+
+- **Sprint:** S6
+- **Type:** session--implement (remediation)
+- **Agent:** Copilot (Petey → Cody)
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0150_TASK_01 | Wire AuditLog into transitionMembershipStatus via after() callback | ✅ done |
+| SESSION_0150_TASK_02 | Integration tests for membership actions (10 tests, 27 assertions) | ✅ done |
+| SESSION_0150_TASK_03 | Add code guardrail G7 (no nuqs/server in client components) | ✅ done |
+| SESSION_0150_TASK_04 | Type check — zero TS errors | ✅ done |
+| SESSION_0150_EXTRA | Created sop-test-writing.md test writing runbook | ✅ done |
+
+**Result:** All tasks completed. Kaizen aggregate improved from 7 → 8. Remediation addressed SESSION_0149 findings: audit trail (FINDING_01 partial — integration tests added, E2E tests staged), client/server boundary (FINDING_02 — G7 guardrail codified).
+
+#### Review
+
+**SESSION_0150_REVIEW_01 — Full Close Review**
+
+- **Reviewer:** Giddy + Doug (hostile close)
+- **Dirstarter docs check:** Not applicable — no L1 layers touched
+- **Sources:** N/A
+- **Verdict:** Aligned. Pure L2 extension. 10 integration tests with real Postgres. AuditLog wiring is append-only, admin-gated. Kaizen aggregate: 8. Staged SESSION_0151 for concurrency + resilience gaps.
+
+### SESSION_0150_FINDING_01 — No concurrent transition test
+
+- **Severity:** medium
+- **Task:** SESSION_0150_TASK_01
+- **Evidence:** Two parallel admins transitioning same membership untested
+- **Impact:** Last-write-wins behavior unproven at 1,000+ scale
+- **Required follow-up:** Concurrency test in SESSION_0151
+- **Status:** open — staged for SESSION_0151_TASK_01
+
+### SESSION_0150_FINDING_02 — after() audit failure is silent
+
+- **Severity:** low
+- **Task:** SESSION_0150_TASK_01
+- **Evidence:** `after()` callback has no try/catch — if `db.auditLog.create` fails, error is swallowed
+- **Impact:** Transition succeeds but audit trail has gap — no visibility into failure
+- **Required follow-up:** Add try/catch with console.error in SESSION_0151
+- **Status:** open — staged for SESSION_0151_TASK_02
+
+### SESSION_0150_FINDING_03 — E2E tests still missing for membership admin
+
+- **Severity:** medium
+- **Task:** SESSION_0149_FINDING_01 (carried)
+- **Evidence:** No Playwright tests for membership list/detail/transition/role pages
+- **Impact:** Runtime browser behavior unverified
+- **Required follow-up:** E2E test plan in SESSION_0151, implementation in future session
+- **Status:** open — staged for SESSION_0151_TASK_03

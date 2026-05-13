@@ -11,7 +11,7 @@ import { idsSchema } from "~/server/admin/shared/schema"
 
 export const transitionMembershipStatus = adminActionClient
   .inputSchema(transitionMembershipSchema)
-  .action(async ({ parsedInput: { id, toStatus }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { id, toStatus }, ctx: { db, revalidate, brand, user } }) => {
     const membership = await db.membership.findUnique({
       where: { id },
       select: { id: true, status: true },
@@ -28,6 +28,8 @@ export const transitionMembershipStatus = adminActionClient
       )
     }
 
+    const previousStatus = membership.status
+
     const updated = await db.membership.update({
       where: { id },
       data: {
@@ -38,6 +40,18 @@ export const transitionMembershipStatus = adminActionClient
     })
 
     after(async () => {
+      await db.auditLog.create({
+        data: {
+          brand: brand,
+          action: "STATUS_TRANSITION",
+          entityType: "Membership",
+          entityId: id,
+          before: { status: previousStatus },
+          after: { status: toStatus },
+          userId: user.id,
+        },
+      })
+
       revalidate({
         paths: ["/admin/memberships"],
         tags: ["memberships", `membership-${updated.id}`],

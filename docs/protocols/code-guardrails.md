@@ -4,7 +4,8 @@ slug: code-guardrails
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-12
+last_agent: copilot-session-0150
 ---
 
 # Code Guardrails
@@ -120,3 +121,21 @@ Consult [`dirstarter-component-inventory.md`](../knowledge/wiki/dirstarter-compo
 | `<a href=...>` | `Link` from `components/common/link.tsx` |
 
 Violations are classified as **FS-0001** in the failed-steps log.
+
+### G7 — No nuqs/server imports in client components
+
+Never import from a file that uses `nuqs/server` (e.g., `createSearchParamsCache`) in a `"use client"` component. Turbopack chunks `nuqs/server` as server-only, causing runtime errors like `Cannot use import statement outside a module`.
+
+**Pattern:** Extract shared constants (state machines, enum maps, config objects) to a separate `constants.ts` file with no server-only imports. Import from `constants.ts` in client components.
+
+```typescript
+// ❌ BAD — client component importing from schema.ts that uses nuqs/server
+"use client"
+import { VALID_TRANSITIONS } from "~/server/admin/memberships/schema" // 💥 runtime error
+
+// ✅ GOOD — shared constants in a separate file
+"use client"
+import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants" // ✅ no server deps
+```
+
+**Discovery:** SESSION_0149 — Turbopack chunk error when `membership-status-actions.tsx` imported from `schema.ts`.
