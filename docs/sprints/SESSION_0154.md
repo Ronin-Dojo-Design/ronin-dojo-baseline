@@ -28,10 +28,6 @@ Brian Scott + Copilot (Petey → Cody)
 1. Fix P2028 transaction timeout in `findMemberships` query — replace `$transaction` with `Promise.all` for read-only list+count pattern.
 2. Add optimistic locking (`version` column) to Registration model, matching the Membership pattern from SESSION_0152.
 
-## Status
-
-in-progress
-
 ## Failed Steps / Drift Check
 
 - No open failed steps in the membership or registration area

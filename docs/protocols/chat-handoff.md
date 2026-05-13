@@ -35,7 +35,8 @@ A SESSION file has these sections, in this order:
 **Date:** YYYY-MM-DD
 **Operator:** {who is running the session — human + LLM, or just human}
 **Goal:** {one sentence, set at bow-in}
-**Status:** {one of: in-progress, closed-quick, closed-full}
+
+<!-- Status lives in frontmatter only (status: in-progress | closed-quick | closed-full) -->
 
 ## What landed
 
@@ -70,9 +71,9 @@ A SESSION file has these sections, in this order:
 
 ## When to write the SESSION file
 
-- **Bow-in (opening ritual):** create the file at the start of the session, fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. Optionally pre-populate `Inputs to read` from your plan.
+- **Bow-in (opening ritual):** create the file at the start of the session, fill in `Date`, `Operator`, `Goal`. Set frontmatter `status: in-progress`. Optionally pre-populate `Inputs to read` from your plan.
 - **During the session:** update `Files touched` and `What landed` as you go (or at the end — whatever feels light).
-- **Bow-out (closing ritual):** finalize `What landed`, `Decisions resolved`, `Open decisions`, `Next session`. Set `Status` to `closed-quick` or `closed-full`. If full-close, fill in `Reflections`.
+- **Bow-out (closing ritual):** finalize `What landed`, `Decisions resolved`, `Open decisions`, `Next session`. Set frontmatter `status` to `closed-quick` or `closed-full`. If full-close, fill in `Reflections`.
 
 ## Quick close vs. full close
 
@@ -94,7 +95,7 @@ Start at `SESSION_0001.md`. Each new session increments by 1. Don't reuse number
 
 ## What if the previous SESSION wasn't closed?
 
-If you're starting a session and the latest SESSION file has `Status: in-progress`:
+If you're starting a session and the latest SESSION file has `status: in-progress` in frontmatter:
 
 1. Decide whether to resume that session (continue writing into the same file) or start fresh.
 2. If starting fresh: rename the previous one to `SESSION_NNNN_unclosed.md`, then create the new one with the next number.

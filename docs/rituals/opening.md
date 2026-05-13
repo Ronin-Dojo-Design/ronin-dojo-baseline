@@ -141,7 +141,7 @@ backlinks:
 
 Refine `type` at bow-out: if the session was clearly one mode, narrow it. If it was mixed, leave it `session--open`. No backfill needed — old sessions stay `type: session`.
 
-Then fill in `Date`, `Operator`, `Goal`, `Status: in-progress`. The rest gets filled during/at end of session.
+Then fill in `Date`, `Operator`, `Goal`. Set frontmatter `status: in-progress`. The rest gets filled during/at end of session.
 
 If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
 
