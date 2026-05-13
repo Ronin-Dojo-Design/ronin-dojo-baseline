@@ -18,6 +18,7 @@ import {
   LayersIcon,
   LogOutIcon,
   MailIcon,
+  IdCardIcon,
   ScrollTextIcon,
   SwordsIcon,
   TagIcon,
@@ -139,6 +140,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Invites",
       href: "/admin/invites",
       prefix: <MailIcon />,
+    },
+    {
+      title: "Memberships",
+      href: "/admin/memberships",
+      prefix: <IdCardIcon />,
     },
     {
       title: "Reports",

@@ -8,7 +8,7 @@ export const findMemberships = async (
   search: MembershipsTableSchema,
   where?: Prisma.MembershipWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
+  const { name, status, page, perPage, sort, from, to, operator } = search
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -25,6 +25,7 @@ export const findMemberships = async (
           ],
         }
       : undefined,
+    status.length > 0 ? { status: { in: status } } : undefined,
     fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
   ]
 

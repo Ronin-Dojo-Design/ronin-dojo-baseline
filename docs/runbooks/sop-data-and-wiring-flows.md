@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-04-27
 updated: 2026-05-12
-last_agent: copilot-session-0146
+last_agent: copilot-session-0148
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -568,7 +568,7 @@ Notification email
 
 ---
 
-## 14. Invite → Claim → Membership activation flow (SESSION_0146)
+## 14. Invite → Claim → Membership activation flow (SESSION_0146, updated SESSION_0148)
 
 ```text
 Admin creates Invite
@@ -583,6 +583,10 @@ Admin creates Invite
 Invite link generated: /invite/{token}
   |
   v
+If meta.email present: send invite notification email via Resend
+  (emails/invite-notification.tsx → lib/email.ts → Resend API)
+  |
+  v
 Recipient visits link
   |
   v
@@ -592,12 +596,15 @@ Auth check: signed in?
   +--> Yes: continue
   |
   v
+Discipline picker shown (org's available disciplines)
+  |
+  v
 InviteClaim created
   |
   +--> checks: not expired, not over maxUses, not already claimed by this user
   |
   v
-Membership created (status: INVITED → PENDING or ACTIVE depending on org setting)
+Membership created (status: ACTIVE — invited members pre-approved)
   |
   v
 MembershipRoleAssignment created (if role specified)
@@ -609,12 +616,14 @@ Redirect to /organizations/{slug}/welcome
 ```mermaid
 flowchart TD
     ADM[Admin creates Invite] --> LINK[Invite link: /invite/token]
+    ADM -->|meta.email?| EMAIL[Send invite email via Resend]
     LINK --> VISIT[Recipient visits link]
     VISIT --> AUTH{Signed in?}
     AUTH -->|No| SIGNUP[Sign up → return]
-    AUTH -->|Yes| CHECK[InviteClaim checks\nnot expired, not over max, not duplicate]
-    SIGNUP --> CHECK
-    CHECK --> MEM[Membership created\nINVITED → PENDING/ACTIVE]
+    AUTH -->|Yes| DISC[Discipline picker]
+    SIGNUP --> DISC
+    DISC --> CHECK[InviteClaim checks\nnot expired, not over max, not duplicate]
+    CHECK --> MEM[Membership created\nstatus: ACTIVE]
     MEM --> ROLE[MembershipRoleAssignment\nif role specified]
     ROLE --> WELCOME[Redirect to welcome page]
 ```

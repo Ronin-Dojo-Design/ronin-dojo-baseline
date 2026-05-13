@@ -1,15 +1,19 @@
 import {
   createSearchParamsCache,
+  parseAsArrayOf,
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
 } from "nuqs/server"
 import * as z from "zod"
-import type { Membership } from "~/.generated/prisma/browser"
+import { type Membership, MembershipStatus } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 export const membershipsTableParamsSchema = {
   name: parseAsString.withDefault(""),
+  status: parseAsArrayOf(
+    parseAsStringEnum<MembershipStatus>(Object.values(MembershipStatus)),
+  ).withDefault([]),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(25),
   sort: getSortingStateParser<Membership>().withDefault([{ id: "createdAt", desc: true }]),
