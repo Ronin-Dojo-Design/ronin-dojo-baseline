@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-12
-last_agent: copilot-session-0140
+updated: 2026-05-13
+last_agent: copilot-session-0155
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -113,6 +113,10 @@ bun run wiki:lint
 ```
 
 If wiki-lint fails, record the exact error/warning count and whether failures are pre-existing or introduced by this session. Do not write "wiki-lint ran" without the command result.
+
+#### 3d. Incremental markdown formatting fix (G8 / R8)
+
+For every file in `Files touched`, fix any markdown formatting violations (blank lines around headings and lists per guardrail G8). This is incremental cleanup — only fix files you already touched this session, not the whole repo. Over time this brings all docs to compliance without a dedicated batch session.
 
 ### 4. Git hygiene
 
