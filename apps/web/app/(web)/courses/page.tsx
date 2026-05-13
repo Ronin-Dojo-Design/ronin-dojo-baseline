@@ -1,11 +1,8 @@
-import { Suspense } from "react"
-import { Badge } from "~/components/common/badge"
-import { Grid } from "~/components/web/ui/grid"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { CourseList } from "~/components/web/courses/course-list"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { searchCourses } from "~/server/web/courses/queries"
-import Link from "next/link"
 
 export const metadata = {
   title: "Courses",
@@ -34,39 +31,7 @@ export default async function CoursesPage({ searchParams }: PageProps) {
       </Intro>
 
       <Section>
-        <Grid>
-          {courses.map(course => (
-            <Link
-              key={course.id}
-              href={`/courses/${course.slug}`}
-              className="group flex flex-col gap-3 rounded-lg border p-5 transition-colors hover:bg-muted/50"
-            >
-              <h3 className="font-semibold text-lg group-hover:underline">{course.title}</h3>
-
-              {course.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
-              )}
-
-              <div className="mt-auto flex flex-wrap gap-2">
-                {course.discipline && (
-                  <Badge variant="soft">{course.discipline.name}</Badge>
-                )}
-                {course.rank && (
-                  <Badge variant="outline">{course.rank.name}</Badge>
-                )}
-                <Badge variant="outline">
-                  {course._count.curriculumItems} item{course._count.curriculumItems !== 1 ? "s" : ""}
-                </Badge>
-              </div>
-            </Link>
-          ))}
-
-          {courses.length === 0 && (
-            <p className="col-span-full text-center text-muted-foreground py-12">
-              No courses found.
-            </p>
-          )}
-        </Grid>
+        <CourseList courses={courses} />
       </Section>
     </>
   )

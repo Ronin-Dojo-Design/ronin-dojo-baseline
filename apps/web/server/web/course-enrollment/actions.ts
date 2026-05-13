@@ -20,7 +20,7 @@ import { db } from "~/services/db"
 const assertCourseExists = async (courseId: string, brand: Brand) => {
   const course = await db.course.findFirst({
     where: { id: courseId, brand, isPublished: true },
-    select: { id: true, organizationId: true, disciplineId: true },
+    select: { id: true, organizationId: true, disciplineId: true, slug: true },
   })
 
   if (!course) {
@@ -88,6 +88,11 @@ export const enrollInCourse = userActionClient
       select: { id: true, enrolledAt: true },
     })
 
+    ctx.revalidate({
+      paths: ["/courses", `/courses/${course.slug}`],
+      tags: ["courses", `course-${course.slug}`],
+    })
+
     return { enrollment }
   })
 
@@ -98,13 +103,15 @@ export const enrollInCourse = userActionClient
 export const unenrollFromCourse = userActionClient
   .schema(unenrollFromCourseSchema)
   .action(async ({ ctx, parsedInput: { enrollmentId } }) => {
+    const brand = await getRequestBrand()
+
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     const enrollment = await db.courseEnrollment.findFirst({
-      where: { id: enrollmentId, userId: ctx.user.id },
-      select: { id: true },
+      where: { id: enrollmentId, userId: ctx.user.id, course: { brand } },
+      select: { id: true, course: { select: { slug: true } } },
     })
 
     if (!enrollment) {
@@ -112,6 +119,11 @@ export const unenrollFromCourse = userActionClient
     }
 
     await db.courseEnrollment.delete({ where: { id: enrollmentId } })
+
+    ctx.revalidate({
+      paths: ["/courses", `/courses/${enrollment.course.slug}`],
+      tags: ["courses", `course-${enrollment.course.slug}`],
+    })
 
     return { success: true }
   })
@@ -126,14 +138,16 @@ export const unenrollFromCourse = userActionClient
 export const markItemComplete = userActionClient
   .schema(markItemCompleteSchema)
   .action(async ({ ctx, parsedInput: { enrollmentId, curriculumItemId, notes } }) => {
+    const brand = await getRequestBrand()
+
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     // Verify the enrollment belongs to this user
     const enrollment = await db.courseEnrollment.findFirst({
-      where: { id: enrollmentId, userId: ctx.user.id },
-      select: { id: true, courseId: true },
+      where: { id: enrollmentId, userId: ctx.user.id, course: { brand } },
+      select: { id: true, courseId: true, course: { select: { slug: true } } },
     })
 
     if (!enrollment) {
@@ -186,6 +200,11 @@ export const markItemComplete = userActionClient
       })
     }
 
+    ctx.revalidate({
+      paths: [`/courses/${enrollment.course.slug}`],
+      tags: [`course-${enrollment.course.slug}`],
+    })
+
     return { completion, courseCompleted: completionCount >= courseItemCount }
   })
 
@@ -196,6 +215,8 @@ export const markItemComplete = userActionClient
 export const markItemIncomplete = userActionClient
   .schema(markItemIncompleteSchema)
   .action(async ({ ctx, parsedInput: { completionId } }) => {
+    const brand = await getRequestBrand()
+
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
@@ -203,9 +224,13 @@ export const markItemIncomplete = userActionClient
     const completion = await db.curriculumItemCompletion.findFirst({
       where: {
         id: completionId,
-        enrollment: { userId: ctx.user.id },
+        enrollment: { userId: ctx.user.id, course: { brand } },
       },
-      select: { id: true, enrollmentId: true },
+      select: {
+        id: true,
+        enrollmentId: true,
+        enrollment: { select: { course: { select: { slug: true } } } },
+      },
     })
 
     if (!completion) {
@@ -220,6 +245,11 @@ export const markItemIncomplete = userActionClient
         data: { completedAt: null },
       }),
     ])
+
+    ctx.revalidate({
+      paths: [`/courses/${completion.enrollment.course.slug}`],
+      tags: [`course-${completion.enrollment.course.slug}`],
+    })
 
     return { success: true }
   })

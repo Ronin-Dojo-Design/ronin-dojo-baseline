@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-12
-last_agent: copilot-session-0152
+updated: 2026-05-13
+last_agent: codex-session-0157
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -33,6 +33,7 @@ backlinks:
   - docs/sprints/SESSION_0103.md
   - docs/sprints/SESSION_0106.md
   - docs/sprints/SESSION_0111.md
+  - docs/sprints/SESSION_0157.md
 ---
 
 # Project Log
@@ -1064,3 +1065,38 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** Runtime browser behavior unverified
 - **Required follow-up:** E2E test scaffolding in next session
 - **Status:** open — staged for SESSION_0153
+
+### SESSION_0157 — Public Course Pages + Enrollment UI
+
+**Date:** 2026-05-13
+**Agent:** codex-session-0157
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0157_TASK_01 | Course page L1 polish and metadata | ✅ done |
+| SESSION_0157_TASK_02 | Enrollment CTA and state lookup | ✅ done |
+| SESSION_0157_TASK_03 | Curriculum completion controls | ✅ done |
+
+**Result:** Public course list/detail pages now use L1 primitives; detail page has enrollment and curriculum completion UI; course-enrollment actions have active-brand scoping and revalidation.
+
+#### Review
+
+**SESSION_0157_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0157_TASK_01, TASK_02, TASK_03
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://dirstarter.com/docs/introduction`, `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/authentication`, `https://dirstarter.com/docs/seo`, local component inventory.
+- **Verdict:** Aligned implementation slice. Extends Dirstarter App Router, `server/web`, and common/web UI primitives. Security improved by brand-scoping completion mutation paths. Typecheck and route smoke passed. Authenticated browser click-path remains open.
+- **Kaizen aggregate:** 8.5 — next proof is signed-in course enrollment/completion E2E.
+
+### SESSION_0157_FINDING_01 — Course enrollment/completion E2E missing
+
+- **Severity:** medium
+- **Task:** SESSION_0157_TASK_02, SESSION_0157_TASK_03
+- **Evidence:** Verification covered `bun run typecheck` and HTTP 200 route render for `/courses` and `/courses/bjj-safety-school`; no signed-in click-path test was added.
+- **Impact:** Enroll/unenroll and completion toggle UI wiring is unproven in a browser session.
+- **Required follow-up:** Add signed-in Playwright or dev-login course lifecycle smoke for `/courses/bjj-safety-school`.
+- **Status:** open

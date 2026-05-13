@@ -5,15 +5,17 @@ type: runbook
 status: active
 created: 2026-05-13
 updated: 2026-05-13
-last_agent: copilot-session-0156
+last_agent: codex-session-0157
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/stripe-setup-runbook.md
   - docs/runbooks/invites.md
+  - docs/architecture/feature-data-prerequisites.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0156.md
+  - docs/sprints/SESSION_0157.md
 tags:
   - course
   - curriculum

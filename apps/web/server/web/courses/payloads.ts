@@ -16,6 +16,10 @@ export const courseManyPayload = {
   _count: { select: { curriculumItems: true, enrollments: true } },
 } satisfies Prisma.CourseSelect
 
+export type CourseMany = Prisma.CourseGetPayload<{
+  select: typeof courseManyPayload
+}>
+
 export const courseOnePayload = {
   id: true,
   brand: true,
@@ -56,3 +60,7 @@ export const courseOnePayload = {
   },
   _count: { select: { enrollments: true } },
 } satisfies Prisma.CourseSelect
+
+export type CourseOne = Prisma.CourseGetPayload<{
+  select: typeof courseOnePayload
+}>

@@ -4,14 +4,16 @@ slug: feature-data-prerequisites
 type: architecture
 status: active
 created: 2026-04-27
-updated: 2026-04-29
-last_agent: codex-session-0028
+updated: 2026-05-13
+last_agent: codex-session-0157
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/knowledge/wiki/files/seed-ts.md
+  - docs/runbooks/course-curriculum-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0157.md
 ---
 
 # Feature data prerequisites
@@ -82,17 +84,17 @@ Organization (brand=BASELINE_MARTIAL_ARTS)
 - **Seed covers:** ✅ Baseline Academy + Sensei OWNER role + 2 ACTIVE Programs (BJJ, Muay Thai)
 - **Smoke proof:** `cd apps/web && bun scripts/smoke-program.ts`
 
-## Course + Curriculum (S6 — upcoming)
+## Course + Curriculum (S6)
 
 ```text
 Organization → Course (orgId, disciplineId)
-            → CurriculumItem (courseId, sortOrder)
+            → CurriculumItem (courseId, order)
             → CourseEnrollment (userId, courseId)
-            → CurriculumItemCompletion (userId, itemId)
+            → CurriculumItemCompletion (enrollmentId, curriculumItemId)
 ```
 
 - **Minimum:** 1 Course with ≥2 CurriculumItems, 1 enrolled user, 1 completion
-- **Seed covers:** ❌ Not yet seeded — add before building S6
+- **Seed covers:** ✅ SESSION_0156 seed creates 218 Courses, 654 CurriculumItems, 1 CourseEnrollment, and 1 CurriculumItemCompletion. See `docs/runbooks/course-curriculum-runbook.md`.
 
 ## Progress + Gamification (S7 — upcoming)
 

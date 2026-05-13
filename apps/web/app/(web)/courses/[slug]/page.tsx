@@ -1,15 +1,41 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
-import { H4 } from "~/components/common/heading"
+import { Card } from "~/components/common/card"
+import { H4, H5 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { CourseEnrollmentPanel } from "~/components/web/courses/course-enrollment-panel"
+import { CurriculumCompletionList } from "~/components/web/courses/curriculum-completion-list"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
+import { getCurrentCourseEnrollmentState } from "~/server/web/course-enrollment/queries"
 import { findCourseBySlug } from "~/server/web/courses/queries"
-import Link from "next/link"
 
 type PageProps = {
   params: Promise<{ slug: string }>
+}
+
+const formatCertificationType = (value: string) => value.replace(/_/g, " ")
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  const brand = await getRequestBrand()
+  const course = await findCourseBySlug(slug, brand)
+
+  if (!course) {
+    return {}
+  }
+
+  return getPageMetadata({
+    url: `/courses/${course.slug}`,
+    metadata: {
+      title: course.title,
+      description: course.description ?? `View curriculum for ${course.title}.`,
+    },
+  })
 }
 
 export default async function CourseDetailPage({ params }: PageProps) {
@@ -21,82 +47,84 @@ export default async function CourseDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  const session = await getServerSession()
+  const enrollmentState = session?.user
+    ? await getCurrentCourseEnrollmentState({
+        brand,
+        courseId: course.id,
+        organizationId: course.organization.id,
+        userId: session.user.id,
+      })
+    : { enrollment: null, hasActiveMembership: false }
+
+  const completedItems = enrollmentState.enrollment?.itemCompletions.length ?? 0
+  const totalItems = course.curriculumItems.length
+  const enrollmentForClient = enrollmentState.enrollment
+    ? {
+        id: enrollmentState.enrollment.id,
+        enrolledAt: enrollmentState.enrollment.enrolledAt.toISOString(),
+        completedAt: enrollmentState.enrollment.completedAt?.toISOString() ?? null,
+      }
+    : null
+  const completionsForClient =
+    enrollmentState.enrollment?.itemCompletions.map(completion => ({
+      id: completion.id,
+      curriculumItemId: completion.curriculumItemId,
+      completedAt: completion.completedAt.toISOString(),
+    })) ?? []
+
   return (
     <>
       <Intro>
         <IntroTitle>{course.title}</IntroTitle>
-        {course.description && (
-          <IntroDescription>{course.description}</IntroDescription>
-        )}
+        {course.description && <IntroDescription>{course.description}</IntroDescription>}
       </Intro>
 
       <Section>
-        <Stack size="sm" className="flex-wrap">
-          {course.discipline && (
-            <Badge variant="soft">{course.discipline.name}</Badge>
-          )}
-          {course.rank && (
-            <Badge variant="outline">{course.rank.name}</Badge>
-          )}
-          <Badge variant="outline">
-            {course.certificationType.replace(/_/g, " ")}
-          </Badge>
-          <Badge variant="soft">
-            {course._count.enrollments} enrolled
-          </Badge>
-        </Stack>
+        <Section.Content>
+          <Stack size="sm" className="flex-wrap">
+            {course.discipline && <Badge variant="soft">{course.discipline.name}</Badge>}
+            {course.rank && <Badge variant="outline">{course.rank.name}</Badge>}
+            <Badge variant="outline">{formatCertificationType(course.certificationType)}</Badge>
+            <Badge variant="soft">{course._count.enrollments} enrolled</Badge>
+          </Stack>
+
+          <Card hover={false}>
+            <Stack direction="column" size="sm">
+              <H5 as="h2">Offered by</H5>
+              <H4>{course.organization.name}</H4>
+            </Stack>
+          </Card>
+        </Section.Content>
+
+        <Section.Sidebar>
+          <CourseEnrollmentPanel
+            courseId={course.id}
+            courseSlug={course.slug}
+            organizationName={course.organization.name}
+            isAuthenticated={Boolean(session?.user)}
+            hasActiveMembership={enrollmentState.hasActiveMembership}
+            enrollment={enrollmentForClient}
+            completedItems={completedItems}
+            totalItems={totalItems}
+          />
+        </Section.Sidebar>
       </Section>
 
-      {/* Curriculum Items */}
       {course.curriculumItems.length > 0 && (
         <Section>
-          <H4>Curriculum</H4>
-          <ol className="space-y-4">
-            {course.curriculumItems.map((item, idx) => (
-              <li key={item.id} className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {idx + 1}
-                  </span>
-                  <div className="flex-1 space-y-2">
-                    <h5 className="font-medium">{item.title}</h5>
-                    {item.notes && (
-                      <p className="text-sm text-muted-foreground">{item.notes}</p>
-                    )}
-
-                    {/* Linked techniques */}
-                    {item.techniqueLinks.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {item.techniqueLinks.map(({ technique }) => (
-                          <Link
-                            key={technique.id}
-                            href={`/techniques/${technique.slug}`}
-                            className="inline-flex items-center gap-1 text-xs rounded-md border px-2 py-1 hover:bg-muted/50 transition-colors"
-                          >
-                            {technique.name}
-                            {technique.difficultyLevel && (
-                              <Badge variant="soft" className="text-[10px] px-1 py-0">
-                                {technique.difficultyLevel.replace(/_/g, " ")}
-                              </Badge>
-                            )}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <Section.Content>
+            <Stack direction="column" size="md">
+              <H4>Curriculum</H4>
+              <CurriculumCompletionList
+                enrollmentId={enrollmentState.enrollment?.id}
+                items={course.curriculumItems}
+                completions={completionsForClient}
+              />
+            </Stack>
+          </Section.Content>
         </Section>
       )}
-
-      {/* Organization info */}
-      <Section>
-        <p className="text-sm text-muted-foreground">
-          Offered by <span className="font-medium text-foreground">{course.organization.name}</span>
-        </p>
-      </Section>
     </>
   )
 }

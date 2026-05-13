@@ -5,6 +5,58 @@ import {
 } from "~/server/web/course-enrollment/payloads"
 import { db } from "~/services/db"
 
+export const getCurrentCourseEnrollmentState = async ({
+  brand,
+  courseId,
+  organizationId,
+  userId,
+}: {
+  brand: Brand
+  courseId: string
+  organizationId: string
+  userId: string
+}) => {
+  const [enrollment, membership] = await db.$transaction([
+    db.courseEnrollment.findFirst({
+      where: {
+        userId,
+        courseId,
+        course: {
+          brand,
+          organizationId,
+        },
+      },
+      select: {
+        id: true,
+        enrolledAt: true,
+        completedAt: true,
+        itemCompletions: {
+          select: {
+            id: true,
+            curriculumItemId: true,
+            completedAt: true,
+          },
+          orderBy: { completedAt: "asc" },
+        },
+      },
+    }),
+    db.membership.findFirst({
+      where: {
+        brand,
+        organizationId,
+        userId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    }),
+  ])
+
+  return {
+    enrollment,
+    hasActiveMembership: Boolean(membership),
+  }
+}
+
 /**
  * Admin: list all enrollments for a course.
  * Brand-scoped through Course.brand.
