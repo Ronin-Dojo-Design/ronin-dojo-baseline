@@ -5,6 +5,7 @@ import { adminActionClient } from "~/lib/safe-actions"
 import {
   transitionMembershipSchema,
   VALID_TRANSITIONS,
+  roleAssignmentSchema,
 } from "~/server/admin/memberships/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
 
@@ -56,6 +57,42 @@ export const deleteMemberships = adminActionClient
     revalidate({
       paths: ["/admin/memberships"],
       tags: ["memberships"],
+    })
+
+    return true
+  })
+
+export const assignRoleToMembership = adminActionClient
+  .inputSchema(roleAssignmentSchema)
+  .action(async ({ parsedInput: { membershipId, roleId }, ctx: { db, revalidate } }) => {
+    const assignment = await db.membershipRoleAssignment.upsert({
+      where: { membershipId_roleId: { membershipId, roleId } },
+      create: { membershipId, roleId },
+      update: {},
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/memberships", `/admin/memberships/${membershipId}`],
+        tags: ["memberships", `membership-${membershipId}`],
+      })
+    })
+
+    return assignment
+  })
+
+export const removeRoleFromMembership = adminActionClient
+  .inputSchema(roleAssignmentSchema)
+  .action(async ({ parsedInput: { membershipId, roleId }, ctx: { db, revalidate } }) => {
+    await db.membershipRoleAssignment.delete({
+      where: { membershipId_roleId: { membershipId, roleId } },
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/memberships", `/admin/memberships/${membershipId}`],
+        tags: ["memberships", `membership-${membershipId}`],
+      })
     })
 
     return true

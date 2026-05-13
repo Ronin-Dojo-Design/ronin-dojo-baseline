@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/common/dropdown-menu"
 import { Note } from "~/components/common/note"
+import { Link } from "~/components/common/link"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import {
   transitionMembershipStatus,
@@ -78,10 +79,10 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
       size: 180,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
       cell: ({ row }) => (
-        <div>
+        <Link href={`/admin/memberships/${row.original.id}`} className="block">
           <div className="font-medium">{row.original.user.name ?? "—"}</div>
           <Note className="text-xs">{row.original.user.email}</Note>
-        </div>
+        </Link>
       ),
     },
     {

@@ -44,3 +44,10 @@ export const VALID_TRANSITIONS: Record<string, string[]> = {
   CANCELLED: [],
   EXPIRED: [],
 }
+
+export const roleAssignmentSchema = z.object({
+  membershipId: z.string().min(1, "Membership ID is required"),
+  roleId: z.string().min(1, "Role ID is required"),
+})
+
+export type RoleAssignmentSchema = z.infer<typeof roleAssignmentSchema>
