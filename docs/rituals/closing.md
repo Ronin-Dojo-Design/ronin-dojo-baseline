@@ -38,7 +38,7 @@ Any of: "Bow out" / "Close session" / "End session" / task complete / hitting a 
 ## Three modes
 
 | Mode | When to use | Required actions |
-|---|---|---|
+| --- | --- | --- |
 | **Quick close** | Back-to-back execution sessions | Fill SESSION file; commit if needed; done |
 | **Full close** | End of day, end of sprint, after a milestone, before any context loss | Quick close + evidence artifact + Reflections + hostile review + Review & Recommend + memory sweep |
 | **Unclean close recovery** | Session crashed, compaction ate context, or bow-out was skipped | Recovery checklist below; creates incident entry |
@@ -300,7 +300,7 @@ Use when a previous session's bow-out was skipped — context loss, compaction, 
 ### Status values (complete list)
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | `in-progress` | Session is active |
 | `closed-quick` | Normal quick close |
 | `closed-full` | Full close with reflections |

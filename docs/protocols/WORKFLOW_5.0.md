@@ -21,6 +21,7 @@ backlinks:
 Governing operating system for every session from SESSION_0021 forward. Supersedes the older sequential sprint model. Synthesized from the ChatGPT deep research brief and Launch OS document.
 
 **Source docs:**
+
 - `docs/architecture/source/Ronin-Dojo-Launch-Deep-Research-Brief.md`
 - `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md`
 
@@ -71,6 +72,7 @@ Governing operating system for every session from SESSION_0021 forward. Supersed
 | Launch usefulness | 1.0 | Work does not materially move a May 18 launch deliverable |
 
 **Hard caps:**
+
 - Fail on Dirstarter alignment OR data integrity → score capped at **8.9**
 - Under 9.5 after pass three → rolls to fresh session
 

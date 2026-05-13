@@ -47,6 +47,7 @@ Every commit uses a tag: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:
 ### G5 — JETTY 3.0 sweep on touched docs
 
 Every doc file touched during a session must have:
+
 - JETTY 3.0 frontmatter present
 - `updated` date current
 - `last_agent` set
@@ -57,6 +58,7 @@ This is the same as closing ritual step 3 — referenced here, not duplicated.
 ### G6 — Prisma schema hygiene
 
 After any schema change:
+
 1. `prisma generate` clean
 2. `tsc --noEmit` clean (catches stale Prisma Client types)
 3. Seed runs against fresh DB
@@ -109,7 +111,7 @@ socialLinks: z.record(z.string().url()),
 Consult [`dirstarter-component-inventory.md`](../knowledge/wiki/dirstarter-component-inventory.md) before writing any UI. The following raw elements are NEVER acceptable when the inventory provides a component:
 
 | ❌ Raw HTML | ✅ Use instead |
-|---|---|
+| --- | --- |
 | `<h1>` – `<h6>` | `H1` – `H6` from `components/common/heading.tsx` |
 | `<input>` | `Input` from `components/common/input.tsx` |
 | `<select>` | `Select` from `components/common/select.tsx` |
