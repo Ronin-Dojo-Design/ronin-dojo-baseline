@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-04-26
 updated: 2026-05-12
-last_agent: copilot-session-0147
+last_agent: copilot-session-0152
 use_count: 0
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -28,49 +28,31 @@ Any time you modify `apps/web/prisma/schema.prisma` — adding models, changing 
 # Make your changes, then save.
 ```
 
-### 2. Reset the dev database
+### 2. Choose your workflow
+
+Two valid approaches — pick based on the change type:
+
+#### Option A: `db push` (rapid prototyping / destructive changes)
+
+Best for: large schema rewrites, wave migrations, dropping columns/tables, or when you don't need migration files.
 
 ```bash
+# Reset dev database (clean slate)
 /Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
 /Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
-```
 
-> **Why reset?** `prisma db push` can't always handle destructive changes (dropped columns, changed enums) on an existing DB. A clean slate is faster than debugging drift. The seed file restores all reference data.
-
-### 3. Push schema to DB
-
-```bash
+# Push schema
 cd apps/web
 bunx prisma db push --accept-data-loss
-```
 
-This syncs the database to the schema without creating migration files. We use `db push` (not `migrate dev`) because `migrate dev` hangs on the shadow DB — see [Known issues](#known-issues).
-
-### 4. Generate Prisma client
-
-```bash
+# Generate client
 bunx prisma generate
-```
 
-This regenerates the TypeScript types in `.generated/prisma/`. Required after any schema change.
-
-### 5. Run the seed
-
-```bash
+# Run seed
 bun run prisma/seed.ts
 ```
 
-Populates all system defaults: disciplines, rank systems, ranks, roles, tournament roles, gamification event types, subscription tiers, styles.
-
-### 6. Verify
-
-```bash
-bunx tsc --noEmit 2>&1 | head -30
-```
-
-Check for new type errors. Pre-existing Dirstarter template errors (PageProps, content-collections) are expected and can be ignored.
-
-## One-liner (copy-paste)
+##### One-liner (copy-paste)
 
 ```bash
 cd apps/web && \
@@ -81,14 +63,45 @@ bunx prisma generate && \
 bun run prisma/seed.ts
 ```
 
+#### Option B: `migrate dev` (additive changes that need migration files)
+
+Best for: adding columns, adding models, or any change where you want a versioned migration file committed to `prisma/migrations/`. This is the correct workflow when production uses `prisma migrate deploy` (which it does — see `package.json` `prebuild` script).
+
+```bash
+cd apps/web
+bunx prisma migrate dev --name <descriptive-name>
+```
+
+This creates a migration file in `prisma/migrations/`, applies it, and regenerates the client. No need to run `prisma generate` separately.
+
+> **Note:** The shadow DB hang reported in SESSION_0004 does not reproduce with Prisma 7.x. `migrate dev` works correctly with Postgres.app.
+
+#### When to use which
+
+| Scenario | Use |
+| --- | --- |
+| New model wave (many models at once) | `db push` + reset |
+| Adding a column to an existing model | `migrate dev` |
+| Changing an enum (add/remove values) | `db push` + reset |
+| Adding an optional field | Either works |
+| Need migration file for production deploy | `migrate dev` |
+
+### 3. Verify
+
+```bash
+bunx tsc --noEmit 2>&1 | head -30
+```
+
+Check for new type errors. Pre-existing Dirstarter template errors (PageProps, content-collections) are expected and can be ignored.
+
 ## When NOT to reset
 
 - If you only added new optional fields or new models (no breaking changes), you can skip the dropdb/createdb and just run `prisma db push` + `prisma generate`.
 - If you want to preserve existing test data, use `prisma db push` without `--accept-data-loss` and fix any errors manually.
+- If you used `migrate dev`, no reset is needed — the migration is applied incrementally.
 
 ## Known issues
 
-- **`prisma migrate dev` hangs** — even with shadow DB configured and `CREATEDB` granted. Use `db push` for local dev. Migration history will be established on Neon for production. Tracked since SESSION_0004.
 - **Postgres.app CLI not on PATH** — use full path `/Applications/Postgres.app/Contents/Versions/latest/bin/` or add to PATH per [Postgres.app docs](https://postgresapp.com/documentation/cli-tools.html).
 
 ## Related

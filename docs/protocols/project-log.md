@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-12
-last_agent: copilot-session-0150
+last_agent: copilot-session-0152
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1005,7 +1005,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** Two parallel admins transitioning same membership untested
 - **Impact:** Last-write-wins behavior unproven at 1,000+ scale
 - **Required follow-up:** Concurrency test in SESSION_0151
-- **Status:** open — staged for SESSION_0151_TASK_01
+- **Status:** resolved — SESSION_0152 implemented optimistic locking + concurrency test (1 winner, 4 conflicts, 1 audit entry)
 
 ### SESSION_0150_FINDING_02 — after() audit failure is silent
 
@@ -1024,3 +1024,43 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** Runtime browser behavior unverified
 - **Required follow-up:** E2E test plan in SESSION_0151, implementation in future session
 - **Status:** open — staged for SESSION_0151_TASK_03
+
+### SESSION_0152 — Optimistic Locking for Membership Transitions
+
+- **Sprint:** S6
+- **Type:** session--implement
+- **Agent:** Copilot (Petey → Cody)
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0152_TASK_01 | Add `version Int @default(0)` to Membership model, run migration | ✅ done |
+| SESSION_0152_TASK_02 | Implement optimistic locking in `transitionMembershipStatus` | ✅ done |
+| SESSION_0152_TASK_03 | Update concurrency test for optimistic locking assertions | ✅ done |
+| SESSION_0152_TASK_04 | Type check — Passport/profile unaffected | ✅ done |
+| SESSION_0152_TASK_05 | Run concurrency test — 1 pass, 12 assertions | ✅ done |
+| SESSION_0152_EXTRA_01 | Fix test assertions for next-safe-action `serverError` pattern | ✅ done |
+| SESSION_0152_EXTRA_02 | Update `prisma-workflow.md` — add `migrate dev` as valid workflow | ✅ done |
+| SESSION_0152_EXTRA_03 | Update `schema-migration.md` — add `migrate dev` as valid workflow | ✅ done |
+| SESSION_0152_EXTRA_04 | Log FS-0021 in failed-steps-log.md | ✅ done |
+
+**Result:** All tasks completed. Concurrency race condition closed. Runbooks corrected to match L1. Kaizen aggregate: 8.5.
+
+#### Review
+
+**SESSION_0152_REVIEW_01 — Full Close Review**
+
+- **Reviewer:** Giddy + Doug (hostile close)
+- **Dirstarter docs check:** Checked `dirstarter.com/docs/database/prisma` — confirmed both `db push` and `migrate dev` are valid L1 workflows
+- **Sources:** `https://dirstarter.com/docs/database/prisma`
+- **Verdict:** Aligned. Pure L2 data integrity fix. Optimistic locking prevents duplicate transitions and audit entries. Closes SESSION_0150_FINDING_01. Runbooks corrected.
+
+### SESSION_0152_FINDING_01 — E2E tests still missing for membership admin (carried)
+
+- **Severity:** medium
+- **Task:** SESSION_0150_FINDING_03 (carried from SESSION_0150 → 0151 → 0152)
+- **Evidence:** No Playwright tests for membership list/detail/transition/role pages
+- **Impact:** Runtime browser behavior unverified
+- **Required follow-up:** E2E test scaffolding in next session
+- **Status:** open — staged for SESSION_0153

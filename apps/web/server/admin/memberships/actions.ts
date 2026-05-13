@@ -18,7 +18,7 @@ export const transitionMembershipStatus = adminActionClient
     // (3) the AuditLog records brand provenance for forensic traceability.
     const membership = await db.membership.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, version: true },
     })
 
     if (!membership) {
@@ -34,14 +34,34 @@ export const transitionMembershipStatus = adminActionClient
 
     const previousStatus = membership.status
 
-    const updated = await db.membership.update({
-      where: { id },
-      data: {
-        status: toStatus as typeof membership.status,
-        ...(toStatus === "ACTIVE" && !membership.status ? { joinedAt: new Date() } : {}),
-        ...(toStatus === "CANCELLED" || toStatus === "EXPIRED" ? { leftAt: new Date() } : {}),
-      },
-    })
+    // Optimistic locking: only update if version hasn't changed since read.
+    // If another caller updated first, Prisma throws P2025 (record not found)
+    // because the compound where {id, version} no longer matches.
+    let updated
+    try {
+      updated = await db.membership.update({
+        where: { id, version: membership.version },
+        data: {
+          status: toStatus as typeof membership.status,
+          version: { increment: 1 },
+          ...(toStatus === "ACTIVE" && !membership.status ? { joinedAt: new Date() } : {}),
+          ...(toStatus === "CANCELLED" || toStatus === "EXPIRED" ? { leftAt: new Date() } : {}),
+        },
+      })
+    } catch (error: unknown) {
+      // P2025 = "Record to update not found" — another caller won the race
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code: string }).code === "P2025"
+      ) {
+        throw new Error(
+          `Conflict: membership ${id} was modified by another request. Please retry.`,
+        )
+      }
+      throw error
+    }
 
     after(async () => {
       try {

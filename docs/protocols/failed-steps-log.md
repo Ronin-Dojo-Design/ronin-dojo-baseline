@@ -405,6 +405,19 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** Next session bow-in: count grep calls before first Graphify query. Target: 0 greps before Graphify for any cross-domain session.
 - **Status:** open
 
+### FS-0021 — Schema migration runbook steps skipped (3 of 8 steps) + runbook accuracy gap
+
+- **Session:** SESSION_0152
+- **Agent:** Copilot (Cody)
+- **Step failed:** Steps 1 (pre-flight check), 4 (verify model count), 8 (type check post-migration). Used `prisma migrate dev` instead of `prisma db push` per runbook — but investigation revealed the runbook itself is outdated.
+- **SOP source:** `docs/runbooks/schema-migration.md` §1–8, `docs/runbooks/prisma-workflow.md`
+- **Root cause:** Agent executed schema change without reading the runbook first. Skipped pre-flight, verification, and post-migration type check steps. However, the `migrate dev` vs `db push` guidance in the runbook is also stale: Dirstarter L1 uses `prisma migrate` for production deploys (`prebuild: db:migrate deploy`), and `migrate dev` successfully created the migration file needed for Neon. The "shadow DB hang" known issue (SESSION_0004) did not reproduce.
+- **Impact:** Low — migration succeeded, correct migration SQL file was created (`ALTER TABLE "Membership" ADD COLUMN "version" INTEGER NOT NULL DEFAULT 0`), schema valid, 109 models confirmed, zero TS errors. Skipped steps were completed retroactively.
+- **Corrective action:** (1) Before any schema change, read the runbook steps 1–8 sequentially — do not skip. (2) Update `schema-migration.md` and `prisma-workflow.md` to reflect that `migrate dev` is acceptable (and preferred when migration files are needed for production). Remove blanket "never use migrate dev" guidance. (3) Always run `prisma validate` before and `tsc --noEmit` after.
+- **Verification:** Next schema change: agent must cite "schema-migration.md step N" for each step as it executes. Runbook update needed (separate task).
+- **Status:** open
+- **Follow-up:** Update `prisma-workflow.md` known issues — `migrate dev` shadow DB hang may be resolved in Prisma 7.x. Test and confirm. Also reconcile with Dirstarter L1 `prebuild: db:migrate deploy` pattern.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.

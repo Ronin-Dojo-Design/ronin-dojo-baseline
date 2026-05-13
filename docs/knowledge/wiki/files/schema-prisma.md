@@ -4,9 +4,9 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-05-10
+updated: 2026-05-12
 author: Brian + Copilot
-last_agent: copilot-session-0121
+last_agent: copilot-session-0152
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
@@ -20,9 +20,9 @@ backlinks:
   - knowledge/wiki/content-engine/curriculum-extract-schema
   - docs/knowledge/wiki/files/dirstarter-l1-baseline.md
   - docs/knowledge/wiki/files/discipline-queries.md
+  - docs/sprints/SESSION_0152.md
 needs_fix:
   - "Dirstarter template models (Tool, Category, Tag, Report, Ad) still present — remove before prod"
-  - "prisma migrate dev hangs — using db push for now"
 wiring:
   - "apps/web/prisma/seed.ts — seeds data into these models"
   - "apps/web/services/db.ts — creates PrismaClient from generated types"
@@ -35,7 +35,7 @@ tags: [prisma, schema, database, s1]
 
 ## Summary
 
-The Prisma schema defining all database models for the Ronin Dojo platform. 31 models, 18 enums, ~1100 lines. Source of truth for the data layer.
+The Prisma schema defining all database models for the Ronin Dojo platform. 109 models, ~55 enums, ~3500 lines. Source of truth for the data layer.
 
 ## Intent
 
@@ -69,8 +69,8 @@ Two sections:
 - Type-checks: ✅ (`tsc --noEmit` clean, only pre-existing Dirstarter errors)
 - Tested: ❌ (no automated schema tests yet)
 - Seeded: ✅ (seed.ts runs clean)
-- Migration history: ❌ (`prisma migrate dev` hangs — using `db push`)
-- Score: **8/10**
+- Migration history: ✅ (`prisma migrate dev` works with Prisma 7.x; shadow DB hang resolved)
+- Score: **8.5/10**
 
 ## Teachable explanation
 

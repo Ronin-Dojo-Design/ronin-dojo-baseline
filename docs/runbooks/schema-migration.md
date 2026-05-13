@@ -4,8 +4,8 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-04-29
-last_agent: codex-session-0023
+updated: 2026-05-12
+last_agent: copilot-session-0152
 use_count: 1
 pairs_with:
   - docs/runbooks/database.md
@@ -55,7 +55,13 @@ Add models/enums/fields per the wave spec. Work in dependency order:
 
 **Rule:** One wave = one atomic commit. Don't mix waves.
 
-### 3. Reset and push
+### 3. Apply schema changes
+
+Two valid workflows — choose based on change type:
+
+#### Option A: Reset + `db push` (wave migrations / destructive changes)
+
+Best for large wave migrations with many new models, or changes that drop columns/enums.
 
 ```bash
 # Reset dev database (clean slate — fastest path)
@@ -69,6 +75,19 @@ bunx prisma db push --accept-data-loss
 # Generate client
 bunx prisma generate
 ```
+
+#### Option B: `migrate dev` (additive changes needing migration files)
+
+Best for adding columns/models to an existing schema where you want a versioned migration file. Production uses `prisma migrate deploy` (see `package.json` `prebuild`), so migration files are needed for production deploys.
+
+```bash
+cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+bunx prisma migrate dev --name <descriptive-name>
+```
+
+This creates a migration in `prisma/migrations/`, applies it, and regenerates the client in one step.
+
+> **Note:** The shadow DB hang reported in SESSION_0004 does not reproduce with Prisma 7.x.
 
 ### 4. Verify
 
@@ -142,7 +161,6 @@ cd apps/web && bunx prisma db push --accept-data-loss && bunx prisma generate &&
 
 ## Known issues
 
-- `prisma migrate dev` hangs on shadow DB creation with Postgres.app. Use `prisma db push` for local dev.
 - `citext` extension: do NOT pre-install. Prisma manages it via schema `extensions = [citext]`.
 - Large schema changes (50+ models) can take 10-15 seconds on `db push`. Normal.
 

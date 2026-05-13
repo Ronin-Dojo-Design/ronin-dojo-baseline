@@ -1,10 +1,11 @@
 /**
- * SESSION_0151 TASK_01 — Concurrency test for membership transitions.
+ * SESSION_0151 TASK_01 → SESSION_0152 TASK_03 — Concurrency test for membership transitions.
  *
- * Proves:
+ * Proves (with optimistic locking via `version` column):
  *   - Multiple parallel transitionMembershipStatus calls on the same membership
- *     converge safely: exactly one final status, no corruption.
- *   - AuditLog entries are created without duplicates for the same transition.
+ *     result in exactly ONE winner. Losers receive a `serverError` containing
+ *     "Conflict" (next-safe-action catches thrown errors as `{ serverError }`).
+ *   - Exactly 1 AuditLog entry is created (no duplicates).
  *   - No uncaught exceptions surface to callers.
  *
  * Pattern: sop-test-writing.md §8 (concurrency test)
@@ -167,7 +168,7 @@ afterAll(async () => {
 // ---------------------------------------------------------------------------
 
 describe("transitionMembershipStatus — concurrency", () => {
-  it("parallel PENDING→ACTIVE calls converge without corruption", async () => {
+  it("parallel PENDING→ACTIVE calls: exactly one wins via optimistic locking", async () => {
     const PARALLEL_COUNT = 5
 
     // Fire N parallel transition calls
@@ -180,29 +181,37 @@ describe("transitionMembershipStatus — concurrency", () => {
     // Allow after() callbacks to settle
     await new Promise(r => setTimeout(r, 200))
 
-    // At least one should succeed
+    // All promises settle as "fulfilled" because next-safe-action catches errors
+    // and returns them as { serverError } in the result object.
     const fulfilled = results.filter(r => r.status === "fulfilled")
-    expect(fulfilled.length).toBeGreaterThanOrEqual(1)
+    expect(fulfilled.length).toBe(PARALLEL_COUNT)
 
-    // No uncaught exceptions — all should be fulfilled or rejected (not thrown)
-    for (const r of results) {
-      expect(["fulfilled", "rejected"]).toContain(r.status)
+    // Among the fulfilled results, exactly one should be a success (no serverError)
+    const successes = fulfilled.filter(
+      r => r.status === "fulfilled" && r.value && !("serverError" in r.value),
+    )
+    const conflicts = fulfilled.filter(
+      r => r.status === "fulfilled" && r.value && "serverError" in r.value,
+    )
+    expect(successes.length).toBe(1)
+    expect(conflicts.length).toBe(PARALLEL_COUNT - 1)
+
+    // Conflict errors should contain "Conflict" message
+    for (const r of conflicts) {
+      if (r.status === "fulfilled" && r.value && "serverError" in r.value) {
+        expect(String(r.value.serverError)).toContain("Conflict")
+      }
     }
 
-    // Final membership state: ACTIVE (exactly one status, no corruption)
+    // Final membership state: ACTIVE, version incremented exactly once
     const membership = await db.membership.findUnique({
       where: { id: fx.membershipId },
-      select: { status: true },
+      select: { status: true, version: true },
     })
     expect(membership?.status).toBe("ACTIVE")
+    expect(membership?.version).toBe(1)
 
-    // FINDING: Without optimistic locking (e.g. version column or SELECT FOR UPDATE),
-    // all parallel callers read PENDING before any update commits, so all succeed.
-    // This is a known gap — last-write-wins, no corruption, but multiple AuditLog
-    // entries are created. Acceptable for admin-only actions at current scale.
-    // Future hardening: add optimistic lock or serializable transaction if needed.
-
-    // AuditLog: all successful transitions create audit entries
+    // Exactly 1 AuditLog entry — no duplicates
     const auditLogs = await db.auditLog.findMany({
       where: {
         entityType: "Membership",
@@ -211,17 +220,11 @@ describe("transitionMembershipStatus — concurrency", () => {
       },
       orderBy: { createdAt: "asc" },
     })
+    expect(auditLogs.length).toBe(1)
 
-    // At least one audit entry exists
-    expect(auditLogs.length).toBeGreaterThanOrEqual(1)
-
-    // All audit entries should be PENDING → ACTIVE (since all read PENDING before update)
-    const pendingToActive = auditLogs.filter(
-      l =>
-        (l.before as Record<string, string>)?.status === "PENDING" &&
-        (l.after as Record<string, string>)?.status === "ACTIVE",
-    )
-    // All entries are the same transition — no corruption, just duplicates
-    expect(pendingToActive.length).toBe(auditLogs.length)
+    // The single entry should be PENDING → ACTIVE
+    const entry = auditLogs[0]
+    expect((entry.before as Record<string, string>)?.status).toBe("PENDING")
+    expect((entry.after as Record<string, string>)?.status).toBe("ACTIVE")
   })
 })

@@ -1083,6 +1083,10 @@ model Membership {
   memberNumber String?
   joinedAt     DateTime?        @db.Date
   leftAt       DateTime?        @db.Date
+  // @added   SESSION_0152 (2026-05-12)
+  // @why     Optimistic locking — prevents race conditions on concurrent status transitions
+  // @wired   server/admin/memberships/actions.ts (transitionMembershipStatus)
+  version      Int              @default(0)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
