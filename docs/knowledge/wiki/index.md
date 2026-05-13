@@ -215,6 +215,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0157](../../sprints/SESSION_0157.md) | session--implement | closed-full |
 | [SESSION_0158](../../sprints/SESSION_0158.md) | session--open | closed-full |
 | [SESSION_0159](../../sprints/SESSION_0159.md) | session--open | closed-full |
+| [SESSION_0160](../../sprints/SESSION_0160.md) | session--open | in-progress |
 
 ## Protocols
 
@@ -263,6 +264,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [AWS S3 Operator Runbook](../../runbooks/aws-s3-operator-runbook.md) | runbook | active |
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
+| [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sop-test-writing.md) | runbook | active |
 | [Course + Curriculum Runbook](../../runbooks/course-curriculum-runbook.md) | runbook | active |
@@ -294,6 +296,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 > Exhaustive per-component API inventory of every L1 component, hook, HOC, admin pattern, data-table system, and web component. Includes L1 violation audit, refactoring priority queue, and pre-flight checklist.
 >
 > Also see [`dirstarter-baseline-index.md`](../../architecture/dirstarter-baseline-index.md) (SESSION_0039) for architecture-level integration patterns.
+>
 > - §13: dirstarter.com/docs integration patterns (auth, email, storage, payments, rate limiting, analytics, content, middleware)
 > - §14: D-014 decision — Tool → Directory Listing repurpose
 
