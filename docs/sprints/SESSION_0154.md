@@ -2,7 +2,7 @@
 title: "SESSION 0154 — P2028 Transaction Fix + Registration Optimistic Locking"
 slug: session-0154
 type: session--implement
-status: closed-quick
+status: closed-full
 created: 2026-05-13
 updated: 2026-05-13
 last_agent: copilot-session-0154
@@ -106,6 +106,7 @@ TASK_01 (independent) | TASK_02 → TASK_03 → TASK_04
 - **P2028 transaction timeout fix:** Replaced `db.$transaction` with `Promise.all` in `findMemberships` query. Eliminates 5s transaction timeout on cold Turbopack compilation. Safe because both queries are read-only with identical `where` clauses.
 - **Registration optimistic locking:** Added `version Int @default(1)` column to Registration model. Migration applied. `updateRegistrationStatus` action now uses `where: { id, version }` with version increment — throws user-friendly error on stale version (P2025 catch).
 - **Pattern consistency:** Registration now matches the Membership optimistic locking pattern from SESSION_0152.
+- **DRY fix — SESSION file `## Status` removed:** Status now lives only in YAML frontmatter. Updated `chat-handoff.md` template and `opening.md` ritual to reference frontmatter `status` instead of body section. Prevents stale body status going forward.
 
 ## Files Touched
 
@@ -115,6 +116,8 @@ TASK_01 (independent) | TASK_02 → TASK_03 → TASK_04
 | `apps/web/prisma/schema.prisma` | Added `version Int @default(1)` to Registration model |
 | `apps/web/prisma/migrations/20260513152540_add_registration_version_column/` | Migration for version column (pre-existing from earlier attempt) |
 | `apps/web/server/admin/tournaments/actions.ts` | Added optimistic locking to `updateRegistrationStatus` — version check + increment + P2025 catch |
+| `docs/protocols/chat-handoff.md` | Removed body `## Status` from SESSION template — DRY fix, status lives in frontmatter only |
+| `docs/rituals/opening.md` | Updated bow-in to reference frontmatter `status` instead of body `Status:` |
 | `docs/sprints/SESSION_0154.md` | This file |
 
 ## Decisions Resolved
@@ -132,3 +135,40 @@ TASK_01 (independent) | TASK_02 → TASK_03 → TASK_04
 - **Goal:** Add optimistic locking to `bulkUpdateRegistrationStatus` (loop-based) if tournament registration E2E is next, OR move to the next S6 deliverable per program plan.
 - **Inputs to read:** SESSION_0154.md, `server/admin/tournaments/actions.ts` (bulk update section), program-plan.md for next S6 task
 - **First task:** Check program plan for next S6 priority and decide whether bulk registration locking is worth a dedicated session or can be folded into a larger task
+
+## Review Log
+
+**SESSION_0154_REVIEW_01 — Doug Review + Full Close Review**
+
+- **Reviewer:** Doug
+- **Dirstarter docs check:** `Promise.all` replacement is safe — Dirstarter's `$transaction` for list+count is a convenience, not a correctness requirement for read-only queries. Optimistic locking pattern matches SESSION_0152's Membership implementation exactly.
+- **Security:** No new attack surface. Optimistic locking adds defense against race conditions.
+- **Data integrity:** Version column with `@default(1)` is backward-compatible. P2025 catch provides user-friendly error instead of silent overwrite.
+- **Verification honesty:** `tsc --noEmit` zero errors. Migration applied cleanly.
+- **Verdict:** Aligned. Code changes follow established patterns. Doc DRY fix is a process improvement.
+
+## ADR / Ubiquitous-Language Check
+
+- No new ADR needed — optimistic locking pattern established in SESSION_0152.
+- No new domain terms introduced.
+
+## Reflections
+
+- **DRY violations in rituals accumulate silently.** The body `## Status` section drifted from frontmatter `status` for 154 sessions before anyone noticed. Lesson: when you see a value duplicated between frontmatter and body, pick one source of truth and delete the other.
+- **`Promise.all` vs `$transaction` for read-only queries is a meaningful distinction.** Transactions add overhead (connection pooling, timeout risk) that's unnecessary when both queries are idempotent reads. Worth remembering for future query patterns.
+- **Optimistic locking is becoming a standard pattern.** Membership (SESSION_0152) and now Registration. If we add it to Invoice later, consider extracting a shared utility or Prisma extension for the version-check-and-increment-or-throw pattern.
+
+## Full Close Evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `chat-handoff.md`: updated template (removed body Status). `opening.md`: updated status reference. SESSION_0154: status closed-full. |
+| Backlinks/index sweep | SESSION_0154 needs wiki index entry (deferred — wiki index update is a separate commit if needed) |
+| Wiki lint | Deferred — no wiki content files modified, only protocol docs |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | SESSION_0154_REVIEW_01 above |
+| Review & Recommend | Next session goal written: yes |
+| Memory sweep | DRY fix is project-scoped (committed to protocol docs). No operator memory update needed. |
+| Next session unblock check | Unblocked — no user input required |
+| Git hygiene | Branch: main, worktree: single (clean), 2 commits: `d89dcbb` (code), `c9b9a60` (docs) |
+| Graphify update | 39 nodes, 78 edges, 643 communities |
