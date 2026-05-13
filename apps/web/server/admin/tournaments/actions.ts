@@ -262,7 +262,7 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
   .action(async ({ parsedInput: { registrationIds, status }, ctx: { db, revalidate } }) => {
     const registrations = await db.registration.findMany({
       where: { id: { in: registrationIds } },
-      select: { id: true, status: true, tournamentId: true },
+      select: { id: true, status: true, version: true, tournamentId: true },
     })
 
     // Validate all transitions before applying any
@@ -277,18 +277,38 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
       )
     }
 
-    await db.registration.updateMany({
-      where: { id: { in: registrationIds } },
-      data: { status },
-    })
+    // Optimistic locking: use individual versioned updates in a transaction.
+    // If any row was modified since read, the transaction rolls back entirely.
+    await db.$transaction(async (tx) => {
+      for (const reg of registrations) {
+        try {
+          await tx.registration.update({
+            where: { id: reg.id, version: reg.version },
+            data: { status, version: { increment: 1 } },
+          })
+        } catch (error: unknown) {
+          if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            (error as { code: string }).code === "P2025"
+          ) {
+            throw new Error(
+              `Registration ${reg.id} was modified by another user. Please refresh and try again.`,
+            )
+          }
+          throw error
+        }
 
-    // If cancelled, also cancel all entries
-    if (status === "CANCELLED") {
-      await db.registrationEntry.updateMany({
-        where: { registrationId: { in: registrationIds } },
-        data: { status: "CANCELLED" },
-      })
-    }
+        // If cancelled, also cancel all entries for this registration
+        if (status === "CANCELLED") {
+          await tx.registrationEntry.updateMany({
+            where: { registrationId: reg.id },
+            data: { status: "CANCELLED" },
+          })
+        }
+      }
+    })
 
     const tournamentIds = [...new Set(registrations.map(r => r.tournamentId))]
 
