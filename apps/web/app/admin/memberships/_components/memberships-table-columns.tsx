@@ -30,7 +30,7 @@ import {
   transitionMembershipStatus,
   deleteMemberships,
 } from "~/server/admin/memberships/actions"
-import { VALID_TRANSITIONS } from "~/server/admin/memberships/schema"
+import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 import type { findMemberships } from "~/server/admin/memberships/queries"
 
 type MembershipRow = Awaited<ReturnType<typeof findMemberships>>["memberships"][number]

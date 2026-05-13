@@ -853,4 +853,120 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | SESSION_0145_TASK_02 | Admin CRUD for Roles: server module + admin pages (list/new/edit) + form + DataTable | ✅ done |
 | SESSION_0145_TASK_03 | Membership status transition server actions: state machine enforcement + queries with relation includes | ✅ done |
 
-**Result:** All 3 tasks completed. PricingPlan form now supports punch card and private lesson pricing. Full Role CRUD following AgeGroup pattern. Membership transition actions enforce valid state machine. Zero TS errors.
+**Result:** All 3 tasks completed. Zero TS errors.
+
+---
+
+### SESSION_0146 — Hostile Close Review + SOP Cross-Reference (0140–0145)
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0146
+**Type:** session--review
+**Status:** closed-unclean (recovered SESSION_0149)
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0146_TASK_01 | Hostile close review of sessions 0140–0145 | ✅ done |
+| SESSION_0146_TASK_02 | SOP data & wiring flows — 6 new flows + monetization alignment map | ✅ done |
+| SESSION_0146_TASK_03 | SOP E2E user lifecycle — 4 new lifecycle sections | ✅ done |
+
+**Result:** Full review + SOP expansion completed. Session was never formally closed — recovered as closed-unclean during SESSION_0149 full close.
+
+---
+
+### SESSION_0147 — Invite Admin CRUD + Claim Flow
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0147
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0147_TASK_01 | Invite server layer (schema + actions + queries) | ✅ done |
+| SESSION_0147_TASK_02 | Invite admin pages (list, create, detail) | ✅ done |
+| SESSION_0147_TASK_03 | Public invite claim flow (auth-gated, discipline picker, transactional claim) | ✅ done |
+| SESSION_0147_TASK_04 | Admin sidebar — Invites link | ✅ done |
+
+**Result:** Full invite CRUD + public claim flow. Zero TS errors.
+
+---
+
+### SESSION_0148 — Membership Admin List Page + Invite Email
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0148
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0148_TASK_01 | Enhance membership schema with parseAsArrayOf status filter | ✅ done |
+| SESSION_0148_TASK_02 | Membership admin list page + data table (status faceted filter, 9 columns, row actions) | ✅ done |
+| SESSION_0148_TASK_03 | Admin sidebar — Memberships link (IdCardIcon) | ✅ done |
+| SESSION_0148_TASK_04 | Invite notification email template + wire into createInvite | ✅ done |
+| SESSION_0148_TASK_05 | Type check — zero TS errors | ✅ done |
+
+**Result:** Full membership list page + invite email template. Zero TS errors.
+
+---
+
+### SESSION_0149 — Membership Detail Page + Role Assignment Management
+
+**Date:** 2026-05-12
+**Agent:** copilot-session-0149
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0149_TASK_01 | Role assignment server actions (assignRoleToMembership, removeRoleFromMembership) | ✅ done |
+| SESSION_0149_TASK_02 | Membership detail page ([id]/page.tsx with info grid) | ✅ done |
+| SESSION_0149_TASK_03 | Membership status actions component (transition buttons per state machine) | ✅ done |
+| SESSION_0149_TASK_04 | Role assignment panel (view/add/remove roles with badges + selector) | ✅ done |
+| SESSION_0149_TASK_05 | Wire list page member name → detail link | ✅ done |
+| SESSION_0149_TASK_06 | Type check — zero TS errors | ✅ done |
+| SESSION_0149_TASK_07 | Hotfix: extract VALID_TRANSITIONS to constants.ts (Turbopack client/server boundary) | ✅ done |
+
+**Result:** Full membership detail page + role assignment. Turbopack boundary issue caught and fixed. Zero TS errors.
+
+#### Review
+
+**SESSION_0149_REVIEW_01 — Hostile Close Batch Review: Sessions 0147–0149**
+
+- **Reviewed tasks:** All tasks from SESSION_0147, 0148, 0149
+- **Dirstarter docs check:** cached docs sufficient — no Dirstarter-owned layers touched
+- **Sources:** `docs/knowledge/wiki/dirstarter-component-inventory.md`, existing admin pages
+- **Verdict:** Aligned. All sessions extended L1 admin CRUD patterns without replacement. `withAdminPage` HOC + `adminActionClient` enforced throughout. Role assignment uses DB-level unique constraint + upsert. State machine validated server-side. Kaizen aggregate: 7 — gaps: no E2E tests, no transition audit trail. Remediation session recommended before further membership work.
+
+### SESSION_0149_FINDING_01 — Missing E2E tests for membership admin
+
+- **Severity:** medium
+- **Task:** SESSION_0149_TASK_02, TASK_03, TASK_04
+- **Evidence:** No test files exist in `app/admin/memberships/`
+- **Impact:** Runtime behavior unverified beyond type checking
+- **Required follow-up:** Add E2E tests for membership detail + role assignment in remediation session
+- **Status:** open
+
+### SESSION_0149_FINDING_02 — Turbopack client/server boundary pattern
+
+- **Severity:** low
+- **Task:** SESSION_0149_TASK_07
+- **Evidence:** `server/admin/memberships/schema.ts` imported in `"use client"` components
+- **Impact:** Turbopack HMR errors in dev (not production-blocking)
+- **Required follow-up:** Add code guardrail: no `nuqs/server` schema file imports in client components
+- **Status:** addressed (constants.ts extracted)
+
+### SESSION_0149_FINDING_03 — Project-log gate not enforced in quick-close
+
+- **Severity:** low
+- **Task:** N/A (process)
+- **Evidence:** Sessions 0143–0149 had zero project-log entries until backfill
+- **Impact:** Audit trail gap; hostile reviews can't reference task IDs
+- **Required follow-up:** Enforce project-log gate in quick-close ritual
+- **Status:** addressed (backfilled)

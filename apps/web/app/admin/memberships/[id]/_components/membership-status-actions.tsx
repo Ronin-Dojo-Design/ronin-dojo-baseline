@@ -7,7 +7,7 @@ import { Button } from "~/components/common/button"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
 import { transitionMembershipStatus } from "~/server/admin/memberships/actions"
-import { VALID_TRANSITIONS } from "~/server/admin/memberships/schema"
+import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 
 type MembershipForActions = {
   id: string

@@ -32,18 +32,7 @@ export const transitionMembershipSchema = z.object({
 
 export type TransitionMembershipSchema = z.infer<typeof transitionMembershipSchema>
 
-/**
- * Valid membership status transitions (state machine).
- * Terminal states (CANCELLED, EXPIRED) have no outbound transitions.
- */
-export const VALID_TRANSITIONS: Record<string, string[]> = {
-  INVITED: ["PENDING", "CANCELLED"],
-  PENDING: ["ACTIVE", "CANCELLED"],
-  ACTIVE: ["SUSPENDED", "CANCELLED", "EXPIRED"],
-  SUSPENDED: ["ACTIVE", "CANCELLED"],
-  CANCELLED: [],
-  EXPIRED: [],
-}
+export { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 
 export const roleAssignmentSchema = z.object({
   membershipId: z.string().min(1, "Membership ID is required"),

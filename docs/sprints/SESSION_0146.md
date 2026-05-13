@@ -2,7 +2,7 @@
 title: "SESSION 0146 — Hostile Close Review + SOP Cross-Reference (0140–0145)"
 slug: session-0146
 type: session--review
-status: in-progress
+status: closed-unclean
 created: 2026-05-12
 updated: 2026-05-12
 last_a| Task ID | Description | Agent | Done criteria |

@@ -2,7 +2,7 @@
 title: "SESSION 0149 — Membership Detail Page + Role Assignment Management"
 slug: session-0149
 type: session--implement
-status: closed-quick
+status: closed-full
 created: 2026-05-12
 updated: 2026-05-12
 last_agent: copilot-session-0149
@@ -215,7 +215,11 @@ TASK_01 and TASK_02 can run in parallel (no dependency). TASK_03 after TASK_02. 
 | `apps/web/app/admin/memberships/[id]/page.tsx` | New — detail page |
 | `apps/web/app/admin/memberships/[id]/_components/membership-status-actions.tsx` | New — status transition buttons |
 | `apps/web/app/admin/memberships/[id]/_components/role-assignment-panel.tsx` | New — role assignment panel |
-| `apps/web/app/admin/memberships/_components/memberships-table-columns.tsx` | Modified — member name links to detail |
+| `apps/web/app/admin/memberships/_components/memberships-table-columns.tsx` | Modified — member name links to detail, VALID_TRANSITIONS import → constants.ts |
+| `apps/web/server/admin/memberships/constants.ts` | New — extracted VALID_TRANSITIONS to avoid nuqs/server in client bundle |
+| `docs/sprints/SESSION_0146.md` | Modified — status → closed-unclean (was stuck in-progress) |
+| `docs/knowledge/wiki/index.md` | Modified — added 0148/0149 entries, fixed 0146 status |
+| `docs/protocols/project-log.md` | Modified — added 0143–0149 task plan + review entries |
 
 ## Decisions Resolved
 
@@ -237,4 +241,88 @@ TASK_01 and TASK_02 can run in parallel (no dependency). TASK_03 after TASK_02. 
 - **Goal:** SESSION_0150 — Membership edit form (rank/discipline changes) + transition audit trail
 - **Inputs to read:** SESSION_0149 (this session), SESSION_0148 (list page)
 - **First task:** Add `updateMembership` action for rank/discipline edits, create edit form component on detail page
+
+## Reflections
+
+- **VALID_TRANSITIONS in schema.ts caused a Turbopack client/server boundary issue.** The `schema.ts` file imports `createSearchParamsCache` from `nuqs/server`, which Turbopack chunks as server-only. Client components importing `VALID_TRANSITIONS` from the same file triggered `Cannot use import statement outside a module`. Fix: extract shared constants to a separate `constants.ts` file that has no server-only imports. This is a pattern to follow for any shared constant used by both server and client code.
+- **SESSION_0146 was discovered stuck at `in-progress`** — an unclean close from a previous session. Fixed to `closed-unclean` during this session's full close sweep.
+- **Sessions 0143–0149 had zero project-log entries** — 7 sessions of debt. Backfilled during full close. This suggests the quick-close ritual isn't enforcing the project-log gate consistently.
+- **The membership admin arc (0145 → 0148 → 0149) is now complete** for list + detail + role assignment. The remaining gap is edit form + transition audit trail.
+
+## Hostile Close Review — Batch: Sessions 0147–0149
+
+### Giddy (Architecture + Dirstarter Compliance)
+
+**1. Plan sanity:** Plans for 0147–0149 were well-scoped, single-concern sessions. Each followed the pattern: Petey plan → Cody executes → type check. No invalid assumptions found — each session built on verified server layer from prior sessions.
+
+**2. Dirstarter compliance:** All three sessions extended L1 patterns without replacing them:
+- 0147: Invite CRUD followed tools/leads admin page pattern exactly (withAdminPage, DataTable, form, detail page)
+- 0148: Membership list page followed identical pattern with faceted filters
+- 0149: Membership detail page followed leads `[id]/page.tsx` pattern (Wrapper + status actions + info grid)
+- `VALID_TRANSITIONS` extraction to `constants.ts` is a necessary pattern divergence (Turbopack boundary), not a bypass
+
+**Dirstarter docs check:** cached docs sufficient — these sessions didn't touch Dirstarter-owned layers (auth, payments, storage, deployment). Admin CRUD patterns are L1 but well-established in the codebase.
+**Sources:** `docs/knowledge/wiki/dirstarter-component-inventory.md`, existing admin pages (leads, tools, tags)
+**Verdict:** aligned
+
+### Doug (QA + Security)
+
+**3. Security:** No new auth paths introduced. All pages use `withAdminPage` HOC. All actions use `adminActionClient` which enforces session + brand. Role assignment actions (`assignRoleToMembership`, `removeRoleFromMembership`) use `adminActionClient` — admin-only. No public endpoints created.
+
+**4. Data integrity:** `MembershipRoleAssignment` has `@@unique([membershipId, roleId])` — duplicate assignments prevented at DB level. `assignRoleToMembership` uses `upsert` to handle the race gracefully. `transitionMembershipStatus` enforces `VALID_TRANSITIONS` state machine server-side — UI shows only valid buttons, but server also validates.
+
+**5. Lifecycle proof:** Invite → Claim → Membership creation (0147) feeds into Membership list (0148) → detail view + role management (0149). The user journey from invite through to active membership with roles is now admin-visible.
+
+**6. Verification honesty:** `bunx tsc --noEmit` passed in all three sessions. No runtime tests. Browser verification was attempted in 0149 and caught a Turbopack chunk error — root cause identified (nuqs/server boundary), fix applied (constants.ts extraction). **Gap: no E2E or integration tests for membership CRUD or role assignment.**
+
+**7. Workflow honesty:** Sessions followed bow-in/plan/execute/close pattern. Task IDs used. Project-log entries were missing for 0143–0149 (now backfilled).
+
+**8. Merge readiness:** Code compiles, patterns are consistent, no known runtime errors after fix. Ready for next implementation session. Not ready for production — missing: E2E tests, transition audit trail, edit form.
+
+### Kaizen Reflection
+
+**1. Is this safe and secure?**
+- Admin-only access is provably enforced (HOC + action client). Brand scoping is enforced by `adminActionClient` context.
+- What's documented but not proven: actual runtime behavior of role assignment panel (no browser screenshot). Tests that would close gaps: E2E test for assign/remove role, E2E test for status transition from detail page.
+
+**2. How many failed steps could we have prevented?**
+- 1 failed step: Turbopack chunk error from `VALID_TRANSITIONS` in `schema.ts`. Prevention: establish a code guardrail rule — "never import from a `schema.ts` file that uses `nuqs/server` in a `"use client"` component; use a separate `constants.ts` for shared values."
+- 1 process gap: 7 sessions without project-log entries. Prevention: add project-log check to quick-close checklist (it's in the protocol but wasn't enforced).
+
+**3. Confidence at scale:**
+- 100 users: 8/10 — admin pages work, role assignment is idempotent (upsert), state machine is server-enforced
+- 1,000 users: 7/10 — no pagination on role assignments per membership (unlikely to be >10 roles, but unverified), no transition audit trail
+- 10,000 users: 6/10 — no E2E tests, no load testing on membership queries with joins, no transition audit trail for compliance
+
+**Kaizen aggregate: 7** — stage remediation session for E2E tests + transition audit trail before further membership feature work.
+
+### Score gate
+
+Kaizen aggregate 7 → per protocol: "Stage a remediation session covering the gaps before the next implementation session."
+
+**Recommendation:** SESSION_0150 should be a remediation session adding:
+1. Transition audit trail model + wiring
+2. E2E test for membership detail page + role assignment
+3. Code guardrail G-NEW: "no nuqs/server imports in client components"
+
+## ADR / Ubiquitous Language Check
+
+- No new ADR needed — role assignment and status transitions follow existing patterns
+- No new domain terms introduced
+- `VALID_TRANSITIONS` constant extraction is a code organization concern, not architectural
+
+## Full Close Evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0149.md updated; SESSION_0146.md status fixed to closed-unclean; no wiki page frontmatter changes needed (no wiki pages touched) |
+| Backlinks/index sweep | wiki/index.md updated: added 0148/0149 entries, fixed 0146 status from closed-full to closed-unclean |
+| Wiki lint | Not run — `bun run wiki:lint` script availability unverified; manual sweep completed |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | Batch review of 0147–0149 completed; Kaizen aggregate: 7; findings: missing E2E tests, missing transition audit trail, project-log debt backfilled |
+| Review & Recommend | Next session goal written: yes — SESSION_0150 remediation (E2E tests + transition audit trail) |
+| Memory sweep | Pattern noted: extract shared constants from nuqs/server schema files to avoid client/server boundary errors. Project-log gate not consistently enforced in quick-close — needs enforcement. |
+| Next session unblock check | Unblocked — no user input needed for remediation session |
+| Git hygiene | Branch: main; worktree: single; commit `653a745`; not pushed (user authorization pending) |
+| Graphify update | Nodes: 103 (incremental), Edges: 360, Communities: 641 |
 
