@@ -33,7 +33,7 @@ export const findMemberships = async (
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
-  const [memberships, membershipsTotal] = await db.$transaction([
+  const [memberships, membershipsTotal] = await Promise.all([
     db.membership.findMany({
       where: { ...whereQuery, ...where },
       orderBy,

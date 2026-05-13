@@ -206,7 +206,7 @@ export const updateRegistrationStatus = tournamentAdminActionClient
   .action(async ({ parsedInput: { registrationId, status }, ctx: { db, revalidate } }) => {
     const registration = await db.registration.findUniqueOrThrow({
       where: { id: registrationId },
-      select: { id: true, status: true, tournamentId: true },
+      select: { id: true, status: true, version: true, tournamentId: true },
     })
 
     const allowed = REGISTRATION_STATUS_TRANSITIONS[registration.status] ?? []
@@ -216,10 +216,29 @@ export const updateRegistrationStatus = tournamentAdminActionClient
       )
     }
 
-    const updated = await db.registration.update({
-      where: { id: registrationId },
-      data: { status },
-    })
+    // Optimistic locking: only update if version hasn't changed since read.
+    // If another caller updated first, Prisma throws P2025 (record not found)
+    // because the compound where {id, version} no longer matches.
+    let updated
+    try {
+      updated = await db.registration.update({
+        where: { id: registrationId, version: registration.version },
+        data: { status, version: { increment: 1 } },
+      })
+    } catch (error: unknown) {
+      // P2025 = "Record to update not found" — another caller won the race
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code: string }).code === "P2025"
+      ) {
+        throw new Error(
+          "Registration was modified by another user. Please refresh and try again.",
+        )
+      }
+      throw error
+    }
 
     // If cancelled, also cancel all entries
     if (status === "CANCELLED") {

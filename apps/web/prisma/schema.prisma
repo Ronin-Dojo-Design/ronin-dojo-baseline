@@ -1994,6 +1994,7 @@ model Registration {
   paymentStatus PaymentStatus      @default(UNPAID)
   totalFeeCents Int                @default(0)
   currency      String             @default("USD") @db.Char(3)
+  version       Int                @default(1)
   submittedAt   DateTime?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
