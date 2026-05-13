@@ -367,6 +367,70 @@ function R7_healthDrift(_pages: ParsedPage[]): LintResult[] {
   return []
 }
 
+/**
+ * R8 — Markdown formatting checks (SESSION_0155)
+ *
+ * Catches the most common agent-generated formatting issues:
+ * - Heading immediately followed by list item (no blank line)
+ * - List immediately followed by heading (no blank line)
+ *
+ * These correspond to markdownlint MD022 + MD032 which only run in-editor
+ * and are invisible to agents generating markdown in chat.
+ */
+function R8_markdownFormatting(pages: ParsedPage[]): LintResult[] {
+  const results: LintResult[] = []
+
+  for (const page of pages) {
+    const lines = page.body.split("\n")
+    let inCodeFence = false
+
+    for (let i = 0; i < lines.length - 1; i++) {
+      const current = lines[i]
+
+      // Track fenced code blocks — skip formatting checks inside them
+      if (/^```/.test(current.trim())) {
+        inCodeFence = !inCodeFence
+        continue
+      }
+      if (inCodeFence) continue
+
+      const next = lines[i + 1]
+
+      // Heading followed immediately by list item (no blank line)
+      if (/^#{1,6}\s/.test(current) && /^\s*[-*+]\s/.test(next)) {
+        results.push({
+          rule: "R8",
+          severity: "warning",
+          file: page.relativePath,
+          message: `Heading on line ${i + 1} immediately followed by list (missing blank line)`,
+          line: i + 1,
+        })
+      }
+
+      // Non-blank, non-list line followed by list item (common: bold text then list)
+      if (
+        current.trim() !== "" &&
+        !/^\s*[-*+]\s/.test(current) &&
+        !/^\s*\d+[.)]\s/.test(current) &&
+        !/^#{1,6}\s/.test(current) &&
+        /^\s*[-*+]\s/.test(next)
+      ) {
+        // Only flag if current line looks like prose (starts with ** or letter)
+        if (/^\*\*/.test(current.trim()) || /^[A-Za-z]/.test(current.trim())) {
+          results.push({
+            rule: "R8",
+            severity: "warning",
+            file: page.relativePath,
+            message: `Text on line ${i + 1} immediately followed by list (missing blank line)`,
+            line: i + 1,
+          })
+        }
+      }
+    }
+  }
+  return results
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -390,6 +454,7 @@ async function main() {
     ...R5_missingFrontmatter(pages),
     ...R6_emptyPages(pages),
     ...R7_healthDrift(pages),
+    ...R8_markdownFormatting(pages),
   ]
 
   // Group by severity
@@ -418,6 +483,7 @@ async function main() {
     R5: "Missing frontmatter",
     R6: "Empty/thin pages",
     R7: "Health score drift",
+    R8: "Markdown formatting",
   }
 
   for (const [rule, items] of byRule) {

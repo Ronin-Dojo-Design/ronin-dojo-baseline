@@ -4,8 +4,8 @@ slug: petey-plan
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-02
-last_agent: codex-session-0032-5
+updated: 2026-05-13
+last_agent: copilot-session-0155
 pairs_with:
   - docs/agents/petey.md
   - docs/protocols/review-recommend.md
@@ -58,6 +58,7 @@ One sentence: what this session accomplishes.
 ### Tasks
 
 #### TASK_01 — <title>
+
 - **Agent:** Petey | Cody | Doug
 - **What:** one-line description
 - **Steps:** numbered list
@@ -65,14 +66,17 @@ One sentence: what this session accomplishes.
 - **Depends on:** nothing | TASK_NN
 
 #### TASK_02 — <title>
+
 ...
 
 ### Parallelism
+
 Which tasks can run concurrently? Which must be sequential?
 Sub-agents on disjoint file sets → parallel on main.
 Overlapping code files → sequential, or git worktrees if justified.
 
 ### Agent assignments
+
 | Task | Agent | Rationale |
 |---|---|---|
 | TASK_01 | Cody | Clear execution, no decisions |

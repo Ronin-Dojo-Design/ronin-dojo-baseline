@@ -4,8 +4,8 @@ slug: code-guardrails
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-05-12
-last_agent: copilot-session-0150
+updated: 2026-05-13
+last_agent: copilot-session-0155
 ---
 
 # Code Guardrails
@@ -139,3 +139,28 @@ import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants" // ✅ 
 ```
 
 **Discovery:** SESSION_0149 — Turbopack chunk error when `membership-status-actions.tsx` imported from `schema.ts`.
+
+### G8 — Markdown formatting: blank lines around headings and lists
+
+Always add a blank line between a heading and the content that follows it (especially lists). Always add a blank line before and after list blocks. This prevents MD022/MD032 lint violations that compound across sessions.
+
+**Pattern:**
+
+```markdown
+#### TASK_01 — Description
+
+- **Agent:** Cody
+- **What:** one-line description
+```
+
+**Anti-pattern:**
+
+```markdown
+#### TASK_01 — Description
+- **Agent:** Cody
+- **What:** one-line description
+```
+
+**Enforcement:** `wiki-lint.ts` rule R8 checks this at close time. VS Code markdownlint extension catches it in-editor.
+
+**Discovery:** SESSION_0155 — 12 session files (0144–0155) had this pattern consistently because the `petey-plan.md` template omitted the blank line.
