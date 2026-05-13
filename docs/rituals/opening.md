@@ -4,14 +4,15 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-12
-last_agent: copilot-session-0139
+updated: 2026-05-13
+last_agent: codex-session-0158
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
   - docs/runbooks/graphify-repo-memory.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0158.md
 ---
 
 # Opening ritual — bow in
@@ -66,13 +67,20 @@ Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). C
 
 Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) for open drift entries relevant to today's lane. If a drift item directly affects the task, note it in the SESSION file.
 
-### 3c. Optional Graphify check for search-heavy lanes
+### 3c. Graphify-first discovery for search-heavy lanes
 
-Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/graphify-repo-memory.md) only when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, or old-monorepo mapping.
+Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/graphify-repo-memory.md) when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, old-monorepo mapping, or any lane where the agent would otherwise "search everything."
 
-If `graphify-out/GRAPH_REPORT.md` exists and is current, read its high-signal sections and run one targeted query before raw grep. Record the query and selected files in the SESSION file if Graphify changes what you open.
+For those lanes, run Graphify before any repo-wide text search:
 
-Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
+```bash
+graphify stats
+graphify query "<lane nouns and domain terms>" --budget 2000
+```
+
+Then open the exact files Graphify identifies and verify them by direct source/doc inspection. Do not use repo-wide `grep`, `rg`, or `find` for task planning before the graph query. If a path is already known, open that exact file directly.
+
+Record the query and selected files in the SESSION file if Graphify changes what you open. Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
 
 ### 4. Identify ONE task for this session
 

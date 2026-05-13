@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-12
-last_agent: copilot-session-0139
+updated: 2026-05-13
+last_agent: codex-session-0158
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -14,6 +14,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
   - docs/sprints/SESSION_0139.md
+  - docs/sprints/SESSION_0158.md
 ---
 
 # FAILED_STEPS Log
@@ -401,9 +402,9 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **SOP source:** `docs/runbooks/graphify-repo-memory.md` §1–4, `docs/rituals/opening.md` step 3c
 - **Root cause:** Agent defaulted to familiar `grep`/`find` patterns instead of treating Graphify as the primary navigation tool for cross-domain work. The runbook says "use Graphify when the task is cross-domain" — this task clearly was.
 - **Impact:** ~5 unnecessary grep/find calls before the user intervened. Wasted tokens and time. The 3 Graphify queries that followed answered all questions faster and surfaced connections (ADR 0012, feature-data-prerequisites.md) that grep would have missed.
-- **Corrective action:** At bow-in, if the session touches 2+ repo areas (admin + server + architecture + web), run Graphify queries FIRST. Use grep only for pinpoint verification after graph narrows the file set.
-- **Verification:** Next session bow-in: count grep calls before first Graphify query. Target: 0 greps before Graphify for any cross-domain session.
-- **Status:** open
+- **Corrective action:** At bow-in, if the session touches 2+ repo areas (admin + server + architecture + web), run Graphify queries FIRST. Use exact-file checks only after graph narrows the file set.
+- **Verification:** SESSION_0158 patched `docs/rituals/opening.md`, `docs/rituals/closing.md`, and `docs/runbooks/graphify-repo-memory.md` so cross-domain lanes use `graphify stats`/`graphify query` before repo-wide text search, and the project-log gate uses Graphify discovery plus a direct `project-log.md` exact-file check.
+- **Status:** mitigated
 
 ### FS-0021 — Schema migration runbook steps skipped (3 of 8 steps) + runbook accuracy gap
 

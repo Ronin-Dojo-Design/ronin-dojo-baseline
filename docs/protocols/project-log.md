@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-13
-last_agent: codex-session-0157
+last_agent: codex-session-0158
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -34,6 +34,7 @@ backlinks:
   - docs/sprints/SESSION_0106.md
   - docs/sprints/SESSION_0111.md
   - docs/sprints/SESSION_0157.md
+  - docs/sprints/SESSION_0158.md
 ---
 
 # Project Log
@@ -1100,3 +1101,29 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** Enroll/unenroll and completion toggle UI wiring is unproven in a browser session.
 - **Required follow-up:** Add signed-in Playwright or dev-login course lifecycle smoke for `/courses/bjj-safety-school`.
 - **Status:** open
+
+### SESSION_0158 — Graphify-First Ritual Patch + Vercel CLI
+
+**Date:** 2026-05-13
+**Agent:** codex-session-0158
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0158_TASK_01 | Patch opening/closing/Graphify runbook to use Graphify-first discovery and direct exact-file checks | ✅ done |
+| SESSION_0158_TASK_02 | Install and verify Vercel CLI | ✅ done |
+| SESSION_0158_TASK_03 | Verify docs and leave DNS repair unblocked | ✅ done |
+
+**Result:** Opening, closing, and Graphify runbook now route cross-domain planning through `graphify stats`/`graphify query` before repo-wide text search; closing no longer forces a commit-hash/Graphify-stats amend loop; Vercel CLI 54.0.0 installed under `~/.local/bin/vercel`.
+
+#### Review
+
+**SESSION_0158_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0158_TASK_01, TASK_02, TASK_03
+- **Dirstarter docs check:** Not applicable — docs/protocol tooling and local CLI setup only.
+- **Sources:** Local `opening.md`, `closing.md`, `graphify-repo-memory.md`, `failed-steps-log.md`; Vercel CLI `vercel --version`.
+- **Verdict:** Aligned. The patch addresses FS-0020 directly, keeps Graphify as navigation rather than proof, and preserves exact-file verification after graph selection. DNS repair remains intentionally unmodified until dashboard-specific records are available.
+- **Kaizen aggregate:** 9 — process patch is narrow and removes the known close-order loop.

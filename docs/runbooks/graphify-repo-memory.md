@@ -4,15 +4,17 @@ slug: graphify-repo-memory
 type: runbook
 status: active
 created: 2026-05-06
-updated: 2026-05-10
+updated: 2026-05-13
 author: Brian + Codex
-last_agent: copilot-session-0116
+last_agent: codex-session-0158
 pairs_with:
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/rituals/opening.md
+  - docs/rituals/closing.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0158.md
 tags:
   - graphify
   - repo-memory
@@ -24,7 +26,7 @@ tags:
 
 ## Summary
 
-Use Graphify as a local repo map before large search-heavy work. The graph is navigation aid, not proof. It helps decide which files to open, then normal code/doc review still verifies the answer.
+Use Graphify as the first local repo map before large search-heavy work. The graph is navigation aid, not proof. It helps decide which files to open, then exact source/doc review still verifies the answer.
 
 ## When to use
 
@@ -35,7 +37,7 @@ Use this when the session is likely to cross multiple repo areas:
 - auth, payment, entitlement, security, or brand-scope review
 - hostile repo review
 - old monorepo vs new repo mapping
-- unfamiliar feature area where raw grep would produce too many files
+- unfamiliar feature area where repo-wide text search would produce too many files
 - a task where the agent says it needs to "search everything"
 
 Do not use it for tiny, obvious, single-file work.
@@ -87,11 +89,12 @@ If no, skip Graphify and work normally.
 
 ### 2. Check freshness
 
-Open `.graphify/graph_report.md` and compare its commit line to current `HEAD`.
+Check graph stats and compare the report header to current `HEAD` if the report records a commit.
 
 ```bash
+graphify stats
 git rev-parse --short HEAD
-rg -n "Built from commit" .graphify/graph_report.md
+sed -n '1,40p' .graphify/graph_report.md
 ```
 
 If stale and the task depends on current code, refresh:
@@ -106,7 +109,7 @@ If the graph exceeds the default HTML viz node limit (5000), set the env var:
 GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
-If Graphify is not installed, do not block the session. Use the wiki index and normal file search.
+If Graphify is not installed, do not block the session. Use the wiki index, direct directory listings, and exact-file reads. Reserve repo-wide text search as the fallback after graph/wiki paths fail.
 
 ### 3. Read the high-signal report sections
 
@@ -140,10 +143,12 @@ Treat graph output as a file-selection tool. Verify by reading the actual files 
 
 Minimum verification:
 
-- open the files named by the graph
+- open the exact files named by the graph
 - confirm imports/calls/relations in source
 - check relevant docs or ADRs
 - record any useful discovery back into a wiki page or session file
+
+For confirmation inside a known file, use a direct exact-file check such as editor find, a bounded `sed` read, or a single-file `awk` counter. Do not go back to repo-wide text search for task planning after Graphify has narrowed the file set.
 
 ### 6. Record use in the session
 
@@ -164,7 +169,7 @@ Add Graphify to bow-in only as an optional lane check.
 
 Use case:
 
-> During bow-in, the agent sees the session is about Dirstarter update strategy, component porting, or payment/security review. Instead of grepping the whole repo, it checks whether `.graphify/graph_report.md` is current, runs one targeted query, and opens only the files the graph points to.
+> During bow-in, the agent sees the session is about Dirstarter update strategy, component porting, or payment/security review. Instead of running repo-wide text search, it checks graph freshness, runs one targeted query, and opens only the files the graph points to.
 
 This belongs in `opening.md` as an optional step after reading lane docs, not as a mandatory step for every session.
 

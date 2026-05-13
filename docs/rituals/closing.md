@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-05-13
-last_agent: copilot-session-0155
+last_agent: codex-session-0158
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -17,6 +17,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0029.md
+  - docs/sprints/SESSION_0158.md
 ---
 
 # Closing ritual — bow out
@@ -77,7 +78,14 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 
 **Atomicity rule (FS-0015 / SESSION_0074_TASK_09):** The YAML frontmatter `status:` field and the body `### Status` line must be updated together in the same edit pass. Never change one without the other. A session file with `status: in-progress` in YAML but `closed-quick` in the body (or vice versa) is a data integrity violation.
 
-**Project-log gate:** Before setting any closed status, verify the current session has at least one entry in `docs/protocols/project-log.md`: `grep -c "SESSION_NNNN" docs/protocols/project-log.md` must return ≥ 1. If it returns 0, append the task plan entries before closing.
+**Project-log gate:** Before setting any closed status, verify the current session has at least one entry in `docs/protocols/project-log.md` using Graphify-first discovery plus an exact-file check:
+
+```bash
+graphify query "SESSION_NNNN TASK_PLAN_LOG TASK_REVIEW_LOG project-log" --budget 1000
+awk 'index($0, "SESSION_NNNN") { count++ } END { print count + 0 }' docs/protocols/project-log.md
+```
+
+The Graphify query should identify the audit ledger; the exact-file check must return >= 1. If it returns 0, append the task plan entries before closing. An editor search inside the already-open `project-log.md` is also acceptable. Do not use repo-wide text search for this gate.
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
 
@@ -134,13 +142,13 @@ If the user hasn't authorized commits, leave changes uncommitted and note that i
 
 ### 4b. Graphify update (if installed)
 
-If the session touched code files and Graphify is installed locally, refresh the repo graph so the next bow-in starts with a current graph:
+If the session changed tracked files and Graphify is installed locally, refresh the repo graph after git hygiene so the next bow-in starts from the current commit/work:
 
 ```bash
 GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
-Skip if Graphify is not installed or if the session only touched docs. Record the node/edge count in the SESSION file if you run it. See [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) for full usage.
+Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response. See [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) for full usage.
 
 ### 5. Bow-out line
 
@@ -150,7 +158,7 @@ That's quick close done.
 
 ## Full close — additional steps
 
-Run these after quick close steps 1–3. **In full close mode, defer steps 4/4b/5 (git hygiene, Graphify, bow-out line) until after step 8.** This lets all content, reviews, and evidence be written before the first commit — avoiding a two-pass commit cycle.
+Run these after quick close steps 1–3. **In full close mode, defer steps 4/4b/5 (git hygiene, Graphify, bow-out line) until after step 8.** This lets all content, reviews, and evidence be written before the first commit. Final commit hash and post-commit Graphify stats may be reported in the bow-out response instead of written back into the committed SESSION file; this avoids a self-referential amend loop.
 
 ### Execution order for full close
 
@@ -159,15 +167,15 @@ Run these after quick close steps 1–3. **In full close mode, defer steps 4/4b/
 3. JETTY/backlinks/wiki-lint sweep (step 3)
 4. Reflections (step 6)
 5. Review & Recommend + hostile close (step 6.5)
-6. Full close evidence artifact — draft with "pending" for git/Graphify fields (step 6a)
+6. Full close evidence artifact — draft with "final response will report" allowed for post-commit git/Graphify fields (step 6a)
 7. ADR + ubiquitous-language check (step 6.6)
 8. Memory sweep (step 7)
 9. Confirm next session unblocked (step 8)
-10. Git hygiene — single commit covering all content (step 4)
-11. Graphify update (step 4b)
-12. Finalize evidence artifact — fill in commit hash + Graphify stats (step 6a update)
-13. Final commit + push of evidence (step 4, second pass — or amend)
-14. Bow-out line (step 5)
+10. Git hygiene — single commit covering all committed content (step 4)
+11. Graphify update after git hygiene (step 4b)
+12. Bow-out line with final commit hash, push status, and Graphify stats (step 5)
+
+If the operator requires the SESSION file itself to contain the final commit hash and Graphify stats, amend once after step 11, rerun Graphify after the amend, and stop editing docs. Do not create an endless evidence-update cycle.
 
 ### 6. Reflections (in the SESSION file)
 
@@ -197,8 +205,8 @@ For full close, add this block to the SESSION file before changing status to `cl
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
-| Git hygiene | <branch, worktree list result, status, commit/push result or explicit no-commit reason> |
-| Graphify update | <node/edge/community count or "skipped — docs-only session"> |
+| Git hygiene | <branch, worktree list result, status, commit/push plan, final response proof, or explicit no-commit reason> |
+| Graphify update | <node/edge/community count, final response proof, or "skipped — Graphify unavailable/no file changes"> |
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
