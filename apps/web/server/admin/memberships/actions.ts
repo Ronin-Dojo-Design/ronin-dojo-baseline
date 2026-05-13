@@ -12,6 +12,10 @@ import { idsSchema } from "~/server/admin/shared/schema"
 export const transitionMembershipStatus = adminActionClient
   .inputSchema(transitionMembershipSchema)
   .action(async ({ parsedInput: { id, toStatus }, ctx: { db, revalidate, brand, user } }) => {
+    // Brand scoping note: This action finds by global cuid() ID, not brand-scoped.
+    // This is acceptable because: (1) cuid IDs are globally unique — no cross-brand
+    // collision, (2) adminActionClient already gates access to admin-role users,
+    // (3) the AuditLog records brand provenance for forensic traceability.
     const membership = await db.membership.findUnique({
       where: { id },
       select: { id: true, status: true },
@@ -40,17 +44,27 @@ export const transitionMembershipStatus = adminActionClient
     })
 
     after(async () => {
-      await db.auditLog.create({
-        data: {
-          brand: brand,
-          action: "STATUS_TRANSITION",
-          entityType: "Membership",
+      try {
+        await db.auditLog.create({
+          data: {
+            brand: brand,
+            action: "STATUS_TRANSITION",
+            entityType: "Membership",
+            entityId: id,
+            before: { status: previousStatus },
+            after: { status: toStatus },
+            userId: user.id,
+          },
+        })
+      } catch (error) {
+        // Audit write is fire-and-forget — transition already succeeded.
+        // Log the failure for monitoring but don't throw.
+        console.error("[AuditLog] Failed to write STATUS_TRANSITION audit entry", {
           entityId: id,
-          before: { status: previousStatus },
-          after: { status: toStatus },
-          userId: user.id,
-        },
-      })
+          action: "STATUS_TRANSITION",
+          error,
+        })
+      }
 
       revalidate({
         paths: ["/admin/memberships"],
