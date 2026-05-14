@@ -12,6 +12,12 @@ export default defineConfig({
 
   datasource: {
     url: env("DATABASE_URL"),
-    shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
+    // SHADOW_DATABASE_URL is only used by `prisma migrate dev` locally;
+    // production builds (Vercel) don't need it. The conditional spread
+    // keeps the field absent when the env var isn't set, avoiding a
+    // strict PrismaConfigEnvError during postinstall.
+    ...(process.env.SHADOW_DATABASE_URL && {
+      shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
+    }),
   },
 })
