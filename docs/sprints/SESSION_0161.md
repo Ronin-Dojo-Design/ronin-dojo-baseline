@@ -56,16 +56,23 @@ Land the `baselinemartialarts.com` production deploy end-to-end: peel remaining 
 
 ## Files Touched
 
-_(filled at bow-out)_
+| Path | Note |
+| --- | --- |
+| `apps/web/prisma.config.ts` | TASK_01 Path B fix: `shadowDatabaseUrl` conditional-spread so it's only set when env var exists. |
+| `apps/web/package.json` | TASK_02: added `@radix-ui/react-accordion`, `debounce`, `embla-carousel` as explicit deps. |
+| `pnpm-lock.yaml` | Updated by `pnpm add --filter dirstarter`. |
+| `docs/sprints/SESSION_0161.md` | This session record. |
 
 ## What Landed
 
-_(filled at bow-out)_
+- **TASK_01** — Prisma config now lets `prisma generate` proceed on Vercel without `SHADOW_DATABASE_URL` set. Commit `cc5cd59`.
+- **TASK_02** — Three phantom dependencies declared in `apps/web/package.json`. Full repo audit confirms zero remaining phantoms. Commit `291d8dd`.
+- Auto-redeploy triggered on push of `7f857fd`. Awaiting build result for TASK_03 verification.
 
 ## Open Decisions / Blockers
 
-- Awaiting Vercel auto-deploy result after TASK_01 push.
+- Awaiting Vercel auto-deploy result for `7f857fd` — should now reach `next build` and either succeed end-to-end or surface the actual env-validation layer (TASK_03 trigger).
 
 ## Next Session
 
-_(filled at bow-out)_
+Filled at bow-out.
