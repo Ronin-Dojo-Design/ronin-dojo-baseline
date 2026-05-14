@@ -41,13 +41,13 @@ Land the `baselinemartialarts.com` production deploy end-to-end: peel remaining 
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0161_TASK_01 | Path B fix for SHADOW_DATABASE_URL strict-validation failure: conditional-spread the `shadowDatabaseUrl` field in `apps/web/prisma.config.ts` so it's only set when `SHADOW_DATABASE_URL` env var exists. Unblocks Vercel postinstall after SESSION_0160's deploy attempt failed on this var. | in progress |
+| SESSION_0161_TASK_01 | Path B fix for SHADOW_DATABASE_URL strict-validation failure: conditional-spread the `shadowDatabaseUrl` field in `apps/web/prisma.config.ts` so it's only set when `SHADOW_DATABASE_URL` env var exists. Unblocks Vercel postinstall after SESSION_0160's deploy attempt failed on this var. | ✅ done |
 | SESSION_0161_TASK_02 | After TASK_01 push triggers redeploy, watch build log for next failure layer (likely env var validation in `next build` via `apps/web/env.ts` schema). Surface and resolve. | ✅ done — actual next failure was not env validation but **phantom dependencies**: `@radix-ui/react-accordion`, `debounce`, `embla-carousel` were imported in `apps/web/` source but not declared in `apps/web/package.json`. They resolved locally via pnpm symlinks from transitive deps, but Vercel's `--frozen-lockfile` install with strict isolation couldn't follow that. Added all three with `pnpm add --filter dirstarter`. Full repo audit confirms zero remaining phantom deps. |
-| SESSION_0161_TASK_03 | On successful deploy: `curl -sI https://baselinemartialarts.com` → expect HTTP 200 + valid TLS cert + `Server: Vercel`. Confirm Vercel issued Let's Encrypt cert. | queued |
-| SESSION_0161_TASK_04 | Add `www.baselinemartialarts.com` to Vercel project Domains (redirect to apex). Carried over from SESSION_0160. | queued |
+| SESSION_0161_TASK_03 | On successful deploy: `curl -sI https://baselinemartialarts.com` → expect HTTP 200 + valid TLS cert + `Server: Vercel`. Confirm Vercel issued Let's Encrypt cert. | ✅ done — apex returns HTTP 200 from Vercel |
+| SESSION_0161_TASK_04 | Add `www.baselinemartialarts.com` to Vercel project Domains (redirect to apex). Carried over from SESSION_0160. | ✅ done — `www` redirects 308 to apex |
 | SESSION_0161_TASK_05 | Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` content body to match current Resend dashboard pattern (per SESSION_0159_FINDING_01). | queued |
 | SESSION_0161_TASK_06 | Fix the next `fdf9b2f` Vercel `next build` layer: `"use server"` sync export in Printful actions + `better-auth@1.6.11` `createAuthMiddleware` import path; local TypeScript then exposed and resolved a Resend SDK contact overload mismatch. | ✅ done — local `pnpm --filter dirstarter exec next build` passes |
-| SESSION_0161_TASK_07 | Fix Vercel production environment/config layer: add required Production env vars and prepare Next.js monorepo Root Directory config for `apps/web`. | in progress |
+| SESSION_0161_TASK_07 | Fix Vercel production environment/config layer: add required Production env vars and prepare Next.js monorepo Root Directory config for `apps/web`. | ✅ done — production deployment `371c2ef` is Ready |
 
 ### Pre-flight context (from SESSION_0160 close)
 
@@ -199,6 +199,7 @@ Unblock the `fdf9b2f` production build layer exposed by Vercel after install, Pr
 - **TASK_02** — Three phantom dependencies declared in `apps/web/package.json`. Full repo audit confirms zero remaining phantoms. Commit `291d8dd`.
 - **TASK_06** — Vercel `fdf9b2f` logs showed the phantom-deps layer was resolved; build failed at `next build` on Better-Auth import path + Printful `"use server"` export. Local verification also surfaced a Resend SDK `contacts.create` overload mismatch. All three are patched.
 - **TASK_07** — Added missing Vercel Production env vars via CLI: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL`. Vercel project settings are now corrected for the monorepo app root: Root Directory `apps/web`, Framework Preset `Next.js`, Output Directory `Next.js default`, and monorepo install/build commands. The install command now calls `corepack pnpm@9.0.0` directly so Vercel accepts the checked-in lockfile.
+- **TASK_03 / TASK_04** — Production deploy for commit `371c2ef` is Ready. Apex domain serves the app directly; `www.baselinemartialarts.com` redirects to apex with HTTP 308.
 
 ## Verification Evidence
 
@@ -224,11 +225,22 @@ Unblock the `fdf9b2f` production build layer exposed by Vercel after install, Pr
   - Install Command `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile`
   - Build Command `cd ../.. && pnpm --filter dirstarter build`
 - First post-root deploys for `ce69779` and `d662655` proved the Root Directory fix took effect, then failed at install because Vercel's plain `pnpm` binary still rejected the root lockfile. The install command now invokes `corepack pnpm@9.0.0` directly.
+- Push `371c2ef` deployed successfully:
+  - `vercel inspect https://ronin-dojo-baseline-afzizzo7x-brian-scotts-projects-4841d4d6.vercel.app --scope brian-scotts-projects-4841d4d6 --logs`
+  - Status: `Ready`
+  - Detected Next.js version: `16.2.6`
+  - Build completed in `/vercel/output`
+  - Deployment completed
+- Domain verification:
+  - `curl -sI https://baselinemartialarts.com` returns `HTTP/2 200`, `server: Vercel`, and `x-matched-path: /`.
+  - `curl -sI https://www.baselinemartialarts.com` returns `HTTP/2 308` with `location: https://baselinemartialarts.com/`.
+  - Vercel project domains API confirms `www.baselinemartialarts.com` redirects to `baselinemartialarts.com` with status `308`, while `baselinemartialarts.com` has no redirect and is verified.
 
 ## Open Decisions / Blockers
 
-- Awaiting redeploy after Vercel project Root Directory correction to `apps/web`.
+- No production deploy blocker remains.
+- Remaining queued work: TASK_05 Resend DNS documentation refresh.
 
 ## Next Session
 
-Filled at bow-out.
+- Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` Resend DNS body per SESSION_0159_FINDING_01.

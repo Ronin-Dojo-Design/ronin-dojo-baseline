@@ -1205,8 +1205,8 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | --- | --- | --- |
 | SESSION_0161_TASK_01 | Make `SHADOW_DATABASE_URL` optional in `apps/web/prisma.config.ts` so Prisma generate can run on Vercel without a shadow DB env var | ✅ done |
 | SESSION_0161_TASK_02 | Resolve next Vercel build layer after TASK_01 | ✅ done — phantom deps declared in `apps/web/package.json` |
-| SESSION_0161_TASK_03 | Verify successful production deploy and `curl -I https://baselinemartialarts.com` response | queued |
-| SESSION_0161_TASK_04 | Add/confirm `www.baselinemartialarts.com` project domain redirect to apex | queued |
+| SESSION_0161_TASK_03 | Verify successful production deploy and `curl -I https://baselinemartialarts.com` response | ✅ done — apex returns HTTP 200 from Vercel |
+| SESSION_0161_TASK_04 | Add/confirm `www.baselinemartialarts.com` project domain redirect to apex | ✅ done — `www` redirects 308 to apex |
 | SESSION_0161_TASK_05 | Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` Resend DNS body | queued |
 | SESSION_0161_TASK_06 | Fix `fdf9b2f` Vercel `next build` errors: Printful `"use server"` sync export + Better-Auth `createAuthMiddleware` import path + Resend SDK contact overload mismatch | ✅ done — local `pnpm --filter dirstarter exec next build` passes |
-| SESSION_0161_TASK_07 | Add missing Vercel Production env vars and set Vercel app root to `apps/web` with Next.js framework settings | in progress |
+| SESSION_0161_TASK_07 | Add missing Vercel Production env vars and set Vercel app root to `apps/web` with Next.js framework settings | ✅ done — production deployment `371c2ef` is Ready |
