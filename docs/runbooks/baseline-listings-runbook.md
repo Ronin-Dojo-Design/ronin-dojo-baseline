@@ -5,14 +5,18 @@ type: runbook
 status: active
 created: 2026-05-14
 updated: 2026-05-14
-last_agent: chatgpt-session-listings-runbook
+last_agent: codex-session-0165
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/architecture/dirstarter-baseline-index.md
+  - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
   - docs/knowledge/wiki/manual-boundary-registry.md
+  - docs/sprints/SESSION_0165.md
   - docs/sprints/lanes/LANE-S040-listing-relabel.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0165.md
 tags:
   - listings
   - directory
@@ -55,6 +59,12 @@ Why:
 - Dirstarter already provides submission, admin review, scheduling, Stripe tier language, ads, and paid listing mechanics.
 - The repo already has Ronin-native `Organization`, `Program`, `DirectoryProfile`, `Membership`, and `Discipline` models.
 - Building a separate directory before the relationship between these models is locked would create duplicate workflows.
+
+### SESSION_0165 integration note
+
+This runbook was pulled from GitHub commit `a2f5f87a79ea15a89d063234bbc150864581ff8c` and integrated as a planning input, not as runtime implementation.
+
+Use it with `docs/architecture/dirstarter-baseline-index.md` and `docs/architecture/dirstarter-upstream-sync-2026-05-14.md` before any Tool-to-Listing code change. Upstream Dirstarter `7e724b6` adds `ToolTier`, `Rejected`, `Deleted`, bookmarks, and tier priority; Ronin must port those deliberately instead of renaming or merging the whole Tool stack.
 
 ---
 

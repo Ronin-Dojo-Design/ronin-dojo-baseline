@@ -5,16 +5,19 @@ type: backlog
 status: active
 created: 2026-05-05
 updated: 2026-05-14
-last_agent: codex-session-0164
+last_agent: codex-session-0165
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/knowledge/wiki/dirstarter-docs-inventory.md
   - docs/architecture/dirstarter-baseline-index.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
+  - docs/runbooks/baseline-listings-runbook.md
+  - docs/sprints/SESSION_0165.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0074.md
   - docs/sprints/SESSION_0164.md
+  - docs/sprints/SESSION_0165.md
 ---
 
 # Dirstarter Uplift Backlog
@@ -28,6 +31,17 @@ Items cataloged from `dirstarter-component-inventory.md` and `dirstarter-docs-in
 SESSION_0164 refreshed the local Dirstarter upstream reference to `7e724b6` on branch `upstream/dirstarter-main-20260514`. This backlog predates that update and should be treated as a historical uplift list until it is reconciled with `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`.
 
 Do not start a backlog item from this file without first checking whether upstream changed the relevant pattern.
+
+## SESSION_0165 triage
+
+The backlog is still useful, but the next executable work should follow the updated port-package order in `docs/architecture/dirstarter-baseline-index.md`:
+
+1. Env/deploy comparison before touching production-sensitive config.
+2. Baseline listings relabel planning before any Tool schema or route rename.
+3. Small UI primitive sample with Playwright proof.
+4. Vendor SDK review as its own lane.
+
+The older "easy wins" below are no longer automatically next. They must be checked against Dirstarter upstream `7e724b6` and the Baseline Listings Runbook before implementation.
 
 ## High-leverage easy wins (< 1 session each)
 

@@ -5,14 +5,17 @@ type: architecture
 status: active
 created: 2026-05-14
 updated: 2026-05-14
-last_agent: codex-session-0164
+last_agent: codex-session-0165
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
+  - docs/runbooks/baseline-listings-runbook.md
   - docs/knowledge/wiki/dirstarter-uplift-backlog.md
   - docs/protocols/project-log.md
   - docs/sprints/SESSION_0164.md
+  - docs/sprints/SESSION_0165.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0165.md
 ---
 
 # Dirstarter Upstream Sync Snapshot - 2026-05-14
@@ -91,6 +94,28 @@ The correct move is lane-based porting. Each lane should have a source diff, Ron
 5. **API architecture lane.** Decide whether oRPC is a future Ronin direction. This requires an ADR because it affects action clients, brand scoping, audit logging, tests, and UI mutation patterns.
 6. **Content/SEO lane.** Review native sitemap/RSS and database blog migration after production user-journey smoke.
 7. **Schema/content lane.** Review bookmarks, posts, tool statuses/tiers, CUID2, and tier priority only when a Ronin product feature needs them.
+
+## SESSION_0165 port-planning addendum
+
+SESSION_0165 pulled Ronin commit `a2f5f87a79ea15a89d063234bbc150864581ff8c`, which added `docs/runbooks/baseline-listings-runbook.md`. That runbook turns the old D-014 Tool disposition into a more concrete planning constraint:
+
+- Baseline proves the school-listing engine first.
+- BBL inherits the engine after Baseline can generate one clean lead.
+- `Tool` remains the internal substrate until a focused listing lane proves a public relabel and bridge strategy.
+- `Organization`, `DirectoryProfile`, `Program`, and future listing/claim structures must not collapse into one duplicate directory model.
+
+The upstream-lane order is now:
+
+| Order | Lane | Reason |
+| --- | --- | --- |
+| 1 | Baseline map/listings doctrine | The baseline index was stale and the listings runbook is now the controlling Tool-to-Listing input. |
+| 2 | Env/deploy comparison | SESSION_0161/0163 stabilized production deploy, Resend, and Vercel app-root behavior; do not disturb it blindly. |
+| 3 | Baseline listings relabel plan | Smallest feature-aligned use of upstream Tool changes; validates `ToolTier`, statuses, claim, lead, and tier flow. |
+| 4 | UI primitive sampling | Low-risk only after target surfaces are selected; requires browser proof. |
+| 5 | Vendor SDK review | Stripe/Resend changes must be tested against Ronin checkout, merch webhook, and magic-link behavior. |
+| 6 | Content/SEO comparison | Run after production smoke or keep doc-only; preserve brand-domain routing. |
+| 7 | oRPC/API architecture | ADR required before implementation. |
+| 8 | Schema/content deltas | Only when directly needed by a Ronin feature. |
 
 ## Gates before code porting
 

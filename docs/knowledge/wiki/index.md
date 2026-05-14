@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-14
 author: Brian + Copilot
-last_agent: codex-session-0164
+last_agent: codex-session-0165
 ---
 
 # LLM Wiki Index
@@ -222,6 +222,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0162](../../sprints/SESSION_0162.md) | session--review | closed-full |
 | [SESSION_0163](../../sprints/SESSION_0163.md) | session--open | closed-full |
 | [SESSION_0164](../../sprints/SESSION_0164.md) | session--open | closed-full |
+| [SESSION_0165](../../sprints/SESSION_0165.md) | session--plan | closed-full |
 
 ## Protocols
 
@@ -271,6 +272,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
 | [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
+| [Baseline Listings Runbook](../../runbooks/baseline-listings-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sop-test-writing.md) | runbook | active |
 | [Course + Curriculum Runbook](../../runbooks/course-curriculum-runbook.md) | runbook | active |

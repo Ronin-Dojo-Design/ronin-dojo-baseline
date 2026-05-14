@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0164
+last_agent: codex-session-0165
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -41,7 +41,9 @@ backlinks:
   - docs/sprints/SESSION_0162.md
   - docs/sprints/SESSION_0163.md
   - docs/sprints/SESSION_0164.md
+  - docs/sprints/SESSION_0165.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
+  - docs/runbooks/baseline-listings-runbook.md
 ---
 
 # Project Log
@@ -1398,4 +1400,50 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** SESSION_0164 intentionally handled Dirstarter upstream hygiene and did not run the SESSION_0162 production smoke checklist.
 - **Impact:** Baseline production still needs login/auth/email/user-route proof.
 - **Required follow-up:** Re-stage production smoke once the immediate Dirstarter upstream decision is documented.
+- **Status:** open
+
+### SESSION_0165 — Dirstarter Upstream Port Planning
+
+**Date:** 2026-05-14
+**Agent:** codex-session-0165
+**Type:** session--plan
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0165_TASK_01 | Pull and integrate Baseline Listings Runbook from GitHub commit `a2f5f87` | done |
+| SESSION_0165_TASK_02 | Refresh Dirstarter baseline index and port-package map against upstream `7e724b6` | done |
+| SESSION_0165_TASK_03 | Full-close planning docs with wiki/project-log/Graphify hygiene | done |
+
+**Result:** Ronin fast-forwarded to `a2f5f87`, adding `docs/runbooks/baseline-listings-runbook.md`. The Dirstarter baseline index, upstream sync snapshot, and uplift backlog now agree on a lane-based port order: no bulk merge; env/deploy comparison first unless production smoke credentials are ready; Baseline listing proof before BBL lineage complexity; oRPC/API migration requires ADR-level planning.
+
+#### Review
+
+**SESSION_0165_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0165_TASK_01 through SESSION_0165_TASK_03.
+- **Dirstarter docs check:** live docs checked 2026-05-14.
+- **Sources:** `https://dirstarter.com/docs/codebase/updates`, `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, local Dirstarter upstream `7e724b6`, Ronin `a2f5f87`.
+- **Verdict:** Aligned. This session converted SESSION_0164's upstream snapshot into an actionable port map while preserving Ronin's brand-scoped action architecture and production deploy constraints. No runtime code was changed.
+- **Kaizen aggregate:** 8.5. Planning is clear; launch confidence remains capped until production smoke runs.
+
+#### Findings
+
+**SESSION_0165_FINDING_01 — Production user-journey smoke still pending**
+
+- **Severity:** medium
+- **Task:** SESSION_0165_TASK_01 through SESSION_0165_TASK_03
+- **Evidence:** SESSION_0165 was docs/planning only.
+- **Impact:** A correct Dirstarter port map does not prove production login, protected dashboard, email delivery, or brand-context behavior.
+- **Required follow-up:** Run SESSION_0162's production smoke checklist as soon as credentials/test user are ready.
+- **Status:** open
+
+**SESSION_0165_FINDING_02 — Listings implementation decisions remain open**
+
+- **Severity:** low
+- **Task:** SESSION_0165_TASK_02
+- **Evidence:** `baseline-listings-runbook.md` keeps route naming, bridge target, claim model, and tier storage as open decisions.
+- **Impact:** Cody must not rename routes, add claim permissions, or change Tool schema until a focused listing implementation plan resolves those choices.
+- **Required follow-up:** Resolve `/schools` vs `/listings`, claim persistence, and tier storage in the Baseline listing MVP lane.
 - **Status:** open
