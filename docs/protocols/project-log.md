@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-13
-last_agent: claude-session-0159
+last_agent: claude-session-0160
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -36,6 +36,7 @@ backlinks:
   - docs/sprints/SESSION_0157.md
   - docs/sprints/SESSION_0158.md
   - docs/sprints/SESSION_0159.md
+  - docs/sprints/SESSION_0160.md
 ---
 
 # Project Log
@@ -1163,3 +1164,31 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Sources:** Local `opening.md`, `closing.md`, `.github/copilot-instructions.md`, `dns-verification-spec.md`, `resend-setup-runbook.md`; live `dig` (incl. authoritative `@ns1.bluehost.com`, public `@1.1.1.1`, `@8.8.8.8`); Vercel CLI `vercel domains inspect`, `vercel project ls`, `vercel teams ls`; Resend dashboard screenshot; ADR 0006 + ADR 0015.
 - **Verdict:** Aligned. Copilot ritual surface now single-source-of-truth-disciplined via thin-pointer pattern; DNS work followed ADR 0015 (Bluehost-as-DNS) and ADR 0006 (multi-domain Vercel); stale spec doc tracked as finding (scope discipline preserved); build pipeline regression fixed as part of close so the next session opens unblocked.
 - **Kaizen aggregate:** 8 — well-scoped, surfaced one important finding, and resolved an adjacent regression without scope creep (single Part-A commit, explicit user authorization).
+
+### SESSION_0160 — Vercel/Bluehost Domain Runbook + Part B Build Fix + JETTY Sweep
+
+**Date:** 2026-05-13
+**Agent:** claude-session-0160
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0160_TASK_01 | Author `docs/runbooks/vercel-domain-setup-runbook.md` (mermaid + ASCII + step-by-step + troubleshooting + Brand Rollout) | ✅ done |
+| SESSION_0160_TASK_02 | Verify post-`cd6c12c` Vercel prod build succeeds; cert + serve | ⚠️ partial — Part B `vercel.json` applied (commit `881b664`); build progressed past install failure to next layer (Prisma postinstall needs `DATABASE_URL` env var). Carryover. |
+| SESSION_0160_TASK_03 | Refresh Resend dashboard verification (DKIM, MX Sending, SPF Sending → Verified) | ✅ done — verified 2026-05-13 15:04 per Brian's Resend dashboard screenshot |
+| SESSION_0160_TASK_04 | Refresh stale `dns-verification-spec.md` content body (per SESSION_0159_FINDING_01) | queued — carryover to SESSION_0161 |
+| SESSION_0160_TASK_05 | JETTY bidirectional backlink sweep on 4 related docs for the new runbook | ✅ done |
+
+**Result:** New Vercel Domain Setup Runbook (425 lines, mermaid flowchart + ASCII record table + 8-phase step-by-step + Bluehost UI gotchas + Production Build Readiness + troubleshooting + Brand Rollout) now indexed and bidirectionally linked. Part B build fix (`vercel.json` with `corepack enable && pnpm install --frozen-lockfile`) committed; build progressed past install-layer failure to expose the next layer (`DATABASE_URL` env var missing in Vercel — fully self-serve for Brian to fix in dashboard). Resend domain verified end-to-end. Carryovers: TASK_02 deploy verification + new TASK (add `www` domain to Vercel project) + TASK_04 spec content refresh.
+
+#### Review
+
+### SESSION_0160_REVIEW_01 — Full Close Review
+
+- **Reviewed tasks:** SESSION_0160_TASK_01 through TASK_05.
+- **Dirstarter docs check:** Not applicable — runbook authoring + Vercel build config + JETTY metadata; no L1 Dirstarter baseline layer touched.
+- **Sources:** `docs/runbooks/resend-setup-runbook.md` (style baseline), `docs/runbooks/stripe-setup-runbook.md` (style baseline), `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-mermaid-code.md` (mermaid pattern), Resend dashboard screenshot (verification proof), Vercel build logs (build fix verification).
+- **Verdict:** Aligned. Runbook captures SESSION_0159's procedural knowledge in a form reusable for the remaining three brand domain rollouts. JETTY sweep eliminates the "leaf doc" risk where the new runbook would be findable only via wiki index. Build fix progressed the deploy past the install-layer failure, exposing the next concrete blocker (`DATABASE_URL`) cleanly rather than masking it. Resend verification confirms SESSION_0159's CNAME-sibling diagnosis was correct.
+- **Kaizen aggregate:** 8 — well-scoped, surfaced two concrete findings (carryover content refresh; ADR 0006 frontmatter gap), and made the Vercel deploy blocker fully self-serve for Brian.
