@@ -4,20 +4,22 @@ slug: graphify-repo-memory
 type: runbook
 status: active
 created: 2026-05-06
-updated: 2026-05-13
+updated: 2026-05-14
 author: Brian + Codex
-last_agent: claude-session-0160
+last_agent: codex-session-0166
 pairs_with:
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
+  - docs/runbooks/mcp-usage-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0158.md
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
   - docs/runbooks/vercel-domain-setup-runbook.md
+  - docs/runbooks/mcp-usage-runbook.md
 tags:
   - graphify
   - repo-memory

@@ -4,13 +4,16 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-02
-last_agent: codex-session-0032
+updated: 2026-05-14
+last_agent: codex-session-0166
 use_count: 0
+pairs_with:
+  - docs/runbooks/mcp-usage-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
   - docs/protocols/failed-steps-log.md
+  - docs/runbooks/mcp-usage-runbook.md
 tags:
   - dev
   - environment
@@ -44,6 +47,7 @@ git worktree add ../<worktree-name> -b <branch> main
 cd ../<worktree-name>/apps/web
 
 # 3. Install deps
+
 bun install
 
 # 4. Copy env vars from the canonical main worktree
@@ -63,8 +67,7 @@ If the canonical `.env` is unavailable, the worktree needs at minimum:
 - `DATABASE_URL` — Postgres connection string (see "Database" below).
 - `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` — Better Auth keys.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate-limit backend.
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — only if Stripe surfaces are
-  exercised; otherwise stub values are acceptable in dev.
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — only if Stripe surfaces are exercised; otherwise stub values are acceptable in dev.
 - `CRON_SECRET` — required by any scheduled-cron route handler.
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` — optional; analytics no-op without it.
 

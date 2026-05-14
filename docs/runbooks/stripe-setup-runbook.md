@@ -4,23 +4,24 @@ slug: stripe-setup-runbook
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-05-08
-last_agent: codex-session-0098-plan
+updated: 2026-05-14
+last_agent: codex-session-0166
 pairs_with:
-
-- docs/sprints/SESSION_0098.md
-- docs/knowledge/wiki/manual-boundary-registry.md
-- docs/architecture/monetization-entitlements-spec.md
-- docs/architecture/security-privacy-payments-monitoring-plan.md
+  - docs/sprints/SESSION_0098.md
+  - docs/knowledge/wiki/manual-boundary-registry.md
+  - docs/architecture/monetization-entitlements-spec.md
+  - docs/architecture/security-privacy-payments-monitoring-plan.md
+  - docs/runbooks/mcp-usage-runbook.md
 backlinks:
-- docs/knowledge/wiki/index.md
+  - docs/knowledge/wiki/index.md
+  - docs/runbooks/mcp-usage-runbook.md
 tags:
-- stripe
-- payments
-- webhooks
-- subscriptions
-- coupons
-- connect
+  - stripe
+  - payments
+  - webhooks
+  - subscriptions
+  - coupons
+  - connect
 
 ---
 

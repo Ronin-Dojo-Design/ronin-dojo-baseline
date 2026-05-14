@@ -5,10 +5,11 @@ type: runbook
 status: active
 created: 2026-05-13
 updated: 2026-05-14
-last_agent: codex-session-0163
+last_agent: codex-session-0166
 pairs_with:
   - docs/sprints/SESSION_0159.md
   - docs/runbooks/resend-setup-runbook.md
+  - docs/runbooks/mcp-usage-runbook.md
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/decisions/0015-domain-hosting-infrastructure.md
   - docs/architecture/infrastructure/dns-verification-spec.md
@@ -16,6 +17,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/infrastructure/README.md
   - docs/sprints/SESSION_0163.md
+  - docs/runbooks/mcp-usage-runbook.md
 tags:
   - vercel
   - bluehost

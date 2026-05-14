@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0165
+last_agent: codex-session-0166
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -42,8 +42,10 @@ backlinks:
   - docs/sprints/SESSION_0163.md
   - docs/sprints/SESSION_0164.md
   - docs/sprints/SESSION_0165.md
+  - docs/sprints/SESSION_0166.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
+  - docs/runbooks/mcp-usage-runbook.md
 ---
 
 # Project Log
@@ -1446,4 +1448,50 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** `baseline-listings-runbook.md` keeps route naming, bridge target, claim model, and tier storage as open decisions.
 - **Impact:** Cody must not rename routes, add claim permissions, or change Tool schema until a focused listing implementation plan resolves those choices.
 - **Required follow-up:** Resolve `/schools` vs `/listings`, claim persistence, and tier storage in the Baseline listing MVP lane.
+- **Status:** open
+
+### SESSION_0166 - MCP Usage Runbook
+
+**Date:** 2026-05-14
+**Agent:** codex-session-0166
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0166_TASK_01 | Draft `docs/runbooks/mcp-usage-runbook.md` with provider matrix, data flows, decision trees, and safety gates | done |
+| SESSION_0166_TASK_02 | Wire JETTY links, wiki index, project-log, and session close artifacts | done |
+| SESSION_0166_TASK_03 | Run full-close verification, commit docs, and refresh Graphify | done |
+
+**Result:** Added the MCP Usage Runbook as the provider-tooling policy for Vercel, browser QA, Stripe, Neon, Supabase, and Graphify. The runbook keeps MCPs in the inspection/debugging/guided-ops lane, keeps CLI as the repeatable proof lane, and records Neon-first versus Supabase-platform boundaries.
+
+#### Review
+
+**SESSION_0166_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0166_TASK_01 through SESSION_0166_TASK_03.
+- **Dirstarter docs check:** not applicable; provider-ops documentation only.
+- **Sources:** `https://vercel.com/docs/agent-resources/vercel-mcp`, `https://playwright.dev/docs/getting-started-mcp`, `https://github.com/ChromeDevTools/chrome-devtools-mcp`, `https://neon.com/docs/ai/neon-mcp-server`, `https://supabase.com/docs/guides/ai-tools/mcp`, `https://docs.stripe.com/mcp`.
+- **Verdict:** Aligned. The runbook adds concrete data flows and safety gates without installing MCPs, mutating provider accounts, or changing runtime code. Neon remains the current default fit; Supabase remains an ADR-level platform decision.
+- **Kaizen aggregate:** 8.0. Documentation is clear, but confidence remains capped until selected MCPs are installed and proven against a real smoke/debug task.
+
+#### Findings
+
+**SESSION_0166_FINDING_01 - MCP install scope remains an operator decision**
+
+- **Severity:** low
+- **Task:** SESSION_0166_TASK_01
+- **Evidence:** `mcp-usage-runbook.md` keeps Vercel and Chrome DevTools MCP install scope open.
+- **Impact:** Future MCP setup can spend time resolving global versus project-local scope.
+- **Required follow-up:** Decide install scope before the first MCP install session.
+- **Status:** open
+
+**SESSION_0166_FINDING_02 - Database provider decision still needs ADR if Supabase is chosen**
+
+- **Severity:** medium
+- **Task:** SESSION_0166_TASK_01
+- **Evidence:** Supabase would shift Auth/RLS/Realtime/Storage/iOS SDK posture beyond simple Postgres hosting.
+- **Impact:** Tooling could bias architecture before the platform choice is reviewed.
+- **Required follow-up:** Write an ADR before adopting Supabase as more than a Postgres host.
 - **Status:** open

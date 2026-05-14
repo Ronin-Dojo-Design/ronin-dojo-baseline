@@ -4,11 +4,14 @@ slug: database
 type: runbook
 status: active
 created: 2026-04-25
-updated: 2026-05-12
-last_agent: copilot-session-0147
+updated: 2026-05-14
+last_agent: codex-session-0166
 use_count: 0
+pairs_with:
+  - docs/runbooks/mcp-usage-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/runbooks/mcp-usage-runbook.md
 ---
 
 # Database — local dev (Postgres.app) + production (Neon)
@@ -95,6 +98,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema
 1. Sign up at [neon.tech](https://neon.tech) — free tier is enough for dev/staging and modest production.
 2. Create project: `ronin-dojo` (or whatever you prefer). Region: pick close to Vercel's edge (us-east-1 if your users are mostly US).
 3. Note the **connection string** — Neon shows two: one with pooling (`-pooler`) and one without. You want both:
+
    - **Pooled** (`...?sslmode=require&pgbouncer=true`) for runtime queries — set as `DATABASE_URL` on Vercel.
    - **Direct** (no `-pooler`) for migrations — set as `DIRECT_URL` on Vercel.
 4. Enable extensions on Neon: in the SQL editor, run `CREATE EXTENSION IF NOT EXISTS citext;` and `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
@@ -117,6 +121,7 @@ datasource db {
 ### Vercel env vars
 
 In Vercel project settings → Environment Variables:
+
 - `DATABASE_URL` → Neon pooled connection string
 - `DIRECT_URL` → Neon direct connection string
 - All the other vars from `apps/web/.env.example` (Better-Auth, Stripe, Resend, S3, etc.)
