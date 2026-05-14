@@ -31,3 +31,4 @@ android/.gradle/
 .playwright-mcp/
 test-results/
 playwright-report/
+.vercel
