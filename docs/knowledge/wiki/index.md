@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-14
 author: Brian + Copilot
-last_agent: codex-session-0163
+last_agent: codex-session-0164
 ---
 
 # LLM Wiki Index
@@ -33,6 +33,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
+| [Dirstarter Upstream Sync Snapshot - 2026-05-14](../../architecture/dirstarter-upstream-sync-2026-05-14.md) | architecture | active — upstream porting gate |
 | [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | superseded by baseline index |
 | [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | superseded by baseline index |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active |
@@ -63,6 +64,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Architecture README](../../architecture/README.md) | file | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | file | active — **L1 source of truth for all Dirstarter patterns** |
+| [Dirstarter Upstream Sync Snapshot - 2026-05-14](../../architecture/dirstarter-upstream-sync-2026-05-14.md) | file | active — current upstream sync gate |
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active |
 | [Program Plan](../../architecture/program-plan.md) | file | active |
@@ -219,6 +221,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0161](../../sprints/SESSION_0161.md) | session--open | closed-full |
 | [SESSION_0162](../../sprints/SESSION_0162.md) | session--review | closed-full |
 | [SESSION_0163](../../sprints/SESSION_0163.md) | session--open | closed-full |
+| [SESSION_0164](../../sprints/SESSION_0164.md) | session--open | closed-full |
 
 ## Protocols
 

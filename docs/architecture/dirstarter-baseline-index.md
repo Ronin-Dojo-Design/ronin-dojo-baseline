@@ -4,18 +4,26 @@ slug: dirstarter-baseline-index
 type: architecture
 status: active
 created: 2026-05-03
-updated: 2026-05-03
-last_agent: copilot-session-0039
+updated: 2026-05-14
+last_agent: codex-session-0164
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/knowledge/wiki/drift-register.md
+  - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0039.md
   - docs/sprints/SESSION_0137.md
+  - docs/sprints/SESSION_0164.md
 ---
 
 # Dirstarter Baseline Index
+
+## Upstream freshness note
+
+SESSION_0164 refreshed the local Dirstarter upstream reference to `origin/main` at `7e724b6` on branch `upstream/dirstarter-main-20260514`. The body of this baseline index was built from an older Dirstarter snapshot and must be reconciled before it is used as current upstream truth.
+
+Use `docs/architecture/dirstarter-upstream-sync-2026-05-14.md` as the gate for new Dirstarter porting work.
 
 > **Purpose**: Comprehensive inventory of e## 12. Open questions for planning
 

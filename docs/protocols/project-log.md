@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0163
+last_agent: codex-session-0164
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -40,6 +40,8 @@ backlinks:
   - docs/sprints/SESSION_0161.md
   - docs/sprints/SESSION_0162.md
   - docs/sprints/SESSION_0163.md
+  - docs/sprints/SESSION_0164.md
+  - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
 ---
 
 # Project Log
@@ -1351,3 +1353,49 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** A corrected runbook does not prove production login, protected route behavior, authenticated dashboard access, or email delivery.
 - **Required follow-up:** Open SESSION_0164 for the production smoke checklist.
 - **Status:** open — staged for SESSION_0164
+
+### SESSION_0164 — Dirstarter Upstream Sync Snapshot
+
+**Date:** 2026-05-14
+**Agent:** codex-session-0164
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0164_TASK_01 | Safely update local Dirstarter upstream reference without losing the local Graphify ignore commit | done |
+| SESSION_0164_TASK_02 | Document upstream delta and Ronin porting implications | done |
+| SESSION_0164_TASK_03 | Update wiki/project-log/session discoverability and close full | done |
+
+**Result:** The local Dirstarter checkout now has a clean upstream branch `upstream/dirstarter-main-20260514` at `origin/main` (`7e724b6`), with local Graphify state ignored via `.git/info/exclude` and the prior local commit preserved on `backup/local-graphify-ignore-20260514`. Ronin docs now record the upstream delta and require lane-based porting before any runtime code merge.
+
+#### Review
+
+**SESSION_0164_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0164_TASK_01 through SESSION_0164_TASK_03.
+- **Dirstarter docs check:** local upstream checkout inspected at `origin/main` (`7e724b6`).
+- **Sources:** Dirstarter git history/diff from `c42e8bb` to `7e724b6`, `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`.
+- **Verdict:** Aligned. Dirstarter upstream is available locally without a destructive rewrite, and Ronin now has a documented gate warning that the update is a 252-commit architecture delta, not a blind sync.
+- **Kaizen aggregate:** 8.0. The risk was contained and documented; porting work is intentionally deferred to scoped follow-up sessions.
+
+#### Findings
+
+**SESSION_0164_FINDING_01 — Dirstarter baseline index is stale against upstream `7e724b6`**
+
+- **Severity:** medium
+- **Task:** SESSION_0164_TASK_02
+- **Evidence:** `dirstarter-baseline-index.md` was built from an older upstream snapshot; the current Dirstarter diff changes oRPC/server routing, UI primitives, env vars, sitemap/RSS, Prisma migrations, and package/toolchain versions.
+- **Impact:** Future Ronin work can accidentally follow stale Dirstarter patterns.
+- **Required follow-up:** Refresh `dirstarter-baseline-index.md` from upstream `7e724b6` before starting Dirstarter uplift or upstream-porting tasks.
+- **Status:** open — staged for Dirstarter port-planning session
+
+**SESSION_0164_FINDING_02 — Production user-journey smoke remains pending after upstream sync interruption**
+
+- **Severity:** medium
+- **Task:** SESSION_0164_TASK_01 through SESSION_0164_TASK_03
+- **Evidence:** SESSION_0164 intentionally handled Dirstarter upstream hygiene and did not run the SESSION_0162 production smoke checklist.
+- **Impact:** Baseline production still needs login/auth/email/user-route proof.
+- **Required follow-up:** Re-stage production smoke once the immediate Dirstarter upstream decision is documented.
+- **Status:** open

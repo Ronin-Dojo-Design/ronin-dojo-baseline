@@ -4,15 +4,17 @@ slug: dirstarter-uplift-backlog
 type: backlog
 status: active
 created: 2026-05-05
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-05-14
+last_agent: codex-session-0164
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/knowledge/wiki/dirstarter-docs-inventory.md
   - docs/architecture/dirstarter-baseline-index.md
+  - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0074.md
+  - docs/sprints/SESSION_0164.md
 ---
 
 # Dirstarter Uplift Backlog
@@ -20,6 +22,12 @@ backlinks:
 > **You already paid for this boilerplate. Use it.**
 
 Items cataloged from `dirstarter-component-inventory.md` and `dirstarter-docs-inventory.md` that we have available but aren't using yet.
+
+## Upstream freshness note
+
+SESSION_0164 refreshed the local Dirstarter upstream reference to `7e724b6` on branch `upstream/dirstarter-main-20260514`. This backlog predates that update and should be treated as a historical uplift list until it is reconciled with `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`.
+
+Do not start a backlog item from this file without first checking whether upstream changed the relevant pattern.
 
 ## High-leverage easy wins (< 1 session each)
 
