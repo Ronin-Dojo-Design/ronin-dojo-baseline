@@ -32,3 +32,4 @@ android/.gradle/
 test-results/
 playwright-report/
 .vercel
+ronin-baseline.code-workspace
