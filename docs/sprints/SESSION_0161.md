@@ -198,7 +198,7 @@ Unblock the `fdf9b2f` production build layer exposed by Vercel after install, Pr
 - **TASK_01** — Prisma config now lets `prisma generate` proceed on Vercel without `SHADOW_DATABASE_URL` set. Commit `cc5cd59`.
 - **TASK_02** — Three phantom dependencies declared in `apps/web/package.json`. Full repo audit confirms zero remaining phantoms. Commit `291d8dd`.
 - **TASK_06** — Vercel `fdf9b2f` logs showed the phantom-deps layer was resolved; build failed at `next build` on Better-Auth import path + Printful `"use server"` export. Local verification also surfaced a Resend SDK `contacts.create` overload mismatch. All three are patched.
-- **TASK_07** — Added missing Vercel Production env vars via CLI: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL`. Vercel project settings are now corrected for the monorepo app root: Root Directory `apps/web`, Framework Preset `Next.js`, Output Directory `Next.js default`, and monorepo install/build commands.
+- **TASK_07** — Added missing Vercel Production env vars via CLI: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL`. Vercel project settings are now corrected for the monorepo app root: Root Directory `apps/web`, Framework Preset `Next.js`, Output Directory `Next.js default`, and monorepo install/build commands. The install command now pins `pnpm@9.0.0` through Corepack so Vercel accepts the checked-in lockfile.
 
 ## Verification Evidence
 
@@ -221,8 +221,9 @@ Unblock the `fdf9b2f` production build layer exposed by Vercel after install, Pr
   - Root Directory `apps/web`
   - Framework Preset `Next.js`
   - Output Directory `Next.js default`
-  - Install Command `cd ../.. && corepack enable && pnpm install --frozen-lockfile`
+  - Install Command `cd ../.. && corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile`
   - Build Command `cd ../.. && pnpm --filter dirstarter build`
+- First post-root deploy for `ce69779` proved the Root Directory fix took effect, then failed at install because Vercel used an incompatible pnpm for the root lockfile. The install command now explicitly activates `pnpm@9.0.0`.
 
 ## Open Decisions / Blockers
 
