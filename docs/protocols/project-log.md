@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-13
-last_agent: claude-session-0160
+updated: 2026-05-14
+last_agent: codex-session-0161
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -37,6 +37,7 @@ backlinks:
   - docs/sprints/SESSION_0158.md
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
+  - docs/sprints/SESSION_0161.md
 ---
 
 # Project Log
@@ -44,6 +45,7 @@ backlinks:
 Unified append-only ledger. Consolidates the former `build-log.md`, `TASK_PLAN_LOG`, and `TASK_REVIEW_LOG` (merged SESSION_0027).
 
 Three sections:
+
 1. **Build log** — what shipped and whether it works
 2. **Task plan log** — task accountability (IDs, owners, done criteria)
 3. **Task review log** — review findings that survive beyond a single session
@@ -62,6 +64,7 @@ Three sections:
 ## Build log
 
 ### S1_SCHEMA — Phase 1 schema rev (31 models, all enums)
+
 - **Session:** SESSION_0003–0005
 - **Sprint:** S1
 - **Status:** ✅ verified
@@ -70,6 +73,7 @@ Three sections:
 - **Smoke test:** migration applied, seed ran, Prisma Studio verified
 
 ### S2_AUTH — Better-Auth + Passport bootstrap
+
 - **Session:** SESSION_0007
 - **Sprint:** S2
 - **Status:** ✅ verified
@@ -78,6 +82,7 @@ Three sections:
 - **Smoke test:** sign-up creates User + Passport + DirectoryProfile stubs
 
 ### S3_ORG — Organization create + join flow
+
 - **Session:** SESSION_0008–0013
 - **Sprint:** S3
 - **Status:** ✅ verified
@@ -86,6 +91,7 @@ Three sections:
 - **Smoke test:** create org + join flow tested in browser
 
 ### S4_DIRECTORY — Directory search with privacy
+
 - **Session:** SESSION_0014
 - **Sprint:** S4
 - **Status:** ⚠️ needs-verification
@@ -95,6 +101,7 @@ Three sections:
 - **Fix (SESSION_0015):** Added 5 test users to seed.ts with Passport + DirectoryProfile + Organization + Membership + RankAward. Reseeded. Awaiting browser verification.
 
 ### S15_SEED_FIX — Seed script: full identity graph
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (fix)
 - **Status:** ✅ verified
@@ -103,6 +110,7 @@ Three sections:
 - **Smoke test:** `prisma db seed` ran successfully, all 5 users created with full graph
 
 ### S15_DOC_ADOPTION — SOP adoption + feature prerequisites + Cody pre-flight
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (housekeeping)
 - **Status:** ✅ verified
@@ -111,6 +119,7 @@ Three sections:
 - **Smoke test:** n/a
 
 ### S15_CLOSE_FIX — Full close steps remediation (FS-0004)
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (process fix)
 - **Status:** ✅ verified
@@ -119,6 +128,7 @@ Three sections:
 - **Smoke test:** JETTY sweep completed, wiki index updated, close checklist artifact added to SESSION file
 
 ### S28_PROGRAM_CRUD — School Ops Program CRUD
+
 - **Session:** SESSION_0028
 - **Sprint:** S2 / School operations lane
 - **Status:** ✅ verified
@@ -127,6 +137,7 @@ Three sections:
 - **Smoke test:** `bun scripts/smoke-program.ts` passed; HTTP smoke returned `/programs` 200, `/programs/[id]` 200, protected create/edit routes 307 to login
 
 ### DIRECTORY_MONETIZATION_ROADMAP — Directory monetization roadmap + Dirstarter reuse pass
+
 - **Session:** Roadmap artifact, not numbered SESSION_0029 per owner directive
 - **Sprint:** Cross-lane roadmap / Content + monetization
 - **Status:** ✅ verified with known full-typecheck baseline debt
@@ -135,6 +146,7 @@ Three sections:
 - **Smoke test:** `bunx biome check --write` on touched code passed; `bun run db:generate` passed; `bunx prisma validate --schema prisma/schema.prisma` passed; `bun run wiki:lint` passed; `git diff --check` passed; `curl -H "Host: baseline.local" http://localhost:3000/submit` returned 200; `curl -H "Host: baseline.local" http://localhost:3000/advertise` returned 200. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues, with no errors reported in the roadmap-touched code paths after Prisma generate.
 
 ### S32_ATTENDANCE_WRITE — Attendance/check-in write surface
+
 - **Session:** SESSION_0032
 - **Sprint:** S2 / School operations lane
 - **Status:** ✅ verified with known full-typecheck baseline debt
@@ -143,13 +155,16 @@ Three sections:
 - **Smoke test:** `bun test server/web/attendance/actions.test.ts` 7/7; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed allow/deny/idempotency matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the attendance/school-ops touched paths.
 
 ### S32_5_TYPECHECK_DEBT — Full app typecheck baseline
+
 - **Session:** SESSION_0032.5
 - **Sprint:** S2 / QA hardening
 - **Status:** ✅ verified, pause-gated before SESSION_0033
 - **Files:** `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/lib/auth.ts`, `apps/web/lib/media.ts`, `apps/web/services/s3.ts`, `apps/web/lib/structured-data.ts`, `apps/web/server/web/passport/*`, `apps/web/server/web/tools/queries.ts`
 - **Seed data:** n/a.
 - **Smoke test:** `bun run typecheck` passed; `bunx tsc --noEmit --pretty false` passed after `next typegen`; `bun test server/web/schedule/ server/web/attendance/` 22/22; `bun scripts/smoke-attendance.ts` passed; `bunx prisma validate --schema prisma/schema.prisma` passed.
+
 ### S33_ENROLLMENT_FAMILY_WAIVER_LEAD — Enrollment, family, waiver, trial write surface
+
 - **Session:** SESSION_0033
 - **Sprint:** S2 / School operations lane
 - **Status:** ✅ verified with known full-typecheck baseline debt
@@ -158,6 +173,7 @@ Three sections:
 - **Smoke test:** `bun test server/web/enrollment server/web/family server/web/waiver server/web/lead` 7/7; `bun test server/web/schedule server/web/attendance` 22/22; `bun scripts/smoke-school-ops-extended.ts` passed enrollment/family/waiver/lead allow-deny-convert matrix; `bunx prisma validate --schema prisma/schema.prisma` passed. Full `bunx tsc --noEmit --pretty false` still fails on pre-existing baseline issues outside the SESSION_0033 touched paths.
 
 ### S58_TOURNAMENT_SNAPSHOTS_AUTH — Tournament registration snapshots + admin auth hardening
+
 - **Session:** SESSION_0058
 - **Sprint:** P0–P2 remediation
 - **Status:** ✅ verified
@@ -166,6 +182,7 @@ Three sections:
 - **Smoke test:** `bunx tsc --noEmit` passes; code review confirmed snapshot fields populated in both free and paid registration paths; PricingPlanActions type mismatch investigated and closed as INVALID (TypeScript structural typing).
 
 ### S59_CACHE_ENROLLMENT_DRIFT — Cache pattern upgrade + enrollment Passport check + drift close
+
 - **Session:** SESSION_0059
 - **Sprint:** P0–P2 remediation
 - **Status:** ✅ verified
@@ -174,6 +191,7 @@ Three sections:
 - **Smoke test:** `bunx tsc --noEmit` passes; public queries upgraded to `"use cache"` + `cacheTag` + `cacheLife`; auth-scoped queries kept with React `cache()`; enrollment Passport assertion added to both `enrollInProgram` and `joinProgramWaitlist`; D-005 and D-011 closed.
 
 ### S60_HOSTILE_CLOSE_REVIEW — Cross-session hostile-close review (audit only, no code)
+
 - **Session:** SESSION_0060
 - **Sprint:** Hostile-close review
 - **Status:** ✅ review complete — 6 P1 + 1 P2 + 3 P3 findings documented
@@ -182,6 +200,7 @@ Three sections:
 - **Smoke test:** wiki:lint passed clean (169 files, 0 violations); D-006 and D-010 closed; `program-plan.md` marked `partially-superseded`.
 
 ### S96_BILLING_LAUNCH_GAPS — Customer billing, webhook idempotency, and lifecycle proof
+
 - **Session:** SESSION_0096
 - **Sprint:** S3 / Commerce implementation
 - **Status:** ✅ verified with known full-typecheck baseline debt
@@ -190,6 +209,7 @@ Three sections:
 - **Smoke test:** `bun test app/api/stripe/webhooks/route.test.ts server/web/billing/actions.test.ts server/web/tournaments/register.concurrency.test.ts` passed 18/18; scoped Biome check passed. Full `bun run typecheck` still fails only on pre-existing unrelated errors from SESSION_0095.
 
 ### S99_STORAGE_MEDIA_BRIDGE — S3 public media bridge and admin cost monitor
+
 - **Session:** SESSION_0099
 - **Sprint:** S3 / Launch support
 - **Status:** ✅ verified with full typecheck inconclusive
@@ -1210,3 +1230,24 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | SESSION_0161_TASK_05 | Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` Resend DNS body | queued |
 | SESSION_0161_TASK_06 | Fix `fdf9b2f` Vercel `next build` errors: Printful `"use server"` sync export + Better-Auth `createAuthMiddleware` import path + Resend SDK contact overload mismatch | ✅ done — local `pnpm --filter dirstarter exec next build` passes |
 | SESSION_0161_TASK_07 | Add missing Vercel Production env vars and set Vercel app root to `apps/web` with Next.js framework settings | ✅ done — production deployment `371c2ef` is Ready |
+
+**Result:** Baseline Martial Arts is live on Vercel. Latest production deployment for `main` is Ready; apex `https://baselinemartialarts.com` returns HTTP 200 from Vercel; `https://www.baselinemartialarts.com` redirects 308 to apex. The build pipeline now uses Root Directory `apps/web`, Framework Preset `Next.js`, app-root `vercel.json`, and a Corepack-forced `pnpm@9.0.0` install command.
+
+#### Review
+
+### SESSION_0161_REVIEW_01 — Full Close Review
+
+- **Reviewed tasks:** SESSION_0161_TASK_01 through TASK_07.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/authentication`, local `docs/architecture/dirstarter-baseline-index.md`, Vercel CLI deployment logs, Vercel project/domain API responses.
+- **Verdict:** Aligned. The final production build extends the existing Dirstarter/Next/Better-Auth shape rather than replacing it. The earlier middleware suspicion was ruled out by the repo's `proxy.ts` architecture and deployment logs; the real blockers were layered build/runtime configuration issues. Production now serves the apex domain and redirects `www` to apex. Remaining debt is documentation-only: the Resend DNS spec body still needs the SESSION_0159 stale-record refresh.
+- **Kaizen aggregate:** 8.5 — production is live and verified, but auth/login and email delivery browser smokes remain outside this deploy-fix slice.
+
+### SESSION_0161_FINDING_01 — Resend DNS spec body still stale
+
+- **Severity:** medium
+- **Task:** SESSION_0161_TASK_05
+- **Evidence:** SESSION_0161_TASK_05 remained queued by scope; SESSION_0159_FINDING_01 says `dns-verification-spec.md` still describes a stale Resend verification pattern.
+- **Impact:** A future domain setup operator could follow outdated DNS instructions despite the runbook containing the corrected pattern.
+- **Required follow-up:** Refresh `docs/architecture/infrastructure/dns-verification-spec.md` against the current Resend dashboard pattern and stamp the verification date.
+- **Status:** open
