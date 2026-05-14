@@ -1192,3 +1192,20 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Sources:** `docs/runbooks/resend-setup-runbook.md` (style baseline), `docs/runbooks/stripe-setup-runbook.md` (style baseline), `docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-mermaid-code.md` (mermaid pattern), Resend dashboard screenshot (verification proof), Vercel build logs (build fix verification).
 - **Verdict:** Aligned. Runbook captures SESSION_0159's procedural knowledge in a form reusable for the remaining three brand domain rollouts. JETTY sweep eliminates the "leaf doc" risk where the new runbook would be findable only via wiki index. Build fix progressed the deploy past the install-layer failure, exposing the next concrete blocker (`DATABASE_URL`) cleanly rather than masking it. Resend verification confirms SESSION_0159's CNAME-sibling diagnosis was correct.
 - **Kaizen aggregate:** 8 — well-scoped, surfaced two concrete findings (carryover content refresh; ADR 0006 frontmatter gap), and made the Vercel deploy blocker fully self-serve for Brian.
+
+### SESSION_0161 — Production Deploy Verification + Optional Env Var Hygiene
+
+**Date:** 2026-05-13
+**Agent:** codex-session-0161
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0161_TASK_01 | Make `SHADOW_DATABASE_URL` optional in `apps/web/prisma.config.ts` so Prisma generate can run on Vercel without a shadow DB env var | ✅ done |
+| SESSION_0161_TASK_02 | Resolve next Vercel build layer after TASK_01 | ✅ done — phantom deps declared in `apps/web/package.json` |
+| SESSION_0161_TASK_03 | Verify successful production deploy and `curl -I https://baselinemartialarts.com` response | queued |
+| SESSION_0161_TASK_04 | Add/confirm `www.baselinemartialarts.com` project domain redirect to apex | queued |
+| SESSION_0161_TASK_05 | Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` Resend DNS body | queued |
+| SESSION_0161_TASK_06 | Fix `fdf9b2f` Vercel `next build` errors: Printful `"use server"` sync export + Better-Auth `createAuthMiddleware` import path + Resend SDK contact overload mismatch | ✅ done — local `pnpm --filter dirstarter exec next build` passes |

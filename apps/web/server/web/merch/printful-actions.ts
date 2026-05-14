@@ -154,7 +154,7 @@ const PRINTFUL_VARIANT_MAP: Record<string, Record<string, Record<string, number>
  * Look up the Printful catalog variant_id for a merch product + size + color.
  * Returns undefined if not mapped yet.
  */
-export function getPrintfulVariantId(
+function getPrintfulVariantId(
   merchProductId: string,
   size?: string | null,
   color?: string | null,
