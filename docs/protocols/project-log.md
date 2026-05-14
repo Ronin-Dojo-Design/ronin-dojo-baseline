@@ -1209,4 +1209,4 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | SESSION_0161_TASK_04 | Add/confirm `www.baselinemartialarts.com` project domain redirect to apex | queued |
 | SESSION_0161_TASK_05 | Refresh stale `docs/architecture/infrastructure/dns-verification-spec.md` Resend DNS body | queued |
 | SESSION_0161_TASK_06 | Fix `fdf9b2f` Vercel `next build` errors: Printful `"use server"` sync export + Better-Auth `createAuthMiddleware` import path + Resend SDK contact overload mismatch | ✅ done — local `pnpm --filter dirstarter exec next build` passes |
-| SESSION_0161_TASK_07 | Add missing Vercel Production env vars and override Framework Preset to Next.js in repo config | in progress |
+| SESSION_0161_TASK_07 | Add missing Vercel Production env vars and set Vercel app root to `apps/web` with Next.js framework settings | in progress |
