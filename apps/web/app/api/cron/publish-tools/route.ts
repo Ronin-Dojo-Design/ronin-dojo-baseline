@@ -9,7 +9,7 @@ export const maxDuration = 60
 
 export const GET = async (req: Request) => {
   // Verify the authorization token
-  if (req.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`) {
+  if (!env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`) {
     return new Response("Unauthorized", { status: 401 })
   }
 
