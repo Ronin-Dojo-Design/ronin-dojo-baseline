@@ -15,11 +15,11 @@ import { Brand } from "~/.generated/prisma/client"
  */
 
 export const HOST_TO_BRAND: Record<string, Brand> = {
-  // Production / public domains — fill in once registered.
-  // "ronindojodesign.com": Brand.RONIN_DOJO_DESIGN,
-  // "baselinemartialarts.com": Brand.BASELINE_MARTIAL_ARTS,
-  // "blackbeltlegacy.com": Brand.BBL,
-  // "wekafusa.com": Brand.WEKAF,
+  // Production / public domains
+  "ronindojodesign.com": Brand.RONIN_DOJO_DESIGN,
+  "baselinemartialarts.com": Brand.BASELINE_MARTIAL_ARTS,
+  "blackbeltlegacy.com": Brand.BBL,
+  "wekafusa.com": Brand.WEKAF,
 
   // Local dev convention
   "ronindojo.local": Brand.RONIN_DOJO_DESIGN,
@@ -42,7 +42,10 @@ const isBrand = (value: string | null | undefined): value is Brand => {
 /** Edge-safe: derive brand from a raw host string. Used by middleware. */
 export const resolveBrand = (host: string | null | undefined): Brand => {
   if (!host) return DEFAULT_BRAND
-  const bare = host.split(":")[0]?.toLowerCase()
+  const bare = host
+    .split(":")[0]
+    ?.toLowerCase()
+    .replace(/^www\./, "")
   return (bare && HOST_TO_BRAND[bare]) || DEFAULT_BRAND
 }
 

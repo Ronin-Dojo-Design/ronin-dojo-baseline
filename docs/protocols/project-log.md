@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0166
+last_agent: codex-session-0167
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -43,6 +43,7 @@ backlinks:
   - docs/sprints/SESSION_0164.md
   - docs/sprints/SESSION_0165.md
   - docs/sprints/SESSION_0166.md
+  - docs/sprints/SESSION_0167.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1494,4 +1495,68 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** Supabase would shift Auth/RLS/Realtime/Storage/iOS SDK posture beyond simple Postgres hosting.
 - **Impact:** Tooling could bias architecture before the platform choice is reviewed.
 - **Required follow-up:** Write an ADR before adopting Supabase as more than a Postgres host.
+- **Status:** open
+
+### SESSION_0167 - Vercel MCP Setup and Env/Deploy Comparison
+
+**Date:** 2026-05-14
+**Agent:** codex-session-0167
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0167_TASK_01 | Decide and configure Vercel MCP scope | done |
+| SESSION_0167_TASK_02 | Run non-authenticated production/env-deploy proof | done |
+| SESSION_0167_TASK_03 | Review and full close | done |
+
+**Result:** Added authenticated Codex MCP entry `vercel-ronin`, captured read-only Vercel project/env/deployment evidence, ran public production smoke, and fixed the local host-to-brand resolver after production smoke showed Baseline requests falling back to `RONIN_DOJO_DESIGN`. Production was not deployed in this session, so current public routes still reflect the prior build until deploy.
+
+#### Review
+
+**SESSION_0167_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0167_TASK_01 through SESSION_0167_TASK_03.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://vercel.com/docs/agent-resources/vercel-mcp`, `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/codebase/updates`, local Vercel CLI output, and public production curl checks.
+- **Verdict:** Partially aligned and useful. The provider-inspection lane is now configured, CLI proof remains the repeatable evidence path, and a production brand-routing bug was fixed locally with test coverage. Release readiness is not complete because the fix is not deployed, several public routes currently return 500, and authenticated smoke remains blocked.
+- **Kaizen aggregate:** 7.0. The session improved launch readiness by exposing and fixing a real bug, but production confidence remains capped until deploy and authenticated smoke.
+
+#### Findings
+
+**SESSION_0167_FINDING_01 - Production host-map fix is local but not deployed**
+
+- **Severity:** high
+- **Task:** SESSION_0167_TASK_02
+- **Evidence:** Current production responses set `brand=RONIN_DOJO_DESIGN` on Baseline requests. Local `resolveBrand` proof now maps Baseline apex and `www` to `BASELINE_MARTIAL_ARTS`.
+- **Impact:** Until deployed, Baseline public requests can route through the wrong brand context.
+- **Required follow-up:** Deploy the host-map fix, then rerun public route smoke.
+- **Status:** open
+
+**SESSION_0167_FINDING_02 - Production public app routes return 500**
+
+- **Severity:** high
+- **Task:** SESSION_0167_TASK_02
+- **Evidence:** `curl -sI` returned HTTP 500 for `/organizations`, `/programs`, and `/tournaments` on `https://baselinemartialarts.com`.
+- **Impact:** Baseline is not launch-ready even though homepage, login, and protected redirect checks work.
+- **Required follow-up:** After deploying the host-map fix, rerun these routes and inspect provider logs if any still fail.
+- **Status:** open
+
+**SESSION_0167_FINDING_03 - Authenticated production smoke still blocked**
+
+- **Severity:** medium
+- **Task:** SESSION_0167_TASK_02
+- **Evidence:** No production test-user credentials or approved safe auth path were present in the session context.
+- **Impact:** Dashboard, session cookie behavior, and magic-link/email delivery remain unproven.
+- **Required follow-up:** Provide/approve a production test user or safe auth path, then run authenticated dashboard and email/auth smoke.
+- **Status:** open
+
+**SESSION_0167_FINDING_04 - `CRON_SECRET` absent from production env listing**
+
+- **Severity:** low
+- **Task:** SESSION_0167_TASK_02
+- **Evidence:** Vercel production env names listed `DATABASE_URL`, Better Auth vars, site URL/email, and Google OAuth vars, but not `CRON_SECRET`. Dirstarter environment docs and Ronin deployment runbook name `CRON_SECRET`; `apps/web/env.ts` currently treats it as optional.
+- **Impact:** Cron endpoint protection posture needs an explicit decision before cron-dependent launch work.
+- **Required follow-up:** Decide whether to add `CRON_SECRET` for production now or document why current cron endpoints are not active/required.
 - **Status:** open
