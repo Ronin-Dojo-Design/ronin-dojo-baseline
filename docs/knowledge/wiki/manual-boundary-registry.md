@@ -4,13 +4,14 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-09
+updated: 2026-05-14
 author: Brian + ChatGPT
-last_agent: copilot-session-0113
+last_agent: codex-session-0163
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
   - docs/runbooks/aws-s3-operator-runbook.md
+  - docs/runbooks/resend-setup-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/chat-handoff.md
@@ -28,6 +29,7 @@ backlinks:
   - docs/sprints/SESSION_0097.md
   - docs/sprints/SESSION_0098.md
   - docs/sprints/SESSION_0099.md
+  - docs/sprints/SESSION_0163.md
 tags:
   - blockers
   - ops
@@ -198,6 +200,8 @@ Blocker classes:
 - **Status:** open
 - **Specific gates:** Create Resend account → add sending domain (baselinemartialarts.com) → add DNS records (SPF, DKIM, DMARC) → verify → update `.env` → test delivery. Current sandbox key `re_DGuMPeUi_*` is placeholder. Magic link auth and merch order confirmation emails are both wired and waiting.
 - **Added:** SESSION_0113
+
+SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs. This boundary remains open until production email delivery is proven with a real magic-link or equivalent safe test email.
 
 ### 2. Notes by boundary
 

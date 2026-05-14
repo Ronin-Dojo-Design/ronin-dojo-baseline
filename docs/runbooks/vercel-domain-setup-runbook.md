@@ -4,8 +4,8 @@ slug: vercel-domain-setup-runbook
 type: runbook
 status: active
 created: 2026-05-13
-updated: 2026-05-13
-last_agent: claude-session-0160
+updated: 2026-05-14
+last_agent: codex-session-0163
 pairs_with:
   - docs/sprints/SESSION_0159.md
   - docs/runbooks/resend-setup-runbook.md
@@ -15,6 +15,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/infrastructure/README.md
+  - docs/sprints/SESSION_0163.md
 tags:
   - vercel
   - bluehost
@@ -66,6 +67,21 @@ Codifies the SESSION_0159 procedure for `baselinemartialarts.com` so the remaini
 
 We explicitly **do not** delegate DNS to Vercel (`ns*.vercel-dns.com`) per ADR 0015. The Vercel dashboard will keep suggesting delegation in an "Intended Nameservers" column — that's a UI default, not a recommendation. Ignore it.
 
+## Current Vercel Truth
+
+Live Dirstarter deployment docs checked on 2026-05-14 describe a Vercel/Next.js deployment with production environment variables. The Ronin production app currently uses the `apps/web` Vercel app root:
+
+| Setting | Current value |
+| --- | --- |
+| Root Directory | `apps/web` |
+| Framework Preset | `Next.js` |
+| Output Directory | Next.js default |
+| Install Command | `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile` |
+| Build Command | `cd ../.. && pnpm --filter dirstarter build` |
+| Active app-root config | `apps/web/vercel.json` |
+
+Treat any repo-root `vercel.json` guidance as historical/root fallback only. Use it only when the active source for a project proves Vercel is building from the repo root.
+
 ## End-to-End Flow
 
 ```mermaid
@@ -110,7 +126,7 @@ After all edits propagate, `dig` should match this exactly. Use it as the verifi
 
 Records that MUST be absent:
   - CNAME at resend._domainkey  (blocks the DKIM TXT via CNAME-sibling rule)
-  - CNAME at em.<domain>        (legacy stale leftover from older Resend setup)
+  - CNAME at the legacy em host (stale leftover from older Resend setup)
   - Any A   at www              (replaced by the CNAME above)
   - Any A   at @ pointing at Bluehost shared IP (e.g. 66.81.203.198)
 ```
@@ -169,7 +185,7 @@ Note the EXACT values for each row marked "Failed" or "Pending":
 
 ⚠️ The Resend dashboard truncates long values with `[...]` in the list view. Click each row to expand or open the Configuration tab to copy the full string. The DKIM `p=` value is ~216 chars — copy it once, paste it carefully.
 
-⚠️ Resend's current pattern does **not** use a `resend-verification=rv_<token>` TXT record or a `CNAME em.<domain>` record. If a runbook or spec doc tells you to add those, that doc is stale (SESSION_0159_FINDING_01). The dashboard is the source of truth.
+Legacy ownership-token TXT rows and legacy return-path CNAME rows are not part of the verified Baseline setup. If a runbook or spec doc tells you to add them without matching the current Resend dashboard for the domain, that instruction is stale (SESSION_0159_FINDING_01). The dashboard is the source of truth.
 
 ### 4. Apply Bluehost DNS edits in one batch
 
@@ -187,8 +203,8 @@ Apply in roughly this order:
   REPLACE  TXT    resend._domainkey  → p=MIGfMA0G…IDAQAB          TTL Auto
   ADD      MX     send                → feedback-smtp.us-east-1.amazonses.com   priority 10
   ADD      TXT    send                → v=spf1 include:amazonses.com ~all       TTL Auto
-  DELETE   TXT    @  any "resend-verification=rv_…" stale row
-  DELETE   CNAME  em                   (if present, stale)
+  DELETE   TXT    @  any stale Resend ownership-token row
+  DELETE   CNAME  em                   (legacy return-path row, if present)
   KEEP     MX     @ → inbound-smtp.us-east-1.amazonaws.com priority 10
   KEEP     NS     @ → ns1.bluehost.com / ns2.bluehost.com (registrar-level)
 ```
@@ -288,7 +304,9 @@ Verify Vercel picked up pnpm by checking the next build log:
 ❌ Bad:   "Installing dependencies..." → "up to date in 538ms"  (npm fallback, broken)
 ```
 
-If pnpm still isn't used despite the lockfile, force Corepack via a `vercel.json` at the repo root:
+If pnpm still isn't used despite the lockfile, first confirm the project is using Root Directory `apps/web` and the active `apps/web/vercel.json`. For the current production app, the expected settings are listed in "Current Vercel Truth" above.
+
+A repo-root `vercel.json` is historical/root fallback only. Use this shape only when the project source proves Vercel is building from the repo root:
 
 ```json
 {
@@ -347,8 +365,8 @@ Each brand needs its own Resend domain entry and its own dedicated DKIM key — 
 ## Cross-References
 
 - [SESSION_0159](../sprints/SESSION_0159.md) — execution session this runbook is derived from.
-- [Resend Setup Runbook](resend-setup-runbook.md) — Resend account + API key + env var wiring (DNS-records section needs the FINDING_01 refresh; cross-check against this runbook's Step 3).
+- [Resend Setup Runbook](resend-setup-runbook.md) — Resend account + API key + env var wiring; copy exact DNS records from the per-domain Resend dashboard/API.
 - [ADR 0006 — Multi-domain hosting on one Vercel deployment](../architecture/decisions/0006-multi-domain-hosting.md) — why all four brands share one Vercel deployment.
 - [ADR 0015 — Domain Hosting Infrastructure](../architecture/decisions/0015-domain-hosting-infrastructure.md) — why Bluehost stays as DNS registrar (record-based path, not delegation).
-- [DNS Verification Spec](../architecture/infrastructure/dns-verification-spec.md) — record specification reference (stale as of SESSION_0159_FINDING_01; refresh pending).
+- [DNS Verification Spec](../architecture/infrastructure/dns-verification-spec.md) — current shared DNS record reference.
 - [Graphify Repo Memory Runbook](graphify-repo-memory.md) — cross-domain discovery pattern used during SESSION_0159.

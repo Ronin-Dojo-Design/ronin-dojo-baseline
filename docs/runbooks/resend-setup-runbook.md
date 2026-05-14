@@ -4,8 +4,8 @@ slug: resend-setup-runbook
 type: runbook
 status: active
 created: 2026-05-09
-updated: 2026-05-13
-last_agent: claude-session-0160
+updated: 2026-05-14
+last_agent: codex-session-0163
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/architecture/infrastructure/dns-verification-spec.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/architecture/infrastructure/README.md
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
+  - docs/sprints/SESSION_0163.md
 tags:
   - resend
   - email
@@ -58,6 +59,12 @@ Step-by-step operator guide for configuring Resend transactional email for the R
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+## Current DNS Source Note
+
+Baseline Resend DNS was verified in the Resend dashboard on 2026-05-13 15:04. The live Baseline shape is DKIM TXT at `resend._domainkey`, outbound MX at `send`, outbound SPF TXT at `send`, and inbound MX at the apex. Live Resend public docs checked on 2026-05-14 can show alternate tokenized examples, including DKIM CNAME examples; copy the exact per-domain records from the Resend dashboard/API when they differ from examples.
+
+Cross-check the shared record reference in [DNS Verification Spec](../architecture/infrastructure/dns-verification-spec.md) and the Bluehost/Vercel application flow in [Vercel Domain Setup Runbook](vercel-domain-setup-runbook.md).
+
 ## Step-by-Step
 
 ### 1. Create Resend account
@@ -81,14 +88,14 @@ Resend will display required DNS records:
 ┌──────────┬──────────────────────────┬────────────────────────────────┐
 │ Type     │ Name                     │ Value                          │
 ├──────────┼──────────────────────────┼────────────────────────────────┤
-│ TXT      │ @ or _resend             │ resend-verification=rv_xxxx    │
-│ CNAME    │ resend._domainkey        │ resend._domainkey.resend.dev   │
-│ CNAME    │ em.baselinemartialarts   │ (provided by Resend)           │
-│ TXT      │ @                        │ v=spf1 include:amazonses...    │
+│ TXT      │ resend._domainkey        │ full p=... DKIM value          │
+│ MX       │ send                     │ feedback-smtp.<region>...      │
+│ TXT      │ send                     │ v=spf1 include:amazonses...    │
 │ TXT      │ _dmarc                   │ v=DMARC1; p=none; ...          │
 └──────────┴──────────────────────────┴────────────────────────────────┘
 
-⚠️ Copy these values EXACTLY — don't close this page until DNS is added.
+Copy these values exactly. The dashboard/API record list for this domain is the authority, not generic examples in public docs or older runbooks.
+If Resend receiving is enabled for the domain, the dashboard may also request an apex inbound MX record. Add that only when requested.
 ```
 
 ### 3. Add DNS records in Bluehost
@@ -102,18 +109,26 @@ Resend will display required DNS records:
    For TXT records:
    ┌─────────────────────────────────────────┐
    │ Type: TXT                               │
-   │ Name: baselinemartialarts.com            │
+   │ Name: resend._domainkey or send          │
    │ TTL: 14400                              │
    │ TXT Data: (paste from Resend)           │
    └─────────────────────────────────────────┘
 
-   For CNAME records:
+   For MX records:
    ┌─────────────────────────────────────────┐
-   │ Type: CNAME                             │
-   │ Name: resend._domainkey                 │
+   │ Type: MX                                │
+   │ Name: send                              │
    │ TTL: 14400                              │
-   │ CNAME: resend._domainkey.resend.dev     │
+   │ Priority: 10                            │
+   │ Mail server: (paste from Resend)        │
    └─────────────────────────────────────────┘
+
+   Add an apex inbound MX record only when Resend receiving is enabled and
+   the dashboard explicitly requests it.
+
+   Remove older ownership-token TXT rows or legacy return-path CNAME rows
+   unless the current Resend dashboard for this domain explicitly requests
+   them.
 
 5. Save all records
 ```
@@ -126,8 +141,10 @@ Resend will display required DNS records:
 3. Wait for green checkmark (usually < 5 min, can take up to 48h)
 
 Verify from terminal:
-  dig +short resend._domainkey.baselinemartialarts.com CNAME
-  dig +short baselinemartialarts.com TXT | grep resend
+  dig +short resend._domainkey.baselinemartialarts.com TXT
+  dig +short send.baselinemartialarts.com MX
+  dig +short send.baselinemartialarts.com TXT
+  dig +short baselinemartialarts.com MX  # receiving only
 ```
 
 ### 5. Generate API key

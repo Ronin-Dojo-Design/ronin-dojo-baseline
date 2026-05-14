@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0161
+last_agent: codex-session-0163
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -38,6 +38,8 @@ backlinks:
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
   - docs/sprints/SESSION_0161.md
+  - docs/sprints/SESSION_0162.md
+  - docs/sprints/SESSION_0163.md
 ---
 
 # Project Log
@@ -1251,3 +1253,101 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** A future domain setup operator could follow outdated DNS instructions despite the runbook containing the corrected pattern.
 - **Required follow-up:** Refresh `docs/architecture/infrastructure/dns-verification-spec.md` against the current Resend dashboard pattern and stamp the verification date.
 - **Status:** open
+
+### SESSION_0162 — Hostile-Close Review: Sessions 0160-0161
+
+**Date:** 2026-05-14
+**Agent:** chatgpt-session-0162
+**Type:** session--review
+
+#### Review
+
+**SESSION_0162_REVIEW_01 — Consolidated hostile close review**
+
+- **Reviewed tasks:** SESSION_0160_TASK_01 through SESSION_0160_TASK_05; SESSION_0161_TASK_01 through SESSION_0161_TASK_07.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/authentication`, `https://dirstarter.com/docs/codebase/structure`, local Vercel/Resend runbooks, `dns-verification-spec.md`.
+- **Verdict:** Deployment proof is real, but release proof is incomplete. SESSION_0160-0161 fixed the production deploy path and captured key runbook knowledge, while leaving the Resend DNS spec body stale and the hostile-close protocol pointed at the old review-log name. Production auth/login/email smoke remains required before calling Baseline live.
+- **Kaizen aggregate:** 6.5.
+
+### SESSION_0162_FINDING_01 — Resend DNS spec body remains stale after two sessions
+
+- **Severity:** medium
+- **Task:** SESSION_0161_TASK_05
+- **Evidence:** SESSION_0159 and SESSION_0161 both carried `dns-verification-spec.md` refresh as open; the active spec still named stale `resend-verification=rv_...` and `em.<domain>` records.
+- **Impact:** Future brand-domain setup can be poisoned by authoritative-looking stale DNS instructions.
+- **Required follow-up:** Refresh `docs/architecture/infrastructure/dns-verification-spec.md` against the current Resend dashboard pattern and cross-link it to the Resend/Vercel runbooks.
+- **Status:** addressed — SESSION_0163_TASK_01
+
+### SESSION_0162_FINDING_02 — Production deploy proof is real, but not yet user-journey proof
+
+- **Severity:** medium
+- **Task:** SESSION_0161_TASK_03, SESSION_0161_TASK_04, SESSION_0161_TASK_07
+- **Evidence:** SESSION_0161 proved domain serve and `www` redirect, but explicitly excluded auth/login and email delivery browser smokes.
+- **Impact:** The app can serve while launch-critical flows fail quietly.
+- **Required follow-up:** Run production smoke checklist for homepage, login, protected redirect, authenticated dashboard, Resend/magic-link, and brand context.
+- **Status:** open — staged for SESSION_0164
+
+### SESSION_0162_FINDING_03 — Hostile close protocol still points at the old review log name
+
+- **Severity:** medium
+- **Task:** SESSION_0162_REVIEW_01
+- **Evidence:** `docs/protocols/hostile-close-review.md` names `TASK_REVIEW_LOG`; `docs/protocols/project-log.md` is the active unified ledger and says former logs were consolidated.
+- **Impact:** Future close reviews can be recorded in an archived/deprecated log.
+- **Required follow-up:** Patch `hostile-close-review.md` so required output names `docs/protocols/project-log.md` and marks `docs/_archive/task-review-log.md` historical only.
+- **Status:** addressed — SESSION_0163_TASK_02
+
+### SESSION_0162_FINDING_04 — Closed sessions still use `type: session--open`
+
+- **Severity:** low
+- **Task:** SESSION_0159 through SESSION_0161 close metadata
+- **Evidence:** SESSION_0159, SESSION_0160, and SESSION_0161 have `type: session--open` with `status: closed-full`.
+- **Impact:** Metadata classifiers can lose some precision, though `status` remains clear.
+- **Required follow-up:** Decide whether `session--open` is an accepted mixed-session type at close or stale naming.
+- **Status:** open
+
+### SESSION_0162_FINDING_05 — Vercel config fixes solved deployment but added operator complexity
+
+- **Severity:** low
+- **Task:** SESSION_0160_TASK_02, SESSION_0161_TASK_07
+- **Evidence:** The final deploy depends on root/app Vercel config plus Vercel project settings.
+- **Impact:** Future operators may change the wrong layer without a concise current-truth section.
+- **Required follow-up:** Add "Current Vercel truth" to `vercel-domain-setup-runbook.md`.
+- **Status:** addressed — SESSION_0163_TASK_01
+
+### SESSION_0163 — Resend DNS Spec Remediation
+
+**Date:** 2026-05-14
+**Agent:** codex-session-0163
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0163_TASK_01 | Refresh `dns-verification-spec.md` and related Resend/Vercel runbook guidance so stale `rv_`/`em` records are no longer active instructions; add current Vercel truth section | done |
+| SESSION_0163_TASK_02 | Patch `hostile-close-review.md` required output to point at `docs/protocols/project-log.md` and mark archived `task-review-log.md` historical only | done |
+| SESSION_0163_TASK_03 | Reconcile SESSION_0162/0163 audit trail in project-log/wiki/session docs and run full-close | done |
+
+**Result:** SESSION_0163 remediated the stale Resend DNS doc cluster, captured the current Vercel deployment truth, fixed the hostile-close ledger target, and reconciled the SESSION_0162/0163 audit trail. SESSION_0162_FINDING_02 and FINDING_04 remain open by design.
+
+#### Review
+
+**SESSION_0163_REVIEW_01 — Full Close Review**
+
+- **Reviewed tasks:** SESSION_0163_TASK_01 through SESSION_0163_TASK_03.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/authentication`, `https://resend.com/docs/dashboard/domains/introduction`, `https://resend.com/docs/api-reference/domains/create-domain`, local SESSION_0159-0162 evidence.
+- **Verdict:** Aligned. The active docs no longer tell operators to add stale `rv_` ownership-token TXT rows or legacy `em` return-path CNAME rows. The Resend docs now use per-domain dashboard/API records as authority, Vercel current-truth settings are explicit, and hostile-close output points at `project-log.md`.
+- **Kaizen aggregate:** 8.5. Documentation/governance confidence is high, but launch confidence stays capped until SESSION_0164 proves auth and email behavior on production.
+
+#### Findings
+
+**SESSION_0163_FINDING_01 — Production user-journey smoke still pending**
+
+- **Severity:** medium
+- **Task:** SESSION_0163_TASK_01 through SESSION_0163_TASK_03
+- **Evidence:** This session explicitly did docs/governance remediation only; SESSION_0162_FINDING_02 remains open.
+- **Impact:** A corrected runbook does not prove production login, protected route behavior, authenticated dashboard access, or email delivery.
+- **Required follow-up:** Open SESSION_0164 for the production smoke checklist.
+- **Status:** open — staged for SESSION_0164

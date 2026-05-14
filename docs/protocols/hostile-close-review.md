@@ -4,8 +4,8 @@ slug: hostile-close-review
 type: protocol
 status: active
 created: 2026-04-29
-updated: 2026-05-02
-last_agent: codex-session-0032-5
+updated: 2026-05-14
+last_agent: codex-session-0163
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0024.md
   - docs/sprints/SESSION_0025.md
+  - docs/sprints/SESSION_0163.md
 ---
 
 # Giddy + Doug Hostile Close Review
@@ -36,7 +37,7 @@ Run at close when the session touched any of:
 - Dirstarter-derived patterns
 
 For typo-only sessions, record `Hostile close review: not applicable — typo/doc
-copy only` in the SESSION file and `TASK_REVIEW_LOG`.
+copy only` in the SESSION file and the active project-log task review section.
 
 ## Persona split
 
@@ -73,8 +74,8 @@ Dirstarter does now, check the live docs.
 
 ## Review questions
 
-Answer these in hostile-review language, then record findings in
-`TASK_REVIEW_LOG`.
+Answer these in hostile-review language, then record findings in the task review
+section of `docs/protocols/project-log.md`.
 
 1. **Plan sanity:** Was the plan actually good, or did it paper over an
    invalid assumption? If the work touched a Dirstarter-owned layer, did the
@@ -98,8 +99,8 @@ Answer these in hostile-review language, then record findings in
 
 After the eight review questions, the closing agent answers these three Kaizen
 questions in plain prose. They are deliberately sharp; defensive answers fail
-the gate. Record the answers in the `TASK_REVIEW_LOG` entry directly under the
-review-questions verdict.
+the gate. Record the answers in the `docs/protocols/project-log.md` review
+entry directly under the review-questions verdict.
 
 1. **Is this safe and secure? What tests would prove me right?** Name what is
    provably safe, what is *documented* but not behaviorally proven, and the
@@ -130,17 +131,24 @@ planned*. Treat both numbers as load-bearing.
 
 ## Required output
 
-Append one review entry to `TASK_REVIEW_LOG` using this shape:
+Append one review entry to the task review section of
+`docs/protocols/project-log.md` using this shape:
 
 ```markdown
-## SESSION_NNNN_REVIEW_XX - <short title>
+### SESSION_NNNN - <session title>
 
-**Reviewed tasks:** SESSION_NNNN_TASK_XX
-**Dirstarter docs check:** live docs checked | cached docs sufficient | not applicable
-**Sources:** <URLs or local docs>
-**Verdict:** <one blunt paragraph>
+#### Review
 
-### SESSION_NNNN_FINDING_XX - <title>
+**SESSION_NNNN_REVIEW_XX - <short title>**
+
+- **Reviewed tasks:** SESSION_NNNN_TASK_XX
+- **Dirstarter docs check:** live docs checked | cached docs sufficient | not applicable
+- **Sources:** <URLs or local docs>
+- **Verdict:** <one blunt paragraph>
+
+#### Findings
+
+**SESSION_NNNN_FINDING_XX - <title>**
 
 - **Severity:** high | medium | low
 - **Task:** SESSION_NNNN_TASK_XX
@@ -149,6 +157,10 @@ Append one review entry to `TASK_REVIEW_LOG` using this shape:
 - **Required follow-up:** <specific next action>
 - **Status:** open | addressed | accepted-risk
 ```
+
+`docs/protocols/project-log.md` is the active append-only ledger for hostile
+close review entries. `docs/_archive/task-review-log.md` is historical only and
+does not satisfy this protocol.
 
 ## Score impact
 
@@ -160,8 +172,8 @@ Apply WORKFLOW 5.0 caps honestly:
 - Security proof missing for exposed data paths caps score at 8.9.
 
 If a session scores under 9.5 after hostile review, do not hide the debt. Add it
-to `Open decisions / blockers`, `TASK_REVIEW_LOG`, and any relevant boundary
-registry entry.
+to `Open decisions / blockers`, the task review section of
+`docs/protocols/project-log.md`, and any relevant boundary registry entry.
 
 A WORKFLOW-rubric pass with a Kaizen aggregate ≤ 8 also counts as debt — record
 it the same way and stage a remediation session before any further

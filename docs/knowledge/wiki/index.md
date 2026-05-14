@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-14
 author: Brian + Copilot
-last_agent: codex-session-0161
+last_agent: codex-session-0163
 ---
 
 # LLM Wiki Index
@@ -217,6 +217,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0159](../../sprints/SESSION_0159.md) | session--open | closed-full |
 | [SESSION_0160](../../sprints/SESSION_0160.md) | session--open | closed-full |
 | [SESSION_0161](../../sprints/SESSION_0161.md) | session--open | closed-full |
+| [SESSION_0162](../../sprints/SESSION_0162.md) | session--review | closed-full |
+| [SESSION_0163](../../sprints/SESSION_0163.md) | session--open | closed-full |
 
 ## Protocols
 
