@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0168
+last_agent: codex-session-0169
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -45,6 +45,7 @@ backlinks:
   - docs/sprints/SESSION_0166.md
   - docs/sprints/SESSION_0167.md
   - docs/sprints/SESSION_0168.md
+  - docs/sprints/SESSION_0169.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1615,4 +1616,59 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** Giddy review confirmed `/schools` exists but school detail Request Info / Book Trial / Claim / tier surfacing is not proven in this session.
 - **Impact:** Stripe/S3 readiness does not by itself equal Baseline Listings launch readiness.
 - **Required follow-up:** Run a focused Baseline Listings MVP session after provider setup/deploy smoke.
+- **Status:** open
+
+### SESSION_0169 - Production Baseline Smoke and Provider Readiness
+
+**Date:** 2026-05-14 MDT / 2026-05-15 UTC
+**Agent:** codex-session-0169
+**Type:** session--review
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0169_TASK_01 | Verify deployed SESSION_0168 patch and public Baseline route smoke | done |
+| SESSION_0169_TASK_02 | Check production Neon/Stripe/S3 readiness without exposing secrets | done |
+| SESSION_0169_TASK_03 | Review, document, full-close, and refresh Graphify | done |
+
+**Result:** SESSION_0168 production deployment is live on Vercel at commit `6a19060`; public route smoke passed for `/`, `/merch`, `/members`, `/gear`, `/schools`, `/programs`, `/courses`, `/auth/login`, and `/me`. Production DB/Stripe seed-link work remains blocked from Codex because local env is dev/test and no intentional production env file was available. S3/media env names were not present in Vercel production at final check.
+
+#### Review
+
+**SESSION_0169_REVIEW_01 - Production Smoke and Provider Readiness Review**
+
+- **Reviewed tasks:** SESSION_0169_TASK_01 through SESSION_0169_TASK_03.
+- **Dirstarter docs check:** live docs checked 2026-05-15 UTC.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/integrations/payments`, `https://dirstarter.com/docs/integrations/storage`, `https://docs.stripe.com/get-started/checklist/go-live`, `https://docs.stripe.com/webhooks`, local runbooks, Vercel deployment/env/log output, and public production route smoke.
+- **Verdict:** Green for deployed public-route smoke; amber for provider readiness. SESSION_0168 route fixes are live and public pages no longer show the prior auth/500 failures. Production Stripe/DB/S3 launch setup still needs owner-controlled env access and S3/media env configuration.
+- **Kaizen aggregate:** 8.8. The deploy proof is strong; score is capped by unrun production seed/link work and missing S3/media provider proof.
+
+#### Findings
+
+**SESSION_0169_FINDING_01 - Production seed/link work remains blocked from Codex**
+
+- **Severity:** high
+- **Task:** SESSION_0169_TASK_02
+- **Evidence:** Local `apps/web/.env` classified as local-dev database plus test-mode Stripe; Vercel values are encrypted and were not pulled into an intentional production env file.
+- **Impact:** Codex did not run production Baseline pricing seeds or Stripe product linking.
+- **Required follow-up:** Brian either creates an ignored production env file intentionally or runs the documented owner command sequence directly.
+- **Status:** open
+
+**SESSION_0169_FINDING_02 - Production S3/media env names missing in Vercel**
+
+- **Severity:** high
+- **Task:** SESSION_0169_TASK_02
+- **Evidence:** `vercel env ls production` did not list `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, or `NEXT_PUBLIC_MEDIA_BASE_URL`.
+- **Impact:** `/admin/storage/monitoring` and CloudFront/media smoke cannot prove production media readiness yet.
+- **Required follow-up:** Add the S3/media env names in Vercel, redeploy if needed, sync catalog assets, and run storage monitor smoke.
+- **Status:** open
+
+**SESSION_0169_FINDING_03 - Authenticated/admin production smoke still blocked**
+
+- **Severity:** medium
+- **Task:** SESSION_0169_TASK_03
+- **Evidence:** No production test user or approved auth path was available during this session.
+- **Impact:** `/admin/storage/monitoring`, `/admin/billing/monitoring`, dashboard session behavior, and real email/auth delivery remain unproven.
+- **Required follow-up:** Provide/approve a safe production auth path, then run authenticated admin smoke after provider env setup.
 - **Status:** open
