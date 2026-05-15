@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-14
-last_agent: codex-session-0169
+updated: 2026-05-15
+last_agent: codex-session-0170
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -46,6 +46,7 @@ backlinks:
   - docs/sprints/SESSION_0167.md
   - docs/sprints/SESSION_0168.md
   - docs/sprints/SESSION_0169.md
+  - docs/sprints/SESSION_0170.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1671,4 +1672,59 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** No production test user or approved auth path was available during this session.
 - **Impact:** `/admin/storage/monitoring`, `/admin/billing/monitoring`, dashboard session behavior, and real email/auth delivery remain unproven.
 - **Required follow-up:** Provide/approve a safe production auth path, then run authenticated admin smoke after provider env setup.
+- **Status:** open
+
+### SESSION_0170 - Production Provider Proof Continuation
+
+**Date:** 2026-05-15
+**Agent:** codex-session-0170
+**Type:** session--review
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0170_TASK_01 | Re-check production deploy, env names, and public Baseline smoke | done |
+| SESSION_0170_TASK_02 | Prove or block S3/media readiness | blocked after partial proof |
+| SESSION_0170_TASK_03 | Check DB/Stripe/admin proof gate, document, full-close, and refresh Graphify | done as blocked-proof closeout |
+
+**Result:** Production S3/media env names are now present and were created before the latest deployment, and public route availability remains green. Production merch catalog/media/admin proof remains blocked by missing production seed/link evidence, absent local production env/auth path, and no local AWS CLI for the runbook sync command.
+
+#### Review
+
+**SESSION_0170_REVIEW_01 - Production Provider Proof Continuation Review**
+
+- **Reviewed tasks:** SESSION_0170_TASK_01 through SESSION_0170_TASK_03.
+- **Dirstarter docs check:** live docs checked 2026-05-15.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/integrations/payments`, `https://dirstarter.com/docs/integrations/storage`, `https://docs.stripe.com/get-started/checklist/go-live`, `https://docs.stripe.com/webhooks`, local provider runbooks, Vercel CLI/MCP evidence, and public production smoke.
+- **Verdict:** Amber but honest. The session advanced provider readiness by proving S3/media env names are now present and included before the latest production redeploy. It did not prove launch readiness: `/merch` is empty in production, media URLs were not observable from public pages, AWS sync cannot run locally, DB/Stripe writes remain owner-gated, and admin monitors still require a safe production admin session.
+- **Kaizen aggregate:** 8.8. Public deploy and env-name proof are good; confidence remains capped until owner-controlled provider operations and authenticated monitors pass.
+
+#### Findings
+
+**SESSION_0170_FINDING_01 - Production merch catalog is empty**
+
+- **Severity:** high
+- **Task:** SESSION_0170_TASK_02
+- **Evidence:** Public `/merch` rendered `200` but showed `0 items` and `No products in this category yet`.
+- **Impact:** Merch checkout, merch media proof, and Stripe merch product linking cannot be considered launch-ready.
+- **Required follow-up:** Run the production product catalog seed/link path with intentional production DB/Stripe access, then re-smoke `/merch` and at least one merch detail page.
+- **Status:** open
+
+**SESSION_0170_FINDING_02 - S3/media env names are present but media proof is still blocked**
+
+- **Severity:** high
+- **Task:** SESSION_0170_TASK_02
+- **Evidence:** Vercel production lists `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, and `NEXT_PUBLIC_MEDIA_BASE_URL`, but `aws` CLI is not installed locally, no production env file exists, no media-base catalog image URL was observable in public HTML, and `/admin/storage/monitoring` requires auth.
+- **Impact:** Production media readiness cannot be called proven.
+- **Required follow-up:** Owner-run or approved Codex-run media sync, then authenticated storage monitor smoke showing `CONFIGURED` and missing local paths `0`.
+- **Status:** open
+
+**SESSION_0170_FINDING_03 - Authenticated provider monitors remain blocked**
+
+- **Severity:** medium
+- **Task:** SESSION_0170_TASK_03
+- **Evidence:** Unauthenticated `/admin/storage/monitoring` and `/admin/billing/monitoring` both returned `307` to login.
+- **Impact:** Operators still lack production evidence that storage and billing monitors report healthy provider state.
+- **Required follow-up:** Provide/approve a safe production admin auth path and run both monitor smokes after provider setup.
 - **Status:** open

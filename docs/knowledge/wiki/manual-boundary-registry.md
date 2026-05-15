@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-14
+updated: 2026-05-15
 author: Brian + ChatGPT
-last_agent: codex-session-0163
+last_agent: codex-session-0170
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
@@ -30,6 +30,7 @@ backlinks:
   - docs/sprints/SESSION_0098.md
   - docs/sprints/SESSION_0099.md
   - docs/sprints/SESSION_0163.md
+  - docs/sprints/SESSION_0170.md
 tags:
   - blockers
   - ops
@@ -277,6 +278,8 @@ Future Stripe event-destination backlog, not to be subscribed until handlers exi
 3. Add `experimental.serverActions.allowedOrigins` to `apps/web/next.config.ts` listing the four brand domains so Server Actions CSRF/Origin checks pass under multi-domain hosting.
 4. Verify env validation covers Better Auth, Postgres, Stripe (publishable + secret + webhook), Upstash Redis, S3 / private storage, cron secret, and Plausible before staging deploy. Live Dirstarter docs reference: `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/deployment`.
 5. Configure public media storage per `docs/runbooks/aws-s3-operator-runbook.md`: bucket, CloudFront/OAC or approved direct S3 public delivery, least-privilege upload IAM key, synced merch assets, and Vercel `S3_*` / `NEXT_PUBLIC_MEDIA_BASE_URL` variables.
+
+SESSION_0170 update: Vercel production now lists the S3/media env names (`S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `NEXT_PUBLIC_MEDIA_BASE_URL`) and the latest production deployment was created after those env names. This partially advances gate 5, but MB-014 remains open because assets were not synced from this machine, no production media-base catalog image URL was observable on public pages, `/merch` still shows `0 items`, and authenticated `/admin/storage/monitoring` proof is blocked on a safe production admin auth path.
 
 This boundary stays `open` until those five steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
 
