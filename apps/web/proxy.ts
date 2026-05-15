@@ -21,17 +21,25 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/auth/).*)"],
 }
 
+export const matchesRoute = (pathname: string, route: string) =>
+  pathname === route || pathname.startsWith(`${route}/`)
+
 export default async function (req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const sessionCookie = getSessionCookie(req)
 
   // If the user is logged in and tries to access the auth page, redirect to the home page
-  if (sessionCookie && pathname.startsWith("/auth")) {
+  if (sessionCookie && matchesRoute(pathname, "/auth")) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 
   // If the user is not logged in and tries to access the authed pages, redirect to the login page
-  if (!sessionCookie && (pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/me"))) {
+  if (
+    !sessionCookie &&
+    (matchesRoute(pathname, "/dashboard") ||
+      matchesRoute(pathname, "/admin") ||
+      matchesRoute(pathname, "/me"))
+  ) {
     return NextResponse.redirect(new URL(`/auth/login?next=${pathname}${search}`, req.url))
   }
 

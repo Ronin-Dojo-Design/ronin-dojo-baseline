@@ -6,6 +6,7 @@
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { afterAll, afterEach, describe, expect, it } from "bun:test"
+import type { Prisma } from "~/.generated/prisma/client"
 import { runPaymentEntitlementDriftAudit } from "~/server/web/billing/drift-audit"
 import { db } from "~/services/db"
 
@@ -101,6 +102,7 @@ const createPlan = async ({
   entitlementId,
   name,
   priceId,
+  metadata,
 }: {
   prefix: string
   organizationId: string
@@ -108,6 +110,7 @@ const createPlan = async ({
   entitlementId?: string
   name: string
   priceId: string
+  metadata?: Prisma.InputJsonValue
 }) => {
   const plan = await db.pricingPlan.create({
     data: {
@@ -119,6 +122,7 @@ const createPlan = async ({
       amountCents: 9900,
       stripeProductId: `${prefix}-prod-${name}`,
       stripePriceId: priceId,
+      ...(metadata ? { metadata } : {}),
     },
   })
 
@@ -211,6 +215,32 @@ describe("runPaymentEntitlementDriftAudit", () => {
     expect(report.launchReady).toBe(true)
     expect(report.blockingIssueCount).toBe(0)
     expect(report.warningIssueCount).toBe(0)
+  })
+
+  it("does not require entitlement grants for physical merch Stripe plans", async () => {
+    const prefix = prefixFor("physical-merch")
+    const { organization, program } = await createUserOrgProgram(prefix)
+
+    await createPlan({
+      prefix,
+      organizationId: organization.id,
+      programId: program.id,
+      name: "shirt",
+      priceId: `${prefix}-price-shirt`,
+      metadata: { source: "tuffbuffs-merch", externalId: "tb-shirt" },
+    })
+
+    const report = await runPaymentEntitlementDriftAudit({
+      now,
+      brand: BRAND,
+      scopePrefix: prefix,
+    })
+    const planGrantCheck = report.checks.find(
+      check => check.code === "ACTIVE_PAID_PLAN_MISSING_ENTITLEMENT_GRANT",
+    )
+
+    expect(report.launchReady).toBe(true)
+    expect(planGrantCheck?.issues).toHaveLength(0)
   })
 
   it("reports every SESSION_0098 drift class with deterministic issue codes", async () => {

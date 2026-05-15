@@ -55,6 +55,14 @@ export type RunPaymentEntitlementDriftAuditOptions = {
 
 const STRIPE_ENTITLEMENT_SOURCE_TYPES: EntitlementSourceType[] = ["PURCHASE", "SUBSCRIPTION"]
 
+const isPhysicalMerchPlan = (plan: { metadata: Prisma.JsonValue | null }) => {
+  if (!plan.metadata || typeof plan.metadata !== "object" || Array.isArray(plan.metadata)) {
+    return false
+  }
+
+  return (plan.metadata as Record<string, unknown>).source === "tuffbuffs-merch"
+}
+
 const activeEntitlementWindowWhere = (now: Date) =>
   ({
     startsAt: { lte: now },
@@ -193,6 +201,7 @@ export const runPaymentEntitlementDriftAudit = async ({
       programId: true,
       stripePriceId: true,
       amountCents: true,
+      metadata: true,
       organizationId: true,
       _count: { select: { entitlementGrants: true } },
       program: { select: { id: true, name: true } },
@@ -230,7 +239,8 @@ export const runPaymentEntitlementDriftAudit = async ({
   }
 
   for (const plan of activeStripePlans) {
-    if (plan.amountCents <= 0 || plan._count.entitlementGrants > 0) continue
+    if (plan.amountCents <= 0 || plan._count.entitlementGrants > 0 || isPhysicalMerchPlan(plan))
+      continue
 
     addIssue(planGrantIssues, {
       code: "ACTIVE_PAID_PLAN_MISSING_ENTITLEMENT_GRANT",

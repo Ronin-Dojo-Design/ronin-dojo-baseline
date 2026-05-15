@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-14
-last_agent: codex-session-0167
+last_agent: codex-session-0168
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -44,6 +44,7 @@ backlinks:
   - docs/sprints/SESSION_0165.md
   - docs/sprints/SESSION_0166.md
   - docs/sprints/SESSION_0167.md
+  - docs/sprints/SESSION_0168.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1559,4 +1560,59 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** Vercel production env names listed `DATABASE_URL`, Better Auth vars, site URL/email, and Google OAuth vars, but not `CRON_SECRET`. Dirstarter environment docs and Ronin deployment runbook name `CRON_SECRET`; `apps/web/env.ts` currently treats it as optional.
 - **Impact:** Cron endpoint protection posture needs an explicit decision before cron-dependent launch work.
 - **Required follow-up:** Decide whether to add `CRON_SECRET` for production now or document why current cron endpoints are not active/required.
+- **Status:** open
+
+### SESSION_0168 - Baseline Stripe/S3 Launch Setup
+
+**Date:** 2026-05-14 MDT / 2026-05-15 UTC
+**Agent:** codex-session-0168
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0168_TASK_01 | Patch Baseline pricing seed to create/find entitlements and entitlement grants idempotently | done |
+| SESSION_0168_TASK_02 | Patch physical merch drift-audit semantics and `/merch` route protection false positive | done |
+| SESSION_0168_TASK_03 | Verify, review, full-close, and refresh Graphify | done |
+
+**Result:** Baseline local catalog setup now has 32 entitlement grants for operational pricing plans, 56 Stripe-linked local test-mode prices across operational and merch catalogs, a drift audit that treats physical TuffBuffs merch as non-digital-access products, and an exact route matcher that stops `/me` protection from capturing `/merch` and `/members`.
+
+#### Review
+
+**SESSION_0168_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0168_TASK_01 through SESSION_0168_TASK_03.
+- **Dirstarter docs check:** live docs checked 2026-05-14.
+- **Sources:** `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/integrations/payments`, `https://dirstarter.com/docs/integrations/storage`, local Stripe/S3/product-catalog runbooks, local tests/typecheck/audit.
+- **Verdict:** Amber but aligned. Local Baseline launch plumbing is verified, and the remaining risk is now production operations: deploy this patch, provide production Neon DB access, run Baseline-only migration/seed/link commands, and prove Stripe/S3/admin monitors against production.
+- **Kaizen aggregate:** 8.6. Verification is strong locally; production readiness remains capped until provider-side smoke passes.
+
+#### Findings
+
+**SESSION_0168_FINDING_01 - Production `/merch` and `/members` still blocked until deploy**
+
+- **Severity:** high
+- **Task:** SESSION_0168_TASK_02
+- **Evidence:** Local matcher test passes, but production curl still follows `/merch` and `/members` to `/auth/login` because the fix is not deployed.
+- **Impact:** Baseline public merch/catalog QA cannot pass on production before deploy.
+- **Required follow-up:** Deploy SESSION_0168 patch, then rerun public smoke for `/merch`, `/members`, `/gear`, `/schools`, `/programs`, and `/courses`.
+- **Status:** open
+
+**SESSION_0168_FINDING_02 - Production DB seed/link work blocked on Neon URL**
+
+- **Severity:** high
+- **Task:** SESSION_0168_TASK_01
+- **Evidence:** Vercel env pull redacts secret values; local production env files cannot provide a usable `DATABASE_URL` for production migration/seed commands.
+- **Impact:** Codex cannot safely run production Baseline-only migrations/seeds or Stripe DB-link scripts.
+- **Required follow-up:** Provide production Neon `DATABASE_URL` through a secure local env path or have Brian run the documented commands directly.
+- **Status:** open
+
+**SESSION_0168_FINDING_03 - Baseline Listings MVP remains outside this setup lane**
+
+- **Severity:** medium
+- **Task:** SESSION_0168_TASK_03
+- **Evidence:** Giddy review confirmed `/schools` exists but school detail Request Info / Book Trial / Claim / tier surfacing is not proven in this session.
+- **Impact:** Stripe/S3 readiness does not by itself equal Baseline Listings launch readiness.
+- **Required follow-up:** Run a focused Baseline Listings MVP session after provider setup/deploy smoke.
 - **Status:** open
