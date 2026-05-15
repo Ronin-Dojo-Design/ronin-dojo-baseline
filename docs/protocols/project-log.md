@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-15
-last_agent: codex-session-0170
+last_agent: claude-session-0171
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -47,6 +47,7 @@ backlinks:
   - docs/sprints/SESSION_0168.md
   - docs/sprints/SESSION_0169.md
   - docs/sprints/SESSION_0170.md
+  - docs/sprints/SESSION_0171.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1727,4 +1728,77 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Evidence:** Unauthenticated `/admin/storage/monitoring` and `/admin/billing/monitoring` both returned `307` to login.
 - **Impact:** Operators still lack production evidence that storage and billing monitors report healthy provider state.
 - **Required follow-up:** Provide/approve a safe production admin auth path and run both monitor smokes after provider setup.
+- **Status:** open
+
+### SESSION_0171 - Production Provider Proof Completion
+
+**Date:** 2026-05-15
+**Agent:** claude-session-0171
+**Type:** session--open
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0171_TASK_01 | Verify env/auth surface and prepare safe operator runtime | done |
+| SESSION_0171_TASK_02 | Sync production media bucket and run production catalog seed/link | partial (sync no-op; seed + Stripe link halted on F-05) |
+| SESSION_0171_TASK_03 | Authenticated admin monitor smoke and full-close | deferred to SESSION_0172 |
+
+**Result:** SESSION_0170's three owner-side blockers (no local env file, no local AWS CLI, no approved admin auth path) all advanced. The local env file + AWS CLI are now in place; admin auth path is local-dev-server with `.env.production.local`. Five env value findings (F-01 region invalid, F-02 truncated key, F-03 wrong key shape, F-04 private S3 host, F-05 empty production DB) were caught before any production write. F-01..F-04 were resolved during the session. F-05 (no `BASELINE_MARTIAL_ARTS` org row + Dirstarter main seed not production-safe) became the deliberate close point.
+
+#### Review
+
+**SESSION_0171_REVIEW_01 — Production Provider Proof Completion Review**
+
+- **Reviewed tasks:** SESSION_0171_TASK_01 through SESSION_0171_TASK_03.
+- **Dirstarter docs check:** not re-fetched this session because no new architectural decision was made. SESSION_0172 launch-seed task is required to re-check live docs.
+- **Sources:** local `.env.production.local` (key shape only, no values), `aws --version` + `aws s3 ls` + `aws s3 sync --dryrun`, `curl -sI` on CloudFront, `bunx prisma migrate status` against Neon, throwaway Prisma probe (deleted before commit), `apps/web/app/api/auth/dev-login/route.ts`, `apps/web/env.ts`, `apps/web/prisma/seed*.ts`, `docs/runbooks/aws-s3-operator-runbook.md`, `docs/runbooks/product-catalog-seed.md`.
+- **Verdict:** Amber. Caught five owner-side findings before production writes. Closed the loop on F-01..F-04. F-05 (empty prod DB + non-production-safe main seed) is the launch-blocking finding and is staged for SESSION_0172 with a precise execution plan. No code changes shipped this session.
+- **Kaizen aggregate:** 8.5. Public deploy + env-name + bucket + CloudFront are all green; live catalog and authenticated admin monitor proof remain open until SESSION_0172.
+
+#### Findings
+
+**SESSION_0171_FINDING_01 — `S3_REGION` was `us-east-2-an` (invalid AWS region)**
+
+- **Severity:** high (blocks all AWS API calls)
+- **Task:** SESSION_0171_TASK_02
+- **Evidence:** `aws s3 sync` returned `Could not connect to the endpoint URL: https://<bucket>.s3.us-east-2-an.amazonaws.com/...`. Local file value was `us-east-2-an`, 12 chars.
+- **Impact:** Vercel production runtime received the same invalid region; all S3 reads/writes from prod would fail until corrected.
+- **Required follow-up:** none — operator fixed in Vercel + local file to `us-east-2` during the session.
+- **Status:** mitigated
+
+**SESSION_0171_FINDING_02 — `S3_SECRET_ACCESS_KEY` was 38 chars (truncated)**
+
+- **Severity:** high (signature failure)
+- **Task:** SESSION_0171_TASK_02
+- **Evidence:** `aws s3 ls` returned `SignatureDoesNotMatch` even with corrected region. Local value was 38 chars where AWS secrets are exactly 40 chars.
+- **Impact:** Vercel runtime same problem; would silently fail all signed S3 requests in production.
+- **Required follow-up:** none — operator re-pasted from `credentials.csv`.
+- **Status:** mitigated (then re-broken by F-03)
+
+**SESSION_0171_FINDING_03 — `S3_SECRET_ACCESS_KEY` re-paste was a Stripe live secret (`sk_l...`, 107 chars)**
+
+- **Severity:** high (wrong-vendor secret in AWS slot)
+- **Task:** SESSION_0171_TASK_02
+- **Evidence:** Length check after operator's fix returned 107 chars + `sk_l` prefix; `STRIPE_SECRET_KEY` in same file matched same shape. AWS secrets never start with `sk_`.
+- **Impact:** AWS would continue to reject as `SignatureDoesNotMatch`; Stripe key was also leaked into a second env slot.
+- **Required follow-up:** operator should rotate the Stripe live secret as a precaution (it was visible in `S3_SECRET_ACCESS_KEY` to anyone who could read the env file).
+- **Status:** mitigated (correct 40-char AWS secret pasted from `credentials.csv`); follow-up Stripe-key rotation is recommended but not landed in this session.
+
+**SESSION_0171_FINDING_04 — `NEXT_PUBLIC_MEDIA_BASE_URL` / `S3_PUBLIC_URL` pointed at private S3 host**
+
+- **Severity:** high (catalog images would 403 in public pages)
+- **Task:** SESSION_0171_TASK_02
+- **Evidence:** `curl -sI` against `<bucket>.s3.us-east-2.amazonaws.com/images/merch/Everlast-Elite-2-Boxing-Gloves.jpg` returned `403 Forbidden`. Bucket has Block Public Access on, per `docs/runbooks/aws-s3-operator-runbook.md`.
+- **Impact:** Even with CloudFront created, both env values must point at the CloudFront domain (not at the private S3 host) for public delivery.
+- **Required follow-up:** none — operator confirmed CloudFront `d1th1bjp9wz9c3.cloudfront.net` was already created (last night) and updated both env values during the session. `curl -sI` on CloudFront returned `HTTP/2 200`.
+- **Status:** mitigated
+
+**SESSION_0171_FINDING_05 — Production DB is empty; no `BASELINE_MARTIAL_ARTS` Organization row**
+
+- **Severity:** high (launch-blocking; catalog seeds + admin monitors all require an org row)
+- **Task:** SESSION_0171_TASK_02
+- **Evidence:** Direct Prisma probe against Neon prod returned User=1 (Brian admin), Organization=0, PricingPlan=0, Category=0, Tool=0, Entitlement=0, Post=0. Catalog seeds all check `findFirst({ where: { brand: "BASELINE_MARTIAL_ARTS" } })` and exit `❌ No BASELINE_MARTIAL_ARTS organization found.`.
+- **Impact:** `/merch` and `/gear` cannot render real catalog rows until an org exists and the affiliate/merch seeds populate `PricingPlan`. The Dirstarter main `prisma db seed` is **not** production-safe — it creates `admin@dirstarter.com` + `user@dirstarter.com` test users + Dirstarter-template categories + demo tools/programs/courses with FK references back to those test users.
+- **Required follow-up:** SESSION_0172 first task — write `apps/web/prisma/seed-baseline-launch.ts` with Cody pre-flight: org + categories + tags + system roles + entitlements (skip test users + demo tools + content/programs/courses). Then catalog seeds. Then Stripe link + create missing. Then live `/merch`/`/gear` re-smoke. Then authenticated admin monitor smoke via local dev server with `.env.production.local`.
 - **Status:** open

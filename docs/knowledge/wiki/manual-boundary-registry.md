@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-05-15
 author: Brian + ChatGPT
-last_agent: codex-session-0170
+last_agent: claude-session-0171
 pairs_with:
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
@@ -31,6 +31,7 @@ backlinks:
   - docs/sprints/SESSION_0099.md
   - docs/sprints/SESSION_0163.md
   - docs/sprints/SESSION_0170.md
+  - docs/sprints/SESSION_0171.md
 tags:
   - blockers
   - ops
@@ -280,6 +281,8 @@ Future Stripe event-destination backlog, not to be subscribed until handlers exi
 5. Configure public media storage per `docs/runbooks/aws-s3-operator-runbook.md`: bucket, CloudFront/OAC or approved direct S3 public delivery, least-privilege upload IAM key, synced merch assets, and Vercel `S3_*` / `NEXT_PUBLIC_MEDIA_BASE_URL` variables.
 
 SESSION_0170 update: Vercel production now lists the S3/media env names (`S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `NEXT_PUBLIC_MEDIA_BASE_URL`) and the latest production deployment was created after those env names. This partially advances gate 5, but MB-014 remains open because assets were not synced from this machine, no production media-base catalog image URL was observable on public pages, `/merch` still shows `0 items`, and authenticated `/admin/storage/monitoring` proof is blocked on a safe production admin auth path.
+
+SESSION_0171 update: Gate 5 (public media storage) now advanced significantly. Local `.env.production.local` contains all S3 keys; AWS CLI installed locally; bucket `ronin-baseline-s3-bucket-434978747667-us-east-2-an` in `us-east-2` is reachable from local with the IAM credentials; 60 merch JPG/PNGs are uploaded under `images/merch/` (sync dry-run reports 0 changes — local + bucket identical); CloudFront distribution `d1th1bjp9wz9c3.cloudfront.net` is fronted by `NEXT_PUBLIC_MEDIA_BASE_URL` + `S3_PUBLIC_URL` and serves objects publicly (`HTTP/2 200` confirmed). The session also caught and helped the operator resolve four env value defects (region was `us-east-2-an`, secret was truncated to 38 chars, then re-paste was the Stripe live key shape, public URL pointed at the private S3 host) — all four are now mitigated in both Vercel and local `.env.production.local`. SESSION_0171 surfaced one new finding for MB-013: production DB has no `BASELINE_MARTIAL_ARTS` Organization row (User=1 Brian admin, all other tables=0), and the Dirstarter main `prisma db seed` is not production-safe (creates `admin@dirstarter.com`/`user@dirstarter.com` test users and demo Tools/Programs/Courses with FK refs back to those test users). MB-014 stays `open` because authenticated `/admin/storage/monitoring` smoke and the launch-safe production seed are deferred to SESSION_0172. Stripe-key rotation recommended as a precaution because the Stripe live secret was briefly present in `S3_SECRET_ACCESS_KEY` env slot during the in-session F-03 mitigation cycle.
 
 This boundary stays `open` until those five steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
 
