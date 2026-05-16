@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-15
-last_agent: claude-session-0171
+last_agent: claude-session-0172
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -48,6 +48,7 @@ backlinks:
   - docs/sprints/SESSION_0169.md
   - docs/sprints/SESSION_0170.md
   - docs/sprints/SESSION_0171.md
+  - docs/sprints/SESSION_0172.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1802,3 +1803,71 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** `/merch` and `/gear` cannot render real catalog rows until an org exists and the affiliate/merch seeds populate `PricingPlan`. The Dirstarter main `prisma db seed` is **not** production-safe — it creates `admin@dirstarter.com` + `user@dirstarter.com` test users + Dirstarter-template categories + demo tools/programs/courses with FK references back to those test users.
 - **Required follow-up:** SESSION_0172 first task — write `apps/web/prisma/seed-baseline-launch.ts` with Cody pre-flight: org + categories + tags + system roles + entitlements (skip test users + demo tools + content/programs/courses). Then catalog seeds. Then Stripe link + create missing. Then live `/merch`/`/gear` re-smoke. Then authenticated admin monitor smoke via local dev server with `.env.production.local`.
 - **Status:** open
+
+### SESSION_0172 - Launch-Safe Production Seed + Admin Monitor Smoke
+
+**Date:** 2026-05-15
+**Agent:** claude-session-0172
+**Type:** session--implement
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0172_TASK_01 | Cody pre-flight + write `seed-baseline-launch.ts` (1 BASELINE_MARTIAL_ARTS Organization + 6 system Roles, idempotent) | done (F-06 remediated in-session: duplicate Roles cleaned, seed patched per-code findFirst+create, idempotency re-proven across 2 consecutive no-op runs) |
+| SESSION_0172_TASK_02 | Run catalog seed sequence + Stripe link + create missing against production | done (Prisma seeds: 32+36+24 = 92 PricingPlans idempotent; Stripe live: 24 merch + 20 BMA core created, 0 errors; F-09 raised when core write-back gap surfaced and remediated in-session via Step 12 reconciler — 32 PricingPlans linked, final stripeProductId-linked count = 56) |
+| SESSION_0172_TASK_03 | Local-dev authenticated admin monitor smoke | done (after F-10 fix — stale `DEV_LOGIN_USER_ID` in local env; operator updated to prod admin id; dev-login flipped 404→307; `/admin/storage/monitoring` HTTP 200 CONFIGURED, 59 catalog objects, 0 missing, 0 alerts; `/admin/billing/monitoring` HTTP 200, all event tiles 0 — expected, no checkouts yet) |
+| SESSION_0172_TASK_04 | Full close (Petey) | done (this entry + JETTY sweep + wiki-lint + hostile close + Review & Recommend + memory sweep + git hygiene + post-git Graphify refresh) |
+
+**Result:** Goal achieved — MB-013 (`/admin/storage/monitoring`) and MB-014 (`/admin/billing/monitoring`) proven readable end-to-end against production data. F-05 (carried from SESSION_0171, empty production DB) resolved. Three new findings raised + closed in-session: F-06 (Role.createMany skipDuplicates NULL-distinct bug), F-09 (core BMA Stripe write-back gap), F-10 (stale DEV_LOGIN_USER_ID in local env). Production state: 1 BMA Organization, 6 system Roles, 92 PricingPlans (32 ops + 36 affiliate + 24 merch), 44 new Stripe Products (24 merch + 20 BMA core), 56 PricingPlan rows linked to Stripe (24 merch + 32 core/multi-price; 36 affiliate correctly NULL). Live `/merch` and `/gear` re-smoke green with CloudFront-hosted images. Operator-confirmed cascade locked: SESSION_0173 (Tools + Categories + Tags + F-09 root-cause patch + F-06 sibling audit) → SESSION_0174 (Disciplines + Rank Systems + Programs + ClassSchedule + Courses + CurriculumItems + system fixtures).
+
+#### Review
+
+**SESSION_0172_REVIEW_01 — Launch-Safe Production Seed + Admin Monitor Smoke Review**
+
+- **Reviewed tasks:** SESSION_0172_TASK_01 through SESSION_0172_TASK_04.
+- **Dirstarter docs check:** not re-fetched this session because no new architectural decision was made and no Dirstarter-baseline-layer replacement was attempted. SESSION_0173's launch-listings task is required to re-check live Dirstarter Prisma + theming docs during Cody pre-flight.
+- **Sources:** local `.env.production.local` (shape checks only — length + prefix, no values), Prisma read-only probes against Neon prod, in-session F-06 cleanup transaction (`db.role.deleteMany` on 6 newer createdAt ids after FK-zero check on MembershipRoleAssignment), three Prisma catalog seeds, two Stripe scripts (`setup-merch-stripe-products.ts` and `setup-ronin-stripe-products.ts --brand BMA`) live + post-live dry-run, one-shot F-09 reconciler (Stripe products by `BMA_*` name → PricingPlan match by exact name → write-back stripeProductId/stripePriceId), `curl` against live `/merch` and `/gear` with cache-buster, local `bun run dev` boot, `curl` against `/api/auth/dev-login` + `/admin/storage/monitoring` + `/admin/billing/monitoring`.
+- **Verdict:** Green. Three findings caught + mitigated in-session, each with idempotency re-proven after the fix. Spine seed + catalog seed + Stripe live + admin monitor smoke all landed clean. Live customer-visible re-smoke green.
+- **Kaizen aggregate:** 9.4/10. Heavy production-write lift completed cleanly; secret hygiene maintained; operator-decision audit trail complete. Lost 0.6 because the F-09 root-cause script patch (write-back on the `--brand` branch of `setup-ronin-stripe-products.ts`) is deferred to SESSION_0173 — the in-session reconciler is a one-shot, and any future BMA product addition via `--brand BMA` would re-introduce F-09 until the script is patched.
+
+#### Findings
+
+**SESSION_0172_FINDING_01 (F-06) — Role.createMany skipDuplicates is a no-op for system Roles (brand=null) due to Postgres NULL-distinct semantics on @@unique([code, brand])**
+
+- **Severity:** high (silent duplication on every seed re-run; downstream UserRole / MembershipRoleAssignment writes could attach to the wrong duplicate Role row).
+- **Task:** SESSION_0172_TASK_01
+- **Evidence:** Pre-cleanup `Role(isSystem=true)` count = 12 (2 of each code: STUDENT, INSTRUCTOR, OWNER, COACH, ORG_ADMIN, STYLE_APPROVER). Postgres treats NULL as distinct in unique constraints, so `ON CONFLICT (code, brand)` never fires when `brand IS NULL` and `createMany skipDuplicates` inserts every row again on each run. Confirmed by two consecutive `seed-baseline-launch.ts` runs against production (run 1: 0→6; run 2: 6→12 instead of 6→6).
+- **Impact:** Production data integrity issue. Duplicate system Role rows would have caused ambiguous joins in any UserRole / MembershipRoleAssignment lookup. Cleaned same-session before any FK row attached to a duplicate (Prisma probe confirmed `MembershipRoleAssignment.roleId IN toDelete` count was 0 before `deleteMany`).
+- **Mitigation in this session:** Cleaned 6 duplicate Roles (kept the earlier `createdAt` per code, deleted the later 6 by id); patched `seed-baseline-launch.ts` to use a per-code `findFirst({ code, brand: null, isSystem: true }) → create` loop (mirrors the Organization upsert in the same file); re-proved idempotency across two consecutive no-op runs after the fix (final `Role(isSystem=true)` = 6, unchanged).
+- **Required follow-up:** Audit `apps/web/prisma/seed.ts` system Roles block (and any other `createMany skipDuplicates` against a model with a nullable-column composite unique constraint) for the same bug. Consider adding a partial unique index `(code) WHERE brand IS NULL` if system Roles should be globally unique by code (Prisma migration required).
+- **Status:** mitigated (this session) / open (broader audit deferred to SESSION_0173 or SESSION_0174)
+
+**SESSION_0172_FINDING_02 (F-09) — `setup-ronin-stripe-products.ts --brand <CODE>` creates Stripe Products but does not write `stripeProductId`/`stripePriceId` back to PricingPlan**
+
+- **Severity:** high (Stripe Checkout against memberships/programs/courses/tournaments/certificates/events/etc. cannot resolve `stripeProductId` from PricingPlan; launch-day functional blocker for the entire BMA core catalog).
+- **Task:** SESSION_0172_TASK_02 (Stripe live), surfaced by Doug verification (post-live dry-run re-check)
+- **Evidence:** After live `setup-ronin-stripe-products.ts --brand BMA` reported 20 created / 0 errors, the post-live dry-run still reported "20 Would create" instead of "20 already linked". Prisma probe confirmed `PricingPlan where brand=BMA AND stripeProductId IS NOT NULL` count was 24 (merch only — those rows were linked by the separate `setup-merch-stripe-products.ts` script which writes back at create-time). Inspection of `setup-ronin-stripe-products.ts:846–893` confirmed the `--brand <CODE>` branch creates products via `stripe.products.create()` but never updates the PricingPlan row.
+- **Impact:** 20 Stripe Products exist server-side at Stripe but local DB cannot map PricingPlan → Stripe Product. Any Checkout attempt would fail to resolve the Stripe price id.
+- **Mitigation in this session (TASK_02 Step 12):** One-shot reconciler `apps/web/scripts/_reconcile-bma-stripe-ids.ts` (throwaway, deleted at exit) — read Stripe Products with `name LIKE 'BMA_%' AND metadata.brand = 'BASELINE_MARTIAL_ARTS'`, match each by exact name to a `PricingPlan(brand=BASELINE_MARTIAL_ARTS)` row, fetch the default price + any `additional_prices`, and write `stripeProductId` + `stripePriceId` back. Dry-run first (32 PricingPlan rows matched, 0 ambiguous, 0 unmatched — 4 BMA products use `additional_prices` to cover multiple PricingPlan rows like monthly/yearly variants, accounting for 32 PricingPlan rows from 20 base Stripe Products); live run wrote 32 stripeProductId/stripePriceId pairs back, 0 already-linked, 0 errors. Post-live idempotency re-check confirmed 0 new planned links. Final `PricingPlan(BMA, stripeProductId IS NOT NULL)` = 56 (24 merch + 32 core/multi-price). 36 affiliate rows correctly stay NULL (Amazon-routed).
+- **Required follow-up:** SESSION_0173 TASK_02 — patch the `--brand <CODE>` branch of `apps/web/scripts/setup-ronin-stripe-products.ts:846–893` to write `stripeProductId` + `stripePriceId` back to PricingPlan after each successful create (mirror the existing `--from-db` write-back logic). Without this, any future BMA-scoped product addition would re-introduce F-09.
+- **Status:** mitigated (this session) / open (root-cause script patch deferred to SESSION_0173)
+
+**SESSION_0172_FINDING_03 (F-10) — Stale local-dev cuid in `DEV_LOGIN_USER_ID` slot of `.env.production.local`**
+
+- **Severity:** medium (blocks local-dev admin monitor smoke; would not affect Vercel production runtime because `isDev=false` there ignores the value anyway).
+- **Task:** SESSION_0172_TASK_03
+- **Evidence:** Local `.env.production.local` had `DEV_LOGIN_USER_ID` set to a 25-char local-dev cuid (`cmp1…`) that does not exist in production Neon. Production Prisma probe confirmed `mrbscott@gmail.com` exists with `role=admin` under a different 32-char id (prefix `KBYc…`). First TASK_03 attempt: `/api/auth/dev-login` returned HTTP 404 with body `User {id} not found or has no email` — passed the `isDev && env.DEV_LOGIN_USER_ID` guard but failed the DB lookup; no session cookie issued.
+- **Impact:** Admin monitor smoke could not authenticate; MB-013 + MB-014 proof was blocked.
+- **Mitigation in this session:** Operator updated the local `.env.production.local` to the correct 32-char prod admin id (`KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T`); Vercel not touched. Cody re-ran TASK_03: env shape-check confirmed length=32 + prefix=`KBYc`; dev-server booted with `next dev --turbo`, ready in 648ms; `/api/auth/dev-login` returned HTTP 307 + 2 `Set-Cookie` headers with `better-auth.session_token`; `/admin/storage/monitoring` returned HTTP 200 status `CONFIGURED` with 59 catalog objects, 0 missing, 0 alerts; `/admin/billing/monitoring` returned HTTP 200 with all event tiles at 0 (expected — no checkouts yet).
+- **Required follow-up:** This is the second session in a row (SESSION_0171 F-01..F-04, SESSION_0172 F-10) where an env shape-check caught a problem a presence-check would have missed. Operator-side memory entry [[feedback_env_secret_shape_check]] is now validated by two sessions of evidence; worth promoting from feedback memory to a project memory or runbook.
+- **Status:** mitigated (env value fixed by operator; admin monitor smoke succeeded end-to-end)
+
+**SESSION_0172_FINDING_04 (F-11) — Cosmetic UNMATCHED false-positive in F-09 reconciler heuristic**
+
+- **Severity:** low (cosmetic; no data impact)
+- **Task:** SESSION_0172_TASK_02 Step 12 (F-09 reconciler post-live idempotency re-check)
+- **Evidence:** The F-09 reconciler's post-live UNMATCHED logger flagged 3 PricingPlan rows for `BMA_org_annual_fee` (additional-price variants) as unmatched on the idempotency re-run. Prisma probe confirmed those rows ARE correctly linked with valid `stripeProductId`/`stripePriceId` values; the heuristic was conservative and treated the additional-price PricingPlan rows as missing because the script searches by base-product name only.
+- **Impact:** None — those rows are linked correctly in production. Log noise only.
+- **Required follow-up:** Reconciler was deleted at end of TASK_02 Step 12 (throwaway). If a similar reconciler is needed in SESSION_0173 for any cleanup, refine the UNMATCHED heuristic to also walk `additional_prices` per Stripe Product.
+- **Status:** deferred (cosmetic; no production action required)
