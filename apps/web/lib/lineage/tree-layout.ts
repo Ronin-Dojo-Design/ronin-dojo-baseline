@@ -24,7 +24,7 @@
 import type { LineageNodeRow, LineageRelationshipRow } from "~/server/web/lineage/payloads"
 
 /** Maximum absolute depth emitted by `bucketByDepth`. */
-export const MAX_LAYOUT_DEPTH = 2
+export const MAX_LAYOUT_DEPTH = 5
 
 export type LineageRow = {
   depth: number

@@ -1139,3 +1139,20 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | SESSION_0175_TASK_03 | Cody: build Baseline MVP UI at `apps/web/app/(web)/lineage/` using Dirstarter primitives only; tree-layout math in `lib/lineage/tree-layout.ts`; drawer wired as client island | pending |
 
 **Notes:** Mid-session pivot — original lane was Cross-brand UAT + Public UI polish; rolled to SESSION_0176. New lane is component port (BBL legacy → Baseline first) per operator direction. Schema unchanged. T-2 from 2026-05-18 launch — MVP scope only; anything beyond minimum rolls to SESSION_0176.
+
+## SESSION 0176 — Drawer + Tabs primitives, cross-brand UAT, lineage polish
+
+**Date:** 2026-05-16
+**Sprint:** S6
+**Agent:** copilot-session-0176
+**Branch:** main
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0176_TASK_01 | Cody: scaffold `components/common/drawer.tsx` (Radix Dialog-based Sheet/Drawer); refactor `lineage-profile-drawer.tsx` to consume it | pending |
+| SESSION_0176_TASK_02 | Cody: scaffold `components/common/tabs.tsx` (Radix Tabs); refactor drawer tab-bar from Stack+Button to real Tabs | pending |
+| SESSION_0176_TASK_03 | Doug: cross-brand UAT smoke — 4 brands × key public routes; capture pass/fail table | pending |
+
+**Notes:** Staged from SESSION_0175 "Next session." Two new L1 primitives (Drawer + Tabs) fill inventory gaps surfaced by Doug's SESSION_0175 discovery. UAT validates all brands at T-2.

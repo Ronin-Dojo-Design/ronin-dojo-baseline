@@ -51,7 +51,7 @@ export async function LineageTreeSection({ brand }: LineageTreeSectionProps) {
   const rootNode = await getLineageRootForUser(baselineOrg.ownerId)
   if (!rootNode) return null
 
-  const tree = await getLineageTreeForUser(baselineOrg.ownerId, 2)
+  const tree = await getLineageTreeForUser(baselineOrg.ownerId, 5)
   if (!tree) return null
 
   const rows = bucketByDepth(rootNode, tree.nodes, tree.edges)
@@ -78,7 +78,7 @@ export async function LineageTreeSection({ brand }: LineageTreeSectionProps) {
           Click any tile to open the profile drawer.
         </Note>
       </Stack>
-      <LineageTreeBoard rows={rows} rootId={rootNode.id} profilesById={profilesById} />
+      <LineageTreeBoard rows={rows} rootId={rootNode.id} profilesById={profilesById} edges={tree.edges} />
     </section>
   )
 }

@@ -1,45 +1,35 @@
 "use client"
 
 import { CheckIcon, ShieldOffIcon } from "lucide-react"
-import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/common/dialog"
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "~/components/common/drawer"
 import { H6 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/common/tabs"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 /**
- * Side-anchored Dialog used as a Drawer fallback (Petey-resolved per
- * SESSION_0175 Open decisions — no Drawer/Sheet primitive in inventory).
+ * Bottom-sheet Drawer for lineage profiles.
  *
- * Tabs are a Stack of Button toggles (Tabs primitive also absent). Only the
- * Info tab is populated for MVP; Belt Story / Tournaments / Achievements
- * render empty-state copy (backend gaps P2/P3).
+ * Mobile: slides up from bottom (max 85vh).
+ * Desktop: centered Dialog.
  *
- * Author: Cody / SESSION_0175 TASK_03.
+ * Uses real Tabs primitive (SESSION_0176 TASK_02).
+ * Only the Info tab is populated for MVP.
+ *
+ * Author: Cody / SESSION_0175 TASK_03, refactored SESSION_0176 TASK_01+02.
  * Refs:
  *   - docs/knowledge/wiki/component-porting/specs/lineage-profile-drawer-port-spec.md
  */
-
-type DrawerTab = "info" | "belt-story" | "tournaments" | "achievements"
-
-const TABS: { id: DrawerTab; label: string }[] = [
-  { id: "info", label: "Info" },
-  { id: "belt-story", label: "Belt Story" },
-  { id: "tournaments", label: "Tournaments" },
-  { id: "achievements", label: "Achievements" },
-]
 
 type LineageProfileDrawerProps = {
   open: boolean
@@ -63,45 +53,28 @@ function formatDate(date: Date | string | null | undefined): string | null {
 }
 
 export function LineageProfileDrawer({ open, onOpenChange, profile }: LineageProfileDrawerProps) {
-  const [activeTab, setActiveTab] = useState<DrawerTab>("info")
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {/*
-       * Side-anchored variant: override Dialog's default centered layout with
-       * an `ml-auto` right-stack + full-height. Stays within the primitive —
-       * no new component, no FS-0001 violation.
-       */}
-      <DialogContent
-        className={cx(
-          "max-w-[420px] ml-auto mr-0 mt-0 mb-0 max-h-screen min-h-screen w-full",
-          "rounded-none sm:rounded-none sm:p-0 p-0",
-          "flex flex-col gap-0 overflow-hidden",
-        )}
-      >
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
         {!profile ? (
           <Stack direction="column" size="md" className="p-6">
-            <DialogHeader>
-              <DialogTitle>Profile unavailable</DialogTitle>
-              <DialogDescription>This lineage profile could not be loaded.</DialogDescription>
-            </DialogHeader>
+            <DrawerHeader>
+              <DrawerTitle>Profile unavailable</DrawerTitle>
+              <DrawerDescription>This lineage profile could not be loaded.</DrawerDescription>
+            </DrawerHeader>
           </Stack>
         ) : (
-          <DrawerBody profile={profile} activeTab={activeTab} setActiveTab={setActiveTab} />
+          <DrawerBody profile={profile} />
         )}
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
 function DrawerBody({
   profile,
-  activeTab,
-  setActiveTab,
 }: {
   profile: LineageNodeProfile
-  activeTab: DrawerTab
-  setActiveTab: (tab: DrawerTab) => void
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const currentAward = profile.user.rankAwards[0] ?? null
@@ -113,14 +86,14 @@ function DrawerBody({
   return (
     <>
       {/* Identity */}
-      <DialogHeader className="border-b p-6">
+      <DrawerHeader className="border-b p-6">
         <Stack size="md">
           <Avatar className="size-16">
             {profile.user.image && <AvatarImage src={profile.user.image} alt={displayName} />}
             <AvatarFallback>{initials(displayName)}</AvatarFallback>
           </Avatar>
           <Stack size="xs" direction="column" className="min-w-0 flex-1">
-            <DialogTitle>{displayName}</DialogTitle>
+            <DrawerTitle>{displayName}</DrawerTitle>
             {currentRank && (
               <Note className="truncate">
                 {currentRank.name}
@@ -140,31 +113,18 @@ function DrawerBody({
             </Stack>
           </Stack>
         </Stack>
-      </DialogHeader>
+      </DrawerHeader>
 
-      {/* Tab bar (Stack-of-Button workaround per Open decision). */}
-      <Stack size="xs" wrap={false} className="border-b px-6 py-3 overflow-x-auto" role="tablist">
-        {TABS.map(tab => {
-          const isActive = activeTab === tab.id
-          return (
-            <Button
-              key={tab.id}
-              variant={isActive ? "primary" : "ghost"}
-              size="sm"
-              role="tab"
-              aria-selected={isActive}
-              aria-pressed={isActive}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </Button>
-          )
-        })}
-      </Stack>
+      {/* Tabs */}
+      <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="border-b px-6 py-3 rounded-none bg-transparent">
+          <TabsTrigger value="info">Info</TabsTrigger>
+          <TabsTrigger value="belt-story">Belt Story</TabsTrigger>
+          <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+          <TabsTrigger value="achievements">Achievements</TabsTrigger>
+        </TabsList>
 
-      {/* Tab body */}
-      <Stack direction="column" size="md" className="flex-1 overflow-y-auto p-6" role="tabpanel">
-        {activeTab === "info" && (
+        <TabsContent value="info" className="flex-1 overflow-y-auto p-6 mt-0">
           <InfoTab
             profile={profile}
             currentRank={currentRank}
@@ -173,26 +133,29 @@ function DrawerBody({
             latestMembership={latestMembership}
             instructorRelationship={instructorRelationship}
           />
-        )}
-        {activeTab === "belt-story" && (
+        </TabsContent>
+
+        <TabsContent value="belt-story" className="flex-1 overflow-y-auto p-6 mt-0">
           <EmptyTabBody
             heading="Belt Story coming soon"
-            body="Per-belt history and media require the BeltStory schema, scheduled for SESSION_0176."
+            body="Per-belt history and media require the BeltStory schema, scheduled for a future session."
           />
-        )}
-        {activeTab === "tournaments" && (
+        </TabsContent>
+
+        <TabsContent value="tournaments" className="flex-1 overflow-y-auto p-6 mt-0">
           <EmptyTabBody
             heading="No tournament records yet"
-            body="Tournament results are not yet joined to lineage — scheduled for SESSION_0176."
+            body="Tournament results are not yet joined to lineage — scheduled for a future session."
           />
-        )}
-        {activeTab === "achievements" && (
+        </TabsContent>
+
+        <TabsContent value="achievements" className="flex-1 overflow-y-auto p-6 mt-0">
           <EmptyTabBody
             heading="No achievements yet"
-            body="The Achievement model is not in the schema yet — scheduled for SESSION_0176."
+            body="The Achievement model is not in the schema yet — scheduled for a future session."
           />
-        )}
-      </Stack>
+        </TabsContent>
+      </Tabs>
     </>
   )
 }
@@ -242,8 +205,8 @@ function InfoTab({
             {currentRank.colorHex && (
               <span
                 aria-hidden
-                className="inline-block h-3 w-6 rounded-sm border"
-                style={{ backgroundColor: currentRank.colorHex }}
+                className="inline-block h-3 w-6 rounded-sm border bg-(--rank-color)"
+                style={{ "--rank-color": currentRank.colorHex } as React.CSSProperties}
               />
             )}
             <span className="font-medium text-sm">{currentRank.name}</span>

@@ -62,32 +62,95 @@ type LineageEdgeSeed = {
 // Brian's instructors (depth 1) + one depth-2 instructor (Rigan Machado as
 // Bob Bass's instructor) so the tree renders depth >= 2 per Petey plan risks.
 const PLACEHOLDER_USERS: PlaceholderUser[] = [
-  // BJJ lineage — direct instructor + grand-instructor for depth-2 ladder.
-  { key: "bob-bass", name: "Bob Bass", email: "bob-bass@placeholder.lineage" },
+  // ========== ROOT LINEAGE (Carlos → Carlos Jr → Rigan) ==========
+  { key: "carlos-gracie-sr", name: "Carlos Gracie Sr", email: "carlos-gracie-sr@placeholder.lineage" },
+  { key: "carlos-gracie-jr", name: "Carlos Gracie Jr", email: "carlos-gracie-jr@placeholder.lineage" },
   { key: "rigan-machado", name: "Rigan Machado", email: "rigan-machado@placeholder.lineage" },
-  // Eskrima
+
+  // ========== DIRTY DOZEN (Rigan's First Black Belts — ALL Coral Belt) ==========
+  { key: "bob-bass", name: "Bob Bass", email: "bob-bass@placeholder.lineage" },
+  { key: "rick-williams", name: "Rick Williams", email: "rick-williams@placeholder.lineage" },
+  { key: "david-meyer", name: "David Meyer", email: "david-meyer@placeholder.lineage" },
+  { key: "chris-haueter", name: "Chris Haueter", email: "chris-haueter@placeholder.lineage" },
+  { key: "john-will", name: "John Will", email: "john-will@placeholder.lineage" },
+  { key: "bill-hosken", name: "Bill Hosken", email: "bill-hosken@placeholder.lineage" },
+  { key: "jerry-smith", name: "Jerry Smith", email: "jerry-smith@placeholder.lineage" },
+
+  // ========== NEXT GENERATION ==========
+  { key: "brian-truelson", name: "Brian Truelson", email: "brian-truelson@placeholder.lineage" },
+
+  // ========== Brian's non-BJJ instructors ==========
   { key: "steve-wolk", name: "GM Steve Wolk", email: "steve-wolk@placeholder.lineage" },
-  // Muay Thai
   { key: "sak-va-roon", name: "Sak Va Roon", email: "sak-va-roon@placeholder.lineage" },
-  // Kajukenbo — three co-instructors, seed one to keep MVP focused.
   { key: "tim-mills", name: "Sifu Tim Mills", email: "tim-mills@placeholder.lineage" },
   { key: "sam-carter", name: "Sifu Sam Carter", email: "sam-carter@placeholder.lineage" },
   { key: "hanyann-ng", name: "Sifu Hanyann Ng", email: "hanyann-ng@placeholder.lineage" },
-  // Karate
   { key: "tim-wolchek", name: "Mr. Tim Wolchek", email: "tim-wolchek@placeholder.lineage" },
 ]
 
 const NODE_SEEDS: LineageNodeSeed[] = [
+  // Root lineage
   {
-    userKey: "bob-bass",
-    slug: "bob-bass",
-    bio: "1st American Black Belt under Rigan Machado · 8th Degree Coral Belt · BJJ instructor at South Bay Jiu Jitsu, Hermosa Beach CA. Brian Scott's BJJ instructor.",
+    userKey: "carlos-gracie-sr",
+    slug: "carlos-gracie-sr",
+    bio: "Founder of Gracie Jiu-Jitsu. Belém, Brazil.",
+  },
+  {
+    userKey: "carlos-gracie-jr",
+    slug: "carlos-gracie-jr",
+    bio: "Son of Carlos Gracie Sr. Founder of Gracie Barra. 9th Degree Red Belt. Rio de Janeiro, Brazil.",
   },
   {
     userKey: "rigan-machado",
     slug: "rigan-machado",
-    bio: "Machado Brothers founder · BJJ Coral Belt · trained under Carlos Gracie Jr lineage. Bob Bass's BJJ instructor.",
+    bio: "8th Degree Coral Belt · Head of Rigan Machado Jiu-Jitsu · Los Angeles, CA. Trained under Carlos Gracie Jr lineage.",
   },
+
+  // Dirty Dozen — Rigan's first black belts, ALL now Coral Belt
+  {
+    userKey: "bob-bass",
+    slug: "bob-bass",
+    bio: "Coral Belt · 1st American Black Belt under Rigan Machado · Founder of South Bay Jiu Jitsu, Hermosa Beach CA. Dirty Dozen #8.",
+  },
+  {
+    userKey: "rick-williams",
+    slug: "rick-williams",
+    bio: "Coral Belt · Dirty Dozen #9 under Rigan Machado · South Bay Jiu Jitsu, Los Angeles CA.",
+  },
+  {
+    userKey: "david-meyer",
+    slug: "david-meyer",
+    bio: "Coral Belt · Dirty Dozen #10 under Rigan Machado · David Meyer BJJ, Seattle WA.",
+  },
+  {
+    userKey: "chris-haueter",
+    slug: "chris-haueter",
+    bio: "Coral Belt · Dirty Dozen #11 under Rigan Machado · Combat Base, California.",
+  },
+  {
+    userKey: "john-will",
+    slug: "john-will",
+    bio: "Coral Belt · Dirty Dozen #12 under Rigan Machado · John Will Martial Arts, Melbourne, Australia.",
+  },
+  {
+    userKey: "bill-hosken",
+    slug: "bill-hosken",
+    bio: "Coral Belt · Under Rigan Machado · Colorado Springs BJJ, Colorado Springs CO.",
+  },
+  {
+    userKey: "jerry-smith",
+    slug: "jerry-smith",
+    bio: "Coral Belt · Under Rigan Machado · Mat Fitness, California.",
+  },
+
+  // Next generation
+  {
+    userKey: "brian-truelson",
+    slug: "brian-truelson",
+    bio: "1st Degree Black Belt · Under Bill Hosken (Rigan Machado lineage) · Puyallup BJJ, Puyallup WA.",
+  },
+
+  // Brian's non-BJJ instructors
   {
     userKey: "steve-wolk",
     slug: "gm-steve-wolk",
@@ -120,15 +183,84 @@ const NODE_SEEDS: LineageNodeSeed[] = [
   },
 ]
 
-// All edges go INTO Brian unless otherwise noted (Brian = toNode, instructor = fromNode).
+// EDGES: fromNode = INSTRUCTOR, toNode = STUDENT
+// Tree structure: Carlos Sr → Carlos Jr → Rigan → Dirty Dozen → Next Gen
 const EDGE_SEEDS: LineageEdgeSeed[] = [
-  // Depth-1 ladder — Brian's direct instructors.
+  // Root lineage chain
+  {
+    fromKey: "carlos-gracie-sr",
+    toKey: "carlos-gracie-jr",
+    description: "Carlos Gracie Jr trained under his father Carlos Gracie Sr.",
+    isVerified: true,
+  },
+  {
+    fromKey: "carlos-gracie-jr",
+    toKey: "rigan-machado",
+    description: "Rigan Machado trained under Carlos Gracie Jr lineage.",
+    isVerified: true,
+  },
+
+  // Rigan → Dirty Dozen (ALL Coral Belt)
+  {
+    fromKey: "rigan-machado",
+    toKey: "bob-bass",
+    description: "Bob Bass — 1st American Black Belt under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "rick-williams",
+    description: "Rick Williams — Dirty Dozen #9 under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "david-meyer",
+    description: "David Meyer — Dirty Dozen #10 under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "chris-haueter",
+    description: "Chris Haueter — Dirty Dozen #11 under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "john-will",
+    description: "John Will — Dirty Dozen #12 under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "bill-hosken",
+    description: "Bill Hosken — under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "jerry-smith",
+    description: "Jerry Smith — under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+
+  // Next generation — Bob Bass → Brian Scott
   {
     fromKey: "bob-bass",
     toKey: "OWNER",
     description: "BJJ Black Belt 1st Degree under Bob Bass (Rigan Machado lineage).",
     isVerified: false,
   },
+
+  // Next generation — Bill Hosken → Brian Truelson (CORRECTED: was under Bob Bass in legacy)
+  {
+    fromKey: "bill-hosken",
+    toKey: "brian-truelson",
+    description: "Brian Truelson — 1st Degree Black Belt under Bill Hosken.",
+    isVerified: false,
+  },
+
+  // Brian's non-BJJ instructors → Brian
   {
     fromKey: "steve-wolk",
     toKey: "OWNER",
@@ -163,13 +295,6 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     fromKey: "tim-wolchek",
     toKey: "OWNER",
     description: "American Freestyle Karate 4th Degree Black Belt under Mr. Tim Wolchek.",
-    isVerified: false,
-  },
-  // Depth-2 ladder — Rigan Machado → Bob Bass.
-  {
-    fromKey: "rigan-machado",
-    toKey: "bob-bass",
-    description: "Bob Bass earned his BJJ Black Belt as the first American under Rigan Machado.",
     isVerified: false,
   },
 ]
