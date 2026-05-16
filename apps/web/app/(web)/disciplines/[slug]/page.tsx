@@ -17,6 +17,7 @@ import { BlackBeltRail } from "../_components/black-belt-rail"
 import { ContentAtomsSection } from "../_components/content-atoms-section"
 import { CoursesSection } from "../_components/courses-section"
 import { FounderCarousel } from "../_components/founder-carousel"
+import { LineageTreeSection } from "../_components/lineage-tree-section"
 import { MemberCarouselByRank } from "../_components/member-carousel-by-rank"
 import { SchoolsSection } from "../_components/schools-section"
 import { VideoCarousel } from "../_components/video-carousel"
@@ -227,6 +228,13 @@ export default async function DisciplineDetailPage({ params }: Props) {
           </Section.Content>
         </Section>
       )}
+
+      {/* Lineage (Baseline-only) */}
+      <Section>
+        <Section.Content>
+          <LineageTreeSection brand={brand} />
+        </Section.Content>
+      </Section>
 
       <StructuredData
         data={{

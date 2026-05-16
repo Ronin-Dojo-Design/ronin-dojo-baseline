@@ -1122,3 +1122,20 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 - **Reviewed tasks:** SESSION_0174_TASK_01 through SESSION_0174_TASK_04.
 - **Verdict:** Green. Four idempotent production seed scripts, all re-runnable as no-ops. Rank corrections applied cleanly (Eskrima 5D, Karate 4D, Kajukenbo 1D). No schema changes. Score: 9/10.
+
+## SESSION 0175 — Lineage Family Tree + Profile Drawer port to Baseline (BBL legacy → Next/Dirstarter)
+
+**Date:** 2026-05-16
+**Sprint:** S6
+**Agent:** claude-session-0175
+**Branch:** main
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0175_TASK_01 | Doug: Playwright-first discovery of BBL legacy `LineageTreeMVP` + `LineageProfileDrawer`; write two port-spec docs + primitive mapping + backend gap list | pending |
+| SESSION_0175_TASK_02 | Cody: scaffold `apps/web/server/web/lineage/{queries,payloads,schema}.ts` against existing `LineageNode` + `LineageRelationship` models; add Baseline seed for Brian's tree (≥ depth 2) | pending |
+| SESSION_0175_TASK_03 | Cody: build Baseline MVP UI at `apps/web/app/(web)/lineage/` using Dirstarter primitives only; tree-layout math in `lib/lineage/tree-layout.ts`; drawer wired as client island | pending |
+
+**Notes:** Mid-session pivot — original lane was Cross-brand UAT + Public UI polish; rolled to SESSION_0176. New lane is component port (BBL legacy → Baseline first) per operator direction. Schema unchanged. T-2 from 2026-05-18 launch — MVP scope only; anything beyond minimum rolls to SESSION_0176.
