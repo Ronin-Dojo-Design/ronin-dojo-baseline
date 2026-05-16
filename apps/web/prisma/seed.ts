@@ -932,47 +932,24 @@ async function main() {
 
   // ---------------------------------------------------------------------------
   // Roles (6 system defaults)
+  // F-06 fix (SESSION_0173): per-code findFirst+create loop instead of
+  // createMany, because @@unique([code, brand]) with brand=null makes
+  // skipDuplicates a no-op (Postgres NULL-distinct semantics).
   // ---------------------------------------------------------------------------
-  await db.role.createMany({
-    data: [
-      {
-        code: "STUDENT",
-        name: "Student",
-        description: "Standard member/student role",
-        isSystem: true,
-      },
-      {
-        code: "INSTRUCTOR",
-        name: "Instructor",
-        description: "Teaches classes and can verify curriculum completions",
-        isSystem: true,
-      },
-      {
-        code: "OWNER",
-        name: "Owner",
-        description: "Organization owner with full administrative access",
-        isSystem: true,
-      },
-      {
-        code: "COACH",
-        name: "Coach",
-        description: "Coaches students, can award ranks and manage rosters",
-        isSystem: true,
-      },
-      {
-        code: "ORG_ADMIN",
-        name: "Organization Admin",
-        description: "Administrative access to organization settings and membership",
-        isSystem: true,
-      },
-      {
-        code: "STYLE_APPROVER",
-        name: "Style Approver",
-        description: "Can approve user-submitted styles within their organization",
-        isSystem: true,
-      },
-    ],
-  })
+  const systemRoles = [
+    { code: "STUDENT", name: "Student", description: "Standard member/student role", isSystem: true },
+    { code: "INSTRUCTOR", name: "Instructor", description: "Teaches classes and can verify curriculum completions", isSystem: true },
+    { code: "OWNER", name: "Owner", description: "Organization owner with full administrative access", isSystem: true },
+    { code: "COACH", name: "Coach", description: "Coaches students, can award ranks and manage rosters", isSystem: true },
+    { code: "ORG_ADMIN", name: "Organization Admin", description: "Administrative access to organization settings and membership", isSystem: true },
+    { code: "STYLE_APPROVER", name: "Style Approver", description: "Can approve user-submitted styles within their organization", isSystem: true },
+  ]
+  for (const role of systemRoles) {
+    const existing = await db.role.findFirst({ where: { code: role.code, brand: null, isSystem: true } })
+    if (!existing) {
+      await db.role.create({ data: role })
+    }
+  }
   console.log("Created 6 system roles")
 
   // ---------------------------------------------------------------------------
@@ -993,34 +970,23 @@ async function main() {
   // ---------------------------------------------------------------------------
   // Tournament Roles (4 system defaults)
   // ---------------------------------------------------------------------------
-  await db.tournamentRole.createMany({
-    data: [
-      {
-        code: "COMPETITOR",
-        name: "Competitor",
-        description: "Participates in divisions as a competitor",
-        isSystem: true,
-      },
-      {
-        code: "COACH",
-        name: "Coach",
-        description: "Corners/coaches competitors during events",
-        isSystem: true,
-      },
-      {
-        code: "JUDGE",
-        name: "Judge",
-        description: "Judges or referees matches/forms",
-        isSystem: true,
-      },
-      {
-        code: "VOLUNTEER",
-        name: "Volunteer",
-        description: "General volunteer staff",
-        isSystem: true,
-      },
-    ],
-  })
+  // ---------------------------------------------------------------------------
+  // Tournament Roles (4 system defaults)
+  // F-06 fix (SESSION_0173): per-code findFirst+create loop — @@unique([code, brand])
+  // with brand=null makes createMany non-idempotent.
+  // ---------------------------------------------------------------------------
+  const tournamentRoles = [
+    { code: "COMPETITOR", name: "Competitor", description: "Participates in divisions as a competitor", isSystem: true },
+    { code: "COACH", name: "Coach", description: "Corners/coaches competitors during events", isSystem: true },
+    { code: "JUDGE", name: "Judge", description: "Judges or referees matches/forms", isSystem: true },
+    { code: "VOLUNTEER", name: "Volunteer", description: "General volunteer staff", isSystem: true },
+  ]
+  for (const tr of tournamentRoles) {
+    const existing = await db.tournamentRole.findFirst({ where: { code: tr.code, brand: null, isSystem: true } })
+    if (!existing) {
+      await db.tournamentRole.create({ data: tr })
+    }
+  }
   console.log("Created 4 system tournament roles")
 
   // ---------------------------------------------------------------------------
@@ -1029,61 +995,49 @@ async function main() {
   // obvious event types derived from TuffBuffs behavioral needs. Point values,
   // badge triggers, and level thresholds are all TBD.
   // ---------------------------------------------------------------------------
-  await db.gamificationEventType.createMany({
-    data: [
-      {
-        code: "BELT_PROMOTION",
-        name: "Belt/Rank Promotion",
-        description: "Awarded when a student receives a new rank",
-        defaultPoints: 100,
-        isSystem: true,
-      },
-      {
-        code: "CLASS_ATTENDANCE",
-        name: "Class Attendance",
-        description: "Awarded for attending a class session",
-        defaultPoints: 10,
-        isSystem: true,
-      },
-      {
-        code: "TOURNAMENT_WIN",
-        name: "Tournament Win",
-        description: "Awarded for winning a division in a tournament",
-        defaultPoints: 50,
-        isSystem: true,
-      },
-      {
-        code: "TOURNAMENT_PARTICIPATION",
-        name: "Tournament Participation",
-        description: "Awarded for participating in a tournament",
-        defaultPoints: 25,
-        isSystem: true,
-      },
-      {
-        code: "COURSE_COMPLETION",
-        name: "Course Completion",
-        description: "Awarded for completing an entire course",
-        defaultPoints: 75,
-        isSystem: true,
-      },
-      {
-        code: "CURRICULUM_ITEM_COMPLETION",
-        name: "Curriculum Item Completion",
-        description: "Awarded for completing a single curriculum item",
-        defaultPoints: 5,
-        isSystem: true,
-      },
-    ],
-  })
+  // ---------------------------------------------------------------------------
+  // Gamification Event Types (6 system defaults)
+  // TODO(gamification-design): Needs a proper design pass — these are the
+  // obvious event types derived from TuffBuffs behavioral needs. Point values,
+  // badge triggers, and level thresholds are all TBD.
+  // F-06 fix (SESSION_0173): per-code findFirst+create loop — @@unique([code, brand])
+  // with brand=null makes createMany non-idempotent.
+  // ---------------------------------------------------------------------------
+  const gamificationEventTypes = [
+    { code: "BELT_PROMOTION", name: "Belt/Rank Promotion", description: "Awarded when a student receives a new rank", defaultPoints: 100, isSystem: true },
+    { code: "CLASS_ATTENDANCE", name: "Class Attendance", description: "Awarded for attending a class session", defaultPoints: 10, isSystem: true },
+    { code: "TOURNAMENT_WIN", name: "Tournament Win", description: "Awarded for winning a division in a tournament", defaultPoints: 50, isSystem: true },
+    { code: "TOURNAMENT_PARTICIPATION", name: "Tournament Participation", description: "Awarded for participating in a tournament", defaultPoints: 25, isSystem: true },
+    { code: "COURSE_COMPLETION", name: "Course Completion", description: "Awarded for completing an entire course", defaultPoints: 75, isSystem: true },
+    { code: "CURRICULUM_ITEM_COMPLETION", name: "Curriculum Item Completion", description: "Awarded for completing a single curriculum item", defaultPoints: 5, isSystem: true },
+  ]
+  for (const ge of gamificationEventTypes) {
+    const existing = await db.gamificationEventType.findFirst({ where: { code: ge.code, brand: null, isSystem: true } })
+    if (!existing) {
+      await db.gamificationEventType.create({ data: ge })
+    }
+  }
   console.log("Created 6 system gamification event types")
 
   // ---------------------------------------------------------------------------
   // Subscription Tiers
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Subscription Tiers
+  // F-06 fix (SESSION_0173): the universal FREE tier (brand=null) uses
+  // findFirst+create to avoid NULL-distinct duplication on @@unique([code, brand]).
+  // Brand-specific tiers (BBL) have explicit brand values and are safe with createMany.
+  // ---------------------------------------------------------------------------
+  const existingFreeTier = await db.subscriptionTier.findFirst({
+    where: { code: "FREE", brand: null, isSystem: true },
+  })
+  if (!existingFreeTier) {
+    await db.subscriptionTier.create({
+      data: { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true },
+    })
+  }
   await db.subscriptionTier.createMany({
     data: [
-      // Universal (all brands)
-      { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true },
       // BBL-specific tiers
       {
         code: "FREE",

@@ -839,9 +839,17 @@ async function main() {
     console.log("🏜️  DRY RUN — no Stripe API calls will be made.\n")
   }
 
+  // Prisma client for write-back (F-09 fix — SESSION_0173 TASK_02).
+  const adapter = new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  })
+  const db = new PrismaClient({ adapter })
+
   let totalCreated = 0
   let totalSkipped = 0
   let totalProducts = 0
+  let totalLinked = 0
 
   for (const brandConfig of activeBrands) {
     const products = getProductsForBrand(brandConfig)
@@ -875,6 +883,25 @@ async function main() {
       const product = await stripe.products.create(createParams)
       console.log(`   ✅ Created: ${productDef.name} [${product.id}]`)
 
+      // Write-back stripeProductId + default stripePriceId to PricingPlan (F-09 fix).
+      if (!DRY_RUN) {
+        const linked = await db.pricingPlan.updateMany({
+          where: {
+            name: productDef.name,
+            brand: brandConfig.brand as any,
+            stripeProductId: null,
+          },
+          data: {
+            stripeProductId: product.id,
+            stripePriceId: product.default_price as string,
+          },
+        })
+        if (linked.count > 0) {
+          console.log(`      └─ Linked ${linked.count} PricingPlan row(s) to ${product.id}`)
+          totalLinked += linked.count
+        }
+      }
+
       // Create additional prices if defined
       if (additional_prices) {
         for (const priceData of additional_prices) {
@@ -896,7 +923,9 @@ async function main() {
   }
 
   const mode = DRY_RUN ? "Would create" : "Created"
-  console.log(`🎉 Done! ${mode}: ${totalCreated}, Skipped: ${totalSkipped}, Total: ${totalProducts}`)
+  console.log(`🎉 Done! ${mode}: ${totalCreated}, Skipped: ${totalSkipped}, Linked: ${totalLinked}, Total: ${totalProducts}`)
+
+  await db.$disconnect()
 }
 
 main().catch((error) => {
