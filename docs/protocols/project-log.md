@@ -1096,136 +1096,29 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Verdict:** Aligned. Dirstarter upstream is available locally without a destructive rewrite, and Ronin now has a documented gate warning that the update is a 252-commit architecture delta, not a blind sync.
 - **Kaizen aggregate:** 8.5. The risk was contained and documented; porting work is intentionally deferred to scoped follow-up sessions.
 
-#### Findings
+---
 
-**SESSION_0152_FINDING_01 — E2E tests still missing for membership admin (carried)**
+## SESSION 0174 — Production Data Parity: Platform Seed, Owner Identity Graph, Rank Corrections
 
-- **Severity:** medium
-- **Task:** SESSION_0150_FINDING_03 (carried from SESSION_0150 → 0151 → 0152)
-- **Evidence:** No Playwright tests for membership list/detail/transition/role pages
-- **Impact:** Runtime browser behavior unverified
-- **Required follow-up:** E2E test scaffolding in next session
-- **Status:** open
-
-### SESSION_0157 — Public Course Pages + Enrollment UI
-
-**Date:** 2026-05-13
-**Agent:** codex-session-0157
-**Type:** session--implement
+**Date:** 2026-05-15 / 2026-05-16
+**Sprint:** S6
+**Agent:** copilot-session-0174
+**Branch:** main
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0157_TASK_01 | Course page L1 polish and metadata | ✅ done |
-| SESSION_0157_TASK_02 | Enrollment CTA and state lookup | ✅ done |
-| SESSION_0157_TASK_03 | Curriculum completion controls | ✅ done |
+| SESSION_0174_TASK_01 | Run `seed-baseline-listings.ts` against production (14 Categories, 36 Tags, 24 Tools) | ✅ done |
+| SESSION_0174_TASK_02 | Write + run `seed-baseline-programs.ts` — 12 Disciplines, 13 RankSystems, 194 Ranks, 2 Programs, 1 ClassSchedule, 218 Courses, 654 CurriculumItems | ✅ done |
+| SESSION_0174_TASK_03 | Write + run `seed-baseline-platform.ts` — Roles, Entitlements, TournamentRoles, GamificationEventTypes, SubscriptionTiers, Styles, OrgDisciplines, ContentAtoms, ClassSchedules (CU Rec Summer 2026) | ✅ done |
+| SESSION_0174_TASK_04 | Write + run `seed-baseline-owner.ts` — Brian's identity graph: admin, Passport, DirectoryProfile, 7 Memberships, 5 RankAwards, CourseEnrollment, SAFETY Certification | ✅ done |
 
-**Result:** Public course list/detail pages now use L1 primitives; detail page has enrollment and curriculum completion UI; course-enrollment actions have active-brand scoping and revalidation.
-
-#### Review
-
-**SESSION_0157_REVIEW_01 — Full Close Review**
-
-- **Reviewed tasks:** SESSION_0157_TASK_01, TASK_02, TASK_03
-- **Dirstarter docs check:** live docs checked.
-- **Sources:** `https://dirstarter.com/docs/introduction`, `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/authentication`, `https://dirstarter.com/docs/seo`, local component inventory.
-- **Verdict:** Aligned implementation slice. Extends Dirstarter App Router, `server/web`, and common/web UI primitives. Security improved by brand-scoping completion mutation paths. Typecheck and route smoke passed. Authenticated browser click-path remains open.
-- **Kaizen aggregate:** 8.5 — next proof is signed-in course enrollment/completion E2E.
-
-### SESSION_0157_FINDING_01 — Course enrollment/completion E2E missing
-
-- **Severity:** medium
-- **Task:** SESSION_0157_TASK_02, SESSION_0157_TASK_03
-- **Evidence:** Verification covered `bun run typecheck` and HTTP 200 route render for `/courses` and `/courses/bjj-safety-school`; no signed-in click-path test was added.
-- **Impact:** Enroll/unenroll and completion toggle UI wiring is unproven in a browser session.
-- **Required follow-up:** Add signed-in Playwright or dev-login course lifecycle smoke for `/courses/bjj-safety-school`.
-- **Status:** open
-
-### SESSION_0158 — Graphify-First Ritual Patch + Vercel CLI
-
-**Date:** 2026-05-13
-**Agent:** codex-session-0158
-**Type:** session--open
-
-#### Task Plan
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0158_TASK_01 | Patch opening/closing/Graphify runbook to use Graphify-first discovery and direct exact-file checks | ✅ done |
-| SESSION_0158_TASK_02 | Install and verify Vercel CLI | ✅ done |
-| SESSION_0158_TASK_03 | Verify docs and leave DNS repair unblocked | ✅ done |
-
-**Result:** Opening, closing, and Graphify runbook now route cross-domain planning through `graphify stats`/`graphify query` before repo-wide text search; closing no longer forces a commit-hash/Graphify-stats amend loop; Vercel CLI 54.0.0 installed under `~/.local/bin/vercel`.
+**Result:** Full production data parity achieved for Baseline Martial Arts. All platform-level reference data, program catalog, owner identity graph, and rank awards seeded to Neon production. Passport bio updated with full credentials. BJJ Safety certification created marking Brian as course author/instructor.
 
 #### Review
 
-**SESSION_0158_REVIEW_01 — Full Close Review**
+### SESSION_0174_REVIEW_01
 
-- **Reviewed tasks:** SESSION_0158_TASK_01, TASK_02, TASK_03
-- **Dirstarter docs check:** Not applicable — docs/protocol tooling and local CLI setup only.
-- **Sources:** Local `opening.md`, `closing.md`, `graphify-repo-memory.md`, `failed-steps-log.md`; Vercel CLI `vercel --version`.
-- **Verdict:** Aligned. The patch addresses FS-0020 directly, keeps Graphify as navigation rather than proof, and preserves exact-file verification after graph selection. DNS repair remains intentionally unmodified until dashboard-specific records are available.
-- **Kaizen aggregate:** 9 — process patch is narrow and removes the known close-order loop.
-
-### SESSION_0159 — Copilot Prompt Sync + Vercel/Resend DNS Repair
-
-**Date:** 2026-05-13
-**Agent:** claude-session-0159
-**Type:** session--open
-
-#### Task Plan
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0159_TASK_01 | Sync Copilot ritual surface (`.github/copilot-instructions.md` + `bow-in.prompt.md` + `bow-out.prompt.md`) to `opening.md` / `closing.md` v5.0 as thin pointers + minimum binding steps | ✅ done |
-| SESSION_0159_TASK_02 | DNS repair for `baselinemartialarts.com`: Vercel CLI auth + `vercel domains inspect`, dig diff vs. Resend dashboard, 10 Bluehost edits applied and verified | ✅ done |
-
-**Result:** Copilot ritual surface now matches `opening.md` / `closing.md` v5.0; drift between Copilot path and Claude/Codex paths eliminated. Bluehost DNS for `baselinemartialarts.com` fully aligned to Vercel (apex A + www CNAME) and Resend (DKIM TXT + send MX/SPF + kept inbound MX); stale records cleared. Discovered pre-existing production build pipeline regression (no committed `pnpm-lock.yaml` → Vercel falls back to npm install → `next: command not found`); fixed in same close pass by committing the lockfile (Part A) so the next session can verify a successful production deploy and Let's Encrypt cert issuance.
-
-#### Findings
-
-**SESSION_0159_FINDING_01 — `dns-verification-spec.md` is stale**
-
-- **File:** `docs/architecture/infrastructure/dns-verification-spec.md`
-- **Issue:** Documents a Resend verification flow using `resend-verification=rv_<token>` TXT at apex + `CNAME em.<domain>`. Neither is in Resend's current dashboard. Actual pattern: DKIM TXT at `resend._domainkey` + MX/TXT at `send` + MX at apex (already in spec for inbound).
-- **Impact:** During SESSION_0159 the spec misled requirement extraction; the Resend dashboard screenshot caught the mismatch before bad records were applied.
-- **Required follow-up:** Refresh spec to match current Resend dashboard pattern, with a "verified against Resend UI on `YYYY-MM-DD`" stamp.
-- **Status:** open
-
-#### Review
-
-**SESSION_0159_REVIEW_01 — Full Close Review**
-
-- **Reviewed tasks:** SESSION_0159_TASK_01, SESSION_0159_TASK_02
-- **Dirstarter docs check:** Not applicable — Copilot prompts (project-config files) + DNS infrastructure; no L1 Dirstarter baseline layer touched. Component Inventory Gate references (G6, FS-0001, `dirstarter-component-inventory.md`, `code-guardrails.md`) verified current via `graphify query` and left unchanged.
-- **Sources:** Local `opening.md`, `closing.md`, `.github/copilot-instructions.md`, `dns-verification-spec.md`, `resend-setup-runbook.md`; live `dig` (authoritative `@ns1.bluehost.com`, public `@1.1.1.1`, `@8.8.8.8`); Vercel CLI `vercel domains inspect`, `vercel project ls`, `vercel teams ls`; Resend dashboard screenshot; ADR 0006 + ADR 0015.
-- **Verdict:** Aligned. Copilot ritual surface now single-source-of-truth-disciplined via thin-pointer pattern; DNS work followed ADR 0015 (Bluehost-as-DNS) and ADR 0006 (multi-domain Vercel); stale spec doc tracked as finding (scope discipline preserved); build pipeline regression fixed as part of close so the next session opens unblocked.
-- **Kaizen aggregate:** 8 — well-scoped, surfaced one important finding, and resolved an adjacent regression without scope creep (single Part-A commit, explicit user authorization).
-
-### SESSION_0160 — Vercel MCP Setup and Env/Deploy Comparison
-
-**Date:** 2026-05-14
-**Agent:** codex-session-0160
-**Type:** session--open
-
-#### Task Plan
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0160_TASK_01 | Author `docs/runbooks/vercel-domain-setup-runbook.md` (mermaid + ASCII + step-by-step + troubleshooting + Brand Rollout) | ✅ done |
-| SESSION_0160_TASK_02 | Verify post-`cd6c12c` Vercel prod build succeeds; cert + serve | ⚠️ partial — Part B `vercel.json` applied (commit `881b664`); build progressed past install failure to next layer (Prisma postinstall needs `DATABASE_URL` env var). Carryover. |
-| SESSION_0160_TASK_03 | Refresh Resend dashboard verification (DKIM, MX Sending, SPF Sending → Verified) | ✅ done — verified 2026-05-13 15:04 per Brian's Resend dashboard screenshot |
-| SESSION_0160_TASK_04 | Refresh stale `dns-verification-spec.md` content body (per SESSION_0159_FINDING_01) | queued — carryover to SESSION_0161 |
-| SESSION_0160_TASK_05 | JETTY bidirectional backlink sweep on 4 related docs for the new runbook | ✅ done |
-
-**Result:** New Vercel Domain Setup Runbook (425 lines, mermaid flowchart + ASCII record table + 8-phase step-by-step + Bluehost UI gotchas + Production Build Readiness + troubleshooting + Brand Rollout) now indexed and bidirectionally linked. Part B build fix (`vercel.json` with `corepack enable && pnpm install --frozen-lockfile`) committed; build progressed past install-layer failure to expose the next layer (`DATABASE_URL` env var missing in Vercel — fully self-serve for Brian to fix in dashboard). Resend domain verified end-to-end. Carryovers: TASK_02 deploy verification + new TASK (add `www` domain to Vercel project) + TASK_04 spec content refresh.
-
-#### Review
-
-### SESSION_0160_REVIEW_01
-
-- **Reviewed tasks:** SESSION_0160_TASK_01 through SESSION_0160_TASK_05; SESSION_0161_TASK_01 through SESSION_0161_TASK_07.
-- **Dirstarter docs check:** not re-fetched — no new architectural decision, no Dirstarter-layer replacement. All extensions only.
-- **Verdict:** Green. Code-only session with precise F-06 and F-09 fixes. New seed module mirrors existing `seed-baseline-launch.ts` pattern. No production risk (operator must run). Score: 9.5/10.
-- **Kaizen aggregate:** 9.5. Three surgical tasks, all clean. Production verification deferred to operator by design.
+- **Reviewed tasks:** SESSION_0174_TASK_01 through SESSION_0174_TASK_04.
+- **Verdict:** Green. Four idempotent production seed scripts, all re-runnable as no-ops. Rank corrections applied cleanly (Eskrima 5D, Karate 4D, Kajukenbo 1D). No schema changes. Score: 9/10.
