@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-17
-last_agent: claude-session-0187
+last_agent: claude-session-0188
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1422,3 +1422,28 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 **SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
 
 - **Status:** resolved in SESSION_0187. Wrapped-action tests for `reviewLineageClaim` and `updateLineageNodeProfile` exercise the `userActionClient` and `adminActionClient` middleware chains end-to-end. Reusable harness lives at `apps/web/lib/test/safe-action-env.ts`; pattern documented in `docs/runbooks/sop-test-writing.md` §5b.
+
+### SESSION_0188 — Enrollment Safe-Action Wrapper
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0188_TASK_01 | Cody: add `apps/web/server/web/enrollment/actions.safe-action.test.ts` invoking `enrollInProgram` through `userActionClient` end-to-end — unauthenticated, rate-limited (with no-write proof), authorized happy-path cases | complete |
+| SESSION_0188_TASK_02 | Doug + Petey: run new wrapper test + combined regression with existing lead/lineage wrapper tests, scoped typecheck filter, wiki lint, append SESSION_0188 + SESSION_0187 backfill to `sop-test-writing.md` §12 inventory, update project-log + wiki index, git hygiene + post-commit Graphify | complete |
+
+**Notes:** Rolled SESSION_0187 wrapper pattern to the enrollment lane and exercised the `~/lib/rate-limiter` mock seam through `installSafeActionMocks`'s `setRateLimited` toggle. No harness change required; harness already exposed `initialRateLimited` + `setRateLimited`. No enrollment runtime code touched.
+
+#### Review
+
+**SESSION_0188_REVIEW_01 - Enrollment wrapper coverage**
+
+- **Reviewed tasks:** SESSION_0188_TASK_01, SESSION_0188_TASK_02.
+- **Dirstarter docs check:** not applicable — local test file + local SOP inventory edit only.
+- **Sources:** `apps/web/server/web/enrollment/actions.ts`, `apps/web/lib/test/safe-action-env.ts`, `apps/web/server/web/lead/actions.test.ts` (rate-limit precedent), `apps/web/server/web/lineage/node-profile-actions.safe-action.test.ts` (harness precedent), `docs/runbooks/sop-test-writing.md` §5b/§12.
+- **Verdict:** Aligned. The new test mirrors `sop-test-writing.md` §5b verbatim with a rate-limited case substituted for the role-gated case. Combined wrapper + helper regression remained green at 15 pass / 0 fail / 75 expect() across 4 files. Scoped typecheck filter returned `NO_MATCHING_ERRORS`; wiki lint held at 501 warnings (identical to SESSION_0187 baseline).
+- **WORKFLOW score:** 9.6/10. The wrapper rollout is correct and well-isolated. Held below 10 because three more wrappable lanes (`schedule`, `attendance`, `billing`) still lack wrapper coverage; staged for future sessions.
+
+#### Kaizen
+
+1. **Safety/security:** Rate-limit gate is now exercised end-to-end through the harness, proving the `~/lib/rate-limiter` mock seam works for `userActionClient`-wrapped actions and confirming `ENROLLMENT_ERROR.RATE_LIMITED` surfaces as a `serverError` rather than a thrown rejection.
+2. **Preventable failed steps:** The harness's `initialRateLimited` option made the test trivial — no separate mock module setup was needed. Documenting it in the `installSafeActionMocks` JSDoc paid off this session.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The fixture is a single owner/org/program triple; harness does not change runtime behavior.

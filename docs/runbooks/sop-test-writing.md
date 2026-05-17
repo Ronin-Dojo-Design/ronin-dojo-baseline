@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-17
-last_agent: claude-session-0187
+last_agent: claude-session-0188
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -600,6 +600,12 @@ it("creates audit log on transition", async () => {
 - `server/web/billing/checkout-actions.test.ts` — Stripe checkout actions
 - `app/api/stripe/webhooks/route.test.ts` — Stripe webhook handler
 - `app/api/auth/dev-login/route.test.ts` — dev login route
+
+### Wrapped safe-action tests (bun:test, real DB, harness via `lib/test/safe-action-env.ts`)
+
+- `server/admin/lineage/claim-review-actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, admin approve
+- `server/web/lineage/node-profile-actions.safe-action.test.ts` — `userActionClient` chain: unauth, authorized NODE_EDITOR
+- `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
 
 ### Query / integration tests
 - `server/web/disciplines/queries.integration.test.ts` — discipline query integration
