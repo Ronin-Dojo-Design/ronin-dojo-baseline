@@ -8,6 +8,8 @@ updated: 2026-05-17
 last_agent: codex-session-0177
 backlinks:
   - docs/sprints/SESSION_0177.md
+  - docs/sprints/SESSION_0178.md
+  - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/knowledge/wiki/index.md
 ---
 

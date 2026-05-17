@@ -1180,3 +1180,61 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 **Result:** Documentation/spec slice completed. No production code, Prisma schema, or migration changes. V1 direction is now captured: retire D3 after parity, use a TypeScript/Dirstarter React canvas port of the old BBL `LineageTree.jsx`, make `RankAward` canonical, add `PROMOTED_BY`, materialize visual groups, gate editing by lineage ACL, and support placeholder profile claims.
 
 **Next:** Schema implementation session must start from `docs/runbooks/schema-migration.md` and the new lineage schema/sync/test specs. Use additive `migrate dev` discipline before server read models or UI port work.
+
+## SESSION 0178 - Lineage Schema Migration + Backfill Proof
+
+**Date:** 2026-05-17
+**Sprint:** S6
+**Agent:** codex-session-0178
+**Branch:** main
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0178_TASK_01 | Cody: apply Lineage Tree v1 Prisma schema patch from SESSION_0177 specs | done |
+| SESSION_0178_TASK_02 | Cody: generate additive migration and prove verification-status backfill | done |
+| SESSION_0178_TASK_03 | Doug + Giddy: verify migration safety, record hostile close review, and stage next session | done |
+
+**Notes:** Petey scoped this as a core-platform/schema session. No server read models, dashboard editor routes, claim actions, React canvas port, D3 removal, or UI work belongs in this session.
+
+**Result:** Lineage Tree v1 schema migration landed on branch `session-0178-lineage-schema`. Prisma validation, migration deploy/status/diff, client generation, targeted lineage seed, DB backfill checks, custom index checks, and diff hygiene passed. Full seed and full typecheck still fail in unrelated existing areas.
+
+#### Review
+
+**SESSION_0178_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0178_TASK_01, SESSION_0178_TASK_02, SESSION_0178_TASK_03.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** `https://dirstarter.com/docs/database/prisma`, `docs/runbooks/schema-migration.md`, `docs/runbooks/prisma-workflow.md`, `docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md`.
+- **Verdict:** Aligned. This extends the Dirstarter Prisma/Postgres baseline through a versioned migration, not `db push` or ad hoc database drift. The main architecture risk was caught before migration: `PROMOTED_BY` cannot keep the old pair/type uniqueness if repeated promotions need separate `RankAward` mirrors. The migration preserves legacy non-award uniqueness with custom SQL, backfills `verificationStatus`, preserves existing rank award dates, and leaves UI/server read-model changes for the next session. WORKFLOW 5.0 compliance is good: Petey plan, task IDs, branch hygiene, Graphify-first discovery, live Dirstarter docs, and hostile review all ran.
+- **Kaizen:** Safe for the schema slice based on migration deploy/diff/backfill proof. Missing proof is outside this slice: no lineage adapter tests yet, full app typecheck remains noisy, and global seed is not idempotent on an existing DB. Prevented failed steps: one major schema uniqueness miss and one unsafe required-column migration were caught before commit. Confidence: 100 users 9.5, 1,000 users 9.2, 10,000 users 9.0 for the migration/data contract itself; lower-scale UI/editor confidence is intentionally not claimed until read models and tests land.
+
+#### Findings
+
+**SESSION_0178_FINDING_01 - Full app typecheck still fails outside lineage**
+
+- **Severity:** medium
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun run typecheck` fails in existing Zod resolver, React/Slot prop, Next duplicate type, Resend API, and `seed-baseline-platform.ts` DayOfWeek areas; filtered lineage/schema output is empty.
+- **Impact:** Full-app clean gate remains unavailable, so future sessions must keep using scoped proof until baseline type debt is fixed.
+- **Required follow-up:** Dedicated typecheck debt session or fix the existing dependency/type mismatches when those surfaces are next touched.
+- **Status:** open
+
+**SESSION_0178_FINDING_02 - Global seed is not idempotent on existing DB**
+
+- **Severity:** low
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun run db:seed` fails with Prisma P2002 on `User.email` in `prisma/seed.ts`; targeted `seed-baseline-lineage.ts` passes.
+- **Impact:** Full seed cannot be used as a migration smoke on a populated local DB without reset or seed refactor.
+- **Required follow-up:** Make `prisma/seed.ts` idempotent or document that it is reset-only.
+- **Status:** open
+
+**SESSION_0178_FINDING_03 - No lineage adapter tests exist yet**
+
+- **Severity:** medium
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun test server/web/lineage` found no matching test files.
+- **Impact:** The migration is proven, but next read-model/UI session must create adapter tests before claiming viewer/editor correctness.
+- **Required follow-up:** Add lineage server read-model and adapter tests before public viewer changes.
+- **Status:** open
