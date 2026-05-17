@@ -24,7 +24,12 @@ export async function findPendingClaims() {
       createdAt: true,
       claimantNote: true,
       tree: { select: { id: true, name: true, slug: true } },
-      node: { select: { id: true, displayName: true } },
+      node: {
+        select: {
+          id: true,
+          user: { select: { passport: { select: { displayName: true } } } },
+        },
+      },
       claimant: { select: { id: true, name: true, email: true } },
     },
   })
@@ -49,7 +54,12 @@ export async function findClaimById(id: string) {
       createdAt: true,
       updatedAt: true,
       tree: { select: { id: true, name: true, slug: true } },
-      node: { select: { id: true, displayName: true } },
+      node: {
+        select: {
+          id: true,
+          user: { select: { passport: { select: { displayName: true } } } },
+        },
+      },
       claimant: { select: { id: true, name: true, email: true } },
       reviewedBy: { select: { id: true, name: true, email: true } },
       evidence: {

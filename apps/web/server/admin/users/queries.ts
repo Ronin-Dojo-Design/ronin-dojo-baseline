@@ -32,8 +32,14 @@ export const findUsers = async (search: UsersTableSchema) => {
     fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
   ]
 
+  const activeUserWhere: Prisma.UserWhereInput = {
+    archivedAt: null,
+    isPlaceholder: false,
+  }
+  const filteredExpressions = expressions.filter(isTruthy)
   const where: Prisma.UserWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
+    ...activeUserWhere,
+    ...(filteredExpressions.length ? { [operator.toUpperCase()]: filteredExpressions } : {}),
   }
 
   // Transaction is used to ensure both queries are executed in a single transaction
@@ -62,6 +68,10 @@ export const findUserById = async (id: string) => {
 
 export const findUserList = async () => {
   return db.user.findMany({
+    where: {
+      archivedAt: null,
+      isPlaceholder: false,
+    },
     select: { id: true, name: true, email: true },
     orderBy: { name: "asc" },
   })

@@ -63,8 +63,16 @@ type LineageEdgeSeed = {
 // Bob Bass's instructor) so the tree renders depth >= 2 per Petey plan risks.
 const PLACEHOLDER_USERS: PlaceholderUser[] = [
   // ========== ROOT LINEAGE (Carlos → Carlos Jr → Rigan) ==========
-  { key: "carlos-gracie-sr", name: "Carlos Gracie Sr", email: "carlos-gracie-sr@placeholder.lineage" },
-  { key: "carlos-gracie-jr", name: "Carlos Gracie Jr", email: "carlos-gracie-jr@placeholder.lineage" },
+  {
+    key: "carlos-gracie-sr",
+    name: "Carlos Gracie Sr",
+    email: "carlos-gracie-sr@placeholder.lineage",
+  },
+  {
+    key: "carlos-gracie-jr",
+    name: "Carlos Gracie Jr",
+    email: "carlos-gracie-jr@placeholder.lineage",
+  },
   { key: "rigan-machado", name: "Rigan Machado", email: "rigan-machado@placeholder.lineage" },
 
   // ========== DIRTY DOZEN (Rigan's First Black Belts — ALL Coral Belt) ==========
@@ -264,7 +272,8 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
   {
     fromKey: "steve-wolk",
     toKey: "OWNER",
-    description: "Eskrima 5th Degree Black Belt (Master) under GM Steve Wolk, PIMA Denver Doce Pares.",
+    description:
+      "Eskrima 5th Degree Black Belt (Master) under GM Steve Wolk, PIMA Denver Doce Pares.",
     isVerified: false,
   },
   {
@@ -318,9 +327,15 @@ async function ensureUser(
 ): Promise<{ id: string; created: boolean }> {
   const existing = await db.user.findFirst({
     where: { email: pu.email },
-    select: { id: true },
+    select: { id: true, isPlaceholder: true },
   })
   if (existing) {
+    if (!existing.isPlaceholder) {
+      await db.user.update({
+        where: { id: existing.id },
+        data: { isPlaceholder: true },
+      })
+    }
     counts.usersFound++
     console.log(`   User ${pu.key}: already exists (id=${existing.id})`)
     return { id: existing.id, created: false }
@@ -332,6 +347,7 @@ async function ensureUser(
       emailVerified: false,
       image: pu.image ?? null,
       role: "user",
+      isPlaceholder: true,
     },
     select: { id: true },
   })
@@ -511,7 +527,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error("❌ Error in seed-baseline-lineage:", error)
     process.exit(1)
   })

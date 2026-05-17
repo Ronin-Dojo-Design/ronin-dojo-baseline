@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-15
-last_agent: copilot-session-0173
+updated: 2026-05-17
+last_agent: claude-session-0187
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1326,3 +1326,99 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 1. **Safety/security:** The new edit path is brand-gated and APPROVED-claim gated, with negative tests for pending claims, brand mismatch, and node/tree mismatch. The remaining safety gap is durable ownership exclusivity; SESSION_0185 should prove it with tests against claim approval and editor authorization.
 2. **Preventable failed steps:** One prior-session atomicity miss was found and repaired (`SESSION_0183` YAML status). The subagent handoff also lacked timely final status. Next time, require subagents to checkpoint after first file creation instead of waiting for final.
 3. **Scale confidence:** 100 records: 9/10; 1,000 records: 8/10; 10,000 records: 7/10. The per-route reads are fine for single-node editing, but claim ownership exclusivity and indexed access-grant semantics should land before scaling lineage editing workflows.
+
+### SESSION_0185 — Lineage Claim Ownership Hardening
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0185_TASK_01 | Cody: update `reviewLineageClaim` so APPROVED lineage-node claims transfer `LineageNode.userId`, create or preserve a `LineageTreeAccess` `NODE_EDITOR` grant, block duplicate approved claimants, block claimants that already own a different node, and write audit logs | complete |
+| SESSION_0185_TASK_02 | Cody: update node-profile query/action authorization to require active `LineageTreeAccess` instead of APPROVED claim status, with DB-backed tests for grant-required editing | complete |
+| SESSION_0185_TASK_03 | Doug/Giddy + Petey: run focused lineage tests, scoped typecheck, wiki lint, hostile close, full-close evidence, git hygiene, push, and post-commit Graphify update | complete |
+
+**Notes:** Closes SESSION_0184_FINDING_01 by making claim approval create durable ownership/access state. No schema migration planned; `LineageTreeAccess` already contains `NODE_EDITOR`, `TREE_EDITOR`, and `TREE_ADMIN` roles.
+
+#### Review
+
+**SESSION_0185_REVIEW_01 - Durable lineage claim ownership/access shipped**
+
+- **Reviewed tasks:** SESSION_0185_TASK_01, SESSION_0185_TASK_02, SESSION_0185_TASK_03.
+- **Dirstarter docs check:** live docs checked on 2026-05-17.
+- **Sources:** <https://dirstarter.com/docs/database/prisma>, <https://dirstarter.com/docs/authentication>, <https://dirstarter.com/docs/codebase/structure>, `docs/architecture/lineage/lineage-claim-workflow-evidence-review.md`, `docs/runbooks/lineage-listing-runbook.md`.
+- **Verdict:** Aligned. Claim approval now creates durable data state instead of treating claim status as the editor permission: `LineageNode.userId` transfers to the claimant, `LineageTreeAccess` gets an active `NODE_EDITOR` grant, duplicate approved claimants are blocked, and claim review writes audit logs without evidence content. The node-profile editor now requires active `LineageTreeAccess`, ignores revoked grants, and no longer trusts APPROVED claim status alone. Scoped lineage tests pass and scoped typecheck output has no matching errors.
+- **WORKFLOW score:** 9.6/10. Data integrity and lifecycle coverage are strong for the node-editor slice; score is held below 10 because placeholder-user archival remains staged for a future schema decision and safe-action middleware is still not directly exercised by the DB helper tests.
+
+#### Finding status updates
+
+**SESSION_0184_FINDING_01 - Approved claim status can authorize multiple editors for one node**
+
+- **Status:** resolved by SESSION_0185_REVIEW_01.
+- **Resolution:** APPROVED review now blocks a different approved claimant for the same tree/node, transfers node ownership to the claimant, creates/preserves an active `NODE_EDITOR` grant, and the editor requires active `LineageTreeAccess`.
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Status:** accepted-risk, still open for a future reusable safe-action test harness.
+
+### SESSION_0186 — Lineage Placeholder User Archival
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0186_TASK_01 | Cody: add minimal `User.isPlaceholder` + `User.archivedAt` fields, generate an additive Prisma migration, and mark seeded lineage placeholder users idempotently | complete |
+| SESSION_0186_TASK_02 | Cody: update approved lineage claim review to archive only prior placeholder node owners after ownership transfer, with audit payload and DB-backed tests | complete |
+| SESSION_0186_TASK_03 | Doug/Giddy + Petey: run schema verification, focused lineage tests, scoped typecheck, wiki lint, hostile close, git hygiene, push, and post-commit Graphify update | complete |
+
+**Notes:** Follows SESSION_0185 next-session goal and `lineage-claim-workflow-evidence-review.md` placeholder-user handling. FS-0021 is active for this schema migration, so `schema-migration.md` steps must be cited during execution.
+
+#### Review
+
+**SESSION_0186_REVIEW_01 - Placeholder-user archival shipped**
+
+- **Reviewed tasks:** SESSION_0186_TASK_01, SESSION_0186_TASK_02, SESSION_0186_TASK_03.
+- **Dirstarter docs check:** live docs checked on 2026-05-17.
+- **Sources:** <https://dirstarter.com/docs/database/prisma>, <https://dirstarter.com/docs/authentication>, <https://dirstarter.com/docs/codebase/structure>, `docs/architecture/lineage/lineage-claim-workflow-evidence-review.md`, `docs/runbooks/schema-migration.md`, `docs/runbooks/prisma-workflow.md`.
+- **Verdict:** Aligned. The session extends the Better Auth `User` table with small optional Ronin metadata instead of replacing auth behavior. Claim approval archives only prior node owners marked as placeholders, leaves real prior owners untouched, records audit payload fields, and filters archived/placeholder users out of generic admin user listings and pickers. Additive schema migration, data backfill migration, focused DB tests, lineage regression tests, scoped typecheck filter, and diff whitespace checks passed.
+- **WORKFLOW score:** 9.7/10. Data integrity and lifecycle proof are strong for this slice; held below 10 because full safe-action wrapper coverage remains a broader accepted test-harness gap.
+
+#### Kaizen
+
+1. **Safety/security:** Safe for the intended slice: archival is gated by `isPlaceholder`, and tests prove placeholder and non-placeholder owner paths. Remaining unproven surface is the full next-safe-action middleware wrapper, which is existing accepted risk.
+2. **Preventable failed steps:** One near-miss was caught during close: the additive field migration alone would not have marked existing placeholder users. The backfill migration fixed that before commit.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 9.7/10; 10,000 records: 9.5/10. The approval transaction is single-claim scoped and indexed through existing claim/node relations; generic admin user filters are simple indexed-ish predicates over the user table, with no new cross-table fanout.
+
+#### Finding status updates
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Status:** accepted-risk, still open for a future reusable safe-action test harness.
+
+### SESSION_0187 — Safe-Action Test Harness
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0187_TASK_01 | Cody: add reusable `~/lib/test/safe-action-env` helper installing the `next/headers`, `next/cache`, `~/lib/auth`, `~/lib/brand-context`, `next/server`, `~/lib/rate-limiter` mock seams per `sop-test-writing.md` §3, with `installSafeActionMocks` + `setTestSession` exports | complete |
+| SESSION_0187_TASK_02 | Cody (subagent): add `claim-review-actions.safe-action.test.ts` invoking `reviewLineageClaim` through `adminActionClient` end-to-end — unauthenticated, non-admin, admin-approve cases | complete |
+| SESSION_0187_TASK_03 | Cody (subagent): add `node-profile-actions.safe-action.test.ts` invoking `updateLineageNodeProfile` through `userActionClient` end-to-end — unauthenticated, authorized-claimant cases | complete |
+| SESSION_0187_TASK_04 | Doug + Petey: run focused + combined lineage regression tests, scoped typecheck filter, wiki lint, `git diff --check`, append `sop-test-writing.md` §5b, update project-log + wiki index, resolve SESSION_0184_FINDING_02, git hygiene + post-commit Graphify | complete |
+
+**Notes:** Closes SESSION_0184_FINDING_02. Helper + two wrapped-action tests added; no schema or runtime code changed. Parallel subagents wrote disjoint test files after the shared helper landed.
+
+#### Review
+
+**SESSION_0187_REVIEW_01 - Safe-action wrapper harness landed**
+
+- **Reviewed tasks:** SESSION_0187_TASK_01, SESSION_0187_TASK_02, SESSION_0187_TASK_03, SESSION_0187_TASK_04.
+- **Dirstarter docs check:** not applicable — this lane only adds local test code and a local runbook section; the underlying `next-safe-action` primitive is treated as upstream truth and exercised, not redefined.
+- **Sources:** `apps/web/lib/safe-actions.ts`, `apps/web/server/admin/lineage/claim-review-actions.ts`, `apps/web/server/web/lineage/node-profile-actions.ts`, `apps/web/server/web/lead/actions.test.ts` (working precedent), `docs/runbooks/sop-test-writing.md`.
+- **Verdict:** Aligned. The harness mirrors the canonical mock-seam pattern documented in `sop-test-writing.md` §3 and replaces no Dirstarter capability. Wrapped-action tests prove the `userActionClient` and `adminActionClient` middleware chains (`User not authenticated`, `User not authorized`, brand injection, approve happy path including placeholder archival side effect). Combined lineage regression remained green at 45 pass / 0 fail / 153 expect() across 7 files. Scoped typecheck filter returned `NO_MATCHING_ERRORS`; full-app typecheck baseline remains nonzero (pre-existing).
+- **WORKFLOW score:** 9.7/10. Lifecycle and test-evidence proof are strong. Held below 10 because the harness only covers two action lanes today; broader rollout across non-lineage actions is a follow-up rather than a regression.
+
+#### Kaizen
+
+1. **Safety/security:** Auth/admin gates are now exercised end-to-end for the two highest-risk lineage actions. The unauthenticated and unauthorized cases prove the action client short-circuits before reaching the helper, which closes the SESSION_0184_FINDING_02 visibility gap.
+2. **Preventable failed steps:** The claim id schema (`z.string().cuid()`) would have rejected `tag(...)` prefix ids through the wrapper; the subagent caught this and used Prisma's default cuid. Documented as a rule in `sop-test-writing.md` §5b so future wrapper tests don't relearn it.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.7/10. The tests are unit-scoped to a single claim/node/tree fixture per case; the harness does not change runtime behavior.
+
+#### Finding status updates
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Status:** resolved in SESSION_0187. Wrapped-action tests for `reviewLineageClaim` and `updateLineageNodeProfile` exercise the `userActionClient` and `adminActionClient` middleware chains end-to-end. Reusable harness lives at `apps/web/lib/test/safe-action-env.ts`; pattern documented in `docs/runbooks/sop-test-writing.md` §5b.
