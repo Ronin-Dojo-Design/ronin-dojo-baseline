@@ -41,11 +41,15 @@ type Fixtures = {
   publicMemberAId: string
   publicMemberBId: string
   restrictedMemberId: string
+  unlistedMemberId: string
   visualGroupAId: string
   visualGroupBId: string
   emptyGroupId: string
   userIds: string[]
   nodeIds: string[]
+  ownerUserId: string
+  ownerNodeId: string
+  nonOwnerUserId: string
 }
 
 let fx: Fixtures | null = null
@@ -73,6 +77,14 @@ beforeAll(async () => {
     data: { userId: userC.id, slug: tag("node-c"), visibility: "RESTRICTED" },
   })
 
+  // userD — UNLISTED node for viewer-scope testing (SESSION_0181 TASK_02).
+  const userD = await db.user.create({
+    data: { name: tag("user-d"), email: `${tag("user-d")}@test.local` },
+  })
+  const nodeD = await db.lineageNode.create({
+    data: { userId: userD.id, slug: tag("node-d"), visibility: "UNLISTED" },
+  })
+
   const publishedTree = await db.lineageTree.create({
     data: {
       brand: TEST_BRAND,
@@ -80,6 +92,7 @@ beforeAll(async () => {
       name: tag("tree-published"),
       visibility: "PUBLIC",
       isPublished: true,
+      ownerNodeId: nodeA.id,
     },
   })
 
@@ -144,6 +157,17 @@ beforeAll(async () => {
     },
   })
 
+  // memberD — UNLISTED node (SESSION_0181 TASK_02). Visible to authenticated
+  // viewers but not to unauthenticated ones.
+  const memberD = await db.lineageTreeMember.create({
+    data: {
+      treeId: publishedTree.id,
+      nodeId: nodeD.id,
+      visualSortOrder: 40,
+      visualGroupId: groupB.id,
+    },
+  })
+
   await db.lineageTree.update({
     where: { id: publishedTree.id },
     data: { defaultRootMemberId: memberA.id },
@@ -168,11 +192,15 @@ beforeAll(async () => {
     publicMemberAId: memberA.id,
     publicMemberBId: memberB.id,
     restrictedMemberId: memberC.id,
+    unlistedMemberId: memberD.id,
     visualGroupAId: groupA.id,
     visualGroupBId: groupB.id,
     emptyGroupId: emptyGroup.id,
-    userIds: [userA.id, userB.id, userC.id],
-    nodeIds: [nodeA.id, nodeB.id, nodeC.id],
+    userIds: [userA.id, userB.id, userC.id, userD.id],
+    nodeIds: [nodeA.id, nodeB.id, nodeC.id, nodeD.id],
+    ownerUserId: userA.id,
+    ownerNodeId: nodeA.id,
+    nonOwnerUserId: userB.id,
   }
 })
 
@@ -247,6 +275,80 @@ describe("getLineageTreeBySlug", () => {
 
       const memberB = result!.members.find((m) => m.id === fx!.publicMemberBId)
       expect(memberB?.primaryVisualParentMemberId).toBe(fx!.publicMemberAId)
+    },
+  )
+
+  // --- SESSION_0181 TASK_02 — viewer-scoped integration tests. ---------------
+  // Closes SESSION_0180_FINDING_03.
+
+  it(
+    "viewer-scoped: unauthenticated sees only PUBLIC members",
+    async () => {
+      const result = await getLineageTreeBySlug({
+        brand: TEST_BRAND,
+        slug: fx!.publishedTreeSlug,
+        // no viewer — unauthenticated
+      })
+
+      expect(result).not.toBeNull()
+      const memberIds = result!.members.map((m) => m.id)
+      expect(memberIds).toContain(fx!.publicMemberAId)
+      expect(memberIds).toContain(fx!.publicMemberBId)
+      expect(memberIds).not.toContain(fx!.unlistedMemberId)
+      expect(memberIds).not.toContain(fx!.restrictedMemberId)
+    },
+  )
+
+  it(
+    "viewer-scoped: authenticated non-owner sees PUBLIC + UNLISTED members",
+    async () => {
+      const result = await getLineageTreeBySlug({
+        brand: TEST_BRAND,
+        slug: fx!.publishedTreeSlug,
+        viewer: { userId: fx!.nonOwnerUserId },
+      })
+
+      expect(result).not.toBeNull()
+      const memberIds = result!.members.map((m) => m.id)
+      expect(memberIds).toContain(fx!.publicMemberAId)
+      expect(memberIds).toContain(fx!.publicMemberBId)
+      expect(memberIds).toContain(fx!.unlistedMemberId)
+      expect(memberIds).not.toContain(fx!.restrictedMemberId)
+    },
+  )
+
+  it(
+    "viewer-scoped: authenticated owner sees PUBLIC + UNLISTED + RESTRICTED members",
+    async () => {
+      const result = await getLineageTreeBySlug({
+        brand: TEST_BRAND,
+        slug: fx!.publishedTreeSlug,
+        viewer: { userId: fx!.ownerUserId },
+      })
+
+      expect(result).not.toBeNull()
+      const memberIds = result!.members.map((m) => m.id)
+      expect(memberIds).toContain(fx!.publicMemberAId)
+      expect(memberIds).toContain(fx!.publicMemberBId)
+      expect(memberIds).toContain(fx!.unlistedMemberId)
+      expect(memberIds).toContain(fx!.restrictedMemberId)
+    },
+  )
+
+  it(
+    "viewer-scoped: non-published tree returns null for all callers",
+    async () => {
+      const noViewer = await getLineageTreeBySlug({
+        brand: TEST_BRAND,
+        slug: fx!.privateTreeSlug,
+      })
+      const withViewer = await getLineageTreeBySlug({
+        brand: TEST_BRAND,
+        slug: fx!.privateTreeSlug,
+        viewer: { userId: fx!.ownerUserId },
+      })
+      expect(noViewer).toBeNull()
+      expect(withViewer).toBeNull()
     },
   )
 })
