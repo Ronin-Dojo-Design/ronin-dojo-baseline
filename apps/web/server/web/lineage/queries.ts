@@ -38,18 +38,47 @@ import { db } from "~/services/db"
 // ---------------------------------------------------------------------------
 
 /**
- * TODO: visibility ACL (SESSION_0176)
+ * The unauthenticated default scope used by every cached public read.
  *
- * Replace this constant with a viewer-scope helper that returns:
- *   - unauthenticated → `[PUBLIC]`
- *   - authenticated   → `[PUBLIC, UNLISTED]`
- *   - viewer w/ explicit ACL on the node → `[PUBLIC, UNLISTED, RESTRICTED]`
- *   - owner of the node                  → `[PUBLIC, UNLISTED, RESTRICTED, PRIVATE]`
- *
- * Until that helper exists, every read in this module returns PUBLIC-only.
- * RESTRICTED/PRIVATE rows are never surfaced.
+ * Authenticated, viewer-aware callers use `resolveLineageVisibilityScope`
+ * instead; PRIVATE is reserved for explicit owner-only reads (separate
+ * helper, future session) and is never returned here.
  */
 const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
+
+/**
+ * Resolve the visibility scope for a viewer.
+ *
+ * Pure helper — no DB. The caller is expected to have already determined
+ * whether the viewer is the tree owner (typically by resolving their
+ * `LineageNode.id` and comparing to `LineageTree.ownerNodeId`).
+ *
+ *   - No viewer (unauthenticated) → `[PUBLIC]`
+ *   - Authenticated, not owner    → `[PUBLIC, UNLISTED]`
+ *   - Authenticated, owner        → `[PUBLIC, UNLISTED, RESTRICTED]`
+ *
+ * `PRIVATE` is never returned here — it is owner-only and unlocked through
+ * a separate read path so it never enters a shared cache key.
+ *
+ * Author: Cody / SESSION_0180 TASK_03.
+ */
+export const resolveLineageVisibilityScope = ({
+  authenticated,
+  isOwner,
+}: {
+  authenticated: boolean
+  isOwner: boolean
+}): LineageVisibility[] => {
+  if (!authenticated) return [LineageVisibility.PUBLIC]
+  if (isOwner) {
+    return [
+      LineageVisibility.PUBLIC,
+      LineageVisibility.UNLISTED,
+      LineageVisibility.RESTRICTED,
+    ]
+  }
+  return [LineageVisibility.PUBLIC, LineageVisibility.UNLISTED]
+}
 
 // ---------------------------------------------------------------------------
 // getLineageRootForUser — single LineageNode for a user.
@@ -234,16 +263,30 @@ export const getLineageProfile = cache(
  * pruning ordering without standing up a fixture tree.
  *
  * Visibility-filter order matters: members are dropped first (anything whose
- * `node.visibility` is outside the public scope), then visual groups are
+ * `node.visibility` is outside the supplied scope), then visual groups are
  * pruned if every member that referenced them was just dropped. Reversing
- * the order would leak empty groups for RESTRICTED rows.
+ * the order would leak empty groups for filtered-out rows.
+ *
+ * Reference hardening (SESSION_0180 TASK_01): after pruning, every id that
+ * could point at a dropped member is normalized so the UI never dereferences
+ * a missing id:
+ *  - `member.primaryVisualParentMemberId` → null when parent was dropped.
+ *  - `group.parentMemberId` → null when the referenced member was dropped.
+ *  - `defaultRootMemberId` → null when the chosen root was dropped.
+ *
+ * The `scope` arg defaults to `PUBLIC_VISIBILITY_SCOPE` so existing PUBLIC
+ * callers keep working unchanged; viewer-aware callers pass the scope
+ * returned by `resolveLineageVisibilityScope(viewer)`.
  */
 export const materializeLineageTreeResult = (
   tree: LineageTreePublicRow,
+  scope: readonly LineageVisibility[] = PUBLIC_VISIBILITY_SCOPE,
 ): LineageTreePublicResult => {
   const visibleMembers = tree.members.filter((member) =>
-    PUBLIC_VISIBILITY_SCOPE.includes(member.node.visibility),
+    scope.includes(member.node.visibility),
   )
+
+  const survivingMemberIds = new Set(visibleMembers.map((m) => m.id))
 
   const referencedGroupIds = new Set<string>()
   for (const member of visibleMembers) {
@@ -252,26 +295,45 @@ export const materializeLineageTreeResult = (
     }
   }
 
-  const visibleGroups = tree.visualGroups.filter((group) =>
-    referencedGroupIds.has(group.id),
+  const normalizedMembers = visibleMembers.map((member) =>
+    member.primaryVisualParentMemberId &&
+    !survivingMemberIds.has(member.primaryVisualParentMemberId)
+      ? { ...member, primaryVisualParentMemberId: null }
+      : member,
   )
+
+  const normalizedGroups = tree.visualGroups
+    .filter((group) => referencedGroupIds.has(group.id))
+    .map((group) =>
+      group.parentMemberId && !survivingMemberIds.has(group.parentMemberId)
+        ? { ...group, parentMemberId: null }
+        : group,
+    )
+
+  const defaultRootMemberId =
+    tree.defaultRootMemberId &&
+    survivingMemberIds.has(tree.defaultRootMemberId)
+      ? tree.defaultRootMemberId
+      : null
 
   const { members: _members, visualGroups: _visualGroups, ...summary } = tree
 
   return {
-    tree: summary,
-    members: visibleMembers,
-    visualGroups: visibleGroups,
-    defaultRootMemberId: tree.defaultRootMemberId,
+    tree: { ...summary, defaultRootMemberId },
+    members: normalizedMembers,
+    visualGroups: normalizedGroups,
+    defaultRootMemberId,
   }
 }
 
 /**
- * Fetch a published, PUBLIC `LineageTree` by `brand` + `slug` and return the
- * visibility-filtered visual tree. Returns null when the tree doesn't exist,
- * isn't published, or isn't PUBLIC.
+ * Public, unauthenticated tree-by-slug read.
+ *
+ * Uses Next.js `"use cache"` so the response is shareable across requests.
+ * The PUBLIC-only scope is implicit — never accept a viewer here, otherwise
+ * viewer-scoped data would enter a shared cache key (ADR 0010).
  */
-export const getLineageTreeBySlug = async ({
+const getLineageTreeBySlugPublic = async ({
   brand,
   slug,
 }: {
@@ -299,5 +361,89 @@ export const getLineageTreeBySlug = async ({
     return null
   }
 
-  return materializeLineageTreeResult(tree)
+  return materializeLineageTreeResult(tree, PUBLIC_VISIBILITY_SCOPE)
+}
+
+/**
+ * Viewer-scoped tree-by-slug read.
+ *
+ * Uses React `cache()` (request-scoped) so the response keys on viewer
+ * identity without contaminating the shared `"use cache"` store. Ownership
+ * is resolved by matching the viewer's `LineageNode.id` against
+ * `LineageTree.ownerNodeId`.
+ *
+ * UNLISTED trees are returned to any authenticated viewer; RESTRICTED trees
+ * are returned only to the owner; PRIVATE trees never surface through this
+ * read path (separate owner-only helper, future session).
+ */
+const getLineageTreeBySlugForViewer = cache(
+  async ({
+    brand,
+    slug,
+    viewerUserId,
+  }: {
+    brand: Brand
+    slug: string
+    viewerUserId: string
+  }): Promise<LineageTreePublicResult | null> => {
+    const tree = await db.lineageTree.findUnique({
+      where: { brand_slug: { brand, slug } },
+      select: lineageTreePublicPayload,
+    })
+
+    if (!tree || !tree.isPublished) {
+      return null
+    }
+
+    const viewerNode = await db.lineageNode.findFirst({
+      where: { userId: viewerUserId },
+      select: { id: true },
+    })
+
+    const isOwner = Boolean(
+      tree.ownerNodeId && viewerNode?.id && viewerNode.id === tree.ownerNodeId,
+    )
+
+    const scope = resolveLineageVisibilityScope({
+      authenticated: true,
+      isOwner,
+    })
+
+    if (!scope.includes(tree.visibility)) {
+      return null
+    }
+
+    return materializeLineageTreeResult(tree, scope)
+  },
+)
+
+/**
+ * Fetch a published `LineageTree` by `brand` + `slug` and return the
+ * visibility-filtered visual tree.
+ *
+ * - No `viewer` (default) → PUBLIC-only, shared-cache fast path.
+ * - `viewer` present     → viewer-scoped, request-cached path; UNLISTED
+ *   trees visible to any signed-in viewer, RESTRICTED visible only to
+ *   the owner.
+ *
+ * Returns null when the tree doesn't exist, isn't published, or is outside
+ * the resolved scope.
+ */
+export const getLineageTreeBySlug = async ({
+  brand,
+  slug,
+  viewer,
+}: {
+  brand: Brand
+  slug: string
+  viewer?: { userId: string } | null
+}): Promise<LineageTreePublicResult | null> => {
+  if (!viewer?.userId) {
+    return getLineageTreeBySlugPublic({ brand, slug })
+  }
+  return getLineageTreeBySlugForViewer({
+    brand,
+    slug,
+    viewerUserId: viewer.userId,
+  })
 }

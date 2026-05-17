@@ -24,6 +24,7 @@ import type {
 import {
   getLineageTreeBySlug,
   materializeLineageTreeResult,
+  resolveLineageVisibilityScope,
 } from "~/server/web/lineage/queries"
 import { db } from "~/services/db"
 
@@ -237,7 +238,7 @@ describe("getLineageTreeBySlug", () => {
   )
 
   it(
-    "preserves primaryVisualParentMemberId so PROMOTED_BY orientation survives",
+    "preserves primaryVisualParentMemberId when the parent member survives the scope filter",
     async () => {
       const result = await getLineageTreeBySlug({
         brand: TEST_BRAND,
@@ -277,7 +278,11 @@ function makeMember(overrides: {
   } as unknown as LineageTreeMemberRow
 }
 
-function makeGroup(id: string, sortOrder: number): LineageVisualGroupRow {
+function makeGroup(
+  id: string,
+  sortOrder: number,
+  overrides: { parentMemberId?: string | null } = {},
+): LineageVisualGroupRow {
   return {
     id,
     label: `group-${id}`,
@@ -286,7 +291,7 @@ function makeGroup(id: string, sortOrder: number): LineageVisualGroupRow {
     sortOrder,
     showPublicLabel: false,
     isCollapsedDefault: false,
-    parentMemberId: null,
+    parentMemberId: overrides.parentMemberId ?? null,
     treeId: "tree-1",
   } as unknown as LineageVisualGroupRow
 }
@@ -294,6 +299,7 @@ function makeGroup(id: string, sortOrder: number): LineageVisualGroupRow {
 function makeTree(
   members: LineageTreeMemberRow[],
   visualGroups: LineageVisualGroupRow[],
+  overrides: { defaultRootMemberId?: string | null } = {},
 ): LineageTreePublicRow {
   return {
     id: "tree-1",
@@ -304,7 +310,7 @@ function makeTree(
     description: null,
     visibility: "PUBLIC",
     isPublished: true,
-    defaultRootMemberId: null,
+    defaultRootMemberId: overrides.defaultRootMemberId ?? null,
     organizationId: null,
     disciplineId: null,
     styleId: null,
@@ -352,5 +358,144 @@ describe("materializeLineageTreeResult", () => {
     expect(result.tree).not.toHaveProperty("members")
     expect(result.tree).not.toHaveProperty("visualGroups")
     expect(result.tree.id).toBe("tree-1")
+  })
+
+  // --- SESSION_0180 TASK_02 — dangling-reference hardening. ------------------
+
+  it(
+    "nulls primaryVisualParentMemberId when the referenced parent is dropped",
+    () => {
+      const tree = makeTree(
+        [
+          makeMember({ id: "mA", visibility: "RESTRICTED" }),
+          makeMember({
+            id: "mB",
+            visibility: "PUBLIC",
+            primaryVisualParentMemberId: "mA",
+          }),
+        ],
+        [],
+      )
+
+      const result = materializeLineageTreeResult(tree)
+      expect(result.members.map((m) => m.id)).toEqual(["mB"])
+      const memberB = result.members.find((m) => m.id === "mB")
+      expect(memberB?.primaryVisualParentMemberId).toBeNull()
+    },
+  )
+
+  it(
+    "nulls visualGroup.parentMemberId when the referenced member is dropped",
+    () => {
+      const tree = makeTree(
+        [
+          makeMember({ id: "mA", visibility: "RESTRICTED" }),
+          makeMember({
+            id: "mB",
+            visualGroupId: "g1",
+            visibility: "PUBLIC",
+          }),
+        ],
+        [makeGroup("g1", 10, { parentMemberId: "mA" })],
+      )
+
+      const result = materializeLineageTreeResult(tree)
+      const group = result.visualGroups.find((g) => g.id === "g1")
+      expect(group).toBeDefined()
+      expect(group?.parentMemberId).toBeNull()
+    },
+  )
+
+  it(
+    "nulls defaultRootMemberId when the chosen root is dropped by the scope filter",
+    () => {
+      const tree = makeTree(
+        [
+          makeMember({ id: "mA", visibility: "RESTRICTED" }),
+          makeMember({ id: "mB", visibility: "PUBLIC" }),
+        ],
+        [],
+        { defaultRootMemberId: "mA" },
+      )
+
+      const result = materializeLineageTreeResult(tree)
+      expect(result.defaultRootMemberId).toBeNull()
+      expect(result.tree.defaultRootMemberId).toBeNull()
+    },
+  )
+
+  it(
+    "preserves defaultRootMemberId when the chosen root survives",
+    () => {
+      const tree = makeTree(
+        [
+          makeMember({ id: "mA", visibility: "PUBLIC" }),
+          makeMember({ id: "mB", visibility: "RESTRICTED" }),
+        ],
+        [],
+        { defaultRootMemberId: "mA" },
+      )
+
+      const result = materializeLineageTreeResult(tree)
+      expect(result.defaultRootMemberId).toBe("mA")
+      expect(result.tree.defaultRootMemberId).toBe("mA")
+    },
+  )
+
+  it(
+    "applies a custom scope so authenticated callers can surface UNLISTED",
+    () => {
+      const tree = makeTree(
+        [
+          makeMember({ id: "mA", visibility: "UNLISTED" }),
+          makeMember({ id: "mB", visibility: "RESTRICTED" }),
+        ],
+        [],
+      )
+
+      const result = materializeLineageTreeResult(tree, [
+        "PUBLIC",
+        "UNLISTED",
+      ] as const)
+      expect(result.members.map((m) => m.id)).toEqual(["mA"])
+    },
+  )
+})
+
+// --- SESSION_0180 TASK_03 — resolveLineageVisibilityScope. -------------------
+
+describe("resolveLineageVisibilityScope", () => {
+  it("returns [PUBLIC] for unauthenticated callers", () => {
+    expect(
+      resolveLineageVisibilityScope({ authenticated: false, isOwner: false }),
+    ).toEqual(["PUBLIC"])
+  })
+
+  it("returns [PUBLIC, UNLISTED] for authenticated non-owners", () => {
+    expect(
+      resolveLineageVisibilityScope({ authenticated: true, isOwner: false }),
+    ).toEqual(["PUBLIC", "UNLISTED"])
+  })
+
+  it("returns [PUBLIC, UNLISTED, RESTRICTED] for owners", () => {
+    expect(
+      resolveLineageVisibilityScope({ authenticated: true, isOwner: true }),
+    ).toEqual(["PUBLIC", "UNLISTED", "RESTRICTED"])
+  })
+
+  it("never returns PRIVATE", () => {
+    for (const authenticated of [false, true]) {
+      for (const isOwner of [false, true]) {
+        expect(
+          resolveLineageVisibilityScope({ authenticated, isOwner }),
+        ).not.toContain("PRIVATE")
+      }
+    }
+  })
+
+  it("ignores isOwner when the viewer is unauthenticated", () => {
+    expect(
+      resolveLineageVisibilityScope({ authenticated: false, isOwner: true }),
+    ).toEqual(["PUBLIC"])
   })
 })
