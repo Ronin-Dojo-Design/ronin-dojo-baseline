@@ -1,5 +1,5 @@
 /**
- * SESSION_0185 TASK_01 — durable lineage claim review integration tests.
+ * SESSION_0185/0186 — durable lineage claim review integration tests.
  *
  * Run: cd apps/web && bun test server/admin/lineage/claim-review-actions.test.ts
  *
@@ -33,7 +33,7 @@ import {
 import { db } from "~/services/db"
 
 const TS = Date.now()
-const PREFIX = `session-0185-${TS}`
+const PREFIX = `session-0186-${TS}`
 const tag = (name: string) => `${PREFIX}-${name}`
 
 type ClaimFixture = {
@@ -57,13 +57,14 @@ const expectRejectsWithMessage = async (promise: Promise<unknown>, message: stri
   }
 }
 
-const createUser = async (name: string) => {
+const createUser = async (name: string, options: { isPlaceholder?: boolean } = {}) => {
   return db.user.create({
     data: {
       id: tag(name),
       name: tag(name),
       email: `${tag(name)}@test.local`,
       role: name.includes("admin") ? "admin" : "user",
+      isPlaceholder: options.isPlaceholder ?? false,
     },
   })
 }
@@ -73,13 +74,15 @@ const createClaimFixture = async ({
   status = "PENDING",
   brand = TEST_BRAND,
   claimantOwnsDifferentNode = false,
+  placeholderOwner = true,
 }: {
   name: string
   status?: LineageClaimStatus
   brand?: Brand
   claimantOwnsDifferentNode?: boolean
+  placeholderOwner?: boolean
 }): Promise<ClaimFixture> => {
-  const placeholder = await createUser(`${name}-placeholder`)
+  const placeholder = await createUser(`${name}-placeholder`, { isPlaceholder: placeholderOwner })
   const claimant = await createUser(`${name}-claimant`)
 
   if (claimantOwnsDifferentNode) {
@@ -153,10 +156,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.auditLog.deleteMany({
     where: {
-      OR: [
-        { entityId: { startsWith: PREFIX } },
-        { userId: { startsWith: PREFIX } },
-      ],
+      OR: [{ entityId: { startsWith: PREFIX } }, { userId: { startsWith: PREFIX } }],
     },
   })
   await db.lineageTreeAccess.deleteMany({
@@ -203,7 +203,7 @@ describe("applyLineageClaimReview", () => {
     expect(result.ownershipTransferred).toBe(true)
     expect(result.accessGrantId).toBeTruthy()
 
-    const [claim, node, grant, audit] = await Promise.all([
+    const [claim, node, grant, audit, placeholderOwner, claimant] = await Promise.all([
       db.lineageClaimRequest.findUnique({ where: { id: fx.claimId } }),
       db.lineageNode.findUnique({ where: { id: fx.nodeId } }),
       db.lineageTreeAccess.findFirst({
@@ -223,20 +223,39 @@ describe("applyLineageClaimReview", () => {
           action: "lineage.claim.reviewed",
         },
       }),
+      db.user.findUnique({ where: { id: fx.placeholderUserId } }),
+      db.user.findUnique({ where: { id: fx.claimantUserId } }),
     ])
+    const auditAfter = audit?.after as Record<string, unknown> | null
 
     expect(claim?.status).toBe("APPROVED")
     expect(claim?.reviewedById).toBe(adminUserId)
     expect(claim?.reviewerNote).toBe("Verified identity.")
     expect(node?.userId).toBe(fx.claimantUserId)
     expect(grant?.id).toBe(result.accessGrantId)
+    expect(result.placeholderArchivedUserId).toBe(fx.placeholderUserId)
+    expect(result.placeholderArchivedAt).toBeInstanceOf(Date)
+    expect(placeholderOwner?.isPlaceholder).toBe(true)
+    expect(placeholderOwner?.archivedAt).toBeInstanceOf(Date)
+    expect(placeholderOwner?.archivedAt?.toISOString()).toBe(
+      result.placeholderArchivedAt?.toISOString(),
+    )
+    expect(claimant?.archivedAt).toBeNull()
     expect(audit?.userId).toBe(adminUserId)
     expect(audit?.after).toMatchObject({
       claimId: fx.claimId,
+      treeId: fx.treeId,
+      nodeId: fx.nodeId,
+      claimantUserId: fx.claimantUserId,
       status: "APPROVED",
+      reviewerUserId: adminUserId,
       accessGrantId: grant?.id,
       ownershipTransferred: true,
+      placeholderArchivedUserId: fx.placeholderUserId,
+      placeholderArchivedAt: result.placeholderArchivedAt?.toISOString(),
+      evidenceCount: 0,
     })
+    expect(auditAfter?.placeholderArchivedAt).toBe(result.placeholderArchivedAt?.toISOString())
   })
 
   it("keeps non-approved decisions as status-only review outcomes with audit", async () => {
@@ -253,7 +272,7 @@ describe("applyLineageClaimReview", () => {
       },
     })
 
-    const [claim, node, grants, audit] = await Promise.all([
+    const [claim, node, grants, audit, placeholderOwner] = await Promise.all([
       db.lineageClaimRequest.findUnique({ where: { id: fx.claimId } }),
       db.lineageNode.findUnique({ where: { id: fx.nodeId } }),
       db.lineageTreeAccess.findMany({ where: { treeId: fx.treeId } }),
@@ -264,18 +283,71 @@ describe("applyLineageClaimReview", () => {
           action: "lineage.claim.reviewed",
         },
       }),
+      db.user.findUnique({ where: { id: fx.placeholderUserId } }),
     ])
 
     expect(result.status).toBe("NEEDS_INFO")
     expect(result.accessGrantId).toBeNull()
     expect(result.ownershipTransferred).toBe(false)
+    expect(result.placeholderArchivedUserId).toBeNull()
+    expect(result.placeholderArchivedAt).toBeNull()
     expect(claim?.status).toBe("NEEDS_INFO")
     expect(node?.userId).toBe(fx.placeholderUserId)
     expect(grants).toHaveLength(0)
+    expect(placeholderOwner?.isPlaceholder).toBe(true)
+    expect(placeholderOwner?.archivedAt).toBeNull()
     expect(audit?.after).toMatchObject({
+      claimId: fx.claimId,
+      treeId: fx.treeId,
+      nodeId: fx.nodeId,
+      claimantUserId: fx.claimantUserId,
       status: "NEEDS_INFO",
+      reviewerUserId: adminUserId,
       accessGrantId: null,
       ownershipTransferred: false,
+      placeholderArchivedUserId: null,
+      placeholderArchivedAt: null,
+      evidenceCount: 0,
+    })
+  })
+
+  it("does not archive a prior real user when ownership transfers from a non-placeholder owner", async () => {
+    const fx = await createClaimFixture({
+      name: "real-owner",
+      placeholderOwner: false,
+    })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: {
+        claimId: fx.claimId,
+        decision: "APPROVED",
+      },
+    })
+
+    const [priorOwner, audit] = await Promise.all([
+      db.user.findUnique({ where: { id: fx.placeholderUserId } }),
+      db.auditLog.findFirst({
+        where: {
+          entityType: "LineageClaimRequest",
+          entityId: fx.claimId,
+          action: "lineage.claim.reviewed",
+        },
+      }),
+    ])
+
+    expect(result.status).toBe("APPROVED")
+    expect(result.ownershipTransferred).toBe(true)
+    expect(result.placeholderArchivedUserId).toBeNull()
+    expect(result.placeholderArchivedAt).toBeNull()
+    expect(priorOwner?.isPlaceholder).toBe(false)
+    expect(priorOwner?.archivedAt).toBeNull()
+    expect(audit?.after).toMatchObject({
+      status: "APPROVED",
+      placeholderArchivedUserId: null,
+      placeholderArchivedAt: null,
     })
   })
 

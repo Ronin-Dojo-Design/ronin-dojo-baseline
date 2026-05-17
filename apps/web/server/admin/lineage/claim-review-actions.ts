@@ -33,6 +33,8 @@ export type ReviewLineageClaimResult = {
   nodeId: string
   accessGrantId: string | null
   ownershipTransferred: boolean
+  placeholderArchivedUserId: string | null
+  placeholderArchivedAt: Date | null
 }
 
 export const applyLineageClaimReview = async ({
@@ -59,7 +61,18 @@ export const applyLineageClaimReview = async ({
           treeId: true,
           nodeId: true,
           claimantUserId: true,
-          node: { select: { userId: true } },
+          node: {
+            select: {
+              userId: true,
+              user: {
+                select: {
+                  id: true,
+                  isPlaceholder: true,
+                  archivedAt: true,
+                },
+              },
+            },
+          },
           _count: { select: { evidence: true } },
         },
       })
@@ -83,6 +96,9 @@ export const applyLineageClaimReview = async ({
 
       let accessGrantId: string | null = null
       let ownershipTransferred = false
+      let placeholderArchivedUserId: string | null = null
+      let placeholderArchivedAt: Date | null = null
+      const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
         const member = await tx.lineageTreeMember.findUnique({
@@ -126,6 +142,21 @@ export const applyLineageClaimReview = async ({
             data: { userId: claim.claimantUserId },
           })
           ownershipTransferred = true
+
+          if (claim.node.user.isPlaceholder) {
+            placeholderArchivedUserId = claim.node.userId
+
+            if (claim.node.user.archivedAt) {
+              placeholderArchivedAt = claim.node.user.archivedAt
+            } else {
+              const archivedUser = await tx.user.update({
+                where: { id: claim.node.userId },
+                data: { archivedAt: reviewTimestamp },
+                select: { archivedAt: true },
+              })
+              placeholderArchivedAt = archivedUser.archivedAt
+            }
+          }
         }
 
         const existingGrant = await tx.lineageTreeAccess.findFirst({
@@ -176,7 +207,7 @@ export const applyLineageClaimReview = async ({
           status: input.decision,
           reviewerNote: input.reviewerNote ?? null,
           reviewedById: reviewerUserId,
-          reviewedAt: new Date(),
+          reviewedAt: reviewTimestamp,
         },
         select: { id: true, status: true },
       })
@@ -195,6 +226,8 @@ export const applyLineageClaimReview = async ({
             reviewerUserId,
             accessGrantId,
             ownershipTransferred,
+            placeholderArchivedUserId,
+            placeholderArchivedAt: placeholderArchivedAt?.toISOString() ?? null,
           },
         },
       })
@@ -205,6 +238,8 @@ export const applyLineageClaimReview = async ({
         nodeId: claim.nodeId,
         accessGrantId,
         ownershipTransferred,
+        placeholderArchivedUserId,
+        placeholderArchivedAt,
       }
     },
     { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },

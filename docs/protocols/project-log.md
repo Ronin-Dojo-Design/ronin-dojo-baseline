@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-15
-last_agent: copilot-session-0173
+updated: 2026-05-17
+last_agent: codex-session-0186
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1353,6 +1353,38 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 
 - **Status:** resolved by SESSION_0185_REVIEW_01.
 - **Resolution:** APPROVED review now blocks a different approved claimant for the same tree/node, transfers node ownership to the claimant, creates/preserves an active `NODE_EDITOR` grant, and the editor requires active `LineageTreeAccess`.
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Status:** accepted-risk, still open for a future reusable safe-action test harness.
+
+### SESSION_0186 — Lineage Placeholder User Archival
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0186_TASK_01 | Cody: add minimal `User.isPlaceholder` + `User.archivedAt` fields, generate an additive Prisma migration, and mark seeded lineage placeholder users idempotently | complete |
+| SESSION_0186_TASK_02 | Cody: update approved lineage claim review to archive only prior placeholder node owners after ownership transfer, with audit payload and DB-backed tests | complete |
+| SESSION_0186_TASK_03 | Doug/Giddy + Petey: run schema verification, focused lineage tests, scoped typecheck, wiki lint, hostile close, git hygiene, push, and post-commit Graphify update | complete |
+
+**Notes:** Follows SESSION_0185 next-session goal and `lineage-claim-workflow-evidence-review.md` placeholder-user handling. FS-0021 is active for this schema migration, so `schema-migration.md` steps must be cited during execution.
+
+#### Review
+
+**SESSION_0186_REVIEW_01 - Placeholder-user archival shipped**
+
+- **Reviewed tasks:** SESSION_0186_TASK_01, SESSION_0186_TASK_02, SESSION_0186_TASK_03.
+- **Dirstarter docs check:** live docs checked on 2026-05-17.
+- **Sources:** <https://dirstarter.com/docs/database/prisma>, <https://dirstarter.com/docs/authentication>, <https://dirstarter.com/docs/codebase/structure>, `docs/architecture/lineage/lineage-claim-workflow-evidence-review.md`, `docs/runbooks/schema-migration.md`, `docs/runbooks/prisma-workflow.md`.
+- **Verdict:** Aligned. The session extends the Better Auth `User` table with small optional Ronin metadata instead of replacing auth behavior. Claim approval archives only prior node owners marked as placeholders, leaves real prior owners untouched, records audit payload fields, and filters archived/placeholder users out of generic admin user listings and pickers. Additive schema migration, data backfill migration, focused DB tests, lineage regression tests, scoped typecheck filter, and diff whitespace checks passed.
+- **WORKFLOW score:** 9.7/10. Data integrity and lifecycle proof are strong for this slice; held below 10 because full safe-action wrapper coverage remains a broader accepted test-harness gap.
+
+#### Kaizen
+
+1. **Safety/security:** Safe for the intended slice: archival is gated by `isPlaceholder`, and tests prove placeholder and non-placeholder owner paths. Remaining unproven surface is the full next-safe-action middleware wrapper, which is existing accepted risk.
+2. **Preventable failed steps:** One near-miss was caught during close: the additive field migration alone would not have marked existing placeholder users. The backfill migration fixed that before commit.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 9.7/10; 10,000 records: 9.5/10. The approval transaction is single-claim scoped and indexed through existing claim/node relations; generic admin user filters are simple indexed-ish predicates over the user table, with no new cross-table fanout.
+
+#### Finding status updates
 
 **SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
 
