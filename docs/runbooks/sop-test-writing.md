@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-12
-last_agent: copilot-session-0150
+updated: 2026-05-17
+last_agent: claude-session-0187
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -372,6 +372,69 @@ describe("myAdminAction", () => {
   })
 })
 ```
+
+---
+
+## 5b. Wrapped action invocation pattern (SESSION_0187)
+
+Helper-level tests (§5) prove the business logic inside an action's exported helper. They do not prove the `next-safe-action` middleware chain — auth gate, role gate, brand injection, error normalization, revalidation. For that, invoke the wrapped export directly through `~/lib/test/safe-action-env`.
+
+### When to use which
+
+| Goal | Test type | Example |
+| --- | --- | --- |
+| Prove transaction/SQL semantics, edge cases, branching, fixture coverage | Helper-level (§5) | `claim-review-actions.test.ts` calls `applyLineageClaimReview` |
+| Prove auth/admin gate, brand, schema validation, serverError shape | Wrapped action (this section) | `claim-review-actions.safe-action.test.ts` calls `reviewLineageClaim` |
+| Both | Pair them — one file each, disjoint cases | SESSION_0187 ships the wrapped pair alongside SESSION_0186 helper tests |
+
+Do not duplicate helper-level coverage in the wrapped-action file. Keep it to the gates the wrapper enforces: typically 2–3 cases (unauthenticated, unauthorized, happy path).
+
+### Harness
+
+`apps/web/lib/test/safe-action-env.ts` installs the standard mock seams once via `installSafeActionMocks({ brand })`. Tests mutate auth state per case with `setTestSession({ id, role })`.
+
+### Skeleton
+
+```typescript
+// @ts-expect-error — bun:test
+import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
+
+installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+
+import { db } from "~/services/db"
+import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
+
+// ...fixtures...
+
+describe("reviewLineageClaim (wrapped)", () => {
+  it("returns serverError when unauthenticated", async () => {
+    setTestSession(null)
+    const result = await reviewLineageClaim({ claimId, decision: "APPROVED" })
+    expect(result?.serverError).toBe("User not authenticated")
+  })
+
+  it("returns serverError when user lacks admin role", async () => {
+    setTestSession({ id: claimantId, role: "user" })
+    const result = await reviewLineageClaim({ claimId, decision: "APPROVED" })
+    expect(result?.serverError).toBe("User not authorized")
+  })
+
+  it("approves with admin role and brand injection", async () => {
+    setTestSession({ id: adminId, role: "admin" })
+    const result = await reviewLineageClaim({ claimId, decision: "APPROVED", reviewerNote: "ok" })
+    expect(result?.serverError).toBeUndefined()
+    expect(result?.data?.status).toBe("APPROVED")
+  })
+})
+```
+
+### Rules
+
+- `next-safe-action` returns `{ data, serverError, validationErrors }` — it never throws to the caller. Assert on `result?.serverError`, never `expect(...).toThrow`.
+- Error strings come from `~/lib/safe-actions.ts`: `"User not authenticated"` (line 65), `"User not authorized"` (line 76). If those change, the tests change too.
+- Use cuid-shaped ids for any schema field declared `z.string().cuid()`. Either let Prisma's `@default(cuid())` fill the id, or use `createId()` from `@paralleldrive/cuid2`. Do not pass `tag(...)` prefix strings.
+- Naming: `<feature>-actions.safe-action.test.ts` next to the helper-level `<feature>-actions.test.ts`. Both files can run together; use distinct fixture prefixes (e.g., `session-NNNN-<TS>-`) so the suites don't collide.
 
 ---
 
