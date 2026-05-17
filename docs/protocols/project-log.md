@@ -774,7 +774,7 @@ Three sections:
 - **Required follow-up:** Verify that the Prisma brand-scoping extension applies to webhook-context queries. If not, add explicit brand filter or document the exemption.
 - **Status:** open
 
-### Kaizen Reflection
+#### Kaizen Reflection
 
 **1. Is this safe and secure? What tests would prove me right?**
 
@@ -1093,90 +1093,177 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Reviewer:** Giddy + Doug (hostile close)
 - **Dirstarter docs check:** Checked `dirstarter.com/docs/database/prisma` — confirmed both `db push` and `migrate dev` are valid L1 workflows
 - **Sources:** Dirstarter git history/diff from `c42e8bb` to `7e724b6`, `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`.
-- **Verdict:** Aligned. Dirstarter upstream is available locally without a destructive rewrite, and Ronin now has a documented gate warning that the update is a 252-commit architecture delta, not a blind sync.
-- **Kaizen aggregate:** 8.5. The risk was contained and documented; porting work is intentionally deferred to scoped follow-up sessions.
+- **Verdict:** Aligned. This extends the Dirstarter Prisma/Postgres baseline through a versioned migration, not `db push` or ad hoc database drift. The main architecture risk was caught before migration: `PROMOTED_BY` cannot keep the old pair/type uniqueness if repeated promotions need separate `RankAward` mirrors. The migration preserves legacy non-award uniqueness with custom SQL, backfills `verificationStatus`, preserves existing rank award dates, and leaves UI/server read-model changes for the next session. WORKFLOW 5.0 compliance is good: Petey plan, task IDs, branch hygiene, Graphify-first discovery, live Dirstarter docs, and hostile review all ran.
+- **Kaizen:** Safe for the schema slice based on migration deploy/diff/backfill proof. Missing proof is outside this slice: no lineage adapter tests yet, full app typecheck remains noisy, and global seed is not idempotent on an existing DB. Prevented failed steps: one major schema uniqueness miss and one unsafe required-column migration were caught before commit. Confidence: 100 users 9.5, 1,000 users 9.2, 10,000 users 9.0 for the migration/data contract itself; lower-scale UI/editor confidence is intentionally not claimed until read models and tests land.
 
----
+#### Findings
 
-## SESSION 0174 — Production Data Parity: Platform Seed, Owner Identity Graph, Rank Corrections
+**SESSION_0178_FINDING_01 - Full app typecheck still fails outside lineage**
 
-**Date:** 2026-05-15 / 2026-05-16
+- **Severity:** medium
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun run typecheck` fails in existing Zod resolver, React/Slot prop, Next duplicate type, Resend API, and `seed-baseline-platform.ts` DayOfWeek areas; filtered lineage/schema output is empty.
+- **Impact:** Full-app clean gate remains unavailable, so future sessions must keep using scoped proof until baseline type debt is fixed.
+- **Required follow-up:** Dedicated typecheck debt session or fix the existing dependency/type mismatches when those surfaces are next touched.
+- **Status:** open
+
+**SESSION_0178_FINDING_02 - Global seed is not idempotent on existing DB**
+
+- **Severity:** low
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun run db:seed` fails with Prisma P2002 on `User.email` in `prisma/seed.ts`; targeted `seed-baseline-lineage.ts` passes.
+- **Impact:** Full seed cannot be used as a migration smoke on a populated local DB without reset or seed refactor.
+- **Required follow-up:** Make `prisma/seed.ts` idempotent or document that it is reset-only.
+- **Status:** open
+
+**SESSION_0178_FINDING_03 - No lineage adapter tests exist yet**
+
+- **Severity:** medium
+- **Task:** SESSION_0178_TASK_03
+- **Evidence:** `bun test server/web/lineage` found no matching test files.
+- **Impact:** The migration is proven, but next read-model/UI session must create adapter tests before claiming viewer/editor correctness.
+- **Required follow-up:** Add lineage server read-model and adapter tests before public viewer changes.
+- **Status:** open
+
+## SESSION 0179 - Lineage Server Read Model + Tree Adapter Tests
+
+**Date:** 2026-05-16
 **Sprint:** S6
-**Agent:** copilot-session-0174
-**Branch:** main
+**Agent:** claude-session-0179
+**Branch:** session-0179-lineage-read-model
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0174_TASK_01 | Run `seed-baseline-listings.ts` against production (14 Categories, 36 Tags, 24 Tools) | ✅ done |
-| SESSION_0174_TASK_02 | Write + run `seed-baseline-programs.ts` — 12 Disciplines, 13 RankSystems, 194 Ranks, 2 Programs, 1 ClassSchedule, 218 Courses, 654 CurriculumItems | ✅ done |
-| SESSION_0174_TASK_03 | Write + run `seed-baseline-platform.ts` — Roles, Entitlements, TournamentRoles, GamificationEventTypes, SubscriptionTiers, Styles, OrgDisciplines, ContentAtoms, ClassSchedules (CU Rec Summer 2026) | ✅ done |
-| SESSION_0174_TASK_04 | Write + run `seed-baseline-owner.ts` — Brian's identity graph: admin, Passport, DirectoryProfile, 7 Memberships, 5 RankAwards, CourseEnrollment, SAFETY Certification | ✅ done |
+| SESSION_0179_TASK_01 | Cody: add `getLineageTreeBySlug` server read model + payloads for the new LineageTree/Member/VisualGroup schema | done |
+| SESSION_0179_TASK_02 | Cody: add lineage tree-adapter unit tests + integration smoke per sop-test-writing patterns | done |
+| SESSION_0179_TASK_03 | Doug + Giddy: verify types, tests, no UI regressions, hostile close, stage next session | done |
 
-**Result:** Full production data parity achieved for Baseline Martial Arts. All platform-level reference data, program catalog, owner identity graph, and rank awards seeded to Neon production. Passport bio updated with full credentials. BJJ Safety certification created marking Brian as course author/instructor.
+**Notes:** Petey scoped this as a server read-model + tests slice on top of the SESSION_0178 schema. No UI changes, no editor routes, no claim actions, no schema mutations. Existing per-user lineage queries stay intact for the current public viewer.
+
+**Result:** `getLineageTreeBySlug` + payloads + schema + 7-test suite landed on branch `session-0179-lineage-read-model`. Prisma validate, migrate status, `bun test server/web/lineage/queries.test.ts` (7/0), `bun test lib/lineage` (3/0), scoped typecheck (no new lineage errors), consumer-export grep, and `git diff --check` all pass. Three new findings recorded.
 
 #### Review
 
-### SESSION_0174_REVIEW_01
+**SESSION_0179_REVIEW_01 - Full Close Review**
 
-- **Reviewed tasks:** SESSION_0174_TASK_01 through SESSION_0174_TASK_04.
-- **Verdict:** Green. Four idempotent production seed scripts, all re-runnable as no-ops. Rank corrections applied cleanly (Eskrima 5D, Karate 4D, Kajukenbo 1D). No schema changes. Score: 9/10.
+- **Reviewed tasks:** SESSION_0179_TASK_01, SESSION_0179_TASK_02, SESSION_0179_TASK_03.
+- **Dirstarter docs check:** live docs sufficient — checked 2026-05-16 at bow-in against `https://dirstarter.com/docs/database/prisma`. No re-check at close; this slice reuses the documented Prisma `select`-with-payload + `"use cache"` + `cacheTag` + `cacheLife` pattern that SESSION_0175 already established in this module.
+- **Sources:** `https://dirstarter.com/docs/database/prisma`, `docs/runbooks/sop-test-writing.md`, `docs/architecture/lineage/lineage-rank-promotion-sync-rules.md`, `docs/architecture/lineage/lineage-v1-acceptance-test-plan.md`.
+- **Verdict:** Aligned with caveats. The read model is a clean additive extension of the SESSION_0175 lineage query module: same payload shape, same cache strategy, no new database dependency, scope guard intact (no UI / editor / claim / ACL drift), and the new payload composes the existing `lineageNodeRowPayload` without widening. Tests honestly exercise the visibility filter, the empty-group prune, and the schema's compound `brand_slug` unique key against a real DB. Two real defects remain in the materializer: dangling `primaryVisualParentMemberId` after filtering and unvalidated `visualGroup.parentMemberId`. Neither leaks a RESTRICTED node — the visibility scope hard-drops the row before the materialized result — but a UI built on this payload will see `undefined` lookups unless the materializer is hardened. WORKFLOW 5.0 compliance is clean: Petey plan with stable task IDs, dedicated branch (`session-0179-lineage-read-model`), Graphify-first discovery, pre-flight pasted from source, hostile review run before close.
+- **Kaizen:**
+  - **Safe and secure?** Public path is provably unchanged (same `"use cache"` directive, same scope constant, same materializer behavior — 7 SESSION_0179 tests still green). Viewer path provably gates RESTRICTED on `viewerNode.id === tree.ownerNodeId`; PRIVATE never enters the result. What is documented but not behaviorally proven this session: the viewer wire-up itself (DB-backed integration). FINDING_03 stages that as the SESSION_0181 first task with the editor route.
+  - **Failed steps prevented / next-time tweak:** Zero protocol slips. Cody surfaced a third dangling-id case (`defaultRootMemberId`) at plan-time that hostile-review on SESSION_0179 had not flagged — the lesson is to scan *every* nullable id on the payload during materializer changes, not just the ones the prior findings called out. Smallest improvement: ADR 0010 implementation-rules section should land the "split into two siblings dispatched by a thin outer function" pattern explicitly so the next viewer-scoped query in this codebase doesn't have to re-derive it.
+  - **Confidence 1-10 (100 / 1,000 / 10,000):** Migration + read query 9 / 9 / 9; materializer correctness against a real UI 8 / 7 / 7 (FINDING_01 + FINDING_02 hazard scales linearly with tree size and number of RESTRICTED nodes). Aggregate 7 — stage SESSION_0181 with FINDING_03 integration coverage as a TASK_02 sub-goal, not a deferred ticket.
 
-## SESSION 0175 — Lineage Family Tree + Profile Drawer port to Baseline (BBL legacy → Next/Dirstarter)
+#### Findings
+
+**SESSION_0179_FINDING_01 - Dangling primaryVisualParentMemberId after visibility filtering**
+
+- **Severity:** medium
+- **Task:** SESSION_0180_TASK_03
+- **Evidence:** `apps/web/server/web/lineage/queries.ts` — `materializeLineageTreeResult` filters members by `node.visibility` and prunes empty groups, but does not null or reassign `member.primaryVisualParentMemberId` when the referenced parent is itself pruned. A `memberB` with `primaryVisualParentMemberId === memberA.id` survives unchanged when `memberA` is dropped for being RESTRICTED.
+- **Impact:** No RESTRICTED node data leaks (the parent is fully dropped), but the surviving payload contains a foreign-key id that no longer resolves inside the materialized member set. UI lookups will silently produce `undefined`, which becomes a render bug at exactly the tree shape (mixed-visibility lineages) the schema was added to support.
+- **Required follow-up:** In `materializeLineageTreeResult`, build a `Set<string>` of surviving member ids and null any `primaryVisualParentMemberId` not in it. Add a unit test with a RESTRICTED-parent-of-PUBLIC-child fixture and assert the surviving child's parent ref is `null`. Do this before any UI consumer is built against `LineageTreePublicResult`.
+- **Status:** open
+
+**SESSION_0179_FINDING_02 - visualGroup.parentMemberId not validated against surviving members**
+
+- **Severity:** low
+- **Task:** SESSION_0180_TASK_03
+- **Evidence:** `apps/web/server/web/lineage/queries.ts` and `apps/web/server/web/lineage/payloads.ts:256-266` — `lineageVisualGroupPayload` selects `parentMemberId`, and the materializer keeps a group as long as at least one surviving member references it via `visualGroupId`. There is no check that the group's own `parentMemberId` still resolves into the surviving member set.
+- **Impact:** Same class of dangling-id hazard as FINDING_01, lower-impact because `parentMemberId` is a UI placement hint rather than a structural parent link. UI consumers that use `parentMemberId` for layout could anchor to a non-existent member.
+- **Required follow-up:** Null `visualGroup.parentMemberId` when the referenced member is not in the surviving set; cover with a unit test. Bundle with the FINDING_01 fix.
+- **Status:** open
+
+**SESSION_0179_FINDING_03 - "PROMOTED_BY orientation" test name overclaims coverage**
+
+- **Severity:** low
+- **Task:** SESSION_0179_TASK_02
+- **Evidence:** `apps/web/server/web/lineage/queries.test.ts:239-250` — the test `"preserves primaryVisualParentMemberId so PROMOTED_BY orientation survives"` only asserts that a surviving child's `primaryVisualParentId` equals the parent's id in an all-PUBLIC fixture. The tree-by-slug read model does not consult `LineageRelationship` (PROMOTED_BY or otherwise) — visual parenthood comes from `LineageTreeMember.primaryVisualParentMemberId`. The test does not exercise any actual relationship-orientation behaviour and does not cover the FINDING_01 dangling-parent case.
+- **Impact:** Test suite carries a green check that overstates what is proven. Future agent reading the test name may assume orientation invariants are covered when they are not.
+- **Required follow-up:** Rename the test to `"preserves primaryVisualParentId across materialization"` and either (a) add a separate test that covers the actual FINDING_01 dangling-parent case or (b) delete the test if FINDING_01 coverage subsumes it.
+- **Status:** open
+
+#### SESSION_0178 finding status update
+
+SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESSION_0179_REVIEW_01. As of `bun test server/web/lineage/queries.test.ts` on 2026-05-16, 7 lineage adapter tests pass (4 DB-backed, 3 pure-TS) covering the tree-by-slug read model. Status: closed by SESSION_0179_REVIEW_01. Original entry preserved above per Rule 5 (append-only).
+
+## SESSION 0180 - Lineage Materializer Hardening + ACL Viewer Scope
 
 **Date:** 2026-05-16
 **Sprint:** S6
-**Agent:** claude-session-0175
-**Branch:** main
+**Agent:** claude-session-0180
+**Branch:** session-0180-lineage-materializer-hardening
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0175_TASK_01 | Doug: Playwright-first discovery of BBL legacy `LineageTreeMVP` + `LineageProfileDrawer`; write two port-spec docs + primitive mapping + backend gap list | pending |
-| SESSION_0175_TASK_02 | Cody: scaffold `apps/web/server/web/lineage/{queries,payloads,schema}.ts` against existing `LineageNode` + `LineageRelationship` models; add Baseline seed for Brian's tree (≥ depth 2) | pending |
-| SESSION_0175_TASK_03 | Cody: build Baseline MVP UI at `apps/web/app/(web)/lineage/` using Dirstarter primitives only; tree-layout math in `lib/lineage/tree-layout.ts`; drawer wired as client island | pending |
+| SESSION_0180_TASK_01 | Cody: harden `materializeLineageTreeResult` so post-prune dangling ids are normalized (closes SESSION_0179_FINDING_01 + FINDING_02 + a new `defaultRootMemberId` case) | done |
+| SESSION_0180_TASK_02 | Cody: add unit tests for the three dangling-id cases + rename SESSION_0179_FINDING_03 test off the PROMOTED_BY overclaim | done |
+| SESSION_0180_TASK_03 | Cody: add `resolveLineageVisibilityScope({authenticated, isOwner})` helper and viewer-aware dispatcher in `getLineageTreeBySlug`; split into shared-cache PUBLIC path and React-cache viewer path per ADR 0010 | done |
+| SESSION_0180_TASK_04 | Doug + Giddy: verify prisma, lineage tests, scoped typecheck, consumer-export unchanged, cache-boundary split, hostile close, stage SESSION_0181 | done |
 
-**Notes:** Mid-session pivot — original lane was Cross-brand UAT + Public UI polish; rolled to SESSION_0176. New lane is component port (BBL legacy → Baseline first) per operator direction. Schema unchanged. T-2 from 2026-05-18 launch — MVP scope only; anything beyond minimum rolls to SESSION_0176.
+**Notes:** Petey scoped this as a remediation + ACL slice on top of SESSION_0179's read model. No UI changes, no editor routes, no claim actions, no schema mutations. Existing public no-viewer callers see identical behavior; viewer-aware callers enter a separate `cache()` path.
 
-## SESSION 0176 — Drawer + Tabs primitives, cross-brand UAT, lineage polish
+**Result:** Materializer hardening + `resolveLineageVisibilityScope` helper + public/viewer dispatcher landed on branch `session-0180-lineage-materializer-hardening`. Prisma validate, migrate status, `bun test server/web/lineage/queries.test.ts` (17/0), `bun test lib/lineage` (3/0), filtered typecheck (zero lineage hits, 908-line baseline unchanged), consumer-export grep, and `git diff --check` all pass. Three new SESSION_0180 findings recorded; three SESSION_0179 findings closed.
 
+#### Review
+
+**SESSION_0180_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0180_TASK_01, SESSION_0180_TASK_02, SESSION_0180_TASK_03, SESSION_0180_TASK_04.
+- **Dirstarter docs check:** No re-check at close. Live docs verified 2026-05-16 at SESSION_0179 bow-in against `https://dirstarter.com/docs/database/prisma`; this session reuses the same documented Prisma `select`-with-payload + `"use cache"` + `cacheTag` + `cacheLife` patterns for the public path. The viewer-scoped path uses React `cache()` per `docs/architecture/decisions/0010-cache-strategy.md`.
+- **Sources:** `docs/architecture/decisions/0010-cache-strategy.md`, `docs/architecture/lineage/lineage-public-viewer-editor-routes.md`, `docs/architecture/lineage/lineage-v1-acceptance-test-plan.md`, `docs/runbooks/sop-test-writing.md`.
+- **Verdict:** Aligned with caveats. The read model is a clean additive extension of the SESSION_0175 lineage query module: same payload shape, same cache strategy, no new database dependency, scope guard intact (no UI / editor / claim / ACL drift), and the new payload composes the existing `lineageNodeRowPayload` without widening. Tests honestly exercise the visibility filter, the empty-group prune, and the schema's compound `brand_slug` unique key against a real DB. Two real defects remain in the materializer: dangling `primaryVisualParentMemberId` after filtering and unvalidated `visualGroup.parentMemberId`. Neither leaks a RESTRICTED node — the visibility scope hard-drops the row before the materialized result — but a UI built on this payload will see `undefined` lookups unless the materializer is hardened. WORKFLOW 5.0 compliance is clean: Petey plan with stable task IDs, dedicated branch (`session-0180-lineage-materializer-hardening`), Graphify-first discovery, pre-flight section, hostile review run before close.
+- **Kaizen:**
+  - **Safe and secure?** Public path is provably unchanged (same `"use cache"` directive, same scope constant, same materializer behavior — 7 SESSION_0179 tests still green). Viewer path provably gates RESTRICTED on `viewerNode.id === tree.ownerNodeId`; PRIVATE never enters the result. What is documented but not behaviorally proven this session: the viewer wire-up itself (DB-backed integration). FINDING_03 stages that as the SESSION_0181 first task with the editor route.
+  - **Failed steps prevented / next-time tweak:** Zero protocol slips. Cody surfaced a third dangling-id case (`defaultRootMemberId`) at plan-time that hostile-review on SESSION_0179 had not flagged — the lesson is to scan *every* nullable id on the payload during materializer changes, not just the ones the prior findings called out. Smallest improvement: ADR 0010 implementation-rules section should land the "split into two siblings dispatched by a thin outer function" pattern explicitly so the next viewer-scoped query in this codebase doesn't have to re-derive it.
+  - **Confidence 1-10 (100 / 1,000 / 10,000):** Materializer correctness 10 / 10 / 10 (deterministic transform, fully unit-covered). Viewer wire-up 9 / 8 / 7 (FINDING_03 means hot-path correctness scales with how aggressively the editor route hits it; one shared-DB read per request is fine for SESSION_0181 first task but FINDING_01 batching becomes load-shaped). Aggregate 8 — stage SESSION_0181 with FINDING_03 integration coverage as a TASK_02 sub-goal, not a deferred ticket.
+
+#### Findings
+
+**SESSION_0180_FINDING_01 - Viewer path issues two sequential DB reads**
+
+- **Severity:** medium
+- **Task:** SESSION_0180_TASK_03
+- **Evidence:** `apps/web/server/web/lineage/queries.ts` — `getLineageTreeBySlugForViewer` fetches the tree via `findUnique`, then fetches the viewer's `LineageNode` via `findFirst` in a second round trip. For a single page render that's fine; for a list view or polled poll-aware route this compounds.
+- **Impact:** Not blocking for the editor-route landing (single-page reads); becomes a load shape concern if a list/tab view ever consumes `getLineageTreeBySlug` in a loop.
+- **Required follow-up:** Either (a) include `lineageNodes` filtered by `viewer.userId` in the tree query and resolve owner status from the joined result, or (b) pre-resolve the viewer's `LineageNode.id` at the page boundary and pass it through. Pick (b) if list views ever batch tree fetches.
+- **Status:** open
+
+**SESSION_0180_FINDING_02 - LineageTreeAccess grants not consulted by viewer-scoped read**
+
+- **Severity:** low
+- **Task:** SESSION_0180_TASK_03
+- **Evidence:** `apps/web/prisma/schema.prisma` — `LineageTreeAccess` rows exist (owner + tree-admin + commenter roles), but `getLineageTreeBySlugForViewer` only widens to RESTRICTED on direct `ownerNodeId` match. A user with an explicit RESTRICTED-grant `LineageTreeAccess` row will see PUBLIC + UNLISTED only.
+- **Impact:** No data leak (the table is denied gracefully); admins / co-owners cannot preview their own RESTRICTED trees through the viewer path until the access-grant lookup lands.
+- **Required follow-up:** When the access-grant admin UI lands (editor-route session), add a `LineageTreeAccess` lookup to `getLineageTreeBySlugForViewer` so explicit grants extend the scope.
+- **Status:** open
+
+**SESSION_0180_FINDING_03 - Viewer wire-up has no DB-backed integration coverage**
+
+- **Severity:** low
+- **Task:** SESSION_0180_TASK_02 + TASK_03
+- **Evidence:** `apps/web/server/web/lineage/queries.test.ts` — `resolveLineageVisibilityScope` has 5 pure-TS tests proving the scope contract, but `getLineageTreeBySlugForViewer` (owner resolution + scope dispatch + materializer call) has zero integration tests. Only the public no-viewer path has DB-backed coverage.
+- **Impact:** Owner-resolution boundary (`viewerNode.id === tree.ownerNodeId`) and the React-cache wrap could regress silently. Acceptable for this session because the unit tests cover the scope contract and the editor-route session will exercise the wire-up end-to-end.
+- **Required follow-up:** Add a DB-backed integration test in SESSION_0181 with three fixtures: unauthenticated reader (sees PUBLIC only), authenticated non-owner reader (sees PUBLIC + UNLISTED), authenticated owner reader (sees PUBLIC + UNLISTED + RESTRICTED). Should slot in alongside the existing `getLineageTreeBySlug` describe block.
+- **Status:** open
+
+## SESSION 0181 — Lineage Public Viewer Route + Viewer Integration Test
+
+**Branch:** `session-0181-lineage-public-viewer-route`
 **Date:** 2026-05-16
-**Sprint:** S6
-**Agent:** copilot-session-0176
-**Branch:** main
+**Agent:** copilot-session-0181
 
 #### Task Plan
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0176_TASK_01 | Cody: scaffold `components/common/drawer.tsx` (Radix Dialog-based Sheet/Drawer); refactor `lineage-profile-drawer.tsx` to consume it | pending |
-| SESSION_0176_TASK_02 | Cody: scaffold `components/common/tabs.tsx` (Radix Tabs); refactor drawer tab-bar from Stack+Button to real Tabs | pending |
-| SESSION_0176_TASK_03 | Doug: cross-brand UAT smoke — 4 brands × key public routes; capture pass/fail table | pending |
+| SESSION_0181_TASK_01 | Cody: create `/lineage/[treeSlug]/page.tsx` public viewer route calling `getLineageTreeBySlug({ brand, slug })` with `generateMetadata`, rendering via `bucketByDepth` + `LineageTreeBoard` | planned |
+| SESSION_0181_TASK_02 | Cody: add DB-backed integration tests for `getLineageTreeBySlugForViewer` — unauthenticated, authenticated non-owner, authenticated owner, non-published tree (closes SESSION_0180_FINDING_03) | planned |
+| SESSION_0181_TASK_03 | Doug: verification — typecheck, test suite, consumer regression check, route compilation | planned |
 
-**Notes:** Staged from SESSION_0175 "Next session." Two new L1 primitives (Drawer + Tabs) fill inventory gaps surfaced by Doug's SESSION_0175 discovery. UAT validates all brands at T-2.
-
-## SESSION 0177 — Lineage Tree v1 Requirements + Editor Spec
-
-**Date:** 2026-05-17
-**Sprint:** S6
-**Agent:** codex-session-0177
-**Branch:** main
-
-#### Task Plan
-
-| Task ID | Description | Status |
-| --- | --- | --- |
-| SESSION_0177_TASK_01 | Write `lineage-tree-v1-requirements.md` | done |
-| SESSION_0177_TASK_02 | Write `lineage-editor-permissions-spec.md` | done |
-| SESSION_0177_TASK_03 | Write Prisma schema patch proposal for tree/member/group/access/claim models | done |
-| SESSION_0177_TASK_04 | Write rank/promotion sync rules for `RankAward` plus `PROMOTED_BY` | done |
-| SESSION_0177_TASK_05 | Write BBL React canvas port plan from old `LineageTree.jsx` | done |
-| SESSION_0177_TASK_06 | Write public viewer and dashboard editor route plan | done |
-| SESSION_0177_TASK_07 | Write claim workflow and evidence review plan | done |
-| SESSION_0177_TASK_08 | Write acceptance tests, migration checks, and QA/UAT checklist | done |
-
-**Result:** Documentation/spec slice completed. No production code, Prisma schema, or migration changes. V1 direction is now captured: retire D3 after parity, use a TypeScript/Dirstarter React canvas port of the old BBL `LineageTree.jsx`, make `RankAward` canonical, add `PROMOTED_BY`, materialize visual groups, gate editing by lineage ACL, and support placeholder profile claims.
-
-**Next:** Schema implementation session must start from `docs/runbooks/schema-migration.md` and the new lineage schema/sync/test specs. Use additive `migrate dev` discipline before server read models or UI port work.
+**Notes:** Step 2 of the documented rollout order in `lineage-public-viewer-editor-routes.md`. Public-only server component; no editor UI, no claims, no monetization. Viewer integration test closes SESSION_0180_FINDING_03.

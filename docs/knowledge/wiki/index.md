@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-15
+updated: 2026-05-16
 author: Brian + Copilot
-last_agent: copilot-session-0173
+last_agent: claude-session-0180
 ---
 
 # LLM Wiki Index
@@ -106,6 +106,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0012 Admin CRUD Routing Pattern](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
 | [ADR 0014 Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | proposed |
 | [ADR 0015 Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
+| [ADR 0016 Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
 
 ## Sessions
 
@@ -231,6 +232,13 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0171](../../sprints/SESSION_0171.md) | session--review | closed-full |
 | [SESSION_0172](../../sprints/SESSION_0172.md) | session--implement | closed-full |
 | [SESSION_0173](../../sprints/SESSION_0173.md) | session--implement | closed-full |
+| [SESSION_0174](../../sprints/SESSION_0174.md) | session--implement | closed-full |
+| [SESSION_0175](../../sprints/SESSION_0175.md) | session--implement | closed-full |
+| [SESSION_0176](../../sprints/SESSION_0176.md) | session--implement | closed-quick |
+| [SESSION_0177](../../sprints/SESSION_0177.md) | session--planning | closed-full |
+| [SESSION_0178](../../sprints/SESSION_0178.md) | session--implement | closed-full |
+| [SESSION_0179](../../sprints/SESSION_0179.md) | session--implement | closed-full |
+| [SESSION_0180](../../sprints/SESSION_0180.md) | session--implement | closed-full |
 
 ## Protocols
 
@@ -281,6 +289,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
 | [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
 | [Baseline Listings Runbook](../../runbooks/baseline-listings-runbook.md) | runbook | active |
+| [Lineage Listing Runbook](../../runbooks/lineage-listing-runbook.md) | runbook | active |
 | [MCP Usage Runbook](../../runbooks/mcp-usage-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sop-test-writing.md) | runbook | active |

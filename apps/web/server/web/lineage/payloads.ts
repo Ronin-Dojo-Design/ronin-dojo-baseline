@@ -243,3 +243,96 @@ export type LineageTreeResult = {
   nodes: LineageNodeRow[]
   edges: LineageRelationshipRow[]
 }
+
+// ---------------------------------------------------------------------------
+// Lineage Tree v1 — visual-tree payloads (tree-by-slug read model).
+//
+// Author: Cody / SESSION_0179 TASK_01.
+// Refs:
+//  - schema.prisma:2306-2395 (LineageTree, LineageTreeMember, LineageVisualGroup)
+//  - docs/sprints/SESSION_0179.md
+// ---------------------------------------------------------------------------
+
+export const lineageVisualGroupPayload = {
+  id: true,
+  label: true,
+  groupType: true,
+  promotionDate: true,
+  sortOrder: true,
+  showPublicLabel: true,
+  isCollapsedDefault: true,
+  parentMemberId: true,
+  treeId: true,
+} satisfies Prisma.LineageVisualGroupSelect
+
+export const lineageTreeMemberPayload = {
+  id: true,
+  visualSortOrder: true,
+  showPromotionDatePublic: true,
+  showRankPublic: true,
+  isCollapsedDefault: true,
+  primaryVisualParentMemberId: true,
+  visualGroupId: true,
+  treeId: true,
+  nodeId: true,
+  node: { select: lineageNodeRowPayload },
+  selectedRankAward: {
+    select: {
+      id: true,
+      awardedAt: true,
+      rank: {
+        select: { id: true, name: true, shortName: true, colorHex: true },
+      },
+    },
+  },
+} satisfies Prisma.LineageTreeMemberSelect
+
+export const lineageTreePublicPayload = {
+  id: true,
+  brand: true,
+  scopeType: true,
+  slug: true,
+  name: true,
+  description: true,
+  visibility: true,
+  isPublished: true,
+  defaultRootMemberId: true,
+  organizationId: true,
+  disciplineId: true,
+  styleId: true,
+  ownerNodeId: true,
+  members: {
+    select: lineageTreeMemberPayload,
+    orderBy: { visualSortOrder: "asc" as const },
+  },
+  visualGroups: {
+    select: lineageVisualGroupPayload,
+    orderBy: { sortOrder: "asc" as const },
+  },
+} satisfies Prisma.LineageTreeSelect
+
+export type LineageVisualGroupRow = Prisma.LineageVisualGroupGetPayload<{
+  select: typeof lineageVisualGroupPayload
+}>
+
+export type LineageTreeMemberRow = Prisma.LineageTreeMemberGetPayload<{
+  select: typeof lineageTreeMemberPayload
+}>
+
+export type LineageTreePublicRow = Prisma.LineageTreeGetPayload<{
+  select: typeof lineageTreePublicPayload
+}>
+
+/**
+ * Bare tree metadata — `LineageTreePublicRow` minus the heavy collections.
+ * Callers consume the materialized arrays via the dedicated keys on
+ * `LineageTreePublicResult` and never need to dig through `tree.members`.
+ */
+export type LineageTreeSummary = Omit<LineageTreePublicRow, "members" | "visualGroups">
+
+export type LineageTreePublicResult = {
+  tree: LineageTreeSummary
+  members: LineageTreeMemberRow[]
+  visualGroups: LineageVisualGroupRow[]
+  defaultRootMemberId: string | null
+}

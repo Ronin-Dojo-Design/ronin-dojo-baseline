@@ -61,6 +61,10 @@ model User {
   rankAwards                 RankAward[]                 @relation("EarnedBy")
   awardedRankAwards          RankAward[]                 @relation("AwardedBy")
   ownedOrganizations         Organization[]              @relation("OrganizationOwner")
+  lineageTreeAccessGrants    LineageTreeAccess[]         @relation("LineageTreeAccessUser")
+  lineageTreeAccessGranted   LineageTreeAccess[]         @relation("LineageTreeAccessGrantedBy")
+  lineageClaimRequests       LineageClaimRequest[]       @relation("LineageClaimClaimant")
+  reviewedLineageClaims      LineageClaimRequest[]       @relation("LineageClaimReviewer")
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
@@ -410,11 +414,50 @@ enum LineageVisibility {
 
 enum LineageRelationType {
   INSTRUCTOR_STUDENT
+  PROMOTED_BY
   TOURNAMENT_PARTNER
   AFFILIATION
   TRAINING_PARTNER
   SEMINAR
   COMPETITION_TEAM
+}
+
+enum LineageVerificationStatus {
+  PENDING
+  VERIFIED
+  DISPUTED
+}
+
+enum LineageTreeScopeType {
+  BRAND
+  ORGANIZATION
+  DISCIPLINE
+  STYLE
+  PERSON
+  CUSTOM
+}
+
+enum LineageTreeAccessRole {
+  TREE_ADMIN
+  TREE_EDITOR
+  BRANCH_EDITOR
+  NODE_EDITOR
+}
+
+enum LineageClaimStatus {
+  PENDING
+  APPROVED
+  DENIED
+  NEEDS_INFO
+  CANCELLED
+}
+
+enum LineageVisualGroupType {
+  PROMOTION_DATE
+  RANK
+  GENERATION
+  TEAM
+  CUSTOM
 }
 
 enum CertificationStatus {
@@ -763,15 +806,15 @@ enum ShippingStatus {
 /// Printful POD fulfillment lifecycle.
 /// @see docs/architecture/printful-pod-spec.md — MerchOrder State Machine
 enum FulfillmentStatus {
-  PAID               /// Stripe payment received, Printful order not yet created
-  SUBMITTED          /// Printful API accepted the order
-  PRINTING           /// Printful is producing the item
-  SHIPPED            /// Package shipped, tracking available
-  DELIVERED          /// Carrier confirmed delivery (terminal — happy path)
-  FAILED             /// Printful could not fulfill (out of stock, print error)
-  CANCELED           /// Admin or customer canceled before fulfillment
-  RETURNED           /// Package returned to sender
-  REFUNDED           /// Stripe refund issued (terminal)
+  PAID /// Stripe payment received, Printful order not yet created
+  SUBMITTED /// Printful API accepted the order
+  PRINTING /// Printful is producing the item
+  SHIPPED /// Package shipped, tracking available
+  DELIVERED /// Carrier confirmed delivery (terminal — happy path)
+  FAILED /// Printful could not fulfill (out of stock, print error)
+  CANCELED /// Admin or customer canceled before fulfillment
+  RETURNED /// Package returned to sender
+  REFUNDED /// Stripe refund issued (terminal)
 }
 
 enum TechniqueCategory {
@@ -958,6 +1001,7 @@ model Organization {
   techniques           Technique[]
   studentLists         StudentList[]
   certificateTemplates CertificateTemplate[]
+  lineageTrees         LineageTree[]
 
   // Merch / POD
   merchOrders MerchOrder[]
@@ -1002,6 +1046,7 @@ model Discipline {
   techniques   Technique[]
 
   gearRecommendations GearRecommendation[]
+  lineageTrees        LineageTree[]
 
   @@unique([code, brand])
   @@unique([name, brand])
@@ -1514,34 +1559,34 @@ model PricingPlan {
   program        Program?     @relation(fields: [programId], references: [id])
   programId      String?
 
-  invoiceLineItems  InvoiceLineItem[]
-  entitlementGrants EntitlementGrant[]
+  invoiceLineItems    InvoiceLineItem[]
+  entitlementGrants   EntitlementGrant[]
   gearRecommendations GearRecommendation[]
-  merchOrders       MerchOrder[]
+  merchOrders         MerchOrder[]
 
   @@index([brand, organizationId])
   @@index([programId])
 }
 
 model Invoice {
-  id            String        @id @default(cuid())
-  brand         Brand
-  invoiceNumber String?
-  stripeInvoiceId String?       @unique
+  id                      String        @id @default(cuid())
+  brand                   Brand
+  invoiceNumber           String?
+  stripeInvoiceId         String?       @unique
   stripeCheckoutSessionId String?       @unique
-  stripeSubscriptionId String?
-  status        InvoiceStatus @default(DRAFT)
-  subtotalCents Int           @default(0)
-  discountCents Int           @default(0)
-  taxCents      Int           @default(0)
-  totalCents    Int           @default(0)
-  currency      String        @default("USD") @db.Char(3)
-  issuedAt      DateTime?
-  dueAt         DateTime?
-  paidAt        DateTime?
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  stripeSubscriptionId    String?
+  status                  InvoiceStatus @default(DRAFT)
+  subtotalCents           Int           @default(0)
+  discountCents           Int           @default(0)
+  taxCents                Int           @default(0)
+  totalCents              Int           @default(0)
+  currency                String        @default("USD") @db.Char(3)
+  issuedAt                DateTime?
+  dueAt                   DateTime?
+  paidAt                  DateTime?
+  notes                   String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String
@@ -1573,15 +1618,15 @@ model InvoiceLineItem {
 }
 
 model Payment {
-  id                    String            @id @default(cuid())
-  amountCents           Int
-  currency              String            @default("USD") @db.Char(3)
-  method                PaymentMethodType
-  stripePaymentIntentId String?
-  stripeCheckoutSessionId String?            @unique
-  barterNote            String?
-  paidAt                DateTime          @default(now())
-  createdAt             DateTime          @default(now())
+  id                      String            @id @default(cuid())
+  amountCents             Int
+  currency                String            @default("USD") @db.Char(3)
+  method                  PaymentMethodType
+  stripePaymentIntentId   String?
+  stripeCheckoutSessionId String?           @unique
+  barterNote              String?
+  paidAt                  DateTime          @default(now())
+  createdAt               DateTime          @default(now())
 
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   invoiceId String
@@ -1790,13 +1835,13 @@ model OrgSettings {
 // ---------------------------------------------------------------------------
 
 model RankAward {
-  id        String   @id @default(cuid())
-  awardedAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  awardedAt DateTime?
   notes     String?
   location  String?
   mediaUrls Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   user        User    @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
   userId      String
@@ -1805,11 +1850,14 @@ model RankAward {
   awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
   awardedById String?
 
-  gamificationEvents GamificationEvent[]
+  lineageTreeMembers   LineageTreeMember[]
+  lineageRelationships LineageRelationship[]
+  gamificationEvents   GamificationEvent[]
 
   @@unique([userId, rankId])
   @@index([userId, awardedAt])
   @@index([rankId])
+  @@index([awardedById])
 }
 
 // ---------------------------------------------------------------------------
@@ -2157,6 +2205,7 @@ model Style {
   memberships  Membership[]
   contentAtoms ContentAtom[]
   techniques   Technique[]
+  lineageTrees LineageTree[]
 
   @@unique([disciplineId, code])
   @@index([disciplineId, status])
@@ -2207,38 +2256,210 @@ model UserBrandSubscription {
 // ---------------------------------------------------------------------------
 
 model LineageNode {
-  id         String            @id @default(cuid())
-  visibility LineageVisibility @default(PUBLIC)
-  isVerified Boolean           @default(false)
-  slug       String?           @unique
-  bio        String?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  id                 String                    @id @default(cuid())
+  visibility         LineageVisibility         @default(PUBLIC)
+  isVerified         Boolean                   @default(false)
+  verificationStatus LineageVerificationStatus @default(PENDING)
+  slug               String?                   @unique
+  bio                String?
+  archivedAt         DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
 
   relationshipsFrom LineageRelationship[] @relation("LineageFrom")
   relationshipsTo   LineageRelationship[] @relation("LineageTo")
+  ownedLineageTrees LineageTree[]         @relation("LineageTreeOwnerNode")
+  treeMembers       LineageTreeMember[]
+  accessGrants      LineageTreeAccess[]
+  claimRequests     LineageClaimRequest[]
 }
 
 model LineageRelationship {
-  id          String              @id @default(cuid())
-  type        LineageRelationType
-  description String?
-  startedAt   DateTime?
-  endedAt     DateTime?
-  isVerified  Boolean             @default(false)
-  createdAt   DateTime            @default(now())
+  id                 String                    @id @default(cuid())
+  type               LineageRelationType
+  description        String?
+  startedAt          DateTime?
+  endedAt            DateTime?
+  isVerified         Boolean                   @default(false)
+  verificationStatus LineageVerificationStatus @default(PENDING)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
 
-  fromNode   LineageNode @relation("LineageFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
-  fromNodeId String
-  toNode     LineageNode @relation("LineageTo", fields: [toNodeId], references: [id], onDelete: Cascade)
-  toNodeId   String
+  fromNode    LineageNode @relation("LineageFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  fromNodeId  String
+  toNode      LineageNode @relation("LineageTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  toNodeId    String
+  rankAward   RankAward?  @relation(fields: [rankAwardId], references: [id], onDelete: SetNull)
+  rankAwardId String?
 
-  @@unique([fromNodeId, toNodeId, type])
+  @@unique([rankAwardId])
   @@index([fromNodeId])
   @@index([toNodeId])
+  @@index([fromNodeId, toNodeId, type])
+  @@index([type, rankAwardId])
+  @@index([verificationStatus])
+}
+
+model LineageTree {
+  id                  String               @id @default(cuid())
+  brand               Brand
+  scopeType           LineageTreeScopeType @default(BRAND)
+  slug                String
+  name                String
+  description         String?
+  visibility          LineageVisibility    @default(PUBLIC)
+  isPublished         Boolean              @default(false)
+  defaultRootMemberId String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationId String?
+  discipline     Discipline?   @relation(fields: [disciplineId], references: [id], onDelete: SetNull)
+  disciplineId   String?
+  style          Style?        @relation(fields: [styleId], references: [id], onDelete: SetNull)
+  styleId        String?
+  ownerNode      LineageNode?  @relation("LineageTreeOwnerNode", fields: [ownerNodeId], references: [id], onDelete: SetNull)
+  ownerNodeId    String?
+
+  members       LineageTreeMember[]
+  visualGroups  LineageVisualGroup[]
+  accessGrants  LineageTreeAccess[]
+  claimRequests LineageClaimRequest[]
+
+  @@unique([brand, slug])
+  @@index([brand, scopeType])
+  @@index([organizationId])
+  @@index([disciplineId])
+  @@index([styleId])
+  @@index([ownerNodeId])
+}
+
+model LineageTreeMember {
+  id                      String   @id @default(cuid())
+  visualSortOrder         Int      @default(0)
+  showPromotionDatePublic Boolean  @default(true)
+  showRankPublic          Boolean  @default(true)
+  isCollapsedDefault      Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  tree   LineageTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId String
+  node   LineageNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId String
+
+  selectedRankAward RankAward? @relation(fields: [rankAwardId], references: [id], onDelete: SetNull)
+  rankAwardId       String?
+
+  primaryVisualParent         LineageTreeMember?  @relation("LineageVisualParent", fields: [primaryVisualParentMemberId], references: [id], onDelete: SetNull)
+  primaryVisualParentMemberId String?
+  visualChildren              LineageTreeMember[] @relation("LineageVisualParent")
+
+  visualGroup   LineageVisualGroup? @relation("LineageMemberVisualGroup", fields: [visualGroupId], references: [id], onDelete: SetNull)
+  visualGroupId String?
+
+  accessGrantsAsRoot   LineageTreeAccess[]  @relation("LineageAccessRootMember")
+  accessGrantsAsNode   LineageTreeAccess[]  @relation("LineageAccessMember")
+  visualGroupsAsParent LineageVisualGroup[] @relation("LineageGroupParentMember")
+
+  @@unique([treeId, nodeId])
+  @@index([treeId, primaryVisualParentMemberId])
+  @@index([treeId, visualGroupId, visualSortOrder])
+  @@index([rankAwardId])
+}
+
+model LineageVisualGroup {
+  id                 String                 @id @default(cuid())
+  label              String
+  groupType          LineageVisualGroupType @default(PROMOTION_DATE)
+  promotionDate      DateTime?
+  sortOrder          Int                    @default(0)
+  showPublicLabel    Boolean                @default(false)
+  isCollapsedDefault Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  tree           LineageTree        @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId         String
+  parentMember   LineageTreeMember? @relation("LineageGroupParentMember", fields: [parentMemberId], references: [id], onDelete: Cascade)
+  parentMemberId String?
+
+  members LineageTreeMember[] @relation("LineageMemberVisualGroup")
+
+  @@unique([treeId, parentMemberId, groupType, promotionDate])
+  @@index([treeId, parentMemberId, sortOrder])
+}
+
+model LineageTreeAccess {
+  id        String                @id @default(cuid())
+  role      LineageTreeAccessRole
+  createdAt DateTime              @default(now())
+  revokedAt DateTime?
+
+  tree        LineageTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId      String
+  user        User        @relation("LineageTreeAccessUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  grantedBy   User?       @relation("LineageTreeAccessGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+  grantedById String?
+
+  rootMember   LineageTreeMember? @relation("LineageAccessRootMember", fields: [rootMemberId], references: [id], onDelete: Cascade)
+  rootMemberId String?
+  member       LineageTreeMember? @relation("LineageAccessMember", fields: [memberId], references: [id], onDelete: Cascade)
+  memberId     String?
+  node         LineageNode?       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId       String?
+
+  @@index([treeId, userId, role])
+  @@index([rootMemberId])
+  @@index([memberId])
+  @@index([nodeId])
+}
+
+model LineageClaimRequest {
+  id           String             @id @default(cuid())
+  status       LineageClaimStatus @default(PENDING)
+  claimantNote String?
+  reviewerNote String?
+  bypassReason String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  tree           LineageTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  treeId         String
+  node           LineageNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId         String
+  claimant       User        @relation("LineageClaimClaimant", fields: [claimantUserId], references: [id], onDelete: Cascade)
+  claimantUserId String
+  reviewedBy     User?       @relation("LineageClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedById   String?
+
+  evidence LineageClaimEvidence[]
+
+  @@index([treeId, status])
+  @@index([nodeId, status])
+  @@index([claimantUserId, status])
+}
+
+model LineageClaimEvidence {
+  id        String   @id @default(cuid())
+  label     String?
+  url       String?
+  text      String?
+  createdAt DateTime @default(now())
+
+  claimRequest   LineageClaimRequest @relation(fields: [claimRequestId], references: [id], onDelete: Cascade)
+  claimRequestId String
+  media          Media?              @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId        String?
+
+  @@index([claimRequestId])
+  @@index([mediaId])
 }
 
 // ---------------------------------------------------------------------------
@@ -2277,11 +2498,11 @@ model WaiverSignature {
   userAgent String?
   createdAt DateTime @default(now())
 
-  waiver             Waiver  @relation(fields: [waiverId], references: [id], onDelete: Restrict)
-  waiverId           String
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId             String
-  signedOnBehalfOf   User?   @relation("SignedOnBehalf", fields: [signedOnBehalfId], references: [id])
+  waiver           Waiver  @relation(fields: [waiverId], references: [id], onDelete: Restrict)
+  waiverId         String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  signedOnBehalfOf User?   @relation("SignedOnBehalf", fields: [signedOnBehalfId], references: [id])
   signedOnBehalfId String?
 
   @@unique([waiverId, userId])
@@ -2555,8 +2776,6 @@ model Bracket {
 
   matches Match[]
 
-
-
   @@index([divisionId])
 }
 
@@ -2778,7 +2997,8 @@ model Media {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
 
-  attachments MediaAttachment[]
+  attachments          MediaAttachment[]
+  lineageClaimEvidence LineageClaimEvidence[]
 
   @@index([brand, uploadedById])
   @@index([organizationId])
@@ -3102,12 +3322,12 @@ model UserEntitlement {
 // @why     Replace hardcoded gear collections with DB-managed discipline→product mappings
 // @wired   server/web/affiliate-products/queries.ts, app/(web)/gear/page.tsx, prisma/seed-gear-recommendations.ts
 model GearRecommendation {
-  id            String                 @id @default(cuid())
-  brand         Brand
-  type          GearRecommendationType
-  sortOrder     Int                    @default(0)
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
+  id        String                 @id @default(cuid())
+  brand     Brand
+  type      GearRecommendationType
+  sortOrder Int                    @default(0)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
 
   discipline    Discipline  @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
   disciplineId  String
@@ -3126,63 +3346,63 @@ model GearRecommendation {
 /// Created by the Stripe webhook merch_purchase handler.
 /// @see docs/architecture/printful-pod-spec.md
 model MerchOrder {
-  id                      String            @id @default(cuid())
-  brand                   Brand
+  id    String @id @default(cuid())
+  brand Brand
 
   /// Stripe checkout session that created this order
-  stripeCheckoutSessionId String            @unique
+  stripeCheckoutSessionId String  @unique
   stripePaymentIntentId   String?
 
   /// Printful integration
-  printfulOrderId         Int?              /// Printful's internal order ID
-  printfulExternalId      String?           /// Our ID sent to Printful (= this record's id)
-  fulfillmentStatus       FulfillmentStatus @default(PAID)
+  printfulOrderId    Int? /// Printful's internal order ID
+  printfulExternalId String? /// Our ID sent to Printful (= this record's id)
+  fulfillmentStatus  FulfillmentStatus @default(PAID)
 
   /// Order details
-  customerEmail           String
-  customerName            String?
-  amountCents             Int               @default(0)
-  shippingCents           Int               @default(0)
-  totalCents              Int               @default(0)
-  currency                String            @default("USD") @db.Char(3)
+  customerEmail String
+  customerName  String?
+  amountCents   Int     @default(0)
+  shippingCents Int     @default(0)
+  totalCents    Int     @default(0)
+  currency      String  @default("USD") @db.Char(3)
 
   /// Line item snapshot (JSON — product name, size, color, qty, printfulVariantId)
-  lineItems               Json?
+  lineItems Json?
 
   /// Shipping address snapshot
-  shippingName            String?
-  shippingAddress1        String?
-  shippingAddress2        String?
-  shippingCity            String?
-  shippingState           String?
-  shippingPostalCode      String?
-  shippingCountryCode     String?
+  shippingName        String?
+  shippingAddress1    String?
+  shippingAddress2    String?
+  shippingCity        String?
+  shippingState       String?
+  shippingPostalCode  String?
+  shippingCountryCode String?
 
   /// Fulfillment tracking (populated by Printful webhook)
-  trackingNumber          String?
-  trackingUrl             String?
-  carrier                 String?
-  shippedAt               DateTime?
-  deliveredAt             DateTime?
+  trackingNumber String?
+  trackingUrl    String?
+  carrier        String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
 
   /// Error handling
-  failureReason           String?
+  failureReason String?
 
   /// Append-only audit trail for admin status overrides (JSON array)
   /// Each entry: { timestamp, adminUserId, oldStatus, newStatus, reason? }
   /// @see docs/sprints/SESSION_0121.md — TASK_02 (FINDING_02 remediation)
-  statusHistory           Json?
+  statusHistory Json?
 
-  createdAt               DateTime          @default(now())
-  updatedAt               DateTime          @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   /// Relations
-  user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                  String
-  organization            Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId          String
-  pricingPlan             PricingPlan?      @relation(fields: [pricingPlanId], references: [id])
-  pricingPlanId           String?
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  pricingPlan    PricingPlan? @relation(fields: [pricingPlanId], references: [id])
+  pricingPlanId  String?
 
   @@index([brand, organizationId])
   @@index([brand, customerEmail])
@@ -3212,6 +3432,7 @@ model Post {
   author   User   @relation(fields: [authorId], references: [id])
   authorId String
   tools    Tool[]
+
   @@index([brand, slug])
   @@index([authorId])
   @@index([publishedAt])

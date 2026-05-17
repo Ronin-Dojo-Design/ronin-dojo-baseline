@@ -8,6 +8,7 @@ updated: 2026-05-14
 last_agent: codex-session-0165
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/runbooks/lineage-listing-runbook.md
   - docs/architecture/dirstarter-baseline-index.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md

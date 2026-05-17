@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-05-09
-last_agent: copilot-session-0113
+updated: 2026-05-17
+last_agent: codex-session-0178
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -13,11 +13,13 @@ pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
+  - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0033.md
+  - docs/sprints/SESSION_0178.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -179,11 +181,73 @@ Use Rank because not all martial arts or certifications use belts.
 
 A rank promotion record awarded to a User.
 
-RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It also supports promotion photos/videos via `mediaUrls` and links to `GamificationEvent` for point tracking.
+RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It also supports promotion photos/videos via `mediaUrls`, links to `GamificationEvent` for point tracking, and is the canonical promotion fact for lineage.
 
 Former name: `Progress`.
 
 Do not use `Progress` in new code.
+
+## Lineage
+
+### LineageNode
+
+The reusable lineage profile for a person.
+
+LineageNode belongs to one User and can appear in one or more LineageTree contexts through LineageTreeMember.
+
+### LineageRelationship
+
+A graph edge between two LineageNodes.
+
+For `PROMOTED_BY`, the direction is promoter to promoted person: `fromNodeId` is the promoter and `toNodeId` is the promoted person.
+
+### PROMOTED_BY
+
+The LineageRelationship type that mirrors a RankAward for graph traversal and display.
+
+PROMOTED_BY is not the source of promotion truth. RankAward is canonical.
+
+### LineageTree
+
+A publishable lineage context scoped to a Brand, Organization, Discipline, Style, Person, or custom grouping.
+
+LineageTree owns public/editor visibility, slug, membership rows, visual groups, ACL grants, and claim requests.
+
+### LineageTreeMember
+
+The tree-specific placement of a LineageNode.
+
+LineageTreeMember owns visual parent, display order, selected display RankAward, group membership, and public display toggles. It does not own promotion truth.
+
+### LineageVisualGroup
+
+A materialized visual row/group inside a LineageTree.
+
+Groups can be generated from promotion dates, rank, generation, team, or a custom editor label. Unknown-date groups require explicit app or database integrity because nullable SQL uniqueness is not enough by itself.
+
+### LineageTreeAccess
+
+An explicit ACL grant for editing lineage.
+
+Organization owner and organization admin access may be derived by server authorization logic; explicit grants are stored for tree, branch, or node-specific editors.
+
+### LineageClaimRequest
+
+A request by an authenticated user to claim a placeholder LineageNode.
+
+Approval may transfer the placeholder node only when the claimant does not already have a LineageNode. Duplicate-node cases require manual merge.
+
+### LineageClaimEvidence
+
+Private evidence attached to a LineageClaimRequest.
+
+Evidence is visible to the claimant and reviewers, not public lineage payloads.
+
+### LineageVerificationStatus
+
+The new verification state for lineage nodes and relationships.
+
+Values are `PENDING`, `VERIFIED`, and `DISPUTED`. Legacy `isVerified` remains during the migration window but should be replaced by verificationStatus in new code.
 
 ## Membership shells
 
