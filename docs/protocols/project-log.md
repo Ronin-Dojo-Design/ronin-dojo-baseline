@@ -1238,3 +1238,68 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Impact:** The migration is proven, but next read-model/UI session must create adapter tests before claiming viewer/editor correctness.
 - **Required follow-up:** Add lineage server read-model and adapter tests before public viewer changes.
 - **Status:** open
+
+## SESSION 0179 - Lineage Server Read Model + Tree Adapter Tests
+
+**Date:** 2026-05-16
+**Sprint:** S6
+**Agent:** claude-session-0179
+**Branch:** session-0179-lineage-read-model
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0179_TASK_01 | Cody: add `getLineageTreeBySlug` server read model + payloads for the new LineageTree/Member/VisualGroup schema | done |
+| SESSION_0179_TASK_02 | Cody: add lineage tree-adapter unit tests + integration smoke per sop-test-writing patterns | done |
+| SESSION_0179_TASK_03 | Doug + Giddy: verify types, tests, no UI regressions, hostile close, stage next session | done |
+
+**Notes:** Petey scoped this as a server read-model + tests slice on top of the SESSION_0178 schema. No UI changes, no editor routes, no claim actions, no ACL helper, no schema mutations. Existing per-user lineage queries stay intact for the current public viewer.
+
+**Result:** `getLineageTreeBySlug` + payloads + schema + 7-test suite landed on branch `session-0179-lineage-read-model`. Prisma validate, migrate status, `bun test server/web/lineage/queries.test.ts` (7/0), `bun test lib/lineage` (3/0), scoped typecheck (no new lineage errors), consumer-export grep, and `git diff --check` all pass. Three new findings recorded.
+
+#### Review
+
+**SESSION_0179_REVIEW_01 - Full Close Review**
+
+- **Reviewed tasks:** SESSION_0179_TASK_01, SESSION_0179_TASK_02, SESSION_0179_TASK_03.
+- **Dirstarter docs check:** live docs sufficient — checked 2026-05-16 at bow-in against `https://dirstarter.com/docs/database/prisma`. No re-check at close; this slice reuses the documented Prisma `select`-with-payload + `"use cache"` + `cacheTag` + `cacheLife` pattern that SESSION_0175 already established in this module.
+- **Sources:** `https://dirstarter.com/docs/database/prisma`, `docs/runbooks/sop-test-writing.md`, `docs/architecture/lineage/lineage-rank-promotion-sync-rules.md`, `docs/architecture/lineage/lineage-v1-acceptance-test-plan.md`.
+- **Verdict:** Aligned with caveats. The read model is a clean additive extension of the SESSION_0175 lineage query module: same payload shape, same cache strategy, no new database dependency, scope guard intact (no UI / editor / claim / ACL drift), and the new payload composes the existing `lineageNodeRowPayload` without widening. Tests honestly exercise the visibility filter, the empty-group prune, and the schema's compound `brand_slug` unique key against a real DB. Two real defects remain in the materializer: dangling `primaryVisualParentMemberId` after filtering and unvalidated `visualGroup.parentMemberId`. Neither leaks a RESTRICTED node — the visibility scope hard-drops the row before the materialized result — but a UI built on this payload will see `undefined` lookups unless the materializer is hardened. WORKFLOW 5.0 compliance is clean: Petey plan with stable task IDs, dedicated branch (`session-0179-lineage-read-model`), Graphify-first discovery, pre-flight pasted from source, hostile review run before close.
+- **Kaizen:**
+  - **Safe and secure?** Visibility filter provably drops non-PUBLIC members before materialization (DB-backed test asserts `memberIds == [public-a, public-b]`); the unpublished-tree path provably returns null (DB-backed test). What is *documented* but not behaviorally proven: that UI consumers can safely dereference `primaryVisualParentMemberId` against the surviving member set. Closing test: add a `RESTRICTED parent of PUBLIC child` fixture and assert the surviving child's `primaryVisualParentMemberId` is either null or points into the surviving set.
+  - **Failed steps prevented / next-time tweak:** Zero protocol slips this session. Cody flagged the Bun `skipIf` load-time gotcha and the `LineageVisualGroup` NULL-distinct uniqueness gotcha up front; both deserve `failed-steps-log.md` entries if they bite a second time. Smallest improvement: a "post-Prisma transformation" checklist row in `sop-test-writing.md` that explicitly asks "what dangling foreign keys could survive your filter?" would have caught FINDING_01 at plan time.
+  - **Confidence 1-10 (100 / 1,000 / 10,000):** Migration + read query 9 / 9 / 9; materializer correctness against a real UI 8 / 7 / 7 (FINDING_01 + FINDING_02 hazard scales linearly with tree size and number of RESTRICTED nodes). Aggregate 7 — stage SESSION_0180 as a remediation + ACL session before any editor / dashboard work consumes this payload.
+
+#### Findings
+
+**SESSION_0179_FINDING_01 - Dangling primaryVisualParentMemberId after visibility filtering**
+
+- **Severity:** medium
+- **Task:** SESSION_0179_TASK_01
+- **Evidence:** `apps/web/server/web/lineage/queries.ts:241-267` — `materializeLineageTreeResult` filters members by `node.visibility` and prunes empty groups, but does not null or reassign `member.primaryVisualParentMemberId` when the referenced parent is itself pruned. A `memberB` with `primaryVisualParentMemberId === memberA.id` survives unchanged when `memberA` is dropped for being RESTRICTED.
+- **Impact:** No RESTRICTED node data leaks (the parent is fully dropped), but the surviving payload contains a foreign-key id that no longer resolves inside the materialized member set. UI lookups will silently produce `undefined`, which becomes a render bug at exactly the tree shape (mixed-visibility lineages) the schema was added to support.
+- **Required follow-up:** In `materializeLineageTreeResult`, build a `Set<string>` of surviving member ids and null any `primaryVisualParentMemberId` not in it. Add a unit test with a RESTRICTED-parent-of-PUBLIC-child fixture and assert the surviving child's parent ref is `null`. Do this before any UI consumer is built against `LineageTreePublicResult`.
+- **Status:** open
+
+**SESSION_0179_FINDING_02 - visualGroup.parentMemberId not validated against surviving members**
+
+- **Severity:** low
+- **Task:** SESSION_0179_TASK_01
+- **Evidence:** `apps/web/server/web/lineage/queries.ts:241-267` and `apps/web/server/web/lineage/payloads.ts:256-266` — `lineageVisualGroupPayload` selects `parentMemberId`, and the materializer keeps a group as long as at least one surviving member references it via `visualGroupId`. There is no check that the group's own `parentMemberId` still resolves into the surviving member set.
+- **Impact:** Same class of dangling-id hazard as FINDING_01, lower-impact because `parentMemberId` is a UI placement hint rather than a structural parent link. UI consumers that use `parentMemberId` for layout could anchor to a non-existent member.
+- **Required follow-up:** Null `visualGroup.parentMemberId` when the referenced member is not in the surviving set; cover with a unit test. Bundle with the FINDING_01 fix.
+- **Status:** open
+
+**SESSION_0179_FINDING_03 - "PROMOTED_BY orientation" test name overclaims coverage**
+
+- **Severity:** low
+- **Task:** SESSION_0179_TASK_02
+- **Evidence:** `apps/web/server/web/lineage/queries.test.ts:239-250` — the test `"preserves primaryVisualParentMemberId so PROMOTED_BY orientation survives"` only asserts that a surviving child's `primaryVisualParentMemberId` equals the parent's id in an all-PUBLIC fixture. The tree-by-slug read model does not consult `LineageRelationship` (PROMOTED_BY or otherwise) — visual parenthood comes from `LineageTreeMember.primaryVisualParentMemberId`. The test does not exercise any actual relationship-orientation behaviour and does not cover the FINDING_01 dangling-parent case.
+- **Impact:** Test suite carries a green check that overstates what is proven. Future agent reading the test name may assume orientation invariants are covered when they are not.
+- **Required follow-up:** Rename the test to `"preserves primaryVisualParentMemberId across materialization"` and either (a) add a separate test that covers the actual FINDING_01 dangling-parent case or (b) delete the test if FINDING_01 coverage subsumes it.
+- **Status:** open
+
+#### SESSION_0178 finding status update
+
+SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESSION_0179_REVIEW_01. As of `bun test server/web/lineage/queries.test.ts` on 2026-05-16, 7 lineage adapter tests pass (4 DB-backed, 3 pure-TS) covering the tree-by-slug read model. Status: closed by SESSION_0179_REVIEW_01. Original entry preserved above per Rule 5 (append-only).

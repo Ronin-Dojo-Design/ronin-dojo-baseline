@@ -1,14 +1,17 @@
 import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
-import { LineageVisibility } from "~/.generated/prisma/client"
+import { type Brand, LineageVisibility } from "~/.generated/prisma/client"
 import {
   type LineageNodeProfile,
   type LineageNodeRow,
   type LineageRelationshipRow,
+  type LineageTreePublicResult,
+  type LineageTreePublicRow,
   type LineageTreeResult,
   lineageNodeProfilePayload,
   lineageNodeRowPayload,
   lineageRelationshipPayload,
+  lineageTreePublicPayload,
 } from "~/server/web/lineage/payloads"
 import { db } from "~/services/db"
 
@@ -216,3 +219,85 @@ export const getLineageProfile = cache(
     })
   },
 )
+
+// ---------------------------------------------------------------------------
+// getLineageTreeBySlug — Lineage Tree v1 read model.
+// Public read path; cached.
+//
+// Author: Cody / SESSION_0179 TASK_01.
+// ---------------------------------------------------------------------------
+
+/**
+ * Materialize a `LineageTreePublicRow` into the public-facing result.
+ *
+ * Pure helper — no DB or cache. Exported for unit testing the filtering /
+ * pruning ordering without standing up a fixture tree.
+ *
+ * Visibility-filter order matters: members are dropped first (anything whose
+ * `node.visibility` is outside the public scope), then visual groups are
+ * pruned if every member that referenced them was just dropped. Reversing
+ * the order would leak empty groups for RESTRICTED rows.
+ */
+export const materializeLineageTreeResult = (
+  tree: LineageTreePublicRow,
+): LineageTreePublicResult => {
+  const visibleMembers = tree.members.filter((member) =>
+    PUBLIC_VISIBILITY_SCOPE.includes(member.node.visibility),
+  )
+
+  const referencedGroupIds = new Set<string>()
+  for (const member of visibleMembers) {
+    if (member.visualGroupId) {
+      referencedGroupIds.add(member.visualGroupId)
+    }
+  }
+
+  const visibleGroups = tree.visualGroups.filter((group) =>
+    referencedGroupIds.has(group.id),
+  )
+
+  const { members: _members, visualGroups: _visualGroups, ...summary } = tree
+
+  return {
+    tree: summary,
+    members: visibleMembers,
+    visualGroups: visibleGroups,
+    defaultRootMemberId: tree.defaultRootMemberId,
+  }
+}
+
+/**
+ * Fetch a published, PUBLIC `LineageTree` by `brand` + `slug` and return the
+ * visibility-filtered visual tree. Returns null when the tree doesn't exist,
+ * isn't published, or isn't PUBLIC.
+ */
+export const getLineageTreeBySlug = async ({
+  brand,
+  slug,
+}: {
+  brand: Brand
+  slug: string
+}): Promise<LineageTreePublicResult | null> => {
+  "use cache"
+
+  cacheTag("lineage", `lineage-tree-${brand}-${slug}`)
+  cacheLife("minutes")
+
+  const tree = await db.lineageTree.findUnique({
+    where: { brand_slug: { brand, slug } },
+    select: lineageTreePublicPayload,
+  })
+
+  if (!tree) {
+    return null
+  }
+
+  if (
+    !PUBLIC_VISIBILITY_SCOPE.includes(tree.visibility) ||
+    !tree.isPublished
+  ) {
+    return null
+  }
+
+  return materializeLineageTreeResult(tree)
+}
