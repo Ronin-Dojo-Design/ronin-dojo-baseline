@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "~/.generated/prisma/client"
+import { type DayOfWeek, PrismaClient } from "~/.generated/prisma/client"
 
 /**
  * seed-baseline-platform.ts
@@ -464,7 +464,7 @@ async function main() {
         name: sched.name,
         description: sched.description,
         status: sched.status,
-        daysOfWeek: sched.daysOfWeek,
+        daysOfWeek: sched.daysOfWeek as DayOfWeek[],
         startTime: sched.startTime,
         endTime: sched.endTime,
         timezone: "America/Denver",
