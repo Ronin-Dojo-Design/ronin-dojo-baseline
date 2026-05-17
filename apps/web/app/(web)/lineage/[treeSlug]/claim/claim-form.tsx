@@ -75,7 +75,6 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
   })
 
   const form = useForm<FormValues>({
-    // @ts-expect-error — @hookform/resolvers@5.2.2 Zod 4 overload types don't match zod@4.1.13 default export. Works at runtime. Tracked as SESSION_0178_FINDING_01.
     resolver: zodResolver(formSchema),
     defaultValues: {
       nodeId: "",

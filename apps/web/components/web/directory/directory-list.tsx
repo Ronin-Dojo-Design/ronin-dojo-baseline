@@ -22,7 +22,7 @@ type DirectoryProfile = {
   }[]
   ranks: {
     rank: { id: string; name: string; sortOrder: number; rankSystem: { id: string; name: string } }
-    awardedAt: Date
+    awardedAt: Date | null
   }[]
 }
 
