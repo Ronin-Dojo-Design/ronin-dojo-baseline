@@ -1272,11 +1272,57 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 
 | Task ID | Description | Status |
 | --- | --- | --- |
-| SESSION_0183_TASK_01 | Cody: `reviewLineageClaim` server action + Zod schema using `adminActionClient` — approve/deny/needs-info state machine with brand gate, status guard, reviewer metadata | planned |
-| SESSION_0183_TASK_02 | Cody: Admin claim queries — `findPendingClaims(brand)` + `findClaimById(id, brand)` with tree/node/claimant/evidence joins | planned |
-| SESSION_0183_TASK_03 | Cody: Admin claims list page at `/admin/lineage/claims` using `withAdminPage` HOC + DataTable pattern | planned |
-| SESSION_0183_TASK_04 | Cody: Admin claim detail page + `ClaimStatusActions` client component (mirrors `lead-status-actions.tsx`) | planned |
-| SESSION_0183_TASK_05 | Cody: Integration tests for `reviewLineageClaim` — happy paths, auth guard, status guard, brand mismatch | planned |
-| SESSION_0183_TASK_06 | Doug: Verification — typecheck, test suite, regression check | planned |
+| SESSION_0183_TASK_01 | Cody: `reviewLineageClaim` server action + Zod schema using `adminActionClient` — approve/deny/needs-info state machine with brand gate, status guard, reviewer metadata | complete |
+| SESSION_0183_TASK_02 | Cody: Admin claim queries — `findPendingClaims(brand)` + `findClaimById(id, brand)` with tree/node/claimant/evidence joins | complete |
+| SESSION_0183_TASK_03 | Cody: Admin claims list page at `/admin/lineage/claims` using `withAdminPage` HOC + DataTable pattern | complete |
+| SESSION_0183_TASK_04 | Cody: Admin claim detail page + `ClaimStatusActions` client component (mirrors `lead-status-actions.tsx`) | complete |
+| SESSION_0183_TASK_05 | Cody: Integration tests for `reviewLineageClaim` — happy paths, auth guard, status guard, brand mismatch | complete |
+| SESSION_0183_TASK_06 | Doug: Verification — typecheck, test suite, regression check | complete |
 
 **Notes:** Step 6 in `lineage-public-viewer-editor-routes.md` rollout. Admin claim review lets brand admins approve/deny/request-info on pending `LineageClaimRequest` rows. No editor route, no email notifications, no Stripe.
+
+### SESSION_0184 — Lineage Node Profile Editor
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0184_TASK_01 | Cody: node profile schema/query/action using `userActionClient`, brand gate, node membership check, and APPROVED claim ownership proof | complete |
+| SESSION_0184_TASK_02 | Cody + Desi: claimant editor route `/lineage/[treeSlug]/edit/[nodeId]` and form for display name, bio, avatar/media URL, and selected promotion date | complete |
+| SESSION_0184_TASK_03 | Cody: DB-backed integration tests for approved-claim update, pending-claim denial, brand mismatch, and node/tree membership guard | complete |
+| SESSION_0184_TASK_04 | Doug + Giddy: focused tests, scoped typecheck, hostile close review, full-close evidence, git hygiene, and Graphify refresh | complete |
+
+**Notes:** Continues SESSION_0183. Approved claim status remains the ownership proof; no `LineageNode.claimedByUserId`, no whole-tree editor, no Stripe tiering.
+
+#### Review
+
+**SESSION_0184_REVIEW_01 - Approved-claim node editor shipped with ownership-model debt**
+
+- **Reviewed tasks:** SESSION_0184_TASK_01, SESSION_0184_TASK_02, SESSION_0184_TASK_03, SESSION_0184_TASK_04
+- **Dirstarter docs check:** live docs checked
+- **Sources:** <https://dirstarter.com/docs/codebase/structure>, <https://dirstarter.com/docs/integrations/media>, <https://dirstarter.com/docs/integrations/storage>, <https://dirstarter.com/docs/database/prisma>, `docs/architecture/dirstarter-baseline-index.md`
+- **Verdict:** The slice extends the local Dirstarter-derived server/action/form/media patterns instead of replacing them. The implementation is correctly scoped to one claimed node, brand-gated, and covered by focused DB-backed tests. The material debt is the same one SESSION_0183 deliberately carried forward: APPROVED claim status is an interim ownership proof, not a durable access-grant model.
+
+#### Findings
+
+**SESSION_0184_FINDING_01 - Approved claim status can authorize multiple editors for one node**
+
+- **Severity:** medium
+- **Task:** SESSION_0184_TASK_01
+- **Evidence:** `apps/web/server/web/lineage/node-profile-actions.ts` authorizes any current user with an APPROVED `LineageClaimRequest` for the tree/node. `apps/web/server/admin/lineage/claim-review-actions.ts` does not yet prevent more than one user from receiving APPROVED status for the same node.
+- **Impact:** If two different claims are approved for one lineage node, both users can edit the node profile until a durable ownership/access model is added.
+- **Required follow-up:** In SESSION_0185, decide whether APPROVED node claims transfer `LineageNode.userId`, create a `LineageTreeAccess` `NODE_EDITOR` grant, or both; then update review + editor authorization tests.
+- **Status:** open
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Severity:** low
+- **Task:** SESSION_0184_TASK_03
+- **Evidence:** `apps/web/server/web/lineage/node-profile-actions.test.ts` intentionally tests `applyLineageNodeProfileUpdate()` and `getEditableLineageNodeProfile()` directly because nearby lineage action tests also bypass next-safe-action request state.
+- **Impact:** Tests prove the DB/authz logic but not the full `userActionClient` invocation path. A future test harness could catch middleware-level regressions earlier.
+- **Required follow-up:** When the repo gets a reusable safe-action test harness, port lineage action tests to invoke the actual exported actions.
+- **Status:** accepted-risk
+
+#### Kaizen
+
+1. **Safety/security:** The new edit path is brand-gated and APPROVED-claim gated, with negative tests for pending claims, brand mismatch, and node/tree mismatch. The remaining safety gap is durable ownership exclusivity; SESSION_0185 should prove it with tests against claim approval and editor authorization.
+2. **Preventable failed steps:** One prior-session atomicity miss was found and repaired (`SESSION_0183` YAML status). The subagent handoff also lacked timely final status. Next time, require subagents to checkpoint after first file creation instead of waiting for final.
+3. **Scale confidence:** 100 records: 9/10; 1,000 records: 8/10; 10,000 records: 7/10. The per-route reads are fine for single-node editing, but claim ownership exclusivity and indexed access-grant semantics should land before scaling lineage editing workflows.
