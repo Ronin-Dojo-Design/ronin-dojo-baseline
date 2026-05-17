@@ -23,6 +23,8 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
     notFound()
   }
 
+  const nodeDisplayName = claim.node.user.passport?.displayName ?? "Unnamed lineage node"
+
   return (
     <Wrapper>
       <Stack direction="column" className="gap-6">
@@ -31,7 +33,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
             ← Back to Claims
           </Link>
           <Heading as="h1" size="h3" className="mt-2">
-            Claim: {claim.node.displayName}
+            Claim: {nodeDisplayName}
           </Heading>
         </div>
 

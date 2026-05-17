@@ -7,13 +7,14 @@ import {
   type UpdateLineageNodeProfileInput,
   updateLineageNodeProfileSchema,
 } from "~/server/web/lineage/node-profile-schemas"
+import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
 import { db as appDb } from "~/services/db"
 
 /**
- * Approved-claim lineage node profile server action.
+ * Durable-access lineage node profile server action.
  *
- * Approved LineageClaimRequest rows remain the ownership proof; this action
- * does not grant whole-tree edit rights.
+ * LineageTreeAccess rows are the editor proof. Approved claims create those
+ * grants during admin review.
  *
  * Author: Cody / SESSION_0184 TASK_01.
  */
@@ -23,7 +24,7 @@ type AppDb = typeof appDb
 export const LINEAGE_NODE_PROFILE_ERROR = {
   TREE_NOT_FOUND: "Tree not found or does not belong to this brand.",
   NODE_NOT_IN_TREE: "Node is not a member of this tree.",
-  APPROVED_CLAIM_REQUIRED: "Approved claim required to edit this lineage node profile.",
+  ACCESS_GRANT_REQUIRED: "Lineage node editor access required.",
 } as const
 
 export type UpdateLineageNodeProfileResult = {
@@ -78,18 +79,16 @@ export const applyLineageNodeProfileUpdate = async ({
     throw new Error(LINEAGE_NODE_PROFILE_ERROR.NODE_NOT_IN_TREE)
   }
 
-  const approvedClaim = await db.lineageClaimRequest.findFirst({
-    where: {
-      treeId: tree.id,
-      nodeId: input.nodeId,
-      claimantUserId: userId,
-      status: "APPROVED",
-    },
-    select: { id: true },
+  const accessGrant = await findActiveLineageNodeProfileAccess({
+    db,
+    treeId: tree.id,
+    nodeId: input.nodeId,
+    memberId: member.id,
+    userId,
   })
 
-  if (!approvedClaim) {
-    throw new Error(LINEAGE_NODE_PROFILE_ERROR.APPROVED_CLAIM_REQUIRED)
+  if (!accessGrant) {
+    throw new Error(LINEAGE_NODE_PROFILE_ERROR.ACCESS_GRANT_REQUIRED)
   }
 
   await db.$transaction(async tx => {

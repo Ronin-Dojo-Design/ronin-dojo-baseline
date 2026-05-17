@@ -23,31 +23,35 @@ async function ClaimsContent() {
 
   return (
     <div className="divide-y rounded-lg border">
-      {claims.map(claim => (
-        <Link
-          key={claim.id}
-          href={`/admin/lineage/claims/${claim.id}`}
-          className="flex items-center justify-between gap-4 p-4 hover:bg-muted/50 transition-colors"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="font-medium truncate">
-              {claim.claimant.name ?? claim.claimant.email} → {claim.node.displayName}
-            </p>
-            <p className="text-sm text-muted-foreground truncate">
-              Tree: {claim.tree.name}
-            </p>
-          </div>
+      {claims.map(claim => {
+        const nodeDisplayName = claim.node.user.passport?.displayName ?? "Unnamed lineage node"
 
-          <div className="flex items-center gap-3 shrink-0">
-            <Badge variant={claim.status === "NEEDS_INFO" ? "outline" : "secondary"}>
-              {claim.status}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {claim.createdAt.toLocaleDateString()}
-            </span>
-          </div>
-        </Link>
-      ))}
+        return (
+          <Link
+            key={claim.id}
+            href={`/admin/lineage/claims/${claim.id}`}
+            className="flex items-center justify-between gap-4 p-4 hover:bg-muted/50 transition-colors"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="font-medium truncate">
+                {claim.claimant.name ?? claim.claimant.email} → {nodeDisplayName}
+              </p>
+              <p className="text-sm text-muted-foreground truncate">
+                Tree: {claim.tree.name}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <Badge variant={claim.status === "NEEDS_INFO" ? "outline" : "info"}>
+                {claim.status}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {claim.createdAt.toLocaleDateString()}
+              </span>
+            </div>
+          </Link>
+        )
+      })}
     </div>
   )
 }

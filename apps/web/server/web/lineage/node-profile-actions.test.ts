@@ -57,7 +57,7 @@ type Fixtures = {
   rankSystemId: string
   rankId: string
   approvedClaimantUserId: string
-  pendingClaimantUserId: string
+  noAccessClaimantUserId: string
   userIds: string[]
 }
 
@@ -82,11 +82,11 @@ beforeAll(async () => {
     },
   })
 
-  const pendingClaimant = await db.user.create({
+  const noAccessClaimant = await db.user.create({
     data: {
-      id: tag("pending-claimant"),
-      name: tag("Pending Claimant"),
-      email: `${tag("pending-claimant")}@test.local`,
+      id: tag("no-access-claimant"),
+      name: tag("No Access Claimant"),
+      email: `${tag("no-access-claimant")}@test.local`,
     },
   })
 
@@ -188,6 +188,17 @@ beforeAll(async () => {
     },
   })
 
+  await db.lineageTreeAccess.create({
+    data: {
+      id: tag("node-editor-grant"),
+      treeId: tree.id,
+      userId: approvedClaimant.id,
+      role: "NODE_EDITOR",
+      nodeId: node.id,
+      memberId: member.id,
+    },
+  })
+
   await db.lineageClaimRequest.create({
     data: {
       id: tag("claim-approved"),
@@ -201,11 +212,12 @@ beforeAll(async () => {
 
   await db.lineageClaimRequest.create({
     data: {
-      id: tag("claim-pending"),
+      id: tag("claim-approved-no-access"),
       treeId: tree.id,
       nodeId: node.id,
-      claimantUserId: pendingClaimant.id,
-      status: "PENDING",
+      claimantUserId: noAccessClaimant.id,
+      status: "APPROVED",
+      reviewedAt: new Date(),
     },
   })
 
@@ -231,8 +243,8 @@ beforeAll(async () => {
     rankSystemId: rankSystem.id,
     rankId: rank.id,
     approvedClaimantUserId: approvedClaimant.id,
-    pendingClaimantUserId: pendingClaimant.id,
-    userIds: [approvedClaimant.id, pendingClaimant.id, orphanUser.id],
+    noAccessClaimantUserId: noAccessClaimant.id,
+    userIds: [approvedClaimant.id, noAccessClaimant.id, orphanUser.id],
   }
 })
 
@@ -242,6 +254,7 @@ afterAll(async () => {
   await db.lineageClaimEvidence.deleteMany({
     where: { claimRequest: { treeId: fx.treeId } },
   })
+  await db.lineageTreeAccess.deleteMany({ where: { treeId: fx.treeId } })
   await db.lineageClaimRequest.deleteMany({ where: { treeId: fx.treeId } })
   await db.lineageTreeMember.deleteMany({ where: { treeId: fx.treeId } })
   await db.lineageTree.deleteMany({ where: { id: fx.treeId } })
@@ -309,30 +322,60 @@ describe("lineage node profile editing — logic", () => {
     expect(rankAward?.awardedAt?.toISOString()).toBe(promotionDate.toISOString())
   })
 
-  it("denies update when the claimant only has a PENDING claim", async () => {
+  it("denies update when the claimant has an APPROVED claim but no access grant", async () => {
     await expectRejectsWithMessage(
       applyLineageNodeProfileUpdate({
         db,
         brand: TEST_BRAND,
-        userId: fx!.pendingClaimantUserId,
+        userId: fx!.noAccessClaimantUserId,
         input: {
           treeId: fx!.treeId,
           nodeId: fx!.nodeId,
-          displayName: "Pending Claimant",
+          displayName: "No Access Claimant",
           bio: "Should not update",
-          avatarUrl: "https://example.com/pending-avatar.jpg",
+          avatarUrl: "https://example.com/no-access-avatar.jpg",
         },
       }),
-      LINEAGE_NODE_PROFILE_ERROR.APPROVED_CLAIM_REQUIRED,
+      LINEAGE_NODE_PROFILE_ERROR.ACCESS_GRANT_REQUIRED,
     )
 
     const editable = await getEditableLineageNodeProfile({
       brand: TEST_BRAND,
       treeSlug: fx!.treeSlug,
       nodeId: fx!.nodeId,
-      userId: fx!.pendingClaimantUserId,
+      userId: fx!.noAccessClaimantUserId,
     })
     expect(editable).toBeNull()
+  })
+
+  it("ignores revoked NODE_EDITOR grants", async () => {
+    await db.lineageTreeAccess.create({
+      data: {
+        id: tag("revoked-node-editor-grant"),
+        treeId: fx!.treeId,
+        userId: fx!.noAccessClaimantUserId,
+        role: "NODE_EDITOR",
+        nodeId: fx!.nodeId,
+        memberId: fx!.memberId,
+        revokedAt: new Date(),
+      },
+    })
+
+    await expectRejectsWithMessage(
+      applyLineageNodeProfileUpdate({
+        db,
+        brand: TEST_BRAND,
+        userId: fx!.noAccessClaimantUserId,
+        input: {
+          treeId: fx!.treeId,
+          nodeId: fx!.nodeId,
+          displayName: "Revoked Grant",
+          bio: "Should not update",
+          avatarUrl: "https://example.com/revoked-avatar.jpg",
+        },
+      }),
+      LINEAGE_NODE_PROFILE_ERROR.ACCESS_GRANT_REQUIRED,
+    )
   })
 
   it("denies update when the tree brand does not match the request brand", async () => {

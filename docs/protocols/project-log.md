@@ -1326,3 +1326,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 1. **Safety/security:** The new edit path is brand-gated and APPROVED-claim gated, with negative tests for pending claims, brand mismatch, and node/tree mismatch. The remaining safety gap is durable ownership exclusivity; SESSION_0185 should prove it with tests against claim approval and editor authorization.
 2. **Preventable failed steps:** One prior-session atomicity miss was found and repaired (`SESSION_0183` YAML status). The subagent handoff also lacked timely final status. Next time, require subagents to checkpoint after first file creation instead of waiting for final.
 3. **Scale confidence:** 100 records: 9/10; 1,000 records: 8/10; 10,000 records: 7/10. The per-route reads are fine for single-node editing, but claim ownership exclusivity and indexed access-grant semantics should land before scaling lineage editing workflows.
+
+### SESSION_0185 — Lineage Claim Ownership Hardening
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0185_TASK_01 | Cody: update `reviewLineageClaim` so APPROVED lineage-node claims transfer `LineageNode.userId`, create or preserve a `LineageTreeAccess` `NODE_EDITOR` grant, block duplicate approved claimants, block claimants that already own a different node, and write audit logs | complete |
+| SESSION_0185_TASK_02 | Cody: update node-profile query/action authorization to require active `LineageTreeAccess` instead of APPROVED claim status, with DB-backed tests for grant-required editing | complete |
+| SESSION_0185_TASK_03 | Doug/Giddy + Petey: run focused lineage tests, scoped typecheck, wiki lint, hostile close, full-close evidence, git hygiene, push, and post-commit Graphify update | complete |
+
+**Notes:** Closes SESSION_0184_FINDING_01 by making claim approval create durable ownership/access state. No schema migration planned; `LineageTreeAccess` already contains `NODE_EDITOR`, `TREE_EDITOR`, and `TREE_ADMIN` roles.
+
+#### Review
+
+**SESSION_0185_REVIEW_01 - Durable lineage claim ownership/access shipped**
+
+- **Reviewed tasks:** SESSION_0185_TASK_01, SESSION_0185_TASK_02, SESSION_0185_TASK_03.
+- **Dirstarter docs check:** live docs checked on 2026-05-17.
+- **Sources:** <https://dirstarter.com/docs/database/prisma>, <https://dirstarter.com/docs/authentication>, <https://dirstarter.com/docs/codebase/structure>, `docs/architecture/lineage/lineage-claim-workflow-evidence-review.md`, `docs/runbooks/lineage-listing-runbook.md`.
+- **Verdict:** Aligned. Claim approval now creates durable data state instead of treating claim status as the editor permission: `LineageNode.userId` transfers to the claimant, `LineageTreeAccess` gets an active `NODE_EDITOR` grant, duplicate approved claimants are blocked, and claim review writes audit logs without evidence content. The node-profile editor now requires active `LineageTreeAccess`, ignores revoked grants, and no longer trusts APPROVED claim status alone. Scoped lineage tests pass and scoped typecheck output has no matching errors.
+- **WORKFLOW score:** 9.6/10. Data integrity and lifecycle coverage are strong for the node-editor slice; score is held below 10 because placeholder-user archival remains staged for a future schema decision and safe-action middleware is still not directly exercised by the DB helper tests.
+
+#### Finding status updates
+
+**SESSION_0184_FINDING_01 - Approved claim status can authorize multiple editors for one node**
+
+- **Status:** resolved by SESSION_0185_REVIEW_01.
+- **Resolution:** APPROVED review now blocks a different approved claimant for the same tree/node, transfers node ownership to the claimant, creates/preserves an active `NODE_EDITOR` grant, and the editor requires active `LineageTreeAccess`.
+
+**SESSION_0184_FINDING_02 - Safe-action middleware wrapper is not directly exercised**
+
+- **Status:** accepted-risk, still open for a future reusable safe-action test harness.

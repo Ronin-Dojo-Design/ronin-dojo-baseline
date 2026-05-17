@@ -32,6 +32,38 @@ export type EditableLineageNodeProfile = {
   }
 }
 
+type LineageNodeProfileAccessDb = Pick<typeof db, "lineageTreeAccess">
+
+export const findActiveLineageNodeProfileAccess = async ({
+  db: dbClient = db,
+  treeId,
+  nodeId,
+  memberId,
+  userId,
+}: {
+  db?: LineageNodeProfileAccessDb
+  treeId: string
+  nodeId: string
+  memberId: string
+  userId: string
+}) => {
+  return dbClient.lineageTreeAccess.findFirst({
+    where: {
+      treeId,
+      userId,
+      revokedAt: null,
+      OR: [
+        { role: { in: ["TREE_ADMIN", "TREE_EDITOR"] } },
+        {
+          role: "NODE_EDITOR",
+          OR: [{ nodeId }, { memberId }],
+        },
+      ],
+    },
+    select: { id: true, role: true },
+  })
+}
+
 export const getEditableLineageNodeProfile = async ({
   brand,
   treeSlug,
@@ -86,17 +118,14 @@ export const getEditableLineageNodeProfile = async ({
     return null
   }
 
-  const approvedClaim = await db.lineageClaimRequest.findFirst({
-    where: {
-      treeId: tree.id,
-      nodeId,
-      claimantUserId: userId,
-      status: "APPROVED",
-    },
-    select: { id: true },
+  const accessGrant = await findActiveLineageNodeProfileAccess({
+    treeId: tree.id,
+    nodeId,
+    memberId: member.id,
+    userId,
   })
 
-  if (!approvedClaim) {
+  if (!accessGrant) {
     return null
   }
 

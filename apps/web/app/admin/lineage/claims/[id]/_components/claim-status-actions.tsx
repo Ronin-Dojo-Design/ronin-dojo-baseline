@@ -73,7 +73,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
 
         <Stack direction="row" className="gap-2">
           <Button
-            variant="default"
+            variant="primary"
             disabled={anyPending}
             onClick={() => execApprove({ claimId: claim.id, decision: "APPROVED", reviewerNote: reviewerNote || undefined })}
           >
@@ -81,7 +81,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           </Button>
 
           <Button
-            variant="outline"
+            variant="secondary"
             disabled={anyPending}
             onClick={() => execNeedsInfo({ claimId: claim.id, decision: "NEEDS_INFO", reviewerNote: reviewerNote || undefined })}
           >

@@ -1,7 +1,10 @@
 "use server"
 
+import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
+import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
+import { db as appDb } from "~/services/db"
 
 /**
  * Admin lineage claim review server action.
@@ -14,43 +17,207 @@ import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-sc
 
 const REVIEWABLE_STATUSES = ["PENDING", "NEEDS_INFO"] as const
 
+type AppDb = typeof appDb
+
 export const CLAIM_REVIEW_ERROR = {
   NOT_FOUND: "Claim not found or does not belong to this brand.",
   NOT_REVIEWABLE: "Claim is not in a reviewable status.",
+  NODE_NOT_IN_TREE: "Claim node is not a member of this tree.",
+  NODE_ALREADY_APPROVED: "Another claimant is already approved for this lineage node.",
+  CLAIMANT_HAS_NODE: "Claimant already owns a different lineage node.",
 } as const
+
+export type ReviewLineageClaimResult = {
+  claimId: string
+  status: LineageClaimStatus
+  nodeId: string
+  accessGrantId: string | null
+  ownershipTransferred: boolean
+}
+
+export const applyLineageClaimReview = async ({
+  db,
+  brand,
+  reviewerUserId,
+  input,
+}: {
+  db: AppDb
+  brand: Brand
+  reviewerUserId: string
+  input: ReviewLineageClaimInput
+}): Promise<ReviewLineageClaimResult> => {
+  return db.$transaction(
+    async tx => {
+      const claim = await tx.lineageClaimRequest.findFirst({
+        where: {
+          id: input.claimId,
+          tree: { brand },
+        },
+        select: {
+          id: true,
+          status: true,
+          treeId: true,
+          nodeId: true,
+          claimantUserId: true,
+          node: { select: { userId: true } },
+          _count: { select: { evidence: true } },
+        },
+      })
+
+      if (!claim) {
+        throw new Error(CLAIM_REVIEW_ERROR.NOT_FOUND)
+      }
+
+      if (!REVIEWABLE_STATUSES.includes(claim.status as (typeof REVIEWABLE_STATUSES)[number])) {
+        throw new Error(CLAIM_REVIEW_ERROR.NOT_REVIEWABLE)
+      }
+
+      const before = {
+        claimId: claim.id,
+        treeId: claim.treeId,
+        nodeId: claim.nodeId,
+        claimantUserId: claim.claimantUserId,
+        status: claim.status,
+        evidenceCount: claim._count.evidence,
+      }
+
+      let accessGrantId: string | null = null
+      let ownershipTransferred = false
+
+      if (input.decision === "APPROVED") {
+        const member = await tx.lineageTreeMember.findUnique({
+          where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
+          select: { id: true },
+        })
+
+        if (!member) {
+          throw new Error(CLAIM_REVIEW_ERROR.NODE_NOT_IN_TREE)
+        }
+
+        const alreadyApproved = await tx.lineageClaimRequest.findFirst({
+          where: {
+            treeId: claim.treeId,
+            nodeId: claim.nodeId,
+            status: "APPROVED",
+            NOT: { id: claim.id },
+          },
+          select: { id: true, claimantUserId: true },
+        })
+
+        if (alreadyApproved && alreadyApproved.claimantUserId !== claim.claimantUserId) {
+          throw new Error(CLAIM_REVIEW_ERROR.NODE_ALREADY_APPROVED)
+        }
+
+        const claimantExistingNode = await tx.lineageNode.findFirst({
+          where: {
+            userId: claim.claimantUserId,
+            NOT: { id: claim.nodeId },
+          },
+          select: { id: true },
+        })
+
+        if (claimantExistingNode) {
+          throw new Error(CLAIM_REVIEW_ERROR.CLAIMANT_HAS_NODE)
+        }
+
+        if (claim.node.userId !== claim.claimantUserId) {
+          await tx.lineageNode.update({
+            where: { id: claim.nodeId },
+            data: { userId: claim.claimantUserId },
+          })
+          ownershipTransferred = true
+        }
+
+        const existingGrant = await tx.lineageTreeAccess.findFirst({
+          where: {
+            treeId: claim.treeId,
+            userId: claim.claimantUserId,
+            role: "NODE_EDITOR",
+            revokedAt: null,
+            OR: [{ nodeId: claim.nodeId }, { memberId: member.id }],
+          },
+          select: { id: true, nodeId: true, memberId: true },
+        })
+
+        if (existingGrant) {
+          const repairedGrant =
+            existingGrant.nodeId === claim.nodeId && existingGrant.memberId === member.id
+              ? existingGrant
+              : await tx.lineageTreeAccess.update({
+                  where: { id: existingGrant.id },
+                  data: {
+                    nodeId: claim.nodeId,
+                    memberId: member.id,
+                  },
+                  select: { id: true },
+                })
+
+          accessGrantId = repairedGrant.id
+        } else {
+          const grant = await tx.lineageTreeAccess.create({
+            data: {
+              treeId: claim.treeId,
+              userId: claim.claimantUserId,
+              grantedById: reviewerUserId,
+              role: "NODE_EDITOR",
+              nodeId: claim.nodeId,
+              memberId: member.id,
+            },
+            select: { id: true },
+          })
+
+          accessGrantId = grant.id
+        }
+      }
+
+      const updated = await tx.lineageClaimRequest.update({
+        where: { id: claim.id },
+        data: {
+          status: input.decision,
+          reviewerNote: input.reviewerNote ?? null,
+          reviewedById: reviewerUserId,
+          reviewedAt: new Date(),
+        },
+        select: { id: true, status: true },
+      })
+
+      await tx.auditLog.create({
+        data: {
+          brand,
+          action: "lineage.claim.reviewed",
+          entityType: "LineageClaimRequest",
+          entityId: claim.id,
+          userId: reviewerUserId,
+          before,
+          after: {
+            ...before,
+            status: updated.status,
+            reviewerUserId,
+            accessGrantId,
+            ownershipTransferred,
+          },
+        },
+      })
+
+      return {
+        claimId: updated.id,
+        status: updated.status,
+        nodeId: claim.nodeId,
+        accessGrantId,
+        ownershipTransferred,
+      }
+    },
+    { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
+  )
+}
 
 export const reviewLineageClaim = adminActionClient
   .inputSchema(reviewLineageClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db, brand } }) => {
-    // 1. Load claim and verify brand match via tree.
-    const claim = await db.lineageClaimRequest.findFirst({
-      where: {
-        id: parsedInput.claimId,
-        tree: { brand },
-      },
-      select: { id: true, status: true },
+    return applyLineageClaimReview({
+      db,
+      brand,
+      reviewerUserId: user.id,
+      input: parsedInput,
     })
-
-    if (!claim) {
-      throw new Error(CLAIM_REVIEW_ERROR.NOT_FOUND)
-    }
-
-    // 2. Guard: must be in a reviewable state.
-    if (!REVIEWABLE_STATUSES.includes(claim.status as (typeof REVIEWABLE_STATUSES)[number])) {
-      throw new Error(CLAIM_REVIEW_ERROR.NOT_REVIEWABLE)
-    }
-
-    // 3. Apply decision.
-    const updated = await db.lineageClaimRequest.update({
-      where: { id: claim.id },
-      data: {
-        status: parsedInput.decision,
-        reviewerNote: parsedInput.reviewerNote ?? null,
-        reviewedById: user.id,
-        reviewedAt: new Date(),
-      },
-      select: { id: true, status: true },
-    })
-
-    return { claimId: updated.id, status: updated.status }
   })
