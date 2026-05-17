@@ -1156,3 +1156,27 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 | SESSION_0176_TASK_03 | Doug: cross-brand UAT smoke — 4 brands × key public routes; capture pass/fail table | pending |
 
 **Notes:** Staged from SESSION_0175 "Next session." Two new L1 primitives (Drawer + Tabs) fill inventory gaps surfaced by Doug's SESSION_0175 discovery. UAT validates all brands at T-2.
+
+## SESSION 0177 — Lineage Tree v1 Requirements + Editor Spec
+
+**Date:** 2026-05-17
+**Sprint:** S6
+**Agent:** codex-session-0177
+**Branch:** main
+
+#### Task Plan
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0177_TASK_01 | Write `lineage-tree-v1-requirements.md` | done |
+| SESSION_0177_TASK_02 | Write `lineage-editor-permissions-spec.md` | done |
+| SESSION_0177_TASK_03 | Write Prisma schema patch proposal for tree/member/group/access/claim models | done |
+| SESSION_0177_TASK_04 | Write rank/promotion sync rules for `RankAward` plus `PROMOTED_BY` | done |
+| SESSION_0177_TASK_05 | Write BBL React canvas port plan from old `LineageTree.jsx` | done |
+| SESSION_0177_TASK_06 | Write public viewer and dashboard editor route plan | done |
+| SESSION_0177_TASK_07 | Write claim workflow and evidence review plan | done |
+| SESSION_0177_TASK_08 | Write acceptance tests, migration checks, and QA/UAT checklist | done |
+
+**Result:** Documentation/spec slice completed. No production code, Prisma schema, or migration changes. V1 direction is now captured: retire D3 after parity, use a TypeScript/Dirstarter React canvas port of the old BBL `LineageTree.jsx`, make `RankAward` canonical, add `PROMOTED_BY`, materialize visual groups, gate editing by lineage ACL, and support placeholder profile claims.
+
+**Next:** Schema implementation session must start from `docs/runbooks/schema-migration.md` and the new lineage schema/sync/test specs. Use additive `migrate dev` discipline before server read models or UI port work.
