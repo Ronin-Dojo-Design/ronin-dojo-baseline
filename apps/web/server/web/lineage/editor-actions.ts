@@ -111,8 +111,8 @@ function relationshipAuditSnapshot(
     isVerified: boolean
     verificationStatus: string
   } | null,
-): RelationshipAuditSnapshot | null {
-  if (!relationship) return null
+): RelationshipAuditSnapshot | undefined {
+  if (!relationship) return undefined
 
   return {
     id: relationship.id,

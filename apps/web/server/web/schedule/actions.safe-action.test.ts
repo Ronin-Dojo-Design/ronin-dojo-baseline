@@ -227,9 +227,7 @@ describe("saveSchedule — safe-action wrapper", () => {
 
     expect(result?.serverError).toBe("User not authenticated")
     expect(result?.data).toBeUndefined()
-    expect(
-      await db.classSchedule.count({ where: { organizationId: fx!.organizationId } }),
-    ).toBe(0)
+    expect(await db.classSchedule.count({ where: { organizationId: fx!.organizationId } })).toBe(0)
   })
 
   it("surfaces validationErrors when the Zod schema rejects the payload", async () => {
@@ -243,9 +241,7 @@ describe("saveSchedule — safe-action wrapper", () => {
     expect(result?.validationErrors).toBeDefined()
     expect(result?.validationErrors?.daysOfWeek).toBeDefined()
     expect(result?.data).toBeUndefined()
-    expect(
-      await db.classSchedule.count({ where: { organizationId: fx!.organizationId } }),
-    ).toBe(0)
+    expect(await db.classSchedule.count({ where: { organizationId: fx!.organizationId } })).toBe(0)
   })
 
   it("creates the schedule and writes an audit row on the authorized happy path", async () => {
