@@ -3,7 +3,7 @@
  *
  * Run: cd apps/web && bun test server/web/lineage/editor-actions.test.ts
  *
- * These tests prove the high-risk lineage editor invariants:
+ * Proves the high-risk lineage editor invariants:
  * - tree editors can mutate placement/promoter state
  * - node editors cannot rewrite lineage truth
  * - branch editors are scope-limited
@@ -13,7 +13,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 
 mock.module("next/cache", () => ({
   cacheLife: () => {},
@@ -264,17 +264,53 @@ beforeAll(async () => {
   }
 })
 
-afterAll(async () => {
+beforeEach(async () => {
   if (!fx) return
+
+  await db.lineageTreeMember.update({
+    where: { id: fx.childAMemberId },
+    data: {
+      primaryVisualParentMemberId: fx.rootMemberId,
+      visualGroupId: null,
+      visualSortOrder: 1,
+    },
+  })
+
+  await db.lineageTreeMember.update({
+    where: { id: fx.childBMemberId },
+    data: {
+      primaryVisualParentMemberId: fx.rootMemberId,
+      visualGroupId: null,
+      visualSortOrder: 2,
+    },
+  })
+
+  await db.lineageTreeMember.update({
+    where: { id: fx.grandchildMemberId },
+    data: {
+      primaryVisualParentMemberId: fx.childAMemberId,
+      visualGroupId: null,
+      visualSortOrder: 3,
+    },
+  })
+
+  await db.lineageRelationship.deleteMany({
+    where: {
+      OR: [{ fromNodeId: { in: fx.nodeIds } }, { toNodeId: { in: fx.nodeIds } }],
+    },
+  })
 
   await db.auditLog.deleteMany({
     where: {
-      OR: [
-        { entityId: { in: [fx.childAMemberId, fx.childBMemberId, fx.grandchildMemberId] } },
-        { userId: { in: fx.userIds } },
-      ],
+      userId: { in: fx.userIds },
     },
   })
+})
+
+afterAll(async () => {
+  if (!fx) return
+
+  await db.auditLog.deleteMany({ where: { userId: { in: fx.userIds } } })
   await db.lineageRelationship.deleteMany({
     where: {
       OR: [{ fromNodeId: { in: fx.nodeIds } }, { toNodeId: { in: fx.nodeIds } }],
@@ -324,6 +360,26 @@ describe("lineage editor placement actions", () => {
       },
     })
     expect(audit).not.toBeNull()
+  })
+
+  it("assigns a member to a compatible visual group", async () => {
+    const result = await applyLineageMemberPlacementUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.treeEditorUserId,
+      input: {
+        treeId: fx!.treeId,
+        memberId: fx!.childBMemberId,
+        parentMemberId: fx!.rootMemberId,
+        visualGroupId: fx!.visualGroupId,
+        visualSortOrder: 6,
+        auditNote: "Assign child B to the test promotion cohort row.",
+      },
+    })
+
+    expect(result.memberId).toBe(fx!.childBMemberId)
+    const member = await db.lineageTreeMember.findUnique({ where: { id: fx!.childBMemberId } })
+    expect(member?.visualGroupId).toBe(fx!.visualGroupId)
   })
 
   it("blocks NODE_EDITOR from moving a member", async () => {
@@ -476,6 +532,40 @@ describe("lineage promoter relationship actions", () => {
       },
     })
     expect(audit).not.toBeNull()
+  })
+
+  it("updates an existing PROMOTED_BY relationship", async () => {
+    const first = await applyLineagePromotionRelationshipUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.treeEditorUserId,
+      input: {
+        treeId: fx!.treeId,
+        memberId: fx!.childBMemberId,
+        promoterMemberId: fx!.rootMemberId,
+        auditNote: "Initial promoter assignment before update.",
+      },
+    })
+
+    const second = await applyLineagePromotionRelationshipUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.treeEditorUserId,
+      input: {
+        treeId: fx!.treeId,
+        memberId: fx!.childBMemberId,
+        promoterMemberId: fx!.childAMemberId,
+        auditNote: "Update child B promoter to child A for hardening test.",
+      },
+    })
+
+    expect(second.relationshipId).toBe(first.relationshipId)
+    const relationship = await db.lineageRelationship.findUnique({
+      where: { id: second.relationshipId! },
+    })
+    expect(relationship?.fromNodeId).toBe(fx!.childANodeId)
+    expect(relationship?.verificationStatus).toBe("PENDING")
+    expect(relationship?.isVerified).toBe(false)
   })
 
   it("blocks NODE_EDITOR from changing promoter", async () => {
