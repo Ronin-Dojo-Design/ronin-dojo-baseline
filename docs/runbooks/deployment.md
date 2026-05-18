@@ -114,6 +114,18 @@ bunx vercel --prod
 [ ] Verify: database seeded (check admin panel)
 ```
 
+## Env Parity Guard (FS-0023)
+
+Before deploying, verify required env vars exist in both Production and Preview:
+
+```bash
+bun scripts/check-vercel-env-parity.ts
+```
+
+- Reports variable **names and scopes only** — never prints secret values.
+- Use `--dry-run` to list required vars from `env.ts` without calling Vercel.
+- Exit code 0 = all clear, exit code 1 = missing scopes detected.
+
 ## Subsequent Deploys
 
 Just push to `main`. Vercel handles everything:

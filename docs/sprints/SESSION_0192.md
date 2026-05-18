@@ -1,11 +1,11 @@
 ---
 title: "SESSION 0192 — Vercel Env Parity Guard"
 slug: session-0192
-type: session--open
-status: pending
+type: session--implement
+status: closed-quick
 created: 2026-05-17
 updated: 2026-05-17
-last_agent: codex-session-0191
+last_agent: copilot-session-0192
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0191.md
@@ -19,11 +19,11 @@ backlinks:
 
 ## Date
 
-Pending next bow-in.
+2026-05-17
 
 ## Operator
 
-Pending next bow-in.
+Brian + copilot-session-0192
 
 ## Goal
 
@@ -95,4 +95,61 @@ No env value changes, no Vercel dashboard mutations, no deployment changes, and 
 
 ## Status
 
-pending
+closed-quick
+
+## What landed
+
+- `scripts/check-vercel-env-parity.ts` — Bun script that parses required vars from `apps/web/env.ts` and compares against `vercel env ls` scopes. Reports names/scopes only, never values. Supports `--dry-run`.
+- Deployment runbook updated with "Env Parity Guard (FS-0023)" section and usage instructions.
+- Live check confirmed all 5 required vars present in both Production and Preview.
+
+## Files touched
+
+- `scripts/check-vercel-env-parity.ts` (new)
+- `docs/runbooks/deployment.md` (added Env Parity Guard section)
+- `docs/protocols/project-log.md` (SESSION_0192 entries)
+- `docs/sprints/SESSION_0192.md` (this file)
+
+## Decisions resolved
+
+- **Implementation path:** Live checker script using `vercel env ls` CLI (not API). Vercel CLI is installed and authenticated locally.
+- **Scope:** Script + runbook section. No CI integration this session.
+
+## Open decisions / blockers
+
+- Whether to add this check to CI (needs Vercel token as GitHub secret).
+- Whether to update FS-0023 status from `mitigated` to `closed` now that the guard exists.
+
+## Next session
+
+- **Goal:** TBD — check program-plan.md for next S6 priority.
+- **Inputs to read:** `docs/architecture/program-plan.md`, latest SESSION file.
+- **First task:** Bow-in, read plan, pick next task.
+
+## Task Log
+
+| Task ID | Status |
+| --- | --- |
+| SESSION_0192_TASK_01 | complete |
+| SESSION_0192_TASK_02 | complete |
+| SESSION_0192_TASK_03 | complete |
+
+## Review Log
+
+### SESSION_0192_REVIEW_01 — Doug security review
+
+- **Reviewed tasks:** TASK_01, TASK_02, TASK_03.
+- **Secret leakage check:** Script only reads `vercel env ls` output which shows "Encrypted" for all values. Variable names and scope labels are the only data surfaced.
+- **Dry-run verification:** `--dry-run` mode exits before any Vercel API call.
+- **Live verification:** All 5 required vars confirmed present in both Production and Preview scopes.
+- **Verdict:** Pass — no secrets exposed, guard works as designed.
+
+## Hostile close review
+
+- **Did the session expand scope?** No — script + runbook only, as planned.
+- **Are there uncommitted changes?** Pending git hygiene below.
+- **Is the project-log gate satisfied?** Yes — 3 task entries added.
+
+## ADR / ubiquitous-language check
+
+No new ADRs needed. No new domain terms introduced.

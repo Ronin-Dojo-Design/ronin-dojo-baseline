@@ -251,7 +251,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0189](../../sprints/SESSION_0189.md) | session--implement | closed-full |
 | [SESSION_0190](../../sprints/SESSION_0190.md) | session--implement | closed-full |
 | [SESSION_0191](../../sprints/SESSION_0191.md) | session--implement | closed-full |
-| [SESSION_0192](../../sprints/SESSION_0192.md) | session--open | pending |
+| [SESSION_0192](../../sprints/SESSION_0192.md) | session--implement | closed-quick |
 
 ## Protocols
 
