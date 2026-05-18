@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0196 — Listings Parity v1 (Techniques, Schools, Disciplines, Courses)"
 slug: session-0196
-type: session--open
-status: in-progress
+type: session--implement
+status: closed-full
 created: 2026-05-18
 updated: 2026-05-18
 last_agent: claude-session-0196
@@ -193,7 +193,7 @@ Per `petey-plan.md` rule 5: adjacent tech debt or ideas surfaced during executio
 
 ## Status
 
-in-progress
+closed-full
 
 ## Task Log
 
@@ -201,10 +201,10 @@ in-progress
 | --- | --- |
 | SESSION_0196_TASK_01 | complete |
 | SESSION_0196_TASK_02 | complete |
-| SESSION_0196_TASK_03a | pending |
+| SESSION_0196_TASK_03a | complete |
 | SESSION_0196_TASK_03b | complete |
-| SESSION_0196_TASK_04 | pending |
-| SESSION_0196_TASK_05 | pending |
+| SESSION_0196_TASK_04 | complete |
+| SESSION_0196_TASK_05 | complete |
 
 ## TASK_01 — Desi promotion proof
 
@@ -284,6 +284,111 @@ Not applicable — public read-only listing surfaces, no registration paths.
 
 **Handoff:** Cody owns all HIGH items and MEDIUM items 1–3 (chip overflow + skeleton + grid/empty). MEDIUM 4 (translations) lands in the same pass if cheap. LOW items defer to a follow-up session and pair with Petey on the domain-avatar / payload question.
 
+## What landed
+
+- Desi promoted to a Claude Code subagent at `.claude/agents/desi.md` (read-only tools; persona + 9-section output spec mirrors `docs/agents/desi.md`). Native discovery is session-start gated; in-session use today was via a `general-purpose` subagent with persona embedded inline. SESSION_0197 onward picks up the agent type natively.
+- Desi baseline review pass (Review pass 1) produced a 9-section structured audit with 4 HIGH + 4 MEDIUM + 4 LOW fix items and a clear Cody handoff.
+- TASK_03a (Cody A, commit `6a421a0`) — four `<Domain>Card` components tightened toward the `ToolCard` visual contract: hover-reveal description overlay (`group-hover:opacity-0` / `group-hover:opacity-100` crossfade) on techniques + schools + courses + disciplines cards; chip rows on techniques + schools + courses moved to `ShowMore(limit=2, size="xs", showMoreType="text")`; disciplines card flipped to `Card isRevealed` + `CardHeader wrap={false}` + truncated H4 + absolute-inset Link (a11y win — H4 stays the screen-reader landmark while the whole card stays clickable); outer `<Link>` wrap on disciplines removed; three-stat row moved behind the hover overlay; `DisciplineCardSkeleton` exported for reuse; "Instructor: Sensei" debug-looking caption reworded.
+- TASK_03b (Cody B, commit `4fef673`) — courses page wraps in `Suspense` with a new `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` trio (mirrors the technique trio; search + sort + pagination only, filter axes deferred per scope); `courseFilterParams` schema shell created (`q + sort + page + perPage`); disciplines list adopts `Grid` + `EmptyList` primitives; disciplines list-skeleton consumes `DisciplineCardSkeleton` inside `Grid`; technique/school/course empty-state copy routed through `useTranslations("common")("empty")` with a single shared `common.empty: "Nothing found."` bridge key in `messages/en/common.json` (per-domain copy deferred).
+- TASK_04 (Doug verification) — `pnpm --filter dirstarter typecheck` pass, `bun biome check .` clean across 952 files in `apps/web`, `bun test server/web/lineage` 58/58 pass (166 expect() calls; no regression from SESSION_0195 baseline). Branch `session-listings-parity-v1` pushed to origin; PR #31 opened against `main`; Vercel preview deploy SUCCESS; CodeRabbit review SUCCESS. PR is `CLEAN` / `MERGEABLE` and queued for owner squash-merge.
+- TASK_05 (Petey close) — this SESSION file finalized; `project-log.md` SESSION_0196 entries appended; `wiki/index.md` SESSION_0196 row added with `session--implement` / `closed-full`; `custom-component-inventory.md` updated for the four card-contract tightenings, the new course trio, and the new Disciplines section reflecting the flipped-to-`Card isRevealed` contract + `DisciplineCardSkeleton` export.
+
+## Files touched
+
+- `.claude/agents/desi.md` — new Claude Code subagent definition (Desi promotion).
+- `docs/sprints/SESSION_0196.md` — this file; Petey plan + Desi review pass + close content + JETTY frontmatter.
+- `apps/web/app/(web)/disciplines/_components/discipline-card.tsx` (TASK_03a) — flipped to `Card isRevealed` + absolute-inset Link; three-stat row behind hover overlay; new `DisciplineCardSkeleton` named export.
+- `apps/web/components/web/techniques/technique-card.tsx` (TASK_03a) — hover-reveal overlay + `ShowMore` chip row.
+- `apps/web/components/web/schools/school-card.tsx` (TASK_03a) — hover-reveal overlay + `ShowMore` chip row.
+- `apps/web/components/web/courses/course-card.tsx` (TASK_03a) — hover-reveal overlay + `ShowMore` chip row; enrollment/curriculum-item counts moved behind overlay.
+- `apps/web/app/(web)/courses/page.tsx` (TASK_03b) — Suspense + `CourseQuery` + `CourseListingSkeleton`.
+- `apps/web/components/web/courses/course-listing.tsx` (TASK_03b, new) — `FiltersProvider` + search + grid + pagination shell.
+- `apps/web/components/web/courses/course-query.tsx` (TASK_03b, new) — server-component data fetch shape.
+- `apps/web/components/web/courses/course-search.tsx` (TASK_03b, new) — search input + sort dropdown (no filter chips this session).
+- `apps/web/components/web/courses/course-list.tsx` (TASK_03b) — `useTranslations("common")("empty")` empty state.
+- `apps/web/server/web/courses/schema.ts` (TASK_03b, new) — `courseFilterParams` shell (`q + sort + page + perPage`; mirrors `toolFilterParams`).
+- `apps/web/app/(web)/disciplines/_components/discipline-list.tsx` (TASK_03b) — `Grid` + `EmptyList` primitives.
+- `apps/web/app/(web)/disciplines/_components/discipline-list-skeleton.tsx` (TASK_03b) — imports `DisciplineCardSkeleton`; wraps in `Grid`.
+- `apps/web/components/web/techniques/technique-list.tsx` (TASK_03b) — `useTranslations` empty state.
+- `apps/web/components/web/schools/school-list.tsx` (TASK_03b) — `useTranslations` empty state.
+- `apps/web/messages/en/common.json` (TASK_03b) — added `empty: "Nothing found."` shared bridge key.
+- `docs/protocols/project-log.md` — SESSION_0196 task plan + review + findings entries; `last_agent` bump.
+- `docs/knowledge/wiki/index.md` — new SESSION_0196 row; `last_agent` bump.
+- `docs/knowledge/wiki/custom-component-inventory.md` — Section 3 updated for the four card-contract tightenings and the new course trio; new Section 3a for Disciplines documenting the flipped contract + `DisciplineCardSkeleton` export.
+
+## Decisions resolved
+
+- Bringing all four listing surfaces to ToolListing parity in a single PR (not per-page PRs) — confirmed in the grill round; PR #31 is the single landing surface.
+- Pattern depth split: full kit for schools + techniques; card-grid only for disciplines + courses (filter axes deferred). Confirmed via Desi review and respected by both Cody subagents.
+- Card strategy: tighten existing domain cards toward the `ToolCard` visual contract; no shared `ListingCard` primitive extracted this session. Confirmed; both Cody appends honored the guardrail.
+- Desi sequencing: promote first, then review pass, then Cody. Confirmed; flow executed end-to-end.
+- Worktree plan: single feature branch `session-listings-parity-v1` off main with two sequential Cody subagents on disjoint files (not literal-clock-time parallel — disjoint-file guarantee preserved). Confirmed; both Cody commits clean.
+
+## Open decisions / blockers
+
+- **PR #31 awaiting owner squash-merge.** All checks green (Vercel SUCCESS, CodeRabbit SUCCESS, `CLEAN` / `MERGEABLE`). Doug verification comment posted at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/31#issuecomment-4479114056`.
+- **DisciplineCard inline count strings i18n migration** (deferred follow-up; pair with the empty-state per-domain translations work).
+- **SchoolCard hover overlay fallback when `description` is null** — `searchOrganizations` payload exposes `description / city / region / type / disciplines` only. Adding a phone/contact field to the payload is a follow-up (Petey-scoped, no schema change here).
+- **`courseFilterParams.sort` not consumed server-side** — `searchCourses` doesn't accept a `sort` arg. URL-tracked + UI-wired client-side only this session per scope guardrail. Wiring server-side `orderBy` from `sort` pairs with the deferred filter axes follow-up.
+- **`courses/page.tsx` intro count copy** (`{total} courses available`) dropped during Suspense migration. Replaced with static description ("Browse our curriculum and certification programs."). Reintroduce via a `<Stats>` row inside `CourseQuery` if launch-critical.
+- **Generic `common.empty` bridge key.** Per-domain copy (`"No techniques found"`, etc.) lands when domain namespaces are introduced; pair with the DisciplineCard inline-count i18n follow-up.
+- **Disciplines card location** (`_components/` → `components/web/disciplines/`) deferred (LOW Desi item) — useful when related-disciplines rails reuse the card.
+- **Leading visual / domain avatar** on all four cards (LOW Desi item) — payload doesn't carry `logoUrl` / `avatar` today; pairs with a payload-scope follow-up.
+- **Sort label translations** on technique-search + school-search (LOW Desi item) — inline English; route through `useTranslations` in the same follow-up as empty-state per-domain copy.
+
+## Reflections
+
+- **Desi promotion path:** the `.claude/agents/<name>.md` file is read at session start, so a freshly promoted agent type is not natively invocable in the same session it was promoted. Future sessions need this in mind when planning a "promote-then-use" sequence — the inline-embed-via-`general-purpose` workaround works but loses the durable agent-type benefits (transcript labeling, agent-specific tool sets). Setting up a session-start promotion check at bow-in for any expected new agents would be a small win.
+- **Grill-me discipline:** two rounds × four questions × one ratify question (9 decisions total) was enough to lock the plan with high confidence. Adding a third grill round when no axis was genuinely fuzzy would have been wasted token spend. The pre-emptive "Lock it / Lock with one change / More grilling" gate was the right shape for ratification.
+- **SESSION file on feature branch:** Cody A and Cody B both appended to `docs/sprints/SESSION_0196.md` on the feature branch (the Open decisions section). That's a deviation from the SESSION_0195 pattern (SESSION docs stay on main; PR feature branch only carries code). The recovery was clean (pull the file from the feature branch into main's working tree with `git checkout <branch> -- <file>`) but it sets up a likely SESSION_0196.md no-op or conflict at squash-merge time. Lesson: Cody prompts must explicitly say "Do not edit any file under `docs/sprints/`" — a tighter guardrail than the current "stay on disjoint files" rule.
+- **Sequential vs parallel subagents:** the plan called for "parallel subagents on disjoint files" but the on-disk worktree races at the index level made sequential safer. The disjoint-file guarantee was the substantive parallelism; clock-time parallelism would have required `isolation: "worktree"` + a manual merge step that adds complexity disproportionate to the savings. Worth noting that single-worktree sequential subagents do scale linearly in wall-time but trade off cleanly with merge-risk.
+- **Empty-state bridge key:** introducing `common.empty: "Nothing found."` rather than per-domain copy was a fast, reversible choice — gives the three surfaces a single localizable string today and a clear migration path tomorrow (per-domain namespaces replacing the bridge key). The instinct to defer a wider i18n namespace decision in a UI-parity lane was correct; protected the scope guard without sacrificing the MEDIUM Desi item.
+- **`courseFilterParams.sort` orphan:** wiring a client-side sort URL param without server-side consumption is a known short-term smell (visible Sort UI that doesn't change results unless the server query is re-derived from the URL). Flagged in Open decisions; today the smell is acceptable because the alternative (extending `searchCourses` signature) would balloon scope into the data layer. Lesson for the follow-up: orphan UI parameters should land with a paired "TODO surface" so they're hard to miss.
+
+## Hostile close review
+
+### SESSION_0196_REVIEW_01 — Hostile close review for listings parity v1
+
+- **Reviewed tasks:** SESSION_0196_TASK_01, SESSION_0196_TASK_02, SESSION_0196_TASK_03a, SESSION_0196_TASK_03b, SESSION_0196_TASK_04, SESSION_0196_TASK_05.
+- **Dirstarter docs check:** no Dirstarter baseline layer (project structure / Prisma / Better Auth / Stripe / storage / deploy / content / theming) was touched. This session is pure UI-parity work over four public listing surfaces using Dirstarter L1 primitives (`Card`, `CardHeader`, `H4`, `Link`, `Badge`, `ShowMore`) already in active use by the proven `ToolCard`. `Favicon` not adopted due to a payload gap (no `logoUrl` field on any of the four payloads) — flagged LOW for follow-up. No new ADR triggered.
+- **Sources:** `apps/web/components/web/tools/tool-card.tsx`, `tool-listing.tsx`, `tool-list.tsx`, `tool-search.tsx`; `apps/web/contexts/filter-context.tsx`; the four target card + page files; Desi persona doc; SESSION_0196 Petey plan + Desi review pass; Doug static gate outputs; GitHub PR #31 metadata (Vercel + CodeRabbit SUCCESS).
+- **Plan sanity:** Good. Grill rounds locked four binary decisions before any code; Desi review produced a prioritized fix list that Cody followed without scope-balloon; both Cody subagents stayed on disjoint files. PR #31 single-PR strategy matches the locked plan.
+- **Dirstarter compliance:** Aligned. Cards use existing Dirstarter primitives end-to-end. `Favicon` adoption deferred for a data-layer reason, not a Dirstarter bypass.
+- **Security:** Net neutral. Public read-only listing pages; no auth, no payments, no PII rendered. No new endpoints, no Prisma migration, no env var. PR push used standard origin push to a fresh branch.
+- **Data integrity:** Aligned. No schema change; `searchCourses` signature untouched; `courseFilterParams.sort` is client-side-only and flagged in Open decisions.
+- **Lifecycle proof:** Lineage test suite regression check passed (58/58 / 166 expect()); typecheck pass; biome clean across 952 files; Vercel preview deploy SUCCESS; CodeRabbit SUCCESS. Browser smoke deferred to owner during PR review since the preview deploy is publicly browsable at `ronin-dojo-baseline-git-s-36ce41-brian-scotts-projects-4841d4d6.vercel.app`.
+- **Verification honesty:** Each step records the exact command + outcome. Static gate outputs were copy-paste from terminal; PR + comment URLs are linked literally. No silent retries.
+- **Workflow honesty:** Bow-in, Graphify queries logged in SESSION file, Petey plan with stable task IDs, Desi review pass before Cody, isolated work per Cody on disjoint files, project-log + wiki index + custom-component-inventory updated, full-close evidence below.
+- **Verdict:** Pass. WORKFLOW 5.0 rubric expected score 9.5/10 (no Dirstarter alignment or data integrity cap triggered).
+- **Kaizen:** Cleanest improvement opportunity is the "Cody must not edit SESSION files" guardrail in the prompt — current session had to recover a SESSION_0196.md divergence between main and the feature branch via `git checkout <branch> -- <file>`. Add an explicit `docs/sprints/**` no-edit line to future Cody briefs.
+
+## ADR / ubiquitous-language check
+
+No new ADR needed.
+
+- The ToolCard visual-contract adoption across four domains is a pattern-reuse decision, not an architectural one. Existing precedent (techniques + schools already followed the `ToolListing`-shaped wiring) keeps this within "tighten existing primitives" rather than "introduce a new architectural pattern."
+- The `courseFilterParams` schema introduction mirrors `toolFilterParams` shape exactly — same nuqs-backed shape, same `q + sort + page + perPage` keys. Not a new architectural decision.
+- The `common.empty` bridge key is a localization stopgap with a documented migration path (per-domain namespaces) — not architectural.
+- No new domain terms introduced. "Domain card", "listing surface", "card contract" are descriptive references to existing patterns. Ubiquitous-language file does not need an update.
+- Component inventory updated: four card files (techniques/schools/courses/disciplines) with their tightened public contract; new course trio (`CourseListing`, `CourseListingSkeleton`, `CourseQuery`, `CourseSearch`); new Disciplines section reflecting the flipped `Card isRevealed` contract and `DisciplineCardSkeleton` named export.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `SESSION_0196.md` frontmatter updated atomically with body status (status `closed-full`, type `session--implement`, `last_agent: claude-session-0196`); `project-log.md` `last_agent` bumped to `claude-session-0196`; `wiki/index.md` `last_agent` bumped to `claude-session-0196`; `custom-component-inventory.md` `last_agent` bumped to `claude-session-0196` and `pairs_with` extended to include SESSION_0196. New `.claude/agents/desi.md` Claude Code subagent definition created. |
+| Backlinks/index sweep | `SESSION_0196.md` `pairs_with` covers SESSION_0195 + Desi agent doc + petey-plan + WORKFLOW_5.0 + custom-component-inventory; `custom-component-inventory.md` `pairs_with` now includes SESSION_0196. No orphan cross-references introduced. |
+| Wiki lint | Run after final commit; recorded in bow-out response. |
+| Kaizen reflection | `## Reflections` section present with six entries. |
+| Hostile close review | `SESSION_0196_REVIEW_01` present here and mirrored in `project-log.md`. |
+| Review & Recommend | Next session goal written below (Lineage v1 task selection resumes; or a follow-up listings-parity polish session if owner prefers the per-domain i18n + payload-field work first). |
+| Memory sweep | One operator-memory candidate identified for the Reflections kaizen point (Cody must-not-edit-SESSION-files guardrail). Logging decision: skip a new memory file; the lesson is already captured in this SESSION's Reflections and the Kaizen line of SESSION_0196_REVIEW_01. Existing `feedback_ronin_dojo_bash_cwd.md` memory still load-bearing and was honored. |
+| Next session unblock check | Fully unblocked. PR #31 is the queued owner-merge artifact; main is up to date locally; feature branch is pushed; no FS log / drift register entry blocks the next bow-in. |
+| Git hygiene | Branch `main` ahead of origin by the planning commit `721e21d` (+ this close commit, hash recorded in bow-out response); feature branch `session-listings-parity-v1` pushed to origin at `4fef673`; no orphan worktrees (single primary worktree at `/Users/brianscott/dev/ronin-dojo-app`). Close commit on main covers SESSION_0196 final state + project-log SESSION_0196 entries + wiki/index SESSION_0196 row + custom-component-inventory SESSION_0196 updates. |
+| Graphify update | Run after close commit on main; node/edge/community count recorded in bow-out response. |
+
 ## Next session
 
-(filled at close)
+- **Goal:** Pick the next lane from the WORKFLOW 5.0 session calendar. Default path: resume lineage v1 (whatever sits next after viewer polish + hardening tests already on `main`). Alternate path: a follow-up listings-parity polish session that consumes the Open decisions backlog from this session (per-domain i18n namespaces, payload phone/contact field for SchoolCard, server-side `sort` consumption in `searchCourses`, leading-visual / domain-avatar adoption, disciplines-card location move). Owner picks at bow-in.
+- **Inputs to read:** `docs/sprints/SESSION_0196.md` (this file — Open decisions section especially), `docs/protocols/WORKFLOW_5.0.md` session calendar, `docs/architecture/program-plan.md` lineage v1 section, latest `main` (commit hash recorded in bow-out response), PR #31 final merge state.
+- **First task:** If owner authorizes the listings-parity follow-up: re-run the Petey plan against the Open decisions in this SESSION's blockers list; each is already scoped to a single follow-up axis. If owner resumes lineage v1: open the calendar row for the next post-viewer-polish surface and confirm the lane/outcome before any code, then promote Desi-style UX review into the lineage v1 lane as appropriate.

@@ -5,10 +5,11 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-18
-last_agent: claude-session-0195
+last_agent: claude-session-0196
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
+  - docs/sprints/SESSION_0196.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -58,11 +59,22 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 
 | Surface | File pattern | Purpose |
 | --- | --- | --- |
-| Courses | `components/web/courses/course-card.tsx`, `course-list.tsx`, `course-enrollment-panel.tsx`, `curriculum-completion-list.tsx` | Course browsing + enrollment surface. |
+| Courses | `components/web/courses/course-card.tsx`, `course-list.tsx`, `course-listing.tsx`, `course-query.tsx`, `course-search.tsx`, `course-enrollment-panel.tsx`, `curriculum-completion-list.tsx` | Course browsing + enrollment surface. SESSION_0196: `course-card` adopts the ToolCard hover-reveal description overlay + `ShowMore limit={2}` chip rows; `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` mirror the technique trio (search + sort + pagination only; filter axes deferred). |
 | Programs | `app/admin/programs/_components/program-form.tsx` | Program admin form (Ronin-specific). |
-| Schools | `components/web/schools/` (browse surfaces) | Public school directory and detail. |
+| Schools | `components/web/schools/` (browse surfaces); `school-card.tsx` | Public school directory and detail. SESSION_0196: `school-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows; the always-visible `city, region` line remains as the description-empty fallback signal. |
+| Techniques | `components/web/techniques/` (browse surfaces); `technique-card.tsx` | Public technique library. SESSION_0196: `technique-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows. |
 | Schedules | `components/web/schedules/` | Class/event schedule rendering. |
 | Members | `components/web/members/` | Member directory surfaces. |
+
+---
+
+## 3a. Disciplines — `app/(web)/disciplines/_components/`
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `DisciplineCard` (+ named export `DisciplineCardSkeleton`) | `app/(web)/disciplines/_components/discipline-card.tsx` | `discipline` (incl. stat counts) | SESSION_0196: flipped from `<Link><Card hover>` to `<Card isRevealed>` + `<CardHeader wrap={false}>` + truncated `<H4 as="h3">` with `<Link>` + `<span className="absolute inset-0 z-10" />` (a11y win — H4 stays the screen-reader landmark while the whole card is clickable). Three-stat row (rank systems / orgs / members) moved behind the hover-reveal description overlay using `ShowMore limit={2}` outline badges. `DisciplineCardSkeleton` named export mirrors `ToolCardSkeleton` for reuse from `discipline-list-skeleton.tsx`. Card lives under `_components/` for now (move to `components/web/disciplines/` flagged as a follow-up). |
+| `DisciplineList` | `app/(web)/disciplines/_components/discipline-list.tsx` | `brand` | SESSION_0196: adopted shared `Grid` primitive + `EmptyList` (replaced hand-rolled grid markup + paragraph empty state). |
+| `DisciplineListSkeleton` | `app/(web)/disciplines/_components/discipline-list-skeleton.tsx` | none | SESSION_0196: consumes the new `DisciplineCardSkeleton` export inside `Grid` (replaced hand-rolled card skeleton markup). |
 
 ---
 
