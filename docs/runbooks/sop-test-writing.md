@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-17
-last_agent: codex-session-0190
+last_agent: codex-session-0191
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -610,6 +610,7 @@ it("creates audit log on transition", async () => {
 - `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
 - `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit
 - `server/web/attendance/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized check-in + audit
+- `server/web/billing/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, no-customer serverError, authorized Stripe portal redirect
 
 ### Query / integration tests
 
@@ -647,6 +648,7 @@ it("creates audit log on transition", async () => {
 - `scripts/smoke-school-ops-extended.ts`
 
 ### E2E (Playwright)
+
 - `e2e/smoke.spec.ts`
 - `e2e/admin/bracket.spec.ts`
 - `e2e/admin/scoring.spec.ts`

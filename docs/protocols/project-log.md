@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-17
-last_agent: codex-session-0190
+last_agent: codex-session-0191
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1528,3 +1528,28 @@ See `docs/sprints/SESSION_0188.md` § "Big Kaizen — lessons from the unplanned
 1. **Safety/security:** The auth and validation gates are now behaviorally proven through the wrapper for attendance check-in. The owner/student fixture also proves the target student must be an active member in the schedule discipline before check-in succeeds.
 2. **Preventable failed steps:** No new failed-step class surfaced. The main risk was repeating FS-0020, so Graphify queries ran before broad discovery and the selected files were verified by direct source reads.
 3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The test is fixture-scoped and does not change runtime behavior; remaining scale proof belongs to broader attendance query/control surfaces, not this wrapper test.
+
+### SESSION_0191 — Billing Safe-Action Wrapper
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0191_TASK_01 | Cody (subagent): add `apps/web/server/web/billing/actions.safe-action.test.ts` invoking a wrapped billing action through `userActionClient` end-to-end, preferring `createBillingPortalSession` unless direct source review shows a better proof target | complete |
+| SESSION_0191_TASK_02 | Doug + Petey: run focused billing wrapper test, combined wrapper regression, scoped typecheck, wiki lint, append SESSION_0191 to `sop-test-writing.md` §12 inventory, update project-log + wiki index, full close, git hygiene + post-commit Graphify | complete |
+
+**Notes:** Pre-staged by SESSION_0190 and activated at bow-in. Scope guard: no billing runtime changes, no Stripe SDK changes, no shared harness changes, and no env/deploy changes unless the wrapper test exposes a blocker that must be recorded for a later session.
+
+#### Review
+
+**SESSION_0191_REVIEW_01 - Billing wrapper coverage**
+
+- **Reviewed tasks:** SESSION_0191_TASK_01, SESSION_0191_TASK_02.
+- **Dirstarter docs check:** not applicable — local test file + local SOP inventory edit only.
+- **Sources:** `apps/web/server/web/billing/actions.ts` (`createBillingPortalSession` wrapper), `apps/web/server/web/billing/actions.test.ts` (Stripe portal mock precedent), `apps/web/server/web/billing/stripe-customers.ts` (`accountScope: "platform"` lookup), `apps/web/lib/test/safe-action-env.ts` (harness), `apps/web/server/web/attendance/actions.safe-action.test.ts` (latest wrapper precedent), `docs/runbooks/sop-test-writing.md` §5b/§12.
+- **Verdict:** Aligned. The new test invokes the real wrapped `createBillingPortalSession` export through `installSafeActionMocks`, proves unauthenticated short-circuit, proves Zod `validationErrors` on invalid `returnUrl`, proves no-customer `serverError`, and proves the authorized happy path dispatches the Stripe Customer Portal call and mocked redirect for the current-brand `StripeCustomer`. Isolated test returned 4 pass / 0 fail / 18 expect(); combined wrapper/helper regression returned 33 pass / 0 fail / 173 expect() across 9 files.
+- **WORKFLOW score:** 9.8/10. The wrapper rollout is correct, isolated, and closes the obvious school-ops wrapped-action sequence. Held below 10 because deploy-chain follow-ups from FS-0023 still need operational guardrail work.
+
+#### Kaizen
+
+1. **Safety/security:** Billing portal auth, validation, customer lookup, Stripe dispatch, and redirect behavior are now proven through the same wrapped path the UI invokes. The no-customer branch is intentionally covered as `serverError`, not only the Zod branch.
+2. **Preventable failed steps:** Graphify-first discovery avoided repeating FS-0020, and subagent writes stayed isolated to one test file while shared docs remained on the main thread.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The portal action is a single-user customer lookup plus Stripe API dispatch; broader commerce scale proof belongs to webhook/drift tests, not this wrapper file.
