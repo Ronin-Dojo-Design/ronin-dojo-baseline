@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-17
-last_agent: codex-session-0191
+updated: 2026-05-18
+last_agent: codex-session-0193
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1258,3 +1258,52 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 | SESSION_0192_TASK_03 | Doug + Petey: verify no secret output, record FS-0023 coverage, update deployment runbook, close session with evidence | complete |
 
 **Notes:** FS-0023 follow-up from SESSION_0188. Guard reports variable names/scopes only. Live check confirmed all 5 required vars present in both Production and Preview.
+
+### SESSION_0193 — PR 23-30 Merge Strategy and Verification
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0193_TASK_01 | Giddy: audit PR #23-#30 topology, merged/open/missing state, branch ancestry, and safe merge/retarget/delete strategy | complete |
+| SESSION_0193_TASK_02 | Cody + Doug: inspect actionable PR review/check issues and run scoped local verification for current `main` plus relevant pending heads | complete |
+| SESSION_0193_TASK_03 | Petey: consolidate findings, full-close session/project-log evidence, run post-hygiene Graphify update, commit, and push | complete |
+
+**Notes:** User-directed discovery session. PR #25 and #27 do not exist. Current `main` was fast-forwarded to PR #28 and then fixed locally for the Vercel/typecheck failure in `editor-actions.ts`. Pending PRs #23/#24/#29/#30 should not be merged automatically.
+
+#### Review
+
+##### SESSION_0193_REVIEW_01 — PR stack hostile close review
+
+- **Reviewed tasks:** SESSION_0193_TASK_01, SESSION_0193_TASK_02, SESSION_0193_TASK_03.
+- **Dirstarter docs check:** cached docs sufficient; no Dirstarter layer replacement or new implementation pattern.
+- **Sources:** `docs/protocols/merge-to-main.md`, `docs/agents/giddy.md`, `docs/protocols/hostile-close-review.md`, GitHub PR #23-#30 metadata/comments, Vercel inspect logs for `main`, #23, #24, #29, #30.
+- **Verdict:** Current `main` is locally green after the narrow `editor-actions.ts` JSON fix and Biome-only formatting cleanup. Pending PRs remain unready: #23/#24/#30 fail frozen-lockfile because their branches still carry old d3 lockfile state; #24 has an actionable UTC date-format P2; #29 is generated-test noise with a Neon advisory-lock Vercel failure and conflicts; #30 has a valid Resend API-shape P2 and should not be merged wholesale. The merge strategy is rebase/retarget #23 to current `main`, fold only safe #30 fixes, then handle #24 and optionally #29. No auto-merge without owner approval.
+- **Kaizen:** Safe and secure for the landed fix: no authz/data-access semantics changed, and Resend stayed untouched despite a tempting cherry-pick. Failed steps prevented: avoided blind `--theirs`/blind cherry-pick class from FS-0010 by inspecting PR #30 inline review and Vercel logs first. Confidence for current-main fix: 9.5 / 9.5 / 9.5 at 100 / 1,000 / 10,000 users; confidence for pending PR stack: 7 until rebase and retest.
+
+#### Findings
+
+##### SESSION_0193_FINDING_01 — PR #23/#30 are stale and should be consolidated before merge
+
+- **Severity:** high
+- **Task:** SESSION_0193_TASK_01
+- **Evidence:** #23 and #30 Vercel logs fail `pnpm install --frozen-lockfile` because branch lockfiles still include d3/d3-org-chart specifiers removed from `apps/web/package.json`; #30 also has a Codex P2 on `apps/web/services/resend.ts`.
+- **Impact:** Merging either branch as-is would keep CI red or import an unsafe Resend helper API.
+- **Required follow-up:** Rebase #23 onto current `main`, fold only safe #30 fixes, leave/rework the Resend change, rerun install/typecheck/Biome/tests, then retarget #23 to `main`.
+- **Status:** open
+
+##### SESSION_0193_FINDING_02 — PR #24 has UI conflict plus UTC date-format bug
+
+- **Severity:** medium
+- **Task:** SESSION_0193_TASK_01
+- **Evidence:** `gh pr view 24` reports `mergeable: CONFLICTING`; Codex inline review at `apps/web/components/web/lineage/lineage-tree-canvas.tsx:306` says promotion dates render a prior local day west of UTC.
+- **Impact:** Viewer polish can render wrong promotion dates and cannot merge cleanly.
+- **Required follow-up:** Rebase #24 onto current `main`, resolve canvas conflicts, pin date formatting to UTC, rerun typecheck/Biome/UI-relevant tests.
+- **Status:** open
+
+##### SESSION_0193_FINDING_03 — PR #29 generated tests should not merge directly
+
+- **Severity:** medium
+- **Task:** SESSION_0193_TASK_02
+- **Evidence:** #29 is CodeRabbit-authored, CodeRabbit skipped review, `mergeable: CONFLICTING`, and Vercel failed with Neon advisory-lock timeout `P1002`.
+- **Impact:** Direct merge adds review-noise tests on top of a conflicted branch without proving they are wanted or passing.
+- **Required follow-up:** Owner decides whether generated tests are useful; if yes, selectively port them into the cleaned #23 branch and rerun local verification.
+- **Status:** open

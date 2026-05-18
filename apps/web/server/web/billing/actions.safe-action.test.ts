@@ -16,11 +16,9 @@ installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 
-const portalSessionCreateMock = mock(
-  async (_params: { customer: string; return_url: string }) => ({
-    url: "https://billing.stripe.test/session_0191",
-  }),
-)
+const portalSessionCreateMock = mock(async (_params: { customer: string; return_url: string }) => ({
+  url: "https://billing.stripe.test/session_0191",
+}))
 const redirectState = { url: "" }
 
 mock.module("next/navigation", () => ({

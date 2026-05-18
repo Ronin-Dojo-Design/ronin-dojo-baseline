@@ -8,8 +8,8 @@
 import { describe, expect, it } from "bun:test"
 import {
   isLineageMemberInBranch,
-  wouldCreateLineageParentCycle,
   type LineageEditorGraphMember,
+  wouldCreateLineageParentCycle,
 } from "~/server/web/lineage/editor-graph"
 
 const members: LineageEditorGraphMember[] = [
