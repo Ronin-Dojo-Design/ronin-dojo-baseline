@@ -61,6 +61,7 @@ export function LineageTreeBoard({
         members={members}
         visualGroups={visualGroups}
         defaultRootMemberId={defaultRootMemberId}
+        selectedNodeId={selectedNodeId}
         onSelect={setSelectedNodeId}
       />
 
