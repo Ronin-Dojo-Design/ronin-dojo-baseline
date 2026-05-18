@@ -2,36 +2,68 @@
 
 import { useState } from "react"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
-import type { LineageNodeProfile, LineageRelationshipRow } from "~/server/web/lineage/payloads"
-import { LineageOrgChart } from "./lineage-org-chart"
+import type {
+  LineageNodeProfile,
+  LineageRelationshipRow,
+  LineageTreeMemberRow,
+  LineageVisualGroupRow,
+} from "~/server/web/lineage/payloads"
 import { LineageProfileDrawer } from "./lineage-profile-drawer"
+import { LineageTreeCanvas } from "./lineage-tree-canvas"
 
 /**
- * Client island that owns drawer state + selected node id, and renders the
- * tree alongside the drawer.
+ * Client island that owns drawer state + selected node id.
  *
- * Profile data for every visible node is pre-fetched on the server and
- * passed in via `profilesById` (small tree, ≤10 nodes — eager-load is the
- * lightest path that doesn't introduce a new data layer).
+ * v1 renders through `LineageTreeCanvas`, not d3-org-chart.
  *
- * Author: Cody / SESSION_0175 TASK_03.
+ * Supports two data paths:
+ * - preferred v1 path: LineageTreeMember + LineageVisualGroup payloads
+ * - legacy discipline-page path: bucketed rows + relationship edges
  */
 
 type LineageTreeBoardProps = {
-  rows: LineageRow[]
-  rootId: string
   profilesById: Record<string, LineageNodeProfile>
-  edges: LineageRelationshipRow[]
+
+  /**
+   * Preferred v1 source for `/lineage/[treeSlug]`.
+   */
+  members?: LineageTreeMemberRow[]
+  visualGroups?: LineageVisualGroupRow[]
+  defaultRootMemberId?: string | null
+
+  /**
+   * Legacy fallback source for discipline detail page.
+   */
+  rows?: LineageRow[]
+  rootId?: string
+  edges?: LineageRelationshipRow[]
 }
 
-export function LineageTreeBoard({ rows, rootId, profilesById, edges }: LineageTreeBoardProps) {
+export function LineageTreeBoard({
+  rows,
+  rootId,
+  profilesById,
+  edges,
+  members,
+  visualGroups,
+  defaultRootMemberId,
+}: LineageTreeBoardProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 
   const selectedProfile = selectedNodeId ? (profilesById[selectedNodeId] ?? null) : null
 
   return (
     <>
-      <LineageOrgChart rows={rows} rootId={rootId} edges={edges} onSelect={setSelectedNodeId} />
+      <LineageTreeCanvas
+        rows={rows}
+        rootId={rootId}
+        edges={edges}
+        members={members}
+        visualGroups={visualGroups}
+        defaultRootMemberId={defaultRootMemberId}
+        onSelect={setSelectedNodeId}
+      />
+
       <LineageProfileDrawer
         open={selectedNodeId !== null}
         onOpenChange={open => {
