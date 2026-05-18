@@ -3,6 +3,7 @@ import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
+import { ShowMore } from "~/components/common/show-more"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
 import type { CourseMany } from "~/server/web/courses/payloads"
@@ -14,6 +15,24 @@ type CourseCardProps = ComponentProps<typeof Card> & {
 const formatCertificationType = (value: string) => value.replace(/_/g, " ")
 
 const CourseCard = ({ course, ...props }: CourseCardProps) => {
+  const chips = [
+    course.discipline && {
+      key: `disc-${course.discipline.id}`,
+      label: course.discipline.name,
+      variant: "soft" as const,
+    },
+    course.rank && {
+      key: `rank-${course.rank.id}`,
+      label: course.rank.name,
+      variant: "outline" as const,
+    },
+  ].filter((chip): chip is { key: string; label: string; variant: "soft" | "outline" } =>
+    Boolean(chip),
+  )
+
+  const itemCount = course._count.curriculumItems
+  const enrolledCount = course._count.enrollments
+
   return (
     <Card isRevealed {...props}>
       <CardHeader wrap={false}>
@@ -29,21 +48,37 @@ const CourseCard = ({ course, ...props }: CourseCardProps) => {
         </Badge>
       </CardHeader>
 
-      <Stack size="lg" direction="column" className="relative size-full flex-1">
-        {course.description && (
-          <CardDescription className="min-h-10">{course.description}</CardDescription>
-        )}
+      <div className="relative size-full flex flex-col">
+        <Stack size="lg" direction="column" className="flex-1 duration-200 group-hover:opacity-0">
+          {course.description && (
+            <CardDescription className="min-h-10">{course.description}</CardDescription>
+          )}
 
-        <Stack size="sm" className="mt-auto flex-wrap">
-          {course.discipline && <Badge variant="soft">{course.discipline.name}</Badge>}
-          {course.rank && <Badge variant="outline">{course.rank.name}</Badge>}
-          <Badge variant="outline">
-            {course._count.curriculumItems} item
-            {course._count.curriculumItems === 1 ? "" : "s"}
-          </Badge>
-          <Badge variant="soft">{course._count.enrollments} enrolled</Badge>
+          <ShowMore
+            items={chips}
+            limit={2}
+            renderItem={chip => <Badge variant={chip.variant}>{chip.label}</Badge>}
+            size="xs"
+            showMoreType="text"
+            className="mt-auto flex-wrap"
+          />
         </Stack>
-      </Stack>
+
+        <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
+          <Stack size="lg" direction="column" className="size-full">
+            {course.description && (
+              <CardDescription className="line-clamp-3">{course.description}</CardDescription>
+            )}
+
+            <Stack size="xs" className="mt-auto flex-wrap">
+              <Badge variant="outline">
+                {itemCount} item{itemCount === 1 ? "" : "s"}
+              </Badge>
+              <Badge variant="soft">{enrolledCount} enrolled</Badge>
+            </Stack>
+          </Stack>
+        </div>
+      </div>
     </Card>
   )
 }

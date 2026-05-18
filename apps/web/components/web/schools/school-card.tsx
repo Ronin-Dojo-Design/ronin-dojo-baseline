@@ -5,6 +5,7 @@ import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
+import { ShowMore } from "~/components/common/show-more"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
 
@@ -23,6 +24,9 @@ type SchoolCardProps = ComponentProps<typeof Card> & {
 }
 
 export const SchoolCard = ({ school, ...props }: SchoolCardProps) => {
+  const location = [school.city, school.region].filter(Boolean).join(", ")
+  const disciplines = school.disciplines ?? []
+
   return (
     <Card isRevealed {...props}>
       <CardHeader wrap={false}>
@@ -40,29 +44,24 @@ export const SchoolCard = ({ school, ...props }: SchoolCardProps) => {
       </CardHeader>
 
       <div className="relative size-full flex flex-col">
-        <Stack size="lg" direction="column" className="flex-1">
-          {school.description && (
-            <CardDescription className="line-clamp-2 min-h-10">
-              {school.description}
-            </CardDescription>
-          )}
+        <Stack size="lg" direction="column" className="flex-1 duration-200 group-hover:opacity-0">
+          {location && <CardDescription className="min-h-10">{location}</CardDescription>}
 
-          {(school.city || school.region) && (
-            <CardDescription className="text-xs">
-              {[school.city, school.region].filter(Boolean).join(", ")}
-            </CardDescription>
-          )}
-
-          {school.disciplines && school.disciplines.length > 0 && (
-            <Stack size="sm" className="mt-auto flex-wrap">
-              {school.disciplines.map(d => (
-                <Badge key={d.discipline.name} variant="soft">
-                  {d.discipline.name}
-                </Badge>
-              ))}
-            </Stack>
-          )}
+          <ShowMore
+            items={disciplines}
+            limit={2}
+            renderItem={d => <Badge variant="soft">{d.discipline.name}</Badge>}
+            size="xs"
+            showMoreType="text"
+            className="mt-auto flex-wrap"
+          />
         </Stack>
+
+        {school.description && (
+          <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
+            <CardDescription className="line-clamp-3">{school.description}</CardDescription>
+          </div>
+        )}
       </div>
     </Card>
   )

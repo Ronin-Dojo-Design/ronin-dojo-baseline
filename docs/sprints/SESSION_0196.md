@@ -168,6 +168,8 @@ Promote Desi to a Claude Code subagent, then port four public listing surfaces t
 - **Shared card primitive (`ListingCard`):** if Cody surfaces extraction value during TASK_03a, it lands in `Open decisions / blockers` for next session — do not extract inline.
 - **PR title format:** `feat(listings): bring techniques/schools/disciplines/courses to tool-listing parity` unless owner prefers otherwise.
 - **No-out-of-bounds caveat:** owner has granted latitude; agents may surface adjacent fixes but must flag them in chat before extending scope mid-task.
+- **i18n migration for inline count strings (TASK_03a):** `DisciplineCard` stat badges (`"5 ranks"`, `"12 orgs"`, `"48 members"`) are rendered with inline English pluralization. Per Desi Section 9 MEDIUM (route through `useTranslations`), the formal i18n namespace migration is deferred — no existing namespace covers these strings. Pair with the empty-state translation work in the same follow-up.
+- **School card hover overlay falls back when `description` is null (TASK_03a):** `searchOrganizations` payload exposes `description / city / region / type / disciplines` only — no `phone` / `email` / `address` fields. The overlay therefore only fires when description exists; the always-visible `city, region` already surfaces the secondary signal. Adding a phone/contact field to the payload is a follow-up (Petey-scoped, no schema change here).
 
 ### Risks
 

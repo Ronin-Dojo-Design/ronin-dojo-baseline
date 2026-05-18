@@ -5,6 +5,7 @@ import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
+import { ShowMore } from "~/components/common/show-more"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
 import type { TechniqueMany } from "~/server/web/techniques/payloads"
@@ -14,6 +15,26 @@ type TechniqueCardProps = ComponentProps<typeof Card> & {
 }
 
 const TechniqueCard = ({ technique, ...props }: TechniqueCardProps) => {
+  const chips = [
+    technique.category && {
+      key: `cat-${technique.category}`,
+      label: technique.category.replace(/_/g, " "),
+      variant: "outline" as const,
+    },
+    technique.position && {
+      key: `pos-${technique.position}`,
+      label: technique.position.replace(/_/g, " "),
+      variant: "outline" as const,
+    },
+    technique.discipline && {
+      key: `disc-${technique.discipline.name}`,
+      label: technique.discipline.name,
+      variant: "soft" as const,
+    },
+  ].filter((chip): chip is { key: string; label: string; variant: "outline" | "soft" } =>
+    Boolean(chip),
+  )
+
   return (
     <Card isRevealed {...props}>
       <CardHeader wrap={false}>
@@ -32,23 +53,26 @@ const TechniqueCard = ({ technique, ...props }: TechniqueCardProps) => {
       </CardHeader>
 
       <div className="relative size-full flex flex-col">
-        <Stack size="lg" direction="column" className="flex-1">
-          {technique.description && (
-            <CardDescription className="line-clamp-2 min-h-10">
-              {technique.description}
-            </CardDescription>
+        <Stack size="lg" direction="column" className="flex-1 duration-200 group-hover:opacity-0">
+          {technique.discipline && (
+            <CardDescription className="min-h-10">{technique.discipline.name}</CardDescription>
           )}
 
-          <Stack size="sm" className="mt-auto flex-wrap">
-            {technique.category && (
-              <Badge variant="outline">{technique.category.replace(/_/g, " ")}</Badge>
-            )}
-            {technique.position && (
-              <Badge variant="outline">{technique.position.replace(/_/g, " ")}</Badge>
-            )}
-            {technique.discipline && <Badge variant="soft">{technique.discipline.name}</Badge>}
-          </Stack>
+          <ShowMore
+            items={chips}
+            limit={2}
+            renderItem={chip => <Badge variant={chip.variant}>{chip.label}</Badge>}
+            size="xs"
+            showMoreType="text"
+            className="mt-auto flex-wrap"
+          />
         </Stack>
+
+        {technique.description && (
+          <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
+            <CardDescription className="line-clamp-3">{technique.description}</CardDescription>
+          </div>
+        )}
       </div>
     </Card>
   )
