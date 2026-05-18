@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-18
-last_agent: claude-session-0196
+last_agent: claude-session-0197
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1429,3 +1429,47 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** No data loss — both sets of Open decisions are preserved in the close commit on main. Sets up a likely SESSION_0196.md no-op or minor conflict at squash-merge time of PR #31 (the file content on main may already match feature-branch content for the appended sections).
 - **Required follow-up:** Add an explicit "Do not edit any file under `docs/sprints/**`" guardrail to future Cody prompt templates. Captured in `SESSION_0196_REVIEW_01` Kaizen.
 - **Status:** mitigated in SESSION_0196 (close commit on main includes the Cody appends; PR #31 squash-merge can resolve a SESSION_0196.md diff cleanly if it surfaces).
+
+### SESSION_0197 — Listings Parity i18n Cleanup (Disciplines counts, per-domain empty states, sort labels)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0197_TASK_01 | Petey: squash-merge PR #31 to main; resolve anticipated `SESSION_0196.md` merge conflict; sync main; cut feature branch off post-merge main | complete |
+| SESSION_0197_TASK_02 | Desi (native Claude Code subagent now invocable): focused i18n-axis review on DisciplineCard inline plurals, per-domain empty copy, sort labels; produce 9-section structured audit with exact JSON skeletons for the four new namespaces | complete |
+| SESSION_0197_TASK_03 | Cody (single `general-purpose` subagent, sequential): create `disciplines.json` / `techniques.json` / `schools.json` / `courses.json`; migrate DisciplineCard counts to next-intl ICU plurals (`one`/`other`); swap empty-state namespace consumers from `common` to per-domain; route sort labels + search placeholders through `<domain>.sort.*` / `<domain>.filters.search_placeholder` | complete |
+| SESSION_0197_TASK_04 | Doug: static gate verification (typecheck + biome + lineage regression) + push + PR; wait for Vercel + CodeRabbit; post verification comment | complete |
+| SESSION_0197_TASK_05 | Petey + Giddy: full close — SESSION_0197, project-log, wiki index, custom-component-inventory, ADR/component sweep, drift/FS sweep, post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive: consume the i18n axis of the SESSION_0196 Open decisions backlog (items 1, 5, 8). PR #31 squash-merge gating SESSION_0197 work; PR #22 lineage editor actions explicitly out of scope. Use Graphify (not repo-wide grep) for navigation. /grill-me to mutual understanding before code. Single feature branch, single PR.
+
+**Result:** PR #31 squash-merged to main at `0606b38` after `--theirs` resolution of the anticipated `SESSION_0196.md` conflict and Vercel/CodeRabbit re-run green. Desi review pass produced 8 HIGH + 1 MEDIUM + 4 LOW deferrals with the four exact JSON skeletons. Cody landed `1a0e1a6` on `session-listings-parity-i18n` (4 new JSON files + 8 component edits; ICU plurals; `getTranslations` correctly substituted for the async server component `discipline-list.tsx`). Doug verification: typecheck + biome + lineage all green; PR #34 opened against main; Vercel SUCCESS + CodeRabbit SUCCESS; PR `CLEAN`/`MERGEABLE`, queued for owner squash-merge. Doug verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/34#issuecomment-4482706312`. Open decisions (deferred per scope guardrail): `common.empty` bridge removal, DisciplineCard `=0` plural branch, server-query lane (SchoolCard payload phone field, `searchCourses` sort consumption, courses intro count restoration), sort label tone alignment, leading-visual / domain-avatar adoption, disciplines card file move, PR #22 Vercel failure diagnosis.
+
+#### Review
+
+##### SESSION_0197_REVIEW_01 — Hostile close review for listings parity i18n cleanup
+
+- **Reviewed tasks:** SESSION_0197_TASK_01, SESSION_0197_TASK_02, SESSION_0197_TASK_03, SESSION_0197_TASK_04, SESSION_0197_TASK_05.
+- **Dirstarter docs check:** no Dirstarter baseline layer touched. `useTranslations` / `getTranslations` are existing next-intl L1 hooks; new per-domain JSON namespaces mirror the `tools.json` precedent exactly. Glob loader at `apps/web/lib/i18n.ts:13` auto-loads new files — no `i18n.ts` registration change required. No new ADR triggered.
+- **Sources:** `apps/web/messages/en/tools.json`, `apps/web/messages/en/common.json` (post PR #31 merge), `apps/web/lib/i18n.ts:13`, the eight card/list/search components touched, Desi persona doc, SESSION_0197 Petey plan + Desi review pass, Doug static gate outputs, GitHub PR #34 metadata (Vercel + CodeRabbit SUCCESS).
+- **Verdict:** Pass. Plan was locked via two grill rounds before any code. Desi review produced a focused fix list and Cody followed it without scope-balloon, including correct on-the-fly substitution of `getTranslations` for the async server component case. PR #34 single-PR strategy matches the locked plan. No Dirstarter alignment or data-integrity cap triggered; expected WORKFLOW 5.0 rubric score 9.5/10.
+- **Kaizen:** Make the `useTranslations` (client) vs `getTranslations` (async server) selection an explicit line in the Cody i18n-migration template — handled correctly this session by Cody, but a future agent without that judgment could ship a runtime error. Confidence for the PR at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5 (public read-only listings with no auth/payment/data-layer change).
+
+#### Findings
+
+##### SESSION_0197_FINDING_01 — PR #34 ready for owner squash-merge
+
+- **Severity:** low
+- **Task:** SESSION_0197_TASK_04
+- **Evidence:** Final `gh pr view 34` reports base `main`, head `session-listings-parity-i18n`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; Doug verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/34#issuecomment-4482706312`.
+- **Impact:** Technical implementation is complete and all checks are green, but merge-to-main protocol still gates the squash merge on owner approval.
+- **Required follow-up:** Owner reviews and squash-merges PR #34, or requests additional changes.
+- **Status:** queued for owner action (next session can pick up either the merge follow-up or move to the next WORKFLOW 5.0 lane).
+
+##### SESSION_0197_FINDING_02 — Server-query lane (items 2, 3, 4) still queued
+
+- **Severity:** low
+- **Task:** N/A (scope guardrail)
+- **Evidence:** SESSION_0196 Open decisions backlog items 2 (SchoolCard payload phone/contact field), 3 (`searchCourses` server-side `sort` consumption), 4 (courses `IntroDescription` count line restoration) are unchanged by SESSION_0197 per the Round 1 locked scope cluster.
+- **Impact:** Three i18n items shipped, three server-query items still represent visible launch-readiness gaps (SchoolCard hover overlay still falls back when `description` is null; course Sort UI is wired but server still ignores it; courses page has a static description where the count line used to live).
+- **Required follow-up:** Pull these three items as a single lane in a future session — they share a Prisma/server-query alignment check, so bundling beats sequencing.
+- **Status:** open follow-up; default next-session goal.

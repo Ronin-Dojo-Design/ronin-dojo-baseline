@@ -5,11 +5,12 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-18
-last_agent: claude-session-0196
+last_agent: claude-session-0197
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
   - docs/sprints/SESSION_0196.md
+  - docs/sprints/SESSION_0197.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -59,10 +60,10 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 
 | Surface | File pattern | Purpose |
 | --- | --- | --- |
-| Courses | `components/web/courses/course-card.tsx`, `course-list.tsx`, `course-listing.tsx`, `course-query.tsx`, `course-search.tsx`, `course-enrollment-panel.tsx`, `curriculum-completion-list.tsx` | Course browsing + enrollment surface. SESSION_0196: `course-card` adopts the ToolCard hover-reveal description overlay + `ShowMore limit={2}` chip rows; `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` mirror the technique trio (search + sort + pagination only; filter axes deferred). |
+| Courses | `components/web/courses/course-card.tsx`, `course-list.tsx`, `course-listing.tsx`, `course-query.tsx`, `course-search.tsx`, `course-enrollment-panel.tsx`, `curriculum-completion-list.tsx` | Course browsing + enrollment surface. SESSION_0196: `course-card` adopts the ToolCard hover-reveal description overlay + `ShowMore limit={2}` chip rows; `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` mirror the technique trio (search + sort + pagination only; filter axes deferred). SESSION_0197: `course-list` empty state reads from `useTranslations("courses")("empty")`; `course-search` sort labels routed through `useTranslations("courses.sort")` with `title_*` keys (mirrors sort value field); search placeholder routed through `useTranslations("courses.filters")("search_placeholder")`. |
 | Programs | `app/admin/programs/_components/program-form.tsx` | Program admin form (Ronin-specific). |
-| Schools | `components/web/schools/` (browse surfaces); `school-card.tsx` | Public school directory and detail. SESSION_0196: `school-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows; the always-visible `city, region` line remains as the description-empty fallback signal. |
-| Techniques | `components/web/techniques/` (browse surfaces); `technique-card.tsx` | Public technique library. SESSION_0196: `technique-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows. |
+| Schools | `components/web/schools/` (browse surfaces); `school-card.tsx` | Public school directory and detail. SESSION_0196: `school-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows; the always-visible `city, region` line remains as the description-empty fallback signal. SESSION_0197: `school-list` empty state reads from `useTranslations("schools")("empty")`; `school-search` sort labels routed through `useTranslations("schools.sort")` with `name_asc` / `name_desc` keys; search placeholder routed through `useTranslations("schools.filters")("search_placeholder")`. |
+| Techniques | `components/web/techniques/` (browse surfaces); `technique-card.tsx` | Public technique library. SESSION_0196: `technique-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows. SESSION_0197: `technique-list` empty state reads from `useTranslations("techniques")("empty")`; `technique-search` sort labels routed through `useTranslations("techniques.sort")` with `name_asc` / `name_desc` / `curriculum_order` keys; search placeholder routed through `useTranslations("techniques.filters")("search_placeholder")`. |
 | Schedules | `components/web/schedules/` | Class/event schedule rendering. |
 | Members | `components/web/members/` | Member directory surfaces. |
 
@@ -72,9 +73,29 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
-| `DisciplineCard` (+ named export `DisciplineCardSkeleton`) | `app/(web)/disciplines/_components/discipline-card.tsx` | `discipline` (incl. stat counts) | SESSION_0196: flipped from `<Link><Card hover>` to `<Card isRevealed>` + `<CardHeader wrap={false}>` + truncated `<H4 as="h3">` with `<Link>` + `<span className="absolute inset-0 z-10" />` (a11y win — H4 stays the screen-reader landmark while the whole card is clickable). Three-stat row (rank systems / orgs / members) moved behind the hover-reveal description overlay using `ShowMore limit={2}` outline badges. `DisciplineCardSkeleton` named export mirrors `ToolCardSkeleton` for reuse from `discipline-list-skeleton.tsx`. Card lives under `_components/` for now (move to `components/web/disciplines/` flagged as a follow-up). |
-| `DisciplineList` | `app/(web)/disciplines/_components/discipline-list.tsx` | `brand` | SESSION_0196: adopted shared `Grid` primitive + `EmptyList` (replaced hand-rolled grid markup + paragraph empty state). |
+| `DisciplineCard` (+ named export `DisciplineCardSkeleton`) | `app/(web)/disciplines/_components/discipline-card.tsx` | `discipline` (incl. stat counts) | SESSION_0196: flipped from `<Link><Card hover>` to `<Card isRevealed>` + `<CardHeader wrap={false}>` + truncated `<H4 as="h3">` with `<Link>` + `<span className="absolute inset-0 z-10" />` (a11y win — H4 stays the screen-reader landmark while the whole card is clickable). Three-stat row (rank systems / orgs / members) moved behind the hover-reveal description overlay using `ShowMore limit={2}` outline badges. `DisciplineCardSkeleton` named export mirrors `ToolCardSkeleton` for reuse from `discipline-list-skeleton.tsx`. Card lives under `_components/` for now (move to `components/web/disciplines/` flagged as a follow-up). SESSION_0197: count chips render via `useTranslations("disciplines")` + next-intl ICU plural keys `counts.{ranks,orgs,members}` using CLDR-canonical `one`/`other` rules; inline ternary plural strings removed. |
+| `DisciplineList` | `app/(web)/disciplines/_components/discipline-list.tsx` | `brand` | SESSION_0196: adopted shared `Grid` primitive + `EmptyList` (replaced hand-rolled grid markup + paragraph empty state). SESSION_0197: async server component; empty literal replaced with `getTranslations("disciplines")` → `t("empty")` (server-async hook, not the client `useTranslations`). |
 | `DisciplineListSkeleton` | `app/(web)/disciplines/_components/discipline-list-skeleton.tsx` | none | SESSION_0196: consumes the new `DisciplineCardSkeleton` export inside `Grid` (replaced hand-rolled card skeleton markup). |
+
+---
+
+## 3b. Listings i18n namespaces — `apps/web/messages/en/`
+
+> SESSION_0197 introduced per-domain message namespaces for the four public listing surfaces, mirroring the `tools.json` precedent. Glob loader at `apps/web/lib/i18n.ts:13` auto-loads any `messages/en/*.json` file by basename as the namespace key — no registration code change required when adding a new namespace.
+
+| Namespace | File | Keys |
+| --- | --- | --- |
+| `disciplines` | `apps/web/messages/en/disciplines.json` | `empty`, `counts.ranks` / `counts.orgs` / `counts.members` (next-intl ICU plural with CLDR `one`/`other` rules). |
+| `techniques` | `apps/web/messages/en/techniques.json` | `empty`, `filters.search_placeholder`, `sort.name_asc` / `sort.name_desc` / `sort.curriculum_order`. |
+| `schools` | `apps/web/messages/en/schools.json` | `empty`, `filters.search_placeholder`, `sort.name_asc` / `sort.name_desc`. |
+| `courses` | `apps/web/messages/en/courses.json` | `empty`, `filters.search_placeholder`, `sort.title_asc` / `sort.title_desc` (`title_*` keys mirror the sort value field; not `name_*`). |
+
+**Conventions for future per-domain namespaces:**
+
+- Keep keys 1:1 with the inline strings the components currently render — no speculative keys.
+- Use CLDR-canonical `one`/`other` ICU plural rules over `=1`/`=0`/`other` for any new plural keys (`tools.json` uses the older `=1`/`=0`/`other` style for noun-only tokens; the CLDR form is locale-safe for any plural-rule-rich language).
+- Client components consume via `useTranslations("<namespace>")` or `useTranslations("<namespace>.<sub>")`. Async server components must use `getTranslations` from `next-intl/server` instead.
+- The `common.empty: "Nothing found."` bridge key (added in SESSION_0196) stays as a fallback; removal is queued for the next listings cleanup session after all four domains are verified migrated in production.
 
 ---
 
