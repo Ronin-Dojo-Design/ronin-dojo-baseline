@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-13
-last_agent: codex-session-0158
+updated: 2026-05-17
+last_agent: claude-session-0188
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -419,6 +419,32 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Status:** open
 - **Follow-up:** Update `prisma-workflow.md` known issues — `migrate dev` shadow DB hang may be resolved in Prisma 7.x. Test and confirm. Also reconcile with Dirstarter L1 `prebuild: db:migrate deploy` pattern.
 
+### FS-0022 — pnpm 9 pre/post lifecycle hooks silently disabled on Vercel
+
+- **Session:** SESSION_0188 (continuation)
+- **Agent:** Claude (this session)
+- **Step failed:** `apps/web/package.json` declared `"prebuild": "bun run db:migrate deploy"`, intending Vercel builds to apply pending Prisma migrations before `next build`. Because pnpm 9 disables npm-style pre/post lifecycle hooks by default (require `enable-pre-post-scripts=true` in `.npmrc`), the hook had never fired on Vercel.
+- **SOP source:** Implicit — no SOP existed; the `package.json` script convention was inherited from npm-era assumptions.
+- **Root cause:** Default pnpm 9 behavior change. Unknown for how many sessions the `prebuild` hook was a no-op. SESSION_0186 added two `User` migrations (`add_user_placeholder_archival`, `backfill_placeholder_users`); they shipped in `schema.prisma` and the Prisma client started selecting `User.isPlaceholder` via better-auth's user-fallback-join, but the columns never reached the production DB.
+- **Impact:** HIGH — production login broken for ~30 minutes. `/api/auth/get-session` returned 500 with P2022 ColumnNotFound after PR #14 unblocked Vercel deploys and the latest Prisma client went live against an un-migrated prod DB.
+- **Corrective action:** Added `.npmrc` with `enable-pre-post-scripts=true` (PR #15). On the next Vercel rebuild, `prebuild` ran `prisma migrate deploy` against prod, both migrations applied, login resumed. No manual prod DB touch needed.
+- **Verification:** Next session must check Vercel build log shows the `> prebuild` step running `> bun run db:migrate deploy` before `> next build`. If any migration is added in a session, bow-out must verify Vercel build log shows the prebuild step ran successfully.
+- **Status:** mitigated
+- **Follow-up:** ADR_0001 documents the pnpm pre/post scripts decision and why we don't switch to inlining `migrate deploy` into the build script (see `docs/architecture/decisions/ADR_0001_pnpm_pre_post_scripts.md`).
+
+### FS-0023 — Vercel env vars scoped Production-only, breaking Preview deploys
+
+- **Session:** SESSION_0188 (continuation)
+- **Agent:** Claude (this session)
+- **Step failed:** Five env vars (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL`, `RESEND_API_KEY`) existed in the Vercel project but were only attached to the Production environment. Preview builds for every PR failed `@t3-oss/env-nextjs` validation at module load time with `Invalid environment variables: ... expected string, received undefined`.
+- **SOP source:** Implicit — no SOP exists for "every Vercel env var must be attached to Production + Preview unless explicitly different per-env." Adding via Vercel UI defaults to Production only when the user clicks save without checking the Preview box.
+- **Root cause:** Vercel UX. When adding env vars 4 days ago, the user did not realize the Preview checkbox was unchecked. Preview deploys silently failed for every PR since.
+- **Impact:** MEDIUM — Vercel preview never went green on any PR for ~4 days. Masked further failures (lockfile, TS errors) until install/typecheck advanced. Slowed PR review cycle.
+- **Corrective action:** User extended each of the five env vars to also apply to Preview environment via Vercel dashboard. PR previews now build with the same auth/site config as Production.
+- **Verification:** At bow-out, if a new env var was added to `apps/web/env.ts` this session, the SESSION file must record which Vercel environments (Production + Preview + Development) it was attached to.
+- **Status:** mitigated
+- **Follow-up:** Consider adding a script `scripts/check-vercel-env-parity.ts` that uses the Vercel REST API to compare env var presence across Production vs Preview and warns on drift. Tracked as **SESSION_0189 follow-up `vercel-env-parity-check`**.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.
@@ -438,3 +464,7 @@ Read this section at bow-in instead of skimming all 16 entries.
 ### Pattern 4: Git operation footguns (FS-0010 → FS-0011 → FS-0012 → FS-0013)
 
 **4 occurrences** in one session (SESSION_0034). Root cause: first time running multi-branch rebase in automated context. All mitigated via `merge-to-main.md`. **Current status: mitigated, low recurrence risk.**
+
+### Pattern 5: Deploy chain drift — config + lockfile + migrations + env all desynced (FS-0022 → FS-0023 + lockfile gap)
+
+**1 incident producing 4 chained failures (SESSION_0188).** Root cause: multiple silent failures (lockfile out-of-sync, pnpm pre/post hooks disabled, env vars scoped wrong, migrations queued) were each individually harmless until one fix exposed the next. Each linear repair surfaced another buried failure. **Current status: mitigated for this incident; bow-out checklist updated.** Future at bow-out, must verify the latest preview/production Vercel deploy is `Ready` (not `Error`) before declaring closed. ADR_0001 codifies the pnpm pre/post scripts decision. Future env-var additions must record Vercel env scope in the SESSION file.

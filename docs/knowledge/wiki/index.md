@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-17
 author: Brian + Copilot
-last_agent: claude-session-0188
+last_agent: claude-session-0188-addendum
 ---
 
 # LLM Wiki Index
@@ -107,6 +107,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0014 Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | proposed |
 | [ADR 0015 Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
 | [ADR 0016 Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
+| [ADR 0017 Enable pnpm pre/post lifecycle scripts](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) | decision | accepted |
 
 ## Sessions
 
