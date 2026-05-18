@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-17
-last_agent: claude-session-0189
+last_agent: codex-session-0190
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -19,6 +19,7 @@ backlinks:
 ## Purpose
 
 Document the repeatable test patterns in this repo so:
+
 - agents and humans write tests that match existing conventions
 - mock surfaces stay minimal and consistent
 - fixture setup/teardown patterns are copy-paste reliable
@@ -593,6 +594,7 @@ it("creates audit log on transition", async () => {
 ## 12. Existing test inventory
 
 ### Action tests (bun:test, real DB, mocked seams)
+
 - `server/web/lead/actions.test.ts` — lead lifecycle + enrollment + family + waiver gates
 - `server/web/schedule/actions.test.ts` — schedule CRUD + audit log proof
 - `server/web/attendance/actions.test.ts` — attendance/check-in gates
@@ -607,8 +609,10 @@ it("creates audit log on transition", async () => {
 - `server/web/lineage/node-profile-actions.safe-action.test.ts` — `userActionClient` chain: unauth, authorized NODE_EDITOR
 - `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
 - `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit
+- `server/web/attendance/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized check-in + audit
 
 ### Query / integration tests
+
 - `server/web/disciplines/queries.integration.test.ts` — discipline query integration
 - `server/web/entitlements/queries.integration.test.ts` — entitlement query integration
 - `server/admin/tournaments/weigh-in.integration.test.ts` — weigh-in lifecycle
@@ -619,6 +623,7 @@ it("creates audit log on transition", async () => {
 - `server/web/techniques/queries.test.ts` — technique queries
 
 ### Specialized tests
+
 - `server/web/tournaments/queries.brand-isolation.test.ts` — cross-brand isolation proof
 - `server/web/schedule/materialize.concurrency.test.ts` — schedule materialization concurrency
 - `server/web/tournaments/register.concurrency.test.ts` — registration concurrency
@@ -631,6 +636,7 @@ it("creates audit log on transition", async () => {
 - `lib/public-media-url.test.ts` — utility function
 
 ### Smoke scripts (standalone, own PrismaClient)
+
 - `scripts/smoke-attendance.ts`
 - `scripts/smoke-entitlements.ts`
 - `scripts/smoke-lead-lifecycle.ts`
