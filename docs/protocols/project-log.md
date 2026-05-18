@@ -506,50 +506,32 @@ Three sections:
 | SESSION_0086_TASK_02 | SESSION_0086 | Tournament ops (UI smoke) | Cody + Desi worker | Refunded-paid customer notice: when `registered=true` resolves to an existing `CANCELLED`/`REFUNDED` Registration, show rejected/refunded copy instead of the success banner; display persisted cancelled/refunded state without offering an impossible re-registration form | Tournament detail/RegisterButton UI updated; `registration-notice.test.tsx` covers `CANCELLED`/`REFUNDED`, success, and processing copy; UI test passes | landed | SESSION_0086_REVIEW_01 |
 | SESSION_0086_TASK_03 | SESSION_0086 | Tournament ops (refund tests) | Cody + Doug worker | Add cancel/refund regression tests around `cancelRegistration`: paid Registration refunds by stored `stripePaymentIntentId`, free Registration cancels without refund, paid Registration missing PaymentIntent fails without mutation | `register.concurrency.test.ts` asserts refund mock calls and DB state for paid/free/error branches; test file passes 6/6 | landed | SESSION_0086_REVIEW_01 |
 | SESSION_0086_TASK_04 | SESSION_0086 | Close | Petey + Doug (Codex) | Integrate worker patches, run focused tests/typecheck/wiki-lint, append SESSION_0086 review, and record close evidence/worktree cleanup status | Focused tests pass; Biome clean; typecheck has only pre-existing unrelated errors; 0086 worktrees removed; SESSION_0086 closed-full | landed | SESSION_0086_REVIEW_01 |
-| SESSION_0111_TASK_01 | SESSION_0111 | Create merch seed script
 
-- **ID:** SESSION_0111_TASK_01
-- **Owner:** Cody
-- **Session:** SESSION_0111
-- **Date:** 2026-05-09
-- **Done criteria:** Seed script creates PricingPlan rows with `metadata.source = "tuffbuffs-merch"`.
-- **Status:** landed
-- **Verification:** 24 PricingPlan rows created. Idempotent on re-run.
+---
 
-### SESSION_0111_TASK_02 — Create merch query functions
+### SESSION_0111 — Merch Catalog (DB-Driven)
 
-- **ID:** SESSION_0111_TASK_02
-- **Owner:** Cody
-- **Session:** SESSION_0111
-- **Date:** 2026-05-09
-- **Done criteria:** `server/web/merch/queries.ts` with findMerchProducts, findMerchProductById, getMerchMetadata.
-- **Status:** landed
-- **Verification:** Functions compile and return typed merch product data.
+**Date:** 2026-05-09
+**Agent:** Cody
+**Type:** session--implement
 
-### SESSION_0111_PHASE_02 — Merch store page at /merch
+#### Task Plan
 
-- **ID:** SESSION_0111_PHASE_02
-- **Owner:** Cody
-- **Session:** SESSION_0111
-- **Date:** 2026-05-09
-- **Done criteria:** /merch route renders DB-driven merch catalog with category tabs and product cards.
-- **Status:** landed
-- **Verification:** Type-check clean. L1 components used exclusively.
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0111_TASK_01 | Merch seed script — creates PricingPlan rows with `metadata.source = "tuffbuffs-merch"` | ✅ done |
+| SESSION_0111_TASK_02 | Merch query functions — `findMerchProducts`, `findMerchProductById`, `getMerchMetadata` in `server/web/merch/queries.ts` | ✅ done |
+| SESSION_0111_PHASE_02 | Merch store page at `/merch` — DB-driven catalog with category tabs and product cards | ✅ done |
+| SESSION_0111_PHASE_04 | Merch catalog cleanup — product data inlined into seed script, `merch-catalog.ts` deleted | ✅ done |
 
-### SESSION_0111_PHASE_04 — Merch catalog cleanup
+**Result:** All phases landed. Merch catalog fully DB-driven. Store page uses L1 components. Seed script self-contained. 24 PricingPlan rows created (idempotent on re-run). Type-check clean.
 
-- **ID:** SESSION_0111_PHASE_04
-- **Owner:** Cody
-- **Session:** SESSION_0111
-- **Date:** 2026-05-09
-- **Done criteria:** Product data inlined into seed script. merch-catalog.ts deleted.
-- **Status:** landed
-- **Verification:** Zero remaining importers. Type-check clean.
+#### Review
 
-### SESSION_0111_REVIEW_01 — Full close review
+##### SESSION_0111_REVIEW_01 — Full close review
 
-**Reviewed tasks:** SESSION_0111_TASK_01, SESSION_0111_TASK_02, SESSION_0111_PHASE_02, SESSION_0111_PHASE_04
-**Verdict:** All phases landed. Merch catalog fully DB-driven. Store page uses L1 components. Seed script self-contained. Kaizen aggregate: 9.
+- **Reviewed tasks:** SESSION_0111_TASK_01, SESSION_0111_TASK_02, SESSION_0111_PHASE_02, SESSION_0111_PHASE_04
+- **Verdict:** All phases landed. Merch catalog fully DB-driven. Store page uses L1 components. Seed script self-contained. Kaizen aggregate: 9.
 
 ### SESSION_0112_TASK_01 — Create Stripe Products + Prices for merch items
 
@@ -814,7 +796,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0139_REVIEW_01 — Hostile Close Review of 0139**
+##### SESSION_0139_REVIEW_01 — Hostile Close Review of 0139
 
 - **Reviewed tasks:** SESSION_0139_TASK_01
 - **Dirstarter docs check:** not applicable — planning-only session, no code written
@@ -841,7 +823,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0140_REVIEW_01 — Hostile Close Review of 0140**
+##### SESSION_0140_REVIEW_01 — Hostile Close Review of 0140
 
 - **Reviewed tasks:** SESSION_0139_TASK_02, TASK_03, TASK_04, TASK_05
 - **Dirstarter docs check:** Admin CRUD routing pattern (ADR 0012) followed. L1 components used throughout.
@@ -868,7 +850,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0142_REVIEW_01 — Hostile Close Review of 0142**
+##### SESSION_0142_REVIEW_01 — Hostile Close Review of 0142
 
 - **Reviewed tasks:** SESSION_0142_TASK_01, TASK_02, TASK_03, TASK_04
 - **Dirstarter docs check:** All L1 components used. ComboboxSelector reuses Popover + Command (L1). Lead form raw `<select>` replaced with L1 Select + ComboboxSelector.
@@ -975,7 +957,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0149_REVIEW_01 — Hostile Close Batch Review: Sessions 0147–0149**
+##### SESSION_0149_REVIEW_01 — Hostile Close Batch Review: Sessions 0147–0149
 
 - **Reviewed tasks:** All tasks from SESSION_0147, 0148, 0149
 - **Dirstarter docs check:** cached docs sufficient — no Dirstarter-owned layers touched
@@ -1029,7 +1011,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0150_REVIEW_01 — Full Close Review**
+##### SESSION_0150_REVIEW_01 — Full Close Review
 
 - **Reviewer:** Giddy + Doug (hostile close)
 - **Dirstarter docs check:** Not applicable — no L1 layers touched
@@ -1087,7 +1069,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0152_REVIEW_01 — Full Close Review**
+##### SESSION_0152_REVIEW_01 — Full Close Review
 
 - **Reviewer:** Giddy + Doug (hostile close)
 - **Dirstarter docs check:** Checked `dirstarter.com/docs/database/prisma` — confirmed both `db push` and `migrate dev` are valid L1 workflows
@@ -1097,7 +1079,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Findings
 
-**SESSION_0178_FINDING_01 - Full app typecheck still fails outside lineage**
+##### SESSION_0178_FINDING_01 - Full app typecheck still fails outside lineage
 
 - **Severity:** medium
 - **Task:** SESSION_0178_TASK_03
@@ -1106,7 +1088,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Required follow-up:** Dedicated typecheck debt session or fix the existing dependency/type mismatches when those surfaces are next touched.
 - **Status:** open
 
-**SESSION_0178_FINDING_02 - Global seed is not idempotent on existing DB**
+##### SESSION_0178_FINDING_02 - Global seed is not idempotent on existing DB
 
 - **Severity:** low
 - **Task:** SESSION_0178_TASK_03
@@ -1115,7 +1097,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Required follow-up:** Make `prisma/seed.ts` idempotent or document that it is reset-only.
 - **Status:** open
 
-**SESSION_0178_FINDING_03 - No lineage adapter tests exist yet**
+##### SESSION_0178_FINDING_03 - No lineage adapter tests exist yet
 
 - **Severity:** medium
 - **Task:** SESSION_0178_TASK_03
@@ -1124,7 +1106,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Required follow-up:** Add lineage server read-model and adapter tests before public viewer changes.
 - **Status:** open
 
-## SESSION 0179 - Lineage Server Read Model + Tree Adapter Tests
+### SESSION 0179 - Lineage Server Read Model + Tree Adapter Tests
 
 **Date:** 2026-05-16
 **Sprint:** S6
@@ -1145,7 +1127,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Review
 
-**SESSION_0179_REVIEW_01 - Full Close Review**
+##### SESSION_0179_REVIEW_01 - Full Close Review
 
 - **Reviewed tasks:** SESSION_0179_TASK_01, SESSION_0179_TASK_02, SESSION_0179_TASK_03.
 - **Dirstarter docs check:** live docs sufficient — checked 2026-05-16 at bow-in against `https://dirstarter.com/docs/database/prisma`. No re-check at close; this slice reuses the documented Prisma `select`-with-payload + `"use cache"` + `cacheTag` + `cacheLife` pattern that SESSION_0175 already established in this module.
@@ -1158,7 +1140,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 #### Findings
 
-**SESSION_0179_FINDING_01 - Dangling primaryVisualParentMemberId after visibility filtering**
+##### SESSION_0179_FINDING_01 - Dangling primaryVisualParentMemberId after visibility filtering
 
 - **Severity:** medium
 - **Task:** SESSION_0180_TASK_03
@@ -1167,7 +1149,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Required follow-up:** In `materializeLineageTreeResult`, build a `Set<string>` of surviving member ids and null any `primaryVisualParentMemberId` not in it. Add a unit test with a RESTRICTED-parent-of-PUBLIC-child fixture and assert the surviving child's parent ref is `null`. Do this before any UI consumer is built against `LineageTreePublicResult`.
 - **Status:** open
 
-**SESSION_0179_FINDING_02 - visualGroup.parentMemberId not validated against surviving members**
+##### SESSION_0179_FINDING_02 - visualGroup.parentMemberId not validated against surviving members
 
 - **Severity:** low
 - **Task:** SESSION_0180_TASK_03
@@ -1176,7 +1158,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 - **Required follow-up:** Null `visualGroup.parentMemberId` when the referenced member is not in the surviving set; cover with a unit test. Bundle with the FINDING_01 fix.
 - **Status:** open
 
-**SESSION_0179_FINDING_03 - "PROMOTED_BY orientation" test name overclaims coverage**
+##### SESSION_0179_FINDING_03 - "PROMOTED_BY orientation" test name overclaims coverage
 
 - **Severity:** low
 - **Task:** SESSION_0179_TASK_02
@@ -1189,7 +1171,7 @@ Zero failed steps across 5 sessions — the arc was clean. The Resend DNS propag
 
 SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESSION_0179_REVIEW_01. As of `bun test server/web/lineage/queries.test.ts` on 2026-05-16, 7 lineage adapter tests pass (4 DB-backed, 3 pure-TS) covering the tree-by-slug read model. Status: closed by SESSION_0179_REVIEW_01. Original entry preserved above per Rule 5 (append-only).
 
-## SESSION 0180 - Lineage Materializer Hardening + ACL Viewer Scope
+### SESSION 0180 - Lineage Materializer Hardening + ACL Viewer Scope
 
 **Date:** 2026-05-16
 **Sprint:** S6
@@ -1211,7 +1193,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 
 #### Review
 
-**SESSION_0180_REVIEW_01 - Full Close Review**
+##### SESSION_0180_REVIEW_01 - Full Close Review
 
 - **Reviewed tasks:** SESSION_0180_TASK_01, SESSION_0180_TASK_02, SESSION_0180_TASK_03, SESSION_0180_TASK_04.
 - **Dirstarter docs check:** No re-check at close. Live docs verified 2026-05-16 at SESSION_0179 bow-in against `https://dirstarter.com/docs/database/prisma`; this session reuses the same documented Prisma `select`-with-payload + `"use cache"` + `cacheTag` + `cacheLife` patterns for the public path. The viewer-scoped path uses React `cache()` per `docs/architecture/decisions/0010-cache-strategy.md`.
@@ -1224,7 +1206,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 
 #### Findings
 
-**SESSION_0180_FINDING_01 - Viewer path issues two sequential DB reads**
+##### SESSION_0180_FINDING_01 - Viewer path issues two sequential DB reads
 
 - **Severity:** medium
 - **Task:** SESSION_0180_TASK_03
@@ -1233,7 +1215,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Required follow-up:** Either (a) include `lineageNodes` filtered by `viewer.userId` in the tree query and resolve owner status from the joined result, or (b) pre-resolve the viewer's `LineageNode.id` at the page boundary and pass it through. Pick (b) if list views ever batch tree fetches.
 - **Status:** open
 
-**SESSION_0180_FINDING_02 - LineageTreeAccess grants not consulted by viewer-scoped read**
+##### SESSION_0180_FINDING_02 - LineageTreeAccess grants not consulted by viewer-scoped read
 
 - **Severity:** low
 - **Task:** SESSION_0180_TASK_03
@@ -1242,7 +1224,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Required follow-up:** When the access-grant admin UI lands (editor-route session), add a `LineageTreeAccess` lookup to `getLineageTreeBySlugForViewer` so explicit grants extend the scope.
 - **Status:** open
 
-**SESSION_0180_FINDING_03 - Viewer wire-up has no DB-backed integration coverage**
+##### SESSION_0180_FINDING_03 - Viewer wire-up has no DB-backed integration coverage
 
 - **Severity:** low
 - **Task:** SESSION_0180_TASK_02 + TASK_03
@@ -1251,7 +1233,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Required follow-up:** Add a DB-backed integration test in SESSION_0181 with three fixtures: unauthenticated reader (sees PUBLIC only), authenticated non-owner reader (sees PUBLIC + UNLISTED), authenticated owner reader (sees PUBLIC + UNLISTED + RESTRICTED). Should slot in alongside the existing `getLineageTreeBySlug` describe block.
 - **Status:** open
 
-## SESSION 0181 - Lineage Public Viewer Route + Viewer Integration Test
+### SESSION 0181 - Lineage Public Viewer Route + Viewer Integration Test
 
 **Branch:** `session-0181-lineage-public-viewer-route`
 **Date:** 2026-05-16
