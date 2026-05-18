@@ -46,6 +46,17 @@ type EditorVisualGroup = {
   parentMemberId: string | null
 }
 
+type RelationshipAuditSnapshot = {
+  id: string
+  fromNodeId: string
+  toNodeId: string
+  rankAwardId: string | null
+  startedAt: string | null
+  endedAt: string | null
+  isVerified: boolean
+  verificationStatus: string
+}
+
 export const LINEAGE_EDITOR_ERROR = {
   TREE_NOT_FOUND: "Tree not found or does not belong to this brand.",
   MEMBER_NOT_FOUND: "Member is not part of this lineage tree.",
@@ -89,6 +100,32 @@ function hasTreeEditorGrant(grants: EditorGrant[]) {
   return grants.some(grant => grant.role === "TREE_ADMIN" || grant.role === "TREE_EDITOR")
 }
 
+function relationshipAuditSnapshot(
+  relationship: {
+    id: string
+    fromNodeId: string
+    toNodeId: string
+    rankAwardId: string | null
+    startedAt: Date | null
+    endedAt: Date | null
+    isVerified: boolean
+    verificationStatus: string
+  } | null,
+): RelationshipAuditSnapshot | null {
+  if (!relationship) return null
+
+  return {
+    id: relationship.id,
+    fromNodeId: relationship.fromNodeId,
+    toNodeId: relationship.toNodeId,
+    rankAwardId: relationship.rankAwardId,
+    startedAt: relationship.startedAt?.toISOString() ?? null,
+    endedAt: relationship.endedAt?.toISOString() ?? null,
+    isVerified: relationship.isVerified,
+    verificationStatus: relationship.verificationStatus,
+  }
+}
+
 function assertPlacementEditorAccess({
   grants,
   members,
@@ -102,20 +139,24 @@ function assertPlacementEditorAccess({
   relatedMemberIds: string[]
   nextParentMemberId: string | null
 }) {
+  if (grants.length === 0) {
+    throw new Error(LINEAGE_EDITOR_ERROR.EDITOR_ACCESS_REQUIRED)
+  }
+
   if (hasTreeEditorGrant(grants)) return
 
-  if (grants.some(grant => grant.role === "NODE_EDITOR")) {
+  const branchGrants = grants.filter(
+    (grant): grant is EditorGrant & { rootMemberId: string } =>
+      grant.role === "BRANCH_EDITOR" && Boolean(grant.rootMemberId),
+  )
+
+  if (branchGrants.length === 0 && grants.some(grant => grant.role === "NODE_EDITOR")) {
     throw new Error(LINEAGE_EDITOR_ERROR.NODE_EDITOR_CANNOT_REPARENT)
   }
 
   if (nextParentMemberId === null && editedMember.primaryVisualParentMemberId !== null) {
     throw new Error(LINEAGE_EDITOR_ERROR.BRANCH_EDITOR_CANNOT_DETACH)
   }
-
-  const branchGrants = grants.filter(
-    (grant): grant is EditorGrant & { rootMemberId: string } =>
-      grant.role === "BRANCH_EDITOR" && Boolean(grant.rootMemberId),
-  )
 
   const inAnyGrantedBranch = branchGrants.some(grant => {
     const allMemberIds = [editedMember.id, ...relatedMemberIds]
@@ -410,7 +451,7 @@ export const applyLineagePromotionRelationshipUpdate = async ({
           entityType: "LineageRelationship",
           entityId: relationshipId ?? currentRelationship?.id ?? `cleared-${member.id}`,
           userId,
-          before: currentRelationship,
+          before: relationshipAuditSnapshot(currentRelationship),
           after: {
             treeId: tree.id,
             memberId: member.id,
