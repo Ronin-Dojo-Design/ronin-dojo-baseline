@@ -170,6 +170,9 @@ Promote Desi to a Claude Code subagent, then port four public listing surfaces t
 - **No-out-of-bounds caveat:** owner has granted latitude; agents may surface adjacent fixes but must flag them in chat before extending scope mid-task.
 - **i18n migration for inline count strings (TASK_03a):** `DisciplineCard` stat badges (`"5 ranks"`, `"12 orgs"`, `"48 members"`) are rendered with inline English pluralization. Per Desi Section 9 MEDIUM (route through `useTranslations`), the formal i18n namespace migration is deferred — no existing namespace covers these strings. Pair with the empty-state translation work in the same follow-up.
 - **School card hover overlay falls back when `description` is null (TASK_03a):** `searchOrganizations` payload exposes `description / city / region / type / disciplines` only — no `phone` / `email` / `address` fields. The overlay therefore only fires when description exists; the always-visible `city, region` already surfaces the secondary signal. Adding a phone/contact field to the payload is a follow-up (Petey-scoped, no schema change here).
+- **Generic `common.empty` key (TASK_03b):** no per-domain `techniques` / `schools` / `courses` namespace JSON exists and creating one is out of scope. Added a single `common.empty: "Nothing found."` key and routed all three list empty states through it. A per-domain string (`"No techniques found"`, etc.) can replace this when the domain namespaces land; pair with the inline count-string migration noted in the TASK_03a decision above.
+- **Course `sort` query param parsed but unused server-side (TASK_03b):** `courseFilterParams` carries `q + sort + page + perPage` to match the technique/tool shape, but `searchCourses` only accepts `{ q, discipline, page, perPage }`. The `sort` value is URL-tracked via nuqs and the Sort UI works; the server query ignores it for now. Wiring server-side `orderBy` from `sort` is a follow-up that pairs with the deferred filter axes — flagged per scope guardrail (no `searchCourses` signature change this session).
+- **`courses/page.tsx` intro count copy dropped (TASK_03b):** the old page rendered `{total} course(s) available` in the `IntroDescription`. Moving to Suspense + a streamed `CourseQuery` would require either passing the count up through render or duplicating the query — both bigger than this task. Replaced with a static description ("Browse our curriculum and certification programs."). If the count is load-bearing for the launch, surface a `<Stats>` row inside `CourseQuery` in a follow-up.
 
 ### Risks
 
@@ -199,7 +202,7 @@ in-progress
 | SESSION_0196_TASK_01 | complete |
 | SESSION_0196_TASK_02 | complete |
 | SESSION_0196_TASK_03a | pending |
-| SESSION_0196_TASK_03b | pending |
+| SESSION_0196_TASK_03b | complete |
 | SESSION_0196_TASK_04 | pending |
 | SESSION_0196_TASK_05 | pending |
 

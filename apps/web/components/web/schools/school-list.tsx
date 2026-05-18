@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { EmptyList } from "~/components/web/empty-list"
 import { SchoolCard, SchoolCardSkeleton } from "~/components/web/schools/school-card"
@@ -20,13 +21,15 @@ type SchoolListProps = ComponentProps<typeof Grid> & {
 }
 
 const SchoolList = ({ children, schools, ...props }: SchoolListProps) => {
+  const t = useTranslations("common")
+
   return (
     <Grid {...props}>
       {schools.map((school, order) => (
         <SchoolCard key={school.slug} school={school} style={{ order }} />
       ))}
 
-      {schools.length ? children : <EmptyList>No schools found</EmptyList>}
+      {schools.length ? children : <EmptyList>{t("empty")}</EmptyList>}
     </Grid>
   )
 }

@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { CourseCard, CourseCardSkeleton } from "~/components/web/courses/course-card"
 import { EmptyList } from "~/components/web/empty-list"
@@ -9,13 +12,15 @@ type CourseListProps = ComponentProps<typeof Grid> & {
 }
 
 const CourseList = ({ children, courses, ...props }: CourseListProps) => {
+  const t = useTranslations("common")
+
   return (
     <Grid {...props}>
       {courses.map((course, order) => (
         <CourseCard key={course.slug} course={course} style={{ order }} />
       ))}
 
-      {courses.length ? children : <EmptyList>No courses found.</EmptyList>}
+      {courses.length ? children : <EmptyList>{t("empty")}</EmptyList>}
     </Grid>
   )
 }

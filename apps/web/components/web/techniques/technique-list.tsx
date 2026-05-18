@@ -12,7 +12,7 @@ type TechniqueListProps = ComponentProps<typeof Grid> & {
 }
 
 const TechniqueList = ({ children, techniques, ...props }: TechniqueListProps) => {
-  const _t = useTranslations()
+  const t = useTranslations("common")
 
   return (
     <Grid {...props}>
@@ -20,7 +20,7 @@ const TechniqueList = ({ children, techniques, ...props }: TechniqueListProps) =
         <TechniqueCard key={technique.slug} technique={technique} style={{ order }} />
       ))}
 
-      {techniques.length ? children : <EmptyList>No techniques found</EmptyList>}
+      {techniques.length ? children : <EmptyList>{t("empty")}</EmptyList>}
     </Grid>
   )
 }
