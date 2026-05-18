@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-17
-last_agent: claude-session-0188-addendum
+last_agent: claude-session-0189
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1478,3 +1478,28 @@ See `docs/sprints/SESSION_0188.md` § "Big Kaizen — lessons from the unplanned
 2. **Bow-out must verify Vercel is green, not just that PR merged.** A 30-second `vercel ls` check would have caught the cascade before declaring closed-full.
 3. **Biome `--unsafe` renames need a tsc cross-check.** Biome's unused-detector missed a JSX-expression use of `perPage` in `tournament-query.tsx`; renaming broke a working component. Tsc caught it within seconds.
 4. **Three permanent fixes shipped:** ADR_0017 (pnpm pre/post), FS-0022/FS-0023 (failed-steps log entries with future-detection rules), and the tsc baseline reset to zero.
+
+### SESSION_0189 — Schedule Safe-Action Wrapper
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0189_TASK_01 | Cody (subagent): add `apps/web/server/web/schedule/actions.safe-action.test.ts` invoking `saveSchedule` through `userActionClient` end-to-end — unauthenticated, Zod validationErrors (`daysOfWeek: []`), authorized happy-path cases including `schedule.created` audit row proof | complete |
+| SESSION_0189_TASK_02 | Doug + Petey: run new wrapper test + combined regression with existing wrapper tests and schedule helper test, scoped typecheck filter, wiki lint, append SESSION_0189 to `sop-test-writing.md` §12 inventory, update project-log + wiki index, git hygiene + post-commit Graphify | complete |
+
+**Notes:** Rolled SESSION_0187/0188 wrapper pattern to the schedule lane and added the first `result.validationErrors` proof to the wrapped-action test family. Confirms the Zod input parse surfaces validation errors as `result.validationErrors` (not `serverError`) through `userActionClient`. No harness change required. No schedule runtime code touched.
+
+#### Review
+
+**SESSION_0189_REVIEW_01 - Schedule wrapper coverage + validationErrors proof**
+
+- **Reviewed tasks:** SESSION_0189_TASK_01, SESSION_0189_TASK_02.
+- **Dirstarter docs check:** not applicable — local test file + local SOP inventory edit only.
+- **Sources:** `apps/web/server/web/schedule/actions.ts` (`saveSchedule:50`), `apps/web/server/web/schedule/schemas.ts` (`saveScheduleSchema` + `daysOfWeek.min(1)` validation), `apps/web/server/web/schedule/actions.test.ts` (helper-level precedent + fixture lifecycle), `apps/web/server/web/enrollment/actions.safe-action.test.ts` (closest wrapper precedent), `apps/web/lib/test/safe-action-env.ts` (harness), `docs/runbooks/sop-test-writing.md` §5b/§12.
+- **Verdict:** Aligned. The new test mirrors `sop-test-writing.md` §5b verbatim with a validation-error case substituted for the role-gated case. Combined wrapper + helper regression returned 17 pass / 0 fail / 84 expect() across 5 files in 1.91s. Scoped typecheck filter returned `NO_MATCHING_ERRORS` with full `bunx tsc --noEmit` now exit-0 (post-SESSION_0188 baseline reset holds). Wiki lint held at 501 warnings (identical to SESSION_0187/0188 baseline). Fixture isolation by distinct tag prefix (`session-0189-` vs `actions-test-` vs `session-0188-`) prevents collision.
+- **WORKFLOW score:** 9.7/10. The wrapper rollout is correct, well-isolated, and adds the first validationErrors proof to the wrapper inventory — closing a real proof gap. Held below 10 because two more wrappable lanes (`attendance`, `billing`) still lack wrapper coverage.
+
+#### Kaizen
+
+1. **Safety/security:** Zod input parse is now exercised end-to-end through the harness, proving `userActionClient` surfaces validation failures as `result.validationErrors` (not `serverError`). The auth middleware short-circuits BEFORE Zod runs, so an unauthenticated invalid payload returns `serverError` — confirmed in test case (a) and noted for future wrapper authors.
+2. **Preventable failed steps:** Cody followed the SESSION_0188 precedent verbatim — same `installSafeActionMocks` ordering, same tag-prefix-driven two-phase teardown, same OWNER-role reuse pattern. Pattern is stable; future wrapper tests for `attendance` and `billing` lanes should be near-mechanical.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The fixture is a single owner/org/program triple; harness does not change runtime behavior.

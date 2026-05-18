@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-17
-last_agent: claude-session-0188
+last_agent: claude-session-0189
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -606,6 +606,7 @@ it("creates audit log on transition", async () => {
 - `server/admin/lineage/claim-review-actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, admin approve
 - `server/web/lineage/node-profile-actions.safe-action.test.ts` — `userActionClient` chain: unauth, authorized NODE_EDITOR
 - `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
+- `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit
 
 ### Query / integration tests
 - `server/web/disciplines/queries.integration.test.ts` — discipline query integration
