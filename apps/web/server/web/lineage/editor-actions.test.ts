@@ -850,10 +850,7 @@ describe("lineage promoter relationship ranked-regression guard", () => {
     await db.lineageTree.deleteMany({ where: { id: regressionFx.treeId } })
     await db.lineageRelationship.deleteMany({
       where: {
-        OR: [
-          { rankAwardId: regressionFx.rankAwardId },
-          { toNodeId: regressionFx.studentNodeId },
-        ],
+        OR: [{ rankAwardId: regressionFx.rankAwardId }, { toNodeId: regressionFx.studentNodeId }],
       },
     })
     await db.lineageNode.deleteMany({
