@@ -1,4 +1,6 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { EmptyList } from "~/components/web/empty-list"
+import { Grid } from "~/components/web/ui/grid"
 import { findDisciplines } from "~/server/web/disciplines/queries"
 import { DisciplineCard } from "./discipline-card"
 
@@ -10,14 +12,18 @@ export async function DisciplineList({ brand }: DisciplineListProps) {
   const disciplines = await findDisciplines(brand)
 
   if (disciplines.length === 0) {
-    return <p className="text-muted-foreground text-center py-12">No disciplines found.</p>
+    return (
+      <Grid>
+        <EmptyList>No disciplines found.</EmptyList>
+      </Grid>
+    )
   }
 
   return (
-    <div className="grid gap-4 @md:grid-cols-2 @lg:grid-cols-3">
+    <Grid>
       {disciplines.map(discipline => (
         <DisciplineCard key={discipline.id} discipline={discipline} />
       ))}
-    </div>
+    </Grid>
   )
 }

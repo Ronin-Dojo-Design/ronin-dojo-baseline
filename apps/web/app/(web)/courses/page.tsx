@@ -1,8 +1,9 @@
-import { CourseList } from "~/components/web/courses/course-list"
+import type { SearchParams } from "nuqs"
+import { Suspense } from "react"
+import { CourseListingSkeleton } from "~/components/web/courses/course-listing"
+import { CourseQuery } from "~/components/web/courses/course-query"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
-import { searchCourses } from "~/server/web/courses/queries"
 
 export const metadata = {
   title: "Courses",
@@ -10,29 +11,22 @@ export const metadata = {
 }
 
 type PageProps = {
-  searchParams: Promise<{ q?: string; discipline?: string; page?: string }>
+  searchParams: Promise<SearchParams>
 }
 
 export default async function CoursesPage({ searchParams }: PageProps) {
   const brand = await getRequestBrand()
-  const sp = await searchParams
-  const { courses, total } = await searchCourses(
-    { q: sp.q, discipline: sp.discipline, page: Number(sp.page) || 1 },
-    brand,
-  )
 
   return (
     <>
       <Intro>
         <IntroTitle>Courses</IntroTitle>
-        <IntroDescription>
-          Browse our curriculum — {total} course{total !== 1 ? "s" : ""} available.
-        </IntroDescription>
+        <IntroDescription>Browse our curriculum and certification programs.</IntroDescription>
       </Intro>
 
-      <Section>
-        <CourseList courses={courses} />
-      </Section>
+      <Suspense fallback={<CourseListingSkeleton />}>
+        <CourseQuery searchParams={searchParams} brand={brand} options={{ enableSort: true }} />
+      </Suspense>
     </>
   )
 }
