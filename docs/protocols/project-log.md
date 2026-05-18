@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-17
-last_agent: claude-session-0188
+last_agent: claude-session-0188-addendum
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1446,3 +1446,35 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 1. **Safety/security:** Rate-limit gate is now exercised end-to-end through the harness, proving the `~/lib/rate-limiter` mock seam works for `userActionClient`-wrapped actions and confirming `ENROLLMENT_ERROR.RATE_LIMITED` surfaces as a `serverError` rather than a thrown rejection.
 2. **Preventable failed steps:** The harness's `initialRateLimited` option made the test trivial — no separate mock module setup was needed. Documenting it in the `installSafeActionMocks` JSDoc paid off this session.
 3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The fixture is a single owner/org/program triple; harness does not change runtime behavior.
+
+### SESSION_0188 continuation — unplanned post-close work
+
+After PR #13 (the planned safe-action wrapper) merged, four additional PRs shipped to repair an arc of related failures discovered during the bow-out check. Captured here for ledger continuity; full narrative + Kaizen lives in `docs/sprints/SESSION_0188.md` under "Session continuation — unplanned post-close work".
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0188_TASK_03 | PR #14 — regenerate `pnpm-lock.yaml` after d3/d3-org-chart/@types/d3 deps drifted; remove stale `@ts-expect-error` in lineage `claim-form.tsx`; widen `DirectoryProfile.ranks.awardedAt` to `Date \| null`; cast seed `daysOfWeek` to `DayOfWeek[]`. Unblocks Vercel install + build typecheck. | complete |
+| SESSION_0188_TASK_04 | PR #15 — add `.npmrc` with `enable-pre-post-scripts=true` so Vercel's `prebuild` hook runs `prisma migrate deploy`. Fixes production login outage (`User.isPlaceholder` ColumnNotFound) by applying SESSION_0186 lineage placeholder archival migrations on the next Vercel rebuild. | complete |
+| SESSION_0188_TASK_05 | PR #16 — full biome lint cleanup (~360 file format diff + 13 unsafe auto-fixes + 16 hand-fixed errors including a genuine React rules-of-hooks bug in `dashboard/school-form.tsx`). Closes the long-running SESSION_0178_FINDING_01 (app-wide tsc baseline nonzero) by bringing TypeScript to zero errors. | complete |
+| SESSION_0188_TASK_06 | This addendum — extend `SESSION_0188.md` with continuation arc, big Kaizen, plans for `_`-prefixed unused props audit and production seed inventory; add FS-0022 + FS-0023 to failed-steps log; ADR_0017 for pnpm pre/post scripts; update project-log + wiki index. | in-progress |
+
+**Notes:** This was a four-PR arc triggered by the user noticing Vercel preview red on the just-merged PR #13. Each fix surfaced the next latent failure. Production was down for ~30 minutes when PR #14 unmasked the un-deployed SESSION_0186 migrations. The chain demonstrated FS-0022 (pnpm pre/post disabled) and FS-0023 (Vercel env vars Production-only).
+
+#### Review
+
+**SESSION_0188_REVIEW_02 - Deploy chain repair**
+
+- **Reviewed tasks:** SESSION_0188_TASK_03, SESSION_0188_TASK_04, SESSION_0188_TASK_05, SESSION_0188_TASK_06.
+- **Dirstarter docs check:** ADR_0017 (Dirstarter docs proof table: project structure URL referenced for the Vercel + Prisma + prebuild deploy chain pattern).
+- **Sources:** `apps/web/.npmrc`, `apps/web/pnpm-lock.yaml`, `apps/web/app/(web)/lineage/[treeSlug]/claim/claim-form.tsx`, `apps/web/components/web/directory/directory-list.tsx`, `apps/web/prisma/seed-baseline-platform.ts`, `apps/web/prisma/migrations/20260517195956_add_user_placeholder_archival/`, `apps/web/prisma/migrations/20260517202000_backfill_placeholder_users/`, `docs/protocols/failed-steps-log.md` (FS-0022, FS-0023), `docs/architecture/decisions/0017-pnpm-pre-post-scripts.md`.
+- **Verdict:** Aligned. The four-PR arc is the right shape: small, individually-reviewable, each one verified Vercel-green before moving to the next. The genuine React bug fix in `school-form.tsx` (hooks-after-early-return → inner component) is a real defect closure, not lint-theater. Closing SESSION_0178_FINDING_01 (app-wide tsc baseline) is a substantial win — every future session inherits a clean baseline instead of "broken plus more broken." Honest caveat: the production outage window (~30 min) is the cost of the latent FS-0022 + FS-0023 debt finally surfacing; this is an acceptable forcing function but worth a FAILED_STEPS Pattern 5 entry to discourage recurrence.
+- **WORKFLOW score:** 9.2/10. Lifecycle was correct; recovery was fast; documentation closes the loop. Held below 10 because the outage window was preventable — a 30-second `vercel ls` check before the initial bow-out would have caught the lockfile failure and avoided the cascade.
+
+#### Kaizen (continuation arc)
+
+See `docs/sprints/SESSION_0188.md` § "Big Kaizen — lessons from the unplanned escalation" for the full reflection. Headlines:
+
+1. **Latent debt only surfaces when something else gets fixed first.** Lockfile drift, pnpm pre/post hooks, env-var scope, and queued migrations were all individually silent until lockfile-fix → newer-Prisma-client → P2022.
+2. **Bow-out must verify Vercel is green, not just that PR merged.** A 30-second `vercel ls` check would have caught the cascade before declaring closed-full.
+3. **Biome `--unsafe` renames need a tsc cross-check.** Biome's unused-detector missed a JSX-expression use of `perPage` in `tournament-query.tsx`; renaming broke a working component. Tsc caught it within seconds.
+4. **Three permanent fixes shipped:** ADR_0017 (pnpm pre/post), FS-0022/FS-0023 (failed-steps log entries with future-detection rules), and the tsc baseline reset to zero.
