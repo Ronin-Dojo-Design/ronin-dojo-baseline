@@ -19,7 +19,7 @@ backlinks:
 ## Architecture
 
 | Component | Provider | Dashboard |
-|---|---|---|
+| --- | --- | --- |
 | App hosting | Vercel | [vercel.com/dashboard](https://vercel.com/dashboard) |
 | Database | Neon (Postgres 16) | [console.neon.tech](https://console.neon.tech) |
 | Auth | Better-Auth (self-hosted in app) | — |
@@ -40,7 +40,7 @@ Before first deploy:
 Set these in **Vercel → Settings → Environment Variables** for Production (and optionally Preview):
 
 | Variable | Example value | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `DATABASE_URL` | `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require` | From Neon dashboard |
 | `BETTER_AUTH_SECRET` | _(generate with `openssl rand -base64 32`)_ | Unique per environment |
 | `BETTER_AUTH_URL` | `https://baselinemartialarts.com` | Must match your production domain |
@@ -53,7 +53,7 @@ Set these in **Vercel → Settings → Environment Variables** for Production (a
 ### Optional (configure when ready)
 
 | Variable | Purpose |
-|---|---|
+| --- | --- |
 | `RESEND_API_KEY` | Transactional email |
 | `RESEND_SENDER_EMAIL` | Email from address |
 | `STRIPE_SECRET_KEY` | Payments |
@@ -80,7 +80,7 @@ Set these in **Vercel → Settings → Environment Variables** for Production (a
 
 Vercel deploys automatically on push to `main`. The build process:
 
-```
+```text
 push to main
   → Vercel triggers build
     → bun install (postinstall → prisma generate)
@@ -102,7 +102,7 @@ bunx vercel --prod
 
 ## First Deploy Checklist
 
-```
+```text
 [ ] Neon project created, connection string copied
 [ ] Vercel project linked to GitHub repo
 [ ] All required env vars set in Vercel
@@ -129,6 +129,7 @@ bun scripts/check-vercel-env-parity.ts
 ## Subsequent Deploys
 
 Just push to `main`. Vercel handles everything:
+
 - Schema changes: `prebuild` runs `prisma migrate deploy` automatically
 - No manual migration step needed
 
@@ -156,7 +157,7 @@ DATABASE_URL="<neon-connection-string>" bunx prisma db seed
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | Build fails at `prisma migrate deploy` | Missing `DATABASE_URL` env var | Add Neon connection string to Vercel |
 | Google sign-in redirects to error | Wrong redirect URI in Google Console | Must be `https://baselinemartialarts.com/api/auth/callback/google` |
 | `BETTER_AUTH_URL` mismatch | Auth callbacks point to wrong domain | Ensure `BETTER_AUTH_URL` matches production domain exactly |
