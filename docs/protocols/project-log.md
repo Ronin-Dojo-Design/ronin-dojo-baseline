@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-18
-last_agent: codex-session-0193
+last_agent: codex-session-0194
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1306,4 +1306,47 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Evidence:** #29 is CodeRabbit-authored, CodeRabbit skipped review, `mergeable: CONFLICTING`, and Vercel failed with Neon advisory-lock timeout `P1002`.
 - **Impact:** Direct merge adds review-noise tests on top of a conflicted branch without proving they are wanted or passing.
 - **Required follow-up:** Owner decides whether generated tests are useful; if yes, selectively port them into the cleaned #23 branch and rerun local verification.
+- **Status:** open
+
+### SESSION_0194 — PR 23 Stack Cleanup and Retarget
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0194_TASK_01 | Giddy: reconfirm PR #23/#24/#29/#30 topology, branch dependencies, merge-base relationships, and safe retarget strategy | complete |
+| SESSION_0194_TASK_02 | Cody: clean PR #23 in an isolated worktree, rebase onto current `main`, resolve conflicts semantically, and avoid wholesale PR #30 cherry-pick | complete |
+| SESSION_0194_TASK_03 | Doug: run frozen install, typecheck, Biome, lineage tests, and inspect remaining #24/#29/#30 blockers after #23 cleanup | complete |
+| SESSION_0194_TASK_04 | Petey: close the session with SESSION/project-log/wiki updates, hostile review, Graphify refresh, commit, and push | complete |
+
+**Notes:** User-directed implementation of SESSION_0193 merge strategy. No auto-merge to `main` without separate owner approval; target is to make PR #23 clean and reviewable against `main`.
+
+**Result:** PR #23 was rebased from `350c8e9` to `39f1e8a`, retargeted to `main`, and verified locally plus through green Vercel/CodeRabbit checks. PR #30 and PR #29 were closed; #30's remote branch was deleted. Merged PR #26/#28 remote heads were deleted.
+
+#### Review
+
+##### SESSION_0194_REVIEW_01 — PR stack cleanup hostile close review
+
+- **Reviewed tasks:** SESSION_0194_TASK_01, SESSION_0194_TASK_02, SESSION_0194_TASK_03, SESSION_0194_TASK_04.
+- **Dirstarter docs check:** cached docs sufficient; no Dirstarter layer replacement or new implementation pattern.
+- **Sources:** `docs/protocols/merge-to-main.md`, `docs/agents/giddy.md`, `docs/protocols/hostile-close-review.md`, GitHub PR #23/#24/#29/#30 metadata/comments/checks, local #23 worktree verification.
+- **Verdict:** Pass. The session used an isolated #23 worktree, rebased onto current `main`, resolved the add/add `editor-actions.test.ts` conflict by keeping both useful test fixtures, excluded #30's reviewed Resend regression, and pushed with an explicit force-with-lease. Local install/typecheck/Biome/lineage tests passed, and PR #23 is now mergeable with Vercel + CodeRabbit success. No auto-merge was performed.
+- **Kaizen:** Safe and secure: #23 is test-only on top of current main and does not alter production auth/data behavior; risky #30 Resend widening stayed out. Prevented failed-step classes: no blind `--theirs`, no replay of already-merged base work, and Graphify-first discovery was used. Confidence for #23: 9.5 / 9.5 / 9.5 at 100 / 1,000 / 10,000 users.
+
+#### Findings
+
+##### SESSION_0194_FINDING_01 — PR #24 remains a separate conflicting viewer-polish cleanup
+
+- **Severity:** medium
+- **Task:** SESSION_0194_TASK_03
+- **Evidence:** `gh pr view 24` still reports `mergeable: CONFLICTING`; SESSION_0193 recorded a Codex UTC date-format review item in `apps/web/components/web/lineage/lineage-tree-canvas.tsx`.
+- **Impact:** Viewer polish cannot merge cleanly and can render promotion dates incorrectly west of UTC if left unpatched.
+- **Required follow-up:** If #24 is still wanted, rebase `session-lineage-v1-viewer-polish` onto `main`, resolve canvas conflicts, fix UTC date formatting, and rerun verification.
+- **Status:** open
+
+##### SESSION_0194_FINDING_02 — PR #23 is ready for owner review, not auto-merged
+
+- **Severity:** low
+- **Task:** SESSION_0194_TASK_02
+- **Evidence:** Final `gh pr view 23` reports base `main`, head `session-lineage-v1-hardening-tests`, `mergeable: MERGEABLE`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; local verification passed install/typecheck/Biome/lineage tests.
+- **Impact:** The technical cleanup is complete, but merge-to-main protocol still gates the squash merge on owner approval.
+- **Required follow-up:** Owner reviews and merges PR #23, or requests additional changes on that PR.
 - **Status:** open
