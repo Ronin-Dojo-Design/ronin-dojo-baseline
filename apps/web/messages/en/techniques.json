@@ -1,0 +1,11 @@
+{
+  "empty": "No techniques found.",
+  "filters": {
+    "search_placeholder": "Search techniques…"
+  },
+  "sort": {
+    "name_asc": "Name A–Z",
+    "name_desc": "Name Z–A",
+    "curriculum_order": "Curriculum order"
+  }
+}

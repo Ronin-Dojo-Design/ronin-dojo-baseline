@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import type { Brand } from "~/.generated/prisma/client"
 import { EmptyList } from "~/components/web/empty-list"
 import { Grid } from "~/components/web/ui/grid"
@@ -9,12 +10,13 @@ interface DisciplineListProps {
 }
 
 export async function DisciplineList({ brand }: DisciplineListProps) {
+  const t = await getTranslations("disciplines")
   const disciplines = await findDisciplines(brand)
 
   if (disciplines.length === 0) {
     return (
       <Grid>
-        <EmptyList>No disciplines found.</EmptyList>
+        <EmptyList>{t("empty")}</EmptyList>
       </Grid>
     )
   }

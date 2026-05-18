@@ -21,7 +21,7 @@ type SchoolListProps = ComponentProps<typeof Grid> & {
 }
 
 const SchoolList = ({ children, schools, ...props }: SchoolListProps) => {
-  const t = useTranslations("common")
+  const t = useTranslations("schools")
 
   return (
     <Grid {...props}>

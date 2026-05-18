@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
@@ -28,24 +29,20 @@ interface DisciplineCardProps {
 }
 
 export function DisciplineCard({ discipline }: DisciplineCardProps) {
+  const t = useTranslations("disciplines")
+
   const stats = [
     {
       key: "rankSystems",
-      label: `${discipline._count.rankSystems} rank${
-        discipline._count.rankSystems === 1 ? "" : "s"
-      }`,
+      label: t("counts.ranks", { count: discipline._count.rankSystems }),
     },
     {
       key: "organizations",
-      label: `${discipline._count.organizations} org${
-        discipline._count.organizations === 1 ? "" : "s"
-      }`,
+      label: t("counts.orgs", { count: discipline._count.organizations }),
     },
     {
       key: "memberships",
-      label: `${discipline._count.memberships} member${
-        discipline._count.memberships === 1 ? "" : "s"
-      }`,
+      label: t("counts.members", { count: discipline._count.memberships }),
     },
   ]
 
