@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-18
-last_agent: codex-session-0194
+last_agent: claude-session-0195
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1349,4 +1349,38 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Evidence:** Final `gh pr view 23` reports base `main`, head `session-lineage-v1-hardening-tests`, `mergeable: MERGEABLE`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; local verification passed install/typecheck/Biome/lineage tests.
 - **Impact:** The technical cleanup is complete, but merge-to-main protocol still gates the squash merge on owner approval.
 - **Required follow-up:** Owner reviews and merges PR #23, or requests additional changes on that PR.
+- **Status:** resolved in SESSION_0195 (PR #23 squash-merged with owner approval)
+
+### SESSION_0195 — Merge PR 23 and Clean PR 24 Viewer Polish
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0195_TASK_01 | Petey/Cody: squash-merge PR #23 to `main` (owner-authorized), pull `main`, remove leftover `pr-23-clean` worktree | complete |
+| SESSION_0195_TASK_02 | Cody: create isolated worktree for PR #24 head, rebase onto `origin/main`, resolve canvas conflicts, apply UTC promotion-date formatting fix | complete |
+| SESSION_0195_TASK_03 | Doug: frozen install, typecheck, Biome, lineage tests on PR #24 worktree; force-push with lease; retarget PR #24 to `main`; post verification comment | complete |
+| SESSION_0195_TASK_04 | Petey/Giddy: hostile close review, full-close docs (SESSION_0195, project-log, wiki index, custom-component-inventory.md, ADR check), post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive: merge #23 and clean #24. Do not auto-merge #24; today's goal for #24 is "ready for owner review" matching the #23 outcome from SESSION_0194.
+
+**Result:** PR #23 squash-merged into `main` at commit `554fda4` (owner-authorized). PR #24 rebased onto fresh `main`, UTC promotion-date fix applied per Codex P2 (`timeZone: "UTC"` on `Intl.DateTimeFormat` in `lineage-tree-canvas.tsx`), biome formatter cleanup squashed into the originating commit, force-pushed (`a59249b` -> `43eee22`), retargeted to `main`, and verified locally plus through green Vercel + CodeRabbit checks. New `docs/knowledge/wiki/custom-component-inventory.md` created (user-requested) to document Ronin-specific custom components alongside the Dirstarter inventory.
+
+#### Review
+
+##### SESSION_0195_REVIEW_01 — Hostile close review for PR #23 merge and PR #24 cleanup
+
+- **Reviewed tasks:** SESSION_0195_TASK_01, SESSION_0195_TASK_02, SESSION_0195_TASK_03, SESSION_0195_TASK_04.
+- **Dirstarter docs check:** cached docs sufficient; no Dirstarter baseline layer (project structure / Prisma / Better Auth / Stripe / storage / deploy / content / theming) was touched. PR #23 is test-only and now on `main`; PR #24 is viewer-only with a one-line `Intl.DateTimeFormat` timezone option.
+- **Sources:** `docs/protocols/merge-to-main.md`, `docs/protocols/hostile-close-review.md`, `docs/sprints/SESSION_0194.md`, PR #23 + #24 GitHub state and inline review comments, local pr-24-clean worktree verification (frozen install, typecheck, Biome, lineage tests).
+- **Verdict:** Pass. Owner-authorized squash-merge of #23 happened only after a CLEAN/MERGEABLE/all-green re-check. PR #24 was cleaned in an isolated worktree following the merge-to-main protocol end-to-end (rebase, conflict by inspection, force-with-lease, retarget, verification comment). UTC fix matches the Codex P2 review exactly. Local verification reproduces the green GitHub checks.
+- **Kaizen:** Safe and secure for both PRs (no auth/data path change in `main`; #23 adds tests only, #24 enhances viewer UI plus a presentation-only timezone option). FS-0010/FS-0012/FS-0015/FS-0019 classes avoided by inspecting conflicts before accepting either side, atomic frontmatter+body status flip, and full wiki-index completeness sweep. Confidence for PR #24 at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5.
+
+#### Findings
+
+##### SESSION_0195_FINDING_01 — PR #24 is ready for owner review, not auto-merged
+
+- **Severity:** low
+- **Task:** SESSION_0195_TASK_03
+- **Evidence:** Final `gh pr view 24` reports base `main`, head `session-lineage-v1-viewer-polish`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/24#issuecomment-4478451917`.
+- **Impact:** The technical cleanup is complete, but merge-to-main protocol still gates the squash merge on owner approval.
+- **Required follow-up:** Owner reviews and squash-merges PR #24, or requests additional changes on that PR.
 - **Status:** open
