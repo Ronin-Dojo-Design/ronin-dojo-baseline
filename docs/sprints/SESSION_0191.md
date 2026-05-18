@@ -143,6 +143,7 @@ SESSION_0191_TASK_01, SESSION_0191_TASK_02
 - `docs/protocols/project-log.md` — SESSION_0191 task plan, review, and kaizen entry; bumped `last_agent`.
 - `docs/knowledge/wiki/index.md` — updated SESSION_0191 row to `closed-full`; bumped `last_agent`.
 - `docs/sprints/SESSION_0191.md` — current session record and full-close artifact.
+- `docs/sprints/SESSION_0192.md` — optional next-session pre-stage with Petey plan for the Vercel env parity guard.
 
 ## Decisions resolved
 
@@ -199,11 +200,11 @@ No ADR or ubiquitous-language update needed. This session adds test coverage for
 | Step | Proof |
 | --- | --- |
 | JETTY/frontmatter sweep | Updated `last_agent: codex-session-0191` on `sop-test-writing.md`, `project-log.md`, and `wiki/index.md`; `SESSION_0191.md` frontmatter set to `status: closed-full`, `type: session--implement`; fixed touched-file R8 blank-line warning in `sop-test-writing.md`. |
-| Backlinks/index sweep | `docs/knowledge/wiki/index.md` SESSION_0191 row updated to `session--implement` / `closed-full`; no new wiki pages or cross-reference pairs created. |
+| Backlinks/index sweep | `docs/knowledge/wiki/index.md` SESSION_0191 row updated to `session--implement` / `closed-full` and SESSION_0192 row added as `pending`; no new wiki pages created. |
 | Wiki lint | `bun run wiki:lint` returned 0 errors / 495 warnings after touched-file R8 cleanup; remaining warnings are pre-existing outside this session's touched-file scope. |
 | Kaizen reflection | Reflections section present above; project-log Kaizen entry present under SESSION_0191_REVIEW_01. |
 | Hostile close review | SESSION_0191_REVIEW_01 recorded in project log; hostile close review section present above. |
-| Review & Recommend | Next session goal written above: Vercel env parity guard for FS-0023. |
+| Review & Recommend | Next session goal written above and `docs/sprints/SESSION_0192.md` pre-staged with a Petey plan for the Vercel env parity guard. |
 | Memory sweep | None needed; the reusable wrapper pattern remains documented in `sop-test-writing.md` §5b/§12 and the session records. |
 | Next session unblock check | Unblocked if Vercel CLI/API credentials are available; otherwise the first task can still land a dry-run/mockable script and document credential setup. |
 | Git hygiene | Pending final branch/status/commit/push proof in bow-out response. |
