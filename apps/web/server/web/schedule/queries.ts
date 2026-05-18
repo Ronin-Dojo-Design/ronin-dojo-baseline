@@ -1,9 +1,6 @@
 import { cache } from "react"
 import type { Brand, ScheduleStatus } from "~/.generated/prisma/client"
-import {
-  scheduleDetailPayload,
-  scheduleManyPayload,
-} from "~/server/web/schedule/payloads"
+import { scheduleDetailPayload, scheduleManyPayload } from "~/server/web/schedule/payloads"
 import { db } from "~/services/db"
 
 /**
@@ -46,9 +43,7 @@ export const getSchedulesByProgramPaginated = cache(
       brand,
       programId,
       organizationId,
-      ...(status
-        ? { status }
-        : { status: { not: "ARCHIVED" as const } }),
+      ...(status ? { status } : { status: { not: "ARCHIVED" as const } }),
     }
 
     const [items, total] = await db.$transaction([
@@ -77,34 +72,32 @@ export const getScheduleById = cache(async (brand: Brand, id: string) => {
   })
 })
 
-export const getEditableInstructors = cache(
-  async (brand: Brand, organizationId: string) => {
-    const memberships = await db.membership.findMany({
-      where: {
-        brand,
-        organizationId,
-        status: "ACTIVE",
-        roleAssignments: {
-          some: {
-            role: { code: { in: [...SCHEDULE_INSTRUCTOR_ROLE_CODES] } },
-          },
+export const getEditableInstructors = cache(async (brand: Brand, organizationId: string) => {
+  const memberships = await db.membership.findMany({
+    where: {
+      brand,
+      organizationId,
+      status: "ACTIVE",
+      roleAssignments: {
+        some: {
+          role: { code: { in: [...SCHEDULE_INSTRUCTOR_ROLE_CODES] } },
         },
       },
-      select: {
-        userId: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
         },
       },
-      distinct: ["userId"],
-      orderBy: { user: { name: "asc" } },
-    })
+    },
+    distinct: ["userId"],
+    orderBy: { user: { name: "asc" } },
+  })
 
-    return memberships.map(m => m.user)
-  },
-)
+  return memberships.map(m => m.user)
+})

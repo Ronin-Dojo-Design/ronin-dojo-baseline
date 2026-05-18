@@ -5,6 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { slugify } from "@primoui/utils"
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
+import type { FieldValues } from "react-hook-form"
 import { toast } from "sonner"
 import { Brand, CertificationType } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
@@ -18,11 +19,16 @@ import {
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
-import type { FieldValues } from "react-hook-form"
 import { useComputedField } from "~/hooks/use-computed-field"
 import { upsertCourse } from "~/server/admin/courses/actions"
 import type { findCourseById } from "~/server/admin/courses/queries"
@@ -234,7 +240,12 @@ export function CourseForm({ children, className, title, course, ...props }: Cou
             )}
           />
 
-          <Button type="submit" variant="primary" className="self-start" isPending={action.isPending}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="self-start"
+            isPending={action.isPending}
+          >
             {course ? "Update course" : "Create course"}
           </Button>
         </Stack>

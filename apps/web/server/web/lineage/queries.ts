@@ -71,11 +71,7 @@ export const resolveLineageVisibilityScope = ({
 }): LineageVisibility[] => {
   if (!authenticated) return [LineageVisibility.PUBLIC]
   if (isOwner) {
-    return [
-      LineageVisibility.PUBLIC,
-      LineageVisibility.UNLISTED,
-      LineageVisibility.RESTRICTED,
-    ]
+    return [LineageVisibility.PUBLIC, LineageVisibility.UNLISTED, LineageVisibility.RESTRICTED]
   }
   return [LineageVisibility.PUBLIC, LineageVisibility.UNLISTED]
 }
@@ -92,9 +88,7 @@ export const resolveLineageVisibilityScope = ({
  * the public scope. Used by the discipline-page lineage section to anchor
  * the tree on the discipline owner / brand owner.
  */
-export const getLineageRootForUser = async (
-  userId: string,
-): Promise<LineageNodeRow | null> => {
+export const getLineageRootForUser = async (userId: string): Promise<LineageNodeRow | null> => {
   "use cache"
 
   cacheTag("lineage", `lineage-root-${userId}`)
@@ -131,7 +125,7 @@ export const getLineageRootForUser = async (
  */
 export const getLineageTreeForUser = async (
   userId: string,
-  depth: number = 2,
+  depth = 2,
 ): Promise<LineageTreeResult | null> => {
   "use cache"
 
@@ -163,10 +157,7 @@ export const getLineageTreeForUser = async (
     const edges = await db.lineageRelationship.findMany({
       where: {
         type: "INSTRUCTOR_STUDENT",
-        OR: [
-          { fromNodeId: { in: frontier } },
-          { toNodeId: { in: frontier } },
-        ],
+        OR: [{ fromNodeId: { in: frontier } }, { toNodeId: { in: frontier } }],
       },
       select: lineageRelationshipPayload,
     })
@@ -183,7 +174,7 @@ export const getLineageTreeForUser = async (
       }
     }
 
-    let visibleNeighbourIds = new Set<string>()
+    const visibleNeighbourIds = new Set<string>()
     if (neighbourIds.size > 0) {
       const neighbours = await db.lineageNode.findMany({
         where: {
@@ -282,11 +273,9 @@ export const materializeLineageTreeResult = (
   tree: LineageTreePublicRow,
   scope: readonly LineageVisibility[] = PUBLIC_VISIBILITY_SCOPE,
 ): LineageTreePublicResult => {
-  const visibleMembers = tree.members.filter((member) =>
-    scope.includes(member.node.visibility),
-  )
+  const visibleMembers = tree.members.filter(member => scope.includes(member.node.visibility))
 
-  const survivingMemberIds = new Set(visibleMembers.map((m) => m.id))
+  const survivingMemberIds = new Set(visibleMembers.map(m => m.id))
 
   const referencedGroupIds = new Set<string>()
   for (const member of visibleMembers) {
@@ -295,7 +284,7 @@ export const materializeLineageTreeResult = (
     }
   }
 
-  const normalizedMembers = visibleMembers.map((member) =>
+  const normalizedMembers = visibleMembers.map(member =>
     member.primaryVisualParentMemberId &&
     !survivingMemberIds.has(member.primaryVisualParentMemberId)
       ? { ...member, primaryVisualParentMemberId: null }
@@ -303,16 +292,15 @@ export const materializeLineageTreeResult = (
   )
 
   const normalizedGroups = tree.visualGroups
-    .filter((group) => referencedGroupIds.has(group.id))
-    .map((group) =>
+    .filter(group => referencedGroupIds.has(group.id))
+    .map(group =>
       group.parentMemberId && !survivingMemberIds.has(group.parentMemberId)
         ? { ...group, parentMemberId: null }
         : group,
     )
 
   const defaultRootMemberId =
-    tree.defaultRootMemberId &&
-    survivingMemberIds.has(tree.defaultRootMemberId)
+    tree.defaultRootMemberId && survivingMemberIds.has(tree.defaultRootMemberId)
       ? tree.defaultRootMemberId
       : null
 
@@ -354,10 +342,7 @@ const getLineageTreeBySlugPublic = async ({
     return null
   }
 
-  if (
-    !PUBLIC_VISIBILITY_SCOPE.includes(tree.visibility) ||
-    !tree.isPublished
-  ) {
+  if (!PUBLIC_VISIBILITY_SCOPE.includes(tree.visibility) || !tree.isPublished) {
     return null
   }
 
@@ -391,7 +376,7 @@ const getLineageTreeBySlugForViewer = cache(
       select: lineageTreePublicPayload,
     })
 
-    if (!tree || !tree.isPublished) {
+    if (!tree?.isPublished) {
       return null
     }
 

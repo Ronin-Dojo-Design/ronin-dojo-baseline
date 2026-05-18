@@ -1,9 +1,9 @@
+import type { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { db } from "~/services/db"
-import type { Brand } from "~/.generated/prisma/client"
 
 type CoursesSectionProps = {
   disciplineId: string
@@ -42,15 +42,19 @@ export async function CoursesSection({ disciplineId, brand }: CoursesSectionProp
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">Courses & Certifications ({courses.length})</H4>
+      <H4 as="h3" className="mb-4">
+        Courses & Certifications ({courses.length})
+      </H4>
       <div className="grid gap-3 @md:grid-cols-2">
-        {courses.map((course) => (
+        {courses.map(course => (
           <Card key={course.id}>
             <CardHeader>
               <Stack size="sm" direction="column">
                 <span className="font-medium">{course.title}</span>
                 <Stack size="xs" className="text-sm text-muted-foreground">
-                  <Badge variant="outline" size="sm">{course.certificationType}</Badge>
+                  <Badge variant="outline" size="sm">
+                    {course.certificationType}
+                  </Badge>
                   <span>{course.organization.name}</span>
                 </Stack>
               </Stack>

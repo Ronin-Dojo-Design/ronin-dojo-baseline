@@ -47,8 +47,6 @@ export const findBracketsByDivisionId = async (divisionId: string) => {
   })
 }
 
-export type BracketWithMatches = Awaited<
-  ReturnType<typeof findBracketsByDivisionId>
->[number]
+export type BracketWithMatches = Awaited<ReturnType<typeof findBracketsByDivisionId>>[number]
 
 export type MatchWithCompetitors = BracketWithMatches["matches"][number]

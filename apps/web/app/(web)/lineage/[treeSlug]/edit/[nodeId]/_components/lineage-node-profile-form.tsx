@@ -1,7 +1,7 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
@@ -21,8 +21,6 @@ import { TextArea } from "~/components/common/textarea"
 import { updateLineageNodeProfile } from "~/server/web/lineage/node-profile-actions"
 import type { EditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import type { UpdateLineageNodeProfileInput } from "~/server/web/lineage/node-profile-schemas"
-
-type SelectedRankAward = EditableLineageNodeProfile["member"]["selectedRankAward"]
 
 type FormValues = {
   treeId: string
@@ -84,9 +82,7 @@ export function LineageNodeProfileForm({ profile }: Props) {
       displayName: values.displayName,
       bio: values.bio,
       avatarUrl: values.avatarUrl,
-      ...(canEditPromotionDate
-        ? { promotionDate: values.promotionDate ?? null }
-        : {}),
+      ...(canEditPromotionDate ? { promotionDate: values.promotionDate ?? null } : {}),
     } satisfies UpdateLineageNodeProfileInput
 
     execute(payload)
@@ -94,11 +90,7 @@ export function LineageNodeProfileForm({ profile }: Props) {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="grid gap-4 sm:grid-cols-2"
-        noValidate
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2" noValidate>
         <input type="hidden" {...form.register("treeId")} />
         <input type="hidden" {...form.register("nodeId")} />
 
@@ -131,10 +123,8 @@ export function LineageNodeProfileForm({ profile }: Props) {
                   <Input
                     type="date"
                     value={toDateInputValue(field.value)}
-                    onChange={(event) =>
-                      field.onChange(
-                        event.target.value ? new Date(event.target.value) : null,
-                      )
+                    onChange={event =>
+                      field.onChange(event.target.value ? new Date(event.target.value) : null)
                     }
                   />
                 </FormControl>
@@ -144,8 +134,7 @@ export function LineageNodeProfileForm({ profile }: Props) {
           />
         ) : (
           <Note className="self-end">
-            Promotion date is unavailable because this tree member has no
-            selected rank award.
+            Promotion date is unavailable because this tree member has no selected rank award.
           </Note>
         )}
 

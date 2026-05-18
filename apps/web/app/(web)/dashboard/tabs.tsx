@@ -18,12 +18,12 @@ type DashboardTabsProps = {
 export function DashboardTabs({ tabs, defaultTab }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? "")
 
-  const activeContent = tabs.find((t) => t.id === activeTab)?.content
+  const activeContent = tabs.find(t => t.id === activeTab)?.content
 
   return (
     <Stack size="lg" direction="column">
       <Stack size="sm" direction="row" wrap>
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <Button
             key={tab.id}
             variant={activeTab === tab.id ? "primary" : "secondary"}

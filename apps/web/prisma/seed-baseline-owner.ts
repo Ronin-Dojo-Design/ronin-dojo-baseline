@@ -43,7 +43,9 @@ async function main() {
   // -----------------------------------------------------------------------
   const user = await db.user.findUnique({ where: { id: OWNER_ID } })
   if (!user) {
-    throw new Error(`User not found: id=${OWNER_ID}. Log in via magic link first to create your Better-Auth user record.`)
+    throw new Error(
+      `User not found: id=${OWNER_ID}. Log in via magic link first to create your Better-Auth user record.`,
+    )
   }
   console.log(`   Found user: ${user.email} (name=${user.name}, role=${user.role})`)
 
@@ -51,7 +53,10 @@ async function main() {
   let orgSlug = ""
   for (const slug of ORG_SLUGS) {
     org = await db.organization.findFirst({ where: { brand: BRAND, slug }, select: { id: true } })
-    if (org) { orgSlug = slug; break }
+    if (org) {
+      orgSlug = slug
+      break
+    }
   }
   if (!org) {
     throw new Error(`Organization not found: brand=${BRAND}, slugs=${ORG_SLUGS.join(",")}`)
@@ -65,7 +70,7 @@ async function main() {
     await db.user.update({ where: { id: OWNER_ID }, data: { role: "admin" } })
     console.log(`   ✅ Upgraded user role: ${user.role} → admin`)
   } else {
-    console.log(`   User already admin`)
+    console.log("   User already admin")
   }
 
   // Set lastActiveBrandId
@@ -92,10 +97,10 @@ async function main() {
   const existingPassport = await db.passport.findUnique({ where: { userId: OWNER_ID } })
   if (!existingPassport) {
     await db.passport.create({ data: { userId: OWNER_ID, ...passportData } })
-    console.log(`   ✅ Created Passport`)
+    console.log("   ✅ Created Passport")
   } else {
     await db.passport.update({ where: { userId: OWNER_ID }, data: passportData })
-    console.log(`   ✅ Updated Passport (bio + social links)`)
+    console.log("   ✅ Updated Passport (bio + social links)")
   }
 
   // -----------------------------------------------------------------------
@@ -117,31 +122,48 @@ async function main() {
         showRanks: true,
       },
     })
-    console.log(`   ✅ Created DirectoryProfile`)
+    console.log("   ✅ Created DirectoryProfile")
   } else {
-    console.log(`   DirectoryProfile already exists`)
+    console.log("   DirectoryProfile already exists")
   }
 
   // -----------------------------------------------------------------------
   // 4. Ensure org ownership
   // -----------------------------------------------------------------------
-  const orgFull = await db.organization.findUnique({ where: { id: org.id }, select: { ownerId: true } })
+  const orgFull = await db.organization.findUnique({
+    where: { id: org.id },
+    select: { ownerId: true },
+  })
   if (orgFull?.ownerId !== OWNER_ID) {
     await db.organization.update({ where: { id: org.id }, data: { ownerId: OWNER_ID } })
     console.log(`   ✅ Set org owner → ${OWNER_ID}`)
   } else {
-    console.log(`   Org owner already set`)
+    console.log("   Org owner already set")
   }
 
   // -----------------------------------------------------------------------
   // 5. Memberships — one per discipline Brian teaches
   // -----------------------------------------------------------------------
-  const disciplineCodes = ["bjj", "muay-thai", "eskrima", "boxing", "self-defense", "karate", "kajukenbo"]
+  const disciplineCodes = [
+    "bjj",
+    "muay-thai",
+    "eskrima",
+    "boxing",
+    "self-defense",
+    "karate",
+    "kajukenbo",
+  ]
   const membershipMap = new Map<string, string>() // code → membershipId
 
   for (const code of disciplineCodes) {
-    const disc = await db.discipline.findFirst({ where: { code, isSystem: true }, select: { id: true } })
-    if (!disc) { console.log(`   ⚠️  Discipline ${code} not found, skipping`); continue }
+    const disc = await db.discipline.findFirst({
+      where: { code, isSystem: true },
+      select: { id: true },
+    })
+    if (!disc) {
+      console.log(`   ⚠️  Discipline ${code} not found, skipping`)
+      continue
+    }
 
     const existing = await db.membership.findFirst({
       where: { userId: OWNER_ID, organizationId: org.id, disciplineId: disc.id },
@@ -170,8 +192,12 @@ async function main() {
   // -----------------------------------------------------------------------
   // 6. MembershipRoleAssignment — OWNER + INSTRUCTOR on each membership
   // -----------------------------------------------------------------------
-  const ownerRole = await db.role.findFirst({ where: { code: "OWNER", isSystem: true, brand: null } })
-  const instructorRole = await db.role.findFirst({ where: { code: "INSTRUCTOR", isSystem: true, brand: null } })
+  const ownerRole = await db.role.findFirst({
+    where: { code: "OWNER", isSystem: true, brand: null },
+  })
+  const instructorRole = await db.role.findFirst({
+    where: { code: "INSTRUCTOR", isSystem: true, brand: null },
+  })
 
   for (const [code, membershipId] of membershipMap) {
     for (const role of [ownerRole, instructorRole]) {
@@ -194,13 +220,18 @@ async function main() {
 
   // Clean up incorrect Eskrima award (was Guro/BB, should be 5th Degree/5D)
   const incorrectEskRank = await db.rank.findFirst({
-    where: { rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } }, shortName: "BB" },
+    where: {
+      rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } },
+      shortName: "BB",
+    },
   })
   if (incorrectEskRank) {
-    const bad = await db.rankAward.findFirst({ where: { userId: OWNER_ID, rankId: incorrectEskRank.id } })
+    const bad = await db.rankAward.findFirst({
+      where: { userId: OWNER_ID, rankId: incorrectEskRank.id },
+    })
     if (bad) {
       await db.rankAward.delete({ where: { id: bad.id } })
-      console.log(`   🧹 Removed incorrect Eskrima rank award (was Guro/BB)`)
+      console.log("   🧹 Removed incorrect Eskrima rank award (was Guro/BB)")
     }
   }
 
@@ -212,7 +243,10 @@ async function main() {
     membershipDiscCode: string,
   ) {
     const rank = await db.rank.findFirst(rankQuery)
-    if (!rank) { console.log(`   ⚠️  Rank not found for ${label}`); return }
+    if (!rank) {
+      console.log(`   ⚠️  Rank not found for ${label}`)
+      return
+    }
     const existing = await db.rankAward.findFirst({ where: { userId: OWNER_ID, rankId: rank.id } })
     if (!existing) {
       await db.rankAward.create({
@@ -241,7 +275,12 @@ async function main() {
   // 2. Eskrima — 5th Degree Black Belt (Master) under GM Steve Wolk, PIMA Denver
   await ensureRankAward(
     "Eskrima 5th Degree Black Belt (Master)",
-    { where: { rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } }, shortName: "5D" } },
+    {
+      where: {
+        rankSystem: { discipline: { code: "eskrima" }, name: { contains: "PIMA Denver" } },
+        shortName: "5D",
+      },
+    },
     "5th Degree Black Belt (Master) under GM Steve Wolk, PIMA Denver Doce Pares Eskrima. 8x World Champion (WEKAF), 14x National Champion.",
     "Denver, CO",
     "eskrima",
@@ -293,9 +332,9 @@ async function main() {
       enrollment = await db.courseEnrollment.create({
         data: { userId: OWNER_ID, courseId: bjjSafetyCourse.id },
       })
-      console.log(`   ✅ Enrolled in BJJ Safety course`)
+      console.log("   ✅ Enrolled in BJJ Safety course")
     } else {
-      console.log(`   BJJ Safety enrollment already exists`)
+      console.log("   BJJ Safety enrollment already exists")
     }
 
     let completionsCreated = 0
@@ -322,7 +361,7 @@ async function main() {
       })
       console.log(`   ✅ Completed ${completionsCreated} curriculum items (BJJ Safety)`)
     } else {
-      console.log(`   BJJ Safety items already completed`)
+      console.log("   BJJ Safety items already completed")
     }
 
     // 9. Certification — marks Brian as the instructor/author of BJJ Safety
@@ -338,12 +377,13 @@ async function main() {
           organizationId: org.id,
           courseId: bjjSafetyCourse.id,
           issuedById: OWNER_ID,
-          notes: "Course author and lead instructor. Program designed by Brian Scott for Baseline Martial Arts.",
+          notes:
+            "Course author and lead instructor. Program designed by Brian Scott for Baseline Martial Arts.",
         },
       })
-      console.log(`   ✅ Created SAFETY Certification (BJJ Safety — instructor/author)`)
+      console.log("   ✅ Created SAFETY Certification (BJJ Safety — instructor/author)")
     } else {
-      console.log(`   BJJ Safety certification already exists`)
+      console.log("   BJJ Safety certification already exists")
     }
   }
 
@@ -351,7 +391,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error("❌ Error in seed-baseline-owner:", error)
     process.exit(1)
   })

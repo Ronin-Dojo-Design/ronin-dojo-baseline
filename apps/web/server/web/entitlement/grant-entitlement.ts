@@ -1,7 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import type { Brand, EntitlementSourceType } from "~/.generated/prisma/client"
+import type { EntitlementSourceType } from "~/.generated/prisma/client"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 

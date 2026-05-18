@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { TournamentRow } from "~/app/admin/tournaments/_components/tournaments-table-columns"
 import { TournamentsDeleteDialog } from "~/app/admin/tournaments/_components/tournaments-delete-dialog"
+import type { TournamentRow } from "~/app/admin/tournaments/_components/tournaments-table-columns"
 import { Button } from "~/components/common/button"
 
 interface TournamentsTableToolbarActionsProps {

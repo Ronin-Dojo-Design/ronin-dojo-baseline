@@ -536,36 +536,143 @@ async function main() {
   // ---------------------------------------------------------------------------
   const disciplines = await Promise.all([
     db.discipline.create({
-      data: { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true, foundedBy: "Hélio Gracie, Carlos Gracie", yearEstablished: 1925, history: "Developed in Brazil from Kodokan judo ground fighting (newaza) fundamentals by the Gracie family. Emphasizes leverage-based submissions and positional control." },
+      data: {
+        name: "Brazilian Jiu-Jitsu",
+        slug: "bjj",
+        code: "bjj",
+        isSystem: true,
+        foundedBy: "Hélio Gracie, Carlos Gracie",
+        yearEstablished: 1925,
+        history:
+          "Developed in Brazil from Kodokan judo ground fighting (newaza) fundamentals by the Gracie family. Emphasizes leverage-based submissions and positional control.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true, foundedBy: "Lorenzo Saavedra", yearEstablished: 1932, history: "Founded in Cebu City, Philippines. One of the oldest and most influential Filipino martial arts organizations, blending stick, blade, and empty-hand combat." },
+      data: {
+        name: "Doce Pares Eskrima",
+        slug: "eskrima",
+        code: "eskrima",
+        isSystem: true,
+        foundedBy: "Lorenzo Saavedra",
+        yearEstablished: 1932,
+        history:
+          "Founded in Cebu City, Philippines. One of the oldest and most influential Filipino martial arts organizations, blending stick, blade, and empty-hand combat.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true, yearEstablished: 1238, history: "Thailand's national combat sport, known as the Art of Eight Limbs for its use of fists, elbows, knees, and shins. Evolved from ancient Muay Boran battlefield techniques." },
+      data: {
+        name: "Muay Thai",
+        slug: "muay-thai",
+        code: "muay-thai",
+        isSystem: true,
+        yearEstablished: 1238,
+        history:
+          "Thailand's national combat sport, known as the Art of Eight Limbs for its use of fists, elbows, knees, and shins. Evolved from ancient Muay Boran battlefield techniques.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true, yearEstablished: 1867, history: "Western boxing codified under the Marquess of Queensberry Rules. Focuses on footwork, head movement, and punching combinations." },
+      data: {
+        name: "Boxing",
+        slug: "boxing",
+        code: "boxing",
+        isSystem: true,
+        yearEstablished: 1867,
+        history:
+          "Western boxing codified under the Marquess of Queensberry Rules. Focuses on footwork, head movement, and punching combinations.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true, history: "Practical self-defense training drawing from multiple martial arts disciplines, situational awareness, and de-escalation techniques." },
-    }),
-    db.discipline.create({ data: { name: "Judo", slug: "judo", code: "judo", isSystem: true, foundedBy: "Kanō Jigorō", yearEstablished: 1882, history: "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964." } }),
-    db.discipline.create({
-      data: { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true, foundedBy: "Adriano Emperado, Peter Choo, Joe Holck, Frank Ordonez, Clarence Chang", yearEstablished: 1947, history: "Hybrid martial art founded in Honolulu, Hawaii by the Black Belt Society. Name derives from KA-rate, JU-do/jujitsu, KEN-po, BO-xing." },
-    }),
-    db.discipline.create({
-      data: { name: "Karate", slug: "karate", code: "karate", isSystem: true, foundedBy: "Gichin Funakoshi", yearEstablished: 1922, history: "Okinawan striking art brought to mainland Japan. Emphasizes kata, kihon, and kumite across numerous styles including Shotokan, Goju-Ryu, and Shito-Ryu." },
-    }),
-    db.discipline.create({ data: { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true, foundedBy: "Choi Hong-hi", yearEstablished: 1955, history: "Korean martial art known for dynamic kicking techniques. Olympic sport since 2000." } }),
-    db.discipline.create({
-      data: { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true, yearEstablished: -708, history: "One of the oldest combat sports, dating to ancient Greece. Modern styles include folkstyle, freestyle, and Greco-Roman." },
+      data: {
+        name: "Self Defense",
+        slug: "self-defense",
+        code: "self-defense",
+        isSystem: true,
+        history:
+          "Practical self-defense training drawing from multiple martial arts disciplines, situational awareness, and de-escalation techniques.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true, foundedBy: "Imi Lichtenfeld", yearEstablished: 1948, history: "Developed for the Israel Defense Forces. Emphasizes real-world threat neutralization, combining techniques from boxing, wrestling, judo, and aikido." },
+      data: {
+        name: "Judo",
+        slug: "judo",
+        code: "judo",
+        isSystem: true,
+        foundedBy: "Kanō Jigorō",
+        yearEstablished: 1882,
+        history:
+          "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964.",
+      },
     }),
     db.discipline.create({
-      data: { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true, foundedBy: "Ng Mui (legendary)", yearEstablished: 1700, history: "Southern Chinese kung fu style emphasizing close-range combat, centerline theory, and simultaneous attack-defense. Popularized by Ip Man and Bruce Lee." },
+      data: {
+        name: "Kajukenbo",
+        slug: "kajukenbo",
+        code: "kajukenbo",
+        isSystem: true,
+        foundedBy: "Adriano Emperado, Peter Choo, Joe Holck, Frank Ordonez, Clarence Chang",
+        yearEstablished: 1947,
+        history:
+          "Hybrid martial art founded in Honolulu, Hawaii by the Black Belt Society. Name derives from KA-rate, JU-do/jujitsu, KEN-po, BO-xing.",
+      },
+    }),
+    db.discipline.create({
+      data: {
+        name: "Karate",
+        slug: "karate",
+        code: "karate",
+        isSystem: true,
+        foundedBy: "Gichin Funakoshi",
+        yearEstablished: 1922,
+        history:
+          "Okinawan striking art brought to mainland Japan. Emphasizes kata, kihon, and kumite across numerous styles including Shotokan, Goju-Ryu, and Shito-Ryu.",
+      },
+    }),
+    db.discipline.create({
+      data: {
+        name: "Taekwondo",
+        slug: "tkd",
+        code: "tkd",
+        isSystem: true,
+        foundedBy: "Choi Hong-hi",
+        yearEstablished: 1955,
+        history:
+          "Korean martial art known for dynamic kicking techniques. Olympic sport since 2000.",
+      },
+    }),
+    db.discipline.create({
+      data: {
+        name: "Wrestling",
+        slug: "wrestling",
+        code: "wrestling",
+        isSystem: true,
+        yearEstablished: -708,
+        history:
+          "One of the oldest combat sports, dating to ancient Greece. Modern styles include folkstyle, freestyle, and Greco-Roman.",
+      },
+    }),
+    db.discipline.create({
+      data: {
+        name: "Krav Maga",
+        slug: "krav-maga",
+        code: "krav-maga",
+        isSystem: true,
+        foundedBy: "Imi Lichtenfeld",
+        yearEstablished: 1948,
+        history:
+          "Developed for the Israel Defense Forces. Emphasizes real-world threat neutralization, combining techniques from boxing, wrestling, judo, and aikido.",
+      },
+    }),
+    db.discipline.create({
+      data: {
+        name: "Wing Chun",
+        slug: "wing-chun",
+        code: "wing-chun",
+        isSystem: true,
+        foundedBy: "Ng Mui (legendary)",
+        yearEstablished: 1700,
+        history:
+          "Southern Chinese kung fu style emphasizing close-range combat, centerline theory, and simultaneous attack-defense. Popularized by Ip Man and Bruce Lee.",
+      },
     }),
   ])
 
@@ -937,15 +1044,47 @@ async function main() {
   // skipDuplicates a no-op (Postgres NULL-distinct semantics).
   // ---------------------------------------------------------------------------
   const systemRoles = [
-    { code: "STUDENT", name: "Student", description: "Standard member/student role", isSystem: true },
-    { code: "INSTRUCTOR", name: "Instructor", description: "Teaches classes and can verify curriculum completions", isSystem: true },
-    { code: "OWNER", name: "Owner", description: "Organization owner with full administrative access", isSystem: true },
-    { code: "COACH", name: "Coach", description: "Coaches students, can award ranks and manage rosters", isSystem: true },
-    { code: "ORG_ADMIN", name: "Organization Admin", description: "Administrative access to organization settings and membership", isSystem: true },
-    { code: "STYLE_APPROVER", name: "Style Approver", description: "Can approve user-submitted styles within their organization", isSystem: true },
+    {
+      code: "STUDENT",
+      name: "Student",
+      description: "Standard member/student role",
+      isSystem: true,
+    },
+    {
+      code: "INSTRUCTOR",
+      name: "Instructor",
+      description: "Teaches classes and can verify curriculum completions",
+      isSystem: true,
+    },
+    {
+      code: "OWNER",
+      name: "Owner",
+      description: "Organization owner with full administrative access",
+      isSystem: true,
+    },
+    {
+      code: "COACH",
+      name: "Coach",
+      description: "Coaches students, can award ranks and manage rosters",
+      isSystem: true,
+    },
+    {
+      code: "ORG_ADMIN",
+      name: "Organization Admin",
+      description: "Administrative access to organization settings and membership",
+      isSystem: true,
+    },
+    {
+      code: "STYLE_APPROVER",
+      name: "Style Approver",
+      description: "Can approve user-submitted styles within their organization",
+      isSystem: true,
+    },
   ]
   for (const role of systemRoles) {
-    const existing = await db.role.findFirst({ where: { code: role.code, brand: null, isSystem: true } })
+    const existing = await db.role.findFirst({
+      where: { code: role.code, brand: null, isSystem: true },
+    })
     if (!existing) {
       await db.role.create({ data: role })
     }
@@ -961,7 +1100,8 @@ async function main() {
       brand,
       key: "S3_UPLOAD",
       name: "Media Upload",
-      description: "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
+      description:
+        "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
     })),
     skipDuplicates: true,
   })
@@ -976,13 +1116,35 @@ async function main() {
   // with brand=null makes createMany non-idempotent.
   // ---------------------------------------------------------------------------
   const tournamentRoles = [
-    { code: "COMPETITOR", name: "Competitor", description: "Participates in divisions as a competitor", isSystem: true },
-    { code: "COACH", name: "Coach", description: "Corners/coaches competitors during events", isSystem: true },
-    { code: "JUDGE", name: "Judge", description: "Judges or referees matches/forms", isSystem: true },
-    { code: "VOLUNTEER", name: "Volunteer", description: "General volunteer staff", isSystem: true },
+    {
+      code: "COMPETITOR",
+      name: "Competitor",
+      description: "Participates in divisions as a competitor",
+      isSystem: true,
+    },
+    {
+      code: "COACH",
+      name: "Coach",
+      description: "Corners/coaches competitors during events",
+      isSystem: true,
+    },
+    {
+      code: "JUDGE",
+      name: "Judge",
+      description: "Judges or referees matches/forms",
+      isSystem: true,
+    },
+    {
+      code: "VOLUNTEER",
+      name: "Volunteer",
+      description: "General volunteer staff",
+      isSystem: true,
+    },
   ]
   for (const tr of tournamentRoles) {
-    const existing = await db.tournamentRole.findFirst({ where: { code: tr.code, brand: null, isSystem: true } })
+    const existing = await db.tournamentRole.findFirst({
+      where: { code: tr.code, brand: null, isSystem: true },
+    })
     if (!existing) {
       await db.tournamentRole.create({ data: tr })
     }
@@ -1004,15 +1166,53 @@ async function main() {
   // with brand=null makes createMany non-idempotent.
   // ---------------------------------------------------------------------------
   const gamificationEventTypes = [
-    { code: "BELT_PROMOTION", name: "Belt/Rank Promotion", description: "Awarded when a student receives a new rank", defaultPoints: 100, isSystem: true },
-    { code: "CLASS_ATTENDANCE", name: "Class Attendance", description: "Awarded for attending a class session", defaultPoints: 10, isSystem: true },
-    { code: "TOURNAMENT_WIN", name: "Tournament Win", description: "Awarded for winning a division in a tournament", defaultPoints: 50, isSystem: true },
-    { code: "TOURNAMENT_PARTICIPATION", name: "Tournament Participation", description: "Awarded for participating in a tournament", defaultPoints: 25, isSystem: true },
-    { code: "COURSE_COMPLETION", name: "Course Completion", description: "Awarded for completing an entire course", defaultPoints: 75, isSystem: true },
-    { code: "CURRICULUM_ITEM_COMPLETION", name: "Curriculum Item Completion", description: "Awarded for completing a single curriculum item", defaultPoints: 5, isSystem: true },
+    {
+      code: "BELT_PROMOTION",
+      name: "Belt/Rank Promotion",
+      description: "Awarded when a student receives a new rank",
+      defaultPoints: 100,
+      isSystem: true,
+    },
+    {
+      code: "CLASS_ATTENDANCE",
+      name: "Class Attendance",
+      description: "Awarded for attending a class session",
+      defaultPoints: 10,
+      isSystem: true,
+    },
+    {
+      code: "TOURNAMENT_WIN",
+      name: "Tournament Win",
+      description: "Awarded for winning a division in a tournament",
+      defaultPoints: 50,
+      isSystem: true,
+    },
+    {
+      code: "TOURNAMENT_PARTICIPATION",
+      name: "Tournament Participation",
+      description: "Awarded for participating in a tournament",
+      defaultPoints: 25,
+      isSystem: true,
+    },
+    {
+      code: "COURSE_COMPLETION",
+      name: "Course Completion",
+      description: "Awarded for completing an entire course",
+      defaultPoints: 75,
+      isSystem: true,
+    },
+    {
+      code: "CURRICULUM_ITEM_COMPLETION",
+      name: "Curriculum Item Completion",
+      description: "Awarded for completing a single curriculum item",
+      defaultPoints: 5,
+      isSystem: true,
+    },
   ]
   for (const ge of gamificationEventTypes) {
-    const existing = await db.gamificationEventType.findFirst({ where: { code: ge.code, brand: null, isSystem: true } })
+    const existing = await db.gamificationEventType.findFirst({
+      where: { code: ge.code, brand: null, isSystem: true },
+    })
     if (!existing) {
       await db.gamificationEventType.create({ data: ge })
     }
@@ -1033,7 +1233,13 @@ async function main() {
   })
   if (!existingFreeTier) {
     await db.subscriptionTier.create({
-      data: { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true },
+      data: {
+        code: "FREE",
+        name: "Free",
+        description: "Basic free tier",
+        level: 0,
+        isSystem: true,
+      },
     })
   }
   await db.subscriptionTier.createMany({
@@ -1397,7 +1603,7 @@ async function main() {
       showRanks: true,
     },
   })
-  const mtMikeMembership = await db.membership.create({
+  const _mtMikeMembership = await db.membership.create({
     data: {
       brand: "BASELINE_MARTIAL_ARTS",
       status: "ACTIVE",
@@ -1489,7 +1695,8 @@ async function main() {
       slug: "muay-thai-clinch-basics",
       status: "PUBLISHED" as const,
       hook: "Control the clinch, control the fight",
-      teachingTruth: "Double collar tie with proper posture is the starting point for all clinch work.",
+      teachingTruth:
+        "Double collar tie with proper posture is the starting point for all clinch work.",
       disciplineId: muayThai.id,
       createdById: senseiUser.id,
       siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
@@ -1513,7 +1720,8 @@ async function main() {
       slug: "sinawali-double-stick-drills",
       status: "PUBLISHED" as const,
       hook: "The partner drill that builds timing and flow",
-      teachingTruth: "Heaven Six is the foundational sinawali pattern — master it before moving to variations.",
+      teachingTruth:
+        "Heaven Six is the foundational sinawali pattern — master it before moving to variations.",
       disciplineId: eskrima.id,
       createdById: senseiUser.id,
       siteTargets: ["BASELINE_MARTIAL_ARTS" as const],
@@ -1617,8 +1825,18 @@ async function main() {
   // =========================================================================
 
   const allDisciplines = [
-    bjj, eskrima, muayThai, boxing, selfDefense,
-    judo, kajukenbo, karate, tkd, wrestling, kravMaga, wingChun,
+    bjj,
+    eskrima,
+    muayThai,
+    boxing,
+    selfDefense,
+    judo,
+    kajukenbo,
+    karate,
+    tkd,
+    wrestling,
+    kravMaga,
+    wingChun,
   ]
 
   let courseCount = 0
@@ -1646,9 +1864,24 @@ async function main() {
       },
     })
     const safetyItems = [
-      { order: 1, title: "Training Etiquette & Dojo Rules", notes: "Proper behavior, bowing protocols, hygiene standards, and respect for training partners." },
-      { order: 2, title: "Injury Prevention & Warm-Up Protocol", notes: "Dynamic stretching, joint preparation, and common injury patterns specific to this discipline." },
-      { order: 3, title: "Emergency Procedures & First Aid Basics", notes: "Emergency contacts, concussion protocol, when to stop training, and basic first aid." },
+      {
+        order: 1,
+        title: "Training Etiquette & Dojo Rules",
+        notes:
+          "Proper behavior, bowing protocols, hygiene standards, and respect for training partners.",
+      },
+      {
+        order: 2,
+        title: "Injury Prevention & Warm-Up Protocol",
+        notes:
+          "Dynamic stretching, joint preparation, and common injury patterns specific to this discipline.",
+      },
+      {
+        order: 3,
+        title: "Emergency Procedures & First Aid Basics",
+        notes:
+          "Emergency contacts, concussion protocol, when to stop training, and basic first aid.",
+      },
     ]
     for (const item of safetyItems) {
       await db.curriculumItem.create({
@@ -1665,7 +1898,10 @@ async function main() {
     })
 
     for (const rs of rankSystems) {
-      const rsSlug = rs.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")
+      const rsSlug = rs.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+$/, "")
       const rsPrefix = rankSystems.length > 1 ? `${rsSlug}-` : ""
       for (const rank of rs.ranks) {
         const rankSlug = (rank.shortName ?? rank.name).toLowerCase().replace(/[^a-z0-9]/g, "-")
@@ -1675,9 +1911,10 @@ async function main() {
             organizationId: baselineOrg.id,
             disciplineId: discipline.id,
             rankId: rank.id,
-            title: rankSystems.length > 1
-              ? `${disc.name} Fundamentals (${rs.name}) — ${rank.name}`
-              : `${disc.name} Fundamentals — ${rank.name}`,
+            title:
+              rankSystems.length > 1
+                ? `${disc.name} Fundamentals (${rs.name}) — ${rank.name}`
+                : `${disc.name} Fundamentals — ${rank.name}`,
             slug: `${disc.slug}-fundamentals-${rsPrefix}${rankSlug}`,
             description: `Fundamentals curriculum for ${disc.name} students working toward ${rank.name}. Covers required techniques, concepts, and competency standards.`,
             certificationType: "BELT_RANK",
@@ -1686,9 +1923,21 @@ async function main() {
           },
         })
         const fundItems = [
-          { order: 1, title: "Core Techniques & Drills", notes: `Required techniques for ${rank.name} proficiency. Includes partner drills and solo practice.` },
-          { order: 2, title: "Concepts & Principles", notes: `Foundational concepts expected at the ${rank.name} level. Covers strategy, timing, and positioning.` },
-          { order: 3, title: "Competency Assessment Criteria", notes: `Evaluation standards for ${rank.name}. What the student must demonstrate to progress.` },
+          {
+            order: 1,
+            title: "Core Techniques & Drills",
+            notes: `Required techniques for ${rank.name} proficiency. Includes partner drills and solo practice.`,
+          },
+          {
+            order: 2,
+            title: "Concepts & Principles",
+            notes: `Foundational concepts expected at the ${rank.name} level. Covers strategy, timing, and positioning.`,
+          },
+          {
+            order: 3,
+            title: "Competency Assessment Criteria",
+            notes: `Evaluation standards for ${rank.name}. What the student must demonstrate to progress.`,
+          },
         ]
         for (const item of fundItems) {
           await db.curriculumItem.create({
@@ -1715,9 +1964,24 @@ async function main() {
       },
     })
     const coachItems = [
-      { order: 1, title: "Teaching Methodology & Class Structure", notes: "How to plan and deliver effective classes. Warm-up, technique blocks, drilling, and cool-down." },
-      { order: 2, title: "Student Safety & Risk Management", notes: "Spotting fatigue, managing sparring intensity, handling injuries, and safeguarding minors." },
-      { order: 3, title: "Curriculum Delivery & Assessment", notes: "How to use the rank curriculum, track student progress, and conduct fair evaluations." },
+      {
+        order: 1,
+        title: "Teaching Methodology & Class Structure",
+        notes:
+          "How to plan and deliver effective classes. Warm-up, technique blocks, drilling, and cool-down.",
+      },
+      {
+        order: 2,
+        title: "Student Safety & Risk Management",
+        notes:
+          "Spotting fatigue, managing sparring intensity, handling injuries, and safeguarding minors.",
+      },
+      {
+        order: 3,
+        title: "Curriculum Delivery & Assessment",
+        notes:
+          "How to use the rank curriculum, track student progress, and conduct fair evaluations.",
+      },
     ]
     for (const item of coachItems) {
       await db.curriculumItem.create({

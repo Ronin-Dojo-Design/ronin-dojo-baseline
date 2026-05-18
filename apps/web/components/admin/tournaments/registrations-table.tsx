@@ -16,7 +16,10 @@ interface RegistrationsTableProps {
   tournamentName: string
 }
 
-export function RegistrationsTable({ registrations, tournamentName }: RegistrationsTableProps) {
+export function RegistrationsTable({
+  registrations,
+  tournamentName: _tournamentName,
+}: RegistrationsTableProps) {
   const columns = useMemo(() => getRegistrationColumns(), [])
 
   const filterFields: DataTableFilterField<RegistrationRow>[] = [
@@ -39,7 +42,7 @@ export function RegistrationsTable({ registrations, tournamentName }: Registrati
       sorting: [{ id: "createdAt", desc: true }],
       columnPinning: { right: ["actions"] },
     },
-    getRowId: (row) => row.id,
+    getRowId: row => row.id,
   })
 
   return (

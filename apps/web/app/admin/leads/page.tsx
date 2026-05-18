@@ -12,10 +12,7 @@ export default withAdminPage(async ({ searchParams }: PageProps<"/admin/leads">)
 
   return (
     <Suspense fallback={<DataTableSkeleton title="Leads" />}>
-      <LeadsTable
-        leadsPromise={leadsPromise}
-        organizationsPromise={organizationsPromise}
-      />
+      <LeadsTable leadsPromise={leadsPromise} organizationsPromise={organizationsPromise} />
     </Suspense>
   )
 })

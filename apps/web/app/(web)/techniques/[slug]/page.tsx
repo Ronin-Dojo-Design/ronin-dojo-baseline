@@ -3,7 +3,7 @@ import { Badge } from "~/components/common/badge"
 import { H4 } from "~/components/common/heading"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { findTechniqueBySlug } from "~/server/web/techniques/queries"
@@ -25,9 +25,7 @@ export default async function TechniqueDetailPage({ params }: PageProps) {
     <>
       <Intro>
         <IntroTitle>{technique.name}</IntroTitle>
-        {technique.description && (
-          <IntroDescription>{technique.description}</IntroDescription>
-        )}
+        {technique.description && <IntroDescription>{technique.description}</IntroDescription>}
       </Intro>
 
       <Section>
@@ -41,9 +39,7 @@ export default async function TechniqueDetailPage({ params }: PageProps) {
           {technique.difficultyLevel && (
             <Badge variant="soft">{technique.difficultyLevel.replace(/_/g, " ")}</Badge>
           )}
-          {technique.discipline && (
-            <Badge variant="soft">{technique.discipline.name}</Badge>
-          )}
+          {technique.discipline && <Badge variant="soft">{technique.discipline.name}</Badge>}
           {technique.isFoundational && <Badge variant="success">Foundational</Badge>}
           {technique.isGi !== null && (
             <Badge variant="outline">{technique.isGi ? "Gi" : "No-Gi"}</Badge>
@@ -61,6 +57,7 @@ export default async function TechniqueDetailPage({ params }: PageProps) {
             {technique.mediaAttachments.map(({ id, media }) => (
               <div key={id} className="overflow-hidden rounded-lg">
                 {media.mimeType?.startsWith("video/") ? (
+                  // biome-ignore lint/a11y/useMediaCaption: user-uploaded technique video; no caption track available
                   <video
                     src={media.url}
                     controls

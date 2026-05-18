@@ -2,14 +2,14 @@
 
 import { after } from "next/server"
 import type { Brand } from "~/.generated/prisma/client"
+import { siteConfig } from "~/config/site"
+import { EmailMagicLink } from "~/emails/magic-link"
 import { canEditOrganization } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
 import { sendEmail } from "~/lib/email"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { generateUniqueProfileSlug } from "~/lib/slug"
-import { siteConfig } from "~/config/site"
-import { EmailMagicLink } from "~/emails/magic-link"
 import { LEAD_ERROR } from "~/server/web/lead/errors"
 import { type LeadRecord, leadPayload, leadProgramPayload } from "~/server/web/lead/payloads"
 import {
@@ -386,8 +386,7 @@ export const convertLead = userActionClient
         if (!existingUser?.directoryProfile) {
           const slug = await generateUniqueProfileSlug(
             displayName,
-            async (s) =>
-              (await tx.directoryProfile.count({ where: { slug: s } })) > 0,
+            async s => (await tx.directoryProfile.count({ where: { slug: s } })) > 0,
           )
           await tx.directoryProfile.create({
             data: { userId: convertedUser.id, slug },

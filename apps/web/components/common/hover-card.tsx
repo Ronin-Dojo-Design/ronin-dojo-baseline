@@ -30,4 +30,4 @@ const HoverCardContent = ({
   )
 }
 
-export { HoverCard, HoverCardTrigger, HoverCardArrow, HoverCardContent }
+export { HoverCard, HoverCardArrow, HoverCardContent, HoverCardTrigger }

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
-import { CertificateTemplateForm } from "~/app/admin/certificates/_components/certificate-template-form"
 import { CertificateIssuanceList } from "~/app/admin/certificates/_components/certificate-issuance-list"
+import { CertificateTemplateForm } from "~/app/admin/certificates/_components/certificate-template-form"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
-import { findCertificateTemplateById } from "~/server/admin/certificates/queries"
 import { findIssuancesByTemplate } from "~/server/admin/certificates/issuance-queries"
+import { findCertificateTemplateById } from "~/server/admin/certificates/queries"
 
 export default withAdminPage(async ({ params }) => {
   const { id } = await params

@@ -41,7 +41,6 @@ export const findTags = async (search: TagsTableSchema, where?: Prisma.TagWhereI
 
   const countQuery = db.tag.count({ where: combinedWhere })
 
-  // @ts-ignore — Prisma TagInclude excessive stack depth; upstream Prisma type bug
   const [tags, tagsTotal] = await db.$transaction([tagsQuery, countQuery])
 
   const pageCount = Math.ceil(tagsTotal / perPage)

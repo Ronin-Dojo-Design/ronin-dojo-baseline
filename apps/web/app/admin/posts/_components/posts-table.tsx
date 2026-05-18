@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  CircleCheckIcon,
-  CircleDashedIcon,
-  CircleDotIcon,
-  PlusIcon,
-} from "lucide-react"
+import { CircleCheckIcon, CircleDashedIcon, CircleDotIcon, PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { type Post, PostStatus } from "~/.generated/prisma/browser"

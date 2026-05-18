@@ -50,10 +50,7 @@ export const CourseActions = ({ course, className, ...props }: CourseActionsProp
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CoursesDeleteDialog
-        courses={[course]}
-        onExecute={() => router.push("/admin/courses")}
-      >
+      <CoursesDeleteDialog courses={[course]} onExecute={() => router.push("/admin/courses")}>
         <Button
           variant="secondary"
           size="sm"

@@ -23,7 +23,11 @@ type RegistrationActionsProps = ComponentProps<typeof Button> & {
   registration: RegistrationRow
 }
 
-export const RegistrationActions = ({ registration, className, ...props }: RegistrationActionsProps) => {
+export const RegistrationActions = ({
+  registration,
+  className,
+  ...props
+}: RegistrationActionsProps) => {
   const router = useRouter()
   const allowed = REGISTRATION_STATUS_TRANSITIONS[registration.status] ?? []
 
@@ -45,7 +49,7 @@ export const RegistrationActions = ({ registration, className, ...props }: Regis
       {
         loading: `Updating to ${status.toLowerCase()}...`,
         success: `Registration ${status.toLowerCase()} successfully`,
-        error: (err) => `Failed: ${err.message}`,
+        error: err => `Failed: ${err.message}`,
       },
     )
   }

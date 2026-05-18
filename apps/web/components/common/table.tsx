@@ -57,4 +57,4 @@ const TableCaption = ({ className, ...props }: ComponentProps<typeof Note>) => {
   return <Note as="caption" className={cx("mt-4", className)} {...props} />
 }
 
-export { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, TableCaption }
+export { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow }

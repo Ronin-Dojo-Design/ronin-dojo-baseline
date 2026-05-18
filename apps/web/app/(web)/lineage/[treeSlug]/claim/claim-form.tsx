@@ -1,9 +1,9 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
-import { useRouter } from "next/navigation"
-import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
+import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
 import {
@@ -15,7 +15,9 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { Input } from "~/components/common/input"
-import { TextArea } from "~/components/common/textarea"
+import { Label } from "~/components/common/label"
+import { Note } from "~/components/common/note"
+import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import {
   Select,
   SelectContent,
@@ -23,12 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import { Stack } from "~/components/common/stack"
-import { Note } from "~/components/common/note"
-import { Label } from "~/components/common/label"
+import { TextArea } from "~/components/common/textarea"
 import { submitLineageClaimRequest } from "~/server/web/lineage/claim-actions"
-import { submitLineageClaimSchema } from "~/server/web/lineage/claim-schemas"
 
 /**
  * Client-island lineage claim form.
@@ -70,7 +69,7 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
 
   const { execute, isExecuting, result } = useAction(submitLineageClaimRequest, {
     onSuccess: () => {
-      router.push(`/lineage?claimed=true`)
+      router.push("/lineage?claimed=true")
     },
   })
 
@@ -223,12 +222,7 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
                   </FormItem>
                 )}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => remove(index)}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
                 Remove
               </Button>
             </Stack>
@@ -244,9 +238,7 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
         </Stack>
 
         {/* Error feedback */}
-        {result?.serverError && (
-          <Note className="text-destructive">{result.serverError}</Note>
-        )}
+        {result?.serverError && <Note className="text-destructive">{result.serverError}</Note>}
 
         {/* Submit */}
         <Button type="submit" isPending={isExecuting}>

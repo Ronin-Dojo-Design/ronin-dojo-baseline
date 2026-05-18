@@ -1,7 +1,7 @@
 "use server"
 
 import { userActionClient } from "~/lib/safe-actions"
-import { updatePassportSchema, updateDirectoryProfileSchema } from "./schemas"
+import { updateDirectoryProfileSchema, updatePassportSchema } from "./schemas"
 
 // ---------------------------------------------------------------------------
 // Actions

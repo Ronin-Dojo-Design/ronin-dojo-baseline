@@ -14,7 +14,8 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../.generated/prisma/client.js"
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
+const DATABASE_URL =
+  process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
 const adapter = new PrismaPg({ connectionString: DATABASE_URL })
 const db = new PrismaClient({ adapter })
 const TEST_EMAIL = `smoke-passport-${Date.now()}@test.local`
@@ -87,7 +88,9 @@ async function main() {
   if (dp.showOrgs !== true || dp.showRanks !== true) {
     throw new Error("FAIL: default showOrgs/showRanks not true")
   }
-  console.log(`   ✅ DirectoryProfile defaults OK: visibility=${dp.visibility}, showOrgs=${dp.showOrgs}, showRanks=${dp.showRanks}`)
+  console.log(
+    `   ✅ DirectoryProfile defaults OK: visibility=${dp.visibility}, showOrgs=${dp.showOrgs}, showRanks=${dp.showRanks}`,
+  )
 
   // ── Cleanup ──────────────────────────────────────────────────────────────
   console.log("\n🧹 Cleaning up test data…")
@@ -100,7 +103,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("\n❌ SMOKE PROOF FAILED:", e.message)
     process.exit(1)
   })

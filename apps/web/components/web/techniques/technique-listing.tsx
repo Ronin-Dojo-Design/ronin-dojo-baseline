@@ -5,7 +5,10 @@ import type { PropsWithChildren } from "react"
 import { Input } from "~/components/common/input"
 import { Pagination, type PaginationProps } from "~/components/web/pagination"
 import { TechniqueListSkeleton } from "~/components/web/techniques/technique-list"
-import { TechniqueSearch, type TechniqueSearchProps } from "~/components/web/techniques/technique-search"
+import {
+  TechniqueSearch,
+  type TechniqueSearchProps,
+} from "~/components/web/techniques/technique-search"
 import { FiltersProvider, type FiltersProviderProps } from "~/contexts/filter-context"
 import { techniqueFilterParams } from "~/server/web/techniques/schema"
 
@@ -39,4 +42,4 @@ const TechniqueListingSkeleton = () => {
   )
 }
 
-export { TechniqueListing, TechniqueListingSkeleton, type TechniqueListingProps }
+export { TechniqueListing, type TechniqueListingProps, TechniqueListingSkeleton }

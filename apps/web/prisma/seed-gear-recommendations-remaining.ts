@@ -68,7 +68,7 @@ async function main() {
     where: { slug: { in: remainingSlugs } },
     select: { id: true, slug: true },
   })
-  const disciplineBySlug = new Map(disciplines.map((d) => [d.slug, d.id]))
+  const disciplineBySlug = new Map(disciplines.map(d => [d.slug, d.id]))
 
   // Load affiliate PricingPlan rows keyed by metadata.externalId
   const plans = await db.pricingPlan.findMany({
@@ -86,7 +86,9 @@ async function main() {
     }
   }
 
-  console.log(`📍 Found ${disciplines.length} remaining disciplines, ${plans.length} affiliate PricingPlans\n`)
+  console.log(
+    `📍 Found ${disciplines.length} remaining disciplines, ${plans.length} affiliate PricingPlans\n`,
+  )
 
   let created = 0
   let skipped = 0
@@ -150,7 +152,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("❌ Seed error:", e)
     process.exit(1)
   })

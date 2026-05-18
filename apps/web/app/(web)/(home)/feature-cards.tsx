@@ -3,8 +3,8 @@ import { getTranslations } from "next-intl/server"
 import type { ComponentProps } from "react"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { Heading } from "~/components/common/heading"
-import { Intro, IntroTitle } from "~/components/web/ui/intro"
 import { Grid } from "~/components/web/ui/grid"
+import { Intro, IntroTitle } from "~/components/web/ui/intro"
 import { cx } from "~/lib/utils"
 
 const features = [

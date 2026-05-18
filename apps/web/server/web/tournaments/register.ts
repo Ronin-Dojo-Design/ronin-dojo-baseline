@@ -105,72 +105,72 @@ export const createRegistrationCheckout = userActionClient
 
     async function runCapacityTransaction() {
       return db.$transaction(
-      async tx => {
-        const divisions = await tx.division.findMany({
-          where: { id: { in: input.divisionIds } },
-          include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
-        })
-
-        if (divisions.length !== input.divisionIds.length) {
-          throw new Error("One or more selected divisions not found")
-        }
-
-        for (const div of divisions) {
-          if (div.capacity && div._count.entries >= div.capacity) {
-            throw new Error(`Division "${div.name}" is at capacity`)
-          }
-        }
-
-        const totalFeeCents = divisions.reduce((sum, d) => sum + d.feeCents, 0)
-
-        // Snapshot the user's current rank and org for registration entries
-        let snapshotRankName: string | null = null
-        let snapshotOrgName: string | null = null
-
-        if (input.representingMembershipId) {
-          const membership = await tx.membership.findUnique({
-            where: { id: input.representingMembershipId },
-            select: {
-              rank: { select: { name: true } },
-              organization: { select: { name: true } },
-            },
+        async tx => {
+          const divisions = await tx.division.findMany({
+            where: { id: { in: input.divisionIds } },
+            include: { _count: { select: { entries: { where: { status: "ACTIVE" } } } } },
           })
 
-          if (membership) {
-            snapshotRankName = membership.rank?.name ?? null
-            snapshotOrgName = membership.organization?.name ?? null
+          if (divisions.length !== input.divisionIds.length) {
+            throw new Error("One or more selected divisions not found")
           }
-        }
 
-        // If free, create registration inside the transaction
-        if (totalFeeCents === 0) {
-          const registration = await tx.registration.create({
-            data: {
-              tournamentId: input.tournamentId,
-              userId,
-              status: "SUBMITTED",
-              paymentStatus: "PAID",
-              totalFeeCents: 0,
-              submittedAt: new Date(),
-              entries: {
-                create: input.divisionIds.map(divisionId => ({
-                  divisionId,
-                  tournamentRoleId: validatedRole.id,
-                  representingMembershipId: input.representingMembershipId ?? null,
-                  snapshotRankName,
-                  snapshotOrgName,
-                })),
+          for (const div of divisions) {
+            if (div.capacity && div._count.entries >= div.capacity) {
+              throw new Error(`Division "${div.name}" is at capacity`)
+            }
+          }
+
+          const totalFeeCents = divisions.reduce((sum, d) => sum + d.feeCents, 0)
+
+          // Snapshot the user's current rank and org for registration entries
+          let snapshotRankName: string | null = null
+          let snapshotOrgName: string | null = null
+
+          if (input.representingMembershipId) {
+            const membership = await tx.membership.findUnique({
+              where: { id: input.representingMembershipId },
+              select: {
+                rank: { select: { name: true } },
+                organization: { select: { name: true } },
               },
-            },
-          })
+            })
 
-          return { type: "free" as const, registrationId: registration.id, divisions: [] }
-        }
+            if (membership) {
+              snapshotRankName = membership.rank?.name ?? null
+              snapshotOrgName = membership.organization?.name ?? null
+            }
+          }
 
-        return { type: "paid" as const, registrationId: null, divisions, totalFeeCents }
-      },
-      { isolationLevel: "Serializable" },
-    )
+          // If free, create registration inside the transaction
+          if (totalFeeCents === 0) {
+            const registration = await tx.registration.create({
+              data: {
+                tournamentId: input.tournamentId,
+                userId,
+                status: "SUBMITTED",
+                paymentStatus: "PAID",
+                totalFeeCents: 0,
+                submittedAt: new Date(),
+                entries: {
+                  create: input.divisionIds.map(divisionId => ({
+                    divisionId,
+                    tournamentRoleId: validatedRole.id,
+                    representingMembershipId: input.representingMembershipId ?? null,
+                    snapshotRankName,
+                    snapshotOrgName,
+                  })),
+                },
+              },
+            })
+
+            return { type: "free" as const, registrationId: registration.id, divisions: [] }
+          }
+
+          return { type: "paid" as const, registrationId: null, divisions, totalFeeCents }
+        },
+        { isolationLevel: "Serializable" },
+      )
     }
 
     if (capacityResult.type === "free") {

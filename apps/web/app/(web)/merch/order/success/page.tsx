@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
+import type Stripe from "stripe"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
-import { H2, H3 } from "~/components/common/heading"
+import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
@@ -38,7 +39,7 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
     )
   }
 
-  let session
+  let session: Stripe.Checkout.Session
   try {
     session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items.data.price.product"],
@@ -138,7 +139,9 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
           <Card className="space-y-3 p-6">
             <H3>Shipping To</H3>
             <div className="text-sm text-secondary-foreground">
-              {shippingDetails.name && <p className="font-medium text-foreground">{shippingDetails.name}</p>}
+              {shippingDetails.name && (
+                <p className="font-medium text-foreground">{shippingDetails.name}</p>
+              )}
               <p>{shippingDetails.address.line1}</p>
               {shippingDetails.address.line2 && <p>{shippingDetails.address.line2}</p>}
               <p>
@@ -146,9 +149,7 @@ export default async function MerchOrderSuccessPage({ searchParams }: Props) {
                 {shippingDetails.address.postal_code}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Estimated delivery: 5–10 business days
-            </p>
+            <p className="text-xs text-muted-foreground">Estimated delivery: 5–10 business days</p>
           </Card>
         )}
 

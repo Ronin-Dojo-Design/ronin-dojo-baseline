@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import Markdown from "react-markdown"
+import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { Nav } from "~/components/web/nav"
@@ -14,7 +15,6 @@ import { Author } from "~/components/web/ui/author"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Favicon } from "~/components/web/ui/favicon"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { Prose } from "~/components/common/prose"
 import { Section } from "~/components/web/ui/section"
 import { blogConfig } from "~/config/blog"
 import { getRequestBrand } from "~/lib/brand-context"
@@ -79,7 +79,9 @@ export default async function (props: Props) {
                   </time>
                 )}
                 <span className="px-1.5">&bull;</span>
-                <span>{t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}</span>
+                <span>
+                  {t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}
+                </span>
               </>
             }
             className="mt-4"

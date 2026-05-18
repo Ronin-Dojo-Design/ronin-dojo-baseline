@@ -65,6 +65,12 @@ export function Carousel({ options, children, className }: CarouselProps) {
   )
 }
 
-export function CarouselSlide({ children, className }: { children: React.ReactNode; className?: string }) {
+export function CarouselSlide({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return <div className={cx("min-w-0 flex-[0_0_280px]", className)}>{children}</div>
 }

@@ -1,8 +1,8 @@
 "use client"
 
 import { StarIcon, UserMinusIcon, UserPlusIcon } from "lucide-react"
-import { useState } from "react"
 import { useAction } from "next-safe-action/hooks"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"

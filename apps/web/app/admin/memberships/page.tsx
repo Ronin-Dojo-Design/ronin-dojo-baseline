@@ -9,7 +9,7 @@ import { withAdminPage } from "~/components/admin/auth-hoc"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findMemberships } from "~/server/admin/memberships/queries"
 import { membershipsTableParamsCache } from "~/server/admin/memberships/schema"
-import { findOrganizationOptions, findDisciplineOptions } from "~/server/admin/programs/queries"
+import { findDisciplineOptions, findOrganizationOptions } from "~/server/admin/programs/queries"
 
 export default withAdminPage(async ({ searchParams }: PageProps<"/admin/memberships">) => {
   const search = membershipsTableParamsCache.parse(await searchParams)

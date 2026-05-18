@@ -73,7 +73,9 @@ export const getColumns = (): ColumnDef<PricingPlanRow>[] => {
       accessorKey: "organization.name",
       enableSorting: false,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Organization" />,
-      cell: ({ row }) => <Note className="max-w-40 truncate">{row.original.organization.name}</Note>,
+      cell: ({ row }) => (
+        <Note className="max-w-40 truncate">{row.original.organization.name}</Note>
+      ),
     },
     {
       accessorKey: "program.name",
@@ -87,7 +89,9 @@ export const getColumns = (): ColumnDef<PricingPlanRow>[] => {
       accessorKey: "pricingModel",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Model" />,
       cell: ({ row }) => (
-        <Badge variant="outline">{modelLabels[row.original.pricingModel] ?? row.original.pricingModel}</Badge>
+        <Badge variant="outline">
+          {modelLabels[row.original.pricingModel] ?? row.original.pricingModel}
+        </Badge>
       ),
     },
     {

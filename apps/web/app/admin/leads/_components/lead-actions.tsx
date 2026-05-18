@@ -1,6 +1,6 @@
 "use client"
 
-import { EllipsisIcon, EyeIcon, CalendarIcon, XCircleIcon, TrashIcon } from "lucide-react"
+import { CalendarIcon, EllipsisIcon, EyeIcon, TrashIcon, XCircleIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import type { ComponentProps } from "react"
@@ -25,7 +25,7 @@ type LeadActionsProps = ComponentProps<typeof Button> & {
 }
 
 export const LeadActions = ({ className, lead, ...props }: LeadActionsProps) => {
-  const router = useRouter()
+  const _router = useRouter()
 
   const { executeAsync: executeLost } = useAction(markLeadLost, {
     onSuccess: () => toast.success("Lead marked as lost"),

@@ -10,7 +10,7 @@ export const findMemberFilterOptions = actionClient.action(async () => {
   })
 
   return {
-    disciplines: disciplines.map((d) => ({ slug: d.slug, name: d.name })),
+    disciplines: disciplines.map(d => ({ slug: d.slug, name: d.name })),
   }
 })
 
@@ -21,6 +21,6 @@ export const findSchoolFilterOptions = actionClient.action(async () => {
   })
 
   return {
-    disciplines: disciplines.map((d) => ({ slug: d.slug, name: d.name })),
+    disciplines: disciplines.map(d => ({ slug: d.slug, name: d.name })),
   }
 })

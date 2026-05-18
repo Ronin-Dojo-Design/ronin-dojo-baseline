@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation"
+import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
-import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
 
 export default async function NewTechniquePage() {
   const session = await getServerSession()
@@ -27,10 +27,5 @@ export default async function NewTechniquePage() {
     orderBy: { name: "asc" },
   })
 
-  return (
-    <TechniqueForm
-      organizationId={membership.organization.id}
-      disciplines={disciplines}
-    />
-  )
+  return <TechniqueForm organizationId={membership.organization.id} disciplines={disciplines} />
 }

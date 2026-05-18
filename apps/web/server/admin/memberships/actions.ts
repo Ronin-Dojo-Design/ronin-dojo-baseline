@@ -3,9 +3,9 @@
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
 import {
+  roleAssignmentSchema,
   transitionMembershipSchema,
   VALID_TRANSITIONS,
-  roleAssignmentSchema,
 } from "~/server/admin/memberships/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
 
@@ -37,7 +37,7 @@ export const transitionMembershipStatus = adminActionClient
     // Optimistic locking: only update if version hasn't changed since read.
     // If another caller updated first, Prisma throws P2025 (record not found)
     // because the compound where {id, version} no longer matches.
-    let updated
+    let updated: Awaited<ReturnType<typeof db.membership.update>>
     try {
       updated = await db.membership.update({
         where: { id, version: membership.version },
@@ -56,9 +56,7 @@ export const transitionMembershipStatus = adminActionClient
         "code" in error &&
         (error as { code: string }).code === "P2025"
       ) {
-        throw new Error(
-          `Conflict: membership ${id} was modified by another request. Please retry.`,
-        )
+        throw new Error(`Conflict: membership ${id} was modified by another request. Please retry.`)
       }
       throw error
     }

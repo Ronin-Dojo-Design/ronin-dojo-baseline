@@ -55,13 +55,7 @@ const assertTargetIsActiveMember = async ({
   }
 }
 
-const assertUserHasPassport = async ({
-  db,
-  userId,
-}: {
-  db: DbLike
-  userId: string
-}) => {
+const assertUserHasPassport = async ({ db, userId }: { db: DbLike; userId: string }) => {
   const passport = await db.passport.findUnique({
     where: { userId },
     select: { id: true },

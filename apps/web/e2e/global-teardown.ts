@@ -1,9 +1,10 @@
 /**
  * Playwright global teardown — cleans up the seeded tournament fixture.
  */
-import { cleanupTournamentFixture, type TournamentFixture } from "./helpers/seed-tournament"
+
 import { readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
+import { cleanupTournamentFixture, type TournamentFixture } from "./helpers/seed-tournament"
 
 const FIXTURE_PATH = join(process.cwd(), "e2e", ".fixture.json")
 

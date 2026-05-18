@@ -7,11 +7,7 @@
 
 import { formatDate } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import {
-  ArrowRightIcon,
-  MoreHorizontalIcon,
-  TrashIcon,
-} from "lucide-react"
+import { ArrowRightIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
@@ -23,19 +19,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/common/dropdown-menu"
-import { Note } from "~/components/common/note"
 import { Link } from "~/components/common/link"
+import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
-import {
-  transitionMembershipStatus,
-  deleteMemberships,
-} from "~/server/admin/memberships/actions"
+import { deleteMemberships, transitionMembershipStatus } from "~/server/admin/memberships/actions"
 import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 import type { findMemberships } from "~/server/admin/memberships/queries"
 
 type MembershipRow = Awaited<ReturnType<typeof findMemberships>>["memberships"][number]
 
-const statusVariant: Record<string, "primary" | "success" | "warning" | "danger" | "outline" | "soft"> = {
+const statusVariant: Record<
+  string,
+  "primary" | "success" | "warning" | "danger" | "outline" | "soft"
+> = {
   INVITED: "soft",
   PENDING: "primary",
   ACTIVE: "success",
@@ -91,7 +87,9 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
       enableSorting: false,
       size: 140,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Organization" />,
-      cell: ({ row }) => <Note className="truncate max-w-35">{row.original.organization.name}</Note>,
+      cell: ({ row }) => (
+        <Note className="truncate max-w-35">{row.original.organization.name}</Note>
+      ),
     },
     {
       accessorKey: "discipline.name",
@@ -122,13 +120,15 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Roles" />,
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
-          {row.original.roleAssignments.length > 0
-            ? row.original.roleAssignments.map(ra => (
-                <Badge key={ra.role.id} variant="outline" size="sm">
-                  {ra.role.name}
-                </Badge>
-              ))
-            : <Note>—</Note>}
+          {row.original.roleAssignments.length > 0 ? (
+            row.original.roleAssignments.map(ra => (
+              <Badge key={ra.role.id} variant="outline" size="sm">
+                {ra.role.name}
+              </Badge>
+            ))
+          ) : (
+            <Note>—</Note>
+          )}
         </div>
       ),
     },
@@ -176,7 +176,10 @@ function MembershipRowActions({ membership }: { membership: MembershipRow }) {
 
       <DropdownMenuContent align="end" sideOffset={8}>
         {validTransitions.map(target => (
-          <DropdownMenuItem key={target} onClick={() => handleTransition(target as MembershipRow["status"])}>
+          <DropdownMenuItem
+            key={target}
+            onClick={() => handleTransition(target as MembershipRow["status"])}
+          >
             <ArrowRightIcon className="mr-2 size-4" />
             Transition to {target}
           </DropdownMenuItem>

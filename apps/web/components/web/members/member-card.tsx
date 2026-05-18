@@ -1,13 +1,13 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { Avatar, AvatarImage, AvatarFallback } from "~/components/common/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { Skeleton } from "~/components/common/skeleton"
+import { Stack } from "~/components/common/stack"
 
 type MemberCardData = {
   slug: string
@@ -32,9 +32,7 @@ export const MemberCard = ({ member, ...props }: MemberCardProps) => {
             {member.avatarUrl && (
               <AvatarImage src={member.avatarUrl} alt={member.displayName ?? "Member"} />
             )}
-            <AvatarFallback>
-              {(member.displayName ?? "?").charAt(0).toUpperCase()}
-            </AvatarFallback>
+            <AvatarFallback>{(member.displayName ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <H4 as="h3" className="truncate">
             <Link href={`/members/${member.slug}`}>
@@ -48,9 +46,7 @@ export const MemberCard = ({ member, ...props }: MemberCardProps) => {
       <div className="relative size-full flex flex-col">
         <Stack size="lg" direction="column" className="flex-1">
           {member.bio && (
-            <CardDescription className="line-clamp-2 min-h-10">
-              {member.bio}
-            </CardDescription>
+            <CardDescription className="line-clamp-2 min-h-10">{member.bio}</CardDescription>
           )}
 
           {(member.locationCity || member.locationRegion) && (
@@ -62,7 +58,9 @@ export const MemberCard = ({ member, ...props }: MemberCardProps) => {
           {member.disciplines && member.disciplines.length > 0 && (
             <Stack size="sm" className="mt-auto flex-wrap">
               {member.disciplines.map(d => (
-                <Badge key={d.name} variant="soft">{d.name}</Badge>
+                <Badge key={d.name} variant="soft">
+                  {d.name}
+                </Badge>
               ))}
             </Stack>
           )}
@@ -78,7 +76,9 @@ export const MemberCardSkeleton = () => {
       <CardHeader>
         <Stack size="sm" direction="row" className="items-center">
           <Skeleton className="size-10 rounded-full">&nbsp;</Skeleton>
-          <H4 className="w-2/3"><Skeleton>&nbsp;</Skeleton></H4>
+          <H4 className="w-2/3">
+            <Skeleton>&nbsp;</Skeleton>
+          </H4>
         </Stack>
       </CardHeader>
       <CardDescription className="flex flex-col gap-0.5">

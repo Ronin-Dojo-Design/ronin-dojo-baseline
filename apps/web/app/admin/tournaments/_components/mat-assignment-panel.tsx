@@ -1,11 +1,11 @@
 "use client"
 
-import { PlusIcon, TrashIcon } from "lucide-react"
-import { use, useState } from "react"
-import { useAction } from "next-safe-action/hooks"
-import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { formatDate } from "@primoui/utils"
+import { PlusIcon, TrashIcon } from "lucide-react"
+import { useAction } from "next-safe-action/hooks"
+import { use, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -13,10 +13,10 @@ import { Card, CardHeader } from "~/components/common/card"
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "~/components/common/dialog"
 import {
   Form,
@@ -45,7 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
-import { upsertMatAssignment, deleteMatAssignment } from "~/server/admin/tournaments/actions"
+import { deleteMatAssignment, upsertMatAssignment } from "~/server/admin/tournaments/actions"
 import type { findMatAssignmentsByTournament } from "~/server/admin/tournaments/queries"
 import { matAssignmentSchema } from "~/server/admin/tournaments/schema"
 
@@ -149,7 +149,8 @@ export function MatAssignmentPanel({
                             {unassignedMatches.map(m => (
                               <SelectItem key={m.id} value={m.id}>
                                 {m.divisionName} — R{m.roundNumber} M{m.matchNumber}
-                                {m.competitorNames.length > 0 && ` (${m.competitorNames.join(" vs ")})`}
+                                {m.competitorNames.length > 0 &&
+                                  ` (${m.competitorNames.join(" vs ")})`}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -182,8 +183,16 @@ export function MatAssignmentPanel({
                         <FormControl>
                           <Input
                             type="datetime-local"
-                            value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : typeof field.value === "string" ? field.value.slice(0, 16) : ""}
-                            onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                            value={
+                              field.value instanceof Date
+                                ? field.value.toISOString().slice(0, 16)
+                                : typeof field.value === "string"
+                                  ? field.value.slice(0, 16)
+                                  : ""
+                            }
+                            onChange={e =>
+                              field.onChange(e.target.value ? new Date(e.target.value) : null)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -226,7 +235,9 @@ export function MatAssignmentPanel({
                     <TableCell className="font-medium">{a.matName}</TableCell>
                     <TableCell>{a.match.bracket.division.name}</TableCell>
                     <TableCell>
-                      <Note>R{a.match.roundNumber} M{a.match.matchNumber}</Note>
+                      <Note>
+                        R{a.match.roundNumber} M{a.match.matchNumber}
+                      </Note>
                     </TableCell>
                     <TableCell>{competitors || "TBD"}</TableCell>
                     <TableCell>
@@ -235,16 +246,10 @@ export function MatAssignmentPanel({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Note>
-                        {a.startTime ? formatDate(a.startTime) : "—"}
-                      </Note>
+                      <Note>{a.startTime ? formatDate(a.startTime) : "—"}</Note>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(a.id)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onDelete(a.id)}>
                         <TrashIcon className="size-4 text-destructive" />
                       </Button>
                     </TableCell>

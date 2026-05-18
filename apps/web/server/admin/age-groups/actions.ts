@@ -3,7 +3,7 @@
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
 import { ageGroupSchema } from "~/server/admin/age-groups/schema"
-import { idSchema, idsSchema } from "~/server/admin/shared/schema"
+import { idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertAgeGroup = adminActionClient
   .inputSchema(ageGroupSchema)

@@ -26,10 +26,10 @@ import {
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
+import type { findSubscriptionTierList } from "~/server/admin/subscription-tiers/queries"
 import { upsertSubscription } from "~/server/admin/subscriptions/actions"
 import type { findSubscriptionById } from "~/server/admin/subscriptions/queries"
 import { subscriptionSchema } from "~/server/admin/subscriptions/schema"
-import type { findSubscriptionTierList } from "~/server/admin/subscription-tiers/queries"
 import type { findUserList } from "~/server/admin/users/queries"
 
 type SubscriptionFormProps = ComponentProps<"form"> & {
@@ -52,33 +52,29 @@ export function SubscriptionForm({
   const tiers = use(tiersPromise)
   const users = usersPromise ? use(usersPromise) : []
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    upsertSubscription,
-    resolver,
-    {
-      formProps: {
-        defaultValues: {
-          id: subscription?.id ?? "",
-          userId: subscription?.userId ?? "",
-          tierId: subscription?.tierId ?? "",
-          status: subscription?.status ?? "ACTIVE",
-          startsAt: subscription?.startsAt ?? new Date(),
-          expiresAt: subscription?.expiresAt ?? null,
-        },
-      },
-
-      actionProps: {
-        onSuccess: ({ data }) => {
-          toast.success(`Subscription successfully ${subscription ? "updated" : "created"}`)
-          router.push(`/admin/subscriptions/${data?.id}`)
-        },
-
-        onError: ({ error }) => {
-          toast.error(error.serverError)
-        },
+  const { form, action, handleSubmitWithAction } = useHookFormAction(upsertSubscription, resolver, {
+    formProps: {
+      defaultValues: {
+        id: subscription?.id ?? "",
+        userId: subscription?.userId ?? "",
+        tierId: subscription?.tierId ?? "",
+        status: subscription?.status ?? "ACTIVE",
+        startsAt: subscription?.startsAt ?? new Date(),
+        expiresAt: subscription?.expiresAt ?? null,
       },
     },
-  )
+
+    actionProps: {
+      onSuccess: ({ data }) => {
+        toast.success(`Subscription successfully ${subscription ? "updated" : "created"}`)
+        router.push(`/admin/subscriptions/${data?.id}`)
+      },
+
+      onError: ({ error }) => {
+        toast.error(error.serverError)
+      },
+    },
+  })
 
   return (
     <Form {...form}>
@@ -86,9 +82,7 @@ export function SubscriptionForm({
         <H3 className="flex-1 truncate">{title}</H3>
 
         <Stack size="sm" className="-my-0.5">
-          {subscription && (
-            <SubscriptionActions subscription={subscription as any} />
-          )}
+          {subscription && <SubscriptionActions subscription={subscription as any} />}
 
           <Button variant="primary" isPending={action.isPending} onClick={handleSubmitWithAction}>
             {subscription ? "Update subscription" : "Create subscription"}
@@ -187,10 +181,12 @@ export function SubscriptionForm({
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value ? new Date(field.value as string | number).toISOString().split("T")[0] : ""}
-                  onChange={e =>
-                    field.onChange(e.target.value ? new Date(e.target.value) : null)
+                  value={
+                    field.value
+                      ? new Date(field.value as string | number).toISOString().split("T")[0]
+                      : ""
                   }
+                  onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)}
                 />
               </FormControl>
               <FormMessage />

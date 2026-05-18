@@ -45,10 +45,7 @@ export function MerchProductDetail({ product, metadata }: MerchProductDetailProp
   return (
     <div className="grid gap-8 md:grid-cols-2">
       {/* Image gallery */}
-      <MerchImageGallery
-        images={metadata.imagePaths ?? [metadata.imagePath]}
-        alt={product.name}
-      />
+      <MerchImageGallery images={metadata.imagePaths ?? [metadata.imagePath]} alt={product.name} />
 
       {/* Product info */}
       <div className="space-y-6">

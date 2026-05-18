@@ -81,9 +81,7 @@ export const getColumns = (): ColumnDef<MerchOrderRow>[] => {
       accessorKey: "totalCents",
       size: 100,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Total" />,
-      cell: ({ row }) => (
-        <Note>{formatCents(row.original.totalCents, row.original.currency)}</Note>
-      ),
+      cell: ({ row }) => <Note>{formatCents(row.original.totalCents, row.original.currency)}</Note>,
     },
     {
       accessorKey: "fulfillmentStatus",

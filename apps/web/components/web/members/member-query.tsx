@@ -1,10 +1,13 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
-import type { PaginationProps } from "~/components/web/pagination"
 import { MemberList, type MemberListProps } from "~/components/web/members/member-list"
 import { MemberListing, type MemberListingProps } from "~/components/web/members/member-listing"
+import type { PaginationProps } from "~/components/web/pagination"
+import {
+  type MemberFilterParams,
+  memberFilterParamsCache,
+} from "~/server/web/directory/member-schema"
 import { searchDirectoryProfiles } from "~/server/web/directory/search-profiles"
-import { type MemberFilterParams, memberFilterParamsCache } from "~/server/web/directory/member-schema"
 
 type MemberQueryProps = Omit<MemberListingProps, "list" | "pagination"> & {
   searchParams: Promise<SearchParams>
@@ -26,7 +29,11 @@ const MemberQuery = async ({
 }: MemberQueryProps) => {
   const parsedParams = memberFilterParamsCache.parse(await searchParams)
   const params = { ...parsedParams, ...overrideParams }
-  const { members, total, page, perPage } = await searchDirectoryProfiles(params, brand, viewerUserId)
+  const { members, total, page, perPage } = await searchDirectoryProfiles(
+    params,
+    brand,
+    viewerUserId,
+  )
 
   return (
     <MemberListing pagination={{ total, perPage, page, ...pagination }} {...props}>

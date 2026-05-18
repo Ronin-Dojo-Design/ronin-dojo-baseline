@@ -78,7 +78,12 @@ export async function LineageTreeSection({ brand }: LineageTreeSectionProps) {
           Click any tile to open the profile drawer.
         </Note>
       </Stack>
-      <LineageTreeBoard rows={rows} rootId={rootNode.id} profilesById={profilesById} edges={tree.edges} />
+      <LineageTreeBoard
+        rows={rows}
+        rootId={rootNode.id}
+        profilesById={profilesById}
+        edges={tree.edges}
+      />
     </section>
   )
 }

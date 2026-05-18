@@ -1,10 +1,7 @@
 import type { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
-export const findRegistrationsByTournamentId = async (
-  tournamentId: string,
-  brand?: Brand,
-) => {
+export const findRegistrationsByTournamentId = async (tournamentId: string, brand?: Brand) => {
   return db.registration.findMany({
     where: {
       tournamentId,

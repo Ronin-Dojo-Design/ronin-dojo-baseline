@@ -38,7 +38,9 @@ const BRAND = "BASELINE_MARTIAL_ARTS" as const
 const ORG_SLUGS = ["baseline-martial-arts", "baseline-academy"] as const
 
 async function main() {
-  console.log("\n🌱 seed-baseline-platform.ts — Roles, Entitlements, TournamentRoles, GamificationEventTypes, SubscriptionTiers, Styles, OrgDisciplines, Content, Schedules\n")
+  console.log(
+    "\n🌱 seed-baseline-platform.ts — Roles, Entitlements, TournamentRoles, GamificationEventTypes, SubscriptionTiers, Styles, OrgDisciplines, Content, Schedules\n",
+  )
 
   // -----------------------------------------------------------------------
   // 0. Look up the Baseline org
@@ -50,10 +52,15 @@ async function main() {
       where: { brand: BRAND, slug },
       select: { id: true, ownerId: true },
     })
-    if (org) { orgSlug = slug; break }
+    if (org) {
+      orgSlug = slug
+      break
+    }
   }
   if (!org) {
-    throw new Error(`Organization not found: brand=${BRAND}, slugs=${ORG_SLUGS.join(",")}. Run seed-baseline-launch.ts first.`)
+    throw new Error(
+      `Organization not found: brand=${BRAND}, slugs=${ORG_SLUGS.join(",")}. Run seed-baseline-launch.ts first.`,
+    )
   }
   console.log(`   Found org: ${orgSlug} (id=${org.id})`)
 
@@ -62,18 +69,55 @@ async function main() {
   // F-06: @@unique([code, brand]) with brand=null — must use findFirst+create
   // -----------------------------------------------------------------------
   const systemRoles = [
-    { code: "STUDENT", name: "Student", description: "Standard member/student role", isSystem: true },
-    { code: "INSTRUCTOR", name: "Instructor", description: "Teaches classes and can verify curriculum completions", isSystem: true },
-    { code: "OWNER", name: "Owner", description: "Organization owner with full administrative access", isSystem: true },
-    { code: "COACH", name: "Coach", description: "Coaches students, can award ranks and manage rosters", isSystem: true },
-    { code: "ORG_ADMIN", name: "Organization Admin", description: "Administrative access to organization settings and membership", isSystem: true },
-    { code: "STYLE_APPROVER", name: "Style Approver", description: "Can approve user-submitted styles within their organization", isSystem: true },
+    {
+      code: "STUDENT",
+      name: "Student",
+      description: "Standard member/student role",
+      isSystem: true,
+    },
+    {
+      code: "INSTRUCTOR",
+      name: "Instructor",
+      description: "Teaches classes and can verify curriculum completions",
+      isSystem: true,
+    },
+    {
+      code: "OWNER",
+      name: "Owner",
+      description: "Organization owner with full administrative access",
+      isSystem: true,
+    },
+    {
+      code: "COACH",
+      name: "Coach",
+      description: "Coaches students, can award ranks and manage rosters",
+      isSystem: true,
+    },
+    {
+      code: "ORG_ADMIN",
+      name: "Organization Admin",
+      description: "Administrative access to organization settings and membership",
+      isSystem: true,
+    },
+    {
+      code: "STYLE_APPROVER",
+      name: "Style Approver",
+      description: "Can approve user-submitted styles within their organization",
+      isSystem: true,
+    },
   ]
   let rolesCreated = 0
   let rolesSkipped = 0
   for (const role of systemRoles) {
-    const existing = await db.role.findFirst({ where: { code: role.code, brand: null, isSystem: true } })
-    if (existing) { rolesSkipped++ } else { await db.role.create({ data: role }); rolesCreated++ }
+    const existing = await db.role.findFirst({
+      where: { code: role.code, brand: null, isSystem: true },
+    })
+    if (existing) {
+      rolesSkipped++
+    } else {
+      await db.role.create({ data: role })
+      rolesCreated++
+    }
   }
   console.log(`   Roles: Created ${rolesCreated}, Skipped ${rolesSkipped}`)
 
@@ -85,13 +129,16 @@ async function main() {
   let entSkipped = 0
   for (const brand of brands) {
     const existing = await db.entitlement.findFirst({ where: { brand, key: "S3_UPLOAD" } })
-    if (existing) { entSkipped++ } else {
+    if (existing) {
+      entSkipped++
+    } else {
       await db.entitlement.create({
         data: {
           brand,
           key: "S3_UPLOAD",
           name: "Media Upload",
-          description: "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
+          description:
+            "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
         },
       })
       entCreated++
@@ -104,16 +151,43 @@ async function main() {
   // F-06: @@unique([code, brand]) with brand=null
   // -----------------------------------------------------------------------
   const tournamentRoles = [
-    { code: "COMPETITOR", name: "Competitor", description: "Participates in divisions as a competitor", isSystem: true },
-    { code: "COACH", name: "Coach", description: "Corners/coaches competitors during events", isSystem: true },
-    { code: "JUDGE", name: "Judge", description: "Judges or referees matches/forms", isSystem: true },
-    { code: "VOLUNTEER", name: "Volunteer", description: "General volunteer staff", isSystem: true },
+    {
+      code: "COMPETITOR",
+      name: "Competitor",
+      description: "Participates in divisions as a competitor",
+      isSystem: true,
+    },
+    {
+      code: "COACH",
+      name: "Coach",
+      description: "Corners/coaches competitors during events",
+      isSystem: true,
+    },
+    {
+      code: "JUDGE",
+      name: "Judge",
+      description: "Judges or referees matches/forms",
+      isSystem: true,
+    },
+    {
+      code: "VOLUNTEER",
+      name: "Volunteer",
+      description: "General volunteer staff",
+      isSystem: true,
+    },
   ]
   let trCreated = 0
   let trSkipped = 0
   for (const tr of tournamentRoles) {
-    const existing = await db.tournamentRole.findFirst({ where: { code: tr.code, brand: null, isSystem: true } })
-    if (existing) { trSkipped++ } else { await db.tournamentRole.create({ data: tr }); trCreated++ }
+    const existing = await db.tournamentRole.findFirst({
+      where: { code: tr.code, brand: null, isSystem: true },
+    })
+    if (existing) {
+      trSkipped++
+    } else {
+      await db.tournamentRole.create({ data: tr })
+      trCreated++
+    }
   }
   console.log(`   Tournament Roles: Created ${trCreated}, Skipped ${trSkipped}`)
 
@@ -122,18 +196,61 @@ async function main() {
   // F-06: @@unique([code, brand]) with brand=null
   // -----------------------------------------------------------------------
   const gamificationEventTypes = [
-    { code: "BELT_PROMOTION", name: "Belt/Rank Promotion", description: "Awarded when a student receives a new rank", defaultPoints: 100, isSystem: true },
-    { code: "CLASS_ATTENDANCE", name: "Class Attendance", description: "Awarded for attending a class session", defaultPoints: 10, isSystem: true },
-    { code: "TOURNAMENT_WIN", name: "Tournament Win", description: "Awarded for winning a division in a tournament", defaultPoints: 50, isSystem: true },
-    { code: "TOURNAMENT_PARTICIPATION", name: "Tournament Participation", description: "Awarded for participating in a tournament", defaultPoints: 25, isSystem: true },
-    { code: "COURSE_COMPLETION", name: "Course Completion", description: "Awarded for completing an entire course", defaultPoints: 75, isSystem: true },
-    { code: "CURRICULUM_ITEM_COMPLETION", name: "Curriculum Item Completion", description: "Awarded for completing a single curriculum item", defaultPoints: 5, isSystem: true },
+    {
+      code: "BELT_PROMOTION",
+      name: "Belt/Rank Promotion",
+      description: "Awarded when a student receives a new rank",
+      defaultPoints: 100,
+      isSystem: true,
+    },
+    {
+      code: "CLASS_ATTENDANCE",
+      name: "Class Attendance",
+      description: "Awarded for attending a class session",
+      defaultPoints: 10,
+      isSystem: true,
+    },
+    {
+      code: "TOURNAMENT_WIN",
+      name: "Tournament Win",
+      description: "Awarded for winning a division in a tournament",
+      defaultPoints: 50,
+      isSystem: true,
+    },
+    {
+      code: "TOURNAMENT_PARTICIPATION",
+      name: "Tournament Participation",
+      description: "Awarded for participating in a tournament",
+      defaultPoints: 25,
+      isSystem: true,
+    },
+    {
+      code: "COURSE_COMPLETION",
+      name: "Course Completion",
+      description: "Awarded for completing an entire course",
+      defaultPoints: 75,
+      isSystem: true,
+    },
+    {
+      code: "CURRICULUM_ITEM_COMPLETION",
+      name: "Curriculum Item Completion",
+      description: "Awarded for completing a single curriculum item",
+      defaultPoints: 5,
+      isSystem: true,
+    },
   ]
   let geCreated = 0
   let geSkipped = 0
   for (const ge of gamificationEventTypes) {
-    const existing = await db.gamificationEventType.findFirst({ where: { code: ge.code, brand: null, isSystem: true } })
-    if (existing) { geSkipped++ } else { await db.gamificationEventType.create({ data: ge }); geCreated++ }
+    const existing = await db.gamificationEventType.findFirst({
+      where: { code: ge.code, brand: null, isSystem: true },
+    })
+    if (existing) {
+      geSkipped++
+    } else {
+      await db.gamificationEventType.create({ data: ge })
+      geCreated++
+    }
   }
   console.log(`   Gamification Event Types: Created ${geCreated}, Skipped ${geSkipped}`)
 
@@ -144,29 +261,85 @@ async function main() {
   let stCreated = 0
   let stSkipped = 0
 
-  const existingFreeTier = await db.subscriptionTier.findFirst({ where: { code: "FREE", brand: null, isSystem: true } })
-  if (existingFreeTier) { stSkipped++ } else {
-    await db.subscriptionTier.create({ data: { code: "FREE", name: "Free", description: "Basic free tier", level: 0, isSystem: true } })
+  const existingFreeTier = await db.subscriptionTier.findFirst({
+    where: { code: "FREE", brand: null, isSystem: true },
+  })
+  if (existingFreeTier) {
+    stSkipped++
+  } else {
+    await db.subscriptionTier.create({
+      data: {
+        code: "FREE",
+        name: "Free",
+        description: "Basic free tier",
+        level: 0,
+        isSystem: true,
+      },
+    })
     stCreated++
   }
 
   const bblTiers = [
-    { code: "FREE", name: "Free", description: "BBL free tier", level: 0, isSystem: false, brand: "BBL" as const },
-    { code: "PREMIUM", name: "Premium", description: "BBL premium membership", level: 10, isSystem: false, brand: "BBL" as const },
-    { code: "INSTRUCTOR", name: "Instructor", description: "BBL instructor tier", level: 20, isSystem: false, brand: "BBL" as const },
-    { code: "SCHOOL_OWNER", name: "School Owner", description: "BBL school owner tier", level: 30, isSystem: false, brand: "BBL" as const },
-    { code: "LEGEND", name: "Legend", description: "BBL legend tier", level: 40, isSystem: false, brand: "BBL" as const },
+    {
+      code: "FREE",
+      name: "Free",
+      description: "BBL free tier",
+      level: 0,
+      isSystem: false,
+      brand: "BBL" as const,
+    },
+    {
+      code: "PREMIUM",
+      name: "Premium",
+      description: "BBL premium membership",
+      level: 10,
+      isSystem: false,
+      brand: "BBL" as const,
+    },
+    {
+      code: "INSTRUCTOR",
+      name: "Instructor",
+      description: "BBL instructor tier",
+      level: 20,
+      isSystem: false,
+      brand: "BBL" as const,
+    },
+    {
+      code: "SCHOOL_OWNER",
+      name: "School Owner",
+      description: "BBL school owner tier",
+      level: 30,
+      isSystem: false,
+      brand: "BBL" as const,
+    },
+    {
+      code: "LEGEND",
+      name: "Legend",
+      description: "BBL legend tier",
+      level: 40,
+      isSystem: false,
+      brand: "BBL" as const,
+    },
   ]
   for (const tier of bblTiers) {
-    const existing = await db.subscriptionTier.findFirst({ where: { code: tier.code, brand: tier.brand } })
-    if (existing) { stSkipped++ } else { await db.subscriptionTier.create({ data: tier }); stCreated++ }
+    const existing = await db.subscriptionTier.findFirst({
+      where: { code: tier.code, brand: tier.brand },
+    })
+    if (existing) {
+      stSkipped++
+    } else {
+      await db.subscriptionTier.create({ data: tier })
+      stCreated++
+    }
   }
   console.log(`   Subscription Tiers: Created ${stCreated}, Skipped ${stSkipped}`)
 
   // -----------------------------------------------------------------------
   // 6. Karate Styles (5 substyles)
   // -----------------------------------------------------------------------
-  const karateDiscipline = await db.discipline.findFirst({ where: { code: "karate", isSystem: true } })
+  const karateDiscipline = await db.discipline.findFirst({
+    where: { code: "karate", isSystem: true },
+  })
   let stylesCreated = 0
   let stylesSkipped = 0
   if (karateDiscipline) {
@@ -178,8 +351,12 @@ async function main() {
       { code: "kajukenbo", name: "Kajukenbo", status: "APPROVED" as const },
     ]
     for (const style of karateStyles) {
-      const existing = await db.style.findFirst({ where: { code: style.code, disciplineId: karateDiscipline.id } })
-      if (existing) { stylesSkipped++ } else {
+      const existing = await db.style.findFirst({
+        where: { code: style.code, disciplineId: karateDiscipline.id },
+      })
+      if (existing) {
+        stylesSkipped++
+      } else {
         await db.style.create({ data: { ...style, disciplineId: karateDiscipline.id } })
         stylesCreated++
       }
@@ -194,13 +371,20 @@ async function main() {
   let odCreated = 0
   let odSkipped = 0
   for (const code of orgDisciplineCodes) {
-    const disc = await db.discipline.findFirst({ where: { code, isSystem: true }, select: { id: true } })
+    const disc = await db.discipline.findFirst({
+      where: { code, isSystem: true },
+      select: { id: true },
+    })
     if (!disc) continue
     const existing = await db.organizationDiscipline.findFirst({
       where: { organizationId: org.id, disciplineId: disc.id },
     })
-    if (existing) { odSkipped++ } else {
-      await db.organizationDiscipline.create({ data: { organizationId: org.id, disciplineId: disc.id } })
+    if (existing) {
+      odSkipped++
+    } else {
+      await db.organizationDiscipline.create({
+        data: { organizationId: org.id, disciplineId: disc.id },
+      })
       odCreated++
     }
   }
@@ -220,8 +404,14 @@ async function main() {
 
   if (creatorId) {
     const bjjDisc = await db.discipline.findFirst({ where: { code: "bjj" }, select: { id: true } })
-    const mtDisc = await db.discipline.findFirst({ where: { code: "muay-thai" }, select: { id: true } })
-    const eskDisc = await db.discipline.findFirst({ where: { code: "eskrima" }, select: { id: true } })
+    const mtDisc = await db.discipline.findFirst({
+      where: { code: "muay-thai" },
+      select: { id: true },
+    })
+    const eskDisc = await db.discipline.findFirst({
+      where: { code: "eskrima" },
+      select: { id: true },
+    })
 
     const contentAtoms = [
       {
@@ -236,8 +426,24 @@ async function main() {
         siteTargets: [BRAND],
         channelTargets: ["YOUTUBE_LONG" as const],
         variants: [
-          { brand: BRAND, channel: "YOUTUBE_LONG" as const, status: "PUBLISHED" as const, publicTitle: "Guard Passing 101 — Full Breakdown", publicSlug: "guard-passing-101", videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-001", thumbnailUrl: "https://placehold.co/640x360?text=Guard+Passing" },
-          { brand: BRAND, channel: "YOUTUBE_SHORT" as const, status: "PUBLISHED" as const, publicTitle: "Guard Passing in 60 Seconds", publicSlug: "guard-passing-60s", videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-002", thumbnailUrl: "https://placehold.co/640x360?text=Guard+Pass+Short" },
+          {
+            brand: BRAND,
+            channel: "YOUTUBE_LONG" as const,
+            status: "PUBLISHED" as const,
+            publicTitle: "Guard Passing 101 — Full Breakdown",
+            publicSlug: "guard-passing-101",
+            videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-001",
+            thumbnailUrl: "https://placehold.co/640x360?text=Guard+Passing",
+          },
+          {
+            brand: BRAND,
+            channel: "YOUTUBE_SHORT" as const,
+            status: "PUBLISHED" as const,
+            publicTitle: "Guard Passing in 60 Seconds",
+            publicSlug: "guard-passing-60s",
+            videoUrl: "https://www.youtube.com/watch?v=example-bjj-guard-002",
+            thumbnailUrl: "https://placehold.co/640x360?text=Guard+Pass+Short",
+          },
         ],
       },
       {
@@ -252,7 +458,15 @@ async function main() {
         siteTargets: [BRAND],
         channelTargets: ["YOUTUBE_LONG" as const],
         variants: [
-          { brand: BRAND, channel: "YOUTUBE_LONG" as const, status: "PUBLISHED" as const, publicTitle: "3 Mount Escapes Every White Belt Needs", publicSlug: "mount-escapes-white-belt", videoUrl: "https://www.youtube.com/watch?v=example-bjj-mount-001", thumbnailUrl: "https://placehold.co/640x360?text=Mount+Escapes" },
+          {
+            brand: BRAND,
+            channel: "YOUTUBE_LONG" as const,
+            status: "PUBLISHED" as const,
+            publicTitle: "3 Mount Escapes Every White Belt Needs",
+            publicSlug: "mount-escapes-white-belt",
+            videoUrl: "https://www.youtube.com/watch?v=example-bjj-mount-001",
+            thumbnailUrl: "https://placehold.co/640x360?text=Mount+Escapes",
+          },
         ],
       },
       {
@@ -261,13 +475,22 @@ async function main() {
         slug: "muay-thai-clinch-basics",
         status: "PUBLISHED" as const,
         hook: "Control the clinch, control the fight",
-        teachingTruth: "Double collar tie with proper posture is the starting point for all clinch work.",
+        teachingTruth:
+          "Double collar tie with proper posture is the starting point for all clinch work.",
         disciplineId: mtDisc?.id ?? null,
         createdById: creatorId,
         siteTargets: [BRAND],
         channelTargets: ["YOUTUBE_LONG" as const],
         variants: [
-          { brand: BRAND, channel: "YOUTUBE_LONG" as const, status: "PUBLISHED" as const, publicTitle: "Muay Thai Clinch — Complete Beginner Guide", publicSlug: "muay-thai-clinch-guide", videoUrl: "https://www.youtube.com/watch?v=example-mt-clinch-001", thumbnailUrl: "https://placehold.co/640x360?text=MT+Clinch" },
+          {
+            brand: BRAND,
+            channel: "YOUTUBE_LONG" as const,
+            status: "PUBLISHED" as const,
+            publicTitle: "Muay Thai Clinch — Complete Beginner Guide",
+            publicSlug: "muay-thai-clinch-guide",
+            videoUrl: "https://www.youtube.com/watch?v=example-mt-clinch-001",
+            thumbnailUrl: "https://placehold.co/640x360?text=MT+Clinch",
+          },
         ],
       },
       {
@@ -276,13 +499,22 @@ async function main() {
         slug: "sinawali-double-stick-drills",
         status: "PUBLISHED" as const,
         hook: "The partner drill that builds timing and flow",
-        teachingTruth: "Heaven Six is the foundational sinawali pattern — master it before moving to variations.",
+        teachingTruth:
+          "Heaven Six is the foundational sinawali pattern — master it before moving to variations.",
         disciplineId: eskDisc?.id ?? null,
         createdById: creatorId,
         siteTargets: [BRAND],
         channelTargets: ["YOUTUBE_LONG" as const],
         variants: [
-          { brand: BRAND, channel: "YOUTUBE_LONG" as const, status: "PUBLISHED" as const, publicTitle: "Heaven Six Sinawali — Step by Step", publicSlug: "heaven-six-sinawali", videoUrl: "https://www.youtube.com/watch?v=example-eskrima-sinawali-001", thumbnailUrl: "https://placehold.co/640x360?text=Sinawali+Drill" },
+          {
+            brand: BRAND,
+            channel: "YOUTUBE_LONG" as const,
+            status: "PUBLISHED" as const,
+            publicTitle: "Heaven Six Sinawali — Step by Step",
+            publicSlug: "heaven-six-sinawali",
+            videoUrl: "https://www.youtube.com/watch?v=example-eskrima-sinawali-001",
+            thumbnailUrl: "https://placehold.co/640x360?text=Sinawali+Drill",
+          },
         ],
       },
     ]
@@ -290,7 +522,10 @@ async function main() {
     for (const atom of contentAtoms) {
       const { variants, ...atomData } = atom
       const existing = await db.contentAtom.findFirst({ where: { canonicalId: atom.canonicalId } })
-      if (existing) { contentSkipped++; continue }
+      if (existing) {
+        contentSkipped++
+        continue
+      }
       const created = await db.contentAtom.create({ data: atomData })
       for (const v of variants) {
         await db.contentVariant.create({ data: { ...v, atomId: created.id } })
@@ -320,8 +555,13 @@ async function main() {
   })
 
   // We need Self Defense and Eskrima programs — create if missing
-  const sdDisc = await db.discipline.findFirst({ where: { code: "self-defense" }, select: { id: true } })
-  const eskDiscId = (await db.discipline.findFirst({ where: { code: "eskrima" }, select: { id: true } }))?.id
+  const sdDisc = await db.discipline.findFirst({
+    where: { code: "self-defense" },
+    select: { id: true },
+  })
+  const eskDiscId = (
+    await db.discipline.findFirst({ where: { code: "eskrima" }, select: { id: true } })
+  )?.id
 
   let sdProgram = await db.program.findFirst({
     where: { brand: BRAND, organizationId: org.id, slug: "self-defense" },
@@ -330,10 +570,15 @@ async function main() {
   if (!sdProgram && sdDisc) {
     const created = await db.program.create({
       data: {
-        brand: BRAND, organizationId: org.id, disciplineId: sdDisc.id,
-        name: "Self Defense", slug: "self-defense",
-        description: "Practical self-defense techniques for real-world situations. Covers awareness, de-escalation, and physical responses.",
-        status: "ACTIVE", sortOrder: 30,
+        brand: BRAND,
+        organizationId: org.id,
+        disciplineId: sdDisc.id,
+        name: "Self Defense",
+        slug: "self-defense",
+        description:
+          "Practical self-defense techniques for real-world situations. Covers awareness, de-escalation, and physical responses.",
+        status: "ACTIVE",
+        sortOrder: 30,
       },
       select: { id: true, organizationId: true, disciplineId: true },
     })
@@ -348,10 +593,15 @@ async function main() {
   if (!eskProgram && eskDiscId) {
     const created = await db.program.create({
       data: {
-        brand: BRAND, organizationId: org.id, disciplineId: eskDiscId,
-        name: "Doce Pares Eskrima", slug: "eskrima",
-        description: "Filipino stick fighting — single stick, double stick, and empty hand techniques through partner drills.",
-        status: "ACTIVE", sortOrder: 40,
+        brand: BRAND,
+        organizationId: org.id,
+        disciplineId: eskDiscId,
+        name: "Doce Pares Eskrima",
+        slug: "eskrima",
+        description:
+          "Filipino stick fighting — single stick, double stick, and empty hand techniques through partner drills.",
+        status: "ACTIVE",
+        sortOrder: 40,
       },
       select: { id: true, organizationId: true, disciplineId: true },
     })
@@ -364,7 +614,8 @@ async function main() {
     {
       program: bjjProgram,
       name: "BJJ Level 1 — Mon/Wed Afternoons",
-      description: "All levels welcome. Ground fighting, submissions, and positional control fundamentals. CU Rec Center Mat Room.",
+      description:
+        "All levels welcome. Ground fighting, submissions, and positional control fundamentals. CU Rec Center Mat Room.",
       daysOfWeek: ["MON", "WED"],
       startTime: "15:00",
       endTime: "16:00",
@@ -378,7 +629,8 @@ async function main() {
     {
       program: bjjProgram,
       name: "BJJ Level 2 — Tue/Thu Afternoons",
-      description: "Intermediate/advanced BJJ. Prerequisite: experience in BJJ and skills test during first week. CU Rec Center Mat Room.",
+      description:
+        "Intermediate/advanced BJJ. Prerequisite: experience in BJJ and skills test during first week. CU Rec Center Mat Room.",
       daysOfWeek: ["TUE", "THU"],
       startTime: "15:00",
       endTime: "16:00",
@@ -392,7 +644,8 @@ async function main() {
     {
       program: mtProgram,
       name: "Muay Thai Basics — Mon/Wed Afternoons",
-      description: "Basic Muay Thai striking — punches, kicks, elbows, knees. Intense cardio workout. CU Rec Center Mat Room.",
+      description:
+        "Basic Muay Thai striking — punches, kicks, elbows, knees. Intense cardio workout. CU Rec Center Mat Room.",
       daysOfWeek: ["MON", "WED"],
       startTime: "16:15",
       endTime: "17:15",
@@ -406,7 +659,8 @@ async function main() {
     {
       program: mtProgram,
       name: "Muay Thai Level 2 — Tue/Thu Afternoons",
-      description: "Intermediate/advanced Muay Thai. Conditioning drills, heavy bag work, sparring prep. Prerequisite: MT experience + skills test.",
+      description:
+        "Intermediate/advanced Muay Thai. Conditioning drills, heavy bag work, sparring prep. Prerequisite: MT experience + skills test.",
       daysOfWeek: ["TUE", "THU"],
       startTime: "16:15",
       endTime: "17:15",
@@ -420,7 +674,8 @@ async function main() {
     {
       program: sdProgram,
       name: "Self Defense — Tuesday Evenings",
-      description: "Empowering verbal and physical self-defense skills. Covers awareness, boundaries, and responses to real-life scenarios. No experience necessary.",
+      description:
+        "Empowering verbal and physical self-defense skills. Covers awareness, boundaries, and responses to real-life scenarios. No experience necessary.",
       daysOfWeek: ["TUE"],
       startTime: "17:30",
       endTime: "18:30",
@@ -434,7 +689,8 @@ async function main() {
     {
       program: eskProgram,
       name: "Eskrima — Fall 2026",
-      description: "Doce Pares Eskrima — single stick, double stick, and empty hand techniques. Returning fall 2026.",
+      description:
+        "Doce Pares Eskrima — single stick, double stick, and empty hand techniques. Returning fall 2026.",
       daysOfWeek: [] as string[],
       startTime: "TBD",
       endTime: "TBD",
@@ -454,7 +710,10 @@ async function main() {
     const existing = await db.classSchedule.findFirst({
       where: { brand: BRAND, programId: sched.program.id, name: sched.name },
     })
-    if (existing) { schedSkipped++; continue }
+    if (existing) {
+      schedSkipped++
+      continue
+    }
     await db.classSchedule.create({
       data: {
         brand: BRAND,
@@ -485,7 +744,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error("❌ Error in seed-baseline-platform:", error)
     process.exit(1)
   })

@@ -36,4 +36,4 @@ const TagListSkeleton = () => {
   )
 }
 
-export { TagList, TagListSkeleton, type TagListProps }
+export { TagList, type TagListProps, TagListSkeleton }

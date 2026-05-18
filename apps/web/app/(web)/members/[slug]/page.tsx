@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
-import { Avatar, AvatarImage, AvatarFallback } from "~/components/common/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
@@ -67,9 +67,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
                 <p>{user.bio}</p>
               </Prose>
             )}
-            {user.email && (
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-            )}
+            {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
           </Stack>
         </div>
       </Section>
@@ -79,14 +77,12 @@ export default async function MemberDetailPage({ params }: PageProps) {
         <Section>
           <H4>Schools &amp; Organizations</H4>
           <Stack size="sm">
-            {user.organizations.map((org) => (
+            {user.organizations.map(org => (
               <div key={org.id} className="flex items-center gap-2">
                 <Link href={`/schools/${org.slug}`} className="font-medium">
                   {org.name}
                 </Link>
-                {org.discipline && (
-                  <Badge variant="soft">{org.discipline.name}</Badge>
-                )}
+                {org.discipline && <Badge variant="soft">{org.discipline.name}</Badge>}
               </div>
             ))}
           </Stack>
@@ -102,9 +98,7 @@ export default async function MemberDetailPage({ params }: PageProps) {
               <div key={rank.id} className="flex items-center gap-2">
                 <Badge variant="outline">{rank.rank?.name ?? "Rank"}</Badge>
                 {rank.discipline && (
-                  <span className="text-sm text-muted-foreground">
-                    {rank.discipline.name}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{rank.discipline.name}</span>
                 )}
               </div>
             ))}
@@ -117,13 +111,11 @@ export default async function MemberDetailPage({ params }: PageProps) {
         <Section>
           <H4>Social</H4>
           <Stack size="sm" className="flex-wrap">
-            {Object.entries(user.socialLinks as Record<string, string>).map(
-              ([platform, url]) => (
-                <Link key={platform} href={url} target="_blank" rel="noopener noreferrer">
-                  <Badge variant="outline">{platform}</Badge>
-                </Link>
-              ),
-            )}
+            {Object.entries(user.socialLinks as Record<string, string>).map(([platform, url]) => (
+              <Link key={platform} href={url} target="_blank" rel="noopener noreferrer">
+                <Badge variant="outline">{platform}</Badge>
+              </Link>
+            ))}
           </Stack>
         </Section>
       )}

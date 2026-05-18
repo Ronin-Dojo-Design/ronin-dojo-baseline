@@ -1,9 +1,9 @@
+import type { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { db } from "~/services/db"
-import type { Brand } from "~/.generated/prisma/client"
 
 type ContentAtomsSectionProps = {
   disciplineId: string
@@ -35,9 +35,11 @@ export async function ContentAtomsSection({ disciplineId, brand }: ContentAtomsS
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">Related Content ({atoms.length})</H4>
+      <H4 as="h3" className="mb-4">
+        Related Content ({atoms.length})
+      </H4>
       <div className="grid gap-3 @md:grid-cols-2">
-        {atoms.map((atom) => (
+        {atoms.map(atom => (
           <Card key={atom.id}>
             <CardHeader>
               <Stack size="sm" direction="column">
@@ -47,8 +49,10 @@ export async function ContentAtomsSection({ disciplineId, brand }: ContentAtomsS
                 )}
                 {atom.channelTargets.length > 0 && (
                   <Stack size="xs">
-                    {atom.channelTargets.slice(0, 3).map((ch) => (
-                      <Badge key={ch} variant="outline" size="sm">{ch}</Badge>
+                    {atom.channelTargets.slice(0, 3).map(ch => (
+                      <Badge key={ch} variant="outline" size="sm">
+                        {ch}
+                      </Badge>
                     ))}
                   </Stack>
                 )}

@@ -1,8 +1,8 @@
 "use client"
 
-import { use, useState } from "react"
-import { useAction } from "next-safe-action/hooks"
 import { AwardIcon } from "lucide-react"
+import { useAction } from "next-safe-action/hooks"
+import { use, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -10,10 +10,10 @@ import { Card, CardHeader } from "~/components/common/card"
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "~/components/common/dialog"
 import { H3 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
@@ -49,10 +49,7 @@ type FightRecordPanelProps = {
   completedMatches: CompletedMatch[]
 }
 
-export function FightRecordPanel({
-  fightRecordsPromise,
-  completedMatches,
-}: FightRecordPanelProps) {
+export function FightRecordPanel({ fightRecordsPromise, completedMatches }: FightRecordPanelProps) {
   const fightRecords = use(fightRecordsPromise)
   const [open, setOpen] = useState(false)
   const [selectedMatchId, setSelectedMatchId] = useState("")
@@ -89,8 +86,8 @@ export function FightRecordPanel({
               </DialogHeader>
               <div className="space-y-4">
                 <Note>
-                  Select a completed match to publish official fight records. This updates
-                  each competitor's win/loss/draw record for their discipline.
+                  Select a completed match to publish official fight records. This updates each
+                  competitor's win/loss/draw record for their discipline.
                 </Note>
                 <Select onValueChange={setSelectedMatchId} value={selectedMatchId}>
                   <SelectTrigger>
@@ -117,7 +114,10 @@ export function FightRecordPanel({
       </CardHeader>
       <div className="p-4 pt-0">
         {fightRecords.length === 0 ? (
-          <Note>No fight records published yet. Complete matches and publish records to track competitor W/L/D.</Note>
+          <Note>
+            No fight records published yet. Complete matches and publish records to track competitor
+            W/L/D.
+          </Note>
         ) : (
           <Table>
             <TableHeader>
@@ -136,16 +136,24 @@ export function FightRecordPanel({
                   <TableCell className="font-medium">{fr.user.name ?? fr.user.email}</TableCell>
                   <TableCell>{fr.discipline.name}</TableCell>
                   <TableCell>
-                    <Badge variant="success" size="sm">{fr.wins}</Badge>
+                    <Badge variant="success" size="sm">
+                      {fr.wins}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="danger" size="sm">{fr.losses}</Badge>
+                    <Badge variant="danger" size="sm">
+                      {fr.losses}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="soft" size="sm">{fr.draws}</Badge>
+                    <Badge variant="soft" size="sm">
+                      {fr.draws}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="soft" size="sm">{fr.noContests}</Badge>
+                    <Badge variant="soft" size="sm">
+                      {fr.noContests}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))}

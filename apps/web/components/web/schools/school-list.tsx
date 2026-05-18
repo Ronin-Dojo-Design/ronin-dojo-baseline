@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { EmptyList } from "~/components/web/empty-list"
 import { SchoolCard, SchoolCardSkeleton } from "~/components/web/schools/school-card"
@@ -42,4 +41,4 @@ const SchoolListSkeleton = ({ count = 6 }: { count?: number }) => {
   )
 }
 
-export { SchoolList, SchoolListSkeleton, type SchoolListProps }
+export { SchoolList, type SchoolListProps, SchoolListSkeleton }

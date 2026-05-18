@@ -3,8 +3,8 @@ import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
 
 type TournamentCardProps = {
   tournament: {
@@ -31,26 +31,20 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
   const totalDivisions = tournament.disciplines.reduce((sum, d) => sum + d._count.divisions, 0)
 
   return (
-    <Link
-      href={`/tournaments/${tournament.slug}`}
-      className="group"
-    >
+    <Link href={`/tournaments/${tournament.slug}`} className="group">
       <Card className="flex flex-col p-5 transition-colors hover:border-primary/50 hover:bg-accent/50">
-        <H3 className="group-hover:text-primary transition-colors">
-          {tournament.name}
-        </H3>
+        <H3 className="group-hover:text-primary transition-colors">{tournament.name}</H3>
 
         {tournament.description && (
-          <Note className="mt-1 line-clamp-2">
-            {tournament.description}
-          </Note>
+          <Note className="mt-1 line-clamp-2">{tournament.description}</Note>
         )}
 
         <Stack direction="column" size="xs" className="mt-3">
           <Stack direction="row" size="sm" className="items-center text-sm text-muted-foreground">
             <CalendarIcon className="size-4" />
             <span>
-              {new Date(tournament.startDate).toLocaleDateString()} – {new Date(tournament.endDate).toLocaleDateString()}
+              {new Date(tournament.startDate).toLocaleDateString()} –{" "}
+              {new Date(tournament.endDate).toLocaleDateString()}
             </span>
           </Stack>
 
@@ -74,7 +68,9 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
             </Badge>
           ))}
           {totalDivisions > 0 && (
-            <Badge variant="outline">{totalDivisions} division{totalDivisions !== 1 ? "s" : ""}</Badge>
+            <Badge variant="outline">
+              {totalDivisions} division{totalDivisions !== 1 ? "s" : ""}
+            </Badge>
           )}
         </Stack>
       </Card>

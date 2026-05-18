@@ -5,13 +5,7 @@ import { useFieldArray, useFormContext, useWatch } from "react-hook-form"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "~/components/common/form"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
 import { Tooltip } from "~/components/common/tooltip"
@@ -175,7 +169,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -195,7 +189,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -214,7 +208,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -233,7 +227,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -252,7 +246,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -271,7 +265,7 @@ export function TenPointMustForm({
                         size="sm"
                         className="text-center"
                         {...f}
-                        onChange={(e) => f.onChange(Number(e.target.value))}
+                        onChange={e => f.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                   </FormItem>
@@ -348,10 +342,7 @@ type PointsScoreFormProps = {
   competitor2Name: string
 }
 
-export function PointsScoreForm({
-  competitor1Name,
-  competitor2Name,
-}: PointsScoreFormProps) {
+export function PointsScoreForm({ competitor1Name, competitor2Name }: PointsScoreFormProps) {
   const { control } = useFormContext()
 
   return (
@@ -369,7 +360,7 @@ export function PointsScoreForm({
                   min={0}
                   placeholder="Points"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={e => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
@@ -389,7 +380,7 @@ export function PointsScoreForm({
                   min={0}
                   placeholder="Points"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={e => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
               <FormMessage />

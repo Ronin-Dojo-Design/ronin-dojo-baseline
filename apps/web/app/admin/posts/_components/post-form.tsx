@@ -43,7 +43,14 @@ type PostFormProps = ComponentProps<"form"> & {
   toolsPromise: ReturnType<typeof findToolList>
 }
 
-export function PostForm({ children, className, title, post, toolsPromise, ...props }: PostFormProps) {
+export function PostForm({
+  children,
+  className,
+  title,
+  post,
+  toolsPromise,
+  ...props
+}: PostFormProps) {
   const router = useRouter()
   const tools = use(toolsPromise)
   const resolver = zodResolver(postSchema)

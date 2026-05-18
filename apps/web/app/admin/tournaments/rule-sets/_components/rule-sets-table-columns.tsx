@@ -89,9 +89,7 @@ export const getColumns = (): ColumnDef<RuleSetRow>[] => {
       accessorKey: "discipline.name",
       enableSorting: false,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Discipline" />,
-      cell: ({ row }) => (
-        <Note>{row.original.discipline?.name ?? "All"}</Note>
-      ),
+      cell: ({ row }) => <Note>{row.original.discipline?.name ?? "All"}</Note>,
     },
     {
       accessorKey: "isSystem",
@@ -119,9 +117,7 @@ export const getColumns = (): ColumnDef<RuleSetRow>[] => {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <RuleSetActions ruleSet={row.original} className="float-right" />
-      ),
+      cell: ({ row }) => <RuleSetActions ruleSet={row.original} className="float-right" />,
     },
   ]
 }

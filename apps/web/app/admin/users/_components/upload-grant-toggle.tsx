@@ -4,10 +4,7 @@ import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
-import {
-  grantUserEntitlement,
-  revokeUserEntitlement,
-} from "~/server/admin/entitlements/actions"
+import { grantUserEntitlement, revokeUserEntitlement } from "~/server/admin/entitlements/actions"
 
 type Props = {
   userId: string
@@ -30,7 +27,8 @@ export function UploadGrantToggle({ userId, hasUploadEntitlement }: Props) {
   return (
     <Stack className="items-center gap-3">
       <span className="text-sm font-medium">
-        S3 Upload: {hasUploadEntitlement ? (
+        S3 Upload:{" "}
+        {hasUploadEntitlement ? (
           <span className="text-green-600">Granted</span>
         ) : (
           <span className="text-muted-foreground">Not granted</span>

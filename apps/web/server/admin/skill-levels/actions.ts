@@ -2,8 +2,8 @@
 
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
+import { idsSchema } from "~/server/admin/shared/schema"
 import { skillLevelSchema } from "~/server/admin/skill-levels/schema"
-import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertSkillLevel = adminActionClient
   .inputSchema(skillLevelSchema)

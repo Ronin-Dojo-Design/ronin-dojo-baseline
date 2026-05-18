@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import { OrgChart } from "d3-org-chart"
+import { useEffect, useRef } from "react"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageNodeRow, LineageRelationshipRow } from "~/server/web/lineage/payloads"
 
@@ -32,7 +32,11 @@ type ChartNode = {
 }
 
 /** Build parent-child data from edges. Instructor is parent, student is child. */
-function buildChartData(rows: LineageRow[], rootId: string, edges: LineageRelationshipRow[]): ChartNode[] {
+function buildChartData(
+  rows: LineageRow[],
+  rootId: string,
+  edges: LineageRelationshipRow[],
+): ChartNode[] {
   // Collect all nodes
   const allNodes = new Map<string, LineageNodeRow>()
   for (const row of rows) {
@@ -101,8 +105,7 @@ function buildChartData(rows: LineageRow[], rootId: string, edges: LineageRelati
   const result: ChartNode[] = []
   for (const [nodeId, node] of allNodes) {
     if (!reachable.has(nodeId)) continue
-    const displayName =
-      node.user.passport?.displayName ?? node.user.name ?? node.slug ?? "Unknown"
+    const displayName = node.user.passport?.displayName ?? node.user.name ?? node.slug ?? "Unknown"
     const rankAward = node.user.rankAwards[0]
     const rank = rankAward?.rank?.name ?? ""
     const school = node.user.memberships[0]?.organization?.name ?? ""

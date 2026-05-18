@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation"
-import { Stack } from "~/components/common/stack"
 import { H4 } from "~/components/common/heading"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Stack } from "~/components/common/stack"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getLineageTreeBySlug } from "~/server/web/lineage/queries"
 import { LineageClaimForm } from "./claim-form"
 
@@ -37,17 +37,15 @@ export default async function LineageClaimPage({ params }: Props) {
   // Build member list for the node selector.
   const members = tree.members.map(m => ({
     nodeId: m.nodeId,
-    displayName:
-      m.node.user?.passport?.displayName ?? m.node.user?.name ?? "Unknown",
+    displayName: m.node.user?.passport?.displayName ?? m.node.user?.name ?? "Unknown",
   }))
 
   return (
     <Stack direction="column" className="mx-auto max-w-2xl py-8">
       <H4>Claim a Lineage Node</H4>
       <p className="text-muted-foreground text-sm">
-        Submit a claim to take ownership of a node on the{" "}
-        <strong>{tree.tree.name}</strong> lineage tree. After review, you&#39;ll
-        be able to edit your profile and choose a listing tier.
+        Submit a claim to take ownership of a node on the <strong>{tree.tree.name}</strong> lineage
+        tree. After review, you&#39;ll be able to edit your profile and choose a listing tier.
       </p>
 
       <LineageClaimForm treeId={tree.tree.id} members={members} />

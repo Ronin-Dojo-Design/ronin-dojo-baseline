@@ -3,6 +3,7 @@
 import { EllipsisIcon, TrashIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
+import type { PricingPlan } from "~/.generated/prisma/browser"
 import { PricingPlansDeleteDialog } from "~/app/admin/pricing-plans/_components/pricing-plans-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
@@ -14,7 +15,6 @@ import {
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
-import type { PricingPlan } from "~/.generated/prisma/browser"
 
 type PricingPlanActionsProps = ComponentProps<typeof Button> & {
   pricingPlan: PricingPlan

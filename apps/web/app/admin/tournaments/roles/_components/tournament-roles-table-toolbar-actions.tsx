@@ -6,13 +6,17 @@ import { TournamentRolesDeleteDialog } from "~/app/admin/tournaments/roles/_comp
 import { Button } from "~/components/common/button"
 import type { findTournamentRolesPaginated } from "~/server/admin/tournaments/queries"
 
-type TournamentRoleWithCount = Awaited<ReturnType<typeof findTournamentRolesPaginated>>["roles"][number]
+type TournamentRoleWithCount = Awaited<
+  ReturnType<typeof findTournamentRolesPaginated>
+>["roles"][number]
 
 interface TournamentRolesTableToolbarActionsProps {
   table: Table<TournamentRoleWithCount>
 }
 
-export function TournamentRolesTableToolbarActions({ table }: TournamentRolesTableToolbarActionsProps) {
+export function TournamentRolesTableToolbarActions({
+  table,
+}: TournamentRolesTableToolbarActionsProps) {
   const { rows } = table.getFilteredSelectedRowModel()
 
   if (!rows.length) {

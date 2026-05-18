@@ -17,7 +17,7 @@ const getData = cache(async () => {
   return getPageData(siteConfig.url, title, description)
 })
 
-export default async function (props: PageProps<"/">) {
+export default async function (_props: PageProps<"/">) {
   const { structuredData } = await getData()
 
   return (

@@ -5,8 +5,8 @@ import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { Skeleton } from "~/components/common/skeleton"
+import { Stack } from "~/components/common/stack"
 
 type SchoolCardData = {
   slug: string
@@ -56,7 +56,9 @@ export const SchoolCard = ({ school, ...props }: SchoolCardProps) => {
           {school.disciplines && school.disciplines.length > 0 && (
             <Stack size="sm" className="mt-auto flex-wrap">
               {school.disciplines.map(d => (
-                <Badge key={d.discipline.name} variant="soft">{d.discipline.name}</Badge>
+                <Badge key={d.discipline.name} variant="soft">
+                  {d.discipline.name}
+                </Badge>
               ))}
             </Stack>
           )}
@@ -70,7 +72,9 @@ export const SchoolCardSkeleton = () => {
   return (
     <Card hover={false} className="items-stretch select-none">
       <CardHeader>
-        <H4 className="w-2/3"><Skeleton>&nbsp;</Skeleton></H4>
+        <H4 className="w-2/3">
+          <Skeleton>&nbsp;</Skeleton>
+        </H4>
       </CardHeader>
       <CardDescription className="flex flex-col gap-0.5">
         <Skeleton className="h-5 w-4/5">&nbsp;</Skeleton>
@@ -78,7 +82,9 @@ export const SchoolCardSkeleton = () => {
       </CardDescription>
       <Stack size="sm" className="mt-auto">
         {[...Array(2)].map((_, i) => (
-          <Badge key={i} variant="outline" className="w-12">&nbsp;</Badge>
+          <Badge key={i} variant="outline" className="w-12">
+            &nbsp;
+          </Badge>
         ))}
       </Stack>
     </Card>

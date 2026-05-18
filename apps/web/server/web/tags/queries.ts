@@ -64,8 +64,13 @@ export const findTagSlugs = async ({ where, orderBy, ...args }: Prisma.TagFindMa
   cacheTag("tags")
   cacheLife("infinite")
 
-  // @ts-ignore — TS2321: Prisma excessive stack depth on TagInclude generics
-  return db.tag.findMany({ ...args, orderBy: orderBy ?? { name: "asc" }, where: { tools: { some: { status: ToolStatus.Published } }, ...where }, select: { slug: true, updatedAt: true } })
+  // @ts-expect-error — TS2321: Prisma excessive stack depth on TagInclude generics
+  return db.tag.findMany({
+    ...args,
+    orderBy: orderBy ?? { name: "asc" },
+    where: { tools: { some: { status: ToolStatus.Published } }, ...where },
+    select: { slug: true, updatedAt: true },
+  })
 }
 
 export const findTag = async ({ where, ...args }: Prisma.TagFindFirstArgs = {}) => {

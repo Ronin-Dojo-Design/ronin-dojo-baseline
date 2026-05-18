@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
-import { LeadStatus, LeadSource } from "~/.generated/prisma/browser"
+import { LeadSource, LeadStatus } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/admin/leads/_components/leads-table-columns"
 import { LeadsTableToolbarActions } from "~/app/admin/leads/_components/leads-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
@@ -23,10 +23,9 @@ import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
 import { useDataTable } from "~/hooks/use-data-table"
-import type { findLeads, findOrganizationList } from "~/server/admin/leads/queries"
+import type { findLeads, findOrganizationList, LeadRow } from "~/server/admin/leads/queries"
 import { leadsTableParamsSchema } from "~/server/admin/leads/schema"
 import type { DataTableFilterField } from "~/types"
-import type { LeadRow } from "~/server/admin/leads/queries"
 
 type LeadsTableProps = {
   leadsPromise: ReturnType<typeof findLeads>
@@ -35,7 +34,7 @@ type LeadsTableProps = {
 
 export function LeadsTable({ leadsPromise, organizationsPromise }: LeadsTableProps) {
   const { leads, total, pageCount } = use(leadsPromise)
-  const organizations = use(organizationsPromise)
+  const _organizations = use(organizationsPromise)
   const [{ perPage, sort }] = useQueryStates(leadsTableParamsSchema)
 
   const columns = useMemo(() => getColumns(), [])
@@ -51,12 +50,32 @@ export function LeadsTable({ leadsPromise, organizationsPromise }: LeadsTablePro
       label: "Status",
       options: [
         { label: "New", value: LeadStatus.NEW, icon: <CircleIcon className="text-blue-500" /> },
-        { label: "Contacted", value: LeadStatus.CONTACTED, icon: <CircleDotDashedIcon className="text-cyan-500" /> },
-        { label: "Trial Booked", value: LeadStatus.TRIAL_BOOKED, icon: <CircleDotIcon className="text-indigo-500" /> },
-        { label: "Trial Completed", value: LeadStatus.TRIAL_COMPLETED, icon: <CircleDashedIcon className="text-purple-500" /> },
-        { label: "Converted", value: LeadStatus.CONVERTED, icon: <CircleCheckIcon className="text-green-500" /> },
+        {
+          label: "Contacted",
+          value: LeadStatus.CONTACTED,
+          icon: <CircleDotDashedIcon className="text-cyan-500" />,
+        },
+        {
+          label: "Trial Booked",
+          value: LeadStatus.TRIAL_BOOKED,
+          icon: <CircleDotIcon className="text-indigo-500" />,
+        },
+        {
+          label: "Trial Completed",
+          value: LeadStatus.TRIAL_COMPLETED,
+          icon: <CircleDashedIcon className="text-purple-500" />,
+        },
+        {
+          label: "Converted",
+          value: LeadStatus.CONVERTED,
+          icon: <CircleCheckIcon className="text-green-500" />,
+        },
         { label: "Lost", value: LeadStatus.LOST, icon: <CircleXIcon className="text-red-500" /> },
-        { label: "Nurture", value: LeadStatus.NURTURE, icon: <HeartPulseIcon className="text-amber-500" /> },
+        {
+          label: "Nurture",
+          value: LeadStatus.NURTURE,
+          icon: <HeartPulseIcon className="text-amber-500" />,
+        },
       ],
     },
     {

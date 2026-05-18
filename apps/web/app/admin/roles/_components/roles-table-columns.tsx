@@ -71,8 +71,7 @@ export const getColumns = (): ColumnDef<Role & { _count?: { roleAssignments: num
     {
       accessorKey: "isSystem",
       header: "System",
-      cell: ({ row }) =>
-        row.original.isSystem ? <Badge variant="outline">System</Badge> : null,
+      cell: ({ row }) => (row.original.isSystem ? <Badge variant="outline">System</Badge> : null),
     },
     {
       accessorKey: "createdAt",

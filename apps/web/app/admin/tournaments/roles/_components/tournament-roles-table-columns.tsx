@@ -12,7 +12,9 @@ import { DataTableLink } from "~/components/data-table/data-table-link"
 
 import type { findTournamentRolesPaginated } from "~/server/admin/tournaments/queries"
 
-type TournamentRoleWithCount = Awaited<ReturnType<typeof findTournamentRolesPaginated>>["roles"][number]
+type TournamentRoleWithCount = Awaited<
+  ReturnType<typeof findTournamentRolesPaginated>
+>["roles"][number]
 
 export const getColumns = (): ColumnDef<TournamentRoleWithCount>[] => {
   return [
@@ -86,9 +88,7 @@ export const getColumns = (): ColumnDef<TournamentRoleWithCount>[] => {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <TournamentRoleActions role={row.original} className="float-right" />
-      ),
+      cell: ({ row }) => <TournamentRoleActions role={row.original} className="float-right" />,
     },
   ]
 }

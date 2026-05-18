@@ -1,8 +1,8 @@
 "use cache"
 
 import { cacheLife, cacheTag } from "next/cache"
-import { db } from "~/services/db"
 import type { Brand } from "~/.generated/prisma/client"
+import { db } from "~/services/db"
 
 /**
  * Check if a user has a specific active entitlement.
@@ -37,10 +37,7 @@ export async function hasEntitlement(
  * Consolidated into a single DB round-trip using parallel promises.
  * Cached with 60s TTL, invalidated on grant/revoke via `user-entitlements-{userId}` tag.
  */
-export async function canUploadMedia(
-  userId: string,
-  brand: Brand,
-): Promise<boolean> {
+export async function canUploadMedia(userId: string, brand: Brand): Promise<boolean> {
   cacheTag(`user-entitlements-${userId}`)
   cacheLife("seconds")
 

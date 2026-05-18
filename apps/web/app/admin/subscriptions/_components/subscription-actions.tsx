@@ -3,8 +3,8 @@
 import { EllipsisIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
-import type { SubscriptionRow } from "~/app/admin/subscriptions/_components/subscriptions-table-columns"
 import { SubscriptionsDeleteDialog } from "~/app/admin/subscriptions/_components/subscriptions-delete-dialog"
+import type { SubscriptionRow } from "~/app/admin/subscriptions/_components/subscriptions-table-columns"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,

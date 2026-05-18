@@ -50,4 +50,4 @@ const AdBadge = ({ className, ...props }: ComponentProps<typeof Badge>) => {
   )
 }
 
-export { AdLink, AdBadge }
+export { AdBadge, AdLink }

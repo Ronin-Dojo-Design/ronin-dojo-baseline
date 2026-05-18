@@ -15,14 +15,22 @@ export const updatePassportSchema = z.object({
   emergencyContactPhoneE164: z.string().max(20).optional(),
   avatarUrl: z.string().url().max(2048).optional(),
   bio: z.string().max(2000).optional(),
-  socialLinks: z.array(z.object({
-    platform: z.string(),
-    url: z.string().url(),
-  })).optional(),
+  socialLinks: z
+    .array(
+      z.object({
+        platform: z.string(),
+        url: z.string().url(),
+      }),
+    )
+    .optional(),
 })
 
 export const updateDirectoryProfileSchema = z.object({
-  slug: z.string().max(100).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes").optional(),
+  slug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes")
+    .optional(),
   visibility: DirectoryVisibility.optional(),
   locationCity: z.string().max(100).optional(),
   locationRegion: z.string().max(100).optional(),

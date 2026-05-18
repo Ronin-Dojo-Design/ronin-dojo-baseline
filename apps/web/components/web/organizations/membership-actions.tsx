@@ -1,15 +1,11 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
-import {
-  updateMembershipStatus,
-  assignRole,
-  removeRole,
-} from "~/server/web/organization/actions"
+import { assignRole, removeRole, updateMembershipStatus } from "~/server/web/organization/actions"
 
 interface Role {
   id: string
@@ -23,7 +19,10 @@ interface MembershipActionsProps {
   assignedRoleIds: string[]
 }
 
-const statusTransitions: Record<string, { label: string; status: string; variant: "primary" | "secondary" | "destructive" | "ghost" }[]> = {
+const statusTransitions: Record<
+  string,
+  { label: string; status: string; variant: "primary" | "secondary" | "destructive" | "ghost" }[]
+> = {
   INVITED: [
     { label: "Approve", status: "ACTIVE", variant: "primary" },
     { label: "Reject", status: "EXPIRED", variant: "destructive" },
@@ -32,9 +31,7 @@ const statusTransitions: Record<string, { label: string; status: string; variant
     { label: "Approve", status: "ACTIVE", variant: "primary" },
     { label: "Reject", status: "EXPIRED", variant: "destructive" },
   ],
-  ACTIVE: [
-    { label: "Suspend", status: "SUSPENDED", variant: "destructive" },
-  ],
+  ACTIVE: [{ label: "Suspend", status: "SUSPENDED", variant: "destructive" }],
   SUSPENDED: [
     { label: "Reactivate", status: "ACTIVE", variant: "primary" },
     { label: "Expire", status: "EXPIRED", variant: "destructive" },
@@ -51,17 +48,26 @@ export const MembershipActions = ({
   const transitions = statusTransitions[membership.status] ?? []
 
   const statusAction = useAction(updateMembershipStatus, {
-    onSuccess: () => { toast.success("Status updated"); router.refresh() },
+    onSuccess: () => {
+      toast.success("Status updated")
+      router.refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed"),
   })
 
   const assignAction = useAction(assignRole, {
-    onSuccess: () => { toast.success("Role assigned"); router.refresh() },
+    onSuccess: () => {
+      toast.success("Role assigned")
+      router.refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed"),
   })
 
   const removeAction = useAction(removeRole, {
-    onSuccess: () => { toast.success("Role removed"); router.refresh() },
+    onSuccess: () => {
+      toast.success("Role removed")
+      router.refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed"),
   })
 
@@ -70,7 +76,7 @@ export const MembershipActions = ({
       {/* Status transitions */}
       {transitions.length > 0 && (
         <Stack size="sm">
-          {transitions.map((t) => (
+          {transitions.map(t => (
             <Button
               key={t.status}
               size="sm"
@@ -93,8 +99,8 @@ export const MembershipActions = ({
       {membership.status === "ACTIVE" && (
         <Stack size="sm" className="flex-wrap">
           {roles
-            .filter((r) => r.code !== "OWNER") // Don't let owner role be toggled
-            .map((role) => {
+            .filter(r => r.code !== "OWNER") // Don't let owner role be toggled
+            .map(role => {
               const isAssigned = assignedRoleIds.includes(role.id)
               return (
                 <Button

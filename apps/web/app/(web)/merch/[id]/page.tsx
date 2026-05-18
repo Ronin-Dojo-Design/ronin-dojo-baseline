@@ -6,10 +6,7 @@ import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { MerchProductDetail } from "~/components/web/tuffbuffs/merch-product-detail"
 import { Intro, IntroTitle } from "~/components/web/ui/intro"
-import {
-  findMerchProductById,
-  getMerchMetadata,
-} from "~/server/web/merch/queries"
+import { findMerchProductById, getMerchMetadata } from "~/server/web/merch/queries"
 
 type Props = {
   params: Promise<{ id: string }>

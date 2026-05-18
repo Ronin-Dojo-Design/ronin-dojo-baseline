@@ -38,32 +38,28 @@ export function SkillLevelForm({
   const router = useRouter()
   const resolver = zodResolver(skillLevelSchema)
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    upsertSkillLevel,
-    resolver,
-    {
-      formProps: {
-        defaultValues: {
-          id: skillLevel?.id ?? "",
-          name: skillLevel?.name ?? "",
-          code: skillLevel?.code ?? "",
-          description: skillLevel?.description ?? "",
-          sortOrder: skillLevel?.sortOrder ?? 0,
-        },
-      },
-
-      actionProps: {
-        onSuccess: ({ data }) => {
-          toast.success(`Skill level successfully ${skillLevel ? "updated" : "created"}`)
-          router.push(`/admin/skill-levels/${data?.id}`)
-        },
-
-        onError: ({ error }) => {
-          toast.error(error.serverError)
-        },
+  const { form, action, handleSubmitWithAction } = useHookFormAction(upsertSkillLevel, resolver, {
+    formProps: {
+      defaultValues: {
+        id: skillLevel?.id ?? "",
+        name: skillLevel?.name ?? "",
+        code: skillLevel?.code ?? "",
+        description: skillLevel?.description ?? "",
+        sortOrder: skillLevel?.sortOrder ?? 0,
       },
     },
-  )
+
+    actionProps: {
+      onSuccess: ({ data }) => {
+        toast.success(`Skill level successfully ${skillLevel ? "updated" : "created"}`)
+        router.push(`/admin/skill-levels/${data?.id}`)
+      },
+
+      onError: ({ error }) => {
+        toast.error(error.serverError)
+      },
+    },
+  })
 
   return (
     <Form {...form}>
@@ -129,7 +125,11 @@ export function SkillLevelForm({
             <FormItem>
               <FormLabel>Sort Order</FormLabel>
               <FormControl>
-                <Input type="number" value={String(field.value ?? "")} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} />
+                <Input
+                  type="number"
+                  value={String(field.value ?? "")}
+                  onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -65,8 +65,8 @@ mock.module("next/server", () => ({
 // Real imports
 // ---------------------------------------------------------------------------
 
-import { db } from "~/services/db"
 import { transitionMembershipStatus } from "~/server/admin/memberships/actions"
+import { db } from "~/services/db"
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -147,7 +147,16 @@ afterAll(async () => {
 
   // Phase 2: zombie sweep
   await db.auditLog.deleteMany({
-    where: { userId: { in: (await db.user.findMany({ where: { email: { startsWith: TAG_PREFIX } }, select: { id: true } })).map(u => u.id) } },
+    where: {
+      userId: {
+        in: (
+          await db.user.findMany({
+            where: { email: { startsWith: TAG_PREFIX } },
+            select: { id: true },
+          })
+        ).map(u => u.id),
+      },
+    },
   })
   await db.membership.deleteMany({
     where: { user: { email: { startsWith: TAG_PREFIX } } },

@@ -5,8 +5,12 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { slugify } from "@primoui/utils"
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
+import type { FieldValues } from "react-hook-form"
 import { toast } from "sonner"
 import { Brand, ProgramStatus } from "~/.generated/prisma/browser"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
+import { RelationSelector } from "~/components/admin/relation-selector"
+import { AnimatedContainer } from "~/components/common/animated-container"
 import { Button } from "~/components/common/button"
 import {
   Form,
@@ -18,20 +22,25 @@ import {
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
-import { AnimatedContainer } from "~/components/common/animated-container"
-import type { FieldValues } from "react-hook-form"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
-import { RelationSelector } from "~/components/admin/relation-selector"
 import { useComputedField } from "~/hooks/use-computed-field"
-import { upsertProgram } from "~/server/admin/programs/actions"
-import type { findProgramById } from "~/server/admin/programs/queries"
-import type { findOrganizationOptions, findDisciplineOptions } from "~/server/admin/programs/queries"
-import { programSchema } from "~/server/admin/programs/schema"
 import type { findAgeGroupList } from "~/server/admin/age-groups/queries"
+import { upsertProgram } from "~/server/admin/programs/actions"
+import type {
+  findDisciplineOptions,
+  findOrganizationOptions,
+  findProgramById,
+} from "~/server/admin/programs/queries"
+import { programSchema } from "~/server/admin/programs/schema"
 import type { findSkillLevelList } from "~/server/admin/skill-levels/queries"
 
 type ProgramFormProps = ComponentProps<"form"> & {
@@ -43,7 +52,17 @@ type ProgramFormProps = ComponentProps<"form"> & {
   title?: string
 }
 
-export function ProgramForm({ children, className, title, program, organizations, disciplines, ageGroups, skillLevels, ...props }: ProgramFormProps) {
+export function ProgramForm({
+  children,
+  className,
+  title,
+  program,
+  organizations,
+  disciplines,
+  ageGroups,
+  skillLevels,
+  ...props
+}: ProgramFormProps) {
   const router = useRouter()
   const resolver = zodResolver(programSchema)
 
@@ -260,7 +279,10 @@ export function ProgramForm({ children, className, title, program, organizations
                 <FormItem>
                   <FormLabel>Age Groups</FormLabel>
                   <RelationSelector
-                    relations={ageGroups.map(ag => ({ id: ag.id, name: `${ag.name} (${ag.ageMin}–${ag.ageMax ?? "∞"})` }))}
+                    relations={ageGroups.map(ag => ({
+                      id: ag.id,
+                      name: `${ag.name} (${ag.ageMin}–${ag.ageMax ?? "∞"})`,
+                    }))}
                     selectedIds={field.value ?? []}
                     setSelectedIds={field.onChange}
                   />
@@ -315,7 +337,9 @@ export function ProgramForm({ children, className, title, program, organizations
                             placeholder="—"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                            onChange={e =>
+                              field.onChange(e.target.value ? Number(e.target.value) : null)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -335,7 +359,9 @@ export function ProgramForm({ children, className, title, program, organizations
                             placeholder="—"
                             {...field}
                             value={field.value ?? ""}
-                            onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                            onChange={e =>
+                              field.onChange(e.target.value ? Number(e.target.value) : null)
+                            }
                           />
                         </FormControl>
                         <FormMessage />

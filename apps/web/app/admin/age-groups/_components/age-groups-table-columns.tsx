@@ -80,8 +80,7 @@ export const getColumns = (): ColumnDef<AgeGroup & { _count?: { programs: number
     {
       accessorKey: "isSystem",
       header: "System",
-      cell: ({ row }) =>
-        row.original.isSystem ? <Badge variant="outline">System</Badge> : null,
+      cell: ({ row }) => (row.original.isSystem ? <Badge variant="outline">System</Badge> : null),
     },
     {
       accessorKey: "createdAt",

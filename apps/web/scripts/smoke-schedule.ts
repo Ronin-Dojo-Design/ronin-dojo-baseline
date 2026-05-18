@@ -253,7 +253,7 @@ async function main() {
       activeBrand: BRAND,
       scheduleId: schedule.id,
     })
-    console.log(`✓ Org instructor can edit schedule`)
+    console.log("✓ Org instructor can edit schedule")
 
     // Deny: cross-brand org input is rejected at organization lookup
     await expectRejects(
@@ -356,7 +356,7 @@ async function main() {
     if (eligibleInstructorIds.includes(coach.id)) {
       throw new Error("COACH role should NOT appear in instructor selector (gate 5 + OD-5)")
     }
-    console.log(`✓ Instructor selector returned only OWNER/ORG_ADMIN/INSTRUCTOR (COACH excluded)`)
+    console.log("✓ Instructor selector returned only OWNER/ORG_ADMIN/INSTRUCTOR (COACH excluded)")
 
     // Gate 6 — materialization preserves attended sessions as CANCELLED
     const today = new Date()
@@ -380,9 +380,7 @@ async function main() {
     })
 
     // Now flip schedule daysOfWeek so the attended future session becomes stale.
-    const futureDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
-      futureDate.getUTCDay()
-    ] as
+    const futureDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][futureDate.getUTCDay()] as
       | "SUN"
       | "MON"
       | "TUE"
@@ -422,7 +420,7 @@ async function main() {
     if (plan.toDelete.find(d => d.id === attendedSession.id)) {
       throw new Error("Gate 6 failed: attended future session was DELETED instead of CANCELLED")
     }
-    console.log(`✓ Gate 6: attended future session CANCELLED, not deleted`)
+    console.log("✓ Gate 6: attended future session CANCELLED, not deleted")
 
     console.log("\nSchedule slice smoke proof — passed")
   } finally {
@@ -526,10 +524,7 @@ async function editScheduleLikeAction({
     },
   })
   if (!schedule) throw new Error("Schedule not found for active brand")
-  if (
-    schedule.organization.ownerId !== userId &&
-    schedule.organization.memberships.length === 0
-  ) {
+  if (schedule.organization.ownerId !== userId && schedule.organization.memberships.length === 0) {
     throw new Error("User cannot edit schedule")
   }
   return db.classSchedule.update({

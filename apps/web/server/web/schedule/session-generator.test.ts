@@ -7,8 +7,8 @@
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { describe, expect, it } from "bun:test"
 import {
-  MAX_GENERATION_WINDOW_DAYS,
   generateSessionPlan,
+  MAX_GENERATION_WINDOW_DAYS,
 } from "~/server/web/schedule/session-generator"
 
 const utc = (iso: string) => new Date(`${iso}T00:00:00.000Z`)
@@ -154,9 +154,7 @@ describe("generateSessionPlan", () => {
       windowStart: utc("2099-02-02"),
       windowEnd: utc("2099-02-09"),
     })
-    expect(plan.toRefreshTimes).toEqual([
-      { id: "shift-me", startTime: "18:00", endTime: "19:00" },
-    ])
+    expect(plan.toRefreshTimes).toEqual([{ id: "shift-me", startTime: "18:00", endTime: "19:00" }])
   })
 
   // DST contract: generator stores wall-clock time strings; transitions must not shift them.

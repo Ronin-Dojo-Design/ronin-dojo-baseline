@@ -6,9 +6,7 @@
  */
 
 // @ts-expect-error - bun:test is a Bun runtime module
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
-// @ts-expect-error - bun:test is a Bun runtime module
-import { mock } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 
 mock.module("next/cache", () => ({
   cacheLife: () => {},
@@ -17,7 +15,7 @@ mock.module("next/cache", () => ({
 }))
 
 import type { Brand } from "~/.generated/prisma/client"
-import { searchTechniques, findTechniqueBySlug } from "~/server/web/techniques/queries"
+import { findTechniqueBySlug, searchTechniques } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
 // --- Test fixtures ---
@@ -185,9 +183,7 @@ describe("searchTechniques", () => {
     it("count excludes unpublished techniques", async () => {
       const result = await searchTechniques(defaultParams, BRAND_A)
       // Should be 3 published Brand A techniques (from our seed, possibly more from other tests)
-      const ourTechniques = result.techniques.filter((t: any) =>
-        t.slug.includes(`${TS}`),
-      )
+      const ourTechniques = result.techniques.filter((t: any) => t.slug.includes(`${TS}`))
       expect(ourTechniques.length).toBe(3)
     })
   })

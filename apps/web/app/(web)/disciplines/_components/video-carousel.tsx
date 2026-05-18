@@ -1,8 +1,8 @@
 "use client"
 
 import { Card } from "~/components/common/card"
-import { H4 } from "~/components/common/heading"
 import { Carousel, CarouselSlide } from "~/components/common/carousel"
+import { H4 } from "~/components/common/heading"
 
 type Video = {
   id: string
@@ -24,9 +24,11 @@ export function VideoCarousel({ videos, title = "Videos" }: VideoCarouselProps) 
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">{title}</H4>
+      <H4 as="h3" className="mb-4">
+        {title}
+      </H4>
       <Carousel>
-        {videos.map((v) => (
+        {videos.map(v => (
           <CarouselSlide key={v.id} className="flex-[0_0_300px]">
             <Card className="flex h-[180px] flex-col items-center justify-center overflow-hidden">
               {v.thumbnailUrl ? (

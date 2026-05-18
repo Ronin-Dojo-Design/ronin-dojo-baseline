@@ -35,7 +35,11 @@ type MembershipsTableProps = {
   disciplines: { id: string; name: string }[]
 }
 
-export function MembershipsTable({ membershipsPromise, organizations, disciplines }: MembershipsTableProps) {
+export function MembershipsTable({
+  membershipsPromise,
+  organizations: _organizations,
+  disciplines: _disciplines,
+}: MembershipsTableProps) {
   const { memberships, membershipsTotal, pageCount } = use(membershipsPromise)
   const [{ perPage, sort }] = useQueryStates(membershipsTableParamsSchema)
 
@@ -51,12 +55,36 @@ export function MembershipsTable({ membershipsPromise, organizations, discipline
       id: "status",
       label: "Status",
       options: [
-        { label: "Invited", value: MembershipStatus.INVITED, icon: <MailIcon className="text-blue-500" /> },
-        { label: "Pending", value: MembershipStatus.PENDING, icon: <CircleIcon className="text-blue-500" /> },
-        { label: "Active", value: MembershipStatus.ACTIVE, icon: <CircleCheckIcon className="text-green-500" /> },
-        { label: "Suspended", value: MembershipStatus.SUSPENDED, icon: <CirclePauseIcon className="text-amber-500" /> },
-        { label: "Cancelled", value: MembershipStatus.CANCELLED, icon: <CircleXIcon className="text-red-500" /> },
-        { label: "Expired", value: MembershipStatus.EXPIRED, icon: <CircleDotIcon className="text-gray-500" /> },
+        {
+          label: "Invited",
+          value: MembershipStatus.INVITED,
+          icon: <MailIcon className="text-blue-500" />,
+        },
+        {
+          label: "Pending",
+          value: MembershipStatus.PENDING,
+          icon: <CircleIcon className="text-blue-500" />,
+        },
+        {
+          label: "Active",
+          value: MembershipStatus.ACTIVE,
+          icon: <CircleCheckIcon className="text-green-500" />,
+        },
+        {
+          label: "Suspended",
+          value: MembershipStatus.SUSPENDED,
+          icon: <CirclePauseIcon className="text-amber-500" />,
+        },
+        {
+          label: "Cancelled",
+          value: MembershipStatus.CANCELLED,
+          icon: <CircleXIcon className="text-red-500" />,
+        },
+        {
+          label: "Expired",
+          value: MembershipStatus.EXPIRED,
+          icon: <CircleDotIcon className="text-gray-500" />,
+        },
       ],
     },
   ]

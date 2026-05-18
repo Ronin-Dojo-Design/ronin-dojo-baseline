@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { LeadForm } from "~/app/admin/leads/_components/lead-form"
-import { LeadStatusActions } from "~/app/admin/leads/[id]/_components/lead-status-actions"
 import { FollowUpPanel } from "~/app/admin/leads/[id]/_components/follow-up-panel"
+import { LeadStatusActions } from "~/app/admin/leads/[id]/_components/lead-status-actions"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { findLeadById, findOrganizationList } from "~/server/admin/leads/queries"

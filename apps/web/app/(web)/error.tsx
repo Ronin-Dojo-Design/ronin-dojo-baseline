@@ -15,7 +15,7 @@ type ErrorProps = {
   reset: () => void
 }
 
-export default function ({ error }: ErrorProps) {
+export default function WebErrorBoundary({ error }: ErrorProps) {
   const t = useTranslations("pages.error")
   const router = useRouter()
 

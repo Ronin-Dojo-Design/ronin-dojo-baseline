@@ -1,10 +1,10 @@
 "use server"
 
 import { randomBytes } from "node:crypto"
-import { z } from "zod/v4"
 import { after } from "next/server"
-import { adminActionClient } from "~/lib/safe-actions"
+import { z } from "zod/v4"
 import { getRequestBrand } from "~/lib/brand-context"
+import { adminActionClient } from "~/lib/safe-actions"
 
 const issueCertificateSchema = z.object({
   certificateTemplateId: z.string(),

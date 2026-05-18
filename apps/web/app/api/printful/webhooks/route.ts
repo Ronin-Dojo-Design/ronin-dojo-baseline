@@ -1,13 +1,7 @@
 import { after, type NextRequest, NextResponse } from "next/server"
-import {
-  verifyWebhookSignature,
-  type PrintfulWebhookEvent,
-} from "~/services/printful"
+import { notifyAdminOfPrintfulFailure, notifyCustomerOfShipment } from "~/lib/notifications"
 import { db } from "~/services/db"
-import {
-  notifyCustomerOfShipment,
-  notifyAdminOfPrintfulFailure,
-} from "~/lib/notifications"
+import { type PrintfulWebhookEvent, verifyWebhookSignature } from "~/services/printful"
 
 // ---------------------------------------------------------------------------
 // Printful Webhook Handler
@@ -66,7 +60,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  console.log(`📦 Printful webhook: processing ${event.type} for MerchOrder ${merchOrder.id} (brand: ${merchOrder.brand})`)
+  console.log(
+    `📦 Printful webhook: processing ${event.type} for MerchOrder ${merchOrder.id} (brand: ${merchOrder.brand})`,
+  )
 
   switch (event.type) {
     case "package_shipped": {

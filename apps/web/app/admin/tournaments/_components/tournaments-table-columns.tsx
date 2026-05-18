@@ -1,14 +1,14 @@
 "use client"
 
+import { formatDateTime } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Tournament } from "~/.generated/prisma/browser"
-import type { findTournaments } from "~/server/admin/tournaments/queries"
 import { TournamentActions } from "~/app/admin/tournaments/_components/tournament-actions"
-import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
-import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import { formatDateTime } from "@primoui/utils"
+import { Link } from "~/components/common/link"
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
+import type { findTournaments } from "~/server/admin/tournaments/queries"
 
 export type TournamentRow = Awaited<ReturnType<typeof findTournaments>>["tournaments"][number]
 
@@ -18,7 +18,10 @@ export function getColumns(): ColumnDef<TournamentRow>[] {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
           onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -37,7 +40,10 @@ export function getColumns(): ColumnDef<TournamentRow>[] {
       accessorKey: "name",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
-        <Link href={`/admin/tournaments/${row.original.id}`} className="font-medium hover:underline">
+        <Link
+          href={`/admin/tournaments/${row.original.id}`}
+          className="font-medium hover:underline"
+        >
           {row.getValue("name")}
         </Link>
       ),
@@ -78,15 +84,14 @@ export function getColumns(): ColumnDef<TournamentRow>[] {
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status
-        const variant = status === "PUBLISHED" ? "success" : status === "CLOSED" ? "warning" : "soft"
+        const variant =
+          status === "PUBLISHED" ? "success" : status === "CLOSED" ? "warning" : "soft"
         return <Badge variant={variant}>{status}</Badge>
       },
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <TournamentActions tournament={row.original as Tournament} />
-      ),
+      cell: ({ row }) => <TournamentActions tournament={row.original as Tournament} />,
     },
   ]
 }

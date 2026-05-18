@@ -1,17 +1,31 @@
 import { notFound } from "next/navigation"
-import { ProgramForm } from "~/app/admin/programs/_components/program-form"
 import { ProgramCoursesEditor } from "~/app/admin/programs/_components/program-courses-editor"
+import { ProgramForm } from "~/app/admin/programs/_components/program-form"
 import { ProgramWaiversEditor } from "~/app/admin/programs/_components/program-waivers-editor"
 import { withAdminPage } from "~/components/admin/auth-hoc"
-import { Wrapper } from "~/components/common/wrapper"
 import { Separator } from "~/components/common/separator"
-import { findAvailableCourses, findAvailableWaivers, findDisciplineOptions, findOrganizationOptions, findProgramById } from "~/server/admin/programs/queries"
+import { Wrapper } from "~/components/common/wrapper"
 import { findAgeGroupList } from "~/server/admin/age-groups/queries"
+import {
+  findAvailableCourses,
+  findAvailableWaivers,
+  findDisciplineOptions,
+  findOrganizationOptions,
+  findProgramById,
+} from "~/server/admin/programs/queries"
 import { findSkillLevelList } from "~/server/admin/skill-levels/queries"
 
 export default withAdminPage(async ({ params }) => {
   const { id } = await params
-  const [program, organizations, disciplines, availableCourses, availableWaivers, ageGroups, skillLevels] = await Promise.all([
+  const [
+    program,
+    organizations,
+    disciplines,
+    availableCourses,
+    availableWaivers,
+    ageGroups,
+    skillLevels,
+  ] = await Promise.all([
     findProgramById(id),
     findOrganizationOptions(),
     findDisciplineOptions(),
@@ -40,9 +54,20 @@ export default withAdminPage(async ({ params }) => {
 
   return (
     <Wrapper size="md" gap="sm">
-      <ProgramForm title={`Edit ${program.name}`} program={program} organizations={organizations} disciplines={disciplines} ageGroups={ageGroups} skillLevels={skillLevels} />
+      <ProgramForm
+        title={`Edit ${program.name}`}
+        program={program}
+        organizations={organizations}
+        disciplines={disciplines}
+        ageGroups={ageGroups}
+        skillLevels={skillLevels}
+      />
       <Separator />
-      <ProgramCoursesEditor programId={program.id} linkedCourses={linkedCourses} availableCourses={availableCourses} />
+      <ProgramCoursesEditor
+        programId={program.id}
+        linkedCourses={linkedCourses}
+        availableCourses={availableCourses}
+      />
       <Separator />
       <ProgramWaiversEditor
         programId={program.id}

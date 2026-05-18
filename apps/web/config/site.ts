@@ -12,30 +12,37 @@ type BrandSiteConfig = {
   domain: string
 }
 
-const brandConfigs: Record<Brand, Pick<BrandSiteConfig, "name" | "slug" | "tagline" | "description">> = {
+const brandConfigs: Record<
+  Brand,
+  Pick<BrandSiteConfig, "name" | "slug" | "tagline" | "description">
+> = {
   BASELINE_MARTIAL_ARTS: {
     name: "Baseline Martial Arts",
     slug: "baseline-martial-arts",
     tagline: "Train Smart. Fight Ready. Community First.",
-    description: "A modern martial arts school platform for programs, tournaments, belt testing, and community.",
+    description:
+      "A modern martial arts school platform for programs, tournaments, belt testing, and community.",
   },
   RONIN_DOJO_DESIGN: {
     name: "Ronin Dojo Design",
     slug: "ronin-dojo-design",
     tagline: "White-Label Dojo Management, Built for Growth.",
-    description: "The platform behind every dojo. Multi-brand martial arts SaaS for school owners and organizations.",
+    description:
+      "The platform behind every dojo. Multi-brand martial arts SaaS for school owners and organizations.",
   },
   BBL: {
     name: "Black Belt Legacy",
     slug: "black-belt-legacy",
     tagline: "Honor the Lineage. Build the Future.",
-    description: "Preserving martial arts heritage through lineage tracking, curriculum, and certifications.",
+    description:
+      "Preserving martial arts heritage through lineage tracking, curriculum, and certifications.",
   },
   WEKAF: {
     name: "WEKAF USA",
     slug: "wekaf-usa",
     tagline: "World Eskrima Kali Arnis Federation — USA Chapter.",
-    description: "Official tournament management, athlete registration, and rankings for Filipino martial arts.",
+    description:
+      "Official tournament management, athlete registration, and rankings for Filipino martial arts.",
   },
 }
 

@@ -1,10 +1,10 @@
+import type { Brand } from "~/.generated/prisma/client"
+import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
 import { db } from "~/services/db"
-import type { Brand } from "~/.generated/prisma/client"
 
 type SchoolsSectionProps = {
   disciplineId: string
@@ -42,7 +42,9 @@ export async function SchoolsSection({ disciplineId, brand }: SchoolsSectionProp
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">Schools & Dojos ({orgLinks.length})</H4>
+      <H4 as="h3" className="mb-4">
+        Schools & Dojos ({orgLinks.length})
+      </H4>
       <div className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3">
         {orgLinks.map(({ organization: org }) => (
           <Link key={org.id} href={`/organizations/${org.slug}`} className="no-underline">
@@ -51,7 +53,9 @@ export async function SchoolsSection({ disciplineId, brand }: SchoolsSectionProp
                 <Stack size="sm" direction="column">
                   <span className="font-medium">{org.name}</span>
                   <Stack size="xs" className="text-sm text-muted-foreground">
-                    <Badge variant="outline" size="sm">{org.type}</Badge>
+                    <Badge variant="outline" size="sm">
+                      {org.type}
+                    </Badge>
                     {(org.city || org.state) && (
                       <span>{[org.city, org.state].filter(Boolean).join(", ")}</span>
                     )}

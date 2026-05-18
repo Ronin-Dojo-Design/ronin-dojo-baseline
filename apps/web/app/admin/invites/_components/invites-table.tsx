@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  CircleCheckIcon,
-  CircleDotIcon,
-  CircleIcon,
-  CircleXIcon,
-  PlusIcon,
-} from "lucide-react"
+import { CircleCheckIcon, CircleDotIcon, CircleIcon, CircleXIcon, PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { InviteStatus, InviteType } from "~/.generated/prisma/browser"
@@ -30,7 +24,7 @@ type InvitesTableProps = {
   organizations: { id: string; name: string }[]
 }
 
-export function InvitesTable({ invitesPromise, organizations }: InvitesTableProps) {
+export function InvitesTable({ invitesPromise, organizations: _organizations }: InvitesTableProps) {
   const { invites, invitesTotal, pageCount } = use(invitesPromise)
   const [{ perPage, sort }] = useQueryStates(invitesTableParamsSchema)
 
@@ -46,10 +40,26 @@ export function InvitesTable({ invitesPromise, organizations }: InvitesTableProp
       id: "status",
       label: "Status",
       options: [
-        { label: "Pending", value: InviteStatus.PENDING, icon: <CircleIcon className="text-blue-500" /> },
-        { label: "Accepted", value: InviteStatus.ACCEPTED, icon: <CircleCheckIcon className="text-green-500" /> },
-        { label: "Expired", value: InviteStatus.EXPIRED, icon: <CircleDotIcon className="text-amber-500" /> },
-        { label: "Revoked", value: InviteStatus.REVOKED, icon: <CircleXIcon className="text-red-500" /> },
+        {
+          label: "Pending",
+          value: InviteStatus.PENDING,
+          icon: <CircleIcon className="text-blue-500" />,
+        },
+        {
+          label: "Accepted",
+          value: InviteStatus.ACCEPTED,
+          icon: <CircleCheckIcon className="text-green-500" />,
+        },
+        {
+          label: "Expired",
+          value: InviteStatus.EXPIRED,
+          icon: <CircleDotIcon className="text-amber-500" />,
+        },
+        {
+          label: "Revoked",
+          value: InviteStatus.REVOKED,
+          icon: <CircleXIcon className="text-red-500" />,
+        },
       ],
     },
     {

@@ -6,10 +6,7 @@ import { findOrganizationList } from "~/server/admin/leads/queries"
 export default withAdminPage(() => {
   return (
     <Wrapper size="md" gap="sm">
-      <LeadForm
-        title="Create lead"
-        organizationsPromise={findOrganizationList()}
-      />
+      <LeadForm title="Create lead" organizationsPromise={findOrganizationList()} />
     </Wrapper>
   )
 })

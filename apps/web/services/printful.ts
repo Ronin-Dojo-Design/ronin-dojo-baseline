@@ -84,10 +84,7 @@ export type PrintfulWebhookEvent = {
 // HTTP helper
 // ---------------------------------------------------------------------------
 
-async function printfulFetch<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function printfulFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const apiKey = env.PRINTFUL_API_KEY
 
   if (!apiKey) {
@@ -132,18 +129,15 @@ export async function createOrder(params: {
 }): Promise<PrintfulOrder> {
   const { externalId, recipient, items, shippingRate } = params
 
-  return printfulFetch<PrintfulOrder>(
-    `/orders${shouldConfirmOrders ? "?confirm=true" : ""}`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        external_id: externalId,
-        shipping: shippingRate,
-        recipient,
-        items,
-      }),
-    },
-  )
+  return printfulFetch<PrintfulOrder>(`/orders${shouldConfirmOrders ? "?confirm=true" : ""}`, {
+    method: "POST",
+    body: JSON.stringify({
+      external_id: externalId,
+      shipping: shippingRate,
+      recipient,
+      items,
+    }),
+  })
 }
 
 /**
@@ -213,10 +207,7 @@ export async function estimateOrderCosts(params: {
  * Verify a Printful webhook signature.
  * Returns true if the signature matches, false otherwise.
  */
-export function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-): boolean {
+export function verifyWebhookSignature(_payload: string, signature: string): boolean {
   const secret = env.PRINTFUL_WEBHOOK_SECRET
   if (!secret) return true // No secret configured — skip verification in dev
 

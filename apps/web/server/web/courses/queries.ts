@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache"
-import { type Brand, type Prisma } from "~/.generated/prisma/client"
+import type { Brand, Prisma } from "~/.generated/prisma/client"
 import { courseManyPayload, courseOnePayload } from "~/server/web/courses/payloads"
 import { db } from "~/services/db"
 

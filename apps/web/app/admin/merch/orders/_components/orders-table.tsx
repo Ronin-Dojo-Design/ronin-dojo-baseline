@@ -3,7 +3,6 @@
 import {
   CircleCheckIcon,
   CircleDashedIcon,
-  CircleDotDashedIcon,
   CircleDotIcon,
   CircleXIcon,
   PackageIcon,
@@ -23,9 +22,8 @@ import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
 import { useDataTable } from "~/hooks/use-data-table"
-import type { findMerchOrders } from "~/server/web/merch/queries"
+import type { findMerchOrders, MerchOrderRow } from "~/server/web/merch/queries"
 import type { DataTableFilterField } from "~/types"
-import type { MerchOrderRow } from "~/server/web/merch/queries"
 
 type OrdersTableProps = {
   ordersPromise: ReturnType<typeof findMerchOrders>
@@ -47,15 +45,51 @@ export function OrdersTable({ ordersPromise }: OrdersTableProps) {
       id: "fulfillmentStatus",
       label: "Status",
       options: [
-        { label: "Paid", value: FulfillmentStatus.PAID, icon: <WalletIcon className="text-blue-500" /> },
-        { label: "Submitted", value: FulfillmentStatus.SUBMITTED, icon: <CircleDotIcon className="text-blue-500" /> },
-        { label: "Printing", value: FulfillmentStatus.PRINTING, icon: <PrinterIcon className="text-yellow-600" /> },
-        { label: "Shipped", value: FulfillmentStatus.SHIPPED, icon: <TruckIcon className="text-purple-500" /> },
-        { label: "Delivered", value: FulfillmentStatus.DELIVERED, icon: <CircleCheckIcon className="text-green-500" /> },
-        { label: "Failed", value: FulfillmentStatus.FAILED, icon: <CircleXIcon className="text-red-500" /> },
-        { label: "Canceled", value: FulfillmentStatus.CANCELED, icon: <CircleDashedIcon className="text-gray-500" /> },
-        { label: "Returned", value: FulfillmentStatus.RETURNED, icon: <RotateCcwIcon className="text-yellow-600" /> },
-        { label: "Refunded", value: FulfillmentStatus.REFUNDED, icon: <PackageIcon className="text-gray-500" /> },
+        {
+          label: "Paid",
+          value: FulfillmentStatus.PAID,
+          icon: <WalletIcon className="text-blue-500" />,
+        },
+        {
+          label: "Submitted",
+          value: FulfillmentStatus.SUBMITTED,
+          icon: <CircleDotIcon className="text-blue-500" />,
+        },
+        {
+          label: "Printing",
+          value: FulfillmentStatus.PRINTING,
+          icon: <PrinterIcon className="text-yellow-600" />,
+        },
+        {
+          label: "Shipped",
+          value: FulfillmentStatus.SHIPPED,
+          icon: <TruckIcon className="text-purple-500" />,
+        },
+        {
+          label: "Delivered",
+          value: FulfillmentStatus.DELIVERED,
+          icon: <CircleCheckIcon className="text-green-500" />,
+        },
+        {
+          label: "Failed",
+          value: FulfillmentStatus.FAILED,
+          icon: <CircleXIcon className="text-red-500" />,
+        },
+        {
+          label: "Canceled",
+          value: FulfillmentStatus.CANCELED,
+          icon: <CircleDashedIcon className="text-gray-500" />,
+        },
+        {
+          label: "Returned",
+          value: FulfillmentStatus.RETURNED,
+          icon: <RotateCcwIcon className="text-yellow-600" />,
+        },
+        {
+          label: "Refunded",
+          value: FulfillmentStatus.REFUNDED,
+          icon: <PackageIcon className="text-gray-500" />,
+        },
       ],
     },
   ]

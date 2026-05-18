@@ -2,11 +2,10 @@
 
 import { formatDate } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import { EllipsisIcon } from "lucide-react"
 import Link from "next/link"
-import type { RegistrationStatus, PaymentStatus } from "~/.generated/prisma/browser"
-import { RegistrationActions } from "~/components/admin/tournaments/registration-actions"
+import type { PaymentStatus, RegistrationStatus } from "~/.generated/prisma/browser"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
+import { RegistrationActions } from "~/components/admin/tournaments/registration-actions"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { Tooltip } from "~/components/common/tooltip"
@@ -86,9 +85,7 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
       cell: ({ row }) => (
         <Note className="max-w-48 truncate">
-          <Tooltip tooltip={row.original.user.email}>
-            {row.original.user.email}
-          </Tooltip>
+          <Tooltip tooltip={row.original.user.email}>{row.original.user.email}</Tooltip>
         </Note>
       ),
     },
@@ -97,7 +94,7 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       enableSorting: false,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Divisions" />,
       cell: ({ row }) => {
-        const names = row.original.entries.map((e) => e.division.name)
+        const names = row.original.entries.map(e => e.division.name)
         if (names.length === 0) return <Note>—</Note>
         return (
           <Tooltip tooltip={names.join(", ")}>
@@ -111,7 +108,11 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => {
         const status = row.original.status
-        return <Badge variant={STATUS_VARIANT[status] ?? "soft"} size="sm">{status}</Badge>
+        return (
+          <Badge variant={STATUS_VARIANT[status] ?? "soft"} size="sm">
+            {status}
+          </Badge>
+        )
       },
     },
     {
@@ -119,7 +120,11 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Payment" />,
       cell: ({ row }) => {
         const ps = row.original.paymentStatus
-        return <Badge variant={PAYMENT_VARIANT[ps] ?? "soft"} size="sm">{ps}</Badge>
+        return (
+          <Badge variant={PAYMENT_VARIANT[ps] ?? "soft"} size="sm">
+            {ps}
+          </Badge>
+        )
       },
     },
     {

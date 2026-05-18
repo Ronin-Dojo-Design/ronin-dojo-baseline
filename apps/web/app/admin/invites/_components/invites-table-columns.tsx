@@ -2,7 +2,7 @@
 
 import { formatDate } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import { CopyIcon, HashIcon, MoreHorizontalIcon, ShieldXIcon, TrashIcon } from "lucide-react"
+import { CopyIcon, MoreHorizontalIcon, ShieldXIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
@@ -18,12 +18,15 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
-import { revokeInvite, deleteInvites } from "~/server/admin/invites/actions"
+import { deleteInvites, revokeInvite } from "~/server/admin/invites/actions"
 import type { findInvites } from "~/server/admin/invites/queries"
 
 type InviteRow = Awaited<ReturnType<typeof findInvites>>["invites"][number]
 
-const statusVariant: Record<string, "primary" | "success" | "warning" | "danger" | "outline" | "soft"> = {
+const statusVariant: Record<
+  string,
+  "primary" | "success" | "warning" | "danger" | "outline" | "soft"
+> = {
   PENDING: "primary",
   ACCEPTED: "success",
   EXPIRED: "warning",

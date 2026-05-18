@@ -4,10 +4,7 @@ import type { Prisma } from "~/.generated/prisma/client"
 import type { RolesTableSchema } from "~/server/admin/roles/schema"
 import { db } from "~/services/db"
 
-export const findRoles = async (
-  search: RolesTableSchema,
-  where?: Prisma.RoleWhereInput,
-) => {
+export const findRoles = async (search: RolesTableSchema, where?: Prisma.RoleWhereInput) => {
   const { name, page, perPage, sort, from, to, operator } = search
 
   const offset = (page - 1) * perPage

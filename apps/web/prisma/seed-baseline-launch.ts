@@ -94,9 +94,7 @@ async function main() {
   })
 
   if (existingOrg) {
-    console.log(
-      `   ⏭️  Skipped (exists): Organization "${existingOrg.name}" (id=${existingOrg.id})`,
-    )
+    console.log(`   ⏭️  Skipped (exists): Organization "${existingOrg.name}" (id=${existingOrg.id})`)
   } else {
     const org = await db.organization.create({
       data: {
@@ -142,9 +140,7 @@ async function main() {
   if (rolesSkipped > 0) {
     console.log(`   ⏭️  Skipped ${rolesSkipped} system role(s) (already exist)`)
   }
-  console.log(
-    `   📊 System Role count: before=${rolesBefore}, after=${rolesAfter} (expected 6)`,
-  )
+  console.log(`   📊 System Role count: before=${rolesBefore}, after=${rolesAfter} (expected 6)`)
 
   console.log(
     `\n🎉 Done! Organization created: ${orgCreated}, Roles created: ${rolesCreated} (skipped: ${rolesSkipped}).`,

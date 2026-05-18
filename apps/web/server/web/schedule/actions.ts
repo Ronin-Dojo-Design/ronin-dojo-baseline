@@ -70,8 +70,7 @@ export const saveSchedule = userActionClient
     } = parsedInput
 
     const id = rawId && rawId !== "none" ? rawId : undefined
-    const disciplineId =
-      rawDisciplineId && rawDisciplineId !== "none" ? rawDisciplineId : undefined
+    const disciplineId = rawDisciplineId && rawDisciplineId !== "none" ? rawDisciplineId : undefined
     const description = rawDescription?.trim() || undefined
     const locationName = rawLocationName?.trim() || undefined
 

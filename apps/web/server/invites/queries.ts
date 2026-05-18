@@ -1,9 +1,3 @@
-/**
- * @added   SESSION_0147 (2026-05-12)
- * @why     Public invite validation — checks expiry, maxUses, status before claim
- * @wired   app/(web)/invite/[code]/page.tsx
- */
-import type { Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**

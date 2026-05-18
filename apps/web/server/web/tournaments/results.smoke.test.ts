@@ -12,9 +12,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
-// @ts-expect-error — bun:test is a Bun runtime module
-import { mock } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 
 mock.module("next/cache", () => ({
   cacheLife: () => {},
@@ -180,7 +178,7 @@ describe("Tournament results page smoke", () => {
 
     expect(divisions.length).toBeGreaterThanOrEqual(1)
 
-    const div = divisions.find((d) => d.id === divisionId)
+    const div = divisions.find(d => d.id === divisionId)
     expect(div).toBeDefined()
     expect(div!.brackets).toHaveLength(1)
     expect(div!.brackets[0].matches).toHaveLength(1)
@@ -188,7 +186,8 @@ describe("Tournament results page smoke", () => {
 
   it("completed match has competitors with user info", async () => {
     const result = await findTournamentResults(SLUG, BRAND)
-    const match = result!.disciplines[0].divisions.find((d) => d.id === divisionId)!.brackets[0].matches[0]
+    const match = result!.disciplines[0].divisions.find(d => d.id === divisionId)!.brackets[0]
+      .matches[0]
 
     expect(match.status).toBe("COMPLETED")
     expect(match.result).toBe("WIN_DECISION")

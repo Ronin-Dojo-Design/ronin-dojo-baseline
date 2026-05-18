@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
 import { useFilters } from "~/contexts/filter-context"
 import { findMemberFilterOptions } from "~/server/web/directory/filter-actions"

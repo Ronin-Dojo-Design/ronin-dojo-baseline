@@ -3,8 +3,11 @@ import type { Brand } from "~/.generated/prisma/client"
 import type { PaginationProps } from "~/components/web/pagination"
 import { SchoolList, type SchoolListProps } from "~/components/web/schools/school-list"
 import { SchoolListing, type SchoolListingProps } from "~/components/web/schools/school-listing"
+import {
+  type SchoolFilterParams,
+  schoolFilterParamsCache,
+} from "~/server/web/directory/school-schema"
 import { searchOrganizations } from "~/server/web/directory/search-organizations"
-import { type SchoolFilterParams, schoolFilterParamsCache } from "~/server/web/directory/school-schema"
 
 type SchoolQueryProps = Omit<SchoolListingProps, "list" | "pagination"> & {
   searchParams: Promise<SearchParams>

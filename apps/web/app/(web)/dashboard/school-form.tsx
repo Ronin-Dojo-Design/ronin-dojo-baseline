@@ -1,23 +1,33 @@
 "use client"
 
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAction } from "next-safe-action/hooks"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { Button } from "~/components/common/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
-import { Input } from "~/components/common/input"
-import { TextArea } from "~/components/common/textarea"
-import { Stack } from "~/components/common/stack"
-import { H4 } from "~/components/common/heading"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/common/form"
+import { H4 } from "~/components/common/heading"
+import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
+import { TextArea } from "~/components/common/textarea"
 import { updateOrganization } from "~/server/web/school/actions"
 
 const schoolFormSchema = z.object({
   name: z.string().min(1).max(200),
-  slug: z.string().max(100).regex(/^[a-z0-9-]+$/, "Lowercase alphanumeric and dashes only"),
+  slug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, "Lowercase alphanumeric and dashes only"),
   description: z.string().max(2000).optional().default(""),
   websiteUrl: z.string().max(2048).optional().default(""),
   contactEmail: z.string().email().max(200).optional().or(z.literal("")),
@@ -56,6 +66,10 @@ export function SchoolForm({ organization }: SchoolFormProps) {
     )
   }
 
+  return <SchoolFormContent organization={organization} />
+}
+
+function SchoolFormContent({ organization }: { organization: OrganizationData }) {
   const form = useForm({
     resolver: zodResolver(schoolFormSchema),
     defaultValues: {
@@ -83,7 +97,7 @@ export function SchoolForm({ organization }: SchoolFormProps) {
 
         {organization.disciplines && organization.disciplines.length > 0 && (
           <Stack size="xs" direction="row" wrap>
-            {organization.disciplines.map((d) => (
+            {organization.disciplines.map(d => (
               <Badge key={d.discipline.id} variant="soft">
                 {d.discipline.name}
               </Badge>
@@ -93,7 +107,9 @@ export function SchoolForm({ organization }: SchoolFormProps) {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => execute({ organizationId: organization.id, ...data }))}
+            onSubmit={form.handleSubmit(data =>
+              execute({ organizationId: organization.id, ...data }),
+            )}
             className="mt-4 space-y-4"
           >
             <FormField

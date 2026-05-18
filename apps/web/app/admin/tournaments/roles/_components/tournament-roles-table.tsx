@@ -17,7 +17,9 @@ import type { findTournamentRolesPaginated } from "~/server/admin/tournaments/qu
 import { tournamentRolesTableParamsSchema } from "~/server/admin/tournaments/schema"
 import type { DataTableFilterField } from "~/types"
 
-type TournamentRoleWithCount = Awaited<ReturnType<typeof findTournamentRolesPaginated>>["roles"][number]
+type TournamentRoleWithCount = Awaited<
+  ReturnType<typeof findTournamentRolesPaginated>
+>["roles"][number]
 
 type TournamentRolesTableProps = {
   rolesPromise: ReturnType<typeof findTournamentRolesPaginated>

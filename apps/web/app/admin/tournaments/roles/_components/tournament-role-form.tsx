@@ -73,7 +73,11 @@ export function TournamentRoleForm({
     form,
     sourceField: "name",
     computedField: "code",
-    callback: (name: string) => name.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, ""),
+    callback: (name: string) =>
+      name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "_")
+        .replace(/^_|_$/g, ""),
     enabled: !role,
   })
 

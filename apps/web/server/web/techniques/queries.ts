@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
-import { type Brand, type Prisma } from "~/.generated/prisma/client"
+import type { Brand, Prisma } from "~/.generated/prisma/client"
 import { techniqueManyPayload, techniqueOnePayload } from "~/server/web/techniques/payloads"
 import type { TechniqueFilterParams } from "~/server/web/techniques/schema"
 import { db } from "~/services/db"

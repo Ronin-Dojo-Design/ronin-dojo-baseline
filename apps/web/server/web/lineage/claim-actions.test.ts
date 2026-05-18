@@ -23,7 +23,7 @@ mock.module("~/lib/brand-context", () => ({
 }))
 
 // Mock auth — will be overridden per test via mockSession.
-let mockSession: { user: { id: string; role: string } } | null = null
+const mockSession: { user: { id: string; role: string } } | null = null
 mock.module("~/lib/auth", () => ({
   getServerSession: () => Promise.resolve(mockSession),
 }))
@@ -32,7 +32,6 @@ mock.module("~/lib/auth", () => ({
 // The real userActionClient requires next headers/cookies context which doesn't exist in tests.
 // Instead we'll test the action logic by calling the DB operations directly.
 
-import type { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 const TS = Date.now()

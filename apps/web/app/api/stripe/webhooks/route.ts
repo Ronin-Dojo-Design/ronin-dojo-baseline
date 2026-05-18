@@ -3,9 +3,13 @@ import { after } from "next/server"
 import type Stripe from "stripe"
 import type { Brand } from "~/.generated/prisma/client"
 import { env } from "~/env"
-import { notifyAdminOfPremiumTool, notifyCustomerOfMerchOrder, notifySubmitterOfPremiumTool } from "~/lib/notifications"
-import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
+import {
+  notifyAdminOfPremiumTool,
+  notifyCustomerOfMerchOrder,
+  notifySubmitterOfPremiumTool,
+} from "~/lib/notifications"
 import { upsertStripeCustomerMapping } from "~/server/web/billing/stripe-customers"
+import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
 import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
@@ -1013,27 +1017,31 @@ export const POST = async (req: Request) => {
               } | null
 
               // Create MerchOrder record
-              const merchProductId = (plan?.metadata as any)?.merchProductId ?? metadata.pricingPlanId
+              const merchProductId =
+                (plan?.metadata as any)?.merchProductId ?? metadata.pricingPlanId
               const merchOrder = await db.merchOrder.create({
                 data: {
                   brand: (metadata.brand as Brand) ?? "BASELINE_MARTIAL_ARTS",
                   stripeCheckoutSessionId: session.id,
-                  stripePaymentIntentId: typeof session.payment_intent === "string"
-                    ? session.payment_intent
-                    : session.payment_intent?.id ?? null,
+                  stripePaymentIntentId:
+                    typeof session.payment_intent === "string"
+                      ? session.payment_intent
+                      : (session.payment_intent?.id ?? null),
                   fulfillmentStatus: "PAID",
                   customerEmail: customerEmail ?? "",
                   customerName: session.customer_details?.name ?? shipping?.name ?? null,
                   amountCents: plan?.amountCents ?? 0,
                   shippingCents: 499,
                   totalCents: session.amount_total ?? 0,
-                  lineItems: [{
-                    merchProductId,
-                    productName: plan?.name ?? "TuffBuffs Merch",
-                    size: metadata.size ?? null,
-                    color: metadata.color ?? null,
-                    quantity: 1,
-                  }],
+                  lineItems: [
+                    {
+                      merchProductId,
+                      productName: plan?.name ?? "TuffBuffs Merch",
+                      size: metadata.size ?? null,
+                      color: metadata.color ?? null,
+                      quantity: 1,
+                    },
+                  ],
                   shippingName: shipping?.name ?? null,
                   shippingAddress1: shipping?.address?.line1 ?? null,
                   shippingAddress2: shipping?.address?.line2 ?? null,
@@ -1071,7 +1079,12 @@ export const POST = async (req: Request) => {
               }
 
               // Trigger Printful order creation (non-blocking)
-              if (shipping?.address?.line1 && shipping?.address?.city && shipping?.address?.state && shipping?.address?.postal_code) {
+              if (
+                shipping?.address?.line1 &&
+                shipping?.address?.city &&
+                shipping?.address?.state &&
+                shipping?.address?.postal_code
+              ) {
                 after(async () =>
                   createPrintfulOrder({
                     merchOrderId: merchOrder.id,
@@ -1085,16 +1098,20 @@ export const POST = async (req: Request) => {
                       postalCode: shipping.address!.postal_code!,
                       countryCode: shipping.address?.country ?? "US",
                     },
-                    items: [{
-                      merchProductId,
-                      size: metadata.size,
-                      color: metadata.color,
-                      quantity: 1,
-                    }],
+                    items: [
+                      {
+                        merchProductId,
+                        size: metadata.size,
+                        color: metadata.color,
+                        quantity: 1,
+                      },
+                    ],
                   }),
                 )
               } else {
-                console.warn(`⚠️ MerchOrder ${merchOrder.id}: No shipping address — Printful order skipped`)
+                console.warn(
+                  `⚠️ MerchOrder ${merchOrder.id}: No shipping address — Printful order skipped`,
+                )
               }
 
               revalidateTag("merch", "infinite")

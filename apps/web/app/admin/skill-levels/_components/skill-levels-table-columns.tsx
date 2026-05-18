@@ -45,10 +45,7 @@ export const getColumns = (): ColumnDef<SkillLevel & { _count?: { programs: numb
       size: 160,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
-        <DataTableLink
-          href={`/admin/skill-levels/${row.original.id}`}
-          title={row.original.name}
-        />
+        <DataTableLink href={`/admin/skill-levels/${row.original.id}`} title={row.original.name} />
       ),
     },
     {
@@ -60,9 +57,7 @@ export const getColumns = (): ColumnDef<SkillLevel & { _count?: { programs: numb
       accessorKey: "description",
       header: "Description",
       size: 300,
-      cell: ({ row }) => (
-        <Note className="max-w-96 truncate">{row.original.description}</Note>
-      ),
+      cell: ({ row }) => <Note className="max-w-96 truncate">{row.original.description}</Note>,
     },
     {
       accessorKey: "_count.programs",
@@ -82,8 +77,7 @@ export const getColumns = (): ColumnDef<SkillLevel & { _count?: { programs: numb
     {
       accessorKey: "isSystem",
       header: "System",
-      cell: ({ row }) =>
-        row.original.isSystem ? <Badge variant="outline">System</Badge> : null,
+      cell: ({ row }) => (row.original.isSystem ? <Badge variant="outline">System</Badge> : null),
     },
     {
       accessorKey: "createdAt",

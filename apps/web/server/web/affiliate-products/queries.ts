@@ -88,13 +88,9 @@ export const findGearRecommendations = async (disciplineSlug: string) => {
     orderBy: { sortOrder: "asc" },
   })
 
-  const required = recommendations
-    .filter((r) => r.type === "REQUIRED")
-    .map((r) => r.pricingPlan)
+  const required = recommendations.filter(r => r.type === "REQUIRED").map(r => r.pricingPlan)
 
-  const recommended = recommendations
-    .filter((r) => r.type === "RECOMMENDED")
-    .map((r) => r.pricingPlan)
+  const recommended = recommendations.filter(r => r.type === "RECOMMENDED").map(r => r.pricingPlan)
 
   return { required, recommended }
 }

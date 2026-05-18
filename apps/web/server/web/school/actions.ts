@@ -6,7 +6,10 @@ import { userActionClient } from "~/lib/safe-actions"
 const updateOrganizationSchema = z.object({
   organizationId: z.string(),
   name: z.string().min(1).max(200),
-  slug: z.string().max(100).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9-]+$/),
   description: z.string().max(2000).optional(),
   websiteUrl: z.string().max(2048).optional(),
   contactEmail: z.string().email().max(200).optional().or(z.literal("")),
@@ -23,7 +26,11 @@ export const updateOrganization = userActionClient
 
     // Verify user is owner of this org
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId, roleAssignments: { some: { role: { code: "OWNER" } } } },
+      where: {
+        userId: user.id,
+        organizationId,
+        roleAssignments: { some: { role: { code: "OWNER" } } },
+      },
     })
 
     if (!membership) {

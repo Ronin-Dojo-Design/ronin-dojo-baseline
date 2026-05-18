@@ -3,9 +3,9 @@
 import { useTranslations } from "next-intl"
 import type { PropsWithChildren } from "react"
 import { Input } from "~/components/common/input"
-import { Pagination, type PaginationProps } from "~/components/web/pagination"
 import { MemberListSkeleton } from "~/components/web/members/member-list"
 import { MemberSearch, type MemberSearchProps } from "~/components/web/members/member-search"
+import { Pagination, type PaginationProps } from "~/components/web/pagination"
 import { FiltersProvider, type FiltersProviderProps } from "~/contexts/filter-context"
 import { memberFilterParams } from "~/server/web/directory/member-schema"
 
@@ -39,4 +39,4 @@ const MemberListingSkeleton = () => {
   )
 }
 
-export { MemberListing, MemberListingSkeleton, type MemberListingProps }
+export { MemberListing, type MemberListingProps, MemberListingSkeleton }

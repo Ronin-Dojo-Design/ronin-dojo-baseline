@@ -84,525 +84,525 @@ interface RoninProductDef {
 
 function getSharedProducts(BRAND: string, BRAND_CODE: string): RoninProductDef[] {
   return [
-  // ── Vertical 2: Organization Membership Dues (Stripe Subscription) ──
-  {
-    name: `${BRAND_CODE}_membership_monthly`,
-    description: "Monthly school membership with full class access and scheduling.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "membership",
-      entitlement_key: "membership:org:active",
-      created_by: "script",
+    // ── Vertical 2: Organization Membership Dues (Stripe Subscription) ──
+    {
+      name: `${BRAND_CODE}_membership_monthly`,
+      description: "Monthly school membership with full class access and scheduling.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "membership",
+        entitlement_key: "membership:org:active",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Unlimited class attendance" },
+        { name: "✓ Online scheduling" },
+        { name: "✓ Progress tracking" },
+        { name: "✓ Belt testing eligibility" },
+        { name: "✓ Cancel anytime" },
+      ],
+      default_price_data: {
+        unit_amount: 14900,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 1 },
+      },
     },
-    marketing_features: [
-      { name: "✓ Unlimited class attendance" },
-      { name: "✓ Online scheduling" },
-      { name: "✓ Progress tracking" },
-      { name: "✓ Belt testing eligibility" },
-      { name: "✓ Cancel anytime" },
-    ],
-    default_price_data: {
-      unit_amount: 14900,
-      currency: "usd",
-      recurring: { interval: "month", interval_count: 1 },
+    {
+      name: `${BRAND_CODE}_membership_quarterly`,
+      description: "Quarterly school membership — save 5% vs monthly, billed every 3 months.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "membership",
+        entitlement_key: "membership:org:active",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Unlimited class attendance" },
+        { name: "✓ Online scheduling" },
+        { name: "✓ Progress tracking" },
+        { name: "✓ Belt testing eligibility" },
+        { name: "✓ 5% savings vs monthly" },
+      ],
+      default_price_data: {
+        unit_amount: 42500,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: 3 },
+      },
     },
-  },
-  {
-    name: `${BRAND_CODE}_membership_quarterly`,
-    description: "Quarterly school membership — save 5% vs monthly, billed every 3 months.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "membership",
-      entitlement_key: "membership:org:active",
-      created_by: "script",
+    {
+      name: `${BRAND_CODE}_membership_annual`,
+      description: "Annual school membership — save over 15% compared to monthly.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "membership",
+        entitlement_key: "membership:org:active",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Unlimited class attendance" },
+        { name: "✓ Online scheduling" },
+        { name: "✓ Progress tracking" },
+        { name: "✓ Belt testing eligibility" },
+        { name: "✓ Priority seminar registration" },
+      ],
+      default_price_data: {
+        unit_amount: 149900,
+        currency: "usd",
+        recurring: { interval: "year", interval_count: 1 },
+      },
     },
-    marketing_features: [
-      { name: "✓ Unlimited class attendance" },
-      { name: "✓ Online scheduling" },
-      { name: "✓ Progress tracking" },
-      { name: "✓ Belt testing eligibility" },
-      { name: "✓ 5% savings vs monthly" },
-    ],
-    default_price_data: {
-      unit_amount: 42500,
-      currency: "usd",
-      recurring: { interval: "month", interval_count: 3 },
-    },
-  },
-  {
-    name: `${BRAND_CODE}_membership_annual`,
-    description: "Annual school membership — save over 15% compared to monthly.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "membership",
-      entitlement_key: "membership:org:active",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Unlimited class attendance" },
-      { name: "✓ Online scheduling" },
-      { name: "✓ Progress tracking" },
-      { name: "✓ Belt testing eligibility" },
-      { name: "✓ Priority seminar registration" },
-    ],
-    default_price_data: {
-      unit_amount: 149900,
-      currency: "usd",
-      recurring: { interval: "year", interval_count: 1 },
-    },
-  },
 
-  // ── Vertical 3: Program Enrollment (Stripe One-Time / Subscription) ──
-  {
-    name: `${BRAND_CODE}_program_enrollment_free`,
-    description: "Free access to the program curriculum and community resources.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "program",
-      entitlement_key: "program:enrollment:free",
-      created_by: "script",
+    // ── Vertical 3: Program Enrollment (Stripe One-Time / Subscription) ──
+    {
+      name: `${BRAND_CODE}_program_enrollment_free`,
+      description: "Free access to the program curriculum and community resources.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "program",
+        entitlement_key: "program:enrollment:free",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Access to curriculum" },
+        { name: "✓ Community forum access" },
+        { name: "✗ No instructor feedback" },
+        { name: "✗ No rank progression" },
+        { name: "✗ No certificate eligibility" },
+      ],
+      default_price_data: {
+        unit_amount: 0,
+        currency: "usd",
+      },
     },
-    marketing_features: [
-      { name: "✓ Access to curriculum" },
-      { name: "✓ Community forum access" },
-      { name: "✗ No instructor feedback" },
-      { name: "✗ No rank progression" },
-      { name: "✗ No certificate eligibility" },
-    ],
-    default_price_data: {
-      unit_amount: 0,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_program_enrollment_standard`,
-    description: "Full program access with instructor feedback and rank progression.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "program",
-      entitlement_key: "program:enrollment:standard",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Access to curriculum" },
-      { name: "✓ Community forum access" },
-      { name: "✓ Instructor feedback" },
-      { name: "✓ Rank progression tracking" },
-      { name: "✗ No certificate eligibility" },
-    ],
-    default_price_data: {
-      unit_amount: 4900,
-      currency: "usd",
-    },
-    additional_prices: [
-      {
+    {
+      name: `${BRAND_CODE}_program_enrollment_standard`,
+      description: "Full program access with instructor feedback and rank progression.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "program",
+        entitlement_key: "program:enrollment:standard",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Access to curriculum" },
+        { name: "✓ Community forum access" },
+        { name: "✓ Instructor feedback" },
+        { name: "✓ Rank progression tracking" },
+        { name: "✗ No certificate eligibility" },
+      ],
+      default_price_data: {
         unit_amount: 4900,
         currency: "usd",
-        recurring: { interval: "month", interval_count: 1 },
       },
-      {
-        unit_amount: 13900,
-        currency: "usd",
-        recurring: { interval: "month", interval_count: 3 },
-      },
-      {
-        unit_amount: 49900,
-        currency: "usd",
-        recurring: { interval: "year", interval_count: 1 },
-      },
-    ],
-  },
-  {
-    name: `${BRAND_CODE}_program_enrollment_premium`,
-    description: "Full program access with certification eligibility and priority support.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "program",
-      entitlement_key: "program:enrollment:premium",
-      created_by: "script",
+      additional_prices: [
+        {
+          unit_amount: 4900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        },
+        {
+          unit_amount: 13900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+        {
+          unit_amount: 49900,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
     },
-    marketing_features: [
-      { name: "✓ Access to curriculum" },
-      { name: "✓ Community forum access" },
-      { name: "✓ Instructor feedback" },
-      { name: "✓ Rank progression tracking" },
-      { name: "✓ Certificate eligibility" },
-    ],
-    default_price_data: {
-      unit_amount: 9900,
-      currency: "usd",
-    },
-    additional_prices: [
-      {
+    {
+      name: `${BRAND_CODE}_program_enrollment_premium`,
+      description: "Full program access with certification eligibility and priority support.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "program",
+        entitlement_key: "program:enrollment:premium",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Access to curriculum" },
+        { name: "✓ Community forum access" },
+        { name: "✓ Instructor feedback" },
+        { name: "✓ Rank progression tracking" },
+        { name: "✓ Certificate eligibility" },
+      ],
+      default_price_data: {
         unit_amount: 9900,
         currency: "usd",
-        recurring: { interval: "month", interval_count: 1 },
       },
-      {
-        unit_amount: 27900,
+      additional_prices: [
+        {
+          unit_amount: 9900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        },
+        {
+          unit_amount: 27900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+        {
+          unit_amount: 99900,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
+    },
+
+    // ── Vertical 4: Tournament Registration (Stripe One-Time) ──
+    {
+      name: `${BRAND_CODE}_tournament_registration`,
+      description: "Register for a tournament — compete in one or more divisions.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "tournament",
+        entitlement_key: "tournament:registration:entry",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Division entry" },
+        { name: "✓ Bracket placement" },
+        { name: "✓ Official scoring and results" },
+        { name: "✓ Fight record tracking" },
+      ],
+      default_price_data: {
+        unit_amount: 7500,
         currency: "usd",
-        recurring: { interval: "month", interval_count: 3 },
       },
-      {
-        unit_amount: 99900,
+    },
+
+    // ── Vertical 5: Certificate Order (Stripe + Fulfillment) ──
+    {
+      name: `${BRAND_CODE}_certificate_order`,
+      description: "Official certificate issued for rank promotion or course completion.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "certificate",
+        entitlement_key: "certificate:order:issued",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Official certificate document" },
+        { name: "✓ Verified by issuing organization" },
+        { name: "✓ Digital and physical copy" },
+        { name: "✓ Added to your Passport record" },
+      ],
+      default_price_data: {
+        unit_amount: 2500,
         currency: "usd",
-        recurring: { interval: "year", interval_count: 1 },
       },
-    ],
-  },
+    },
 
-  // ── Vertical 4: Tournament Registration (Stripe One-Time) ──
-  {
-    name: `${BRAND_CODE}_tournament_registration`,
-    description: "Register for a tournament — compete in one or more divisions.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "tournament",
-      entitlement_key: "tournament:registration:entry",
-      created_by: "script",
+    // ── Vertical 6: Course Enrollment (Stripe One-Time) ──
+    {
+      name: `${BRAND_CODE}_course_free`,
+      description: "Free access to course curriculum materials.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "course",
+        entitlement_key: "course:enrollment:free",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Access to course materials" },
+        { name: "✓ Self-paced learning" },
+        { name: "✗ No completion certificate" },
+        { name: "✗ No instructor review" },
+      ],
+      default_price_data: {
+        unit_amount: 0,
+        currency: "usd",
+      },
     },
-    marketing_features: [
-      { name: "✓ Division entry" },
-      { name: "✓ Bracket placement" },
-      { name: "✓ Official scoring and results" },
-      { name: "✓ Fight record tracking" },
-    ],
-    default_price_data: {
-      unit_amount: 7500,
-      currency: "usd",
-    },
-  },
-
-  // ── Vertical 5: Certificate Order (Stripe + Fulfillment) ──
-  {
-    name: `${BRAND_CODE}_certificate_order`,
-    description: "Official certificate issued for rank promotion or course completion.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "certificate",
-      entitlement_key: "certificate:order:issued",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Official certificate document" },
-      { name: "✓ Verified by issuing organization" },
-      { name: "✓ Digital and physical copy" },
-      { name: "✓ Added to your Passport record" },
-    ],
-    default_price_data: {
-      unit_amount: 2500,
-      currency: "usd",
-    },
-  },
-
-  // ── Vertical 6: Course Enrollment (Stripe One-Time) ──
-  {
-    name: `${BRAND_CODE}_course_free`,
-    description: "Free access to course curriculum materials.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "course",
-      entitlement_key: "course:enrollment:free",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Access to course materials" },
-      { name: "✓ Self-paced learning" },
-      { name: "✗ No completion certificate" },
-      { name: "✗ No instructor review" },
-    ],
-    default_price_data: {
-      unit_amount: 0,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_course_standard`,
-    description: "Full course access with completion tracking and certificate eligibility.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "course",
-      entitlement_key: "course:enrollment:standard",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Access to course materials" },
-      { name: "✓ Self-paced learning" },
-      { name: "✓ Completion certificate" },
-      { name: "✓ Instructor review" },
-    ],
-    default_price_data: {
-      unit_amount: 2900,
-      currency: "usd",
-    },
-    additional_prices: [
-      {
+    {
+      name: `${BRAND_CODE}_course_standard`,
+      description: "Full course access with completion tracking and certificate eligibility.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "course",
+        entitlement_key: "course:enrollment:standard",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Access to course materials" },
+        { name: "✓ Self-paced learning" },
+        { name: "✓ Completion certificate" },
+        { name: "✓ Instructor review" },
+      ],
+      default_price_data: {
         unit_amount: 2900,
         currency: "usd",
-        recurring: { interval: "month", interval_count: 1 },
       },
-      {
-        unit_amount: 7900,
+      additional_prices: [
+        {
+          unit_amount: 2900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        },
+        {
+          unit_amount: 7900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+        {
+          unit_amount: 29900,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
+    },
+
+    // ── Vertical 7: Belt Test Registration (Stripe One-Time) ──
+    {
+      name: `${BRAND_CODE}_belt_test_registration`,
+      description: "Register for a belt promotion test at your school.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "belt_test",
+        entitlement_key: "belt_test:registration:entry",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Belt test entry" },
+        { name: "✓ Prerequisite verification" },
+        { name: "✓ Score breakdown provided" },
+        { name: "✓ Rank updated on pass" },
+      ],
+      default_price_data: {
+        unit_amount: 5000,
         currency: "usd",
-        recurring: { interval: "month", interval_count: 3 },
       },
-      {
+    },
+
+    // ── Vertical 8: Event Registration (Stripe One-Time) ──
+    {
+      name: `${BRAND_CODE}_event_free`,
+      description: "Free community event — open to all members.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "event",
+        entitlement_key: "event:registration:free",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Event access" },
+        { name: "✓ Community networking" },
+        { name: "✗ No materials included" },
+      ],
+      default_price_data: {
+        unit_amount: 0,
+        currency: "usd",
+      },
+    },
+    {
+      name: `${BRAND_CODE}_event_paid`,
+      description: "Seminar, workshop, or camp registration with full materials.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "event",
+        entitlement_key: "event:registration:paid",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Event access" },
+        { name: "✓ Community networking" },
+        { name: "✓ Training materials included" },
+        { name: "✓ Certificate of attendance" },
+      ],
+      default_price_data: {
+        unit_amount: 4900,
+        currency: "usd",
+      },
+    },
+
+    // ── Vertical: Org/League Annual Fee (Stripe Subscription) ──
+    {
+      name: `${BRAND_CODE}_org_annual_fee`,
+      description: "Annual organization or league affiliation fee.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "org_fee",
+        entitlement_key: "org:affiliation:active",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Organization listing in directory" },
+        { name: "✓ Tournament sanctioning eligibility" },
+        { name: "✓ Member rank verification" },
+        { name: "✓ Platform admin tools" },
+      ],
+      default_price_data: {
         unit_amount: 29900,
         currency: "usd",
         recurring: { interval: "year", interval_count: 1 },
       },
-    ],
-  },
+      additional_prices: [
+        {
+          unit_amount: 2900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 1 },
+        },
+        {
+          unit_amount: 7900,
+          currency: "usd",
+          recurring: { interval: "month", interval_count: 3 },
+        },
+      ],
+    },
 
-  // ── Vertical 7: Belt Test Registration (Stripe One-Time) ──
-  {
-    name: `${BRAND_CODE}_belt_test_registration`,
-    description: "Register for a belt promotion test at your school.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "belt_test",
-      entitlement_key: "belt_test:registration:entry",
-      created_by: "script",
+    // ── Vertical: Branded Merch (Stripe One-Time / Stripe + Fulfillment) ──
+    {
+      name: `${BRAND_CODE}_merch_training_gear`,
+      description: "Training gear — gi, rash guards, shorts, gloves, and protective equipment.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "merch",
+        entitlement_key: "merch:order:training",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Quality training equipment" },
+        { name: "✓ School-approved gear" },
+        { name: "✓ Ships direct" },
+      ],
+      default_price_data: {
+        unit_amount: 5999,
+        currency: "usd",
+      },
     },
-    marketing_features: [
-      { name: "✓ Belt test entry" },
-      { name: "✓ Prerequisite verification" },
-      { name: "✓ Score breakdown provided" },
-      { name: "✓ Rank updated on pass" },
-    ],
-    default_price_data: {
-      unit_amount: 5000,
-      currency: "usd",
+    {
+      name: `${BRAND_CODE}_merch_accessories`,
+      description: "Accessories — bags, water bottles, wraps, tape, and training aids.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "merch",
+        entitlement_key: "merch:order:accessories",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Essential training accessories" },
+        { name: "✓ School-branded options available" },
+        { name: "✓ Ships direct" },
+      ],
+      default_price_data: {
+        unit_amount: 2499,
+        currency: "usd",
+      },
     },
-  },
+    {
+      name: `${BRAND_CODE}_merch_recovery`,
+      description: "Recovery gear — foam rollers, massage tools, supplements, and rehab aids.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "merch",
+        entitlement_key: "merch:order:recovery",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ Recovery and conditioning tools" },
+        { name: "✓ Instructor-recommended" },
+        { name: "✓ Ships direct" },
+      ],
+      default_price_data: {
+        unit_amount: 2999,
+        currency: "usd",
+      },
+    },
 
-  // ── Vertical 8: Event Registration (Stripe One-Time) ──
-  {
-    name: `${BRAND_CODE}_event_free`,
-    description: "Free community event — open to all members.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "event",
-      entitlement_key: "event:registration:free",
-      created_by: "script",
+    // ── Vertical 9: Directory Listing (Dirstarter baseline, brand-scoped) ──
+    {
+      name: `${BRAND_CODE}_directory_listing_free`,
+      description: "Free listing with a wait time and a direct link to your website.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "directory",
+        entitlement_key: "directory:listing:free",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "• Few weeks processing time" },
+        { name: "✗ No content updates" },
+        { name: "✗ No do-follow backlink" },
+        { name: "✗ No featured spot" },
+        { name: "✗ No prominent placement" },
+      ],
+      default_price_data: {
+        unit_amount: 0,
+        currency: "usd",
+      },
     },
-    marketing_features: [
-      { name: "✓ Event access" },
-      { name: "✓ Community networking" },
-      { name: "✗ No materials included" },
-    ],
-    default_price_data: {
-      unit_amount: 0,
-      currency: "usd",
+    {
+      name: `${BRAND_CODE}_directory_listing_standard`,
+      description: "Do-follow link with faster processing and content updates.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "directory",
+        entitlement_key: "directory:listing:standard",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ 24h processing time" },
+        { name: "✓ Unlimited content updates" },
+        { name: "✓ Do-follow backlink" },
+        { name: "✗ No featured spot" },
+        { name: "✗ No prominent placement" },
+      ],
+      default_price_data: {
+        unit_amount: 9700,
+        currency: "usd",
+      },
     },
-  },
-  {
-    name: `${BRAND_CODE}_event_paid`,
-    description: "Seminar, workshop, or camp registration with full materials.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "event",
-      entitlement_key: "event:registration:paid",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Event access" },
-      { name: "✓ Community networking" },
-      { name: "✓ Training materials included" },
-      { name: "✓ Certificate of attendance" },
-    ],
-    default_price_data: {
-      unit_amount: 4900,
-      currency: "usd",
-    },
-  },
-
-  // ── Vertical: Org/League Annual Fee (Stripe Subscription) ──
-  {
-    name: `${BRAND_CODE}_org_annual_fee`,
-    description: "Annual organization or league affiliation fee.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "org_fee",
-      entitlement_key: "org:affiliation:active",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Organization listing in directory" },
-      { name: "✓ Tournament sanctioning eligibility" },
-      { name: "✓ Member rank verification" },
-      { name: "✓ Platform admin tools" },
-    ],
-    default_price_data: {
-      unit_amount: 29900,
-      currency: "usd",
-      recurring: { interval: "year", interval_count: 1 },
-    },
-    additional_prices: [
-      {
-        unit_amount: 2900,
+    {
+      name: `${BRAND_CODE}_directory_listing_premium`,
+      description: "Featured placement with a homepage spot and prominent listing position.",
+      active: true,
+      metadata: {
+        brand: BRAND,
+        vertical: "directory",
+        entitlement_key: "directory:listing:premium",
+        created_by: "script",
+      },
+      marketing_features: [
+        { name: "✓ 12h processing time" },
+        { name: "✓ Unlimited content updates" },
+        { name: "✓ Do-follow backlink" },
+        { name: "✓ Featured spot on homepage" },
+        { name: "✓ Prominent placement" },
+      ],
+      default_price_data: {
+        unit_amount: 19700,
         currency: "usd",
         recurring: { interval: "month", interval_count: 1 },
       },
-      {
-        unit_amount: 7900,
-        currency: "usd",
-        recurring: { interval: "month", interval_count: 3 },
-      },
-    ],
-  },
-
-  // ── Vertical: Branded Merch (Stripe One-Time / Stripe + Fulfillment) ──
-  {
-    name: `${BRAND_CODE}_merch_training_gear`,
-    description: "Training gear — gi, rash guards, shorts, gloves, and protective equipment.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "merch",
-      entitlement_key: "merch:order:training",
-      created_by: "script",
+      additional_prices: [
+        {
+          unit_amount: 197000,
+          currency: "usd",
+          recurring: { interval: "year", interval_count: 1 },
+        },
+      ],
     },
-    marketing_features: [
-      { name: "✓ Quality training equipment" },
-      { name: "✓ School-approved gear" },
-      { name: "✓ Ships direct" },
-    ],
-    default_price_data: {
-      unit_amount: 5999,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_merch_accessories`,
-    description: "Accessories — bags, water bottles, wraps, tape, and training aids.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "merch",
-      entitlement_key: "merch:order:accessories",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Essential training accessories" },
-      { name: "✓ School-branded options available" },
-      { name: "✓ Ships direct" },
-    ],
-    default_price_data: {
-      unit_amount: 2499,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_merch_recovery`,
-    description: "Recovery gear — foam rollers, massage tools, supplements, and rehab aids.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "merch",
-      entitlement_key: "merch:order:recovery",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ Recovery and conditioning tools" },
-      { name: "✓ Instructor-recommended" },
-      { name: "✓ Ships direct" },
-    ],
-    default_price_data: {
-      unit_amount: 2999,
-      currency: "usd",
-    },
-  },
-
-  // ── Vertical 9: Directory Listing (Dirstarter baseline, brand-scoped) ──
-  {
-    name: `${BRAND_CODE}_directory_listing_free`,
-    description: "Free listing with a wait time and a direct link to your website.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "directory",
-      entitlement_key: "directory:listing:free",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "• Few weeks processing time" },
-      { name: "✗ No content updates" },
-      { name: "✗ No do-follow backlink" },
-      { name: "✗ No featured spot" },
-      { name: "✗ No prominent placement" },
-    ],
-    default_price_data: {
-      unit_amount: 0,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_directory_listing_standard`,
-    description: "Do-follow link with faster processing and content updates.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "directory",
-      entitlement_key: "directory:listing:standard",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ 24h processing time" },
-      { name: "✓ Unlimited content updates" },
-      { name: "✓ Do-follow backlink" },
-      { name: "✗ No featured spot" },
-      { name: "✗ No prominent placement" },
-    ],
-    default_price_data: {
-      unit_amount: 9700,
-      currency: "usd",
-    },
-  },
-  {
-    name: `${BRAND_CODE}_directory_listing_premium`,
-    description: "Featured placement with a homepage spot and prominent listing position.",
-    active: true,
-    metadata: {
-      brand: BRAND,
-      vertical: "directory",
-      entitlement_key: "directory:listing:premium",
-      created_by: "script",
-    },
-    marketing_features: [
-      { name: "✓ 12h processing time" },
-      { name: "✓ Unlimited content updates" },
-      { name: "✓ Do-follow backlink" },
-      { name: "✓ Featured spot on homepage" },
-      { name: "✓ Prominent placement" },
-    ],
-    default_price_data: {
-      unit_amount: 19700,
-      currency: "usd",
-      recurring: { interval: "month", interval_count: 1 },
-    },
-    additional_prices: [
-      {
-        unit_amount: 197000,
-        currency: "usd",
-        recurring: { interval: "year", interval_count: 1 },
-      },
-    ],
-  },
   ]
 }
 
@@ -649,7 +649,8 @@ function getRddProducts(): RoninProductDef[] {
     },
     {
       name: `${BRAND_CODE}_platform_maintenance_pro`,
-      description: "Pro whitelabel maintenance — priority support, custom domain, and advanced config.",
+      description:
+        "Pro whitelabel maintenance — priority support, custom domain, and advanced config.",
       active: true,
       metadata: {
         brand: BRAND,
@@ -749,7 +750,10 @@ async function runFromDb() {
     for (const plan of plans) {
       const brandCode = BRAND_CODE_MAP[plan.brand] ?? plan.brand
       // Build ADR 0014-style product name
-      const slugName = plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "")
+      const slugName = plan.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/_+$/, "")
       const productName = `${brandCode}_db_${slugName}`
 
       const isRecurring = plan.intervalMonths !== null && plan.intervalMonths > 0
@@ -757,8 +761,12 @@ async function runFromDb() {
       const intervalCount = plan.intervalMonths === 12 ? 1 : (plan.intervalMonths ?? 1)
 
       if (DRY_RUN) {
-        console.log(`   🔍 Would create: ${productName} ($${(plan.amountCents / 100).toFixed(2)}, ${isRecurring ? `${plan.intervalMonths}mo` : "one-time"})`)
-        console.log(`      └─ PricingPlan ID: ${plan.id} → will write back stripeProductId + stripePriceId`)
+        console.log(
+          `   🔍 Would create: ${productName} ($${(plan.amountCents / 100).toFixed(2)}, ${isRecurring ? `${plan.intervalMonths}mo` : "one-time"})`,
+        )
+        console.log(
+          `      └─ PricingPlan ID: ${plan.id} → will write back stripeProductId + stripePriceId`,
+        )
         created++
         continue
       }
@@ -767,7 +775,10 @@ async function runFromDb() {
       const existing = await findExistingProduct(productName)
       if (existing) {
         // Write back IDs even if product exists
-        const defaultPrice = typeof existing.default_price === "string" ? existing.default_price : existing.default_price?.id
+        const defaultPrice =
+          typeof existing.default_price === "string"
+            ? existing.default_price
+            : existing.default_price?.id
         await db.pricingPlan.update({
           where: { id: plan.id },
           data: {
@@ -775,7 +786,9 @@ async function runFromDb() {
             stripePriceId: defaultPrice ?? null,
           },
         })
-        console.log(`   ⏭️  Linked existing: ${productName} [${existing.id}] → PricingPlan ${plan.id}`)
+        console.log(
+          `   ⏭️  Linked existing: ${productName} [${existing.id}] → PricingPlan ${plan.id}`,
+        )
         skipped++
         continue
       }
@@ -800,7 +813,10 @@ async function runFromDb() {
       const product = await stripe.products.create(productParams)
 
       // Write back to DB
-      const defaultPriceId = typeof product.default_price === "string" ? product.default_price : product.default_price?.id
+      const defaultPriceId =
+        typeof product.default_price === "string"
+          ? product.default_price
+          : product.default_price?.id
       await db.pricingPlan.update({
         where: { id: plan.id },
         data: {
@@ -814,7 +830,9 @@ async function runFromDb() {
     }
 
     const mode = DRY_RUN ? "Would create" : "Created"
-    console.log(`\n🎉 Done! ${mode}: ${created}, Linked existing: ${skipped}, Total: ${plans.length}`)
+    console.log(
+      `\n🎉 Done! ${mode}: ${created}, Linked existing: ${skipped}, Total: ${plans.length}`,
+    )
   } finally {
     await db.$disconnect()
   }
@@ -826,12 +844,12 @@ async function main() {
     return runFromDb()
   }
 
-  const activeBrands = brandFilter
-    ? BRANDS.filter((b) => b.code === brandFilter)
-    : BRANDS
+  const activeBrands = brandFilter ? BRANDS.filter(b => b.code === brandFilter) : BRANDS
 
   if (activeBrands.length === 0) {
-    console.error(`❌ Unknown brand code: ${brandFilter}. Available: ${BRANDS.map((b) => b.code).join(", ")}`)
+    console.error(
+      `❌ Unknown brand code: ${brandFilter}. Available: ${BRANDS.map(b => b.code).join(", ")}`,
+    )
     process.exit(1)
   }
 
@@ -863,7 +881,9 @@ async function main() {
         console.log(`   🔍 Would create: ${productDef.name}`)
         if (productDef.additional_prices?.length) {
           for (const p of productDef.additional_prices) {
-            console.log(`      └─ Additional price: $${(p.unit_amount / 100).toFixed(2)} (${p.recurring?.interval ?? "one-time"})`)
+            console.log(
+              `      └─ Additional price: $${(p.unit_amount / 100).toFixed(2)} (${p.recurring?.interval ?? "one-time"})`,
+            )
           }
         }
         totalCreated++
@@ -912,7 +932,9 @@ async function main() {
               currency: priceData.currency,
             },
           })
-          console.log(`      └─ Additional price: ${price.id} (${priceData.recurring?.interval ?? "one-time"})`)
+          console.log(
+            `      └─ Additional price: ${price.id} (${priceData.recurring?.interval ?? "one-time"})`,
+          )
         }
       }
 
@@ -923,12 +945,14 @@ async function main() {
   }
 
   const mode = DRY_RUN ? "Would create" : "Created"
-  console.log(`🎉 Done! ${mode}: ${totalCreated}, Skipped: ${totalSkipped}, Linked: ${totalLinked}, Total: ${totalProducts}`)
+  console.log(
+    `🎉 Done! ${mode}: ${totalCreated}, Skipped: ${totalSkipped}, Linked: ${totalLinked}, Total: ${totalProducts}`,
+  )
 
   await db.$disconnect()
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error("❌ Error setting up Ronin Stripe products:", error)
   process.exit(1)
 })

@@ -1,12 +1,10 @@
-import { headers } from "next/headers"
-import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { Brand } from "~/.generated/prisma/client"
+import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
 import { InviteJoinForm } from "~/components/web/organizations/invite-join-form"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getOrganizationByInviteCode } from "~/server/web/organization/queries"
 
 export const metadata: Metadata = {
@@ -31,8 +29,12 @@ export default async function JoinByInvitePage({ searchParams }: Props) {
         <IntroTitle>Join {org.name}</IntroTitle>
         <IntroDescription>
           <Stack size="sm">
-            <Badge variant="outline" size="lg">{org.type}</Badge>
-            <span>{org._count.memberships} member{org._count.memberships !== 1 ? "s" : ""}</span>
+            <Badge variant="outline" size="lg">
+              {org.type}
+            </Badge>
+            <span>
+              {org._count.memberships} member{org._count.memberships !== 1 ? "s" : ""}
+            </span>
           </Stack>
         </IntroDescription>
       </Intro>
@@ -43,7 +45,7 @@ export default async function JoinByInvitePage({ searchParams }: Props) {
             <InviteJoinForm
               inviteCode={code}
               orgName={org.name}
-              disciplines={org.disciplines.map((od) => od.discipline)}
+              disciplines={org.disciplines.map(od => od.discipline)}
             />
           ) : (
             <p className="text-sm text-muted-foreground">

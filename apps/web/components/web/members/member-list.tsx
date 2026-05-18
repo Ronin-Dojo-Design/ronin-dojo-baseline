@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { EmptyList } from "~/components/web/empty-list"
 import { MemberCard, MemberCardSkeleton } from "~/components/web/members/member-card"
@@ -42,4 +41,4 @@ const MemberListSkeleton = ({ count = 6 }: { count?: number }) => {
   )
 }
 
-export { MemberList, MemberListSkeleton, type MemberListProps }
+export { MemberList, type MemberListProps, MemberListSkeleton }

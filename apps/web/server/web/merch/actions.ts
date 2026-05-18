@@ -5,10 +5,7 @@ import { z } from "zod"
 import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
-import {
-  findStripeCustomerForCheckout,
-  STRIPE_CUSTOMER_ACCOUNT_SCOPE,
-} from "~/server/web/billing/stripe-customers"
+import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { stripe } from "~/services/stripe"
 
 /**
@@ -99,9 +96,7 @@ export const createMerchCheckout = userActionClient
     // 6. Create Stripe Checkout Session
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: [
-        { price: plan.stripePriceId, quantity },
-      ],
+      line_items: [{ price: plan.stripePriceId, quantity }],
       // Flat-rate shipping
       shipping_options: [
         {

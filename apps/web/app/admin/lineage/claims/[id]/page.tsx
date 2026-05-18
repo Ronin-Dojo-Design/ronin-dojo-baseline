@@ -29,7 +29,10 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
     <Wrapper>
       <Stack direction="column" className="gap-6">
         <div>
-          <Link href="/admin/lineage/claims" className="text-sm text-muted-foreground hover:underline">
+          <Link
+            href="/admin/lineage/claims"
+            className="text-sm text-muted-foreground hover:underline"
+          >
             ← Back to Claims
           </Link>
           <Heading as="h1" size="h3" className="mt-2">
@@ -42,7 +45,9 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div>
               <dt className="text-muted-foreground">Status</dt>
-              <dd><Badge>{claim.status}</Badge></dd>
+              <dd>
+                <Badge>{claim.status}</Badge>
+              </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Submitted</dt>
@@ -78,7 +83,9 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Claimant Note */}
         {claim.claimantNote && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">Claimant Note</Heading>
+            <Heading as="h2" size="h5" className="mb-2">
+              Claimant Note
+            </Heading>
             <p className="text-sm whitespace-pre-wrap">{claim.claimantNote}</p>
           </Card>
         )}
@@ -86,7 +93,9 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Reviewer Note */}
         {claim.reviewerNote && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">Reviewer Note</Heading>
+            <Heading as="h2" size="h5" className="mb-2">
+              Reviewer Note
+            </Heading>
             <p className="text-sm whitespace-pre-wrap">{claim.reviewerNote}</p>
           </Card>
         )}
@@ -94,17 +103,26 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Evidence */}
         {claim.evidence.length > 0 && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">Evidence ({claim.evidence.length})</Heading>
+            <Heading as="h2" size="h5" className="mb-2">
+              Evidence ({claim.evidence.length})
+            </Heading>
             <Stack direction="column" className="gap-3">
               {claim.evidence.map(ev => (
                 <div key={ev.id} className="rounded border p-3 text-sm">
                   {ev.label && <p className="font-medium">{ev.label}</p>}
                   {ev.url && (
-                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+                    <a
+                      href={ev.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline break-all"
+                    >
                       {ev.url}
                     </a>
                   )}
-                  {ev.text && <p className="text-muted-foreground whitespace-pre-wrap mt-1">{ev.text}</p>}
+                  {ev.text && (
+                    <p className="text-muted-foreground whitespace-pre-wrap mt-1">{ev.text}</p>
+                  )}
                 </div>
               ))}
             </Stack>

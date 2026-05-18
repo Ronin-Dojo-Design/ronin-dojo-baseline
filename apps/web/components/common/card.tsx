@@ -128,6 +128,6 @@ export {
   CardFooter,
   CardHeader,
   CardIcon,
-  cardVariants,
   type CardProps,
+  cardVariants,
 }

@@ -44,20 +44,90 @@ Automated content generation can enrich this text later with screenshots, favico
 // ---------------------------------------------------------------------------
 
 const CATEGORIES = [
-  { name: "Frontend", slug: "frontend", label: "Frontend Development", description: "Tools for building the user interface of a website or application." },
-  { name: "Backend", slug: "backend", label: "Backend Development", description: "Tools for building the server-side of a website or application." },
-  { name: "DevOps", slug: "devops", label: "DevOps & Deployment", description: "Tools for deploying and managing applications." },
-  { name: "Design Tools", slug: "design-tools", label: "Design & UI/UX", description: "Tools for designing and creating user interfaces." },
-  { name: "Productivity", slug: "productivity", label: "Productivity Tools", description: "Tools for increasing productivity and efficiency." },
-  { name: "Testing", slug: "testing", label: "Testing & QA", description: "Tools for testing and quality assurance." },
-  { name: "Learning", slug: "learning", label: "Learning Resources", description: "Tools for learning and improving skills." },
-  { name: "AI Tools", slug: "ai-tools", label: "AI & Machine Learning", description: "Tools for using AI and machine learning." },
-  { name: "Training Programs", slug: "training-programs", label: "Training Programs", description: "Schools, curriculums, and multi-discipline training programs." },
-  { name: "Lineage & Certification", slug: "lineage-certification", label: "Lineage & Certification", description: "Rank lineage, instructor credentials, certificates, and education records." },
-  { name: "Tournaments & Events", slug: "tournaments-events", label: "Tournaments & Events", description: "Tournament platforms, event organizers, leagues, and competitive circuits." },
-  { name: "School Operations", slug: "school-operations", label: "School Operations", description: "Software and services for memberships, billing, attendance, and school growth." },
-  { name: "Equipment & Gear", slug: "equipment-gear", label: "Equipment & Gear", description: "Training gear, uniforms, safety equipment, and weapons suppliers." },
-  { name: "Media & Education", slug: "media-education", label: "Media & Education", description: "Educational sites, videos, articles, and reference libraries." },
+  {
+    name: "Frontend",
+    slug: "frontend",
+    label: "Frontend Development",
+    description: "Tools for building the user interface of a website or application.",
+  },
+  {
+    name: "Backend",
+    slug: "backend",
+    label: "Backend Development",
+    description: "Tools for building the server-side of a website or application.",
+  },
+  {
+    name: "DevOps",
+    slug: "devops",
+    label: "DevOps & Deployment",
+    description: "Tools for deploying and managing applications.",
+  },
+  {
+    name: "Design Tools",
+    slug: "design-tools",
+    label: "Design & UI/UX",
+    description: "Tools for designing and creating user interfaces.",
+  },
+  {
+    name: "Productivity",
+    slug: "productivity",
+    label: "Productivity Tools",
+    description: "Tools for increasing productivity and efficiency.",
+  },
+  {
+    name: "Testing",
+    slug: "testing",
+    label: "Testing & QA",
+    description: "Tools for testing and quality assurance.",
+  },
+  {
+    name: "Learning",
+    slug: "learning",
+    label: "Learning Resources",
+    description: "Tools for learning and improving skills.",
+  },
+  {
+    name: "AI Tools",
+    slug: "ai-tools",
+    label: "AI & Machine Learning",
+    description: "Tools for using AI and machine learning.",
+  },
+  {
+    name: "Training Programs",
+    slug: "training-programs",
+    label: "Training Programs",
+    description: "Schools, curriculums, and multi-discipline training programs.",
+  },
+  {
+    name: "Lineage & Certification",
+    slug: "lineage-certification",
+    label: "Lineage & Certification",
+    description: "Rank lineage, instructor credentials, certificates, and education records.",
+  },
+  {
+    name: "Tournaments & Events",
+    slug: "tournaments-events",
+    label: "Tournaments & Events",
+    description: "Tournament platforms, event organizers, leagues, and competitive circuits.",
+  },
+  {
+    name: "School Operations",
+    slug: "school-operations",
+    label: "School Operations",
+    description: "Software and services for memberships, billing, attendance, and school growth.",
+  },
+  {
+    name: "Equipment & Gear",
+    slug: "equipment-gear",
+    label: "Equipment & Gear",
+    description: "Training gear, uniforms, safety equipment, and weapons suppliers.",
+  },
+  {
+    name: "Media & Education",
+    slug: "media-education",
+    label: "Media & Education",
+    description: "Educational sites, videos, articles, and reference libraries.",
+  },
 ] as const
 
 const TAGS = [
@@ -123,7 +193,8 @@ const TOOLS: ToolDef[] = [
     slug: "vscode",
     websiteUrl: "https://code.visualstudio.com",
     tagline: "Free source-code editor made by Microsoft",
-    description: "Visual Studio Code is a lightweight but powerful source code editor with support for many programming languages through extensions.",
+    description:
+      "Visual Studio Code is a lightweight but powerful source code editor with support for many programming languages through extensions.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://code.visualstudio.com/opengraphimg/opengraph-home.png",
@@ -136,7 +207,8 @@ const TOOLS: ToolDef[] = [
     slug: "nextjs",
     websiteUrl: "https://nextjs.org",
     tagline: "The full-stack React framework for the web",
-    description: "Next.js gives you the best developer experience with all the features you need for production: hybrid static & server rendering, TypeScript support, smart bundling, route pre-fetching, and more.",
+    description:
+      "Next.js gives you the best developer experience with all the features you need for production: hybrid static & server rendering, TypeScript support, smart bundling, route pre-fetching, and more.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -150,7 +222,8 @@ const TOOLS: ToolDef[] = [
     slug: "docker",
     websiteUrl: "https://www.docker.com",
     tagline: "Accelerate how you build, share and run modern applications",
-    description: "Docker is an open platform for developing, shipping, and running applications in containers.",
+    description:
+      "Docker is an open platform for developing, shipping, and running applications in containers.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -164,11 +237,13 @@ const TOOLS: ToolDef[] = [
     slug: "figma",
     websiteUrl: "https://www.figma.com",
     tagline: "Design, prototype, and collaborate all in the browser",
-    description: "Figma is a vector graphics editor and prototyping tool, primarily web-based with additional offline features through desktop applications.",
+    description:
+      "Figma is a vector graphics editor and prototyping tool, primarily web-based with additional offline features through desktop applications.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
-    screenshotUrl: "https://cdn.sanity.io/images/599r6htc/regionalized/1adfa5a99040c80af7b4b5e3e2cf845315ea2367-2400x1260.png?w=1200&q=70&fit=max&auto=format",
+    screenshotUrl:
+      "https://cdn.sanity.io/images/599r6htc/regionalized/1adfa5a99040c80af7b4b5e3e2cf845315ea2367-2400x1260.png?w=1200&q=70&fit=max&auto=format",
     categories: ["design-tools"],
     tags: ["free", "paid"],
     hasOwner: false,
@@ -178,10 +253,12 @@ const TOOLS: ToolDef[] = [
     slug: "nodejs",
     websiteUrl: "https://nodejs.org",
     tagline: "JavaScript runtime built on Chrome's V8 JavaScript engine",
-    description: "Node.js is an open-source, cross-platform JavaScript runtime environment that executes JavaScript code outside a web browser.",
+    description:
+      "Node.js is an open-source, cross-platform JavaScript runtime environment that executes JavaScript code outside a web browser.",
     status: "Published",
     publishedAt: now,
-    screenshotUrl: "https://nodejs.org/en/next-data/og/announcement/Node.js%20%E2%80%94%20Run%20JavaScript%20Everywhere",
+    screenshotUrl:
+      "https://nodejs.org/en/next-data/og/announcement/Node.js%20%E2%80%94%20Run%20JavaScript%20Everywhere",
     categories: ["backend"],
     tags: ["nodejs", "javascript", "free", "open-source"],
     hasOwner: false,
@@ -191,7 +268,8 @@ const TOOLS: ToolDef[] = [
     slug: "claude",
     websiteUrl: "https://claude.ai",
     tagline: "Advanced AI assistant for coding and analysis",
-    description: "Claude is an AI assistant by Anthropic that excels at coding, analysis, and creative tasks. It can help with code review, debugging, and explaining complex concepts.",
+    description:
+      "Claude is an AI assistant by Anthropic that excels at coding, analysis, and creative tasks. It can help with code review, debugging, and explaining complex concepts.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://claude.ai/images/claude_ogimage.png",
@@ -204,7 +282,8 @@ const TOOLS: ToolDef[] = [
     slug: "jest",
     websiteUrl: "https://jestjs.io",
     tagline: "Delightful JavaScript Testing",
-    description: "Jest is a JavaScript testing framework designed to ensure correctness of any JavaScript codebase.",
+    description:
+      "Jest is a JavaScript testing framework designed to ensure correctness of any JavaScript codebase.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://jestjs.io/img/opengraph.png",
@@ -217,7 +296,8 @@ const TOOLS: ToolDef[] = [
     slug: "aws",
     websiteUrl: "https://aws.amazon.com",
     tagline: "The most comprehensive and broadly adopted cloud platform",
-    description: "Amazon Web Services offers reliable, scalable, and inexpensive cloud computing services.",
+    description:
+      "Amazon Web Services offers reliable, scalable, and inexpensive cloud computing services.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png",
@@ -230,7 +310,8 @@ const TOOLS: ToolDef[] = [
     slug: "mdn-web-docs",
     websiteUrl: "https://developer.mozilla.org",
     tagline: "Resources for developers, by developers",
-    description: "MDN Web Docs is an open-source, collaborative project documenting Web platform technologies.",
+    description:
+      "MDN Web Docs is an open-source, collaborative project documenting Web platform technologies.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://developer.mozilla.org/mdn-social-share.d893525a4fb5fb1f67a2.png",
@@ -243,7 +324,8 @@ const TOOLS: ToolDef[] = [
     slug: "chatgpt",
     websiteUrl: "https://chatgpt.com",
     tagline: "A conversational AI system that listens, learns, and challenges",
-    description: "ChatGPT is a large language model developed by OpenAI that can generate human-like text based on the context and prompt it's given.",
+    description:
+      "ChatGPT is a large language model developed by OpenAI that can generate human-like text based on the context and prompt it's given.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -257,7 +339,8 @@ const TOOLS: ToolDef[] = [
     slug: "tailwind-css",
     websiteUrl: "https://tailwindcss.com",
     tagline: "A utility-first CSS framework for rapid UI development",
-    description: "Tailwind CSS is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup.",
+    description:
+      "Tailwind CSS is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://tailwindcss.com/opengraph-image.jpg",
@@ -270,7 +353,8 @@ const TOOLS: ToolDef[] = [
     slug: "react",
     websiteUrl: "https://react.dev",
     tagline: "The library for web and native user interfaces",
-    description: "React is a JavaScript library for building user interfaces, particularly single-page applications.",
+    description:
+      "React is a JavaScript library for building user interfaces, particularly single-page applications.",
     status: "Published",
     publishedAt: now,
     screenshotUrl: "https://react.dev/images/og-home.png",
@@ -283,10 +367,12 @@ const TOOLS: ToolDef[] = [
     slug: "postman",
     websiteUrl: "https://www.postman.com",
     tagline: "API platform for building and using APIs",
-    description: "Postman is an API platform for developers to design, build, test and iterate their APIs.",
+    description:
+      "Postman is an API platform for developers to design, build, test and iterate their APIs.",
     status: "Published",
     publishedAt: now,
-    screenshotUrl: "https://voyager.postman.com/social-preview/postman-api-platform-social-preview-2.jpeg",
+    screenshotUrl:
+      "https://voyager.postman.com/social-preview/postman-api-platform-social-preview-2.jpeg",
     categories: ["testing", "backend"],
     tags: ["free", "paid", "api"],
     hasOwner: false,
@@ -296,11 +382,13 @@ const TOOLS: ToolDef[] = [
     slug: "github",
     websiteUrl: "https://github.com",
     tagline: "Build and ship software on a single, collaborative platform",
-    description: "GitHub is a code hosting platform for version control and collaboration, letting you and others work together on projects.",
+    description:
+      "GitHub is a code hosting platform for version control and collaboration, letting you and others work together on projects.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
-    screenshotUrl: "https://github.githubassets.com/images/modules/site/social-cards/github-social.png",
+    screenshotUrl:
+      "https://github.githubassets.com/images/modules/site/social-cards/github-social.png",
     categories: ["devops"],
     tags: ["free", "paid", "open-source", "ci-cd"],
     hasOwner: false,
@@ -310,7 +398,8 @@ const TOOLS: ToolDef[] = [
     slug: "sveltekit",
     websiteUrl: "https://svelte.dev",
     tagline: "The fastest way to build Svelte apps",
-    description: "SvelteKit is a framework for building web applications of all sizes, with a beautiful development experience and flexible filesystem-based routing.",
+    description:
+      "SvelteKit is a framework for building web applications of all sizes, with a beautiful development experience and flexible filesystem-based routing.",
     status: "Scheduled",
     publishedAt: addDays(now, 7),
     screenshotUrl: "https://svelte.dev/images/twitter-thumbnail.jpg",
@@ -323,7 +412,8 @@ const TOOLS: ToolDef[] = [
     slug: "rust",
     websiteUrl: "https://www.rust-lang.org",
     tagline: "A language empowering everyone to build reliable and efficient software",
-    description: "Rust is a multi-paradigm, general-purpose programming language designed for performance and safety, especially safe concurrency.",
+    description:
+      "Rust is a multi-paradigm, general-purpose programming language designed for performance and safety, especially safe concurrency.",
     status: "Draft",
     screenshotUrl: "https://www.rust-lang.org/static/images/rust-social-wide.jpg",
     categories: ["backend"],
@@ -335,7 +425,8 @@ const TOOLS: ToolDef[] = [
     slug: "kubernetes",
     websiteUrl: "https://kubernetes.io",
     tagline: "Production-Grade Container Orchestration",
-    description: "Kubernetes is an open-source container orchestration platform for automating deployment, scaling, and management of containerized applications.",
+    description:
+      "Kubernetes is an open-source container orchestration platform for automating deployment, scaling, and management of containerized applications.",
     status: "Draft",
     screenshotUrl: "https://kubernetes.io/images/kubernetes-open-graph.png",
     categories: ["devops"],
@@ -347,7 +438,8 @@ const TOOLS: ToolDef[] = [
     slug: "baseline-martial-arts",
     websiteUrl: "https://baselinemartialarts.com",
     tagline: "Multi-discipline martial arts training programs",
-    description: "Baseline Martial Arts is the first public training brand for the Ronin Dojo platform, focused on practical classes, curriculum, memberships, and student progress.",
+    description:
+      "Baseline Martial Arts is the first public training brand for the Ronin Dojo platform, focused on practical classes, curriculum, memberships, and student progress.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -360,7 +452,8 @@ const TOOLS: ToolDef[] = [
     slug: "black-belt-legacy",
     websiteUrl: "https://blackbeltlegacy.com",
     tagline: "Brazilian Jiu-Jitsu black belt lineage records",
-    description: "Black Belt Legacy preserves lineage-centered Brazilian Jiu-Jitsu records and is a future migration target for profiles, credentials, and community trust signals.",
+    description:
+      "Black Belt Legacy preserves lineage-centered Brazilian Jiu-Jitsu records and is a future migration target for profiles, credentials, and community trust signals.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -373,7 +466,8 @@ const TOOLS: ToolDef[] = [
     slug: "wekaf-usa",
     websiteUrl: "https://wekafusa.com",
     tagline: "Eskrima tournament and league operations",
-    description: "WEKAF USA represents the tournament-operations lane for stick fighting, with event discovery, registration, brackets, officials, and results as launch-critical workflows.",
+    description:
+      "WEKAF USA represents the tournament-operations lane for stick fighting, with event discovery, registration, brackets, officials, and results as launch-critical workflows.",
     isFeatured: true,
     status: "Published",
     publishedAt: now,
@@ -386,7 +480,8 @@ const TOOLS: ToolDef[] = [
     slug: "ronin-dojo-design",
     websiteUrl: "https://ronindojodesign.com",
     tagline: "White-label martial arts software and launch support",
-    description: "Ronin Dojo Design is the umbrella brand for assisted white-label onboarding, brand launches, school operations setup, and implementation support.",
+    description:
+      "Ronin Dojo Design is the umbrella brand for assisted white-label onboarding, brand launches, school operations setup, and implementation support.",
     status: "Published",
     publishedAt: now,
     categories: ["school-operations"],
@@ -398,7 +493,8 @@ const TOOLS: ToolDef[] = [
     slug: "usa-stick-fighting",
     websiteUrl: "https://usastickfighting.com",
     tagline: "Stick fighting event visibility and athlete pathway",
-    description: "USA Stick Fighting is a companion domain for public-facing event visibility, athlete discovery, and tournament funnel testing in the WEKAF lane.",
+    description:
+      "USA Stick Fighting is a companion domain for public-facing event visibility, athlete discovery, and tournament funnel testing in the WEKAF lane.",
     status: "Scheduled",
     publishedAt: addDays(now, 10),
     categories: ["tournaments-events"],
@@ -410,7 +506,8 @@ const TOOLS: ToolDef[] = [
     slug: "black-belt-wiki",
     websiteUrl: "https://blackbeltwiki.com",
     tagline: "Martial arts reference library for students",
-    description: "Black Belt Wiki is a public martial arts reference library covering styles, techniques, training ideas, and student-facing education resources.",
+    description:
+      "Black Belt Wiki is a public martial arts reference library covering styles, techniques, training ideas, and student-facing education resources.",
     status: "Published",
     publishedAt: now,
     categories: ["media-education"],
@@ -422,7 +519,8 @@ const TOOLS: ToolDef[] = [
     slug: "smoothcomp",
     websiteUrl: "https://smoothcomp.com",
     tagline: "Competition registration and tournament software",
-    description: "Smoothcomp is a competition operations platform that provides useful reference behavior for registration, brackets, check-in, and public tournament results.",
+    description:
+      "Smoothcomp is a competition operations platform that provides useful reference behavior for registration, brackets, check-in, and public tournament results.",
     status: "Published",
     publishedAt: now,
     categories: ["tournaments-events"],
@@ -454,7 +552,9 @@ async function main() {
     catsCreated++
   }
 
-  console.log(`   Categories: Created ${catsCreated}, Skipped ${catsSkipped}, Total ${CATEGORIES.length}`)
+  console.log(
+    `   Categories: Created ${catsCreated}, Skipped ${catsSkipped}, Total ${CATEGORIES.length}`,
+  )
 
   // -------------------------------------------------------------------------
   // Tags — 36 rows, upsert on slug
@@ -512,7 +612,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error("❌ Error in seed-baseline-listings:", error)
     process.exit(1)
   })

@@ -35,4 +35,4 @@ const TileCaption = ({ className, ...props }: ComponentProps<"span">) => {
   return <span className={cx("shrink-0 text-xs text-secondary-foreground", className)} {...props} />
 }
 
-export { Tile, TileTitle, TileDivider, TileCaption }
+export { Tile, TileCaption, TileDivider, TileTitle }

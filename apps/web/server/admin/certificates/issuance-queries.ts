@@ -1,4 +1,3 @@
-import type { Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 export const findIssuancesByTemplate = async (certificateTemplateId: string) => {

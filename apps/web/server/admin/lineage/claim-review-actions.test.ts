@@ -20,15 +20,15 @@ mock.module("~/lib/brand-context", () => ({
   getRequestBrand: () => Promise.resolve(TEST_BRAND),
 }))
 
-let mockSession: { user: { id: string; role: string } } | null = null
+const mockSession: { user: { id: string; role: string } } | null = null
 mock.module("~/lib/auth", () => ({
   getServerSession: () => Promise.resolve(mockSession),
 }))
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
 import {
-  CLAIM_REVIEW_ERROR,
   applyLineageClaimReview,
+  CLAIM_REVIEW_ERROR,
 } from "~/server/admin/lineage/claim-review-actions"
 import { db } from "~/services/db"
 

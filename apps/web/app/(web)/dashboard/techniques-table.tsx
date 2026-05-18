@@ -2,11 +2,18 @@
 
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/common/table"
+import { Stack } from "~/components/common/stack"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/common/table"
 
 type TechniqueRow = {
   id: string
@@ -51,7 +58,7 @@ export function TechniquesTable({ techniques }: TechniquesTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {techniques.map((t) => (
+          {techniques.map(t => (
             <TableRow key={t.id}>
               <TableCell>
                 <Link href={`/techniques/${t.slug}`} className="font-medium">

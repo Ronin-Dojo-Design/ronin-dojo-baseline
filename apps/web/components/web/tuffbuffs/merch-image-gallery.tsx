@@ -33,11 +33,7 @@ export function MerchImageGallery({ images, alt }: MerchImageGalleryProps) {
   return (
     <div className="space-y-3">
       <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-muted/50 p-4">
-        <img
-          src={displayImages[activeIndex]}
-          alt={alt}
-          className="h-full w-full object-contain"
-        />
+        <img src={displayImages[activeIndex]} alt={alt} className="h-full w-full object-contain" />
       </div>
 
       {displayImages.length > 1 && (

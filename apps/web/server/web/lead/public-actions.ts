@@ -1,11 +1,11 @@
 "use server"
 
-import { after } from "next/server"
 import { headers } from "next/headers"
-import { publicActionClient } from "~/lib/safe-actions"
-import { getRequestBrand } from "~/lib/brand-context"
-import { leadPayload } from "~/server/web/lead/payloads"
+import { after } from "next/server"
 import { z } from "zod"
+import { getRequestBrand } from "~/lib/brand-context"
+import { publicActionClient } from "~/lib/safe-actions"
+import { leadPayload } from "~/server/web/lead/payloads"
 
 const publicLeadSchema = z.object({
   organizationId: z.string().min(1),
@@ -70,7 +70,7 @@ export const createPublicLead = publicActionClient
 
     after(() => {
       revalidate({
-        paths: [`/admin/leads`],
+        paths: ["/admin/leads"],
         tags: ["leads"],
       })
     })

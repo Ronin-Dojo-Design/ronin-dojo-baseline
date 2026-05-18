@@ -1,8 +1,8 @@
-import { Suspense } from "react"
 import type { SearchParams } from "nuqs"
-import { TechniqueQuery } from "~/components/web/techniques/technique-query"
+import { Suspense } from "react"
 import { TechniqueListingSkeleton } from "~/components/web/techniques/technique-listing"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { TechniqueQuery } from "~/components/web/techniques/technique-query"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getRequestBrand } from "~/lib/brand-context"
 
 export const metadata = {

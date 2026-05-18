@@ -1,3 +1,4 @@
+import type React from "react"
 import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
-import type React from "react"
 
 type CompletedMatch = {
   id: string
@@ -61,20 +61,12 @@ type MedalEntry = {
   division: string
 }
 
-function getCompetitorName(
-  competitor: CompletedMatch["competitors"][number],
-): string {
+function getCompetitorName(competitor: CompletedMatch["competitors"][number]): string {
   const passport = competitor.registrationEntry.registration.user.passport
-  return (
-    passport?.displayName ??
-    competitor.registrationEntry.registration.user.name ??
-    "Unknown"
-  )
+  return passport?.displayName ?? competitor.registrationEntry.registration.user.name ?? "Unknown"
 }
 
-function getCompetitorOrg(
-  competitor: CompletedMatch["competitors"][number],
-): string | null {
+function getCompetitorOrg(competitor: CompletedMatch["competitors"][number]): string | null {
   return competitor.registrationEntry.representingMembership?.organization.name ?? null
 }
 
@@ -86,16 +78,16 @@ function deriveMedals(divisions: DivisionResult[]): MedalEntry[] {
       if (bracket.matches.length === 0) continue
 
       // Find the final match (highest round number)
-      const maxRound = Math.max(...bracket.matches.map((m) => m.roundNumber))
+      const maxRound = Math.max(...bracket.matches.map(m => m.roundNumber))
       const finalMatch = bracket.matches.find(
-        (m) => m.roundNumber === maxRound && m.matchNumber === 1,
+        m => m.roundNumber === maxRound && m.matchNumber === 1,
       )
 
-      if (!finalMatch || !finalMatch.winnerEntryId) continue
+      if (!finalMatch?.winnerEntryId) continue
 
       // Gold = winner of final
       const goldComp = finalMatch.competitors.find(
-        (c) => c.registrationEntry.id === finalMatch.winnerEntryId,
+        c => c.registrationEntry.id === finalMatch.winnerEntryId,
       )
       if (goldComp) {
         medals.push({
@@ -108,7 +100,7 @@ function deriveMedals(divisions: DivisionResult[]): MedalEntry[] {
 
       // Silver = loser of final
       const silverComp = finalMatch.competitors.find(
-        (c) => c.registrationEntry.id !== finalMatch.winnerEntryId,
+        c => c.registrationEntry.id !== finalMatch.winnerEntryId,
       )
       if (silverComp) {
         medals.push({
@@ -122,13 +114,11 @@ function deriveMedals(divisions: DivisionResult[]): MedalEntry[] {
       // Bronze = losers of semifinals (round before final)
       const semiFinalRound = maxRound - 1
       if (semiFinalRound >= 1) {
-        const semiMatches = bracket.matches.filter(
-          (m) => m.roundNumber === semiFinalRound,
-        )
+        const semiMatches = bracket.matches.filter(m => m.roundNumber === semiFinalRound)
         for (const semi of semiMatches) {
           if (!semi.winnerEntryId) continue
           const bronzeComp = semi.competitors.find(
-            (c) => c.registrationEntry.id !== semi.winnerEntryId,
+            c => c.registrationEntry.id !== semi.winnerEntryId,
           )
           if (bronzeComp) {
             medals.push({
@@ -197,17 +187,11 @@ export function MedalStandings({ divisions }: MedalStandingsProps) {
               {entries.map((entry, i) => (
                 <TableRow key={`${entry.name}-${entry.medal}-${i}`}>
                   <TableCell>
-                    <Badge variant={medalVariant[entry.medal]}>
-                      {medalLabel[entry.medal]}
-                    </Badge>
+                    <Badge variant={medalVariant[entry.medal]}>{medalLabel[entry.medal]}</Badge>
                   </TableCell>
                   <TableCell className="font-medium">{entry.name}</TableCell>
                   <TableCell>
-                    {entry.org ? (
-                      <Note>{entry.org}</Note>
-                    ) : (
-                      <Note>Independent</Note>
-                    )}
+                    {entry.org ? <Note>{entry.org}</Note> : <Note>Independent</Note>}
                   </TableCell>
                 </TableRow>
               ))}

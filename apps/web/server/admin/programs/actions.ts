@@ -2,8 +2,14 @@
 
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
+import {
+  programCourseRemoveSchema,
+  programCourseSchema,
+  programSchema,
+  programWaiverRemoveSchema,
+  programWaiverSchema,
+} from "~/server/admin/programs/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
-import { programSchema, programCourseSchema, programCourseRemoveSchema, programWaiverSchema, programWaiverRemoveSchema } from "~/server/admin/programs/schema"
 
 export const upsertProgram = adminActionClient
   .inputSchema(programSchema)

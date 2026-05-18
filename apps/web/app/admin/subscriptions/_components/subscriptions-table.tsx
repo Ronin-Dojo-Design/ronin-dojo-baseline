@@ -4,8 +4,8 @@ import { PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import {
-  type SubscriptionRow,
   getColumns,
+  type SubscriptionRow,
 } from "~/app/admin/subscriptions/_components/subscriptions-table-columns"
 import { SubscriptionsTableToolbarActions } from "~/app/admin/subscriptions/_components/subscriptions-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"

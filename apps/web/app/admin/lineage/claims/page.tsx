@@ -1,7 +1,6 @@
 import { Suspense } from "react"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
-import { Card } from "~/components/common/card"
 import { Heading } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
@@ -36,9 +35,7 @@ async function ClaimsContent() {
               <p className="font-medium truncate">
                 {claim.claimant.name ?? claim.claimant.email} → {nodeDisplayName}
               </p>
-              <p className="text-sm text-muted-foreground truncate">
-                Tree: {claim.tree.name}
-              </p>
+              <p className="text-sm text-muted-foreground truncate">Tree: {claim.tree.name}</p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">

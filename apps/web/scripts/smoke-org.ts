@@ -15,7 +15,8 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../.generated/prisma/client.js"
 
-const DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
+const DATABASE_URL =
+  process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
 const adapter = new PrismaPg({ connectionString: DATABASE_URL })
 const db = new PrismaClient({ adapter })
 
@@ -27,11 +28,15 @@ async function main() {
 
   // ── Step 1: Create two users with Passports ──────────────────────────────
   console.log("1️⃣  Creating owner + joiner users…")
-  const owner = await db.user.create({ data: { name: "Org Owner", email: `smoke-owner-${TS}@test.local` } })
+  const owner = await db.user.create({
+    data: { name: "Org Owner", email: `smoke-owner-${TS}@test.local` },
+  })
   await db.passport.create({ data: { userId: owner.id, displayName: "Owner" } })
   await db.directoryProfile.create({ data: { userId: owner.id } })
 
-  const joiner = await db.user.create({ data: { name: "Org Joiner", email: `smoke-joiner-${TS}@test.local` } })
+  const joiner = await db.user.create({
+    data: { name: "Org Joiner", email: `smoke-joiner-${TS}@test.local` },
+  })
   await db.passport.create({ data: { userId: joiner.id, displayName: "Joiner" } })
   await db.directoryProfile.create({ data: { userId: joiner.id } })
   console.log(`   Owner: ${owner.id}, Joiner: ${joiner.id}`)
@@ -101,16 +106,18 @@ async function main() {
 
   if (!fullOrg) throw new Error("FAIL: Org not found")
   if (fullOrg.ownerId !== owner.id) throw new Error("FAIL: Owner mismatch")
-  if (fullOrg.disciplines.length !== 1) throw new Error(`FAIL: Expected 1 discipline, got ${fullOrg.disciplines.length}`)
-  if (fullOrg.memberships.length !== 2) throw new Error(`FAIL: Expected 2 memberships, got ${fullOrg.memberships.length}`)
+  if (fullOrg.disciplines.length !== 1)
+    throw new Error(`FAIL: Expected 1 discipline, got ${fullOrg.disciplines.length}`)
+  if (fullOrg.memberships.length !== 2)
+    throw new Error(`FAIL: Expected 2 memberships, got ${fullOrg.memberships.length}`)
 
-  const activeMembers = fullOrg.memberships.filter((m) => m.status === "ACTIVE")
-  const pendingMembers = fullOrg.memberships.filter((m) => m.status === "PENDING")
+  const activeMembers = fullOrg.memberships.filter(m => m.status === "ACTIVE")
+  const pendingMembers = fullOrg.memberships.filter(m => m.status === "PENDING")
   if (activeMembers.length !== 1) throw new Error("FAIL: Expected 1 ACTIVE member")
   if (pendingMembers.length !== 1) throw new Error("FAIL: Expected 1 PENDING member")
 
   console.log(`   ✅ Org owner: ${fullOrg.owner?.name}`)
-  console.log(`   ✅ Disciplines: ${fullOrg.disciplines.map((d) => d.discipline.name).join(", ")}`)
+  console.log(`   ✅ Disciplines: ${fullOrg.disciplines.map(d => d.discipline.name).join(", ")}`)
   console.log(`   ✅ Memberships: ${activeMembers.length} active, ${pendingMembers.length} pending`)
 
   // ── Cleanup ──────────────────────────────────────────────────────────────
@@ -130,7 +137,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("\n❌ SMOKE PROOF FAILED:", e.message)
     process.exit(1)
   })

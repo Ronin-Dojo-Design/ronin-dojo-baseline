@@ -85,10 +85,7 @@ function sortByManualSeed(entries: SeedableEntry[]): SeedableEntry[] {
 }
 
 /** Dispatch to the correct sort strategy */
-export function sortByMethod(
-  entries: SeedableEntry[],
-  method: SeedingMethod,
-): SeedableEntry[] {
+export function sortByMethod(entries: SeedableEntry[], method: SeedingMethod): SeedableEntry[] {
   switch (method) {
     case "REGISTRATION_ORDER":
       return sortByRegistrationOrder(entries)
@@ -120,7 +117,7 @@ export function standardBracketOrder(bracketSize: number): number[] {
 
   const half = bracketSize / 2
   const top = standardBracketOrder(half)
-  const bottom = top.map((seed) => bracketSize + 1 - seed)
+  const bottom = top.map(seed => bracketSize + 1 - seed)
 
   const result: number[] = []
   for (let i = 0; i < half; i++) {

@@ -62,4 +62,4 @@ const Tooltip = Object.assign(TooltipBase, {
   Arrow: TooltipArrow,
 })
 
-export { Tooltip, TooltipRoot, TooltipTrigger, TooltipContent, TooltipProvider }
+export { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger }

@@ -80,9 +80,9 @@ mock.module("~/lib/rate-limiter", () => ({
 // Real imports happen *after* the mocks are registered.
 // -----------------------------------------------------------------------------
 
-import { db } from "~/services/db"
 import { archiveSchedule, assignInstructor, saveSchedule } from "~/server/web/schedule/actions"
 import { SCHEDULE_ERROR } from "~/server/web/schedule/errors"
+import { db } from "~/services/db"
 
 // -----------------------------------------------------------------------------
 // Fixture set — created once, deleted once.

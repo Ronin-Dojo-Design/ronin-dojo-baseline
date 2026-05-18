@@ -6,8 +6,8 @@
 "use server"
 
 import * as z from "zod"
-import { userActionClient } from "~/lib/safe-actions"
 import { getRequestBrand } from "~/lib/brand-context"
+import { userActionClient } from "~/lib/safe-actions"
 
 const claimInviteSchema = z.object({
   code: z.string().min(1),
@@ -20,7 +20,7 @@ export const claimInvite = userActionClient
     const brand = await getRequestBrand()
 
     // Find and validate invite in a transaction
-    const result = await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async tx => {
       const invite = await tx.invite.findUnique({
         where: { code },
         include: { organization: { select: { id: true, name: true } } },
@@ -28,8 +28,10 @@ export const claimInvite = userActionClient
 
       if (!invite) throw new Error("Invite not found")
       if (invite.status !== "PENDING") throw new Error("This invite is no longer active")
-      if (invite.expiresAt && invite.expiresAt < new Date()) throw new Error("This invite has expired")
-      if (invite.maxUses && invite.currentUses >= invite.maxUses) throw new Error("This invite has reached its maximum uses")
+      if (invite.expiresAt && invite.expiresAt < new Date())
+        throw new Error("This invite has expired")
+      if (invite.maxUses && invite.currentUses >= invite.maxUses)
+        throw new Error("This invite has reached its maximum uses")
 
       // Check if user already claimed this invite
       const existingClaim = await tx.inviteClaim.findUnique({
@@ -47,7 +49,8 @@ export const claimInvite = userActionClient
           },
         },
       })
-      if (existingMembership) throw new Error("You already have a membership in this organization for this discipline")
+      if (existingMembership)
+        throw new Error("You already have a membership in this organization for this discipline")
 
       // Create claim
       await tx.inviteClaim.create({

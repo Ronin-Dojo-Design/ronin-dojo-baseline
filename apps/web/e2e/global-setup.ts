@@ -2,9 +2,10 @@
  * Playwright global setup — seeds a tournament fixture before all tests run.
  * The fixture data is written to a temp file so tests can read it.
  */
-import { seedTournamentFixture, type TournamentFixture } from "./helpers/seed-tournament"
-import { writeFileSync, mkdirSync } from "node:fs"
+
+import { writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { seedTournamentFixture } from "./helpers/seed-tournament"
 
 const FIXTURE_PATH = join(process.cwd(), "e2e", ".fixture.json")
 

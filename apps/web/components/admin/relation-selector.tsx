@@ -69,12 +69,7 @@ export const RelationSelector = <T extends Relation>({
   })
 
   useEffect(() => {
-    if (
-      debouncedPrompt &&
-      !!relations.length &&
-      !selectedIds.length &&
-      !suggestedRelations.length
-    ) {
+    if (debouncedPrompt && relations.length && !selectedIds.length && !suggestedRelations.length) {
       complete(`${debouncedPrompt}
         
         Only return the relation names in comma-separated format, and nothing else. If there are no relevant relations, return an empty string.

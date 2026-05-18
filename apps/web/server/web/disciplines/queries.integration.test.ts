@@ -44,7 +44,7 @@ async function queryMembersByRank(disciplineId: string) {
     take: 50,
   })
 
-  return memberships.map((m) => ({
+  return memberships.map(m => ({
     id: m.id,
     name: m.user.passport?.displayName ?? null,
     rankName: m.rank!.name,
@@ -177,7 +177,7 @@ describe("findDisciplineMembersByRank privacy filter", () => {
   it("returns only PUBLIC members, excludes PRIVATE and MEMBERS_ONLY", async () => {
     const results = await queryMembersByRank(disciplineId)
 
-    const resultIds = results.map((r) => r.id)
+    const resultIds = results.map(r => r.id)
 
     expect(resultIds).toContain(publicMembershipId)
     expect(resultIds).not.toContain(privateMembershipId)
@@ -186,7 +186,7 @@ describe("findDisciplineMembersByRank privacy filter", () => {
 
   it("returns displayName from Passport", async () => {
     const results = await queryMembersByRank(disciplineId)
-    const publicMember = results.find((r) => r.id === publicMembershipId)
+    const publicMember = results.find(r => r.id === publicMembershipId)
 
     expect(publicMember).toBeDefined()
     expect(publicMember!.name).toBe(`Public User ${TS}`)

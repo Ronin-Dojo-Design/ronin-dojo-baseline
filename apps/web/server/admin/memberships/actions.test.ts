@@ -66,12 +66,12 @@ mock.module("next/server", () => ({
 // Real imports — after mocks.
 // ---------------------------------------------------------------------------
 
-import { db } from "~/services/db"
 import {
   assignRoleToMembership,
   removeRoleFromMembership,
   transitionMembershipStatus,
 } from "~/server/admin/memberships/actions"
+import { db } from "~/services/db"
 
 // ---------------------------------------------------------------------------
 // Fixtures

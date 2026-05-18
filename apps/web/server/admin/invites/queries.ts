@@ -9,10 +9,7 @@ import type { Prisma } from "~/.generated/prisma/client"
 import type { InvitesTableSchema } from "~/server/admin/invites/schema"
 import { db } from "~/services/db"
 
-export const findInvites = async (
-  search: InvitesTableSchema,
-  where?: Prisma.InviteWhereInput,
-) => {
+export const findInvites = async (search: InvitesTableSchema, where?: Prisma.InviteWhereInput) => {
   const { code, status, type, organizationId, page, perPage, sort, from, to, operator } = search
 
   const offset = (page - 1) * perPage

@@ -1,8 +1,8 @@
 import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
-import type { CoursesTableSchema } from "~/server/admin/courses/schema"
 import { getRequestBrand } from "~/lib/brand-context"
+import type { CoursesTableSchema } from "~/server/admin/courses/schema"
 import { db } from "~/services/db"
 
 export const findCourses = async (search: CoursesTableSchema, where?: Prisma.CourseWhereInput) => {
@@ -95,9 +95,7 @@ export const searchTechniquesForPicker = async (q: string, brand?: string) => {
     where: {
       ...(brand && { brand: brand as any }),
       isPublished: true,
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-      ],
+      OR: [{ name: { contains: q, mode: "insensitive" } }],
     },
     select: { id: true, name: true, slug: true, category: true },
     orderBy: { name: "asc" },

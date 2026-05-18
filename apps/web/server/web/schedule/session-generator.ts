@@ -83,9 +83,7 @@ export const generateSessionPlan = ({
   cancelledStatus = "CANCELLED" as ClassSessionStatus,
 }: GenerateSessionPlanInput): GenerationPlan => {
   const today = toUtcMidnight(new Date())
-  const start = toUtcMidnight(
-    windowStart ?? schedule.effectiveFrom ?? today,
-  )
+  const start = toUtcMidnight(windowStart ?? schedule.effectiveFrom ?? today)
   // Clamp end at +90d from start AND at schedule.effectiveTo (if set).
   const requestedEnd = windowEnd
     ? toUtcMidnight(windowEnd)
@@ -103,11 +101,7 @@ export const generateSessionPlan = ({
 
   const desiredDates: Date[] = []
   if (isActive && desiredDays.size > 0 && end.getTime() >= start.getTime()) {
-    for (
-      let cursor = start.getTime();
-      cursor <= end.getTime();
-      cursor += MS_PER_DAY
-    ) {
+    for (let cursor = start.getTime(); cursor <= end.getTime(); cursor += MS_PER_DAY) {
       const date = new Date(cursor)
       if (desiredDays.has(dayOfWeekFromUtc(date))) {
         desiredDates.push(date)
@@ -131,10 +125,7 @@ export const generateSessionPlan = ({
       toCreate.push({ date, startTime: schedule.startTime, endTime: schedule.endTime })
       continue
     }
-    if (
-      existing.startTime !== schedule.startTime ||
-      existing.endTime !== schedule.endTime
-    ) {
+    if (existing.startTime !== schedule.startTime || existing.endTime !== schedule.endTime) {
       toRefreshTimes.push({
         id: existing.id,
         startTime: schedule.startTime,
