@@ -2,16 +2,32 @@
 
 import { z } from "zod"
 import { userActionClient } from "~/lib/safe-actions"
-import { revalidateTag } from "next/cache"
 
 const TechniqueCategory = z.enum([
-  "STRIKE", "KICK", "THROW", "SUBMISSION", "SWEEP", "ESCAPE",
-  "BLOCK", "FORM", "DRILL", "CONDITIONING", "TRANSITION", "TAKEDOWN",
+  "STRIKE",
+  "KICK",
+  "THROW",
+  "SUBMISSION",
+  "SWEEP",
+  "ESCAPE",
+  "BLOCK",
+  "FORM",
+  "DRILL",
+  "CONDITIONING",
+  "TRANSITION",
+  "TAKEDOWN",
 ])
 
 const TechniquePosition = z.enum([
-  "STANDING", "GUARD", "HALF_GUARD", "MOUNT", "SIDE_CONTROL",
-  "BACK", "TURTLE", "CLINCH", "OPEN",
+  "STANDING",
+  "GUARD",
+  "HALF_GUARD",
+  "MOUNT",
+  "SIDE_CONTROL",
+  "BACK",
+  "TURTLE",
+  "CLINCH",
+  "OPEN",
 ])
 
 const DifficultyLevel = z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"])
@@ -20,7 +36,10 @@ const createTechniqueSchema = z.object({
   organizationId: z.string(),
   disciplineId: z.string(),
   name: z.string().min(1).max(200),
-  slug: z.string().max(200).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .max(200)
+    .regex(/^[a-z0-9-]+$/),
   description: z.string().max(5000).optional(),
   position: TechniquePosition.nullish(),
   category: TechniqueCategory.nullish(),
@@ -52,7 +71,11 @@ export const createTechnique = userActionClient
 
     // Verify user is owner or instructor
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
+      where: {
+        userId: user.id,
+        organizationId,
+        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+      },
     })
     if (!membership) {
       throw new Error("You are not authorized to create techniques for this organization")
@@ -86,7 +109,11 @@ export const updateTechnique = userActionClient
     })
 
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId: technique.organization.id, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
+      where: {
+        userId: user.id,
+        organizationId: technique.organization.id,
+        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+      },
     })
     if (!membership) {
       throw new Error("You are not authorized to edit this technique")
@@ -97,7 +124,10 @@ export const updateTechnique = userActionClient
       data,
     })
 
-    revalidate({ tags: ["techniques", `technique-${updated.slug}`], paths: ["/dashboard", "/techniques"] })
+    revalidate({
+      tags: ["techniques", `technique-${updated.slug}`],
+      paths: ["/dashboard", "/techniques"],
+    })
     return updated
   })
 
@@ -112,7 +142,11 @@ export const deleteTechnique = userActionClient
     })
 
     const membership = await db.membership.findFirst({
-      where: { userId: user.id, organizationId: technique.organization.id, roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } } },
+      where: {
+        userId: user.id,
+        organizationId: technique.organization.id,
+        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+      },
     })
     if (!membership) {
       throw new Error("You are not authorized to delete this technique")

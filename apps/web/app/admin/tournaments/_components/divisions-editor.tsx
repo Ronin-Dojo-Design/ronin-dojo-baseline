@@ -17,13 +17,21 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { EyeIcon, GripVerticalIcon, PlusIcon, RotateCcwIcon, SwordsIcon, TrashIcon } from "lucide-react"
+import {
+  EyeIcon,
+  GripVerticalIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  SwordsIcon,
+  TrashIcon,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { Badge } from "~/components/common/badge"
+import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
 import { ComboboxSelector } from "~/components/admin/combobox-selector"
+import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
 import {
@@ -35,6 +43,7 @@ import {
   DialogTrigger,
 } from "~/components/common/dialog"
 import { H3 } from "~/components/common/heading"
+import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
 import { Note } from "~/components/common/note"
 import {
@@ -45,7 +54,6 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
-import { Input } from "~/components/common/input"
 import {
   deleteDivision,
   deleteTournamentDiscipline,
@@ -56,7 +64,6 @@ import {
 } from "~/server/admin/tournaments/actions"
 import type { SeedingMethod } from "~/server/admin/tournaments/bracket-seeding"
 import type { findTournamentById } from "~/server/admin/tournaments/queries"
-import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
 
 type Tournament = NonNullable<Awaited<ReturnType<typeof findTournamentById>>>
 type TournamentDivision = Tournament["disciplines"][number]["divisions"][number] & {
@@ -129,7 +136,12 @@ function SortableSeedRow({
   )
 }
 
-export function DivisionsEditor({ tournament, availableDisciplines, tournamentRoles, ruleSets }: DivisionsEditorProps) {
+export function DivisionsEditor({
+  tournament,
+  availableDisciplines,
+  tournamentRoles,
+  ruleSets,
+}: DivisionsEditorProps) {
   const router = useRouter()
   const [seedingDialogDivisionId, setSeedingDialogDivisionId] = useState<string | null>(null)
   const [selectedSeedingMethod, setSelectedSeedingMethod] =
@@ -312,7 +324,11 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
                   <div className="space-y-2">
                     <Label>Discipline</Label>
                     <ComboboxSelector
-                      options={availableDisciplines?.filter(d => !tournament.disciplines.some(td => td.discipline.id === d.id)) ?? []}
+                      options={
+                        availableDisciplines?.filter(
+                          d => !tournament.disciplines.some(td => td.discipline.id === d.id),
+                        ) ?? []
+                      }
                       value={selectedDisciplineId}
                       onValueChange={setSelectedDisciplineId}
                       placeholder="Select a discipline"
@@ -397,9 +413,13 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
                                   Ages {div.ageMin}–{div.ageMax}
                                 </Badge>
                               )}
-                              {div.capacity != null && <Badge variant="soft">Cap: {div.capacity}</Badge>}
+                              {div.capacity != null && (
+                                <Badge variant="soft">Cap: {div.capacity}</Badge>
+                              )}
                               {(div as TournamentDivision).ruleSet && (
-                                <Badge variant="info">{(div as TournamentDivision).ruleSet!.name}</Badge>
+                                <Badge variant="info">
+                                  {(div as TournamentDivision).ruleSet!.name}
+                                </Badge>
                               )}
                             </Stack>
                           </div>
@@ -575,13 +595,16 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
       </Dialog>
 
       {/* Add Division Dialog */}
-      <Dialog open={addDivisionOpen} onOpenChange={open => {
-        if (!open) {
-          setAddDivisionOpen(false)
-          setAddDivisionTdId("")
-          resetDivForm()
-        }
-      }}>
+      <Dialog
+        open={addDivisionOpen}
+        onOpenChange={open => {
+          if (!open) {
+            setAddDivisionOpen(false)
+            setAddDivisionTdId("")
+            resetDivForm()
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Division</DialogTitle>
@@ -599,11 +622,18 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Format</Label>
-                <Select value={divForm.format} onValueChange={v => setDivForm(f => ({ ...f, format: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={divForm.format}
+                  onValueChange={v => setDivForm(f => ({ ...f, format: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {Object.values(DivisionFormat).map(f => (
-                      <SelectItem key={f} value={f}>{f.replace(/_/g, " ")}</SelectItem>
+                      <SelectItem key={f} value={f}>
+                        {f.replace(/_/g, " ")}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -611,11 +641,18 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
 
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <Select value={divForm.gender} onValueChange={v => setDivForm(f => ({ ...f, gender: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={divForm.gender}
+                  onValueChange={v => setDivForm(f => ({ ...f, gender: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {Object.values(DivisionGender).map(g => (
-                      <SelectItem key={g} value={g}>{g.replace(/_/g, " ")}</SelectItem>
+                      <SelectItem key={g} value={g}>
+                        {g.replace(/_/g, " ")}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -625,44 +662,81 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Age Min</Label>
-                <Input type="number" placeholder="e.g. 18" value={divForm.ageMin} onChange={e => setDivForm(f => ({ ...f, ageMin: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="e.g. 18"
+                  value={divForm.ageMin}
+                  onChange={e => setDivForm(f => ({ ...f, ageMin: e.target.value }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Age Max</Label>
-                <Input type="number" placeholder="e.g. 35" value={divForm.ageMax} onChange={e => setDivForm(f => ({ ...f, ageMax: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="e.g. 35"
+                  value={divForm.ageMax}
+                  onChange={e => setDivForm(f => ({ ...f, ageMax: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Weight Min (kg)</Label>
-                <Input type="number" placeholder="e.g. 60" value={divForm.weightMinKg} onChange={e => setDivForm(f => ({ ...f, weightMinKg: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="e.g. 60"
+                  value={divForm.weightMinKg}
+                  onChange={e => setDivForm(f => ({ ...f, weightMinKg: e.target.value }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Weight Max (kg)</Label>
-                <Input type="number" placeholder="e.g. 75" value={divForm.weightMaxKg} onChange={e => setDivForm(f => ({ ...f, weightMaxKg: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="e.g. 75"
+                  value={divForm.weightMaxKg}
+                  onChange={e => setDivForm(f => ({ ...f, weightMaxKg: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Fee (cents)</Label>
-                <Input type="number" placeholder="0" value={divForm.feeCents} onChange={e => setDivForm(f => ({ ...f, feeCents: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={divForm.feeCents}
+                  onChange={e => setDivForm(f => ({ ...f, feeCents: e.target.value }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Capacity</Label>
-                <Input type="number" placeholder="e.g. 32" value={divForm.capacity} onChange={e => setDivForm(f => ({ ...f, capacity: e.target.value }))} />
+                <Input
+                  type="number"
+                  placeholder="e.g. 32"
+                  value={divForm.capacity}
+                  onChange={e => setDivForm(f => ({ ...f, capacity: e.target.value }))}
+                />
               </div>
             </div>
 
             {tournamentRoles && tournamentRoles.length > 0 && (
               <div className="space-y-2">
                 <Label>Required Role</Label>
-                <Select value={divForm.roleRequiredId} onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <Select
+                  value={divForm.roleRequiredId}
+                  onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
                   <SelectContent>
                     {tournamentRoles.map(r => (
-                      <SelectItem key={r.id} value={r.id}>{r.name} ({r.code})</SelectItem>
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name} ({r.code})
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -672,11 +746,18 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
             {ruleSets && ruleSets.length > 0 && (
               <div className="space-y-2">
                 <Label>Rule Set (optional)</Label>
-                <Select value={divForm.ruleSetId} onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <Select
+                  value={divForm.ruleSetId}
+                  onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
                   <SelectContent>
                     {ruleSets.map(rs => (
-                      <SelectItem key={rs.id} value={rs.id}>{rs.name}</SelectItem>
+                      <SelectItem key={rs.id} value={rs.id}>
+                        {rs.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -684,7 +765,9 @@ export function DivisionsEditor({ tournament, availableDisciplines, tournamentRo
             )}
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setAddDivisionOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setAddDivisionOpen(false)}>
+              Cancel
+            </Button>
             <Button
               disabled={!divForm.name || !divForm.roleRequiredId || upsertDivisionAction.isPending}
               onClick={() => {

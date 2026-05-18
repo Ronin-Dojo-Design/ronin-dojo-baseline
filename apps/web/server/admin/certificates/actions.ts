@@ -2,8 +2,8 @@
 
 import { after } from "next/server"
 import { adminActionClient } from "~/lib/safe-actions"
-import { idsSchema } from "~/server/admin/shared/schema"
 import { certificateTemplateSchema } from "~/server/admin/certificates/schema"
+import { idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertCertificateTemplate = adminActionClient
   .inputSchema(certificateTemplateSchema)

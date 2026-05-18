@@ -30,15 +30,15 @@ mock.module("~/lib/brand-context", () => ({
 }))
 
 // Mock auth — not used by the helper tests, but required by userActionClient.
-let mockSession: { user: { id: string; role: string } } | null = null
+const mockSession: { user: { id: string; role: string } } | null = null
 mock.module("~/lib/auth", () => ({
   getServerSession: () => Promise.resolve(mockSession),
 }))
 
 import type { Brand } from "~/.generated/prisma/client"
 import {
-  LINEAGE_NODE_PROFILE_ERROR,
   applyLineageNodeProfileUpdate,
+  LINEAGE_NODE_PROFILE_ERROR,
 } from "~/server/web/lineage/node-profile-actions"
 import { getEditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import { db } from "~/services/db"

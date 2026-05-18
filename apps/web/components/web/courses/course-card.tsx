@@ -73,4 +73,4 @@ const CourseCardSkeleton = () => {
   )
 }
 
-export { CourseCard, CourseCardSkeleton, type CourseCardProps }
+export { CourseCard, type CourseCardProps, CourseCardSkeleton }

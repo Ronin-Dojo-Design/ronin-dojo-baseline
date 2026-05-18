@@ -1,10 +1,10 @@
 "use client"
 
 import { getReadTime } from "@primoui/utils"
-import type { Post } from "~/.generated/prisma/client"
 import Image from "next/image"
 import { useFormatter, useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
+import type { Post } from "~/.generated/prisma/client"
 import { Card, CardDescription, CardFooter, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
@@ -44,7 +44,9 @@ export const PostCard = ({ className, post, ...props }: PostCardProps) => {
               {format.dateTime(post.publishedAt, { dateStyle: "medium" })}
             </time>
             <span>&bull;</span>
-            <span>{t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}</span>
+            <span>
+              {t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}
+            </span>
           </CardFooter>
         )}
       </Link>

@@ -6,8 +6,8 @@ import {
   parseAsStringEnum,
 } from "nuqs/server"
 import { FulfillmentStatus } from "~/.generated/prisma/browser"
-import type { MerchOrderRow } from "~/server/web/merch/queries"
 import { getSortingStateParser } from "~/lib/parsers"
+import type { MerchOrderRow } from "~/server/web/merch/queries"
 
 export const merchOrdersTableParamsSchema = {
   search: parseAsString.withDefault(""),

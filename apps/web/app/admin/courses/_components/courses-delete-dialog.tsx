@@ -9,11 +9,7 @@ type CoursesDeleteDialogProps = PropsWithChildren<{
   onExecute?: () => void
 }>
 
-export const CoursesDeleteDialog = ({
-  courses,
-  onExecute,
-  ...props
-}: CoursesDeleteDialogProps) => {
+export const CoursesDeleteDialog = ({ courses, onExecute, ...props }: CoursesDeleteDialogProps) => {
   return (
     <DeleteDialog
       ids={courses.map(({ id }) => id)}

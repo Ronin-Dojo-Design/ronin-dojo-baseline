@@ -1,15 +1,15 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
+import { Label } from "~/components/common/label"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
-import { Label } from "~/components/common/label"
-import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
 import type { ClaimDetail } from "~/server/admin/lineage/claim-queries"
+import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
 
 /**
  * Claim review status action buttons.
@@ -29,19 +29,31 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
   const refresh = () => router.refresh()
 
   const { executeAsync: execApprove, isPending: approvePending } = useAction(reviewLineageClaim, {
-    onSuccess: () => { toast.success("Claim approved"); refresh() },
+    onSuccess: () => {
+      toast.success("Claim approved")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to approve"),
   })
 
   const { executeAsync: execDeny, isPending: denyPending } = useAction(reviewLineageClaim, {
-    onSuccess: () => { toast.success("Claim denied"); refresh() },
+    onSuccess: () => {
+      toast.success("Claim denied")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to deny"),
   })
 
-  const { executeAsync: execNeedsInfo, isPending: needsInfoPending } = useAction(reviewLineageClaim, {
-    onSuccess: () => { toast.success("Info requested from claimant"); refresh() },
-    onError: ({ error }) => toast.error(error.serverError ?? "Failed to request info"),
-  })
+  const { executeAsync: execNeedsInfo, isPending: needsInfoPending } = useAction(
+    reviewLineageClaim,
+    {
+      onSuccess: () => {
+        toast.success("Info requested from claimant")
+        refresh()
+      },
+      onError: ({ error }) => toast.error(error.serverError ?? "Failed to request info"),
+    },
+  )
 
   const anyPending = approvePending || denyPending || needsInfoPending
   const isReviewable = claim.status === "PENDING" || claim.status === "NEEDS_INFO"
@@ -50,7 +62,8 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
     return (
       <div className="rounded-lg border bg-card p-4">
         <p className="text-sm text-muted-foreground">
-          This claim is <span className="font-semibold">{claim.status}</span> and cannot be reviewed.
+          This claim is <span className="font-semibold">{claim.status}</span> and cannot be
+          reviewed.
         </p>
       </div>
     )
@@ -75,7 +88,13 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           <Button
             variant="primary"
             disabled={anyPending}
-            onClick={() => execApprove({ claimId: claim.id, decision: "APPROVED", reviewerNote: reviewerNote || undefined })}
+            onClick={() =>
+              execApprove({
+                claimId: claim.id,
+                decision: "APPROVED",
+                reviewerNote: reviewerNote || undefined,
+              })
+            }
           >
             Approve
           </Button>
@@ -83,7 +102,13 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           <Button
             variant="secondary"
             disabled={anyPending}
-            onClick={() => execNeedsInfo({ claimId: claim.id, decision: "NEEDS_INFO", reviewerNote: reviewerNote || undefined })}
+            onClick={() =>
+              execNeedsInfo({
+                claimId: claim.id,
+                decision: "NEEDS_INFO",
+                reviewerNote: reviewerNote || undefined,
+              })
+            }
           >
             Request Info
           </Button>
@@ -91,7 +116,13 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           <Button
             variant="destructive"
             disabled={anyPending}
-            onClick={() => execDeny({ claimId: claim.id, decision: "DENIED", reviewerNote: reviewerNote || undefined })}
+            onClick={() =>
+              execDeny({
+                claimId: claim.id,
+                decision: "DENIED",
+                reviewerNote: reviewerNote || undefined,
+              })
+            }
           >
             Deny
           </Button>

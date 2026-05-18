@@ -54,9 +54,7 @@ export const setTestSession = (session: TestSessionUser | null) => {
   sessionState.current = session
 }
 
-export const installSafeActionMocks = (
-  options: SafeActionMockOptions = {},
-): SafeActionEnv => {
+export const installSafeActionMocks = (options: SafeActionMockOptions = {}): SafeActionEnv => {
   brandState.value = options.brand ?? "BASELINE_MARTIAL_ARTS"
   hostState.value = options.host ?? "baseline.local"
   sessionState.current = options.initialSession ?? null

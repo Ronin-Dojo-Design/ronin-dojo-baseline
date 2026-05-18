@@ -11,7 +11,8 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  connectionString:
+    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
 })
 const prisma = new PrismaClient({ adapter })
 
@@ -114,7 +115,9 @@ export async function seedTournamentFixture(): Promise<TournamentFixture> {
     userIds.push(user.id)
 
     await prisma.passport.create({ data: { userId: user.id, displayName: user.name! } })
-    await prisma.directoryProfile.create({ data: { userId: user.id, slug: `e2e-fighter-${TS}-${i}` } })
+    await prisma.directoryProfile.create({
+      data: { userId: user.id, slug: `e2e-fighter-${TS}-${i}` },
+    })
 
     const registration = await prisma.registration.create({
       data: {

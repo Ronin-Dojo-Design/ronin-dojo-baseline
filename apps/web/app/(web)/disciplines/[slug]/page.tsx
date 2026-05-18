@@ -1,6 +1,6 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
-import type { Metadata } from "next"
 import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
@@ -12,7 +12,11 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { generateCollectionPage } from "~/lib/structured-data"
-import { findDisciplineBySlug, findDisciplineVideos, findDisciplineMembersByRank } from "~/server/web/disciplines/queries"
+import {
+  findDisciplineBySlug,
+  findDisciplineMembersByRank,
+  findDisciplineVideos,
+} from "~/server/web/disciplines/queries"
 import { BlackBeltRail } from "../_components/black-belt-rail"
 import { ContentAtomsSection } from "../_components/content-atoms-section"
 import { CoursesSection } from "../_components/courses-section"
@@ -66,10 +70,19 @@ export default async function DisciplineDetailPage({ params }: Props) {
         <IntroTitle>{discipline.name}</IntroTitle>
         <IntroDescription>
           <Stack size="sm">
-            {discipline.code && <Badge variant="outline" size="lg">{discipline.code}</Badge>}
-            <span>{discipline._count.memberships} member{discipline._count.memberships !== 1 ? "s" : ""}</span>
+            {discipline.code && (
+              <Badge variant="outline" size="lg">
+                {discipline.code}
+              </Badge>
+            )}
+            <span>
+              {discipline._count.memberships} member{discipline._count.memberships !== 1 ? "s" : ""}
+            </span>
             <span>·</span>
-            <span>{discipline._count.organizations} organization{discipline._count.organizations !== 1 ? "s" : ""}</span>
+            <span>
+              {discipline._count.organizations} organization
+              {discipline._count.organizations !== 1 ? "s" : ""}
+            </span>
           </Stack>
         </IntroDescription>
       </Intro>
@@ -80,12 +93,14 @@ export default async function DisciplineDetailPage({ params }: Props) {
           <H4>Rank Systems ({discipline.rankSystems.length})</H4>
           {discipline.rankSystems.length > 0 ? (
             <div className="grid gap-3 @md:grid-cols-2 mt-4">
-              {discipline.rankSystems.map((rs) => (
+              {discipline.rankSystems.map(rs => (
                 <Card key={rs.id}>
                   <CardHeader>
                     <Stack size="sm">
                       <span className="font-medium">{rs.name}</span>
-                      <Badge variant="soft" size="sm">{rs.kind}</Badge>
+                      <Badge variant="soft" size="sm">
+                        {rs.kind}
+                      </Badge>
                       <span className="text-sm text-muted-foreground">{rs._count.ranks} ranks</span>
                     </Stack>
                   </CardHeader>
@@ -111,7 +126,9 @@ export default async function DisciplineDetailPage({ params }: Props) {
                       <Stack size="sm" direction="column">
                         <span className="font-medium">{org.name}</span>
                         <Stack size="xs" className="text-sm text-muted-foreground">
-                          <Badge variant="outline" size="sm">{org.type}</Badge>
+                          <Badge variant="outline" size="sm">
+                            {org.type}
+                          </Badge>
                           {(org.city || org.state) && (
                             <span>{[org.city, org.state].filter(Boolean).join(", ")}</span>
                           )}
@@ -134,8 +151,10 @@ export default async function DisciplineDetailPage({ params }: Props) {
           <Section.Content>
             <H4>Styles ({discipline.styles.length})</H4>
             <Stack size="sm" wrap className="mt-4">
-              {discipline.styles.map((style) => (
-                <Badge key={style.id} variant="soft">{style.name}</Badge>
+              {discipline.styles.map(style => (
+                <Badge key={style.id} variant="soft">
+                  {style.name}
+                </Badge>
               ))}
             </Stack>
           </Section.Content>
@@ -169,15 +188,13 @@ export default async function DisciplineDetailPage({ params }: Props) {
           <Section.Content>
             <H4>History</H4>
             <Stack size="sm" direction="column" className="mt-4">
-              {discipline.foundedBy && (
-                <FounderCarousel founders={discipline.foundedBy} />
-              )}
+              {discipline.foundedBy && <FounderCarousel founders={discipline.foundedBy} />}
               {discipline.yearEstablished && (
-                <p className="text-sm text-muted-foreground">Established {discipline.yearEstablished}</p>
+                <p className="text-sm text-muted-foreground">
+                  Established {discipline.yearEstablished}
+                </p>
               )}
-              {discipline.history && (
-                <p className="text-sm">{discipline.history}</p>
-              )}
+              {discipline.history && <p className="text-sm">{discipline.history}</p>}
             </Stack>
           </Section.Content>
         </Section>
@@ -239,7 +256,13 @@ export default async function DisciplineDetailPage({ params }: Props) {
       <StructuredData
         data={{
           "@context": "https://schema.org",
-          "@graph": [generateCollectionPage(`/disciplines/${discipline.slug}`, discipline.name, `${discipline.name} — rank systems, organizations, and training programs`)],
+          "@graph": [
+            generateCollectionPage(
+              `/disciplines/${discipline.slug}`,
+              discipline.name,
+              `${discipline.name} — rank systems, organizations, and training programs`,
+            ),
+          ],
         }}
       />
     </>

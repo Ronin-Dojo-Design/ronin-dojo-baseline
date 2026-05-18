@@ -1,9 +1,9 @@
-import { headers } from "next/headers"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import type { SearchParams } from "nuqs"
 import { Brand } from "~/.generated/prisma/client"
 import { DirectoryQuery } from "~/components/web/directory/directory-query"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 

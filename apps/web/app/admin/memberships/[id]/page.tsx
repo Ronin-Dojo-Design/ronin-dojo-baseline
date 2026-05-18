@@ -4,7 +4,7 @@ import { MembershipStatusActions } from "~/app/admin/memberships/[id]/_component
 import { RoleAssignmentPanel } from "~/app/admin/memberships/[id]/_components/role-assignment-panel"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
-import { H3, H4 } from "~/components/common/heading"
+import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Wrapper } from "~/components/common/wrapper"
@@ -30,9 +30,7 @@ export default withAdminPage(async ({ params }: { params: Promise<{ id: string }
 
   return (
     <Wrapper size="md" gap="sm">
-      <H3>
-        Membership — {membership.user.name ?? membership.user.email}
-      </H3>
+      <H3>Membership — {membership.user.name ?? membership.user.email}</H3>
 
       <MembershipStatusActions membership={membership} />
 
@@ -45,7 +43,7 @@ export default withAdminPage(async ({ params }: { params: Promise<{ id: string }
         <div>
           <Note className="text-muted-foreground text-xs">Organization</Note>
           <p>
-            <Link href={`/admin/organizations`}>{membership.organization.name}</Link>
+            <Link href={"/admin/organizations"}>{membership.organization.name}</Link>
           </p>
         </div>
         <div>

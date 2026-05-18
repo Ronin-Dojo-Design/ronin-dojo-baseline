@@ -1,6 +1,6 @@
 import { cache } from "react"
+import { directoryProfileOnePayload, passportOnePayload } from "~/server/web/passport/payloads"
 import { db } from "~/services/db"
-import { passportOnePayload, directoryProfileOnePayload } from "~/server/web/passport/payloads"
 
 /**
  * Fetch Passport + DirectoryProfile for a given user.

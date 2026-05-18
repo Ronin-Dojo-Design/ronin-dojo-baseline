@@ -14,10 +14,7 @@ const Tabs = TabsPrimitive.Root
 
 const TabsList = ({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) => (
   <TabsPrimitive.List
-    className={cx(
-      "inline-flex items-center gap-1 rounded-md bg-muted p-1",
-      className,
-    )}
+    className={cx("inline-flex items-center gap-1 rounded-md bg-muted p-1", className)}
     {...props}
   />
 )
@@ -37,12 +34,9 @@ const TabsTrigger = ({ className, ...props }: ComponentProps<typeof TabsPrimitiv
 
 const TabsContent = ({ className, ...props }: ComponentProps<typeof TabsPrimitive.Content>) => (
   <TabsPrimitive.Content
-    className={cx(
-      "mt-2 ring-offset-background focus-visible:outline-ring",
-      className,
-    )}
+    className={cx("mt-2 ring-offset-background focus-visible:outline-ring", className)}
     {...props}
   />
 )
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsContent, TabsList, TabsTrigger }

@@ -30,4 +30,4 @@ const CourseListSkeleton = ({ count = 6 }: { count?: number }) => {
   )
 }
 
-export { CourseList, CourseListSkeleton, type CourseListProps }
+export { CourseList, type CourseListProps, CourseListSkeleton }

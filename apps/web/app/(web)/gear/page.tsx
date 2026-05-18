@@ -7,12 +7,12 @@ import {
   type AffiliateGearViewSection,
 } from "~/components/web/tuffbuffs/affiliate-gear-browser"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/types/tuffbuffs-gear"
 import {
   findAffiliateProducts,
   findAllGearRecommendations,
   getMetadata,
 } from "~/server/web/affiliate-products/queries"
+import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/types/tuffbuffs-gear"
 
 export const revalidate = 3600
 

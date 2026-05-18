@@ -23,9 +23,7 @@ export const EmailMerchShipmentNotification = ({
     <EmailWrapper preview="Your TuffBuffs order has shipped! 📦" {...props}>
       <Text className="text-xl font-bold">Your order has shipped! 📦</Text>
 
-      <Text>
-        {greeting}, great news — your TuffBuffs merch is on its way!
-      </Text>
+      <Text>{greeting}, great news — your TuffBuffs merch is on its way!</Text>
 
       {(trackingNumber || carrier) && (
         <Section className="rounded-lg border border-solid border-gray-200 p-4 my-4">

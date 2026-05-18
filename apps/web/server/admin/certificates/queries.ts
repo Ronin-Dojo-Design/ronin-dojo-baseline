@@ -1,8 +1,8 @@
 import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
-import type { CertificatesTableSchema } from "~/server/admin/certificates/schema"
 import { getRequestBrand } from "~/lib/brand-context"
+import type { CertificatesTableSchema } from "~/server/admin/certificates/schema"
 import { db } from "~/services/db"
 
 export const findCertificateTemplates = async (

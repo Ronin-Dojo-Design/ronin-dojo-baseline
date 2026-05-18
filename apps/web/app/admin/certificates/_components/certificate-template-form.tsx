@@ -17,7 +17,13 @@ import {
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
@@ -244,7 +250,12 @@ export function CertificateTemplateForm({
             )}
           />
 
-          <Button type="submit" variant="primary" className="self-start" isPending={action.isPending}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="self-start"
+            isPending={action.isPending}
+          >
             {template ? "Update template" : "Create template"}
           </Button>
         </Stack>

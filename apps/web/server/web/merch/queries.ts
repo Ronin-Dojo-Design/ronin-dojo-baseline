@@ -1,7 +1,6 @@
-import type { Prisma } from "~/.generated/prisma/client"
-import { type Brand, FulfillmentStatus } from "~/.generated/prisma/client"
 import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
+import type { Brand, FulfillmentStatus, Prisma } from "~/.generated/prisma/client"
 import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 

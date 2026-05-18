@@ -34,7 +34,13 @@ type InviteFormProps = ComponentProps<"form"> & {
   title?: string
 }
 
-export function InviteForm({ children, className, title, organizations, ...props }: InviteFormProps) {
+export function InviteForm({
+  children,
+  className,
+  title,
+  organizations,
+  ...props
+}: InviteFormProps) {
   const router = useRouter()
   const resolver = zodResolver(inviteSchema)
 

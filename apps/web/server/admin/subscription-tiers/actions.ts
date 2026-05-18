@@ -3,8 +3,8 @@
 import { after } from "next/server"
 import { getRequestBrand } from "~/lib/brand-context"
 import { adminActionClient } from "~/lib/safe-actions"
-import { subscriptionTierSchema } from "~/server/admin/subscription-tiers/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
+import { subscriptionTierSchema } from "~/server/admin/subscription-tiers/schema"
 
 export const upsertSubscriptionTier = adminActionClient
   .inputSchema(subscriptionTierSchema)

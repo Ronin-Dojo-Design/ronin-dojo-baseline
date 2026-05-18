@@ -8,9 +8,9 @@
 import { after } from "next/server"
 import * as z from "zod"
 import { Prisma } from "~/.generated/prisma/client"
-import { adminActionClient } from "~/lib/safe-actions"
-import { sendEmail } from "~/lib/email"
 import { EmailInviteNotification } from "~/emails/invite-notification"
+import { sendEmail } from "~/lib/email"
+import { adminActionClient } from "~/lib/safe-actions"
 import { inviteSchema } from "~/server/admin/invites/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
 

@@ -39,4 +39,4 @@ const SchoolListingSkeleton = () => {
   )
 }
 
-export { SchoolListing, SchoolListingSkeleton, type SchoolListingProps }
+export { SchoolListing, type SchoolListingProps, SchoolListingSkeleton }

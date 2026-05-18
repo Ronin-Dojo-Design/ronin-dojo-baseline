@@ -166,8 +166,8 @@ export const findDisciplineVideos = async (disciplineId: string) => {
     },
   })
 
-  return atoms.flatMap((atom) =>
-    atom.variants.map((v) => ({
+  return atoms.flatMap(atom =>
+    atom.variants.map(v => ({
       id: v.id,
       title: v.publicTitle ?? atom.title,
       thumbnailUrl: v.thumbnailUrl,
@@ -217,7 +217,7 @@ export const findDisciplineMembersByRank = async (disciplineId: string) => {
     take: 50,
   })
 
-  return memberships.map((m) => ({
+  return memberships.map(m => ({
     id: m.id,
     name: m.user.passport?.displayName ?? null,
     rankName: m.rank!.name,

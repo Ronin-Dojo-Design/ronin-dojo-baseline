@@ -16,12 +16,10 @@ import { getSortingStateParser } from "~/lib/parsers"
 
 export const invitesTableParamsSchema = {
   code: parseAsString.withDefault(""),
-  status: parseAsArrayOf(
-    parseAsStringEnum<InviteStatus>(Object.values(InviteStatus)),
-  ).withDefault([]),
-  type: parseAsArrayOf(
-    parseAsStringEnum<InviteType>(Object.values(InviteType)),
-  ).withDefault([]),
+  status: parseAsArrayOf(parseAsStringEnum<InviteStatus>(Object.values(InviteStatus))).withDefault(
+    [],
+  ),
+  type: parseAsArrayOf(parseAsStringEnum<InviteType>(Object.values(InviteType))).withDefault([]),
   organizationId: parseAsString.withDefault(""),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(25),

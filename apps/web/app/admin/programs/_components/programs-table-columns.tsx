@@ -1,13 +1,13 @@
 "use client"
 
+import { formatDateTime } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Program } from "~/.generated/prisma/browser"
 import { ProgramActions } from "~/app/admin/programs/_components/program-actions"
-import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
-import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import { formatDateTime } from "@primoui/utils"
+import { Link } from "~/components/common/link"
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 
 export type ProgramRow = Program & {
   organization: { name: string; id: string }
@@ -21,7 +21,10 @@ export function getColumns(): ColumnDef<ProgramRow>[] {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
           onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -81,9 +84,7 @@ export function getColumns(): ColumnDef<ProgramRow>[] {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <ProgramActions program={row.original as Program} />
-      ),
+      cell: ({ row }) => <ProgramActions program={row.original as Program} />,
     },
   ]
 }

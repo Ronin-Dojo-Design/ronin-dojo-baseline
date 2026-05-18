@@ -1,8 +1,8 @@
-import { Suspense } from "react"
 import type { SearchParams } from "nuqs"
-import { SchoolQuery } from "~/components/web/schools/school-query"
+import { Suspense } from "react"
 import { SchoolListingSkeleton } from "~/components/web/schools/school-listing"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { SchoolQuery } from "~/components/web/schools/school-query"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getRequestBrand } from "~/lib/brand-context"
 
 export const metadata = {
@@ -21,9 +21,7 @@ export default async function SchoolsPage({ searchParams }: PageProps) {
     <>
       <Intro>
         <IntroTitle>School Directory</IntroTitle>
-        <IntroDescription>
-          Find dojos, gyms, and academies in our network.
-        </IntroDescription>
+        <IntroDescription>Find dojos, gyms, and academies in our network.</IntroDescription>
       </Intro>
 
       <Suspense fallback={<SchoolListingSkeleton />}>

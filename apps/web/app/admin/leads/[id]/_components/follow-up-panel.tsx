@@ -2,15 +2,14 @@
 
 import { formatDate } from "@primoui/utils"
 import { CheckCircleIcon, PlusIcon } from "lucide-react"
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
 import { completeFollowUp, createFollowUp } from "~/server/admin/leads/actions"
 import type { LeadDetail } from "~/server/admin/leads/queries"
@@ -65,7 +64,9 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
         <div className="grid gap-3 mb-6 p-4 rounded border bg-muted/50">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="followup-channel" className="text-sm font-medium">Channel *</label>
+              <label htmlFor="followup-channel" className="text-sm font-medium">
+                Channel *
+              </label>
               <select
                 id="followup-channel"
                 title="Follow-up channel"
@@ -81,19 +82,21 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
               </select>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Scheduled</label>
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps custom Input form control */}
+            <label className="block">
+              <span className="text-sm font-medium">Scheduled</span>
               <Input
                 type="datetime-local"
                 value={scheduledAt}
                 onChange={e => setScheduledAt(e.target.value)}
                 className="mt-1"
               />
-            </div>
+            </label>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Notes</label>
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps custom TextArea form control */}
+          <label className="block">
+            <span className="text-sm font-medium">Notes</span>
             <TextArea
               placeholder="Follow-up notes..."
               rows={2}
@@ -101,7 +104,7 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
               onChange={e => setNotes(e.target.value)}
               className="mt-1"
             />
-          </div>
+          </label>
 
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="secondary" onClick={() => setShowForm(false)}>
@@ -126,22 +129,15 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
         </div>
       )}
 
-      {lead.followUps.length === 0 && !showForm && (
-        <Note>No follow-ups yet.</Note>
-      )}
+      {lead.followUps.length === 0 && !showForm && <Note>No follow-ups yet.</Note>}
 
       <div className="space-y-3">
         {lead.followUps.map(fu => (
-          <div
-            key={fu.id}
-            className="flex items-start justify-between rounded border p-3 text-sm"
-          >
+          <div key={fu.id} className="flex items-start justify-between rounded border p-3 text-sm">
             <div>
               <div className="font-medium">
                 {fu.channel.replace(/_/g, " ")}
-                {fu.completedAt && (
-                  <span className="ml-2 text-green-600 text-xs">✓ Completed</span>
-                )}
+                {fu.completedAt && <span className="ml-2 text-green-600 text-xs">✓ Completed</span>}
               </div>
               {fu.notes && <Note className="mt-1">{fu.notes}</Note>}
               <Note className="mt-1">

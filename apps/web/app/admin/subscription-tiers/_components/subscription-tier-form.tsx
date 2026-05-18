@@ -122,11 +122,7 @@ export function SubscriptionTierForm({
             <FormItem>
               <FormLabel>Code</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="e.g. gold-tier"
-                  className="font-mono text-sm"
-                  {...field}
-                />
+                <Input placeholder="e.g. gold-tier" className="font-mono text-sm" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -140,7 +136,13 @@ export function SubscriptionTierForm({
             <FormItem>
               <FormLabel>Level</FormLabel>
               <FormControl>
-                <Input type="number" min={0} placeholder="0" {...field} value={field.value as number ?? ""} />
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  {...field}
+                  value={(field.value as number) ?? ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -168,10 +170,7 @@ export function SubscriptionTierForm({
             <FormItem className="col-span-full">
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <TextArea
-                  placeholder="What does this tier include?"
-                  {...field}
-                />
+                <TextArea placeholder="What does this tier include?" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

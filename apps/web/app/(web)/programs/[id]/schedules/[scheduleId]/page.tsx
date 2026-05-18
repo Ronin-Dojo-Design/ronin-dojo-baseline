@@ -1,4 +1,4 @@
-import { CalendarSyncIcon, PencilIcon } from "lucide-react"
+import { PencilIcon } from "lucide-react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
@@ -9,16 +9,13 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
 import { MaterializeScheduleButton } from "~/components/web/schedules/materialize-schedule-button"
 import { ScheduleInstructorList } from "~/components/web/schedules/schedule-instructor-list"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
-import {
-  getEditableInstructors,
-  getScheduleById,
-} from "~/server/web/schedule/queries"
+import { getEditableInstructors, getScheduleById } from "~/server/web/schedule/queries"
 
 interface Props {
   params: Promise<{ id: string; scheduleId: string }>
@@ -135,10 +132,7 @@ export default async function ScheduleDetailPage({ params }: Props) {
                         <span>
                           {s.date.toISOString().slice(0, 10)} · {s.startTime}–{s.endTime}
                         </span>
-                        <Badge
-                          variant={s.status === "CANCELLED" ? "danger" : "outline"}
-                          size="sm"
-                        >
+                        <Badge variant={s.status === "CANCELLED" ? "danger" : "outline"} size="sm">
                           {s.status}
                         </Badge>
                       </li>

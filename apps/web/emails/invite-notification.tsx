@@ -5,8 +5,8 @@
  */
 import "dotenv/config"
 
-import { Text } from "@react-email/components"
 import { formatDate } from "@primoui/utils"
+import { Text } from "@react-email/components"
 import { siteConfig } from "~/config/site"
 import { EmailButton } from "~/emails/components/button"
 import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
@@ -27,7 +27,9 @@ export const EmailInviteNotification = ({
 
   return (
     <EmailWrapper {...props} preview={`You've been invited to join ${organizationName}`}>
-      <Text>You've been invited to join <strong>{organizationName}</strong> on {siteConfig.name}!</Text>
+      <Text>
+        You've been invited to join <strong>{organizationName}</strong> on {siteConfig.name}!
+      </Text>
 
       <Text>Click the button below to accept your invitation and become a member.</Text>
 
@@ -35,7 +37,9 @@ export const EmailInviteNotification = ({
 
       <Text>or copy and paste this URL into your browser:</Text>
 
-      <Text className="max-w-sm flex-wrap wrap-break-word font-medium leading-snug">{inviteUrl}</Text>
+      <Text className="max-w-sm flex-wrap wrap-break-word font-medium leading-snug">
+        {inviteUrl}
+      </Text>
 
       {expiresAt && (
         <Text className="text-sm text-muted-foreground">

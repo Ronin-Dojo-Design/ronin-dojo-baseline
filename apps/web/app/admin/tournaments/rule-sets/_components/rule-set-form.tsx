@@ -7,8 +7,8 @@ import type { ComponentProps } from "react"
 import { toast } from "sonner"
 import { ScoringMethod } from "~/.generated/prisma/browser"
 import { RuleSetActions } from "~/app/admin/tournaments/rule-sets/_components/rule-set-actions"
-import { Button } from "~/components/common/button"
 import { ComboboxSelector } from "~/components/admin/combobox-selector"
+import { Button } from "~/components/common/button"
 import {
   Form,
   FormControl,

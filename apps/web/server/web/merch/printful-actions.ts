@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "~/services/db"
-import { createOrder, type PrintfulRecipient, type PrintfulOrderItem } from "~/services/printful"
+import { createOrder, type PrintfulOrderItem, type PrintfulRecipient } from "~/services/printful"
 
 // ---------------------------------------------------------------------------
 // Printful Variant Mapping
@@ -34,32 +34,32 @@ const PRINTFUL_VARIANT_MAP: Record<string, Record<string, Record<string, number>
   // Cotton T-Shirts — Bella+Canvas 3001 (Printful product 71)
   // ──────────────────────────────────────────────────────────────
   "tb-tshirt-classic-black": {
-    "S":   { "Black": 4016, "Gold": 4081 },
-    "M":   { "Black": 4017, "Gold": 4082 },
-    "L":   { "Black": 4018, "Gold": 4083 },
-    "XL":  { "Black": 4019, "Gold": 4084 },
-    "2XL": { "Black": 4020, "Gold": 4085 },
+    S: { Black: 4016, Gold: 4081 },
+    M: { Black: 4017, Gold: 4082 },
+    L: { Black: 4018, Gold: 4083 },
+    XL: { Black: 4019, Gold: 4084 },
+    "2XL": { Black: 4020, Gold: 4085 },
   },
   "tb-tshirt-muaythai": {
-    "S":   { "Black": 4016, "Red": 4141 },
-    "M":   { "Black": 4017, "Red": 4142 },
-    "L":   { "Black": 4018, "Red": 4143 },
-    "XL":  { "Black": 4019, "Red": 4144 },
-    "2XL": { "Black": 4020, "Red": 4145 },
+    S: { Black: 4016, Red: 4141 },
+    M: { Black: 4017, Red: 4142 },
+    L: { Black: 4018, Red: 4143 },
+    XL: { Black: 4019, Red: 4144 },
+    "2XL": { Black: 4020, Red: 4145 },
   },
   "tb-tshirt-boxing": {
-    "S":   { "Black": 4016, "Gold": 4081 },
-    "M":   { "Black": 4017, "Gold": 4082 },
-    "L":   { "Black": 4018, "Gold": 4083 },
-    "XL":  { "Black": 4019, "Gold": 4084 },
-    "2XL": { "Black": 4020, "Gold": 4085 },
+    S: { Black: 4016, Gold: 4081 },
+    M: { Black: 4017, Gold: 4082 },
+    L: { Black: 4018, Gold: 4083 },
+    XL: { Black: 4019, Gold: 4084 },
+    "2XL": { Black: 4020, Gold: 4085 },
   },
   "tb-tshirt-eskrima": {
-    "S":   { "Black": 4016, "Red": 4141, "Navy": 4111, "Yellow": 4181, "White": 4011 },
-    "M":   { "Black": 4017, "Red": 4142, "Navy": 4112, "Yellow": 4182, "White": 4012 },
-    "L":   { "Black": 4018, "Red": 4143, "Navy": 4113, "Yellow": 4183, "White": 4013 },
-    "XL":  { "Black": 4019, "Red": 4144, "Navy": 4114, "Yellow": 4184, "White": 4014 },
-    "2XL": { "Black": 4020, "Red": 4145, "Navy": 4115, "Yellow": 4185, "White": 4015 },
+    S: { Black: 4016, Red: 4141, Navy: 4111, Yellow: 4181, White: 4011 },
+    M: { Black: 4017, Red: 4142, Navy: 4112, Yellow: 4182, White: 4012 },
+    L: { Black: 4018, Red: 4143, Navy: 4113, Yellow: 4183, White: 4013 },
+    XL: { Black: 4019, Red: 4144, Navy: 4114, Yellow: 4184, White: 4014 },
+    "2XL": { Black: 4020, Red: 4145, Navy: 4115, Yellow: 4185, White: 4015 },
   },
 
   // ──────────────────────────────────────────────────────────────
@@ -67,36 +67,36 @@ const PRINTFUL_VARIANT_MAP: Record<string, Record<string, Record<string, number>
   // Moisture-wicking material
   // ──────────────────────────────────────────────────────────────
   "tb-athletic-tshirt-men": {
-    "S":   { "Black": 17004, "White": 17053 },
-    "M":   { "Black": 17005, "White": 17054 },
-    "L":   { "Black": 17006, "White": 17055 },
-    "XL":  { "Black": 17007, "White": 17056 },
-    "2XL": { "Black": 17008, "White": 17057 },
+    S: { Black: 17004, White: 17053 },
+    M: { Black: 17005, White: 17054 },
+    L: { Black: 17006, White: 17055 },
+    XL: { Black: 17007, White: 17056 },
+    "2XL": { Black: 17008, White: 17057 },
   },
   "tb-athletic-tshirt-womens": {
-    "S":   { "Black": 17004, "White": 17053 },
-    "M":   { "Black": 17005, "White": 17054 },
-    "L":   { "Black": 17006, "White": 17055 },
-    "XL":  { "Black": 17007, "White": 17056 },
-    "2XL": { "Black": 17008, "White": 17057 },
+    S: { Black: 17004, White: 17053 },
+    M: { Black: 17005, White: 17054 },
+    L: { Black: 17006, White: 17055 },
+    XL: { Black: 17007, White: 17056 },
+    "2XL": { Black: 17008, White: 17057 },
   },
 
   // ──────────────────────────────────────────────────────────────
   // Hoodies — Bella+Canvas 3719 (Printful product 294)
   // ──────────────────────────────────────────────────────────────
   "tb-hoodie-womens": {
-    "S":   { "Black": 9227 },
-    "M":   { "Black": 9228 },
-    "L":   { "Black": 9229 },
-    "XL":  { "Black": 9230 },
-    "2XL": { "Black": 9231 },
+    S: { Black: 9227 },
+    M: { Black: 9228 },
+    L: { Black: 9229 },
+    XL: { Black: 9230 },
+    "2XL": { Black: 9231 },
   },
   "tb-hoodie-mens": {
-    "S":   { "Black": 9227 },
-    "M":   { "Black": 9228 },
-    "L":   { "Black": 9229 },
-    "XL":  { "Black": 9230 },
-    "2XL": { "Black": 9231 },
+    S: { Black: 9227 },
+    M: { Black: 9228 },
+    L: { Black: 9229 },
+    XL: { Black: 9230 },
+    "2XL": { Black: 9231 },
   },
 
   // ──────────────────────────────────────────────────────────────
@@ -106,39 +106,39 @@ const PRINTFUL_VARIANT_MAP: Record<string, Record<string, Record<string, number>
   // All variants use the White base; design applied via print files.
   // ──────────────────────────────────────────────────────────────
   "tb-long-sleeve-rash-guard": {
-    "S":   { "Black": 9327, "Gold": 9327 },
-    "M":   { "Black": 9328, "Gold": 9328 },
-    "L":   { "Black": 9329, "Gold": 9329 },
-    "XL":  { "Black": 9330, "Gold": 9330 },
-    "2XL": { "Black": 9331, "Gold": 9331 },
+    S: { Black: 9327, Gold: 9327 },
+    M: { Black: 9328, Gold: 9328 },
+    L: { Black: 9329, Gold: 9329 },
+    XL: { Black: 9330, Gold: 9330 },
+    "2XL": { Black: 9331, Gold: 9331 },
   },
   "tb-rg-ranked-white": {
-    "S":   { "White": 9327 },
-    "M":   { "White": 9328 },
-    "L":   { "White": 9329 },
-    "XL":  { "White": 9330 },
-    "2XL": { "White": 9331 },
+    S: { White: 9327 },
+    M: { White: 9328 },
+    L: { White: 9329 },
+    XL: { White: 9330 },
+    "2XL": { White: 9331 },
   },
   "tb-rg-ranked-black": {
-    "S":   { "Black": 9327 },
-    "M":   { "Black": 9328 },
-    "L":   { "Black": 9329 },
-    "XL":  { "Black": 9330 },
-    "2XL": { "Black": 9331 },
+    S: { Black: 9327 },
+    M: { Black: 9328 },
+    L: { Black: 9329 },
+    XL: { Black: 9330 },
+    "2XL": { Black: 9331 },
   },
   "tb-rg-nogi": {
-    "S":   { "Black/Gold": 9327 },
-    "M":   { "Black/Gold": 9328 },
-    "L":   { "Black/Gold": 9329 },
-    "XL":  { "Black/Gold": 9330 },
+    S: { "Black/Gold": 9327 },
+    M: { "Black/Gold": 9328 },
+    L: { "Black/Gold": 9329 },
+    XL: { "Black/Gold": 9330 },
     "2XL": { "Black/Gold": 9331 },
   },
   "tb-rg-shortsleeve": {
-    "S":   { "Black": 9327, "Gold": 9327 },
-    "M":   { "Black": 9328, "Gold": 9328 },
-    "L":   { "Black": 9329, "Gold": 9329 },
-    "XL":  { "Black": 9330, "Gold": 9330 },
-    "2XL": { "Black": 9331, "Gold": 9331 },
+    S: { Black: 9327, Gold: 9327 },
+    M: { Black: 9328, Gold: 9328 },
+    L: { Black: 9329, Gold: 9329 },
+    XL: { Black: 9330, Gold: 9330 },
+    "2XL": { Black: 9331, Gold: 9331 },
   },
 
   // ──────────────────────────────────────────────────────────────

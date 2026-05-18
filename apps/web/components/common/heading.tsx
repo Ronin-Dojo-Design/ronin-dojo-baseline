@@ -67,4 +67,4 @@ const H6 = (props: HeadingProps) => {
   return <Heading size="h6" {...props} />
 }
 
-export { Heading, H1, H2, H3, H4, H5, H6 }
+export { H1, H2, H3, H4, H5, H6, Heading }

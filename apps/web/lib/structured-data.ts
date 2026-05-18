@@ -1,4 +1,3 @@
-import type { Post } from "~/.generated/prisma/client"
 import type {
   AboutPage,
   AggregateRating,
@@ -14,6 +13,7 @@ import type {
   WebPage,
   WebSite,
 } from "schema-dts"
+import type { Post } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import type { ToolMany, ToolOne } from "~/server/web/tools/payloads"
 
@@ -217,7 +217,10 @@ export const generateFAQ = (questions: Array<{ question: string; answer: string 
 /**
  * Generates article/blog posting schema
  */
-export const generateArticle = (url: string, post: Post & { author?: { name: string; image?: string | null } | null }): Article => {
+export const generateArticle = (
+  url: string,
+  post: Post & { author?: { name: string; image?: string | null } | null },
+): Article => {
   const { title, description, publishedAt, author, imageUrl, content } = post
 
   return {

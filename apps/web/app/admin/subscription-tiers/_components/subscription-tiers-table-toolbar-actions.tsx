@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { SubscriptionTierRow } from "~/app/admin/subscription-tiers/_components/subscription-tiers-table-columns"
 import { SubscriptionTiersDeleteDialog } from "~/app/admin/subscription-tiers/_components/subscription-tiers-delete-dialog"
+import type { SubscriptionTierRow } from "~/app/admin/subscription-tiers/_components/subscription-tiers-table-columns"
 import { Button } from "~/components/common/button"
 
 interface SubscriptionTiersTableToolbarActionsProps {

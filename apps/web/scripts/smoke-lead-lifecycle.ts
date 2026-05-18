@@ -45,7 +45,7 @@ async function main() {
   assert(lead.status === "NEW", "Lead should be NEW")
 
   // 2. Create follow-up → should transition to CONTACTED
-  const followUp = await db.leadFollowUp.create({
+  const _followUp = await db.leadFollowUp.create({
     data: { leadId: lead.id, channel: "PHONE", notes: "Smoke test call" },
   })
   await db.lead.updateMany({
@@ -88,7 +88,7 @@ async function main() {
   // Cleanup
   await db.leadFollowUp.deleteMany({ where: { leadId: lead.id } })
   await db.lead.delete({ where: { id: lead.id } })
-  console.log(`\n✅ Cleanup done. All assertions passed.`)
+  console.log("\n✅ Cleanup done. All assertions passed.")
   console.log("🥋 Smoke test complete — lead lifecycle works end-to-end.\n")
 }
 

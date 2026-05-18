@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 import { type ComponentProps, use, useMemo } from "react"
 import { toast } from "sonner"
 import { PricingPlanActions } from "~/app/admin/pricing-plans/_components/pricing-plan-actions"
-import { RelationSelector } from "~/components/admin/relation-selector"
 import { ComboboxSelector } from "~/components/admin/combobox-selector"
+import { RelationSelector } from "~/components/admin/relation-selector"
 import { Button } from "~/components/common/button"
 import {
   Form,
@@ -30,10 +30,14 @@ import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
 import { cx } from "~/lib/utils"
-import { upsertPricingPlan } from "~/server/admin/pricing-plans/actions"
-import type { findPricingPlanById, findOrganizationList, findProgramList } from "~/server/admin/pricing-plans/queries"
-import { pricingPlanSchema } from "~/server/admin/pricing-plans/schema"
 import type { findEntitlementList } from "~/server/admin/entitlements/queries"
+import { upsertPricingPlan } from "~/server/admin/pricing-plans/actions"
+import type {
+  findOrganizationList,
+  findPricingPlanById,
+  findProgramList,
+} from "~/server/admin/pricing-plans/queries"
+import { pricingPlanSchema } from "~/server/admin/pricing-plans/schema"
 
 type PricingPlanFormProps = ComponentProps<"form"> & {
   title: string
@@ -82,46 +86,42 @@ export function PricingPlanForm({
     }
   }, [pricingPlan])
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    upsertPricingPlan,
-    resolver,
-    {
-      formProps: {
-        defaultValues: {
-          id: pricingPlan?.id ?? "",
-          name: pricingPlan?.name ?? "",
-          pricingModel: pricingPlan?.pricingModel ?? "MONTHLY",
-          amountCents: pricingPlan?.amountCents ?? 0,
-          currency: pricingPlan?.currency ?? "USD",
-          intervalMonths: pricingPlan?.intervalMonths ?? null,
-          classCount: pricingPlan?.classCount ?? null,
-          trialDays: pricingPlan?.trialDays ?? null,
-          isActive: pricingPlan?.isActive ?? true,
-          sortOrder: pricingPlan?.sortOrder ?? 0,
-          stripeProductId: pricingPlan?.stripeProductId ?? "",
-          stripePriceId: pricingPlan?.stripePriceId ?? "",
-          organizationId: pricingPlan?.organizationId ?? "",
-          programId: pricingPlan?.programId ?? "",
-          entitlementIds: pricingPlan?.entitlementGrants.map(g => g.entitlementId) ?? [],
-          punchCardSize: pricingPlan?.punchCardSize ?? null,
-          bonusSessions: pricingPlan?.bonusSessions ?? null,
-          isPrivateLesson: pricingPlan?.isPrivateLesson ?? false,
-          metadata: pricingPlan?.metadata ? JSON.stringify(pricingPlan.metadata, null, 2) : "",
-        },
-      },
-
-      actionProps: {
-        onSuccess: ({ data }) => {
-          toast.success(`Pricing plan successfully ${pricingPlan ? "updated" : "created"}`)
-          router.push(`/admin/pricing-plans/${data?.id}`)
-        },
-
-        onError: ({ error }) => {
-          toast.error(error.serverError)
-        },
+  const { form, action, handleSubmitWithAction } = useHookFormAction(upsertPricingPlan, resolver, {
+    formProps: {
+      defaultValues: {
+        id: pricingPlan?.id ?? "",
+        name: pricingPlan?.name ?? "",
+        pricingModel: pricingPlan?.pricingModel ?? "MONTHLY",
+        amountCents: pricingPlan?.amountCents ?? 0,
+        currency: pricingPlan?.currency ?? "USD",
+        intervalMonths: pricingPlan?.intervalMonths ?? null,
+        classCount: pricingPlan?.classCount ?? null,
+        trialDays: pricingPlan?.trialDays ?? null,
+        isActive: pricingPlan?.isActive ?? true,
+        sortOrder: pricingPlan?.sortOrder ?? 0,
+        stripeProductId: pricingPlan?.stripeProductId ?? "",
+        stripePriceId: pricingPlan?.stripePriceId ?? "",
+        organizationId: pricingPlan?.organizationId ?? "",
+        programId: pricingPlan?.programId ?? "",
+        entitlementIds: pricingPlan?.entitlementGrants.map(g => g.entitlementId) ?? [],
+        punchCardSize: pricingPlan?.punchCardSize ?? null,
+        bonusSessions: pricingPlan?.bonusSessions ?? null,
+        isPrivateLesson: pricingPlan?.isPrivateLesson ?? false,
+        metadata: pricingPlan?.metadata ? JSON.stringify(pricingPlan.metadata, null, 2) : "",
       },
     },
-  )
+
+    actionProps: {
+      onSuccess: ({ data }) => {
+        toast.success(`Pricing plan successfully ${pricingPlan ? "updated" : "created"}`)
+        router.push(`/admin/pricing-plans/${data?.id}`)
+      },
+
+      onError: ({ error }) => {
+        toast.error(error.serverError)
+      },
+    },
+  })
 
   const selectedModel = form.watch("pricingModel")
   const showPunchCardFields = selectedModel === "PUNCH_CARD"
@@ -241,7 +241,13 @@ export function PricingPlanForm({
             <FormItem>
               <FormLabel>Amount (cents)</FormLabel>
               <FormControl>
-                <Input type="number" min={0} placeholder="e.g. 9900 = $99.00" {...field} value={field.value as number} />
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 9900 = $99.00"
+                  {...field}
+                  value={field.value as number}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -396,7 +402,13 @@ export function PricingPlanForm({
             <FormItem>
               <FormLabel>Sort Order</FormLabel>
               <FormControl>
-                <Input type="number" min={0} placeholder="0" {...field} value={field.value as number} />
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  {...field}
+                  value={field.value as number}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -453,10 +465,13 @@ export function PricingPlanForm({
           <div className="space-y-3 rounded-lg border bg-muted/30 p-4 sm:col-span-2">
             <H3 className="text-sm">Merch Product Settings</H3>
             <p className="text-xs text-muted-foreground">
-              These fields are stored in the metadata JSON. Edit the JSON directly below for advanced changes.
+              These fields are stored in the metadata JSON. Edit the JSON directly below for
+              advanced changes.
             </p>
             <Stack size="sm" className="flex-wrap text-xs text-secondary-foreground">
-              <span>Edit sizes, colors, features, stock, and category in the Metadata JSON field below.</span>
+              <span>
+                Edit sizes, colors, features, stock, and category in the Metadata JSON field below.
+              </span>
             </Stack>
           </div>
         )}

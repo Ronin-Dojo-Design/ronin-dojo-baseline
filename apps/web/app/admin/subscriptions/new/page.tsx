@@ -10,7 +10,11 @@ export default withAdminPage(() => {
 
   return (
     <Wrapper size="md" gap="sm">
-      <SubscriptionForm title="Create subscription" tiersPromise={tiersPromise} usersPromise={usersPromise} />
+      <SubscriptionForm
+        title="Create subscription"
+        tiersPromise={tiersPromise}
+        usersPromise={usersPromise}
+      />
     </Wrapper>
   )
 })

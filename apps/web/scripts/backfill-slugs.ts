@@ -9,7 +9,7 @@
 
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../.generated/prisma/client.js"
-import { slugify, generateUniqueProfileSlug } from "../lib/slug"
+import { generateUniqueProfileSlug, slugify } from "../lib/slug"
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
@@ -25,16 +25,13 @@ async function backfillProfileSlugs() {
   console.log(`[DirectoryProfile] Found ${profiles.length} rows with null slug`)
 
   for (const profile of profiles) {
-    const slug = await generateUniqueProfileSlug(
-      profile.user.name ?? "user",
-      async (candidate) => {
-        const existing = await prisma.directoryProfile.findUnique({
-          where: { slug: candidate },
-          select: { id: true },
-        })
-        return existing !== null
-      },
-    )
+    const slug = await generateUniqueProfileSlug(profile.user.name ?? "user", async candidate => {
+      const existing = await prisma.directoryProfile.findUnique({
+        where: { slug: candidate },
+        select: { id: true },
+      })
+      return existing !== null
+    })
 
     await prisma.directoryProfile.update({
       where: { id: profile.id },
@@ -52,10 +49,12 @@ async function backfillOrgSlugs() {
   })
 
   // Also check for null slugs if schema allows
-  const nullOrgs = await prisma.organization.findMany({
-    where: { slug: { equals: null as any } },
-    select: { id: true, name: true },
-  }).catch(() => [])
+  const nullOrgs = await prisma.organization
+    .findMany({
+      where: { slug: { equals: null as any } },
+      select: { id: true, name: true },
+    })
+    .catch(() => [])
 
   const allOrgs = [...orgs, ...nullOrgs]
   console.log(`[Organization] Found ${allOrgs.length} rows with empty/null slug`)

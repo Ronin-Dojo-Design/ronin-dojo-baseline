@@ -2,17 +2,15 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { EntitlementRow } from "~/app/admin/entitlements/_components/entitlements-table-columns"
 import { EntitlementsDeleteDialog } from "~/app/admin/entitlements/_components/entitlements-delete-dialog"
+import type { EntitlementRow } from "~/app/admin/entitlements/_components/entitlements-table-columns"
 import { Button } from "~/components/common/button"
 
 interface EntitlementsTableToolbarActionsProps {
   table: Table<EntitlementRow>
 }
 
-export function EntitlementsTableToolbarActions({
-  table,
-}: EntitlementsTableToolbarActionsProps) {
+export function EntitlementsTableToolbarActions({ table }: EntitlementsTableToolbarActionsProps) {
   const { rows } = table.getFilteredSelectedRowModel()
 
   if (!rows.length) {

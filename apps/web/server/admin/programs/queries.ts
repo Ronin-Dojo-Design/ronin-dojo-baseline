@@ -1,11 +1,14 @@
 import { isTruthy } from "@primoui/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
-import type { ProgramsTableSchema } from "~/server/admin/programs/schema"
 import { getRequestBrand } from "~/lib/brand-context"
+import type { ProgramsTableSchema } from "~/server/admin/programs/schema"
 import { db } from "~/services/db"
 
-export const findPrograms = async (search: ProgramsTableSchema, where?: Prisma.ProgramWhereInput) => {
+export const findPrograms = async (
+  search: ProgramsTableSchema,
+  where?: Prisma.ProgramWhereInput,
+) => {
   const { name, status, sort, page, perPage, from, to, operator } = search
   const brand = await getRequestBrand()
 

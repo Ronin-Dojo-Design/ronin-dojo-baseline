@@ -1,8 +1,8 @@
-import { Suspense } from "react"
 import type { SearchParams } from "nuqs"
-import { MemberQuery } from "~/components/web/members/member-query"
+import { Suspense } from "react"
 import { MemberListingSkeleton } from "~/components/web/members/member-listing"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { MemberQuery } from "~/components/web/members/member-query"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 

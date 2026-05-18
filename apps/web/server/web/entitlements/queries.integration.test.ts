@@ -19,7 +19,7 @@ import { db } from "~/services/db"
 
 // Inline replicas of query logic without "use cache" wrapper (requires Next.js runtime)
 
-async function queryHasEntitlement(
+async function _queryHasEntitlement(
   userId: string,
   entitlementKey: string,
   brand: "BASELINE_MARTIAL_ARTS",
@@ -226,7 +226,7 @@ describe("canUploadMedia", () => {
     if (!discipline) throw new Error("No disciplines seeded")
 
     // Find or create INSTRUCTOR role
-    let role = await db.role.findFirst({ where: { code: "INSTRUCTOR" } })
+    const role = await db.role.findFirst({ where: { code: "INSTRUCTOR" } })
     if (!role) throw new Error("No INSTRUCTOR role seeded")
 
     const membership = await db.membership.create({

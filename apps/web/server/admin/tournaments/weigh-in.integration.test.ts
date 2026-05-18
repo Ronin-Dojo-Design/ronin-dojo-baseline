@@ -28,7 +28,7 @@ let userId: string
 let orgId: string
 let disciplineId: string
 let roleId: string
-let weighIn1Id: string
+let _weighIn1Id: string
 let weighIn2Id: string
 
 beforeAll(async () => {
@@ -72,7 +72,11 @@ beforeAll(async () => {
 
   // Create a tournament role (required by Division)
   const role = await db.tournamentRole.create({
-    data: { name: `WeighIn Role ${TS}`, code: `weighin-role-${TS}`, brand: "BASELINE_MARTIAL_ARTS" },
+    data: {
+      name: `WeighIn Role ${TS}`,
+      code: `weighin-role-${TS}`,
+      brand: "BASELINE_MARTIAL_ARTS",
+    },
   })
   roleId = role.id
 
@@ -125,7 +129,7 @@ describe("WeighIn workflow integration", () => {
         isOfficial: false,
       },
     })
-    weighIn1Id = record.id
+    _weighIn1Id = record.id
 
     expect(Number(record.weightKg)).toBeCloseTo(72.5)
     expect(record.isOfficial).toBe(false)
@@ -163,7 +167,7 @@ describe("WeighIn workflow integration", () => {
       orderBy: { recordedAt: "desc" },
     })
 
-    const official = records.filter((r) => r.isOfficial)
+    const official = records.filter(r => r.isOfficial)
     expect(official).toHaveLength(1)
     expect(official[0].id).toBe(weighIn2Id)
     expect(Number(official[0].weightKg)).toBeCloseTo(71.8)
@@ -177,6 +181,6 @@ describe("WeighIn workflow integration", () => {
     })
 
     expect(records.length).toBeGreaterThanOrEqual(2)
-    expect(records.every((r) => r.registrationId === registrationId)).toBe(true)
+    expect(records.every(r => r.registrationId === registrationId)).toBe(true)
   })
 })

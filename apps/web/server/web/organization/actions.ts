@@ -1,15 +1,15 @@
 "use server"
 
 import { isInSameBrand } from "~/lib/authz"
-import { slugify } from "~/lib/slug"
 import { userActionClient } from "~/lib/safe-actions"
+import { slugify } from "~/lib/slug"
 import {
-  createOrganizationSchema,
-  joinOrganizationSchema,
-  joinByInviteCodeSchema,
-  updateMembershipStatusSchema,
   assignRoleSchema,
+  createOrganizationSchema,
+  joinByInviteCodeSchema,
+  joinOrganizationSchema,
   removeRoleSchema,
+  updateMembershipStatusSchema,
 } from "./schemas"
 
 // ---------------------------------------------------------------------------
@@ -28,7 +28,9 @@ export const createOrganization = userActionClient
       const base = slugify(orgData.name) || "org"
       let candidate = base
       let attempt = 0
-      while (await db.organization.findFirst({ where: { slug: candidate }, select: { id: true } })) {
+      while (
+        await db.organization.findFirst({ where: { slug: candidate }, select: { id: true } })
+      ) {
         candidate = `${base}-${Math.random().toString(36).slice(2, 8)}`
         if (++attempt > 5) break
       }
@@ -46,7 +48,7 @@ export const createOrganization = userActionClient
     // 2. Link disciplines if provided
     if (disciplineIds?.length) {
       await db.organizationDiscipline.createMany({
-        data: disciplineIds.map((disciplineId) => ({
+        data: disciplineIds.map(disciplineId => ({
           organizationId: org.id,
           disciplineId,
         })),

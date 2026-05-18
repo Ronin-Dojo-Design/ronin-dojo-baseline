@@ -14,7 +14,7 @@ type Props = {
   issuances: Issuance[]
 }
 
-export function CertificateIssuanceList({ templateId, issuances }: Props) {
+export function CertificateIssuanceList({ templateId: _templateId, issuances }: Props) {
   const { execute: revokeAction, isPending } = useAction(revokeCertificate)
 
   return (

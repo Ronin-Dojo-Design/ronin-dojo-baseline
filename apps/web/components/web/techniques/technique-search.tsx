@@ -1,6 +1,5 @@
 "use client"
 
-import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import type { Stack } from "~/components/common/stack"
 import { Filters } from "~/components/web/filters/filters"

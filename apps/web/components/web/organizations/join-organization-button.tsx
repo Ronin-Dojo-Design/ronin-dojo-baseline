@@ -1,11 +1,11 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
+import type { Brand } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { joinOrganization } from "~/server/web/organization/actions"
-import type { Brand } from "~/.generated/prisma/client"
 
 interface JoinOrganizationButtonProps {
   organizationId: string

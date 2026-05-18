@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
-import type { DirectoryProfile, Passport } from "~/.generated/prisma/client"
 import { toast } from "sonner"
+import type { DirectoryProfile, Passport } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
 import {
@@ -25,14 +25,8 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
-import {
-  updatePassport,
-  updateDirectoryProfile,
-} from "~/server/web/passport/actions"
-import {
-  updatePassportSchema,
-  updateDirectoryProfileSchema,
-} from "~/server/web/passport/schemas"
+import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
+import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
 import { SocialLinksEditor } from "./_components/social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
@@ -49,7 +43,11 @@ export function PassportEditor({ passport, directoryProfile, userId, canUploadVi
   return (
     <div className="flex flex-col gap-10">
       <PassportForm passport={passport} userId={userId} />
-      <DirectoryProfileForm directoryProfile={directoryProfile} userId={userId} canUploadVideo={canUploadVideo} />
+      <DirectoryProfileForm
+        directoryProfile={directoryProfile}
+        userId={userId}
+        canUploadVideo={canUploadVideo}
+      />
     </div>
   )
 }
@@ -92,7 +90,11 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
       <H2>Identity</H2>
 
       <Form {...form}>
-        <form onSubmit={handleSubmitWithAction} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
+        <form
+          onSubmit={handleSubmitWithAction}
+          className="mt-4 grid gap-4 @md:grid-cols-2"
+          noValidate
+        >
           <FormField
             control={form.control}
             name="displayName"
@@ -100,7 +102,11 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
               <FormItem>
                 <FormLabel>Display name</FormLabel>
                 <FormControl>
-                  <Input placeholder="How you appear to others" {...field} value={str(field.value)} />
+                  <Input
+                    placeholder="How you appear to others"
+                    {...field}
+                    value={str(field.value)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -145,8 +151,14 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
                   <Input
                     type="date"
                     {...field}
-                    value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : str(field.value as string)}
-                    onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                    value={
+                      field.value instanceof Date
+                        ? field.value.toISOString().split("T")[0]
+                        : str(field.value as string)
+                    }
+                    onChange={e =>
+                      field.onChange(e.target.value ? new Date(e.target.value) : undefined)
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -160,7 +172,10 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
-                <Select value={field.value ?? ""} onValueChange={v => field.onChange(v || undefined)}>
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={v => field.onChange(v || undefined)}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
@@ -185,7 +200,12 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="+1 555 123 4567" {...field} value={str(field.value)} />
+                  <Input
+                    type="tel"
+                    placeholder="+1 555 123 4567"
+                    {...field}
+                    value={str(field.value)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -224,7 +244,12 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
             control={form.control}
             name="avatarUrl"
             render={({ field }) => (
-              <FormMedia form={form} field={field} path={`passports/${userId}/avatar`} className="@md:col-span-2">
+              <FormMedia
+                form={form}
+                field={field}
+                path={`passports/${userId}/avatar`}
+                className="@md:col-span-2"
+              >
                 {field.value && (
                   <img
                     src={field.value}
@@ -243,7 +268,12 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
               <FormItem className="@md:col-span-2">
                 <FormLabel>Bio</FormLabel>
                 <FormControl>
-                  <TextArea rows={4} placeholder="Tell us about your martial arts journey…" {...field} value={str(field.value)} />
+                  <TextArea
+                    rows={4}
+                    placeholder="Tell us about your martial arts journey…"
+                    {...field}
+                    value={str(field.value)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -269,7 +299,15 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
 // Directory profile form
 // ---------------------------------------------------------------------------
 
-function DirectoryProfileForm({ directoryProfile, userId, canUploadVideo }: { directoryProfile: DirectoryProfile; userId: string; canUploadVideo: boolean }) {
+function DirectoryProfileForm({
+  directoryProfile,
+  userId,
+  canUploadVideo,
+}: {
+  directoryProfile: DirectoryProfile
+  userId: string
+  canUploadVideo: boolean
+}) {
   const { form, handleSubmitWithAction } = useHookFormAction(
     updateDirectoryProfile,
     zodResolver(updateDirectoryProfileSchema),
@@ -301,7 +339,11 @@ function DirectoryProfileForm({ directoryProfile, userId, canUploadVideo }: { di
       <H2>Directory Profile</H2>
 
       <Form {...form}>
-        <form onSubmit={handleSubmitWithAction} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
+        <form
+          onSubmit={handleSubmitWithAction}
+          className="mt-4 grid gap-4 @md:grid-cols-2"
+          noValidate
+        >
           <FormField
             control={form.control}
             name="slug"
@@ -385,11 +427,16 @@ function DirectoryProfileForm({ directoryProfile, userId, canUploadVideo }: { di
             control={form.control}
             name="coverPhotoUrl"
             render={({ field }) => (
-              <FormMedia form={form} field={field} path={`profiles/${userId}/cover`} className="@md:col-span-2">
+              <FormMedia
+                form={form}
+                field={field}
+                path={`profiles/${userId}/cover`}
+                className="@md:col-span-2"
+              >
                 {field.value && (
                   <img
                     src={field.value}
-                    alt="Cover photo preview"
+                    alt="Cover preview"
                     className="h-32 w-full rounded-md object-cover"
                   />
                 )}

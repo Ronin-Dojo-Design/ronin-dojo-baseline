@@ -1,15 +1,20 @@
-import { ImageIcon, TrashIcon } from "lucide-react"
-import { Badge } from "~/components/common/badge"
+import { ImageIcon } from "lucide-react"
 import { withAdminPage } from "~/components/admin/auth-hoc"
-import { Wrapper } from "~/components/common/wrapper"
+import { Badge } from "~/components/common/badge"
 import { H2 } from "~/components/common/heading"
-import { findMedia } from "~/server/admin/media/queries"
+import { Wrapper } from "~/components/common/wrapper"
 import { getRequestBrand } from "~/lib/brand-context"
+import { findMedia } from "~/server/admin/media/queries"
 
 export default withAdminPage(async ({ searchParams }) => {
   const sp = await searchParams
   const brand = await getRequestBrand()
-  const { media, total, page, perPage } = await findMedia({
+  const {
+    media,
+    total,
+    page: _page,
+    perPage: _perPage,
+  } = await findMedia({
     brand,
     q: sp?.q as string | undefined,
     page: Number(sp?.page) || 1,
@@ -20,7 +25,9 @@ export default withAdminPage(async ({ searchParams }) => {
       <div className="flex items-center justify-between">
         <div>
           <H2>Media Gallery</H2>
-          <p className="text-sm text-muted-foreground">{total} file{total !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            {total} file{total !== 1 ? "s" : ""}
+          </p>
         </div>
       </div>
 
@@ -40,6 +47,7 @@ export default withAdminPage(async ({ searchParams }) => {
                   className="aspect-square w-full object-cover"
                 />
               ) : item.type === "VIDEO" ? (
+                // biome-ignore lint/a11y/useMediaCaption: admin preview of user-uploaded media; no caption track available
                 <video
                   src={item.url}
                   className="aspect-square w-full object-cover"
@@ -54,13 +62,16 @@ export default withAdminPage(async ({ searchParams }) => {
               <div className="p-2 space-y-1">
                 <p className="text-sm font-medium truncate">{item.title ?? "Untitled"}</p>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px]">{item.type}</Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    {item.type}
+                  </Badge>
                   {item.mimeType && (
                     <span className="text-[10px] text-muted-foreground">{item.mimeType}</span>
                   )}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  {item.uploadedBy.name ?? "Unknown"} · {item._count.attachments} attachment{item._count.attachments !== 1 ? "s" : ""}
+                  {item.uploadedBy.name ?? "Unknown"} · {item._count.attachments} attachment
+                  {item._count.attachments !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>

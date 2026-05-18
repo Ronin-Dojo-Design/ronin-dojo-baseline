@@ -1,20 +1,33 @@
 "use client"
 
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAction } from "next-safe-action/hooks"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
-import { Input } from "~/components/common/input"
-import { TextArea } from "~/components/common/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
-import { Switch } from "~/components/common/switch"
-import { Stack } from "~/components/common/stack"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/common/form"
 import { H4 } from "~/components/common/heading"
 import { Hint } from "~/components/common/hint"
-import { updatePassport, updateDirectoryProfile } from "~/server/web/passport/actions"
+import { Input } from "~/components/common/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
+import { Stack } from "~/components/common/stack"
+import { Switch } from "~/components/common/switch"
+import { TextArea } from "~/components/common/textarea"
+import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
 
 const passportFormSchema = z.object({
   displayName: z.string().max(100).optional().default(""),
@@ -24,7 +37,12 @@ const passportFormSchema = z.object({
 })
 
 const directoryProfileFormSchema = z.object({
-  slug: z.string().max(100).regex(/^[a-z0-9-]*$/, "Lowercase alphanumeric and dashes only").optional().default(""),
+  slug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9-]*$/, "Lowercase alphanumeric and dashes only")
+    .optional()
+    .default(""),
   visibility: z.enum(["PUBLIC", "MEMBERS_ONLY", "HIDDEN"]).default("PUBLIC"),
   locationCity: z.string().max(100).optional().default(""),
   locationRegion: z.string().max(100).optional().default(""),
@@ -76,7 +94,8 @@ export function ProfileForm({ passport, directoryProfile }: ProfileFormProps) {
     resolver: zodResolver(directoryProfileFormSchema),
     defaultValues: {
       slug: directoryProfile?.slug ?? "",
-      visibility: (directoryProfile?.visibility as "PUBLIC" | "MEMBERS_ONLY" | "HIDDEN") ?? "PUBLIC",
+      visibility:
+        (directoryProfile?.visibility as "PUBLIC" | "MEMBERS_ONLY" | "HIDDEN") ?? "PUBLIC",
       locationCity: directoryProfile?.locationCity ?? "",
       locationRegion: directoryProfile?.locationRegion ?? "",
       locationCountry: directoryProfile?.locationCountry ?? "",
@@ -103,7 +122,10 @@ export function ProfileForm({ passport, directoryProfile }: ProfileFormProps) {
       <section>
         <H4>Personal Info</H4>
         <Form {...passportForm}>
-          <form onSubmit={passportForm.handleSubmit((data) => execPassport(data))} className="mt-4 space-y-4">
+          <form
+            onSubmit={passportForm.handleSubmit(data => execPassport(data))}
+            className="mt-4 space-y-4"
+          >
             <FormField
               control={passportForm.control}
               name="displayName"
@@ -172,7 +194,10 @@ export function ProfileForm({ passport, directoryProfile }: ProfileFormProps) {
         <H4>Directory Settings</H4>
         <Hint>Control how your profile appears in the public directory.</Hint>
         <Form {...profileForm}>
-          <form onSubmit={profileForm.handleSubmit((data) => execProfile(data))} className="mt-4 space-y-4">
+          <form
+            onSubmit={profileForm.handleSubmit(data => execProfile(data))}
+            className="mt-4 space-y-4"
+          >
             <FormField
               control={profileForm.control}
               name="slug"
@@ -182,7 +207,9 @@ export function ProfileForm({ passport, directoryProfile }: ProfileFormProps) {
                   <FormControl>
                     <Input {...field} placeholder="john-doe" />
                   </FormControl>
-                  <Hint>Your public profile will be at /directory/{field.value || "your-slug"}</Hint>
+                  <Hint>
+                    Your public profile will be at /directory/{field.value || "your-slug"}
+                  </Hint>
                   <FormMessage />
                 </FormItem>
               )}

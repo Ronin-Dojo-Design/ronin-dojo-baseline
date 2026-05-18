@@ -1,8 +1,8 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
-import { directoryProfileListPayload } from "~/server/web/directory/payloads"
 import type { MemberFilterParams } from "~/server/web/directory/member-schema"
+import { directoryProfileListPayload } from "~/server/web/directory/payloads"
 import { db } from "~/services/db"
 
 /**
@@ -70,9 +70,7 @@ export const searchDirectoryProfiles = async (
           },
         },
       },
-      orderBy: sortBy
-        ? { user: { [sortBy]: sortOrder } }
-        : { user: { name: "asc" } },
+      orderBy: sortBy ? { user: { [sortBy]: sortOrder } } : { user: { name: "asc" } },
       take,
       skip,
     }),
@@ -82,7 +80,7 @@ export const searchDirectoryProfiles = async (
   console.log(`Directory search: ${Math.round(performance.now() - start)}ms`)
 
   // Apply per-field privacy flags
-  const members = profiles.map((profile) => ({
+  const members = profiles.map(profile => ({
     id: profile.id,
     slug: (profile as any).slug ?? profile.id,
     displayName: profile.user.name,
@@ -91,9 +89,7 @@ export const searchDirectoryProfiles = async (
     locationCity: profile.locationCity,
     locationRegion: profile.locationRegion,
     disciplines: profile.showOrgs
-      ? profile.user.memberships
-          .filter((m) => m.discipline)
-          .map((m) => ({ name: m.discipline!.name }))
+      ? profile.user.memberships.filter(m => m.discipline).map(m => ({ name: m.discipline!.name }))
       : [],
   }))
 

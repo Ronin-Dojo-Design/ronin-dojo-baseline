@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { type ComponentProps } from "react"
+import type { ComponentProps } from "react"
 import { CTAForm } from "~/components/web/cta-form"
 import { CTAProof } from "~/components/web/cta-proof"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"

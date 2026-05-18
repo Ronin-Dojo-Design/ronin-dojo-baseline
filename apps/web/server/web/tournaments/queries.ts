@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
-import { type Brand, type Prisma } from "~/.generated/prisma/client"
-import { tournamentCardPayload, tournamentDetailPayload } from "~/server/web/tournaments/payloads"
+import type { Brand, Prisma } from "~/.generated/prisma/client"
 import type { TournamentFilterParams } from "~/server/admin/tournaments/schema"
+import { tournamentCardPayload, tournamentDetailPayload } from "~/server/web/tournaments/payloads"
 import { db } from "~/services/db"
 
 export const searchTournaments = async (
@@ -14,7 +14,7 @@ export const searchTournaments = async (
   cacheTag("tournaments")
   cacheLife("minutes")
 
-  const { q, discipline, sort, page, perPage } = search
+  const { q, discipline, sort: _sort, page, perPage } = search
   const skip = (page - 1) * perPage
   const take = perPage
 

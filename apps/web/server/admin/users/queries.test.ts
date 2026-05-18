@@ -6,9 +6,8 @@
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, describe, expect, it } from "bun:test"
-
-import type { UsersTableSchema } from "~/server/admin/users/schema"
 import { findUserList, findUsers } from "~/server/admin/users/queries"
+import type { UsersTableSchema } from "~/server/admin/users/schema"
 import { db } from "~/services/db"
 
 const TS = Date.now()

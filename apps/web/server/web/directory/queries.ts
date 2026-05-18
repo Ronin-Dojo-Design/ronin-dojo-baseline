@@ -2,8 +2,8 @@ import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
-  directoryProfileListPayload,
   directoryProfileDetailPayload,
+  directoryProfileListPayload,
   filterDisciplinePayload,
   filterOrganizationPayload,
   filterRankPayload,
@@ -58,9 +58,7 @@ export const getDirectoryProfiles = cache(
         : undefined
 
     // Rank filter works through RankAward
-    const userRankFilter = filters.rankId
-      ? { some: { rankId: filters.rankId } }
-      : undefined
+    const userRankFilter = filters.rankId ? { some: { rankId: filters.rankId } } : undefined
 
     const profiles = await db.directoryProfile.findMany({
       where: {
@@ -95,7 +93,7 @@ export const getDirectoryProfiles = cache(
     })
 
     // Apply per-field privacy flags — strip data the user chose to hide
-    return profiles.map((profile) => ({
+    return profiles.map(profile => ({
       id: profile.id,
       userId: profile.user.id,
       name: profile.user.name,
@@ -105,7 +103,7 @@ export const getDirectoryProfiles = cache(
       locationCountry: profile.locationCountry,
       email: profile.showEmail ? profile.user.email : null,
       organizations: profile.showOrgs
-        ? profile.user.memberships.map((m) => ({
+        ? profile.user.memberships.map(m => ({
             id: m.organization.id,
             name: m.organization.name,
             slug: m.organization.slug,
@@ -200,8 +198,8 @@ export const findProfileBySlug = async ({
       email: profile.showEmail ? profile.user.email : null,
       organizations: profile.showOrgs
         ? profile.user.memberships
-            .filter((m) => m.organization)
-            .map((m) => ({
+            .filter(m => m.organization)
+            .map(m => ({
               id: m.organization.id,
               name: m.organization.name,
               slug: m.organization.slug,

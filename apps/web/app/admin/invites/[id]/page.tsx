@@ -1,11 +1,10 @@
 import { formatDate } from "@primoui/utils"
 import { notFound } from "next/navigation"
+import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { H3, H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { withAdminPage } from "~/components/admin/auth-hoc"
 import { findInviteById } from "~/server/admin/invites/queries"
 
 export default withAdminPage(async ({ params }: PageProps<"/admin/invites/[id]">) => {

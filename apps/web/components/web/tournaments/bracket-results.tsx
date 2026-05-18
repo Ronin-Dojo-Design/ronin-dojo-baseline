@@ -1,15 +1,14 @@
-import { Badge } from "~/components/common/badge"
-import { Card } from "~/components/common/card"
-import { H4 } from "~/components/common/heading"
-import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "~/components/common/accordion"
-import type React from "react"
+import { Badge } from "~/components/common/badge"
+import { Card } from "~/components/common/card"
+import { H4 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
 
 type CompletedMatch = {
   id: string
@@ -53,15 +52,9 @@ type BracketResultsProps = {
   divisions: DivisionResult[]
 }
 
-function getCompetitorName(
-  competitor: CompletedMatch["competitors"][number],
-): string {
+function getCompetitorName(competitor: CompletedMatch["competitors"][number]): string {
   const passport = competitor.registrationEntry.registration.user.passport
-  return (
-    passport?.displayName ??
-    competitor.registrationEntry.registration.user.name ??
-    "Unknown"
-  )
+  return passport?.displayName ?? competitor.registrationEntry.registration.user.name ?? "Unknown"
 }
 
 function formatResult(result: string | null): string {
@@ -70,13 +63,11 @@ function formatResult(result: string | null): string {
     .replace(/_/g, " ")
     .replace(/^WIN /, "")
     .toLowerCase()
-    .replace(/^./, (c) => c.toUpperCase())
+    .replace(/^./, c => c.toUpperCase())
 }
 
 export function BracketResults({ divisions }: BracketResultsProps) {
-  const divisionsWithMatches = divisions.filter((d) =>
-    d.brackets.some((b) => b.matches.length > 0),
-  )
+  const divisionsWithMatches = divisions.filter(d => d.brackets.some(b => b.matches.length > 0))
 
   if (divisionsWithMatches.length === 0) {
     return (
@@ -87,8 +78,8 @@ export function BracketResults({ divisions }: BracketResultsProps) {
   }
 
   return (
-    <Accordion type="multiple" defaultValue={divisionsWithMatches.map((d) => d.id)}>
-      {divisionsWithMatches.map((division) => (
+    <Accordion type="multiple" defaultValue={divisionsWithMatches.map(d => d.id)}>
+      {divisionsWithMatches.map(division => (
         <AccordionItem key={division.id} value={division.id}>
           <AccordionTrigger>
             <Stack direction="row" size="sm" className="items-center">
@@ -99,7 +90,7 @@ export function BracketResults({ divisions }: BracketResultsProps) {
           </AccordionTrigger>
           <AccordionContent>
             <Stack direction="column" size="md">
-              {division.brackets.map((bracket) => {
+              {division.brackets.map(bracket => {
                 // Group matches by round, descending (final first)
                 const rounds = new Map<number, CompletedMatch[]>()
                 for (const match of bracket.matches) {
@@ -112,9 +103,7 @@ export function BracketResults({ divisions }: BracketResultsProps) {
 
                 return (
                   <Stack key={bracket.id} direction="column" size="sm">
-                    {bracket.name !== "Main" && (
-                      <Note className="font-medium">{bracket.name}</Note>
-                    )}
+                    {bracket.name !== "Main" && <Note className="font-medium">{bracket.name}</Note>}
                     {Array.from(rounds.entries())
                       .sort(([a], [b]) => b - a)
                       .map(([roundNumber, matches]) => {
@@ -130,7 +119,7 @@ export function BracketResults({ divisions }: BracketResultsProps) {
                             <H4 as="h5">{roundLabel}</H4>
                             {matches
                               .sort((a, b) => a.matchNumber - b.matchNumber)
-                              .map((match) => (
+                              .map(match => (
                                 <MatchResultCard key={match.id} match={match} />
                               ))}
                           </Stack>
@@ -151,32 +140,27 @@ function MatchResultCard({ match }: { match: CompletedMatch }) {
   return (
     <Card className="p-4">
       <Stack direction="column" size="xs">
-        {match.competitors.map((comp) => {
+        {match.competitors.map(comp => {
           const isWinner = comp.registrationEntry.id === match.winnerEntryId
           const name = getCompetitorName(comp)
-          const org =
-            comp.registrationEntry.representingMembership?.organization.name
+          const org = comp.registrationEntry.representingMembership?.organization.name
 
           return (
             <Stack key={comp.id} direction="row" size="sm" className="items-center justify-between">
               <Stack direction="row" size="sm" className="items-center">
-                {comp.seed != null && (
-                  <Note>#{comp.seed}</Note>
-                )}
-                <span className={isWinner ? "font-semibold" : "text-muted-foreground"}>
-                  {name}
-                </span>
+                {comp.seed != null && <Note>#{comp.seed}</Note>}
+                <span className={isWinner ? "font-semibold" : "text-muted-foreground"}>{name}</span>
                 {org && <Note>{org}</Note>}
               </Stack>
               {isWinner && (
-                <Badge variant="success" size="sm">W</Badge>
+                <Badge variant="success" size="sm">
+                  W
+                </Badge>
               )}
             </Stack>
           )
         })}
-        {match.result && (
-          <Note>via {formatResult(match.result)}</Note>
-        )}
+        {match.result && <Note>via {formatResult(match.result)}</Note>}
       </Stack>
     </Card>
   )

@@ -3,9 +3,7 @@ import { getServerSession } from "~/lib/auth"
 import { findValidInviteByCode } from "~/server/invites/queries"
 import { ClaimForm } from "./claim-form"
 
-export default async function InviteClaimPage({
-  params,
-}: PageProps<"/invite/[code]">) {
+export default async function InviteClaimPage({ params }: PageProps<"/invite/[code]">) {
   const { code } = await params
   const session = await getServerSession()
 

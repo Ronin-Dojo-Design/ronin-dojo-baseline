@@ -75,7 +75,9 @@ async function main() {
   const activeCount = await db.userEntitlement.count({
     where: { userId: user.id, status: "ACTIVE", entitlementId: entitlement.id },
   })
-  console.log(activeCount > 0 ? "✅ PASS: access check = true" : "❌ FAIL: access check should be true")
+  console.log(
+    activeCount > 0 ? "✅ PASS: access check = true" : "❌ FAIL: access check should be true",
+  )
 
   // 5. Revoke
   await db.userEntitlement.update({
@@ -85,7 +87,11 @@ async function main() {
   const revokedCount = await db.userEntitlement.count({
     where: { userId: user.id, status: "ACTIVE", entitlementId: entitlement.id },
   })
-  console.log(revokedCount === 0 ? "✅ PASS: revoked access = false" : "❌ FAIL: revoked access should be false")
+  console.log(
+    revokedCount === 0
+      ? "✅ PASS: revoked access = false"
+      : "❌ FAIL: revoked access should be false",
+  )
 
   // 6. Expire test: create with past endsAt, then expire
   const expirable = await db.userEntitlement.create({
@@ -97,7 +103,7 @@ async function main() {
       endsAt: new Date(Date.now() - 1000), // already in the past
     },
   })
-  const expired = await db.userEntitlement.updateMany({
+  const _expired = await db.userEntitlement.updateMany({
     where: { status: "ACTIVE", endsAt: { lte: new Date() } },
     data: { status: "EXPIRED" },
   })

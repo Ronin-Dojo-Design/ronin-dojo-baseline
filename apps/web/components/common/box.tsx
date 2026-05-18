@@ -26,4 +26,4 @@ const Box = ({ hover, focus, focusWithin, className, ...props }: BoxProps) => {
   )
 }
 
-export { Box, boxVariants, type BoxProps }
+export { Box, type BoxProps, boxVariants }

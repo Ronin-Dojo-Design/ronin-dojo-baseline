@@ -4,7 +4,7 @@ import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
-import { db as appDb } from "~/services/db"
+import type { db as appDb } from "~/services/db"
 
 /**
  * Admin lineage claim review server action.

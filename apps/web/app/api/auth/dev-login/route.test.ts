@@ -8,7 +8,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module
-import { describe, expect, it, mock, beforeEach } from "bun:test"
+import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 // ---------------------------------------------------------------------------
 // Test: production guard (isDev = false)
@@ -29,7 +29,7 @@ describe("GET /api/auth/dev-login", () => {
       // Re-import after mock is installed
       const { GET } = await import("./route")
       const request = new Request("http://localhost:8000/api/auth/dev-login")
-      const response = await GET(request) as Response
+      const response = (await GET(request)) as Response
 
       expect(response.status).toBe(404)
       const body = await response.json()
@@ -49,7 +49,7 @@ describe("GET /api/auth/dev-login", () => {
     it("returns 404 with 'Not available' error", async () => {
       const { GET } = await import("./route")
       const request = new Request("http://localhost:8000/api/auth/dev-login")
-      const response = await GET(request) as Response
+      const response = (await GET(request)) as Response
 
       expect(response.status).toBe(404)
       const body = await response.json()
@@ -74,7 +74,7 @@ describe("GET /api/auth/dev-login", () => {
     it("returns 404 with user-not-found error", async () => {
       const { GET } = await import("./route")
       const request = new Request("http://localhost:8000/api/auth/dev-login")
-      const response = await GET(request) as Response
+      const response = (await GET(request)) as Response
 
       expect(response.status).toBe(404)
       const body = await response.json()

@@ -40,7 +40,7 @@ async function main() {
       },
     })
 
-    const merchPlans = plans.filter((p) => {
+    const merchPlans = plans.filter(p => {
       const meta = p.metadata as Record<string, unknown> | null
       return meta?.source === "tuffbuffs-merch"
     })
@@ -92,7 +92,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error("❌ Fatal:", err)
   process.exit(1)
 })

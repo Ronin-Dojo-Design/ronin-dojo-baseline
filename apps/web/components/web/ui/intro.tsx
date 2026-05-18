@@ -40,4 +40,4 @@ const IntroDescription = ({ className, ...props }: ComponentProps<"h2">) => {
   )
 }
 
-export { Intro, IntroTitle, IntroDescription }
+export { Intro, IntroDescription, IntroTitle }

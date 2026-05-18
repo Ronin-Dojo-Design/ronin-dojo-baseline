@@ -8,12 +8,7 @@ import { z } from "zod"
  * Author: Cody / SESSION_0182 TASK_01.
  */
 
-export const lineageClaimRelationship = z.enum([
-  "SELF",
-  "STUDENT_OF",
-  "FAMILY",
-  "ARCHIVIST",
-])
+export const lineageClaimRelationship = z.enum(["SELF", "STUDENT_OF", "FAMILY", "ARCHIVIST"])
 
 export type LineageClaimRelationship = z.infer<typeof lineageClaimRelationship>
 

@@ -5,6 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { slugify } from "@primoui/utils"
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
+import type { FieldValues } from "react-hook-form"
 import { toast } from "sonner"
 import { Brand, TournamentStatus } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
@@ -18,10 +19,15 @@ import {
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
-import type { FieldValues } from "react-hook-form"
 import { useComputedField } from "~/hooks/use-computed-field"
 import { upsertTournament } from "~/server/admin/tournaments/actions"
 import type { findTournamentById } from "~/server/admin/tournaments/queries"
@@ -33,7 +39,14 @@ type TournamentFormProps = ComponentProps<"form"> & {
   organizations?: { id: string; name: string }[]
 }
 
-export function TournamentForm({ children, className, title, tournament, organizations, ...props }: TournamentFormProps) {
+export function TournamentForm({
+  children,
+  className,
+  title,
+  tournament,
+  organizations,
+  ...props
+}: TournamentFormProps) {
   const router = useRouter()
   const resolver = zodResolver(tournamentSchema)
 
@@ -221,7 +234,9 @@ export function TournamentForm({ children, className, title, tournament, organiz
                     <Input
                       type="date"
                       {...field}
-                      value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : ""}
+                      value={
+                        field.value instanceof Date ? field.value.toISOString().split("T")[0] : ""
+                      }
                       onChange={e => field.onChange(new Date(e.target.value))}
                     />
                   </FormControl>
@@ -240,7 +255,9 @@ export function TournamentForm({ children, className, title, tournament, organiz
                     <Input
                       type="date"
                       {...field}
-                      value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : ""}
+                      value={
+                        field.value instanceof Date ? field.value.toISOString().split("T")[0] : ""
+                      }
                       onChange={e => field.onChange(new Date(e.target.value))}
                     />
                   </FormControl>

@@ -20,11 +20,7 @@ export default async function DisciplinesPage() {
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { url: "/disciplines", title: "Disciplines" },
-        ]}
-      />
+      <Breadcrumbs items={[{ url: "/disciplines", title: "Disciplines" }]} />
 
       <Intro>
         <IntroTitle>Disciplines</IntroTitle>
@@ -40,7 +36,13 @@ export default async function DisciplinesPage() {
       <StructuredData
         data={{
           "@context": "https://schema.org",
-          "@graph": [generateCollectionPage("/disciplines", "Disciplines", "Explore martial arts disciplines, their rank systems, and affiliated organizations.")],
+          "@graph": [
+            generateCollectionPage(
+              "/disciplines",
+              "Disciplines",
+              "Explore martial arts disciplines, their rank systems, and affiliated organizations.",
+            ),
+          ],
         }}
       />
     </>

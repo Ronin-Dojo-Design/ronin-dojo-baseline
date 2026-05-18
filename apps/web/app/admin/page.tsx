@@ -1,5 +1,5 @@
-import { Suspense } from "react"
 import { NetworkIcon } from "lucide-react"
+import { Suspense } from "react"
 import { RevenueMetric } from "~/app/admin/_components/revenue-metric"
 import { SubscriberMetric } from "~/app/admin/_components/subscriber-metric"
 import { UserMetric } from "~/app/admin/_components/user-metric"
@@ -54,11 +54,17 @@ export default withAdminPage(() => {
         </div>
 
         <Card className="p-4">
-          <Link href="/graphify.html" target="_blank" className="flex items-center gap-3 no-underline">
+          <Link
+            href="/graphify.html"
+            target="_blank"
+            className="flex items-center gap-3 no-underline"
+          >
             <NetworkIcon className="size-5 text-muted-foreground" />
             <div>
               <p className="font-medium text-sm">Repo Graph</p>
-              <p className="text-xs text-muted-foreground">Interactive Graphify visualization of the codebase</p>
+              <p className="text-xs text-muted-foreground">
+                Interactive Graphify visualization of the codebase
+              </p>
             </div>
           </Link>
         </Card>

@@ -1,11 +1,11 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useState } from "react"
 import { toast } from "sonner"
-import { Button } from "~/components/common/button"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
 import { joinByInviteCode } from "~/server/web/organization/actions"
 
@@ -20,11 +20,7 @@ interface InviteJoinFormProps {
   disciplines: Discipline[]
 }
 
-export const InviteJoinForm = ({
-  inviteCode,
-  orgName,
-  disciplines,
-}: InviteJoinFormProps) => {
+export const InviteJoinForm = ({ inviteCode, orgName, disciplines }: InviteJoinFormProps) => {
   const router = useRouter()
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<string | null>(
     disciplines.length === 1 ? disciplines[0].id : null,
@@ -46,7 +42,7 @@ export const InviteJoinForm = ({
       <p className="text-sm">Select a discipline to join:</p>
 
       <Stack size="sm" className="flex-wrap">
-        {disciplines.map((d) => (
+        {disciplines.map(d => (
           <Badge
             key={d.id}
             size="lg"

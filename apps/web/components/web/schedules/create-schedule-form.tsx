@@ -170,12 +170,7 @@ export const CreateScheduleForm = ({
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <TextArea
-                    size="lg"
-                    rows={3}
-                    placeholder="Internal note for staff."
-                    {...field}
-                  />
+                  <TextArea size="lg" rows={3} placeholder="Internal note for staff." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -205,10 +200,7 @@ export const CreateScheduleForm = ({
                           key={day.value}
                           className="flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 text-sm"
                         >
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggle(day.value)}
-                          />
+                          <Checkbox checked={checked} onCheckedChange={() => toggle(day.value)} />
                           {day.label}
                         </Label>
                       )

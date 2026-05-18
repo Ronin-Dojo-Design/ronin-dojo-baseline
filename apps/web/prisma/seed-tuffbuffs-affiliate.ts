@@ -1,10 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
-import type {
-  TuffBuffsAffiliateGearProduct,
-  TuffBuffsGearCategory,
-  TuffBuffsProgramGearKey,
-} from "~/types/tuffbuffs-gear"
+import type { TuffBuffsAffiliateGearProduct } from "~/types/tuffbuffs-gear"
 
 /**
  * seed-tuffbuffs-affiliate.ts
@@ -412,9 +408,7 @@ const adapter = new PrismaPg({
 const db = new PrismaClient({ adapter })
 
 const args = process.argv.slice(2)
-const orgIdFlag = args.includes("--org-id")
-  ? args[args.indexOf("--org-id") + 1]
-  : null
+const orgIdFlag = args.includes("--org-id") ? args[args.indexOf("--org-id") + 1] : null
 
 async function main() {
   // Resolve org
@@ -476,9 +470,7 @@ async function main() {
         },
       },
     })
-    console.log(
-      `   ✅ Created: ${product.name} ($${(product.amountCents / 100).toFixed(2)})`,
-    )
+    console.log(`   ✅ Created: ${product.name} ($${(product.amountCents / 100).toFixed(2)})`)
     created++
   }
 
@@ -488,7 +480,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("❌ Seed error:", e)
     process.exit(1)
   })

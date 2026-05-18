@@ -2,10 +2,7 @@ import type { Metadata } from "next"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
-import {
-  MerchBrowser,
-  type MerchCategoryTab,
-} from "~/components/web/tuffbuffs/merch-browser"
+import { MerchBrowser, type MerchCategoryTab } from "~/components/web/tuffbuffs/merch-browser"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import {
   findMerchProducts,
@@ -69,11 +66,7 @@ export default async function MerchPage() {
         </p>
       </Intro>
 
-      <MerchBrowser
-        products={rows}
-        metadataMap={metadataMap}
-        categories={categories}
-      />
+      <MerchBrowser products={rows} metadataMap={metadataMap} categories={categories} />
     </Wrapper>
   )
 }

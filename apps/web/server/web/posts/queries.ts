@@ -1,6 +1,6 @@
+import type { Brand } from "~/.generated/prisma/client"
 import { PostStatus } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
-import type { Brand } from "~/.generated/prisma/client"
 
 export const findPublishedPosts = async (brand: Brand) => {
   return db.post.findMany({

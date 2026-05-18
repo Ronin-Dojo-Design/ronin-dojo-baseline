@@ -89,9 +89,7 @@ export const getColumns = (): ColumnDef<LeadRow>[] => {
       accessorKey: "source",
       size: 130,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Source" />,
-      cell: ({ row }) => (
-        <Note>{row.original.source.replace(/_/g, " ")}</Note>
-      ),
+      cell: ({ row }) => <Note>{row.original.source.replace(/_/g, " ")}</Note>,
     },
     {
       id: "organization",

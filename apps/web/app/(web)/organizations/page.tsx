@@ -1,15 +1,15 @@
-import { headers } from "next/headers"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Grid } from "~/components/web/ui/grid"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { Button } from "~/components/common/button"
 import { getOrganizationsByBrand } from "~/server/web/organization/queries"
 
 export const metadata: Metadata = {
@@ -26,9 +26,7 @@ export default async function OrganizationsPage() {
     <>
       <Intro>
         <IntroTitle>Organizations</IntroTitle>
-        <IntroDescription>
-          Browse dojos, schools, clubs, and leagues.
-        </IntroDescription>
+        <IntroDescription>Browse dojos, schools, clubs, and leagues.</IntroDescription>
       </Intro>
 
       <Section>
@@ -48,7 +46,7 @@ export default async function OrganizationsPage() {
             </p>
           ) : (
             <Grid>
-              {orgs.map((org) => (
+              {orgs.map(org => (
                 <Card key={org.id} isRevealed>
                   <CardHeader>
                     <H4 as="h3" className="truncate">
@@ -70,7 +68,7 @@ export default async function OrganizationsPage() {
 
                   {org.disciplines.length > 0 && (
                     <Stack size="sm" className="flex-wrap">
-                      {org.disciplines.map((od) => (
+                      {org.disciplines.map(od => (
                         <Badge key={od.discipline.id} size="sm">
                           {od.discipline.name}
                         </Badge>

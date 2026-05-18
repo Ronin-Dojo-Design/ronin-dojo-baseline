@@ -29,7 +29,6 @@ const scheduleListParams = createSearchParamsCache({
   status: parseAsStringEnum<ScheduleStatus>([...STATUS_VALUES]),
 })
 
-
 interface Props {
   params: Promise<{ id: string }>
   searchParams: Promise<SearchParams>
@@ -100,11 +99,7 @@ export default async function ProgramSchedulesPage({ params, searchParams }: Pro
             )}
           </Stack>
 
-          <Stack
-            size="sm"
-            className="flex-wrap mb-4"
-            aria-label="Filter schedules by status"
-          >
+          <Stack size="sm" className="flex-wrap mb-4" aria-label="Filter schedules by status">
             {STATUS_FILTER_OPTIONS.map(option => {
               const isActive = (activeStatus ?? "") === option.value
               return (
@@ -135,7 +130,8 @@ export default async function ProgramSchedulesPage({ params, searchParams }: Pro
                   </CardHeader>
 
                   <CardDescription>
-                    {schedule.description ?? `${schedule.daysOfWeek.join(", ")} ${schedule.startTime}–${schedule.endTime}`}
+                    {schedule.description ??
+                      `${schedule.daysOfWeek.join(", ")} ${schedule.startTime}–${schedule.endTime}`}
                   </CardDescription>
 
                   <Stack size="sm" className="flex-wrap">
@@ -156,12 +152,7 @@ export default async function ProgramSchedulesPage({ params, searchParams }: Pro
             </Grid>
           )}
 
-          <Pagination
-            className="mt-6"
-            total={total}
-            perPage={PAGE_SIZE}
-            page={page}
-          />
+          <Pagination className="mt-6" total={total} perPage={PAGE_SIZE} page={page} />
         </Section.Content>
       </Section>
     </>

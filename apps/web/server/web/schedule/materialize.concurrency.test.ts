@@ -67,8 +67,8 @@ mock.module("~/lib/rate-limiter", () => ({
 // Real imports happen *after* the mocks are registered.
 // -----------------------------------------------------------------------------
 
-import { db } from "~/services/db"
 import { materializeSchedule } from "~/server/web/schedule/actions"
+import { db } from "~/services/db"
 
 // -----------------------------------------------------------------------------
 // Fixture set

@@ -27,7 +27,13 @@ type AgeGroupFormProps = ComponentProps<"form"> & {
   title?: string
 }
 
-export function AgeGroupForm({ children, className, title, ageGroup, ...props }: AgeGroupFormProps) {
+export function AgeGroupForm({
+  children,
+  className,
+  title,
+  ageGroup,
+  ...props
+}: AgeGroupFormProps) {
   const router = useRouter()
   const resolver = zodResolver(ageGroupSchema)
 
@@ -102,7 +108,12 @@ export function AgeGroupForm({ children, className, title, ageGroup, ...props }:
             <FormItem>
               <FormLabel>Minimum Age</FormLabel>
               <FormControl>
-                <Input type="number" min={0} value={String(field.value ?? "")} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} />
+                <Input
+                  type="number"
+                  min={0}
+                  value={String(field.value ?? "")}
+                  onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -136,7 +147,11 @@ export function AgeGroupForm({ children, className, title, ageGroup, ...props }:
             <FormItem>
               <FormLabel>Sort Order</FormLabel>
               <FormControl>
-                <Input type="number" value={String(field.value ?? "")} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} />
+                <Input
+                  type="number"
+                  value={String(field.value ?? "")}
+                  onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Badge } from "~/components/common/badge"
-import { H2, H3 } from "~/components/common/heading"
+import { H2 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { MerchCard } from "~/components/web/tuffbuffs/merch-card"
 import { cx } from "~/lib/utils"
@@ -58,7 +58,11 @@ export function MerchBrowser({ products, metadataMap, categories }: MerchBrowser
       <section className="space-y-6">
         <Stack className="w-full justify-between gap-4" wrap={false}>
           <div className="space-y-2">
-            <H2>{activeCategory ? categories.find(c => c.id === activeCategory)?.label ?? "All Merch" : "All Merch"}</H2>
+            <H2>
+              {activeCategory
+                ? (categories.find(c => c.id === activeCategory)?.label ?? "All Merch")
+                : "All Merch"}
+            </H2>
             <p className="max-w-2xl text-sm text-secondary-foreground">
               Own-brand TuffBuffs merchandise — shirts, rash guards, hoodies, gear, and accessories.
             </p>

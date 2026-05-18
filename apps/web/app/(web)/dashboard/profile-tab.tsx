@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { ProfileForm } from "~/app/(web)/dashboard/profile-form"
 import { getServerSession } from "~/lib/auth"
-import { findUserPassport, findUserDirectoryProfile } from "~/server/web/dashboard/queries"
+import { findUserDirectoryProfile, findUserPassport } from "~/server/web/dashboard/queries"
 
 export async function DashboardProfileTab() {
   const session = await getServerSession()

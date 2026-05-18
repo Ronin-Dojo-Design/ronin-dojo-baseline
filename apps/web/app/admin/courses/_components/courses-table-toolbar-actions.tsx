@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { CourseRow } from "~/app/admin/courses/_components/courses-table-columns"
 import { CoursesDeleteDialog } from "~/app/admin/courses/_components/courses-delete-dialog"
+import type { CourseRow } from "~/app/admin/courses/_components/courses-table-columns"
 import { Button } from "~/components/common/button"
 
 interface CoursesTableToolbarActionsProps {

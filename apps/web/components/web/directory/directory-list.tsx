@@ -45,7 +45,7 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {profiles.map((profile) => (
+      {profiles.map(profile => (
         <Card key={profile.id}>
           <CardHeader>
             <Stack direction="row" className="items-center gap-3">
@@ -57,9 +57,7 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
                 <H4>{profile.name ?? "Anonymous"}</H4>
                 {(profile.locationCity || profile.locationRegion) && (
                   <CardDescription>
-                    {[profile.locationCity, profile.locationRegion]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ")}
                   </CardDescription>
                 )}
               </div>
@@ -67,7 +65,7 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
 
             {profile.organizations.length > 0 && (
               <Stack direction="row" className="mt-2 flex-wrap gap-1">
-                {profile.organizations.map((org) => (
+                {profile.organizations.map(org => (
                   <Link key={org.id} href={`/organizations/${org.slug}`}>
                     <Badge variant="outline">{org.name}</Badge>
                   </Link>
@@ -77,7 +75,7 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
 
             {profile.ranks.length > 0 && (
               <Stack direction="row" className="mt-2 flex-wrap gap-1">
-                {profile.ranks.map((ra) => (
+                {profile.ranks.map(ra => (
                   <Badge key={ra.rank.id} variant="soft">
                     {ra.rank.name}
                   </Badge>
@@ -86,9 +84,7 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
             )}
 
             {profile.email && (
-              <CardDescription className="mt-2 text-xs">
-                {profile.email}
-              </CardDescription>
+              <CardDescription className="mt-2 text-xs">{profile.email}</CardDescription>
             )}
           </CardHeader>
         </Card>

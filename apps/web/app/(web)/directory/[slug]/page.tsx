@@ -1,15 +1,15 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
-import type { Metadata } from "next"
 import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { findProfileBySlug } from "~/server/web/directory/queries"
 import { getServerSession } from "~/lib/auth"
+import { findProfileBySlug } from "~/server/web/directory/queries"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -64,9 +64,7 @@ export default async function MemberDetailPage({ params }: Props) {
       {profile.user.bio && (
         <Section>
           <Section.Content>
-            <p className="text-secondary-foreground italic">
-              &ldquo;{profile.user.bio}&rdquo;
-            </p>
+            <p className="text-secondary-foreground italic">&ldquo;{profile.user.bio}&rdquo;</p>
           </Section.Content>
         </Section>
       )}
@@ -77,7 +75,7 @@ export default async function MemberDetailPage({ params }: Props) {
           <Section.Content>
             <H4>Ranks</H4>
             <Stack size="sm" className="flex-wrap mt-2">
-              {profile.user.ranks.map((award) => (
+              {profile.user.ranks.map(award => (
                 <Badge key={award.rank.id} variant="soft">
                   {award.rank.name} — {award.rank.rankSystem.name}
                 </Badge>
@@ -93,7 +91,7 @@ export default async function MemberDetailPage({ params }: Props) {
           <Section.Content>
             <H4>Schools</H4>
             <div className="grid gap-3 mt-2">
-              {profile.user.organizations.map((org) => (
+              {profile.user.organizations.map(org => (
                 <Link
                   key={org.id}
                   href={`/organizations/${org.slug}`}
@@ -121,7 +119,7 @@ export default async function MemberDetailPage({ params }: Props) {
               {profile.user.techniqueProgress.length} technique
               {profile.user.techniqueProgress.length !== 1 ? "s" : ""} logged
               {" · "}
-              {profile.user.techniqueProgress.filter((tp) => tp.verifiedById).length} verified
+              {profile.user.techniqueProgress.filter(tp => tp.verifiedById).length} verified
             </p>
           </Section.Content>
         </Section>

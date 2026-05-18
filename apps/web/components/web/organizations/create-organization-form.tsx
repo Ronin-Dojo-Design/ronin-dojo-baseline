@@ -5,6 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
+import type { Brand } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
 import {
@@ -26,7 +27,6 @@ import {
 import { Stack } from "~/components/common/stack"
 import { createOrganization } from "~/server/web/organization/actions"
 import { createOrganizationSchema } from "~/server/web/organization/schemas"
-import type { Brand } from "~/.generated/prisma/client"
 
 type Discipline = { id: string; name: string }
 
@@ -44,40 +44,36 @@ export const CreateOrganizationForm = ({
   const router = useRouter()
   const resolver = zodResolver(createOrganizationSchema)
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    createOrganization,
-    resolver,
-    {
-      formProps: {
-        defaultValues: {
-          brand,
-          name: "",
-          slug: "",
-          type: "DOJO" as const,
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "",
-          zip: "",
-          country: "US",
-          websiteUrl: "",
-          disciplineIds: [],
-        },
-      },
-
-      actionProps: {
-        onSuccess: ({ data }) => {
-          if (!data) return
-          toast.success(`"${data.name}" created!`)
-          router.push(`/organizations/${data.slug}`)
-        },
-
-        onError: ({ error }) => {
-          toast.error(error.serverError ?? "Something went wrong")
-        },
+  const { form, action, handleSubmitWithAction } = useHookFormAction(createOrganization, resolver, {
+    formProps: {
+      defaultValues: {
+        brand,
+        name: "",
+        slug: "",
+        type: "DOJO" as const,
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "US",
+        websiteUrl: "",
+        disciplineIds: [],
       },
     },
-  )
+
+    actionProps: {
+      onSuccess: ({ data }) => {
+        if (!data) return
+        toast.success(`"${data.name}" created!`)
+        router.push(`/organizations/${data.slug}`)
+      },
+
+      onError: ({ error }) => {
+        toast.error(error.serverError ?? "Something went wrong")
+      },
+    },
+  })
 
   // Auto-generate slug from name
   const handleNameChange = (
@@ -94,12 +90,7 @@ export const CreateOrganizationForm = ({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={handleSubmitWithAction}
-        className={className}
-        noValidate
-        {...props}
-      >
+      <form onSubmit={handleSubmitWithAction} className={className} noValidate {...props}>
         <Stack direction="column" className="gap-5">
           {/* Hidden brand field */}
           <input type="hidden" {...form.register("brand")} />
@@ -115,7 +106,7 @@ export const CreateOrganizationForm = ({
                     size="lg"
                     placeholder="e.g. Baseline Martial Arts Academy"
                     {...field}
-                    onChange={(e) => handleNameChange(e, field.onChange)}
+                    onChange={e => handleNameChange(e, field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -130,11 +121,7 @@ export const CreateOrganizationForm = ({
               <FormItem>
                 <FormLabel>URL Slug *</FormLabel>
                 <FormControl>
-                  <Input
-                    size="lg"
-                    placeholder="baseline-martial-arts-academy"
-                    {...field}
-                  />
+                  <Input size="lg" placeholder="baseline-martial-arts-academy" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,10 +134,7 @@ export const CreateOrganizationForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Organization Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger size="lg">
                       <SelectValue placeholder="Select type" />
@@ -175,11 +159,7 @@ export const CreateOrganizationForm = ({
               <FormItem>
                 <FormLabel>Address Line 1</FormLabel>
                 <FormControl>
-                  <Input
-                    size="lg"
-                    placeholder="123 Main St"
-                    {...field}
-                  />
+                  <Input size="lg" placeholder="123 Main St" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,11 +173,7 @@ export const CreateOrganizationForm = ({
               <FormItem>
                 <FormLabel>Address Line 2</FormLabel>
                 <FormControl>
-                  <Input
-                    size="lg"
-                    placeholder="Suite 100"
-                    {...field}
-                  />
+                  <Input size="lg" placeholder="Suite 100" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -269,12 +245,7 @@ export const CreateOrganizationForm = ({
               <FormItem>
                 <FormLabel>Website URL</FormLabel>
                 <FormControl>
-                  <Input
-                    type="url"
-                    size="lg"
-                    placeholder="https://example.com"
-                    {...field}
-                  />
+                  <Input type="url" size="lg" placeholder="https://example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -290,18 +261,19 @@ export const CreateOrganizationForm = ({
                 <FormItem>
                   <FormLabel>Disciplines</FormLabel>
                   <div className="grid gap-2 @sm:grid-cols-2">
-                    {disciplines.map((discipline) => (
+                    {disciplines.map(discipline => (
                       <FormField
                         key={discipline.id}
                         control={form.control}
                         name="disciplineIds"
                         render={({ field }) => (
                           <FormItem>
+                            {/* biome-ignore lint/a11y/noLabelWithoutControl: FormControl wraps the Checkbox inside this label */}
                             <label className="flex items-center gap-2 text-sm cursor-pointer">
                               <FormControl>
                                 <Checkbox
                                   checked={field.value?.includes(discipline.id)}
-                                  onCheckedChange={(checked) => {
+                                  onCheckedChange={checked => {
                                     const current = field.value ?? []
                                     field.onChange(
                                       checked

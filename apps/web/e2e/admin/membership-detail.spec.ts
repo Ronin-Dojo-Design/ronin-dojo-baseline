@@ -1,6 +1,10 @@
-import { test, expect } from "@playwright/test"
-import { createAuthenticatedUser, cleanupTestUser } from "../helpers/auth"
-import { seedMembership, cleanupMembershipFixture, type MembershipFixture } from "../helpers/seed-membership"
+import { expect, test } from "@playwright/test"
+import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
+import {
+  cleanupMembershipFixture,
+  type MembershipFixture,
+  seedMembership,
+} from "../helpers/seed-membership"
 
 let testUserId: string
 let fixture: MembershipFixture

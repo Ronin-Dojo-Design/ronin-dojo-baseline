@@ -50,17 +50,14 @@ interface Props {
  *
  * Passport drives display name: `member.node.user.passport.displayName`.
  */
-function membersToBoardData(
-  members: LineageTreeMemberRow[],
-  defaultRootMemberId: string | null,
-) {
+function membersToBoardData(members: LineageTreeMemberRow[], defaultRootMemberId: string | null) {
   // Map memberId → nodeId for edge derivation.
   const memberIdToNodeId = new Map<string, string>()
   for (const m of members) {
     memberIdToNodeId.set(m.id, m.nodeId)
   }
 
-  const nodes: LineageNodeRow[] = members.map((m) => m.node)
+  const nodes: LineageNodeRow[] = members.map(m => m.node)
 
   // Derive synthetic edges from parent pointers.
   // Only `type`, `fromNodeId`, `toNodeId` are used by LineageOrgChart;
@@ -86,11 +83,11 @@ function membersToBoardData(
 
   // Determine root node.
   const rootMember = defaultRootMemberId
-    ? members.find((m) => m.id === defaultRootMemberId)
+    ? members.find(m => m.id === defaultRootMemberId)
     : members[0]
   const rootNodeId = rootMember?.nodeId ?? nodes[0]?.id ?? ""
 
-  const rootNode = nodes.find((n) => n.id === rootNodeId) ?? null
+  const rootNode = nodes.find(n => n.id === rootNodeId) ?? null
 
   let rows: ReturnType<typeof bucketByDepth> = []
   if (rootNode && nodes.length > 0) {
@@ -132,10 +129,7 @@ export default async function LineageTreePage({ params }: Props) {
     notFound()
   }
 
-  const { rows, rootId, edges } = membersToBoardData(
-    result.members,
-    result.defaultRootMemberId,
-  )
+  const { rows, rootId, edges } = membersToBoardData(result.members, result.defaultRootMemberId)
 
   if (rows.length === 0) {
     return (
@@ -149,11 +143,9 @@ export default async function LineageTreePage({ params }: Props) {
   }
 
   // Eager-load profiles for drawer (same pattern as lineage-tree-section.tsx).
-  const visibleNodeIds = Array.from(
-    new Set(rows.flatMap((row) => row.nodes.map((n) => n.id))),
-  )
+  const visibleNodeIds = Array.from(new Set(rows.flatMap(row => row.nodes.map(n => n.id))))
   const profiles = await Promise.all(
-    visibleNodeIds.map(async (id) => [id, await getLineageProfile(id)] as const),
+    visibleNodeIds.map(async id => [id, await getLineageProfile(id)] as const),
   )
   const profilesById: Record<string, LineageNodeProfile> = {}
   for (const [id, profile] of profiles) {
@@ -166,12 +158,7 @@ export default async function LineageTreePage({ params }: Props) {
         <H4 as="h1">{result.tree.name}</H4>
         {result.tree.description && <Note>{result.tree.description}</Note>}
       </Stack>
-      <LineageTreeBoard
-        rows={rows}
-        rootId={rootId}
-        profilesById={profilesById}
-        edges={edges}
-      />
+      <LineageTreeBoard rows={rows} rootId={rootId} profilesById={profilesById} edges={edges} />
     </section>
   )
 }

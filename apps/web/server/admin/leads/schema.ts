@@ -21,12 +21,8 @@ export const leadsTableParamsSchema = {
   from: parseAsString.withDefault(""),
   to: parseAsString.withDefault(""),
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
-  status: parseAsArrayOf(
-    parseAsStringEnum<LeadStatus>(Object.values(LeadStatus)),
-  ).withDefault([]),
-  source: parseAsArrayOf(
-    parseAsStringEnum<LeadSource>(Object.values(LeadSource)),
-  ).withDefault([]),
+  status: parseAsArrayOf(parseAsStringEnum<LeadStatus>(Object.values(LeadStatus))).withDefault([]),
+  source: parseAsArrayOf(parseAsStringEnum<LeadSource>(Object.values(LeadSource))).withDefault([]),
   organizationId: parseAsString.withDefault(""),
 }
 

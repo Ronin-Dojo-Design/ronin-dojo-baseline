@@ -50,10 +50,7 @@ export const ProgramActions = ({ program, className, ...props }: ProgramActionsP
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ProgramsDeleteDialog
-        programs={[program]}
-        onExecute={() => router.push("/admin/programs")}
-      >
+      <ProgramsDeleteDialog programs={[program]} onExecute={() => router.push("/admin/programs")}>
         <Button
           variant="secondary"
           size="sm"

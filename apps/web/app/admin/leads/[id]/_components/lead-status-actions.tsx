@@ -7,14 +7,14 @@ import {
   UserPlusIcon,
   XCircleIcon,
 } from "lucide-react"
-import { useAction } from "next-safe-action/hooks"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
 import { markLeadLost, markLeadNurture } from "~/server/admin/leads/actions"
-import { bookTrial, completeTrial, convertLead } from "~/server/web/lead/actions"
 import type { LeadDetail } from "~/server/admin/leads/queries"
+import { bookTrial, completeTrial, convertLead } from "~/server/web/lead/actions"
 
 type LeadStatusActionsProps = {
   lead: LeadDetail
@@ -26,37 +26,54 @@ export function LeadStatusActions({ lead }: LeadStatusActionsProps) {
   const refresh = () => router.refresh()
 
   const { executeAsync: execBookTrial, isPending: bookingPending } = useAction(bookTrial, {
-    onSuccess: () => { toast.success("Trial booked"); refresh() },
+    onSuccess: () => {
+      toast.success("Trial booked")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError),
   })
 
   const { executeAsync: execCompleteTrial, isPending: completePending } = useAction(completeTrial, {
-    onSuccess: () => { toast.success("Trial completed"); refresh() },
+    onSuccess: () => {
+      toast.success("Trial completed")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError),
   })
 
   const { executeAsync: execConvert, isPending: convertPending } = useAction(convertLead, {
-    onSuccess: () => { toast.success("Lead converted to member"); refresh() },
+    onSuccess: () => {
+      toast.success("Lead converted to member")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError),
   })
 
   const { executeAsync: execLost, isPending: lostPending } = useAction(markLeadLost, {
-    onSuccess: () => { toast.success("Lead marked as lost"); refresh() },
+    onSuccess: () => {
+      toast.success("Lead marked as lost")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError),
   })
 
   const { executeAsync: execNurture, isPending: nurturePending } = useAction(markLeadNurture, {
-    onSuccess: () => { toast.success("Lead moved to nurture"); refresh() },
+    onSuccess: () => {
+      toast.success("Lead moved to nurture")
+      refresh()
+    },
     onError: ({ error }) => toast.error(error.serverError),
   })
 
-  const anyPending = bookingPending || completePending || convertPending || lostPending || nurturePending
+  const anyPending =
+    bookingPending || completePending || convertPending || lostPending || nurturePending
 
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-medium text-muted-foreground">
-          Status: <span className="font-semibold text-foreground">{lead.status.replace(/_/g, " ")}</span>
+          Status:{" "}
+          <span className="font-semibold text-foreground">{lead.status.replace(/_/g, " ")}</span>
         </div>
       </div>
 

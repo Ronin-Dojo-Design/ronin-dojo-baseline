@@ -2,8 +2,8 @@ import { notFound } from "next/navigation"
 import { SubscriptionForm } from "~/app/admin/subscriptions/_components/subscription-form"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
-import { findSubscriptionById } from "~/server/admin/subscriptions/queries"
 import { findSubscriptionTierList } from "~/server/admin/subscription-tiers/queries"
+import { findSubscriptionById } from "~/server/admin/subscriptions/queries"
 
 export default withAdminPage(async ({ params }: PageProps<"/admin/subscriptions/[id]">) => {
   const { id } = await params

@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { CertificateRow } from "~/app/admin/certificates/_components/certificates-table-columns"
 import { CertificatesDeleteDialog } from "~/app/admin/certificates/_components/certificates-delete-dialog"
+import type { CertificateRow } from "~/app/admin/certificates/_components/certificates-table-columns"
 import { Button } from "~/components/common/button"
 
 interface CertificatesTableToolbarActionsProps {

@@ -36,15 +36,13 @@ async function main() {
     {
       code: "BEGINNER",
       name: "Beginner",
-      description:
-        "Wolchek: White–Gold–Orange belts; BJJ: Rookies, White belts 1–2 stripe",
+      description: "Wolchek: White–Gold–Orange belts; BJJ: Rookies, White belts 1–2 stripe",
       sortOrder: 1,
     },
     {
       code: "INTERMEDIATE",
       name: "Intermediate",
-      description:
-        "Wolchek: Green–Purple–Blue belts; BJJ: White belts 3–4 stripe, Blue belts",
+      description: "Wolchek: Green–Purple–Blue belts; BJJ: White belts 3–4 stripe, Blue belts",
       sortOrder: 2,
     },
     {
@@ -88,7 +86,7 @@ async function main() {
 
 main()
   .then(() => db.$disconnect())
-  .catch((e) => {
+  .catch(e => {
     console.error(e)
     db.$disconnect()
     process.exit(1)

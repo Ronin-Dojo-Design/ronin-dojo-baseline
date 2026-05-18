@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
-import { H4 } from "~/components/common/heading"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { findIssuanceByQrCode } from "~/server/admin/certificates/issuance-queries"
 
@@ -25,20 +24,24 @@ export default async function CertificateVerifyPage({ params }: PageProps) {
     <>
       <Intro>
         <IntroTitle>Certificate Verification</IntroTitle>
-        <IntroDescription>
-          {issuance.certificateTemplate.name}
-        </IntroDescription>
+        <IntroDescription>{issuance.certificateTemplate.name}</IntroDescription>
       </Intro>
 
       <Section>
         <div className="mx-auto max-w-md space-y-6 rounded-lg border p-6">
           <div className="flex items-center justify-center">
             {isValid ? (
-              <Badge variant="success" className="text-lg px-4 py-2">✓ Valid Certificate</Badge>
+              <Badge variant="success" className="text-lg px-4 py-2">
+                ✓ Valid Certificate
+              </Badge>
             ) : isRevoked ? (
-              <Badge variant="danger" className="text-lg px-4 py-2">✗ Revoked</Badge>
+              <Badge variant="danger" className="text-lg px-4 py-2">
+                ✗ Revoked
+              </Badge>
             ) : (
-              <Badge variant="outline" className="text-lg px-4 py-2">⏳ Expired</Badge>
+              <Badge variant="outline" className="text-lg px-4 py-2">
+                ⏳ Expired
+              </Badge>
             )}
           </div>
 

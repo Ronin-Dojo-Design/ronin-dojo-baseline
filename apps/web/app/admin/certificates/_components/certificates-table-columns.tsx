@@ -1,15 +1,17 @@
 "use client"
 
+import { formatDateTime } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { CertificateTemplate } from "~/.generated/prisma/browser"
 import { CertificateActions } from "~/app/admin/certificates/_components/certificate-actions"
-import { Link } from "~/components/common/link"
 import { Badge } from "~/components/common/badge"
-import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { Checkbox } from "~/components/common/checkbox"
-import { formatDateTime } from "@primoui/utils"
+import { Link } from "~/components/common/link"
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 
-export type CertificateRow = CertificateTemplate & { organization: { name: string; id: string } | null }
+export type CertificateRow = CertificateTemplate & {
+  organization: { name: string; id: string } | null
+}
 
 export function getColumns(): ColumnDef<CertificateRow>[] {
   return [
@@ -17,7 +19,10 @@ export function getColumns(): ColumnDef<CertificateRow>[] {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
           onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -36,7 +41,10 @@ export function getColumns(): ColumnDef<CertificateRow>[] {
       accessorKey: "name",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
-        <Link href={`/admin/certificates/${row.original.id}`} className="font-medium hover:underline">
+        <Link
+          href={`/admin/certificates/${row.original.id}`}
+          className="font-medium hover:underline"
+        >
           {row.getValue("name")}
         </Link>
       ),
@@ -55,9 +63,7 @@ export function getColumns(): ColumnDef<CertificateRow>[] {
       id: "price",
       header: "Price",
       cell: ({ row }) =>
-        row.original.priceCents === 0
-          ? "Free"
-          : `$${(row.original.priceCents / 100).toFixed(2)}`,
+        row.original.priceCents === 0 ? "Free" : `$${(row.original.priceCents / 100).toFixed(2)}`,
     },
     {
       accessorKey: "isActive",
@@ -75,9 +81,7 @@ export function getColumns(): ColumnDef<CertificateRow>[] {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <CertificateActions template={row.original as CertificateTemplate} />
-      ),
+      cell: ({ row }) => <CertificateActions template={row.original as CertificateTemplate} />,
     },
   ]
 }

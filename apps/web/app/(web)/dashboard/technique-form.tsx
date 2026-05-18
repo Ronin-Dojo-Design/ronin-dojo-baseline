@@ -1,36 +1,69 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
-import { Input } from "~/components/common/input"
-import { TextArea } from "~/components/common/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/common/select"
-import { Switch } from "~/components/common/switch"
-import { Stack } from "~/components/common/stack"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/common/form"
 import { H4 } from "~/components/common/heading"
 import { Hint } from "~/components/common/hint"
+import { Input } from "~/components/common/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
+import { Stack } from "~/components/common/stack"
+import { Switch } from "~/components/common/switch"
+import { TextArea } from "~/components/common/textarea"
 import { createTechnique, updateTechnique } from "~/server/web/techniques/crud-actions"
 
 const categoryOptions = [
-  "STRIKE", "KICK", "THROW", "SUBMISSION", "SWEEP", "ESCAPE",
-  "BLOCK", "FORM", "DRILL", "CONDITIONING", "TRANSITION", "TAKEDOWN",
+  "STRIKE",
+  "KICK",
+  "THROW",
+  "SUBMISSION",
+  "SWEEP",
+  "ESCAPE",
+  "BLOCK",
+  "FORM",
+  "DRILL",
+  "CONDITIONING",
+  "TRANSITION",
+  "TAKEDOWN",
 ] as const
 
 const positionOptions = [
-  "STANDING", "GUARD", "HALF_GUARD", "MOUNT", "SIDE_CONTROL",
-  "BACK", "TURTLE", "CLINCH", "OPEN",
+  "STANDING",
+  "GUARD",
+  "HALF_GUARD",
+  "MOUNT",
+  "SIDE_CONTROL",
+  "BACK",
+  "TURTLE",
+  "CLINCH",
+  "OPEN",
 ] as const
 
 const difficultyOptions = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"] as const
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
-  slug: z.string().max(200).regex(/^[a-z0-9-]+$/, "Lowercase alphanumeric with dashes"),
+  slug: z
+    .string()
+    .max(200)
+    .regex(/^[a-z0-9-]+$/, "Lowercase alphanumeric with dashes"),
   description: z.string().max(5000).optional(),
   disciplineId: z.string().min(1, "Discipline is required"),
   position: z.string().optional(),
@@ -144,7 +177,9 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
-                  <FormControl><Input placeholder="Arm Bar" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="Arm Bar" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -156,7 +191,9 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
-                  <FormControl><Input placeholder="arm-bar" {...field} /></FormControl>
+                  <FormControl>
+                    <Input placeholder="arm-bar" {...field} />
+                  </FormControl>
                   <Hint>URL-friendly identifier (lowercase, dashes)</Hint>
                   <FormMessage />
                 </FormItem>
@@ -169,7 +206,9 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
-                  <FormControl><TextArea rows={3} {...field} /></FormControl>
+                  <FormControl>
+                    <TextArea rows={3} {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -183,11 +222,15 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                   <FormLabel>Discipline</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Select discipline" /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select discipline" />
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {disciplines.map(d => (
-                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -205,11 +248,15 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                     <FormLabel>Category</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {categoryOptions.map(v => (
-                          <SelectItem key={v} value={v}>{v.replace(/_/g, " ")}</SelectItem>
+                          <SelectItem key={v} value={v}>
+                            {v.replace(/_/g, " ")}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -225,11 +272,15 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                     <FormLabel>Position</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select position" /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select position" />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {positionOptions.map(v => (
-                          <SelectItem key={v} value={v}>{v.replace(/_/g, " ")}</SelectItem>
+                          <SelectItem key={v} value={v}>
+                            {v.replace(/_/g, " ")}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -245,11 +296,15 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                     <FormLabel>Difficulty</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select difficulty" /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {difficultyOptions.map(v => (
-                          <SelectItem key={v} value={v}>{v}</SelectItem>
+                          <SelectItem key={v} value={v}>
+                            {v}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -259,30 +314,54 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
             </Stack>
 
             <Stack size="md" direction="row" className="flex-wrap">
-              <FormField control={form.control} name="isGi" render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <FormLabel>Gi technique</FormLabel>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="isFoundational" render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <FormLabel>Foundational</FormLabel>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="requiresPartner" render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <FormLabel>Requires partner</FormLabel>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="requiresEquipment" render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <FormLabel>Requires equipment</FormLabel>
-                </FormItem>
-              )} />
+              <FormField
+                control={form.control}
+                name="isGi"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Gi technique</FormLabel>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isFoundational"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Foundational</FormLabel>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="requiresPartner"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Requires partner</FormLabel>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="requiresEquipment"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Requires equipment</FormLabel>
+                  </FormItem>
+                )}
+              />
             </Stack>
 
             <FormField
@@ -291,7 +370,9 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Teaching Cues</FormLabel>
-                  <FormControl><TextArea rows={3} placeholder="One cue per line" {...field} /></FormControl>
+                  <FormControl>
+                    <TextArea rows={3} placeholder="One cue per line" {...field} />
+                  </FormControl>
                   <Hint>Enter one teaching cue per line</Hint>
                 </FormItem>
               )}
@@ -303,7 +384,9 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Common Errors</FormLabel>
-                  <FormControl><TextArea rows={3} placeholder="One error per line" {...field} /></FormControl>
+                  <FormControl>
+                    <TextArea rows={3} placeholder="One error per line" {...field} />
+                  </FormControl>
                   <Hint>Enter one common error per line</Hint>
                 </FormItem>
               )}
@@ -315,17 +398,25 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Safety Notes</FormLabel>
-                  <FormControl><TextArea rows={2} {...field} /></FormControl>
+                  <FormControl>
+                    <TextArea rows={2} {...field} />
+                  </FormControl>
                 </FormItem>
               )}
             />
 
-            <FormField control={form.control} name="isPublished" render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormLabel>Published</FormLabel>
-              </FormItem>
-            )} />
+            <FormField
+              control={form.control}
+              name="isPublished"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormLabel>Published</FormLabel>
+                </FormItem>
+              )}
+            />
           </Stack>
 
           <Stack size="sm" direction="row">

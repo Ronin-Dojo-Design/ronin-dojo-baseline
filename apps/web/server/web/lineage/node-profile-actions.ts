@@ -3,12 +3,12 @@
 import type { Brand } from "~/.generated/prisma/client"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
+import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
 import {
   type UpdateLineageNodeProfileInput,
   updateLineageNodeProfileSchema,
 } from "~/server/web/lineage/node-profile-schemas"
-import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
-import { db as appDb } from "~/services/db"
+import type { db as appDb } from "~/services/db"
 
 /**
  * Durable-access lineage node profile server action.

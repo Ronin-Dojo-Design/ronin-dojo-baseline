@@ -1,8 +1,8 @@
-import { Suspense } from "react"
 import type { SearchParams } from "nuqs"
-import { TournamentQuery } from "~/components/web/tournaments/tournament-query"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Suspense } from "react"
 import { Skeleton } from "~/components/common/skeleton"
+import { TournamentQuery } from "~/components/web/tournaments/tournament-query"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getRequestBrand } from "~/lib/brand-context"
 
 export const metadata = {

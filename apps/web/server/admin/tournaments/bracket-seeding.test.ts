@@ -9,10 +9,10 @@
 // @ts-expect-error — bun:test runtime module
 import { describe, expect, it } from "bun:test"
 import {
-  standardBracketOrder,
+  type SeedableEntry,
   seedEntries,
   sortByMethod,
-  type SeedableEntry,
+  standardBracketOrder,
 } from "./bracket-seeding"
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ describe("sortByMethod REGISTRATION_ORDER", () => {
   it("sorts by registration order", () => {
     const entries = [entry("c", 2), entry("a", 0), entry("b", 1)]
     const sorted = sortByMethod(entries, "REGISTRATION_ORDER")
-    expect(sorted.map((e) => e.id)).toEqual(["a", "b", "c"])
+    expect(sorted.map(e => e.id)).toEqual(["a", "b", "c"])
   })
 })
 
@@ -87,7 +87,7 @@ describe("sortByMethod TOURNAMENT_RANKING", () => {
       entry("mid", 2, { tournamentRankingScore: 5 }),
     ]
     const sorted = sortByMethod(entries, "TOURNAMENT_RANKING")
-    expect(sorted.map((e) => e.id)).toEqual(["high", "mid", "low"])
+    expect(sorted.map(e => e.id)).toEqual(["high", "mid", "low"])
   })
 
   it("puts unscored entries last, sorted by registration order", () => {
@@ -97,7 +97,7 @@ describe("sortByMethod TOURNAMENT_RANKING", () => {
       entry("unscored0", 2),
     ]
     const sorted = sortByMethod(entries, "TOURNAMENT_RANKING")
-    expect(sorted.map((e) => e.id)).toEqual(["scored", "unscored1", "unscored0"])
+    expect(sorted.map(e => e.id)).toEqual(["scored", "unscored1", "unscored0"])
   })
 
   it("breaks ties by registration order", () => {
@@ -106,7 +106,7 @@ describe("sortByMethod TOURNAMENT_RANKING", () => {
       entry("a", 0, { tournamentRankingScore: 5 }),
     ]
     const sorted = sortByMethod(entries, "TOURNAMENT_RANKING")
-    expect(sorted.map((e) => e.id)).toEqual(["a", "b"])
+    expect(sorted.map(e => e.id)).toEqual(["a", "b"])
   })
 })
 
@@ -122,16 +122,13 @@ describe("sortByMethod MARTIAL_ARTS_RANK", () => {
       entry("blue", 2, { martialArtsRankOrdinal: 5 }),
     ]
     const sorted = sortByMethod(entries, "MARTIAL_ARTS_RANK")
-    expect(sorted.map((e) => e.id)).toEqual(["black", "blue", "white"])
+    expect(sorted.map(e => e.id)).toEqual(["black", "blue", "white"])
   })
 
   it("puts unranked entries last", () => {
-    const entries = [
-      entry("unranked", 0),
-      entry("ranked", 1, { martialArtsRankOrdinal: 3 }),
-    ]
+    const entries = [entry("unranked", 0), entry("ranked", 1, { martialArtsRankOrdinal: 3 })]
     const sorted = sortByMethod(entries, "MARTIAL_ARTS_RANK")
-    expect(sorted.map((e) => e.id)).toEqual(["ranked", "unranked"])
+    expect(sorted.map(e => e.id)).toEqual(["ranked", "unranked"])
   })
 })
 
@@ -147,17 +144,13 @@ describe("sortByMethod MANUAL", () => {
       entry("seed2", 2, { manualSeed: 2 }),
     ]
     const sorted = sortByMethod(entries, "MANUAL")
-    expect(sorted.map((e) => e.id)).toEqual(["seed1", "seed2", "seed3"])
+    expect(sorted.map(e => e.id)).toEqual(["seed1", "seed2", "seed3"])
   })
 
   it("puts non-manually-seeded entries last by registration order", () => {
-    const entries = [
-      entry("auto2", 2),
-      entry("manual", 0, { manualSeed: 1 }),
-      entry("auto1", 1),
-    ]
+    const entries = [entry("auto2", 2), entry("manual", 0, { manualSeed: 1 }), entry("auto1", 1)]
     const sorted = sortByMethod(entries, "MANUAL")
-    expect(sorted.map((e) => e.id)).toEqual(["manual", "auto1", "auto2"])
+    expect(sorted.map(e => e.id)).toEqual(["manual", "auto1", "auto2"])
   })
 })
 
@@ -180,10 +173,10 @@ describe("seedEntries", () => {
     const result = seedEntries(entries, 4, "REGISTRATION_ORDER")
     // Standard order for 4: [1,4,2,3]
     // Seed 1 (a) → position 0, Seed 2 (b) → position 2, Seed 3 (c) → position 3, Seed 4 (d) → position 1
-    expect(result.find((r) => r.entryId === "a")?.bracketSlotIndex).toBe(0)
-    expect(result.find((r) => r.entryId === "d")?.bracketSlotIndex).toBe(1)
-    expect(result.find((r) => r.entryId === "b")?.bracketSlotIndex).toBe(2)
-    expect(result.find((r) => r.entryId === "c")?.bracketSlotIndex).toBe(3)
+    expect(result.find(r => r.entryId === "a")?.bracketSlotIndex).toBe(0)
+    expect(result.find(r => r.entryId === "d")?.bracketSlotIndex).toBe(1)
+    expect(result.find(r => r.entryId === "b")?.bracketSlotIndex).toBe(2)
+    expect(result.find(r => r.entryId === "c")?.bracketSlotIndex).toBe(3)
   })
 
   it("with 3 competitors in bracket of 4, seed 1 gets the BYE slot partner", () => {
@@ -192,7 +185,7 @@ describe("seedEntries", () => {
     // 3 entries, bracket size 4 → seed 4 is empty (BYE)
     // Seed 1 (a) at slot 0, paired with slot 1 (seed 4 = empty) = BYE for seed 1
     expect(result.length).toBe(3)
-    expect(result.find((r) => r.entryId === "a")?.seed).toBe(1)
+    expect(result.find(r => r.entryId === "a")?.seed).toBe(1)
   })
 
   it("uses tournament ranking to determine seeds", () => {
@@ -202,17 +195,14 @@ describe("seedEntries", () => {
     ]
     const result = seedEntries(entries, 2, "TOURNAMENT_RANKING")
     // Champion should be seed 1
-    expect(result.find((r) => r.entryId === "champion")?.seed).toBe(1)
-    expect(result.find((r) => r.entryId === "newcomer")?.seed).toBe(2)
+    expect(result.find(r => r.entryId === "champion")?.seed).toBe(1)
+    expect(result.find(r => r.entryId === "newcomer")?.seed).toBe(2)
   })
 
   it("uses manual seeds when specified", () => {
-    const entries = [
-      entry("b", 0, { manualSeed: 2 }),
-      entry("a", 1, { manualSeed: 1 }),
-    ]
+    const entries = [entry("b", 0, { manualSeed: 2 }), entry("a", 1, { manualSeed: 1 })]
     const result = seedEntries(entries, 2, "MANUAL")
-    expect(result.find((r) => r.entryId === "a")?.seed).toBe(1)
-    expect(result.find((r) => r.entryId === "b")?.seed).toBe(2)
+    expect(result.find(r => r.entryId === "a")?.seed).toBe(1)
+    expect(result.find(r => r.entryId === "b")?.seed).toBe(2)
   })
 })

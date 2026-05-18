@@ -219,7 +219,7 @@ export const updateRegistrationStatus = tournamentAdminActionClient
     // Optimistic locking: only update if version hasn't changed since read.
     // If another caller updated first, Prisma throws P2025 (record not found)
     // because the compound where {id, version} no longer matches.
-    let updated
+    let updated: Awaited<ReturnType<typeof db.registration.update>>
     try {
       updated = await db.registration.update({
         where: { id: registrationId, version: registration.version },
@@ -233,9 +233,7 @@ export const updateRegistrationStatus = tournamentAdminActionClient
         "code" in error &&
         (error as { code: string }).code === "P2025"
       ) {
-        throw new Error(
-          "Registration was modified by another user. Please refresh and try again.",
-        )
+        throw new Error("Registration was modified by another user. Please refresh and try again.")
       }
       throw error
     }
@@ -279,7 +277,7 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
 
     // Optimistic locking: use individual versioned updates in a transaction.
     // If any row was modified since read, the transaction rolls back entirely.
-    await db.$transaction(async (tx) => {
+    await db.$transaction(async tx => {
       for (const reg of registrations) {
         try {
           await tx.registration.update({

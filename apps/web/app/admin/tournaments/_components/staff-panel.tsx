@@ -1,9 +1,10 @@
 "use client"
 
 import { PlusIcon, TrashIcon } from "lucide-react"
+import { useAction } from "next-safe-action/hooks"
 import { use, useState } from "react"
 import { toast } from "sonner"
-import { useAction } from "next-safe-action/hooks"
+import { StaffAssignmentForm } from "~/app/admin/tournaments/_components/staff-assignment-form"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
@@ -14,6 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/common/dialog"
+import { H3 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
 import {
   Table,
   TableBody,
@@ -22,13 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
-import { H3 } from "~/components/common/heading"
-import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import { Tooltip } from "~/components/common/tooltip"
-import { StaffAssignmentForm } from "~/app/admin/tournaments/_components/staff-assignment-form"
 import { deleteTournamentStaffAssignments } from "~/server/admin/tournaments/actions"
-import type { findTournamentStaff, findTournamentRoles } from "~/server/admin/tournaments/queries"
+import type { findTournamentRoles, findTournamentStaff } from "~/server/admin/tournaments/queries"
 
 type StaffPanelProps = {
   tournamentId: string
@@ -60,7 +60,7 @@ export function StaffPanel({
       {
         loading: "Removing staff...",
         success: "Staff removed successfully",
-        error: (err) => `Failed: ${err.message}`,
+        error: err => `Failed: ${err.message}`,
       },
     )
   }

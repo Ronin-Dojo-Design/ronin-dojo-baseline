@@ -39,31 +39,27 @@ export function EntitlementForm({
   const router = useRouter()
   const resolver = zodResolver(entitlementSchema)
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    upsertEntitlement,
-    resolver,
-    {
-      formProps: {
-        defaultValues: {
-          id: entitlement?.id ?? "",
-          key: entitlement?.key ?? "",
-          name: entitlement?.name ?? "",
-          description: entitlement?.description ?? "",
-        },
-      },
-
-      actionProps: {
-        onSuccess: ({ data }) => {
-          toast.success(`Entitlement successfully ${entitlement ? "updated" : "created"}`)
-          router.push(`/admin/entitlements/${data?.id}`)
-        },
-
-        onError: ({ error }) => {
-          toast.error(error.serverError)
-        },
+  const { form, action, handleSubmitWithAction } = useHookFormAction(upsertEntitlement, resolver, {
+    formProps: {
+      defaultValues: {
+        id: entitlement?.id ?? "",
+        key: entitlement?.key ?? "",
+        name: entitlement?.name ?? "",
+        description: entitlement?.description ?? "",
       },
     },
-  )
+
+    actionProps: {
+      onSuccess: ({ data }) => {
+        toast.success(`Entitlement successfully ${entitlement ? "updated" : "created"}`)
+        router.push(`/admin/entitlements/${data?.id}`)
+      },
+
+      onError: ({ error }) => {
+        toast.error(error.serverError)
+      },
+    },
+  })
 
   // Auto-generate key from name (e.g., "Program Access" → "program-access")
   useComputedField({
@@ -119,11 +115,7 @@ export function EntitlementForm({
             <FormItem>
               <FormLabel>Key</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="e.g. program-access"
-                  className="font-mono text-sm"
-                  {...field}
-                />
+                <Input placeholder="e.g. program-access" className="font-mono text-sm" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -137,10 +129,7 @@ export function EntitlementForm({
             <FormItem className="col-span-full">
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <TextArea
-                  placeholder="What does this entitlement grant access to?"
-                  {...field}
-                />
+                <TextArea placeholder="What does this entitlement grant access to?" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -1,9 +1,10 @@
 "use client"
 
 import { PlusIcon, TrashIcon } from "lucide-react"
-import { useFieldArray, type UseFormReturn } from "react-hook-form"
+import { type UseFormReturn, useFieldArray } from "react-hook-form"
 import { Button } from "~/components/common/button"
 import { FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
+import { H2 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import {
   Select,
@@ -12,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { H2 } from "~/components/common/heading"
 
 const PLATFORMS = [
   { value: "WEBSITE", label: "Website" },
@@ -25,7 +25,6 @@ const PLATFORMS = [
 ] as const
 
 type SocialLinksEditorProps = {
-  // biome-ignore lint: generic form type
   form: UseFormReturn<any>
 }
 

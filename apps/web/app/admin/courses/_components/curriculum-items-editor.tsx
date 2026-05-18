@@ -73,8 +73,12 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
   })
 
   const isPending =
-    addAction.isPending || deleteAction.isPending || reorderAction.isPending ||
-    updateAction.isPending || linkAction.isPending || unlinkAction.isPending
+    addAction.isPending ||
+    deleteAction.isPending ||
+    reorderAction.isPending ||
+    updateAction.isPending ||
+    linkAction.isPending ||
+    unlinkAction.isPending
 
   const handleAdd = () => {
     const newOrder = items.length + 1
@@ -103,13 +107,21 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
     <Stack direction="column" size="md">
       <div className="flex items-center justify-between">
         <H3>Curriculum Items</H3>
-        <Button variant="secondary" size="sm" prefix={<PlusIcon />} onClick={handleAdd} disabled={isPending}>
+        <Button
+          variant="secondary"
+          size="sm"
+          prefix={<PlusIcon />}
+          onClick={handleAdd}
+          disabled={isPending}
+        >
           Add item
         </Button>
       </div>
 
       {items.length === 0 && (
-        <p className="text-sm text-muted-foreground">No curriculum items yet. Add one to get started.</p>
+        <p className="text-sm text-muted-foreground">
+          No curriculum items yet. Add one to get started.
+        </p>
       )}
 
       <Stack direction="column" size="sm">
@@ -130,9 +142,30 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
                 className="flex-1"
               />
 
-              <Button variant="ghost" size="sm" prefix={<ArrowUpIcon />} onClick={() => handleMove(index, "up")} disabled={index === 0 || isPending} aria-label="Move up" />
-              <Button variant="ghost" size="sm" prefix={<ArrowDownIcon />} onClick={() => handleMove(index, "down")} disabled={index === items.length - 1 || isPending} aria-label="Move down" />
-              <Button variant="ghost" size="sm" prefix={<TrashIcon />} onClick={() => handleDelete(item.id)} disabled={isPending} aria-label="Delete" />
+              <Button
+                variant="ghost"
+                size="sm"
+                prefix={<ArrowUpIcon />}
+                onClick={() => handleMove(index, "up")}
+                disabled={index === 0 || isPending}
+                aria-label="Move up"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                prefix={<ArrowDownIcon />}
+                onClick={() => handleMove(index, "down")}
+                disabled={index === items.length - 1 || isPending}
+                aria-label="Move down"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                prefix={<TrashIcon />}
+                onClick={() => handleDelete(item.id)}
+                disabled={isPending}
+                aria-label="Delete"
+              />
             </Stack>
 
             {/* Technique links */}
@@ -146,7 +179,13 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
                   <button
                     type="button"
                     className="text-muted-foreground hover:text-destructive"
-                    onClick={() => unlinkAction.execute({ techniqueId: link.techniqueId, curriculumItemId: item.id, courseId })}
+                    onClick={() =>
+                      unlinkAction.execute({
+                        techniqueId: link.techniqueId,
+                        curriculumItemId: item.id,
+                        courseId,
+                      })
+                    }
                     disabled={isPending}
                     aria-label={`Unlink ${link.technique.name}`}
                   >
@@ -157,7 +196,9 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
               <TechniqueSearchPicker
                 courseId={courseId}
                 curriculumItemId={item.id}
-                onLink={(techniqueId) => linkAction.execute({ techniqueId, curriculumItemId: item.id, courseId })}
+                onLink={techniqueId =>
+                  linkAction.execute({ techniqueId, curriculumItemId: item.id, courseId })
+                }
                 disabled={isPending}
               />
             </div>
@@ -169,8 +210,8 @@ export function CurriculumItemsEditor({ courseId, items }: CurriculumItemsEditor
 }
 
 function TechniqueSearchPicker({
-  courseId,
-  curriculumItemId,
+  courseId: _courseId,
+  curriculumItemId: _curriculumItemId,
   onLink,
   disabled,
 }: {
@@ -181,7 +222,9 @@ function TechniqueSearchPicker({
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<{ id: string; name: string; slug: string; category: string | null }[]>([])
+  const [results, setResults] = useState<
+    { id: string; name: string; slug: string; category: string | null }[]
+  >([])
   const [searching, startSearch] = useTransition()
 
   const handleSearch = (value: string) => {
@@ -220,7 +263,11 @@ function TechniqueSearchPicker({
         autoFocus
         onBlur={() => {
           // Delay close so click on result fires first
-          setTimeout(() => { setOpen(false); setQuery(""); setResults([]) }, 200)
+          setTimeout(() => {
+            setOpen(false)
+            setQuery("")
+            setResults([])
+          }, 200)
         }}
       />
       {results.length > 0 && (
@@ -239,7 +286,11 @@ function TechniqueSearchPicker({
               }}
             >
               {t.name}
-              {t.category && <span className="text-muted-foreground ml-1">({t.category.replace(/_/g, " ")})</span>}
+              {t.category && (
+                <span className="text-muted-foreground ml-1">
+                  ({t.category.replace(/_/g, " ")})
+                </span>
+              )}
             </button>
           ))}
         </div>

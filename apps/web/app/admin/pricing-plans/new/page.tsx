@@ -2,10 +2,7 @@ import { PricingPlanForm } from "~/app/admin/pricing-plans/_components/pricing-p
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { findEntitlementList } from "~/server/admin/entitlements/queries"
-import {
-  findOrganizationList,
-  findProgramList,
-} from "~/server/admin/pricing-plans/queries"
+import { findOrganizationList, findProgramList } from "~/server/admin/pricing-plans/queries"
 
 export default withAdminPage(() => {
   return (

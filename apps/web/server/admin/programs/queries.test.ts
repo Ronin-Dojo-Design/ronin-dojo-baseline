@@ -8,7 +8,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module
-import { describe, expect, it, mock, beforeEach } from "bun:test"
+import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 const defaultSearch = {
   name: "",

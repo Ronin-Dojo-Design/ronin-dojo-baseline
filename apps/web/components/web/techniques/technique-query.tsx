@@ -2,9 +2,15 @@ import type { SearchParams } from "nuqs"
 import type { Brand, Prisma } from "~/.generated/prisma/client"
 import type { PaginationProps } from "~/components/web/pagination"
 import { TechniqueList, type TechniqueListProps } from "~/components/web/techniques/technique-list"
-import { TechniqueListing, type TechniqueListingProps } from "~/components/web/techniques/technique-listing"
+import {
+  TechniqueListing,
+  type TechniqueListingProps,
+} from "~/components/web/techniques/technique-listing"
 import { searchTechniques } from "~/server/web/techniques/queries"
-import { type TechniqueFilterParams, techniqueFilterParamsCache } from "~/server/web/techniques/schema"
+import {
+  type TechniqueFilterParams,
+  techniqueFilterParamsCache,
+} from "~/server/web/techniques/schema"
 
 type TechniqueQueryProps = Omit<TechniqueListingProps, "list" | "pagination"> & {
   searchParams: Promise<SearchParams>

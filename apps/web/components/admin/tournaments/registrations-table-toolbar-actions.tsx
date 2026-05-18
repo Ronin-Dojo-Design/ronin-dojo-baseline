@@ -28,7 +28,7 @@ export function RegistrationsTableToolbarActions({ table }: RegistrationsTableTo
 
   if (!rows.length) return null
 
-  const selectedIds = rows.map((r) => r.original.id)
+  const selectedIds = rows.map(r => r.original.id)
 
   const handleBulkUpdate = (status: string) => {
     toast.promise(
@@ -42,7 +42,7 @@ export function RegistrationsTableToolbarActions({ table }: RegistrationsTableTo
       {
         loading: `Updating ${selectedIds.length} registrations...`,
         success: `${selectedIds.length} registrations updated`,
-        error: (err) => `Failed: ${err.message}`,
+        error: err => `Failed: ${err.message}`,
       },
     )
   }

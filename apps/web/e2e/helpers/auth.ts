@@ -10,10 +10,12 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  connectionString:
+    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
 })
 const prisma = new PrismaClient({ adapter })
-const AUTH_SECRET = process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me-before-deploy-please-rotate-when-pushed"
+const AUTH_SECRET =
+  process.env.BETTER_AUTH_SECRET ?? "dev-only-change-me-before-deploy-please-rotate-when-pushed"
 
 /**
  * Sign a cookie value using HMAC-SHA-256, matching Better-Auth's cookie signing.
@@ -32,7 +34,10 @@ async function signCookieValue(value: string, secret: string): Promise<string> {
   return encodeURIComponent(`${value}.${base64Sig}`)
 }
 
-export async function createAuthenticatedUser(page: Page, options?: { name?: string; email?: string; role?: string }) {
+export async function createAuthenticatedUser(
+  page: Page,
+  options?: { name?: string; email?: string; role?: string },
+) {
   const uid = crypto.randomUUID().slice(0, 12)
   const name = options?.name ?? `e2e-user-${uid}`
   const email = options?.email ?? `e2e-${uid}@test.local`

@@ -3,8 +3,8 @@
 import { after } from "next/server"
 import { getRequestBrand } from "~/lib/brand-context"
 import { adminActionClient } from "~/lib/safe-actions"
-import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 import { postSchema } from "~/server/admin/posts/schema"
+import { idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertPost = adminActionClient
   .inputSchema(postSchema)
@@ -12,7 +12,7 @@ export const upsertPost = adminActionClient
     const { id, tools, ...input } = parsedInput
 
     // Strip content to plain text for search/read-time
-    const plainText = input.content.replace(/[#*_~`>\[\]()!-]/g, "").trim()
+    const plainText = input.content.replace(/[#*_~`>[\]()!-]/g, "").trim()
     const toolIds = tools?.map(id => ({ id }))
     const brand = await getRequestBrand()
 

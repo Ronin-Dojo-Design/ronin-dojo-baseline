@@ -46,9 +46,7 @@ const TechniqueCard = ({ technique, ...props }: TechniqueCardProps) => {
             {technique.position && (
               <Badge variant="outline">{technique.position.replace(/_/g, " ")}</Badge>
             )}
-            {technique.discipline && (
-              <Badge variant="soft">{technique.discipline.name}</Badge>
-            )}
+            {technique.discipline && <Badge variant="soft">{technique.discipline.name}</Badge>}
           </Stack>
         </Stack>
       </div>
@@ -81,4 +79,4 @@ const TechniqueCardSkeleton = () => {
   )
 }
 
-export { TechniqueCard, TechniqueCardSkeleton, type TechniqueCardProps }
+export { TechniqueCard, type TechniqueCardProps, TechniqueCardSkeleton }

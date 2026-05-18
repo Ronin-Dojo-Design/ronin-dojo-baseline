@@ -19,8 +19,8 @@ import { ExternalLink } from "~/components/web/external-link"
 import { AffiliateGearCard } from "~/components/web/tuffbuffs/affiliate-gear-card"
 import { resolvePublicMediaUrl } from "~/lib/public-media-url"
 import { formatGearPrice } from "~/lib/tuffbuffs/gear-utils"
-import type { TuffBuffsAffiliateGearProduct } from "~/types/tuffbuffs-gear"
 import { cx } from "~/lib/utils"
+import type { TuffBuffsAffiliateGearProduct } from "~/types/tuffbuffs-gear"
 
 type GearViewMode = "grid" | "list" | "carousel"
 

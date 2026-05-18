@@ -1,9 +1,12 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
 import { DirectoryList } from "~/components/web/directory/directory-list"
-import { DirectoryListing, type DirectoryListingProps } from "~/components/web/directory/directory-listing"
+import {
+  DirectoryListing,
+  type DirectoryListingProps,
+} from "~/components/web/directory/directory-listing"
 import { getDirectoryProfiles } from "~/server/web/directory/queries"
-import { type DirectoryFilterParams, directoryFilterParamsCache } from "~/server/web/directory/schema"
+import { directoryFilterParamsCache } from "~/server/web/directory/schema"
 
 type DirectoryQueryProps = Omit<DirectoryListingProps, "children"> & {
   searchParams: Promise<SearchParams>

@@ -1,9 +1,10 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
 import { XIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
+import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { AnimatedContainer } from "~/components/common/animated-container"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -11,7 +12,6 @@ import { Card } from "~/components/common/card"
 import { H3 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { addProgramWaiver, removeProgramWaivers } from "~/server/admin/programs/actions"
 
 type LinkedWaiver = { id: string; title: string; type: string; required: boolean }
@@ -83,10 +83,14 @@ export function ProgramWaiversEditor({
                 <Card key={waiver.id}>
                   <Stack direction="row" size="sm" className="items-center justify-between p-3">
                     <Stack direction="row" size="sm" className="items-center">
-                      <Badge variant="soft" size="sm">{waiver.type}</Badge>
+                      <Badge variant="soft" size="sm">
+                        {waiver.type}
+                      </Badge>
                       <span className="text-sm font-medium">{waiver.title}</span>
                       {waiver.required && (
-                        <Badge variant="outline" size="sm">Required</Badge>
+                        <Badge variant="outline" size="sm">
+                          Required
+                        </Badge>
                       )}
                     </Stack>
 

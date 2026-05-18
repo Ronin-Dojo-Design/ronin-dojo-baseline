@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
-import { UserForm } from "~/app/admin/users/_components/user-form"
 import { UploadGrantToggle } from "~/app/admin/users/_components/upload-grant-toggle"
+import { UserForm } from "~/app/admin/users/_components/user-form"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
 import { getRequestBrand } from "~/lib/brand-context"
-import { hasEntitlement } from "~/server/web/entitlements/queries"
 import { findUserById } from "~/server/admin/users/queries"
+import { hasEntitlement } from "~/server/web/entitlements/queries"
 
 export default withAdminPage(async ({ params }: PageProps<"/admin/users/[id]">) => {
   const { id } = await params

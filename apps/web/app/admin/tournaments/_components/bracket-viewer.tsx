@@ -1,33 +1,34 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useCallback, useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { Avatar, AvatarImage, AvatarFallback } from "~/components/common/avatar"
+import { MatchResult } from "~/.generated/prisma/browser"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Card, CardHeader, CardFooter } from "~/components/common/card"
+import { Card, CardFooter, CardHeader } from "~/components/common/card"
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "~/components/common/dialog"
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
-import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import { Label } from "~/components/common/label"
+import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import {
   Select,
   SelectContent,
@@ -36,29 +37,23 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Tooltip } from "~/components/common/tooltip"
-import { MatchResult } from "~/.generated/prisma/browser"
 import { scoreMatch } from "~/server/admin/tournaments/actions"
-import { scoreMatchSchema, type ScoreMatchInput } from "~/server/admin/tournaments/schema"
 import type {
   BracketWithMatches,
   MatchWithCompetitors,
 } from "~/server/admin/tournaments/bracket-queries"
-import { TenPointMustForm, PointsScoreForm } from "./score-forms"
+import { type ScoreMatchInput, scoreMatchSchema } from "~/server/admin/tournaments/schema"
+import { PointsScoreForm, TenPointMustForm } from "./score-forms"
 
 // -----------------------------------------------------------------------------
 // Constants
 // -----------------------------------------------------------------------------
 
 /** Result types that use 10-point must scoring */
-const TEN_POINT_MUST_RESULTS = new Set([
-  "WIN_DECISION",
-  "WIN_KO_TKO",
-])
+const TEN_POINT_MUST_RESULTS = new Set(["WIN_DECISION", "WIN_KO_TKO"])
 
 /** Result types that use points scoring */
-const POINTS_RESULTS = new Set([
-  "WIN_POINTS",
-])
+const POINTS_RESULTS = new Set(["WIN_POINTS"])
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -83,7 +78,7 @@ function getCompetitorOrg(c: MatchWithCompetitors["competitors"][number]) {
 function getInitials(name: string) {
   return name
     .split(" ")
-    .map((w) => w[0])
+    .map(w => w[0])
     .join("")
     .slice(0, 2)
     .toUpperCase()
@@ -184,26 +179,28 @@ function ScoreMatchDialog({
                 <FormItem>
                   <FormLabel isRequired>Winner</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      {match.competitors.map((c) => (
+                    <RadioGroup onValueChange={field.onChange} value={field.value}>
+                      {match.competitors.map(c => (
                         <div key={c.id} className="flex items-center gap-3">
-                          <RadioGroupItem
-                            value={c.registrationEntryId}
-                            id={`winner-${c.id}`}
-                          />
-                          <Label htmlFor={`winner-${c.id}`} className="flex items-center gap-2 cursor-pointer">
+                          <RadioGroupItem value={c.registrationEntryId} id={`winner-${c.id}`} />
+                          <Label
+                            htmlFor={`winner-${c.id}`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
                             <Avatar className="size-6">
                               {getCompetitorAvatar(c) ? (
-                                <AvatarImage src={getCompetitorAvatar(c)!} alt={getCompetitorName(c)} />
+                                <AvatarImage
+                                  src={getCompetitorAvatar(c)!}
+                                  alt={getCompetitorName(c)}
+                                />
                               ) : null}
                               <AvatarFallback>{getInitials(getCompetitorName(c))}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm">{getCompetitorName(c)}</span>
                             {getCompetitorOrg(c) && (
-                              <Badge variant="soft" size="sm">{getCompetitorOrg(c)}</Badge>
+                              <Badge variant="soft" size="sm">
+                                {getCompetitorOrg(c)}
+                              </Badge>
                             )}
                           </Label>
                         </div>
@@ -229,7 +226,7 @@ function ScoreMatchDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(MatchResult).map((r) => (
+                      {Object.values(MatchResult).map(r => (
                         <SelectItem key={r} value={r}>
                           {r.replace(/_/g, " ")}
                         </SelectItem>
@@ -300,11 +297,7 @@ function ScoreMatchDialog({
             )}
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setOpen(false)}
-              >
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
@@ -359,17 +352,18 @@ function CompetitorRow({
 // Match card
 // -----------------------------------------------------------------------------
 
-function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scoringMethod: string }) {
-  const canScore =
-    match.status === "SCHEDULED" || match.status === "IN_PROGRESS"
+function MatchCard({
+  match,
+  scoringMethod,
+}: {
+  match: MatchWithCompetitors
+  scoringMethod: string
+}) {
+  const canScore = match.status === "SCHEDULED" || match.status === "IN_PROGRESS"
   const isBye = match.status === "BYE"
   const isCompleted = match.status === "COMPLETED"
 
-  const statusVariant = isCompleted
-    ? "success"
-    : isBye
-      ? "warning"
-      : ("soft" as const)
+  const statusVariant = isCompleted ? "success" : isBye ? "warning" : ("soft" as const)
 
   return (
     <Card
@@ -384,9 +378,7 @@ function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scor
     >
       <CardHeader>
         <div className="flex items-center justify-between gap-2 w-full">
-          <span className="text-xs text-muted-foreground">
-            Match {match.matchNumber}
-          </span>
+          <span className="text-xs text-muted-foreground">Match {match.matchNumber}</span>
           <Tooltip tooltip={STATUS_TOOLTIPS[match.status] ?? match.status}>
             <Badge variant={statusVariant} size="sm">
               {match.status}
@@ -396,7 +388,7 @@ function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scor
       </CardHeader>
 
       <div className="space-y-1.5">
-        {match.competitors.map((c) => (
+        {match.competitors.map(c => (
           <CompetitorRow
             key={c.id}
             competitor={c}
@@ -405,7 +397,9 @@ function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scor
         ))}
 
         {isBye && match.competitors.length === 1 && (
-          <Badge variant="warning" size="sm">BYE — auto-advanced</Badge>
+          <Badge variant="warning" size="sm">
+            BYE — auto-advanced
+          </Badge>
         )}
       </div>
 
@@ -432,7 +426,13 @@ function MatchCard({ match, scoringMethod }: { match: MatchWithCompetitors; scor
 // Bracket viewer (round-by-round columns)
 // -----------------------------------------------------------------------------
 
-export function BracketViewer({ bracket, scoringMethod = "POINTS" }: { bracket: BracketWithMatches; scoringMethod?: string }) {
+export function BracketViewer({
+  bracket,
+  scoringMethod = "POINTS",
+}: {
+  bracket: BracketWithMatches
+  scoringMethod?: string
+}) {
   // Group matches by round
   const matchesByRound = new Map<number, MatchWithCompetitors[]>()
   for (const match of bracket.matches) {
@@ -441,9 +441,7 @@ export function BracketViewer({ bracket, scoringMethod = "POINTS" }: { bracket: 
     matchesByRound.set(match.roundNumber, existing)
   }
 
-  const rounds = Array.from(matchesByRound.entries()).sort(
-    ([a], [b]) => a - b,
-  )
+  const rounds = Array.from(matchesByRound.entries()).sort(([a], [b]) => a - b)
   const totalRounds = rounds.length
 
   const roundLabel = (round: number) => {
@@ -462,7 +460,7 @@ export function BracketViewer({ bracket, scoringMethod = "POINTS" }: { bracket: 
             <div className="text-sm font-medium text-center border-b pb-1">
               {roundLabel(roundNum)}
             </div>
-            {matches.map((match) => (
+            {matches.map(match => (
               <MatchCard key={match.id} match={match} scoringMethod={scoringMethod} />
             ))}
           </div>

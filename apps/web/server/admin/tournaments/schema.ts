@@ -1,12 +1,23 @@
 import {
   createSearchParamsCache,
+  type inferParserType,
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  type inferParserType,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Tournament, type TournamentRole, type RuleSet, Brand, TournamentStatus, DivisionFormat, DivisionGender, MatchResult, MatchStatus, ScoringMethod, SeedingMethod } from "~/.generated/prisma/browser"
+import {
+  Brand,
+  DivisionFormat,
+  DivisionGender,
+  MatchResult,
+  type RuleSet,
+  ScoringMethod,
+  SeedingMethod,
+  type Tournament,
+  type TournamentRole,
+  TournamentStatus,
+} from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 // -----------------------------------------------------------------------------
@@ -21,7 +32,9 @@ export const tournamentsTableParamsSchema = {
   from: parseAsString.withDefault(""),
   to: parseAsString.withDefault(""),
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
-  status: parseAsStringEnum<TournamentStatus>(Object.values(TournamentStatus)).withDefault("" as any),
+  status: parseAsStringEnum<TournamentStatus>(Object.values(TournamentStatus)).withDefault(
+    "" as any,
+  ),
 }
 
 export const tournamentsTableParamsCache = createSearchParamsCache(tournamentsTableParamsSchema)
@@ -41,8 +54,12 @@ export const tournamentRolesTableParamsSchema = {
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
 }
 
-export const tournamentRolesTableParamsCache = createSearchParamsCache(tournamentRolesTableParamsSchema)
-export type TournamentRolesTableSchema = Awaited<ReturnType<typeof tournamentRolesTableParamsCache.parse>>
+export const tournamentRolesTableParamsCache = createSearchParamsCache(
+  tournamentRolesTableParamsSchema,
+)
+export type TournamentRolesTableSchema = Awaited<
+  ReturnType<typeof tournamentRolesTableParamsCache.parse>
+>
 
 // -----------------------------------------------------------------------------
 // RuleSet admin table params
@@ -183,9 +200,7 @@ export const generateBracketSchema = z.object({
   bracketName: z.string().optional(),
   seedingMethod: z.enum(SeedingMethod).default("REGISTRATION_ORDER"),
   /** For MANUAL seeding: array of { entryId, seed } pairs */
-  manualSeeds: z
-    .array(z.object({ entryId: z.string(), seed: z.number().int().min(1) }))
-    .optional(),
+  manualSeeds: z.array(z.object({ entryId: z.string(), seed: z.number().int().min(1) })).optional(),
 })
 
 export type GenerateBracketInput = z.infer<typeof generateBracketSchema>
@@ -331,4 +346,3 @@ export const publishFightRecordSchema = z.object({
 })
 
 export type PublishFightRecordSchema = z.infer<typeof publishFightRecordSchema>
-

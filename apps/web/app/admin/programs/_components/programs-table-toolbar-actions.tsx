@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import type { ProgramRow } from "~/app/admin/programs/_components/programs-table-columns"
 import { ProgramsDeleteDialog } from "~/app/admin/programs/_components/programs-delete-dialog"
+import type { ProgramRow } from "~/app/admin/programs/_components/programs-table-columns"
 import { Button } from "~/components/common/button"
 
 interface ProgramsTableToolbarActionsProps {

@@ -85,13 +85,15 @@ async function main() {
     })
 
     // Filter to merch items by checking metadata.source
-    const merchPlans = plans.filter((p) => {
+    const merchPlans = plans.filter(p => {
       const meta = p.metadata as Record<string, unknown> | null
       return meta?.source === "tuffbuffs-merch"
     })
 
     if (merchPlans.length === 0) {
-      console.log("✅ No TuffBuffs merch PricingPlan rows found. Run seed-tuffbuffs-merch.ts first.")
+      console.log(
+        "✅ No TuffBuffs merch PricingPlan rows found. Run seed-tuffbuffs-merch.ts first.",
+      )
       return
     }
 
@@ -123,7 +125,9 @@ async function main() {
       }
 
       if (DRY_RUN) {
-        console.log(`   🔍 Would create: ${productName} — ${plan.name} ($${(plan.amountCents / 100).toFixed(2)})`)
+        console.log(
+          `   🔍 Would create: ${productName} — ${plan.name} ($${(plan.amountCents / 100).toFixed(2)})`,
+        )
         console.log(`      └─ Image: ${isPlaceholderImage(imagePath) ? "fallback" : imagePath}`)
         created++
         continue
@@ -143,7 +147,9 @@ async function main() {
             stripePriceId: defaultPrice ?? null,
           },
         })
-        console.log(`   🔗 Linked existing: ${productName} [${existing.id}] → PricingPlan ${plan.id}`)
+        console.log(
+          `   🔗 Linked existing: ${productName} [${existing.id}] → PricingPlan ${plan.id}`,
+        )
         linked++
         continue
       }
@@ -189,18 +195,22 @@ async function main() {
         },
       })
 
-      console.log(`   ✅ Created: ${productName} [${product.id}] → PricingPlan ${plan.id} ($${(plan.amountCents / 100).toFixed(2)})`)
+      console.log(
+        `   ✅ Created: ${productName} [${product.id}] → PricingPlan ${plan.id} ($${(plan.amountCents / 100).toFixed(2)})`,
+      )
       created++
     }
 
     const mode = DRY_RUN ? "Would create" : "Created"
-    console.log(`\n🎉 Done! ${mode}: ${created}, Linked existing: ${linked}, Skipped: ${skipped}, Total: ${merchPlans.length}`)
+    console.log(
+      `\n🎉 Done! ${mode}: ${created}, Linked existing: ${linked}, Skipped: ${skipped}, Total: ${merchPlans.length}`,
+    )
   } finally {
     await db.$disconnect()
   }
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error("❌ Error setting up merch Stripe products:", error)
   process.exit(1)
 })

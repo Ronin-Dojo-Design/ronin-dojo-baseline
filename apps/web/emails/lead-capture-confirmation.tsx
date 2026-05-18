@@ -22,9 +22,7 @@ export const EmailLeadCaptureConfirmation = ({
         information and a member of our team will reach out shortly to help get you started.
       </Text>
 
-      <Text>
-        In the meantime, if you have any questions, feel free to reply to this email.
-      </Text>
+      <Text>In the meantime, if you have any questions, feel free to reply to this email.</Text>
 
       <Text>See you on the mat! 🥋</Text>
     </EmailWrapper>

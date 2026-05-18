@@ -1,11 +1,11 @@
 import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
-import { db } from "~/services/db"
 import {
   organizationDetailPayload,
   organizationManyPayload,
   organizationOnePayload,
 } from "~/server/web/organization/payloads"
+import { db } from "~/services/db"
 
 export const getOrganizationById = cache(async (id: string) => {
   return db.organization.findUnique({

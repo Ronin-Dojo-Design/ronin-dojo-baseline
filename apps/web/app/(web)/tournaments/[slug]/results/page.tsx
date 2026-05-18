@@ -4,10 +4,10 @@ import { Button } from "~/components/common/button"
 import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
-import { MedalStandings } from "~/components/web/tournaments/medal-standings"
 import { BracketResults } from "~/components/web/tournaments/bracket-results"
+import { MedalStandings } from "~/components/web/tournaments/medal-standings"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { findTournamentResults } from "~/server/web/tournaments/queries"
 
@@ -30,8 +30,8 @@ export default async function TournamentResultsPage({ params }: PageProps) {
   }
 
   // Flatten all divisions across disciplines for medal + bracket display
-  const allDivisions = tournament.disciplines.flatMap((td) =>
-    td.divisions.map((div) => ({
+  const allDivisions = tournament.disciplines.flatMap(td =>
+    td.divisions.map(div => ({
       ...div,
       disciplineName: td.discipline.name,
     })),
@@ -40,12 +40,8 @@ export default async function TournamentResultsPage({ params }: PageProps) {
   return (
     <>
       <Intro>
-        <IntroTitle>
-          {tournament.name} — Results
-        </IntroTitle>
-        <IntroDescription>
-          Bracket results and medal standings
-        </IntroDescription>
+        <IntroTitle>{tournament.name} — Results</IntroTitle>
+        <IntroDescription>Bracket results and medal standings</IntroDescription>
       </Intro>
 
       <Section>

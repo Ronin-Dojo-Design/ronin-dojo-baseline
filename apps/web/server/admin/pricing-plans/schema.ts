@@ -51,18 +51,21 @@ export const pricingPlanSchema = z.object({
   organizationId: z.string().min(1, "Organization is required"),
   programId: z.string().optional().nullable(),
   entitlementIds: z.array(z.string()).optional(),
-  metadata: z.union([
-    z.string().transform((val, ctx) => {
-      if (!val || val.trim() === "") return null
-      try {
-        return JSON.parse(val) as Record<string, unknown>
-      } catch {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid JSON" })
-        return z.NEVER
-      }
-    }),
-    z.record(z.string(), z.unknown()),
-  ]).optional().nullable(),
+  metadata: z
+    .union([
+      z.string().transform((val, ctx) => {
+        if (!val || val.trim() === "") return null
+        try {
+          return JSON.parse(val) as Record<string, unknown>
+        } catch {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid JSON" })
+          return z.NEVER
+        }
+      }),
+      z.record(z.string(), z.unknown()),
+    ])
+    .optional()
+    .nullable(),
 })
 
 export type PricingPlanSchema = z.infer<typeof pricingPlanSchema>

@@ -7,6 +7,7 @@ import { StaffPanel } from "~/app/admin/tournaments/_components/staff-panel"
 import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
 import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
+import { getRequestBrand } from "~/lib/brand-context"
 import {
   findFightRecordsByTournament,
   findMatAssignmentsByTournament,
@@ -14,7 +15,6 @@ import {
   findTournamentRoles,
   findTournamentStaff,
 } from "~/server/admin/tournaments/queries"
-import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 
 export default withTournamentAdminPage(async ({ params }) => {
@@ -109,16 +109,22 @@ export default withTournamentAdminPage(async ({ params }) => {
           View Registrations →
         </Link>
       </div>
-      <TournamentForm title={`Edit ${tournament.name}`} tournament={tournament} organizations={organizations} />
+      <TournamentForm
+        title={`Edit ${tournament.name}`}
+        tournament={tournament}
+        organizations={organizations}
+      />
       <DivisionsEditor
         tournament={tournament}
         availableDisciplines={disciplines}
         tournamentRoles={(await rolesPromise).map(r => ({ id: r.id, name: r.name, code: r.code }))}
-        ruleSets={await db.ruleSet.findMany({
-          where: { OR: [{ brand }, { brand: null, isSystem: true }] },
-          select: { id: true, name: true },
-          orderBy: { name: "asc" },
-        })}
+        ruleSets={
+          await db.ruleSet.findMany({
+            where: { OR: [{ brand }, { brand: null, isSystem: true }] },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+          })
+        }
       />
       <StaffPanel
         tournamentId={id}

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation"
+import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
 import { getServerSession } from "~/lib/auth"
 import { db } from "~/services/db"
-import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
 
 type Props = { params: Promise<{ id: string }> }
 

@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test"
-import { createAuthenticatedUser, cleanupTestUser } from "../helpers/auth"
+import { expect, test } from "@playwright/test"
+import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
 
 let testUserId: string
 
@@ -48,7 +48,10 @@ test.describe("Tournament registration E2E (free path)", () => {
     // 6. Wait for redirect with ?registered=true (free path success)
     // The server action may reject if the test user lacks entitlements or brand membership.
     // A successful redirect proves the full flow; a toast/error proves the UI handles rejection.
-    const registered = await page.waitForURL(/registered=true/, { timeout: 10000 }).then(() => true).catch(() => false)
+    const registered = await page
+      .waitForURL(/registered=true/, { timeout: 10000 })
+      .then(() => true)
+      .catch(() => false)
 
     if (registered) {
       // 7. Assert confirmation notice

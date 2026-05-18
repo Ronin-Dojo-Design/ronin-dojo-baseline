@@ -79,8 +79,7 @@ export const auth = betterAuth({
             const displayName = context.body?.user?.name ?? null
             const slug = await generateUniqueProfileSlug(
               displayName,
-              async (s) =>
-                (await db.directoryProfile.count({ where: { slug: s } })) > 0,
+              async s => (await db.directoryProfile.count({ where: { slug: s } })) > 0,
             )
             await db.$transaction([
               db.passport.create({

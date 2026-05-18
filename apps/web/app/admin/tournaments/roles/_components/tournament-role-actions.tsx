@@ -21,7 +21,11 @@ type TournamentRoleActionsProps = Omit<ComponentProps<typeof Button>, "role"> & 
   role: TournamentRole
 }
 
-export const TournamentRoleActions = ({ role, className, ...props }: TournamentRoleActionsProps) => {
+export const TournamentRoleActions = ({
+  role,
+  className,
+  ...props
+}: TournamentRoleActionsProps) => {
   const pathname = usePathname()
   const router = useRouter()
 

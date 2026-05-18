@@ -136,11 +136,17 @@ afterAll(async () => {
     },
   })
   await db.lineageClaimEvidence.deleteMany({
-    where: { claimRequest: { is: { OR: [
-      { treeId: { startsWith: PREFIX } },
-      { nodeId: { startsWith: PREFIX } },
-      { claimantUserId: { startsWith: PREFIX } },
-    ] } } },
+    where: {
+      claimRequest: {
+        is: {
+          OR: [
+            { treeId: { startsWith: PREFIX } },
+            { nodeId: { startsWith: PREFIX } },
+            { claimantUserId: { startsWith: PREFIX } },
+          ],
+        },
+      },
+    },
   })
   // Claim id is a real cuid (not prefixed), so cascade through tree/node/claimant.
   await db.lineageClaimRequest.deleteMany({

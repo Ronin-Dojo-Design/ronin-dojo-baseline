@@ -1,11 +1,11 @@
 "use client"
 
-import { PlusIcon, ShieldCheckIcon, TrashIcon } from "lucide-react"
-import { use, useState } from "react"
-import { useAction } from "next-safe-action/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { formatDate } from "@primoui/utils"
+import { PlusIcon, ShieldCheckIcon, TrashIcon } from "lucide-react"
+import { useAction } from "next-safe-action/hooks"
+import { use, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -40,7 +40,11 @@ import {
 } from "~/components/common/table"
 import { TextArea } from "~/components/common/textarea"
 import { Tooltip } from "~/components/common/tooltip"
-import { createWeighInRecord, markWeighInOfficial, deleteWeighInRecords } from "~/server/admin/tournaments/actions"
+import {
+  createWeighInRecord,
+  deleteWeighInRecords,
+  markWeighInOfficial,
+} from "~/server/admin/tournaments/actions"
 import type { findWeighInRecords } from "~/server/admin/tournaments/queries"
 import { weighInRecordSchema } from "~/server/admin/tournaments/schema"
 
@@ -66,7 +70,7 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
       {
         loading: "Marking as official...",
         success: "Marked as official weigh-in",
-        error: (err) => `Failed: ${err.message}`,
+        error: err => `Failed: ${err.message}`,
       },
     )
   }
@@ -80,7 +84,7 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
       {
         loading: "Deleting weigh-in...",
         success: "Weigh-in deleted",
-        error: (err) => `Failed: ${err.message}`,
+        error: err => `Failed: ${err.message}`,
       },
     )
   }
@@ -158,10 +162,7 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
                       <FormItem>
                         <Stack size="sm">
                           <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <FormLabel>Official weigh-in</FormLabel>
                         </Stack>

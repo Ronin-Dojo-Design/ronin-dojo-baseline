@@ -3,7 +3,7 @@ import { Badge } from "~/components/common/badge"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getOrganizationBySlug } from "~/server/web/organization/queries"
@@ -48,7 +48,7 @@ export default async function SchoolDetailPage({ params }: PageProps) {
       <Section>
         <Stack size="sm" className="flex-wrap">
           {org.type && <Badge variant="outline">{org.type.replace(/_/g, " ")}</Badge>}
-          {org.disciplines?.map((d) => (
+          {org.disciplines?.map(d => (
             <Badge key={d.discipline.id} variant="soft">
               {d.discipline.name}
             </Badge>
@@ -82,7 +82,7 @@ export default async function SchoolDetailPage({ params }: PageProps) {
         <Section>
           <H4>Members</H4>
           <Stack size="sm">
-            {org.memberships.slice(0, 20).map((m) => (
+            {org.memberships.slice(0, 20).map(m => (
               <div key={m.id} className="flex items-center gap-2">
                 <span className="text-sm font-medium">{m.user.name}</span>
                 {m.discipline && (
@@ -90,7 +90,7 @@ export default async function SchoolDetailPage({ params }: PageProps) {
                     {m.discipline.name}
                   </Badge>
                 )}
-                {m.roleAssignments?.map((ra) => (
+                {m.roleAssignments?.map(ra => (
                   <Badge key={ra.role.id} variant="outline" size="sm">
                     {ra.role.name}
                   </Badge>

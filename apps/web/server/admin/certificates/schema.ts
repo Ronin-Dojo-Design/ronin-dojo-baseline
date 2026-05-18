@@ -5,7 +5,12 @@ import {
   parseAsStringEnum,
 } from "nuqs/server"
 import * as z from "zod"
-import { type CertificateTemplate, Brand, CertificationType, CertificateDeliveryMethod } from "~/.generated/prisma/browser"
+import {
+  Brand,
+  CertificateDeliveryMethod,
+  type CertificateTemplate,
+  CertificationType,
+} from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 export const certificatesTableParamsSchema = {

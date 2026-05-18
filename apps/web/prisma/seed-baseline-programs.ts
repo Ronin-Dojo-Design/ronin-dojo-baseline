@@ -42,18 +42,120 @@ const ORG_SLUGS = ["baseline-martial-arts", "baseline-academy"] as const
 // =========================================================================
 
 const DISCIPLINES = [
-  { name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj", isSystem: true, foundedBy: "Hélio Gracie, Carlos Gracie", yearEstablished: 1925, history: "Developed in Brazil from Kodokan judo ground fighting (newaza) fundamentals by the Gracie family. Emphasizes leverage-based submissions and positional control." },
-  { name: "Doce Pares Eskrima", slug: "eskrima", code: "eskrima", isSystem: true, foundedBy: "Lorenzo Saavedra", yearEstablished: 1932, history: "Founded in Cebu City, Philippines. One of the oldest and most influential Filipino martial arts organizations, blending stick, blade, and empty-hand combat." },
-  { name: "Muay Thai", slug: "muay-thai", code: "muay-thai", isSystem: true, yearEstablished: 1238, history: "Thailand's national combat sport, known as the Art of Eight Limbs for its use of fists, elbows, knees, and shins. Evolved from ancient Muay Boran battlefield techniques." },
-  { name: "Boxing", slug: "boxing", code: "boxing", isSystem: true, yearEstablished: 1867, history: "Western boxing codified under the Marquess of Queensberry Rules. Focuses on footwork, head movement, and punching combinations." },
-  { name: "Self Defense", slug: "self-defense", code: "self-defense", isSystem: true, history: "Practical self-defense training drawing from multiple martial arts disciplines, situational awareness, and de-escalation techniques." },
-  { name: "Judo", slug: "judo", code: "judo", isSystem: true, foundedBy: "Kanō Jigorō", yearEstablished: 1882, history: "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964." },
-  { name: "Kajukenbo", slug: "kajukenbo", code: "kajukenbo", isSystem: true, foundedBy: "Adriano Emperado, Peter Choo, Joe Holck, Frank Ordonez, Clarence Chang", yearEstablished: 1947, history: "Hybrid martial art founded in Honolulu, Hawaii by the Black Belt Society. Name derives from KA-rate, JU-do/jujitsu, KEN-po, BO-xing." },
-  { name: "Karate", slug: "karate", code: "karate", isSystem: true, foundedBy: "Gichin Funakoshi", yearEstablished: 1922, history: "Okinawan striking art brought to mainland Japan. Emphasizes kata, kihon, and kumite across numerous styles including Shotokan, Goju-Ryu, and Shito-Ryu." },
-  { name: "Taekwondo", slug: "tkd", code: "tkd", isSystem: true, foundedBy: "Choi Hong-hi", yearEstablished: 1955, history: "Korean martial art known for dynamic kicking techniques. Olympic sport since 2000." },
-  { name: "Wrestling", slug: "wrestling", code: "wrestling", isSystem: true, yearEstablished: -708, history: "One of the oldest combat sports, dating to ancient Greece. Modern styles include folkstyle, freestyle, and Greco-Roman." },
-  { name: "Krav Maga", slug: "krav-maga", code: "krav-maga", isSystem: true, foundedBy: "Imi Lichtenfeld", yearEstablished: 1948, history: "Developed for the Israel Defense Forces. Emphasizes real-world threat neutralization, combining techniques from boxing, wrestling, judo, and aikido." },
-  { name: "Wing Chun", slug: "wing-chun", code: "wing-chun", isSystem: true, foundedBy: "Ng Mui (legendary)", yearEstablished: 1700, history: "Southern Chinese kung fu style emphasizing close-range combat, centerline theory, and simultaneous attack-defense. Popularized by Ip Man and Bruce Lee." },
+  {
+    name: "Brazilian Jiu-Jitsu",
+    slug: "bjj",
+    code: "bjj",
+    isSystem: true,
+    foundedBy: "Hélio Gracie, Carlos Gracie",
+    yearEstablished: 1925,
+    history:
+      "Developed in Brazil from Kodokan judo ground fighting (newaza) fundamentals by the Gracie family. Emphasizes leverage-based submissions and positional control.",
+  },
+  {
+    name: "Doce Pares Eskrima",
+    slug: "eskrima",
+    code: "eskrima",
+    isSystem: true,
+    foundedBy: "Lorenzo Saavedra",
+    yearEstablished: 1932,
+    history:
+      "Founded in Cebu City, Philippines. One of the oldest and most influential Filipino martial arts organizations, blending stick, blade, and empty-hand combat.",
+  },
+  {
+    name: "Muay Thai",
+    slug: "muay-thai",
+    code: "muay-thai",
+    isSystem: true,
+    yearEstablished: 1238,
+    history:
+      "Thailand's national combat sport, known as the Art of Eight Limbs for its use of fists, elbows, knees, and shins. Evolved from ancient Muay Boran battlefield techniques.",
+  },
+  {
+    name: "Boxing",
+    slug: "boxing",
+    code: "boxing",
+    isSystem: true,
+    yearEstablished: 1867,
+    history:
+      "Western boxing codified under the Marquess of Queensberry Rules. Focuses on footwork, head movement, and punching combinations.",
+  },
+  {
+    name: "Self Defense",
+    slug: "self-defense",
+    code: "self-defense",
+    isSystem: true,
+    history:
+      "Practical self-defense training drawing from multiple martial arts disciplines, situational awareness, and de-escalation techniques.",
+  },
+  {
+    name: "Judo",
+    slug: "judo",
+    code: "judo",
+    isSystem: true,
+    foundedBy: "Kanō Jigorō",
+    yearEstablished: 1882,
+    history:
+      "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964.",
+  },
+  {
+    name: "Kajukenbo",
+    slug: "kajukenbo",
+    code: "kajukenbo",
+    isSystem: true,
+    foundedBy: "Adriano Emperado, Peter Choo, Joe Holck, Frank Ordonez, Clarence Chang",
+    yearEstablished: 1947,
+    history:
+      "Hybrid martial art founded in Honolulu, Hawaii by the Black Belt Society. Name derives from KA-rate, JU-do/jujitsu, KEN-po, BO-xing.",
+  },
+  {
+    name: "Karate",
+    slug: "karate",
+    code: "karate",
+    isSystem: true,
+    foundedBy: "Gichin Funakoshi",
+    yearEstablished: 1922,
+    history:
+      "Okinawan striking art brought to mainland Japan. Emphasizes kata, kihon, and kumite across numerous styles including Shotokan, Goju-Ryu, and Shito-Ryu.",
+  },
+  {
+    name: "Taekwondo",
+    slug: "tkd",
+    code: "tkd",
+    isSystem: true,
+    foundedBy: "Choi Hong-hi",
+    yearEstablished: 1955,
+    history: "Korean martial art known for dynamic kicking techniques. Olympic sport since 2000.",
+  },
+  {
+    name: "Wrestling",
+    slug: "wrestling",
+    code: "wrestling",
+    isSystem: true,
+    yearEstablished: -708,
+    history:
+      "One of the oldest combat sports, dating to ancient Greece. Modern styles include folkstyle, freestyle, and Greco-Roman.",
+  },
+  {
+    name: "Krav Maga",
+    slug: "krav-maga",
+    code: "krav-maga",
+    isSystem: true,
+    foundedBy: "Imi Lichtenfeld",
+    yearEstablished: 1948,
+    history:
+      "Developed for the Israel Defense Forces. Emphasizes real-world threat neutralization, combining techniques from boxing, wrestling, judo, and aikido.",
+  },
+  {
+    name: "Wing Chun",
+    slug: "wing-chun",
+    code: "wing-chun",
+    isSystem: true,
+    foundedBy: "Ng Mui (legendary)",
+    yearEstablished: 1700,
+    history:
+      "Southern Chinese kung fu style emphasizing close-range combat, centerline theory, and simultaneous attack-defense. Popularized by Ip Man and Bruce Lee.",
+  },
 ]
 
 // =========================================================================
@@ -130,12 +232,30 @@ function buildPimaDenverRanks(): RankDef[] {
 
 const RANK_SYSTEMS: RankSystemDef[] = [
   // 1. BJJ — IBJJF
-  { disciplineCode: "bjj", name: "IBJJF Belt System", kind: "BELT", isSystem: true, brand: null, ranks: buildBjjRanks() },
+  {
+    disciplineCode: "bjj",
+    name: "IBJJF Belt System",
+    kind: "BELT",
+    isSystem: true,
+    brand: null,
+    ranks: buildBjjRanks(),
+  },
   // 2. Eskrima — PIMA Denver
-  { disciplineCode: "eskrima", name: "PIMA Denver Doce Pares (GM Steve Wolk)", kind: "BELT", isSystem: true, brand: null, ranks: buildPimaDenverRanks() },
+  {
+    disciplineCode: "eskrima",
+    name: "PIMA Denver Doce Pares (GM Steve Wolk)",
+    kind: "BELT",
+    isSystem: true,
+    brand: null,
+    ranks: buildPimaDenverRanks(),
+  },
   // 3. Eskrima — PIMA Jersey
   {
-    disciplineCode: "eskrima", name: "PIMA Jersey Doce Pares (SGM Dong Cuesta)", kind: "BELT", isSystem: true, brand: null,
+    disciplineCode: "eskrima",
+    name: "PIMA Jersey Doce Pares (SGM Dong Cuesta)",
+    kind: "BELT",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "White Belt", shortName: "W", colorHex: "#FFFFFF" },
       { name: "Yellow Belt", shortName: "Y", colorHex: "#FFD700" },
@@ -163,7 +283,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 4. Muay Thai — Prajioud
   {
-    disciplineCode: "muay-thai", name: "Sak Va Roon Thai Boxing Prajioud System", kind: "PRAJIOUD", isSystem: true, brand: null,
+    disciplineCode: "muay-thai",
+    name: "Sak Va Roon Thai Boxing Prajioud System",
+    kind: "PRAJIOUD",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "White (Beginner)", shortName: "W", colorHex: "#FFFFFF" },
       { name: "Yellow", shortName: "Y", colorHex: "#FFD700" },
@@ -173,12 +297,20 @@ const RANK_SYSTEMS: RankSystemDef[] = [
       { name: "Red (Advanced)", shortName: "R", colorHex: "#FF0000" },
       { name: "Black (Fighter)", shortName: "BK", colorHex: "#000000" },
       { name: "Red-Black (Instructor - Fighter)", shortName: "RB", colorHex: "#FF0000" },
-      { name: "Red-Blue-Black (Fighter - Corner/Kru/Head Instructor)", shortName: "RBB", colorHex: "#FF0000" },
+      {
+        name: "Red-Blue-Black (Fighter - Corner/Kru/Head Instructor)",
+        shortName: "RBB",
+        colorHex: "#FF0000",
+      },
     ],
   },
   // 5. Boxing — Skill Levels (Baseline-specific)
   {
-    disciplineCode: "boxing", name: "Boxing Skill Levels", kind: "GRADE", isSystem: false, brand: BRAND,
+    disciplineCode: "boxing",
+    name: "Boxing Skill Levels",
+    kind: "GRADE",
+    isSystem: false,
+    brand: BRAND,
     ranks: [
       { name: "Fundamentals", shortName: "F" },
       { name: "Novice", shortName: "N" },
@@ -192,7 +324,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 6. Self Defense — Levels (Baseline-specific)
   {
-    disciplineCode: "self-defense", name: "Self Defense Levels", kind: "GRADE", isSystem: false, brand: BRAND,
+    disciplineCode: "self-defense",
+    name: "Self Defense Levels",
+    kind: "GRADE",
+    isSystem: false,
+    brand: BRAND,
     ranks: [
       { name: "Awareness", shortName: "AW" },
       { name: "Fundamentals", shortName: "F" },
@@ -206,7 +342,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 7. Judo — Kodokan Kyu-Dan (16 ranks)
   {
-    disciplineCode: "judo", name: "Kodokan Judo Kyu-Dan System", kind: "KYU_DAN", isSystem: true, brand: null,
+    disciplineCode: "judo",
+    name: "Kodokan Judo Kyu-Dan System",
+    kind: "KYU_DAN",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "6th Kyu (Rokkyu) - White Belt", shortName: "6K", colorHex: "#FFFFFF" },
       { name: "5th Kyu (Gokyu) - Yellow Belt", shortName: "5K", colorHex: "#FFD700" },
@@ -228,7 +368,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 8. Kajukenbo — Belt System (19 ranks)
   {
-    disciplineCode: "kajukenbo", name: "Kajukenbo Belt System", kind: "BELT", isSystem: true, brand: null,
+    disciplineCode: "kajukenbo",
+    name: "Kajukenbo Belt System",
+    kind: "BELT",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "White Belt", shortName: "W", colorHex: "#FFFFFF" },
       { name: "Yellow Belt", shortName: "Y", colorHex: "#FFD700" },
@@ -253,7 +397,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 9. Karate — USA Karate Federation Kyu-Dan (20 ranks)
   {
-    disciplineCode: "karate", name: "USA Karate Federation Kyu-Dan System", kind: "KYU_DAN", isSystem: true, brand: null,
+    disciplineCode: "karate",
+    name: "USA Karate Federation Kyu-Dan System",
+    kind: "KYU_DAN",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "10th Kyu (Jukyu) - White Belt", shortName: "10K", colorHex: "#FFFFFF" },
       { name: "9th Kyu (Kukyu) - White Belt", shortName: "9K", colorHex: "#FFFFFF" },
@@ -279,7 +427,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 10. TKD — USA Taekwondo Gup-Dan (20 ranks)
   {
-    disciplineCode: "tkd", name: "USA Taekwondo Gup-Dan System", kind: "KYU_DAN", isSystem: true, brand: null,
+    disciplineCode: "tkd",
+    name: "USA Taekwondo Gup-Dan System",
+    kind: "KYU_DAN",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "10th Gup - White Belt", shortName: "10G", colorHex: "#FFFFFF" },
       { name: "9th Gup - White Belt with Yellow Stripe", shortName: "9G", colorHex: "#FFFFFF" },
@@ -305,7 +457,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 11. Wrestling — Skill Levels (6 ranks)
   {
-    disciplineCode: "wrestling", name: "Wrestling Skill Levels", kind: "GRADE", isSystem: true, brand: null,
+    disciplineCode: "wrestling",
+    name: "Wrestling Skill Levels",
+    kind: "GRADE",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "Beginner", shortName: "BEG" },
       { name: "Novice", shortName: "NOV" },
@@ -317,7 +473,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 12. Krav Maga — Level System (6 ranks)
   {
-    disciplineCode: "krav-maga", name: "Krav Maga Level System", kind: "GRADE", isSystem: true, brand: null,
+    disciplineCode: "krav-maga",
+    name: "Krav Maga Level System",
+    kind: "GRADE",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "Practitioner 1 (P1)", shortName: "P1" },
       { name: "Practitioner 2 (P2)", shortName: "P2" },
@@ -329,7 +489,11 @@ const RANK_SYSTEMS: RankSystemDef[] = [
   },
   // 13. Wing Chun — Forms Progression (8 ranks)
   {
-    disciplineCode: "wing-chun", name: "Wing Chun Forms Progression", kind: "OTHER", isSystem: true, brand: null,
+    disciplineCode: "wing-chun",
+    name: "Wing Chun Forms Progression",
+    kind: "OTHER",
+    isSystem: true,
+    brand: null,
     ranks: [
       { name: "Siu Nim Tao (Little Idea)", shortName: "SNT" },
       { name: "Chum Kiu (Seeking Bridge)", shortName: "CK" },
@@ -430,7 +594,9 @@ async function main() {
       discCreated++
     }
   }
-  console.log(`   Disciplines: Created ${discCreated}, Skipped ${discSkipped}, Total ${DISCIPLINES.length}`)
+  console.log(
+    `   Disciplines: Created ${discCreated}, Skipped ${discSkipped}, Total ${DISCIPLINES.length}`,
+  )
 
   // -----------------------------------------------------------------------
   // 2. Rank Systems + Ranks
@@ -443,7 +609,9 @@ async function main() {
   for (const rsDef of RANK_SYSTEMS) {
     const disciplineId = disciplineMap.get(rsDef.disciplineCode)
     if (!disciplineId) {
-      console.warn(`   ⚠️  Discipline not found for code=${rsDef.disciplineCode}, skipping rank system "${rsDef.name}"`)
+      console.warn(
+        `   ⚠️  Discipline not found for code=${rsDef.disciplineCode}, skipping rank system "${rsDef.name}"`,
+      )
       continue
     }
 
@@ -498,7 +666,9 @@ async function main() {
       }
     }
   }
-  console.log(`   Rank Systems: Created ${rsCreated}, Skipped ${rsSkipped}, Total ${RANK_SYSTEMS.length}`)
+  console.log(
+    `   Rank Systems: Created ${rsCreated}, Skipped ${rsSkipped}, Total ${RANK_SYSTEMS.length}`,
+  )
   console.log(`   Ranks: Created ${ranksCreated}, Skipped ${ranksSkipped}`)
 
   // -----------------------------------------------------------------------
@@ -531,7 +701,9 @@ async function main() {
       progCreated++
     }
   }
-  console.log(`   Programs: Created ${progCreated}, Skipped ${progSkipped}, Total ${PROGRAMS.length}`)
+  console.log(
+    `   Programs: Created ${progCreated}, Skipped ${progSkipped}, Total ${PROGRAMS.length}`,
+  )
 
   // -----------------------------------------------------------------------
   // 4. ClassSchedule — Adult BJJ Tue/Thu Evenings
@@ -581,7 +753,7 @@ async function main() {
   let courseSkipped = 0
   let ciCount = 0
 
-  for (const [code, disciplineId] of disciplineMap) {
+  for (const [_code, disciplineId] of disciplineMap) {
     const disc = await db.discipline.findUnique({
       where: { id: disciplineId },
       select: { name: true, slug: true },
@@ -609,9 +781,24 @@ async function main() {
         },
       })
       const safetyItems = [
-        { order: 1, title: "Training Etiquette & Dojo Rules", notes: "Proper behavior, bowing protocols, hygiene standards, and respect for training partners." },
-        { order: 2, title: "Injury Prevention & Warm-Up Protocol", notes: "Dynamic stretching, joint preparation, and common injury patterns specific to this discipline." },
-        { order: 3, title: "Emergency Procedures & First Aid Basics", notes: "Emergency contacts, concussion protocol, when to stop training, and basic first aid." },
+        {
+          order: 1,
+          title: "Training Etiquette & Dojo Rules",
+          notes:
+            "Proper behavior, bowing protocols, hygiene standards, and respect for training partners.",
+        },
+        {
+          order: 2,
+          title: "Injury Prevention & Warm-Up Protocol",
+          notes:
+            "Dynamic stretching, joint preparation, and common injury patterns specific to this discipline.",
+        },
+        {
+          order: 3,
+          title: "Emergency Procedures & First Aid Basics",
+          notes:
+            "Emergency contacts, concussion protocol, when to stop training, and basic first aid.",
+        },
       ]
       for (const item of safetyItems) {
         await db.curriculumItem.create({ data: { courseId: safetyCourse.id, ...item } })
@@ -629,7 +816,10 @@ async function main() {
     })
 
     for (const rs of rankSystems) {
-      const rsSlug = rs.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")
+      const rsSlug = rs.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+$/, "")
       const rsPrefix = rankSystems.length > 1 ? `${rsSlug}-` : ""
 
       for (const rank of rs.ranks) {
@@ -651,9 +841,10 @@ async function main() {
             organizationId: org.id,
             disciplineId,
             rankId: rank.id,
-            title: rankSystems.length > 1
-              ? `${disc.name} Fundamentals (${rs.name}) — ${rank.name}`
-              : `${disc.name} Fundamentals — ${rank.name}`,
+            title:
+              rankSystems.length > 1
+                ? `${disc.name} Fundamentals (${rs.name}) — ${rank.name}`
+                : `${disc.name} Fundamentals — ${rank.name}`,
             slug: fundSlug,
             description: `Fundamentals curriculum for ${disc.name} students working toward ${rank.name}. Covers required techniques, concepts, and competency standards.`,
             certificationType: "BELT_RANK",
@@ -662,9 +853,21 @@ async function main() {
           },
         })
         const fundItems = [
-          { order: 1, title: "Core Techniques & Drills", notes: `Required techniques for ${rank.name} proficiency. Includes partner drills and solo practice.` },
-          { order: 2, title: "Concepts & Principles", notes: `Foundational concepts expected at the ${rank.name} level. Covers strategy, timing, and positioning.` },
-          { order: 3, title: "Competency Assessment Criteria", notes: `Evaluation standards for ${rank.name}. What the student must demonstrate to progress.` },
+          {
+            order: 1,
+            title: "Core Techniques & Drills",
+            notes: `Required techniques for ${rank.name} proficiency. Includes partner drills and solo practice.`,
+          },
+          {
+            order: 2,
+            title: "Concepts & Principles",
+            notes: `Foundational concepts expected at the ${rank.name} level. Covers strategy, timing, and positioning.`,
+          },
+          {
+            order: 3,
+            title: "Competency Assessment Criteria",
+            notes: `Evaluation standards for ${rank.name}. What the student must demonstrate to progress.`,
+          },
         ]
         for (const item of fundItems) {
           await db.curriculumItem.create({ data: { courseId: fundCourse.id, ...item } })
@@ -695,9 +898,24 @@ async function main() {
         },
       })
       const coachItems = [
-        { order: 1, title: "Teaching Methodology & Class Structure", notes: "How to plan and deliver effective classes. Warm-up, technique blocks, drilling, and cool-down." },
-        { order: 2, title: "Student Safety & Risk Management", notes: "Spotting fatigue, managing sparring intensity, handling injuries, and safeguarding minors." },
-        { order: 3, title: "Curriculum Delivery & Assessment", notes: "How to use the rank curriculum, track student progress, and conduct fair evaluations." },
+        {
+          order: 1,
+          title: "Teaching Methodology & Class Structure",
+          notes:
+            "How to plan and deliver effective classes. Warm-up, technique blocks, drilling, and cool-down.",
+        },
+        {
+          order: 2,
+          title: "Student Safety & Risk Management",
+          notes:
+            "Spotting fatigue, managing sparring intensity, handling injuries, and safeguarding minors.",
+        },
+        {
+          order: 3,
+          title: "Curriculum Delivery & Assessment",
+          notes:
+            "How to use the rank curriculum, track student progress, and conduct fair evaluations.",
+        },
       ]
       for (const item of coachItems) {
         await db.curriculumItem.create({ data: { courseId: coachesCourse.id, ...item } })
@@ -719,7 +937,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error("❌ Error in seed-baseline-programs:", error)
     process.exit(1)
   })

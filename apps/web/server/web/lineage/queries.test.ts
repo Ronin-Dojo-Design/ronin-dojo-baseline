@@ -231,126 +231,105 @@ describe("getLineageTreeBySlug", () => {
     expect(result).toBeNull()
   })
 
-  it(
-    "returns null when the tree exists but is not published",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.privateTreeSlug,
-      })
-      expect(result).toBeNull()
-    },
-  )
+  it("returns null when the tree exists but is not published", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.privateTreeSlug,
+    })
+    expect(result).toBeNull()
+  })
 
-  it(
-    "materializes ordered members and prunes RESTRICTED nodes + empty groups",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.publishedTreeSlug,
-      })
+  it("materializes ordered members and prunes RESTRICTED nodes + empty groups", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+    })
 
-      expect(result).not.toBeNull()
-      expect(result!.tree.id).toBe(fx!.publishedTreeId)
-      expect(result!.defaultRootMemberId).toBe(fx!.publicMemberAId)
+    expect(result).not.toBeNull()
+    expect(result!.tree.id).toBe(fx!.publishedTreeId)
+    expect(result!.defaultRootMemberId).toBe(fx!.publicMemberAId)
 
-      // memberC (RESTRICTED) dropped; A then B by visualSortOrder asc.
-      const memberIds = result!.members.map((m) => m.id)
-      expect(memberIds).toEqual([fx!.publicMemberAId, fx!.publicMemberBId])
+    // memberC (RESTRICTED) dropped; A then B by visualSortOrder asc.
+    const memberIds = result!.members.map(m => m.id)
+    expect(memberIds).toEqual([fx!.publicMemberAId, fx!.publicMemberBId])
 
-      // Empty group dropped; A then B by sortOrder asc.
-      const groupIds = result!.visualGroups.map((g) => g.id)
-      expect(groupIds).toEqual([fx!.visualGroupAId, fx!.visualGroupBId])
-      expect(groupIds).not.toContain(fx!.emptyGroupId)
-    },
-  )
+    // Empty group dropped; A then B by sortOrder asc.
+    const groupIds = result!.visualGroups.map(g => g.id)
+    expect(groupIds).toEqual([fx!.visualGroupAId, fx!.visualGroupBId])
+    expect(groupIds).not.toContain(fx!.emptyGroupId)
+  })
 
-  it(
-    "preserves primaryVisualParentMemberId when the parent member survives the scope filter",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.publishedTreeSlug,
-      })
+  it("preserves primaryVisualParentMemberId when the parent member survives the scope filter", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+    })
 
-      const memberB = result!.members.find((m) => m.id === fx!.publicMemberBId)
-      expect(memberB?.primaryVisualParentMemberId).toBe(fx!.publicMemberAId)
-    },
-  )
+    const memberB = result!.members.find(m => m.id === fx!.publicMemberBId)
+    expect(memberB?.primaryVisualParentMemberId).toBe(fx!.publicMemberAId)
+  })
 
   // --- SESSION_0181 TASK_02 — viewer-scoped integration tests. ---------------
   // Closes SESSION_0180_FINDING_03.
 
-  it(
-    "viewer-scoped: unauthenticated sees only PUBLIC members",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.publishedTreeSlug,
-        // no viewer — unauthenticated
-      })
+  it("viewer-scoped: unauthenticated sees only PUBLIC members", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+      // no viewer — unauthenticated
+    })
 
-      expect(result).not.toBeNull()
-      const memberIds = result!.members.map((m) => m.id)
-      expect(memberIds).toContain(fx!.publicMemberAId)
-      expect(memberIds).toContain(fx!.publicMemberBId)
-      expect(memberIds).not.toContain(fx!.unlistedMemberId)
-      expect(memberIds).not.toContain(fx!.restrictedMemberId)
-    },
-  )
+    expect(result).not.toBeNull()
+    const memberIds = result!.members.map(m => m.id)
+    expect(memberIds).toContain(fx!.publicMemberAId)
+    expect(memberIds).toContain(fx!.publicMemberBId)
+    expect(memberIds).not.toContain(fx!.unlistedMemberId)
+    expect(memberIds).not.toContain(fx!.restrictedMemberId)
+  })
 
-  it(
-    "viewer-scoped: authenticated non-owner sees PUBLIC + UNLISTED members",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.publishedTreeSlug,
-        viewer: { userId: fx!.nonOwnerUserId },
-      })
+  it("viewer-scoped: authenticated non-owner sees PUBLIC + UNLISTED members", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+      viewer: { userId: fx!.nonOwnerUserId },
+    })
 
-      expect(result).not.toBeNull()
-      const memberIds = result!.members.map((m) => m.id)
-      expect(memberIds).toContain(fx!.publicMemberAId)
-      expect(memberIds).toContain(fx!.publicMemberBId)
-      expect(memberIds).toContain(fx!.unlistedMemberId)
-      expect(memberIds).not.toContain(fx!.restrictedMemberId)
-    },
-  )
+    expect(result).not.toBeNull()
+    const memberIds = result!.members.map(m => m.id)
+    expect(memberIds).toContain(fx!.publicMemberAId)
+    expect(memberIds).toContain(fx!.publicMemberBId)
+    expect(memberIds).toContain(fx!.unlistedMemberId)
+    expect(memberIds).not.toContain(fx!.restrictedMemberId)
+  })
 
-  it(
-    "viewer-scoped: authenticated owner sees PUBLIC + UNLISTED + RESTRICTED members",
-    async () => {
-      const result = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.publishedTreeSlug,
-        viewer: { userId: fx!.ownerUserId },
-      })
+  it("viewer-scoped: authenticated owner sees PUBLIC + UNLISTED + RESTRICTED members", async () => {
+    const result = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+      viewer: { userId: fx!.ownerUserId },
+    })
 
-      expect(result).not.toBeNull()
-      const memberIds = result!.members.map((m) => m.id)
-      expect(memberIds).toContain(fx!.publicMemberAId)
-      expect(memberIds).toContain(fx!.publicMemberBId)
-      expect(memberIds).toContain(fx!.unlistedMemberId)
-      expect(memberIds).toContain(fx!.restrictedMemberId)
-    },
-  )
+    expect(result).not.toBeNull()
+    const memberIds = result!.members.map(m => m.id)
+    expect(memberIds).toContain(fx!.publicMemberAId)
+    expect(memberIds).toContain(fx!.publicMemberBId)
+    expect(memberIds).toContain(fx!.unlistedMemberId)
+    expect(memberIds).toContain(fx!.restrictedMemberId)
+  })
 
-  it(
-    "viewer-scoped: non-published tree returns null for all callers",
-    async () => {
-      const noViewer = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.privateTreeSlug,
-      })
-      const withViewer = await getLineageTreeBySlug({
-        brand: TEST_BRAND,
-        slug: fx!.privateTreeSlug,
-        viewer: { userId: fx!.ownerUserId },
-      })
-      expect(noViewer).toBeNull()
-      expect(withViewer).toBeNull()
-    },
-  )
+  it("viewer-scoped: non-published tree returns null for all callers", async () => {
+    const noViewer = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.privateTreeSlug,
+    })
+    const withViewer = await getLineageTreeBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.privateTreeSlug,
+      viewer: { userId: fx!.ownerUserId },
+    })
+    expect(noViewer).toBeNull()
+    expect(withViewer).toBeNull()
+  })
 })
 
 // --- Pure helper tests — no DB. ----------------------------------------------
@@ -434,7 +413,7 @@ describe("materializeLineageTreeResult", () => {
     )
 
     const result = materializeLineageTreeResult(tree)
-    expect(result.members.map((m) => m.id)).toEqual(["m1"])
+    expect(result.members.map(m => m.id)).toEqual(["m1"])
   })
 
   it("prunes visual groups no longer referenced after member filtering", () => {
@@ -447,14 +426,11 @@ describe("materializeLineageTreeResult", () => {
     )
 
     const result = materializeLineageTreeResult(tree)
-    expect(result.visualGroups.map((g) => g.id)).toEqual(["g1"])
+    expect(result.visualGroups.map(g => g.id)).toEqual(["g1"])
   })
 
   it("returns the bare tree summary without members/visualGroups", () => {
-    const tree = makeTree(
-      [makeMember({ id: "m1", visibility: "PUBLIC" })],
-      [],
-    )
+    const tree = makeTree([makeMember({ id: "m1", visibility: "PUBLIC" })], [])
 
     const result = materializeLineageTreeResult(tree)
     expect(result.tree).not.toHaveProperty("members")
@@ -464,140 +440,123 @@ describe("materializeLineageTreeResult", () => {
 
   // --- SESSION_0180 TASK_02 — dangling-reference hardening. ------------------
 
-  it(
-    "nulls primaryVisualParentMemberId when the referenced parent is dropped",
-    () => {
-      const tree = makeTree(
-        [
-          makeMember({ id: "mA", visibility: "RESTRICTED" }),
-          makeMember({
-            id: "mB",
-            visibility: "PUBLIC",
-            primaryVisualParentMemberId: "mA",
-          }),
-        ],
-        [],
-      )
+  it("nulls primaryVisualParentMemberId when the referenced parent is dropped", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "mA", visibility: "RESTRICTED" }),
+        makeMember({
+          id: "mB",
+          visibility: "PUBLIC",
+          primaryVisualParentMemberId: "mA",
+        }),
+      ],
+      [],
+    )
 
-      const result = materializeLineageTreeResult(tree)
-      expect(result.members.map((m) => m.id)).toEqual(["mB"])
-      const memberB = result.members.find((m) => m.id === "mB")
-      expect(memberB?.primaryVisualParentMemberId).toBeNull()
-    },
-  )
+    const result = materializeLineageTreeResult(tree)
+    expect(result.members.map(m => m.id)).toEqual(["mB"])
+    const memberB = result.members.find(m => m.id === "mB")
+    expect(memberB?.primaryVisualParentMemberId).toBeNull()
+  })
 
-  it(
-    "nulls visualGroup.parentMemberId when the referenced member is dropped",
-    () => {
-      const tree = makeTree(
-        [
-          makeMember({ id: "mA", visibility: "RESTRICTED" }),
-          makeMember({
-            id: "mB",
-            visualGroupId: "g1",
-            visibility: "PUBLIC",
-          }),
-        ],
-        [makeGroup("g1", 10, { parentMemberId: "mA" })],
-      )
+  it("nulls visualGroup.parentMemberId when the referenced member is dropped", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "mA", visibility: "RESTRICTED" }),
+        makeMember({
+          id: "mB",
+          visualGroupId: "g1",
+          visibility: "PUBLIC",
+        }),
+      ],
+      [makeGroup("g1", 10, { parentMemberId: "mA" })],
+    )
 
-      const result = materializeLineageTreeResult(tree)
-      const group = result.visualGroups.find((g) => g.id === "g1")
-      expect(group).toBeDefined()
-      expect(group?.parentMemberId).toBeNull()
-    },
-  )
+    const result = materializeLineageTreeResult(tree)
+    const group = result.visualGroups.find(g => g.id === "g1")
+    expect(group).toBeDefined()
+    expect(group?.parentMemberId).toBeNull()
+  })
 
-  it(
-    "nulls defaultRootMemberId when the chosen root is dropped by the scope filter",
-    () => {
-      const tree = makeTree(
-        [
-          makeMember({ id: "mA", visibility: "RESTRICTED" }),
-          makeMember({ id: "mB", visibility: "PUBLIC" }),
-        ],
-        [],
-        { defaultRootMemberId: "mA" },
-      )
+  it("nulls defaultRootMemberId when the chosen root is dropped by the scope filter", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "mA", visibility: "RESTRICTED" }),
+        makeMember({ id: "mB", visibility: "PUBLIC" }),
+      ],
+      [],
+      { defaultRootMemberId: "mA" },
+    )
 
-      const result = materializeLineageTreeResult(tree)
-      expect(result.defaultRootMemberId).toBeNull()
-      expect(result.tree.defaultRootMemberId).toBeNull()
-    },
-  )
+    const result = materializeLineageTreeResult(tree)
+    expect(result.defaultRootMemberId).toBeNull()
+    expect(result.tree.defaultRootMemberId).toBeNull()
+  })
 
-  it(
-    "preserves defaultRootMemberId when the chosen root survives",
-    () => {
-      const tree = makeTree(
-        [
-          makeMember({ id: "mA", visibility: "PUBLIC" }),
-          makeMember({ id: "mB", visibility: "RESTRICTED" }),
-        ],
-        [],
-        { defaultRootMemberId: "mA" },
-      )
+  it("preserves defaultRootMemberId when the chosen root survives", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "mA", visibility: "PUBLIC" }),
+        makeMember({ id: "mB", visibility: "RESTRICTED" }),
+      ],
+      [],
+      { defaultRootMemberId: "mA" },
+    )
 
-      const result = materializeLineageTreeResult(tree)
-      expect(result.defaultRootMemberId).toBe("mA")
-      expect(result.tree.defaultRootMemberId).toBe("mA")
-    },
-  )
+    const result = materializeLineageTreeResult(tree)
+    expect(result.defaultRootMemberId).toBe("mA")
+    expect(result.tree.defaultRootMemberId).toBe("mA")
+  })
 
-  it(
-    "applies a custom scope so authenticated callers can surface UNLISTED",
-    () => {
-      const tree = makeTree(
-        [
-          makeMember({ id: "mA", visibility: "UNLISTED" }),
-          makeMember({ id: "mB", visibility: "RESTRICTED" }),
-        ],
-        [],
-      )
+  it("applies a custom scope so authenticated callers can surface UNLISTED", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "mA", visibility: "UNLISTED" }),
+        makeMember({ id: "mB", visibility: "RESTRICTED" }),
+      ],
+      [],
+    )
 
-      const result = materializeLineageTreeResult(tree, [
-        "PUBLIC",
-        "UNLISTED",
-      ] as const)
-      expect(result.members.map((m) => m.id)).toEqual(["mA"])
-    },
-  )
+    const result = materializeLineageTreeResult(tree, ["PUBLIC", "UNLISTED"] as const)
+    expect(result.members.map(m => m.id)).toEqual(["mA"])
+  })
 })
 
 // --- SESSION_0180 TASK_03 — resolveLineageVisibilityScope. -------------------
 
 describe("resolveLineageVisibilityScope", () => {
   it("returns [PUBLIC] for unauthenticated callers", () => {
-    expect(
-      resolveLineageVisibilityScope({ authenticated: false, isOwner: false }),
-    ).toEqual(["PUBLIC"])
+    expect(resolveLineageVisibilityScope({ authenticated: false, isOwner: false })).toEqual([
+      "PUBLIC",
+    ])
   })
 
   it("returns [PUBLIC, UNLISTED] for authenticated non-owners", () => {
-    expect(
-      resolveLineageVisibilityScope({ authenticated: true, isOwner: false }),
-    ).toEqual(["PUBLIC", "UNLISTED"])
+    expect(resolveLineageVisibilityScope({ authenticated: true, isOwner: false })).toEqual([
+      "PUBLIC",
+      "UNLISTED",
+    ])
   })
 
   it("returns [PUBLIC, UNLISTED, RESTRICTED] for owners", () => {
-    expect(
-      resolveLineageVisibilityScope({ authenticated: true, isOwner: true }),
-    ).toEqual(["PUBLIC", "UNLISTED", "RESTRICTED"])
+    expect(resolveLineageVisibilityScope({ authenticated: true, isOwner: true })).toEqual([
+      "PUBLIC",
+      "UNLISTED",
+      "RESTRICTED",
+    ])
   })
 
   it("never returns PRIVATE", () => {
     for (const authenticated of [false, true]) {
       for (const isOwner of [false, true]) {
-        expect(
-          resolveLineageVisibilityScope({ authenticated, isOwner }),
-        ).not.toContain("PRIVATE")
+        expect(resolveLineageVisibilityScope({ authenticated, isOwner })).not.toContain("PRIVATE")
       }
     }
   })
 
   it("ignores isOwner when the viewer is unauthenticated", () => {
-    expect(
-      resolveLineageVisibilityScope({ authenticated: false, isOwner: true }),
-    ).toEqual(["PUBLIC"])
+    expect(resolveLineageVisibilityScope({ authenticated: false, isOwner: true })).toEqual([
+      "PUBLIC",
+    ])
   })
 })

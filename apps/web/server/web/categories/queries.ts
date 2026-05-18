@@ -3,7 +3,11 @@ import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { categoryManyPayload, categoryOnePayload } from "~/server/web/categories/payloads"
 import { db } from "~/services/db"
 
-export const findCategories = async ({ where, orderBy, take }: Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "take"> = {}) => {
+export const findCategories = async ({
+  where,
+  orderBy,
+  take,
+}: Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "take"> = {}) => {
   "use cache"
 
   cacheTag("categories")

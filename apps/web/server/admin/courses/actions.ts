@@ -1,10 +1,14 @@
 "use server"
 
 import { after } from "next/server"
-import { adminActionClient } from "~/lib/safe-actions"
-import { idSchema, idsSchema } from "~/server/admin/shared/schema"
-import { courseSchema, curriculumItemSchema, reorderCurriculumItemsSchema } from "~/server/admin/courses/schema"
 import { z } from "zod/v4"
+import { adminActionClient } from "~/lib/safe-actions"
+import {
+  courseSchema,
+  curriculumItemSchema,
+  reorderCurriculumItemsSchema,
+} from "~/server/admin/courses/schema"
+import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 
 export const upsertCourse = adminActionClient
   .inputSchema(courseSchema)

@@ -1,14 +1,10 @@
 import { notFound } from "next/navigation"
-import { LeadCaptureForm } from "~/components/web/lead-capture-form"
-import { Wrapper } from "~/components/common/wrapper"
 import { H2 } from "~/components/common/heading"
+import { Wrapper } from "~/components/common/wrapper"
+import { LeadCaptureForm } from "~/components/web/lead-capture-form"
 import { db } from "~/services/db"
 
-export default async function GetStartedPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+export default async function GetStartedPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
   const organization = await db.organization.findFirst({

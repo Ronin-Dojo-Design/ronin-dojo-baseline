@@ -12,7 +12,7 @@ type TechniqueListProps = ComponentProps<typeof Grid> & {
 }
 
 const TechniqueList = ({ children, techniques, ...props }: TechniqueListProps) => {
-  const t = useTranslations()
+  const _t = useTranslations()
 
   return (
     <Grid {...props}>
@@ -35,4 +35,4 @@ const TechniqueListSkeleton = ({ count = 6 }: { count?: number }) => {
   )
 }
 
-export { TechniqueList, TechniqueListSkeleton, type TechniqueListProps }
+export { TechniqueList, type TechniqueListProps, TechniqueListSkeleton }

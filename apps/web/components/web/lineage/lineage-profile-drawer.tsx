@@ -71,11 +71,7 @@ export function LineageProfileDrawer({ open, onOpenChange, profile }: LineagePro
   )
 }
 
-function DrawerBody({
-  profile,
-}: {
-  profile: LineageNodeProfile
-}) {
+function DrawerBody({ profile }: { profile: LineageNodeProfile }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const currentAward = profile.user.rankAwards[0] ?? null
   const currentRank = currentAward?.rank

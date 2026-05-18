@@ -188,14 +188,11 @@ async function main() {
   // 1. Load all disciplines (system + BASELINE) keyed by slug
   const disciplines = await db.discipline.findMany({
     where: {
-      OR: [
-        { brand: "BASELINE_MARTIAL_ARTS" },
-        { isSystem: true },
-      ],
+      OR: [{ brand: "BASELINE_MARTIAL_ARTS" }, { isSystem: true }],
     },
     select: { id: true, slug: true },
   })
-  const disciplineBySlug = new Map(disciplines.map((d) => [d.slug, d.id]))
+  const disciplineBySlug = new Map(disciplines.map(d => [d.slug, d.id]))
 
   // 2. Load all affiliate PricingPlan rows keyed by metadata.externalId
   const plans = await db.pricingPlan.findMany({
@@ -304,13 +301,11 @@ async function main() {
     console.log(`   ✅ ${collection.name}: seeded`)
   }
 
-  console.log(
-    `\n🎉 Done! Created: ${created}, Skipped: ${skipped}, Missing refs: ${missing}`,
-  )
+  console.log(`\n🎉 Done! Created: ${created}, Skipped: ${skipped}, Missing refs: ${missing}`)
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("❌ Seed error:", e)
     process.exit(1)
   })

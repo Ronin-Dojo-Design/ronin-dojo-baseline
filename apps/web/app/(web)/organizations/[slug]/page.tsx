@@ -1,17 +1,17 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
-import type { Metadata } from "next"
 import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
-import { Intro, IntroTitle, IntroDescription } from "~/components/web/ui/intro"
-import { Section } from "~/components/web/ui/section"
 import { JoinOrganizationButton } from "~/components/web/organizations/join-organization-button"
 import { MembershipActions } from "~/components/web/organizations/membership-actions"
-import { getOrganizationBySlug, getSystemRoles } from "~/server/web/organization/queries"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getOrganizationBySlug, getSystemRoles } from "~/server/web/organization/queries"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -46,7 +46,14 @@ export default async function OrganizationDetailPage({ params }: Props) {
   const isOwner = session?.user?.id === org.ownerId
 
   // Format address from expanded fields
-  const addressParts = [org.addressLine1, org.addressLine2, org.city, org.state, org.zip, org.country].filter(Boolean)
+  const addressParts = [
+    org.addressLine1,
+    org.addressLine2,
+    org.city,
+    org.state,
+    org.zip,
+    org.country,
+  ].filter(Boolean)
   const formattedAddress = addressParts.length > 0 ? addressParts.join(", ") : null
 
   return (
@@ -55,8 +62,12 @@ export default async function OrganizationDetailPage({ params }: Props) {
         <IntroTitle>{org.name}</IntroTitle>
         <IntroDescription>
           <Stack size="sm">
-            <Badge variant="outline" size="lg">{org.type}</Badge>
-            <span>{org._count.memberships} member{org._count.memberships !== 1 ? "s" : ""}</span>
+            <Badge variant="outline" size="lg">
+              {org.type}
+            </Badge>
+            <span>
+              {org._count.memberships} member{org._count.memberships !== 1 ? "s" : ""}
+            </span>
           </Stack>
         </IntroDescription>
       </Intro>
@@ -104,7 +115,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                 <div className="space-y-2">
                   <H4>Disciplines</H4>
                   <Stack size="sm" className="flex-wrap">
-                    {org.disciplines.map((od) => (
+                    {org.disciplines.map(od => (
                       <Badge key={od.discipline.id}>{od.discipline.name}</Badge>
                     ))}
                   </Stack>
@@ -129,7 +140,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Join a discipline:</p>
                   <Stack size="sm" className="flex-wrap">
-                    {org.disciplines.map((od) => (
+                    {org.disciplines.map(od => (
                       <JoinOrganizationButton
                         key={od.discipline.id}
                         organizationId={org.id}
@@ -142,13 +153,20 @@ export default async function OrganizationDetailPage({ params }: Props) {
               )}
 
               <div className="space-y-2">
-                {org.memberships.map((m) => (
+                {org.memberships.map(m => (
                   <Card key={m.id} hover={false}>
                     <CardHeader>
-                      <span className="text-sm font-medium">
-                        {m.user.name ?? "Unknown"}
-                      </span>
-                      <Badge size="sm" variant={m.status === "ACTIVE" ? "success" : m.status === "SUSPENDED" ? "danger" : "warning"}>
+                      <span className="text-sm font-medium">{m.user.name ?? "Unknown"}</span>
+                      <Badge
+                        size="sm"
+                        variant={
+                          m.status === "ACTIVE"
+                            ? "success"
+                            : m.status === "SUSPENDED"
+                              ? "danger"
+                              : "warning"
+                        }
+                      >
                         {m.status}
                       </Badge>
                       {m.discipline && (
@@ -156,7 +174,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                           {m.discipline.name}
                         </Badge>
                       )}
-                      {m.roleAssignments.map((ra) => (
+                      {m.roleAssignments.map(ra => (
                         <Badge key={ra.role.id} size="sm" variant="soft">
                           {ra.role.name}
                         </Badge>
@@ -166,7 +184,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                       <MembershipActions
                         membership={m}
                         roles={roles}
-                        assignedRoleIds={m.roleAssignments.map((ra) => ra.role.id)}
+                        assignedRoleIds={m.roleAssignments.map(ra => ra.role.id)}
                       />
                     )}
                   </Card>

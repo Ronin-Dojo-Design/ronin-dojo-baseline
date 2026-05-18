@@ -113,9 +113,11 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     currency: "usd",
     colors: ["Black", "White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
-    description: "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
+    description:
+      "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
     features: ["Moisture-wicking jersey", "Breathable fabric", "Athletic fit", "Durable print"],
-    imagePath: "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
+    imagePath:
+      "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-front-698dda8dd7a1b.png",
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-black-back-698dda8dd888e.png",
@@ -140,9 +142,11 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     currency: "usd",
     colors: ["Black", "White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
-    description: "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
+    description:
+      "Moisture-wicking sport jersey built for Brian's workouts, tournaments, or everyday wear.",
     features: ["Moisture-wicking jersey", "Breathable fabric", "Athletic fit", "Durable print"],
-    imagePath: "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
+    imagePath:
+      "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd86eb.png",
       "/images/merch/Tuff-Buffs-Athletic-T-Shirt-unisex-sports-jersey-white-front-698dda8dd81d6.png",
@@ -169,7 +173,8 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Cotton heritage pullover hoodie with TuffBuffs branding.",
     features: ["Soft fleece interior", "Pullover fit", "Kangaroo pocket", "Drawstring hood"],
-    imagePath: "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
+    imagePath:
+      "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-left-front-698dd20f65162.png",
       "/images/merch/Tuff-Buffs-Hoodies-cotton-heritage-m2580-i-unisex-premium-pullover-female-black-front-right-front-698dd20f65916.png",
@@ -189,7 +194,8 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Cotton heritage pullover hoodie with TuffBuffs branding.",
     features: ["Soft fleece interior", "Pullover fit", "Kangaroo pocket", "Drawstring hood"],
-    imagePath: "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
+    imagePath:
+      "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-front-698dd20f6602d.png",
       "/images/merch/Tuff-Buffs-Hoodie-cotton-heritage-m2580-i-unisex-premium-pullover-hoodie-black-left-front-698dd20f6707f.png",
@@ -208,8 +214,14 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     colors: ["Black", "Gold"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "All-over print long sleeve rash guard with TuffBuffs branding.",
-    features: ["Compression fit", "Anti-microbial fabric", "Sublimated design", "Reinforced stitching"],
-    imagePath: "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
+    features: [
+      "Compression fit",
+      "Anti-microbial fabric",
+      "Sublimated design",
+      "Reinforced stitching",
+    ],
+    imagePath:
+      "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
     imagePaths: [
       "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-front-68bb1b3d6a895-68bb1b3d694b3.png",
       "/images/merch/Tuff-Buffs-long-sleeve-all-over-print-mens-rash-guard-back-68bb1b3d6a895.png",
@@ -229,7 +241,12 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     colors: ["White"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "IBJJF-compliant white ranked rash guard for BJJ competition.",
-    features: ["4-way stretch fabric", "Flatlock stitching", "Sublimated graphics", "IBJJF compliant"],
+    features: [
+      "4-way stretch fabric",
+      "Flatlock stitching",
+      "Sublimated graphics",
+      "IBJJF compliant",
+    ],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -244,7 +261,12 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     colors: ["Black"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "IBJJF-compliant black ranked rash guard for BJJ competition.",
-    features: ["4-way stretch fabric", "Flatlock stitching", "Sublimated graphics", "IBJJF compliant"],
+    features: [
+      "4-way stretch fabric",
+      "Flatlock stitching",
+      "Sublimated graphics",
+      "IBJJF compliant",
+    ],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -259,7 +281,12 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     colors: ["Black/Gold"],
     sizes: ["S", "M", "L", "XL", "2XL"],
     description: "Premium no-gi rash guard with full TuffBuffs branding.",
-    features: ["Compression fit", "Anti-microbial fabric", "Sublimated design", "Reinforced stitching"],
+    features: [
+      "Compression fit",
+      "Anti-microbial fabric",
+      "Sublimated design",
+      "Reinforced stitching",
+    ],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     featured: true,
     inStock: true,
@@ -287,7 +314,12 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     currency: "usd",
     sizes: ["12oz", "14oz", "16oz"],
     description: "Quality boxing gloves with TuffBuffs branding.",
-    features: ["Multi-layer foam padding", "Velcro wrist closure", "Synthetic leather", "Thumb lock"],
+    features: [
+      "Multi-layer foam padding",
+      "Velcro wrist closure",
+      "Synthetic leather",
+      "Thumb lock",
+    ],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -327,7 +359,12 @@ const tuffBuffsMerchProducts: readonly TuffBuffsMerchProduct[] = [
     currency: "usd",
     sizes: ["S", "M", "L", "XL"],
     description: "Protective headgear for sparring sessions.",
-    features: ["Full face protection", "Adjustable chin strap", "Open top design", "Synthetic leather"],
+    features: [
+      "Full face protection",
+      "Adjustable chin strap",
+      "Open top design",
+      "Synthetic leather",
+    ],
     imagePath: PLACEHOLDER_IMAGE_PATH,
     inStock: true,
   },
@@ -437,9 +474,7 @@ const adapter = new PrismaPg({
 const db = new PrismaClient({ adapter })
 
 const args = process.argv.slice(2)
-const orgIdFlag = args.includes("--org-id")
-  ? args[args.indexOf("--org-id") + 1]
-  : null
+const orgIdFlag = args.includes("--org-id") ? args[args.indexOf("--org-id") + 1] : null
 
 async function main() {
   // Resolve org
@@ -510,9 +545,7 @@ async function main() {
         },
       },
     })
-    console.log(
-      `   ✅ Created: ${product.name} ($${(product.amountCents / 100).toFixed(2)})`,
-    )
+    console.log(`   ✅ Created: ${product.name} ($${(product.amountCents / 100).toFixed(2)})`)
     created++
   }
 
@@ -522,7 +555,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("❌ Seed error:", e)
     process.exit(1)
   })

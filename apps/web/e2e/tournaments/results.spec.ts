@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 import { getFixture } from "../helpers/fixture"
 
 test.describe("Tournament results page", () => {

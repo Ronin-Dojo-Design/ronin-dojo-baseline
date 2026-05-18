@@ -20,9 +20,7 @@ export const subscriptionsTableParamsSchema = {
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
 }
 
-export const subscriptionsTableParamsCache = createSearchParamsCache(
-  subscriptionsTableParamsSchema,
-)
+export const subscriptionsTableParamsCache = createSearchParamsCache(subscriptionsTableParamsSchema)
 export type SubscriptionsTableSchema = Awaited<
   ReturnType<typeof subscriptionsTableParamsCache.parse>
 >

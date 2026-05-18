@@ -3,7 +3,7 @@ import { OrderStatusBadge } from "~/app/admin/merch/orders/_components/order-sta
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Card, CardHeader, CardDescription } from "~/components/common/card"
+import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
@@ -32,9 +32,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/merch/orders/[
     notFound()
   }
 
-  const lineItems = Array.isArray(order.lineItems)
-    ? (order.lineItems as LineItem[])
-    : []
+  const lineItems = Array.isArray(order.lineItems) ? (order.lineItems as LineItem[]) : []
 
   return (
     <Stack size="lg" direction="column">
@@ -180,7 +178,12 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/merch/orders/[
           <div className="p-6 pt-0">
             <Stack size="sm" direction="column">
               {lineItems.map((item, i) => (
-                <Stack key={i} size="sm" direction="row" className="items-center justify-between border-b pb-2 last:border-0">
+                <Stack
+                  key={i}
+                  size="sm"
+                  direction="row"
+                  className="items-center justify-between border-b pb-2 last:border-0"
+                >
                   <div>
                     <div className="font-medium">{item.name ?? "Unknown product"}</div>
                     <Note>

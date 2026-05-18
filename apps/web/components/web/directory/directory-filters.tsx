@@ -39,14 +39,14 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
     <Stack direction="row" className="mb-6 flex-wrap gap-3">
       <Select
         value={searchParams.get("org") ?? "__all__"}
-        onValueChange={(v) => updateFilter("org", v)}
+        onValueChange={v => updateFilter("org", v)}
       >
         <SelectTrigger aria-label="Filter by organization">
           <SelectValue placeholder="All Organizations" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__all__">All Organizations</SelectItem>
-          {options.organizations.map((o) => (
+          {options.organizations.map(o => (
             <SelectItem key={o.id} value={o.id}>
               {o.name}
             </SelectItem>
@@ -56,14 +56,14 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
 
       <Select
         value={searchParams.get("discipline") ?? "__all__"}
-        onValueChange={(v) => updateFilter("discipline", v)}
+        onValueChange={v => updateFilter("discipline", v)}
       >
         <SelectTrigger aria-label="Filter by discipline">
           <SelectValue placeholder="All Disciplines" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__all__">All Disciplines</SelectItem>
-          {options.disciplines.map((d) => (
+          {options.disciplines.map(d => (
             <SelectItem key={d.id} value={d.id}>
               {d.name}
             </SelectItem>
@@ -73,14 +73,14 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
 
       <Select
         value={searchParams.get("rank") ?? "__all__"}
-        onValueChange={(v) => updateFilter("rank", v)}
+        onValueChange={v => updateFilter("rank", v)}
       >
         <SelectTrigger aria-label="Filter by rank">
           <SelectValue placeholder="All Ranks" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="__all__">All Ranks</SelectItem>
-          {options.ranks.map((r) => (
+          {options.ranks.map(r => (
             <SelectItem key={r.id} value={r.id}>
               {r.name}
             </SelectItem>
@@ -91,8 +91,8 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
       <Input
         placeholder="City"
         defaultValue={searchParams.get("city") ?? ""}
-        onBlur={(e) => updateFilter("city", e.target.value)}
-        onKeyDown={(e) => {
+        onBlur={e => updateFilter("city", e.target.value)}
+        onKeyDown={e => {
           if (e.key === "Enter") updateFilter("city", e.currentTarget.value)
         }}
       />
@@ -100,8 +100,8 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
       <Input
         placeholder="State / Region"
         defaultValue={searchParams.get("region") ?? ""}
-        onBlur={(e) => updateFilter("region", e.target.value)}
-        onKeyDown={(e) => {
+        onBlur={e => updateFilter("region", e.target.value)}
+        onKeyDown={e => {
           if (e.key === "Enter") updateFilter("region", e.currentTarget.value)
         }}
       />
