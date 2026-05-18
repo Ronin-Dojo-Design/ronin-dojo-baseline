@@ -396,7 +396,9 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         where: {
           type: "PROMOTED_BY",
           toNodeId: member.nodeId,
-          ...(member.rankAwardId ? { rankAwardId: member.rankAwardId } : { endedAt: null }),
+          ...(member.rankAwardId
+            ? { rankAwardId: member.rankAwardId }
+            : { endedAt: null, rankAwardId: null }),
         },
         select: {
           id: true,
