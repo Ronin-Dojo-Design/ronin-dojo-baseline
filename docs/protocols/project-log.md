@@ -1362,7 +1362,7 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 
 **Notes:** Owner directive: merge #23 and clean #24. Do not auto-merge #24; today's goal for #24 is "ready for owner review" matching the #23 outcome from SESSION_0194.
 
-**Result:** PR #23 squash-merged into `main` at commit `554fda4` (owner-authorized). PR #24 rebased onto fresh `main`, UTC promotion-date fix applied per Codex P2 (`timeZone: "UTC"` on `Intl.DateTimeFormat` in `lineage-tree-canvas.tsx`), biome formatter cleanup squashed into the originating commit, force-pushed (`a59249b` -> `43eee22`), retargeted to `main`, and verified locally plus through green Vercel + CodeRabbit checks. New `docs/knowledge/wiki/custom-component-inventory.md` created (user-requested) to document Ronin-specific custom components alongside the Dirstarter inventory.
+**Result:** PR #23 squash-merged into `main` at commit `554fda4` (owner-authorized). PR #24 rebased onto fresh `main`, UTC promotion-date fix applied per Codex P2 (`timeZone: "UTC"` on `Intl.DateTimeFormat` in `lineage-tree-canvas.tsx`), biome formatter cleanup squashed into the originating commit, force-pushed (`a59249b` -> `43eee22`), retargeted to `main`, and verified locally plus through green Vercel + CodeRabbit checks. Owner then squash-merged PR #24 in-session at commit `f3a8ebc`; remote branch deleted; pr-24-clean worktree + local branch removed; main fast-forwarded; post-merge `graphify update .` ran. Lineage v1 PR stack is fully drained. New `docs/knowledge/wiki/custom-component-inventory.md` created (user-requested) to document Ronin-specific custom components alongside the Dirstarter inventory.
 
 #### Review
 
@@ -1383,4 +1383,4 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Evidence:** Final `gh pr view 24` reports base `main`, head `session-lineage-v1-viewer-polish`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/24#issuecomment-4478451917`.
 - **Impact:** The technical cleanup is complete, but merge-to-main protocol still gates the squash merge on owner approval.
 - **Required follow-up:** Owner reviews and squash-merges PR #24, or requests additional changes on that PR.
-- **Status:** open
+- **Status:** resolved in SESSION_0195 (PR #24 owner squash-merged in-session at `f3a8ebc`; remote branch deleted; main fast-forwarded; lineage v1 PR stack empty).

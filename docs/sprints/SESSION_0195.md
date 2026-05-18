@@ -119,7 +119,7 @@ closed-full
 | PR | Starting state | SESSION_0195 action | End state |
 | --- | --- | --- | --- |
 | #23 | Open; `session-lineage-v1-hardening-tests` -> `main`; CLEAN/MERGEABLE; Vercel SUCCESS; CodeRabbit SUCCESS; left for owner review by SESSION_0194. | Pre-merge re-check confirmed all green; `gh pr merge 23 --squash --delete-branch` (owner-authorized); main fast-forwarded locally via `git pull --ff-only`. | Merged at squash commit `554fda4`; remote branch deleted; main locally at `554fda4`. |
-| #24 | Open; `session-lineage-v1-viewer-polish` -> `session-lineage-v1-react-canvas-from-lineage-snapshot` (stale parent); CONFLICTING/DIRTY; Vercel FAILURE; CodeRabbit SUCCESS. | Isolated worktree `/Users/brianscott/dev/ronin-dojo-app-pr24-clean`; rebased onto current `origin/main`; resolved add-import conflict in `lineage-tree-canvas.tsx` by keeping incoming `CalendarDaysIcon` + `SparklesIcon`; applied Codex P2 UTC fix on `formatPromotionDate` (added `timeZone: "UTC"` to `Intl.DateTimeFormat`); biome formatter touch-ups squashed into the first commit; second commit re-applied via cherry-pick. Force-pushed with lease (`a59249b` -> `43eee22`); retargeted PR to `main`; posted verification comment. | Open; `session-lineage-v1-viewer-polish` -> `main`; MERGEABLE/CLEAN; Vercel SUCCESS; CodeRabbit SUCCESS; ready for owner review/squash-merge. |
+| #24 | Open; `session-lineage-v1-viewer-polish` -> `session-lineage-v1-react-canvas-from-lineage-snapshot` (stale parent); CONFLICTING/DIRTY; Vercel FAILURE; CodeRabbit SUCCESS. | Isolated worktree `/Users/brianscott/dev/ronin-dojo-app-pr24-clean`; rebased onto current `origin/main`; resolved add-import conflict in `lineage-tree-canvas.tsx` by keeping incoming `CalendarDaysIcon` + `SparklesIcon`; applied Codex P2 UTC fix on `formatPromotionDate` (added `timeZone: "UTC"` to `Intl.DateTimeFormat`); biome formatter touch-ups squashed into the first commit; second commit re-applied via cherry-pick. Force-pushed with lease (`a59249b` -> `43eee22`); retargeted PR to `main`; posted verification comment. After owner sign-off in-session, `gh pr merge 24 --squash --delete-branch` ran; main fast-forwarded; pr-24-clean worktree + local branch removed. | Merged at squash commit `f3a8ebc`; remote `session-lineage-v1-viewer-polish` deleted; main locally at `f3a8ebc`. |
 
 ## Verification
 
@@ -141,12 +141,14 @@ closed-full
 - `gh pr edit 24 --base main` — retargeted to `main`.
 - Polled `gh pr view 24` Vercel status; settled `SUCCESS` after ~5 polls; CodeRabbit `SUCCESS`; PR `CLEAN`/`MERGEABLE`.
 - PR #24 verification comment posted: `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/24#issuecomment-4478451917`.
+- **Post-close addendum — PR #24 owner squash-merge:** owner authorized merge during the same session after the initial close-full. `gh pr merge 24 --squash --delete-branch` succeeded at `f3a8ebc`; `git fetch --all --prune --tags` reported `3331e6d..f3a8ebc main -> origin/main` and pruned the deleted `session-lineage-v1-viewer-polish` remote head; `git pull --ff-only origin main` fast-forwarded local main; `git worktree remove /Users/brianscott/dev/ronin-dojo-app-pr24-clean` + `git branch -D pr-24-clean` cleaned the cleanup worktree. Final `graphify update .` reported +13 nodes, +78 edges; `graphify stats` final: 6370 nodes, 11486 edges, 822 communities, 1250 files tracked.
 
 ## What landed
 
 - PR #23 squash-merged into `main` at `554fda4` (owner-authorized); remote branch deleted; pr-23-clean worktree + local branch removed.
 - PR #24 rebased onto current `main` (now includes #23), conflicts resolved, UTC promotion-date formatting fix applied per Codex P2 review, biome-clean, force-pushed with lease, retargeted to `main`, and verified locally and via Vercel/CodeRabbit checks (both `SUCCESS`).
-- Stale stacked PR lineage was fully retired: with #24 now off the old `session-lineage-v1-react-canvas-from-lineage-snapshot` parent, the lineage v1 PR stack has only one open PR remaining (#24, ready for owner review).
+- PR #24 owner-merged in-session (post-close addendum): squash-merged at `f3a8ebc`; remote `session-lineage-v1-viewer-polish` deleted; main locally at `f3a8ebc`; pr-24-clean worktree + local branch removed.
+- Stale stacked PR lineage is fully retired: the lineage v1 PR stack (#23, #24, #29, #30) is now empty on remote.
 
 ## Files touched
 
@@ -165,14 +167,13 @@ closed-full
 
 ## Open decisions / blockers
 
-- Owner review/merge decision for PR #24 (technical cleanup complete, ready for squash-merge).
-- No remaining stale PRs in the lineage v1 stack after this session.
+- None. PR #24 was owner-merged in-session; no remaining stale or pending PRs in the lineage v1 stack.
 
 ## Next session
 
-- **Goal:** Owner merges PR #24; resume the next lineage launch task per WORKFLOW 5.0 calendar (likely the next lineage v1 milestone after viewer polish lands).
-- **Inputs to read:** `docs/sprints/SESSION_0195.md`, PR #24, `docs/protocols/WORKFLOW_5.0.md` session calendar, lineage v1 program plan section.
-- **First task:** If PR #24 merged: pick the next lineage v1 task from the calendar. If not: complete owner review and squash-merge #24 before any new lineage work.
+- **Goal:** Pick the next lineage v1 task from the WORKFLOW 5.0 session calendar now that viewer polish + hardening tests are on `main`.
+- **Inputs to read:** `docs/sprints/SESSION_0195.md`, `docs/protocols/WORKFLOW_5.0.md` session calendar, lineage v1 program plan section, latest `main` (`f3a8ebc`).
+- **First task:** Open the calendar row for the next session and confirm the lane/outcome before any code. With path-highlight + UTC formatting now landed, the natural next surface is whichever lineage v1 task is queued after viewer polish.
 
 ## Task Log
 
@@ -218,6 +219,7 @@ No new ADR needed.
 - Squashing the biome formatter cleanup into the originating commit via `reset --hard HEAD~1 + commit --amend + cherry-pick` was cleaner than leaving a "chore: apply biome formatter" follow-up commit, even though squash-merge would have flattened it anyway. Future PR-cleanup sessions: stage formatter touch-ups into the commit that introduced the line, not into a tail commit.
 - The Codex P2 UTC review item turned out to be a 1-line `timeZone: "UTC"` option on `Intl.DateTimeFormat`, not a broader date-utility refactor. Reading the inline review comment before deciding scope saved an unnecessary refactor lane.
 - The pr-24 worktree needed the same `.env` copy that SESSION_0194 noted for pr-23 — confirmed pattern for any fresh worktree in this repo: source `apps/web/.env` before `pnpm install --frozen-lockfile` or Prisma postinstall fails.
+- During the post-close PR #24 squash-merge, a single Bash call without a `cd` prefix ran against the DirStarter primary cwd instead of ronin-dojo-app — `git fetch`/`pull`/`log`/`worktree` all reported DirStarter state, which masked the actual ronin-dojo-app result. The recovery was to re-run with explicit `cd /Users/brianscott/dev/ronin-dojo-app &&` prefix. This is the exact failure mode the existing `feedback_ronin_dojo_bash_cwd.md` memory documents; the lesson is that the prefix discipline must extend through *every* call including post-close addendum operations, not just the main session block.
 
 ## Full close evidence
 
@@ -230,6 +232,6 @@ No new ADR needed.
 | Hostile close review | `SESSION_0195_REVIEW_01` present here and recorded in `project-log.md`. |
 | Review & Recommend | Next session goal written above: owner squash-merge #24, then next lineage v1 calendar task. |
 | Memory sweep | No new operator memory required. The four memory rules touched today (Bash cwd, Vercel env preview scope, prebuild scripts, advisory-lock) were all observed without new failure modes. The `gh pr` cwd lesson is captured in Reflections and the existing `feedback_ronin_dojo_bash_cwd.md` memory already covers the broader rule; no separate memory file needed. |
-| Next session unblock check | Unblocked. Owner review/merge of #24 is the only gate; technical work is complete. |
-| Git hygiene | Final response will report branch (`main`), worktree list after pr-24-clean removal, commit hash for SESSION_0195 docs commit, and push proof. |
-| Graphify update | Final response will report post-hygiene `graphify update .` stats. |
+| Next session unblock check | Fully unblocked. PR #24 was owner-merged in-session after the initial close-full (squash commit `f3a8ebc`); the lineage v1 PR stack is empty. |
+| Git hygiene | Branch `main` at `f3a8ebc` (post-#24-merge); worktree list = only `/Users/brianscott/dev/ronin-dojo-app` after pr-24-clean removal; SESSION_0195 docs committed at `3331e6d` and pushed; post-merge `git pull --ff-only` fast-forwarded `3331e6d..f3a8ebc`. |
+| Graphify update | Post-docs-commit `graphify update .` reported +154 nodes / +480 edges (stats: 6369/11476/766/1250). Post-#24-merge `graphify update .` reported +13 nodes / +78 edges (stats: 6370/11486/822/1250). |
