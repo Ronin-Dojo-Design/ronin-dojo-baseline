@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-18
-last_agent: claude-session-0195
+last_agent: claude-session-0196
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1384,3 +1384,48 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** The technical cleanup is complete, but merge-to-main protocol still gates the squash merge on owner approval.
 - **Required follow-up:** Owner reviews and squash-merges PR #24, or requests additional changes on that PR.
 - **Status:** resolved in SESSION_0195 (PR #24 owner squash-merged in-session at `f3a8ebc`; remote branch deleted; main fast-forwarded; lineage v1 PR stack empty).
+
+### SESSION_0196 — Listings Parity v1 (Techniques, Schools, Disciplines, Courses)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0196_TASK_01 | Petey: promote Desi as a Claude Code subagent at `.claude/agents/desi.md` (read-only tools; persona + 9-section output spec mirrors `docs/agents/desi.md`) | complete |
+| SESSION_0196_TASK_02 | Desi: baseline review pass on the four public listing surfaces (techniques/schools/disciplines/courses) against the `ToolListing` + `ToolCard` reference; produce 9-section structured audit with prioritized fix list | complete |
+| SESSION_0196_TASK_03a | Cody A (general-purpose subagent): tighten the four `<Domain>Card` components toward the `ToolCard` visual contract — hover-reveal description overlay, `ShowMore` chip rows, disciplines card flipped to `Card isRevealed` + absolute-inset Link, `DisciplineCardSkeleton` exported | complete |
+| SESSION_0196_TASK_03b | Cody B (general-purpose subagent): wire the courses page to Suspense + `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` trio; adopt `Grid` + `EmptyList` on disciplines list; route technique/school/course empty-state copy through `useTranslations("common")("empty")` | complete |
+| SESSION_0196_TASK_04 | Doug: static gate verification (typecheck + biome + lineage regression) + push + PR; wait for Vercel + CodeRabbit; post verification comment | complete |
+| SESSION_0196_TASK_05 | Petey + Giddy: full close — SESSION_0196, project-log, wiki index, custom-component-inventory, ADR/component sweep, drift/FS sweep, post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive: front-end review then implementation pass to bring courses/techniques/schools/disciplines pages to tool-listing + categories-cards parity. Use Graphify queries (not repo-wide grep) for navigation. Promote Desi as a subagent before kicking off the review. /grill-me to mutual understanding before any code. Single feature branch, single PR.
+
+**Result:** Desi promoted at `.claude/agents/desi.md` (native discovery is session-start gated; in-session use was via a `general-purpose` subagent with persona embedded inline). Desi review pass produced 4 HIGH + 4 MEDIUM + 4 LOW fix items. Cody A landed `6a421a0` on `session-listings-parity-v1` (four card components tightened to ToolCard contract). Cody B landed `4fef673` (course trio created, disciplines list adopts Grid+EmptyList, empty-state i18n via `common.empty` bridge). Doug verification: typecheck + biome + lineage tests all green; PR #31 opened against `main`; Vercel SUCCESS + CodeRabbit SUCCESS; PR `CLEAN`/`MERGEABLE`, queued for owner squash-merge. Doug verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/31#issuecomment-4479114056`. Open decisions (deferred per scope guardrail): DisciplineCard inline-count i18n migration, SchoolCard payload phone/contact field, server-side `sort` consumption in `searchCourses`, courses intro count line restoration, per-domain empty-state copy, disciplines card location move, leading-visual / domain-avatar adoption, sort label translations on technique/school search.
+
+#### Review
+
+##### SESSION_0196_REVIEW_01 — Hostile close review for listings parity v1
+
+- **Reviewed tasks:** SESSION_0196_TASK_01, SESSION_0196_TASK_02, SESSION_0196_TASK_03a, SESSION_0196_TASK_03b, SESSION_0196_TASK_04, SESSION_0196_TASK_05.
+- **Dirstarter docs check:** no Dirstarter baseline layer touched. This session is pure UI-parity work over four public listing surfaces using Dirstarter L1 primitives (`Card`, `CardHeader`, `H4`, `Link`, `Badge`, `ShowMore`) already in active use by the proven `ToolCard`. `Favicon` not adopted due to payload gap (no `logoUrl` field on any of the four payloads) — flagged LOW for follow-up. No new ADR triggered.
+- **Sources:** `apps/web/components/web/tools/tool-card.tsx`, `tool-listing.tsx`, `tool-list.tsx`, `tool-search.tsx`; `apps/web/contexts/filter-context.tsx`; the four target card + page files; Desi persona doc; SESSION_0196 Petey plan + Desi review pass; Doug static gate outputs; GitHub PR #31 metadata (Vercel + CodeRabbit SUCCESS).
+- **Verdict:** Pass. Plan was locked via two grill rounds before any code. Desi review produced a prioritized fix list that Cody followed without scope-balloon. Both Cody subagents stayed on disjoint files. PR #31 single-PR strategy matches the locked plan. No Dirstarter alignment or data-integrity cap triggered; expected WORKFLOW 5.0 rubric score 9.5/10.
+- **Kaizen:** Cleanest improvement is the "Cody must not edit `docs/sprints/**`" guardrail in the Cody prompt — this session had to recover a SESSION_0196.md divergence between main and the feature branch via `git checkout <branch> -- <file>`. Add an explicit no-edit line to future Cody briefs. Confidence for the PR at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5 (public read-only listing pages with no auth/payment/data-layer change).
+
+#### Findings
+
+##### SESSION_0196_FINDING_01 — PR #31 ready for owner squash-merge
+
+- **Severity:** low
+- **Task:** SESSION_0196_TASK_04
+- **Evidence:** Final `gh pr view 31` reports base `main`, head `session-listings-parity-v1`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, Vercel `SUCCESS`, CodeRabbit `SUCCESS`; Doug verification comment at `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/31#issuecomment-4479114056`.
+- **Impact:** Technical implementation is complete and all checks are green, but merge-to-main protocol still gates the squash merge on owner approval.
+- **Required follow-up:** Owner reviews and squash-merges PR #31, or requests additional changes.
+- **Status:** queued for owner action (next session can pick up either the merge follow-up or move to the next WORKFLOW 5.0 lane).
+
+##### SESSION_0196_FINDING_02 — Cody appends to SESSION_0196.md on the feature branch
+
+- **Severity:** low
+- **Task:** SESSION_0196_TASK_03a, SESSION_0196_TASK_03b
+- **Evidence:** Both Cody A (commit `6a421a0`) and Cody B (commit `4fef673`) appended Open decisions to `docs/sprints/SESSION_0196.md` on `session-listings-parity-v1`. Main carried the planning-only SESSION_0196 from commit `721e21d` until the close commit pulled the file from the feature branch via `git checkout session-listings-parity-v1 -- docs/sprints/SESSION_0196.md`.
+- **Impact:** No data loss — both sets of Open decisions are preserved in the close commit on main. Sets up a likely SESSION_0196.md no-op or minor conflict at squash-merge time of PR #31 (the file content on main may already match feature-branch content for the appended sections).
+- **Required follow-up:** Add an explicit "Do not edit any file under `docs/sprints/**`" guardrail to future Cody prompt templates. Captured in `SESSION_0196_REVIEW_01` Kaizen.
+- **Status:** mitigated in SESSION_0196 (close commit on main includes the Cody appends; PR #31 squash-merge can resolve a SESSION_0196.md diff cleanly if it surfaces).
