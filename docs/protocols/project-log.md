@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-17
-last_agent: claude-session-0189
+last_agent: codex-session-0190
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1503,3 +1503,28 @@ See `docs/sprints/SESSION_0188.md` § "Big Kaizen — lessons from the unplanned
 1. **Safety/security:** Zod input parse is now exercised end-to-end through the harness, proving `userActionClient` surfaces validation failures as `result.validationErrors` (not `serverError`). The auth middleware short-circuits BEFORE Zod runs, so an unauthenticated invalid payload returns `serverError` — confirmed in test case (a) and noted for future wrapper authors.
 2. **Preventable failed steps:** Cody followed the SESSION_0188 precedent verbatim — same `installSafeActionMocks` ordering, same tag-prefix-driven two-phase teardown, same OWNER-role reuse pattern. Pattern is stable; future wrapper tests for `attendance` and `billing` lanes should be near-mechanical.
 3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The fixture is a single owner/org/program triple; harness does not change runtime behavior.
+
+### SESSION_0190 — Attendance Safe-Action Wrapper
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0190_TASK_01 | Cody (subagent): add `apps/web/server/web/attendance/actions.safe-action.test.ts` invoking `recordCheckIn` through `userActionClient` end-to-end — unauthenticated, Zod validationErrors, authorized check-in happy path with Attendance + CheckIn + `check_in.recorded` audit proof | complete |
+| SESSION_0190_TASK_02 | Doug + Petey: run isolated and combined wrapper/helper regressions, scoped typecheck filter, wiki lint, append SESSION_0190 to `sop-test-writing.md` §12 inventory, update project-log + wiki index, full close, git hygiene + post-commit Graphify | complete |
+
+**Notes:** Rolled the SESSION_0187-0189 wrapper pattern to the attendance lane. No harness or attendance runtime changes were needed.
+
+#### Review
+
+**SESSION_0190_REVIEW_01 - Attendance wrapper coverage**
+
+- **Reviewed tasks:** SESSION_0190_TASK_01, SESSION_0190_TASK_02.
+- **Dirstarter docs check:** not applicable — local test file + local SOP inventory edit only.
+- **Sources:** `apps/web/server/web/attendance/actions.ts` (`recordCheckIn` wrapper), `apps/web/server/web/attendance/schemas.ts` (`recordCheckInSchema` cuid validation), `apps/web/server/web/attendance/actions.test.ts` (fixture/audit precedent), `apps/web/server/web/schedule/actions.safe-action.test.ts` (validationErrors wrapper precedent), `apps/web/lib/test/safe-action-env.ts` (harness), `docs/runbooks/sop-test-writing.md` §5b/§12.
+- **Verdict:** Aligned. The new test invokes the real wrapped `recordCheckIn` export through `installSafeActionMocks`, proves unauthenticated short-circuit writes nothing, proves authenticated Zod validation errors surface as `result.validationErrors`, and proves the authorized happy path creates a `PRESENT` Attendance, matched CheckIn, and one `check_in.recorded` audit row. Isolated test returned 3 pass / 0 fail / 22 expect(); combined wrapper/helper regression returned 27 pass / 0 fail / 148 expect() across 7 files. Scoped typecheck filter returned `NO_MATCHING_ERRORS`.
+- **WORKFLOW score:** 9.7/10. The wrapper rollout is correct, isolated, and extends the previous validationErrors proof to attendance. Held below 10 because billing remains the final obvious wrapped-action rollout lane.
+
+#### Kaizen
+
+1. **Safety/security:** The auth and validation gates are now behaviorally proven through the wrapper for attendance check-in. The owner/student fixture also proves the target student must be an active member in the schedule discipline before check-in succeeds.
+2. **Preventable failed steps:** No new failed-step class surfaced. The main risk was repeating FS-0020, so Graphify queries ran before broad discovery and the selected files were verified by direct source reads.
+3. **Scale confidence:** 100 records: 10/10; 1,000 records: 10/10; 10,000 records: 9.5/10. The test is fixture-scoped and does not change runtime behavior; remaining scale proof belongs to broader attendance query/control surfaces, not this wrapper test.
