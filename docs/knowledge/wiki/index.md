@@ -286,6 +286,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Database](../../runbooks/database.md) | runbook | active |
 | [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
 | [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
+| [Neon Prisma Advisory-Lock Recovery](../../runbooks/neon-advisory-lock-recovery.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |
