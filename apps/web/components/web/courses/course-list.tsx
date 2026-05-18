@@ -12,7 +12,7 @@ type CourseListProps = ComponentProps<typeof Grid> & {
 }
 
 const CourseList = ({ children, courses, ...props }: CourseListProps) => {
-  const t = useTranslations("common")
+  const t = useTranslations("courses")
 
   return (
     <Grid {...props}>

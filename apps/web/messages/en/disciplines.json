@@ -1,0 +1,8 @@
+{
+  "empty": "No disciplines found.",
+  "counts": {
+    "ranks": "{count, plural, one {# rank} other {# ranks}}",
+    "orgs": "{count, plural, one {# org} other {# orgs}}",
+    "members": "{count, plural, one {# member} other {# members}}"
+  }
+}

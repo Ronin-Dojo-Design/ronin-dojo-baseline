@@ -12,7 +12,7 @@ type TechniqueListProps = ComponentProps<typeof Grid> & {
 }
 
 const TechniqueList = ({ children, techniques, ...props }: TechniqueListProps) => {
-  const t = useTranslations("common")
+  const t = useTranslations("techniques")
 
   return (
     <Grid {...props}>

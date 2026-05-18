@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import type { Stack } from "~/components/common/stack"
 import { Filters } from "~/components/web/filters/filters"
@@ -13,16 +14,18 @@ export type TechniqueSearchProps = ComponentProps<typeof Stack> & {
 }
 
 export const TechniqueSearch = ({ placeholder, ...props }: TechniqueSearchProps) => {
+  const tSort = useTranslations("techniques.sort")
+  const tFilters = useTranslations("techniques.filters")
   const { enableSort, enableFilters } = useFilters<TechniqueFilterSchema>()
 
   const sortOptions = [
-    { value: "name.asc", label: "Name A–Z" },
-    { value: "name.desc", label: "Name Z–A" },
-    { value: "sortOrder.asc", label: "Curriculum order" },
+    { value: "name.asc", label: tSort("name_asc") },
+    { value: "name.desc", label: tSort("name_desc") },
+    { value: "sortOrder.asc", label: tSort("curriculum_order") },
   ]
 
   return (
-    <Filters placeholder={placeholder || "Search techniques…"} {...props}>
+    <Filters placeholder={placeholder || tFilters("search_placeholder")} {...props}>
       {enableFilters && <TechniqueFilters />}
       {enableSort && <Sort options={sortOptions} />}
     </Filters>

@@ -1,0 +1,10 @@
+{
+  "empty": "No courses found.",
+  "filters": {
+    "search_placeholder": "Search courses…"
+  },
+  "sort": {
+    "title_asc": "Title A–Z",
+    "title_desc": "Title Z–A"
+  }
+}
