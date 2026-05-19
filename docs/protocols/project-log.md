@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-19
-last_agent: claude-session-0200
+last_agent: codex-session-0201
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -51,6 +51,7 @@ backlinks:
   - docs/sprints/SESSION_0172.md
   - docs/sprints/SESSION_0173.md
   - docs/sprints/SESSION_0199.md
+  - docs/sprints/SESSION_0201.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1686,3 +1687,23 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** The credential is the owner's own DB; the leak is only to the owner's session log. Pre-existing key; rotation is hygienic but not critical.
 - **Required follow-up:** Write a `feedback_env_var_sanitization_print_keys_only.md` memory: never echo URL content even with "redacted" regexes — print only env var keys; if values must be inspected, copy them out of band, not into shell output. Rotate the Neon DATABASE_URL password in Neon console at next opportunity.
 - **Status:** open follow-up — memory written this session; password rotation queued for owner.
+
+### SESSION_0201 — Neon DIRECT_URL migration routing
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0201_TASK_01 | Petey: bow in; create SESSION_0201; confirm `DIRECT_URL` exists in Vercel Preview + Production via env-name-only check; record Prisma 7 config correction | complete |
+| SESSION_0201_TASK_02 | Cody: update `apps/web/prisma.config.ts` so Prisma CLI uses `DIRECT_URL` on Vercel Preview/Production, keeps local fallback to `DIRECT_URL` or `DATABASE_URL`, and preserves conditional `SHADOW_DATABASE_URL` | complete |
+| SESSION_0201_TASK_03 | Petey + Doug: patch Neon/Prisma runbooks, run local gates, verify deploy readiness, full-close, Graphify update, commit, push to main | complete pending post-push deploy report |
+
+**Result:** `apps/web/prisma.config.ts` now selects `DIRECT_URL` for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`, with local fallback to `DIRECT_URL` or `DATABASE_URL`. Runtime remains unchanged in `apps/web/services/db.ts` and continues to use pooled `DATABASE_URL` through `PrismaPg`. `vercel env ls` confirms `DIRECT_URL` exists as an encrypted variable for Preview and Production; no secret values were printed. `docs/runbooks/neon-advisory-lock-recovery.md` now documents the Prisma 7 structural fix, the parallel-PR deploy trigger, and the zero-row `pg_locks` caveat. Local gates: `bunx prisma validate` clean; `VERCEL_ENV=preview DIRECT_URL="$DATABASE_URL" bunx prisma validate` clean; `pnpm --filter dirstarter typecheck` clean; `bun biome check .` clean across 958 files; `bun run wiki:lint` exited 0 with 497 warnings (pre-existing warning debt).
+
+#### Review
+
+##### SESSION_0201_REVIEW_01 — Hostile close review for Neon DIRECT_URL migration routing
+
+- **Reviewed tasks:** SESSION_0201_TASK_01, SESSION_0201_TASK_02, SESSION_0201_TASK_03.
+- **Dirstarter docs check:** checked live Dirstarter Prisma setup, Postgres hosting, and deployment docs. This extends Dirstarter's PostgreSQL/Vercel baseline for Ronin's Neon pooler/direct-URL split; it does not replace a Dirstarter layer.
+- **Sources:** `apps/web/prisma.config.ts`, `apps/web/services/db.ts`, `docs/runbooks/neon-advisory-lock-recovery.md`, SESSION_0200 findings, installed `@prisma/config` types for Prisma 7.8.0, Vercel env-name check.
+- **Verdict:** Pass. Prisma 7 does not expose `datasource.directUrl`; routing Vercel CLI commands through `datasource.url = DIRECT_URL` is the correct shape. Runtime is unchanged, no schema changed, and validation gates pass. Expected WORKFLOW 5.0 score 9.6/10; residual risk is observing the first post-push deploy with the new config.
+- **Follow-up:** Resume lineage v1 / PR #22 after post-push deploy readiness is confirmed.

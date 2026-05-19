@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-17
 updated: 2026-05-19
-last_agent: claude-session-0200
+last_agent: codex-session-0201
 use_count: 3
 pairs_with:
   - docs/protocols/failed-steps-log.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/sprints/SESSION_0189.md
   - docs/sprints/SESSION_0199.md
   - docs/sprints/SESSION_0200.md
+  - docs/sprints/SESSION_0201.md
 tags:
   - prisma
   - neon
@@ -56,8 +57,18 @@ Known triggers in this repo:
 
 - Adding multiple Vercel env vars back-to-back (see `docs/protocols/failed-steps-log.md` FS-0023). Each env-var change fires a redeploy; if N changes go in within seconds, Vercel kills the in-flight builds in favor of the newest one.
 - Manually cancelling a Vercel deploy that has already started `prebuild`.
-- **Parallel PR opens (SESSION_0200 finding).** When two PRs are opened within ~5s and both kick off Vercel preview builds simultaneously, both `prisma migrate deploy` calls race for `pg_advisory_lock(72707369)`. One wins; the other times out at 10s. Mitigation: serialize the second PR open by ~30s, OR land the `DIRECT_URL` structural fix (Prisma `directUrl` to the non-pooler Neon endpoint) which removes the contention surface entirely — see SESSION_0200_FINDING_01 in `docs/protocols/project-log.md`.
+- **Parallel PR opens (SESSION_0200 finding).** When two PRs are opened within ~5s and both kick off Vercel preview builds simultaneously, both `prisma migrate deploy` calls race for `pg_advisory_lock(72707369)`. One wins; the other times out at 10s. Mitigation: serialize the second PR open by ~30s, OR land the `DIRECT_URL` structural fix so Vercel migration commands use the direct non-pooler Neon endpoint — see SESSION_0200_FINDING_01 in `docs/protocols/project-log.md`.
 - **Pooler transaction-mode + session-level lock interaction (SESSION_0200 hypothesis).** Neon's pooler endpoint (`ep-...-pooler.c-3...`) is transaction-mode pgbouncer by default. `pg_advisory_lock()` is session-level — under transaction pooling each transaction gets a different backend, so the lock is intermittently visible. A `pg_locks` diagnostic after a failed build may return zero rows even though the lock was held during the build's 10s window. The reliable fix is `DIRECT_URL` (see below).
+
+## Structural fix
+
+SESSION_0201 routes Vercel Prisma CLI commands to Neon's direct non-pooler endpoint:
+
+- `DATABASE_URL` stays as the pooled Neon URL used by app runtime through `apps/web/services/db.ts`.
+- `DIRECT_URL` is added in Vercel for Preview and Production and points to the same Neon database through the direct endpoint.
+- `apps/web/prisma.config.ts` uses `DIRECT_URL` for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`.
+
+Because this repo is on Prisma 7, do **not** add `directUrl` to `schema.prisma` or `prisma.config.ts`. Prisma 7's config surface uses `datasource.url` and optional `shadowDatabaseUrl`; the Vercel build-time migration URL is selected by assigning `datasource.url` to `DIRECT_URL` in `prisma.config.ts`.
 
 ## Diagnostic procedure
 
@@ -84,7 +95,7 @@ Note: `72707369` is Prisma's internal lock ID for `_prisma_migrations`. It is st
 
 | Result | Meaning | Next action |
 | --- | --- | --- |
-| Zero rows | Lock already cleared (Neon's idle-connection timeout closed the dead session). | Retrigger the deploy: push an empty commit, or hit Vercel's "Redeploy" with build cache disabled. |
+| Zero rows | Lock already cleared (Neon's idle-connection timeout closed the dead session), or the diagnostic missed the build-time lock window. | Retrigger the deploy: push an empty commit, or hit Vercel's "Redeploy" with build cache disabled. If this repeats after SESSION_0201's `DIRECT_URL` fix, capture Vercel logs before retriggering. |
 | One row, `state = 'idle'` | Lock is leaked — session is alive but doing nothing. | Run the surgical fix below. |
 | One row, `state` is NULL | Lock is leaked — backend gone but lock metadata still associated. | Run the surgical fix below. |
 | One row, `state = 'active'` with a recent `query_start` | A migration is actually running right now. | Wait. Do not kill it. Re-run the query in 1–2 minutes; if it is still active and not progressing, escalate. |
@@ -109,6 +120,8 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 
 - Batch Vercel env-var changes. Add all of them in one editing session, save, then trigger a single redeploy. Do not save each variable individually — every save fires a rebuild.
 - Avoid cancelling an in-flight Vercel build that has already started `prebuild`. Let it finish or fail naturally.
+- Keep `DIRECT_URL` present in both Vercel Preview and Production so `prisma migrate deploy` uses Neon's direct endpoint instead of the transaction pooler. This is the structural fix landed in SESSION_0201.
+- Avoid opening multiple PRs at the same moment until enough post-SESSION_0201 preview deploys prove the direct URL path is stable.
 - Watch SESSION_0189's bow-out evidence — that session is the first recorded occurrence of this pattern and includes the recovery proof.
 
 ## Cross-references
@@ -118,3 +131,4 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 - [ADR 0017 — pnpm pre/post scripts](../architecture/decisions/0017-pnpm-pre-post-scripts.md) — why `prebuild` runs `prisma migrate deploy` in the first place.
 - [Closing Ritual](../rituals/closing.md) — full-close step 4 requires verifying Vercel deploy state, which is the bow-out gate that catches recurrences of this pattern.
 - [SESSION_0189](../sprints/SESSION_0189.md) — first recorded incident and recovery proof.
+- [SESSION_0201](../sprints/SESSION_0201.md) — structural fix: Prisma 7 CLI datasource routing to `DIRECT_URL` on Vercel.
