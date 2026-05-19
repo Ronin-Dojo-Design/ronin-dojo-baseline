@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-19
-last_agent: claude-session-0199
+last_agent: claude-session-0200
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
@@ -13,6 +13,7 @@ pairs_with:
   - docs/sprints/SESSION_0197.md
   - docs/sprints/SESSION_0198.md
   - docs/sprints/SESSION_0199.md
+  - docs/sprints/SESSION_0200.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -118,6 +119,16 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
 | `ResultsCount` | `apps/web/components/web/ui/results-count.tsx` | `total: number`, `label: string`, plus any `<p>` attributes | SESSION_0199: generic server-renderable count line. Renders `label` (consumer is expected to pre-localize via `t("results", { count: total })` — see per-namespace ICU plural keys at `apps/web/messages/en/{courses,schools,techniques,disciplines}.json:results`). `total` is kept required in the public API for forward parity with a future animated variant (NumberFlow / `<Stat>` integration) even though the static render delegates the count to the plural inside `label`. Adopted in `course-query.tsx`, `school-query.tsx`, `technique-query.tsx` above each `*Listing`, and in `discipline-list.tsx` above `<Grid>` (both empty + populated branches via a single fragment). Use `<ResultsCount>` rather than a hand-rolled `<p>` whenever a listing surfaces a total count; this keeps cross-domain parity and gives the animated variant a single replacement point. |
+
+---
+
+## 3f. Server-side utilities — `server/web/_shared/`
+
+> Cross-domain server-side helpers consumed by `server/web/**` query and action files. Not UI; not Prisma extensions; not Dirstarter L1 — these are app-internal utilities that consolidate in-repo patterns once they reach a third occurrence.
+
+| Utility | File | Public API | Notable behavior |
+| --- | --- | --- | --- |
+| `parseSort` | `apps/web/server/web/_shared/sortable.ts` | `parseSort<T extends readonly string[]>(sort: string \| undefined, columns: T, defaultOrder?: "asc" \| "desc"): { sortBy: T[number] \| undefined; sortOrder: "asc" \| "desc" }` | SESSION_0200: generic URL-injection-safe sort parser. Splits `<column>.<direction>` from the query string, narrows `sortBy` to a member of the caller's `as const` allowlist (or `undefined` for unknown/missing), sanitizes `sortOrder` to `"asc" \| "desc"` with a configurable default. Type-safe via `T extends readonly string[]` so Prisma `orderBy: { [sortBy]: sortOrder }` stays sound at every call site. Consolidates the SESSION_0198 (`searchCourses`) + SESSION_0199 (`searchOrganizations`) precedents into one helper at the third occurrence (`searchTechniques`); rule-of-three lift. Adopted in `apps/web/server/web/{courses,directory,techniques}/queries.ts` + `search-organizations.ts`. New callers should: (1) declare `const SORTABLE_<DOMAIN>_COLUMNS = [...] as const` in their query file, (2) call `parseSort(sort, SORTABLE_<DOMAIN>_COLUMNS)`, (3) keep their existing `orderBy` fallback for the `sortBy === undefined` branch. |
 
 ---
 

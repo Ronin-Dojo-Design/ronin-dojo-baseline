@@ -5,8 +5,8 @@ type: runbook
 status: active
 created: 2026-05-17
 updated: 2026-05-19
-last_agent: claude-session-0199
-use_count: 2
+last_agent: claude-session-0200
+use_count: 3
 pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/runbooks/prisma-workflow.md
@@ -14,6 +14,8 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0189.md
+  - docs/sprints/SESSION_0199.md
+  - docs/sprints/SESSION_0200.md
 tags:
   - prisma
   - neon
@@ -54,6 +56,8 @@ Known triggers in this repo:
 
 - Adding multiple Vercel env vars back-to-back (see `docs/protocols/failed-steps-log.md` FS-0023). Each env-var change fires a redeploy; if N changes go in within seconds, Vercel kills the in-flight builds in favor of the newest one.
 - Manually cancelling a Vercel deploy that has already started `prebuild`.
+- **Parallel PR opens (SESSION_0200 finding).** When two PRs are opened within ~5s and both kick off Vercel preview builds simultaneously, both `prisma migrate deploy` calls race for `pg_advisory_lock(72707369)`. One wins; the other times out at 10s. Mitigation: serialize the second PR open by ~30s, OR land the `DIRECT_URL` structural fix (Prisma `directUrl` to the non-pooler Neon endpoint) which removes the contention surface entirely — see SESSION_0200_FINDING_01 in `docs/protocols/project-log.md`.
+- **Pooler transaction-mode + session-level lock interaction (SESSION_0200 hypothesis).** Neon's pooler endpoint (`ep-...-pooler.c-3...`) is transaction-mode pgbouncer by default. `pg_advisory_lock()` is session-level — under transaction pooling each transaction gets a different backend, so the lock is intermittently visible. A `pg_locks` diagnostic after a failed build may return zero rows even though the lock was held during the build's 10s window. The reliable fix is `DIRECT_URL` (see below).
 
 ## Diagnostic procedure
 

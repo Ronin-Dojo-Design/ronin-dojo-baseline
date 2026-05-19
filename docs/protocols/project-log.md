@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-19
-last_agent: claude-session-0199
+last_agent: claude-session-0200
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1606,4 +1606,83 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Evidence:** `searchTechniques` already exposes `curriculum_order` as a sort option (`techniques.json:sort.curriculum_order`). Adding the SORTABLE_*_COLUMNS pattern would require allowing both `["name", "curriculum_order"]`. Per SESSION_0198 reflection: don't lift to a shared helper until a third occurrence surfaces. SESSION_0199 hardens `searchOrganizations` (second occurrence) so `searchTechniques` is the third — but the column-set diverges so a copy is more honest than a helper.
 - **Impact:** A user can hit `/techniques?sort=<arbitrary-column>` and Prisma will honor it; same shape as the pre-SESSION_0199 `searchOrganizations` hole. No data leak path today (all returned columns are public-facing).
 - **Required follow-up:** Mirror `SORTABLE_ORGANIZATION_COLUMNS` pattern with `SORTABLE_TECHNIQUE_COLUMNS = ["name", "curriculum_order"] as const`. Default next-session candidate.
-- **Status:** open follow-up.
+- **Status:** closed in SESSION_0200 — landed in PR #37 with the shared-helper lift (`parseSort` in `apps/web/server/web/_shared/sortable.ts`).
+
+### S200_SORTABLE_HELPER_PLUS_CLEANUP — shared parseSort helper + searchTechniques allowlist + SchoolCardData dedup + FS-0021 runbook patch
+
+- **Session:** SESSION_0200
+- **Sprint:** S6
+- **Status:** ✅ verified
+- **Files:** `apps/web/server/web/_shared/sortable.ts` (new), `apps/web/server/web/courses/queries.ts`, `apps/web/server/web/directory/search-organizations.ts`, `apps/web/server/web/techniques/queries.ts`, `apps/web/components/web/schools/school-card.tsx`, `apps/web/components/web/schools/school-list.tsx`, `docs/runbooks/schema-migration.md`, `docs/runbooks/prisma-workflow.md`, `docs/protocols/failed-steps-log.md`
+- **Seed data:** none (no schema change)
+- **Smoke test:** `pnpm --filter dirstarter typecheck` clean; `bun biome check .` clean (one safe auto-fix on `school-list.tsx` import sort); `bun run wiki:lint` 0 errors. PR #37 Vercel SUCCESS (CodeRabbit Review-skipped via no-substantive-change). PR #38 Vercel SUCCESS (after lock retrigger) + CodeRabbit SUCCESS. Post-merge main production deploy verified Ready after recovering from the third recorded Neon advisory-lock incident (see `docs/runbooks/neon-advisory-lock-recovery.md`).
+
+### SESSION_0200 — Shared sortable.ts helper + searchTechniques allowlist + SchoolCardData dedup + FS-0021 runbook patch
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0200_TASK_01 | Petey: commit SESSION_0200 plan to main; cut + push two feature branches off post-SESSION_0199 main (`session-sortable-helper-and-school-card-dedup` for PR A code lane, `session-fs-0021-schema-migration-runbook-patch` for PR B docs lane) | complete |
+| SESSION_0200_TASK_02 | Two parallel `general-purpose` Cody subagents on disjoint branches: (A) build `parseSort` helper at `_shared/sortable.ts` + refactor 3 search functions + add `SORTABLE_TECHNIQUE_COLUMNS` + dedup `SchoolCardData` via card-owns-type re-export; (B) extend `schema-migration.md` + `prisma-workflow.md` per FS-0021 corrective action #2, flip FS-0021 Status to `mitigated` | complete |
+| SESSION_0200_TASK_03 | Doug + Petey: open PR #37 (code) + PR #38 (docs); diagnose + close stale PRs #11 + #9 in wait-on-Vercel window (both confirmed superseded by main); recover from Neon advisory-lock leak via `pg_locks` diagnostic + empty-commit retrigger; serialize-merge PR #37 then PR #38 to avoid second collision | complete |
+| SESSION_0200_TASK_04 | Petey + Giddy: full close — SESSION_0200, project-log, wiki index, custom-component-inventory (new `3f. Server-side utilities` section with `parseSort` row), runbook `use_count` bump on `neon-advisory-lock-recovery.md`, post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive at bow-in: lineage v1 reserved for next session; THIS session plans + ships any combination of (a) searchTechniques allowlist, (b) SchoolCard dedup, (c) stale PR triage, (d) FS-0021. Four grill rounds locked the shape: rule-of-three lift to a shared `parseSort` helper (not inline) + SchoolCardData dedup in PR A; FS-0021 minimal accuracy patch as a separate docs PR B; stale PR triage by diagnose-then-decide-per-PR in the wait-on-Vercel slot; parallel Cody subagents on disjoint branches. The lift-to-helper override of the SESSION_0198 rule-of-three was explicit because three precedents now exist (`searchCourses`, `searchOrganizations`, `searchTechniques`).
+
+**Result:** PR #37 squash-merged to main at `3f895ec` (6 files: new helper + 3 query refactors + 2 component files). PR #38 squash-merged to main at `041e6bf` (3 docs files). Both static gates clean (typecheck + biome + wiki:lint). Stale PRs #11 + #9 closed with diagnostic comments (both confirmed superseded by main). The Neon advisory-lock leak recurred for the third time — first on PR #38's initial preview (parallel-PR collision with PR #37's preview), then on the post-PR-#37 main production deploy (the actual leak). Diagnosed via `pg_locks` SELECT against Neon prod using `.env.production.local` pulled at owner direction; `pg_locks` returned zero rows immediately after each failure (lock was already cleared by Neon pooler reaping the idle session by query time, but had held during the build's 10s window). Recovered via retrigger at `419d7ea`; both main production deploys eventually Ready. Closes SESSION_0199_FINDING_03 (`searchTechniques` allowlist). Closes FS-0021 (`failed-steps-log.md` Status → `mitigated`). Open follow-ups: add `DIRECT_URL` env var + `directUrl` in Prisma config to route migrate deploy to Neon's direct (non-pooler) endpoint — structural fix for the recurring advisory-lock incidents (queued as SESSION_0201 candidate alongside lineage v1).
+
+#### Review
+
+##### SESSION_0200_REVIEW_01 — Hostile close review for shared parseSort helper + searchTechniques allowlist + SchoolCardData dedup + FS-0021 runbook patch
+
+- **Reviewed tasks:** SESSION_0200_TASK_01, SESSION_0200_TASK_02, SESSION_0200_TASK_03, SESSION_0200_TASK_04.
+- **Dirstarter docs check:** no Dirstarter baseline layer replaced. `parseSort` consolidates the in-repo `SORTABLE_*_COLUMNS` pattern from SESSION_0198 + SESSION_0199 (two precedents) into a typed helper at the third occurrence — rule-of-three lift; not a new abstraction. `SchoolCardData` re-export mirrors the existing `CourseCard` + `TechniqueCard` card-owns-type pattern. FS-0021 runbook patch is an in-repo doc accuracy update. No new ADR triggered.
+- **Sources:** `apps/web/server/web/_shared/sortable.ts` (new), `apps/web/server/web/{courses,directory,techniques}` query files, `apps/web/components/web/schools/{school-card,school-list}.tsx`, `docs/runbooks/{schema-migration,prisma-workflow,neon-advisory-lock-recovery}.md`, `docs/protocols/failed-steps-log.md`, SESSION_0198 + SESSION_0199 + SESSION_0152 precedents, GitHub PRs #37 + #38 (merged), stale PRs #11 + #9 (closed with comments).
+- **Verdict:** Pass. Plan locked across 4 grill rounds before code; parallel Cody subagents on disjoint branches saved wall-clock time; serialized merges (intent) + post-recovery retrigger sequence avoided a second parallel-PR Neon collision. The Neon lock recurrence is annoying but procedurally clean — the in-repo runbook handled diagnosis; recovery cost was three empty-commit retriggers and ~25 min of wall-clock. Expected WORKFLOW 5.0 score 9.3/10 (slightly below SESSION_0199 because the third Neon-lock incident with no structural fix is a process tell; the right move at SESSION_0189 would have been to add `DIRECT_URL`). Confidence for the PRs at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5 (server-query helper is type-safe and the new allowlist is defensive; runbook patches are docs-only).
+- **Kaizen:** (a) After three incidents of the same Neon advisory-lock leak pattern, stop reaching for the runbook recovery path first — fix it structurally next session by routing `prisma migrate deploy` to the direct (non-pooler) endpoint via `DIRECT_URL` + `directUrl`. (b) When echoing env-file content for diagnosis, never print URL strings even with host-redacting regexes — the regex caught `@HOST` but missed `USER:PASSWORD`. Print env var KEYS only, never values, even partial. Write to a memory file. (c) Parallel Cody subagents on a shared working tree need to `git switch` BEFORE touching files — Cody A's in-flight edits were visible to Cody B during branch switch; Cody A recovered via stash/switch/pop but lost ~10 min. Worth a pre-flight reminder in the subagent prompt.
+
+#### Findings
+
+##### SESSION_0200_FINDING_01 — Third recorded Neon advisory-lock leak; structural fix overdue
+
+- **Severity:** medium (operational; recurring with no structural fix)
+- **Task:** SESSION_0200_TASK_03
+- **Evidence:** Third recorded incident of the `pg_advisory_lock(72707369)` P1002 timeout. SESSION_0189 first, SESSION_0199 second, SESSION_0200 third — this session hit it twice (PR #38 first preview at `2026-05-19T14:59:35Z` and the post-PR-#37 main production deploy at `2026-05-19T15:09:21Z`, then again at `2026-05-19T15:15:49Z`). Diagnostic via `pg_locks` against Neon prod (using `.env.production.local`) showed zero rows holding the lock immediately after each failure — i.e. the lock had already cleared by query time, but had held during the build's 10s acquisition window. Hypothesis: the Neon pooler endpoint (`ep-...-pooler.c-3...`) runs transaction-mode pooling; session-level `pg_advisory_lock()` doesn't behave reliably under transaction-mode pgbouncer because the lock can't survive across transactions, so it's intermittently visible to other connections.
+- **Impact:** Each occurrence costs ~10-25 min of wall-clock retrigger + diagnostic. Three occurrences now; pattern is load-bearing.
+- **Required follow-up:** Add `DIRECT_URL` env var (Neon direct, non-pooler endpoint) to Vercel for both Preview and Production. Update `apps/web/prisma.config.ts` datasource block to set `directUrl: env("DIRECT_URL")` so `prisma migrate deploy` uses the direct connection. Verify the recurring pattern disappears across a few preview deploys. Worth queuing as a SESSION_0201 candidate alongside lineage v1.
+- **Status:** open follow-up — structural fix queued for SESSION_0201.
+
+##### SESSION_0200_FINDING_02 — Parallel-PR deploy collision is a new lock-leak trigger
+
+- **Severity:** low (operational, recoverable, documented)
+- **Task:** SESSION_0200_TASK_02 / TASK_03
+- **Evidence:** When PR #37 (code lane) and PR #38 (docs lane) preview deploys kicked off ~simultaneously at `2026-05-19T14:59:12Z`, both `prisma migrate deploy` calls raced for `pg_advisory_lock(72707369)`. PR #37 won; PR #38 timed out at 10s. This is a NEW trigger pattern — the existing runbook ("Why this happens" section) lists deploy storms via env-var save + cancelled in-flight builds, but does not mention "parallel PR opens that both touch `prebuild`".
+- **Impact:** First parallel-PR session this codebase has run; the failure mode was previously invisible. Now documented.
+- **Required follow-up:** Extend `docs/runbooks/neon-advisory-lock-recovery.md` "Known triggers" with: "Parallel PR opens — if two PR previews both kick off within ~5s, both will race for the lock and one will fail with P1002. Mitigation: serialize the second PR open by ~30s, or land the DIRECT_URL fix to eliminate the contention entirely." Memory `feedback_prisma_advisory_lock_neon_leak.md` should also gain this trigger.
+- **Status:** documented in this finding; runbook extension queued for SESSION_0201.
+
+##### SESSION_0200_FINDING_03 — `pg_locks` diagnostic gives a moment-in-time snapshot that may not match build-time lock state
+
+- **Severity:** informational
+- **Task:** SESSION_0200_TASK_03
+- **Evidence:** During this session's incident response, every `pg_locks` query against Neon prod showed zero rows (lock not held). Yet three consecutive Vercel builds failed at the 10s lock acquisition timeout. The lock IS held during the build's acquisition window, but Neon's pooler reaps the holder before my diagnostic query can observe it. The runbook's interpretation table ("Zero rows → retrigger") shipped twice now to expected success, but in this session the retrigger ALSO failed twice before finally succeeding.
+- **Impact:** Confidence in the runbook's "Zero rows → retrigger and you're done" path is reduced. The runbook is still correct directionally but a "you may need to retrigger 2-3x for transient lock-release-race conditions" caveat is warranted.
+- **Required follow-up:** Extend the runbook's interpretation table with a note that a zero-rows diagnostic does NOT guarantee the next build will succeed if the lock was held within a previous build's 10s window. This caveat goes away entirely once the DIRECT_URL fix lands (Finding 01). Memory candidates: none separate from Finding 01's structural fix.
+- **Status:** documented; runbook extension queued for SESSION_0201.
+
+##### SESSION_0200_FINDING_04 — Cody A's in-flight edits leaked across the shared working tree
+
+- **Severity:** low (operational; recovered)
+- **Task:** SESSION_0200_TASK_02
+- **Evidence:** Two parallel `general-purpose` subagents on disjoint feature branches but ONE shared working directory. Cody B switched to its branch first, found Cody A's still-in-progress edits visible in the working tree, and correctly left them alone. Cody A then noticed the tree had flipped to the wrong branch (probably during the parallel `git switch` calls), stashed (including the untracked `_shared/`), switched back to the correct branch, popped, re-ran static gates, and committed cleanly. No data loss but ~10 min of wall-clock spent on recovery.
+- **Impact:** Recovery cost only; no merged code regression.
+- **Required follow-up:** Update the parallel-Cody subagent prompt template to begin with `git switch <target-branch> || git stash && git switch <target-branch> && git stash pop` so the branch is locked-in before any file edits. Or: switch parallel subagents to actual `git worktree` isolation for stronger separation. Worth a small kaizen in the next parallel-subagent session.
+- **Status:** open follow-up — prompt template update queued for next parallel-subagent session.
+
+##### SESSION_0200_FINDING_05 — Sanitization regex leaked Neon DATABASE_URL password to conversation log
+
+- **Severity:** low-to-medium (single password leaked to a session log only the owner reads, but the credential value is now in conversation history)
+- **Task:** SESSION_0200_TASK_03 (diagnostic phase)
+- **Evidence:** During Neon prod URL inspection, the agent ran `grep DATABASE_URL .env.production.local | sed -E 's/(@[^:/]+)/@<host>/g'` to redact the host. The regex correctly substituted the `@HOST` segment but the original URL format is `postgresql://USER:PASSWORD@HOST/DB`, so `USER:PASSWORD` lived BEFORE the `@` and was untouched by the substitution. The complete password substring was printed to shell output.
+- **Impact:** The credential is the owner's own DB; the leak is only to the owner's session log. Pre-existing key; rotation is hygienic but not critical.
+- **Required follow-up:** Write a `feedback_env_var_sanitization_print_keys_only.md` memory: never echo URL content even with "redacted" regexes — print only env var keys; if values must be inspected, copy them out of band, not into shell output. Rotate the Neon DATABASE_URL password in Neon console at next opportunity.
+- **Status:** open follow-up — memory written this session; password rotation queued for owner.
