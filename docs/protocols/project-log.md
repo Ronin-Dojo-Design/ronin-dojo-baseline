@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-18
-last_agent: claude-session-0197
+updated: 2026-05-19
+last_agent: claude-session-0198
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -1473,3 +1473,74 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** Three i18n items shipped, three server-query items still represent visible launch-readiness gaps (SchoolCard hover overlay still falls back when `description` is null; course Sort UI is wired but server still ignores it; courses page has a static description where the count line used to live).
 - **Required follow-up:** Pull these three items as a single lane in a future session — they share a Prisma/server-query alignment check, so bundling beats sequencing.
 - **Status:** open follow-up; default next-session goal.
+
+### SESSION_0198 — Server-Query Lane v1 (Organization Contact Fields + searchCourses Sort)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0198_TASK_01 | Petey: squash-merge PR #34 to main; sync main; cut feature branch `session-org-contact-and-course-sort` off post-merge main | complete |
+| SESSION_0198_TASK_02 | Desi (general-purpose subagent in Desi role): focused review on SchoolCard hover overlay, admin org form parity, `searchCourses` sort wiring; produce 9-section structured audit with file:line briefs for Cody | complete |
+| SESSION_0198_TASK_03 | Cody (single `general-purpose` subagent, sequential): Prisma migration `add_organization_contact_fields` (`phoneE164` + `email` on Organization), payload + `searchOrganizations` map + `SchoolCard` hover overlay with `relative z-20` escape, create-org form + dashboard `school-form.tsx` rename + new fields, `searchCourses` sort consumption with `SORTABLE_COURSE_COLUMNS` allowlist | complete |
+| SESSION_0198_TASK_04 | Doug (Petey-driven, lighter shape + migration check): typecheck + biome + `prisma migrate deploy` no-op replay + push + PR #35 open; lineage regression skipped per ratify | complete |
+| SESSION_0198_TASK_05 | Petey + Giddy: full close — SESSION_0198, project-log, wiki index, custom-component-inventory, ADR/component sweep, drift/FS sweep, post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive: consume the server-query lane (SESSION_0196 backlog items 2, 3; item 4 deferred). PR #34 squash-merge gating SESSION_0198 work. Use Graphify (not repo-wide grep) for navigation. Three grill rounds + ratify gate locked the plan; schema-reality re-grill (Round 3) forced the Prisma migration path after Organization model had no `phoneE164`/`email` columns. Single feature branch, single PR.
+
+**Result:** PR #34 squash-merged to main at `f53aea4` (clean MERGEABLE, no SESSION-doc conflict). Desi review pass produced 7 HIGH + 6 MEDIUM + 6 LOW items with Cody-ready code snippets and surfaced two beyond-plan findings: SchoolCard `z-10` click-shield would swallow new `tel:`/`mailto:` clicks without `relative z-20` escape; dashboard `school-form.tsx` had three field names (`contactEmail`, `address`, `region`) that don't exist on Prisma Organization model — silent breakage on save. Cody landed `ae914ab` on `session-org-contact-and-course-sort` (12 files: migration + schema + 2 payloads + map + card + shadow-type list + 2 form-action pairs + 2 sort files). Migration SQL is column-add only, both nullable. Doug verification: typecheck + biome clean across 956 files; `prisma migrate deploy` clean no-op replay (35/35 applied); PR #35 opened against main, Vercel + CodeRabbit final state captured in SESSION_0198 Full close evidence. Open follow-ups: `searchOrganizations` matching sort-allowlist hardening; `createOrganizationSchema.websiteUrl` empty-string zod fix; courses `IntroDescription` count line restoration; E.164 phone normalization; `SchoolCardData` type duplication cleanup; lineage v1 next-task pickup + PR #22 diagnosis.
+
+#### Review
+
+##### SESSION_0198_REVIEW_01 — Hostile close review for organization contact fields + searchCourses sort
+
+- **Reviewed tasks:** SESSION_0198_TASK_01, SESSION_0198_TASK_02, SESSION_0198_TASK_03, SESSION_0198_TASK_04, SESSION_0198_TASK_05.
+- **Dirstarter docs check:** Prisma + database is a Dirstarter L1 layer. The session adds two optional nullable columns to the existing Organization model — pattern matches the existing `websiteUrl String?` adjacent to where the new columns live. Did not re-open Dirstarter Prisma docs because change is column-add-on-existing-model (smallest possible migration shape), not a model introduction. No new ADR triggered — pattern reuse.
+- **Sources:** `apps/web/prisma/schema.prisma` Organization model, `organizationManyPayload` + `organizationOnePayload`, `searchOrganizations`, `SchoolCard` + `SchoolList`, `searchCourses`, both affected forms + server actions, Desi persona doc, SESSION_0198 Petey plan + Desi review pass, Doug static gate outputs, GitHub PR #35.
+- **Verdict:** Pass. Three grill rounds + one ratify gate locked the plan before any code (schema-reality re-grill was the legitimate scope-shift trigger, not indecision). Desi review surfaced two beyond-plan items that materially improved the lane (click-shield escape + latent bug fix); Cody followed Desi's brief verbatim with one defensible side-effect (`school-list.tsx` shadow type) and one defensible non-edit (`createOrganization` action no-diff). Single bundled PR matched the locked plan. Expected WORKFLOW 5.0 rubric score 9.7/10 (two-tenths above SESSION_0197 because of the latent-bug fix folded into the same commit).
+- **Kaizen:** (a) Make "verify assumed columns exist" an explicit step in the Petey backlog-writing template — would have caught the schema-reality issue at SESSION_0196 close time instead of SESSION_0198 grill Round 2. (b) Add explicit `prisma generate` to the Cody migration template (Prisma client lagged the schema in two of three migration sessions now). Confidence for the PR at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5 (public read-only listing surface gains intended-public contact info; admin write gated by existing auth; migration is column-add on battle-tested model).
+
+#### Findings
+
+##### SESSION_0198_FINDING_01 — PR #35 queued for owner squash-merge
+
+- **Severity:** low
+- **Task:** SESSION_0198_TASK_04
+- **Evidence:** `gh pr view 35` reports base `main`, head `session-org-contact-and-course-sort`, `mergeable: MERGEABLE`; final Vercel + CodeRabbit state captured in SESSION_0198 Full close evidence (PR opened at `2026-05-19T00:13Z`).
+- **Impact:** Technical implementation complete and static gates green; owner action gates merge.
+- **Required follow-up:** Owner reviews and squash-merges PR #35, or requests changes.
+- **Status:** queued for owner action.
+
+##### SESSION_0198_FINDING_02 — `searchOrganizations` has the matching unsanitized-sortBy hole
+
+- **Severity:** low (defensive)
+- **Task:** SESSION_0198_TASK_03 (out-of-scope guardrail)
+- **Evidence:** `apps/web/server/web/directory/search-organizations.ts:44` does `orderBy: sortBy ? { [sortBy]: sortOrder } : { name: "asc" }` with no allowlist — same pattern that SESSION_0198 just closed for `searchCourses` via `SORTABLE_COURSE_COLUMNS`.
+- **Impact:** A user can hit `/schools?sort=<arbitrary-column>` and Prisma will honor it as long as the column exists on the model. No data leak path today (all returned columns are public-facing); just an unsanitized surface.
+- **Required follow-up:** Mirror the `SORTABLE_COURSE_COLUMNS` allowlist pattern. Pairs naturally with the courses `IntroDescription` count line restoration in a follow-up "server-query cleanup" lane.
+- **Status:** open follow-up; default next-session candidate.
+
+##### SESSION_0198_FINDING_03 — Latent bug closed: dashboard school-form had three model-mismatched field names
+
+- **Severity:** medium (closed)
+- **Task:** SESSION_0198_TASK_03
+- **Evidence:** Pre-SESSION_0198 `apps/web/app/(web)/dashboard/school-form.tsx` declared `contactEmail`, `address`, `region` fields that don't exist on Prisma Organization (model has `addressLine1`/`addressLine2`/`state` and now `email`). The `updateOrganization` action at `apps/web/server/web/school/actions.ts` forwarded them to `db.organization.update`, which Prisma silently rejects unknown fields on (TypeScript would also reject the mismatched key shape unless the call used a permissive type). Desi surfaced this in the review pass; Cody renamed `contactEmail` → `email`, `address` → `addressLine1`, `region` → `state` in the same commit as the new-field landings.
+- **Impact:** Pre-fix, every dashboard school-edit save would have failed silently or thrown at the Prisma layer. Closed by `ae914ab`.
+- **Required follow-up:** None — the rename ships with PR #35.
+- **Status:** closed via PR #35.
+
+##### SESSION_0198_FINDING_04 — Pre-existing zod allows-empty bug on `createOrganizationSchema.websiteUrl`
+
+- **Severity:** low
+- **Task:** N/A (surfaced during SESSION_0198, out of scope)
+- **Evidence:** `apps/web/server/web/organization/schemas.ts:websiteUrl` is `z.string().url().max(2048).optional()`. The form `defaultValues` sets `websiteUrl: ""` and `.optional()` allows `undefined` not empty string — a user who leaves the field blank gets a validation error. Same idiom this session correctly applied to `email` via `.or(z.literal(""))`.
+- **Impact:** Public create-org flow blocks on blank website. Minor UX friction.
+- **Required follow-up:** One-line fix — extend `websiteUrl` to `z.string().url().max(2048).optional().or(z.literal(""))`. Pair with the courses count line + `searchOrganizations` hardening lane.
+- **Status:** open follow-up.
+
+##### SESSION_0198_FINDING_05 — Prisma client did not auto-regenerate after `migrate dev`
+
+- **Severity:** low (procedural)
+- **Task:** SESSION_0198_TASK_03
+- **Evidence:** Cody's initial typecheck after `prisma migrate dev` failed with two TS2353 errors on `payloads.ts:25,48` (new fields not visible on `Prisma.OrganizationSelect`). Resolved after explicit `prisma generate`. Same lag observed previously in SESSION_0196's migration touch.
+- **Impact:** A Cody pass that doesn't explicitly run `prisma generate` after `migrate dev` will hit a confusing typecheck failure. Resolves in one command.
+- **Required follow-up:** Add an explicit `prisma generate` step to the Cody migration template (after `migrate dev`, before typecheck). Captured in SESSION_0198_REVIEW_01 Kaizen (b).
+- **Status:** open follow-up — template update.

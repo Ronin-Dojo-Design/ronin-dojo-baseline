@@ -4,13 +4,14 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-05-18
-last_agent: claude-session-0197
+updated: 2026-05-19
+last_agent: claude-session-0198
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
   - docs/sprints/SESSION_0196.md
   - docs/sprints/SESSION_0197.md
+  - docs/sprints/SESSION_0198.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -62,7 +63,7 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 | --- | --- | --- |
 | Courses | `components/web/courses/course-card.tsx`, `course-list.tsx`, `course-listing.tsx`, `course-query.tsx`, `course-search.tsx`, `course-enrollment-panel.tsx`, `curriculum-completion-list.tsx` | Course browsing + enrollment surface. SESSION_0196: `course-card` adopts the ToolCard hover-reveal description overlay + `ShowMore limit={2}` chip rows; `CourseListing` + `CourseListingSkeleton` + `CourseQuery` + `CourseSearch` mirror the technique trio (search + sort + pagination only; filter axes deferred). SESSION_0197: `course-list` empty state reads from `useTranslations("courses")("empty")`; `course-search` sort labels routed through `useTranslations("courses.sort")` with `title_*` keys (mirrors sort value field); search placeholder routed through `useTranslations("courses.filters")("search_placeholder")`. |
 | Programs | `app/admin/programs/_components/program-form.tsx` | Program admin form (Ronin-specific). |
-| Schools | `components/web/schools/` (browse surfaces); `school-card.tsx` | Public school directory and detail. SESSION_0196: `school-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows; the always-visible `city, region` line remains as the description-empty fallback signal. SESSION_0197: `school-list` empty state reads from `useTranslations("schools")("empty")`; `school-search` sort labels routed through `useTranslations("schools.sort")` with `name_asc` / `name_desc` keys; search placeholder routed through `useTranslations("schools.filters")("search_placeholder")`. |
+| Schools | `components/web/schools/` (browse surfaces); `school-card.tsx`, `school-list.tsx` | Public school directory and detail. SESSION_0196: `school-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows; the always-visible `city, region` line remains as the description-empty fallback signal. SESSION_0197: `school-list` empty state reads from `useTranslations("schools")("empty")`; `school-search` sort labels routed through `useTranslations("schools.sort")` with `name_asc` / `name_desc` keys; search placeholder routed through `useTranslations("schools.filters")("search_placeholder")`. SESSION_0198: `SchoolCardData` gains `phoneE164` / `email` / `websiteUrl` (the last was missing from `organizationManyPayload` until SESSION_0198 closed the gap); hover overlay renders three optional contact rows (tel/mailto/external website) wrapped in `<Stack direction="column" size="sm" className="relative z-20">` — the **`relative z-20` is load-bearing**: it lifts contact anchors above the card-wide `<Link>` click-shield at `school-card.tsx:35` (`<span className="absolute inset-0 z-10" />`) so anchors are independently clickable instead of being intercepted by the card-wide link. Description drops to `line-clamp-2` to make room. Conditional render skips the contact Stack entirely when all three fields are null. `school-list.tsx` carries a shadow `SchoolCardData` type that mirrors the card's (duplication flagged as future cleanup). |
 | Techniques | `components/web/techniques/` (browse surfaces); `technique-card.tsx` | Public technique library. SESSION_0196: `technique-card` adopts the ToolCard hover-reveal description overlay + `ShowMore` chip rows. SESSION_0197: `technique-list` empty state reads from `useTranslations("techniques")("empty")`; `technique-search` sort labels routed through `useTranslations("techniques.sort")` with `name_asc` / `name_desc` / `curriculum_order` keys; search placeholder routed through `useTranslations("techniques.filters")("search_placeholder")`. |
 | Schedules | `components/web/schedules/` | Class/event schedule rendering. |
 | Members | `components/web/members/` | Member directory surfaces. |
@@ -96,6 +97,16 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 - Use CLDR-canonical `one`/`other` ICU plural rules over `=1`/`=0`/`other` for any new plural keys (`tools.json` uses the older `=1`/`=0`/`other` style for noun-only tokens; the CLDR form is locale-safe for any plural-rule-rich language).
 - Client components consume via `useTranslations("<namespace>")` or `useTranslations("<namespace>.<sub>")`. Async server components must use `getTranslations` from `next-intl/server` instead.
 - The `common.empty: "Nothing found."` bridge key (added in SESSION_0196) stays as a fallback; removal is queued for the next listings cleanup session after all four domains are verified migrated in production.
+
+---
+
+## 3c. Organization payload + contact fields — `server/web/organization/` + dashboard `school-form.tsx`
+
+> SESSION_0198 added `phoneE164 String?` + `email String?` columns to the Prisma `Organization` model (migration `20260519000527_add_organization_contact_fields` — column-add only, nullable). The Many + One payloads (`organization/payloads.ts`) now select `phoneE164` / `email` / `websiteUrl` (the last was missing from `organizationManyPayload` pre-SESSION_0198 even though the column already existed). `searchOrganizations` (`directory/search-organizations.ts:54-62`) maps all three to the SchoolCard data shape. The dashboard org-edit form `app/(web)/dashboard/school-form.tsx` had three field names (`contactEmail`, `address`, `region`) that did not exist on the Prisma model and were silently breaking saves — SESSION_0198 renamed them to `email`, `addressLine1`, `state` to match the model and added `phoneE164` in the same commit. The public `create-organization-form.tsx` gained the two new fields in a 2-col grid wrapper after `websiteUrl`, mirroring `lead-form.tsx:115-143` precedent. Validation is intentionally loose (`z.string().email().max(200).optional().or(z.literal(""))` for email; `z.string().max(32).optional().or(z.literal(""))` for phone) — E.164 normalization deferred.
+
+## 3d. Course sort consumption — `server/web/courses/queries.ts`
+
+> SESSION_0198 wired `searchCourses` to consume the URL-tracked `sort` param that SESSION_0196 added to `courseFilterParams`. Pattern mirrors `searchOrganizations` split-by-dot but adds a defensive allowlist `SORTABLE_COURSE_COLUMNS = ["title"] as const` + sortOrder direction defaulting (`rawSortOrder === "desc" ? "desc" : "asc"`). Closes the SESSION_0196 orphan-Sort-UI smell. `course-query.tsx` threads `sort: params.sort` into the `searchCourses` call. The matching unsanitized-`sortBy` hole still exists in `searchOrganizations:44` — flagged in SESSION_0198 Open decisions for a follow-up "server-query cleanup" lane.
 
 ---
 
