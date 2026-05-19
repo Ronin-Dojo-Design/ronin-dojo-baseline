@@ -16,6 +16,9 @@ type SchoolCardData = {
   city: string | null
   region: string | null
   type: string | null
+  phoneE164: string | null
+  email: string | null
+  websiteUrl: string | null
   disciplines?: { discipline: { name: string } }[]
 }
 
@@ -57,11 +60,47 @@ export const SchoolCard = ({ school, ...props }: SchoolCardProps) => {
           />
         </Stack>
 
-        {school.description && (
-          <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
-            <CardDescription className="line-clamp-3">{school.description}</CardDescription>
-          </div>
-        )}
+        <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
+          <Stack direction="column" size="sm" className="w-full">
+            {school.description && (
+              <CardDescription className="line-clamp-2">{school.description}</CardDescription>
+            )}
+            {(school.phoneE164 || school.email || school.websiteUrl) && (
+              <Stack
+                direction="column"
+                size="sm"
+                className="relative z-20 w-full text-sm text-muted-foreground"
+              >
+                {school.phoneE164 && (
+                  <a
+                    href={`tel:${school.phoneE164}`}
+                    className="hover:text-primary hover:underline truncate"
+                  >
+                    {school.phoneE164}
+                  </a>
+                )}
+                {school.email && (
+                  <a
+                    href={`mailto:${school.email}`}
+                    className="hover:text-primary hover:underline truncate"
+                  >
+                    {school.email}
+                  </a>
+                )}
+                {school.websiteUrl && (
+                  <a
+                    href={school.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary hover:underline truncate"
+                  >
+                    {school.websiteUrl.replace(/^https?:\/\//, "")}
+                  </a>
+                )}
+              </Stack>
+            )}
+          </Stack>
+        </div>
       </div>
     </Card>
   )

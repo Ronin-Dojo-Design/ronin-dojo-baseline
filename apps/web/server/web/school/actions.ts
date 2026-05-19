@@ -12,10 +12,11 @@ const updateOrganizationSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   description: z.string().max(2000).optional(),
   websiteUrl: z.string().max(2048).optional(),
-  contactEmail: z.string().email().max(200).optional().or(z.literal("")),
-  address: z.string().max(500).optional(),
+  email: z.string().email().max(200).optional().or(z.literal("")),
+  phoneE164: z.string().max(32).optional(),
+  addressLine1: z.string().max(500).optional(),
   city: z.string().max(100).optional(),
-  region: z.string().max(100).optional(),
+  state: z.string().max(100).optional(),
   country: z.string().max(2).optional(),
 })
 

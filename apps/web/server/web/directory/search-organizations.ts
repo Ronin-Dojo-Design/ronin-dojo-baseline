@@ -58,6 +58,9 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
     city: org.city,
     region: org.state,
     type: org.type,
+    phoneE164: org.phoneE164,
+    email: org.email,
+    websiteUrl: org.websiteUrl,
     disciplines: org.disciplines,
   }))
 

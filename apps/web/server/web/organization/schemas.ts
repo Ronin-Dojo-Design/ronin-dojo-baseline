@@ -20,6 +20,8 @@ export const createOrganizationSchema = z.object({
   zip: z.string().max(20).optional(),
   country: z.string().max(100).default("US"),
   websiteUrl: z.string().url().max(2048).optional(),
+  phoneE164: z.string().max(32).optional(),
+  email: z.string().email().max(200).optional().or(z.literal("")),
   /** IDs of disciplines this org teaches — creates OrganizationDiscipline join rows */
   disciplineIds: z.array(z.string().cuid()).optional(),
 })
