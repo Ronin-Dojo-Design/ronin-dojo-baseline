@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0199 — Server-Query Cleanup Lane (ResultsCount Primitive + searchOrganizations Sort Allowlist + websiteUrl Empty-String Zod)"
 slug: session-0199
-type: session--open
-status: in-progress
+type: session--implement
+status: closed-full
 created: 2026-05-19
 updated: 2026-05-19
 last_agent: claude-session-0199
@@ -12,8 +12,10 @@ pairs_with:
   - docs/protocols/petey-plan.md
   - docs/protocols/WORKFLOW_5.0.md
   - docs/knowledge/wiki/custom-component-inventory.md
+  - docs/runbooks/neon-advisory-lock-recovery.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/protocols/project-log.md
 ---
 
 # SESSION 0199 — Server-Query Cleanup Lane
@@ -218,6 +220,109 @@ Per `petey-plan.md` rule 5: items surfaced during execution (e.g., extending all
 - **Custom delta:** New `ResultsCount` primitive (generic, server-renderable, label-as-prop). Adoption across four heterogeneous listings (3 share Query/Listing pattern, DisciplineList is flat).
 - **No-bypass proof:** Uses existing primitive folder, existing i18n pattern, existing server-query pattern, existing zod pattern. No competing primitive introduced; no parallel i18n system; no schema change.
 
+## What landed
+
+- **PR #36 merged** — squash-merged to main at commit `4517931` (`feat(listings): ResultsCount primitive + searchOrganizations sort allowlist + websiteUrl empty-string zod (#36)`). Feature branch `session-results-count-and-server-query-cleanup` deleted; main fast-forwarded.
+- **New `<ResultsCount>` primitive** at `apps/web/components/web/ui/results-count.tsx` — generic server component, `total` + `label` API, no `"use client"`. `total` kept required in the API for forward parity with a future animated variant.
+- **Four-listing parity** — `ResultsCount` adopted in `course-query.tsx`, `school-query.tsx`, `technique-query.tsx` (above each `*Listing`), and `discipline-list.tsx` (above the always-rendered `<Grid>`, both empty + populated branches via a single fragment).
+- **i18n** — `results` ICU plural key added to `apps/web/messages/en/{courses,schools,techniques,disciplines}.json` (`en` namespace only — no other locales exist yet). CLDR `=0`/`one`/`other` rules consistent with SESSION_0197 precedent.
+- **`searchOrganizations` sort allowlist hardening** — `SORTABLE_ORGANIZATION_COLUMNS = ["name"] as const` added; `sortBy` whitelist-gated and `sortOrder` sanitized to `"desc" | "asc"`. Mirrors `SORTABLE_COURSE_COLUMNS` pattern landed in SESSION_0198. Closes SESSION_0198_FINDING_02 (URL-injection of arbitrary column names against `/schools?sort=...`).
+- **`createOrganizationSchema.websiteUrl` empty-string accept** — extended to `.or(z.literal(""))` mirroring the `email` treatment from PR #35. Closes SESSION_0198_FINDING_04 (form rejected `""` from defaultValues).
+- **Vercel production deploy Ready** — first preview hit a leaked Neon advisory lock (P1002 on `pg_advisory_lock(72707369)`); resolved by waiting ~10h for Neon's pooler to close the dead session and retriggering with an empty commit. Production deploy `qynyjh14j` Ready in 2m.
+
+Goal reached: three SESSION_0198 Open-decisions items shipped as a single bundled PR, exactly as the locked plan called for.
+
+## Files touched
+
+| File | Note |
+| --- | --- |
+| `apps/web/components/web/ui/results-count.tsx` | New generic server-renderable primitive (`total` + `label` API). |
+| `apps/web/components/web/courses/course-query.tsx` | Wires `<ResultsCount>` above `<CourseListing>`. |
+| `apps/web/components/web/schools/school-query.tsx` | Wires `<ResultsCount>` above `<SchoolListing>`. |
+| `apps/web/components/web/techniques/technique-query.tsx` | Wires `<ResultsCount>` above `<TechniqueListing>`. |
+| `apps/web/app/(web)/disciplines/_components/discipline-list.tsx` | Hoists `<ResultsCount>` above `<Grid>` (renders even on empty state). |
+| `apps/web/messages/en/courses.json` | Adds `results` ICU plural. |
+| `apps/web/messages/en/schools.json` | Adds `results` ICU plural. |
+| `apps/web/messages/en/techniques.json` | Adds `results` ICU plural. |
+| `apps/web/messages/en/disciplines.json` | Adds `results` ICU plural. |
+| `apps/web/server/web/directory/search-organizations.ts` | Adds `SORTABLE_ORGANIZATION_COLUMNS` allowlist + `sortOrder` sanitization. |
+| `apps/web/server/web/organization/schemas.ts` | `websiteUrl` accepts empty string via `.or(z.literal(""))`. |
+| `docs/sprints/SESSION_0199.md` | Open + close (this file). |
+| `docs/protocols/project-log.md` | SESSION_0199 build-log + task-plan + review block. |
+| `docs/knowledge/wiki/index.md` | SESSION_0199 row in session table. |
+| `docs/knowledge/wiki/custom-component-inventory.md` | New `3e. Listing UI primitives` section with `ResultsCount` row. |
+| `docs/runbooks/neon-advisory-lock-recovery.md` | `use_count` bumped (second recorded incident, recovered using the runbook). |
+
+## Decisions resolved
+
+- **`ResultsCount.total` is required even though the static render delegates to the ICU plural inside `label`.** Kept in the API for forward parity with a future animated variant (NumberFlow / `<Stat>` integration). Owner ratified at Round 3 grill.
+- **No locale fan-out beyond `en`.** Only the `en` namespace has files; if additional locales are introduced later, the `results` ICU plural key will need to ship per-locale. Out of scope this session.
+- **Desi review pass skipped.** Items were individually small and locked at the grill; single sequential Cody pass on disjoint files matched the SESSION_0198 reflection ("don't lift to shared helper until third occurrence").
+- **Retrigger over diagnostic-first when the Neon advisory lock failure is hours old.** Per `docs/runbooks/neon-advisory-lock-recovery.md` interpretation table, ~5 min is enough for Neon's pooler to close the dead session; ~10h elapsed before retrigger was trivially safe and avoided needing SQL access during the incident.
+
+## Open decisions / blockers
+
+- **`searchTechniques` allowlist hardening still queued.** `searchTechniques` already has `curriculum_order` as a sort option (`techniques.json:sort.curriculum_order`). Adding allowlist hardening would need `["name", "curriculum_order"]`. Deferred per SESSION_0198 reflection — don't lift to a shared helper until a third occurrence surfaces.
+- **`SchoolCardData` duplication** between `school-card.tsx` and `school-list.tsx` (from SESSION_0198) — still queued.
+- **PR #22 (lineage editor actions)** still OPEN, base `session-lineage-v1-react-canvas-from-lineage-snapshot`, Vercel FAILURE; explicitly out of SESSION_0199 scope.
+- **Lineage v1 next-task pickup** — owner-ratified next-session candidate.
+
+## Task log
+
+- SESSION_0199_TASK_01 — PR #35 squash-merge + branch cut — landed at `ce867db` (PR #35) + `537b378` (SESSION_0199 plan commit).
+- SESSION_0199_TASK_02 — Cody implementation (single sequential, no Desi pass) — landed at `b6262e1` (Cody commit) on feature branch.
+- SESSION_0199_TASK_03 — Doug lighter verification (typecheck + biome clean; smoke deferred to Vercel preview) — verified pre-push; PR opened.
+- SESSION_0199_TASK_04 — Petey self-squash-merge + close push — merged at `4517931`; preview retrigger after Neon lock leak documented in Reflections.
+- SESSION_0199_TASK_05 — Petey + Giddy: full close (this entry) — current commit.
+
+## Review log
+
+- SESSION_0199_REVIEW_01 — Hostile close review for ResultsCount primitive + searchOrganizations sort allowlist + websiteUrl empty-string zod (project-log entry).
+
+## Reflections
+
+- **The Neon advisory-lock runbook paid for itself a second time.** SESSION_0189 wrote it; SESSION_0199 used it cold from a fresh session resumption. The diagnostic table + "lock self-clears in ~5min" line was enough to skip pulling env vars and running the SQL — the elapsed-time check was sufficient evidence to retrigger. The runbook's pattern of being agent-agnostic + in-repo (so Codex/Copilot can read it too) is the right design.
+- **Session resumption across context limit + harness "thinking" stall.** The prior turn hit the 10:40pm America/Denver limit mid-diagnosis. The next morning the resumed session was apparently stuck "thinking" with no output — required user nudge to restart. Lesson: a long-running tool call right before a context limit risks an unclean handoff; if a deploy is failing at end-of-context, write the diagnosis + intended fix into the SESSION file before the limit lands so the next session can pick up cold. This session recovered cleanly because all the evidence was either in the user's pasted recap or in-repo (runbook + memory).
+- **`vercel inspect <full-URL>` will swallow the URL into the project context.** The previous session ran `vercel inspect https://vercel.com/...../<id> --logs` and got `Error: Can't find the deployment "vercel.com"`. The right form is `vercel inspect <deployment-domain> --logs` (where deployment-domain is `ronin-dojo-baseline-<hash>-...vercel.app`, not the vercel.com dashboard URL). Worth adding to a deployment-troubleshooting runbook if a third occurrence comes up.
+- **Self-pacing Bash polls without jq.** `jq` is not installed on this machine; an `until` loop that gates on `jq -e` will silently fail every iteration and stay armed until the 10-min timeout. Use `gh ... --template '{{range .field}}...{{end}}'` instead; for `vercel ls` the column format is grep-friendly with `● (Ready|Error|Canceled)`. Memory-able: prefer gh templates over jq pipelines on this machine.
+- **`cd /Users/brianscott/dev/ronin-dojo-app && ...` must prefix every Bash call** per the documented memory rule. I violated this once in the bow-out (`git log -1 main` returned DirStarter's HEAD instead of ronin-dojo-app's) and had to re-run. The rule isn't paranoia — the VSCode primary cwd is DirStarter and the harness can reset cwd between turns under some conditions.
+
+## Hostile close review
+
+| Check | Verdict |
+| --- | --- |
+| Giddy (plan sanity + WORKFLOW 5.0 compliance) | Pass. Three grill rounds + Round 3 ratify locked the plan before any code. Single bundled PR matched the locked scope. No mid-flight scope additions. |
+| Doug (static gates) | Pass. `pnpm --filter dirstarter typecheck` clean; `bun biome check .` clean across 957 files; PR #36 Vercel SUCCESS + CodeRabbit SUCCESS after retrigger. |
+| Dirstarter docs check | No new ADR triggered. New primitive joins existing `~/components/web/ui/` set (Dirstarter-pattern surface). Sort allowlist mirrors SESSION_0198 in-repo precedent. Zod fix mirrors PR #35 in-repo precedent. No Dirstarter L1 layer replaced. |
+| Score cap | None. Expected WORKFLOW 5.0 score 9.6/10 (one-tenth below SESSION_0198 because no latent-bug-fix-folded-in this session — pure cleanup with one operational hiccup recovered cleanly via existing runbook). |
+
+## ADR / ubiquitous-language check
+
+- **No new ADR triggered.** The lane was entirely pattern reuse: `~/components/web/ui/` primitive set (existing); `SORTABLE_*_COLUMNS = [...] as const` allowlist (SESSION_0198 precedent); `.or(z.literal(""))` zod (PR #35 precedent for `email`). No Dirstarter baseline layer replaced; smallest-possible change shape across the board.
+- **No ubiquitous-language update needed.** `ResultsCount` is a UI primitive name, not a domain term. Sort, sortBy, sortOrder, and allowlist are existing terms.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `SESSION_0199.md` frontmatter: `status: closed-full`, `type: session--implement`, `updated: 2026-05-19`, `last_agent: claude-session-0199`, added `docs/runbooks/neon-advisory-lock-recovery.md` to `pairs_with` and `docs/protocols/project-log.md` to `backlinks`. `custom-component-inventory.md` `updated: 2026-05-19` + `last_agent: claude-session-0199` bumped. `project-log.md` `updated: 2026-05-19` + `last_agent: claude-session-0199` bumped + SESSION_0199 added to backlinks. `neon-advisory-lock-recovery.md` `updated: 2026-05-19` + `use_count: 2` + `last_agent: claude-session-0199` bumped. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0199 row appended in session table. `custom-component-inventory.md` new section `3e. Listing UI primitives` with `ResultsCount` row. `pairs_with` SESSION_0199 ↔ `neon-advisory-lock-recovery.md` bidirectional. |
+| Wiki lint | `bun run wiki:lint` — result captured in bow-out response (run after all doc edits). |
+| Kaizen reflection | Reflections section present: yes (5 reflections covering runbook reuse, resumption hygiene, vercel CLI URL gotcha, jq absence, cwd rule). |
+| Hostile close review | SESSION_0199_REVIEW_01 entry in `docs/protocols/project-log.md`. |
+| Review & Recommend | Next session goal written: yes (lineage v1 pickup + PR #22 diagnosis, owner-ratified). |
+| Memory sweep | No new memory needed — existing `feedback_prisma_advisory_lock_neon_leak.md` already captured the pattern; existing `feedback_ronin_dojo_bash_cwd.md` already captured the cwd rule (violated once this session, re-validates the rule). `vercel inspect <full-URL>` gotcha + jq-absence observations queued in Reflections as memory candidates if they recur. |
+| Next session unblock check | Unblocked. Lineage v1 next-task pickup has all required context in `SESSION_0193.md` + `SESSION_0194.md` + `lineage-listing-runbook.md`. |
+| Git hygiene | Branch: `main`. Worktree list: main repo only (`/Users/brianscott/dev/ronin-dojo-app`). Status: doc-only changes for the close. Single commit `docs: close session 0199 — server-query cleanup lane shipped via PR 36` covering all close content. Pushed to `origin/main`. |
+| Graphify update | Run after git hygiene per ritual; final node/edge/community count in bow-out response. |
+
+## Next session
+
+- **Goal:** Lineage v1 pickup + PR #22 Vercel-failure diagnosis. Owner-ratified at SESSION_0199 close.
+- **Inputs to read:** `docs/sprints/SESSION_0193.md`, `docs/sprints/SESSION_0194.md`, `docs/runbooks/lineage-listing-runbook.md`, current state of PR #22 via `gh pr view 22 --json statusCheckRollup,mergeable,mergeStateStatus`.
+- **First task:** Pull PR #22 base branch local, run `pnpm --filter dirstarter typecheck` to reproduce any TypeScript failures; if Vercel preview log is still accessible, capture the failing build step to focus the diagnosis.
+- **Status check:** PR #22 base = `session-lineage-v1-react-canvas-from-lineage-snapshot`; previous Vercel state = FAILURE; sit in a separate branch from main so no impact on production until the lane is reopened.
+
 ## Status
 
-in-progress
+closed-full

@@ -5,13 +5,14 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-19
-last_agent: claude-session-0198
+last_agent: claude-session-0199
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
   - docs/sprints/SESSION_0196.md
   - docs/sprints/SESSION_0197.md
   - docs/sprints/SESSION_0198.md
+  - docs/sprints/SESSION_0199.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -106,7 +107,17 @@ Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (clai
 
 ## 3d. Course sort consumption — `server/web/courses/queries.ts`
 
-> SESSION_0198 wired `searchCourses` to consume the URL-tracked `sort` param that SESSION_0196 added to `courseFilterParams`. Pattern mirrors `searchOrganizations` split-by-dot but adds a defensive allowlist `SORTABLE_COURSE_COLUMNS = ["title"] as const` + sortOrder direction defaulting (`rawSortOrder === "desc" ? "desc" : "asc"`). Closes the SESSION_0196 orphan-Sort-UI smell. `course-query.tsx` threads `sort: params.sort` into the `searchCourses` call. The matching unsanitized-`sortBy` hole still exists in `searchOrganizations:44` — flagged in SESSION_0198 Open decisions for a follow-up "server-query cleanup" lane.
+> SESSION_0198 wired `searchCourses` to consume the URL-tracked `sort` param that SESSION_0196 added to `courseFilterParams`. Pattern mirrors `searchOrganizations` split-by-dot but adds a defensive allowlist `SORTABLE_COURSE_COLUMNS = ["title"] as const` + sortOrder direction defaulting (`rawSortOrder === "desc" ? "desc" : "asc"`). Closes the SESSION_0196 orphan-Sort-UI smell. `course-query.tsx` threads `sort: params.sort` into the `searchCourses` call. SESSION_0199 mirrored this pattern onto `searchOrganizations` via `SORTABLE_ORGANIZATION_COLUMNS = ["name"] as const`; `searchTechniques` still has the matching unsanitized-`sortBy` hole (would need `["name", "curriculum_order"]`) — deferred per the SESSION_0198 reflection on not lifting to a shared helper until a third occurrence surfaces.
+
+---
+
+## 3e. Listing UI primitives — `components/web/ui/`
+
+> Cross-domain primitives that compose any listing surface. Server-renderable by default; no `"use client"`. Companion to the existing primitive set (`Stat`, `Intro`, `Grid`, `Breadcrumbs`).
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `ResultsCount` | `apps/web/components/web/ui/results-count.tsx` | `total: number`, `label: string`, plus any `<p>` attributes | SESSION_0199: generic server-renderable count line. Renders `label` (consumer is expected to pre-localize via `t("results", { count: total })` — see per-namespace ICU plural keys at `apps/web/messages/en/{courses,schools,techniques,disciplines}.json:results`). `total` is kept required in the public API for forward parity with a future animated variant (NumberFlow / `<Stat>` integration) even though the static render delegates the count to the plural inside `label`. Adopted in `course-query.tsx`, `school-query.tsx`, `technique-query.tsx` above each `*Listing`, and in `discipline-list.tsx` above `<Grid>` (both empty + populated branches via a single fragment). Use `<ResultsCount>` rather than a hand-rolled `<p>` whenever a listing surfaces a total count; this keeps cross-domain parity and gives the animated variant a single replacement point. |
 
 ---
 

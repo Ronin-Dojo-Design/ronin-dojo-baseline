@@ -4,9 +4,9 @@ slug: neon-advisory-lock-recovery
 type: runbook
 status: active
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: claude-session-0189
-use_count: 1
+updated: 2026-05-19
+last_agent: claude-session-0199
+use_count: 2
 pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/runbooks/prisma-workflow.md

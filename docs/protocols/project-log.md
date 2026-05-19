@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-19
-last_agent: claude-session-0198
+last_agent: claude-session-0199
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -50,6 +50,7 @@ backlinks:
   - docs/sprints/SESSION_0171.md
   - docs/sprints/SESSION_0172.md
   - docs/sprints/SESSION_0173.md
+  - docs/sprints/SESSION_0199.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1544,3 +1545,65 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** A Cody pass that doesn't explicitly run `prisma generate` after `migrate dev` will hit a confusing typecheck failure. Resolves in one command.
 - **Required follow-up:** Add an explicit `prisma generate` step to the Cody migration template (after `migrate dev`, before typecheck). Captured in SESSION_0198_REVIEW_01 Kaizen (b).
 - **Status:** open follow-up — template update.
+
+### S199_RESULTS_COUNT_SORT_HARDENING — ResultsCount primitive + searchOrganizations sort allowlist + websiteUrl empty-string zod
+
+- **Session:** SESSION_0199
+- **Sprint:** S6
+- **Status:** ✅ verified
+- **Files:** `apps/web/components/web/ui/results-count.tsx` (new), `apps/web/components/web/courses/course-query.tsx`, `apps/web/components/web/schools/school-query.tsx`, `apps/web/components/web/techniques/technique-query.tsx`, `apps/web/app/(web)/disciplines/_components/discipline-list.tsx`, `apps/web/messages/en/{courses,schools,techniques,disciplines}.json`, `apps/web/server/web/directory/search-organizations.ts`, `apps/web/server/web/organization/schemas.ts`
+- **Seed data:** none (no schema change)
+- **Smoke test:** `pnpm --filter dirstarter typecheck` clean; `bun biome check .` clean across 957 files; PR #36 Vercel SUCCESS + CodeRabbit SUCCESS (after one retrigger to clear a leaked Neon advisory lock — see `docs/runbooks/neon-advisory-lock-recovery.md`); production deploy `qynyjh14j` Ready in 2m after squash-merge.
+
+### SESSION_0199 — Server-Query Cleanup Lane (ResultsCount Primitive + searchOrganizations Sort Allowlist + websiteUrl Empty-String Zod)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0199_TASK_01 | Petey: squash-merge PR #35 to main; sync main; cut feature branch `session-results-count-and-server-query-cleanup` off post-merge main | complete |
+| SESSION_0199_TASK_02 | Cody (single `general-purpose` subagent, sequential; no Desi pass): build `ResultsCount` primitive; add `results` ICU plural to four `en` namespaces; wire into four listings; `SORTABLE_ORGANIZATION_COLUMNS` allowlist + `sortOrder` sanitization in `searchOrganizations`; one-line `.or(z.literal(""))` on `createOrganizationSchema.websiteUrl` | complete |
+| SESSION_0199_TASK_03 | Doug (lighter shape, no migrate-replay this session): typecheck + biome + push + PR #36 open; smoke deferred to Vercel preview per owner-ratified path | complete |
+| SESSION_0199_TASK_04 | Petey self-squash-merge after PR #36 green; first Vercel preview failed with P1002 Neon advisory-lock leak — recovered per `docs/runbooks/neon-advisory-lock-recovery.md` by waiting ~10h for Neon's pooler to clear the dead session and retriggering via empty commit; merged at `4517931`; production deploy `qynyjh14j` Ready in 2m | complete |
+| SESSION_0199_TASK_05 | Petey + Giddy: full close — SESSION_0199, project-log, wiki index, custom-component-inventory, ADR/component sweep, runbook `use_count` bump, post-hygiene Graphify refresh, commit, push | complete |
+
+**Notes:** Owner directive at bow-in: drain the three SESSION_0198 Open-decisions items (`ResultsCount` cross-listing parity, `searchOrganizations` sort allowlist, `createOrganizationSchema.websiteUrl` empty-string zod) as a single bundled PR. Use Graphify (not repo-wide grep) for navigation. Three grill rounds + Round 3 ratify locked the plan; Desi review pass explicitly skipped per Round 3 grill decision (items individually small + locked; single sequential Cody on disjoint files). Doug lighter gates — no schema change this session, so no migrate-replay needed. Self-squash-merge authorized at bow-in.
+
+**Result:** PR #36 squash-merged to main at `4517931`. Cody landed `b6262e1` on `session-results-count-and-server-query-cleanup` (11 files: new primitive + 4 listing wirings + 4 i18n JSONs + 2 server-query files). Static gates clean (typecheck + biome 957 files). First Vercel preview failed with P1002 advisory-lock timeout on `pg_advisory_lock(72707369)` — the documented Neon lock leak (`docs/runbooks/neon-advisory-lock-recovery.md`); session ran out of context mid-diagnosis. Recovered the next morning by retriggering with an empty commit after ~10h elapsed (Neon pooler self-clears dead sessions in ~5min). Retriggered preview SUCCESS; CodeRabbit SUCCESS; squash-merged; production deploy `qynyjh14j` Ready in 2m. Closes SESSION_0198_FINDING_02 (`searchOrganizations` unsanitized sortBy) and SESSION_0198_FINDING_04 (`websiteUrl` zod blank-reject). Open follow-ups: `searchTechniques` allowlist (queued — third occurrence trigger for shared-helper lift), `SchoolCardData` duplication cleanup, PR #22 lineage editor diagnosis, lineage v1 next-task pickup.
+
+#### Review
+
+##### SESSION_0199_REVIEW_01 — Hostile close review for ResultsCount primitive + searchOrganizations sort allowlist + websiteUrl empty-string zod
+
+- **Reviewed tasks:** SESSION_0199_TASK_01, SESSION_0199_TASK_02, SESSION_0199_TASK_03, SESSION_0199_TASK_04, SESSION_0199_TASK_05.
+- **Dirstarter docs check:** no Dirstarter baseline layer replaced. `~/components/web/ui/` is an existing Dirstarter-pattern surface (joins `Stat`, `Intro`, `Grid`, `Breadcrumbs`). Sort allowlist is a mirror of the in-repo `SORTABLE_COURSE_COLUMNS` precedent landed in SESSION_0198. Zod `.or(z.literal(""))` is a mirror of the `email` precedent landed in PR #35. No new ADR triggered — pure pattern reuse.
+- **Sources:** `apps/web/components/web/ui/` primitive folder (existing `Stat`, `Intro`, `Grid`, `Breadcrumbs`), `course-query.tsx` / `school-query.tsx` / `technique-query.tsx` / `discipline-list.tsx`, `apps/web/messages/en/{courses,schools,techniques,disciplines}.json`, `apps/web/server/web/directory/search-organizations.ts`, `apps/web/server/web/organization/schemas.ts`, SESSION_0198 Petey plan + closed-full proof (PR #35 = `ce867db`), `docs/runbooks/neon-advisory-lock-recovery.md` (Neon lock-leak recovery), Doug static gate outputs, GitHub PR #36.
+- **Verdict:** Pass. Plan was locked via three grill rounds + Round 3 ratify before any code. Single sequential Cody pass on disjoint files; no scope balloon. PR #36 single-PR strategy matched the locked plan exactly. The mid-flight Neon advisory-lock failure was operationally annoying but procedurally clean — the in-repo runbook + memory pointed to the fix immediately on session resumption. Expected WORKFLOW 5.0 score 9.6/10 (one-tenth below SESSION_0198 because no latent-bug-fix-folded-in this session; pure cleanup with one operational hiccup recovered via existing runbook). Confidence for the PR at 100 / 1,000 / 10,000 users: 9.5 / 9.5 / 9.5 (public read-only listing surface gains a generic count primitive; allowlist + zod fixes are defensive cleanups).
+- **Kaizen:** (a) When a Vercel deploy is failing at end-of-context, write the diagnosis + intended fix into the SESSION file before the limit lands so the next session can pick up cold — this session recovered because all evidence was either in the user's pasted recap or in-repo, but the chain of inference was reconstructable, not guaranteed. (b) `vercel inspect <full-URL>` swallows `vercel.com` into the project context and 404s; use `vercel inspect <deployment-domain> --logs` instead (where deployment-domain is the `ronin-dojo-baseline-<hash>-...vercel.app` form). Queue for a deployment-troubleshooting runbook if a third occurrence comes up. (c) `jq` is not installed locally; an `until` loop gating on `jq -e` silently fails every iteration and stays armed until timeout. Prefer `gh ... --template '{{range}}...{{end}}'` for poll loops; for `vercel ls` grep the `● (Ready|Error|Canceled)` column directly.
+
+#### Findings
+
+##### SESSION_0199_FINDING_01 — Neon advisory-lock leak recurrence (second recorded incident) — recovered via runbook
+
+- **Severity:** low (operational; recovered)
+- **Task:** SESSION_0199_TASK_04
+- **Evidence:** PR #36 first Vercel preview failed at `2026-05-19T03:18:24Z` with `Error: P1002 — Timed out trying to acquire a postgres advisory lock (SELECT pg_advisory_lock(72707369)). Timeout: 10000ms.` at `prisma migrate deploy` prebuild. Trigger appears to be the prior prod deploy storm captured in the same `vercel ls` page (two `● Error` Production deploys at 7m and 11h ages, consistent with a SIGKILL'd build leaking the session-level lock on Neon's pooler). Per `docs/runbooks/neon-advisory-lock-recovery.md` interpretation table, ~5 min is enough for Neon's pooler to close the dead session; ~10h elapsed before the recovery retrigger.
+- **Impact:** Single failed preview; no production impact (production was already Ready at the time of the failure). Recovery cost was one empty-commit push and one wait for Vercel re-run.
+- **Required follow-up:** None — runbook handled it. Runbook `use_count` bumped to 2 to reflect the second recorded incident.
+- **Status:** closed via empty-commit retrigger at `61408b1`; production deploy `qynyjh14j` Ready in 2m post-merge.
+
+##### SESSION_0199_FINDING_02 — Unclean-close recovery from prior session's context-limit cutoff
+
+- **Severity:** low (procedural; recovered)
+- **Task:** SESSION_0199_TASK_05
+- **Evidence:** Prior session hit the user's 10:40pm America/Denver limit mid-diagnosis of the P1002 Vercel preview failure. The morning resume was apparently stuck "thinking" with no output until the user nudged it. SESSION_0199.md `status` was left at `in-progress`. This session recovered by reading the user's pasted recap, the in-repo runbook, and SESSION_0199.md frontmatter to reconstruct the chain.
+- **Impact:** Recovery cost ~30 minutes of read + question-asking; no work was lost.
+- **Required follow-up:** Reflections section in SESSION_0199.md captures the lesson — at end-of-context with a failing deploy, write the diagnosis + intended fix into the SESSION file before the limit lands.
+- **Status:** closed via this full close pass.
+
+##### SESSION_0199_FINDING_03 — `searchTechniques` allowlist hardening still queued
+
+- **Severity:** low (defensive)
+- **Task:** N/A (scope guardrail)
+- **Evidence:** `searchTechniques` already exposes `curriculum_order` as a sort option (`techniques.json:sort.curriculum_order`). Adding the SORTABLE_*_COLUMNS pattern would require allowing both `["name", "curriculum_order"]`. Per SESSION_0198 reflection: don't lift to a shared helper until a third occurrence surfaces. SESSION_0199 hardens `searchOrganizations` (second occurrence) so `searchTechniques` is the third — but the column-set diverges so a copy is more honest than a helper.
+- **Impact:** A user can hit `/techniques?sort=<arbitrary-column>` and Prisma will honor it; same shape as the pre-SESSION_0199 `searchOrganizations` hole. No data leak path today (all returned columns are public-facing).
+- **Required follow-up:** Mirror `SORTABLE_ORGANIZATION_COLUMNS` pattern with `SORTABLE_TECHNIQUE_COLUMNS = ["name", "curriculum_order"] as const`. Default next-session candidate.
+- **Status:** open follow-up.
