@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-19
-last_agent: codex-session-0201
+last_agent: codex-session-0202
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -52,6 +52,7 @@ backlinks:
   - docs/sprints/SESSION_0173.md
   - docs/sprints/SESSION_0199.md
   - docs/sprints/SESSION_0201.md
+  - docs/sprints/SESSION_0202.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -1707,3 +1708,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** `apps/web/prisma.config.ts`, `apps/web/services/db.ts`, `docs/runbooks/neon-advisory-lock-recovery.md`, SESSION_0200 findings, installed `@prisma/config` types for Prisma 7.8.0, Vercel env-name check.
 - **Verdict:** Pass. Prisma 7 does not expose `datasource.directUrl`; routing Vercel CLI commands through `datasource.url = DIRECT_URL` is the correct shape. Runtime is unchanged, no schema changed, and validation gates pass. Expected WORKFLOW 5.0 score 9.6/10; residual risk is observing the first post-push deploy with the new config.
 - **Follow-up:** Resume lineage v1 / PR #22 after post-push deploy readiness is confirmed.
+
+### S202_DASHBOARD_LINEAGE_EDITOR_PREVIEW — Dashboard lineage editor read-only preview
+
+- **Session:** SESSION_0202
+- **Sprint:** S6
+- **Status:** ✅ verified
+- **Files:** `apps/web/server/web/lineage/editor-queries.ts`, `apps/web/server/web/lineage/editor-queries.test.ts`, `apps/web/app/(web)/dashboard/page.tsx`, `apps/web/app/(web)/dashboard/lineage-tab.tsx`, `apps/web/app/(web)/dashboard/lineage/[treeId]/page.tsx`, `docs/architecture/lineage/lineage-public-viewer-editor-routes.md`, `docs/knowledge/wiki/custom-component-inventory.md`
+- **Seed data:** none
+- **Smoke test:** `pnpm --filter dirstarter typecheck` clean; `bun biome check .` clean across 962 files; `bun test server/web/lineage/editor-queries.test.ts` passed 3/3; `bun test server/web/lineage/editor-queries.test.ts server/web/lineage/editor-graph.test.ts server/web/lineage/queries.visibility.test.ts` passed 10/10; `bun run wiki:lint` exited 0 with 497 pre-existing warnings; unauthenticated HTTP smoke returned 307 redirects for `/dashboard` and `/dashboard/lineage/test-tree-id`.
+
+### SESSION_0202 — Dashboard lineage editor read-only preview
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0202_TASK_01 | Petey: bow in; create SESSION_0202; use Graphify-first discovery; verify PR #22 topology and record superseded/actionable evidence before implementation | complete |
+| SESSION_0202_TASK_02 | Cody: add ACL-gated dashboard lineage editor list/detail preview using existing `LineageTreeBoard`, current `getServerSession` auth pattern, and auth-scoped lineage editor read queries | complete |
+| SESSION_0202_TASK_03 | Doug + Petey: run verification, stage Dirstarter upstream-sync as next session, full-close, update Graphify after git hygiene, commit, and push `main` | complete |
+
+**Notes:** Owner resolved SESSION_0202 scope in chat: finish the missing dashboard lineage editor now, then make Dirstarter upstream-sync the next session. PR #22 is not to be merged directly unless fresh evidence contradicts the current finding that PR #28/main already absorbed its editor-action code and added a newer fix.
+
+**Result:** The user dashboard now has a `Lineage` tab and `/dashboard/lineage/[treeId]` read-only preview route. Access is brand-scoped and capability-gated through global admin, org owner/admin for organization-scoped trees, or explicit `LineageTreeAccess` grants. The preview reuses `LineageTreeBoard`; mutation controls are intentionally deferred. Dirstarter upstream-sync is staged as SESSION_0203's first lane, with `docs/architecture/dirstarter-upstream-sync-2026-05-14.md` as the snapshot gate.
+
+#### Review
+
+##### SESSION_0202_REVIEW_01 — Hostile close review for dashboard lineage editor read-only preview
+
+- **Reviewed tasks:** SESSION_0202_TASK_01, SESSION_0202_TASK_02, SESSION_0202_TASK_03.
+- **Dirstarter docs check:** no Dirstarter baseline layer replaced. The dashboard surface uses current Dirstarter-derived auth/session, Next route, Prisma query, and L1 component primitives. No ADR triggered.
+- **Sources:** `apps/web/server/web/lineage/editor-queries.ts`, `apps/web/app/(web)/dashboard/lineage-tab.tsx`, `apps/web/app/(web)/dashboard/lineage/[treeId]/page.tsx`, `apps/web/components/web/lineage/lineage-tree-board.tsx`, `docs/architecture/lineage/lineage-public-viewer-editor-routes.md`, PR #22 topology evidence, PR #28/main evidence.
+- **Verdict:** Pass. No P0/P1 findings. The largest avoided risk was stale PR #22 rollback; the implementation landed directly on current `main` with auth-scoped reads and no mutation surface. Residual gap: seeded editor-fixture browser QA is still needed before enabling visual group or promotion mutation controls.
+- **Follow-up:** SESSION_0203 should begin Dirstarter upstream-sync planning from the 2026-05-14 snapshot, now that the owner confirmed no existing users must be preserved.

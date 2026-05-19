@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-19
-last_agent: claude-session-0200
+last_agent: codex-session-0202
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0195.md
@@ -14,6 +14,7 @@ pairs_with:
   - docs/sprints/SESSION_0198.md
   - docs/sprints/SESSION_0199.md
   - docs/sprints/SESSION_0200.md
+  - docs/sprints/SESSION_0202.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -44,6 +45,14 @@ Conventions:
 ### Lineage admin surfaces
 
 Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (claim review, node profile editor, placeholder archival actions). They consume the same payload types as the public viewer but use server actions for mutations — the public viewer remains read-only by contract.
+
+SESSION_0202 added the user-dashboard editor preview surface:
+
+| Surface | File | Purpose | Notable behavior |
+| --- | --- | --- | --- |
+| Dashboard lineage tab | `app/(web)/dashboard/lineage-tab.tsx` | Lists lineage trees the current user can preview or edit. | Server component. Uses `getServerSession`, current request brand, `findEditableLineageTrees`, and L1 `Card`/`Badge`/`Button`/`Stack` primitives. Unauthenticated users redirect to `/auth/login?next=/dashboard`. |
+| Dashboard lineage editor preview | `app/(web)/dashboard/lineage/[treeId]/page.tsx` | Authenticated read-only editor preview for a single tree. | Uses `getLineageEditorTree` and reuses `LineageTreeBoard`; does not expose mutation controls. Users without global admin, organization admin/owner on organization-scoped trees, or explicit `LineageTreeAccess` capability receive `notFound()`. |
+| Lineage editor read queries | `server/web/lineage/editor-queries.ts` | Auth-scoped list/detail read model and capability resolver. | Capability derives from global admin, organization owner/admin for organization-scoped trees, and explicit lineage ACL roles. Public viewer payloads remain unchanged; editor reads are separated from cached public reads. |
 
 ---
 

@@ -4,10 +4,11 @@ slug: lineage-public-viewer-editor-routes
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0177
+updated: 2026-05-19
+last_agent: codex-session-0202
 backlinks:
   - docs/sprints/SESSION_0177.md
+  - docs/sprints/SESSION_0202.md
   - docs/knowledge/wiki/index.md
 ---
 
@@ -65,6 +66,13 @@ Visibility rules:
 New dashboard route:
 
 - `apps/web/app/(web)/dashboard/lineage/[treeId]/page.tsx`
+
+Landed SESSION_0202:
+
+- `apps/web/app/(web)/dashboard/lineage-tab.tsx` adds a `Lineage` tab to `/dashboard` with the current user's editable trees.
+- `apps/web/app/(web)/dashboard/lineage/[treeId]/page.tsx` renders the read-only editor preview.
+- `apps/web/server/web/lineage/editor-queries.ts` owns the auth-scoped editor list/detail reads and capability resolver.
+- The shipped route is preview-only. Visual group controls, promotion changes, claim review, and ACL management remain future rollout items.
 
 Optional supporting routes:
 
@@ -138,7 +146,7 @@ Tournament, belt story, and achievements stay out of the v1 drawer and move to t
 
 1. Create read models and adapter behind the current embedded surface.
 2. Add standalone public route.
-3. Add dashboard editor route with read-only preview.
+3. Add dashboard editor route with read-only preview. **Landed SESSION_0202.**
 4. Add visual group controls.
 5. Add promotion modal and audited parent changes.
 6. Add claims and ACL management.

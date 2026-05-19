@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-19
 author: Brian + Copilot
-last_agent: codex-session-0201
+last_agent: codex-session-0202
 ---
 
 # LLM Wiki Index
@@ -94,6 +94,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [2026-05-18 Launch Plan](../../architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md) | file | active |
 | [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated |
 | [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | signed-off |
+| [Lineage Public Viewer And Editor Routes](../../architecture/lineage/lineage-public-viewer-editor-routes.md) | spec | active — dashboard editor preview landed SESSION_0202 |
 
 ### ADRs
 
@@ -261,6 +262,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0199](../../sprints/SESSION_0199.md) | session--implement | closed-full |
 | [SESSION_0200](../../sprints/SESSION_0200.md) | session--implement | closed-full |
 | [SESSION_0201](../../sprints/SESSION_0201.md) | session--implement | closed-full |
+| [SESSION_0202](../../sprints/SESSION_0202.md) | session--implement | closed-full |
 
 ## Protocols
 

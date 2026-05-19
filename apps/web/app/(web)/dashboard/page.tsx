@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
+import { DashboardLineageTab } from "~/app/(web)/dashboard/lineage-tab"
 import { DashboardToolListing } from "~/app/(web)/dashboard/listing"
 import { DashboardMembership } from "~/app/(web)/dashboard/membership"
 import { DashboardProfileTab } from "~/app/(web)/dashboard/profile-tab"
@@ -84,6 +85,15 @@ export default async function ({ searchParams }: PageProps<"/dashboard">) {
                 content: (
                   <Suspense fallback={<DataTableSkeleton />}>
                     <DashboardToolListing searchParams={searchParams} />
+                  </Suspense>
+                ),
+              },
+              {
+                id: "lineage",
+                label: "Lineage",
+                content: (
+                  <Suspense fallback={<Skeleton className="h-64" />}>
+                    <DashboardLineageTab />
                   </Suspense>
                 ),
               },
