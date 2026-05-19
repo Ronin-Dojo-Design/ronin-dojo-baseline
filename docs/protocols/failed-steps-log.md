@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-17
-last_agent: claude-session-0188
+updated: 2026-05-19
+last_agent: claude-session-0200
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -416,7 +416,8 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Impact:** Low — migration succeeded, correct migration SQL file was created (`ALTER TABLE "Membership" ADD COLUMN "version" INTEGER NOT NULL DEFAULT 0`), schema valid, 109 models confirmed, zero TS errors. Skipped steps were completed retroactively.
 - **Corrective action:** (1) Before any schema change, read the runbook steps 1–8 sequentially — do not skip. (2) Update `schema-migration.md` and `prisma-workflow.md` to reflect that `migrate dev` is acceptable (and preferred when migration files are needed for production). Remove blanket "never use migrate dev" guidance. (3) Always run `prisma validate` before and `tsc --noEmit` after.
 - **Verification:** Next schema change: agent must cite "schema-migration.md step N" for each step as it executes. Runbook update needed (separate task).
-- **Status:** open
+- **Status:** mitigated
+- **Mitigation:** Mitigation landed in SESSION_0200_TASK_03 (claude-session-0200). schema-migration.md + prisma-workflow.md now reflect SESSION_0152 evidence per corrective action #2. Shadow-DB retest deferred as non-blocking follow-up.
 - **Follow-up:** Update `prisma-workflow.md` known issues — `migrate dev` shadow DB hang may be resolved in Prisma 7.x. Test and confirm. Also reconcile with Dirstarter L1 `prebuild: db:migrate deploy` pattern.
 
 ### FS-0022 — pnpm 9 pre/post lifecycle hooks silently disabled on Vercel

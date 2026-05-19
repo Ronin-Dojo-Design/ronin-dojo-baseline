@@ -4,8 +4,8 @@ slug: prisma-workflow
 type: runbook
 status: active
 created: 2026-04-26
-updated: 2026-05-12
-last_agent: copilot-session-0152
+updated: 2026-05-19
+last_agent: claude-session-0200
 use_count: 0
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -103,6 +103,7 @@ Check for new type errors. Pre-existing Dirstarter template errors (PageProps, c
 ## Known issues
 
 - **Postgres.app CLI not on PATH** — use full path `/Applications/Postgres.app/Contents/Versions/latest/bin/` or add to PATH per [Postgres.app docs](https://postgresapp.com/documentation/cli-tools.html).
+- **Shadow DB hang on `prisma migrate dev` (SESSION_0004)** — did NOT reproduce in SESSION_0152 against the Neon dev DB. A formal Prisma 7.x retest is queued as a future follow-up but is not blocking; treat `migrate dev` as the default path for migrations that must ship.
 
 ## Related
 

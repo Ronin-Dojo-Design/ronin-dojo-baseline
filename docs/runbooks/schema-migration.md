@@ -4,8 +4,8 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-05-12
-last_agent: copilot-session-0152
+updated: 2026-05-19
+last_agent: claude-session-0200
 use_count: 1
 pairs_with:
   - docs/runbooks/database.md
@@ -54,6 +54,16 @@ Add models/enums/fields per the wave spec. Work in dependency order:
 5. Index additions
 
 **Rule:** One wave = one atomic commit. Don't mix waves.
+
+## When to use `migrate dev` vs `db push` vs `migrate deploy`
+
+Three Prisma commands, three jobs. Pick by what the change needs downstream.
+
+- **`prisma migrate dev`** — creates a versioned migration file in `prisma/migrations/` and applies it to the local dev DB in one step. Use this whenever the change must ship to production: Neon prod is migrated via `prisma migrate deploy` during Vercel prebuild (`package.json` `prebuild: bun run db:migrate deploy`), and `deploy` only runs migration files that already exist in the repo. No migration file in the repo means nothing to deploy.
+- **`prisma db push`** — pushes the current `schema.prisma` to the dev DB without creating a migration file. Use for rapid local iteration only — destructive wave rewrites, throwaway schema experiments, or large model bursts where you're going to `dropdb/createdb` and reseed anyway. Do **not** use `db push` for changes that need to ship.
+- **`prisma migrate deploy`** — applies committed migration files against the target DB. This is what Vercel runs in `prebuild` against Neon prod. Never invoke it by hand in dev; it's the production half of the pair with `migrate dev`.
+
+Per FS-0021 corrective action #2: SESSION_0152 confirmed `migrate dev` is the correct path when a migration file must ship; the shadow-DB hang from SESSION_0004 did not reproduce on the current Prisma version.
 
 ### 3. Apply schema changes
 
