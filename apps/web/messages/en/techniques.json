@@ -1,5 +1,6 @@
 {
   "empty": "No techniques found.",
+  "results": "{count, plural, =0 {No techniques} one {1 technique} other {# techniques}}",
   "filters": {
     "search_placeholder": "Search techniques…"
   },

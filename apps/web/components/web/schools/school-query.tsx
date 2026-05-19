@@ -1,8 +1,10 @@
+import { getTranslations } from "next-intl/server"
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
 import type { PaginationProps } from "~/components/web/pagination"
 import { SchoolList, type SchoolListProps } from "~/components/web/schools/school-list"
 import { SchoolListing, type SchoolListingProps } from "~/components/web/schools/school-listing"
+import { ResultsCount } from "~/components/web/ui/results-count"
 import {
   type SchoolFilterParams,
   schoolFilterParamsCache,
@@ -28,11 +30,15 @@ const SchoolQuery = async ({
   const parsedParams = schoolFilterParamsCache.parse(await searchParams)
   const params = { ...parsedParams, ...overrideParams }
   const { schools, total, page, perPage } = await searchOrganizations(params, brand)
+  const t = await getTranslations("schools")
 
   return (
-    <SchoolListing pagination={{ total, perPage, page, ...pagination }} {...props}>
-      <SchoolList schools={schools} {...list} />
-    </SchoolListing>
+    <>
+      <ResultsCount total={total} label={t("results", { count: total })} />
+      <SchoolListing pagination={{ total, perPage, page, ...pagination }} {...props}>
+        <SchoolList schools={schools} {...list} />
+      </SchoolListing>
+    </>
   )
 }
 
