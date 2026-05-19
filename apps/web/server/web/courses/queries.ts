@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, Prisma } from "~/.generated/prisma/client"
+import { parseSort } from "~/server/web/_shared/sortable"
 import { courseManyPayload, courseOnePayload } from "~/server/web/courses/payloads"
 import { db } from "~/services/db"
 
@@ -23,11 +24,7 @@ export const searchCourses = async (
   const { q, discipline, sort, page = 1, perPage = 12 } = params
   const skip = (page - 1) * perPage
 
-  const [rawSortBy, rawSortOrder] = sort ? sort.split(".") : [undefined, undefined]
-  const sortBy = (SORTABLE_COURSE_COLUMNS as readonly string[]).includes(rawSortBy ?? "")
-    ? rawSortBy
-    : undefined
-  const sortOrder = rawSortOrder === "desc" ? "desc" : "asc"
+  const { sortBy, sortOrder } = parseSort(sort, SORTABLE_COURSE_COLUMNS)
 
   const where: Prisma.CourseWhereInput = {
     brand,
