@@ -3,8 +3,16 @@ import type { Brand, Prisma } from "~/.generated/prisma/client"
 import { courseManyPayload, courseOnePayload } from "~/server/web/courses/payloads"
 import { db } from "~/services/db"
 
+const SORTABLE_COURSE_COLUMNS = ["title"] as const
+
 export const searchCourses = async (
-  params: { q?: string; discipline?: string; page?: number; perPage?: number },
+  params: {
+    q?: string
+    discipline?: string
+    sort?: string
+    page?: number
+    perPage?: number
+  },
   brand: Brand,
 ) => {
   "use cache"
@@ -12,8 +20,14 @@ export const searchCourses = async (
   cacheTag("courses")
   cacheLife("minutes")
 
-  const { q, discipline, page = 1, perPage = 12 } = params
+  const { q, discipline, sort, page = 1, perPage = 12 } = params
   const skip = (page - 1) * perPage
+
+  const [rawSortBy, rawSortOrder] = sort ? sort.split(".") : [undefined, undefined]
+  const sortBy = (SORTABLE_COURSE_COLUMNS as readonly string[]).includes(rawSortBy ?? "")
+    ? rawSortBy
+    : undefined
+  const sortOrder = rawSortOrder === "desc" ? "desc" : "asc"
 
   const where: Prisma.CourseWhereInput = {
     brand,
@@ -32,7 +46,7 @@ export const searchCourses = async (
     db.course.findMany({
       where,
       select: courseManyPayload,
-      orderBy: [{ title: "asc" }],
+      orderBy: sortBy ? { [sortBy]: sortOrder } : { title: "asc" },
       take: perPage,
       skip,
     }),

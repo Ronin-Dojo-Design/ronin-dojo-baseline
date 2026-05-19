@@ -962,6 +962,8 @@ model Organization {
   zip          String?
   country      String?          @default("US")
   websiteUrl   String?
+  phoneE164    String?
+  email        String?
   inviteCode   String?          @unique @default(cuid())
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt

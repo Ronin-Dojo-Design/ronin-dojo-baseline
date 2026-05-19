@@ -30,10 +30,11 @@ const schoolFormSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Lowercase alphanumeric and dashes only"),
   description: z.string().max(2000).optional().default(""),
   websiteUrl: z.string().max(2048).optional().default(""),
-  contactEmail: z.string().email().max(200).optional().or(z.literal("")),
-  address: z.string().max(500).optional().default(""),
+  email: z.string().email().max(200).optional().or(z.literal("")),
+  phoneE164: z.string().max(32).optional().default(""),
+  addressLine1: z.string().max(500).optional().default(""),
   city: z.string().max(100).optional().default(""),
-  region: z.string().max(100).optional().default(""),
+  state: z.string().max(100).optional().default(""),
   country: z.string().max(2).optional().default(""),
 })
 
@@ -45,10 +46,11 @@ type OrganizationData = {
   slug: string
   description?: string | null
   websiteUrl?: string | null
-  contactEmail?: string | null
-  address?: string | null
+  email?: string | null
+  phoneE164?: string | null
+  addressLine1?: string | null
   city?: string | null
-  region?: string | null
+  state?: string | null
   country?: string | null
   disciplines?: Discipline[]
 }
@@ -77,10 +79,11 @@ function SchoolFormContent({ organization }: { organization: OrganizationData })
       slug: organization.slug ?? "",
       description: organization.description ?? "",
       websiteUrl: organization.websiteUrl ?? "",
-      contactEmail: organization.contactEmail ?? "",
-      address: organization.address ?? "",
+      email: organization.email ?? "",
+      phoneE164: organization.phoneE164 ?? "",
+      addressLine1: organization.addressLine1 ?? "",
       city: organization.city ?? "",
-      region: organization.region ?? "",
+      state: organization.state ?? "",
       country: organization.country ?? "",
     },
   })
@@ -168,24 +171,39 @@ function SchoolFormContent({ organization }: { organization: OrganizationData })
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="contactEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="contact@school.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneE164"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Phone</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" placeholder="+1 555 123 4567" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <Stack size="sm" direction="row" wrap>
               <FormField
                 control={form.control}
-                name="address"
+                name="addressLine1"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Address</FormLabel>
@@ -209,7 +227,7 @@ function SchoolFormContent({ organization }: { organization: OrganizationData })
               />
               <FormField
                 control={form.control}
-                name="region"
+                name="state"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>State/Region</FormLabel>

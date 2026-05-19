@@ -25,7 +25,7 @@ const CourseQuery = async ({
   const parsedParams = courseFilterParamsCache.parse(await searchParams)
   const params = { ...parsedParams, ...overrideParams }
   const { courses, total, page, perPage } = await searchCourses(
-    { q: params.q, page: params.page, perPage: params.perPage },
+    { q: params.q, sort: params.sort, page: params.page, perPage: params.perPage },
     brand,
   )
 

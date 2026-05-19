@@ -58,6 +58,8 @@ export const CreateOrganizationForm = ({
         zip: "",
         country: "US",
         websiteUrl: "",
+        email: "",
+        phoneE164: "",
         disciplineIds: [],
       },
     },
@@ -251,6 +253,36 @@ export const CreateOrganizationForm = ({
               </FormItem>
             )}
           />
+
+          <div className="grid gap-4 @sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" size="lg" placeholder="contact@school.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phoneE164"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Phone</FormLabel>
+                  <FormControl>
+                    <Input type="tel" size="lg" placeholder="+1 555 123 4567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Discipline multi-select via checkboxes */}
           {disciplines.length > 0 && (

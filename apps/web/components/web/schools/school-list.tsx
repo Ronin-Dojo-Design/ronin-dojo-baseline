@@ -13,6 +13,9 @@ type SchoolCardData = {
   city: string | null
   region: string | null
   type: string | null
+  phoneE164: string | null
+  email: string | null
+  websiteUrl: string | null
   disciplines?: { discipline: { name: string } }[]
 }
 
