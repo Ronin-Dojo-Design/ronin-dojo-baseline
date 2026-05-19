@@ -1,5 +1,6 @@
 {
   "empty": "No schools found.",
+  "results": "{count, plural, =0 {No schools} one {1 school} other {# schools}}",
   "filters": {
     "search_placeholder": "Search schools…"
   },

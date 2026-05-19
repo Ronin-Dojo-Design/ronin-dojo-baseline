@@ -5,6 +5,8 @@ import type { SchoolFilterParams } from "~/server/web/directory/school-schema"
 import { organizationManyPayload } from "~/server/web/organization/payloads"
 import { db } from "~/services/db"
 
+const SORTABLE_ORGANIZATION_COLUMNS = ["name"] as const
+
 /**
  * Paginated organization/school search, brand-scoped.
  */
@@ -18,7 +20,11 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
   const start = performance.now()
   const skip = (page - 1) * perPage
   const take = perPage
-  const [sortBy, sortOrder] = sort ? sort.split(".") : [undefined, undefined]
+  const [rawSortBy, rawSortOrder] = sort ? sort.split(".") : [undefined, undefined]
+  const sortBy = (SORTABLE_ORGANIZATION_COLUMNS as readonly string[]).includes(rawSortBy ?? "")
+    ? rawSortBy
+    : undefined
+  const sortOrder = rawSortOrder === "desc" ? "desc" : "asc"
 
   const where: Record<string, unknown> = { brand }
 
