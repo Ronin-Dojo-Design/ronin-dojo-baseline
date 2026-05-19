@@ -9,7 +9,7 @@ import { ShowMore } from "~/components/common/show-more"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
 
-type SchoolCardData = {
+export type SchoolCardData = {
   slug: string
   name: string
   description: string | null

@@ -1,9 +1,12 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, Prisma } from "~/.generated/prisma/client"
+import { parseSort } from "~/server/web/_shared/sortable"
 import { techniqueManyPayload, techniqueOnePayload } from "~/server/web/techniques/payloads"
 import type { TechniqueFilterParams } from "~/server/web/techniques/schema"
 import { db } from "~/services/db"
+
+const SORTABLE_TECHNIQUE_COLUMNS = ["name", "curriculum_order"] as const
 
 export const searchTechniques = async (
   search: TechniqueFilterParams,
@@ -19,7 +22,7 @@ export const searchTechniques = async (
   const start = performance.now()
   const skip = (page - 1) * perPage
   const take = perPage
-  const [sortBy, sortOrder] = sort.split(".")
+  const { sortBy, sortOrder } = parseSort(sort, SORTABLE_TECHNIQUE_COLUMNS)
 
   const whereQuery: Prisma.TechniqueWhereInput = {
     brand,
