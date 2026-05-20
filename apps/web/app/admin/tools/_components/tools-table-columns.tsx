@@ -2,44 +2,18 @@
 
 import { formatDate } from "@primoui/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import type { ComponentProps } from "react"
-import { type Tool, ToolStatus } from "~/.generated/prisma/browser"
+import type { Tool } from "~/.generated/prisma/browser"
 import { ToolActions } from "~/app/admin/tools/_components/tool-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
+import { toolStatusBadgeProps } from "~/components/common/tool-status"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
 import { ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { VerifiedBadge } from "~/components/web/verified-badge"
 
 export const getColumns = (): ColumnDef<Tool>[] => {
-  const statusBadges: Record<ToolStatus, ComponentProps<typeof Badge>> = {
-    [ToolStatus.Draft]: {
-      variant: "soft",
-    },
-
-    [ToolStatus.Pending]: {
-      variant: "warning",
-    },
-
-    [ToolStatus.Scheduled]: {
-      variant: "info",
-    },
-
-    [ToolStatus.Published]: {
-      variant: "success",
-    },
-
-    [ToolStatus.Rejected]: {
-      variant: "danger",
-    },
-
-    [ToolStatus.Deleted]: {
-      variant: "outline",
-    },
-  }
-
   return [
     {
       id: "select",
@@ -99,7 +73,7 @@ export const getColumns = (): ColumnDef<Tool>[] => {
       accessorKey: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => (
-        <Badge {...statusBadges[row.original.status]}>{row.original.status}</Badge>
+        <Badge {...toolStatusBadgeProps[row.original.status]}>{row.original.status}</Badge>
       ),
     },
     {

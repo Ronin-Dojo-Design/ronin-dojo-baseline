@@ -22,3 +22,10 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   upstream 7e724b6 applied on Ronin's existing Tool routes/model
 #   (public tier badges, bookmark affordance, admin tier transition audit).
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0208 / L5: UI primitives Part 1 from upstream 7e724b6 applied —
+#   components/common/{field,button-group,tool-status}.tsx ported; tools-table
+#   refactored to consume toolStatusBadgeProps / toolStatusIcon. Data-table
+#   helpers (faceted-filter, view-options) already matched upstream behavior;
+#   the render={} vs asChild Popover API drift is deferred to a later
+#   Radix-API lane.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

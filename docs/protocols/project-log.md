@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-20
-last_agent: codex-session-0207
+last_agent: claude-session-0208
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -58,6 +58,7 @@ backlinks:
   - docs/sprints/SESSION_0205.md
   - docs/sprints/SESSION_0206.md
   - docs/sprints/SESSION_0207.md
+  - docs/sprints/SESSION_0208.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -1915,3 +1916,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** upstream `7e724b6` tool/listing components and server slices, L4 epic block, lane ledger, baseline listings runbook, L3 schema/migration output, local focused/full test output, local build output, curl smoke output, and Vercel deployment list.
 - **Verdict:** Pass. No P0/P1 findings. The implementation follows the upstream three-tier listing flow while preserving Ronin's Tool substrate and route stability. The admin tier path has DB-backed audit proof, public Save uses authenticated bookmark actions, and the broader cross-domain listing parity goal is recorded without scope creep.
 - **Follow-up:** SESSION_0208 starts L5 UI primitives Part 1. L7 should revisit Stripe subscription cancellation downgrade behavior (`Standard` vs current `Free`) because upstream documents graceful downgrades to Standard.
+
+### S208_DIRSTARTER_UPLIFT_L5_UI_PRIMITIVES_PART_1 — UI primitives Part 1 (upstream-derived)
+
+- **Session:** SESSION_0208
+- **Sprint:** S6
+- **Status:** verified
+- **Files:** `apps/web/components/common/field.tsx`, `apps/web/components/common/button-group.tsx`, `apps/web/components/common/tool-status.tsx`, `apps/web/app/admin/tools/_components/tools-table.tsx`, `apps/web/app/admin/tools/_components/tools-table-columns.tsx`, `apps/web/.dirstarter-upstream`, `docs/knowledge/wiki/dirstarter-component-inventory.md`, `docs/architecture/uplift/lane-ledger.md`, `docs/architecture/uplift/epic-2026-05-19.md`, `docs/knowledge/wiki/index.md`, `docs/protocols/project-log.md`, `docs/sprints/SESSION_0208.md`.
+- **Seed data:** no.
+- **Smoke test:** `pnpm --filter dirstarter typecheck` clean; touched-file `bun biome check` clean; `bun test --isolate --path-ignore-patterns='e2e/**'` passed 244/244 (matches L4 baseline); `pnpm --filter dirstarter build` clean (next-sitemap completed); `bun run wiki:lint` passed with 0 errors / 495 warnings; Vercel readiness reported in bow-out response.
+
+### SESSION_0208 — Dirstarter uplift L5 UI primitives Part 1
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0208_TASK_01 | Cody: port upstream `components/common/{field,button-group,tool-status}.tsx` (verbatim except formatting) and document them in `dirstarter-component-inventory.md`. | complete |
+| SESSION_0208_TASK_02 | Cody: reconcile data-table helpers vs upstream (no functional deltas needed beyond deferred `render={}` vs `asChild` Popover API drift); refactor `tools-table` and `tools-table-columns` to consume `toolStatusBadgeProps` / `toolStatusIcon` from the new primitive; update `.dirstarter-upstream` marker. | complete |
+| SESSION_0208_TASK_03 | Doug + Petey: prove typecheck/biome/full-suite/build/wiki:lint behavior, update lane-ledger/epic/project-log/index/sprint doc, commit, push branch, verify Vercel readiness, and full-close. | complete |
+
+**Notes:** L5 deviated from the epic's literal source-file list — upstream uses `data-table-faceted-filter.tsx` / `data-table-view-options.tsx` rather than the epic's claimed `faceted-filter.tsx` / `column-visibility.tsx` names, and `tailwind-variants` is a package dep upstream (no `lib/tv.ts` file). Ronin's existing `cva` package object-form API is signature-compatible with upstream's `tv`-aliased calls so no install was needed; the existing data-table helpers already matched upstream behavior. The `render={…}` vs `asChild` Popover/Stack drift is the only outstanding upstream delta and is deferred to a future Radix-API lane. `providers/` and `relation-selector.tsx` (the other two `common/` files missing in Ronin) are deferred to L6/L8.
+
+**Result:** Ronin now has the upstream `Field` / `ButtonGroup` / `ToolStatus` primitives in `components/common/`. The admin tools table consumes the centralized `toolStatusBadgeProps` and `toolStatusIcon` maps; the previously inline `statusBadges` map and per-icon definitions were removed. The faceted filter on tier + status (already wired in L4 via `DataTableToolbar`) now renders icons from the shared map.
+
+#### Review
+
+##### SESSION_0208_REVIEW_01 — Hostile close review for L5 UI primitives Part 1
+
+- **Reviewed tasks:** SESSION_0208_TASK_01, SESSION_0208_TASK_02, SESSION_0208_TASK_03.
+- **Dirstarter docs check:** epic block `L5 — SESSION_0208 — UI primitives Part 1` re-read and reconciled against the actual upstream `7e724b6` filesystem; the live `dirstarter.com` docs were not required for this lane because the primitives are visual/structural and the upstream source files are the contract.
+- **Sources:** upstream `7e724b6` `components/common/{field,button-group,tool-status,badge,label,separator}.tsx`, `components/data-table/data-table-{faceted-filter,view-options}.tsx`, `components/admin/date-range-picker.tsx`, `lib/utils.ts`; Ronin existing `components/common/` inventory, `lib/utils.ts` (cva object-form), `components/data-table/data-table-toolbar.tsx` (already wires `DataTableFacetedFilter` when `filterFields` carries options), `app/admin/tools/_components/tools-table*.tsx`; `bun biome check`, `pnpm --filter dirstarter typecheck`, `bun test --isolate --path-ignore-patterns='e2e/**'`, `pnpm --filter dirstarter build`, `bun run wiki:lint`.
+- **Verdict:** Pass. No P0/P1 findings. The three new primitives match upstream verbatim except for two safe biome adjustments (inline `type` keywords on shared React imports; `==` → `===` on `uniqueErrors?.length === 1`) and two `biome-ignore lint/a11y/useSemanticElements` markers explaining the deliberate `<div role="group">` choice (FieldSet is the semantic `<fieldset>`; ButtonGroup is a visual cluster, not a form group). Refactoring `tools-table-columns.tsx` to use `toolStatusBadgeProps` removed a duplicated local map; refactoring `tools-table.tsx` to use `toolStatusIcon` removed inline lucide icon plumbing and aligned three minor visual deltas (Pending shade `text-yellow-600` → `text-yellow-500`; Deleted icon `Trash2Icon` → `CircleSlashIcon`; the Deleted status now also flows through the shared map) with the upstream-canonical icons. No regression: 244/244 tests still pass; production build still clean.
+- **Follow-up:** SESSION_0209 starts L6 — UI primitives Part 2 (reconciled easy wins: skeleton/tooltip/cmd-k/toast, layered on these primitives). A future Radix-API lane should adopt the upstream `<PopoverTrigger render={…}>` pattern across `data-table-faceted-filter.tsx` / `data-table-view-options.tsx` / `date-range-picker.tsx` so the upstream port surface stays clean. `providers/` + `relation-selector.tsx` are queued for L6/L8 as appropriate.

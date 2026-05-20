@@ -4,14 +4,15 @@ slug: dirstarter-component-inventory
 type: reference
 status: active
 created: 2026-05-04
-updated: 2026-05-04
-last_agent: copilot-session-0051
+updated: 2026-05-20
+last_agent: claude-session-0208
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0051.md
+  - docs/sprints/SESSION_0208.md
 ---
 
 # Dirstarter Component Inventory
@@ -55,6 +56,7 @@ Every component below is in `~/components/common/`. Import from there.
 | Component | File | Key Props | Use For |
 |---|---|---|---|
 | `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` | `form.tsx` | React Hook Form `FormProvider` | **ALL forms.** Never use raw `<form>` + manual state. |
+| `Field`, `FieldSet`, `FieldGroup`, `FieldLegend`, `FieldLabel`, `FieldContent`, `FieldDescription`, `FieldSeparator`, `FieldError`, `FieldTitle` | `field.tsx` (L5 port from upstream `7e724b6`) | `orientation: vertical\|horizontal\|responsive` on `Field`; `variant: legend\|label` on `FieldLegend`; `errors?` on `FieldError`; `data-required` attribute on `FieldLabel` renders the destructive asterisk marker. | Compose form field rows. `<FieldSet>` is the semantic `<fieldset>`; `<Field>` is the per-row wrapper. Set `data-required` on `<FieldLabel>` to surface the required marker. Used by upstream-derived form patterns; safe to layer on existing `Form*` flows. |
 | `Input`, `inputVariants` | `input.tsx` | Standard input + variant classes | Text inputs — never use raw `<input>` |
 | `TextArea` | `textarea.tsx` | — | Multi-line text |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` | `select.tsx` | Radix-based | Dropdowns — never use raw `<select>` |
@@ -86,6 +88,8 @@ Every component below is in `~/components/common/`. Import from there.
 | `Avatar`, `AvatarImage`, `AvatarFallback` | `avatar.tsx` | — | User/competitor profile pics |
 | `Table`, `TableBody`, `TableCell`, `TableHead`, `TableHeader`, `TableRow` | `table.tsx` | Grid-based table | Use via DataTable system, not directly |
 | `Button` | `button.tsx` | `variant: primary\|secondary\|destructive\|ghost`, `size: sm\|md\|lg`, `prefix`, `suffix`, `isPending` | All buttons |
+| `ButtonGroup` | `button-group.tsx` (L5 port from upstream `7e724b6`) | `<div role="group">` with `*:rounded-none *:first-of-type:rounded-l-md *:last-of-type:rounded-r-md *:not-first-of-type:-ml-px` to fuse adjacent buttons into a single visual cluster. | Cluster adjacent `Button`s into one connected control (segmented controls, paired primary+menu actions). Visual grouping only — not a form `<fieldset>`. |
+| `toolStatusBadgeProps`, `toolStatusIcon` | `tool-status.tsx` (L5 port from upstream `7e724b6`) | Two `Record<ToolStatus, …>` maps keyed by the L3 `ToolStatus` enum (`Draft\|Pending\|Scheduled\|Published\|Rejected\|Deleted`). `toolStatusBadgeProps` → `ComponentProps<typeof Badge>`; `toolStatusIcon` → `ReactNode`. | Shared between admin and dashboard tool tables so a status cell renders identically everywhere. Distinct from L4's `listing-tier-badge` (tier = monetization, status = lifecycle). |
 | `Slottable` | `slottable.tsx` | — | Composition utility |
 
 ### Icons

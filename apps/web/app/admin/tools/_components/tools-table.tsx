@@ -1,14 +1,6 @@
 "use client"
 
-import {
-  CircleCheckIcon,
-  CircleDashedIcon,
-  CircleDotDashedIcon,
-  CircleDotIcon,
-  CircleXIcon,
-  PlusIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { type Tool, ToolStatus, ToolTier } from "~/.generated/prisma/browser"
@@ -17,6 +9,7 @@ import { ToolsTableToolbarActions } from "~/app/admin/tools/_components/tools-ta
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
+import { toolStatusIcon } from "~/components/common/tool-status"
 import { DataTable } from "~/components/data-table/data-table"
 import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
@@ -49,37 +42,17 @@ export function ToolsTable({ toolsPromise }: ToolsTableProps) {
       id: "status",
       label: "Status",
       options: [
-        {
-          label: "Published",
-          value: ToolStatus.Published,
-          icon: <CircleCheckIcon className="text-green-500" />,
-        },
-        {
-          label: "Scheduled",
-          value: ToolStatus.Scheduled,
-          icon: <CircleDotIcon className="text-blue-500" />,
-        },
-        {
-          label: "Pending",
-          value: ToolStatus.Pending,
-          icon: <CircleDotDashedIcon className="text-yellow-600" />,
-        },
-        {
-          label: "Draft",
-          value: ToolStatus.Draft,
-          icon: <CircleDashedIcon className="text-gray-500" />,
-        },
-        {
-          label: "Rejected",
-          value: ToolStatus.Rejected,
-          icon: <CircleXIcon className="text-red-500" />,
-        },
-        {
-          label: "Deleted",
-          value: ToolStatus.Deleted,
-          icon: <Trash2Icon className="text-gray-500" />,
-        },
-      ],
+        ToolStatus.Published,
+        ToolStatus.Scheduled,
+        ToolStatus.Pending,
+        ToolStatus.Draft,
+        ToolStatus.Rejected,
+        ToolStatus.Deleted,
+      ].map(value => ({
+        label: value,
+        value,
+        icon: toolStatusIcon[value],
+      })),
     },
     {
       id: "tier",
