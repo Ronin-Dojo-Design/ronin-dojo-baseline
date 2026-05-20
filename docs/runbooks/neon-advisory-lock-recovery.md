@@ -67,7 +67,8 @@ SESSION_0201 routes Vercel Prisma CLI commands to Neon's direct non-pooler endpo
 
 - `DATABASE_URL` stays as the pooled Neon URL used by app runtime through `apps/web/services/db.ts`.
 - `DIRECT_URL` is added in Vercel for Preview and Production and points to the same Neon database through the direct endpoint.
-- `apps/web/prisma.config.ts` uses `DIRECT_URL` for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`.
+- `apps/web/prisma.config.ts` uses a direct Neon URL for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`.
+- SESSION_0205 added a defensive guard: if the Vercel `DIRECT_URL` value is accidentally copied from the pooler URL, Prisma CLI config strips Neon's `-pooler` host suffix before migration commands. The dashboard value should still be corrected to the real direct URL.
 
 Because this repo is on Prisma 7, do **not** add `directUrl` to `schema.prisma` or `prisma.config.ts`. Prisma 7's config surface uses `datasource.url` and optional `shadowDatabaseUrl`; the Vercel build-time migration URL is selected by assigning `datasource.url` to `DIRECT_URL` in `prisma.config.ts`.
 
@@ -123,6 +124,7 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 - Avoid cancelling an in-flight Vercel build that has already started `prebuild`. Let it finish or fail naturally.
 - Keep `DIRECT_URL` present in both Vercel Preview and Production so `prisma migrate deploy` uses Neon's direct endpoint instead of the transaction pooler. This is the structural fix landed in SESSION_0201.
 - Run `bun scripts/check-vercel-env-parity.ts` before env/deploy closeout. It checks required Vercel env names and scopes, including `DIRECT_URL`, without printing secret values.
+- Inspect failed Vercel build logs for the datasource host only. If the host contains `-pooler` during `prisma migrate deploy`, the dashboard `DIRECT_URL` value is wrong or absent for that environment.
 - Avoid opening multiple PRs at the same moment until enough post-SESSION_0201 preview deploys prove the direct URL path is stable.
 - Watch SESSION_0189's bow-out evidence — that session is the first recorded occurrence of this pattern and includes the recovery proof.
 

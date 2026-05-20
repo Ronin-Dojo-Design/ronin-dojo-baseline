@@ -74,7 +74,9 @@ Do not add placeholder secret values to Vercel. If an optional variable is inten
 
 ## Migration Routing
 
-`DATABASE_URL` remains the runtime app connection. `DIRECT_URL` is selected only by `apps/web/prisma.config.ts` for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`.
+`DATABASE_URL` remains the runtime app connection. `apps/web/prisma.config.ts` selects a direct Neon URL only for Prisma CLI commands when `VERCEL_ENV` is `preview` or `production`.
+
+Defensive guard: if `DIRECT_URL` or fallback `DATABASE_URL` accidentally contains Neon's `-pooler` hostname suffix, the Prisma CLI config strips that suffix and removes `pgbouncer=true` before running migrations. The Vercel env value should still be corrected to the real direct URL; the code guard exists to keep deploys from failing while that dashboard value is audited.
 
 Do not add Prisma `directUrl` to `schema.prisma` for this repo's Prisma 7 setup. The current config surface uses `datasource.url`, and the Neon advisory-lock recovery runbook documents the reason.
 

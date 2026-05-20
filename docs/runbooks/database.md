@@ -111,7 +111,8 @@ This repo uses Prisma 7 config routing instead of a `directUrl` field in `schema
 
 - Runtime app code uses pooled `DATABASE_URL` through `apps/web/services/db.ts`.
 - Prisma CLI migration commands use `apps/web/prisma.config.ts`.
-- On Vercel Preview/Production, `prisma.config.ts` selects `DIRECT_URL` for `prisma migrate deploy`.
+- On Vercel Preview/Production, `prisma.config.ts` selects a direct Neon URL for `prisma migrate deploy`.
+- If a pooler URL is accidentally supplied as `DIRECT_URL`, the Prisma CLI config defensively strips Neon's `-pooler` host suffix. Treat that as a deploy-safety guard, not as permission to leave the Vercel dashboard value wrong.
 - Locally, `DIRECT_URL` is optional; when absent, Prisma CLI falls back to `DATABASE_URL`.
 
 Do not add `directUrl` to `schema.prisma` for this repo. See [Neon Prisma Advisory-Lock Recovery](neon-advisory-lock-recovery.md) for the production incident history and Prisma 7 reasoning.

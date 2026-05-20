@@ -44,6 +44,7 @@ Apply the L1 env/deploy report safely: port only upstream-compatible env/deploy 
   - `env ts services db redis resend plausible vercel next config DIRECT_URL`
 - **Vercel pre-task check:** latest Production was Ready; latest Preview was Error.
 - **Preview Error inspection:** latest Preview `ronin-dojo-baseline-ahpamyagn...` was from branch `docs-baseline-product-pack` at commit `0a35b98` and failed with Prisma P1002 advisory-lock timeout while using the pooled Neon endpoint. Current Vercel env-name check confirmed `DIRECT_URL` is encrypted for Preview and Production.
+- **Production post-push finding:** first main production deploy for `122c7b5` still hit the pooler during `prisma migrate deploy`, proving the Vercel `DIRECT_URL` value/name state was not sufficient on its own. L2 added a defensive Prisma config normalization to strip Neon's `-pooler` host suffix for Vercel Prisma CLI migrations.
 - **Secret safety:** no env values printed; Vercel checks were name/scope only.
 
 ## Dirstarter alignment
@@ -67,7 +68,7 @@ Apply the L1 env/deploy report safely: port only upstream-compatible env/deploy 
 
 - **Agent:** Cody
 - **Status:** complete.
-- **Result:** `services/db.ts` now uses `DATABASE_PUBLIC_URL` only during `PHASE_PRODUCTION_BUILD` when set, otherwise `DATABASE_URL`. `prisma.config.ts` and `DIRECT_URL` routing remain unchanged. `next.config.ts` picked up upstream-safe Turbopack build cache/prefetch flags, while image patterns, rewrites, cron path, and app-root Vercel config stayed stable.
+- **Result:** `services/db.ts` now uses `DATABASE_PUBLIC_URL` only during `PHASE_PRODUCTION_BUILD` when set, otherwise `DATABASE_URL`. `prisma.config.ts` keeps `DIRECT_URL`/direct Neon routing for migrations and now defensively normalizes accidental pooler URLs during Vercel deploys. `next.config.ts` picked up upstream-safe Turbopack build cache/prefetch flags, while image patterns, rewrites, cron path, and app-root Vercel config stayed stable.
 
 ### SESSION_0205_TASK_03 — Verification + ledger + close
 
@@ -92,6 +93,7 @@ Apply the L1 env/deploy report safely: port only upstream-compatible env/deploy 
 | `apps/web/env.ts` | Adds optional L2 env names; removes legacy Google env declaration. |
 | `apps/web/.env.example` | Documents optional DB/public/Plausible names plus local Prisma CLI envs. |
 | `apps/web/services/db.ts` | Adds build-phase `DATABASE_PUBLIC_URL` fallback without touching migration routing. |
+| `apps/web/prisma.config.ts` | Defensively normalizes Vercel Prisma CLI URLs to the Neon direct host when a pooler URL is supplied. |
 | `apps/web/app/(web)/layout.tsx` | Uses optional Plausible domain override with existing site-domain fallback. |
 | `apps/web/next.config.ts` | Adds upstream-safe Turbopack build cache and prefetch flags. |
 | `apps/web/.dirstarter-upstream` | Adds L2 partial-port note; no SHA bump. |
@@ -119,8 +121,9 @@ Apply the L1 env/deploy report safely: port only upstream-compatible env/deploy 
 - Raw `bun test` from repo root — failed because it loads Playwright E2E specs under Bun and initially lacked app-dir env loading. This is not the app test command recorded in `docs/runbooks/sop-test-writing.md`.
 - `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'` — passed; 236 tests / 855 assertions.
 - `bun run wiki:lint` — 0 errors / 497 warnings across 392 markdown files (pre-existing warning debt).
-- Graphify refresh — 6678 nodes / 11848 edges / 807 communities / 1271 files tracked.
+- Graphify refresh — 6678 nodes / 11851 edges / 817 communities / 1271 files tracked.
 - Vercel Preview/Production Ready proof — recorded in bow-out response after branch/main pushes.
+- Initial post-push Production deploy `ronin-dojo-baseline-nicu4tye4...` — failed with P1002 and datasource host containing `-pooler`; fixed by the follow-up Prisma config normalization commit.
 
 ## Review log
 
@@ -128,7 +131,7 @@ Apply the L1 env/deploy report safely: port only upstream-compatible env/deploy 
 
 - **Reviewed tasks:** SESSION_0205_TASK_01, SESSION_0205_TASK_02, SESSION_0205_TASK_03.
 - **Sources:** L1 env/deploy report, upstream `7e724b6` env/deploy files, Ronin env/db/redis/resend/plausible/Vercel files, Neon advisory-lock runbook, Vercel deploy/domain runbooks, Vercel CLI name/scope checks and deployment logs.
-- **Verdict:** Pass. The implementation preserves Ronin's production deploy invariants while adding the safe upstream env surface needed for future lanes. No schema or migration files changed; no secret values were printed.
+- **Verdict:** Pass. The implementation preserves Ronin's production deploy invariants while adding the safe upstream env surface needed for future lanes. The production P1002 recurrence was caught after `main` push and addressed in-session with a defensive Prisma CLI URL normalization; no schema or migration files changed, and no secret values were printed.
 - **Residual risk:** Optional `DATABASE_PUBLIC_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`, and `AI_GATEWAY_API_KEY` are not required in Vercel. Operators should add real values to both Preview and Production only when those integrations are intentionally enabled.
 
 ## Next session
