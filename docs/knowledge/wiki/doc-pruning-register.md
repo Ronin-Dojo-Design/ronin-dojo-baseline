@@ -13,6 +13,7 @@ backlinks:
   - docs/knowledge/wiki/ronin-project-context.md
 pairs_with:
   - docs/product/README.md
+  - docs/product/baseline-martial-arts/PRD.md
   - docs/product/black-belt-legacy/PRD.md
 tags:
   - docs
@@ -40,6 +41,7 @@ Do not delete or move a doc just because it feels stale. First preserve the usef
 
 | Path / pattern | Current status | Recommended status | Canonical replacement / summary target | Reason | Action |
 | --- | --- | --- | --- | --- | --- |
+| `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md` | reference | active supporting / later reference | `docs/product/baseline-martial-arts/PRD.md`, `docs/product/baseline-martial-arts/STORIES.md`, `docs/knowledge/wiki/ronin-project-context.md` | Useful Baseline launch/source material, but too broad to remain the active product truth now that Baseline has a canonical PRD/story pack. | Keep as source for now; demote after Baseline PRD is accepted. |
 | `docs/architecture/source/*` | mixed | reference | `docs/knowledge/wiki/ronin-project-context.md`, product docs, ADRs | Raw planning/source material should not compete with accepted architecture/product docs. | Review one-by-one before archive moves. |
 | `docs/_imports/*` | reference | archive candidate | `docs/knowledge/wiki/repo-truth-index.md`, `docs/knowledge/wiki/ronin-project-context.md` | Imported packs often duplicate adopted wiki/registry content. | Preserve summaries, then move cold. |
 | `docs/ronin_dojo_baseline_systems_pack/*` | reference | archive candidate | existing wiki registries and project-context | Earlier generated systems pack appears duplicated by current repo-native wiki docs. | Compare before moving. |
