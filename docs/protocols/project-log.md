@@ -53,7 +53,10 @@ backlinks:
   - docs/sprints/SESSION_0199.md
   - docs/sprints/SESSION_0201.md
   - docs/sprints/SESSION_0202.md
+  - docs/sprints/SESSION_0203.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
+  - docs/architecture/uplift/epic-2026-05-19.md
+  - docs/architecture/uplift/lane-ledger.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
 ---
@@ -1739,3 +1742,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** `apps/web/server/web/lineage/editor-queries.ts`, `apps/web/app/(web)/dashboard/lineage-tab.tsx`, `apps/web/app/(web)/dashboard/lineage/[treeId]/page.tsx`, `apps/web/components/web/lineage/lineage-tree-board.tsx`, `docs/architecture/lineage/lineage-public-viewer-editor-routes.md`, PR #22 topology evidence, PR #28/main evidence.
 - **Verdict:** Pass. No P0/P1 findings. The largest avoided risk was stale PR #22 rollback; the implementation landed directly on current `main` with auth-scoped reads and no mutation surface. Residual gap: seeded editor-fixture browser QA is still needed before enabling visual group or promotion mutation controls.
 - **Follow-up:** SESSION_0203 should begin Dirstarter upstream-sync planning from the 2026-05-14 snapshot, now that the owner confirmed no existing users must be preserved.
+
+### S203_DIRSTARTER_UPSTREAM_UPLIFT_EPIC_PLAN — Dirstarter upstream uplift epic planning
+
+- **Session:** SESSION_0203
+- **Sprint:** S6
+- **Status:** ✅ verified (plan-only, no runtime code)
+- **Files:** `docs/architecture/uplift/epic-2026-05-19.md`, `docs/architecture/uplift/lane-ledger.md`, `docs/sprints/SESSION_0203.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`, `docs/knowledge/wiki/index.md`
+- **Seed data:** none
+- **Smoke test:** `bun run wiki:lint` from repo root — exited 0 (warnings only); no runtime code changes so no typecheck/biome/test required.
+
+### SESSION_0203 — Dirstarter upstream uplift epic planning
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0203_TASK_01 | Petey: grill-me with owner to lock scope (sync lanes + reconcile easy wins), oRPC stance (ADR + lineage pilot), toolchain order (late bundled), vendor SDK timing (mid-epic dedicated), SHA bump cadence (per-lane + ledger), schema port aggressiveness (single wave), epic doc location, and Codex chaining (one session per lane). | complete |
+| SESSION_0203_TASK_02 | Petey: write `docs/architecture/uplift/epic-2026-05-19.md` (15-lane multi-session epic with files, ASCII/Mermaid diagrams, low-fi wireframes, done-means per task) and `docs/architecture/uplift/lane-ledger.md` (append-only audit ledger scaffold). | complete |
+| SESSION_0203_TASK_03 | Petey + Doug: wire epic doc into `dirstarter-baseline-index.md`, `dirstarter-uplift-backlog.md`, and wiki index; record paste-ready Codex bow-in prompt for SESSION_0204 in SESSION_0203 `Next session` block; full-close; Graphify refresh after git hygiene; commit + push `main`. | complete |
+
+**Notes:** Owner directive was planning-only — handoff to a fresh Codex session for implementation lane-by-lane. Eight grill-me decisions resolved before plan authoring. oRPC pilot expanded from 2 to 3 sessions (reads / mutations / Playwright). Schema port locked aggressive single-wave on owner confirmation that no existing users need preservation. `.dirstarter-upstream` SHA bumps per-lane with a new `docs/architecture/uplift/lane-ledger.md` for audit.
+
+**Result:** Multi-session plan covers SESSION_0204 → SESSION_0218 (15 lanes, 3 tasks each). L1 = baseline refresh + lane-ledger init + env/deploy diff report (doc-only). L2 = env/deploy implementation. L3 = aggressive schema port wave. L4 = listings relabel + tier flow. L5–L6 = UI primitives (upstream + reconciled easy wins). L7 = vendor SDKs (Stripe + Resend). L8 = content/SEO (DB blog + sitemap + RSS + MDX + OG). L9 = admin ID-route pattern. L10 = ADR_0019 oRPC stance. L11–L13 = oRPC lineage canvas pilot. L14 = toolchain bundled bump. L15 = final reconciliation + SHA bump to `7e724b6` + epic hostile review.
+
+#### Review
+
+##### SESSION_0203_REVIEW_01 — Hostile close review for Dirstarter upstream uplift epic planning
+
+- **Reviewed tasks:** SESSION_0203_TASK_01, SESSION_0203_TASK_02, SESSION_0203_TASK_03.
+- **Dirstarter docs check:** Plan-only session; no Dirstarter baseline layer replaced. Future implementation sessions will re-check `https://dirstarter.com/docs` per `petey-plan.md` rule 6 at execution time.
+- **Sources:** `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`, `docs/runbooks/baseline-listings-runbook.md`, `apps/web/.dirstarter-upstream`, Graphify queries on uplift backlog and petey-plan protocol.
+- **Verdict:** Pass. No P0/P1 findings. The epic doc enforces per-lane Doug hostile-close gates, `vercel ls` Ready checks, Neon `pg_locks` mitigation, FS-0022 Preview-scope env-var fix, and FS-0024 advisory-lock avoidance. The scope guard is explicit: no runtime code in SESSION_0203. The 15-lane structure honors WORKFLOW 5.0 (1–3 tasks/session), `petey-plan.md` (multi-session epic gets its own doc), and SESSION_0200 lessons (no parallel branches; one Codex session per lane). Residual risk: ADR_0019 may resolve to option A (reject oRPC) in L10, which would skip L11–L13 — the epic doc has the skip condition recorded.
+- **Follow-up:** SESSION_0204 starts at L1 — baseline refresh + lane-ledger init + env/deploy diff report (doc-only). Bow-in prompt staged verbatim in SESSION_0203's `Next session` block for paste-into-Codex.

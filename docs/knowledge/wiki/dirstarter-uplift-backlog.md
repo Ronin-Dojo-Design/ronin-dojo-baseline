@@ -2,29 +2,55 @@
 title: "Dirstarter Uplift Backlog"
 slug: dirstarter-uplift-backlog
 type: backlog
-status: active
+status: superseded
 created: 2026-05-05
-updated: 2026-05-14
-last_agent: codex-session-0165
+updated: 2026-05-19
+last_agent: claude-session-0203
 pairs_with:
+  - docs/architecture/uplift/epic-2026-05-19.md
+  - docs/architecture/uplift/lane-ledger.md
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/knowledge/wiki/dirstarter-docs-inventory.md
   - docs/architecture/dirstarter-baseline-index.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/sprints/SESSION_0165.md
+  - docs/sprints/SESSION_0203.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0074.md
   - docs/sprints/SESSION_0164.md
   - docs/sprints/SESSION_0165.md
+  - docs/sprints/SESSION_0203.md
 ---
 
 # Dirstarter Uplift Backlog
 
-> **You already paid for this boilerplate. Use it.**
+> **⚠️ SUPERSEDED by [`docs/architecture/uplift/epic-2026-05-19.md`](../../architecture/uplift/epic-2026-05-19.md) as of SESSION_0203 (2026-05-19).**
+>
+> Every item below has been reconciled against upstream `7e724b6` and assigned a disposition (L5 / L6 / L8 / replaced-by-upstream). Do not pick items off this list — pick lane work off the epic doc and the per-lane audit ledger at [`docs/architecture/uplift/lane-ledger.md`](../../architecture/uplift/lane-ledger.md).
+>
+> This file is retained for historical context and final archival at L15 (SESSION_0218) bow-out.
 
-Items cataloged from `dirstarter-component-inventory.md` and `dirstarter-docs-inventory.md` that we have available but aren't using yet.
+## Reconciliation summary (SESSION_0203)
+
+| # | Easy win | Disposition | Where it lands in the epic |
+| - | --- | --- | --- |
+| 1 | Skeleton loading states | reconciled-into-L6 | SESSION_0209 TASK_01 — port `components/common/skeleton.tsx` composites to listing pages. |
+| 2 | Tooltips on dashboard/admin | reconciled-into-L6 | SESSION_0209 TASK_01 — wire `Tooltip` to icon-only buttons. |
+| 3 | Command palette (Cmd+K) | reconciled-into-L6 | SESSION_0209 TASK_02 — admin layout cmdk integration. |
+| 4 | Toast/Sonner on actions | reconciled-into-L6 | SESSION_0209 TASK_02 — wire to all mutation paths via action client. |
+| 5 | EmptyList for zero-state | reconciled-into-L6 | SESSION_0209 TASK_01 — port `components/common/empty-list.tsx`. |
+| 6 | Dialog/Sheet ConfirmDelete | reconciled-into-L6 | SESSION_0209 TASK_02 — extract reusable `ConfirmDeleteDialog`. |
+| 7 | MDX content | reconciled-into-L8 | SESSION_0211 TASK_01 — MDX component library for blog + program/school/technique. |
+| 8 | OG image generation | reconciled-into-L8 | SESSION_0211 TASK_02 — dynamic OG handler per entity. |
+| 9 | Sitemap generation | reconciled-into-L8 | SESSION_0211 TASK_02 — native `app/sitemap.ts`; remove `next-sitemap`. |
+| 10 | Data-table column features | reconciled-into-L5 | SESSION_0208 TASK_02 — column-visibility, faceted-filter, date-range from upstream helpers. |
+| 11 | Blog/newsletter scaffolding | reconciled-into-L8 | SESSION_0211 TASK_01 — DB-driven blog wired to L3 `Post` model. |
+
+## Historical content (frozen 2026-05-19)
+
+> The sections below are the original backlog as of SESSION_0165's last edit. Kept intact for trace; superseded by the epic doc.
 
 ## Upstream freshness note
 

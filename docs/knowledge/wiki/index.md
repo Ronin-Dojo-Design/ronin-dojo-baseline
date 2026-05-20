@@ -34,6 +34,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
 | [Dirstarter Upstream Sync Snapshot - 2026-05-14](../../architecture/dirstarter-upstream-sync-2026-05-14.md) | architecture | active — upstream porting gate |
+| [Dirstarter Upstream Uplift Epic - 2026-05-19](../../architecture/uplift/epic-2026-05-19.md) | architecture | active — **15-lane multi-session epic plan; execution authority for the uplift** |
+| [Dirstarter Upstream Uplift Lane Ledger](../../architecture/uplift/lane-ledger.md) | ledger | active — append-only per-lane audit ledger |
 | [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | superseded by baseline index |
 | [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | superseded by baseline index |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active |
@@ -263,6 +265,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0200](../../sprints/SESSION_0200.md) | session--implement | closed-full |
 | [SESSION_0201](../../sprints/SESSION_0201.md) | session--implement | closed-full |
 | [SESSION_0202](../../sprints/SESSION_0202.md) | session--implement | closed-full |
+| [SESSION_0203](../../sprints/SESSION_0203.md) | session--plan | closed-full |
 
 ## Protocols
 

@@ -4,11 +4,13 @@ slug: dirstarter-baseline-index
 type: architecture
 status: active
 created: 2026-05-03
-updated: 2026-05-14
-last_agent: codex-session-0165
+updated: 2026-05-19
+last_agent: claude-session-0203
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
+  - docs/architecture/uplift/epic-2026-05-19.md
+  - docs/architecture/uplift/lane-ledger.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/knowledge/wiki/dirstarter-uplift-backlog.md
   - docs/sprints/SESSION_0165.md
@@ -18,9 +20,12 @@ backlinks:
   - docs/sprints/SESSION_0137.md
   - docs/sprints/SESSION_0164.md
   - docs/sprints/SESSION_0165.md
+  - docs/sprints/SESSION_0203.md
 ---
 
 # Dirstarter Baseline Index
+
+> **Execution authority for Dirstarter upstream uplift:** see [`docs/architecture/uplift/epic-2026-05-19.md`](uplift/epic-2026-05-19.md). The P-priority port packages below are the same ones broken into 15 lane-based Codex sessions in the epic doc. Per-lane audit ledger: [`docs/architecture/uplift/lane-ledger.md`](uplift/lane-ledger.md). SESSION_0203 wrote the epic; SESSION_0204 starts at L1.
 
 ## Purpose
 
