@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
-import { EmptyList } from "~/components/web/empty-list"
+import { EmptyList } from "~/components/common/empty-list"
 import { ToolCard, ToolCardSkeleton } from "~/components/web/tools/tool-card"
 import { Grid } from "~/components/web/ui/grid"
 import type { ToolMany } from "~/server/web/tools/payloads"

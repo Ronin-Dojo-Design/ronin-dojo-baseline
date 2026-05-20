@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import type { ComponentProps } from "react"
+import { EmptyList } from "~/components/common/empty-list"
 import { CategoryCard, CategoryCardSkeleton } from "~/components/web/categories/category-card"
-import { EmptyList } from "~/components/web/empty-list"
 import { Grid } from "~/components/web/ui/grid"
 import { cx } from "~/lib/utils"
 import type { CategoryMany } from "~/server/web/categories/payloads"

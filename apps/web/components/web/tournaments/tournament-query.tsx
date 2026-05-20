@@ -1,7 +1,7 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
+import { EmptyList } from "~/components/common/empty-list"
 import { Stack } from "~/components/common/stack"
-import { EmptyList } from "~/components/web/empty-list"
 import { TournamentList } from "~/components/web/tournaments/tournament-list"
 import { tournamentFilterParamsCache } from "~/server/admin/tournaments/schema"
 import { searchTournaments } from "~/server/web/tournaments/queries"

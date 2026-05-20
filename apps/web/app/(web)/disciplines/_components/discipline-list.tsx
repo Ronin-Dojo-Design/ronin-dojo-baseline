@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import type { Brand } from "~/.generated/prisma/client"
-import { EmptyList } from "~/components/web/empty-list"
+import { EmptyList } from "~/components/common/empty-list"
 import { Grid } from "~/components/web/ui/grid"
 import { ResultsCount } from "~/components/web/ui/results-count"
 import { findDisciplines } from "~/server/web/disciplines/queries"

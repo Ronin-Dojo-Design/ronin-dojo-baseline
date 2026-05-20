@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import type { Post } from "~/.generated/prisma/client"
-import { EmptyList } from "~/components/web/empty-list"
+import { EmptyList } from "~/components/common/empty-list"
 import { PostCard } from "~/components/web/posts/post-card"
 import { Grid } from "~/components/web/ui/grid"
 

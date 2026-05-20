@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
-import { EmptyList } from "~/components/web/empty-list"
+import { EmptyList } from "~/components/common/empty-list"
 import { TechniqueCard, TechniqueCardSkeleton } from "~/components/web/techniques/technique-card"
 import { Grid } from "~/components/web/ui/grid"
 import type { TechniqueMany } from "~/server/web/techniques/payloads"

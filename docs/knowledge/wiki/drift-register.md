@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-20
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -137,3 +137,57 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Decision needed:** Mark old wiki log as superseded historical context
 - **Status:** resolved
 - **Resolved in:** 2026-05-08; `wiki/log.md` marked superseded. Routine docs/runbook changes should not be appended there.
+
+### D-016 — Radix → @base-ui/react primitive runtime migration
+
+- **Source A:** Ronin `apps/web/components/common/*.tsx` — 23 primitives on `radix-ui ^1.4.3` + `cmdk ^1.1.1` + `radix-ui` `Slot.Root` for `asChild` composition.
+- **Source B:** Upstream `dirstarter_template @ 7e724b6 components/common/*.tsx` — 18 primitives on `@base-ui/react ^1.3.0` + `cmdk-base ^1.0.0` + custom `~/lib/slot.ts` util + `useRender` consumer API (`render={…}` replacing `asChild`).
+- **Decision needed:** Migrate all Ronin common primitives to upstream's `@base-ui/react` runtime; remove `radix-ui` and `cmdk` from `apps/web/package.json` when complete.
+- **Status:** open (Phase 1 complete; Phases 2–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
+- **Opened:** SESSION_0209 (2026-05-20). Replaces the prior SESSION_0208 partial deferral for `<PopoverTrigger render={…}>` alone — that work is rolled into Phase 7 here.
+
+#### Phase 1 — SESSION_0209 (2026-05-20) ✅ complete
+
+- [x] Install `@base-ui/react ^1.3.0`, `cmdk-base ^1.0.0`, `tailwind-variants ^3.2.2` in `apps/web`.
+- [x] Port `apps/web/lib/slot.ts` from upstream.
+- [x] Reconcile `apps/web/components/common/toaster.tsx` (next-themes integration + CSS-variable styling).
+- [x] Move `empty-list.tsx` from `components/web/` → `components/common/`; repath 10 import sites.
+- [x] Migrate `separator.tsx` (Radix → `@base-ui/react/separator`; 0 `decorative` consumer sites).
+- [x] Migrate `avatar.tsx` (Radix → `@base-ui/react/avatar`; 11 consumer sites unchanged).
+
+#### Phase 2 — SESSION_0210 (planned)
+
+- [ ] Migrate `apps/web/lib/utils.ts` from `cva` package to `tailwind-variants` (unlocks `slots` API).
+- [ ] Migrate Slot-only primitives with **zero** `asChild` call sites: `box.tsx`, `heading.tsx`, `animated-container.tsx`.
+
+#### Phase 3 — SESSION_0211 (planned)
+
+- [ ] Migrate Slot-only primitives with `asChild` consumer migration: `badge.tsx` (2 sites), `card.tsx` (3 sites), `stack.tsx` (9 sites), `form.tsx` (audit), `button.tsx` (30 sites). Adopt `useRender` + `render={…}` API.
+
+#### Phase 4 — SESSION_0212 (planned)
+
+- [ ] Migrate `tooltip.tsx` (~41 `<Tooltip tooltip="…">` call sites). New composition: `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>`.
+
+#### Phase 5 — SESSION_0213 (planned)
+
+- [ ] Migrate `hover-card.tsx` (PreviewCard rename + Positioner wrapper).
+- [ ] Migrate `accordion.tsx` (depends on Phase 3 Card render-prop; `data-[state=*]` → `data-*`; `Content` → `Panel`).
+
+#### Phase 6 — SESSION_0214 (planned)
+
+- [ ] Migrate `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx`.
+- [ ] Sanity pass on `field.tsx` and `button-group.tsx` (already L5-ported).
+
+#### Phase 7 — SESSION_0215 (planned)
+
+- [ ] Migrate `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx`.
+- [ ] Sweep `<PopoverTrigger asChild>` → `<PopoverTrigger render={…}>` across all call sites including data-table-faceted-filter, data-table-view-options, date-range-picker (the L5-deferred work).
+
+#### Phase 8 — SESSION_0216 (planned)
+
+- [ ] Migrate `command.tsx` (cmdk → cmdk-base + slot util).
+- [ ] Migrate `tabs.tsx`.
+- [ ] Build new admin Cmd+K palette (`apps/web/components/admin/command-palette.tsx`) — L6 epic carry-over.
+- [ ] Remove `radix-ui` + `cmdk` from `apps/web/package.json`.
+- [ ] Full sweep: zero residual `radix-ui` / `cmdk` imports across `apps/web/`.
+- [ ] Final tsc/biome/test/build/Playwright/wiki-lint.

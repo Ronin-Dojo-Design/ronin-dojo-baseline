@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
+import { EmptyList } from "~/components/common/empty-list"
 import { CourseCard, CourseCardSkeleton } from "~/components/web/courses/course-card"
-import { EmptyList } from "~/components/web/empty-list"
 import { Grid } from "~/components/web/ui/grid"
 import type { CourseMany } from "~/server/web/courses/payloads"
 

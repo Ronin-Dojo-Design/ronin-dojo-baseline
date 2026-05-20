@@ -29,3 +29,15 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   the render={} vs asChild Popover API drift is deferred to a later
 #   Radix-API lane.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0209 / L6 Phase 1: Base UI migration foundation + 2 safe leaf
+#   primitives applied from upstream 7e724b6 —
+#   added deps @base-ui/react ^1.3.0, cmdk-base ^1.0.0, tailwind-variants ^3.2.2;
+#   ported lib/slot.ts (Base UI mergeProps-based asChild util);
+#   reconciled components/common/toaster.tsx (next-themes + CSS-variable styling);
+#   relocated components/common/empty-list.tsx from components/web/empty-list.tsx
+#   (10 import sites repathed); migrated components/common/separator.tsx and
+#   components/common/avatar.tsx from radix-ui to @base-ui/react. Phases 2-8
+#   (lib/utils cva→tv, Slot-only primitives, tooltip, accordion+hover-card,
+#   form primitives, popover family, command+tabs+admin Cmd+K+dep cleanup)
+#   tracked under drift register D-016 + petey-plan-0083.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

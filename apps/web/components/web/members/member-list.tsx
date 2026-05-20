@@ -1,7 +1,7 @@
 "use client"
 
 import type { ComponentProps } from "react"
-import { EmptyList } from "~/components/web/empty-list"
+import { EmptyList } from "~/components/common/empty-list"
 import { MemberCard, MemberCardSkeleton } from "~/components/web/members/member-card"
 import { Grid } from "~/components/web/ui/grid"
 
