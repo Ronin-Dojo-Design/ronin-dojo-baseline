@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-19
+updated: 2026-05-20
 author: Brian + Copilot
-last_agent: codex-session-0204
+last_agent: codex-session-0205
 ---
 
 # LLM Wiki Index
@@ -269,6 +269,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0202](../../sprints/SESSION_0202.md) | session--implement | closed-full |
 | [SESSION_0203](../../sprints/SESSION_0203.md) | session--plan | closed-full |
 | [SESSION_0204](../../sprints/SESSION_0204.md) | session--plan | closed-full |
+| [SESSION_0205](../../sprints/SESSION_0205.md) | session--implement | closed-full |
 
 ## Protocols
 
@@ -319,6 +320,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
 | [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
+| [Vercel Deploy Runbook](../../runbooks/vercel-deploy.md) | runbook | active |
 | [Baseline Listings Runbook](../../runbooks/baseline-listings-runbook.md) | runbook | active |
 | [Lineage Listing Runbook](../../runbooks/lineage-listing-runbook.md) | runbook | active |
 | [MCP Usage Runbook](../../runbooks/mcp-usage-runbook.md) | runbook | active |

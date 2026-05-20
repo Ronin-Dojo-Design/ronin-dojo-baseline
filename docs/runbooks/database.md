@@ -4,11 +4,13 @@ slug: database
 type: runbook
 status: active
 created: 2026-04-25
-updated: 2026-05-14
-last_agent: codex-session-0166
+updated: 2026-05-20
+last_agent: codex-session-0205
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/neon-advisory-lock-recovery.md
+  - docs/runbooks/vercel-deploy.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/runbooks/mcp-usage-runbook.md
@@ -103,20 +105,16 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema
    - **Direct** (no `-pooler`) for migrations — set as `DIRECT_URL` on Vercel.
 4. Enable extensions on Neon: in the SQL editor, run `CREATE EXTENSION IF NOT EXISTS citext;` and `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
 
-### Update `prisma/schema.prisma` to support both URLs
+### Prisma 7 URL routing
 
-Once Neon is provisioned, edit the datasource block:
+This repo uses Prisma 7 config routing instead of a `directUrl` field in `schema.prisma`.
 
-```prisma
-datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
-  extensions = [citext]
-}
-```
+- Runtime app code uses pooled `DATABASE_URL` through `apps/web/services/db.ts`.
+- Prisma CLI migration commands use `apps/web/prisma.config.ts`.
+- On Vercel Preview/Production, `prisma.config.ts` selects `DIRECT_URL` for `prisma migrate deploy`.
+- Locally, `DIRECT_URL` is optional; when absent, Prisma CLI falls back to `DATABASE_URL`.
 
-`DIRECT_URL` is only needed in production (for `prisma migrate deploy`). Locally, omit it.
+Do not add `directUrl` to `schema.prisma` for this repo. See [Neon Prisma Advisory-Lock Recovery](neon-advisory-lock-recovery.md) for the production incident history and Prisma 7 reasoning.
 
 ### Vercel env vars
 
@@ -125,6 +123,12 @@ In Vercel project settings → Environment Variables:
 - `DATABASE_URL` → Neon pooled connection string
 - `DIRECT_URL` → Neon direct connection string
 - All the other vars from `apps/web/.env.example` (Better-Auth, Stripe, Resend, S3, etc.)
+
+Run the env-scope guard before deploy closeout:
+
+```bash
+bun scripts/check-vercel-env-parity.ts
+```
 
 ## Migrations workflow
 
@@ -149,7 +153,7 @@ bun db:generate                                 # regenerate Prisma Client (also
 
 ### Production deploy
 
-`prisma migrate deploy` runs automatically in `prebuild` (see Dirstarter's `package.json`). Pushing to Vercel applies pending migrations against `DATABASE_URL`.
+`prisma migrate deploy` runs automatically in `prebuild` (see Dirstarter's `package.json`). On Vercel it uses `DIRECT_URL` through `apps/web/prisma.config.ts`, while runtime app traffic keeps using pooled `DATABASE_URL`.
 
 For destructive changes: review the generated SQL in `prisma/migrations/<name>/migration.sql` before merging the PR.
 

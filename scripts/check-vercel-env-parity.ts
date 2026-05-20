@@ -3,8 +3,8 @@
  * check-vercel-env-parity.ts
  *
  * Vercel environment-variable parity guard (FS-0023).
- * Reports required env vars from apps/web/env.ts that are missing
- * from Production or Preview scopes in Vercel. Never prints secret values.
+ * Reports required deploy env names that are missing from Production
+ * or Preview scopes in Vercel. Never prints secret values.
  *
  * Usage:
  *   bun scripts/check-vercel-env-parity.ts          # live check via `vercel env ls`
@@ -19,6 +19,7 @@ const DRY_RUN = process.argv.includes("--dry-run")
 
 // ---------------------------------------------------------------------------
 // 1. Parse required variable names from apps/web/env.ts
+//    and add deploy-only names consumed outside T3 Env.
 // ---------------------------------------------------------------------------
 
 const envTsPath = resolve(import.meta.dir, "../apps/web/env.ts")
@@ -52,9 +53,11 @@ function parseRequiredVars(source: string): string[] {
   return required
 }
 
-const requiredVars = parseRequiredVars(envTsContent)
+const requiredEnvVars = parseRequiredVars(envTsContent)
+const requiredVercelOnlyVars = ["DIRECT_URL"]
+const requiredVars = [...new Set([...requiredEnvVars, ...requiredVercelOnlyVars])]
 
-console.log(`\n🔍 Required env vars from env.ts (${requiredVars.length}):`)
+console.log(`\n🔍 Required deploy env var names (${requiredVars.length}):`)
 for (const v of requiredVars) {
   console.log(`   ${v}`)
 }

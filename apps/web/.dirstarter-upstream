@@ -10,3 +10,7 @@ upstream_branch = main
 copied_at_sha   = c42e8bbc9a093daa8bb70faebfc552399134ee13
 copied_on       = 2026-04-25
 copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
+
+# Partial upstream ports:
+# - SESSION_0205 / L2: env/deploy-safe subset from upstream 7e724b6 applied.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

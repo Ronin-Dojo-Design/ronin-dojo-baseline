@@ -17,7 +17,9 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     VERCEL_ENV: z.enum(["development", "preview", "production"]).default("development"),
+    NEXT_PHASE: z.string().optional(),
     DATABASE_URL: z.string().min(1),
+    DATABASE_PUBLIC_URL: z.string().optional(),
     CRON_SECRET: z.string().optional(),
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.url().min(1),
@@ -46,7 +48,6 @@ export const env = createEnv({
     AI_GATEWAY_API_KEY: z.string().optional(),
     AI_CHAT_MODEL: z.string().default("openai/gpt-4o"),
     AI_COMPLETION_MODEL: z.string().default("openai/gpt-4o-mini"),
-    GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
     JINA_API_KEY: z.string().optional(),
   },
 
@@ -58,6 +59,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: z.url().min(1),
     NEXT_PUBLIC_SITE_EMAIL: z.email().min(1),
     NEXT_PUBLIC_PLAUSIBLE_URL: z.url().optional(),
+    NEXT_PUBLIC_PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     NEXT_PUBLIC_MEDIA_BASE_URL: z.url().optional(),
   },
 
@@ -70,6 +72,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_SITE_EMAIL: process.env.NEXT_PUBLIC_SITE_EMAIL,
     NEXT_PUBLIC_PLAUSIBLE_URL: process.env.NEXT_PUBLIC_PLAUSIBLE_URL,
+    NEXT_PUBLIC_PLAUSIBLE_DOMAIN: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   },
 

@@ -4,11 +4,13 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-14
-last_agent: codex-session-0166
+updated: 2026-05-20
+last_agent: codex-session-0205
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/vercel-deploy.md
+  - docs/runbooks/neon-advisory-lock-recovery.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
@@ -51,7 +53,7 @@ cd ../<worktree-name>/apps/web
 bun install
 
 # 4. Copy env vars from the canonical main worktree
-cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env apps/web/.env
+cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env .env
 
 # 5. Generate the Prisma client
 bunx prisma generate --schema prisma/schema.prisma --no-hints
@@ -65,11 +67,14 @@ bun test ./server/web/schedule/
 If the canonical `.env` is unavailable, the worktree needs at minimum:
 
 - `DATABASE_URL` — Postgres connection string (see "Database" below).
+- `DIRECT_URL` — optional locally, but required in Vercel Preview and Production so Prisma CLI migration commands use Neon's direct endpoint.
 - `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` — Better Auth keys.
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate-limit backend.
+- `REDIS_REST_URL`, `REDIS_REST_TOKEN` — optional Upstash REST rate-limit backend.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — only if Stripe surfaces are exercised; otherwise stub values are acceptable in dev.
 - `CRON_SECRET` — required by any scheduled-cron route handler.
-- `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` — optional; analytics no-op without it.
+- `DATABASE_PUBLIC_URL` — optional build-time DB URL override; leave blank unless a deploy-specific build-read endpoint is intentionally configured.
+- `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` — optional analytics domain override; leave blank to derive from `NEXT_PUBLIC_SITE_URL`.
+- `AI_GATEWAY_API_KEY`, `AI_CHAT_MODEL`, `AI_COMPLETION_MODEL` — optional content automation through Vercel AI Gateway.
 
 ### Step 6 detail — pending Prisma migrations (dev only)
 

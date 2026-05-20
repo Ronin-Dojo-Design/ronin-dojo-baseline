@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-19
-last_agent: codex-session-0204
+updated: 2026-05-20
+last_agent: codex-session-0205
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -55,11 +55,13 @@ backlinks:
   - docs/sprints/SESSION_0202.md
   - docs/sprints/SESSION_0203.md
   - docs/sprints/SESSION_0204.md
+  - docs/sprints/SESSION_0205.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
   - docs/architecture/uplift/L1-env-deploy-diff-report.md
   - docs/runbooks/baseline-listings-runbook.md
+  - docs/runbooks/vercel-deploy.md
   - docs/runbooks/mcp-usage-runbook.md
 ---
 
@@ -1817,3 +1819,35 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Impact:** L1's owner-stated production Ready gate is satisfied, but L2 should not start env/deploy implementation while assuming preview deploys are healthy.
 - **Required follow-up:** At SESSION_0205 bow-in, run `vercel ls`; if the newest Preview row is still Error, inspect that deployment before runtime env/deploy changes.
 - **Status:** open follow-up for SESSION_0205.
+- **SESSION_0205 update:** Follow-up completed. Latest Error Preview was inspected before TASK_01; failure was P1002 advisory-lock timeout on older preview branch `docs-baseline-product-pack`, not the L2 runtime/env changes.
+
+### S205_DIRSTARTER_UPLIFT_L2_ENV_DEPLOY_IMPL — Dirstarter uplift L2 env/deploy implementation
+
+- **Session:** SESSION_0205
+- **Sprint:** S6
+- **Status:** verified
+- **Files:** `apps/web/env.ts`, `apps/web/.env.example`, `apps/web/services/db.ts`, `apps/web/app/(web)/layout.tsx`, `apps/web/next.config.ts`, `apps/web/.dirstarter-upstream`, `scripts/check-vercel-env-parity.ts`, `apps/web/server/web/lead/actions.test.ts`, `docs/runbooks/vercel-deploy.md`, `docs/runbooks/dev-environment.md`, `docs/runbooks/database.md`, `docs/runbooks/neon-advisory-lock-recovery.md`, `docs/architecture/uplift/lane-ledger.md`, `docs/architecture/uplift/epic-2026-05-19.md`, `docs/knowledge/wiki/index.md`, `docs/sprints/SESSION_0205.md`, `docs/protocols/project-log.md`
+- **Seed data:** none
+- **Smoke test:** `pnpm --filter dirstarter typecheck` clean; `bunx prisma validate` clean; `cd apps/web && bun biome check .` clean across 962 files; `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'` passed 236/236; `bun scripts/check-vercel-env-parity.ts` confirmed all 6 required deploy env names in Preview + Production; `bun run wiki:lint` exited 0 with 497 warnings; Vercel Ready proof reported in bow-out response.
+
+### SESSION_0205 — Dirstarter uplift L2 env/deploy implementation
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0205_TASK_01 | Cody: apply safe env additions/removals from L1, preserving optional integration posture and no secret-value printing. | complete |
+| SESSION_0205_TASK_02 | Cody: update `services/db.ts`, `next.config.ts`, and deploy/runbook surfaces while preserving `DIRECT_URL`, `apps/web` Vercel root config, and cron route stability. | complete |
+| SESSION_0205_TASK_03 | Doug + Cody: inspect latest Preview Error, run local gates, verify Vercel env/deploy readiness, update lane-ledger/wiki/runbooks/session close artifacts, Graphify refresh, commit, and push `main`. | complete |
+
+**Notes:** SESSION_0205 inspected the latest Error Preview before runtime changes. The failure came from older branch `docs-baseline-product-pack` and showed Prisma P1002 advisory-lock timeout against the pooled endpoint. Current Vercel env-name checks show `DIRECT_URL` encrypted for Preview and Production, so L2 preserved the SESSION_0201 Prisma 7 routing fix rather than changing migration behavior.
+
+**Result:** `DATABASE_PUBLIC_URL` and `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` are now optional env schema/example additions. `services/db.ts` uses `DATABASE_PUBLIC_URL` only during Next production build phase when set, falling back to `DATABASE_URL`; Prisma CLI migration routing remains in `prisma.config.ts` via `DIRECT_URL`. The stale `GOOGLE_GENERATIVE_AI_API_KEY` env declaration was removed after source search found no runtime reads. `REDIS_REST_*` and `RESEND_AUDIENCE_ID` remain because current code still uses them. The new Vercel deploy runbook records active `apps/web` root settings and the env parity guard.
+
+#### Review
+
+##### SESSION_0205_REVIEW_01 — Hostile close review for L2 env/deploy implementation
+
+- **Reviewed tasks:** SESSION_0205_TASK_01, SESSION_0205_TASK_02, SESSION_0205_TASK_03.
+- **Dirstarter docs check:** L2 followed the SESSION_0204 L1 diff against upstream `7e724b6`; no new live-doc browse was needed because L1 had already captured the env/deploy decisions for this session.
+- **Sources:** `L1-env-deploy-diff-report.md`, upstream `7e724b6` env/deploy files, Ronin env/db/redis/resend/plausible/Vercel files, Neon advisory-lock recovery runbook, Vercel deploy/domain runbooks, Vercel CLI env-name and deployment logs.
+- **Verdict:** Pass. No P0/P1 findings. The high-risk deploy invariants are preserved: `DIRECT_URL` remains the migration path, `DATABASE_URL` remains runtime default, `apps/web/vercel.json` remains active Vercel config, `copied_at_sha` is unchanged, and secret values were not printed. Residual risk is operational only: optional upstream-aligned vars should be added to Vercel only with real values and in both Preview and Production scopes.
+- **Follow-up:** SESSION_0206 starts L3 schema port wave from the epic. Do not carry L2 env/deploy work into L3 except as fixed baseline.

@@ -28,6 +28,12 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
 }))
 
+mock.module("next/server", () => ({
+  after: (fn: () => void | Promise<void>) => {
+    void Promise.resolve().then(() => fn())
+  },
+}))
+
 mock.module("~/lib/auth", () => ({
   getServerSession: async () => ({
     user: {

@@ -4,13 +4,14 @@ slug: neon-advisory-lock-recovery
 type: runbook
 status: active
 created: 2026-05-17
-updated: 2026-05-19
-last_agent: codex-session-0201
+updated: 2026-05-20
+last_agent: codex-session-0205
 use_count: 3
 pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/runbooks/prisma-workflow.md
   - docs/architecture/decisions/0017-pnpm-pre-post-scripts.md
+  - docs/runbooks/vercel-deploy.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0189.md
@@ -121,12 +122,14 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 - Batch Vercel env-var changes. Add all of them in one editing session, save, then trigger a single redeploy. Do not save each variable individually — every save fires a rebuild.
 - Avoid cancelling an in-flight Vercel build that has already started `prebuild`. Let it finish or fail naturally.
 - Keep `DIRECT_URL` present in both Vercel Preview and Production so `prisma migrate deploy` uses Neon's direct endpoint instead of the transaction pooler. This is the structural fix landed in SESSION_0201.
+- Run `bun scripts/check-vercel-env-parity.ts` before env/deploy closeout. It checks required Vercel env names and scopes, including `DIRECT_URL`, without printing secret values.
 - Avoid opening multiple PRs at the same moment until enough post-SESSION_0201 preview deploys prove the direct URL path is stable.
 - Watch SESSION_0189's bow-out evidence — that session is the first recorded occurrence of this pattern and includes the recovery proof.
 
 ## Cross-references
 
 - [Failed Steps Log](../protocols/failed-steps-log.md) — FS-0022 (pnpm pre/post enablement) is the precondition that made `prisma migrate deploy` run on Vercel at all; FS-0023 (env var scope) is the trigger pattern that surfaced this lock leak.
+- [Vercel Deploy Runbook](vercel-deploy.md) — active app-root build settings, env-scope guard, and deployment-readiness gate.
 - [Prisma Workflow](prisma-workflow.md) — local Prisma schema workflow, including `migrate dev` (which uses the same advisory lock locally but in a single-user environment where the lock never leaks).
 - [ADR 0017 — pnpm pre/post scripts](../architecture/decisions/0017-pnpm-pre-post-scripts.md) — why `prebuild` runs `prisma migrate deploy` in the first place.
 - [Closing Ritual](../rituals/closing.md) — full-close step 4 requires verifying Vercel deploy state, which is the bow-out gate that catches recurrences of this pattern.

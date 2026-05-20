@@ -1,10 +1,14 @@
 import { PrismaPg } from "@prisma/adapter-pg"
+import { PHASE_PRODUCTION_BUILD } from "next/constants"
 import { PrismaClient } from "~/.generated/prisma/client"
 import { env } from "~/env"
 import { uniqueSlugsExtension } from "~/prisma/extensions/unique-slugs"
 
 const prismaClientSingleton = () => {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
+  const isBuild = env.NEXT_PHASE === PHASE_PRODUCTION_BUILD
+  const connectionString = (isBuild && env.DATABASE_PUBLIC_URL) || env.DATABASE_URL
+  const adapter = new PrismaPg({ connectionString, max: isBuild ? 5 : 10 })
+
   return new PrismaClient({ adapter }).$extends(uniqueSlugsExtension)
 }
 

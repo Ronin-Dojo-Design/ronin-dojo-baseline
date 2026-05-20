@@ -4,8 +4,8 @@ slug: dirstarter-uplift-lane-ledger
 type: ledger
 status: active
 created: 2026-05-19
-updated: 2026-05-19
-last_agent: codex-session-0204
+updated: 2026-05-20
+last_agent: codex-session-0205
 pairs_with:
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/L1-env-deploy-diff-report.md
@@ -15,6 +15,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0203.md
   - docs/sprints/SESSION_0204.md
+  - docs/sprints/SESSION_0205.md
 ---
 
 # Dirstarter Upstream Uplift — Lane Ledger
@@ -47,6 +48,7 @@ Each row appends below the table. Required columns:
 | Lane | Session | Lane name | Upstream commits ported | Files | Ronin commit | Marker before | Marker after | Verification proof | Doug | Notes |
 | --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- |
 | L1 | SESSION_0204 | Baseline map refresh + lane-ledger init + env/deploy diff report | `n/a — doc-only; upstream 7e724b6 compared, no upstream files copied` | 8 | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `wiki:lint` 0 errors / 497 warnings; latest Production deploy Ready via `vercel ls`; Graphify refresh after git hygiene | pass | Partial-port intent for env/deploy recorded in `L1-env-deploy-diff-report.md`; `.dirstarter-upstream` intentionally unchanged until L15. |
+| L2 | SESSION_0205 | Env/deploy implementation | `7e724b6 env/deploy subset: env.ts, .env.example, services/db.ts, next.config.ts reviewed and selectively ported` | 17 | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `typecheck` clean; `biome` clean; app `bun test --isolate --path-ignore-patterns='e2e/**'` 236/236; `wiki:lint` 0 errors; Vercel Ready proof in bow-out response | pass | Added optional `DATABASE_PUBLIC_URL` and `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`; removed dead Google env declaration; kept `DIRECT_URL`, `REDIS_REST_*`, `RESEND_AUDIENCE_ID`, app-root Vercel config, and cron path stable. |
 
 ## Epic summary
 
