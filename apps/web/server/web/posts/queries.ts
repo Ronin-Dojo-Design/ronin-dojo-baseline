@@ -3,7 +3,25 @@ import { PostStatus } from "~/.generated/prisma/client"
 import { postManyPayload, postOnePayload } from "~/server/web/posts/payloads"
 import { db } from "~/services/db"
 
-export const findPosts = async ({ where, orderBy, ...args }: Prisma.PostFindManyArgs = {}) => {
+type PostOrderBy = Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[]
+
+type PublicPostFindManyArgs = {
+  where?: Prisma.PostWhereInput
+  orderBy?: PostOrderBy
+  take?: number
+  skip?: number
+  cursor?: Prisma.PostWhereUniqueInput
+}
+
+type PublicPostFindFirstArgs = {
+  where?: Prisma.PostWhereInput
+  orderBy?: PostOrderBy
+  take?: number
+  skip?: number
+  cursor?: Prisma.PostWhereUniqueInput
+}
+
+export const findPosts = async ({ where, orderBy, ...args }: PublicPostFindManyArgs = {}) => {
   "use cache"
 
   return db.post.findMany({
@@ -14,7 +32,7 @@ export const findPosts = async ({ where, orderBy, ...args }: Prisma.PostFindMany
   })
 }
 
-export const findPostSlugs = async ({ where, orderBy, ...args }: Prisma.PostFindManyArgs = {}) => {
+export const findPostSlugs = async ({ where, orderBy, ...args }: PublicPostFindManyArgs = {}) => {
   "use cache"
 
   return db.post.findMany({
@@ -25,7 +43,7 @@ export const findPostSlugs = async ({ where, orderBy, ...args }: Prisma.PostFind
   })
 }
 
-export const findPost = async ({ where, ...args }: Prisma.PostFindFirstArgs = {}) => {
+export const findPost = async ({ where, ...args }: PublicPostFindFirstArgs = {}) => {
   "use cache"
 
   return db.post.findFirst({

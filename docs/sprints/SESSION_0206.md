@@ -107,12 +107,14 @@ Apply the L3 schema wave from the Dirstarter uplift epic: port the upstream sche
 - `cd apps/web && bunx prisma migrate deploy` - no pending migrations.
 - Local advisory-lock query for `pg_advisory_lock(72707369)` - returned `0`.
 - `pnpm --filter dirstarter typecheck` - passed.
+- `pnpm --filter dirstarter build` - passed after fixing the Vercel-caught Prisma TS2321 issue in post query args.
 - `cd apps/web && bun biome check --write .` - formatted touched code; 971 files checked.
 - `cd apps/web && bun biome check .` - passed; 971 files checked.
 - `cd apps/web && bun test server/web/tools server/web/bookmarks server/web/posts` - passed; 6 tests / 11 assertions.
 - First full app test after DB reset failed only because seed fixtures were absent; `cd apps/web && bun prisma/seed.ts` reseeded.
 - `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'` - passed after seed; 242 tests / 866 assertions across 49 files.
 - `bun run wiki:lint` - passed with 0 errors / 497 warnings across 393 markdown files.
+- First branch Preview deploy failed after successfully applying the L3 migration because `next build` hit Prisma TS2321 in `server/web/posts/queries.ts`; L3 fixed this with lightweight post query arg types and proved the fix with local production build before repush.
 - Vercel Ready proof - recorded in bow-out response after branch push.
 
 ## Review log
@@ -138,6 +140,7 @@ SESSION_0207 is L4 - Baseline listings relabel + tier flow. Start from `docs/arc
 - Prisma 7 CLI flag drift mattered: `migrate dev --skip-generate` is no longer accepted, so the clean path was generate, migrate reset, migrate dev, and deploy proof.
 - The full isolated app suite is only meaningful after seed when the local DB has just been reset; the first failure was useful because it proved the test fixtures were really absent, not silently mocked.
 - The report enum conversion needed a Ronin-specific `Feedback` value. Removing it would have broken an existing feedback action for the sake of upstream purity.
+- Vercel's `next build` TypeScript pass caught a Prisma excessive-stack path that local `tsc --noEmit` did not; for future Prisma 7 query helper changes, run `pnpm --filter dirstarter build` before trusting local typecheck alone.
 
 ## ADR / ubiquitous-language check
 
