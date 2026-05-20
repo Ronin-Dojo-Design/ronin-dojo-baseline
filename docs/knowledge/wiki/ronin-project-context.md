@@ -4,16 +4,18 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-20
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-pr39-intake
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
   - docs/product/README.md
+  - docs/product/baseline-martial-arts/PRD.md
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/knowledge/wiki/doc-pruning-register.md
+  - docs/product/baseline-martial-arts/PRD.md
   - docs/product/black-belt-legacy/PRD.md
 tags:
   - context
@@ -36,7 +38,7 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 
 | Brand | Product theme | Primary story |
 | --- | --- | --- |
-| Baseline Martial Arts | School operations and training system | Run a school and teach structured curriculum. |
+| Baseline Martial Arts | School operations, curriculum, certification, and affiliation | Prove the operating system through Brian's school/program first, then scale as reusable school-ops SaaS for other schools and university programs. |
 | Black Belt Legacy | Lineage, profiles, curriculum, certifications, and trust | Preserve martial arts legacy. |
 | WEKAF USA | Tournament operations | Run events, divisions, brackets, scoring, and results. |
 | Ronin Dojo Design | White-label sales, demos, and onboarding | Sell and operate client martial arts systems. |
@@ -51,14 +53,15 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 - Public payloads are allowlists.
 - Sensitive mutations require audit logs.
 - Lineage truth changes must use explicit audited actions, not casual drag/drop.
+- Rank/certification records should remain compatible with later Black Belt Legacy verification.
 - Session files are operational handoff truth.
 - Wiki pages are repo memory, but not every wiki page is canonical product truth.
 - Do not bulk-load old imports unless the lane requires it.
 
 ## Current product priorities
 
-1. Black Belt Legacy lineage v1.
-2. Black Belt Legacy PRD + stories.
+1. Baseline Martial Arts school-ops PRD + stories.
+2. Black Belt Legacy lineage v1.
 3. Docs pruning/consolidation.
 4. Four-brand story map.
 5. Agent workflow/dashboard integration later.
@@ -95,12 +98,26 @@ PRDs and story docs should be concise and decision-oriented.
 
 They should not carry every implementation note, full session history, raw research dump, or duplicate architecture spec.
 
+## Current Baseline Martial Arts canon
+
+- `docs/product/baseline-martial-arts/PRD.md`
+- `docs/product/baseline-martial-arts/STORIES.md`
+- `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md`
+
 ## Current Black Belt Legacy canon
 
 - `docs/product/black-belt-legacy/PRD.md`
 - `docs/product/black-belt-legacy/STORIES.md`
 - `docs/architecture/lineage/lineage-tree-v1-requirements.md`
 - `docs/architecture/lineage/lineage-editor-permissions-spec.md`
+
+## Baseline product chain
+
+```txt
+Lead -> Trial -> Household/Member -> Waiver -> Membership -> Schedule -> Attendance -> Progress -> Rank -> Billing -> Renewal
+```
+
+Baseline should lead with school-owner operations while making the visible demo student-friendly.
 
 ## Doc diet rule
 

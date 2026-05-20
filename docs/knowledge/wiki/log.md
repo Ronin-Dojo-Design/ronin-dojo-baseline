@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-08
-last_agent: codex-stripe-runbook
+updated: 2026-05-20
+last_agent: codex-pr39-intake
 ---
 
 # Wiki Change Log
@@ -24,6 +24,12 @@ Current source of truth:
 - `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
 
 Use this file only as historical context for early wiki adoption.
+
+## 2026-05-20 — PR39 Baseline product pack intake
+
+- Added discoverability entry for `docs/product/baseline-martial-arts/PRD.md` and `docs/product/baseline-martial-arts/STORIES.md` to `docs/knowledge/wiki/index.md`.
+- Registered the Baseline product packet in the wiki index because PR39 review feedback explicitly requested index/log wiring.
+- Operating accountability remains in `docs/protocols/project-log.md`; this log stays superseded except for this PR review compatibility entry.
 
 ## 2026-04-26 — SESSION_0004
 

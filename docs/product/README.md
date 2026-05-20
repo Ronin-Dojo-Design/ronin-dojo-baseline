@@ -4,9 +4,9 @@ slug: product-documentation-index
 type: index
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-20
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-pr39-intake
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -14,6 +14,8 @@ backlinks:
 pairs_with:
   - docs/knowledge/wiki/ronin-project-context.md
   - docs/knowledge/wiki/doc-pruning-register.md
+  - docs/product/baseline-martial-arts/PRD.md
+  - docs/product/baseline-martial-arts/STORIES.md
 tags:
   - product
   - prd
@@ -44,18 +46,23 @@ They should not duplicate every schema detail, every session note, or every hist
 
 | Brand | Product theme | Canonical docs | Status |
 | --- | --- | --- | --- |
-| Baseline Martial Arts | Run a school and training system | `baseline-martial-arts/` | planned |
+| Baseline Martial Arts | Run a school and training system | `baseline-martial-arts/PRD.md`, `baseline-martial-arts/STORIES.md` | active |
 | Black Belt Legacy | Preserve martial arts legacy | `black-belt-legacy/PRD.md`, `black-belt-legacy/STORIES.md` | active |
 | WEKAF USA | Run tournaments and competition operations | `wekaf-usa/` | planned |
 | Ronin Dojo Design | Sell and operate white-label systems | `ronin-dojo-design/` | planned |
 
 ## Current priority
 
-Black Belt Legacy is the first product lane to receive a canonical PRD and story backlog because it sits directly on top of the current lineage v1 implementation work.
+Baseline Martial Arts and Black Belt Legacy now have canonical PRD/story packs.
+
+Baseline proves the operating system through Brian's real school/program first, then becomes the reusable school-ops SaaS, course-certification, and affiliation model for other schools and university programs.
+
+Black Belt Legacy preserves martial arts legacy through profiles, claims, rank history, lineage, curriculum, certifications, and community trust.
 
 ## Supporting canon
 
 - `docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md`
+- `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md`
 - `docs/architecture/lineage/lineage-tree-v1-requirements.md`
 - `docs/architecture/lineage/lineage-editor-permissions-spec.md`
 - `docs/knowledge/wiki/repo-truth-index.md`
