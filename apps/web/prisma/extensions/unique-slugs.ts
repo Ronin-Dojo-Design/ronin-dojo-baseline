@@ -1,45 +1,14 @@
-import { slugify } from "@primoui/utils"
 import { Prisma } from "~/.generated/prisma/client"
+import { generateUniqueSlug } from "~/lib/slug"
 
-/**
- * Generates a unique slug by checking for collisions and appending a suffix if necessary.
- */
-const generateUniqueSlug = async (
-  baseName: string,
-  checkExists: (slug: string) => Promise<boolean>,
-  currentSlug?: string,
-): Promise<string> => {
-  const baseSlug = slugify(baseName)
+type SluggedModel = "Tool" | "Category" | "Tag" | "Post"
 
-  // If the generated slug matches the existing one, no changes are needed
-  if (currentSlug === baseSlug) {
-    return baseSlug
-  }
-
-  // Check if the base slug is available
-  if (!(await checkExists(baseSlug))) {
-    return baseSlug
-  }
-
-  // Try appending suffixes (e.g., -2, -3) up to a limit
-  let suffix = 2
-  const MAX_ATTEMPTS = 20
-
-  while (suffix <= MAX_ATTEMPTS) {
-    const candidate = `${baseSlug}-${suffix}`
-
-    if (!(await checkExists(candidate))) {
-      return candidate
-    }
-
-    suffix++
-  }
-
-  throw new Error(`Failed to generate unique slug for "${baseName}".`)
+const isSluggedModel = (model: string): model is SluggedModel => {
+  return model === "Tool" || model === "Category" || model === "Tag" || model === "Post"
 }
 
 export const uniqueSlugsExtension = Prisma.defineExtension(client => {
-  const findUniqueRecord = async (model: "Tool" | "Category" | "Tag", slug: string) => {
+  const findUniqueRecord = async (model: SluggedModel, slug: string) => {
     const payload = {
       where: { slug },
       select: { slug: true },
@@ -52,6 +21,8 @@ export const uniqueSlugsExtension = Prisma.defineExtension(client => {
         return Boolean(await client.category.findUnique(payload))
       case "Tag":
         return Boolean(await client.tag.findUnique(payload))
+      case "Post":
+        return Boolean(await client.post.findUnique(payload))
     }
   }
 
@@ -60,31 +31,37 @@ export const uniqueSlugsExtension = Prisma.defineExtension(client => {
     query: {
       $allModels: {
         async create({ model, args, query }) {
-          if (model !== "Tool" && model !== "Category" && model !== "Tag") {
+          if (!isSluggedModel(model)) {
             return query(args)
           }
 
           // Safely cast data to expected shape for slugified models
-          const { name, slug } = args.data
-          const source = slug || name
+          const data = args.data as { name?: string; title?: string; slug?: string }
+          const { name, title, slug } = data
+          const label = name || title
+          const source = slug || label
 
           if (!source) {
             return query(args)
           }
 
-          const uniqueSlug = await generateUniqueSlug(source, slug => findUniqueRecord(model, slug))
+          const uniqueSlug = await generateUniqueSlug({
+            source,
+            isSlugTaken: slug => findUniqueRecord(model, slug),
+          })
 
           // Return query with updated slug
           return query({ ...args, data: { ...args.data, slug: uniqueSlug } } as any)
         },
 
         async update({ model, args, query }) {
-          if (model !== "Tool" && model !== "Category" && model !== "Tag") {
+          if (!isSluggedModel(model)) {
             return query(args)
           }
 
-          const { name, slug } = args.data
-          const source = (slug || name) as string
+          const data = args.data as { name?: string; title?: string; slug?: string }
+          const { name, title, slug } = data
+          const source = (slug || name || title) as string | undefined
 
           // Skip if neither name nor slug is being updated
           if (!source) {
@@ -97,19 +74,25 @@ export const uniqueSlugsExtension = Prisma.defineExtension(client => {
           switch (model) {
             case "Tool":
               existingRecord = await client.tool.findUnique({
-                where: args.where,
+                where: args.where as any,
                 select: { slug: true },
               })
               break
             case "Category":
               existingRecord = await client.category.findUnique({
-                where: args.where,
+                where: args.where as any,
                 select: { slug: true },
               })
               break
             case "Tag":
               existingRecord = await client.tag.findUnique({
-                where: args.where,
+                where: args.where as any,
+                select: { slug: true },
+              })
+              break
+            case "Post":
+              existingRecord = await client.post.findUnique({
+                where: args.where as any,
                 select: { slug: true },
               })
               break
@@ -119,13 +102,13 @@ export const uniqueSlugsExtension = Prisma.defineExtension(client => {
             return query(args)
           }
 
-          const uniqueSlug = await generateUniqueSlug(
+          const uniqueSlug = await generateUniqueSlug({
             source,
-            slug => findUniqueRecord(model, slug),
-            existingRecord.slug,
-          )
+            isSlugTaken: slug => findUniqueRecord(model, slug),
+            currentSlug: existingRecord.slug,
+          })
 
-          return query({ ...args, data: { ...args.data, slug: uniqueSlug } })
+          return query({ ...args, data: { ...args.data, slug: uniqueSlug } } as any)
         },
       },
     },

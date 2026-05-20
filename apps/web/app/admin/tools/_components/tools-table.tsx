@@ -5,7 +5,9 @@ import {
   CircleDashedIcon,
   CircleDotDashedIcon,
   CircleDotIcon,
+  CircleXIcon,
   PlusIcon,
+  Trash2Icon,
 } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
@@ -65,6 +67,16 @@ export function ToolsTable({ toolsPromise }: ToolsTableProps) {
           label: "Draft",
           value: ToolStatus.Draft,
           icon: <CircleDashedIcon className="text-gray-500" />,
+        },
+        {
+          label: "Rejected",
+          value: ToolStatus.Rejected,
+          icon: <CircleXIcon className="text-red-500" />,
+        },
+        {
+          label: "Deleted",
+          value: ToolStatus.Deleted,
+          icon: <Trash2Icon className="text-gray-500" />,
         },
       ],
     },

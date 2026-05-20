@@ -49,7 +49,7 @@ export const ToolReportDialog = ({ tool, isOpen, setIsOpen }: ToolReportDialogPr
   const { form, action, handleSubmitWithAction } = useHookFormAction(reportTool, resolver, {
     formProps: {
       values: {
-        type: "",
+        type: reportsConfig.reportTypes[0],
         message: "",
         toolId: tool.id,
         email: session?.user.email || "",
@@ -131,7 +131,7 @@ export const ToolReportDialog = ({ tool, isOpen, setIsOpen }: ToolReportDialogPr
                             className="font-normal text-secondary-foreground overflow-visible cursor-pointer"
                           >
                             <RadioGroupItem value={type} />
-                            {type}
+                            {reportsConfig.reportTypeLabels[type]}
                           </FormLabel>
                         </Stack>
                       ))}

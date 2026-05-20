@@ -37,8 +37,8 @@ export function ReportsTable({ reportsPromise }: ReportsTableProps) {
     {
       id: "type",
       label: "Type",
-      options: reportsConfig.reportTypes.map(type => ({
-        label: type,
+      options: reportsConfig.allReportTypes.map(type => ({
+        label: reportsConfig.reportTypeLabels[type],
         value: type,
       })),
     },

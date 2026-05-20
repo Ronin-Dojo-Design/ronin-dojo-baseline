@@ -1,7 +1,7 @@
 "use client"
 
 import { formatDate } from "date-fns"
-import { BadgeCheckIcon, CalendarIcon } from "lucide-react"
+import { BadgeCheckIcon, CalendarIcon, Trash2Icon, XCircleIcon } from "lucide-react"
 import { type ComponentProps, type ReactNode, useState } from "react"
 import { useFormContext } from "react-hook-form"
 import { ToolStatus } from "~/.generated/prisma/browser"
@@ -76,6 +76,21 @@ export const ToolPublishActions = ({
     setIsOpen(false)
   }
 
+  const handlePending = () => {
+    onStatusSubmit(ToolStatus.Pending, null)
+    setIsOpen(false)
+  }
+
+  const handleRejected = () => {
+    onStatusSubmit(ToolStatus.Rejected, null)
+    setIsOpen(false)
+  }
+
+  const handleDeleted = () => {
+    onStatusSubmit(ToolStatus.Deleted, null)
+    setIsOpen(false)
+  }
+
   const toolActions: Record<ToolStatus, ActionConfig[]> = {
     [ToolStatus.Pending]: [
       {
@@ -110,6 +125,16 @@ export const ToolPublishActions = ({
               button: {
                 onClick: handleDraft,
                 children: "Convert",
+              },
+            },
+            {
+              status: ToolStatus.Rejected,
+              title: "Reject",
+              description: "Archive this submission after review",
+              button: {
+                onClick: handleRejected,
+                children: "Reject",
+                variant: "destructive",
               },
             },
           ],
@@ -226,6 +251,100 @@ export const ToolPublishActions = ({
               status: ToolStatus.Published,
               title: "Published",
               description: "Keep this tool publicly available",
+            },
+            {
+              status: ToolStatus.Deleted,
+              title: "Deleted",
+              description: "Hide this published tool from listings",
+              button: {
+                onClick: handleDeleted,
+                children: "Delete",
+                variant: "destructive",
+              },
+            },
+          ],
+        },
+      },
+      {
+        type: "submit",
+        children: "Update",
+        variant: "primary",
+      },
+    ],
+
+    [ToolStatus.Rejected]: [
+      {
+        type: "button",
+        children: "Rejected",
+        variant: "secondary",
+        prefix: <XCircleIcon />,
+        popover: {
+          title: "Update tool status",
+          options: [
+            {
+              status: ToolStatus.Pending,
+              title: "Move back to review",
+              description: "Return this submission to the admin review queue",
+              button: {
+                onClick: handlePending,
+                children: "Review",
+              },
+            },
+            {
+              status: ToolStatus.Draft,
+              title: "Reopen as draft",
+              description: "Return this submission to editable draft state",
+              button: {
+                onClick: handleDraft,
+                children: "Reopen",
+              },
+            },
+            {
+              status: ToolStatus.Rejected,
+              title: "Rejected",
+              description: "Keep this submission archived",
+            },
+          ],
+        },
+      },
+      {
+        type: "submit",
+        children: "Update",
+        variant: "primary",
+      },
+    ],
+
+    [ToolStatus.Deleted]: [
+      {
+        type: "button",
+        children: "Deleted",
+        variant: "secondary",
+        prefix: <Trash2Icon />,
+        popover: {
+          title: "Update tool status",
+          options: [
+            {
+              status: ToolStatus.Draft,
+              title: "Restore as draft",
+              description: "Restore this tool for editing before publishing",
+              button: {
+                onClick: handleDraft,
+                children: "Restore",
+              },
+            },
+            {
+              status: ToolStatus.Published,
+              title: "Restore to published",
+              description: "Restore this tool to public listings immediately",
+              button: {
+                onClick: handlePublished,
+                children: "Publish",
+              },
+            },
+            {
+              status: ToolStatus.Deleted,
+              title: "Deleted",
+              description: "Keep this tool hidden from listings",
             },
           ],
         },

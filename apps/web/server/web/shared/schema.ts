@@ -1,6 +1,7 @@
 import { isMimeTypeMatch } from "@primoui/utils"
 import type { useTranslations } from "next-intl"
 import { z } from "zod"
+import { ReportType } from "~/.generated/prisma/browser"
 
 type TFunction = ReturnType<typeof useTranslations>
 
@@ -54,14 +55,19 @@ export const createNewsletterSchema = (t: TFunction) => {
 }
 
 export const createReportToolSchema = (t: TFunction) => {
-  return z.object({
-    type: z.string().min(1, { error: t("required") }),
-    email: z.email({ error: t("invalidEmail") }),
-    message: z
-      .string()
-      .max(256, { error: issue => t("maxLength", { length: Number(issue.maximum) }) }),
-    toolId: z.string(),
-  })
+  return z
+    .object({
+      type: z.enum(ReportType),
+      email: z.email({ error: t("invalidEmail") }),
+      message: z
+        .string()
+        .max(256, { error: issue => t("maxLength", { length: Number(issue.maximum) }) }),
+      toolId: z.string(),
+    })
+    .refine(data => data.type !== ReportType.Other || data.message.length > 0, {
+      path: ["message"],
+      message: t("required"),
+    })
 }
 
 export const createFeedbackSchema = (t: TFunction) => {

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-20
-last_agent: codex-session-0205
+last_agent: codex-session-0206
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -56,6 +56,7 @@ backlinks:
   - docs/sprints/SESSION_0203.md
   - docs/sprints/SESSION_0204.md
   - docs/sprints/SESSION_0205.md
+  - docs/sprints/SESSION_0206.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -1851,3 +1852,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** `L1-env-deploy-diff-report.md`, upstream `7e724b6` env/deploy files, Ronin env/db/redis/resend/plausible/Vercel files, Neon advisory-lock recovery runbook, Vercel deploy/domain runbooks, Vercel CLI env-name and deployment logs.
 - **Verdict:** Pass. No P0/P1 findings. The high-risk deploy invariants are preserved: Vercel Prisma CLI migrations use a direct Neon URL, `DATABASE_URL` remains runtime default, `apps/web/vercel.json` remains active Vercel config, `copied_at_sha` is unchanged, and secret values were not printed. Residual risk is operational only: optional upstream-aligned vars should be added to Vercel only with real values and in both Preview and Production scopes.
 - **Follow-up:** SESSION_0206 starts L3 schema port wave from the epic. Do not carry L2 env/deploy work into L3 except as fixed baseline.
+
+### S206_DIRSTARTER_UPLIFT_L3_SCHEMA_WAVE — Dirstarter uplift L3 schema port wave
+
+- **Session:** SESSION_0206
+- **Sprint:** S6
+- **Status:** verified
+- **Files:** `apps/web/prisma/schema.prisma`, `apps/web/prisma/migrations/20260520004112_uplift_L3_schema_wave/migration.sql`, `apps/web/config/tiers.ts`, `apps/web/config/reports.ts`, `apps/web/lib/slug.ts`, `apps/web/lib/slugs.ts`, `apps/web/lib/tools.ts`, `apps/web/prisma/extensions/unique-slugs.ts`, `apps/web/server/web/bookmarks/*`, `apps/web/server/web/posts/*`, `apps/web/server/web/tools/*`, `apps/web/server/admin/tools/*`, `apps/web/server/admin/reports/schema.ts`, `apps/web/server/web/shared/schema.ts`, report/admin/dashboard/Stripe/seed call sites, and uplift closeout docs.
+- **Seed data:** local dev DB was reset for the no-users schema wave, then seeded after the full isolated app suite correctly exposed missing seeded fixtures.
+- **Smoke test:** `pnpm --filter dirstarter db:generate` clean; `cd apps/web && bunx prisma validate` clean; `cd apps/web && bunx prisma migrate reset --force`, `bunx prisma migrate dev`, and `bunx prisma migrate deploy` clean; advisory-lock query returned `0`; `pnpm --filter dirstarter typecheck` clean; `cd apps/web && bun biome check .` clean across 971 files; `cd apps/web && bun test server/web/tools server/web/bookmarks server/web/posts` passed 6/6; `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'` passed 242/242 after seed; Vercel Ready proof reported in bow-out response.
+
+### SESSION_0206 — Dirstarter uplift L3 schema port wave
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0206_TASK_01 | Cody: add the upstream schema wave subset: `ToolTier`, `tierPriority`, archived tool statuses, report enum, bookmarks, generated slug helpers, and migration. | complete |
+| SESSION_0206_TASK_02 | Cody: align tool/report/post/bookmark/server slices, status transitions, Stripe tier sync, seeds, payloads, and focused tests without changing public route shapes. | complete |
+| SESSION_0206_TASK_03 | Doug + Petey: prove local migration/type/test integrity, check advisory locks, update lane-ledger/wiki/project-log/upstream marker, Graphify refresh, commit, and push the requested session branch. | complete |
+
+**Notes:** The requested `docs/architecture/uplift/L2-env-deploy-diff-report.md` was absent on `main`; SESSION_0206 used the existing `L1-env-deploy-diff-report.md` plus SESSION_0205 close notes as the L2 env/deploy handoff. The epic Mermaid named a `ToolTier` model, but upstream `7e724b6` implements listing tiers as a `ToolTier` enum plus generated `tierPriority`; SESSION_0206 followed the upstream enum shape and kept Ronin's existing `isFeatured` field for compatibility until L4 owns the tier UI flow.
+
+**Result:** Tools now carry `tier` and generated `tierPriority`, public tool queries sort by tier priority, archived `Rejected`/`Deleted` statuses are represented across admin/dashboard/public helper surfaces, published tool deletes soft-delete to `Deleted`, non-published deletes remain hard deletes, reports use a Prisma enum while preserving Ronin's feedback type, and new bookmark/post server slices are ready for L4/L8 UI work.
+
+#### Review
+
+##### SESSION_0206_REVIEW_01 — Hostile close review for L3 schema port wave
+
+- **Reviewed tasks:** SESSION_0206_TASK_01, SESSION_0206_TASK_02, SESSION_0206_TASK_03.
+- **Dirstarter docs check:** live docs/changelog checked: `https://dirstarter.com/docs/database/prisma`, `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/content`, `https://dirstarter.com/changelog/listing-tiers`, and `https://dirstarter.com/changelog`.
+- **Sources:** upstream `7e724b6` schema/server files, Ronin Prisma schema/migrations, tool/report/post/bookmark server slices, L3 epic block, lane ledger, L1 env/deploy report, Vercel and Neon runbooks, Prisma migrate output, local Postgres advisory-lock query, and full isolated app test output.
+- **Verdict:** Pass. No P0/P1 findings. Schema shape follows upstream where it mattered (`ToolTier` enum, generated `tierPriority`, `Bookmark`, DB-backed `Post` reads) while preserving Ronin-specific compatibility (`isFeatured`, `ReportType.Feedback`, brand-scoped post helpers). Local destructive reset was acceptable under the no-users L3 lock and was followed by deploy-mode migration proof.
+- **Follow-up:** SESSION_0207 starts L4 baseline listings relabel + tier flow. It should build UI on top of the L3 `tier`/bookmark primitives and decide whether subscription cancellation downgrades should become `Standard` instead of Ronin's current L3 compatibility fallback to `Free`.

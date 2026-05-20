@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "~/.generated/prisma/client"
+import { PrismaClient, ToolTier } from "~/.generated/prisma/client"
 
 /**
  * seed-baseline-listings.ts
@@ -592,6 +592,7 @@ async function main() {
     await db.tool.create({
       data: {
         ...rest,
+        tier: rest.isFeatured ? ToolTier.Premium : ToolTier.Free,
         status: status as "Published" | "Scheduled" | "Draft",
         content: LISTING_CONTENT,
         faviconUrl: `https://www.google.com/s2/favicons?sz=128&domain_url=${rest.websiteUrl}`,

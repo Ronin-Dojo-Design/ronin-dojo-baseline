@@ -23,7 +23,23 @@ enum ToolStatus {
   Draft
   Scheduled
   Pending
+  Rejected
   Published
+  Deleted
+}
+
+enum ToolTier {
+  Free
+  Standard
+  Premium
+}
+
+enum ReportType {
+  BrokenLink
+  WrongCategory
+  Outdated
+  Other
+  Feedback
 }
 
 enum PostStatus {
@@ -55,6 +71,7 @@ model User {
   accounts Account[]
   sessions Session[]
   tools    Tool[]
+  bookmarks Bookmark[]
 
   // Relations (Ronin Dojo)
   passport                   Passport?
@@ -207,6 +224,8 @@ model Tool {
   faviconUrl     String?
   screenshotUrl  String?
   isFeatured     Boolean    @default(false)
+  tier           ToolTier   @default(Free)
+  tierPriority   Int        @default(dbgenerated())
   submitterName  String?
   submitterEmail String?
   submitterNote  String?
@@ -219,6 +238,7 @@ model Tool {
   categories Category[]
   tags       Tag[]
   reports    Report[]
+  bookmarks  Bookmark[]
   owner      User?      @relation(fields: [ownerId], references: [id])
   ownerId    String?
   posts      Post[]
@@ -227,6 +247,7 @@ model Tool {
   @@index([name])
   @@index([status])
   @@index([ownerId])
+  @@index([tierPriority, publishedAt])
   @@index([createdAt])
 }
 
@@ -261,18 +282,35 @@ model Tag {
 }
 
 model Report {
-  id        String   @id @default(cuid())
-  type      String   @default("Other")
+  id        String     @id @default(cuid())
+  type      ReportType @default(Other)
   message   String?
-  email     String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email     String     @default("")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   // Relations
   tool   Tool?   @relation(fields: [toolId], references: [id], onDelete: Cascade)
   toolId String?
 
   // Indexes
+  @@index([toolId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid(2))
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  tool   Tool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId String
+
+  // Indexes
+  @@unique([userId, toolId])
+  @@index([userId])
   @@index([toolId])
 }
 

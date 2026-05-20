@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { addDays } from "date-fns"
-import { PrismaClient, ToolStatus } from "~/.generated/prisma/client"
+import { PrismaClient, ToolStatus, ToolTier } from "~/.generated/prisma/client"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
@@ -513,6 +513,7 @@ async function main() {
     await db.tool.create({
       data: {
         ...toolData,
+        tier: toolData.isFeatured ? ToolTier.Premium : ToolTier.Free,
         content: DUMMY_CONTENT,
         faviconUrl: `https://www.google.com/s2/favicons?sz=128&domain_url=${toolData.websiteUrl}`,
         categories: { connect: categories.map(slug => ({ slug })) },

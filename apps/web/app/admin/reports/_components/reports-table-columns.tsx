@@ -9,6 +9,7 @@ import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { reportsConfig } from "~/config/reports"
 
 export const getColumns = (): ColumnDef<Report>[] => {
   return [
@@ -67,7 +68,10 @@ export const getColumns = (): ColumnDef<Report>[] => {
     {
       accessorKey: "type",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-      cell: ({ row }) => <Badge variant="outline">{row.getValue("type")}</Badge>,
+      cell: ({ row }) => {
+        const type = row.getValue<keyof typeof reportsConfig.reportTypeLabels>("type")
+        return <Badge variant="outline">{reportsConfig.reportTypeLabels[type] ?? type}</Badge>
+      },
     },
     {
       accessorKey: "email",

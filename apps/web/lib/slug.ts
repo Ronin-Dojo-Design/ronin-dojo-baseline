@@ -12,6 +12,50 @@ export const slugify = (input: string): string =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 80)
 
+export type SlugTakenDelegate = {
+  findUnique: (args: { where: { slug: string }; select: { slug: true } }) => PromiseLike<unknown>
+}
+
+export const createSlugTakenCheck = <D extends SlugTakenDelegate>(delegate: D) => {
+  return (slug: string): Promise<boolean> => {
+    return Promise.resolve(delegate.findUnique({ where: { slug }, select: { slug: true } })).then(
+      Boolean,
+    )
+  }
+}
+
+export const generateUniqueSlug = async (options: {
+  source: string
+  isSlugTaken: (slug: string) => Promise<boolean>
+  currentSlug?: string
+  maxAttempts?: number
+}): Promise<string> => {
+  const { source, isSlugTaken, currentSlug, maxAttempts = 20 } = options
+  const baseSlug = slugify(source)
+
+  if (currentSlug === baseSlug) {
+    return baseSlug
+  }
+
+  if (!(await isSlugTaken(baseSlug))) {
+    return baseSlug
+  }
+
+  let suffix = 2
+
+  while (suffix <= maxAttempts) {
+    const candidate = `${baseSlug}-${suffix}`
+
+    if (!(await isSlugTaken(candidate))) {
+      return candidate
+    }
+
+    suffix++
+  }
+
+  throw new Error(`Failed to generate unique slug for "${source}".`)
+}
+
 /**
  * Generate a unique DirectoryProfile slug given a base name. Collisions resolved
  * by appending a 6-char random suffix; falls back to "user-<random>" when the

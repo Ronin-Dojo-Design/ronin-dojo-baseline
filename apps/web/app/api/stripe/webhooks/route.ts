@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache"
 import { after } from "next/server"
 import type Stripe from "stripe"
-import type { Brand } from "~/.generated/prisma/client"
+import { type Brand, ToolTier } from "~/.generated/prisma/client"
 import { env } from "~/env"
 import {
   notifyAdminOfPremiumTool,
@@ -1146,7 +1146,7 @@ export const POST = async (req: Request) => {
             if (metadata?.tool) {
               const tool = await db.tool.update({
                 where: { slug: metadata.tool },
-                data: { isFeatured: true },
+                data: { isFeatured: true, tier: ToolTier.Premium },
               })
 
               // Revalidate the cache
@@ -1191,7 +1191,7 @@ export const POST = async (req: Request) => {
         if (metadata?.tool) {
           await db.tool.update({
             where: { slug: metadata?.tool },
-            data: { isFeatured: false },
+            data: { isFeatured: false, tier: ToolTier.Free },
           })
 
           // Revalidate the cache

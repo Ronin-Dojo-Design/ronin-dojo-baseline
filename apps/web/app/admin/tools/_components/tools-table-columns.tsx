@@ -29,6 +29,14 @@ export const getColumns = (): ColumnDef<Tool>[] => {
     [ToolStatus.Published]: {
       variant: "success",
     },
+
+    [ToolStatus.Rejected]: {
+      variant: "danger",
+    },
+
+    [ToolStatus.Deleted]: {
+      variant: "outline",
+    },
   }
 
   return [

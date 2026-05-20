@@ -89,9 +89,9 @@ export function ReportForm({ children, className, title, report, ...props }: Rep
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {reportsConfig.reportTypes.map(type => (
+                  {reportsConfig.allReportTypes.map(type => (
                     <SelectItem key={type} value={type}>
-                      {type}
+                      {reportsConfig.reportTypeLabels[type]}
                     </SelectItem>
                   ))}
                 </SelectContent>

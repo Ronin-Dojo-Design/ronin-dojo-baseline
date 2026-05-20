@@ -14,3 +14,7 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 # Partial upstream ports:
 # - SESSION_0205 / L2: env/deploy-safe subset from upstream 7e724b6 applied.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0206 / L3: schema wave subset from upstream 7e724b6 applied
+#   (ToolTier enum/tierPriority, archived statuses, Bookmark, report enum,
+#   post/bookmark slices, slug helpers).
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

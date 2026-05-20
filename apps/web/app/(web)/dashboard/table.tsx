@@ -8,8 +8,10 @@ import {
   CircleDashedIcon,
   CircleDotDashedIcon,
   CircleDotIcon,
+  CircleXIcon,
   PlusIcon,
   SparklesIcon,
+  Trash2Icon,
 } from "lucide-react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useQueryStates } from "nuqs"
@@ -79,6 +81,14 @@ export const DashboardTable = ({ tools, pageCount }: Awaited<ReturnType<typeof f
             [ToolStatus.Draft]: {
               label: t("status.draft"),
               icon: <CircleDashedIcon className="text-gray-500" />,
+            },
+            [ToolStatus.Rejected]: {
+              label: "Rejected",
+              icon: <CircleXIcon className="text-red-500" />,
+            },
+            [ToolStatus.Deleted]: {
+              label: "Deleted",
+              icon: <Trash2Icon className="text-gray-500" />,
             },
           }
 

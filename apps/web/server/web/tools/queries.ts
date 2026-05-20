@@ -51,7 +51,9 @@ export const searchTools = async (search: ToolFilterParams, where?: Prisma.ToolW
 
   const [tools, total] = await db.$transaction([
     db.tool.findMany({
-      orderBy: sortBy ? { [sortBy]: sortOrder } : [{ isFeatured: "desc" }, { createdAt: "desc" }],
+      orderBy: sortBy
+        ? { [sortBy]: sortOrder }
+        : [{ tierPriority: "asc" }, { publishedAt: "desc" }],
       where: { ...whereQuery, ...where },
       select: toolManyPayload,
       take,
@@ -114,7 +116,7 @@ export const findTools = async ({ where, orderBy, ...args }: PublicToolFindManyA
   return db.tool.findMany({
     ...args,
     where: { status: ToolStatus.Published, ...where },
-    orderBy: orderBy ?? [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    orderBy: orderBy ?? [{ tierPriority: "asc" }, { publishedAt: "desc" }],
     select: toolManyPayload,
   })
 }
@@ -137,7 +139,7 @@ export const countSubmittedTools = async ({ where, ...args }: Prisma.ToolCountAr
   return db.tool.count({
     ...args,
     where: {
-      status: { notIn: [ToolStatus.Published] },
+      status: { in: [ToolStatus.Draft, ToolStatus.Pending, ToolStatus.Scheduled] },
       submitterEmail: { not: null },
       ...where,
     },
@@ -152,7 +154,7 @@ export const findTool = async ({ where, ...args }: PublicToolFindFirstArgs = {})
 
   return db.tool.findFirst({
     ...args,
-    where,
+    where: { status: { not: ToolStatus.Rejected }, ...where },
     select: toolOnePayload,
   })
 }

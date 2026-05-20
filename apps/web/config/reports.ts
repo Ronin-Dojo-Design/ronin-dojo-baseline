@@ -6,11 +6,13 @@ export const reportsConfig = {
   requireSignIn: false,
 
   // Report types
-  reportTypes: [
-    // Comment for better diffs
-    "Broken Link",
-    "Wrong Category",
-    "Outdated",
-    "Other",
-  ],
+  reportTypes: ["BrokenLink", "WrongCategory", "Outdated", "Other"] as const,
+  allReportTypes: ["BrokenLink", "WrongCategory", "Outdated", "Other", "Feedback"] as const,
+  reportTypeLabels: {
+    BrokenLink: "Broken Link",
+    WrongCategory: "Wrong Category",
+    Outdated: "Outdated",
+    Other: "Other",
+    Feedback: "Feedback",
+  } as const,
 }

@@ -2,6 +2,7 @@
 
 import { tryCatch } from "@primoui/utils"
 import { getTranslations } from "next-intl/server"
+import { ReportType } from "~/.generated/prisma/client"
 import { reportsConfig } from "~/config/reports"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { actionClient, userActionClient } from "~/lib/safe-actions"
@@ -58,7 +59,7 @@ export const reportFeedback = actionClient
     const result = await tryCatch(
       db.report.create({
         data: {
-          type: "Feedback",
+          type: ReportType.Feedback,
           email,
           message,
         },
