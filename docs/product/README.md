@@ -4,9 +4,9 @@ slug: product-documentation-index
 type: index
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-20
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-pr39-intake
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -14,6 +14,8 @@ backlinks:
 pairs_with:
   - docs/knowledge/wiki/ronin-project-context.md
   - docs/knowledge/wiki/doc-pruning-register.md
+  - docs/product/baseline-martial-arts/PRD.md
+  - docs/product/baseline-martial-arts/STORIES.md
 tags:
   - product
   - prd

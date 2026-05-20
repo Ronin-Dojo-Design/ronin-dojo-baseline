@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-20
 author: Brian + Copilot
-last_agent: codex-session-0206
+last_agent: codex-pr39-intake
 ---
 
 # LLM Wiki Index
@@ -60,6 +60,18 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Topic Index](topic-index.md) | index | active |
 | [Tournament Operations](concepts/tournament-ops.md) | concept | active |
 | [Dirstarter Uplift Backlog](dirstarter-uplift-backlog.md) | backlog | closed/superseded by uplift epic |
+| [Ronin Project Context](ronin-project-context.md) | concept | active — compact project-context canon |
+| [Doc Pruning Register](doc-pruning-register.md) | registry | active — doc consolidation/demotion register |
+
+## Product Docs
+
+| Page | Type | Status |
+| --- | --- | --- |
+| [Product Documentation Index](../../product/README.md) | index | active |
+| [Baseline Martial Arts PRD](../../product/baseline-martial-arts/PRD.md) | prd | active |
+| [Baseline Martial Arts Stories](../../product/baseline-martial-arts/STORIES.md) | stories | active |
+| [Black Belt Legacy PRD](../../product/black-belt-legacy/PRD.md) | prd | active |
+| [Black Belt Legacy Stories](../../product/black-belt-legacy/STORIES.md) | stories | active |
 
 ## Architecture
 

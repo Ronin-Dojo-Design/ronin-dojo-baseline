@@ -4,13 +4,14 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-05-20
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-pr39-intake
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
   - docs/product/README.md
+  - docs/product/baseline-martial-arts/PRD.md
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/knowledge/wiki/doc-pruning-register.md
