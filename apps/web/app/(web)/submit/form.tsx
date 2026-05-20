@@ -22,7 +22,7 @@ import { TextArea } from "~/components/common/textarea"
 import { FeatureNudge } from "~/components/web/feature-nudge"
 import { useTrackEvent } from "~/hooks/use-track-event"
 import { useSession } from "~/lib/auth-client"
-import { isToolPublished } from "~/lib/tools"
+import { isToolPublished, isToolTopTier } from "~/lib/tools"
 import { cx } from "~/lib/utils"
 import { submitTool } from "~/server/web/actions/submit"
 import { createSubmitToolSchema } from "~/server/web/shared/schema"
@@ -59,7 +59,7 @@ export const SubmitForm = ({ className, ...props }: ComponentProps<"form">) => {
         trackEvent("submit_tool", { slug: data.slug })
 
         if (isToolPublished(data)) {
-          if (data.isFeatured) {
+          if (isToolTopTier(data)) {
             toast.info(t("already_published", { name: data.name }))
           } else {
             toast.custom(toastT => <FeatureNudge tool={data} t={toastT} />, {

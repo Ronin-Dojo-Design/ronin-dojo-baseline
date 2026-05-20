@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
+import { ToolTier } from "~/.generated/prisma/client"
 import { ProductListSkeleton } from "~/components/web/products/product-list"
 import { ProductQuery } from "~/components/web/products/product-query"
 import { Stats } from "~/components/web/stats"
@@ -22,7 +23,7 @@ const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
 
   const tool = await db.tool.findFirst({
-    where: { slug, isFeatured: false },
+    where: { slug, tier: { not: ToolTier.Premium } },
     select: toolOnePayload,
   })
 

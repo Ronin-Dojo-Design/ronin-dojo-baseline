@@ -8,7 +8,7 @@ export default withAdminPage(() => {
   return (
     <Wrapper size="md" gap="sm">
       <ToolForm
-        title="Create tool"
+        title="Create listing"
         categoriesPromise={findCategoryList()}
         tagsPromise={findTagList()}
       />

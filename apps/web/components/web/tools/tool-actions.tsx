@@ -13,10 +13,11 @@ import { Tooltip } from "~/components/common/tooltip"
 import { ToolClaimDialog } from "~/components/web/dialogs/tool-claim-dialog"
 import { ToolEmbedDialog } from "~/components/web/dialogs/tool-embed-dialog"
 import { ToolReportDialog } from "~/components/web/dialogs/tool-report-dialog"
+import { ListingBookmarkButton } from "~/components/web/listings/listing-bookmark-button"
 import { ToolButton } from "~/components/web/tools/tool-button"
 import { reportsConfig } from "~/config/reports"
 import { useSession } from "~/lib/auth-client"
-import { isToolApproved, isToolPublished, isToolUpgradable } from "~/lib/tools"
+import { isToolApproved, isToolPublished, isToolTopTier, isToolUpgradable } from "~/lib/tools"
 import { cx } from "~/lib/utils"
 import type { ToolOne } from "~/server/web/tools/payloads"
 
@@ -69,7 +70,7 @@ export const ToolActions = ({ tool, children, className, ...props }: ToolActions
         )}
       </AnimatePresence>
 
-      {!tool.isFeatured &&
+      {!isToolTopTier(tool) &&
         isToolUpgradable(tool) &&
         tool.ownerId &&
         tool.ownerId === session?.user.id && (
@@ -99,6 +100,8 @@ export const ToolActions = ({ tool, children, className, ...props }: ToolActions
           </Button>
         </Tooltip>
       )}
+
+      <ListingBookmarkButton toolId={tool.id} size="md" label="Save" showLabel={false} />
 
       {reportsConfig.enabled && (
         <Tooltip tooltip={t("report_tooltip")}>

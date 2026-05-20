@@ -18,6 +18,7 @@ export const toolsTableParamsSchema = {
   to: parseAsString.withDefault(""),
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
   status: parseAsArrayOf(parseAsStringEnum<ToolStatus>(Object.values(ToolStatus))).withDefault([]),
+  tier: parseAsArrayOf(parseAsStringEnum<ToolTier>(Object.values(ToolTier))).withDefault([]),
 }
 
 export const toolsTableParamsCache = createSearchParamsCache(toolsTableParamsSchema)

@@ -17,7 +17,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/tools/[slug]">
   return (
     <Wrapper size="md" gap="sm">
       <ToolForm
-        title={`Edit ${tool.name}`}
+        title={`Edit listing: ${tool.name}`}
         tool={tool}
         categoriesPromise={findCategoryList()}
         tagsPromise={findTagList()}

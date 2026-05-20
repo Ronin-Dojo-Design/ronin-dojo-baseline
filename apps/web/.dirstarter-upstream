@@ -18,3 +18,7 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   (ToolTier enum/tierPriority, archived statuses, Bookmark, report enum,
 #   post/bookmark slices, slug helpers).
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0207 / L4: listing tier flow and public relabel subset from
+#   upstream 7e724b6 applied on Ronin's existing Tool routes/model
+#   (public tier badges, bookmark affordance, admin tier transition audit).
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

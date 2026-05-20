@@ -5,7 +5,7 @@ import type { ToolsTableSchema } from "~/server/admin/tools/schema"
 import { db } from "~/services/db"
 
 export const findTools = async (search: ToolsTableSchema, where?: Prisma.ToolWhereInput) => {
-  const { name, sort, page, perPage, from, to, operator, status } = search
+  const { name, sort, page, perPage, from, to, operator, status, tier } = search
 
   // Offset to paginate the results
   const offset = (page - 1) * perPage
@@ -26,6 +26,9 @@ export const findTools = async (search: ToolsTableSchema, where?: Prisma.ToolWhe
 
     // Filter tasks by status
     status.length > 0 ? { status: { in: status } } : undefined,
+
+    // Filter listings by tier
+    tier.length > 0 ? { tier: { in: tier } } : undefined,
   ]
 
   const whereQuery: Prisma.ToolWhereInput = {

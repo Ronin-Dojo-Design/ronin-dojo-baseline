@@ -33,9 +33,9 @@
     "add_tooltip": "Get your tool featured"
   },
   "listings": {
-    "featured_tools": "Featured Tools",
+    "featured_tools": "Featured Listings",
     "similar_to": "Similar to {toolName}",
-    "view_all_tools": "View all tools"
+    "view_all_tools": "View all listings"
   },
   "pagination": {
     "prev": "Prev",

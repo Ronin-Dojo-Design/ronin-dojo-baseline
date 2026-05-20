@@ -4,8 +4,8 @@ slug: baseline-listings-runbook
 type: runbook
 status: active
 created: 2026-05-14
-updated: 2026-05-14
-last_agent: codex-session-0165
+updated: 2026-05-20
+last_agent: codex-session-0207
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/lineage-listing-runbook.md
@@ -14,6 +14,7 @@ pairs_with:
   - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/sprints/SESSION_0165.md
+  - docs/sprints/SESSION_0207.md
   - docs/sprints/lanes/LANE-S040-listing-relabel.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -66,6 +67,16 @@ Why:
 This runbook was pulled from GitHub commit `a2f5f87a79ea15a89d063234bbc150864581ff8c` and integrated as a planning input, not as runtime implementation.
 
 Use it with `docs/architecture/dirstarter-baseline-index.md` and `docs/architecture/dirstarter-upstream-sync-2026-05-14.md` before any Tool-to-Listing code change. Upstream Dirstarter `7e724b6` adds `ToolTier`, `Rejected`, `Deleted`, bookmarks, and tier priority; Ronin must port those deliberately instead of renaming or merging the whole Tool stack.
+
+### SESSION_0207 implementation note
+
+L4 landed the first runtime slice of this runbook on top of Ronin's existing `Tool` substrate:
+
+- Public cards/detail pages now say Listing where L4 touches the Tool surface, show Free/Standard/Premium tier badges, show Featured/Verified status, and expose a Save bookmark affordance.
+- `/admin/tools` remains the route and `Tool` remains the Prisma model, but the admin page is now the listing-admin gold standard: tier filter/column, tier transition panel, and `TIER_TRANSITION` audit rows.
+- `Tool.tier` is now the admin source of truth for listing tier. `isFeatured` stays only as compatibility projection for Premium and old call sites.
+
+Confirmed product direction: courses, techniques, programs, disciplines, school listings, org/team listings, and member listings should converge toward this listing/tool parity later. Do not expand the L4 implementation retroactively; stage that as a separate parity lane after the uplift lanes that already exist.
 
 ---
 

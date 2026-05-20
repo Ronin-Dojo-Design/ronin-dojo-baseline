@@ -17,8 +17,8 @@
     "errors": {
       "rate_limited": "Too many submissions. Please try again later.",
       "disposable_email": "Please use a valid, non-disposable email address.",
-      "failed_submission": "We couldn't submit your tool. Please try again.",
-      "slug_generation_failed": "We couldn't generate a unique URL for your tool. Try renaming it and resubmit."
+      "failed_submission": "We couldn't submit your listing. Please try again.",
+      "slug_generation_failed": "We couldn't generate a unique URL for your listing. Try renaming it and resubmit."
     }
   },
   "ad_details": {
@@ -71,7 +71,7 @@
   },
   "sign_in": {
     "title": "Sign In",
-    "description": "Get access to the dashboard and manage your submitted tools.",
+    "description": "Get access to the dashboard and manage your submitted listings.",
     "continue_with": "Continue with {provider}",
     "email_placeholder": "Enter your email",
     "magic_link_button": "Send me a Magic Link"

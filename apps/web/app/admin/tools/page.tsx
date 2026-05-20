@@ -10,7 +10,7 @@ export default withAdminPage(async ({ searchParams }: PageProps<"/admin/tools">)
   const toolsPromise = findTools(search)
 
   return (
-    <Suspense fallback={<DataTableSkeleton title="Tools" />}>
+    <Suspense fallback={<DataTableSkeleton title="Listings" />}>
       <ToolsTable toolsPromise={toolsPromise} />
     </Suspense>
   )

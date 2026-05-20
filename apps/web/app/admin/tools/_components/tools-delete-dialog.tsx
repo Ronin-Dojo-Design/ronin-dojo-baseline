@@ -13,11 +13,11 @@ export const ToolsDeleteDialog = ({ tools, onExecute, ...props }: ToolsDeleteDia
   return (
     <DeleteDialog
       ids={tools.map(({ id }) => id)}
-      label="tool"
+      label="listing"
       action={deleteTools}
       callbacks={{
         onExecute: () => {
-          toast.success("Tool(s) deleted successfully")
+          toast.success("Listing(s) deleted successfully")
           onExecute?.()
         },
         onError: ({ error }) => toast.error(error.serverError),

@@ -2,12 +2,15 @@
 
 import type { ComponentProps } from "react"
 import { Badge } from "~/components/common/badge"
-import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { Button } from "~/components/common/button"
+import { Card, CardDescription, CardFooter, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { ShowMore } from "~/components/common/show-more"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
+import { ListingBookmarkButton } from "~/components/web/listings/listing-bookmark-button"
+import { ListingStatusBadges, ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { Favicon } from "~/components/web/ui/favicon"
 import { VerifiedBadge } from "~/components/web/verified-badge"
 import type { ToolMany } from "~/server/web/tools/payloads"
@@ -23,13 +26,11 @@ const ToolCard = ({ tool, ...props }: ToolCardProps) => {
         <Favicon src={tool.faviconUrl} title={tool.name} contained />
 
         <H4 as="h3" className="truncate">
-          <Link href={`/${tool.slug}`}>
-            <span className="absolute inset-0 z-10" />
-            {tool.name}
-          </Link>
+          <Link href={`/${tool.slug}`}>{tool.name}</Link>
         </H4>
 
         {tool.ownerId && <VerifiedBadge size="md" className="-ml-1.5" />}
+        <ListingTierBadge tool={tool} className="ml-auto" />
       </CardHeader>
 
       <div className="relative size-full flex flex-col">
@@ -44,6 +45,8 @@ const ToolCard = ({ tool, ...props }: ToolCardProps) => {
             showMoreType="text"
             className="mt-auto"
           />
+
+          <ListingStatusBadges tool={tool} />
         </Stack>
 
         {tool.description && (
@@ -52,6 +55,14 @@ const ToolCard = ({ tool, ...props }: ToolCardProps) => {
           </div>
         )}
       </div>
+
+      <CardFooter className="mt-auto w-full justify-between">
+        <Button size="sm" variant="secondary" asChild>
+          <Link href={`/${tool.slug}`}>View Listing</Link>
+        </Button>
+
+        <ListingBookmarkButton toolId={tool.id} />
+      </CardFooter>
     </Card>
   )
 }

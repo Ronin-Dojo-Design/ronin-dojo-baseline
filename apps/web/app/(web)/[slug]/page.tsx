@@ -10,6 +10,7 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { FeaturedToolsIcons } from "~/components/web/listings/featured-tools-icons"
+import { ListingStatusBadges, ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { RelatedTools, RelatedToolsSkeleton } from "~/components/web/listings/related-tools"
 import { Markdown } from "~/components/web/markdown"
 import { Nav } from "~/components/web/nav"
@@ -27,7 +28,7 @@ import { Tag } from "~/components/web/ui/tag"
 import { VerifiedBadge } from "~/components/web/verified-badge"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
-import { isToolPublished } from "~/lib/tools"
+import { hasToolTierCap, isToolPublished } from "~/lib/tools"
 import { findTool, findToolSlugs } from "~/server/web/tools/queries"
 
 type Props = PageProps<"/[slug]">
@@ -77,6 +78,7 @@ export const generateMetadata = async (props: Props): Promise<Metadata> => {
 export default async function (props: Props) {
   const { tool, metadata, structuredData } = await getData(props)
   const t = await getTranslations()
+  const isFeaturedListing = hasToolTierCap(tool, "featuredPlacement")
 
   return (
     <>
@@ -92,6 +94,7 @@ export default async function (props: Props) {
                 </H2>
 
                 {tool.ownerId && <VerifiedBadge size="lg" />}
+                <ListingTierBadge tool={tool} />
               </Stack>
 
               <Suspense>
@@ -106,6 +109,8 @@ export default async function (props: Props) {
             <IntroDescription className="-mt-fluid-md pt-4">{tool.description}</IntroDescription>
           )}
 
+          <ListingStatusBadges tool={tool} className="-mt-fluid-md pt-2" />
+
           {isToolPublished(tool) && (
             <Stack className="w-full -mt-fluid-md pt-8">
               <ToolButton tool={tool} className="md:min-w-36" />
@@ -117,11 +122,12 @@ export default async function (props: Props) {
           {isToolPublished(tool) && tool.screenshotUrl && (
             <OverlayImage
               href={tool.affiliateUrl || tool.websiteUrl}
-              doFollow={tool.isFeatured}
+              doFollow={hasToolTierCap(tool, "doFollow")}
               eventName="click_website"
               eventProps={{
                 url: removeQueryParams(tool.websiteUrl),
-                isFeatured: tool.isFeatured,
+                isFeatured: isFeaturedListing,
+                tier: tool.tier,
                 source: "image",
               }}
               src={tool.screenshotUrl}

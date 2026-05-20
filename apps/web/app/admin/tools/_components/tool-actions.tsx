@@ -52,9 +52,9 @@ export const ToolActions = ({ className, tool, ...props }: ToolActionsProps) => 
         }
       },
       {
-        loading: "Duplicating tool...",
-        success: "Tool duplicated successfully",
-        error: err => `Failed to duplicate tool: ${err.message}`,
+        loading: "Duplicating listing...",
+        success: "Listing duplicated successfully",
+        error: err => `Failed to duplicate listing: ${err.message}`,
       },
     )
   }

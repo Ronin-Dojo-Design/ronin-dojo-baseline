@@ -10,6 +10,7 @@ import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { VerifiedBadge } from "~/components/web/verified-badge"
 
 export const getColumns = (): ColumnDef<Tool>[] => {
@@ -100,6 +101,11 @@ export const getColumns = (): ColumnDef<Tool>[] => {
       cell: ({ row }) => (
         <Badge {...statusBadges[row.original.status]}>{row.original.status}</Badge>
       ),
+    },
+    {
+      accessorKey: "tier",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Tier" />,
+      cell: ({ row }) => <ListingTierBadge tool={row.original} />,
     },
     {
       accessorKey: "publishedAt",

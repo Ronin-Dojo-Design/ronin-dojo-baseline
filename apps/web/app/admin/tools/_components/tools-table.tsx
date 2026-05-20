@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
-import { type Tool, ToolStatus } from "~/.generated/prisma/browser"
+import { type Tool, ToolStatus, ToolTier } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/admin/tools/_components/tools-table-columns"
 import { ToolsTableToolbarActions } from "~/app/admin/tools/_components/tools-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
@@ -21,6 +21,7 @@ import { DataTable } from "~/components/data-table/data-table"
 import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
+import { tiersConfig } from "~/config/tiers"
 import { useDataTable } from "~/hooks/use-data-table"
 import type { findTools } from "~/server/admin/tools/queries"
 import { toolsTableParamsSchema } from "~/server/admin/tools/schema"
@@ -80,6 +81,14 @@ export function ToolsTable({ toolsPromise }: ToolsTableProps) {
         },
       ],
     },
+    {
+      id: "tier",
+      label: "Tier",
+      options: Object.values(ToolTier).map(tier => ({
+        label: tiersConfig[tier].label,
+        value: tier,
+      })),
+    },
   ]
 
   const { table } = useDataTable({
@@ -101,12 +110,12 @@ export function ToolsTable({ toolsPromise }: ToolsTableProps) {
   return (
     <DataTable table={table}>
       <DataTableHeader
-        title="Tools"
+        title="Listings"
         total={total}
         callToAction={
           <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
             <Link href="/admin/tools/new">
-              <div className="max-sm:sr-only">New tool</div>
+              <div className="max-sm:sr-only">New listing</div>
             </Link>
           </Button>
         }

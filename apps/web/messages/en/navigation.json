@@ -1,6 +1,6 @@
 {
   "home": "Home",
-  "tools": "Tools",
+  "tools": "Listings",
   "programs": "Programs",
   "tournaments": "Tournaments",
   "techniques": "Techniques",
@@ -29,7 +29,7 @@
   "quick_links": "Quick Links",
   "create": "Create",
   "appearance": "Appearance",
-  "new_tool": "New Tool",
+  "new_tool": "New Listing",
   "new_category": "New Category",
   "new_tag": "New Tag",
   "toggle_theme": "Toggle theme",

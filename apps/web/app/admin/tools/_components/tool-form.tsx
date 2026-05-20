@@ -8,7 +8,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { type ComponentProps, use, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { type Tool, ToolStatus } from "~/.generated/prisma/browser"
+import { type Tool, ToolStatus, ToolTier } from "~/.generated/prisma/browser"
 import { ToolActions } from "~/app/admin/tools/_components/tool-actions"
 import { ToolPublishActions } from "~/app/admin/tools/_components/tool-publish-actions"
 import { AIGenerateContent } from "~/components/admin/ai/generate-content"
@@ -27,12 +27,14 @@ import { H3 } from "~/components/common/heading"
 import { Input, inputVariants } from "~/components/common/input"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
+import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import { Stack } from "~/components/common/stack"
-import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
 import { Tooltip } from "~/components/common/tooltip"
+import { ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { Markdown } from "~/components/web/markdown"
 import { siteConfig } from "~/config/site"
+import { tiersConfig } from "~/config/tiers"
 import { useComputedField } from "~/hooks/use-computed-field"
 import { isToolPublished } from "~/lib/tools"
 import { cx } from "~/lib/utils"
@@ -49,7 +51,7 @@ const ToolStatusChange = ({ tool }: { tool: Tool }) => {
       <Link href={`/${tool.slug}`} target="_blank" className="font-semibold underline inline-block">
         {tool.name}
       </Link>{" "}
-      is now {tool.status.toLowerCase()}.{" "}
+      listing is now {tool.status.toLowerCase()}.{" "}
       {tool.status === "Scheduled" && (
         <>
           Will be published on {formatDateTime(tool.publishedAt ?? new Date(), "long")} (
@@ -59,6 +61,21 @@ const ToolStatusChange = ({ tool }: { tool: Tool }) => {
     </>
   )
 }
+
+const tierOptions = [
+  {
+    tier: ToolTier.Free,
+    description: "Basic public listing with website and category placement.",
+  },
+  {
+    tier: ToolTier.Standard,
+    description: "Verified directory listing with stronger public trust signals.",
+  },
+  {
+    tier: ToolTier.Premium,
+    description: "Highest priority listing with featured placement.",
+  },
+]
 
 type ToolFormProps = ComponentProps<"form"> & {
   tool?: NonNullable<Awaited<ReturnType<typeof findToolBySlug>>>
@@ -98,6 +115,7 @@ export function ToolForm({
         faviconUrl: tool?.faviconUrl ?? "",
         screenshotUrl: tool?.screenshotUrl ?? "",
         isFeatured: tool?.isFeatured ?? false,
+        tier: tool?.tier ?? (tool?.isFeatured ? ToolTier.Premium : ToolTier.Free),
         submitterName: tool?.submitterName ?? "",
         submitterEmail: tool?.submitterEmail ?? "",
         submitterNote: tool?.submitterNote ?? "",
@@ -117,7 +135,7 @@ export function ToolForm({
           toast.success(<ToolStatusChange tool={data} />)
           originalStatus.current = data.status
         } else {
-          toast.success(`Tool successfully ${tool ? "updated" : "created"}`)
+          toast.success(`Listing successfully ${tool ? "updated" : "created"}`)
         }
 
         // Redirect to the new tool
@@ -505,13 +523,49 @@ export function ToolForm({
 
         <FormField
           control={form.control}
-          name="isFeatured"
+          name="tier"
           render={({ field }) => (
-            <FormItem direction="row">
+            <FormItem className="col-span-full rounded-md border bg-card p-4">
+              <Stack className="w-full justify-between gap-3">
+                <Stack direction="column" size="sm">
+                  <FormLabel>Listing tier</FormLabel>
+                  <Note>
+                    Controls the public tier badge, listing priority, and featured placement.
+                  </Note>
+                </Stack>
+
+                {tool && (
+                  <ListingTierBadge
+                    tool={{ ...tool, tier: field.value ?? ToolTier.Free }}
+                    size="md"
+                  />
+                )}
+              </Stack>
+
               <FormControl>
-                <Switch onCheckedChange={field.onChange} checked={field.value} />
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  className="grid gap-3 md:grid-cols-3"
+                >
+                  {tierOptions.map(option => (
+                    <Stack
+                      key={option.tier}
+                      size="sm"
+                      className="items-start rounded-md border bg-background p-3"
+                    >
+                      <RadioGroupItem id={`tier-${option.tier}`} value={option.tier} />
+
+                      <Stack direction="column" size="sm" className="flex-1" asChild>
+                        <label htmlFor={`tier-${option.tier}`}>
+                          <span className="font-medium">{tiersConfig[option.tier].label}</span>
+                          <Note>{option.description}</Note>
+                        </label>
+                      </Stack>
+                    </Stack>
+                  ))}
+                </RadioGroup>
               </FormControl>
-              <FormLabel>Feature this tool</FormLabel>
               <FormMessage />
             </FormItem>
           )}

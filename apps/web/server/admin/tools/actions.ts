@@ -16,6 +16,7 @@ export const upsertTool = adminActionClient
     const tagIds = tags?.map(id => ({ id }))
     const existingTool = id ? await db.tool.findUnique({ where: { id } }) : null
     const listingTier = tier ?? (isFeatured ? ToolTier.Premium : ToolTier.Free)
+    const featuredListing = listingTier === ToolTier.Premium
 
     const tool = id
       ? // If the tool exists, update it
@@ -23,7 +24,7 @@ export const upsertTool = adminActionClient
           where: { id },
           data: {
             ...input,
-            isFeatured,
+            isFeatured: featuredListing,
             tier: listingTier,
             slug: input.slug || "",
             categories: { set: categoryIds },
@@ -34,7 +35,7 @@ export const upsertTool = adminActionClient
         await db.tool.create({
           data: {
             ...input,
-            isFeatured,
+            isFeatured: featuredListing,
             tier: listingTier,
             slug: input.slug || "",
             categories: { connect: categoryIds },
@@ -54,24 +55,46 @@ export const upsertTool = adminActionClient
     })
 
     after(async () => {
-      if (existingTool && existingTool.status !== tool.status) {
-        try {
-          await db.auditLog.create({
-            data: {
-              brand,
-              action: "STATUS_TRANSITION",
-              entityType: "Tool",
+      if (existingTool) {
+        const auditEntries = [
+          existingTool.status !== tool.status
+            ? {
+                action: "STATUS_TRANSITION",
+                before: { status: existingTool.status },
+                after: { status: tool.status },
+              }
+            : null,
+          existingTool.tier !== tool.tier
+            ? {
+                action: "TIER_TRANSITION",
+                before: { tier: existingTool.tier },
+                after: { tier: tool.tier },
+              }
+            : null,
+        ].filter(Boolean)
+
+        for (const entry of auditEntries) {
+          if (!entry) continue
+
+          try {
+            await db.auditLog.create({
+              data: {
+                brand,
+                action: entry.action,
+                entityType: "Tool",
+                entityId: tool.id,
+                before: entry.before,
+                after: entry.after,
+                userId: user.id,
+              },
+            })
+          } catch (error) {
+            console.error("[AuditLog] Failed to write Tool audit entry", {
+              action: entry.action,
               entityId: tool.id,
-              before: { status: existingTool.status },
-              after: { status: tool.status },
-              userId: user.id,
-            },
-          })
-        } catch (error) {
-          console.error("[AuditLog] Failed to write Tool STATUS_TRANSITION audit entry", {
-            entityId: tool.id,
-            error,
-          })
+              error,
+            })
+          }
         }
       }
 

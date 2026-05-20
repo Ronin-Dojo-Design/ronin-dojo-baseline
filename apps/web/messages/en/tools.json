@@ -1,19 +1,19 @@
 {
-  "count_tools": "{count, plural, =0 {tools} =1 {tool} other {tools}}",
-  "no_tools": "No tools found for the given filters.",
+  "count_tools": "{count, plural, =0 {listings} =1 {listing} other {listings}}",
+  "no_tools": "No listings found for the given filters.",
   "actions": {
-    "promote_tooltip": "Promote this tool to get more visibility",
+    "promote_tooltip": "Upgrade this listing to get more visibility",
     "promote_button": "Promote",
-    "claim_tooltip": "Claim this tool to get a verified badge",
+    "claim_tooltip": "Claim this listing to get a verified badge",
     "claim_button": "Claim",
     "report_tooltip": "Send a report/suggestion",
     "report_button": "Report",
-    "embed_tooltip": "Embed this tool on your website",
+    "embed_tooltip": "Embed this listing on your website",
     "embed_button": "Embed",
     "visit_button": "Visit"
   },
   "filters": {
-    "search_placeholder": "Search tools...",
+    "search_placeholder": "Search listings...",
     "all_categories": "All categories",
     "sort_latest": "Latest",
     "sort_name_asc": "Name (A to Z)",

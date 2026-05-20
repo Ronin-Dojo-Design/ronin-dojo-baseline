@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-20
-last_agent: codex-session-0206
+last_agent: codex-session-0207
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -57,6 +57,7 @@ backlinks:
   - docs/sprints/SESSION_0204.md
   - docs/sprints/SESSION_0205.md
   - docs/sprints/SESSION_0206.md
+  - docs/sprints/SESSION_0207.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -1883,3 +1884,34 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** upstream `7e724b6` schema/server files, Ronin Prisma schema/migrations, tool/report/post/bookmark server slices, L3 epic block, lane ledger, L1 env/deploy report, Vercel and Neon runbooks, Prisma migrate output, local Postgres advisory-lock query, and full isolated app test output.
 - **Verdict:** Pass. No P0/P1 findings. Schema shape follows upstream where it mattered (`ToolTier` enum, generated `tierPriority`, `Bookmark`, DB-backed `Post` reads) while preserving Ronin-specific compatibility (`isFeatured`, `ReportType.Feedback`, brand-scoped post helpers). Local destructive reset was acceptable under the no-users L3 lock and was followed by deploy-mode migration proof. The first branch Preview caught a Prisma TS2321 path in `next build`; L3 fixed it in-session and added local production build proof before repush.
 - **Follow-up:** SESSION_0207 starts L4 baseline listings relabel + tier flow. It should build UI on top of the L3 `tier`/bookmark primitives and decide whether subscription cancellation downgrades should become `Standard` instead of Ronin's current L3 compatibility fallback to `Free`.
+
+### S207_DIRSTARTER_UPLIFT_L4_LISTINGS_TIER_FLOW — Baseline listings relabel + tier flow
+
+- **Session:** SESSION_0207
+- **Sprint:** S6
+- **Status:** verified
+- **Files:** `apps/web/components/web/listings/listing-tier-badge.tsx`, `apps/web/components/web/listings/listing-bookmark-button.tsx`, public Tool/listing card/detail/submit/dashboard surfaces, admin Tool/listing form/table/action/query/schema surfaces, i18n messages, admin focused tests, `.dirstarter-upstream`, and uplift closeout docs.
+- **Seed data:** no durable seed changes; the admin safe-action test creates and cleans its own Tool/User/AuditLog fixtures.
+- **Smoke test:** focused isolated tests 6/6; `pnpm --filter dirstarter typecheck` clean; touched-file `bun biome check` clean; `pnpm --filter dirstarter build` clean with one pre-existing Turbopack/NFT warning; `bun test --isolate --path-ignore-patterns='e2e/**'` passed 244/244; local built-app curl smoke saw public tier/status/bookmark copy; `vercel ls --yes` latest Production and Preview Ready; `bun run wiki:lint` 0 errors / 495 warnings.
+
+### SESSION_0207 — Dirstarter uplift L4 baseline listings tier flow
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0207_TASK_01 | Cody: extend public Tool/listing card and detail surfaces with tier badges, tier/status surfacing, tier-aware CTA/link behavior, and L3-backed Save bookmark affordance without renaming the Tool substrate. | complete |
+| SESSION_0207_TASK_02 | Cody: add admin listing tier controls to the existing `/admin/tools` gold-standard page, including tier filter/column/form panel and `TIER_TRANSITION` audit logging. | complete |
+| SESSION_0207_TASK_03 | Doug + Petey: prove focused and full-suite behavior, run build/curl/Vercel checks, update lane-ledger/wiki/project-log/runbook/upstream marker, and full-close. | complete |
+
+**Notes:** L4 intentionally kept Ronin's `Tool` model and routes. Public/admin copy says Listing where this lane touched the Tool surface. `Tool.tier` is now the admin tier source of truth; `isFeatured` remains only a compatibility projection for Premium. Owner clarified the long-term north star: courses, techniques, programs, disciplines, schools/orgs/teams, and members should converge toward listing/tool parity and use the Tool admin page as a UX standard, but that remains outside L4 scope.
+
+**Result:** Public listing cards/detail pages now render Free/Standard/Premium badges, Featured/Verified status, `View Listing`, and Save. The protected admin tier transition path writes actor/before/after audit rows. Tier-aware dashboard/submit/featured logic now uses `tiersConfig`/`Tool.tier` rather than direct `isFeatured` checks.
+
+#### Review
+
+##### SESSION_0207_REVIEW_01 — Hostile close review for L4 listings tier flow
+
+- **Reviewed tasks:** SESSION_0207_TASK_01, SESSION_0207_TASK_02, SESSION_0207_TASK_03.
+- **Dirstarter docs check:** live docs/changelog checked: `https://dirstarter.com/docs/codebase/structure`, `https://dirstarter.com/docs/database/prisma`, `https://dirstarter.com/docs/authentication`, and `https://dirstarter.com/changelog/listing-tiers`.
+- **Sources:** upstream `7e724b6` tool/listing components and server slices, L4 epic block, lane ledger, baseline listings runbook, L3 schema/migration output, local focused/full test output, local build output, curl smoke output, and Vercel deployment list.
+- **Verdict:** Pass. No P0/P1 findings. The implementation follows the upstream three-tier listing flow while preserving Ronin's Tool substrate and route stability. The admin tier path has DB-backed audit proof, public Save uses authenticated bookmark actions, and the broader cross-domain listing parity goal is recorded without scope creep.
+- **Follow-up:** SESSION_0208 starts L5 UI primitives Part 1. L7 should revisit Stripe subscription cancellation downgrade behavior (`Standard` vs current `Free`) because upstream documents graceful downgrades to Standard.
