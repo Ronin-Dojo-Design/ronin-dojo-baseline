@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-19
 author: Brian + Copilot
-last_agent: codex-session-0202
+last_agent: codex-session-0204
 ---
 
 # LLM Wiki Index
@@ -36,6 +36,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Dirstarter Upstream Sync Snapshot - 2026-05-14](../../architecture/dirstarter-upstream-sync-2026-05-14.md) | architecture | active — upstream porting gate |
 | [Dirstarter Upstream Uplift Epic - 2026-05-19](../../architecture/uplift/epic-2026-05-19.md) | architecture | active — **15-lane multi-session epic plan; execution authority for the uplift** |
 | [Dirstarter Upstream Uplift Lane Ledger](../../architecture/uplift/lane-ledger.md) | ledger | active — append-only per-lane audit ledger |
+| [L1 Env/Deploy Diff Report](../../architecture/uplift/L1-env-deploy-diff-report.md) | architecture | active — SESSION_0205 env/deploy decision input |
 | [Dirstarter Docs Inventory](dirstarter-docs-inventory.md) | concept | superseded by baseline index |
 | [Dirstarter Gap Audit](dirstarter-gap-audit.md) | concept | superseded by baseline index |
 | [Content Atoms](content-engine/content-atoms.md) | concept | active |
@@ -58,7 +59,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 | [Topic Index](topic-index.md) | index | active |
 | [Tournament Operations](concepts/tournament-ops.md) | concept | active |
-| [Dirstarter Uplift Backlog](dirstarter-uplift-backlog.md) | backlog | active |
+| [Dirstarter Uplift Backlog](dirstarter-uplift-backlog.md) | backlog | closed/superseded by uplift epic |
 
 ## Architecture
 
@@ -67,6 +68,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Architecture README](../../architecture/README.md) | file | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | file | active — **L1 source of truth for all Dirstarter patterns** |
 | [Dirstarter Upstream Sync Snapshot - 2026-05-14](../../architecture/dirstarter-upstream-sync-2026-05-14.md) | file | active — current upstream sync gate |
+| [L1 Env/Deploy Diff Report](../../architecture/uplift/L1-env-deploy-diff-report.md) | architecture | active — env/deploy handoff for SESSION_0205 |
 | [S1 Schema Design](../../architecture/s1-schema-design.md) | file | active |
 | [Ubiquitous Language](../../architecture/ubiquitous-language.md) | concept | active |
 | [Program Plan](../../architecture/program-plan.md) | file | active |
@@ -266,6 +268,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0201](../../sprints/SESSION_0201.md) | session--implement | closed-full |
 | [SESSION_0202](../../sprints/SESSION_0202.md) | session--implement | closed-full |
 | [SESSION_0203](../../sprints/SESSION_0203.md) | session--plan | closed-full |
+| [SESSION_0204](../../sprints/SESSION_0204.md) | session--plan | closed-full |
 
 ## Protocols
 

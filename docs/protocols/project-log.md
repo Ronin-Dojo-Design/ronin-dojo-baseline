@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-19
-last_agent: codex-session-0202
+last_agent: codex-session-0204
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -54,9 +54,11 @@ backlinks:
   - docs/sprints/SESSION_0201.md
   - docs/sprints/SESSION_0202.md
   - docs/sprints/SESSION_0203.md
+  - docs/sprints/SESSION_0204.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
+  - docs/architecture/uplift/L1-env-deploy-diff-report.md
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/mcp-usage-runbook.md
 ---
@@ -1773,3 +1775,45 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** `docs/architecture/dirstarter-upstream-sync-2026-05-14.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`, `docs/runbooks/baseline-listings-runbook.md`, `apps/web/.dirstarter-upstream`, Graphify queries on uplift backlog and petey-plan protocol.
 - **Verdict:** Pass. No P0/P1 findings. The epic doc enforces per-lane Doug hostile-close gates, `vercel ls` Ready checks, Neon `pg_locks` mitigation, FS-0022 Preview-scope env-var fix, and FS-0024 advisory-lock avoidance. The scope guard is explicit: no runtime code in SESSION_0203. The 15-lane structure honors WORKFLOW 5.0 (1–3 tasks/session), `petey-plan.md` (multi-session epic gets its own doc), and SESSION_0200 lessons (no parallel branches; one Codex session per lane). Residual risk: ADR_0019 may resolve to option A (reject oRPC) in L10, which would skip L11–L13 — the epic doc has the skip condition recorded.
 - **Follow-up:** SESSION_0204 starts at L1 — baseline refresh + lane-ledger init + env/deploy diff report (doc-only). Bow-in prompt staged verbatim in SESSION_0203's `Next session` block for paste-into-Codex.
+
+### S204_DIRSTARTER_UPLIFT_L1_BASELINE_ENV_DIFF — Dirstarter uplift L1 baseline/env diff
+
+- **Session:** SESSION_0204
+- **Sprint:** S6
+- **Status:** verified (doc-only, no runtime code)
+- **Files:** `docs/architecture/uplift/L1-env-deploy-diff-report.md`, `docs/architecture/uplift/lane-ledger.md`, `docs/architecture/uplift/epic-2026-05-19.md`, `docs/architecture/dirstarter-baseline-index.md`, `docs/knowledge/wiki/dirstarter-uplift-backlog.md`, `docs/knowledge/wiki/index.md`, `docs/sprints/SESSION_0204.md`, `docs/protocols/project-log.md`
+- **Seed data:** none
+- **Smoke test:** `bun run wiki:lint` exited 0 with 497 pre-existing warnings; no runtime code changes so no typecheck/biome/test required. `vercel ls` showed latest Production deploy Ready; latest Preview rows included unrelated Error deploys and are recorded as a low-severity follow-up risk below.
+
+### SESSION_0204 — Dirstarter uplift L1 baseline/env diff
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0204_TASK_01 | Petey: refresh `dirstarter-baseline-index.md` against upstream `7e724b6`; reconcile all 11 historical easy wins in `dirstarter-uplift-backlog.md` with required disposition keywords. | complete |
+| SESSION_0204_TASK_02 | Petey: append the L1 row in `docs/architecture/uplift/lane-ledger.md` and write `docs/architecture/uplift/L1-env-deploy-diff-report.md` with variable-by-variable L2 decisions. | complete |
+| SESSION_0204_TASK_03 | Doug + Petey: hostile-close review; wire wiki index and project-log; full-close per `closing.md`; Graphify refresh after git hygiene; commit and push `main`. | complete; final push proof in bow-out response |
+
+**Notes:** The local Dirstarter reference checkout is at the target SHA `7e724b6`, but its local branch label is `chore/enable-pnpm-pre-post-scripts` rather than the snapshot label `upstream/dirstarter-main-20260514`. L1 records this as branch-label drift only; HEAD matches the required upstream target. No runtime code, schema, env settings, Vercel settings, or `.dirstarter-upstream` marker changed.
+
+**Result:** `dirstarter-baseline-index.md` now has a SESSION_0204 refresh note and points to the new env/deploy diff report. The backlog is closed as of SESSION_0204 and all 11 easy wins have explicit disposition keywords, including `replaced-by-upstream` for old data-table column-feature work and `carried-as-domain-work` for Ronin-specific MDX surfaces. The L1 ledger row records doc-only partial-port intent and leaves `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` unchanged. The env report enumerates core/site, database, auth, email, storage, payments, caching, analytics, AI, and Vercel-only variables with proposed L2 decisions.
+
+#### Review
+
+##### SESSION_0204_REVIEW_01 — Hostile close review for L1 baseline/env diff
+
+- **Reviewed tasks:** SESSION_0204_TASK_01, SESSION_0204_TASK_02, SESSION_0204_TASK_03.
+- **Dirstarter docs check:** live docs checked.
+- **Sources:** Local upstream checkout at `7e724b6`; `apps/web/.env.example`; `apps/web/env.ts`; `apps/web/prisma.config.ts`; `apps/web/services/{db,redis,resend,s3,stripe,plausible}.ts`; `apps/web/lib/{ai,auth,email,media,public-media-url}.ts`; `apps/web/vercel.json`; root `vercel.json`; `docs/runbooks/{vercel-domain-setup-runbook,resend-setup-runbook,neon-advisory-lock-recovery}.md`; `https://dirstarter.com/docs/environment-setup`; `https://dirstarter.com/docs/deployment`; `https://dirstarter.com/docs/authentication`; `https://dirstarter.com/docs/integrations/email`; `https://dirstarter.com/docs/integrations/storage`; `https://dirstarter.com/docs/integrations/payments`; `https://dirstarter.com/docs/integrations/rate-limiting`; `https://dirstarter.com/docs/integrations/analytics`; `https://dirstarter.com/docs/automation`; `https://vercel.com/docs/environment-variables/system-environment-variables`; `https://vercel.com/docs/environment-variables/manage-across-environments`.
+- **Verdict:** Pass with one low-severity follow-up. The doc-only scope held: no code, schema, production env, Vercel config, or `.dirstarter-upstream` file changed. The L1 report is specific enough for L2 to make decisions without re-reading every env surface, and it preserves Ronin's production-stability differences (`DIRECT_URL`, `apps/web` root config, optional integration posture, brand-derived Plausible domain). Production deploy was Ready in `vercel ls`, satisfying the owner-stated bow-out gate. The latest Preview rows in `vercel ls` were Error, so L2 should re-check and inspect preview state before changing runtime env/deploy behavior. WORKFLOW 5.0 score: 9.4/10, capped by the unresolved preview-readiness ambiguity even though production was Ready.
+- **Kaizen:** Safe/security: this session did not read secret values or edit runtime code; safety is documented, not behaviorally proven. L2 should prove env changes with Vercel Preview and Production readiness. Preventable slips: the epic's "prod/preview Ready" line and owner prompt's "production Ready" line conflict; future lane prompts should state whether Preview errors block doc-only work. Confidence at 100 / 1,000 / 10,000 users: 9.5 / 9.4 / 9.4 for the documentation itself; runtime confidence is not scored because no runtime behavior changed.
+
+#### Findings
+
+##### SESSION_0204_FINDING_01 — Latest Preview deploy rows were Error during doc-only L1
+
+- **Severity:** low
+- **Task:** SESSION_0204_TASK_03
+- **Evidence:** `vercel ls` during SESSION_0204 showed the latest Production deploy Ready (`ronin-dojo-baseline-3koo2t73d...`, age 2h at check time), but the four newest Preview rows were Error. L1 did not create a preview deployment because the branch was not pushed yet and no runtime files changed.
+- **Impact:** L1's owner-stated production Ready gate is satisfied, but L2 should not start env/deploy implementation while assuming preview deploys are healthy.
+- **Required follow-up:** At SESSION_0205 bow-in, run `vercel ls`; if the newest Preview row is still Error, inspect that deployment before runtime env/deploy changes.
+- **Status:** open follow-up for SESSION_0205.
