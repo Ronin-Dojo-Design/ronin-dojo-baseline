@@ -5,7 +5,7 @@ import plur from "plur"
 import type { ComponentProps } from "react"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 export type ChartData = {
@@ -54,10 +54,22 @@ export const Chart = ({
 
       <div className="flex items-end justify-between gap-1 flex-1">
         {data.map((item, index) => (
-          <Tooltip
-            key={item.date}
-            side="bottom"
-            tooltip={
+          <Tooltip key={item.date}>
+            <TooltipTrigger
+              render={
+                <div className="flex-1 flex items-end h-full">
+                  <div
+                    className={cx(
+                      "flex-1 bg-primary rounded-full duration-300 opacity-75 hover:opacity-100",
+                      index === data.length - 1 && "opacity-50",
+                      cellClassName,
+                    )}
+                    style={{ height: `${(item.value / maxValue) * 100}%` }}
+                  />
+                </div>
+              }
+            />
+            <TooltipContent side="bottom">
               <Stack size="sm" direction="column">
                 <span className="opacity-60">
                   {format(new Date(item.date), "EEE, MMM d, yyyy")}
@@ -68,18 +80,7 @@ export const Chart = ({
                   {item.value.toLocaleString()} {dataLabel && plur(dataLabel, item.value)}
                 </span>
               </Stack>
-            }
-          >
-            <div className="flex-1 flex items-end h-full">
-              <div
-                className={cx(
-                  "flex-1 bg-primary rounded-full duration-300 opacity-75 hover:opacity-100",
-                  index === data.length - 1 && "opacity-50",
-                  cellClassName,
-                )}
-                style={{ height: `${(item.value / maxValue) * 100}%` }}
-              />
-            </div>
+            </TooltipContent>
           </Tooltip>
         ))}
       </div>

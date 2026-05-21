@@ -14,7 +14,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 type RuleSetActionsProps = Omit<ComponentProps<typeof Button>, "ruleSet"> & {
@@ -52,15 +52,20 @@ export const RuleSetActions = ({ ruleSet, className, ...props }: RuleSetActionsP
       </DropdownMenu>
 
       {ruleSet.isSystem ? (
-        <Tooltip tooltip="System rule sets cannot be deleted">
-          <Button
-            variant="secondary"
-            size="sm"
-            prefix={<TrashIcon />}
-            className="text-red-500"
-            disabled
-            {...props}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="secondary"
+                size="sm"
+                prefix={<TrashIcon />}
+                className="text-red-500"
+                disabled
+                {...props}
+              />
+            }
           />
+          <TooltipContent>System rule sets cannot be deleted</TooltipContent>
         </Tooltip>
       ) : (
         <RuleSetsDeleteDialog

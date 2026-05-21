@@ -3,7 +3,7 @@
 import { BadgeCheckIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 type VerifiedBadgeProps = ComponentProps<typeof BadgeCheckIcon> & {
@@ -14,17 +14,22 @@ export const VerifiedBadge = ({ className, size = "md", ...props }: VerifiedBadg
   const t = useTranslations()
 
   return (
-    <Tooltip tooltip={t("common.verified")}>
-      <BadgeCheckIcon
-        className={cx(
-          "relative z-10 -ml-1 shrink-0 fill-blue-500 stroke-background",
-          size === "sm" && "-mb-[0.15em] size-4",
-          size === "md" && "-mb-[0.2em] size-5",
-          size === "lg" && "-mb-[0.25em] size-6",
-          className,
-        )}
-        {...props}
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <BadgeCheckIcon
+            className={cx(
+              "relative z-10 -ml-1 shrink-0 fill-blue-500 stroke-background",
+              size === "sm" && "-mb-[0.15em] size-4",
+              size === "md" && "-mb-[0.2em] size-5",
+              size === "lg" && "-mb-[0.25em] size-6",
+              className,
+            )}
+            {...props}
+          />
+        }
       />
+      <TooltipContent>{t("common.verified")}</TooltipContent>
     </Tooltip>
   )
 }

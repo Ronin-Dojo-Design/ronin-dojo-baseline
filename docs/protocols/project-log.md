@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-21
-last_agent: codex-session-0214
+last_agent: codex-session-0215
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -61,6 +61,7 @@ backlinks:
   - docs/sprints/SESSION_0208.md
   - docs/sprints/SESSION_0212.md
   - docs/sprints/SESSION_0214.md
+  - docs/sprints/SESSION_0215.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -2071,3 +2072,25 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** Graphify queries for D-016 Tooltip/HoverCard/Accordion and primitive migration docs; upstream HoverCard/Accordion/Tooltip source; Ronin HoverCard/Accordion/Tooltip source; exact AST residual scripts; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun run test -- --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
 - **Verdict:** Pass. No P0/P1 findings. Phase 5 no longer imports Radix, current consumer call sites are the expected 3 HoverCard tags and 4 Accordion tags, and all verification gates passed. The production build still emits the pre-existing Turbopack/NFT storage monitoring warning from SESSION_0213; not caused by this migration.
 - **Follow-up:** D-016 Phase 4 Tooltip remains open and should be planned as its own session because it has 46 JSX tags across 25 files and provider prop changes.
+
+### SESSION_0215 — Dirstarter uplift L6 Base UI migration Phase 4 (Tooltip)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0215_TASK_01 | Cody: migrate `apps/web/components/common/tooltip.tsx` from Radix wrapper API to upstream Base UI Tooltip parts, preserving Ronin export names and provider `delay` API. | complete |
+| SESSION_0215_TASK_02 | Cody workers: rewrite all 46 current Tooltip JSX tags across 25 files from legacy `tooltip=` wrapper calls to Base UI compound composition. | complete |
+| SESSION_0215_TASK_03 | Doug + Petey: exact residual checks, typecheck/lint/tests/build/wiki-lint, D-016 docs, lane ledger, project-log review entry, full close, commit/push, Graphify refresh. | complete |
+
+**Notes:** Petey chose a one-pass Phase 4. A compatibility adapter would preserve the old `tooltip=` API and defer the D-016 consumer migration; current AST inventory shows broad but uniform consumer usage that can be split across disjoint admin and web/shared file groups after the primitive lands.
+
+**Result:** `apps/web/components/common/tooltip.tsx` now wraps `@base-ui/react/tooltip` Provider/Root/Trigger/Portal/Positioner/Popup/Arrow and uses local Base UI animation selectors so global `popoverAnimationClasses` can stay Radix-shaped until Phase 7. All current consumers now compose `Tooltip`, `TooltipTrigger render={...}`, and `TooltipContent`; provider `delayDuration` props were renamed to `delay`.
+
+#### Review
+
+##### SESSION_0215_REVIEW_01 — Hostile close review for L6 Base UI migration Phase 4
+
+- **Reviewed tasks:** SESSION_0215_TASK_01, SESSION_0215_TASK_02, SESSION_0215_TASK_03.
+- **Dirstarter docs check:** upstream `7e724b6` `components/common/tooltip.tsx` directly compared against Ronin `apps/web/components/common/tooltip.tsx`. Live `dirstarter.com` docs not required because the upstream source file is the primitive contract.
+- **Sources:** Graphify queries for D-016 Tooltip and project-log discovery; upstream Tooltip source; Ronin Tooltip source and exact AST residual scripts; Worker A/B focused checks; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun run test -- --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
+- **Verdict:** Pass. No P0/P1 findings. Phase 4 removes the Tooltip primitive's Radix dependency and eliminates the legacy Ronin wrapper API. Exact close proof found 132 Tooltip-family JSX tags across 25 files (43 Tooltip roots, 43 Trigger render calls, 43 Content calls, 3 providers) with zero residual `tooltip`, `delayDuration`, `disableHoverableContent`, `Tooltip.Provider`, or primitive `radix-ui` usage.
+- **Follow-up:** D-016 Phase 6 remains next: form primitives (`checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx`) plus `field.tsx` and `button-group.tsx` sanity pass.

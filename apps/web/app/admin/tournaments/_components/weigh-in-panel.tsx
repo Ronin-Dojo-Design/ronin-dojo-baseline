@@ -39,7 +39,7 @@ import {
   TableRow,
 } from "~/components/common/table"
 import { TextArea } from "~/components/common/textarea"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import {
   createWeighInRecord,
   deleteWeighInRecords,
@@ -223,8 +223,11 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
                   </TableCell>
                   <TableCell>
                     {w.isOfficial ? (
-                      <Tooltip tooltip="This is the official weigh-in used for division eligibility">
-                        <Badge variant="success">Official</Badge>
+                      <Tooltip>
+                        <TooltipTrigger render={<Badge variant="success">Official</Badge>} />
+                        <TooltipContent>
+                          This is the official weigh-in used for division eligibility
+                        </TooltipContent>
                       </Tooltip>
                     ) : (
                       <Note>Unofficial</Note>
@@ -233,23 +236,33 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
                   <TableCell>
                     <Stack size="sm" wrap={false}>
                       {!w.isOfficial && (
-                        <Tooltip tooltip="Mark as official">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            prefix={<ShieldCheckIcon />}
-                            onClick={() => handleMarkOfficial(w.id)}
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                prefix={<ShieldCheckIcon />}
+                                onClick={() => handleMarkOfficial(w.id)}
+                              />
+                            }
                           />
+                          <TooltipContent>Mark as official</TooltipContent>
                         </Tooltip>
                       )}
-                      <Tooltip tooltip="Delete weigh-in">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          prefix={<TrashIcon />}
-                          className="text-red-500"
-                          onClick={() => handleDelete(w.id)}
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              prefix={<TrashIcon />}
+                              className="text-red-500"
+                              onClick={() => handleDelete(w.id)}
+                            />
+                          }
                         />
+                        <TooltipContent>Delete weigh-in</TooltipContent>
                       </Tooltip>
                     </Stack>
                   </TableCell>

@@ -17,7 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/common/popover"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 type Relation = {
@@ -197,8 +197,13 @@ export const RelationSelector = <T extends Relation>({
         <AnimatedContainer height transition={{ ease: "linear", duration: 0.1 }}>
           {!!suggestedRelations.length && (
             <Stack size="sm" direction="row" className="items-start">
-              <Tooltip tooltip="AI-suggested relations. Click on them to add to the selection.">
-                <span className="mt-0.5 text-xs text-muted-foreground">Suggested:</span>
+              <Tooltip>
+                <TooltipTrigger
+                  render={<span className="mt-0.5 text-xs text-muted-foreground">Suggested:</span>}
+                />
+                <TooltipContent>
+                  AI-suggested relations. Click on them to add to the selection.
+                </TooltipContent>
               </Tooltip>
 
               <Stack size="xs" className="flex-1">

@@ -15,7 +15,12 @@ import { BrandWhatsAppIcon } from "~/components/common/icons/brand-whatsapp"
 import { BrandXIcon } from "~/components/common/icons/brand-x"
 import { Kbd } from "~/components/common/kbd"
 import { Note } from "~/components/common/note"
-import { Tooltip, TooltipProvider } from "~/components/common/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { siteConfig } from "~/config/site"
 import { slot } from "~/lib/slot"
@@ -106,7 +111,7 @@ export const Nav = ({ className, title, previous, next, ...props }: NavProps) =>
   useHotkeys([["C", handleCopyLink, { preventDefault: true }]])
 
   return (
-    <TooltipProvider delayDuration={0} disableHoverableContent>
+    <TooltipProvider delay={0}>
       <div
         className={cx("flex flex-wrap items-center p-1 bg-background border rounded-lg", className)}
         {...props}
@@ -120,15 +125,20 @@ export const Nav = ({ className, title, previous, next, ...props }: NavProps) =>
         <Note className="mx-1 text-xs font-medium max-lg:hidden">{t("share")}:</Note>
 
         {shareOptions.map(({ platform, url, icon }) => (
-          <Tooltip key={platform} tooltip={t("share_on", { platform })} sideOffset={0}>
-            <ExternalLink
-              href={url(currentUrl, shareTitle)}
-              className={navItemVariants()}
-              eventName="click_share"
-              eventProps={{ url: currentUrl, platform }}
-            >
-              {slot(icon, { className: "size-4" })}
-            </ExternalLink>
+          <Tooltip key={platform} disableHoverablePopup>
+            <TooltipTrigger
+              render={
+                <ExternalLink
+                  href={url(currentUrl, shareTitle)}
+                  className={navItemVariants()}
+                  eventName="click_share"
+                  eventProps={{ url: currentUrl, platform }}
+                >
+                  {slot(icon, { className: "size-4" })}
+                </ExternalLink>
+              }
+            />
+            <TooltipContent sideOffset={0}>{t("share_on", { platform })}</TooltipContent>
           </Tooltip>
         ))}
       </div>

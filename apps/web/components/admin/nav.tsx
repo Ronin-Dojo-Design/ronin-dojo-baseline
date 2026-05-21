@@ -7,7 +7,7 @@ import { Button, type ButtonProps } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 type NavLink = ButtonProps & {
@@ -53,24 +53,25 @@ export const Nav = ({ className, links, isCollapsed, ...props }: NavProps) => {
 
         if (isCollapsed) {
           return (
-            <Tooltip
-              key={index}
-              side="right"
-              tooltip={
+            <Tooltip key={index}>
+              <TooltipTrigger
+                render={
+                  <Button
+                    size="md"
+                    variant="ghost"
+                    aria-label={title}
+                    className={cx("font-sans", isActive(href) && "bg-accent text-foreground")}
+                    {...props}
+                    render={<Link href={href} />}
+                  />
+                }
+              />
+              <TooltipContent side="right">
                 <Stack size="lg">
                   {title}
                   {label && <span className="opacity-60">{label}</span>}
                 </Stack>
-              }
-            >
-              <Button
-                size="md"
-                variant="ghost"
-                aria-label={title}
-                className={cx("font-sans", isActive(href) && "bg-accent text-foreground")}
-                {...props}
-                render={<Link href={href} />}
-              />
+              </TooltipContent>
             </Tooltip>
           )
         }

@@ -8,7 +8,7 @@ import { Card } from "~/components/common/card"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 
 // -----------------------------------------------------------------------------
 // Constants
@@ -113,10 +113,15 @@ export function TenPointMustForm({
       {/* Scoring guide */}
       <div className="flex flex-wrap gap-1">
         {Object.entries(SCORE_GUIDE).map(([score, desc]) => (
-          <Tooltip key={score} tooltip={desc}>
-            <Badge variant="outline" size="sm" className="cursor-help">
-              {score}
-            </Badge>
+          <Tooltip key={score}>
+            <TooltipTrigger
+              render={
+                <Badge variant="outline" size="sm" className="cursor-help">
+                  {score}
+                </Badge>
+              }
+            />
+            <TooltipContent>{desc}</TooltipContent>
           </Tooltip>
         ))}
       </div>
@@ -128,23 +133,27 @@ export function TenPointMustForm({
           <div className="truncate">{competitor1Name}</div>
           <div className="truncate">{competitor2Name}</div>
           <div>
-            <Tooltip tooltip="Knockdowns (Boxing/MT) or Disarms (Eskrima)">
-              <span className="cursor-help">KD/D ①</span>
+            <Tooltip>
+              <TooltipTrigger render={<span className="cursor-help">KD/D ①</span>} />
+              <TooltipContent>Knockdowns (Boxing/MT) or Disarms (Eskrima)</TooltipContent>
             </Tooltip>
           </div>
           <div>
-            <Tooltip tooltip="Knockdowns (Boxing/MT) or Disarms (Eskrima)">
-              <span className="cursor-help">KD/D ②</span>
+            <Tooltip>
+              <TooltipTrigger render={<span className="cursor-help">KD/D ②</span>} />
+              <TooltipContent>Knockdowns (Boxing/MT) or Disarms (Eskrima)</TooltipContent>
             </Tooltip>
           </div>
           <div>
-            <Tooltip tooltip="Foul point deductions">
-              <span className="cursor-help">Ded ①</span>
+            <Tooltip>
+              <TooltipTrigger render={<span className="cursor-help">Ded ①</span>} />
+              <TooltipContent>Foul point deductions</TooltipContent>
             </Tooltip>
           </div>
           <div>
-            <Tooltip tooltip="Foul point deductions">
-              <span className="cursor-help">Ded ②</span>
+            <Tooltip>
+              <TooltipTrigger render={<span className="cursor-help">Ded ②</span>} />
+              <TooltipContent>Foul point deductions</TooltipContent>
             </Tooltip>
           </div>
         </div>
@@ -305,27 +314,35 @@ export function TenPointMustForm({
           <Badge variant="warning" size="lg">
             Draw on scorecard — 4th overtime round required (Eskrima/WEKAF)
           </Badge>
-          <Tooltip tooltip="In overtime, judges simply point to the winner of the 4th round to determine who advances">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                replace([
-                  ...rounds,
-                  {
-                    competitor1Score: 10,
-                    competitor2Score: 10,
-                    competitor1Deductions: 0,
-                    competitor2Deductions: 0,
-                    competitor1Knockdowns: 0,
-                    competitor2Knockdowns: 0,
-                  },
-                ])
-              }}
-            >
-              Add Overtime Round
-            </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    replace([
+                      ...rounds,
+                      {
+                        competitor1Score: 10,
+                        competitor2Score: 10,
+                        competitor1Deductions: 0,
+                        competitor2Deductions: 0,
+                        competitor1Knockdowns: 0,
+                        competitor2Knockdowns: 0,
+                      },
+                    ])
+                  }}
+                >
+                  Add Overtime Round
+                </Button>
+              }
+            />
+            <TooltipContent>
+              In overtime, judges simply point to the winner of the 4th round to determine who
+              advances
+            </TooltipContent>
           </Tooltip>
         </div>
       )}

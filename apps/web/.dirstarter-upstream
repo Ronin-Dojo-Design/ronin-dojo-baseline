@@ -80,3 +80,11 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   selectors. Tooltip Phase 4 remains pending because it is a larger consumer
 #   rewrite.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0215 / L6 Phase 4: Tooltip migrated to upstream Base UI runtime
+#   from upstream 7e724b6. components/common/tooltip.tsx now wraps
+#   @base-ui/react Tooltip Provider/Root/Trigger/Portal/Positioner/Popup/Arrow
+#   while preserving Ronin import paths. The legacy Ronin-only `tooltip=` wrapper
+#   API was removed; all current consumers now compose Tooltip + TooltipTrigger
+#   render + TooltipContent. Provider `delayDuration` props were renamed to
+#   Base UI `delay`.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

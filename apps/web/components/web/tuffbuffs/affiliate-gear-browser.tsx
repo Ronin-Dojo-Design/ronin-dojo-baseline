@@ -14,7 +14,12 @@ import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { H2, H3, H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { AffiliateGearCard } from "~/components/web/tuffbuffs/affiliate-gear-card"
 import { resolvePublicMediaUrl } from "~/lib/public-media-url"
@@ -75,30 +80,35 @@ function AffiliateGearViewToggle({
   onViewModeChange: (viewMode: GearViewMode) => void
 }) {
   return (
-    <Tooltip.Provider delayDuration={0}>
+    <TooltipProvider delay={0}>
       <div className="inline-flex overflow-hidden rounded-lg border bg-background">
         {viewModes.map(({ value, label, icon: Icon }, index) => (
-          <Tooltip key={value} tooltip={`${label} view`}>
-            <button
-              type="button"
-              aria-label={`${label} view`}
-              aria-pressed={viewMode === value}
-              onClick={() => onViewModeChange(value)}
-              className={cx(
-                "inline-flex h-9 items-center gap-2 px-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                index > 0 && "border-l",
-                viewMode === value
-                  ? "bg-foreground text-background hover:bg-foreground hover:text-background"
-                  : "text-secondary-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <Icon className="size-4" />
-              <span className="max-sm:sr-only">{label}</span>
-            </button>
+          <Tooltip key={value}>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={`${label} view`}
+                  aria-pressed={viewMode === value}
+                  onClick={() => onViewModeChange(value)}
+                  className={cx(
+                    "inline-flex h-9 items-center gap-2 px-3 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    index > 0 && "border-l",
+                    viewMode === value
+                      ? "bg-foreground text-background hover:bg-foreground hover:text-background"
+                      : "text-secondary-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span className="max-sm:sr-only">{label}</span>
+                </button>
+              }
+            />
+            <TooltipContent>{`${label} view`}</TooltipContent>
           </Tooltip>
         ))}
       </div>
-    </Tooltip.Provider>
+    </TooltipProvider>
   )
 }
 

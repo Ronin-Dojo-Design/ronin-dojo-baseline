@@ -7,7 +7,7 @@ import { type ComponentProps, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { useSession } from "~/lib/auth-client"
 import { cx } from "~/lib/utils"
 import { checkBookmark, setBookmark } from "~/server/web/bookmarks/actions"
@@ -59,17 +59,22 @@ export const ListingBookmarkButton = ({
     const next = encodeURIComponent(pathname)
 
     return (
-      <Tooltip tooltip="Sign in to save this listing">
-        <Button
-          size={size}
-          variant={variant}
-          prefix={<HeartIcon />}
-          className={className}
-          render={<Link href={`/auth/login?next=${next}`} />}
-          {...props}
-        >
-          <span className={cx(!showLabel && "sr-only")}>{label}</span>
-        </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              size={size}
+              variant={variant}
+              prefix={<HeartIcon />}
+              className={className}
+              render={<Link href={`/auth/login?next=${next}`} />}
+              {...props}
+            >
+              <span className={cx(!showLabel && "sr-only")}>{label}</span>
+            </Button>
+          }
+        />
+        <TooltipContent>Sign in to save this listing</TooltipContent>
       </Tooltip>
     )
   }
@@ -96,18 +101,23 @@ export const ListingBookmarkButton = ({
   const text = bookmarked ? "Saved" : label
 
   return (
-    <Tooltip tooltip={bookmarked ? "Remove saved listing" : "Save this listing"}>
-      <Button
-        size={size}
-        variant={variant}
-        prefix={<HeartIcon className={cx(bookmarked && "fill-current text-primary")} />}
-        className={className}
-        isPending={setAction.isPending || checkAction.isPending}
-        onClick={handleClick}
-        {...props}
-      >
-        <span className={cx(!showLabel && "sr-only")}>{text}</span>
-      </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            size={size}
+            variant={variant}
+            prefix={<HeartIcon className={cx(bookmarked && "fill-current text-primary")} />}
+            className={className}
+            isPending={setAction.isPending || checkAction.isPending}
+            onClick={handleClick}
+            {...props}
+          >
+            <span className={cx(!showLabel && "sr-only")}>{text}</span>
+          </Button>
+        }
+      />
+      <TooltipContent>{bookmarked ? "Remove saved listing" : "Save this listing"}</TooltipContent>
     </Tooltip>
   )
 }

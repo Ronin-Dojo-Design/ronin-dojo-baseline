@@ -5,7 +5,7 @@ type: petey-plan
 status: active
 created: 2026-05-20
 updated: 2026-05-21
-last_agent: codex-session-0214
+last_agent: codex-session-0215
 pairs_with:
   - docs/sprints/SESSION_0209.md
   - docs/sprints/SESSION_0210.md
@@ -13,6 +13,7 @@ pairs_with:
   - docs/sprints/SESSION_0212.md
   - docs/sprints/SESSION_0213.md
   - docs/sprints/SESSION_0214.md
+  - docs/sprints/SESSION_0215.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/knowledge/wiki/drift-register.md
 backlinks:
@@ -41,7 +42,7 @@ Re-phased to **honest, verifiable chunks**:
   - Phase 2b (SESSION_0211): `heading.tsx` migration complete. Adopted `useRender` + `render={…}` per upstream; exact AST close proof found 211 direct Heading JSX tags plus 60 `IntroTitle` wrapper tags with zero remaining `as`/`asChild` props. The earlier 140-count estimate was superseded by the residual AST/typecheck gates.
   - Phase 2c (SESSION_0212): `box.tsx` migration complete. Deleted the `Box` component and `BoxProps` export; current-tree exact AST close proof found 0 remaining `<Box>` JSX tags and 0 `Box` / `BoxProps` imports. The earlier 59-site handoff estimate was superseded by the residual AST/typecheck gates.
 - Phase 3 (SESSION_0213): Complete. Slot-only primitives with `asChild` consumer migration: Badge, Card, Stack, Form, Button. High-volume consumer refactor pass; `Slottable` retained for web/ui `nav-link` + `tag`.
-- Phase 4: Tooltip migration. Exact SESSION_0214 bow-in count found 46 Tooltip JSX tags across 25 files. New composition: `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>`. Split if estimate proves too large.
+- Phase 4 (SESSION_0215): Complete. Tooltip migration shipped in one pass: Base UI primitive + 43 legacy wrapper consumers and 3 provider call sites rewritten to compound composition.
 - Phase 5 (SESSION_0214): Complete. Ran before Tooltip because it was smaller. HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
 - Phase 6 (SESSION_0216): Form primitives: checkbox, radio-group, switch, label, plus `field.tsx` and `button-group.tsx` sanity pass.
 - Phase 7 (SESSION_0217): Popover family — dialog, popover, dropdown-menu, select, drawer. Includes the L5-deferred `<PopoverTrigger render={…}>` call-site sweep across data-table-faceted-filter / data-table-view-options / date-range-picker / admin actions / dashboard / web nav. Also updates `popoverAnimationClasses` constant content to Base UI semantics (`data-open`/`data-closed`). Likely the heaviest call-site phase.
@@ -74,7 +75,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 | 3 ✓ | `stack.tsx` | Adopted `useRender`; consumer `asChild` sites migrated. |
 | 3 ✓ | `form.tsx` | Internal `Slot.Root` audit complete; `FormControl` uses `slot()`. |
 | 3 ✓ | `button.tsx` | Adopted `useRender` + slots API; high-volume `asChild` consumer migration complete. |
-| 4 | `tooltip.tsx` | 46 Tooltip JSX tags across 25 files. TooltipBase wrapper removed upstream. New composition: `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>`. |
+| 4 ✓ | `tooltip.tsx` | Migrated to upstream Base UI compound API. Exact close proof: 132 Tooltip-family JSX tags across 25 files (43 Tooltip roots + 43 Trigger render calls + 43 Content calls + 3 providers), 0 legacy `tooltip` props, 0 `delayDuration`, 0 `disableHoverableContent`, 0 `Tooltip.Provider`, 0 Radix import in the primitive. |
 | 5 ✓ | `hover-card.tsx` | Renamed to PreviewCard internally; adds Positioner. `ToolHoverCard` migrated off `asChild`. |
 | 5 ✓ | `accordion.tsx` | Depends on Card (Phase 3). `data-[state=*]` → `data-*`; `Content` → `Panel`. |
 | 6 | `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx` | Form primitives. |
@@ -115,6 +116,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 - [SESSION_0212](./SESSION_0212.md) — Phase 2c implementation (Box deletion + boxVariants consumers).
 - [SESSION_0213](./SESSION_0213.md) — Phase 3 implementation (Badge, Card, Stack, Form, Button).
 - [SESSION_0214](./SESSION_0214.md) — Phase 5 implementation (HoverCard, Accordion).
+- [SESSION_0215](./SESSION_0215.md) — Phase 4 implementation (Tooltip).
 - [SESSION_0208](./SESSION_0208.md) — L5 UI primitives Part 1; documented the original PopoverTrigger deferral.
 - [Epic 2026-05-19](../architecture/uplift/epic-2026-05-19.md) — overall uplift lane plan.
 - [Drift register](../knowledge/wiki/drift-register.md) — `D-016`.

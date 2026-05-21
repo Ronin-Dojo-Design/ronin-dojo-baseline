@@ -14,7 +14,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 
 type TournamentRoleActionsProps = Omit<ComponentProps<typeof Button>, "role"> & {
@@ -56,15 +56,20 @@ export const TournamentRoleActions = ({
       </DropdownMenu>
 
       {role.isSystem ? (
-        <Tooltip tooltip="System roles cannot be deleted">
-          <Button
-            variant="secondary"
-            size="sm"
-            prefix={<TrashIcon />}
-            className="text-red-500"
-            disabled
-            {...props}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="secondary"
+                size="sm"
+                prefix={<TrashIcon />}
+                className="text-red-500"
+                disabled
+                {...props}
+              />
+            }
           />
+          <TooltipContent>System roles cannot be deleted</TooltipContent>
         </Tooltip>
       ) : (
         <TournamentRolesDeleteDialog

@@ -9,7 +9,7 @@ import { type ComponentProps, type SetStateAction, useEffect, useState } from "r
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { ToolClaimDialog } from "~/components/web/dialogs/tool-claim-dialog"
 import { ToolEmbedDialog } from "~/components/web/dialogs/tool-embed-dialog"
 import { ToolReportDialog } from "~/components/web/dialogs/tool-report-dialog"
@@ -74,56 +74,76 @@ export const ToolActions = ({ tool, children, className, ...props }: ToolActions
         isToolUpgradable(tool) &&
         tool.ownerId &&
         tool.ownerId === session?.user.id && (
-          <Tooltip tooltip={t("promote_tooltip")}>
-            <Button
-              size="md"
-              variant="secondary"
-              prefix={<SparklesIcon className="text-inherit" />}
-              className="text-blue-600 dark:text-blue-400"
-              render={<Link href={`/submit/${tool.slug}`} />}
-            >
-              {t("promote_button")}
-            </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  size="md"
+                  variant="secondary"
+                  prefix={<SparklesIcon className="text-inherit" />}
+                  className="text-blue-600 dark:text-blue-400"
+                  render={<Link href={`/submit/${tool.slug}`} />}
+                >
+                  {t("promote_button")}
+                </Button>
+              }
+            />
+            <TooltipContent>{t("promote_tooltip")}</TooltipContent>
           </Tooltip>
         )}
 
       {!tool.ownerId && (
-        <Tooltip tooltip={t("claim_tooltip")}>
-          <Button
-            size="md"
-            variant="secondary"
-            prefix={<BadgeCheckIcon className="text-inherit" />}
-            onClick={() => setDialog(Dialog.claim)}
-            className="text-blue-600 dark:text-blue-400"
-          >
-            {t("claim_button")}
-          </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                size="md"
+                variant="secondary"
+                prefix={<BadgeCheckIcon className="text-inherit" />}
+                onClick={() => setDialog(Dialog.claim)}
+                className="text-blue-600 dark:text-blue-400"
+              >
+                {t("claim_button")}
+              </Button>
+            }
+          />
+          <TooltipContent>{t("claim_tooltip")}</TooltipContent>
         </Tooltip>
       )}
 
       <ListingBookmarkButton toolId={tool.id} size="md" label="Save" showLabel={false} />
 
       {reportsConfig.enabled && (
-        <Tooltip tooltip={t("report_tooltip")}>
-          <Button
-            size="md"
-            variant="secondary"
-            prefix={<FlagIcon />}
-            onClick={() => setDialog(Dialog.report)}
-            aria-label={t("report_button")}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                size="md"
+                variant="secondary"
+                prefix={<FlagIcon />}
+                onClick={() => setDialog(Dialog.report)}
+                aria-label={t("report_button")}
+              />
+            }
           />
+          <TooltipContent>{t("report_tooltip")}</TooltipContent>
         </Tooltip>
       )}
 
       {isToolApproved(tool) && (
-        <Tooltip tooltip={t("embed_tooltip")}>
-          <Button
-            size="md"
-            variant="secondary"
-            prefix={<CodeXmlIcon />}
-            onClick={() => setDialog(Dialog.embed)}
-            aria-label={t("embed_button")}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                size="md"
+                variant="secondary"
+                prefix={<CodeXmlIcon />}
+                onClick={() => setDialog(Dialog.embed)}
+                aria-label={t("embed_button")}
+              />
+            }
           />
+          <TooltipContent>{t("embed_tooltip")}</TooltipContent>
         </Tooltip>
       )}
 

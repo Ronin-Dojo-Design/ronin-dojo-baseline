@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { scoreMatch } from "~/server/admin/tournaments/actions"
 import type {
   BracketWithMatches,
@@ -333,9 +333,14 @@ function CompetitorRow({
         <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
       </Avatar>
 
-      <Tooltip tooltip={name}>
+      {name ? (
+        <Tooltip>
+          <TooltipTrigger render={<span className="text-sm truncate max-w-30">{name}</span>} />
+          <TooltipContent>{name}</TooltipContent>
+        </Tooltip>
+      ) : (
         <span className="text-sm truncate max-w-30">{name}</span>
-      </Tooltip>
+      )}
 
       {isWinner && <span className="text-green-600 text-xs">✓</span>}
 
@@ -379,10 +384,15 @@ function MatchCard({
       <CardHeader>
         <div className="flex items-center justify-between gap-2 w-full">
           <span className="text-xs text-muted-foreground">Match {match.matchNumber}</span>
-          <Tooltip tooltip={STATUS_TOOLTIPS[match.status] ?? match.status}>
-            <Badge variant={statusVariant} size="sm">
-              {match.status}
-            </Badge>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Badge variant={statusVariant} size="sm">
+                  {match.status}
+                </Badge>
+              }
+            />
+            <TooltipContent>{STATUS_TOOLTIPS[match.status] ?? match.status}</TooltipContent>
           </Tooltip>
         </div>
       </CardHeader>

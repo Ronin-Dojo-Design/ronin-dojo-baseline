@@ -12,7 +12,7 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { AdsCalendar } from "~/components/web/ads/ads-calendar"
 import { Price } from "~/components/web/price"
 import { adsConfig } from "~/config/ads"
@@ -184,14 +184,21 @@ export const AdsPicker = ({ className, ads, type, ...props }: AdsCalendarProps) 
             </Stack>
 
             {price.discountPercentage > 0 && (
-              <Tooltip tooltip={t("discount_tooltip", { discount: adsConfig.maxDiscount })}>
-                <Badge
-                  size="lg"
-                  variant="outline"
-                  className="-my-1.5 text-green-700/90 dark:text-green-300/90"
-                >
-                  {t("discount_label", { discount: price.discountPercentage })}
-                </Badge>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Badge
+                      size="lg"
+                      variant="outline"
+                      className="-my-1.5 text-green-700/90 dark:text-green-300/90"
+                    >
+                      {t("discount_label", { discount: price.discountPercentage })}
+                    </Badge>
+                  }
+                />
+                <TooltipContent>
+                  {t("discount_tooltip", { discount: adsConfig.maxDiscount })}
+                </TooltipContent>
               </Tooltip>
             )}
           </>

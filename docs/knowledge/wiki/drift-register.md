@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-05-21
-last_agent: codex-session-0214
+last_agent: codex-session-0215
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -144,7 +144,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source A:** Ronin `apps/web/components/common/*.tsx` — 23 primitives on `radix-ui ^1.4.3` + `cmdk ^1.1.1` + `radix-ui` `Slot.Root` for `asChild` composition.
 - **Source B:** Upstream `dirstarter_template @ 7e724b6 components/common/*.tsx` — 18 primitives on `@base-ui/react ^1.3.0` + `cmdk-base ^1.0.0` + custom `~/lib/slot.ts` util + `useRender` consumer API (`render={…}` replacing `asChild`).
 - **Decision needed:** Migrate all Ronin common primitives to upstream's `@base-ui/react` runtime; remove `radix-ui` and `cmdk` from `apps/web/package.json` when complete.
-- **Status:** open (Phase 1 + 2a + 2b + 2c + 3 + 5 complete; Phase 4 and Phases 6–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
+- **Status:** open (Phase 1 + 2a + 2b + 2c + 3 + 4 + 5 complete; Phases 6–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
 - **Opened:** SESSION_0209 (2026-05-20). Replaces the prior SESSION_0208 partial deferral for `<PopoverTrigger render={…}>` alone — that work is rolled into Phase 7 here.
 - **Re-phased at SESSION_0210 bow-in (2026-05-20):** original Phase 2 framing assumed Box/Heading/AnimatedContainer were "mechanical Slot-only swaps." Bow-in audit proved upstream Box deletes the `Box` component (59 JSX + 14 internal consumers) and upstream Heading adopts `useRender` (140 `<Hn as="…">` rewrites). Only AnimatedContainer is mechanical. Phase 2 re-split into 2a (utils + AnimatedContainer + cva import sweep), 2b (Heading), 2c (Box). Phases 3-8 shift by 2 session targets (now SESSION_0213-0218).
 
@@ -178,9 +178,10 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Migrate Slot-only primitives with `asChild` consumer migration: `badge.tsx`, `card.tsx`, `stack.tsx`, `form.tsx`, `button.tsx`. Adopt `useRender` + `render={…}` API.
 - [x] Additional `Slot.Root` → `slot()` cleanup landed in direct consumers (`command.tsx`, data-table/header/filter, web nav, dashboard table). `Slottable` intentionally retained for `nav-link.tsx` and `tag.tsx`.
 
-#### Phase 4 — planned
+#### Phase 4 — SESSION_0215 (2026-05-21) ✅ complete
 
-- [ ] Migrate `tooltip.tsx` (~41 `<Tooltip tooltip="…">` call sites). New composition: `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>`.
+- [x] Migrate `tooltip.tsx` from Ronin's Radix wrapper API to upstream Base UI compound parts.
+- [x] Rewrite 43 legacy `<Tooltip tooltip="…">` wrapper call sites plus 3 provider call sites. Close proof found zero residual `tooltip`, `delayDuration`, `disableHoverableContent`, or `Tooltip.Provider` usage on imported Tooltip parts.
 
 #### Phase 5 — SESSION_0214 (2026-05-21) ✅ complete
 

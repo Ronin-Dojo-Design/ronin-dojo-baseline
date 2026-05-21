@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import type { RegistrationRow } from "~/components/admin/tournaments/registrations-table-columns"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { bulkUpdateRegistrationStatus } from "~/server/admin/tournaments/actions"
 
 interface RegistrationsTableToolbarActionsProps {
@@ -51,40 +51,55 @@ export function RegistrationsTableToolbarActions({ table }: RegistrationsTableTo
     <Stack direction="row" size="xs" className="items-center">
       <span className="text-sm font-medium text-muted-foreground">{rows.length} selected</span>
 
-      <Tooltip tooltip="Approve selected">
-        <Button
-          variant="primary"
-          size="sm"
-          prefix={<CheckCircleIcon />}
-          onClick={() => handleBulkUpdate("APPROVED")}
-          disabled={isPending}
-        >
-          Approve
-        </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="primary"
+              size="sm"
+              prefix={<CheckCircleIcon />}
+              onClick={() => handleBulkUpdate("APPROVED")}
+              disabled={isPending}
+            >
+              Approve
+            </Button>
+          }
+        />
+        <TooltipContent>Approve selected</TooltipContent>
       </Tooltip>
 
-      <Tooltip tooltip="Waitlist selected">
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<ClockIcon />}
-          onClick={() => handleBulkUpdate("WAITLISTED")}
-          disabled={isPending}
-        >
-          Waitlist
-        </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="secondary"
+              size="sm"
+              prefix={<ClockIcon />}
+              onClick={() => handleBulkUpdate("WAITLISTED")}
+              disabled={isPending}
+            >
+              Waitlist
+            </Button>
+          }
+        />
+        <TooltipContent>Waitlist selected</TooltipContent>
       </Tooltip>
 
-      <Tooltip tooltip="Cancel selected">
-        <Button
-          variant="destructive"
-          size="sm"
-          prefix={<XCircleIcon />}
-          onClick={() => handleBulkUpdate("CANCELLED")}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="destructive"
+              size="sm"
+              prefix={<XCircleIcon />}
+              onClick={() => handleBulkUpdate("CANCELLED")}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          }
+        />
+        <TooltipContent>Cancel selected</TooltipContent>
       </Tooltip>
     </Stack>
   )

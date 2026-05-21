@@ -8,7 +8,7 @@ import { Button } from "~/components/common/button"
 import { Calendar } from "~/components/common/calendar"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { Price } from "~/components/web/price"
 import type { AdSpot, AdsSelection, useAds } from "~/hooks/use-ads"
@@ -111,13 +111,18 @@ export const AdsCalendar = ({
 
         <Stack size="sm">
           {adSpot.preview && (
-            <Tooltip tooltip={t("preview_ad")}>
-              <Button
-                variant="secondary"
-                size="sm"
-                prefix={<EyeIcon />}
-                render={<ExternalLink href={adSpot.preview} />}
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    prefix={<EyeIcon />}
+                    render={<ExternalLink href={adSpot.preview} />}
+                  />
+                }
               />
+              <TooltipContent>{t("preview_ad")}</TooltipContent>
             </Tooltip>
           )}
 

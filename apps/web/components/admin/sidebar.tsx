@@ -31,7 +31,7 @@ import { toast } from "sonner"
 import { Nav } from "~/components/admin/nav"
 import { Button } from "~/components/common/button"
 import { Kbd } from "~/components/common/kbd"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
 import { siteConfig } from "~/config/site"
 import { useSearch } from "~/contexts/search-context"
@@ -72,14 +72,19 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       href: "/admin",
       prefix: <LogoSymbol />,
       suffix: (
-        <Tooltip tooltip="Visit site">
-          <Button
-            variant="ghost"
-            onClick={handleOpenSite}
-            className="-my-0.5 -mx-[0.21425em] px-1 py-[0.2em] text-xs/tight rounded-sm hover:bg-background"
-          >
-            <ExternalLinkIcon className="size-3" />
-          </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                onClick={handleOpenSite}
+                className="-my-0.5 -mx-[0.21425em] px-1 py-[0.2em] text-xs/tight rounded-sm hover:bg-background"
+              >
+                <ExternalLinkIcon className="size-3" />
+              </Button>
+            }
+          />
+          <TooltipContent>Visit site</TooltipContent>
         </Tooltip>
       ),
     },

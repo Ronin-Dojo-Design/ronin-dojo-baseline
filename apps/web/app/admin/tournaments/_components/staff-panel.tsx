@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { deleteTournamentStaffAssignments } from "~/server/admin/tournaments/actions"
 import type { findTournamentRoles, findTournamentStaff } from "~/server/admin/tournaments/queries"
 
@@ -118,8 +118,13 @@ export function StaffPanel({
                   </TableCell>
                   <TableCell>
                     {s.division ? (
-                      <Tooltip tooltip="This staff member is scoped to this division only">
-                        <Badge variant="outline">{s.division.name}</Badge>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={<Badge variant="outline">{s.division.name}</Badge>}
+                        />
+                        <TooltipContent>
+                          This staff member is scoped to this division only
+                        </TooltipContent>
                       </Tooltip>
                     ) : (
                       <Note>All</Note>
@@ -129,14 +134,19 @@ export function StaffPanel({
                     <Note className="max-w-48 truncate">{s.notes ?? "—"}</Note>
                   </TableCell>
                   <TableCell>
-                    <Tooltip tooltip="Remove staff assignment">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        prefix={<TrashIcon />}
-                        className="text-red-500"
-                        onClick={() => handleDelete(s.id)}
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            prefix={<TrashIcon />}
+                            className="text-red-500"
+                            onClick={() => handleDelete(s.id)}
+                          />
+                        }
                       />
+                      <TooltipContent>Remove staff assignment</TooltipContent>
                     </Tooltip>
                   </TableCell>
                 </TableRow>

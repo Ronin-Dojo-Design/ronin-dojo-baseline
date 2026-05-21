@@ -30,7 +30,7 @@ import { Note } from "~/components/common/note"
 import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { ListingTierBadge } from "~/components/web/listings/listing-tier-badge"
 import { Markdown } from "~/components/web/markdown"
 import { siteConfig } from "~/config/site"
@@ -288,8 +288,12 @@ export function ToolForm({
               <Stack className="w-full justify-between">
                 <FormLabel>Affiliate URL</FormLabel>
 
-                <Tooltip tooltip="If you have an affiliate link, you can enter it here. This will be displayed on the tool page.">
-                  <InfoIcon className="cursor-help opacity-50" />
+                <Tooltip>
+                  <TooltipTrigger render={<InfoIcon className="cursor-help opacity-50" />} />
+                  <TooltipContent>
+                    If you have an affiliate link, you can enter it here. This will be displayed on
+                    the tool page.
+                  </TooltipContent>
                 </Tooltip>
               </Stack>
 

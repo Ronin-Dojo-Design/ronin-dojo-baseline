@@ -2,7 +2,7 @@ import { CheckIcon, XIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import { Ping } from "~/components/common/ping"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import type { ProductFeature } from "~/lib/products"
 import { cva, cx } from "~/lib/utils"
 
@@ -49,8 +49,9 @@ export const ProductFeatures = ({ features, className, ...props }: ProductFeatur
             {name}
 
             {footnote && (
-              <Tooltip tooltip={footnote} delayDuration={0}>
-                <Ping className="-ml-1 mt-1" />
+              <Tooltip>
+                <TooltipTrigger delay={0} render={<Ping className="-ml-1 mt-1" />} />
+                <TooltipContent>{footnote}</TooltipContent>
               </Tooltip>
             )}
           </div>

@@ -8,7 +8,7 @@ import { H5, H6 } from "~/components/common/heading"
 import { BrandGitHubIcon } from "~/components/common/icons/brand-github"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { BuiltWith } from "~/components/web/built-with"
 import { CTAForm } from "~/components/web/cta-form"
 import { ExternalLink } from "~/components/web/external-link"
@@ -48,26 +48,42 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
           </Stack>
 
           <Stack className="text-lg opacity-75">
-            <Tooltip tooltip={t("navigation.toggle_theme")}>
-              <ThemeSwitcher />
+            <Tooltip>
+              <TooltipTrigger render={<ThemeSwitcher />} />
+              <TooltipContent>{t("navigation.toggle_theme")}</TooltipContent>
             </Tooltip>
 
-            <Tooltip tooltip={t("navigation.rss_feed")}>
-              <ExternalLink href={linksConfig.feed} className={navLinkVariants()}>
-                <RssIcon />
-              </ExternalLink>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <ExternalLink href={linksConfig.feed} className={navLinkVariants()}>
+                    <RssIcon />
+                  </ExternalLink>
+                }
+              />
+              <TooltipContent>{t("navigation.rss_feed")}</TooltipContent>
             </Tooltip>
 
-            <Tooltip tooltip={t("navigation.contact_us")}>
-              <ExternalLink href={`mailto:${siteConfig.email}`} className={navLinkVariants()}>
-                <AtSignIcon />
-              </ExternalLink>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <ExternalLink href={`mailto:${siteConfig.email}`} className={navLinkVariants()}>
+                    <AtSignIcon />
+                  </ExternalLink>
+                }
+              />
+              <TooltipContent>{t("navigation.contact_us")}</TooltipContent>
             </Tooltip>
 
-            <Tooltip tooltip={t("navigation.source_code")}>
-              <ExternalLink href={linksConfig.github} className={navLinkVariants()}>
-                <BrandGitHubIcon />
-              </ExternalLink>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <ExternalLink href={linksConfig.github} className={navLinkVariants()}>
+                    <BrandGitHubIcon />
+                  </ExternalLink>
+                }
+              />
+              <TooltipContent>{t("navigation.source_code")}</TooltipContent>
             </Tooltip>
           </Stack>
         </Stack>

@@ -7,7 +7,7 @@ import { RuleSetActions } from "~/app/admin/tournaments/rule-sets/_components/ru
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
 import type { findRuleSetsPaginated } from "~/server/admin/tournaments/queries"
@@ -74,11 +74,21 @@ export const getColumns = (): ColumnDef<RuleSetRow>[] => {
     {
       accessorKey: "scoringMethod",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Scoring" />,
-      cell: ({ row }) => (
-        <Tooltip tooltip={SCORING_METHOD_LABELS[row.original.scoringMethod]}>
+      cell: ({ row }) => {
+        const scoringTooltip = SCORING_METHOD_LABELS[row.original.scoringMethod]
+        const scoringBadge = (
           <Badge variant="outline">{row.original.scoringMethod.replace(/_/g, " ")}</Badge>
-        </Tooltip>
-      ),
+        )
+
+        if (!scoringTooltip) return scoringBadge
+
+        return (
+          <Tooltip>
+            <TooltipTrigger render={scoringBadge} />
+            <TooltipContent>{scoringTooltip}</TooltipContent>
+          </Tooltip>
+        )
+      },
     },
     {
       accessorKey: "matchDurationSec",

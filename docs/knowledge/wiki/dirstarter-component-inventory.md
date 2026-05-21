@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-04
 updated: 2026-05-21
-last_agent: codex-session-0214
+last_agent: codex-session-0215
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
@@ -15,6 +15,7 @@ backlinks:
   - docs/sprints/SESSION_0208.md
   - docs/sprints/SESSION_0212.md
   - docs/sprints/SESSION_0214.md
+  - docs/sprints/SESSION_0215.md
 ---
 
 # Dirstarter Component Inventory
@@ -78,7 +79,7 @@ Every component below is in `~/components/common/`. Import from there.
 | `Popover`, `PopoverContent`, `PopoverTrigger` | `popover.tsx` | Radix-based | Small overlays |
 | `HoverCard`, `HoverCardTrigger`, `HoverCardContent` | `hover-card.tsx` | Base UI PreviewCard wrapper; trigger uses `render`; content supports `align`, `side`, `sideOffset` | Hover previews. SESSION_0214: migrated off Radix while preserving Ronin export names. |
 | `Command`, `CommandEmpty`, `CommandGroup`, `CommandInput`, `CommandItem`, `CommandList` | `command.tsx` | cmdk-based | Command palettes, searchable lists |
-| `Tooltip` | `tooltip.tsx` | Compound: `Tooltip.Root/Trigger/Content` or simple `<Tooltip tooltip="text">` | Hover tips — use on any truncated text or icon-only buttons |
+| `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider` | `tooltip.tsx` | Base UI compound parts; trigger uses `render`, content supports `side`, `align`, `sideOffset`, and `size: sm\|md\|lg`; provider uses `delay` | Hover tips for truncated text or icon-only buttons. SESSION_0215: legacy `tooltip=` wrapper and `delayDuration` were removed; compose `Tooltip` + `TooltipTrigger` + `TooltipContent`. |
 | `Toaster` | `toaster.tsx` | Sonner-based; variants: default, info, success, error | Toast notifications — use via `toast()` from `sonner` |
 | `Ping` | `ping.tsx` | — | Animated dot indicator |
 

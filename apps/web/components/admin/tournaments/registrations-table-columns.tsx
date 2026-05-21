@@ -8,7 +8,7 @@ import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { RegistrationActions } from "~/components/admin/tournaments/registration-actions"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 
 export type RegistrationRow = {
@@ -83,11 +83,22 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
     {
       id: "email",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
-      cell: ({ row }) => (
-        <Note className="max-w-48 truncate">
-          <Tooltip tooltip={row.original.user.email}>{row.original.user.email}</Tooltip>
-        </Note>
-      ),
+      cell: ({ row }) => {
+        const email = row.original.user.email
+
+        return (
+          <Note className="max-w-48 truncate">
+            {email ? (
+              <Tooltip>
+                <TooltipTrigger render={<span>{email}</span>} />
+                <TooltipContent>{email}</TooltipContent>
+              </Tooltip>
+            ) : (
+              email
+            )}
+          </Note>
+        )
+      },
     },
     {
       id: "divisions",
@@ -96,9 +107,15 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       cell: ({ row }) => {
         const names = row.original.entries.map(e => e.division.name)
         if (names.length === 0) return <Note>—</Note>
+        const divisionNames = names.join(", ")
+        const divisionNote = <Note className="max-w-48 truncate">{divisionNames}</Note>
+
+        if (!divisionNames) return divisionNote
+
         return (
-          <Tooltip tooltip={names.join(", ")}>
-            <Note className="max-w-48 truncate">{names.join(", ")}</Note>
+          <Tooltip>
+            <TooltipTrigger render={divisionNote} />
+            <TooltipContent>{divisionNames}</TooltipContent>
           </Tooltip>
         )
       },

@@ -5,7 +5,7 @@ import type { ComponentProps } from "react"
 import { Card } from "~/components/common/card"
 import { H5 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { Tooltip } from "~/components/common/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { ToolHoverCard } from "~/components/web/tools/tool-hover-card"
 import { Favicon } from "~/components/web/ui/favicon"
@@ -50,13 +50,18 @@ export const FeaturedToolsIcons = async ({ ...props }: ComponentProps<typeof Car
         ))}
 
         {showAddButton && (
-          <Tooltip tooltip={t("add_tooltip")}>
-            <Link
-              href="/submit"
-              className="grid place-items-center size-10 p-1 rounded-lg border hover:bg-muted"
-            >
-              <PlusIcon className="size-6" />
-            </Link>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  href="/submit"
+                  className="grid place-items-center size-10 p-1 rounded-lg border hover:bg-muted"
+                >
+                  <PlusIcon className="size-6" />
+                </Link>
+              }
+            />
+            <TooltipContent>{t("add_tooltip")}</TooltipContent>
           </Tooltip>
         )}
       </div>
