@@ -44,7 +44,7 @@ Re-phased to **honest, verifiable chunks**:
 - Phase 3 (SESSION_0213): Complete. Slot-only primitives with `asChild` consumer migration: Badge, Card, Stack, Form, Button. High-volume consumer refactor pass; `Slottable` retained for web/ui `nav-link` + `tag`.
 - Phase 4 (SESSION_0215): Complete. Tooltip migration shipped in one pass: Base UI primitive + 43 legacy wrapper consumers and 3 provider call sites rewritten to compound composition.
 - Phase 5 (SESSION_0214): Complete. Ran before Tooltip because it was smaller. HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
-- Phase 6 (SESSION_0216): Form primitives: checkbox, radio-group, switch, label, plus `field.tsx` and `button-group.tsx` sanity pass.
+- Phase 6 (SESSION_0216): Complete. Checkbox, RadioGroup, Switch, Label migrated to Base UI. Label dropped Radix for plain `<label>`. 4 DataTable select-all consumers fixed (`indeterminate` prop). Field and ButtonGroup confirmed non-Radix.
 - Phase 7 (SESSION_0217): Popover family — dialog, popover, dropdown-menu, select, drawer. Includes the L5-deferred `<PopoverTrigger render={…}>` call-site sweep across data-table-faceted-filter / data-table-view-options / date-range-picker / admin actions / dashboard / web nav. Also updates `popoverAnimationClasses` constant content to Base UI semantics (`data-open`/`data-closed`). Likely the heaviest call-site phase.
 - Phase 8 (SESSION_0218): Command (cmdk → cmdk-base + slot util) + tabs + new **admin Cmd+K palette** (the L6 epic's one substantive missing easy win) + dep cleanup (`radix-ui` + `cmdk` + `cva` removed from `apps/web/package.json`) + final tsc/biome/test/build/wiki-lint sweep.
 

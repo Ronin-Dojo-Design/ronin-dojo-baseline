@@ -189,10 +189,12 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Migrate `accordion.tsx` (depends on Phase 3 Card render-prop; `data-[state=*]` → `data-*`; `Content` → `Panel`).
 - [x] Phase 5 intentionally ran before Phase 4 because bow-in counts showed Tooltip at 46 JSX tags across 25 files, while HoverCard + Accordion were 7 JSX tags across 2 files.
 
-#### Phase 6 — SESSION_0216 (planned)
+#### Phase 6 — SESSION_0216 (complete)
 
-- [ ] Migrate `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx`.
-- [ ] Sanity pass on `field.tsx` and `button-group.tsx` (already L5-ported).
+- [x] Migrate `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx`.
+- [x] Sanity pass on `field.tsx` and `button-group.tsx` (already L5-ported).
+- [x] Consumer fixes: 4 DataTable select-all columns migrated from `checked="indeterminate"` to `indeterminate={bool}` prop.
+- [x] Label dropped Radix `LabelPrimitive.Root` for plain `<label>`; preserved Ronin `labelVariants` + `isRequired`.
 
 #### Phase 7 — SESSION_0217 (planned)
 

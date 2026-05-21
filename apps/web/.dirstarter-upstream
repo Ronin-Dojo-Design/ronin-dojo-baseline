@@ -88,3 +88,11 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   render + TooltipContent. Provider `delayDuration` props were renamed to
 #   Base UI `delay`.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+#
+# SESSION_0216 partial-port note (Phase 6 — form primitives):
+#   checkbox.tsx, radio-group.tsx, switch.tsx migrated from radix-ui to
+#   @base-ui/react equivalents. label.tsx dropped radix-ui LabelPrimitive.Root
+#   for plain <label> with preserved Ronin labelVariants + isRequired.
+#   4 DataTable select-all consumers updated: checked="indeterminate" →
+#   separate indeterminate={bool} prop. field.tsx and button-group.tsx confirmed
+#   non-Radix; no changes needed.

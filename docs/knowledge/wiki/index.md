@@ -292,6 +292,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0213](../../sprints/SESSION_0213.md) | session--implement | closed-quick |
 | [SESSION_0214](../../sprints/SESSION_0214.md) | session--implement | closed-full |
 | [SESSION_0215](../../sprints/SESSION_0215.md) | session--implement | closed-full |
+| [SESSION_0216](../../sprints/SESSION_0216.md) | session--implement | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 
 ## Protocols

@@ -1,11 +1,8 @@
-"use client"
-
-import { Label as LabelPrimitive } from "radix-ui"
 import type { ComponentProps } from "react"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const labelVariants = cva({
-  base: "self-start text-sm font-medium text-foreground [&[for]]:cursor-pointer",
+  base: "self-start text-sm/snug font-medium text-foreground select-none [[for]]:cursor-pointer group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
 
   variants: {
     isRequired: {
@@ -14,13 +11,15 @@ const labelVariants = cva({
   },
 })
 
-type LabelProps = ComponentProps<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>
+type LabelProps = ComponentProps<"label"> & VariantProps<typeof labelVariants>
 
-const Label = ({ className, isRequired, ...props }: LabelProps) => {
+function Label({ className, isRequired, htmlFor, ...props }: LabelProps) {
   return (
-    <LabelPrimitive.Root
+    // biome-ignore lint/a11y/noLabelWithoutControl: Label is always associated via htmlFor or wrapping at call site
+    <label
+      data-slot="label"
+      htmlFor={htmlFor}
       className={cx(labelVariants({ isRequired, className }))}
-      aria-label="Label"
       {...props}
     />
   )

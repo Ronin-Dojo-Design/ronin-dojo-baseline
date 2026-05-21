@@ -1,22 +1,26 @@
 "use client"
 
+import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 import { CheckIcon } from "lucide-react"
-import { Checkbox as CheckboxPrimitive } from "radix-ui"
-import type { ComponentProps } from "react"
-import { boxVariants } from "~/components/common/box"
 import { cx } from "~/lib/utils"
 
-const Checkbox = ({ className, ...props }: ComponentProps<typeof CheckboxPrimitive.Root>) => {
+function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
   return (
     <CheckboxPrimitive.Root
+      data-slot="checkbox"
       className={cx(
-        boxVariants({ focusWithin: true }),
-        "peer size-4 shrink-0 border-foreground/50! rounded-sm shadow disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+        "peer size-4 shrink-0 border border-foreground/50! rounded-sm shadow",
+        "outline-none focus-visible:ring-[3px] focus-visible:border-ring focus-visible:ring-ring/50",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        "data-checked:bg-primary data-checked:text-primary-foreground",
         className,
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="grid place-items-center">
+      <CheckboxPrimitive.Indicator
+        data-slot="checkbox-indicator"
+        className="grid place-items-center"
+      >
         <CheckIcon className="size-3 stroke-3" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>

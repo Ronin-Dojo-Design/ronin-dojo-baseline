@@ -1,31 +1,36 @@
 "use client"
 
-import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
-import type { ComponentProps } from "react"
-import { boxVariants } from "~/components/common/box"
+import { Radio } from "@base-ui/react/radio"
+import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
 import { cx } from "~/lib/utils"
 
-const RadioGroup = ({ className, ...props }: ComponentProps<typeof RadioGroupPrimitive.Root>) => {
-  return <RadioGroupPrimitive.Root className={cx("grid gap-2", className)} {...props} />
+function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
+  return (
+    <RadioGroupPrimitive
+      data-slot="radio-group"
+      className={cx("grid gap-2", className)}
+      {...props}
+    />
+  )
 }
 
-const RadioGroupItem = ({
-  className,
-  ...props
-}: ComponentProps<typeof RadioGroupPrimitive.Item>) => {
+function RadioGroupItem({ className, ...props }: Radio.Root.Props) {
   return (
-    <RadioGroupPrimitive.Item
+    <Radio.Root
+      data-slot="radio-group-item"
       className={cx(
-        boxVariants({ focusWithin: true }),
-        "size-4 rounded-full border-foreground/50! text-foreground shadow disabled:cursor-not-allowed disabled:opacity-50",
+        "grid place-items-center size-4 rounded-full border border-foreground/50! text-foreground shadow cursor-pointer",
+        "outline-none focus-visible:ring-[3px] focus-visible:border-ring focus-visible:ring-ring/50",
+        "disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator className="grid place-items-center">
-        <span className="size-2.5 rounded-full bg-primary" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
+      <Radio.Indicator
+        data-slot="radio-group-indicator"
+        className="size-2.5 rounded-full bg-primary"
+      />
+    </Radio.Root>
   )
 }
 

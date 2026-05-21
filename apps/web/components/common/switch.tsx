@@ -1,21 +1,25 @@
 "use client"
 
-import { Switch as SwitchPrimitive } from "radix-ui"
-import type { ComponentProps } from "react"
-import { boxVariants } from "~/components/common/box"
+import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 import { cx } from "~/lib/utils"
 
-const Switch = ({ className, ...props }: ComponentProps<typeof SwitchPrimitive.Root>) => {
+function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
   return (
     <SwitchPrimitive.Root
+      data-slot="switch"
       className={cx(
-        boxVariants({ focusWithin: true }),
-        "peer inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent! shadow-xs disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+        "peer inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent! shadow-xs",
+        "outline-none focus-visible:ring-[3px] focus-visible:border-ring focus-visible:ring-ring/50",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        "data-checked:bg-primary data-unchecked:bg-input",
         className,
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="pointer-events-none block size-3 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0" />
+      <SwitchPrimitive.Thumb
+        data-slot="switch-thumb"
+        className="pointer-events-none block size-3 rounded-full bg-background shadow-lg ring-0 transition-transform data-checked:translate-x-3 data-unchecked:translate-x-0"
+      />
     </SwitchPrimitive.Root>
   )
 }

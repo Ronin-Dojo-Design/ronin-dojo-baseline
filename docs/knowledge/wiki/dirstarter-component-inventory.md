@@ -63,9 +63,9 @@ Every component below is in `~/components/common/`. Import from there.
 | `Input`, `inputVariants` | `input.tsx` | Standard input + variant classes | Text inputs — never use raw `<input>` |
 | `TextArea` | `textarea.tsx` | — | Multi-line text |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` | `select.tsx` | Radix-based | Dropdowns — never use raw `<select>` |
-| `RadioGroup`, `RadioGroupItem` | `radio-group.tsx` | Radix-based | Radio buttons — never use raw `<input type="radio">` |
-| `Checkbox` | `checkbox.tsx` | Radix-based | Checkboxes — never use raw `<input type="checkbox">` |
-| `Switch` | `switch.tsx` | — | Toggle switches |
+| `RadioGroup`, `RadioGroupItem` | `radio-group.tsx` | Base UI `@base-ui/react/radio` + `@base-ui/react/radio-group` (SESSION_0216) | Radio buttons — never use raw `<input type="radio">` |
+| `Checkbox` | `checkbox.tsx` | Base UI `@base-ui/react/checkbox` (SESSION_0216). Use `indeterminate` prop for indeterminate state. | Checkboxes — never use raw `<input type="checkbox">` |
+| `Switch` | `switch.tsx` | Base UI `@base-ui/react/switch` (SESSION_0216) | Toggle switches |
 | `Calendar` | `calendar.tsx` | react-day-picker based | Date pickers |
 | `FormMedia` | `form-media.tsx` | Image upload with preview | Media/image upload fields |
 | `Search` | `search.tsx` | — | Search input with icon |
