@@ -4,8 +4,8 @@ slug: dirstarter-uplift-lane-ledger
 type: ledger
 status: active
 created: 2026-05-19
-updated: 2026-05-20
-last_agent: codex-session-0212
+updated: 2026-05-21
+last_agent: codex-session-0214
 pairs_with:
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/L1-env-deploy-diff-report.md
@@ -20,6 +20,7 @@ backlinks:
   - docs/sprints/SESSION_0207.md
   - docs/sprints/SESSION_0208.md
   - docs/sprints/SESSION_0212.md
+  - docs/sprints/SESSION_0214.md
 ---
 
 # Dirstarter Upstream Uplift — Lane Ledger
@@ -60,6 +61,7 @@ Each row appends below the table. Required columns:
 | L6 | SESSION_0210 | UI primitives Part 2 — Base UI migration Phase 2a (utils + AnimatedContainer + cva import sweep) | `7e724b6 base-ui phase 2a: lib/utils.ts rewritten as tailwind-variants re-export (tv as cva, cn as cx, VariantProps; popoverAnimationClasses kept Radix-shape until Phase 7); components/common/animated-container.tsx Slot.Root → slot(); 2 stray "from cva" cx imports repathed to ~/lib/utils` | 5 code + 5 docs | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | verification reported in bow-out response | pass | **Phase 2 re-split at bow-in.** Original Phase 2 framing assumed Box/Heading/AnimatedContainer were mechanical Slot-only swaps. Bow-in audit proved upstream Box deletes the `Box` component (59 JSX + 14 internal consumers to refactor) and upstream Heading adopts `useRender` (140 `<Hn as=…>` rewrites). Only AnimatedContainer is mechanical. Phase 2 re-split into 2a (this session) + 2b (Heading, SESSION_0211) + 2c (Box, SESSION_0212). Phases 3-8 slide to SESSION_0213-0218. `popoverAnimationClasses` content stays Radix-shape this phase — 4 still-Radix popover-family consumers (`popover.tsx`, `hover-card.tsx`, `dropdown-menu.tsx`, `select.tsx`) would break with Base UI semantics until Phase 7 migrates them. `cva` package stays installed through Phases 2-7; removal bundled with `radix-ui` + `cmdk` cleanup in Phase 8. |
 | L6 | SESSION_0211 | UI primitives Part 2 — Base UI migration Phase 2b (Heading) | `7e724b6 base-ui phase 2b: components/common/heading.tsx migrated from radix-ui Slot/as/asChild polymorphism to @base-ui/react/use-render render={...}; 61 direct Heading render callbacks + 1 IntroTitle wrapper render callback replace legacy rendered-tag overrides` | 45 code + 8 docs | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `typecheck` clean; `bun run lint` clean across 979 files; app tests 244/244; production `build` clean with existing Turbopack/NFT warning; `wiki:lint` result reported in bow-out response | pass | AST residual proof found 211 direct Heading JSX tags plus 60 `IntroTitle` wrapper tags with zero remaining `as`/`asChild` props. Used function-form `render={(props) => <h3 {...props}>{props.children}</h3>}` so Biome can see accessible heading content. Phase 2c (Box deletion/refactor) remains next. |
 | L6 | SESSION_0212 | UI primitives Part 2 — Base UI migration Phase 2c (Box) | `7e724b6 base-ui phase 2c: components/common/box.tsx aligned to upstream boxVariants-only API; legacy Box component and BoxProps export removed; consumers apply boxVariants directly to real elements` | 13 code + 8 docs | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | exact AST residual clean; `typecheck` clean; `bun run lint` clean across 979 files; app tests 244/244; production `build` clean with existing Turbopack/NFT warning; `wiki:lint` result reported in bow-out response | pass | Current-tree AST count superseded the 59-site handoff estimate: bow-in found 10 `<Box>` JSX tags, 10 `Box` imports, 1 `BoxProps` import, and 3 existing `boxVariants` imports; close proof found 0 `<Box>` JSX tags and 0 `Box` / `BoxProps` imports. Phase 3 remains next. |
+| L6 | SESSION_0214 | UI primitives Part 2 — Base UI migration Phase 5 (HoverCard + Accordion) | `7e724b6 base-ui phase 5: components/common/hover-card.tsx migrated to @base-ui/react/preview-card; components/common/accordion.tsx migrated to @base-ui/react/accordion; ToolHoverCard asChild consumer migrated to render` | 3 code + 7 docs | final SHA reported in bow-out response | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | `copied_at_sha = c42e8bbc9a093daa8bb70faebfc552399134ee13` | exact residual clean; `typecheck` clean; `bun run lint` clean across 979 files; app tests 244/244; production `build` clean with existing Turbopack/NFT warning; `wiki:lint` 0 errors / 497 warnings | pass | Phase 5 intentionally ran before Tooltip because SESSION_0214 bow-in counts showed Tooltip at 46 JSX tags across 25 files, while HoverCard + Accordion were 7 JSX tags across 2 files. Global `popoverAnimationClasses` stayed Radix-shaped for still-Radix popover-family primitives; HoverCard uses local Base UI animation classes until Phase 7. |
 
 ## Epic summary
 

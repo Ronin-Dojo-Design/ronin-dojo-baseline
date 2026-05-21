@@ -70,3 +70,13 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   consumers apply boxVariants directly to real elements so the prior Slot.Root
 #   DOM shape and focus/hover behavior are preserved without a Radix dependency.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0214 / L6 Phase 5: HoverCard and Accordion migrated to upstream
+#   Base UI runtime from upstream 7e724b6. components/common/hover-card.tsx now
+#   wraps @base-ui/react PreviewCard Root/Trigger/Portal/Positioner/Popup while
+#   preserving Ronin export names; components/web/tools/tool-hover-card.tsx uses
+#   Trigger render instead of Radix asChild. components/common/accordion.tsx now
+#   wraps @base-ui/react Accordion Root/Item/Header/Trigger/Panel, preserving
+#   AccordionContent as the export over Panel and using data-open/data-closed
+#   selectors. Tooltip Phase 4 remains pending because it is a larger consumer
+#   rewrite.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

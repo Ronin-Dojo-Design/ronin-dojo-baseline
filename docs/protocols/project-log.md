@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-20
-last_agent: codex-session-0212
+updated: 2026-05-21
+last_agent: codex-session-0214
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -60,6 +60,7 @@ backlinks:
   - docs/sprints/SESSION_0207.md
   - docs/sprints/SESSION_0208.md
   - docs/sprints/SESSION_0212.md
+  - docs/sprints/SESSION_0214.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -273,6 +274,9 @@ Three sections:
 
 | Task ID | Session | Lane | Owner | Task | Done criteria | Status | Review |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| SESSION_0214_TASK_01 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Cody worker | HoverCard primitive + ToolHoverCard consumer | `hover-card.tsx` imports `@base-ui/react/preview-card`; ToolHoverCard has no legacy `asChild` HoverCard props; typecheck passes | landed | SESSION_0214_REVIEW_01 |
+| SESSION_0214_TASK_02 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Cody worker | Accordion primitive + consumer compatibility | `accordion.tsx` imports `@base-ui/react/accordion`; primitive uses `Panel` and Base UI data attributes; typecheck passes | landed | SESSION_0214_REVIEW_01 |
+| SESSION_0214_TASK_03 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Doug + Petey | Verification, docs, full close | Residual checks plus typecheck/lint/tests/build/wiki-lint pass; docs updated; commit pushed to `main`; Graphify refreshed | landed | SESSION_0214_REVIEW_01 |
 | SESSION_0023_TASK_01 | SESSION_0023 | Core platform | Petey + Giddy | Activate core-platform worktree | `git worktree list` shows wt-core-platform | landed | SESSION_0023_REVIEW_01 |
 | SESSION_0023_TASK_02 | SESSION_0023 | Core platform | Cody | Implement Wave A schema | Prisma validates; local DB push, generate, and seed pass | landed | SESSION_0023_REVIEW_01 |
 | SESSION_0023_TASK_03 | SESSION_0023 | Core platform | Doug + Giddy | Review and evidence | Verification evidence and residual risk recorded | landed | SESSION_0023_REVIEW_01 |
@@ -2045,3 +2049,25 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** Graphify query `D-016 Box boxVariants BoxProps Phase 2c`; upstream Box source; Ronin Box source and exact AST residual scripts; read-only explorer migration map; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
 - **Verdict:** Pass. No P0/P1 findings. Box no longer exposes the deleted wrapper API, no `Box` / `BoxProps` imports remain, and current consumers preserve the prior slotted DOM shape by applying `boxVariants` directly to the existing real element.
 - **Residual follow-up:** The pre-existing Turbopack/NFT warning from `server/admin/storage/monitoring/queries.ts` tracing through `next.config.ts` still appears during production build. It is unrelated to the Box migration and should be fixed in a dedicated hardening follow-up.
+
+### SESSION_0214 — Dirstarter uplift L6 Base UI migration Phase 5 (HoverCard + Accordion)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0214_TASK_01 | Cody worker: migrate `apps/web/components/common/hover-card.tsx` from Radix HoverCard to Base UI PreviewCard and update `components/web/tools/tool-hover-card.tsx` from `asChild` to `render`. | complete |
+| SESSION_0214_TASK_02 | Cody worker: migrate `apps/web/components/common/accordion.tsx` from Radix Accordion to Base UI Accordion and verify `components/web/tournaments/bracket-results.tsx` compatibility. | complete |
+| SESSION_0214_TASK_03 | Doug + Petey: residual checks, typecheck/lint/tests/build/wiki-lint, D-016 docs, lane ledger, project-log, full close, commit/push, Graphify refresh. | complete |
+
+**Notes:** Petey selected Phase 5 before Tooltip because exact AST counts showed Tooltip at 46 JSX tags across 25 files, while HoverCard + Accordion were 7 JSX tags across 2 files. HoverCard uses a local Base UI animation class list so global `popoverAnimationClasses` can stay Radix-shaped until Phase 7 migrates the remaining popover-family primitives.
+
+**Result:** `hover-card.tsx` now wraps `@base-ui/react/preview-card` Root/Trigger/Portal/Positioner/Popup and preserves Ronin export names. `ToolHoverCard` no longer uses Radix `asChild`. `accordion.tsx` now wraps `@base-ui/react/accordion` Root/Item/Header/Trigger/Panel, preserves `AccordionContent` as the export over `Panel`, and uses Base UI `data-open` / `data-closed` selectors.
+
+#### Review
+
+##### SESSION_0214_REVIEW_01 — Hostile close review for L6 Base UI migration Phase 5
+
+- **Reviewed tasks:** SESSION_0214_TASK_01, SESSION_0214_TASK_02, SESSION_0214_TASK_03.
+- **Dirstarter docs check:** upstream `7e724b6` `components/common/{tooltip,hover-card,accordion}.tsx` directly compared against Ronin counterparts. Live `dirstarter.com` docs not required because upstream source files are the primitive contract.
+- **Sources:** Graphify queries for D-016 Tooltip/HoverCard/Accordion and primitive migration docs; upstream HoverCard/Accordion/Tooltip source; Ronin HoverCard/Accordion/Tooltip source; exact AST residual scripts; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun run test -- --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
+- **Verdict:** Pass. No P0/P1 findings. Phase 5 no longer imports Radix, current consumer call sites are the expected 3 HoverCard tags and 4 Accordion tags, and all verification gates passed. The production build still emits the pre-existing Turbopack/NFT storage monitoring warning from SESSION_0213; not caused by this migration.
+- **Follow-up:** D-016 Phase 4 Tooltip remains open and should be planned as its own session because it has 46 JSX tags across 25 files and provider prop changes.

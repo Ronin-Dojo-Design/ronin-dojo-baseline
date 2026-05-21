@@ -4,8 +4,8 @@ slug: dirstarter-component-inventory
 type: reference
 status: active
 created: 2026-05-04
-updated: 2026-05-20
-last_agent: codex-session-0212
+updated: 2026-05-21
+last_agent: codex-session-0214
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/sprints/SESSION_0051.md
   - docs/sprints/SESSION_0208.md
   - docs/sprints/SESSION_0212.md
+  - docs/sprints/SESSION_0214.md
 ---
 
 # Dirstarter Component Inventory
@@ -30,12 +31,12 @@ Every component below is in `~/components/common/`. Import from there.
 
 | Component | File | Key Props / Variants | Use For |
 |---|---|---|---|
-| `Stack` | `stack.tsx` | `size: xs\|sm\|md\|lg`, `direction: row\|column`, `wrap: bool`, `asChild` | Flex container — replaces raw `<div className="flex ...">`. Use everywhere. |
+| `Stack` | `stack.tsx` | `size: xs\|sm\|md\|lg`, `direction: row\|column`, `wrap: bool`, `render` | Flex container — replaces raw `<div className="flex ...">`. Use everywhere. SESSION_0213: legacy `asChild` removed; use Base UI `render`. |
 | `Card`, `CardHeader`, `CardFooter`, `CardDescription` | `card.tsx` | Standard card layout | Content cards, match cards, any bordered container |
 | `boxVariants` | `box.tsx` | `hover`, `focus`, `focusWithin` | Utility classes for interactive borders/focus states. SESSION_0212: upstream deletes the `Box` wrapper; apply `boxVariants` directly to real elements instead of importing `Box`. |
 | `Wrapper` | `wrapper.tsx` | Layout wrapper | Page-level content wrapper |
 | `Separator` | `separator.tsx` | `orientation: horizontal\|vertical` | Visual dividers |
-| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `accordion.tsx` | Radix-based | Collapsible sections |
+| `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `accordion.tsx` | Base UI Accordion; `type="multiple"` compatibility; `AccordionContent` wraps Base UI `Panel` | Collapsible sections. SESSION_0214: migrated off Radix; uses `data-open` / `data-closed` state selectors. |
 | `AnimatedContainer` | `animated-container.tsx` | `height`, `transition` | Smooth height transitions |
 | `Skeleton` | `skeleton.tsx` | — | Loading placeholders |
 | `Prose` | `prose.tsx` | — | Long-form text styling |
@@ -75,7 +76,7 @@ Every component below is in `~/components/common/`. Import from there.
 | `Dialog`, `DialogContent`, `DialogTrigger`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` | `dialog.tsx` | Radix-based | Modals — never use inline expansion for forms |
 | `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuTrigger`, `DropdownMenuItem`, `DropdownMenuSeparator` | `dropdown-menu.tsx` | Radix-based | Action menus — never use inline buttons for row actions |
 | `Popover`, `PopoverContent`, `PopoverTrigger` | `popover.tsx` | Radix-based | Small overlays |
-| `HoverCard` | `hover-card.tsx` | — | Hover previews |
+| `HoverCard`, `HoverCardTrigger`, `HoverCardContent` | `hover-card.tsx` | Base UI PreviewCard wrapper; trigger uses `render`; content supports `align`, `side`, `sideOffset` | Hover previews. SESSION_0214: migrated off Radix while preserving Ronin export names. |
 | `Command`, `CommandEmpty`, `CommandGroup`, `CommandInput`, `CommandItem`, `CommandList` | `command.tsx` | cmdk-based | Command palettes, searchable lists |
 | `Tooltip` | `tooltip.tsx` | Compound: `Tooltip.Root/Trigger/Content` or simple `<Tooltip tooltip="text">` | Hover tips — use on any truncated text or icon-only buttons |
 | `Toaster` | `toaster.tsx` | Sonner-based; variants: default, info, success, error | Toast notifications — use via `toast()` from `sonner` |
