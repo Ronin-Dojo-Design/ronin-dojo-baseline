@@ -50,7 +50,10 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
           </Stack>
 
           <div className="space-y-2">
-            <H4 as="h3" className="line-clamp-2 text-base">
+            <H4
+              render={props => <h3 {...props}>{props.children}</h3>}
+              className="line-clamp-2 text-base"
+            >
               {product.name}
             </H4>
             <p className="line-clamp-3 min-h-16 text-sm text-secondary-foreground">

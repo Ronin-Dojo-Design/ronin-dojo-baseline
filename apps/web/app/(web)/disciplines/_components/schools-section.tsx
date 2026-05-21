@@ -34,7 +34,7 @@ export async function SchoolsSection({ disciplineId, brand }: SchoolsSectionProp
   if (orgLinks.length === 0) {
     return (
       <section>
-        <H4 as="h3">Schools & Dojos</H4>
+        <H4 render={props => <h3 {...props}>{props.children}</h3>}>Schools & Dojos</H4>
         <p className="mt-2 text-sm text-muted-foreground">No schools listed yet.</p>
       </section>
     )
@@ -42,7 +42,7 @@ export async function SchoolsSection({ disciplineId, brand }: SchoolsSectionProp
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">
+      <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Schools & Dojos ({orgLinks.length})
       </H4>
       <div className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3">

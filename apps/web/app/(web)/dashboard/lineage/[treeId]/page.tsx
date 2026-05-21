@@ -79,7 +79,7 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
           ) : (
             <Card hover={false}>
               <CardHeader direction="column" size="xs">
-                <H4 as="h2">No members yet</H4>
+                <H4 render={props => <h2 {...props}>{props.children}</h2>}>No members yet</H4>
                 <CardDescription>
                   This lineage tree is editable, but no members have been added.
                 </CardDescription>
@@ -99,7 +99,7 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
                   {result.tree.visibility.toLowerCase()}
                 </Badge>
               </Stack>
-              <H6 as="h2">Editor Access</H6>
+              <H6 render={props => <h2 {...props}>{props.children}</h2>}>Editor Access</H6>
               <CardDescription>
                 Capabilities are derived from global admin, organization admin, or explicit lineage
                 ACL grants.

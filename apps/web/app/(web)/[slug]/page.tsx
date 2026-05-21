@@ -89,7 +89,10 @@ export default async function (props: Props) {
               <Favicon src={tool.faviconUrl} title={tool.name} className="size-8" />
 
               <Stack className="flex-1 min-w-0">
-                <H2 as="h1" className="leading-tight! truncate">
+                <H2
+                  render={props => <h1 {...props}>{props.children}</h1>}
+                  className="leading-tight! truncate"
+                >
                   {tool.name}
                 </H2>
 
@@ -142,7 +145,9 @@ export default async function (props: Props) {
           {/* Categories */}
           {!!tool.categories.length && (
             <Stack direction="column" className="w-full max-md:order-5">
-              <H5 as="strong">{t("navigation.categories")}:</H5>
+              <H5 render={props => <strong {...props}>{props.children}</strong>}>
+                {t("navigation.categories")}:
+              </H5>
 
               <Stack className="gap-2">
                 {tool.categories?.map(({ slug, name }) => (
@@ -157,7 +162,9 @@ export default async function (props: Props) {
           {/* Tags */}
           {!!tool.tags.length && (
             <Stack direction="column" className="w-full max-md:order-6">
-              <H5 as="h4">{t("navigation.tags")}:</H5>
+              <H5 render={props => <h4 {...props}>{props.children}</h4>}>
+                {t("navigation.tags")}:
+              </H5>
 
               <Stack>
                 {tool.tags.map(tag => (

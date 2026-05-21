@@ -23,7 +23,10 @@ export const Author = ({ name, image, title, prefix, url, note, ...props }: Auth
       />
 
       <div className="flex-1 text-sm/normal text-secondary-foreground">
-        <H6 as="h3" className="truncate *:font-medium *:[[href]]:hover:text-foreground">
+        <H6
+          render={props => <h3 {...props}>{props.children}</h3>}
+          className="truncate *:font-medium *:[[href]]:hover:text-foreground"
+        >
           {prefix ? `${prefix} ` : ""}
           {url ? <ExternalLink href={url}>{name}</ExternalLink> : <span>{name}</span>}
         </H6>

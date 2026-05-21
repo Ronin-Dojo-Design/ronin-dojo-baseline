@@ -119,7 +119,7 @@ function AffiliateGearListItem({ item }: AffiliateGearListItemProps) {
           <Badge variant="outline">{categoryLabel[product.category]}</Badge>
           {badge && <Badge variant="soft">{badge}</Badge>}
         </Stack>
-        <H4 as="h3" className="text-base">
+        <H4 render={props => <h3 {...props}>{props.children}</h3>} className="text-base">
           {product.name}
         </H4>
         <p className="text-sm text-secondary-foreground">{product.description}</p>

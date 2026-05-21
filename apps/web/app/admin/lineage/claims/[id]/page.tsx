@@ -35,7 +35,11 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
           >
             ← Back to Claims
           </Link>
-          <Heading as="h1" size="h3" className="mt-2">
+          <Heading
+            render={props => <h1 {...props}>{props.children}</h1>}
+            size="h3"
+            className="mt-2"
+          >
             Claim: {nodeDisplayName}
           </Heading>
         </div>
@@ -83,7 +87,11 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Claimant Note */}
         {claim.claimantNote && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">
+            <Heading
+              render={props => <h2 {...props}>{props.children}</h2>}
+              size="h5"
+              className="mb-2"
+            >
               Claimant Note
             </Heading>
             <p className="text-sm whitespace-pre-wrap">{claim.claimantNote}</p>
@@ -93,7 +101,11 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Reviewer Note */}
         {claim.reviewerNote && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">
+            <Heading
+              render={props => <h2 {...props}>{props.children}</h2>}
+              size="h5"
+              className="mb-2"
+            >
               Reviewer Note
             </Heading>
             <p className="text-sm whitespace-pre-wrap">{claim.reviewerNote}</p>
@@ -103,7 +115,11 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
         {/* Evidence */}
         {claim.evidence.length > 0 && (
           <Card className="p-4">
-            <Heading as="h2" size="h5" className="mb-2">
+            <Heading
+              render={props => <h2 {...props}>{props.children}</h2>}
+              size="h5"
+              className="mb-2"
+            >
               Evidence ({claim.evidence.length})
             </Heading>
             <Stack direction="column" className="gap-3">

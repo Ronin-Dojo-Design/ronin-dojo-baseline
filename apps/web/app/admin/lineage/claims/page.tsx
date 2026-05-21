@@ -57,7 +57,7 @@ export default withAdminPage(async () => {
   return (
     <Wrapper>
       <Stack direction="column" className="gap-6">
-        <Heading as="h1" size="h3">
+        <Heading render={props => <h1 {...props}>{props.children}</h1>} size="h3">
           Lineage Claims
         </Heading>
 

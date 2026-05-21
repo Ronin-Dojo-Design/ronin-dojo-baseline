@@ -31,7 +31,10 @@ export function LineageTree({ rows, rootId, onSelect }: LineageTreeProps) {
     <Stack size="lg" direction="column" className="w-full">
       {rows.map(row => (
         <section key={row.depth} aria-label={depthLabel(row.depth)} className="w-full">
-          <H6 as="h6" className="mb-2 text-muted-foreground uppercase tracking-wide">
+          <H6
+            render={props => <h6 {...props}>{props.children}</h6>}
+            className="mb-2 text-muted-foreground uppercase tracking-wide"
+          >
             {depthLabel(row.depth)}
           </H6>
           <Stack size="md" wrap>

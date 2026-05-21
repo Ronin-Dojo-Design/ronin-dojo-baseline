@@ -102,7 +102,7 @@ export const AdsCalendar = ({
     <div className={cx("relative flex flex-col flex-1 divide-y", className)} {...props}>
       <Stack size="sm" direction="column" className="items-stretch py-2 px-4">
         <Stack wrap={false}>
-          <H4 as="h3">{adSpot.label}</H4>
+          <H4 render={props => <h3 {...props}>{props.children}</h3>}>{adSpot.label}</H4>
 
           {price && (
             <Price price={discountedPrice} interval={t("day")} className="ml-auto text-sm" />

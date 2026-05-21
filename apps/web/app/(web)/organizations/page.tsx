@@ -49,7 +49,7 @@ export default async function OrganizationsPage() {
               {orgs.map(org => (
                 <Card key={org.id} isRevealed>
                   <CardHeader>
-                    <H4 as="h3" className="truncate">
+                    <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
                       <Link href={`/organizations/${org.slug}`}>
                         <span className="absolute inset-0 z-10" />
                         {org.name}

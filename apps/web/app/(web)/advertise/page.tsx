@@ -66,7 +66,7 @@ export default async function ({ searchParams }: PageProps<"/advertise">) {
       <hr />
 
       <Intro alignment="center">
-        <IntroTitle size="h2" as="h3">
+        <IntroTitle size="h2" render={props => <h3 {...props}>{props.children}</h3>}>
           {t(`${namespace}.cta.title`)}
         </IntroTitle>
 

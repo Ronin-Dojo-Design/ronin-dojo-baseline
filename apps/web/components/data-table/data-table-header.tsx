@@ -27,7 +27,7 @@ export function DataTableHeader({
       {...props}
     >
       <div className="flex items-center justify-between gap-4">
-        <H3 as="h1">
+        <H3 render={props => <h1 {...props}>{props.children}</h1>}>
           {title}
           {typeof total === "number" && <span className="ml-1.5 opacity-40">({total})</span>}
         </H3>

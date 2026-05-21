@@ -34,7 +34,7 @@ export async function BlackBeltRail({ disciplineId, brand }: BlackBeltRailProps)
   if (topMembers.length === 0) {
     return (
       <Card className="p-4">
-        <H4 as="h3" className="mb-2 text-sm">
+        <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-2 text-sm">
           Top Ranked
         </H4>
         <p className="text-xs text-muted-foreground">No ranked members yet.</p>
@@ -44,7 +44,7 @@ export async function BlackBeltRail({ disciplineId, brand }: BlackBeltRailProps)
 
   return (
     <Card className="p-4">
-      <H4 as="h3" className="mb-3 text-sm">
+      <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-3 text-sm">
         Top Ranked Members
       </H4>
       <Stack direction="column" size="sm">

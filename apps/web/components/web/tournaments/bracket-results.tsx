@@ -116,7 +116,9 @@ export function BracketResults({ divisions }: BracketResultsProps) {
 
                         return (
                           <Stack key={roundNumber} direction="column" size="xs">
-                            <H4 as="h5">{roundLabel}</H4>
+                            <H4 render={props => <h5 {...props}>{props.children}</h5>}>
+                              {roundLabel}
+                            </H4>
                             {matches
                               .sort((a, b) => a.matchNumber - b.matchNumber)
                               .map(match => (

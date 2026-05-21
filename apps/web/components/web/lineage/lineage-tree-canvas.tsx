@@ -594,7 +594,10 @@ export function LineageTreeCanvas({
             <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
               Scroll to explore
             </Badge>
-            <H6 as="h2" className="text-muted-foreground">
+            <H6
+              render={props => <h2 {...props}>{props.children}</h2>}
+              className="text-muted-foreground"
+            >
               Click a practitioner to trace their path to the root
             </H6>
           </Stack>

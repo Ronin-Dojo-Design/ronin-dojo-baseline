@@ -34,7 +34,7 @@ export async function CoursesSection({ disciplineId, brand }: CoursesSectionProp
   if (courses.length === 0) {
     return (
       <section>
-        <H4 as="h3">Courses & Certifications</H4>
+        <H4 render={props => <h3 {...props}>{props.children}</h3>}>Courses & Certifications</H4>
         <p className="mt-2 text-sm text-muted-foreground">No published courses yet.</p>
       </section>
     )
@@ -42,7 +42,7 @@ export async function CoursesSection({ disciplineId, brand }: CoursesSectionProp
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">
+      <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Courses & Certifications ({courses.length})
       </H4>
       <div className="grid gap-3 @md:grid-cols-2">

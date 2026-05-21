@@ -38,7 +38,7 @@ const TechniqueCard = ({ technique, ...props }: TechniqueCardProps) => {
   return (
     <Card isRevealed {...props}>
       <CardHeader wrap={false}>
-        <H4 as="h3" className="truncate">
+        <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
           <Link href={`/techniques/${technique.slug}`}>
             <span className="absolute inset-0 z-10" />
             {technique.name}

@@ -22,7 +22,7 @@ export const FeaturedToolsIcons = async ({ ...props }: ComponentProps<typeof Car
 
   return (
     <Card hover={false} focus={false} {...props}>
-      <H5 as="strong">{t("title")}:</H5>
+      <H5 render={props => <strong {...props}>{props.children}</strong>}>{t("title")}:</H5>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] gap-2 w-full -mt-1">
         {tools.map(tool => (

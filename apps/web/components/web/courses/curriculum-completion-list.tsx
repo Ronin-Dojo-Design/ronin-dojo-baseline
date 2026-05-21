@@ -108,7 +108,10 @@ export function CurriculumCompletionList({
 
                   <Stack direction="column" size="sm" className="min-w-0 flex-1">
                     <Stack size="sm" className="w-full justify-between">
-                      <H5 as="h3" className="min-w-0 flex-1">
+                      <H5
+                        render={props => <h3 {...props}>{props.children}</h3>}
+                        className="min-w-0 flex-1"
+                      >
                         {item.title}
                       </H5>
 

@@ -24,7 +24,9 @@ export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrap
       <Wrapper className={cx("py-fluid-md border-t border-foreground/10", className)} {...props}>
         {!!categories?.length && (
           <Stack className="gap-x-4 text-sm">
-            <H6 as="strong">{t("popular_categories")}</H6>
+            <H6 render={props => <strong {...props}>{props.children}</strong>}>
+              {t("popular_categories")}
+            </H6>
 
             <div className="grid grid-cols-2xs gap-x-4 gap-y-2 w-full sm:grid-cols-xs md:grid-cols-sm">
               {categories.map(category => (

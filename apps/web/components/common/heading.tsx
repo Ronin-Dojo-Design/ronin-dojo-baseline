@@ -1,5 +1,4 @@
-import { Slot } from "radix-ui"
-import { type ElementType, type HTMLProps, isValidElement } from "react"
+import { useRender } from "@base-ui/react/use-render"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const headingVariants = cva({
@@ -7,10 +6,10 @@ const headingVariants = cva({
 
   variants: {
     size: {
-      h1: "text-3xl tracking-tight text-pretty bg-linear-to-b from-foreground to-foreground/75 bg-clip-text text-transparent md:text-4xl",
-      h2: "text-2xl tracking-tight md:text-3xl",
-      h3: "text-2xl tracking-tight",
-      h4: "text-xl tracking-tight",
+      h1: "text-3xl tracking-tight text-balance bg-linear-to-b from-foreground to-foreground/75 bg-clip-text text-transparent md:text-4xl",
+      h2: "text-2xl tracking-micro text-balance md:text-3xl",
+      h3: "text-2xl tracking-micro text-balance",
+      h4: "text-xl tracking-micro text-balance",
       h5: "text-base font-sans font-medium",
       h6: "text-sm/tight font-sans font-medium",
     },
@@ -21,50 +20,22 @@ const headingVariants = cva({
   },
 })
 
-export type HeadingProps = Omit<HTMLProps<HTMLHeadingElement>, "size"> &
-  VariantProps<typeof headingVariants> & {
-    /**
-     * If set to `true`, the button will be rendered as a child within the component.
-     * This child component must be a valid React component.
-     */
-    as?: ElementType
+export type HeadingProps = Omit<useRender.ComponentProps<"h2">, "size"> &
+  VariantProps<typeof headingVariants>
 
-    /**
-     * If set to `true`, the button will be rendered as a child within the component.
-     * This child component must be a valid React component.
-     */
-    asChild?: boolean
-  }
-
-const Heading = ({ className, as, asChild, size, ...props }: HeadingProps) => {
-  const useAsChild = asChild && isValidElement(props.children)
-  const Comp = useAsChild ? Slot.Root : (as ?? size ?? "h2")
-
-  return <Comp className={cx(headingVariants({ size, className }))} {...props} />
+const Heading = ({ className, render, size, ...props }: HeadingProps) => {
+  return useRender({
+    render,
+    defaultTagName: (size ?? "h2") as keyof React.JSX.IntrinsicElements,
+    props: { className: cx(headingVariants({ size }), className), ...props },
+  })
 }
 
-const H1 = (props: HeadingProps) => {
-  return <Heading size="h1" {...props} />
-}
-
-const H2 = (props: HeadingProps) => {
-  return <Heading size="h2" {...props} />
-}
-
-const H3 = (props: HeadingProps) => {
-  return <Heading size="h3" {...props} />
-}
-
-const H4 = (props: HeadingProps) => {
-  return <Heading size="h4" {...props} />
-}
-
-const H5 = (props: HeadingProps) => {
-  return <Heading size="h5" {...props} />
-}
-
-const H6 = (props: HeadingProps) => {
-  return <Heading size="h6" {...props} />
-}
+const H1 = (props: HeadingProps) => <Heading size="h1" {...props} />
+const H2 = (props: HeadingProps) => <Heading size="h2" {...props} />
+const H3 = (props: HeadingProps) => <Heading size="h3" {...props} />
+const H4 = (props: HeadingProps) => <Heading size="h4" {...props} />
+const H5 = (props: HeadingProps) => <Heading size="h5" {...props} />
+const H6 = (props: HeadingProps) => <Heading size="h6" {...props} />
 
 export { H1, H2, H3, H4, H5, H6, Heading }

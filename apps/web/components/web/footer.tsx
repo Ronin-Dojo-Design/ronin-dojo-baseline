@@ -36,7 +36,7 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
           className="flex flex-col items-start gap-4 col-span-full md:col-span-6"
         >
           <Stack size="lg" direction="column" className="min-w-0 max-w-64">
-            <H5 as="strong" className="px-0.5">
+            <H5 render={props => <strong {...props}>{props.children}</strong>} className="px-0.5">
               {t("components.footer.cta_title")}
             </H5>
 
@@ -73,7 +73,9 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
         </Stack>
 
         <Stack direction="column" className="text-sm md:col-span-3 md:col-start-8">
-          <H6 as="strong">{t("navigation.browse")}:</H6>
+          <H6 render={props => <strong {...props}>{props.children}</strong>}>
+            {t("navigation.browse")}:
+          </H6>
 
           <NavLink href="/programs">{t("navigation.programs")}</NavLink>
           <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
@@ -84,7 +86,9 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
         </Stack>
 
         <Stack direction="column" className="text-sm md:col-span-3">
-          <H6 as="strong">{t("navigation.quick_links")}:</H6>
+          <H6 render={props => <strong {...props}>{props.children}</strong>}>
+            {t("navigation.quick_links")}:
+          </H6>
 
           <NavLink href="/blog">{t("navigation.blog")}</NavLink>
           <NavLink href="/about">{t("navigation.about")}</NavLink>

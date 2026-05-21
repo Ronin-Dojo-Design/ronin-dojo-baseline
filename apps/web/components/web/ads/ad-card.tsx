@@ -50,7 +50,10 @@ const AdCard = async ({ className, type, explicitAd, fallback, ...props }: AdCar
             <CardHeader wrap={false}>
               <Favicon src={ad.faviconUrl ?? "/favicon.png"} title={ad.name} contained />
 
-              <H4 as="strong" className="truncate">
+              <H4
+                render={props => <strong {...props}>{props.children}</strong>}
+                className="truncate"
+              >
                 {ad.name}
               </H4>
             </CardHeader>

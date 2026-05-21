@@ -23,7 +23,7 @@ export function FounderCarousel({ founders }: FounderCarouselProps) {
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">
+      <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Founders
       </H4>
       <Carousel>

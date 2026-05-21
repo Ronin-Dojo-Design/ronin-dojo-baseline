@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-04
 updated: 2026-05-20
-last_agent: claude-session-0208
+last_agent: codex-session-0211
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
@@ -43,7 +43,7 @@ Every component below is in `~/components/common/`. Import from there.
 
 | Component | File | Key Props | Use For |
 |---|---|---|---|
-| `H3` (+ other headings) | `heading.tsx` | `as` (polymorphic tag) | Section headings — don't use raw `<h3>` |
+| `H3` (+ other headings) | `heading.tsx` | `render` (Base UI polymorphic tag), `size: h1\|h2\|h3\|h4\|h5\|h6` | Section headings — don't use raw `<h3>`. SESSION_0211: legacy `as`/`asChild` removed; use `render={(props) => <h3 {...props}>{props.children}</h3>}` when rendered tag differs from visual size. |
 | `Label` | `label.tsx` | `isRequired` | Form labels — don't use raw `<label>` |
 | `Hint` | `hint.tsx` | — | Help text below form fields |
 | `Note` | `note.tsx` | — | Muted secondary text |

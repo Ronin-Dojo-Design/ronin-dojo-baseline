@@ -27,7 +27,7 @@ export const FeatureCards = async ({ className, ...props }: ComponentProps<"sect
           <Card key={key} className="items-center text-center">
             <CardHeader>
               <Icon className="size-8 text-primary mx-auto" />
-              <Heading size="h4" as="h3">
+              <Heading size="h4" render={props => <h3 {...props}>{props.children}</h3>}>
                 {t(`${key}.title`)}
               </Heading>
               <CardDescription>{t(`${key}.description`)}</CardDescription>

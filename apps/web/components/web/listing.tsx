@@ -32,7 +32,7 @@ export const Listing = ({
         {...props}
       >
         <Stack className="w-full justify-between">
-          {title && <H4 as="h3">{title}</H4>}
+          {title && <H4 render={props => <h3 {...props}>{props.children}</h3>}>{title}</H4>}
 
           {showDivider && <span className="flex-1 ml-1 mr-auto h-0.5 max-w-20 bg-border" />}
 

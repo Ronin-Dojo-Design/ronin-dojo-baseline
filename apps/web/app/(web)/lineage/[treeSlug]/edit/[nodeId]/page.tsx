@@ -34,7 +34,7 @@ export default async function EditLineageNodeProfilePage({ params }: Props) {
   return (
     <Stack direction="column" className="mx-auto max-w-2xl py-8">
       <Stack size="xs" direction="column">
-        <H4 as="h1">Edit Lineage Profile</H4>
+        <H4 render={props => <h1 {...props}>{props.children}</h1>}>Edit Lineage Profile</H4>
         <Note>Update how this approved lineage node appears on the published tree.</Note>
       </Stack>
 

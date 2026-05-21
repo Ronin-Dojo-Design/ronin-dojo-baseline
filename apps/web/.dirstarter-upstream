@@ -57,3 +57,10 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   and upstream Heading adopts useRender (140 <Hn as=…> rewrites). Phases
 #   3-8 slide to SESSION_0213-0218. D-016 + petey-plan-0083 updated.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0211 / L6 Phase 2b: Heading migrated from radix-ui Slot/as/asChild
+#   polymorphism to upstream @base-ui/react/use-render render={...} API. Exact
+#   AST residual check found 211 Heading JSX tags and 60 IntroTitle wrapper
+#   tags with zero remaining Heading/IntroTitle as/asChild props; 61 direct
+#   Heading render callbacks plus 1 IntroTitle render callback preserve the
+#   prior rendered element while keeping visual size props unchanged.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

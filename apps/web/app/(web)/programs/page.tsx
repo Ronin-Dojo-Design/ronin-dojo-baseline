@@ -50,7 +50,7 @@ export default async function ProgramsPage() {
               {programs.map(program => (
                 <Card key={program.id} isRevealed>
                   <CardHeader>
-                    <H4 as="h3" className="truncate">
+                    <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
                       <Link href={`/programs/${program.id}`}>
                         <span className="absolute inset-0 z-10" />
                         {program.name}

@@ -193,7 +193,10 @@ function InfoTab({
 
       {/* Current Rank */}
       <section aria-label="Current rank">
-        <H6 as="h6" className="mb-1 text-muted-foreground uppercase tracking-wide">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="mb-1 text-muted-foreground uppercase tracking-wide"
+        >
           Current Rank
         </H6>
         {currentRank ? (
@@ -226,7 +229,10 @@ function InfoTab({
 
       {/* Awarded By — REQUIRED row per SESSION Open decisions 2026-05-16 */}
       <section aria-label="Awarded by">
-        <H6 as="h6" className="mb-1 text-muted-foreground uppercase tracking-wide">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="mb-1 text-muted-foreground uppercase tracking-wide"
+        >
           Awarded By
         </H6>
         {awardedBy ? (
@@ -251,7 +257,10 @@ function InfoTab({
 
       {/* Promoted On */}
       <section aria-label="Promoted on">
-        <H6 as="h6" className="mb-1 text-muted-foreground uppercase tracking-wide">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="mb-1 text-muted-foreground uppercase tracking-wide"
+        >
           Promoted On
         </H6>
         {promotedOn ? (
@@ -265,7 +274,10 @@ function InfoTab({
 
       {/* Instructor */}
       <section aria-label="Instructor">
-        <H6 as="h6" className="mb-1 text-muted-foreground uppercase tracking-wide">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="mb-1 text-muted-foreground uppercase tracking-wide"
+        >
           Instructor
         </H6>
         {instructorName ? (
@@ -284,7 +296,10 @@ function InfoTab({
 
       {/* School */}
       <section aria-label="School">
-        <H6 as="h6" className="mb-1 text-muted-foreground uppercase tracking-wide">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="mb-1 text-muted-foreground uppercase tracking-wide"
+        >
           School
         </H6>
         {latestMembership?.organization ? (
@@ -309,7 +324,7 @@ function InfoTab({
 function EmptyTabBody({ heading, body }: { heading: string; body: string }) {
   return (
     <Stack direction="column" size="sm" className="w-full py-8 text-center">
-      <H6 as="h6">{heading}</H6>
+      <H6 render={props => <h6 {...props}>{props.children}</h6>}>{heading}</H6>
       <Note>{body}</Note>
     </Stack>
   )

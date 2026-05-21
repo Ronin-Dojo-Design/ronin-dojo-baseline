@@ -25,7 +25,7 @@ export async function DashboardLineageTab() {
     return (
       <Card hover={false}>
         <CardHeader direction="column" size="xs">
-          <H6 as="h2">No editable lineage trees</H6>
+          <H6 render={props => <h2 {...props}>{props.children}</h2>}>No editable lineage trees</H6>
           <CardDescription>
             You do not have lineage editor access for the current brand yet.
           </CardDescription>
@@ -50,7 +50,7 @@ export async function DashboardLineageTab() {
                 {tree.scopeType.toLowerCase()}
               </Badge>
             </Stack>
-            <H6 as="h2">{tree.name}</H6>
+            <H6 render={props => <h2 {...props}>{props.children}</h2>}>{tree.name}</H6>
             <CardDescription>
               {[tree.organizationName, tree.disciplineName].filter(Boolean).join(" · ") ||
                 "Brand lineage tree"}

@@ -71,7 +71,7 @@ export async function LineageTreeSection({ brand }: LineageTreeSectionProps) {
   return (
     <section>
       <Stack size="xs" direction="column" className="mb-4">
-        <H4 as="h3">Lineage</H4>
+        <H4 render={props => <h3 {...props}>{props.children}</h3>}>Lineage</H4>
         <Note>
           Instructor lineage rooted at{" "}
           {rootNode.user.passport?.displayName ?? rootNode.user.name ?? "the head instructor"}.

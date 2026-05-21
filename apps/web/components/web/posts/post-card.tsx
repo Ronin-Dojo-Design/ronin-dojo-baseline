@@ -31,7 +31,7 @@ export const PostCard = ({ className, post, ...props }: PostCardProps) => {
         )}
 
         <CardHeader wrap={false}>
-          <H4 as="h3" className="leading-snug!">
+          <H4 render={props => <h3 {...props}>{props.children}</h3>} className="leading-snug!">
             {post.title}
           </H4>
         </CardHeader>

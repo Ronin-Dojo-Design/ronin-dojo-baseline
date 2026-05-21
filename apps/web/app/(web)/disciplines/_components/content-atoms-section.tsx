@@ -35,7 +35,7 @@ export async function ContentAtomsSection({ disciplineId, brand }: ContentAtomsS
 
   return (
     <section>
-      <H4 as="h3" className="mb-4">
+      <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Related Content ({atoms.length})
       </H4>
       <div className="grid gap-3 @md:grid-cols-2">

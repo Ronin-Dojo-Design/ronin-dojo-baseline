@@ -25,7 +25,7 @@ const ToolCard = ({ tool, ...props }: ToolCardProps) => {
       <CardHeader wrap={false}>
         <Favicon src={tool.faviconUrl} title={tool.name} contained />
 
-        <H4 as="h3" className="truncate">
+        <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
           <Link href={`/${tool.slug}`}>{tool.name}</Link>
         </H4>
 

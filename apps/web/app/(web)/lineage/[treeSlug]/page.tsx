@@ -59,7 +59,7 @@ export default async function LineageTreePage({ params }: Props) {
     return (
       <section className="py-8">
         <Stack size="xs" direction="column">
-          <H4 as="h1">{result.tree.name}</H4>
+          <H4 render={props => <h1 {...props}>{props.children}</h1>}>{result.tree.name}</H4>
           <Note>This lineage tree has no visible members.</Note>
         </Stack>
       </section>
@@ -88,7 +88,7 @@ export default async function LineageTreePage({ params }: Props) {
   return (
     <section className="py-8">
       <Stack size="xs" direction="column" className="mb-4">
-        <H4 as="h1">{result.tree.name}</H4>
+        <H4 render={props => <h1 {...props}>{props.children}</h1>}>{result.tree.name}</H4>
         {result.tree.description && <Note>{result.tree.description}</Note>}
       </Stack>
 

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-20
-last_agent: claude-session-0208
+last_agent: codex-session-0211
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -2000,3 +2000,25 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** upstream `7e724b6` `lib/utils.ts`, `lib/slot.ts`, `components/common/{box,heading,animated-container}.tsx`; Ronin `apps/web/lib/utils.ts`, `apps/web/components/common/{box,heading,animated-container}.tsx`, all 153 `~/lib/utils` consumers (grep), 426 `<Box>`/`<Heading>`/`<Hn>`/`<AnimatedContainer>` JSX sites, 4 `popoverAnimationClasses` consumers (`popover.tsx`, `hover-card.tsx`, `dropdown-menu.tsx`, `select.tsx`), 2 `from "cva"` consumers (`ads-picker.tsx`, `sidebar.tsx`); `pnpm --filter dirstarter typecheck`, `bun run lint`, `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1`, `pnpm --filter dirstarter build`, `bun run wiki:lint`.
 - **Verdict:** Pass. No P0/P1 findings. Honest bow-in re-scope was the right call — Box/Heading scope blowup discovered before any consumer code was touched. Phase 2a stayed bounded to the 3 truly-safe foundation changes (utils swap, AnimatedContainer, cva import sweep) and shipped a green verification suite.
 - **Follow-up:** SESSION_0211 = Phase 2b of `D-016` — migrate `heading.tsx` (adopt `useRender` + `render={…}`; rewrite 140 `<Hn as="…">` call sites). SESSION_0212 = Phase 2c — delete the `Box` component and refactor 59 JSX + 14 internal-primitive consumers to inline `boxVariants`.
+
+### SESSION_0211 — Dirstarter uplift L6 Base UI migration Phase 2b (Heading)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0211_TASK_01 | Cody: rewrite `apps/web/components/common/heading.tsx` to upstream `@base-ui/react/use-render` shape, dropping legacy `as` and `asChild`; convert every legacy Heading `as="tag"` consumer to `render={<tag />}` while preserving visual `size`, classes, and children. | complete |
+| SESSION_0211_TASK_02 | Doug: verify no Heading `as`/`asChild` consumers remain; run typecheck, lint, app tests, build, and wiki lint; record pass/fail evidence. | complete |
+| SESSION_0211_TASK_03 | Petey + Doug: tick `D-016` Phase 2b, append `.dirstarter-upstream` and lane-ledger rows, update wiki index/project-log/session evidence, full-close, commit, push to `main`, and refresh Graphify. | complete |
+
+**Notes:** Upstream Heading removes both legacy `as` and `asChild` and uses `useRender`. The SESSION_0210 handoff estimated 140 `<Hn as=...>` call sites; Graphify-first plus exact AST close proof found 211 direct Heading JSX tags, 60 `IntroTitle` wrapper tags, 61 direct Heading render callbacks, 1 `IntroTitle` render callback, and 0 remaining `as`/`asChild` props. Function-form render callbacks were required because Biome flags empty JSX headings in `render={<h3 />}` as missing accessible content.
+
+**Result:** `apps/web/components/common/heading.tsx` now imports `@base-ui/react/use-render` and no longer imports `radix-ui`. Former rendered-tag overrides now use `render={(props) => <tag {...props}>{props.children}</tag>}` so visual `size` stays unchanged while the actual element matches the previous `as` value. `IntroTitle` remains a thin wrapper over `Heading` and its single legacy `as` call site was migrated.
+
+#### Review
+
+##### SESSION_0211_REVIEW_01 — Hostile close review for L6 Base UI migration Phase 2b
+
+- **Reviewed tasks:** SESSION_0211_TASK_01, SESSION_0211_TASK_02, SESSION_0211_TASK_03.
+- **Dirstarter docs check:** upstream `7e724b6` `components/common/heading.tsx` directly compared against Ronin `apps/web/components/common/heading.tsx`. Live `dirstarter.com` docs not required because the upstream source file is the primitive contract.
+- **Sources:** Graphify queries for `D-016 heading useRender render asChild Phase 2b`, `components common heading H1 H2 H3 H4 H5 H6 as render`, and `custom component inventory heading dirstarter component inventory`; upstream Heading source; Ronin Heading source and `IntroTitle` wrapper; exact AST residual scripts; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
+- **Verdict:** Pass. No P0/P1 findings. The migration removes Heading's direct `radix-ui` dependency, preserves visual sizing and prior rendered tags, and proves no direct Heading or `IntroTitle` legacy polymorphic props remain. The only notable implementation adjustment was switching from element-form render props to function-form render callbacks so Biome can see explicit heading children.
+- **Follow-up:** SESSION_0212 = Phase 2c of `D-016` — migrate `box.tsx` by deleting the `Box` component and refactoring 59 JSX + 14 internal-primitive consumers to inline `boxVariants` on real elements.

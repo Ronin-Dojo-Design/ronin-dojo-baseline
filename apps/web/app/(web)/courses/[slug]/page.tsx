@@ -91,7 +91,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
           <Card hover={false}>
             <Stack direction="column" size="sm">
-              <H5 as="h2">Offered by</H5>
+              <H5 render={props => <h2 {...props}>{props.children}</h2>}>Offered by</H5>
               <H4>{course.organization.name}</H4>
             </Stack>
           </Card>
