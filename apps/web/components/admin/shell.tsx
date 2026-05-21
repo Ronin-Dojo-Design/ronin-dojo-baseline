@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react"
+import { CommandPalette } from "~/components/admin/command-palette"
 import { Sidebar } from "~/components/admin/sidebar"
 
 type ShellProps = PropsWithChildren<{
@@ -11,6 +12,8 @@ export const Shell = ({ children, userRole }: ShellProps) => {
       <Sidebar userRole={userRole} />
 
       <div className="grid content-start gap-4 flex-1 p-4 sm:px-6">{children}</div>
+
+      <CommandPalette />
     </div>
   )
 }

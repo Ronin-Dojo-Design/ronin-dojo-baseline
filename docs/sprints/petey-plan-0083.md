@@ -2,10 +2,10 @@
 title: "Petey plan 0083 — Radix → @base-ui/react migration lane"
 slug: petey-plan-0083
 type: petey-plan
-status: active
+status: closed
 created: 2026-05-20
 updated: 2026-05-21
-last_agent: copilot-session-0217
+last_agent: copilot-session-0218
 pairs_with:
   - docs/sprints/SESSION_0209.md
   - docs/sprints/SESSION_0210.md
@@ -15,6 +15,7 @@ pairs_with:
   - docs/sprints/SESSION_0214.md
   - docs/sprints/SESSION_0215.md
   - docs/sprints/SESSION_0217.md
+  - docs/sprints/SESSION_0218.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/knowledge/wiki/drift-register.md
 backlinks:
@@ -82,10 +83,11 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 | 6 | `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx` | Form primitives. |
 | 6 | `field.tsx`, `button-group.tsx` (already L5-ported) | Sanity pass. |
 | 7 ✓ | `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx` | Popover family. `asChild` → `render={…}` call-site sweep. Picks up the L5-deferred PopoverTrigger work. |
-| 8 | `command.tsx` | cmdk → cmdk-base + slot util. |
-| 8 | `tabs.tsx` | Verify upstream availability; migrate or accept lone Radix dep. |
-| 8 | `admin/command-palette.tsx` | NEW — admin Cmd+K palette (L6 epic carry-over). |
-| 8 | `package.json` | Remove `radix-ui` + `cmdk`. |
+| 8 ✓ | `command.tsx` | cmdk → cmdk-base. |
+| 8 ✓ | `tabs.tsx` | Radix → `@base-ui/react/tabs`; `data-[state=active]` → `data-selected`. |
+| 8 ✓ | `admin/command-palette.tsx` | NEW — admin Cmd+K palette. |
+| 8 ✓ | `web/ui/{tile,container,nav-link,tag,sticky}.tsx` | Radix `Slot` → `useRender` + `render={…}`. `Slottable` deleted. |
+| 8 ✓ | `package.json` | Removed `radix-ui`, `cmdk`, `cva`, `@radix-ui/react-accordion`. Added `@dirstack/utils`. |
 
 ## Decisions reserved for in-phase Petey review
 

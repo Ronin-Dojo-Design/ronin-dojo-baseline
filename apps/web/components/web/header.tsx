@@ -71,9 +71,9 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               <NavLink
                 className="gap-1"
                 suffix={<ChevronDownIcon className="group-data-open:-rotate-180" />}
-                asChild
+                render={<DropdownMenuTrigger />}
               >
-                <DropdownMenuTrigger>{t("navigation.browse")}</DropdownMenuTrigger>
+                {t("navigation.browse")}
               </NavLink>
 
               <DropdownMenuContent align="start">

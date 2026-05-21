@@ -16,14 +16,12 @@ const TagCard = ({ tag, ...props }: TagCardProps) => {
   const count = tag._count.tools
 
   return (
-    <Tile asChild {...props}>
-      <Link href={`/tags/${tag.slug}`}>
-        <TileTitle>{tag.slug}</TileTitle>
+    <Tile render={<Link href={`/tags/${tag.slug}`} />} {...props}>
+      <TileTitle>{tag.slug}</TileTitle>
 
-        <TileDivider />
+      <TileDivider />
 
-        <TileCaption>{`${count} ${t("tools.count_tools", { count })}`}</TileCaption>
-      </Link>
+      <TileCaption>{`${count} ${t("tools.count_tools", { count })}`}</TileCaption>
     </Tile>
   )
 }

@@ -1,34 +1,42 @@
-import { Slot } from "radix-ui"
-import { type ComponentProps, isValidElement } from "react"
+import { useRender } from "@base-ui/react/use-render"
+import type { ComponentProps, ReactNode } from "react"
 import { H5, type Heading } from "~/components/common/heading"
+import { slot } from "~/lib/slot"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const tileVariants = cva({
-  base: "group flex justify-between items-center gap-4 min-w-0 -my-2 py-2",
+  base: "group/tile flex justify-between items-center gap-4 min-w-0 -my-2 py-2",
 })
 
-type TileProps = ComponentProps<"div"> &
-  VariantProps<typeof tileVariants> & {
-    /**
-     * If set to `true`, the button will be rendered as a child within the component.
-     * This child component must be a valid React component.
-     */
-    asChild?: boolean
-  }
+type TileProps = useRender.ComponentProps<"div"> & VariantProps<typeof tileVariants>
 
-const Tile = ({ className, asChild, ...props }: TileProps) => {
-  const useAsChild = asChild && isValidElement(props.children)
-  const Comp = useAsChild ? Slot.Root : "div"
-
-  return <Comp className={cx(tileVariants({ className }))} {...props} />
+const Tile = ({ className, render, ...props }: TileProps) => {
+  return useRender({
+    render,
+    defaultTagName: "div",
+    props: { className: cx(tileVariants(), className), ...props },
+  })
 }
 
-const TileTitle = ({ className, ...props }: ComponentProps<typeof Heading>) => {
-  return <H5 className={cx("truncate", className)} {...props} />
+type TileTitleProps = Omit<ComponentProps<typeof Heading>, "prefix"> & {
+  prefix?: ReactNode
+}
+
+const TileTitle = ({ prefix, className, children, ...props }: TileTitleProps) => {
+  return (
+    <H5 className={cx("flex min-w-0 items-center gap-2", className)} {...props}>
+      {prefix &&
+        slot(prefix, {
+          className:
+            "shrink-0 size-3.5 text-muted-foreground motion-safe:transition-colors group-hover/tile:text-foreground",
+        })}
+      <span className="truncate">{children}</span>
+    </H5>
+  )
 }
 
 const TileDivider = ({ className, ...props }: ComponentProps<"hr">) => {
-  return <hr className={cx("min-w-2 flex-1 group-hover:opacity-35", className)} {...props} />
+  return <hr className={cx("min-w-2 flex-1 group-hover/tile:border-ring", className)} {...props} />
 }
 
 const TileCaption = ({ className, ...props }: ComponentProps<"span">) => {

@@ -26,12 +26,10 @@ export default function ({ children }: PropsWithChildren) {
           <AdBanner />
         </Suspense>
 
-        <Container asChild>
-          <Wrapper className="grow py-fluid-md">
-            {children}
+        <Container render={<Wrapper className="grow py-fluid-md" />}>
+          {children}
 
-            <Footer />
-          </Wrapper>
+          <Footer />
         </Container>
       </div>
 

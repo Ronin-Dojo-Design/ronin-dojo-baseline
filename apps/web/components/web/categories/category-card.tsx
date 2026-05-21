@@ -14,14 +14,12 @@ const CategoryCard = async ({ category, ...props }: CategoryCardProps) => {
   const count = category._count.tools
 
   return (
-    <Tile asChild {...props}>
-      <Link href={`/categories/${category.slug}`}>
-        <TileTitle>{category.name}</TileTitle>
+    <Tile render={<Link href={`/categories/${category.slug}`} />} {...props}>
+      <TileTitle>{category.name}</TileTitle>
 
-        <TileDivider />
+      <TileDivider />
 
-        <TileCaption>{`${count} ${t("tools.count_tools", { count })}`}</TileCaption>
-      </Link>
+      <TileCaption>{`${count} ${t("tools.count_tools", { count })}`}</TileCaption>
     </Tile>
   )
 }

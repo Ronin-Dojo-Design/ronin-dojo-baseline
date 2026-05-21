@@ -56,7 +56,7 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <ExternalLink href={linksConfig.feed} className={navLinkVariants()}>
+                  <ExternalLink href={linksConfig.feed} className={navLinkVariants().base()}>
                     <RssIcon />
                   </ExternalLink>
                 }
@@ -67,7 +67,10 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <ExternalLink href={`mailto:${siteConfig.email}`} className={navLinkVariants()}>
+                  <ExternalLink
+                    href={`mailto:${siteConfig.email}`}
+                    className={navLinkVariants().base()}
+                  >
                     <AtSignIcon />
                   </ExternalLink>
                 }
@@ -78,7 +81,7 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <ExternalLink href={linksConfig.github} className={navLinkVariants()}>
+                  <ExternalLink href={linksConfig.github} className={navLinkVariants().base()}>
                     <BrandGitHubIcon />
                   </ExternalLink>
                 }

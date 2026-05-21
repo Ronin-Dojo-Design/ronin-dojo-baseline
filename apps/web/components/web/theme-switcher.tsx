@@ -41,8 +41,14 @@ export const ThemeSwitcher = ({ className }: ThemeSwitcherProps) => {
 
       <DropdownMenuContent align="start">
         {themes.map(k => (
-          <NavLink key={k} isActive={theme === k} isPadded={false} prefix={getThemeIcon(k)} asChild>
-            <DropdownMenuItem onClick={() => setTheme(k)}>{t(`themes.${k}`)}</DropdownMenuItem>
+          <NavLink
+            key={k}
+            isActive={theme === k}
+            isPadded={false}
+            prefix={getThemeIcon(k)}
+            render={<DropdownMenuItem onClick={() => setTheme(k)} />}
+          >
+            {t(`themes.${k}`)}
           </NavLink>
         ))}
       </DropdownMenuContent>

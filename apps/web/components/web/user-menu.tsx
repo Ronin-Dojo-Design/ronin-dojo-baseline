@@ -84,8 +84,8 @@ export const UserMenu = () => {
             {t("navigation.dashboard")}
           </DropdownMenuItem>
 
-          <DropdownMenuItem render={<NavLink prefix={<LogOutIcon />} asChild />}>
-            <UserLogout>{t("navigation.sign_out")}</UserLogout>
+          <DropdownMenuItem render={<NavLink prefix={<LogOutIcon />} render={<UserLogout />} />}>
+            {t("navigation.sign_out")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

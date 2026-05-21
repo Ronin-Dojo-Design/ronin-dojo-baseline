@@ -23,10 +23,8 @@ const PaginationLink = ({
 }: PaginationLinkProps) => {
   if (isDisabled) {
     return (
-      <NavLink prefix={prefix} suffix={suffix} asChild>
-        <button type="button" disabled>
-          {children}
-        </button>
+      <NavLink prefix={prefix} suffix={suffix} render={<button type="button" disabled />}>
+        {children}
       </NavLink>
     )
   }
@@ -93,7 +91,7 @@ export const Pagination = ({
 
         {pagination.range.map((value, index) => (
           <div key={`page-${index}`}>
-            {value === "dots" && <span className={navLinkVariants()}>...</span>}
+            {value === "dots" && <span className={navLinkVariants().base()}>...</span>}
 
             {typeof value === "number" && (
               <NavLink

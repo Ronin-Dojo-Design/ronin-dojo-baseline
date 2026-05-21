@@ -1,5 +1,5 @@
-import { Slot } from "radix-ui"
-import type { ComponentProps } from "react"
+import { useRender } from "@base-ui/react/use-render"
+import { type ComponentProps, isValidElement } from "react"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const stickyVariants = cva({
@@ -19,6 +19,12 @@ const stickyVariants = cva({
 
 type StickyProps = ComponentProps<"div"> & VariantProps<typeof stickyVariants>
 
-export const Sticky = ({ className, isOverlay, ...props }: StickyProps) => {
-  return <Slot.Root className={cx(stickyVariants({ isOverlay, className }))} {...props} />
+export const Sticky = ({ className, isOverlay, children, ...props }: StickyProps) => {
+  return useRender({
+    render: isValidElement(children) ? (children as React.ReactElement) : undefined,
+    defaultTagName: "div",
+    props: isValidElement(children)
+      ? { className: cx(stickyVariants({ isOverlay }), className), ...props }
+      : { className: cx(stickyVariants({ isOverlay }), className), ...props, children },
+  })
 }

@@ -30,14 +30,16 @@ export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrap
 
             <div className="grid grid-cols-2xs gap-x-4 gap-y-2 w-full sm:grid-cols-xs md:grid-cols-sm">
               {categories.map(category => (
-                <Tile key={category.slug} className="gap-2" asChild>
-                  <NavLink href={`/categories/${category.slug}`}>
-                    <span className="truncate">{category.label}</span>
+                <Tile
+                  key={category.slug}
+                  className="gap-2"
+                  render={<NavLink href={`/categories/${category.slug}`} />}
+                >
+                  <span className="truncate">{category.label}</span>
 
-                    <TileDivider />
+                  <TileDivider />
 
-                    <TileCaption className="max-sm:hidden">{category._count.tools}</TileCaption>
-                  </NavLink>
+                  <TileCaption className="max-sm:hidden">{category._count.tools}</TileCaption>
                 </Tile>
               ))}
             </div>

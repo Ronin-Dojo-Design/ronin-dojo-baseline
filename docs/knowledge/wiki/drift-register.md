@@ -144,7 +144,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source A:** Ronin `apps/web/components/common/*.tsx` — 23 primitives on `radix-ui ^1.4.3` + `cmdk ^1.1.1` + `radix-ui` `Slot.Root` for `asChild` composition.
 - **Source B:** Upstream `dirstarter_template @ 7e724b6 components/common/*.tsx` — 18 primitives on `@base-ui/react ^1.3.0` + `cmdk-base ^1.0.0` + custom `~/lib/slot.ts` util + `useRender` consumer API (`render={…}` replacing `asChild`).
 - **Decision needed:** Migrate all Ronin common primitives to upstream's `@base-ui/react` runtime; remove `radix-ui` and `cmdk` from `apps/web/package.json` when complete.
-- **Status:** open (Phase 1 + 2a + 2b + 2c + 3 + 4 + 5 complete; Phases 6–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
+- **Status:** closed. All 8 phases complete. `radix-ui`, `cmdk`, `cva`, `@radix-ui/react-accordion` removed from `apps/web/package.json`. Zero `radix-ui`/`cmdk`/`cva`/`asChild` residuals across `apps/web/`.
 - **Opened:** SESSION_0209 (2026-05-20). Replaces the prior SESSION_0208 partial deferral for `<PopoverTrigger render={…}>` alone — that work is rolled into Phase 7 here.
 - **Re-phased at SESSION_0210 bow-in (2026-05-20):** original Phase 2 framing assumed Box/Heading/AnimatedContainer were "mechanical Slot-only swaps." Bow-in audit proved upstream Box deletes the `Box` component (59 JSX + 14 internal consumers) and upstream Heading adopts `useRender` (140 `<Hn as="…">` rewrites). Only AnimatedContainer is mechanical. Phase 2 re-split into 2a (utils + AnimatedContainer + cva import sweep), 2b (Heading), 2c (Box). Phases 3-8 shift by 2 session targets (now SESSION_0213-0218).
 
@@ -205,11 +205,16 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Fix Select `onValueChange` type signatures (`value: unknown` → cast `as string`).
 - [x] Fix consumer `data-[state=open]` → `data-open` selectors.
 
-#### Phase 8 — SESSION_0218 (planned)
+#### Phase 8 — SESSION_0218 (2026-05-21) ✅ complete
 
-- [ ] Migrate `command.tsx` (cmdk → cmdk-base + slot util).
-- [ ] Migrate `tabs.tsx`.
-- [ ] Build new admin Cmd+K palette (`apps/web/components/admin/command-palette.tsx`) — L6 epic carry-over.
-- [ ] Remove `radix-ui` + `cmdk` + `cva` from `apps/web/package.json`.
-- [ ] Full sweep: zero residual `radix-ui` / `cmdk` / `cva` imports across `apps/web/`.
-- [ ] Final tsc/biome/test/build/Playwright/wiki-lint.
+- [x] Migrate `command.tsx` (cmdk → cmdk-base; 1 import line + `border-0` class addition).
+- [x] Migrate `tabs.tsx` (Radix → `@base-ui/react/tabs`; `data-[state=active]` → `data-selected`).
+- [x] Migrate 5 `web/ui/` Slot consumers (`tile.tsx`, `container.tsx`, `nav-link.tsx`, `tag.tsx`, `sticky.tsx`) from `Slot` (radix-ui) → `useRender` + `render={…}` per upstream. `navLinkVariants` upgraded to cva `slots` API with `affix` slot.
+- [x] Consumer `asChild` → `render={}` sweep: layout.tsx, [slug]/page.tsx, pagination.tsx, bottom.tsx, tag-card.tsx, category-card.tsx, user-menu.tsx, theme-switcher.tsx, header.tsx (9 consumer sites).
+- [x] Consumer `navLinkVariants()` → `navLinkVariants().base()` fixes (footer.tsx, pagination.tsx).
+- [x] Delete `slottable.tsx` (zero consumers after nav-link/tag migration).
+- [x] Install `@dirstack/utils`; nav-link.tsx switched from deprecated `@primoui/utils`.
+- [x] Build new admin Cmd+K palette (`apps/web/components/admin/command-palette.tsx`), wired into admin shell.
+- [x] Remove `radix-ui`, `cmdk`, `cva`, `@radix-ui/react-accordion` from `apps/web/package.json` (−66 packages).
+- [x] Full sweep: zero residual `radix-ui`/`cmdk`/`cva`/`asChild` imports across `apps/web/`.
+- [x] tsc pass, biome pass, 244 tests pass, build pass, wiki-lint 0 errors.

@@ -1,6 +1,6 @@
 "use client"
 
-import { Command as CommandPrimitive } from "cmdk"
+import { Command as CommandPrimitive } from "cmdk-base"
 import { SearchIcon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 import { Dialog, DialogContent, DialogTitle } from "~/components/common/dialog"
@@ -51,7 +51,7 @@ const CommandInput = ({ className, prefix, suffix, ...props }: CommandInputProps
       {slot(prefix || <SearchIcon className="opacity-50" />, { className: "size-4 shrink-0" })}
 
       <CommandPrimitive.Input
-        className={cx(inputVariants(), "px-0 flex-1 truncate text-sm outline-none")}
+        className={cx(inputVariants(), "border-0 px-0 flex-1 truncate text-sm outline-none")}
         {...props}
       />
 

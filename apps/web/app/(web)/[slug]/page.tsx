@@ -168,8 +168,12 @@ export default async function (props: Props) {
 
               <Stack>
                 {tool.tags.map(tag => (
-                  <Tag key={tag.slug} prefix={<HashIcon />} asChild>
-                    <Link href={`/tags/${tag.slug}`}>{tag.slug}</Link>
+                  <Tag
+                    key={tag.slug}
+                    prefix={<HashIcon />}
+                    render={<Link href={`/tags/${tag.slug}`} />}
+                  >
+                    {tag.slug}
                   </Tag>
                 ))}
               </Stack>
