@@ -446,6 +446,19 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Status:** mitigated
 - **Follow-up:** Consider adding a script `scripts/check-vercel-env-parity.ts` that uses the Vercel REST API to compare env var presence across Production vs Preview and warns on drift. Tracked as **SESSION_0189 follow-up `vercel-env-parity-check`**.
 
+### FS-0024 — Bash cwd drifted to read-only DirStarter template; git commands ran in wrong repo
+
+- **Session:** SESSION_0209 (post-bow-out, during main-merge step)
+- **Agent:** Claude
+- **Step failed:** When the operator authorized FF-merge to main, the agent ran `git checkout main && git pull --ff-only origin main && git merge --ff-only session-0209-… && git push origin main` without prefixing with `cd /Users/brianscott/dev/ronin-dojo-app &&`. The Bash shell's cwd had drifted back to `/Users/brianscott/Local Sites/DirStarter /dirstarter_template` (VSCode's primary cwd; the read-only purchased boilerplate). The four git commands therefore ran against the DirStarter template repo, not the Ronin app repo.
+- **SOP source:** [[feedback-ronin-dojo-bash-cwd]] in operator memory: *"DirStarter is the VSCode primary cwd; every Bash call in a ronin-dojo-app session must start with `cd /Users/brianscott/dev/ronin-dojo-app &&` — no exceptions."* Also [[feedback-dirstarter-template-readonly]]: *"`/Users/brianscott/Local Sites/DirStarter /dirstarter_template` is a purchased boilerplate reference copy… no `git push`/`fetch`/`commit`/`Write`/`Edit` there."*
+- **Root cause:** Earlier in the session, `pnpm --filter dirstarter add` reset the Bash shell's cwd. Subsequent commands prefixed with `cd /Users/brianscott/dev/ronin-dojo-app &&` worked correctly. But after several minutes of post-commit/governance-doc work (Graphify update, `vercel ls`, etc.) the agent stopped prefixing — the operator-memory rule says "no exceptions" and the agent applied it inconsistently.
+- **Impact:** LOW (zero damage). `git checkout main` switched the template's branch off `chore/enable-pnpm-pre-post-scripts` (restored). `git pull --ff-only origin main` from `https://github.com/dirstarter/dirstarter.git` returned "Already up to date"; no local refs advanced. `git merge --ff-only session-0209-…` errored ("not something we can merge") because the branch doesn't exist in the template. `git push origin main` returned **403 Write access not granted** — the lack of write access to the upstream dirstarter repo was the safety net that prevented any actual corruption.
+- **Corrective action:** Restored template to `chore/enable-pnpm-pre-post-scripts`. Ran the FF-merge correctly with `cd /Users/brianscott/dev/ronin-dojo-app &&` prefix; Ronin `main` advanced `0d36d36..4b3d04b` and pushed.
+- **Verification:** Every `git` call in future ronin-dojo-app sessions must either (a) be prefixed with `cd /Users/brianscott/dev/ronin-dojo-app &&` even when the shell's `pwd` *appears* correct, OR (b) be preceded by a `pwd && git remote -v` guard whose output is verified before running mutating git commands. Defensive `pwd` checks before any `git push` / `git merge` / `git checkout main`.
+- **Status:** mitigated (rule existed; agent must apply it without exception, including after extended sessions where context-window pressure encourages dropping per-call prefixes).
+- **Follow-up:** Reinforced in operator memory. Consider adding a hook in `~/.claude/settings.json` that gates `git push` to `origin/main` behind a cwd allowlist (e.g., refuse if `pwd` doesn't include `ronin-dojo-app`) — captured as a future hardening idea, not implemented this session.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.
