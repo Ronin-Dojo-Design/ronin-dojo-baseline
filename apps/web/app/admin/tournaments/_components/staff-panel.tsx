@@ -72,10 +72,8 @@ export function StaffPanel({
           <H3>Staff Assignments</H3>
 
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="primary" size="sm" prefix={<PlusIcon />}>
-                Add Staff
-              </Button>
+            <DialogTrigger render={<Button variant="primary" size="sm" prefix={<PlusIcon />} />}>
+              Add Staff
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

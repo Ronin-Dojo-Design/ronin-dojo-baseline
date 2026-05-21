@@ -43,33 +43,38 @@ export function ComboboxSelector({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="secondary"
-          size="md"
-          role="combobox"
-          aria-expanded={open}
-          className={cx("w-full justify-between font-normal", !selected && "text-muted-foreground")}
-          suffix={
-            clearable && value ? (
-              <XIcon
-                className="size-3.5 shrink-0 opacity-50 hover:opacity-100"
-                onClick={e => {
-                  e.stopPropagation()
-                  onValueChange("")
-                  setOpen(false)
-                }}
-              />
-            ) : (
-              <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-50" />
-            )
-          }
-        >
-          {selected?.name ?? placeholder}
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="secondary"
+            size="md"
+            role="combobox"
+            aria-expanded={open}
+            className={cx(
+              "w-full justify-between font-normal",
+              !selected && "text-muted-foreground",
+            )}
+            suffix={
+              clearable && value ? (
+                <XIcon
+                  className="size-3.5 shrink-0 opacity-50 hover:opacity-100"
+                  onClick={e => {
+                    e.stopPropagation()
+                    onValueChange("")
+                    setOpen(false)
+                  }}
+                />
+              ) : (
+                <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-50" />
+              )
+            }
+          />
+        }
+      >
+        {selected?.name ?? placeholder}
       </PopoverTrigger>
 
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-(--anchor-width) p-0" align="start">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>

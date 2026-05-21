@@ -35,22 +35,22 @@ export const TournamentRoleActions = ({
   return (
     <Stack size="sm" wrap={false}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label="Open menu"
-            variant="secondary"
-            size="sm"
-            prefix={<EllipsisIcon />}
-            className={cx("data-[state=open]:bg-accent", className)}
-            {...props}
-          />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label="Open menu"
+              variant="secondary"
+              size="sm"
+              prefix={<EllipsisIcon />}
+              className={cx("data-open:bg-accent", className)}
+              {...props}
+            />
+          }
+        />
 
         <DropdownMenuContent align="end" sideOffset={8}>
           {!isRolePage && (
-            <DropdownMenuItem asChild>
-              <Link href={rolePath}>Edit</Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href={rolePath} />}>Edit</DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

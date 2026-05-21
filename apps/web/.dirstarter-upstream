@@ -96,3 +96,11 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   4 DataTable select-all consumers updated: checked="indeterminate" →
 #   separate indeterminate={bool} prop. field.tsx and button-group.tsx confirmed
 #   non-Radix; no changes needed.
+#
+# SESSION_0217 (2026-05-21) — D-016 Phase 7 partial port:
+#   dialog.tsx, popover.tsx, dropdown-menu.tsx, select.tsx, drawer.tsx migrated
+#   from radix-ui to @base-ui/react equivalents. popoverAnimationClasses updated
+#   to Base UI semantics (data-open/data-closed, --transform-origin). ~55
+#   consumer asChild → render={} call sites swept. Select onValueChange type
+#   signatures fixed (value as string). Drawer preserved as Ronin-custom
+#   bottom-sheet on Base UI Dialog (no upstream equivalent).

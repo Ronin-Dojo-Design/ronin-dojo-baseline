@@ -95,39 +95,41 @@ export const RelationSelector = <T extends Relation>({
   return (
     <Stack direction="column" className="w-full">
       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="secondary"
-            size="md"
-            className="justify-start w-full px-3 gap-2.5"
-            prefix={<MousePointerClickIcon />}
-            suffix={
-              <Badge variant="outline" className="ml-auto size-auto">
-                {selectedRelations.length}
-              </Badge>
-            }
-          >
-            <Separator orientation="vertical" className="self-stretch" />
+        <PopoverTrigger
+          render={
+            <Button
+              variant="secondary"
+              size="md"
+              className="justify-start w-full px-3 gap-2.5"
+              prefix={<MousePointerClickIcon />}
+              suffix={
+                <Badge variant="outline" className="ml-auto size-auto">
+                  {selectedRelations.length}
+                </Badge>
+              }
+            />
+          }
+        >
+          <Separator orientation="vertical" className="self-stretch" />
 
-            <AnimatedContainer height transition={{ ease: "linear", duration: 0.1 }}>
-              <Stack size="xs">
-                {!selectedRelations.length && (
-                  <span className="font-normal text-muted-foreground">Select</span>
-                )}
+          <AnimatedContainer height transition={{ ease: "linear", duration: 0.1 }}>
+            <Stack size="xs">
+              {!selectedRelations.length && (
+                <span className="font-normal text-muted-foreground">Select</span>
+              )}
 
-                {getDisplayRelations(selectedRelations).map(relation => (
-                  <Badge key={relation.id}>{relation.name}</Badge>
-                ))}
-              </Stack>
-            </AnimatedContainer>
-          </Button>
+              {getDisplayRelations(selectedRelations).map(relation => (
+                <Badge key={relation.id}>{relation.name}</Badge>
+              ))}
+            </Stack>
+          </AnimatedContainer>
         </PopoverTrigger>
 
         <PopoverContent className="p-0" align="start">
           <Command filter={handleFilter}>
             <CommandInput placeholder="Search..." />
 
-            <CommandList className="min-w-72 w-(--radix-popper-anchor-width)">
+            <CommandList className="min-w-72 w-(--anchor-width)">
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
                 {getDisplayRelations(relations, true).map(relation => {

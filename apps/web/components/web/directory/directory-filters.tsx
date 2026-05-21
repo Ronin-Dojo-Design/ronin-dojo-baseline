@@ -39,7 +39,7 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
     <Stack direction="row" className="mb-6 flex-wrap gap-3">
       <Select
         value={searchParams.get("org") ?? "__all__"}
-        onValueChange={v => updateFilter("org", v)}
+        onValueChange={v => updateFilter("org", v as string)}
       >
         <SelectTrigger aria-label="Filter by organization">
           <SelectValue placeholder="All Organizations" />
@@ -56,7 +56,7 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
 
       <Select
         value={searchParams.get("discipline") ?? "__all__"}
-        onValueChange={v => updateFilter("discipline", v)}
+        onValueChange={v => updateFilter("discipline", v as string)}
       >
         <SelectTrigger aria-label="Filter by discipline">
           <SelectValue placeholder="All Disciplines" />
@@ -73,7 +73,7 @@ export function DirectoryFilters({ options }: { options: FilterOptions }) {
 
       <Select
         value={searchParams.get("rank") ?? "__all__"}
-        onValueChange={v => updateFilter("rank", v)}
+        onValueChange={v => updateFilter("rank", v as string)}
       >
         <SelectTrigger aria-label="Filter by rank">
           <SelectValue placeholder="All Ranks" />

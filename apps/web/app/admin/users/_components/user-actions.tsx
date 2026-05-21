@@ -43,21 +43,23 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
   return (
     <Stack size="sm" wrap={false}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label="Open menu"
-            variant="secondary"
-            size="sm"
-            prefix={<EllipsisIcon />}
-            className={cx("data-[state=open]:bg-accent", className)}
-            {...props}
-          />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label="Open menu"
+              variant="secondary"
+              size="sm"
+              prefix={<EllipsisIcon />}
+              className={cx("data-open:bg-accent", className)}
+              {...props}
+            />
+          }
+        />
 
         <DropdownMenuContent align="end" sideOffset={8}>
           {pathname !== `/admin/users/${user.id}` && (
-            <DropdownMenuItem asChild>
-              <Link href={`/admin/users/${user.id}`}>Edit</Link>
+            <DropdownMenuItem render={<Link href={`/admin/users/${user.id}`} />}>
+              Edit
             </DropdownMenuItem>
           )}
 

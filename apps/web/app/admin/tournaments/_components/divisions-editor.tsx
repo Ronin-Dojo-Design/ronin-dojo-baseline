@@ -311,10 +311,12 @@ export function DivisionsEditor({
 
           {availableDisciplines && availableDisciplines.length > 0 && (
             <Dialog open={addDisciplineOpen} onOpenChange={setAddDisciplineOpen}>
-              <DialogTrigger asChild>
-                <Button variant="primary" size="sm" prefix={<PlusIcon />} disabled={isPending}>
-                  Add Discipline
-                </Button>
+              <DialogTrigger
+                render={
+                  <Button variant="primary" size="sm" prefix={<PlusIcon />} disabled={isPending} />
+                }
+              >
+                Add Discipline
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -330,7 +332,7 @@ export function DivisionsEditor({
                         ) ?? []
                       }
                       value={selectedDisciplineId}
-                      onValueChange={setSelectedDisciplineId}
+                      onValueChange={v => setSelectedDisciplineId(v as string)}
                       placeholder="Select a discipline"
                       searchPlaceholder="Search disciplines..."
                       emptyMessage="No disciplines found."
@@ -624,7 +626,7 @@ export function DivisionsEditor({
                 <Label>Format</Label>
                 <Select
                   value={divForm.format}
-                  onValueChange={v => setDivForm(f => ({ ...f, format: v }))}
+                  onValueChange={v => setDivForm(f => ({ ...f, format: v as string }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -643,7 +645,7 @@ export function DivisionsEditor({
                 <Label>Gender</Label>
                 <Select
                   value={divForm.gender}
-                  onValueChange={v => setDivForm(f => ({ ...f, gender: v }))}
+                  onValueChange={v => setDivForm(f => ({ ...f, gender: v as string }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -727,7 +729,7 @@ export function DivisionsEditor({
                 <Label>Required Role</Label>
                 <Select
                   value={divForm.roleRequiredId}
-                  onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v }))}
+                  onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v as string }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -748,7 +750,7 @@ export function DivisionsEditor({
                 <Label>Rule Set (optional)</Label>
                 <Select
                   value={divForm.ruleSetId}
-                  onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v }))}
+                  onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v as string }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="None" />

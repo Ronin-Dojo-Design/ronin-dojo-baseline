@@ -170,9 +170,11 @@ function MembershipRowActions({ membership }: { membership: MembershipRow }) {
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
+        }
+      />
 
       <DropdownMenuContent align="end" sideOffset={8}>
         {validTransitions.map(target => (

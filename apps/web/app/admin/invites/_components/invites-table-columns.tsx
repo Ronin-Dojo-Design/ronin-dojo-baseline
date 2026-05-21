@@ -148,9 +148,11 @@ function InviteRowActions({ invite }: { invite: InviteRow }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
+        }
+      />
 
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={copyLink}>
@@ -158,8 +160,8 @@ function InviteRowActions({ invite }: { invite: InviteRow }) {
           Copy invite link
         </DropdownMenuItem>
 
-        <DropdownMenuItem asChild>
-          <Link href={`/admin/invites/${invite.id}`}>View details</Link>
+        <DropdownMenuItem render={<Link href={`/admin/invites/${invite.id}`} />}>
+          View details
         </DropdownMenuItem>
 
         {invite.status === "PENDING" && (

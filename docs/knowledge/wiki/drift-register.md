@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-05-21
-last_agent: codex-session-0215
+last_agent: copilot-session-0217
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -196,11 +196,14 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Consumer fixes: 4 DataTable select-all columns migrated from `checked="indeterminate"` to `indeterminate={bool}` prop.
 - [x] Label dropped Radix `LabelPrimitive.Root` for plain `<label>`; preserved Ronin `labelVariants` + `isRequired`.
 
-#### Phase 7 — SESSION_0217 (planned)
+#### Phase 7 — SESSION_0217 (complete)
 
-- [ ] Migrate `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx`.
-- [ ] Sweep `<PopoverTrigger asChild>` → `<PopoverTrigger render={…}>` across all call sites including data-table-faceted-filter, data-table-view-options, date-range-picker (the L5-deferred work).
-- [ ] Update `popoverAnimationClasses` constant in `apps/web/lib/utils.ts` to Base UI semantics (`data-open`/`data-closed`).
+- [x] Migrate `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx`.
+- [x] Sweep `<PopoverTrigger asChild>` → `<PopoverTrigger render={…}>` across all call sites including data-table-faceted-filter, data-table-view-options, date-range-picker, combobox-selector (the L5-deferred work).
+- [x] Sweep all `<DropdownMenuTrigger asChild>`, `<DialogTrigger asChild>`, `<DropdownMenuItem asChild>`, `<DialogClose asChild>` → `render={}` across ~55 consumer call sites.
+- [x] Update `popoverAnimationClasses` constant in `apps/web/lib/utils.ts` to Base UI semantics (`data-open`/`data-closed`, `--transform-origin`).
+- [x] Fix Select `onValueChange` type signatures (`value: unknown` → cast `as string`).
+- [x] Fix consumer `data-[state=open]` → `data-open` selectors.
 
 #### Phase 8 — SESSION_0218 (planned)
 

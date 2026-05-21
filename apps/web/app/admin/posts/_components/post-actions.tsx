@@ -27,25 +27,25 @@ export const PostActions = ({ className, post, ...props }: PostActionsProps) => 
       </PostsDeleteDialog>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            prefix={<EllipsisIcon />}
-            aria-label="More actions"
-            className={cx("text-muted", className)}
-            {...props}
-          />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              prefix={<EllipsisIcon />}
+              aria-label="More actions"
+              className={cx("text-muted", className)}
+              {...props}
+            />
+          }
+        />
 
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link href={`/admin/posts/${post.id}`}>Edit</Link>
+          <DropdownMenuItem render={<Link href={`/admin/posts/${post.id}`} />}>
+            Edit
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href={`/blog/${post.slug}`} target="_blank">
-              View
-            </Link>
+          <DropdownMenuItem render={<Link href={`/blog/${post.slug}`} target="_blank" />}>
+            View
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

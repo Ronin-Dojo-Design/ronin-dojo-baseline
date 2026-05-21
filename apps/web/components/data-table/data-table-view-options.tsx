@@ -27,25 +27,23 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
 
   return (
     <Popover modal>
-      <PopoverTrigger asChild>
-        <Button
-          ref={triggerRef}
-          aria-label={t("toggle_columns")}
-          variant="secondary"
-          size="md"
-          className="ml-auto flex gap-2 max-md:hidden"
-          prefix={<Settings2 />}
-          suffix={<ChevronsUpDown />}
-        >
-          {t("view")}
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            ref={triggerRef}
+            aria-label={t("toggle_columns")}
+            variant="secondary"
+            size="md"
+            className="ml-auto flex gap-2 max-md:hidden"
+            prefix={<Settings2 />}
+            suffix={<ChevronsUpDown />}
+          />
+        }
+      >
+        {t("view")}
       </PopoverTrigger>
 
-      <PopoverContent
-        align="end"
-        className="w-44 p-0"
-        onCloseAutoFocus={() => triggerRef.current?.focus()}
-      >
+      <PopoverContent align="end" className="w-44 p-0">
         <Command>
           <CommandInput placeholder={t("search_columns")} />
           <CommandList>

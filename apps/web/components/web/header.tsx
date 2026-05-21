@@ -70,37 +70,29 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
             <DropdownMenu>
               <NavLink
                 className="gap-1"
-                suffix={<ChevronDownIcon className="group-data-[state=open]:-rotate-180" />}
+                suffix={<ChevronDownIcon className="group-data-open:-rotate-180" />}
                 asChild
               >
                 <DropdownMenuTrigger>{t("navigation.browse")}</DropdownMenuTrigger>
               </NavLink>
 
               <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <NavLink href="/disciplines" prefix={<ShieldIcon />}>
-                    {t("navigation.disciplines")}
-                  </NavLink>
+                <DropdownMenuItem render={<NavLink href="/disciplines" prefix={<ShieldIcon />} />}>
+                  {t("navigation.disciplines")}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink href="/courses" prefix={<GraduationCapIcon />}>
-                    {t("navigation.courses")}
-                  </NavLink>
+                <DropdownMenuItem
+                  render={<NavLink href="/courses" prefix={<GraduationCapIcon />} />}
+                >
+                  {t("navigation.courses")}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink href="/techniques" prefix={<SwordsIcon />}>
-                    {t("navigation.techniques")}
-                  </NavLink>
+                <DropdownMenuItem render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}>
+                  {t("navigation.techniques")}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink href="/gear" prefix={<ShoppingBagIcon />}>
-                    {t("navigation.gear")}
-                  </NavLink>
+                <DropdownMenuItem render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}>
+                  {t("navigation.gear")}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NavLink href="/blog" prefix={<BookOpenIcon />}>
-                    {t("navigation.blog")}
-                  </NavLink>
+                <DropdownMenuItem render={<NavLink href="/blog" prefix={<BookOpenIcon />} />}>
+                  {t("navigation.blog")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

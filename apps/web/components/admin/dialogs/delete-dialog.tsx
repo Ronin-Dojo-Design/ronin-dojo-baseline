@@ -36,7 +36,7 @@ export const DeleteDialog = <ServerError, CVE, Data>({
 
   return (
     <Dialog {...props}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+      {children && <DialogTrigger>{children as React.ReactNode}</DialogTrigger>}
 
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -51,11 +51,7 @@ export const DeleteDialog = <ServerError, CVE, Data>({
         </DialogHeader>
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button size="md" variant="secondary">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose render={<Button size="md" variant="secondary" />}>Cancel</DialogClose>
 
           <Button
             aria-label={`Delete ${pluralizedLabel}`}

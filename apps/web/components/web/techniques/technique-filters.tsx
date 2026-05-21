@@ -62,7 +62,7 @@ export const TechniqueFilters = ({ ...props }: ComponentProps<typeof Select>) =>
     <>
       <Select
         value={filters.category}
-        onValueChange={value => updateFilters({ category: value })}
+        onValueChange={value => updateFilters({ category: value as string })}
         {...props}
       >
         <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">
@@ -79,7 +79,7 @@ export const TechniqueFilters = ({ ...props }: ComponentProps<typeof Select>) =>
 
       <Select
         value={filters.position}
-        onValueChange={value => updateFilters({ position: value })}
+        onValueChange={value => updateFilters({ position: value as string })}
         {...props}
       >
         <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">
@@ -97,7 +97,7 @@ export const TechniqueFilters = ({ ...props }: ComponentProps<typeof Select>) =>
       {result.data?.disciplines && result.data.disciplines.length > 0 && (
         <Select
           value={filters.discipline}
-          onValueChange={value => updateFilters({ discipline: value })}
+          onValueChange={value => updateFilters({ discipline: value as string })}
           {...props}
         >
           <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">

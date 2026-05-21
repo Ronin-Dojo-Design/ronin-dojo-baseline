@@ -368,18 +368,11 @@ export const ToolPublishActions = ({
 
           return (
             <Popover key={String(action.children)} open={isOpen} onOpenChange={setIsOpen}>
-              <PopoverTrigger asChild>
-                <Button size="md" isPending={isStatusPending} {...action} />
-              </PopoverTrigger>
+              <PopoverTrigger
+                render={<Button size="md" isPending={isStatusPending} {...action} />}
+              />
 
-              <PopoverContent
-                align="center"
-                side="top"
-                sideOffset={8}
-                className="w-72"
-                onOpenAutoFocus={e => e.preventDefault()}
-                asChild
-              >
+              <PopoverContent align="center" side="top" sideOffset={8} className="w-72">
                 <Stack size="lg" direction="column" className="items-stretch gap-5 min-w-80">
                   <Stack size="sm" direction="column">
                     <H5>{popover.title}</H5>

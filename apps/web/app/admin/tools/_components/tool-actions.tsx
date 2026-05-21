@@ -62,28 +62,26 @@ export const ToolActions = ({ className, tool, ...props }: ToolActionsProps) => 
   return (
     <Stack size="sm" wrap={false}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label="Open menu"
-            variant="secondary"
-            size="sm"
-            prefix={<EllipsisIcon />}
-            className={cx("data-[state=open]:bg-accent", className)}
-            {...props}
-          />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label="Open menu"
+              variant="secondary"
+              size="sm"
+              prefix={<EllipsisIcon />}
+              className={cx("data-open:bg-accent", className)}
+              {...props}
+            />
+          }
+        />
 
         <DropdownMenuContent align="end" sideOffset={8}>
           {!isToolPage && (
-            <DropdownMenuItem asChild>
-              <Link href={toolPath}>Edit</Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href={toolPath} />}>Edit</DropdownMenuItem>
           )}
 
-          <DropdownMenuItem asChild>
-            <Link href={`/${tool.slug}`} target="_blank">
-              View
-            </Link>
+          <DropdownMenuItem render={<Link href={`/${tool.slug}`} target="_blank" />}>
+            View
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
@@ -94,11 +92,9 @@ export const ToolActions = ({ className, tool, ...props }: ToolActionsProps) => 
           </DropdownMenuItem>
 
           {isValidUrl(tool.websiteUrl) && (
-            <DropdownMenuItem asChild>
-              <ExternalLink href={tool.websiteUrl} doTrack>
-                <GlobeIcon />
-                Visit website
-              </ExternalLink>
+            <DropdownMenuItem render={<ExternalLink href={tool.websiteUrl} doTrack />}>
+              <GlobeIcon />
+              Visit website
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

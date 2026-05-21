@@ -119,11 +119,13 @@ export function MatAssignmentPanel({
         <Stack direction="row" className="items-center justify-between">
           <H3>Mat Assignments ({assignments.length})</H3>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="secondary" size="sm" disabled={unassignedMatches.length === 0}>
-                <PlusIcon className="mr-1 size-4" />
-                Assign Match
-              </Button>
+            <DialogTrigger
+              render={
+                <Button variant="secondary" size="sm" disabled={unassignedMatches.length === 0} />
+              }
+            >
+              <PlusIcon className="mr-1 size-4" />
+              Assign Match
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

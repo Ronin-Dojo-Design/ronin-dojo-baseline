@@ -162,7 +162,7 @@ function ScoreMatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger>{children}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

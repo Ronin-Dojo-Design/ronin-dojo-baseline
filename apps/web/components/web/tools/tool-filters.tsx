@@ -28,7 +28,7 @@ export const ToolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
         <Select
           key={type}
           value={filters[type]}
-          onValueChange={value => updateFilters({ [type]: value })}
+          onValueChange={value => updateFilters({ [type]: value as string })}
           {...props}
         >
           <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">

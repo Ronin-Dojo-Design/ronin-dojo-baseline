@@ -91,27 +91,29 @@ export function DateRangePicker({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={triggerVariant}
-          size={triggerSize}
-          prefix={<CalendarIcon />}
-          className={cx(
-            "shrink-0 justify-start truncate text-left",
-            !date && "text-muted-foreground",
-            triggerClassName,
-          )}
-        >
-          {date?.from ? (
-            date.to ? (
-              `${formatDateRange(date.from, date.to)}`
-            ) : (
-              `${formatDate(date.from)}`
-            )
+      <PopoverTrigger
+        render={
+          <Button
+            variant={triggerVariant}
+            size={triggerSize}
+            prefix={<CalendarIcon />}
+            className={cx(
+              "shrink-0 justify-start truncate text-left",
+              !date && "text-muted-foreground",
+              triggerClassName,
+            )}
+          />
+        }
+      >
+        {date?.from ? (
+          date.to ? (
+            `${formatDateRange(date.from, date.to)}`
           ) : (
-            <span>{placeholder}</span>
-          )}
-        </Button>
+            `${formatDate(date.from)}`
+          )
+        ) : (
+          <span>{placeholder}</span>
+        )}
       </PopoverTrigger>
 
       <PopoverContent className={cx("w-auto", className)} {...props}>

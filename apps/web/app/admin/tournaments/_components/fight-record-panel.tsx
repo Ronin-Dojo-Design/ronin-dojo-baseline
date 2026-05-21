@@ -74,11 +74,13 @@ export function FightRecordPanel({ fightRecordsPromise, completedMatches }: Figh
         <Stack direction="row" className="items-center justify-between">
           <H3>Fight Records ({fightRecords.length})</H3>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="secondary" size="sm" disabled={completedMatches.length === 0}>
-                <AwardIcon className="mr-1 size-4" />
-                Publish from Match
-              </Button>
+            <DialogTrigger
+              render={
+                <Button variant="secondary" size="sm" disabled={completedMatches.length === 0} />
+              }
+            >
+              <AwardIcon className="mr-1 size-4" />
+              Publish from Match
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -89,7 +91,10 @@ export function FightRecordPanel({ fightRecordsPromise, completedMatches }: Figh
                   Select a completed match to publish official fight records. This updates each
                   competitor's win/loss/draw record for their discipline.
                 </Note>
-                <Select onValueChange={setSelectedMatchId} value={selectedMatchId}>
+                <Select
+                  onValueChange={v => setSelectedMatchId(v as string)}
+                  value={selectedMatchId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a completed match" />
                   </SelectTrigger>

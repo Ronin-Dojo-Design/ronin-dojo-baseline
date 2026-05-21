@@ -3,7 +3,7 @@
 import { LaptopIcon, MoonIcon, SunIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
-import { type ComponentProps, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +12,9 @@ import {
 } from "~/components/common/dropdown-menu"
 import { NavLink } from "~/components/web/ui/nav-link"
 
-type ThemeSwitcherProps = ComponentProps<typeof DropdownMenuTrigger>
+type ThemeSwitcherProps = { className?: string }
 
-export const ThemeSwitcher = ({ className, ...props }: ThemeSwitcherProps) => {
+export const ThemeSwitcher = ({ className }: ThemeSwitcherProps) => {
   const t = useTranslations("common")
   const { themes, theme, setTheme, resolvedTheme, forcedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -35,11 +35,9 @@ export const ThemeSwitcher = ({ className, ...props }: ThemeSwitcherProps) => {
 
   return (
     <DropdownMenu>
-      <NavLink className={className} asChild>
-        <DropdownMenuTrigger {...props}>
-          {getThemeIcon(resolvedTheme ?? "system")}
-        </DropdownMenuTrigger>
-      </NavLink>
+      <DropdownMenuTrigger render={<NavLink className={className} />}>
+        {getThemeIcon(resolvedTheme ?? "system")}
+      </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start">
         {themes.map(k => (

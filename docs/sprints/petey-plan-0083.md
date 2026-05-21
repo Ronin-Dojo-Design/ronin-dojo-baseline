@@ -5,7 +5,7 @@ type: petey-plan
 status: active
 created: 2026-05-20
 updated: 2026-05-21
-last_agent: codex-session-0215
+last_agent: copilot-session-0217
 pairs_with:
   - docs/sprints/SESSION_0209.md
   - docs/sprints/SESSION_0210.md
@@ -14,6 +14,7 @@ pairs_with:
   - docs/sprints/SESSION_0213.md
   - docs/sprints/SESSION_0214.md
   - docs/sprints/SESSION_0215.md
+  - docs/sprints/SESSION_0217.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/knowledge/wiki/drift-register.md
 backlinks:
@@ -45,7 +46,7 @@ Re-phased to **honest, verifiable chunks**:
 - Phase 4 (SESSION_0215): Complete. Tooltip migration shipped in one pass: Base UI primitive + 43 legacy wrapper consumers and 3 provider call sites rewritten to compound composition.
 - Phase 5 (SESSION_0214): Complete. Ran before Tooltip because it was smaller. HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
 - Phase 6 (SESSION_0216): Complete. Checkbox, RadioGroup, Switch, Label migrated to Base UI. Label dropped Radix for plain `<label>`. 4 DataTable select-all consumers fixed (`indeterminate` prop). Field and ButtonGroup confirmed non-Radix.
-- Phase 7 (SESSION_0217): Popover family — dialog, popover, dropdown-menu, select, drawer. Includes the L5-deferred `<PopoverTrigger render={…}>` call-site sweep across data-table-faceted-filter / data-table-view-options / date-range-picker / admin actions / dashboard / web nav. Also updates `popoverAnimationClasses` constant content to Base UI semantics (`data-open`/`data-closed`). Likely the heaviest call-site phase.
+- Phase 7 (SESSION_0217): Complete. Popover family — dialog, popover, dropdown-menu, select, drawer migrated to Base UI. `popoverAnimationClasses` updated to Base UI semantics. ~55 consumer `asChild` → `render={}` call sites swept. Select `onValueChange` type signatures fixed. Consumer `data-[state=open]` → `data-open` selectors fixed.
 - Phase 8 (SESSION_0218): Command (cmdk → cmdk-base + slot util) + tabs + new **admin Cmd+K palette** (the L6 epic's one substantive missing easy win) + dep cleanup (`radix-ui` + `cmdk` + `cva` removed from `apps/web/package.json`) + final tsc/biome/test/build/wiki-lint sweep.
 
 Phase boundaries are *guidance* — Petey at each bow-in reserves the right to split or merge phases based on actual scope discovered. The contract is: each session ships a green typecheck/biome/test/build/wiki-lint and a closable artifact.
@@ -80,7 +81,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 | 5 ✓ | `accordion.tsx` | Depends on Card (Phase 3). `data-[state=*]` → `data-*`; `Content` → `Panel`. |
 | 6 | `checkbox.tsx`, `radio-group.tsx`, `switch.tsx`, `label.tsx` | Form primitives. |
 | 6 | `field.tsx`, `button-group.tsx` (already L5-ported) | Sanity pass. |
-| 7 | `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx` | Popover family. `asChild` → `render={…}` call-site sweep. Picks up the L5-deferred PopoverTrigger work. |
+| 7 ✓ | `dialog.tsx`, `popover.tsx`, `dropdown-menu.tsx`, `select.tsx`, `drawer.tsx` | Popover family. `asChild` → `render={…}` call-site sweep. Picks up the L5-deferred PopoverTrigger work. |
 | 8 | `command.tsx` | cmdk → cmdk-base + slot util. |
 | 8 | `tabs.tsx` | Verify upstream availability; migrate or accept lone Radix dep. |
 | 8 | `admin/command-palette.tsx` | NEW — admin Cmd+K palette (L6 epic carry-over). |

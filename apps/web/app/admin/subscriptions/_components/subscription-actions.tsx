@@ -34,23 +34,21 @@ export const SubscriptionActions = ({
   return (
     <Stack size="sm" wrap={false}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label="Open menu"
-            variant="secondary"
-            size="sm"
-            prefix={<EllipsisIcon />}
-            className={cx("data-[state=open]:bg-accent", className)}
-            {...props}
-          />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label="Open menu"
+              variant="secondary"
+              size="sm"
+              prefix={<EllipsisIcon />}
+              className={cx("data-open:bg-accent", className)}
+              {...props}
+            />
+          }
+        />
 
         <DropdownMenuContent align="end" sideOffset={8}>
-          {!isSubPage && (
-            <DropdownMenuItem asChild>
-              <Link href={subPath}>Edit</Link>
-            </DropdownMenuItem>
-          )}
+          {!isSubPage && <DropdownMenuItem render={<Link href={subPath} />}>Edit</DropdownMenuItem>}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -32,7 +32,7 @@ export const SchoolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
     <Stack size="sm" direction="row" className="flex-wrap">
       <Select
         value={filters.type}
-        onValueChange={value => updateFilters({ type: value })}
+        onValueChange={value => updateFilters({ type: value as string })}
         {...props}
       >
         <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">
@@ -49,7 +49,7 @@ export const SchoolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
 
       <Select
         value={filters.discipline}
-        onValueChange={value => updateFilters({ discipline: value })}
+        onValueChange={value => updateFilters({ discipline: value as string })}
         {...props}
       >
         <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">

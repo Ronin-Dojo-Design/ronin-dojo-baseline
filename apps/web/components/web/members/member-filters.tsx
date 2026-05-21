@@ -24,7 +24,7 @@ export const MemberFilters = ({ ...props }: ComponentProps<typeof Select>) => {
     <Stack size="sm" direction="row" className="flex-wrap">
       <Select
         value={filters.discipline}
-        onValueChange={value => updateFilters({ discipline: value })}
+        onValueChange={value => updateFilters({ discipline: value as string })}
         {...props}
       >
         <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">

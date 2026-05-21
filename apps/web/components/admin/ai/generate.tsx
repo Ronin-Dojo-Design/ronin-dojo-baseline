@@ -77,11 +77,7 @@ export const AIGenerate = ({
           </DialogHeader>
 
           <DialogFooter>
-            <DialogClose asChild>
-              <Button size="md" variant="secondary">
-                Cancel
-              </Button>
-            </DialogClose>
+            <DialogClose render={<Button size="md" variant="secondary" />}>Cancel</DialogClose>
 
             <Button size="md" onClick={() => handleGenerate(true)}>
               Ok, I understand

@@ -52,11 +52,15 @@ export const UserMenu = () => {
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Avatar className={cx(boxVariants({ hover: true, focus: true }), "size-6 duration-100")}>
-            <AvatarImage src={session.user.image ?? undefined} />
-            <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
-          </Avatar>
+        <DropdownMenuTrigger
+          render={
+            <Avatar
+              className={cx(boxVariants({ hover: true, focus: true }), "size-6 duration-100")}
+            />
+          }
+        >
+          <AvatarImage src={session.user.image ?? undefined} />
+          <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent side="bottom" align="end">
@@ -71,23 +75,17 @@ export const UserMenu = () => {
           <DropdownMenuSeparator />
 
           {session.user.role === "admin" && (
-            <DropdownMenuItem asChild>
-              <NavLink href="/admin" prefix={<ShieldHalfIcon />}>
-                {t("navigation.admin_panel")}
-              </NavLink>
+            <DropdownMenuItem render={<NavLink href="/admin" prefix={<ShieldHalfIcon />} />}>
+              {t("navigation.admin_panel")}
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuItem asChild>
-            <NavLink href="/dashboard" prefix={<UserIcon />}>
-              {t("navigation.dashboard")}
-            </NavLink>
+          <DropdownMenuItem render={<NavLink href="/dashboard" prefix={<UserIcon />} />}>
+            {t("navigation.dashboard")}
           </DropdownMenuItem>
 
-          <DropdownMenuItem asChild>
-            <NavLink prefix={<LogOutIcon />} asChild>
-              <UserLogout>{t("navigation.sign_out")}</UserLogout>
-            </NavLink>
+          <DropdownMenuItem render={<NavLink prefix={<LogOutIcon />} asChild />}>
+            <UserLogout>{t("navigation.sign_out")}</UserLogout>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

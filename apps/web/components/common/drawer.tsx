@@ -1,7 +1,7 @@
 "use client"
 
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
-import { Dialog as DialogPrimitive } from "radix-ui"
 import type { ComponentProps } from "react"
 import { H4 } from "~/components/common/heading"
 import { Prose } from "~/components/common/prose"
@@ -13,33 +13,43 @@ import { cx } from "~/lib/utils"
  * Mobile (< md): slides up from bottom, max-h-[85vh], rounded top corners.
  * Desktop (≥ md): centered Dialog (same as dialog.tsx).
  *
- * Built on Radix Dialog — same a11y, focus-trap, and portal behavior.
+ * Built on Base UI Dialog — same a11y, focus-trap, and portal behavior.
  *
- * Created: SESSION_0176 TASK_01.
+ * Created: SESSION_0176 TASK_01. Migrated to Base UI: SESSION_0217.
  */
 
-const Drawer = DialogPrimitive.Root
-const DrawerTrigger = DialogPrimitive.Trigger
-const DrawerPortal = DialogPrimitive.Portal
-const DrawerClose = DialogPrimitive.Close
+function Drawer({ ...props }: DialogPrimitive.Root.Props) {
+  return <DialogPrimitive.Root data-slot="drawer" {...props} />
+}
 
-const DrawerOverlay = ({ className, ...props }: ComponentProps<typeof DialogPrimitive.Overlay>) => (
-  <DialogPrimitive.Overlay
-    className={cx(
-      "fixed inset-0 z-50 bg-foreground/10 backdrop-blur-sm",
-      "data-[state=open]:animate-in data-[state=closed]:animate-out",
-      "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
-      className,
-    )}
-    {...props}
-  />
-)
+function DrawerTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+  return <DialogPrimitive.Trigger data-slot="drawer-trigger" {...props} />
+}
 
-const DrawerContent = ({
-  className,
-  children,
-  ...props
-}: ComponentProps<typeof DialogPrimitive.Content>) => {
+function DrawerPortal({ ...props }: DialogPrimitive.Portal.Props) {
+  return <DialogPrimitive.Portal data-slot="drawer-portal" {...props} />
+}
+
+function DrawerClose({ ...props }: DialogPrimitive.Close.Props) {
+  return <DialogPrimitive.Close data-slot="drawer-close" {...props} />
+}
+
+function DrawerOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {
+  return (
+    <DialogPrimitive.Backdrop
+      data-slot="drawer-overlay"
+      className={cx(
+        "fixed inset-0 z-50 bg-foreground/10 backdrop-blur-sm",
+        "data-open:animate-in data-closed:animate-out",
+        "data-open:fade-in-0 data-closed:fade-out-0",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -54,7 +64,8 @@ const DrawerContent = ({
           "md:items-start md:justify-center md:px-4 md:py-6 md:pt-[12.5vh] md:[@media(min-height:1000px)]:pt-[25vh]",
         )}
       >
-        <DialogPrimitive.Content
+        <DialogPrimitive.Popup
+          data-slot="drawer-content"
           aria-describedby={undefined}
           className={cx(
             // Shared
@@ -65,10 +76,10 @@ const DrawerContent = ({
             // Desktop: centered dialog style
             "md:max-w-lg md:max-h-full md:rounded-lg md:p-6",
             // Animations — mobile slides up/down, desktop fades
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=open]:slide-in-from-bottom-full data-[state=closed]:slide-out-to-bottom-full",
-            "md:data-[state=open]:slide-in-from-bottom-4 md:data-[state=closed]:slide-out-to-bottom-4",
-            "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+            "data-open:animate-in data-closed:animate-out",
+            "data-open:slide-in-from-bottom-full data-closed:slide-out-to-bottom-full",
+            "md:data-open:slide-in-from-bottom-4 md:data-closed:slide-out-to-bottom-4",
+            "data-open:fade-in-0 data-closed:fade-out-0",
             className,
           )}
           {...props}
@@ -78,23 +89,33 @@ const DrawerContent = ({
 
           {children}
 
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-ring disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <DialogPrimitive.Close
+            data-slot="drawer-close"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-ring disabled:pointer-events-none"
+          >
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
+        </DialogPrimitive.Popup>
       </div>
     </DrawerPortal>
   )
 }
 
-const DrawerHeader = ({ className, ...props }: ComponentProps<"div">) => {
-  return <div className={cx("flex flex-col gap-2 text-start", className)} {...props} />
-}
-
-const DrawerFooter = ({ className, ...props }: ComponentProps<"div">) => {
+function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
+      data-slot="drawer-header"
+      className={cx("flex flex-col gap-2 text-start", className)}
+      {...props}
+    />
+  )
+}
+
+function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="drawer-footer"
       className={cx(
         "flex flex-col-reverse gap-2 -m-4 mt-0 px-4 py-3 border-t md:flex-row md:justify-between md:-m-6 md:mt-0 md:px-6 md:py-4 md:sticky md:-bottom-6 md:bg-background",
         className,
@@ -104,23 +125,25 @@ const DrawerFooter = ({ className, ...props }: ComponentProps<"div">) => {
   )
 }
 
-const DrawerTitle = ({ children, ...props }: ComponentProps<typeof DialogPrimitive.Title>) => {
+function DrawerTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
-    <DialogPrimitive.Title asChild {...props}>
-      <H4>{children}</H4>
-    </DialogPrimitive.Title>
+    <DialogPrimitive.Title
+      data-slot="drawer-title"
+      render={<H4 />}
+      className={className}
+      {...props}
+    />
   )
 }
 
-const DrawerDescription = ({
-  children,
-  className,
-  ...props
-}: ComponentProps<typeof DialogPrimitive.Description>) => {
+function DrawerDescription({ className, ...props }: DialogPrimitive.Description.Props) {
   return (
-    <DialogPrimitive.Description asChild className={cx("text-sm/normal", className)} {...props}>
-      <Prose>{children}</Prose>
-    </DialogPrimitive.Description>
+    <DialogPrimitive.Description
+      data-slot="drawer-description"
+      render={<Prose />}
+      className={cx("text-sm/normal", className)}
+      {...props}
+    />
   )
 }
 

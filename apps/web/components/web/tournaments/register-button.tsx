@@ -94,10 +94,8 @@ export function RegisterButton({
           </Note>
 
           <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="destructive" size="md">
-                Cancel Registration
-              </Button>
+            <DialogTrigger render={<Button variant="destructive" size="md" />}>
+              Cancel Registration
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -107,9 +105,7 @@ export function RegisterButton({
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="secondary">Keep Registration</Button>
-                </DialogClose>
+                <DialogClose render={<Button variant="secondary" />}>Keep Registration</DialogClose>
                 <Button
                   variant="destructive"
                   onClick={() => cancelAction.execute({ registrationId: existingRegistration.id })}

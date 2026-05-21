@@ -19,7 +19,7 @@ const dataTableColumnHeaderVariants = cva({
 
   variants: {
     toggleable: {
-      true: "flex items-center gap-1 hover:text-foreground data-[state=open]:text-foreground",
+      true: "flex items-center gap-1 hover:text-foreground data-open:text-foreground",
     },
   },
 })
@@ -38,7 +38,11 @@ export function DataTableColumnHeader<TData, TValue>({
   const t = useTranslations("components.data_table.column_header")
 
   if (!column.getCanSort() && !column.getCanHide()) {
-    return <div className={cx(dataTableColumnHeaderVariants({ className }))}>{title}</div>
+    return (
+      <div className={cx(dataTableColumnHeaderVariants({ className: className as string }))}>
+        {title}
+      </div>
+    )
   }
 
   const buttonLabel =
@@ -60,7 +64,9 @@ export function DataTableColumnHeader<TData, TValue>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cx(dataTableColumnHeaderVariants({ toggleable: true, className }))}
+        className={cx(
+          dataTableColumnHeaderVariants({ toggleable: true, className: className as string }),
+        )}
         aria-label={buttonLabel}
         {...props}
       >

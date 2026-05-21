@@ -122,10 +122,8 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
           <H3>Weigh-Ins</H3>
 
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="primary" size="sm" prefix={<PlusIcon />}>
-                Record Weight
-              </Button>
+            <DialogTrigger render={<Button variant="primary" size="sm" prefix={<PlusIcon />} />}>
+              Record Weight
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
