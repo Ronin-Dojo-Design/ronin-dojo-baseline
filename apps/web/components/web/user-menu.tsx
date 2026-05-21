@@ -3,7 +3,7 @@ import { LogOutIcon, ShieldHalfIcon, UserIcon } from "lucide-react"
 import { motion } from "motion/react"
 import { useTranslations } from "next-intl"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
-import { Box } from "~/components/common/box"
+import { boxVariants } from "~/components/common/box"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { Link } from "~/components/common/link"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
 import { useSession } from "~/lib/auth-client"
+import { cx } from "~/lib/utils"
 
 export const UserMenu = () => {
   const { data: session, isPending } = useSession()
@@ -52,12 +53,10 @@ export const UserMenu = () => {
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Box hover focus>
-            <Avatar className="size-6 duration-100">
-              <AvatarImage src={session.user.image ?? undefined} />
-              <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
-            </Avatar>
-          </Box>
+          <Avatar className={cx(boxVariants({ hover: true, focus: true }), "size-6 duration-100")}>
+            <AvatarImage src={session.user.image ?? undefined} />
+            <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
+          </Avatar>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent side="bottom" align="end">

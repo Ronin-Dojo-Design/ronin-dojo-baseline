@@ -64,3 +64,9 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   Heading render callbacks plus 1 IntroTitle render callback preserve the
 #   prior rendered element while keeping visual size props unchanged.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0212 / L6 Phase 2c: Box migrated to upstream boxVariants-only API.
+#   Removed the legacy Box component and BoxProps export; exact AST residual
+#   check found 0 remaining <Box> JSX tags and 0 Box/BoxProps imports. Current
+#   consumers apply boxVariants directly to real elements so the prior Slot.Root
+#   DOM shape and focus/hover behavior are preserved without a Radix dependency.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

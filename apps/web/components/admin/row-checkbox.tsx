@@ -1,6 +1,6 @@
 import type { Row, Table } from "@tanstack/react-table"
 import type { ComponentProps, MouseEventHandler } from "react"
-import { Box } from "~/components/common/box"
+import { boxVariants } from "~/components/common/box"
 import { cx } from "~/lib/utils"
 
 // Store the last selected index
@@ -37,9 +37,13 @@ export const RowCheckbox = ({ className, table, row, ...props }: RowCheckboxProp
 
   return (
     <label className={cx("relative z-10 cursor-pointer select-none", className)}>
-      <Box hover focus>
-        <input type="checkbox" name="select" className="block" onClick={handleClick} {...props} />
-      </Box>
+      <input
+        type="checkbox"
+        name="select"
+        className={cx(boxVariants({ hover: true, focus: true }), "block")}
+        onClick={handleClick}
+        {...props}
+      />
 
       <span className="absolute -inset-3 -right-2 z-0" />
     </label>

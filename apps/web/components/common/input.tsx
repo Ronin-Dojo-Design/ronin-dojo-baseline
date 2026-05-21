@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import { Box, type boxVariants } from "~/components/common/box"
+import { boxVariants } from "~/components/common/box"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const inputVariants = cva({
@@ -22,11 +22,19 @@ type InputProps = Omit<ComponentProps<"input">, "size"> &
   VariantProps<typeof inputVariants> &
   VariantProps<typeof boxVariants>
 
-const Input = ({ className, size, hover = false, focus = true, ...props }: InputProps) => {
+const Input = ({
+  className,
+  size,
+  hover = false,
+  focus = true,
+  focusWithin,
+  ...props
+}: InputProps) => {
   return (
-    <Box hover={hover} focus={focus}>
-      <input className={cx(inputVariants({ size, className }))} {...props} />
-    </Box>
+    <input
+      className={cx(boxVariants({ hover, focus, focusWithin }), inputVariants({ size, className }))}
+      {...props}
+    />
   )
 }
 

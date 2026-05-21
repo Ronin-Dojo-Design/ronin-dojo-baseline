@@ -79,6 +79,7 @@ const Button = ({
   size,
   hover = true,
   focus = true,
+  focusWithin,
   ...props
 }: ButtonProps) => {
   const useAsChild = asChild && isValidElement(children)
@@ -88,7 +89,7 @@ const Button = ({
     <Comp
       disabled={disabled ?? isPending}
       className={cx(
-        boxVariants({ hover, focus }),
+        boxVariants({ hover, focus, focusWithin }),
         buttonVariants({ variant, size, isPending, className }),
       )}
       {...props}

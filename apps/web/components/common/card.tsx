@@ -1,6 +1,6 @@
 import { Slot } from "radix-ui"
 import { type ComponentProps, isValidElement } from "react"
-import { type BoxProps, boxVariants } from "~/components/common/box"
+import { boxVariants } from "~/components/common/box"
 import { Stack } from "~/components/common/stack"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
@@ -31,7 +31,7 @@ const cardVariants = cva({
 })
 
 type CardProps = ComponentProps<"div"> &
-  BoxProps &
+  VariantProps<typeof boxVariants> &
   VariantProps<typeof cardVariants> & {
     /**
      * If set to `true`, the button will be rendered as a child within the component.
@@ -44,6 +44,7 @@ const Card = ({
   className,
   hover = true,
   focus = true,
+  focusWithin,
   isRevealed,
   isHighlighted,
   asChild,
@@ -55,7 +56,7 @@ const Card = ({
   return (
     <Comp
       className={cx(
-        boxVariants({ hover, focus }),
+        boxVariants({ hover, focus, focusWithin }),
         cardVariants({ hover, isRevealed, isHighlighted, className }),
       )}
       {...props}

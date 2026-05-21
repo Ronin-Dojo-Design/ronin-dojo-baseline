@@ -5,11 +5,12 @@ type: petey-plan
 status: active
 created: 2026-05-20
 updated: 2026-05-20
-last_agent: codex-session-0211
+last_agent: codex-session-0212
 pairs_with:
   - docs/sprints/SESSION_0209.md
   - docs/sprints/SESSION_0210.md
   - docs/sprints/SESSION_0211.md
+  - docs/sprints/SESSION_0212.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/knowledge/wiki/drift-register.md
 backlinks:
@@ -36,7 +37,7 @@ Re-phased to **honest, verifiable chunks**:
 - **Phase 2 — re-split at SESSION_0210 bow-in (2026-05-20).** Initial Phase 2 framing ("zero `asChild`, mechanical replace" of Box/Heading/AnimatedContainer) proved wrong on bow-in audit: upstream Box now exports only `boxVariants` (the component is gone — 59 JSX sites + 14 internal-primitive consumers to refactor) and upstream Heading adopts `useRender` + `render={…}`, removing both `as` and `asChild` props (140 `<Hn as="…">` rewrites). AnimatedContainer is the only truly-mechanical primitive. Re-split:
   - Phase 2a (SESSION_0210): `lib/utils.ts` cva→tailwind-variants (re-export `tv as cva`, `cn as cx`, `VariantProps`; drop unused `compose`; keep `popoverAnimationClasses` Radix-shape — Phase 7 will swap to Base UI semantics) + `animated-container.tsx` mechanical `Slot.Root` → `slot()` + repath 2 stray `from "cva"` imports onto `~/lib/utils`.
   - Phase 2b (SESSION_0211): `heading.tsx` migration complete. Adopted `useRender` + `render={…}` per upstream; exact AST close proof found 211 direct Heading JSX tags plus 60 `IntroTitle` wrapper tags with zero remaining `as`/`asChild` props. The earlier 140-count estimate was superseded by the residual AST/typecheck gates.
-  - Phase 2c (SESSION_0212): `box.tsx` migration. Delete the `Box` component (upstream only ships `boxVariants`). Refactor 59 `<Box>` JSX sites and 14 internal-primitive consumers (`card`, `switch`, `checkbox`, `textarea`, `input`, `radio-group`, `select`, `dialog`, `drawer`, `overlay-image`, `cta-form`, `user-menu`, `row-checkbox`) to inline `boxVariants` on a real element.
+  - Phase 2c (SESSION_0212): `box.tsx` migration complete. Deleted the `Box` component and `BoxProps` export; current-tree exact AST close proof found 0 remaining `<Box>` JSX tags and 0 `Box` / `BoxProps` imports. The earlier 59-site handoff estimate was superseded by the residual AST/typecheck gates.
 - Phase 3 (SESSION_0213): Slot-only primitives with `asChild` consumer migration: Badge (2 sites), Card (3 sites), Stack (9 sites), Form (audit), Button (30 sites). High-volume consumer refactor pass.
 - Phase 4 (SESSION_0214): Tooltip migration. ~41 call sites of `<Tooltip tooltip="…">` rewriting to the new `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>` shape. Possibly split if estimate proves too large.
 - Phase 5 (SESSION_0215): HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
@@ -65,7 +66,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 | 2a ✓ | `animated-container.tsx` | Mechanical `Slot.Root` → `slot()`; 12 consumer sites unchanged. |
 | 2a ✓ | `from "cva"` import sweep | Repath `ads-picker.tsx` + `admin/sidebar.tsx` `cx` imports onto `~/lib/utils`. |
 | 2b ✓ | `heading.tsx` | Adopted `useRender` + `render={…}`; dropped legacy `as` + `asChild` props. Exact AST close proof: 211 Heading JSX tags + 60 `IntroTitle` wrapper tags, 0 remaining `as`/`asChild`, 61 direct Heading render callbacks + 1 `IntroTitle` render callback. |
-| 2c | `box.tsx` | Delete `Box` component (upstream only ships `boxVariants`). Refactor 59 `<Box>` JSX sites + 14 internal-primitive consumers (`card`, `switch`, `checkbox`, `textarea`, `input`, `radio-group`, `select`, `dialog`, `drawer`, `overlay-image`, `cta-form`, `user-menu`, `row-checkbox`). |
+| 2c ✓ | `box.tsx` | Deleted `Box` component and `BoxProps`; upstream only ships `boxVariants`. Current exact AST close proof: 0 `<Box>` JSX tags, 0 `Box` / `BoxProps` imports, 12 `boxVariants` import consumers. |
 | 3 | `badge.tsx` | 2 `asChild` sites + adopts `useRender` + cva slots `affix`. |
 | 3 | `card.tsx` | 3 `asChild` sites + `useRender`. **Blocks Accordion (Phase 5).** |
 | 3 | `stack.tsx` | 9 `asChild` sites + `useRender`. |
@@ -109,6 +110,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 - [SESSION_0209](./SESSION_0209.md) — Phase 1 implementation.
 - [SESSION_0210](./SESSION_0210.md) — Phase 2a implementation (utils + AnimatedContainer + cva import sweep).
 - [SESSION_0211](./SESSION_0211.md) — Phase 2b implementation (Heading useRender + render callbacks).
+- [SESSION_0212](./SESSION_0212.md) — Phase 2c implementation (Box deletion + boxVariants consumers).
 - [SESSION_0208](./SESSION_0208.md) — L5 UI primitives Part 1; documented the original PopoverTrigger deferral.
 - [Epic 2026-05-19](../architecture/uplift/epic-2026-05-19.md) — overall uplift lane plan.
 - [Drift register](../knowledge/wiki/drift-register.md) — `D-016`.

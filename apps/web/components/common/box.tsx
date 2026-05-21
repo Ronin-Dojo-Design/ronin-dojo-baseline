@@ -1,6 +1,4 @@
-import { Slot } from "radix-ui"
-import type { ComponentProps } from "react"
-import { cva, cx, type VariantProps } from "~/lib/utils"
+import { cva } from "~/lib/utils"
 
 const boxVariants = cva({
   base: "border outline-transparent transition duration-100 ease-out",
@@ -18,12 +16,4 @@ const boxVariants = cva({
   },
 })
 
-type BoxProps = ComponentProps<"div"> & VariantProps<typeof boxVariants>
-
-const Box = ({ hover, focus, focusWithin, className, ...props }: BoxProps) => {
-  return (
-    <Slot.Root className={cx(boxVariants({ hover, focus, focusWithin, className }))} {...props} />
-  )
-}
-
-export { Box, type BoxProps, boxVariants }
+export { boxVariants }

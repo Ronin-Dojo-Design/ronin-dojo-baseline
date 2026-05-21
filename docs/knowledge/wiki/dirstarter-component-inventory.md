@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-04
 updated: 2026-05-20
-last_agent: codex-session-0211
+last_agent: codex-session-0212
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
@@ -13,6 +13,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0051.md
   - docs/sprints/SESSION_0208.md
+  - docs/sprints/SESSION_0212.md
 ---
 
 # Dirstarter Component Inventory
@@ -31,7 +32,7 @@ Every component below is in `~/components/common/`. Import from there.
 |---|---|---|---|
 | `Stack` | `stack.tsx` | `size: xs\|sm\|md\|lg`, `direction: row\|column`, `wrap: bool`, `asChild` | Flex container — replaces raw `<div className="flex ...">`. Use everywhere. |
 | `Card`, `CardHeader`, `CardFooter`, `CardDescription` | `card.tsx` | Standard card layout | Content cards, match cards, any bordered container |
-| `Box` | `box.tsx` | `hover`, `focus` | Utility wrapper for interactive states |
+| `boxVariants` | `box.tsx` | `hover`, `focus`, `focusWithin` | Utility classes for interactive borders/focus states. SESSION_0212: upstream deletes the `Box` wrapper; apply `boxVariants` directly to real elements instead of importing `Box`. |
 | `Wrapper` | `wrapper.tsx` | Layout wrapper | Page-level content wrapper |
 | `Separator` | `separator.tsx` | `orientation: horizontal\|vertical` | Visual dividers |
 | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `accordion.tsx` | Radix-based | Collapsible sections |

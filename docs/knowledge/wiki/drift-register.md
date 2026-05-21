@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-05-20
-last_agent: codex-session-0211
+last_agent: codex-session-0212
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -144,7 +144,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source A:** Ronin `apps/web/components/common/*.tsx` — 23 primitives on `radix-ui ^1.4.3` + `cmdk ^1.1.1` + `radix-ui` `Slot.Root` for `asChild` composition.
 - **Source B:** Upstream `dirstarter_template @ 7e724b6 components/common/*.tsx` — 18 primitives on `@base-ui/react ^1.3.0` + `cmdk-base ^1.0.0` + custom `~/lib/slot.ts` util + `useRender` consumer API (`render={…}` replacing `asChild`).
 - **Decision needed:** Migrate all Ronin common primitives to upstream's `@base-ui/react` runtime; remove `radix-ui` and `cmdk` from `apps/web/package.json` when complete.
-- **Status:** open (Phase 1 + 2a + 2b complete; Phases 2c–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
+- **Status:** open (Phase 1 + 2a + 2b + 2c complete; Phases 3–8 pending per [petey-plan-0083](../../sprints/petey-plan-0083.md)).
 - **Opened:** SESSION_0209 (2026-05-20). Replaces the prior SESSION_0208 partial deferral for `<PopoverTrigger render={…}>` alone — that work is rolled into Phase 7 here.
 - **Re-phased at SESSION_0210 bow-in (2026-05-20):** original Phase 2 framing assumed Box/Heading/AnimatedContainer were "mechanical Slot-only swaps." Bow-in audit proved upstream Box deletes the `Box` component (59 JSX + 14 internal consumers) and upstream Heading adopts `useRender` (140 `<Hn as="…">` rewrites). Only AnimatedContainer is mechanical. Phase 2 re-split into 2a (utils + AnimatedContainer + cva import sweep), 2b (Heading), 2c (Box). Phases 3-8 shift by 2 session targets (now SESSION_0213-0218).
 
@@ -168,10 +168,10 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Migrate `apps/web/components/common/heading.tsx`. Adopt `useRender` + `render={…}` per upstream. Drop legacy `as` and `asChild` props.
 - [x] Rewrite legacy Heading `as="…"` call sites to the new `render={…}` shape. Exact AST residual check found 211 direct Heading JSX tags plus 60 `IntroTitle` wrapper tags with 0 remaining `as`/`asChild` props, 61 direct Heading render callbacks, and 1 `IntroTitle` render callback. The prior 140-count handoff was treated as an estimate; residual AST/typecheck gates are the close proof.
 
-#### Phase 2c — SESSION_0212 (planned)
+#### Phase 2c — SESSION_0212 (2026-05-20) ✅ complete
 
-- [ ] Migrate `apps/web/components/common/box.tsx`. Delete the `Box` component (upstream only ships `boxVariants`).
-- [ ] Refactor 59 `<Box>` JSX call sites and 14 internal-primitive consumers (`card`, `switch`, `checkbox`, `textarea`, `input`, `radio-group`, `select`, `dialog`, `drawer`, `overlay-image`, `cta-form`, `user-menu`, `row-checkbox`) to inline `boxVariants` on a real element.
+- [x] Migrate `apps/web/components/common/box.tsx`. Delete the `Box` component and `BoxProps` export; upstream only ships `boxVariants`.
+- [x] Refactor current `Box` / `BoxProps` consumers to inline `boxVariants` on a real element. Exact AST close proof found 0 remaining `<Box>` JSX tags and 0 `Box` / `BoxProps` imports; current tree has 12 `boxVariants` import consumers. The earlier 59-call-site handoff was superseded by exact current-tree AST counts.
 
 #### Phase 3 — SESSION_0213 (planned)
 

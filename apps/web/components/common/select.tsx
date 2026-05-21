@@ -3,7 +3,7 @@
 import { CheckIcon, ChevronDownIcon, ChevronsUpDownIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 import type { ComponentProps } from "react"
-import { Box } from "~/components/common/box"
+import { boxVariants } from "~/components/common/box"
 import { inputVariants } from "~/components/common/input"
 import { cva, cx, popoverAnimationClasses, type VariantProps } from "~/lib/utils"
 
@@ -18,18 +18,21 @@ const SelectTrigger = ({
   ...props
 }: ComponentProps<typeof SelectPrimitive.Trigger> & VariantProps<typeof inputVariants>) => {
   return (
-    <Box hover focus>
-      <SelectPrimitive.Trigger
-        className={cx(inputVariants({ size }), "flex items-center justify-between", className)}
-        {...props}
-      >
-        <span className="truncate">{children}</span>
+    <SelectPrimitive.Trigger
+      className={cx(
+        boxVariants({ hover: true, focus: true }),
+        inputVariants({ size }),
+        "flex items-center justify-between",
+        className,
+      )}
+      {...props}
+    >
+      <span className="truncate">{children}</span>
 
-        <SelectPrimitive.Icon asChild>
-          <ChevronsUpDownIcon className="ml-1 size-4 shrink-0 opacity-50" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-    </Box>
+      <SelectPrimitive.Icon asChild>
+        <ChevronsUpDownIcon className="ml-1 size-4 shrink-0 opacity-50" />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
   )
 }
 

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-28
 updated: 2026-05-20
-last_agent: codex-session-0211
+last_agent: codex-session-0212
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -59,6 +59,7 @@ backlinks:
   - docs/sprints/SESSION_0206.md
   - docs/sprints/SESSION_0207.md
   - docs/sprints/SESSION_0208.md
+  - docs/sprints/SESSION_0212.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -2022,3 +2023,25 @@ SESSION_0178_FINDING_03 ("No lineage adapter tests exist yet") is closed by SESS
 - **Sources:** Graphify queries for `D-016 heading useRender render asChild Phase 2b`, `components common heading H1 H2 H3 H4 H5 H6 as render`, and `custom component inventory heading dirstarter component inventory`; upstream Heading source; Ronin Heading source and `IntroTitle` wrapper; exact AST residual scripts; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
 - **Verdict:** Pass. No P0/P1 findings. The migration removes Heading's direct `radix-ui` dependency, preserves visual sizing and prior rendered tags, and proves no direct Heading or `IntroTitle` legacy polymorphic props remain. The only notable implementation adjustment was switching from element-form render props to function-form render callbacks so Biome can see explicit heading children.
 - **Follow-up:** SESSION_0212 = Phase 2c of `D-016` — migrate `box.tsx` by deleting the `Box` component and refactoring 59 JSX + 14 internal-primitive consumers to inline `boxVariants` on real elements.
+
+### SESSION_0212 — Dirstarter uplift L6 Base UI migration Phase 2c (Box)
+
+| Task ID | Description | Status |
+| --- | --- | --- |
+| SESSION_0212_TASK_01 | Cody: rewrite `apps/web/components/common/box.tsx` to upstream `boxVariants`-only shape; refactor all current `Box` / `BoxProps` consumers to real elements using `boxVariants`; prove zero residual `<Box>` JSX and `Box` / `BoxProps` imports. | complete |
+| SESSION_0212_TASK_02 | Doug: verify exact Box residual AST checks, typecheck, lint, app tests, build, and wiki lint; record pass/fail evidence. | complete |
+| SESSION_0212_TASK_03 | Petey + Doug: tick `D-016` Phase 2c, append `.dirstarter-upstream` and lane-ledger rows, update component inventory/wiki index/project-log/session evidence, full-close, commit, push to `main`, and refresh Graphify. | complete |
+
+**Notes:** Phase 2c bow-in found a current-tree count discrepancy. The SESSION_0211 handoff estimated 59 `<Box>` JSX sites and 14 internal-primitive consumers; exact AST inspection over tracked `apps/web` TS/TSX files found 10 current `<Box>` JSX tags, 10 `Box` imports, 1 `BoxProps` import, and 3 existing `boxVariants` imports. Phase 2c stays one session; residual AST/typecheck gates are the source of truth.
+
+**Result:** `apps/web/components/common/box.tsx` now matches upstream's `boxVariants`-only API and no longer imports `radix-ui`. All current consumers apply `boxVariants` directly to real elements, and `Button`, `Card`, and `Input` now consume `focusWithin` explicitly so variant props do not leak into DOM spreads.
+
+#### Review
+
+##### SESSION_0212_REVIEW_01 — Hostile close review for L6 Base UI migration Phase 2c
+
+- **Reviewed tasks:** SESSION_0212_TASK_01, SESSION_0212_TASK_02, SESSION_0212_TASK_03.
+- **Dirstarter docs check:** upstream `7e724b6` `components/common/box.tsx` directly compared against Ronin `apps/web/components/common/box.tsx`. Live `dirstarter.com` docs not required because the upstream source file is the primitive contract.
+- **Sources:** Graphify query `D-016 Box boxVariants BoxProps Phase 2c`; upstream Box source; Ronin Box source and exact AST residual scripts; read-only explorer migration map; `pnpm --filter dirstarter typecheck`; `bun run lint`; `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1`; `pnpm --filter dirstarter build`; `bun run wiki:lint`.
+- **Verdict:** Pass. No P0/P1 findings. Box no longer exposes the deleted wrapper API, no `Box` / `BoxProps` imports remain, and current consumers preserve the prior slotted DOM shape by applying `boxVariants` directly to the existing real element.
+- **Residual follow-up:** The pre-existing Turbopack/NFT warning from `server/admin/storage/monitoring/queries.ts` tracing through `next.config.ts` still appears during production build. It is unrelated to the Box migration and should be fixed in a dedicated hardening follow-up.
