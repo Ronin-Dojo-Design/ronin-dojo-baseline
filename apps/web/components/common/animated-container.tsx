@@ -2,8 +2,8 @@
 
 import { useReducedMotion, useResizeObserver } from "@mantine/hooks"
 import { type HTMLMotionProps, motion } from "motion/react"
-import { Slot } from "radix-ui"
 import type { PropsWithChildren } from "react"
+import { slot } from "~/lib/slot"
 import { cx } from "~/lib/utils"
 
 type AnimatedContainerProps = Omit<HTMLMotionProps<"div">, "animate" | "children"> &
@@ -18,7 +18,7 @@ export const AnimatedContainer = (props: AnimatedContainerProps) => {
   const [ref, rect] = useResizeObserver()
 
   if (shouldReduceMotion) {
-    return <Slot.Root className={className}>{children}</Slot.Root>
+    return slot(children, { className })
   }
 
   const motionProps: HTMLMotionProps<"div"> = {
@@ -32,7 +32,7 @@ export const AnimatedContainer = (props: AnimatedContainerProps) => {
   return (
     <motion.div className={cx("overflow-hidden", className)} {...motionProps} {...rest}>
       <div ref={ref} className={cx(height && "h-max", width && "w-max")}>
-        <Slot.Root className="animate-fade-in">{children}</Slot.Root>
+        {slot(children, { className: "animate-fade-in" })}
       </div>
     </motion.div>
   )

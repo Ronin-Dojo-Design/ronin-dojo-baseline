@@ -1,13 +1,5 @@
-import { defineConfig } from "cva"
-import { extendTailwindMerge } from "tailwind-merge"
-
-const customTwMerge = extendTailwindMerge({})
-
-export const { cva, cx, compose } = defineConfig({
-  hooks: {
-    onComplete: className => customTwMerge(className),
-  },
-})
+export type { ClassValue, VariantProps } from "tailwind-variants"
+export { cn as cx, tv as cva } from "tailwind-variants"
 
 export const popoverAnimationClasses = [
   "origin-(--radix-popper-transform-origin)",
@@ -19,5 +11,3 @@ export const popoverAnimationClasses = [
   "data-[side=right]:data-[state=open]:slide-in-from-left-2 data-[side=right]:data-[state=closed]:slide-out-to-left-2",
   "data-[side=top]:data-[state=open]:slide-in-from-bottom-2 data-[side=top]:data-[state=closed]:slide-out-to-bottom-2",
 ]
-
-export type { VariantProps } from "cva"

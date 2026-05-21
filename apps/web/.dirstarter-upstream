@@ -41,3 +41,19 @@ copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 #   form primitives, popover family, command+tabs+admin Cmd+K+dep cleanup)
 #   tracked under drift register D-016 + petey-plan-0083.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.
+# - SESSION_0210 / L6 Phase 2a: utils + AnimatedContainer + cva import sweep
+#   applied from upstream 7e724b6 —
+#   lib/utils.ts rewritten as tailwind-variants re-export (tv as cva, cn as cx,
+#   VariantProps; unused compose/defineConfig/extendTailwindMerge dropped);
+#   popoverAnimationClasses kept in Radix-state shape (Phase 7 swaps to
+#   Base UI data-open/data-closed semantics when the 4 still-Radix popover-
+#   family primitives migrate); components/common/animated-container.tsx
+#   migrated from radix-ui Slot.Root to slot() from ~/lib/slot (12 consumer
+#   sites unchanged); stray `import { cx } from "cva"` consumers
+#   (components/web/ads/ads-picker.tsx, components/admin/sidebar.tsx)
+#   repathed onto ~/lib/utils. Phase 2 was re-split at bow-in into 2a (this
+#   session) + 2b (Heading, SESSION_0211) + 2c (Box, SESSION_0212); upstream
+#   Box deletes the Box component (59 JSX + 14 internal consumers to refactor)
+#   and upstream Heading adopts useRender (140 <Hn as=…> rewrites). Phases
+#   3-8 slide to SESSION_0213-0218. D-016 + petey-plan-0083 updated.
+#   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

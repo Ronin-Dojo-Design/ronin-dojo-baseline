@@ -1,7 +1,6 @@
 "use client"
 
 import { useMediaQuery } from "@mantine/hooks"
-import { cx } from "cva"
 import {
   ActivityIcon,
   BookOpenIcon,
@@ -37,6 +36,7 @@ import { LogoSymbol } from "~/components/web/ui/logo-symbol"
 import { siteConfig } from "~/config/site"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
+import { cx } from "~/lib/utils"
 
 type SidebarProps = {
   userRole?: string

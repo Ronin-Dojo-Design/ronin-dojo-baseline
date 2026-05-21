@@ -5,9 +5,10 @@ type: petey-plan
 status: active
 created: 2026-05-20
 updated: 2026-05-20
-last_agent: claude-session-0209
+last_agent: claude-session-0210
 pairs_with:
   - docs/sprints/SESSION_0209.md
+  - docs/sprints/SESSION_0210.md
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/knowledge/wiki/drift-register.md
 backlinks:
@@ -30,14 +31,17 @@ Initial bow-in scope assumed "Slot-only" primitives were a free swap (`Slot.Root
 
 Re-phased to **honest, verifiable chunks**:
 
-- Phase 1 (this session, SESSION_0209): Foundation only. Deps + slot util + toaster + empty-list move + two genuinely-safe leaf primitives (separator + avatar). Plant the seed; everything else is honest follow-on.
-- Phase 2 (SESSION_0210): `lib/utils.ts` cva→tailwind-variants migration (unlocks `slots` API). Then the **Slot-only primitives that have zero `asChild` call sites today**: Box (0), Heading (0), AnimatedContainer (0). Pure mechanical replace.
-- Phase 3 (SESSION_0211): Slot-only primitives with `asChild` consumer migration: Badge (2 sites), Card (3 sites), Stack (9 sites), Form (audit), Button (30 sites). High-volume consumer refactor pass.
-- Phase 4 (SESSION_0212): Tooltip migration. ~41 call sites of `<Tooltip tooltip="…">` rewriting to the new `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>` shape. Possibly split if estimate proves too large.
-- Phase 5 (SESSION_0213): HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
-- Phase 6 (SESSION_0214): Form primitives: checkbox, radio-group, switch, label, plus `field.tsx` and `button-group.tsx` sanity pass.
-- Phase 7 (SESSION_0215): Popover family — dialog, popover, dropdown-menu, select, drawer. Includes the L5-deferred `<PopoverTrigger render={…}>` call-site sweep across data-table-faceted-filter / data-table-view-options / date-range-picker / admin actions / dashboard / web nav. Likely the heaviest call-site phase.
-- Phase 8 (SESSION_0216): Command (cmdk → cmdk-base + slot util) + tabs + new **admin Cmd+K palette** (the L6 epic's one substantive missing easy win) + dep cleanup (`radix-ui` + `cmdk` removed from `apps/web/package.json`) + final tsc/biome/test/build/wiki-lint sweep.
+- Phase 1 (SESSION_0209): Foundation only. Deps + slot util + toaster + empty-list move + two genuinely-safe leaf primitives (separator + avatar). Plant the seed; everything else is honest follow-on.
+- **Phase 2 — re-split at SESSION_0210 bow-in (2026-05-20).** Initial Phase 2 framing ("zero `asChild`, mechanical replace" of Box/Heading/AnimatedContainer) proved wrong on bow-in audit: upstream Box now exports only `boxVariants` (the component is gone — 59 JSX sites + 14 internal-primitive consumers to refactor) and upstream Heading adopts `useRender` + `render={…}`, removing both `as` and `asChild` props (140 `<Hn as="…">` rewrites). AnimatedContainer is the only truly-mechanical primitive. Re-split:
+  - Phase 2a (SESSION_0210): `lib/utils.ts` cva→tailwind-variants (re-export `tv as cva`, `cn as cx`, `VariantProps`; drop unused `compose`; keep `popoverAnimationClasses` Radix-shape — Phase 7 will swap to Base UI semantics) + `animated-container.tsx` mechanical `Slot.Root` → `slot()` + repath 2 stray `from "cva"` imports onto `~/lib/utils`.
+  - Phase 2b (SESSION_0211): `heading.tsx` migration. Adopt `useRender` + `render={…}` per upstream. Rewrite 140 `<Hn as="…">` call sites; drop legacy `as` and `asChild` props.
+  - Phase 2c (SESSION_0212): `box.tsx` migration. Delete the `Box` component (upstream only ships `boxVariants`). Refactor 59 `<Box>` JSX sites and 14 internal-primitive consumers (`card`, `switch`, `checkbox`, `textarea`, `input`, `radio-group`, `select`, `dialog`, `drawer`, `overlay-image`, `cta-form`, `user-menu`, `row-checkbox`) to inline `boxVariants` on a real element.
+- Phase 3 (SESSION_0213): Slot-only primitives with `asChild` consumer migration: Badge (2 sites), Card (3 sites), Stack (9 sites), Form (audit), Button (30 sites). High-volume consumer refactor pass.
+- Phase 4 (SESSION_0214): Tooltip migration. ~41 call sites of `<Tooltip tooltip="…">` rewriting to the new `<Tooltip><TooltipTrigger render={…}/><TooltipContent>…</TooltipContent></Tooltip>` shape. Possibly split if estimate proves too large.
+- Phase 5 (SESSION_0215): HoverCard (PreviewCard rename + Positioner wrapper) + Accordion (Card-render dep + data-attr rename `data-[state=*]` → `data-*`).
+- Phase 6 (SESSION_0216): Form primitives: checkbox, radio-group, switch, label, plus `field.tsx` and `button-group.tsx` sanity pass.
+- Phase 7 (SESSION_0217): Popover family — dialog, popover, dropdown-menu, select, drawer. Includes the L5-deferred `<PopoverTrigger render={…}>` call-site sweep across data-table-faceted-filter / data-table-view-options / date-range-picker / admin actions / dashboard / web nav. Also updates `popoverAnimationClasses` constant content to Base UI semantics (`data-open`/`data-closed`). Likely the heaviest call-site phase.
+- Phase 8 (SESSION_0218): Command (cmdk → cmdk-base + slot util) + tabs + new **admin Cmd+K palette** (the L6 epic's one substantive missing easy win) + dep cleanup (`radix-ui` + `cmdk` + `cva` removed from `apps/web/package.json`) + final tsc/biome/test/build/wiki-lint sweep.
 
 Phase boundaries are *guidance* — Petey at each bow-in reserves the right to split or merge phases based on actual scope discovered. The contract is: each session ships a green typecheck/biome/test/build/wiki-lint and a closable artifact.
 
@@ -56,8 +60,11 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 | 1 ✓ | `components/common/empty-list.tsx` | Moved from `components/web/empty-list.tsx`. 10 import sites repathed. |
 | 1 ✓ | `components/common/separator.tsx` | Radix `Separator.Root` → `@base-ui/react/separator` `Separator`. 0 call sites needed updating (no `decorative` prop usage in repo). |
 | 1 ✓ | `components/common/avatar.tsx` | Radix `Avatar.Root/Image/Fallback` → `@base-ui/react/avatar` same shape. 11 call sites: no API change. |
-| 2 | `lib/utils.ts` | Migrate `cva` package → `tailwind-variants` `tv` aliased as `cva` (unlocks `slots` API). |
-| 2 | `box.tsx`, `heading.tsx`, `animated-container.tsx` | Slot-only, zero `asChild` call sites — mechanical `Slot.Root` → `slot()`. |
+| 2a ✓ | `lib/utils.ts` | Migrate `cva` package → `tailwind-variants` `tv` aliased as `cva` (unlocks `slots` API). `popoverAnimationClasses` stays Radix-shape (Phase 7). |
+| 2a ✓ | `animated-container.tsx` | Mechanical `Slot.Root` → `slot()`; 12 consumer sites unchanged. |
+| 2a ✓ | `from "cva"` import sweep | Repath `ads-picker.tsx` + `admin/sidebar.tsx` `cx` imports onto `~/lib/utils`. |
+| 2b | `heading.tsx` | Adopt `useRender` + `render={…}`; drop legacy `as` + `asChild` props; rewrite 140 `<Hn as="…">` call sites. |
+| 2c | `box.tsx` | Delete `Box` component (upstream only ships `boxVariants`). Refactor 59 `<Box>` JSX sites + 14 internal-primitive consumers (`card`, `switch`, `checkbox`, `textarea`, `input`, `radio-group`, `select`, `dialog`, `drawer`, `overlay-image`, `cta-form`, `user-menu`, `row-checkbox`). |
 | 3 | `badge.tsx` | 2 `asChild` sites + adopts `useRender` + cva slots `affix`. |
 | 3 | `card.tsx` | 3 `asChild` sites + `useRender`. **Blocks Accordion (Phase 5).** |
 | 3 | `stack.tsx` | 9 `asChild` sites + `useRender`. |
@@ -99,6 +106,7 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 ## Cross-references
 
 - [SESSION_0209](./SESSION_0209.md) — Phase 1 implementation.
+- [SESSION_0210](./SESSION_0210.md) — Phase 2a implementation (utils + AnimatedContainer + cva import sweep).
 - [SESSION_0208](./SESSION_0208.md) — L5 UI primitives Part 1; documented the original PopoverTrigger deferral.
 - [Epic 2026-05-19](../architecture/uplift/epic-2026-05-19.md) — overall uplift lane plan.
 - [Drift register](../knowledge/wiki/drift-register.md) — `D-016`.

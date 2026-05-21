@@ -1,6 +1,5 @@
 "use client"
 
-import { cx } from "cva"
 import { endOfDay, startOfDay } from "date-fns"
 import { XIcon } from "lucide-react"
 import { useFormatter, useTranslations } from "next-intl"
@@ -18,6 +17,7 @@ import { AdsCalendar } from "~/components/web/ads/ads-calendar"
 import { Price } from "~/components/web/price"
 import { adsConfig } from "~/config/ads"
 import { type AdSpot, useAds } from "~/hooks/use-ads"
+import { cx } from "~/lib/utils"
 import type { AdMany } from "~/server/web/ads/payloads"
 import { createStripeCheckout } from "~/server/web/products/actions"
 
