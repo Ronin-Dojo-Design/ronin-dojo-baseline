@@ -44,13 +44,11 @@ export const InlineMenu = <T extends { id: string }>({
         size="sm"
         wrap={false}
         className="group text-start w-full text-muted-foreground hover:text-foreground"
-        asChild
+        render={<button type="button" onClick={() => setIsOpen(!isOpen)} />}
       >
-        <button type="button" onClick={() => setIsOpen(!isOpen)}>
-          <AlignLeftIcon />
-          <span className="flex-1 truncate text-sm">{title || t("on_this_page")}</span>
-          <ChevronDownIcon className={cx("duration-200", isOpen && "rotate-180")} />
-        </button>
+        <AlignLeftIcon />
+        <span className="flex-1 truncate text-sm">{title || t("on_this_page")}</span>
+        <ChevronDownIcon className={cx("duration-200", isOpen && "rotate-180")} />
       </Stack>
 
       <AnimatePresence>

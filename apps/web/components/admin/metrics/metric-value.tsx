@@ -16,10 +16,8 @@ const MetricValue = ({ label, href, query, className, ...props }: MetricValuePro
   const count = use(query)
 
   return (
-    <Card className={cx("w-fit grow", className)} asChild {...props}>
-      <Link href={href}>
-        <MetricHeader title={label} value={count.toLocaleString()} />
-      </Link>
+    <Card className={cx("w-fit grow", className)} render={<Link href={href} />} {...props}>
+      <MetricHeader title={label} value={count.toLocaleString()} />
     </Card>
   )
 }

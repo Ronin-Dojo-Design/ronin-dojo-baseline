@@ -7,11 +7,15 @@ import { cx } from "~/lib/utils"
 
 export const Logo = ({ className, ...props }: ComponentProps<typeof Stack>) => {
   return (
-    <Stack size="sm" className={cx("group/logo", className)} wrap={false} asChild {...props}>
-      <Link href="/">
-        <LogoSymbol />
-        <span className="font-medium text-sm truncate">{siteConfig.name}</span>
-      </Link>
+    <Stack
+      size="sm"
+      className={cx("group/logo", className)}
+      wrap={false}
+      render={<Link href="/" />}
+      {...props}
+    >
+      <LogoSymbol />
+      <span className="font-medium text-sm truncate">{siteConfig.name}</span>
     </Stack>
   )
 }

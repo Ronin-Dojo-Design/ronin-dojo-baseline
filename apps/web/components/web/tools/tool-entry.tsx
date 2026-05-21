@@ -36,17 +36,15 @@ const ToolEntry = async ({ children, className, tool, ...props }: ToolEntryProps
         <Stack size="lg" className="not-prose justify-between">
           <Stack
             className="self-start before:content-['#'_counter(entries)] before:font-semibold before:text-3xl before:opacity-25 xl:before:absolute xl:before:right-full xl:before:mr-2"
-            asChild
+            render={<Link href={href} className="group" />}
           >
-            <Link href={href} className="group">
-              <Favicon src={tool.faviconUrl} title={tool.name} className="size-8" />
+            <Favicon src={tool.faviconUrl} title={tool.name} className="size-8" />
 
-              <H2 className="leading-tight! truncate underline decoration-transparent group-hover:decoration-foreground/30">
-                {tool.name}
-              </H2>
+            <H2 className="leading-tight! truncate underline decoration-transparent group-hover:decoration-foreground/30">
+              {tool.name}
+            </H2>
 
-              {tool.ownerId && <VerifiedBadge size="lg" />}
-            </Link>
+            {tool.ownerId && <VerifiedBadge size="lg" />}
           </Stack>
 
           <Backdrop />
@@ -88,9 +86,9 @@ const ToolEntry = async ({ children, className, tool, ...props }: ToolEntryProps
           variant={tool.isFeatured ? "secondary" : "primary"}
           suffix={<ArrowRightIcon />}
           className="self-start"
-          asChild
+          render={<Link href={href} />}
         >
-          <Link href={href}>{t("common.read_more")}</Link>
+          {t("common.read_more")}
         </Button>
       </Stack>
     </div>

@@ -58,8 +58,13 @@ export function PricingPlansTable({ pricingPlansPromise }: PricingPlansTableProp
         title="Pricing Plans"
         total={pricingPlansTotal}
         callToAction={
-          <Button size="md" variant="primary" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/pricing-plans/new">New pricing plan</Link>
+          <Button
+            size="md"
+            variant="primary"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/pricing-plans/new" />}
+          >
+            New pricing plan
           </Button>
         }
       />

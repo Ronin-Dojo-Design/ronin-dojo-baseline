@@ -21,8 +21,13 @@ export const FeatureNudge = ({ tool, t: toastId }: FeatureNudgeProps) => {
       </p>
 
       <Stack size="sm" className="w-full mt-4">
-        <Button size="md" className="flex-1" onClick={() => toast.dismiss(toastId)} asChild>
-          <Link href={`/submit/${tool.slug}`}>{t("feature_button", { toolName: tool.name })}</Link>
+        <Button
+          size="md"
+          className="flex-1"
+          onClick={() => toast.dismiss(toastId)}
+          render={<Link href={`/submit/${tool.slug}`} />}
+        >
+          {t("feature_button", { toolName: tool.name })}
         </Button>
 
         <Button size="md" variant="secondary" onClick={() => toast.dismiss(toastId)}>

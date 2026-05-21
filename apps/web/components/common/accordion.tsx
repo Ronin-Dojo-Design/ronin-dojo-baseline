@@ -12,13 +12,16 @@ const Accordion = ({ ...props }: ComponentProps<typeof AccordionPrimitive.Root>)
 
 const AccordionItem = ({ className, ...props }: ComponentProps<typeof AccordionPrimitive.Item>) => {
   return (
-    <Card hover={false} asChild>
-      <AccordionPrimitive.Item
-        data-slot="accordion-item"
-        className={cx("p-0! gap-0!", className)}
-        {...props}
-      />
-    </Card>
+    <Card
+      hover={false}
+      render={
+        <AccordionPrimitive.Item
+          data-slot="accordion-item"
+          className={cx("p-0! gap-0!", className)}
+          {...props}
+        />
+      }
+    />
   )
 }
 

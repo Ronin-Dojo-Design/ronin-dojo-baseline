@@ -208,17 +208,17 @@ export const RelationSelector = <T extends Relation>({
                     size="sm"
                     variant="warning"
                     prefix={<PlusIcon />}
-                    asChild
+                    render={
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedIds(selectedIds.concat(relation.id))
+                          setSuggestedRelations(rel => rel.filter(({ id }) => id !== relation.id))
+                        }}
+                      />
+                    }
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedIds(selectedIds.concat(relation.id))
-                        setSuggestedRelations(rel => rel.filter(({ id }) => id !== relation.id))
-                      }}
-                    >
-                      {relation.name}
-                    </button>
+                    {relation.name}
                   </Badge>
                 ))}
               </Stack>

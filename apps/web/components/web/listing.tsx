@@ -1,5 +1,5 @@
 import { ArrowRightIcon } from "lucide-react"
-import type { ComponentProps, ReactNode } from "react"
+import { type ComponentProps, isValidElement, type ReactNode } from "react"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
@@ -42,9 +42,9 @@ export const Listing = ({
               variant="secondary"
               suffix={<ArrowRightIcon />}
               className="-my-1"
-              asChild
+              render={isValidElement(button) ? button : undefined}
             >
-              {button}
+              {!isValidElement(button) ? button : undefined}
             </Button>
           )}
         </Stack>

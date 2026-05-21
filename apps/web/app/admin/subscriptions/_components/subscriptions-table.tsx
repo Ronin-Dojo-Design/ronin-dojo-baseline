@@ -59,10 +59,13 @@ export function SubscriptionsTable({ subscriptionsPromise }: SubscriptionsTableP
         title="Subscriptions"
         total={subscriptionsTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/subscriptions/new">
-              <div className="max-sm:sr-only">New subscription</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/subscriptions/new" />}
+          >
+            <div className="max-sm:sr-only">New subscription</div>
           </Button>
         }
       >

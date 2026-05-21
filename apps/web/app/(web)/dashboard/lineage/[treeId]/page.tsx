@@ -125,12 +125,22 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
             </Stack>
 
             <Stack direction="column" size="xs" className="w-full">
-              <Button size="sm" variant="secondary" prefix={<GitBranchIcon />} asChild>
-                <Link href="/dashboard">Back to dashboard</Link>
+              <Button
+                size="sm"
+                variant="secondary"
+                prefix={<GitBranchIcon />}
+                render={<Link href="/dashboard" />}
+              >
+                Back to dashboard
               </Button>
               {result.tree.isPublished && (
-                <Button size="sm" variant="ghost" prefix={<EyeIcon />} asChild>
-                  <Link href={`/lineage/${result.tree.slug}`}>Open public view</Link>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  prefix={<EyeIcon />}
+                  render={<Link href={`/lineage/${result.tree.slug}`} />}
+                >
+                  Open public view
                 </Button>
               )}
             </Stack>

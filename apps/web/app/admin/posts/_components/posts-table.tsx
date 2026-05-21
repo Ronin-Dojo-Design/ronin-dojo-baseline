@@ -79,10 +79,13 @@ export function PostsTable({ postsPromise }: PostsTableProps) {
         title="Posts"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/posts/new">
-              <div className="max-sm:sr-only">New post</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/posts/new" />}
+          >
+            <div className="max-sm:sr-only">New post</div>
           </Button>
         }
       >

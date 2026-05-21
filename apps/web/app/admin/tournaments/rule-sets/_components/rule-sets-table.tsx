@@ -58,10 +58,13 @@ export function RuleSetsTable({ ruleSetsPromise }: RuleSetsTableProps) {
         title="Rule Sets"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/tournaments/rule-sets/new">
-              <div className="max-sm:sr-only">New rule set</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/tournaments/rule-sets/new" />}
+          >
+            <div className="max-sm:sr-only">New rule set</div>
           </Button>
         }
       >

@@ -161,11 +161,11 @@ export const DashboardMembership = async () => {
 
         {/* Quick actions */}
         <div className="flex gap-3 pt-4">
-          <Button variant="secondary" size="sm" asChild>
-            <Link href="/programs">Browse Programs</Link>
+          <Button variant="secondary" size="sm" render={<Link href="/programs" />}>
+            Browse Programs
           </Button>
-          <Button variant="secondary" size="sm" asChild>
-            <Link href="/tournaments">Browse Tournaments</Link>
+          <Button variant="secondary" size="sm" render={<Link href="/tournaments" />}>
+            Browse Tournaments
           </Button>
           {stripeCustomer && <BillingPortalButton />}
         </div>

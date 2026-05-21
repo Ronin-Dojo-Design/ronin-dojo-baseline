@@ -127,15 +127,20 @@ function AffiliateGearListItem({ item }: AffiliateGearListItemProps) {
 
       <Stack className="justify-between gap-3 sm:flex-col sm:items-end" wrap={false}>
         <span className="text-sm font-semibold">{formatGearPrice(product.amountCents)}</span>
-        <Button size="sm" variant="secondary" suffix={<ExternalLinkIcon />} asChild>
-          <ExternalLink
-            href={product.affiliateUrl}
-            doTrack
-            eventName="click_affiliate_gear"
-            eventProps={{ productId: product.id, source: "tuffbuffs_gear_list" }}
-          >
-            Amazon
-          </ExternalLink>
+        <Button
+          size="sm"
+          variant="secondary"
+          suffix={<ExternalLinkIcon />}
+          render={
+            <ExternalLink
+              href={product.affiliateUrl}
+              doTrack
+              eventName="click_affiliate_gear"
+              eventProps={{ productId: product.id, source: "tuffbuffs_gear_list" }}
+            />
+          }
+        >
+          Amazon
         </Button>
       </Stack>
     </Card>

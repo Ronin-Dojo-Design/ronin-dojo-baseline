@@ -72,12 +72,22 @@ export async function DashboardLineageTab() {
           </Stack>
 
           <CardFooter className="mt-auto w-full justify-between">
-            <Button size="sm" variant="secondary" prefix={<EyeIcon />} asChild>
-              <Link href={`/dashboard/lineage/${tree.id}`}>Open preview</Link>
+            <Button
+              size="sm"
+              variant="secondary"
+              prefix={<EyeIcon />}
+              render={<Link href={`/dashboard/lineage/${tree.id}`} />}
+            >
+              Open preview
             </Button>
             {tree.isPublished && (
-              <Button size="sm" variant="ghost" prefix={<GitBranchIcon />} asChild>
-                <Link href={`/lineage/${tree.slug}`}>Public view</Link>
+              <Button
+                size="sm"
+                variant="ghost"
+                prefix={<GitBranchIcon />}
+                render={<Link href={`/lineage/${tree.slug}`} />}
+              >
+                Public view
               </Button>
             )}
           </CardFooter>

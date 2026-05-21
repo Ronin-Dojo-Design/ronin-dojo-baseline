@@ -15,7 +15,6 @@ import {
 } from "lucide-react"
 import { useFormatter, useTranslations } from "next-intl"
 import { useQueryStates } from "nuqs"
-import { Slot } from "radix-ui"
 import { useMemo } from "react"
 import { type Tool, ToolStatus } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
@@ -27,6 +26,7 @@ import { DataTableColumnHeader } from "~/components/data-table/data-table-column
 import { DataTableLink } from "~/components/data-table/data-table-link"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
 import { useDataTable } from "~/hooks/use-data-table"
+import { slot } from "~/lib/slot"
 import { isToolPublished, isToolTopTier } from "~/lib/tools"
 import type { findTools } from "~/server/admin/tools/queries"
 import { toolsTableParamsSchema } from "~/server/admin/tools/schema"
@@ -94,9 +94,10 @@ export const DashboardTable = ({ tools, pageCount }: Awaited<ReturnType<typeof f
 
           return (
             <Stack size="sm" wrap={false}>
-              <Slot.Root className="-mr-0.5 stroke-[2.5]" aria-hidden="true">
-                {statusIcons[status].icon}
-              </Slot.Root>
+              {slot(statusIcons[status].icon, {
+                className: "-mr-0.5 stroke-[2.5]",
+                "aria-hidden": true,
+              })}
 
               <Note className="font-medium">{statusIcons[status].label}</Note>
             </Stack>
@@ -125,11 +126,9 @@ export const DashboardTable = ({ tools, pageCount }: Awaited<ReturnType<typeof f
                 )
               }
               className="float-right -my-1"
-              asChild
+              render={<Link href={`/submit/${slug}`} />}
             >
-              <Link href={`/submit/${slug}`}>
-                {!isPublished ? t("actions.publish") : t("actions.feature")}
-              </Link>
+              {!isPublished ? t("actions.publish") : t("actions.feature")}
             </Button>
           )
         },
@@ -165,8 +164,8 @@ export const DashboardTable = ({ tools, pageCount }: Awaited<ReturnType<typeof f
   return (
     <DataTable table={table} emptyState={t("empty_state")}>
       <DataTableToolbar table={table} filterFields={filterFields}>
-        <Button size="md" variant="primary" prefix={<PlusIcon />} asChild>
-          <Link href="/submit">{t("submit_button")}</Link>
+        <Button size="md" variant="primary" prefix={<PlusIcon />} render={<Link href="/submit" />}>
+          {t("submit_button")}
         </Button>
       </DataTableToolbar>
     </DataTable>

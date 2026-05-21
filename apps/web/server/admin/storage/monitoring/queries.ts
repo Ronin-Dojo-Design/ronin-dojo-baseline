@@ -123,8 +123,8 @@ const collectTuffBuffsPublicAssetPaths = async () => {
 
 const getPublicRoot = async () => {
   const candidates = [
-    path.join(process.cwd(), "public"),
-    path.join(process.cwd(), "apps", "web", "public"),
+    path.join(/* turbopackIgnore: true */ process.cwd(), "public"),
+    path.join(/* turbopackIgnore: true */ process.cwd(), "apps", "web", "public"),
   ]
 
   for (const candidate of candidates) {

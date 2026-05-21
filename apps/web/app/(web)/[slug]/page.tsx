@@ -151,8 +151,8 @@ export default async function (props: Props) {
 
               <Stack className="gap-2">
                 {tool.categories?.map(({ slug, name }) => (
-                  <Badge key={slug} size="lg" asChild>
-                    <Link href={`/categories/${slug}`}>{name}</Link>
+                  <Badge key={slug} size="lg" render={<Link href={`/categories/${slug}`} />}>
+                    {name}
                   </Badge>
                 ))}
               </Stack>

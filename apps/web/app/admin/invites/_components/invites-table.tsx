@@ -95,10 +95,13 @@ export function InvitesTable({ invitesPromise, organizations: _organizations }: 
         title="Invites"
         total={invitesTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/invites/new">
-              <div className="max-sm:sr-only">New invite</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/invites/new" />}
+          >
+            <div className="max-sm:sr-only">New invite</div>
           </Button>
         }
       >

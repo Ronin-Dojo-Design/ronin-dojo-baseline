@@ -556,11 +556,15 @@ export function ToolForm({
                     >
                       <RadioGroupItem id={`tier-${option.tier}`} value={option.tier} />
 
-                      <Stack direction="column" size="sm" className="flex-1" asChild>
-                        <label htmlFor={`tier-${option.tier}`}>
-                          <span className="font-medium">{tiersConfig[option.tier].label}</span>
-                          <Note>{option.description}</Note>
-                        </label>
+                      <Stack
+                        direction="column"
+                        size="sm"
+                        className="flex-1"
+                        // biome-ignore lint/a11y/noLabelWithoutControl: label has htmlFor targeting radio input
+                        render={<label htmlFor={`tier-${option.tier}`} />}
+                      >
+                        <span className="font-medium">{tiersConfig[option.tier].label}</span>
+                        <Note>{option.description}</Note>
                       </Stack>
                     </Stack>
                   ))}
@@ -572,8 +576,8 @@ export function ToolForm({
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" asChild>
-            <Link href="/admin/tools">Cancel</Link>
+          <Button size="md" variant="secondary" render={<Link href="/admin/tools" />}>
+            Cancel
           </Button>
 
           <ToolPublishActions

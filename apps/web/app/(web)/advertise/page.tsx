@@ -74,10 +74,11 @@ export default async function ({ searchParams }: PageProps<"/advertise">) {
           {t(`${namespace}.cta.description`)}
         </IntroDescription>
 
-        <Button className="mt-4 min-w-40" asChild>
-          <ExternalLink href={`mailto:${siteConfig.email}`}>
-            {t(`${namespace}.cta.button`)}
-          </ExternalLink>
+        <Button
+          className="mt-4 min-w-40"
+          render={<ExternalLink href={`mailto:${siteConfig.email}`} />}
+        >
+          {t(`${namespace}.cta.button`)}
         </Button>
       </Intro>
 

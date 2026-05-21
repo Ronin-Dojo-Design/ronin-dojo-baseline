@@ -23,22 +23,22 @@ export const ToolButton = ({ children, tool, ...props }: ToolButtonProps) => {
       variant={isFeaturedListing ? "fancy" : "primary"}
       suffix={<ArrowUpRightIcon />}
       {...props}
-      asChild
+      render={
+        <ExternalLink
+          href={tool.affiliateUrl || tool.websiteUrl}
+          doFollow={doFollow}
+          doTrack
+          eventName="click_website"
+          eventProps={{
+            url: removeQueryParams(tool.websiteUrl),
+            isFeatured: isFeaturedListing,
+            tier: tool.tier,
+            source: "button",
+          }}
+        />
+      }
     >
-      <ExternalLink
-        href={tool.affiliateUrl || tool.websiteUrl}
-        doFollow={doFollow}
-        doTrack
-        eventName="click_website"
-        eventProps={{
-          url: removeQueryParams(tool.websiteUrl),
-          isFeatured: isFeaturedListing,
-          tier: tool.tier,
-          source: "button",
-        }}
-      >
-        {children || t("common.visit", { name: tool.name })}
-      </ExternalLink>
+      {children || t("common.visit", { name: tool.name })}
     </Button>
   )
 }

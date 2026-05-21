@@ -92,21 +92,32 @@ export const Calendar = ({
         <H5 className="mr-auto">{format(month, "MMM yyyy")}</H5>
 
         {!isCurrentMonth && (
-          <Button variant="secondary" size="md" prefix={<CalendarIcon />} asChild>
-            <Link href={`/admin/schedule?month=${format(today, "yyyy-MM")}`}>Today</Link>
+          <Button
+            variant="secondary"
+            size="md"
+            prefix={<CalendarIcon />}
+            render={<Link href={`/admin/schedule?month=${format(today, "yyyy-MM")}`} />}
+          >
+            Today
           </Button>
         )}
 
-        <Button variant="secondary" size="md" prefix={<ChevronLeftIcon />} asChild>
-          <Link href={`/admin/schedule?month=${format(subMonths(month, 1), "yyyy-MM")}`}>
-            <span className="max-sm:sr-only">Previous</span>
-          </Link>
+        <Button
+          variant="secondary"
+          size="md"
+          prefix={<ChevronLeftIcon />}
+          render={<Link href={`/admin/schedule?month=${format(subMonths(month, 1), "yyyy-MM")}`} />}
+        >
+          <span className="max-sm:sr-only">Previous</span>
         </Button>
 
-        <Button variant="secondary" size="md" suffix={<ChevronRightIcon />} asChild>
-          <Link href={`/admin/schedule?month=${format(addMonths(month, 1), "yyyy-MM")}`}>
-            <span className="max-sm:sr-only">Next</span>
-          </Link>
+        <Button
+          variant="secondary"
+          size="md"
+          suffix={<ChevronRightIcon />}
+          render={<Link href={`/admin/schedule?month=${format(addMonths(month, 1), "yyyy-MM")}`} />}
+        >
+          <span className="max-sm:sr-only">Next</span>
         </Button>
       </Stack>
 

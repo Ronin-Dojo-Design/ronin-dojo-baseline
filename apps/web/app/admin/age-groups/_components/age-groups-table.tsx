@@ -56,10 +56,13 @@ export function AgeGroupsTable({ ageGroupsPromise }: AgeGroupsTableProps) {
         title="Age Groups"
         total={ageGroupsTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/age-groups/new">
-              <div className="max-sm:sr-only">New age group</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/age-groups/new" />}
+          >
+            <div className="max-sm:sr-only">New age group</div>
           </Button>
         }
       >

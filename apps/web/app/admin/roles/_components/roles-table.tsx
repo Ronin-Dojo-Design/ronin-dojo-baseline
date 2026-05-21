@@ -56,10 +56,13 @@ export function RolesTable({ rolesPromise }: RolesTableProps) {
         title="Roles"
         total={rolesTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/roles/new">
-              <div className="max-sm:sr-only">New role</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/roles/new" />}
+          >
+            <div className="max-sm:sr-only">New role</div>
           </Button>
         }
       >

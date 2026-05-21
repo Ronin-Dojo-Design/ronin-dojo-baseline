@@ -34,8 +34,12 @@ export const ToolPreviewAlert = async ({ tool, ...props }: ToolPreviewAlertProps
 
       <Note className="-mt-2">{t("description", { toolName: tool.name })}</Note>
 
-      <Button variant="fancy" prefix={<CalendarPlusIcon />} asChild>
-        <Link href={`/submit/${tool.slug}`}>{t("publish_button")}</Link>
+      <Button
+        variant="fancy"
+        prefix={<CalendarPlusIcon />}
+        render={<Link href={`/submit/${tool.slug}`} />}
+      >
+        {t("publish_button")}
       </Button>
     </Card>
   )

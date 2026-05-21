@@ -110,10 +110,13 @@ export function LeadsTable({ leadsPromise, organizationsPromise }: LeadsTablePro
         title="Leads"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/leads/new">
-              <div className="max-sm:sr-only">New lead</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/leads/new" />}
+          >
+            <div className="max-sm:sr-only">New lead</div>
           </Button>
         }
       >

@@ -396,52 +396,56 @@ export const ToolPublishActions = ({
                       <Stack size="sm" className="items-start" key={option.status}>
                         <RadioGroupItem id={option.status} value={option.status} />
 
-                        <Stack size="sm" direction="column" className="flex-1" asChild>
-                          <label htmlFor={option.status}>
-                            <H6>{option.title}</H6>
+                        <Stack
+                          size="sm"
+                          direction="column"
+                          className="flex-1"
+                          // biome-ignore lint/a11y/noLabelWithoutControl: label has htmlFor targeting radio input
+                          render={<label htmlFor={option.status} />}
+                        >
+                          <H6>{option.title}</H6>
 
-                            {option.description && <Note>{option.description}</Note>}
+                          {option.description && <Note>{option.description}</Note>}
 
-                            {option.status === ToolStatus.Scheduled &&
-                              currentStatus === ToolStatus.Scheduled && (
-                                <Stack size="sm" wrap={false} className="mt-2 items-stretch w-full">
-                                  <Button
-                                    size="md"
-                                    variant="secondary"
-                                    onClick={() => setIsScheduleOpen(true)}
-                                    suffix={<CalendarIcon />}
-                                    className="w-full tabular-nums"
-                                  >
-                                    {selectedDate}
-                                  </Button>
+                          {option.status === ToolStatus.Scheduled &&
+                            currentStatus === ToolStatus.Scheduled && (
+                              <Stack size="sm" wrap={false} className="mt-2 items-stretch w-full">
+                                <Button
+                                  size="md"
+                                  variant="secondary"
+                                  onClick={() => setIsScheduleOpen(true)}
+                                  suffix={<CalendarIcon />}
+                                  className="w-full tabular-nums"
+                                >
+                                  {selectedDate}
+                                </Button>
 
-                                  <Input
-                                    type="time"
-                                    value={selectedTime}
-                                    onChange={e => setSelectedTime(e.target.value)}
-                                    className="w-full tabular-nums"
-                                  />
+                                <Input
+                                  type="time"
+                                  value={selectedTime}
+                                  onChange={e => setSelectedTime(e.target.value)}
+                                  className="w-full tabular-nums"
+                                />
 
-                                  <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
-                                    <DialogContent className="max-w-sm">
-                                      <DialogHeader>
-                                        <DialogTitle>Pick a date to publish</DialogTitle>
-                                      </DialogHeader>
+                                <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                                  <DialogContent className="max-w-sm">
+                                    <DialogHeader>
+                                      <DialogTitle>Pick a date to publish</DialogTitle>
+                                    </DialogHeader>
 
-                                      <Calendar
-                                        mode="single"
-                                        selected={new Date(selectedDate)}
-                                        disabled={{ before: new Date() }}
-                                        onSelect={date => {
-                                          date && setSelectedDate(formatDate(date, "yyyy-MM-dd"))
-                                          setIsScheduleOpen(false)
-                                        }}
-                                      />
-                                    </DialogContent>
-                                  </Dialog>
-                                </Stack>
-                              )}
-                          </label>
+                                    <Calendar
+                                      mode="single"
+                                      selected={new Date(selectedDate)}
+                                      disabled={{ before: new Date() }}
+                                      onSelect={date => {
+                                        date && setSelectedDate(formatDate(date, "yyyy-MM-dd"))
+                                        setIsScheduleOpen(false)
+                                      }}
+                                    />
+                                  </DialogContent>
+                                </Dialog>
+                              </Stack>
+                            )}
                         </Stack>
                       </Stack>
                     ))}

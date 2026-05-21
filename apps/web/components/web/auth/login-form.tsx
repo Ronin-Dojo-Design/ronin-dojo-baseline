@@ -27,32 +27,34 @@ export const LoginForm = ({ ...props }: ComponentProps<"form">) => {
 
   return (
     <Form {...form}>
-      <Stack direction="column" className="items-stretch" asChild>
-        <form onSubmit={form.handleSubmit(handleSignIn)} noValidate {...props}>
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    type="email"
-                    size="lg"
-                    placeholder={t("forms.sign_in.email_placeholder")}
-                    data-1p-ignore
-                    {...field}
-                  />
-                </FormControl>
+      <Stack
+        direction="column"
+        className="items-stretch"
+        render={<form onSubmit={form.handleSubmit(handleSignIn)} noValidate {...props} />}
+      >
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="email"
+                  size="lg"
+                  placeholder={t("forms.sign_in.email_placeholder")}
+                  data-1p-ignore
+                  {...field}
+                />
+              </FormControl>
 
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <Button suffix={<InboxIcon />} isPending={isPending}>
-            {t("forms.sign_in.magic_link_button")}
-          </Button>
-        </form>
+        <Button suffix={<InboxIcon />} isPending={isPending}>
+          {t("forms.sign_in.magic_link_button")}
+        </Button>
       </Stack>
     </Form>
   )

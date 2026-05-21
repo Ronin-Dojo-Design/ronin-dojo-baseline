@@ -130,8 +130,8 @@ export function ReportForm({ children, className, title, report, ...props }: Rep
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" asChild>
-            <Link href="/admin/reports">Cancel</Link>
+          <Button size="md" variant="secondary" render={<Link href="/admin/reports" />}>
+            Cancel
           </Button>
 
           <Button size="md" isPending={action.isPending}>

@@ -3,7 +3,6 @@
 import type { Column } from "@tanstack/react-table"
 import { PlusCircleIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { Slot } from "radix-ui"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import {
@@ -18,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/common/popover"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
+import { slot } from "~/lib/slot"
 import type { Option } from "~/types"
 
 type DataTableFacetedFilterProps<TData, TValue> = {
@@ -75,37 +75,39 @@ export function DataTableFacetedFilter<TData, TValue>({
                 const isSelected = selectedValues.has(option.value)
 
                 return (
-                  <Stack key={option.value} size="sm" asChild>
-                    <CommandItem
-                      onSelect={() => {
-                        if (isSelected) {
-                          selectedValues.delete(option.value)
-                        } else {
-                          selectedValues.add(option.value)
-                        }
-                        const filterValues = Array.from(selectedValues)
-                        column?.setFilterValue(filterValues.length ? filterValues : undefined)
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        readOnly
-                        className="pointer-events-none"
+                  <Stack
+                    key={option.value}
+                    size="sm"
+                    render={
+                      <CommandItem
+                        onSelect={() => {
+                          if (isSelected) {
+                            selectedValues.delete(option.value)
+                          } else {
+                            selectedValues.add(option.value)
+                          }
+                          const filterValues = Array.from(selectedValues)
+                          column?.setFilterValue(filterValues.length ? filterValues : undefined)
+                        }}
                       />
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      readOnly
+                      className="pointer-events-none"
+                    />
 
-                      <Slot.Root className="-mr-0.5 stroke-[2.5]" aria-hidden="true">
-                        {option.icon}
-                      </Slot.Root>
+                    {slot(option.icon, { className: "-mr-0.5 stroke-[2.5]", "aria-hidden": true })}
 
-                      <span>{option.label}</span>
+                    <span>{option.label}</span>
 
-                      {option.withCount && column?.getFacetedUniqueValues()?.get(option.value) && (
-                        <span className="ml-auto flex items-center justify-center font-mono text-xs">
-                          {column?.getFacetedUniqueValues().get(option.value)}
-                        </span>
-                      )}
-                    </CommandItem>
+                    {option.withCount && column?.getFacetedUniqueValues()?.get(option.value) && (
+                      <span className="ml-auto flex items-center justify-center font-mono text-xs">
+                        {column?.getFacetedUniqueValues().get(option.value)}
+                      </span>
+                    )}
                   </Stack>
                 )
               })}

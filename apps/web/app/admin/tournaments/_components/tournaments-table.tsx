@@ -57,10 +57,13 @@ export function TournamentsTable({ tournamentsPromise }: TournamentsTableProps) 
         title="Tournaments"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/tournaments/new">
-              <div className="max-sm:sr-only">New tournament</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/tournaments/new" />}
+          >
+            <div className="max-sm:sr-only">New tournament</div>
           </Button>
         }
       >

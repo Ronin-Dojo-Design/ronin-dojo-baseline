@@ -39,8 +39,8 @@ export default function WebErrorBoundary({ error }: ErrorProps) {
           {t("reload_button")}
         </Button>
 
-        <Button variant="soft" asChild>
-          <Link href="/">{t("home_button")}</Link>
+        <Button variant="soft" render={<Link href="/" />}>
+          {t("home_button")}
         </Button>
       </Stack>
     </Intro>

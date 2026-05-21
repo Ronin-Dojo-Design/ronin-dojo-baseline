@@ -67,67 +67,69 @@ const FeedbackWidgetForm = ({ toastId, setDismissed }: FeedbackWidgetFormProps) 
 
   return (
     <Form {...form}>
-      <Stack direction="column" className="items-stretch w-full" asChild>
-        <form onSubmit={handleSubmitWithAction} noValidate>
-          <p className="mb-1 text-xs">{t("question", { siteName: siteConfig.name })}</p>
+      <Stack
+        direction="column"
+        className="items-stretch w-full"
+        render={<form onSubmit={handleSubmitWithAction} noValidate />}
+      >
+        <p className="mb-1 text-xs">{t("question", { siteName: siteConfig.name })}</p>
 
-          {!session?.user && (
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      size="sm"
-                      placeholder={t("email_placeholder")}
-                      className={cx("text-xs", fieldState.error ? "bg-destructive/5!" : "")}
-                      data-1p-ignore
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          )}
-
+        {!session?.user && (
           <FormField
             control={form.control}
-            name="message"
+            name="email"
             render={({ field, fieldState }) => (
               <FormItem>
                 <FormControl>
-                  <TextArea
+                  <Input
+                    type="email"
                     size="sm"
-                    placeholder={t("feedback_placeholder")}
-                    className={cx("h-20 text-xs", fieldState.error ? "bg-destructive/5!" : "")}
+                    placeholder={t("email_placeholder")}
+                    className={cx("text-xs", fieldState.error ? "bg-destructive/5!" : "")}
+                    data-1p-ignore
                     {...field}
                   />
                 </FormControl>
               </FormItem>
             )}
           />
+        )}
 
-          <Stack size="sm">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="text-xs flex-1"
-              onClick={() => {
-                toast.dismiss()
-                setDismissed(true)
-              }}
-            >
-              {t("dismiss_button")}
-            </Button>
+        <FormField
+          control={form.control}
+          name="message"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormControl>
+                <TextArea
+                  size="sm"
+                  placeholder={t("feedback_placeholder")}
+                  className={cx("h-20 text-xs", fieldState.error ? "bg-destructive/5!" : "")}
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-            <Button size="sm" className="text-xs flex-1" isPending={action.isPending}>
-              {t("send_button")}
-            </Button>
-          </Stack>
-        </form>
+        <Stack size="sm">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="text-xs flex-1"
+            onClick={() => {
+              toast.dismiss()
+              setDismissed(true)
+            }}
+          >
+            {t("dismiss_button")}
+          </Button>
+
+          <Button size="sm" className="text-xs flex-1" isPending={action.isPending}>
+            {t("send_button")}
+          </Button>
+        </Stack>
       </Stack>
     </Form>
   )

@@ -2,12 +2,12 @@
 
 import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
-import { Slot } from "radix-ui"
 import type { ComponentProps, ReactNode } from "react"
 import { Dialog, DialogContent, DialogTitle } from "~/components/common/dialog"
 import { inputVariants } from "~/components/common/input"
 import { Kbd } from "~/components/common/kbd"
 import { Stack } from "~/components/common/stack"
+import { slot } from "~/lib/slot"
 import { cx } from "~/lib/utils"
 
 const Command = ({ className, ...props }: ComponentProps<typeof CommandPrimitive>) => {
@@ -48,16 +48,14 @@ type CommandInputProps = Omit<ComponentProps<typeof CommandPrimitive.Input>, "pr
 const CommandInput = ({ className, prefix, suffix, ...props }: CommandInputProps) => {
   return (
     <Stack className={cx("px-3 -mb-px border-b", className)}>
-      <Slot.Root className="size-4 shrink-0">
-        {prefix || <SearchIcon className="opacity-50" />}
-      </Slot.Root>
+      {slot(prefix || <SearchIcon className="opacity-50" />, { className: "size-4 shrink-0" })}
 
       <CommandPrimitive.Input
         className={cx(inputVariants(), "px-0 flex-1 truncate text-sm outline-none")}
         {...props}
       />
 
-      <Slot.Root className="shrink-0">{suffix}</Slot.Root>
+      {slot(suffix, { className: "shrink-0" })}
     </Stack>
   )
 }

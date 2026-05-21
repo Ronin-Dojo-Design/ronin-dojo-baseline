@@ -80,9 +80,9 @@ export const ToolActions = ({ tool, children, className, ...props }: ToolActions
               variant="secondary"
               prefix={<SparklesIcon className="text-inherit" />}
               className="text-blue-600 dark:text-blue-400"
-              asChild
+              render={<Link href={`/submit/${tool.slug}`} />}
             >
-              <Link href={`/submit/${tool.slug}`}>{t("promote_button")}</Link>
+              {t("promote_button")}
             </Button>
           </Tooltip>
         )}

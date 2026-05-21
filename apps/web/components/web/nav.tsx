@@ -3,7 +3,6 @@
 import { useClipboard, useHotkeys } from "@mantine/hooks"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Slot } from "radix-ui"
 import type { ComponentProps, ReactNode } from "react"
 import { toast } from "sonner"
 import { BrandBlueskyIcon } from "~/components/common/icons/brand-bluesky"
@@ -19,6 +18,7 @@ import { Note } from "~/components/common/note"
 import { Tooltip, TooltipProvider } from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { siteConfig } from "~/config/site"
+import { slot } from "~/lib/slot"
 import { cva, cx } from "~/lib/utils"
 
 type Platform =
@@ -127,7 +127,7 @@ export const Nav = ({ className, title, previous, next, ...props }: NavProps) =>
               eventName="click_share"
               eventProps={{ url: currentUrl, platform }}
             >
-              <Slot.Root className="size-4">{icon}</Slot.Root>
+              {slot(icon, { className: "size-4" })}
             </ExternalLink>
           </Tooltip>
         ))}

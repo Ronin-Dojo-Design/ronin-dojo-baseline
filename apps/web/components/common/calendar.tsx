@@ -18,10 +18,10 @@ const CalendarChevron = ({ orientation }: ComponentProps<typeof Chevron>) => {
 const Calendar = ({ classNames, ...props }: ComponentProps<typeof DayPicker>) => {
   const format = useFormatter()
 
-  const buttonClasses = buttonVariants({
+  const { base } = buttonVariants({
     variant: "ghost",
-    className: "text-lg p-1 pointer-events-auto",
   })
+  const buttonClasses = base({ className: "text-lg p-1 pointer-events-auto" })
 
   // Use next-intl formatter for i18n date formatting
   const formatters: Partial<Formatters> = {

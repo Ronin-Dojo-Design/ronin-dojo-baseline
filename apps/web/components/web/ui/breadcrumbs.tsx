@@ -28,17 +28,20 @@ export const Breadcrumbs = ({ className, items, ...props }: BreadcrumbsProps) =>
   return (
     <>
       {breadcrumbsConfig.enabled && (
-        <Stack size="sm" className={cx("-mb-fluid-md pb-3 text-sm", className)} asChild {...props}>
-          <nav>
-            {breadcrumbItems.map(({ url, title }, index) => (
-              <Fragment key={index}>
-                {index > 0 && <BreadcrumbsSeparator />}
-                <NavLink exact href={url} className="not-last:shrink-0 last:line-clamp-1">
-                  {title}
-                </NavLink>
-              </Fragment>
-            ))}
-          </nav>
+        <Stack
+          size="sm"
+          className={cx("-mb-fluid-md pb-3 text-sm", className)}
+          render={<nav />}
+          {...props}
+        >
+          {breadcrumbItems.map(({ url, title }, index) => (
+            <Fragment key={index}>
+              {index > 0 && <BreadcrumbsSeparator />}
+              <NavLink exact href={url} className="not-last:shrink-0 last:line-clamp-1">
+                {title}
+              </NavLink>
+            </Fragment>
+          ))}
         </Stack>
       )}
     </>

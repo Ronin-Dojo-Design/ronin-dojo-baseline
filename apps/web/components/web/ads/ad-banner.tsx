@@ -21,31 +21,29 @@ export const AdBanner = async ({ className, ...props }: ComponentProps<typeof Ca
     <Container className="z-49 mt-1">
       <Card
         className={cx("flex-row items-center gap-3 px-3 py-2.5 md:px-4", className)}
-        asChild
+        render={<AdLink ad={ad} type={type} source="banner" />}
         {...props}
       >
-        <AdLink ad={ad} type={type} source="banner">
-          <AdBadge className="leading-none max-sm:order-last" />
+        <AdBadge className="leading-none max-sm:order-last" />
 
-          <div className="text-xs leading-tight text-secondary-foreground mr-auto sm:text-sm">
-            <Favicon
-              src={ad.faviconUrl}
-              title={ad.name}
-              size={32}
-              className="float-left align-middle p-0 mr-1.5 size-3.5 rounded-sm sm:size-4"
-            />
-            <strong className="font-medium text-foreground">{ad.name}</strong> — {ad.description}
-          </div>
+        <div className="text-xs leading-tight text-secondary-foreground mr-auto sm:text-sm">
+          <Favicon
+            src={ad.faviconUrl}
+            title={ad.name}
+            size={32}
+            className="float-left align-middle p-0 mr-1.5 size-3.5 rounded-sm sm:size-4"
+          />
+          <strong className="font-medium text-foreground">{ad.name}</strong> — {ad.description}
+        </div>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            className="shrink-0 leading-none pointer-events-none max-sm:hidden"
-            asChild
-          >
-            <span>{ad.buttonLabel ?? t("learn_more")}</span>
-          </Button>
-        </AdLink>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="shrink-0 leading-none pointer-events-none max-sm:hidden"
+          render={<span />}
+        >
+          {ad.buttonLabel ?? t("learn_more")}
+        </Button>
       </Card>
     </Container>
   )

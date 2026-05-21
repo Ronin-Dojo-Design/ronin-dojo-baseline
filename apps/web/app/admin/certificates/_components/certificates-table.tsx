@@ -57,10 +57,13 @@ export function CertificatesTable({ templatesPromise }: CertificatesTableProps) 
         title="Certificate Templates"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/certificates/new">
-              <div className="max-sm:sr-only">New template</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/certificates/new" />}
+          >
+            <div className="max-sm:sr-only">New template</div>
           </Button>
         }
       >

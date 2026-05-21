@@ -49,51 +49,51 @@ export function LineageNodeCard({ node, isRoot, onSelect }: LineageNodeCardProps
 
   return (
     <Card
-      asChild
+      render={
+        <button
+          type="button"
+          onClick={() => onSelect(node.id)}
+          aria-label={`Open lineage profile for ${displayName}`}
+        />
+      }
       className={cx(
         "min-w-[200px] max-w-[260px] cursor-pointer p-4",
         isRoot && "border-foreground/40",
       )}
     >
-      <button
-        type="button"
-        onClick={() => onSelect(node.id)}
-        aria-label={`Open lineage profile for ${displayName}`}
-      >
-        <Stack size="sm" direction="column" className="w-full text-left">
-          <Stack size="sm">
-            <Avatar className="size-12">
-              {node.user.image && <AvatarImage src={node.user.image} alt={displayName} />}
-              <AvatarFallback>{initials(displayName)}</AvatarFallback>
-            </Avatar>
-            <Stack size="xs" direction="column" className="min-w-0 flex-1">
-              <span className="truncate font-medium text-sm">{displayName}</span>
-              {rankLabel && (
-                <span className="truncate text-xs text-muted-foreground">{rankLabel}</span>
-              )}
-            </Stack>
-          </Stack>
-
-          {schoolLabel && <Note className="truncate text-xs">{schoolLabel}</Note>}
-
-          <Stack size="xs" wrap>
-            {node.isVerified ? (
-              <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-                Verified
-              </Badge>
-            ) : (
-              <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-                Unverified
-              </Badge>
-            )}
-            {isRoot && (
-              <Badge variant="primary" size="sm">
-                Root
-              </Badge>
+      <Stack size="sm" direction="column" className="w-full text-left">
+        <Stack size="sm">
+          <Avatar className="size-12">
+            {node.user.image && <AvatarImage src={node.user.image} alt={displayName} />}
+            <AvatarFallback>{initials(displayName)}</AvatarFallback>
+          </Avatar>
+          <Stack size="xs" direction="column" className="min-w-0 flex-1">
+            <span className="truncate font-medium text-sm">{displayName}</span>
+            {rankLabel && (
+              <span className="truncate text-xs text-muted-foreground">{rankLabel}</span>
             )}
           </Stack>
         </Stack>
-      </button>
+
+        {schoolLabel && <Note className="truncate text-xs">{schoolLabel}</Note>}
+
+        <Stack size="xs" wrap>
+          {node.isVerified ? (
+            <Badge variant="success" size="sm" prefix={<CheckIcon />}>
+              Verified
+            </Badge>
+          ) : (
+            <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
+              Unverified
+            </Badge>
+          )}
+          {isRoot && (
+            <Badge variant="primary" size="sm">
+              Root
+            </Badge>
+          )}
+        </Stack>
+      </Stack>
     </Card>
   )
 }

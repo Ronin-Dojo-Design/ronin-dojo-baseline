@@ -59,10 +59,13 @@ export function TagsTable({ tagsPromise }: TagsTableProps) {
         title="Tags"
         total={tagsTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/tags/new">
-              <div className="max-sm:sr-only">New tag</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/tags/new" />}
+          >
+            <div className="max-sm:sr-only">New tag</div>
           </Button>
         }
       >

@@ -51,15 +51,20 @@ export function AffiliateGearCard({ product, badge }: AffiliateGearCardProps) {
 
         <Stack className="mt-auto w-full justify-between gap-3" wrap={false}>
           <span className="text-sm font-semibold">{formatGearPrice(product.amountCents)}</span>
-          <Button size="sm" variant="secondary" suffix={<ExternalLinkIcon />} asChild>
-            <ExternalLink
-              href={product.affiliateUrl}
-              doTrack
-              eventName="click_affiliate_gear"
-              eventProps={{ productId: product.id, source: "tuffbuffs_gear" }}
-            >
-              Amazon
-            </ExternalLink>
+          <Button
+            size="sm"
+            variant="secondary"
+            suffix={<ExternalLinkIcon />}
+            render={
+              <ExternalLink
+                href={product.affiliateUrl}
+                doTrack
+                eventName="click_affiliate_gear"
+                eventProps={{ productId: product.id, source: "tuffbuffs_gear" }}
+              />
+            }
+          >
+            Amazon
           </Button>
         </Stack>
       </div>

@@ -79,8 +79,12 @@ export function CourseEnrollmentPanel({
           </Stack>
           <H4>Enroll in this course</H4>
           <Note>Sign in before enrolling or tracking curriculum progress.</Note>
-          <Button asChild variant="primary" prefix={<LogInIcon />}>
-            <Link href={`/auth/login?next=/courses/${courseSlug}`}>Sign in</Link>
+          <Button
+            variant="primary"
+            prefix={<LogInIcon />}
+            render={<Link href={`/auth/login?next=/courses/${courseSlug}`} />}
+          >
+            Sign in
           </Button>
         </Stack>
       </Card>

@@ -58,8 +58,12 @@ export default async function TournamentResultsPage({ params }: PageProps) {
             </Badge>
           )}
           <Badge variant="soft">{tournament.host.name}</Badge>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/tournaments/${tournament.slug}`}>← Back to tournament</Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            render={<Link href={`/tournaments/${tournament.slug}`} />}
+          >
+            ← Back to tournament
           </Button>
         </Stack>
       </Section>

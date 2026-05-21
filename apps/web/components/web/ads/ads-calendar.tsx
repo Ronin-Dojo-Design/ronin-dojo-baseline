@@ -112,9 +112,12 @@ export const AdsCalendar = ({
         <Stack size="sm">
           {adSpot.preview && (
             <Tooltip tooltip={t("preview_ad")}>
-              <Button variant="secondary" size="sm" prefix={<EyeIcon />} asChild>
-                <ExternalLink href={adSpot.preview} />
-              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                prefix={<EyeIcon />}
+                render={<ExternalLink href={adSpot.preview} />}
+              />
             </Tooltip>
           )}
 

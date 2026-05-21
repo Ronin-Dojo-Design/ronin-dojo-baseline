@@ -56,10 +56,13 @@ export function SkillLevelsTable({ skillLevelsPromise }: SkillLevelsTableProps) 
         title="Skill Levels"
         total={skillLevelsTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/skill-levels/new">
-              <div className="max-sm:sr-only">New skill level</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/skill-levels/new" />}
+          >
+            <div className="max-sm:sr-only">New skill level</div>
           </Button>
         }
       >

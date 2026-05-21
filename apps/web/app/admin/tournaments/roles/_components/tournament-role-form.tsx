@@ -160,8 +160,8 @@ export function TournamentRoleForm({
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" asChild>
-            <Link href="/admin/tournaments/roles">Cancel</Link>
+          <Button size="md" variant="secondary" render={<Link href="/admin/tournaments/roles" />}>
+            Cancel
           </Button>
 
           <Button size="md" isPending={action.isPending}>

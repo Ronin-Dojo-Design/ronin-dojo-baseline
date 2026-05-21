@@ -1,67 +1,61 @@
-import { Slot } from "radix-ui"
-import { type ComponentProps, isValidElement } from "react"
+import { useRender } from "@base-ui/react/use-render"
+import type { ComponentProps } from "react"
 import { boxVariants } from "~/components/common/box"
 import { Stack } from "~/components/common/stack"
+import { slot } from "~/lib/slot"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const cardVariants = cva({
-  base: "group relative flex flex-col items-start gap-4 w-full border bg-card p-5 rounded-lg transform-gpu",
+  extend: boxVariants,
+  base: "group relative flex flex-col items-start gap-4 w-full border bg-card p-5 rounded-lg",
 
   variants: {
-    hover: {
-      true: "hover:bg-accent",
-    },
-
     isRevealed: {
-      true: "animate-reveal",
+      true: "animate-reveal transform-gpu",
     },
 
     isHighlighted: {
-      true: "bg-yellow-500/10 hover:bg-yellow-500/15",
+      true: "bg-yellow-500/10",
     },
   },
 
   compoundVariants: [
     {
       hover: true,
+      className: "hover:bg-accent",
+    },
+    {
+      hover: true,
       isHighlighted: true,
       className: "hover:bg-yellow-500/15",
     },
   ],
+
+  defaultVariants: {
+    hover: true,
+    focus: true,
+  },
 })
 
-type CardProps = ComponentProps<"div"> &
-  VariantProps<typeof boxVariants> &
-  VariantProps<typeof cardVariants> & {
-    /**
-     * If set to `true`, the button will be rendered as a child within the component.
-     * This child component must be a valid React component.
-     */
-    asChild?: boolean
-  }
+type CardProps = useRender.ComponentProps<"div"> & VariantProps<typeof cardVariants>
 
 const Card = ({
   className,
-  hover = true,
-  focus = true,
-  focusWithin,
+  hover,
+  focus,
   isRevealed,
   isHighlighted,
-  asChild,
+  render,
   ...props
 }: CardProps) => {
-  const useAsChild = asChild && isValidElement(props.children)
-  const Comp = useAsChild ? Slot.Root : "div"
-
-  return (
-    <Comp
-      className={cx(
-        boxVariants({ hover, focus, focusWithin }),
-        cardVariants({ hover, isRevealed, isHighlighted, className }),
-      )}
-      {...props}
-    />
-  )
+  return useRender({
+    render,
+    defaultTagName: "div",
+    props: {
+      className: cardVariants({ hover, focus, isRevealed, isHighlighted, className }),
+      ...props,
+    },
+  })
 }
 
 const CardHeader = ({ className, ...props }: ComponentProps<typeof Stack>) => {
@@ -114,9 +108,10 @@ const CardIcon = ({ children, className, ...props }: ComponentProps<"div">) => {
       )}
       {...props}
     >
-      <Slot.Root className="absolute -top-20 -right-20 -z-10 size-60 rotate-12 mask-b-from-25 mask-l-from-25">
-        {children}
-      </Slot.Root>
+      {slot(children, {
+        className:
+          "absolute -top-20 -right-20 -z-10 size-60 rotate-12 mask-b-from-25 mask-l-from-25",
+      })}
     </div>
   )
 }

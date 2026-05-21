@@ -38,8 +38,8 @@ export default async function ProgramsPage() {
             <p className="text-sm text-muted-foreground">
               {programs.length} program{programs.length !== 1 ? "s" : ""}
             </p>
-            <Button size="sm" prefix={<PlusIcon />} asChild>
-              <Link href="/programs/new">Create Program</Link>
+            <Button size="sm" prefix={<PlusIcon />} render={<Link href="/programs/new" />}>
+              Create Program
             </Button>
           </Stack>
 

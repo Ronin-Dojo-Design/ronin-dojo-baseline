@@ -35,8 +35,8 @@ export default async function OrganizationsPage() {
             <p className="text-sm text-muted-foreground">
               {orgs.length} organization{orgs.length !== 1 ? "s" : ""}
             </p>
-            <Button size="sm" asChild>
-              <Link href="/organizations/new">Create Organization</Link>
+            <Button size="sm" render={<Link href="/organizations/new" />}>
+              Create Organization
             </Button>
           </Stack>
 

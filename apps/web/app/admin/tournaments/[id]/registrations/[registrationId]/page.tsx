@@ -49,11 +49,13 @@ export default withTournamentAdminPage(async ({ params }) => {
   return (
     <Wrapper size="md" gap="sm">
       {/* Back link */}
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={`/admin/tournaments/${id}/registrations`}>
-          <ArrowLeftIcon className="mr-1 size-4" />
-          Back to Registrations
-        </Link>
+      <Button
+        variant="ghost"
+        size="sm"
+        render={<Link href={`/admin/tournaments/${id}/registrations`} />}
+      >
+        <ArrowLeftIcon className="mr-1 size-4" />
+        Back to Registrations
       </Button>
 
       {/* Header */}

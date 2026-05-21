@@ -1,7 +1,4 @@
-import { Slot } from "radix-ui"
-import type { ComponentProps } from "react"
-import { isValidElement } from "react"
-
+import { useRender } from "@base-ui/react/use-render"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const stackVariants = cva({
@@ -31,20 +28,14 @@ const stackVariants = cva({
   },
 })
 
-type StackProps = ComponentProps<"div"> &
-  VariantProps<typeof stackVariants> & {
-    /**
-     * If set to `true`, the stack will be rendered as a child within the component.
-     * This child component must be a valid React component.
-     */
-    asChild?: boolean
-  }
+type StackProps = useRender.ComponentProps<"div"> & VariantProps<typeof stackVariants>
 
-const Stack = ({ className, asChild, size, direction, wrap, ...props }: StackProps) => {
-  const useAsChild = asChild && isValidElement(props.children)
-  const Comp = useAsChild ? Slot.Root : "div"
-
-  return <Comp className={cx(stackVariants({ size, direction, wrap, className }))} {...props} />
+const Stack = ({ className, render, size, direction, wrap, ...props }: StackProps) => {
+  return useRender({
+    render,
+    defaultTagName: "div",
+    props: { className: cx(stackVariants({ size, direction, wrap }), className), ...props },
+  })
 }
 
 export { Stack }

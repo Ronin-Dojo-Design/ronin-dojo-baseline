@@ -81,8 +81,13 @@ export default async function TournamentDetailPage({ params, searchParams }: Pag
           </Badge>
           {location && <Badge variant="soft">{location}</Badge>}
           <Badge variant="soft">{tournament.host.name}</Badge>
-          <Button variant="ghost" size="sm" asChild prefix={<TrophyIcon className="size-4" />}>
-            <Link href={`/tournaments/${slug}/results`}>View Results</Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            prefix={<TrophyIcon className="size-4" />}
+            render={<Link href={`/tournaments/${slug}/results`} />}
+          >
+            View Results
           </Button>
         </Stack>
       </Section>

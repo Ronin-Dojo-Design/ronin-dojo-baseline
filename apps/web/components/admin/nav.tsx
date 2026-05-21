@@ -68,11 +68,9 @@ export const Nav = ({ className, links, isCollapsed, ...props }: NavProps) => {
                 variant="ghost"
                 aria-label={title}
                 className={cx("font-sans", isActive(href) && "bg-accent text-foreground")}
-                asChild
                 {...props}
-              >
-                <Link href={href} />
-              </Button>
+                render={<Link href={href} />}
+              />
             </Tooltip>
           )
         }
@@ -91,10 +89,10 @@ export const Nav = ({ className, links, isCollapsed, ...props }: NavProps) => {
               ))
             }
             className={cx("justify-start font-sans", isActive(href) && "bg-accent text-foreground")}
-            asChild
+            render={<Link href={href} />}
             {...props}
           >
-            <Link href={href}>{title}</Link>
+            {title}
           </Button>
         )
       })}

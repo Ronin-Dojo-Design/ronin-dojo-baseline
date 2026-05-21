@@ -59,10 +59,13 @@ export function SubscriptionTiersTable({ tiersPromise }: SubscriptionTiersTableP
         title="Subscription Tiers"
         total={tiersTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/subscription-tiers/new">
-              <div className="max-sm:sr-only">New tier</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/subscription-tiers/new" />}
+          >
+            <div className="max-sm:sr-only">New tier</div>
           </Button>
         }
       >

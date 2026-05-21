@@ -125,14 +125,19 @@ export const ToolReportDialog = ({ tool, isOpen, setIsOpen }: ToolReportDialogPr
                       {...field}
                     >
                       {reportsConfig.reportTypes.map(type => (
-                        <Stack key={type} size="sm" wrap={false} asChild>
-                          <FormLabel
-                            htmlFor={undefined}
-                            className="font-normal text-secondary-foreground overflow-visible cursor-pointer"
-                          >
-                            <RadioGroupItem value={type} />
-                            {reportsConfig.reportTypeLabels[type]}
-                          </FormLabel>
+                        <Stack
+                          key={type}
+                          size="sm"
+                          wrap={false}
+                          render={
+                            <FormLabel
+                              htmlFor={undefined}
+                              className="font-normal text-secondary-foreground overflow-visible cursor-pointer"
+                            />
+                          }
+                        >
+                          <RadioGroupItem value={type} />
+                          {reportsConfig.reportTypeLabels[type]}
                         </Stack>
                       ))}
                     </RadioGroup>

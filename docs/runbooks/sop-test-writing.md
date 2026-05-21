@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-17
-last_agent: codex-session-0191
+updated: 2026-05-21
+last_agent: copilot-session-0213
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -89,9 +89,28 @@ flowchart TD
 ## 2. Test runtime and runner
 
 - **Runtime:** Bun (`bun:test`)
-- **Run command:** `cd apps/web && bun test <path>`
+- **Run single file:** `cd apps/web && bun test <path>`
+- **Run all (non-e2e):** `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'`
+- **Package script:** `bun run test` (defined in `apps/web/package.json`)
 - **No `@types/bun`** — use `// @ts-expect-error` on bun:test imports
 - **Real Postgres** — all tests hit `ronindojo_dev`, not mocks or SQLite
+
+### ⚠ `--isolate` is mandatory for the full suite
+
+Bun's default test runner shares module state across files in the same run. The Prisma singleton in `~/services/db` uses `globalThis.dbGlobal` — when multiple test files race to initialize it in a shared module scope, the `$extends()` call can produce an empty object, causing `db.someModel` to be `undefined`.
+
+**Always use `--isolate`** when running the full suite. This gives each test file its own module scope and prevents the singleton race. Individual files (`bun test <path>`) work fine without it.
+
+```bash
+# ✅ Correct — full suite
+bun test --isolate --path-ignore-patterns='e2e/**'
+
+# ✅ Correct — single file (isolation not needed)
+bun test server/web/disciplines/queries.integration.test.ts
+
+# ❌ Wrong — full suite without --isolate will show ~46 false failures
+bun test --path-ignore-patterns='e2e/**'
+```
 
 ---
 
@@ -180,6 +199,7 @@ mock.module("~/lib/auth", () => ({
 ```
 
 For **admin action tests**, set `role: "admin"`:
+
 ```typescript
 sessionUserState.role = "admin"
 ```

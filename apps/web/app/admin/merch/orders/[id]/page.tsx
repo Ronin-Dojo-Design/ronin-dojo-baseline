@@ -42,8 +42,8 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/merch/orders/[
           <H3>Order {order.id.slice(-8).toUpperCase()}</H3>
           <OrderStatusBadge status={order.fulfillmentStatus} />
         </Stack>
-        <Button variant="secondary" size="sm" asChild>
-          <Link href="/admin/merch/orders">← Back to orders</Link>
+        <Button variant="secondary" size="sm" render={<Link href="/admin/merch/orders" />}>
+          ← Back to orders
         </Button>
       </Stack>
 

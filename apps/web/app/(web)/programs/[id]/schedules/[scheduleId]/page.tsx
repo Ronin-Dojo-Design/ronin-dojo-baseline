@@ -144,10 +144,13 @@ export default async function ScheduleDetailPage({ params }: Props) {
 
             <aside className="space-y-4">
               {canEdit && (
-                <Button size="md" prefix={<PencilIcon />} className="w-full" asChild>
-                  <Link href={`/programs/${programId}/schedules/${schedule.id}/edit`}>
-                    Edit Schedule
-                  </Link>
+                <Button
+                  size="md"
+                  prefix={<PencilIcon />}
+                  className="w-full"
+                  render={<Link href={`/programs/${programId}/schedules/${schedule.id}/edit`} />}
+                >
+                  Edit Schedule
                 </Button>
               )}
 

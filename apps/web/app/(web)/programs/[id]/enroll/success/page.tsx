@@ -57,12 +57,10 @@ export default async function ProgramEnrollSuccessPage(props: Props) {
         </Badge>
 
         <div className="flex gap-3">
-          <Button asChild>
-            <Link href={`/programs/${program.id}`}>View Program</Link>
-          </Button>
+          <Button render={<Link href={`/programs/${program.id}`} />}>View Program</Button>
 
-          <Button variant="secondary" asChild>
-            <Link href="/dashboard">Go to Dashboard</Link>
+          <Button variant="secondary" render={<Link href="/dashboard" />}>
+            Go to Dashboard
           </Button>
         </div>
       </div>

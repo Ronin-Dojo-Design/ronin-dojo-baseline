@@ -386,16 +386,20 @@ export const CreateScheduleForm = ({
           </div>
 
           <Stack className="justify-between">
-            <Button size="md" variant="secondary" asChild>
-              <Link
-                href={
-                  schedule
-                    ? `/programs/${programId}/schedules/${schedule.id}`
-                    : `/programs/${programId}/schedules`
-                }
-              >
-                Cancel
-              </Link>
+            <Button
+              size="md"
+              variant="secondary"
+              render={
+                <Link
+                  href={
+                    schedule
+                      ? `/programs/${programId}/schedules/${schedule.id}`
+                      : `/programs/${programId}/schedules`
+                  }
+                />
+              }
+            >
+              Cancel
             </Button>
 
             <Stack size="sm">

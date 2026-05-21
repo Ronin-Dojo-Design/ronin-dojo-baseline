@@ -30,12 +30,14 @@ const CountBadge = async () => {
   const t = await getTranslations("components.count_badge")
 
   return (
-    <Badge prefix={<Ping />} className="order-first" asChild>
-      <Link href="/?sort=publishedAt.desc">
-        {newCount
-          ? t("new_tools", { count: formatNumber(newCount) })
-          : t("total_tools", { count: formatNumber(count) })}
-      </Link>
+    <Badge
+      prefix={<Ping />}
+      className="order-first"
+      render={<Link href="/?sort=publishedAt.desc" />}
+    >
+      {newCount
+        ? t("new_tools", { count: formatNumber(newCount) })
+        : t("total_tools", { count: formatNumber(count) })}
     </Badge>
   )
 }

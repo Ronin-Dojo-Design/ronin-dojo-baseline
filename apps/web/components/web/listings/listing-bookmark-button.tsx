@@ -65,12 +65,10 @@ export const ListingBookmarkButton = ({
           variant={variant}
           prefix={<HeartIcon />}
           className={className}
-          asChild
+          render={<Link href={`/auth/login?next=${next}`} />}
           {...props}
         >
-          <Link href={`/auth/login?next=${next}`}>
-            <span className={cx(!showLabel && "sr-only")}>{label}</span>
-          </Link>
+          <span className={cx(!showLabel && "sr-only")}>{label}</span>
         </Button>
       </Tooltip>
     )

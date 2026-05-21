@@ -66,89 +66,91 @@ export function CurriculumCompletionList({
   const isPending = completeAction.isPending || incompleteAction.isPending
 
   return (
-    <Stack asChild direction="column" size="md" className="list-none">
-      <ol>
-        {items.map((item, index) => {
-          const completion = completionByItem.get(item.id)
-          const isComplete = Boolean(completion)
+    <Stack render={<ol />} direction="column" size="md" className="list-none">
+      {items.map((item, index) => {
+        const completion = completionByItem.get(item.id)
+        const isComplete = Boolean(completion)
 
-          return (
-            <li key={item.id}>
-              <Card
-                hover={false}
-                className={
-                  isComplete ? "border-green-600/30 bg-green-50/50 dark:bg-green-950/10" : ""
-                }
-              >
-                <Stack wrap={false} className="w-full items-start">
-                  <Stack className="size-8 shrink-0 justify-center rounded-full bg-muted text-sm font-semibold">
-                    {index + 1}
-                  </Stack>
-
-                  {enrollmentId && (
-                    <Checkbox
-                      checked={isComplete}
-                      disabled={isPending}
-                      aria-label={`Mark ${item.title} ${isComplete ? "incomplete" : "complete"}`}
-                      onCheckedChange={checked => {
-                        if (checked === true) {
-                          completeAction.execute({
-                            enrollmentId,
-                            curriculumItemId: item.id,
-                          })
-                          return
-                        }
-
-                        if (completion) {
-                          incompleteAction.execute({ completionId: completion.id })
-                        }
-                      }}
-                    />
-                  )}
-
-                  <Stack direction="column" size="sm" className="min-w-0 flex-1">
-                    <Stack size="sm" className="w-full justify-between">
-                      <H5
-                        render={props => <h3 {...props}>{props.children}</h3>}
-                        className="min-w-0 flex-1"
-                      >
-                        {item.title}
-                      </H5>
-
-                      <Badge
-                        variant={isComplete ? "success" : "outline"}
-                        prefix={isComplete ? <CheckCircle2Icon /> : <CircleIcon />}
-                      >
-                        {isComplete ? "Complete" : "Open"}
-                      </Badge>
-                    </Stack>
-
-                    {item.notes && <Note>{item.notes}</Note>}
-
-                    <AnimatedContainer height transition={{ ease: "linear", duration: 0.12 }}>
-                      {completion && (
-                        <Note className="text-green-700 dark:text-green-300">
-                          Completed {formatDate(completion.completedAt)}
-                        </Note>
-                      )}
-                    </AnimatedContainer>
-
-                    {item.techniqueLinks.length > 0 && (
-                      <Stack size="xs">
-                        {item.techniqueLinks.map(({ technique }) => (
-                          <Badge key={technique.id} variant="soft" asChild>
-                            <Link href={`/techniques/${technique.slug}`}>{technique.name}</Link>
-                          </Badge>
-                        ))}
-                      </Stack>
-                    )}
-                  </Stack>
+        return (
+          <li key={item.id}>
+            <Card
+              hover={false}
+              className={
+                isComplete ? "border-green-600/30 bg-green-50/50 dark:bg-green-950/10" : ""
+              }
+            >
+              <Stack wrap={false} className="w-full items-start">
+                <Stack className="size-8 shrink-0 justify-center rounded-full bg-muted text-sm font-semibold">
+                  {index + 1}
                 </Stack>
-              </Card>
-            </li>
-          )
-        })}
-      </ol>
+
+                {enrollmentId && (
+                  <Checkbox
+                    checked={isComplete}
+                    disabled={isPending}
+                    aria-label={`Mark ${item.title} ${isComplete ? "incomplete" : "complete"}`}
+                    onCheckedChange={checked => {
+                      if (checked === true) {
+                        completeAction.execute({
+                          enrollmentId,
+                          curriculumItemId: item.id,
+                        })
+                        return
+                      }
+
+                      if (completion) {
+                        incompleteAction.execute({ completionId: completion.id })
+                      }
+                    }}
+                  />
+                )}
+
+                <Stack direction="column" size="sm" className="min-w-0 flex-1">
+                  <Stack size="sm" className="w-full justify-between">
+                    <H5
+                      render={props => <h3 {...props}>{props.children}</h3>}
+                      className="min-w-0 flex-1"
+                    >
+                      {item.title}
+                    </H5>
+
+                    <Badge
+                      variant={isComplete ? "success" : "outline"}
+                      prefix={isComplete ? <CheckCircle2Icon /> : <CircleIcon />}
+                    >
+                      {isComplete ? "Complete" : "Open"}
+                    </Badge>
+                  </Stack>
+
+                  {item.notes && <Note>{item.notes}</Note>}
+
+                  <AnimatedContainer height transition={{ ease: "linear", duration: 0.12 }}>
+                    {completion && (
+                      <Note className="text-green-700 dark:text-green-300">
+                        Completed {formatDate(completion.completedAt)}
+                      </Note>
+                    )}
+                  </AnimatedContainer>
+
+                  {item.techniqueLinks.length > 0 && (
+                    <Stack size="xs">
+                      {item.techniqueLinks.map(({ technique }) => (
+                        <Badge
+                          key={technique.id}
+                          variant="soft"
+                          render={<Link href={`/techniques/${technique.slug}`} />}
+                        >
+                          {technique.name}
+                        </Badge>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </Stack>
+            </Card>
+          </li>
+        )
+      })}
     </Stack>
   )
 }

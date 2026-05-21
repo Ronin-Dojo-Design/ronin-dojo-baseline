@@ -113,12 +113,15 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               <SearchIcon />
             </Button>
 
-            <Button size="sm" variant="ghost" className="p-1 -ml-1 text-base max-sm:hidden" asChild>
-              <ThemeSwitcher />
-            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="p-1 -ml-1 text-base max-sm:hidden"
+              render={<ThemeSwitcher />}
+            />
 
-            <Button size="sm" variant="secondary" asChild>
-              <Link href="/programs">{t("navigation.programs")}</Link>
+            <Button size="sm" variant="secondary" render={<Link href="/programs" />}>
+              {t("navigation.programs")}
             </Button>
 
             <UserMenu />

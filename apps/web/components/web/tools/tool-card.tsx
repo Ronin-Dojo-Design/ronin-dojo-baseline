@@ -57,8 +57,8 @@ const ToolCard = ({ tool, ...props }: ToolCardProps) => {
       </div>
 
       <CardFooter className="mt-auto w-full justify-between">
-        <Button size="sm" variant="secondary" asChild>
-          <Link href={`/${tool.slug}`}>View Listing</Link>
+        <Button size="sm" variant="secondary" render={<Link href={`/${tool.slug}`} />}>
+          View Listing
         </Button>
 
         <ListingBookmarkButton toolId={tool.id} />

@@ -12,8 +12,8 @@ export default async function NotFound() {
       <IntroTitle>{t("title")}</IntroTitle>
       <IntroDescription className="max-w-lg">{t("description")}</IntroDescription>
 
-      <Button className="mt-4" prefix={<ArrowLeftIcon />} asChild>
-        <Link href="/">{t("home_button")}</Link>
+      <Button className="mt-4" prefix={<ArrowLeftIcon />} render={<Link href="/" />}>
+        {t("home_button")}
       </Button>
     </Intro>
   )

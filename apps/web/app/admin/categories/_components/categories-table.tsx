@@ -59,10 +59,13 @@ export function CategoriesTable({ categoriesPromise }: CategoriesTableProps) {
         title="Categories"
         total={categoriesTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/categories/new">
-              <div className="max-sm:sr-only">New category</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/categories/new" />}
+          >
+            <div className="max-sm:sr-only">New category</div>
           </Button>
         }
       >

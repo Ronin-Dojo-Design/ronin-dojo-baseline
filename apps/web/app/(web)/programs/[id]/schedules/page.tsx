@@ -93,8 +93,12 @@ export default async function ProgramSchedulesPage({ params, searchParams }: Pro
               {total} schedule{total !== 1 ? "s" : ""}
             </p>
             {canEdit && (
-              <Button size="sm" prefix={<PlusIcon />} asChild>
-                <Link href={`/programs/${program.id}/schedules/new`}>Create Schedule</Link>
+              <Button
+                size="sm"
+                prefix={<PlusIcon />}
+                render={<Link href={`/programs/${program.id}/schedules/new`} />}
+              >
+                Create Schedule
               </Button>
             )}
           </Stack>

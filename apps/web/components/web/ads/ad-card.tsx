@@ -30,48 +30,49 @@ const AdCard = async ({ className, type, explicitAd, fallback, ...props }: AdCar
   }
 
   return (
-    <Card className={cx("group/button", className)} asChild {...props}>
-      <AdLink ad={ad} type={type} source="card">
-        <CardBadges>
-          <AdBadge />
-        </CardBadges>
+    <Card
+      className={cx("group/button", className)}
+      render={<AdLink ad={ad} type={type} source="card" />}
+      {...props}
+    >
+      <CardBadges>
+        <AdBadge />
+      </CardBadges>
 
-        {ad.bannerUrl ? (
-          <Image
-            src={ad.bannerUrl}
-            alt={ad.name}
-            width={400}
-            height={225}
-            className="max-w-none w-[calc(100%+2.5rem)] -m-5 rounded-md"
-          />
-        ) : (
-          // Fallback to a custom banner
-          <>
-            <CardHeader wrap={false}>
-              <Favicon src={ad.faviconUrl ?? "/favicon.png"} title={ad.name} contained />
+      {ad.bannerUrl ? (
+        <Image
+          src={ad.bannerUrl}
+          alt={ad.name}
+          width={400}
+          height={225}
+          className="max-w-none w-[calc(100%+2.5rem)] -m-5 rounded-md"
+        />
+      ) : (
+        // Fallback to a custom banner
+        <>
+          <CardHeader wrap={false}>
+            <Favicon src={ad.faviconUrl ?? "/favicon.png"} title={ad.name} contained />
 
-              <H4
-                render={props => <strong {...props}>{props.children}</strong>}
-                className="truncate"
-              >
-                {ad.name}
-              </H4>
-            </CardHeader>
+            <H4 render={props => <strong {...props}>{props.children}</strong>} className="truncate">
+              {ad.name}
+            </H4>
+          </CardHeader>
 
-            <CardDescription className="mb-auto pr-2 line-clamp-4">
-              {ad.description}
-            </CardDescription>
+          <CardDescription className="mb-auto pr-2 line-clamp-4">{ad.description}</CardDescription>
 
-            <Button className="pointer-events-none md:w-full" suffix={<ArrowUpRightIcon />} asChild>
-              <span>{ad.buttonLabel ?? t("common.visit", { name: ad.name })}</span>
-            </Button>
+          <Button
+            className="pointer-events-none md:w-full"
+            suffix={<ArrowUpRightIcon />}
+            render={<span />}
+          >
+            {ad.buttonLabel ?? t("common.visit", { name: ad.name })}
+          </Button>
 
-            <CardIcon>
-              <Favicon src={ad.faviconUrl} title={ad.name} />
-            </CardIcon>
-          </>
-        )}
-      </AdLink>
+          <CardIcon>
+            <Favicon src={ad.faviconUrl} title={ad.name} />
+          </CardIcon>
+        </>
+      )}
     </Card>
   )
 }
@@ -96,8 +97,11 @@ const AdCardSkeleton = async ({ className, ...props }: ComponentProps<typeof Car
         <Skeleton className="h-5 w-2/3">&nbsp;</Skeleton>
       </CardDescription>
 
-      <Button className="pointer-events-none opacity-10 text-transparent md:w-full" asChild>
-        <span>&nbsp;</span>
+      <Button
+        className="pointer-events-none opacity-10 text-transparent md:w-full"
+        render={<span />}
+      >
+        &nbsp;
       </Button>
     </Card>
   )

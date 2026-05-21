@@ -123,8 +123,8 @@ export const CreateProgramForm = ({
     return (
       <div className="max-w-xl space-y-4 text-sm text-muted-foreground">
         <p>You need an editable organization before you can create programs.</p>
-        <Button size="sm" asChild>
-          <Link href="/organizations/new">Create Organization</Link>
+        <Button size="sm" render={<Link href="/organizations/new" />}>
+          Create Organization
         </Button>
       </div>
     )
@@ -268,8 +268,12 @@ export const CreateProgramForm = ({
           </div>
 
           <Stack className="justify-between">
-            <Button size="md" variant="secondary" asChild>
-              <Link href={program ? `/programs/${program.id}` : "/programs"}>Cancel</Link>
+            <Button
+              size="md"
+              variant="secondary"
+              render={<Link href={program ? `/programs/${program.id}` : "/programs"} />}
+            >
+              Cancel
             </Button>
 
             <Stack size="sm">

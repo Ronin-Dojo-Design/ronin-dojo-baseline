@@ -60,10 +60,13 @@ export function TournamentRolesTable({ rolesPromise }: TournamentRolesTableProps
         title="Tournament Roles"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/tournaments/roles/new">
-              <div className="max-sm:sr-only">New role</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/tournaments/roles/new" />}
+          >
+            <div className="max-sm:sr-only">New role</div>
           </Button>
         }
       >

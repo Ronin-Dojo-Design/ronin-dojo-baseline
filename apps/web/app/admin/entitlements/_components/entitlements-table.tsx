@@ -59,10 +59,13 @@ export function EntitlementsTable({ entitlementsPromise }: EntitlementsTableProp
         title="Entitlements"
         total={entitlementsTotal}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/entitlements/new">
-              <div className="max-sm:sr-only">New entitlement</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/entitlements/new" />}
+          >
+            <div className="max-sm:sr-only">New entitlement</div>
           </Button>
         }
       >

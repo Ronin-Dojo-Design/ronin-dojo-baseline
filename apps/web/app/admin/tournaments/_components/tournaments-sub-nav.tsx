@@ -29,9 +29,9 @@ export function TournamentsSubNav() {
             variant="ghost"
             size="sm"
             className={cx(isActive && "bg-accent")}
-            asChild
+            render={<Link href={link.href} />}
           >
-            <Link href={link.href}>{link.label}</Link>
+            {link.label}
           </Button>
         )
       })}

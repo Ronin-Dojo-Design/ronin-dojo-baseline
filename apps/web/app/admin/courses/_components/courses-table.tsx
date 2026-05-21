@@ -57,10 +57,13 @@ export function CoursesTable({ coursesPromise }: CoursesTableProps) {
         title="Courses"
         total={total}
         callToAction={
-          <Button variant="primary" size="md" prefix={<PlusIcon />} asChild>
-            <Link href="/admin/courses/new">
-              <div className="max-sm:sr-only">New course</div>
-            </Link>
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<PlusIcon />}
+            render={<Link href="/admin/courses/new" />}
+          >
+            <div className="max-sm:sr-only">New course</div>
           </Button>
         }
       >

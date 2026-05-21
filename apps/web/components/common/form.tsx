@@ -1,6 +1,5 @@
 "use client"
 
-import { Slot } from "radix-ui"
 import { type ComponentProps, createContext, use, useId } from "react"
 import {
   Controller,
@@ -13,6 +12,7 @@ import {
 import { Hint } from "~/components/common/hint"
 import { Label } from "~/components/common/label"
 import { Stack } from "~/components/common/stack"
+import { slot } from "~/lib/slot"
 import { cx } from "~/lib/utils"
 
 const Form = FormProvider
@@ -84,17 +84,15 @@ const FormLabel = ({ className, ...props }: ComponentProps<typeof Label>) => {
   return <Label htmlFor={formItemId} className={cx("truncate", className)} {...props} />
 }
 
-const FormControl = (props: ComponentProps<typeof Slot.Root>) => {
+const FormControl = ({ children, ...props }: ComponentProps<"div">) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
-  return (
-    <Slot.Root
-      id={formItemId}
-      aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-      aria-invalid={!!error}
-      {...props}
-    />
-  )
+  return slot(children, {
+    id: formItemId,
+    "aria-describedby": !error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
+    "aria-invalid": !!error,
+    ...props,
+  })
 }
 
 const FormDescription = ({ className, ...props }: ComponentProps<"p">) => {
