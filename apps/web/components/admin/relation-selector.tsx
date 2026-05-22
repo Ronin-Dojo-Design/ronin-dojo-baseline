@@ -1,6 +1,6 @@
 import { useCompletion } from "@ai-sdk/react"
+import { isTruthy } from "@dirstack/utils"
 import { useDebouncedValue } from "@mantine/hooks"
-import { isTruthy } from "@primoui/utils"
 import { LoaderIcon, MousePointerClickIcon, PlusIcon, SparklesIcon } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
 import { AnimatedContainer } from "~/components/common/animated-container"

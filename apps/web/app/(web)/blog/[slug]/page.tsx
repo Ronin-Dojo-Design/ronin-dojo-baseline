@@ -1,4 +1,4 @@
-import { getReadTime } from "@primoui/utils"
+import { getReadTime } from "@dirstack/utils"
 import type { Metadata } from "next"
 import Image from "next/image"
 import { notFound } from "next/navigation"

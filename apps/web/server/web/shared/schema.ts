@@ -1,4 +1,4 @@
-import { isMimeTypeMatch } from "@primoui/utils"
+import { isMimeTypeMatch } from "@dirstack/utils"
 import type { useTranslations } from "next-intl"
 import { z } from "zod"
 import { ReportType } from "~/.generated/prisma/browser"

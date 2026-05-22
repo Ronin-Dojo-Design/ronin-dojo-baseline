@@ -1,6 +1,6 @@
 "use client"
 
-import { formatNumber } from "@primoui/utils"
+import { formatNumber } from "@dirstack/utils"
 import { AtSignIcon, RssIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"

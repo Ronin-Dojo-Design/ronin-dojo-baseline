@@ -1,6 +1,6 @@
 "use server"
 
-import { getDomain } from "@primoui/utils"
+import { getDomain } from "@dirstack/utils"
 import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { after } from "next/server"

@@ -1,8 +1,8 @@
 "use client"
 
+import { slugify } from "@dirstack/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
-import { slugify } from "@primoui/utils"
 import { ArchiveIcon, SaveIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"

@@ -1,4 +1,4 @@
-import { removeQueryParams } from "@primoui/utils"
+import { removeQueryParams } from "@dirstack/utils"
 import { PlusIcon } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import type { ComponentProps } from "react"

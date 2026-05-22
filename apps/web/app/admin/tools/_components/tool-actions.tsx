@@ -1,6 +1,6 @@
 "use client"
 
-import { isValidUrl } from "@primoui/utils"
+import { isValidUrl } from "@dirstack/utils"
 import { CopyIcon, EllipsisIcon, GlobeIcon, TrashIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"

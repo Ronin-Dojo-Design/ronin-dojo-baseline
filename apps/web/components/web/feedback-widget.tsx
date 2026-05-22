@@ -1,9 +1,9 @@
 "use client"
 
+import { getRandomDigits } from "@dirstack/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHotkeys, useLocalStorage } from "@mantine/hooks"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
-import { getRandomDigits } from "@primoui/utils"
 import { millisecondsInSecond } from "date-fns/constants"
 import debounce from "debounce"
 import { useTranslations } from "next-intl"

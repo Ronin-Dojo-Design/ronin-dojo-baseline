@@ -1,6 +1,6 @@
 "use server"
 
-import { getDomain, normalizeUrl, tryCatch } from "@primoui/utils"
+import { getDomain, normalizeUrl, tryCatch } from "@dirstack/utils"
 import { after } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { ToolStatus } from "~/.generated/prisma/client"

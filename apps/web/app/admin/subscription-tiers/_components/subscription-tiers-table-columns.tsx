@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HashIcon, KeyIcon } from "lucide-react"
 import type { SubscriptionTier } from "~/.generated/prisma/browser"

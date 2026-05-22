@@ -1,7 +1,7 @@
 "use client"
 
+import { getPageLink } from "@dirstack/utils"
 import { usePagination } from "@mantine/hooks"
-import { getPageLink } from "@primoui/utils"
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"

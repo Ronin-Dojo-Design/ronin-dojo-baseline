@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import type { PaymentStatus, RegistrationStatus } from "~/.generated/prisma/browser"

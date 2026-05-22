@@ -1,8 +1,8 @@
 "use client"
 
+import { formatDateTime, getRandomString, slugify } from "@dirstack/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
-import { formatDateTime, getRandomString, slugify } from "@primoui/utils"
 import { EyeIcon, InfoIcon, PencilIcon } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"

@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HashIcon } from "lucide-react"
 import { TournamentRoleActions } from "~/app/admin/tournaments/roles/_components/tournament-role-actions"

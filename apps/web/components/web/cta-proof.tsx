@@ -1,4 +1,4 @@
-import { formatNumber } from "@primoui/utils"
+import { formatNumber } from "@dirstack/utils"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"

@@ -1,4 +1,4 @@
-import { setQueryParams } from "@primoui/utils"
+import { setQueryParams } from "@dirstack/utils"
 import { Button, type ButtonProps } from "@react-email/components"
 import { siteConfig } from "~/config/site"
 

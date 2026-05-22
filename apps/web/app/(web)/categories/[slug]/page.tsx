@@ -1,4 +1,4 @@
-import { lcFirst } from "@primoui/utils"
+import { lcFirst } from "@dirstack/utils"
 import { noCase } from "change-case"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"

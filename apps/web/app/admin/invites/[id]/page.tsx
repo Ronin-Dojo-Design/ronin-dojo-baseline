@@ -1,4 +1,4 @@
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import { notFound } from "next/navigation"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"

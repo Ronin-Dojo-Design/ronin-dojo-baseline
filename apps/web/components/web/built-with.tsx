@@ -1,6 +1,6 @@
 "use client"
 
-import { setQueryParams } from "@primoui/utils"
+import { setQueryParams } from "@dirstack/utils"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import { Stack } from "~/components/common/stack"

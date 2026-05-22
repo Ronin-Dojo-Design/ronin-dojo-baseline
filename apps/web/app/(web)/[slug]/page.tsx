@@ -1,4 +1,4 @@
-import { removeQueryParams } from "@primoui/utils"
+import { removeQueryParams } from "@dirstack/utils"
 import { HashIcon } from "lucide-react"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"

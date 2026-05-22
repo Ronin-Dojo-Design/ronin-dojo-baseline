@@ -1,4 +1,4 @@
-import { setQueryParams } from "@primoui/utils"
+import { setQueryParams } from "@dirstack/utils"
 import { cacheLife, cacheTag } from "next/cache"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"

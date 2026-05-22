@@ -1,4 +1,4 @@
-import { getExcerpt } from "@primoui/utils"
+import { getExcerpt } from "@dirstack/utils"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
 import type { OpenGraphParams } from "~/lib/opengraph"
 

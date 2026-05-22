@@ -1,6 +1,6 @@
 "use server"
 
-import { tryCatch } from "@primoui/utils"
+import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import wretch from "wretch"
 import { getFaviconFetchUrl, getScreenshotFetchUrl, uploadToS3Storage } from "~/lib/media"

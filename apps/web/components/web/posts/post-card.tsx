@@ -1,6 +1,6 @@
 "use client"
 
-import { getReadTime } from "@primoui/utils"
+import { getReadTime } from "@dirstack/utils"
 import Image from "next/image"
 import { useFormatter, useTranslations } from "next-intl"
 import type { ComponentProps } from "react"

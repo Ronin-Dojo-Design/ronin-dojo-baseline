@@ -1,4 +1,4 @@
-import { formatNumber } from "@primoui/utils"
+import { formatNumber } from "@dirstack/utils"
 import { subDays } from "date-fns"
 import { cacheLife, cacheTag } from "next/cache"
 import { getTranslations } from "next-intl/server"

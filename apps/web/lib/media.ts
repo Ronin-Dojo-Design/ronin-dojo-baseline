@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
-import { getDomain, tryCatch } from "@primoui/utils"
+import { getDomain, tryCatch } from "@dirstack/utils"
 import { fileTypeFromBuffer } from "file-type"
 import { env, isProd } from "~/env"
 import { s3Client } from "~/services/s3"

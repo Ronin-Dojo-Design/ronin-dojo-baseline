@@ -1,6 +1,6 @@
 "use server"
 
-import { getDomain } from "@primoui/utils"
+import { getDomain } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import z from "zod"
 import { AdType, type Prisma } from "~/.generated/prisma/client"

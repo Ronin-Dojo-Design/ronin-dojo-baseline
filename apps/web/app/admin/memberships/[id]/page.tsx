@@ -1,4 +1,4 @@
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import { notFound } from "next/navigation"
 import { MembershipStatusActions } from "~/app/admin/memberships/[id]/_components/membership-status-actions"
 import { RoleAssignmentPanel } from "~/app/admin/memberships/[id]/_components/role-assignment-panel"

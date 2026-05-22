@@ -5,7 +5,7 @@
  */
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowRightIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"

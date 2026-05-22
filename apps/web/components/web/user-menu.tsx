@@ -1,4 +1,4 @@
-import { getInitials } from "@primoui/utils"
+import { getInitials } from "@dirstack/utils"
 import { LogOutIcon, ShieldHalfIcon, UserIcon } from "lucide-react"
 import { motion } from "motion/react"
 import { useTranslations } from "next-intl"

@@ -5,7 +5,7 @@
  */
 import "dotenv/config"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import { Text } from "@react-email/components"
 import { siteConfig } from "~/config/site"
 import { EmailButton } from "~/emails/components/button"

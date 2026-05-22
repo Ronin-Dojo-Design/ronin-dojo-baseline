@@ -1,6 +1,6 @@
 "use client"
 
-import { removeQueryParams, setQueryParams } from "@primoui/utils"
+import { removeQueryParams, setQueryParams } from "@dirstack/utils"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import type { AdType } from "~/.generated/prisma/client"

@@ -1,6 +1,6 @@
 "use client"
 
-import { isExternalUrl, setQueryParams } from "@primoui/utils"
+import { isExternalUrl, setQueryParams } from "@dirstack/utils"
 import type { ComponentProps } from "react"
 import { siteConfig } from "~/config/site"
 import { useTrackEvent } from "~/hooks/use-track-event"

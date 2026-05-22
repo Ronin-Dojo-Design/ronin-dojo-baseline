@@ -1,4 +1,4 @@
-import { isValidUrl } from "@primoui/utils"
+import { isValidUrl } from "@dirstack/utils"
 import { capitalCase } from "change-case"
 import { DownloadCloudIcon, UploadIcon } from "lucide-react"
 import { type ComponentProps, useRef } from "react"

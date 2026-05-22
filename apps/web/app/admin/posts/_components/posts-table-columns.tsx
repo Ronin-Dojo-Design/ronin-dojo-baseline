@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { ComponentProps } from "react"
 import { type Post, PostStatus } from "~/.generated/prisma/browser"

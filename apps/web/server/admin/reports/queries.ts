@@ -1,4 +1,4 @@
-import { isTruthy } from "@primoui/utils"
+import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"

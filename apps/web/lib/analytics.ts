@@ -1,4 +1,4 @@
-import { tryCatch } from "@primoui/utils"
+import { tryCatch } from "@dirstack/utils"
 import { eachDayOfInterval, format, startOfDay, subDays } from "date-fns"
 import { siteConfig } from "~/config/site"
 import { getPlausibleApi } from "~/services/plausible"

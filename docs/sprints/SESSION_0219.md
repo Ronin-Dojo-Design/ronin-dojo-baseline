@@ -2,10 +2,10 @@
 title: "SESSION 0219 — Petey plan for @primoui/utils → @dirstack/utils migration"
 slug: session-0219
 type: session--open
-status: in-progress
+status: closed-quick
 created: 2026-05-22
 updated: 2026-05-22
-last_agent: codex-session-0219
+last_agent: copilot-session-0220
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0218.md
@@ -118,7 +118,7 @@ This session is planning and orchestration only. No production migration edits s
 
 ## Status
 
-in-progress
+closed-quick
 
 ## Open decisions / blockers
 
@@ -134,6 +134,6 @@ in-progress
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0219_TASK_01 | planned | Inventory and wave decomposition for full import migration |
-| SESSION_0219_TASK_02 | planned | Orchestration plan file with assignments and gating |
-| SESSION_0219_TASK_03 | planned | Project Log task-plan registration |
+| SESSION_0219_TASK_01 | done | Inventory and wave decomposition for full import migration |
+| SESSION_0219_TASK_02 | done | Orchestration plan file with assignments and gating |
+| SESSION_0219_TASK_03 | done | Project Log task-plan registration |

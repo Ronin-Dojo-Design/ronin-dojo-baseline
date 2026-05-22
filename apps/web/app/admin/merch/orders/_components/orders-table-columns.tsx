@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { OrderStatusBadge } from "~/app/admin/merch/orders/_components/order-status-badge"
 import { RowCheckbox } from "~/components/admin/row-checkbox"

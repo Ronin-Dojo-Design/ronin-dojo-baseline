@@ -2,12 +2,13 @@
 title: "Petey plan 0084 — @primoui/utils → @dirstack/utils full migration"
 slug: petey-plan-0084
 type: petey-plan
-status: active
+status: closed
 created: 2026-05-22
 updated: 2026-05-22
-last_agent: codex-session-0219
+last_agent: copilot-session-0220
 pairs_with:
   - docs/sprints/SESSION_0219.md
+  - docs/sprints/SESSION_0220.md
   - docs/sprints/SESSION_0218.md
   - docs/protocols/project-log.md
 backlinks:

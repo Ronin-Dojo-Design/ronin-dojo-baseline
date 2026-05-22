@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDate } from "@primoui/utils"
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HashIcon } from "lucide-react"
 import { PricingPlanActions } from "~/app/admin/pricing-plans/_components/pricing-plan-actions"

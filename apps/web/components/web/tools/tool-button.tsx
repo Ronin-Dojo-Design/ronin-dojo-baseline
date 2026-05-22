@@ -1,6 +1,6 @@
 "use client"
 
-import { removeQueryParams } from "@primoui/utils"
+import { removeQueryParams } from "@dirstack/utils"
 import { ArrowUpRightIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"

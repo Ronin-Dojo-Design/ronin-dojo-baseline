@@ -1,6 +1,6 @@
 "use server"
 
-import { tryCatch } from "@primoui/utils"
+import { tryCatch } from "@dirstack/utils"
 import { Ratelimit } from "@upstash/ratelimit"
 import { headers } from "next/headers"
 import { redis } from "~/services/redis"

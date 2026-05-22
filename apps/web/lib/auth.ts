@@ -1,4 +1,4 @@
-import { getRandomDigits } from "@primoui/utils"
+import { getRandomDigits } from "@dirstack/utils"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { createAuthMiddleware } from "better-auth/api"
 import { betterAuth } from "better-auth/minimal"

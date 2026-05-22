@@ -3,7 +3,7 @@
  * @why     Admin queries for invite listing, detail, and code lookup
  * @wired   app/admin/invites/ (list, detail pages), server/invites/queries.ts (shared code lookup)
  */
-import { isTruthy } from "@primoui/utils"
+import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
 import type { InvitesTableSchema } from "~/server/admin/invites/schema"

@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@primoui/utils"
+import { formatDateTime } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Program } from "~/.generated/prisma/browser"
 import { ProgramActions } from "~/app/admin/programs/_components/program-actions"

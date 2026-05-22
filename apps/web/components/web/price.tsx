@@ -1,7 +1,7 @@
 "use client"
 
+import { formatNumber } from "@dirstack/utils"
 import NumberFlow, { continuous, type Format } from "@number-flow/react"
-import { formatNumber } from "@primoui/utils"
 import { AnimatePresence, motion, type Variants } from "motion/react"
 import { useLocale, useTranslations } from "next-intl"
 import type { ComponentProps } from "react"

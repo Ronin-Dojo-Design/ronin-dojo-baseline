@@ -1,7 +1,7 @@
 "use client"
 
+import { getDomain } from "@dirstack/utils"
 import { type HotkeyItem, useDebouncedState, useHotkeys } from "@mantine/hooks"
-import { getDomain } from "@primoui/utils"
 import { LoaderIcon, MoonIcon, SunIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"

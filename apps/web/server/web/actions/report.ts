@@ -1,6 +1,6 @@
 "use server"
 
-import { tryCatch } from "@primoui/utils"
+import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import { ReportType } from "~/.generated/prisma/client"
 import { reportsConfig } from "~/config/reports"

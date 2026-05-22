@@ -1,4 +1,4 @@
-import { getDomain } from "@primoui/utils"
+import { getDomain } from "@dirstack/utils"
 import type { Brand } from "~/.generated/prisma/client"
 import { env } from "~/env"
 

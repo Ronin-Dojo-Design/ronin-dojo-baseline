@@ -1,4 +1,4 @@
-import { tryCatch } from "@primoui/utils"
+import { tryCatch } from "@dirstack/utils"
 import wretch from "wretch"
 import { env } from "~/env"
 

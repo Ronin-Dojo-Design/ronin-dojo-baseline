@@ -1,4 +1,4 @@
-import type { WithRequired } from "@primoui/utils"
+import type { WithRequired } from "@dirstack/utils"
 import { render } from "@react-email/components"
 import type { CreateEmailOptions, CreateEmailResponse } from "resend"
 import wretch from "wretch"

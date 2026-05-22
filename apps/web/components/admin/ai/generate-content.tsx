@@ -1,5 +1,5 @@
 import { experimental_useObject as useObject } from "@ai-sdk/react"
-import { isValidUrl } from "@primoui/utils"
+import { isValidUrl } from "@dirstack/utils"
 import { TypeValidationError } from "ai"
 import { useEffect } from "react"
 import { toast } from "sonner"
