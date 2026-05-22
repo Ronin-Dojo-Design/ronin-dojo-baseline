@@ -275,6 +275,9 @@ Three sections:
 
 | Task ID | Session | Lane | Owner | Task | Done criteria | Status | Review |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| SESSION_0219_TASK_01 | SESSION_0219 | Core platform governance | Petey + Giddy | Inventory `@primoui/utils` usage and decompose migration waves | Canonical wave matrix exists with file-group counts, dependency hotspots, and execution order | planned | — |
+| SESSION_0219_TASK_02 | SESSION_0219 | Core platform governance | Petey | Author lane orchestration plan for full `@primoui/utils` → `@dirstack/utils` migration | `docs/sprints/petey-plan-0084.md` exists with wave gates, assignments, and scope guard | planned | — |
+| SESSION_0219_TASK_03 | SESSION_0219 | Core platform governance | Petey | Stage governance entries before migration implementation | SESSION_0219 task rows are present in Task plan log before execution handoff | planned | — |
 | SESSION_0214_TASK_01 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Cody worker | HoverCard primitive + ToolHoverCard consumer | `hover-card.tsx` imports `@base-ui/react/preview-card`; ToolHoverCard has no legacy `asChild` HoverCard props; typecheck passes | landed | SESSION_0214_REVIEW_01 |
 | SESSION_0214_TASK_02 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Cody worker | Accordion primitive + consumer compatibility | `accordion.tsx` imports `@base-ui/react/accordion`; primitive uses `Panel` and Base UI data attributes; typecheck passes | landed | SESSION_0214_REVIEW_01 |
 | SESSION_0214_TASK_03 | SESSION_0214 | Dirstarter uplift / D-016 Phase 5 | Doug + Petey | Verification, docs, full close | Residual checks plus typecheck/lint/tests/build/wiki-lint pass; docs updated; commit pushed to `main`; Graphify refreshed | landed | SESSION_0214_REVIEW_01 |
