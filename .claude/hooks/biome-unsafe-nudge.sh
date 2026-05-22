@@ -18,7 +18,7 @@ print((data.get("tool_input") or {}).get("command", ""))
 if printf '%s' "$cmd" | grep -qE 'biome[[:space:]].*--unsafe'; then
   cat <<'EOF'
 {
-  "systemMessage": "[biome-unsafe-nudge] A `biome --unsafe` batch just ran. FS-0023 reminder: biome's unused-var detector has a JSX-expression blindspot — `_var` prefix renames can silently break working code. Run `pnpm --filter dirstarter typecheck` (or equivalent) before declaring the change safe."
+  "systemMessage": "[biome-unsafe-nudge] A `biome --unsafe` batch just ran. FS-0023 reminder: biome's unused-var detector has a JSX-expression blindspot — `_var` prefix renames can silently break working code. Run `pnpm --filter @ronin-dojo/web typecheck` (or equivalent) before declaring the change safe."
 }
 EOF
   exit 0

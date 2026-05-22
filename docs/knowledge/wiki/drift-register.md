@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-21
-last_agent: copilot-session-0217
+updated: 2026-05-22
+last_agent: copilot-session-0221
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -64,16 +64,16 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source A:** SESSION_0016
 - **Source B:** `pnpm-workspace.yaml`
 - **Decision needed:** Run `pnpm install`
-- **Status:** deferred
-- **Resolved in:** SESSION_0060; no consumers, keep for future use.
+- **Status:** resolved
+- **Resolved in:** SESSION_0060 confirmed no consumers; SESSION_0221 verified package installs correctly in workspace (`pnpm ls` shows `@ronin-dojo/api-client@0.0.1`). Kept for future use.
 
 ### D-007 — Dirstarter package identity vs Ronin identity
 
 - **Source A:** `package.json` name field
 - **Source B:** Project identity
 - **Decision needed:** Rename later as transitional cleanup
-- **Status:** deferred
-- **Resolved in:** not resolved
+- **Status:** resolved
+- **Resolved in:** SESSION_0221; renamed `"name": "dirstarter"` → `"@ronin-dojo/web"` in `apps/web/package.json`. Updated `vercel.json` build command and `.claude/hooks/biome-unsafe-nudge.sh` filter references. All gates green.
 
 ### D-008 — Local `dirstarter_template/` inaccessible to remote agents
 
