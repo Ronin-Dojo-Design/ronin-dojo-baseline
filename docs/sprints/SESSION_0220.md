@@ -103,9 +103,38 @@ The petey-plan-0084 4-wave structure was sound for risk management, but Wave 0's
 
 ## Next session
 
-- **Goal:** Next S6 sprint item per program plan. Both petey-plan-0083 (Base UI) and petey-plan-0084 (@dirstack/utils) are fully closed.
-- **Inputs to read:** `SESSION_0220.md`, `program-plan.md`, `plan-vs-current.md`.
-- **First task:** Review program plan for next priority lane.
+### Priority 1 — Housekeeping: close D-006 + D-007
+
+- **Goal:** Resolve the last two deferred drift entries. D-006: install `packages/api-client` in workspace (or remove if unused). D-007: rename `"name": "dirstarter"` in `apps/web/package.json` to Ronin identity (e.g. `@ronin-dojo/web`).
+- **Why now:** L1 upstream alignment lane is otherwise fully closed. These are the only two deferred drifts remaining. Quick wins before shifting to L2 feature work.
+- **Done means:** Both drift register entries updated to `resolved`. Typecheck/lint/build green.
+
+### Priority 2 — L2 Content Engine: DB Posts from ContentAtom pipeline
+
+- **Goal:** Execute SESSION_0196 plan — render public blog posts from `ContentVariant` (channel=BLOG) instead of MDX. Prove one database post from one atom for one brand.
+- **Why now:** L1 alignment complete. Content engine is the next MVP deliverable for Baseline launch. Schema already has `ContentAtom`, `ContentVariant`, `ContentTask`, `ContentPublication`.
+- **Done means:** Public post route renders from `ContentVariant`. Brand scoping enforced. Draft variants invisible. Tests pass.
+
+### Priority 3 — Remaining L2 lanes per program plan
+
+- S1 schema rev completion (plan-vs-current gap closure)
+- Stripe/payments wiring (S10 per program plan)
+- Tournament/registration flows
+- Directory/public listing
+
+### Inputs to read
+
+- `docs/sprints/SESSION_0220.md`
+- `docs/sprints/SESSION_0196_content_atoms_db_posts.md` — content atoms DB posts plan (plan-ready)
+- `docs/knowledge/wiki/drift-register.md` — D-006, D-007 deferred entries
+- `docs/knowledge/wiki/dirstarter-gap-audit.md` — upstream alignment status
+- `docs/architecture/program-plan.md` — 12-sprint MVP plan
+- `docs/architecture/plan-vs-current.md` — schema gap analysis
+- `docs/architecture/s1-schema-design.md` — S1 schema design (31 models)
+
+### First task
+
+Resolve D-006 and D-007 (two small drift items), then bow into SESSION_0196 content atoms pipeline.
 
 ## Task log
 
