@@ -103,9 +103,9 @@ The petey-plan-0084 4-wave structure was sound for risk management, but Wave 0's
 
 ## Next session
 
-- **Goal:** Phase 8 of petey-plan-0083 (command/tabs/admin palette + final Radix cleanup) OR next S6 sprint item per program plan.
-- **Inputs to read:** `SESSION_0220.md`, `petey-plan-0083.md` Phase 8, `program-plan.md`.
-- **First task:** Assess Phase 8 scope and create session plan.
+- **Goal:** Next S6 sprint item per program plan. Both petey-plan-0083 (Base UI) and petey-plan-0084 (@dirstack/utils) are fully closed.
+- **Inputs to read:** `SESSION_0220.md`, `program-plan.md`, `plan-vs-current.md`.
+- **First task:** Review program plan for next priority lane.
 
 ## Task log
 
