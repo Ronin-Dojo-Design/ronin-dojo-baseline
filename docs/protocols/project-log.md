@@ -294,6 +294,9 @@ Three sections:
 
 | Task ID | Session | Lane | Owner | Task | Done criteria | Status | Review |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| SESSION_0227_TASK_01 | SESSION_0227 | Core platform governance | Petey | Finalize orchestration plan and handoff contract | SESSION_0227 contains plan scope, done criteria, dependencies, and explicit handoff checkpoints | planned | — |
+| SESSION_0227_TASK_02 | SESSION_0227 | Core platform governance | Petey | Assign execution/review agents for implementation lane | SESSION_0227 contains parallel/sequential breakdown and agent assignment table for implementation/review handoff | planned | — |
+| SESSION_0227_TASK_03 | SESSION_0227 | Core platform governance | Petey | Stage closure and git-hygiene handoff requirements | SESSION_0227 records close handoff expectations and blockers for final bow-out/full-close sequencing | planned | — |
 | SESSION_0224_TASK_01 | SESSION_0224 | Content + curriculum | Cody | Canonical ContentAtom tags/tools relations and seed proof | `ContentAtom` has `tags` and `tools` relations, migration/client generated, proof seed connects tags/tools idempotently | landed | SESSION_0224_REVIEW_01 |
 | SESSION_0224_TASK_02 | SESSION_0224 | Content + curriculum | Cody + Desi | Content post media carousel and sidebar rendering | `/posts/why-the-bell-matters` renders seeded atom media carousel plus tags/tools sidebar from ContentAtom payload | landed | SESSION_0224_REVIEW_01 |
 | SESSION_0224_TASK_03 | SESSION_0224 | Content + curriculum / SEO | Cody + Doug | Article structured-data typing cleanup and verification | `generateArticle` accepts a narrow article input, `/posts/[slug]` has no `as any`, verification and close evidence recorded | landed | SESSION_0224_REVIEW_01 |
