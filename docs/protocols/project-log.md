@@ -4,8 +4,8 @@ slug: project-log
 type: protocol
 status: active
 created: 2026-04-28
-updated: 2026-05-21
-last_agent: codex-session-0215
+updated: 2026-05-22
+last_agent: codex-session-0224
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -93,6 +93,25 @@ Three sections:
 ---
 
 ## Build log
+
+### SESSION_0224 — ContentAtom canonical relations + media carousel
+
+- **Session:** SESSION_0224
+- **Sprint:** S6 / Content Engine
+- **Status:** ✅ verified
+- **Files:** `apps/web/prisma/schema.prisma`, `apps/web/prisma/migrations/20260522224500_add_content_atom_relations/migration.sql`, `apps/web/prisma/seed-content-atom-proof.ts`, `apps/web/server/web/content-posts/payloads.ts`, `apps/web/app/(web)/posts/[slug]/page.tsx`, `apps/web/components/web/content-posts/content-post-media-carousel.tsx`, `apps/web/components/web/ui/author.tsx`, `apps/web/lib/structured-data.ts`
+- **Seed data:** yes — `why-the-bell-matters` atom now seeds 3 tags, 2 published tools, and 2 media attachments.
+- **Smoke test:** Prisma format/validate/generate passed; migration applied locally; proof seed passed; SQL proof found 3 tags / 2 tools / 2 media; `/posts/why-the-bell-matters` and `/blog/boilerplate` returned 200; HTML proof found tags/tools/media/Article JSON-LD; Biome on touched files passed; `pnpm --filter @ronin-dojo/web typecheck` passed; `bun --cwd apps/web test -- --concurrency=1` passed 257/257; `pnpm --filter @ronin-dojo/web build` passed with existing Next workspace-root/NFT warnings.
+
+#### Review
+
+##### SESSION_0224_REVIEW_01 — Hostile close review for ContentAtom relations and media carousel
+
+- **Reviewed tasks:** SESSION_0224_TASK_01, SESSION_0224_TASK_02, SESSION_0224_TASK_03.
+- **Dirstarter docs check:** live Dirstarter Prisma/database, content, blog, SEO, media, storage, and theming docs checked on 2026-05-22. Implementation extends the DB-backed content/blog/media patterns and leaves `/blog` Post rendering intact.
+- **Sources:** Graphify queries for ContentAtom/ContentVariant tags/tools/media, existing `/blog/[slug]` tools sidebar, existing carousel/media components, structured data caller shape, Dirstarter docs inventory, and project-log review entries; exact file reads for schema, seed, payloads, page, structured data, and component inventory.
+- **Verdict:** Pass. No P0/P1 findings. Canonical atom metadata is additive and seeded idempotently; public reads remain brand-scoped; verification gates passed.
+- **Follow-up:** Product should choose either ContentAtom admin editing for tags/tools/media or public `/posts` discovery/filtering as the next Content Engine slice.
 
 ### S1_SCHEMA — Phase 1 schema rev (31 models, all enums)
 
@@ -275,6 +294,9 @@ Three sections:
 
 | Task ID | Session | Lane | Owner | Task | Done criteria | Status | Review |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| SESSION_0224_TASK_01 | SESSION_0224 | Content + curriculum | Cody | Canonical ContentAtom tags/tools relations and seed proof | `ContentAtom` has `tags` and `tools` relations, migration/client generated, proof seed connects tags/tools idempotently | landed | SESSION_0224_REVIEW_01 |
+| SESSION_0224_TASK_02 | SESSION_0224 | Content + curriculum | Cody + Desi | Content post media carousel and sidebar rendering | `/posts/why-the-bell-matters` renders seeded atom media carousel plus tags/tools sidebar from ContentAtom payload | landed | SESSION_0224_REVIEW_01 |
+| SESSION_0224_TASK_03 | SESSION_0224 | Content + curriculum / SEO | Cody + Doug | Article structured-data typing cleanup and verification | `generateArticle` accepts a narrow article input, `/posts/[slug]` has no `as any`, verification and close evidence recorded | landed | SESSION_0224_REVIEW_01 |
 | SESSION_0219_TASK_01 | SESSION_0219 | Core platform governance | Petey + Giddy | Inventory `@primoui/utils` usage and decompose migration waves | Canonical wave matrix exists with file-group counts, dependency hotspots, and execution order | planned | — |
 | SESSION_0219_TASK_02 | SESSION_0219 | Core platform governance | Petey | Author lane orchestration plan for full `@primoui/utils` → `@dirstack/utils` migration | `docs/sprints/petey-plan-0084.md` exists with wave gates, assignments, and scope guard | planned | — |
 | SESSION_0219_TASK_03 | SESSION_0219 | Core platform governance | Petey | Stage governance entries before migration implementation | SESSION_0219 task rows are present in Task plan log before execution handoff | planned | — |

@@ -1,18 +1,22 @@
 import { getReadTime } from "@dirstack/utils"
 import type { Metadata } from "next"
-import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import Markdown from "react-markdown"
 import { Prose } from "~/components/common/prose"
+import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
+import { ContentPostMediaCarousel } from "~/components/web/content-posts/content-post-media-carousel"
 import { Nav } from "~/components/web/nav"
 import { StructuredData } from "~/components/web/structured-data"
+import { TableOfContents } from "~/components/web/table-of-contents"
 import { Author } from "~/components/web/ui/author"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
+import { Favicon } from "~/components/web/ui/favicon"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Tag } from "~/components/web/ui/tag"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateArticle } from "~/lib/structured-data"
@@ -38,28 +42,26 @@ const getData = cache(async ({ params }: Props) => {
   const title = post.publicTitle ?? post.atom.title
   const description = post.excerpt ?? ""
   const body = post.renderedCopy ?? post.atom.longFormCopy ?? ""
+  const articleImageUrl =
+    post.thumbnailUrl ??
+    post.atom.mediaAttachments.find(({ media }) => media.type === "IMAGE")?.media.url
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [
       { url: "/posts", title: t("navigation.blog") },
       { url, title },
     ],
-    structuredData: [generateArticle(url, {
-      id: post.id,
-      title,
-      description,
-      content: body,
-      plainText: body,
-      slug: post.publicSlug,
-      status: "Published" as any,
-      brand: post.brand,
-      publishedAt: post.publishDate,
-      createdAt: post.createdAt ?? new Date(),
-      updatedAt: post.updatedAt ?? new Date(),
-      imageUrl: post.thumbnailUrl,
-      authorId: post.atom.createdBy?.id ?? "",
-      author: post.atom.createdBy,
-    } as any)],
+    structuredData: [
+      generateArticle(url, {
+        title,
+        description,
+        content: body,
+        publishedAt: post.publishDate,
+        updatedAt: post.updatedAt ?? new Date(),
+        imageUrl: articleImageUrl,
+        author: post.atom.createdBy,
+      }),
+    ],
   })
 
   return { post, body, ...data }
@@ -96,30 +98,31 @@ export default async function (props: Props) {
                   </time>
                 )}
                 <span className="px-1.5">&bull;</span>
-                <span>
-                  {t("posts.read_time", { count: getReadTime(body) })}
-                </span>
+                <span>{t("posts.read_time", { count: getReadTime(body) })}</span>
               </>
             }
             className="mt-4"
             name={post.atom.createdBy.name}
-            image={post.atom.createdBy.image || null}
+            image={post.atom.createdBy.image}
           />
+        )}
+
+        {!!post.atom.tags.length && (
+          <Stack size="sm" className="mt-4" wrap>
+            {post.atom.tags.map(tag => (
+              <Tag key={tag.id}>{tag.name}</Tag>
+            ))}
+          </Stack>
         )}
       </Intro>
 
       <Section>
         <Section.Content>
-          {post.thumbnailUrl && (
-            <Image
-              src={post.thumbnailUrl}
-              alt={displayTitle}
-              width={1200}
-              height={630}
-              loading="eager"
-              className="w-full h-auto aspect-video object-cover rounded-lg"
-            />
-          )}
+          <ContentPostMediaCarousel
+            media={post.atom.mediaAttachments.map(({ media }) => media)}
+            title={displayTitle}
+            fallbackImageUrl={post.thumbnailUrl}
+          />
 
           <Prose>
             <Markdown>{body}</Markdown>
@@ -130,6 +133,22 @@ export default async function (props: Props) {
           <Suspense fallback={<AdCardSkeleton />}>
             <AdCard type="BlogPost" />
           </Suspense>
+
+          {!!post.atom.tools.length && (
+            <TableOfContents
+              title={t("posts.tools_mentioned")}
+              headings={post.atom.tools.map(({ slug, name, faviconUrl }) => ({
+                id: slug,
+                level: 1,
+                text: (
+                  <Stack size="sm" wrap={false}>
+                    <Favicon src={faviconUrl} title={name} className="size-4" />
+                    <span className="truncate">{name}</span>
+                  </Stack>
+                ),
+              }))}
+            />
+          )}
         </Section.Sidebar>
       </Section>
 

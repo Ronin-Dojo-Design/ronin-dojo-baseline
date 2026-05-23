@@ -68,9 +68,9 @@ model User {
   lastActiveBrandId Brand?
 
   // Relations (Dirstarter template)
-  accounts Account[]
-  sessions Session[]
-  tools    Tool[]
+  accounts  Account[]
+  sessions  Session[]
+  tools     Tool[]
   bookmarks Bookmark[]
 
   // Relations (Ronin Dojo)
@@ -235,13 +235,14 @@ model Tool {
   updatedAt      DateTime   @updatedAt
 
   // Relations
-  categories Category[]
-  tags       Tag[]
-  reports    Report[]
-  bookmarks  Bookmark[]
-  owner      User?      @relation(fields: [ownerId], references: [id])
-  ownerId    String?
-  posts      Post[]
+  categories   Category[]
+  tags         Tag[]
+  reports      Report[]
+  bookmarks    Bookmark[]
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  ownerId      String?
+  posts        Post[]
+  contentAtoms ContentAtom[]
 
   @@index([id, slug])
   @@index([name])
@@ -275,7 +276,8 @@ model Tag {
   createdAt DateTime @default(now())
 
   // Relations
-  tools Tool[]
+  tools        Tool[]
+  contentAtoms ContentAtom[]
 
   // Indexes
   @@index([name])
@@ -2625,9 +2627,12 @@ model ContentAtom {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
 
-  variants     ContentVariant[]
-  tasks        ContentTask[]
-  publications ContentPublication[]
+  variants         ContentVariant[]
+  tasks            ContentTask[]
+  publications     ContentPublication[]
+  tags             Tag[]
+  tools            Tool[]
+  mediaAttachments MediaAttachment[]
 
   @@unique([slug])
   @@index([status])
@@ -3066,6 +3071,7 @@ model MediaAttachment {
   certificateTemplateId String?
 
   technique           Technique?           @relation(fields: [techniqueId], references: [id])
+  contentAtom         ContentAtom?         @relation(fields: [contentAtomId], references: [id])
   certificateTemplate CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id])
 
   @@index([mediaId])

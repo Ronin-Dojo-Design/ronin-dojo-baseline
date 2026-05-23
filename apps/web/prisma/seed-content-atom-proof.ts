@@ -12,6 +12,52 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
+const proofTags = [
+  { name: "Dojo Ritual", slug: "dojo-ritual" },
+  { name: "Beginner Training", slug: "beginner-training" },
+  { name: "Martial Arts Culture", slug: "martial-arts-culture" },
+]
+
+const proofTools = [
+  {
+    name: "Dojo Bell",
+    slug: "dojo-bell",
+    websiteUrl: "https://baselinemartialarts.com/tools/dojo-bell",
+    tagline: "A simple class boundary marker for presence and respect.",
+    description: "A proof listing used by the ContentAtom seed to demonstrate tools mentioned.",
+    faviconUrl: "/favicon.png",
+  },
+  {
+    name: "Training Journal",
+    slug: "training-journal",
+    websiteUrl: "https://baselinemartialarts.com/tools/training-journal",
+    tagline: "Capture class notes, repetitions, and reflections after practice.",
+    description: "A proof listing used by the ContentAtom seed to demonstrate tools mentioned.",
+    faviconUrl: "/favicon.png",
+  },
+]
+
+const proofMedia = [
+  {
+    id: "media-why-bell-hero",
+    type: "IMAGE" as const,
+    url: "/content/boilerplate.webp",
+    title: "Class opening bell",
+    altText: "Martial arts class opening ritual",
+    purpose: "hero",
+    sortOrder: 0,
+  },
+  {
+    id: "media-why-bell-presence",
+    type: "IMAGE" as const,
+    url: "/content/tool-mentions.webp",
+    title: "Training floor presence",
+    altText: "Training tools arranged for a focused martial arts class",
+    purpose: "gallery",
+    sortOrder: 1,
+  },
+]
+
 async function main() {
   // Find the first admin/owner user to be the atom creator
   const owner = await prisma.user.findFirst({ where: { role: "admin" } })
@@ -22,10 +68,45 @@ async function main() {
 
   const canonicalId = "atom-2026-why-the-bell-matters"
 
+  const tags = await Promise.all(
+    proofTags.map(tag =>
+      prisma.tag.upsert({
+        where: { slug: tag.slug },
+        update: { name: tag.name },
+        create: tag,
+      }),
+    ),
+  )
+
+  const tools = await Promise.all(
+    proofTools.map(tool =>
+      prisma.tool.upsert({
+        where: { slug: tool.slug },
+        update: {
+          name: tool.name,
+          websiteUrl: tool.websiteUrl,
+          tagline: tool.tagline,
+          description: tool.description,
+          faviconUrl: tool.faviconUrl,
+          status: "Published",
+          publishedAt: new Date("2026-05-22T12:00:00Z"),
+        },
+        create: {
+          ...tool,
+          status: "Published",
+          publishedAt: new Date("2026-05-22T12:00:00Z"),
+        },
+      }),
+    ),
+  )
+
   // Upsert to make this idempotent
   const atom = await prisma.contentAtom.upsert({
     where: { canonicalId },
-    update: {},
+    update: {
+      tags: { set: tags.map(tag => ({ id: tag.id })) },
+      tools: { set: tools.map(tool => ({ id: tool.id })) },
+    },
     create: {
       canonicalId,
       title: "Why the Bell Matters",
@@ -62,8 +143,53 @@ The bell is not decoration. It is the first and last lesson of every class: be h
       qualityScore: 8,
       sourceType: "MANUAL",
       createdById: owner.id,
+      tags: { connect: tags.map(tag => ({ id: tag.id })) },
+      tools: { connect: tools.map(tool => ({ id: tool.id })) },
     },
   })
+
+  for (const media of proofMedia) {
+    const mediaRow = await prisma.media.upsert({
+      where: { id: media.id },
+      update: {
+        brand: "BASELINE_MARTIAL_ARTS",
+        type: media.type,
+        url: media.url,
+        title: media.title,
+        altText: media.altText,
+        isPublic: true,
+        uploadedById: owner.id,
+      },
+      create: {
+        id: media.id,
+        brand: "BASELINE_MARTIAL_ARTS",
+        type: media.type,
+        url: media.url,
+        title: media.title,
+        altText: media.altText,
+        isPublic: true,
+        sortOrder: media.sortOrder,
+        uploadedById: owner.id,
+      },
+    })
+
+    await prisma.mediaAttachment.upsert({
+      where: { id: `attachment-${media.id}` },
+      update: {
+        purpose: media.purpose,
+        sortOrder: media.sortOrder,
+        mediaId: mediaRow.id,
+        contentAtomId: atom.id,
+      },
+      create: {
+        id: `attachment-${media.id}`,
+        purpose: media.purpose,
+        sortOrder: media.sortOrder,
+        mediaId: mediaRow.id,
+        contentAtomId: atom.id,
+      },
+    })
+  }
 
   await prisma.contentVariant.upsert({
     where: {
@@ -73,7 +199,9 @@ The bell is not decoration. It is the first and last lesson of every class: be h
         channel: "BLOG",
       },
     },
-    update: {},
+    update: {
+      thumbnailUrl: proofMedia[0]?.url,
+    },
     create: {
       atomId: atom.id,
       brand: "BASELINE_MARTIAL_ARTS",
@@ -83,6 +211,7 @@ The bell is not decoration. It is the first and last lesson of every class: be h
       publicSlug: "why-the-bell-matters",
       excerpt:
         "Every class begins and ends with the bell. Here's why that ritual matters more than any technique you'll learn.",
+      thumbnailUrl: proofMedia[0]?.url,
       renderedCopy: atom.id ? undefined : undefined, // Will fall back to atom.longFormCopy in the renderer
       publishDate: new Date("2026-05-22T12:00:00Z"),
     },

@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-21
+updated: 2026-05-22
 author: Brian + Copilot
-last_agent: codex-session-0215
+last_agent: codex-session-0224
 ---
 
 # LLM Wiki Index
@@ -125,6 +125,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0015 Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
 | [ADR 0016 Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
 | [ADR 0017 Enable pnpm pre/post lifecycle scripts](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) | decision | accepted |
+| [ADR 0018 ContentAtom Canonical Relations](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
 
 ## Sessions
 
@@ -293,6 +294,14 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0214](../../sprints/SESSION_0214.md) | session--implement | closed-full |
 | [SESSION_0215](../../sprints/SESSION_0215.md) | session--implement | closed-full |
 | [SESSION_0216](../../sprints/SESSION_0216.md) | session--implement | closed-full |
+| [SESSION_0217](../../sprints/SESSION_0217.md) | session--implement | closed-full |
+| [SESSION_0218](../../sprints/SESSION_0218.md) | session--implement | closed-full |
+| [SESSION_0219](../../sprints/SESSION_0219.md) | session--open | closed-quick |
+| [SESSION_0220](../../sprints/SESSION_0220.md) | session--implement | closed-full |
+| [SESSION_0221](../../sprints/SESSION_0221.md) | session--implement | closed-full |
+| [SESSION_0222](../../sprints/SESSION_0222.md) | session--implement | closed-full |
+| [SESSION_0223](../../sprints/SESSION_0223.md) | session--implement | closed-quick |
+| [SESSION_0224](../../sprints/SESSION_0224.md) | session--implement | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 
 ## Protocols
@@ -401,6 +410,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | MaterializeScheduleButton | `components/web/schedules/materialize-schedule-button.tsx` | S2 |
 | ScheduleInstructorList | `components/web/schedules/schedule-instructor-list.tsx` | S2 |
 | DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
+| ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |
 
 ## Obsidian Vault

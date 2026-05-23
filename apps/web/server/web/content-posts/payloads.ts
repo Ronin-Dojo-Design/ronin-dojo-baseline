@@ -30,6 +30,36 @@ export const contentPostOnePayload = {
       hook: true,
       createdBy: contentPostAuthorPayload,
       discipline: { select: { id: true, name: true, slug: true } },
+      tags: {
+        select: { id: true, name: true, slug: true },
+        orderBy: { name: "asc" },
+      },
+      tools: {
+        where: { status: "Published" },
+        select: { id: true, slug: true, name: true, faviconUrl: true },
+        orderBy: { name: "asc" },
+      },
+      mediaAttachments: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          purpose: true,
+          sortOrder: true,
+          media: {
+            select: {
+              id: true,
+              type: true,
+              url: true,
+              thumbnailUrl: true,
+              title: true,
+              altText: true,
+              widthPx: true,
+              heightPx: true,
+              durationSec: true,
+            },
+          },
+        },
+      },
     },
   },
 } satisfies Prisma.ContentVariantSelect

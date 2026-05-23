@@ -1,12 +1,12 @@
-import Image from "next/image"
 import type { ComponentProps, ReactNode } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { H6 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { ExternalLink } from "~/components/web/external-link"
 
 export type AuthorProps = ComponentProps<typeof Stack> & {
   name: string
-  image: string
+  image?: string | null
   url?: string
   note?: ReactNode
 }
@@ -14,13 +14,13 @@ export type AuthorProps = ComponentProps<typeof Stack> & {
 export const Author = ({ name, image, title, prefix, url, note, ...props }: AuthorProps) => {
   return (
     <Stack size="sm" wrap={false} {...props}>
-      <Image
-        src={image}
-        alt={`${name}'s profile`}
-        width={48}
-        height={48}
-        className="size-10 rounded-full group-hover:[&[href]]:brightness-90"
-      />
+      <Avatar className="rounded-full group-hover:[&[href]]:brightness-90">
+        {image ? (
+          <AvatarImage src={image} alt={`${name}'s profile`} />
+        ) : (
+          <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+        )}
+      </Avatar>
 
       <div className="flex-1 text-sm/normal text-secondary-foreground">
         <H6

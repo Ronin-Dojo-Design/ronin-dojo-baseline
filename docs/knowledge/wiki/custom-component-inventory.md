@@ -4,10 +4,11 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-05-19
-last_agent: codex-session-0202
+updated: 2026-05-22
+last_agent: codex-session-0224
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/sprints/SESSION_0224.md
   - docs/sprints/SESSION_0195.md
   - docs/sprints/SESSION_0196.md
   - docs/sprints/SESSION_0197.md
@@ -150,6 +151,7 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Ads | `components/web/ads/ad-banner.tsx`, `ad-base.tsx`, `ad-card.tsx`, `ads-calendar.tsx`, `ads-picker.tsx` | Ad placement, browsing, and admin scheduling. |
 | Tools | `components/web/tools/` (+ `app/admin/tools/_components/`) | Tool catalog admin + public. |
 | Posts | `components/web/posts/` (+ `app/admin/posts/_components/`) | Blog/post surfaces. |
+| Content posts | `components/web/content-posts/content-post-*.tsx` | ContentAtom/ContentVariant-backed public post cards, list, and SESSION_0224 media carousel wrapper. `ContentPostMediaCarousel` composes `Carousel`/`CarouselSlide` and renders inherited atom media for IMAGE, VIDEO, YOUTUBE, and document fallback cases. |
 
 ---
 

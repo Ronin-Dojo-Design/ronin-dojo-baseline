@@ -13,9 +13,18 @@ import type {
   WebPage,
   WebSite,
 } from "schema-dts"
-import type { Post } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import type { ToolMany, ToolOne } from "~/server/web/tools/payloads"
+
+export interface ArticleData {
+  title: string
+  description?: string | null
+  publishedAt?: Date | null
+  updatedAt: Date
+  author?: { name: string } | null
+  imageUrl?: string | null
+  content: string
+}
 
 /**
  * Converts relative URL to absolute URL
@@ -217,10 +226,7 @@ export const generateFAQ = (questions: Array<{ question: string; answer: string 
 /**
  * Generates article/blog posting schema
  */
-export const generateArticle = (
-  url: string,
-  post: Post & { author?: { name: string; image?: string | null } | null },
-): Article => {
+export const generateArticle = (url: string, post: ArticleData): Article => {
   const { title, description, publishedAt, author, imageUrl, content } = post
 
   return {
@@ -280,7 +286,12 @@ export const generateBlog = (
   url: string,
   name: string,
   description: string | undefined,
-  posts: Post[],
+  posts: Array<{
+    title: string
+    description?: string | null
+    slug: string
+    publishedAt?: Date | null
+  }>,
 ): Blog => {
   const absoluteUrl = toAbsoluteUrl(url)
   return {
