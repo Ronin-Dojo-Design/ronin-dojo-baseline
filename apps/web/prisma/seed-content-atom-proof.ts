@@ -14,7 +14,7 @@ const prisma = new PrismaClient({ adapter })
 
 async function main() {
   // Find the first admin/owner user to be the atom creator
-  const owner = await prisma.user.findFirst({ where: { role: "ADMIN" } })
+  const owner = await prisma.user.findFirst({ where: { role: "admin" } })
   if (!owner) {
     console.error("No ADMIN user found. Run seed-baseline-owner.ts first.")
     process.exit(1)

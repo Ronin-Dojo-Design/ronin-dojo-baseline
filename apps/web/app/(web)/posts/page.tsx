@@ -2,11 +2,13 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { ContentPostList } from "~/components/web/content-posts/content-post-list"
+import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
+import { generateBlog } from "~/lib/structured-data"
 import { findPublishedContentPosts } from "~/server/web/content-posts/queries"
 
 const namespace = "pages.blog"
@@ -22,6 +24,7 @@ const getData = cache(async () => {
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],
+    structuredData: [generateBlog(url, title, description, [] as any)],
   })
 
   return { posts, ...data }
@@ -33,7 +36,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default async function () {
-  const { posts, metadata, breadcrumbs } = await getData()
+  const { posts, metadata, breadcrumbs, structuredData } = await getData()
 
   return (
     <>
@@ -45,6 +48,8 @@ export default async function () {
       </Intro>
 
       <ContentPostList posts={posts} />
+
+      <StructuredData data={structuredData} />
     </>
   )
 }
