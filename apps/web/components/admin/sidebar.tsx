@@ -10,6 +10,7 @@ import {
   CreditCardIcon,
   DockIcon,
   ExternalLinkIcon,
+  FileTextIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
   HardDriveIcon,
@@ -91,6 +92,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
 
     undefined, // Separator
 
+    {
+      title: "Content",
+      href: "/admin/content",
+      prefix: <FileTextIcon />,
+    },
     {
       title: "Tools",
       href: "/admin/tools",
