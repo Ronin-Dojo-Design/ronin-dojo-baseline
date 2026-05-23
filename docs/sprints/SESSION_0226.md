@@ -2,7 +2,7 @@
 title: "SESSION 0226 — ContentVariant inline tab, media attachments, public tag filtering"
 slug: session-0226
 type: session--implement
-status: in-progress
+status: closed-quick
 created: 2026-05-23
 updated: 2026-05-23
 last_agent: copilot-session-0226
@@ -30,7 +30,7 @@ Add ContentVariant inline tab on atom edit, media attachment management with S3 
 
 ## Status
 
-### Status: in-progress
+### Status: closed-quick
 
 ## Bow-in
 
@@ -90,8 +90,76 @@ Ship three features: (1) ContentVariant inline management on atom edit page, (2)
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0226_TASK_01 | pending | Server layer: variant schema, upsert/delete actions |
-| SESSION_0226_TASK_02 | pending | Variant inline tab on atom edit page with form |
-| SESSION_0226_TASK_03 | pending | Media attachment list + upload on atom edit |
-| SESSION_0226_TASK_04 | pending | Public `/posts` tag filtering |
-| SESSION_0226_TASK_05 | pending | Verification, lint, typecheck, close |
+| SESSION_0226_TASK_01 | landed | Server layer: variant schema, upsert/delete actions |
+| SESSION_0226_TASK_02 | landed | Variant inline tab on atom edit page with form |
+| SESSION_0226_TASK_03 | landed | Media attachment list + upload on atom edit |
+| SESSION_0226_TASK_04 | landed | Public `/posts` tag filtering |
+| SESSION_0226_TASK_05 | landed | Verification, lint, typecheck, close |
+
+## What landed
+
+- Added `contentVariantSchema` Zod schema (channel, status, publicTitle, publicSlug, renderedCopy, excerpt, cta, thumbnailUrl, videoUrl, voiceNotes, publishDate).
+- Added `upsertContentVariant`, `deleteContentVariant`, `attachMediaToAtom`, `removeMediaAttachment` server actions.
+- Added `findContentVariantById` query.
+- Refactored `/admin/content/[id]/page.tsx` to use `Tabs` with Details, Variants, and Media tabs.
+- Created `ContentVariantForm` — inline create/edit form for ContentVariant with channel, status, public title/slug, excerpt, rendered copy, CTA, publish date, thumbnail/video URLs, voice notes.
+- Created `ContentVariantsPanel` — list/create/edit/delete variants inline on atom edit.
+- Created `ContentMediaPanel` — upload media via S3, list attached media with thumbnails, delete attachments.
+- Created `ContentTagFilter` — badge-based tag filter on `/posts` page using `?tag=` search param.
+- Updated `findPublishedContentPosts` to accept optional `tagSlug` filter.
+- Added `findPublishedContentTags` query for published-content-aware tag list.
+- Extended `contentPostManyPayload` with `atom.tags` for card-level tag display.
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `apps/web/server/admin/content/schema.ts` | Added `contentVariantSchema`, `ContentVariantSchema` |
+| `apps/web/server/admin/content/actions.ts` | Added upsertContentVariant, deleteContentVariant, attachMediaToAtom, removeMediaAttachment |
+| `apps/web/server/admin/content/queries.ts` | Added findContentVariantById |
+| `apps/web/app/admin/content/[id]/page.tsx` | Refactored to Tabs (Details, Variants, Media) |
+| `apps/web/app/admin/content/_components/content-variant-form.tsx` | New: variant create/edit form |
+| `apps/web/app/admin/content/_components/content-variants-panel.tsx` | New: variants list panel |
+| `apps/web/app/admin/content/_components/content-media-panel.tsx` | New: media upload/list panel |
+| `apps/web/components/web/content-posts/content-tag-filter.tsx` | New: tag filter badges |
+| `apps/web/app/(web)/posts/page.tsx` | Added tag filtering + ContentTagFilter |
+| `apps/web/server/web/content-posts/queries.ts` | Extended findPublishedContentPosts with tagSlug; added findPublishedContentTags |
+| `apps/web/server/web/content-posts/payloads.ts` | Added atom.tags to contentPostManyPayload |
+| `docs/sprints/SESSION_0226.md` | Session file |
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `pnpm --filter @ronin-dojo/web typecheck` | Pass |
+| `bun --cwd apps/web biome check --write` | Pass (6 files auto-fixed) |
+| `bun --cwd apps/web test -- --concurrency=1` | Pass; 257 tests |
+| `pnpm --filter @ronin-dojo/web build` | Pass; all admin/content routes and /posts in build |
+
+## Decisions resolved
+
+- ContentVariant inline management on `/admin/content/[id]` via Tabs — no separate variant routes.
+- Media attachments: two-step create (Media record → MediaAttachment link) for Prisma compatibility.
+- Tag filtering on `/posts` uses `?tag=slug` search param with badge-based UI.
+- `contentPostManyPayload` extended with tags to support card-level tag rendering.
+
+## Next session
+
+### Goal
+
+ContentVariant `renderedCopy` preview with Markdown renderer, media attachment reordering (drag-and-drop sort order), and content post card tag badges on public `/posts`.
+
+### First task
+
+Add Markdown preview toggle on ContentVariant `renderedCopy` field (same pattern as atom longFormCopy).
+
+## Git hygiene
+
+- Branch: `main`
+- Commit: `b097bfe` — `feat(admin): add ContentVariant inline tab, media attachments, public tag filtering`
+- Push: `main -> main` on `Ronin-Dojo-Design/ronin-dojo-baseline`
+- Graphify update: incremental rebuild — 6990 nodes, 11413 edges, 953 communities, 1323 files tracked
+
+## Open decisions / blockers
+
+- None for this session.
