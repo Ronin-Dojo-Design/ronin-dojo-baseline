@@ -21,9 +21,12 @@ const publishedBlogVariantWhere = (brand: Brand): Prisma.ContentVariantWhereInpu
   },
 })
 
-export const findPublishedContentPosts = async (brand: Brand) => {
+export const findPublishedContentPosts = async (brand: Brand, tagSlug?: string) => {
   return db.contentVariant.findMany({
-    where: publishedBlogVariantWhere(brand),
+    where: {
+      ...publishedBlogVariantWhere(brand),
+      ...(tagSlug ? { atom: { tags: { some: { slug: tagSlug } } } } : {}),
+    },
     select: contentPostManyPayload,
     orderBy: { publishDate: "desc" },
   })
@@ -36,5 +39,22 @@ export const findPublishedContentPostBySlug = async (slug: string, brand: Brand)
       ...publishedBlogVariantWhere(brand),
     },
     select: contentPostOnePayload,
+  })
+}
+
+/** Tags that have at least one published content post for the given brand. */
+export const findPublishedContentTags = async (brand: Brand) => {
+  return db.tag.findMany({
+    where: {
+      contentAtoms: {
+        some: {
+          variants: {
+            some: publishedBlogVariantWhere(brand),
+          },
+        },
+      },
+    },
+    select: { id: true, name: true, slug: true },
+    orderBy: { name: "asc" },
   })
 }

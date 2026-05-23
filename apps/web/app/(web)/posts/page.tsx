@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { ContentPostList } from "~/components/web/content-posts/content-post-list"
+import { ContentTagFilter } from "~/components/web/content-posts/content-tag-filter"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
@@ -9,13 +10,19 @@ import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateBlog } from "~/lib/structured-data"
-import { findPublishedContentPosts } from "~/server/web/content-posts/queries"
+import {
+  findPublishedContentPosts,
+  findPublishedContentTags,
+} from "~/server/web/content-posts/queries"
 
 const namespace = "pages.blog"
 
-const getData = cache(async () => {
+const getData = cache(async (tagSlug?: string) => {
   const brand = await getRequestBrand()
-  const posts = await findPublishedContentPosts(brand)
+  const [posts, tags] = await Promise.all([
+    findPublishedContentPosts(brand, tagSlug),
+    findPublishedContentTags(brand),
+  ])
 
   const t = await getTranslations()
   const url = "/posts"
@@ -27,7 +34,7 @@ const getData = cache(async () => {
     structuredData: [generateBlog(url, title, description, [] as any)],
   })
 
-  return { posts, ...data }
+  return { posts, tags, ...data }
 })
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -35,8 +42,9 @@ export const generateMetadata = async (): Promise<Metadata> => {
   return getPageMetadata({ url, metadata })
 }
 
-export default async function () {
-  const { posts, metadata, breadcrumbs, structuredData } = await getData()
+export default async function ({ searchParams }: { searchParams: Promise<{ tag?: string }> }) {
+  const { tag } = await searchParams
+  const { posts, tags, metadata, breadcrumbs, structuredData } = await getData(tag)
 
   return (
     <>
@@ -46,6 +54,8 @@ export default async function () {
         <IntroTitle>{metadata.title}</IntroTitle>
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
+
+      <ContentTagFilter tags={tags} activeTag={tag} />
 
       <ContentPostList posts={posts} />
 

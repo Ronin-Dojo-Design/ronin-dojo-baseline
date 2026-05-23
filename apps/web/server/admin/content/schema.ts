@@ -6,7 +6,12 @@ import {
   parseAsStringEnum,
 } from "nuqs/server"
 import * as z from "zod"
-import { type ContentAtom, ContentAtomStatus } from "~/.generated/prisma/browser"
+import {
+  type ContentAtom,
+  ContentAtomStatus,
+  ContentChannel,
+  ContentVariantStatus,
+} from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
 
 export const contentAtomsTableParamsSchema = {
@@ -41,3 +46,21 @@ export const contentAtomSchema = z.object({
 })
 
 export type ContentAtomSchema = z.infer<typeof contentAtomSchema>
+
+export const contentVariantSchema = z.object({
+  id: z.string().optional(),
+  atomId: z.string().min(1, "Atom is required"),
+  channel: z.enum(ContentChannel).default("BLOG"),
+  status: z.enum(ContentVariantStatus).default("DRAFT"),
+  publicTitle: z.string().nullish(),
+  publicSlug: z.string().nullish(),
+  renderedCopy: z.string().nullish(),
+  excerpt: z.string().nullish(),
+  cta: z.string().nullish(),
+  thumbnailUrl: z.string().nullish(),
+  videoUrl: z.string().nullish(),
+  voiceNotes: z.string().nullish(),
+  publishDate: z.coerce.date().nullish(),
+})
+
+export type ContentVariantSchema = z.infer<typeof contentVariantSchema>

@@ -99,3 +99,9 @@ export const findStyleOptions = async () => {
     orderBy: { name: "asc" },
   })
 }
+
+export const findContentVariantById = async (id: string) => {
+  return db.contentVariant.findUnique({
+    where: { id },
+  })
+}

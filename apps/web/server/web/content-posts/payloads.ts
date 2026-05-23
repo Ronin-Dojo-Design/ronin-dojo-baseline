@@ -85,6 +85,10 @@ export const contentPostManyPayload = {
       status: true,
       hook: true,
       createdBy: contentPostAuthorPayload,
+      tags: {
+        select: { id: true, name: true, slug: true },
+        orderBy: { name: "asc" },
+      },
     },
   },
 } satisfies Prisma.ContentVariantSelect
