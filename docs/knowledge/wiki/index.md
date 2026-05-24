@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-23
+updated: 2026-05-24
 author: Brian + Copilot
-last_agent: claude-session-0229
+last_agent: claude-session-0237
 ---
 
 # LLM Wiki Index
@@ -310,6 +310,11 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0230](../../sprints/SESSION_0230.md) | session--implement | closed-full |
 | [SESSION_0231](../../sprints/SESSION_0231.md) | session--implement | closed-full |
 | [SESSION_0232](../../sprints/SESSION_0232.md) | session--implement | closed-full |
+| [SESSION_0233](../../sprints/SESSION_0233.md) | session--implement | closed-full |
+| [SESSION_0234](../../sprints/SESSION_0234.md) | session--implement | closed-full |
+| [SESSION_0235](../../sprints/SESSION_0235.md) | session--implement | closed-full |
+| [SESSION_0236](../../sprints/SESSION_0236.md) | session--implement | closed-quick |
+| [SESSION_0237](../../sprints/SESSION_0237.md) | session--implement | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 
@@ -389,6 +394,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [directory/directory-query.tsx](files/directory-query-component.md) | file | active |
 | [directory/directory-listing.tsx](files/directory-listing-component.md) | file | active |
 | [directory/directory-list.tsx](files/directory-list-component.md) | file | active |
+| [disciplines/[slug]/page.tsx](files/discipline-detail-page.md) | file | active |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components

@@ -102,18 +102,44 @@ export const findDisciplines = async (brand: Brand) => {
 
 /**
  * Find all discipline slugs for static generation.
+ * Returns (slug, brand) tuples for cross-brand `generateStaticParams`.
  */
-export const findDisciplineSlugs = async (brand: Brand) => {
+export const findDisciplineSlugs = async () => {
   "use cache"
 
   cacheTag("discipline-slugs")
   cacheLife("hours")
 
   return db.discipline.findMany({
+    select: { slug: true, brand: true },
+    orderBy: { name: "asc" },
+  })
+}
+
+/**
+ * Find related disciplines for the discipline detail page.
+ * Excludes the current discipline; includes system disciplines and same-brand disciplines.
+ */
+export const findRelatedDisciplines = async ({
+  disciplineId,
+  brand,
+}: {
+  disciplineId: string
+  brand: Brand
+}) => {
+  "use cache"
+
+  cacheTag(`related-disciplines-${disciplineId}`)
+  cacheLife("minutes")
+
+  return db.discipline.findMany({
     where: {
+      id: { not: disciplineId },
       OR: [{ isSystem: true }, { brand }],
     },
-    select: { slug: true },
+    select: disciplineManyPayload,
+    take: 6,
+    orderBy: { name: "asc" },
   })
 }
 

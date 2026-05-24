@@ -1,21 +1,24 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
-import { Card, CardHeader } from "~/components/common/card"
+import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
+import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 import {
   findDisciplineBySlug,
   findDisciplineMembersByRank,
+  findDisciplineSlugs,
   findDisciplineVideos,
+  findRelatedDisciplines,
 } from "~/server/web/disciplines/queries"
 import { BlackBeltRail } from "../_components/black-belt-rail"
 import { ContentAtomsSection } from "../_components/content-atoms-section"
@@ -30,32 +33,43 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+export async function generateStaticParams() {
+  const disciplines = await findDisciplineSlugs()
+  return disciplines.map(({ slug }) => ({ slug }))
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.BASELINE_MARTIAL_ARTS
+  const brand = await getRequestBrand()
   const discipline = await findDisciplineBySlug(brand, slug)
 
   if (!discipline) return { title: "Discipline Not Found" }
 
-  return {
-    title: discipline.name,
-    description: `${discipline.name} — ${discipline._count.rankSystems} rank systems, ${discipline._count.organizations} organizations`,
-  }
+  return getPageMetadata({
+    url: `/disciplines/${discipline.slug}`,
+    metadata: {
+      title: discipline.name,
+      description: `${discipline.name} — ${discipline._count.rankSystems} rank systems, ${discipline._count.organizations} organizations`,
+    },
+  })
 }
 
 export default async function DisciplineDetailPage({ params }: Props) {
   const { slug } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.BASELINE_MARTIAL_ARTS
+  const brand = await getRequestBrand()
   const discipline = await findDisciplineBySlug(brand, slug)
 
   if (!discipline) notFound()
 
-  const [videos, membersByRank] = await Promise.all([
+  const [videos, membersByRank, relatedDisciplines] = await Promise.all([
     findDisciplineVideos(discipline.id),
     findDisciplineMembersByRank(discipline.id),
+    findRelatedDisciplines({ disciplineId: discipline.id, brand }),
   ])
+
+  const hasHistory = Boolean(
+    discipline.foundedBy || discipline.yearEstablished || discipline.history,
+  )
 
   return (
     <>
@@ -87,7 +101,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
         </IntroDescription>
       </Intro>
 
-      {/* Rank Systems */}
+      {/* Rank Systems + Overview/History sidebar */}
       <Section>
         <Section.Content>
           <H4>Rank Systems ({discipline.rankSystems.length})</H4>
@@ -111,6 +125,49 @@ export default async function DisciplineDetailPage({ params }: Props) {
             <p className="text-muted-foreground mt-2">No rank systems defined.</p>
           )}
         </Section.Content>
+
+        <Section.Sidebar>
+          <Card hover={false}>
+            <CardHeader>
+              <H4>Overview</H4>
+            </CardHeader>
+            <CardDescription>
+              <Stack direction="column" className="items-start">
+                <span>
+                  <span className="text-muted-foreground">Programs: </span>
+                  <span className="font-medium">{discipline._count.programs}</span>
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Courses: </span>
+                  <span className="font-medium">{discipline._count.courses}</span>
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Techniques: </span>
+                  <span className="font-medium">{discipline._count.techniques}</span>
+                </span>
+              </Stack>
+            </CardDescription>
+          </Card>
+
+          {hasHistory && (
+            <Card hover={false}>
+              <CardHeader>
+                <H4>History</H4>
+              </CardHeader>
+              <CardDescription>
+                <Stack size="sm" direction="column" className="items-start">
+                  {discipline.foundedBy && <FounderCarousel founders={discipline.foundedBy} />}
+                  {discipline.yearEstablished && (
+                    <p className="text-sm text-muted-foreground">
+                      Established {discipline.yearEstablished}
+                    </p>
+                  )}
+                  {discipline.history && <p className="text-sm">{discipline.history}</p>}
+                </Stack>
+              </CardDescription>
+            </Card>
+          )}
+        </Section.Sidebar>
       </Section>
 
       {/* Organizations */}
@@ -156,45 +213,6 @@ export default async function DisciplineDetailPage({ params }: Props) {
                   {style.name}
                 </Badge>
               ))}
-            </Stack>
-          </Section.Content>
-        </Section>
-      )}
-
-      {/* Stats */}
-      <Section>
-        <Section.Content>
-          <H4>Overview</H4>
-          <dl className="grid gap-2 text-sm mt-4 @md:grid-cols-3">
-            <div>
-              <dt className="text-muted-foreground">Programs</dt>
-              <dd className="font-medium">{discipline._count.programs}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Courses</dt>
-              <dd className="font-medium">{discipline._count.courses}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Techniques</dt>
-              <dd className="font-medium">{discipline._count.techniques}</dd>
-            </div>
-          </dl>
-        </Section.Content>
-      </Section>
-
-      {/* Founder / History */}
-      {(discipline.foundedBy || discipline.yearEstablished || discipline.history) && (
-        <Section>
-          <Section.Content>
-            <H4>History</H4>
-            <Stack size="sm" direction="column" className="mt-4">
-              {discipline.foundedBy && <FounderCarousel founders={discipline.foundedBy} />}
-              {discipline.yearEstablished && (
-                <p className="text-sm text-muted-foreground">
-                  Established {discipline.yearEstablished}
-                </p>
-              )}
-              {discipline.history && <p className="text-sm">{discipline.history}</p>}
             </Stack>
           </Section.Content>
         </Section>
@@ -252,6 +270,37 @@ export default async function DisciplineDetailPage({ params }: Props) {
           <LineageTreeSection brand={brand} />
         </Section.Content>
       </Section>
+
+      {/* Related Disciplines */}
+      {relatedDisciplines.length > 0 && (
+        <Section>
+          <Section.Content>
+            <H4>Related Disciplines</H4>
+            <Grid>
+              {relatedDisciplines.map(rd => (
+                <Card key={rd.id} isRevealed>
+                  <CardHeader>
+                    <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
+                      <Link href={`/disciplines/${rd.slug}`}>
+                        <span className="absolute inset-0 z-10" />
+                        {rd.name}
+                      </Link>
+                    </H4>
+                  </CardHeader>
+                  <CardDescription>
+                    {rd._count.organizations} organizations · {rd._count.rankSystems} rank systems
+                  </CardDescription>
+                  {rd.code && (
+                    <Stack size="sm" className="flex-wrap">
+                      <Badge variant="outline">{rd.code}</Badge>
+                    </Stack>
+                  )}
+                </Card>
+              ))}
+            </Grid>
+          </Section.Content>
+        </Section>
+      )}
 
       <StructuredData
         data={{
