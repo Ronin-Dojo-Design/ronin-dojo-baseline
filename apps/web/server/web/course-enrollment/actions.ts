@@ -30,22 +30,33 @@ const assertCourseExists = async (courseId: string, brand: Brand) => {
   return course
 }
 
-const assertUserHasActiveMembership = async (
-  userId: string,
-  brand: Brand,
-  organizationId: string,
-) => {
-  const membership = await db.membership.findFirst({
-    where: {
-      brand,
-      organizationId,
-      userId,
-      status: "ACTIVE",
-    },
-    select: { id: true },
-  })
+/**
+ * Check that the user has access to enroll: either an active COURSE_ACCESS
+ * entitlement for the brand OR an active membership in the course's org.
+ */
+const assertUserCanEnroll = async (userId: string, brand: Brand, organizationId: string) => {
+  const [entitlement, membership] = await Promise.all([
+    db.userEntitlement.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        entitlement: { key: "COURSE_ACCESS", brand },
+        OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    }),
+    db.membership.findFirst({
+      where: {
+        brand,
+        organizationId,
+        userId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    }),
+  ])
 
-  if (!membership) {
+  if (!entitlement && !membership) {
     throw new Error(COURSE_ENROLLMENT_ERROR.NO_ACTIVE_MEMBERSHIP)
   }
 }
@@ -68,7 +79,7 @@ export const enrollInCourse = userActionClient
     }
 
     const course = await assertCourseExists(courseId, brand)
-    await assertUserHasActiveMembership(ctx.user.id, brand, course.organizationId)
+    await assertUserCanEnroll(ctx.user.id, brand, course.organizationId)
 
     // Check for existing enrollment
     const existing = await db.courseEnrollment.findUnique({

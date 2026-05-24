@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-21
-last_agent: copilot-session-0213
+updated: 2026-05-24
+last_agent: copilot-session-0233
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -90,26 +90,31 @@ flowchart TD
 
 - **Runtime:** Bun (`bun:test`)
 - **Run single file:** `cd apps/web && bun test <path>`
-- **Run all (non-e2e):** `cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'`
+- **Run all (non-e2e):** `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**'`
 - **Package script:** `bun run test` (defined in `apps/web/package.json`)
 - **No `@types/bun`** — use `// @ts-expect-error` on bun:test imports
 - **Real Postgres** — all tests hit `ronindojo_dev`, not mocks or SQLite
 
-### ⚠ `--isolate` is mandatory for the full suite
+### ⚠ `--parallel` is mandatory for the full suite
 
-Bun's default test runner shares module state across files in the same run. The Prisma singleton in `~/services/db` uses `globalThis.dbGlobal` — when multiple test files race to initialize it in a shared module scope, the `$extends()` call can produce an empty object, causing `db.someModel` to be `undefined`.
+Bun's default test runner shares the module registry across files in the same process. When `mock.module()` is used (as in all safe-action tests), the mocks leak into other test files' module resolution — causing `db.someModel` to be `undefined` and ~63 false failures.
 
-**Always use `--isolate`** when running the full suite. This gives each test file its own module scope and prevents the singleton race. Individual files (`bun test <path>`) work fine without it.
+**Always use `--parallel`** when running the full suite. This spawns separate worker processes per test file, providing true process isolation. `--parallel` implies `--isolate`, so no isolation is lost. Individual files (`bun test <path>`) work fine without it.
+
+> **History:** Prior to SESSION_0232, the SOP recommended `--isolate`. That flag isolates globals but shares the module registry, which is insufficient when `mock.module()` is used. `--parallel` was adopted in SESSION_0232 after diagnosing 63 false failures caused by mock cross-contamination.
 
 ```bash
 # ✅ Correct — full suite
-bun test --isolate --path-ignore-patterns='e2e/**'
+bun test --parallel --path-ignore-patterns='e2e/**'
 
 # ✅ Correct — single file (isolation not needed)
 bun test server/web/disciplines/queries.integration.test.ts
 
-# ❌ Wrong — full suite without --isolate will show ~46 false failures
+# ❌ Wrong — full suite without --parallel will show ~63 false failures
 bun test --path-ignore-patterns='e2e/**'
+
+# ❌ Wrong — --isolate alone does not prevent mock.module() leakage
+bun test --isolate --path-ignore-patterns='e2e/**'
 ```
 
 ---
@@ -631,6 +636,7 @@ it("creates audit log on transition", async () => {
 - `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit
 - `server/web/attendance/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized check-in + audit
 - `server/web/billing/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, no-customer serverError, authorized Stripe portal redirect
+- `server/web/course-enrollment/actions.safe-action.test.ts` — `userActionClient` chain: enroll (membership + entitlement OR gate), unenroll, markComplete, markIncomplete
 
 ### Query / integration tests
 
@@ -642,6 +648,7 @@ it("creates audit log on transition", async () => {
 - `server/admin/billing/monitoring/queries.test.ts` — billing monitoring
 - `server/admin/storage/monitoring/queries.test.ts` — storage monitoring
 - `server/web/techniques/queries.test.ts` — technique queries
+- `server/web/course-enrollment/queries.integration.test.ts` — enrollment state, progress, stats, entitlement OR gate
 
 ### Specialized tests
 
