@@ -16,7 +16,7 @@ backlinks:
 
 # Program plan — Ronin Dojo platform rebuild
 
-> **⚠️ PARTIALLY SUPERSEDED (SESSION_0020):** The 12-sprint sequential schedule (S6–S12) is replaced by [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) which defines a 20-session calendar (SESSION_0021–0040) targeting May 18 all-brand launch. The layered architecture, brand sequencing, and agent system sections remain valid.
+> **⚠️ PARTIALLY SUPERSEDED (SESSION_0020, updated SESSION_0241):** The 12-sprint sequential schedule (S6–S12) is replaced by [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md). Original target: May 18 all-brand launch. **Actual status (2026-05-24): 6 days past target.** Brand build order holds (Baseline → BBL → WEKAF → Ronin Dojo Design). S1–S5 done. S6 in progress (content engine + public parity chrome). Priority is shipping product, not planning sessions. The layered architecture, brand sequencing, and agent system sections remain valid.
 
 A real plan we can review together, edit, and execute against. Built to address four threads:
 

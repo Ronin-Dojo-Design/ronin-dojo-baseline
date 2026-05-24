@@ -138,7 +138,7 @@ Pass 3: Polish, hardening, docs (Brandon, all)
 
 ## Launch strategy: Option A-plus
 
-All brands go publicly live on May 18, 2026, with **differentiated depth**:
+All brands targeted for May 18, 2026 launch with **differentiated depth**. **Actual status (2026-05-24): 6 days past target.** Baseline and BBL are furthest along; WEKAF and Ronin Dojo Design are content/theme shells only.
 
 | Brand | Priority | Launch depth |
 | --- | --- | --- |
@@ -316,15 +316,19 @@ BACKLOG
   [White-label self-serve wizard] [Full multi-sport rules engine]
   [Deep scoring/referee workflows] [App-level BJJBuddy-plus analytics]
   [Ranking series] [Athlete journal/HealthKit]
+  [Usage-based billing / credits lifecycle (velobase-harness pattern)]
+  [BullMQ background workers (velobase-harness pattern)]
+  [Anti-abuse guardrails / rate limiting (velobase-harness pattern)]
+  [Affiliate/referral engine (velobase-harness pattern)]
 
-NOW
-  [Course enrollment + curriculum completion server layer]
-  [Public course pages + enrollment UI]
+NOW — SHIP PRODUCT (6 days past May 18 target)
+  [Lineage public parity chrome (SESSION_0240 on Codex)]
+  [Repo cleanup + workflow refinement (SESSION_0241)]
 
 NEXT
+  [BBL lineage foundation slice — published tree queries + SSG]
+  [Baseline public pages content fill]
   [Multi-brand theme polish (all 4 brands)]
-  [Membership lifecycle + invite flow — LANDED 0145–0149]
-  [Invoice optimistic locking]
 
 READY FOR LAUNCH
   [S1-S4 identity/org/directory/tournament foundation]
@@ -341,12 +345,17 @@ READY FOR LAUNCH
   [Membership transition audit trail + tests — landed SESSION_0150–0151]
   [Optimistic locking: Membership (0152) + Registration (0154) + Bulk registration (0155)]
   [P2028 transaction fix — landed SESSION_0154]
+  [Dashboard private chrome — landed SESSION_0239]
+  [Public parity uplift: disciplines, schools, courses, programs, orgs, passports — landed SESSION_0234–0238]
+  [Sprint docs archived (0001–0220) — SESSION_0241]
 
 POST-LAUNCH
   [Full self-serve white-label templating]
   [Advanced competition rulesets + scoring]
   [Deeper mobile athlete intelligence]
   [Cross-brand analytics + automation]
+  [Rate limiting + anti-abuse hardening]
+  [Background worker infrastructure (email, imports, scoring)]
 ```
 
 ---
