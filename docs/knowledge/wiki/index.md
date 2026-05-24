@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-23
 author: Brian + Copilot
-last_agent: codex-session-0227
+last_agent: claude-session-0228
 ---
 
 # LLM Wiki Index
@@ -22,7 +22,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [How to Use These Registries](../how-to-use-these-registries.md) | protocol | active |
 | [LLM Wiki README](../README.md) | protocol | active |
 | [CLAUDE.md](../../../CLAUDE.md) | protocol | active |
-| [Project Log](../../protocols/project-log.md) | log | active |
+| [Project Log (retired)](../../protocols/project-log.md) | log | archived-frozen |
 
 ## Concepts
 
@@ -305,6 +305,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0225](../../sprints/SESSION_0225.md) | session--implement | closed-quick |
 | [SESSION_0226](../../sprints/SESSION_0226.md) | session--implement | closed-quick |
 | [SESSION_0227](../../sprints/SESSION_0227.md) | session--implement | closed-full |
+| [SESSION_0228](../../sprints/SESSION_0228.md) | session--open | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 
 ## Protocols
@@ -314,7 +315,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Chat Handoff](../../protocols/chat-handoff.md) | protocol | active |
 | [Cody Pre-flight Protocol](../../protocols/cody-preflight.md) | protocol | active |
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
-| [Project Log](../../protocols/project-log.md) | protocol | active |
+| [Project Log (retired)](../../protocols/project-log.md) | protocol | archived-frozen |
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
 | [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |

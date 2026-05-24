@@ -94,9 +94,9 @@ If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](
 
 If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute. **Cody must complete the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code.**
 
-### 4b. Number tasks in TASK_PLAN_LOG
+### 4b. Number tasks in the SESSION file
 
-For every task in the session plan, add or update an entry in the [Project Log](../protocols/project-log.md) task plan section before implementation starts.
+For every task in the session plan, add or update an entry in the current SESSION file's `## Petey plan` and `## Task log` sections before implementation starts.
 
 Use stable IDs:
 
@@ -106,7 +106,7 @@ SESSION_NNNN_TASK_02
 SESSION_NNNN_TASK_03
 ```
 
-The SESSION file remains the detailed handoff. `TASK_PLAN_LOG` is the audit ledger that lets Giddy/Doug verify ownership, done criteria, status, and review coverage across sessions.
+The SESSION file is now the canonical audit ledger that lets Giddy/Doug verify ownership, done criteria, status, and review coverage. The legacy cross-session `project-log.md` ledger was retired at SESSION_0228; the historical archive lives at [`docs/_archive/project-log/`](../_archive/project-log/) and is read-only.
 
 ### 5. Branch check
 
@@ -176,7 +176,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
 - [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
-- [Project Log](../protocols/project-log.md) — unified build, task plan, and review ledger.
+- [Project Log (retired)](../protocols/project-log.md) — frozen stub; historical archive in `docs/_archive/project-log/`. Per-session SESSION files now carry the canonical build, task plan, and review record.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

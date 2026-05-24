@@ -137,3 +137,23 @@ closed-quick
 | SESSION_0219_TASK_01 | done | Inventory and wave decomposition for full import migration |
 | SESSION_0219_TASK_02 | done | Orchestration plan file with assignments and gating |
 | SESSION_0219_TASK_03 | done | Project Log task-plan registration |
+
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0219_TASK_01 (inventory + wave decomposition), SESSION_0219_TASK_02 (orchestration plan file `petey-plan-0084.md`), SESSION_0219_TASK_03 (project-log governance staging).
+- **Dirstarter docs check:** Not applicable in implementation sense — this is a plan-only Petey session. Plan does cite `docs/protocols/petey-plan.md`, `WORKFLOW_5.0.md`, `failed-steps-log.md`, and `graphify-repo-memory.md` as docs-read-first, which is the correct planning-phase posture.
+- **Verdict:** Plan was solid and was followed — SESSION_0220 executed the migration cleanly across all 102 files. The wave decomposition was defensible risk management, though SESSION_0220 retroactively noted that an upfront export-parity check (which the plan only implied as a "risk" rather than a Wave 0 preflight task) collapsed the 4 waves into one safe `sed` batch. The plan surfaced the export-mismatch risk and the compatibility-shim open decision, but it should have promoted "verify export parity" from a risk bullet to an explicit Wave 0 task — that omission cost no real damage here but is a generalizable planning gap for future package-swap lanes. Scope guard was clean (planning-only, no edits), agent assignments were single-owner appropriate, and governance task (project-log registration) is now technically stranded since project-log.md was retired in SESSION_0228, but that's a downstream protocol change, not a 0219 defect.
+- **Giddy:** Plan respects Dirstarter compliance — it frames the swap as alignment to an already-adopted upstream package (`@dirstack/utils`) with explicit no-bypass justification, not a custom fork.
+- **Doug:** Plan names verification gates abstractly ("typecheck/lint/tests/build gates" in Next session) but does not bind specific gates to specific waves in the task definitions — acceptable for a Petey plan, marginal for an execution-ready plan.
+- **Desi:** Not applicable — plan-only session, no UX surface touched.
+- **Kaizen aggregate:** 8/10 — Plan was followed and produced a clean migration. Loses two points: (1) export-parity check should have been a named Wave 0 task rather than a passive risk callout, (2) verification gates were named generically in "Next session" rather than bound per-wave in the task list. Both are generalizable lessons for future utility-package swap plans.
+
+### Findings (severity ≥ medium)
+
+- **SESSION_0219_BACKFILL_FINDING_01**
+  - Severity: medium
+  - Task: SESSION_0219_TASK_02 (orchestration plan)
+  - Evidence: Plan lists "Export mismatch between `@primoui/utils` and `@dirstack/utils`" under Risks but does not promote it to a preflight Wave 0 task with a done-criterion. SESSION_0220 had to perform this check ad hoc ("Confirmed full export parity between `@primoui/utils` and `@dirstack/utils`") and discovered the waves were unnecessary.
+  - Impact: Wave structure was over-engineered for the actual risk profile; a Wave 0 contract-check task would have caught this in planning and right-sized the implementation to a single batch.
+  - Required follow-up: For future utility-package swap plans, include an explicit "Wave 0: verify named-export parity" task before wave decomposition. Capture as a generalizable pattern in `docs/protocols/petey-plan.md` or `failed-steps-log.md` if appropriate.
+  - Status: open (pattern-level, no code follow-up required for 0219 itself).

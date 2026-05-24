@@ -263,6 +263,27 @@ closed-full
 - **No P0/P1 findings:** Phase 7 removed Radix from all five popover-family primitives. Consumer `asChild` → `render={}` migration is the largest call-site phase to date (~55 sites). Select `onValueChange` type casts are correct — Base UI's `unknown` value type requires explicit narrowing.
 - **WORKFLOW score:** 9/10. Heaviest phase completed cleanly. ThemeSwitcher type simplification is the only non-mechanical decision. The `data-[state=open]` hamburger selectors in header.tsx were left unchanged (those reference NavigationMenu/custom state, not our migrated components — confirmed via manual inspection).
 
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0217_TASK_01, SESSION_0217_TASK_02, SESSION_0217_TASK_03, SESSION_0217_TASK_04.
+- **Dirstarter docs check:** cached — session already records direct comparison of all five primitives against upstream `7e724b6` source files; primitive-level diffs (`Overlay`→`Backdrop`, `Content`→`Popup`, `Sub`→`SubmenuRoot`, `Viewport`→`List`, `ScrollUpButton`→`ScrollUpArrow`, `--radix-popper-transform-origin`→`--transform-origin`) align with the upstream pin called out in bow-in.
+- **Verdict:** Clean. Heaviest call-site phase of the D-016 lane (~55 consumer `asChild`→`render={}` rewrites across 5 primitives) executed mechanically with all four gates green (typecheck, lint, 244/244 tests, build), zero residual `radix-ui` imports in the migrated primitives, and zero residual popover-family `asChild` props in consumers. The Select `unknown` value-type cast and the ThemeSwitcher type simplification are documented, defensible, and minimal — no scope creep, no smuggled refactors. No P0/P1 debt introduced; lane is unblocked into Phase 8.
+- **Giddy (architecture / Dirstarter compliance):** Upstream-faithful — all five primitives match the upstream `7e724b6` shape (Backdrop/Popup/Positioner layering, data-slot/data-variant attributes), and the only Ronin-custom retention (Drawer bottom-sheet) is justified by absence of an upstream equivalent.
+- **Doug (QA evidence / failure modes):** Evidence chain is complete (residual grep + typecheck + lint + test + build + wiki:lint all recorded with concrete numbers), but no visual/interaction verification is logged for Positioner-layered popover/select/dropdown rendering — mechanical correctness was proven, runtime focus/scroll/anchor behavior was inferred.
+- **Desi (UX / visual):** not applicable — no visual verification claimed; risk noted in Doug findings but no UX regressions reported by consumers.
+- **Kaizen aggregate:** 9.4/10 — heaviest mechanical phase landed cleanly with full gate evidence; single deduction is the absence of visual confirmation for the Positioner structural change on Select (`position="popper"` removed) and dropdown anchor-width behavior, which is the one place where typecheck cannot substitute for eyes-on.
+
+### Findings (severity ≥ medium)
+
+#### SESSION_0217_BACKFILL_FINDING_01 — Positioner-layer visual verification skipped on Select / DropdownMenu / Popover
+
+- **Severity:** medium
+- **Task:** SESSION_0217_TASK_04
+- **Evidence:** Review log lists only typecheck/lint/test/build/wiki:lint; risk section explicitly flagged "Select's `position="popper"` removal may affect layout — verify visually if possible", but no visual proof is recorded. `--radix-select-trigger-width`→`--anchor-width` and `--radix-popper-anchor-width`→`--anchor-width` rewrites in `relation-selector.tsx` / `combobox-selector.tsx` / `select.tsx` change anchor-width CSS plumbing without runtime confirmation.
+- **Impact:** A regression in dropdown/select trigger-width matching, popover anchor positioning, or scroll-arrow rendering would not be caught by typecheck or unit tests; first signal would be operator/end-user report on Baseline staging.
+- **Required follow-up:** During the next admin smoke pass (or Phase 8 bow-in), spot-check one Select-based filter (e.g. `directory-filters.tsx`), one anchor-width consumer (`combobox-selector.tsx`), and one DropdownMenu trigger (`tool-actions.tsx`) for anchor-width parity and scroll-arrow behavior; record evidence in that session's review log.
+- **Status:** open
+
 ## ADR / ubiquitous-language check
 
 - No ADR needed. D-016 already records the architectural direction.

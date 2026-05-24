@@ -158,3 +158,30 @@ Add a Variants tab/section on `/admin/content/[id]` with create/edit form for Co
 
 - None for this session.
 - SESSION_0226 is unblocked: ContentVariant tab, media uploads, public tag filtering.
+
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0225_TASK_01, SESSION_0225_TASK_02, SESSION_0225_TASK_03, SESSION_0225_TASK_04
+- **Dirstarter docs check:** live — admin form + content/blog patterns touched; `/admin/content` extends Dirstarter admin (data-table, RelationSelector, `adminActionClient` HOC, server `schema.ts`/`queries.ts`/`actions.ts` layout) without replacing Dirstarter `/admin/posts`.
+- **Verdict:** Server layer and form follow the Dirstarter admin pattern correctly, `adminActionClient` + `getRequestBrand()` are wired into every action, and typecheck/build/tests pass — but the verification block proves only build sanity, not auth behaviour: there is no smoke or unit test exercising the safe-action auth chain or cross-brand isolation, and `findContentAtomById` does a raw `where: { id }` with no brand predicate, so the edit-page read path leaks atoms across brands to any authenticated admin who can construct a foreign id. Action writes still re-scope by brand, so this is a read-side isolation hole rather than a write breach, and the slice is recoverable with a follow-up brand filter.
+- **Giddy:** Dirstarter admin pattern compliance is clean — every action chains `adminActionClient`, every query uses `getRequestBrand()`, RelationSelector is reused, and `/admin/posts` is left intact.
+- **Doug:** Verification proved typecheck + biome + 257-test suite + `pnpm build` green and confirmed all three `/admin/content` routes in the build manifest, but no test exercises the `upsertContentAtom`/`deleteContentAtoms` safe-action chain or admin route auth redirect.
+- **Desi:** Not applicable — admin-only surface; UX review absorbed into SESSION_0226/0227 inline variant + media work.
+- **Kaizen aggregate:** 8.4/10 — Dirstarter compliance ~8.9 (excellent pattern fidelity), data integrity ~7.8 (read-side brand leak in `findContentAtomById` capped below 8.9), verification ~7.5 (no auth-predicate smoke despite admin surface, capped well below 9.4), security ~7.8 (brand-scoped writes but unscoped admin reads, capped below 8.9).
+
+### Findings (severity >= medium)
+
+- **SESSION_0225_BACKFILL_FINDING_01**
+  - **Severity:** Medium
+  - **Task:** SESSION_0225_TASK_01 (queries)
+  - **Evidence:** `apps/web/server/admin/content/queries.ts:51-99` — `findContentAtomById(id)` calls `db.contentAtom.findUnique({ where: { id }, include: {...} })` with no `variants: { some: { brand } }` predicate and no `getRequestBrand()` call, in contrast to `findContentAtoms` immediately above which does brand-scope.
+  - **Impact:** An authenticated admin on Brand A who navigates to `/admin/content/<atom-id-from-Brand-B>` will get a fully hydrated edit page (title, hook, longFormCopy, variants, media, tags, tools) for the foreign atom. Writes are still brand-checked by the actions, but read isolation across brands is broken on the admin edit surface.
+  - **Required follow-up:** Add brand scoping to `findContentAtomById` (e.g. `where: { id, variants: { some: { brand } } }` using `getRequestBrand()`), and have the edit page return `notFound()` on miss. Add a regression test asserting that a Brand-B atom id returns null for a Brand-A request.
+  - **Status:** Open
+- **SESSION_0225_BACKFILL_FINDING_02**
+  - **Severity:** Medium
+  - **Task:** SESSION_0225_TASK_04 (verification / close)
+  - **Evidence:** `## Verification` table lists only `pnpm typecheck`, `biome check`, `bun test -- --concurrency=1`, and `pnpm build`. No `actions.safe-action.test.ts` existed for `apps/web/server/admin/content/` at SESSION_0225 close (the first one in this directory was added in SESSION_0227 for media reorder). No mention of unauthenticated `/admin/content` smoke or cross-brand isolation check.
+  - **Impact:** The session shipped a new admin surface with new auth-gated server actions without proving the auth predicate fires — exactly the class of regression the WORKFLOW 5.0 verification cap is meant to catch. The cross-brand read leak in FINDING_01 would have been caught by a minimal isolation test.
+  - **Required follow-up:** When FINDING_01 is fixed, add a safe-action / isolation test for `findContentAtomById`, `upsertContentAtom`, and `deleteContentAtoms` covering (a) unauthenticated rejection and (b) Brand-A session cannot read/mutate Brand-B atoms.
+  - **Status:** Open

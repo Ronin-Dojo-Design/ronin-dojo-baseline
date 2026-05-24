@@ -39,7 +39,7 @@ git rebase --onto origin/main <last-merged-ancestor> <branch-name>
 - If all commits are unique to this session, a simple `git rebase origin/main`
   suffices.
 - Resolve conflicts by keeping **both** sides for docs (frontmatter dates,
-  index entries, project-log rows) and accepting **main** for code files that
+  index entries, SESSION-file rows) and accepting **main** for code files that
   were already squash-merged.
 
 ### 2. Verify after rebase
@@ -104,7 +104,8 @@ diff <(git show origin/main:<file>) <(git show <branch>:<file>)
 
 | File type | Strategy |
 | --- | --- |
-| `docs/protocols/project-log.md` | Keep both sides (both add new entries) |
+| `docs/protocols/project-log.md` | Retired stub; conflicts here should not happen — if both branches edited it, escalate to operator before merging. |
+| `docs/sprints/SESSION_*.md` | Keep both sides (each branch should touch its own SESSION file; cross-edits are a smell). |
 | `docs/knowledge/wiki/index.md` | Keep both sides (both add new session rows) |
 | Frontmatter `last_agent` / `updated` | Accept the newer (incoming) value |
 | `apps/web/lib/rate-limiter.ts` | Accept main (it has all prior session keys); incoming adds new keys on top |

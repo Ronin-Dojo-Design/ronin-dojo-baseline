@@ -211,6 +211,16 @@ closed-full
 - **No P0/P1 findings:** Phase 6 removed Radix from all four form primitives. DataTable indeterminate pattern correctly migrated to Base UI's separate boolean prop.
 - **WORKFLOW score:** 9.5/10. Clean migration with minimal consumer drift. Label's Biome suppression is the only non-mechanical decision.
 
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0216_TASK_01, SESSION_0216_TASK_02, SESSION_0216_TASK_03
+- **Dirstarter docs check:** cached docs sufficient — upstream `7e724b6` source files at the read-only template path are the migration contract for D-016 phase ports; live Base UI docs not required for mechanical primitive lifts.
+- **Verdict:** Ready to merge as-claimed. Phase 6 is a textbook upstream-derived primitive port: four leaf components swapped to `@base-ui/react`, four DataTable consumers updated for the `indeterminate` prop split, and every gate (typecheck, lint=0 errors on 979 files, 244/244 tests, build, wiki:lint=0 errors) is green with concrete numbers in the Review log. The split-decision rationale (no `asChild`, no consumer `data-[state=]` selectors, signature-compatible `onCheckedChange`) was pre-flighted before code touched the tree, so the single-pass migration was de-risked rather than reckless.
+- **Giddy (architecture / Dirstarter compliance):** Pure replacement with upstream Base UI runtime, preserves Ronin-custom `labelVariants`/`isRequired` delta and `data-slot` parity — D-016 phase ticked, no bypass, no scope creep into Phase 7/8.
+- **Doug (QA evidence / failure modes):** Full five-gate suite with named outputs; residual `radix-ui` grep on the four primitives went to zero; the only soft spot is no explicit runtime/visual sanity capture for the four indeterminate DataTable headers — but the prop-shape change is type-enforced and tests cover the column definitions, so this is a low-tier risk note, not a gate miss.
+- **Desi (UX / visual):** Form-primitive `data-checked`/`data-unchecked` selector swap and `indeterminate` prop migration are visually equivalent to Radix per upstream parity; no screenshot capture in evidence, acceptable for a mechanical leaf-primitive port but would have hardened the close.
+- **Kaizen aggregate:** 9/10 — clean phase-port with credible evidence and documented Biome `noLabelWithoutControl` suppression; loses a half-point on absent visual/runtime sanity for the four indeterminate header checkboxes, which would plausibly surface at the 1k tier (admin operators clicking select-all on certificates/courses/programs/tournaments tables) before the 10k tier.
+
 ## ADR / ubiquitous-language check
 
 - No ADR needed. D-016 already records the architectural direction.

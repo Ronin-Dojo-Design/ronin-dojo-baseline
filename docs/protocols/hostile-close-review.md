@@ -37,7 +37,7 @@ Run at close when the session touched any of:
 - Dirstarter-derived patterns
 
 For typo-only sessions, record `Hostile close review: not applicable — typo/doc
-copy only` in the SESSION file and the active project-log task review section.
+copy only` in the current SESSION file's `## Review log` section.
 
 ## Persona split
 
@@ -74,8 +74,8 @@ Dirstarter does now, check the live docs.
 
 ## Review questions
 
-Answer these in hostile-review language, then record findings in the task review
-section of `docs/protocols/project-log.md`.
+Answer these in hostile-review language, then record findings in the current
+SESSION file's `## Hostile close review` section.
 
 1. **Plan sanity:** Was the plan actually good, or did it paper over an
    invalid assumption? If the work touched a Dirstarter-owned layer, did the
@@ -99,8 +99,8 @@ section of `docs/protocols/project-log.md`.
 
 After the eight review questions, the closing agent answers these three Kaizen
 questions in plain prose. They are deliberately sharp; defensive answers fail
-the gate. Record the answers in the `docs/protocols/project-log.md` review
-entry directly under the review-questions verdict.
+the gate. Record the answers in the current SESSION file's `## Hostile close
+review` section directly under the review-questions verdict.
 
 1. **Is this safe and secure? What tests would prove me right?** Name what is
    provably safe, what is *documented* but not behaviorally proven, and the
@@ -131,8 +131,8 @@ planned*. Treat both numbers as load-bearing.
 
 ## Required output
 
-Append one review entry to the task review section of
-`docs/protocols/project-log.md` using this shape:
+Append one review entry to the `## Review log` and `## Hostile close review`
+sections of the current SESSION file using this shape:
 
 ```markdown
 ### SESSION_NNNN - <session title>
@@ -158,9 +158,10 @@ Append one review entry to the task review section of
 - **Status:** open | addressed | accepted-risk
 ```
 
-`docs/protocols/project-log.md` is the active append-only ledger for hostile
-close review entries. `docs/_archive/task-review-log.md` is historical only and
-does not satisfy this protocol.
+The current SESSION file is the active append-only record for hostile
+close review entries. The historical archive at `docs/_archive/project-log/`
+(including `03-task-review-log.md`) is read-only and does not satisfy this
+protocol.
 
 ## Score impact
 
@@ -172,8 +173,8 @@ Apply WORKFLOW 5.0 caps honestly:
 - Security proof missing for exposed data paths caps score at 8.9.
 
 If a session scores under 9.5 after hostile review, do not hide the debt. Add it
-to `Open decisions / blockers`, the task review section of
-`docs/protocols/project-log.md`, and any relevant boundary registry entry.
+to `Open decisions / blockers`, the current SESSION file's `## Hostile close
+review` section, and any relevant boundary registry entry.
 
 A WORKFLOW-rubric pass with a Kaizen aggregate ≤ 8 also counts as debt — record
 it the same way and stage a remediation session before any further

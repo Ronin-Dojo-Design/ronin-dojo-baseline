@@ -211,6 +211,36 @@ closed-full
 - **No P0/P1 findings:** D-016 is complete. All Radix primitives migrated. All `asChild` call sites converted. All legacy deps removed.
 - **WORKFLOW score:** 9/10. Clean final phase. The only non-mechanical decisions were the admin Cmd+K palette (new feature) and the `@primoui/utils` → `@dirstack/utils` partial start.
 
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0218_TASK_01, SESSION_0218_TASK_02, SESSION_0218_TASK_03, SESSION_0218_TASK_04.
+- **Dirstarter docs check:** cached — upstream pin `7e724b6` referenced in bow-in, no live re-pull recorded; original review accepted the pin as the contract.
+- **Verdict:** Phase 8 delivered D-016 closure with all verification gates green (typecheck/lint/244 tests/build/wiki-lint), and the dep-cleanup blast radius is empirically contained — but the plan was materially under-scoped versus what shipped, and the original hostile review at 9/10 papered over it. TASK_01's plan said "Slot → `slot()` from `~/lib/slot`" yet the code adopted `useRender` + `render={}` (a different upstream pattern), forced 9 consumer `asChild → render` rewrites in files outside the listed five, deleted `Slottable`, upgraded `navLinkVariants` to the cva slots API (downstream-breaking, caught by tsc), pulled in a new `@dirstack/utils` dep, and removed an undeclared 4th package (`@radix-ui/react-accordion`). The work is correct and gates pass, but the petey-plan was a poor predictor of the change surface and the in-session review didn't flag it.
+- **Giddy:** Architecturally clean — `useRender` is the correct upstream pattern and matches the broader Base UI direction — but introducing `@dirstack/utils` mid-phase (with only one consumer migrated) opened a second, partial dep-swap front while D-016 was supposedly closing.
+- **Doug:** Verification was genuinely thorough — full-monorepo typecheck, 979-file lint, 244/244 tests, full build, and wiki-lint all green, so the four-package removal (`radix-ui`, `cmdk`, `cva`, `@radix-ui/react-accordion`, −66 transitives) is build-proven safe.
+- **Desi:** Tabs `data-[state=active]` → `data-selected` and the 9 `asChild → render` rewrites span user-visible surfaces (header, footer, user-menu, theme-switcher, pagination, tag/category cards, bottom) — tests pass but no manual UX spot-check is recorded; trust rests entirely on automated gates.
+- **Kaizen aggregate:** 7/10 — execution and gate coverage are strong, but scope drift from plan-to-ship was significant and the original 9/10 self-review missed it.
+
+### Findings (severity >= medium)
+
+#### SESSION_0218_BACKFILL_FINDING_01 — Plan-vs-shipped scope drift in TASK_01
+
+- **Severity:** medium
+- **Task:** SESSION_0218_TASK_01
+- **Evidence:** Plan step 4 specifies `import { slot } from "~/lib/slot"` and `slot()` usage across 5 files; "What landed" records `useRender` + `render={}` adoption instead, plus 9 additional consumer `asChild → render` rewrites (layout.tsx, [slug]/page.tsx, pagination.tsx, bottom.tsx, tag-card.tsx, category-card.tsx, user-menu.tsx, theme-switcher.tsx, header.tsx), deletion of `slottable.tsx`, and a `navLinkVariants` cva-slots-API upgrade with downstream fixes in footer.tsx and pagination.tsx — none of which appear in the petey-plan.
+- **Impact:** The plan stopped being a useful change-surface predictor mid-task; future sessions that lean on plan-shape for risk-sizing will under-estimate blast radius. The Phase 8 "small cleanup" framing in petey-plan-0083 is now historically misleading.
+- **Required follow-up:** When the next D-series migration plan is drafted, require the implementer to amend the petey-plan inline before merging when the executed pattern diverges from the planned API (e.g., `slot()` vs `useRender`); update the lane-ledger convention to record plan-vs-shipped deltas.
+- **Status:** open
+
+#### SESSION_0218_BACKFILL_FINDING_02 — `@dirstack/utils` partial migration started under D-016 scope
+
+- **Severity:** medium
+- **Task:** SESSION_0218_TASK_01
+- **Evidence:** "What landed" notes `@dirstack/utils` installed and nav-link.tsx switched from `@primoui/utils`; "Open decisions" defers the remaining ~90 files. The session's stated scope guard says "Do not expand beyond command/tabs/Slot cleanup/dep removal/admin palette."
+- **Impact:** Opened a second, partial dep-swap front (later resolved in SESSION_0220) while declaring D-016 closed; for ~24 hours the repo carried both `@primoui/utils` and `@dirstack/utils` with one cherry-picked consumer, which is exactly the kind of half-state the scope guard exists to prevent.
+- **Required follow-up:** None — SESSION_0220 cleared this in a single pass. Recorded for the pattern: future scope guards should explicitly forbid "install-and-migrate-one" dep introductions when a full migration is out of scope.
+- **Status:** open
+
 ## Reflections
 
 - D-016 is the largest migration epic to date: 8 phases across 10 sessions (SESSION_0209–0218), touching every common primitive and hundreds of consumer call sites.

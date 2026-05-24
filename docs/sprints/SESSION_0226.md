@@ -163,3 +163,42 @@ Add Markdown preview toggle on ContentVariant `renderedCopy` field (same pattern
 ## Open decisions / blockers
 
 - None for this session.
+
+## Hostile close review (backfilled SESSION_0228)
+
+- **Reviewed tasks:** SESSION_0226_TASK_01, SESSION_0226_TASK_02, SESSION_0226_TASK_03, SESSION_0226_TASK_04, SESSION_0226_TASK_05
+- **Dirstarter docs check:** live — Content, Blog, Media, Storage, Prisma touched; SESSION_0227 confirmed live docs were re-checked at planning time and patterns were extended rather than replaced. SESSION_0226 itself did not record an explicit live-docs sweep, which is part of why the variant edit payload was not caught.
+- **Verdict:** Conditional pass with one retroactive medium finding. The three deliverables (inline variant tab, media attachments, public tag filter) landed and shipped, but SESSION_0227 had to fix a variant-edit hydration bug that 0226 introduced: the atom detail query underselected `ContentVariant` fields, so editing an existing variant could blank `renderedCopy`, `excerpt`, `cta`, `thumbnailUrl`, `videoUrl`, and `voiceNotes`. Verification (typecheck/biome/test/build all green) missed it because no test loaded an existing variant into the edit form and re-saved without retyping every field. Media attach also did not validate atom-against-current-brand or assign deterministic `sortOrder` at upload — both tightened in 0227. Tag filtering and `contentPostManyPayload` extension landed cleanly.
+- **Giddy:** Schema and ADR alignment held — ContentAtom remained canonical owner of tags/media, no migration was needed downstream.
+- **Doug:** Verification suite was insufficient — green typecheck/biome/test/build did not catch a user-visible data-loss bug on the variant edit path; no test covered "load existing variant, save without retyping."
+- **Desi:** Inline Tabs choice was correct and the UX shipped; the silent blank-fields regression would have surfaced fast in real use.
+- **Kaizen aggregate:** 7/10
+
+### Findings (severity >= medium)
+
+#### SESSION_0226_BACKFILL_FINDING_01 — Variant edit hydration silently drops fields
+
+- **Severity:** medium (data-loss on edit; surfaced and fixed in next session before reaching users in volume)
+- **Task:** SESSION_0226_TASK_01 (atom detail query) and SESSION_0226_TASK_02 (variant form defaults)
+- **Evidence:** SESSION_0227 § Reflections: "The important bug was not the preview toggle; it was that editing an existing variant could blank fields because the atom detail query did not hydrate the full edit payload." SESSION_0227 § What landed: "Fixed ContentVariant edit hydration by selecting all editable variant fields on the atom detail query: renderedCopy, excerpt, cta, thumbnailUrl, videoUrl, and voiceNotes."
+- **Impact:** Any admin opening an existing variant and pressing Save without re-entering every field would blank `renderedCopy`, `excerpt`, `cta`, `thumbnailUrl`, `videoUrl`, and `voiceNotes` on that variant.
+- **Required follow-up:** Resolved in SESSION_0227_TASK_01.
+- **Status:** addressed
+
+#### SESSION_0226_BACKFILL_FINDING_02 — Media attach lacks brand validation and deterministic ordering
+
+- **Severity:** medium (multi-tenant boundary + UX ordering instability)
+- **Task:** SESSION_0226_TASK_03 (`attachMediaToAtom`)
+- **Evidence:** SESSION_0227 § What landed: "Updated `attachMediaToAtom` to validate the atom against the current brand and append new media at `max(sortOrder) + 1`." Plus "Added deterministic media attachment ordering by `sortOrder` then `createdAt`."
+- **Impact:** Without current-brand validation on the atom, an admin action accepted an atom ID without re-confirming brand scope (defense-in-depth gap on a shared `MediaAttachment` model). Without sortOrder-on-upload, media display order was non-deterministic between server fetches.
+- **Required follow-up:** Resolved in SESSION_0227_TASK_02.
+- **Status:** addressed
+
+#### SESSION_0226_BACKFILL_FINDING_03 — Verification suite missed an end-to-end edit-save round trip
+
+- **Severity:** medium (process — green checks gave false confidence)
+- **Task:** SESSION_0226_TASK_05 (verification/close)
+- **Evidence:** SESSION_0226 § Verification shows typecheck, biome, 257 tests, and build all green; FINDING_01 still shipped. SESSION_0227 added focused action tests but the underlying lesson is that "load existing record into edit form and save unchanged" is a missing test pattern for any inline edit form.
+- **Impact:** Future inline-edit features in the Content Engine lane are at the same risk until this round-trip test pattern is codified.
+- **Required follow-up:** Track as a lane-level test pattern in Content Engine going forward; consider adding to a SESSION_0228+ kaizen item if not already captured.
+- **Status:** open (process improvement, not a code defect)

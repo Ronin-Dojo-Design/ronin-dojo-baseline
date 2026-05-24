@@ -78,14 +78,14 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 
 **Atomicity rule (FS-0015 / SESSION_0074_TASK_09):** The YAML frontmatter `status:` field and the body `### Status` line must be updated together in the same edit pass. Never change one without the other. A session file with `status: in-progress` in YAML but `closed-quick` in the body (or vice versa) is a data integrity violation.
 
-**Project-log gate:** Before setting any closed status, verify the current session has at least one entry in `docs/protocols/project-log.md` using Graphify-first discovery plus an exact-file check:
+**SESSION-file gate:** Before setting any closed status, verify the current SESSION file has at least one entry in its `## Task log` table and `## Review log` section (or, for full close, also in `## Hostile close review`). The cross-session `project-log.md` ledger was retired at SESSION_0228 — the SESSION file is the canonical record. Use Graphify-first discovery plus an exact-file check:
 
 ```bash
-graphify query "SESSION_NNNN TASK_PLAN_LOG TASK_REVIEW_LOG project-log" --budget 1000
-awk 'index($0, "SESSION_NNNN") { count++ } END { print count + 0 }' docs/protocols/project-log.md
+graphify query "SESSION_NNNN task log review log hostile close" --budget 1000
+awk '/^## Task log/{flag=1; next} /^## /{flag=0} flag' docs/sprints/SESSION_NNNN.md | grep -c "SESSION_NNNN_TASK"
 ```
 
-The Graphify query should identify the audit ledger; the exact-file check must return >= 1. If it returns 0, append the task plan entries before closing. An editor search inside the already-open `project-log.md` is also acceptable. Do not use repo-wide text search for this gate.
+The Graphify query should surface the current SESSION file; the exact-file check must return >= 1 task row. If it returns 0, append the task plan entries to the SESSION file before closing. An editor search inside the already-open SESSION file is also acceptable. Do not use repo-wide text search for this gate. Do not append to `docs/protocols/project-log.md` — it is frozen; the historical archive at [`docs/_archive/project-log/`](../_archive/project-log/) is read-only.
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
 
@@ -219,7 +219,7 @@ Run the [Review & Recommend protocol](../protocols/review-recommend.md). This re
 
 At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
 
-Append or update the current session entry in the [Project Log](../protocols/project-log.md) review section. The review entry must reference the numbered task IDs from the project log's task plan section and list unresolved findings as open follow-ups.
+Append or update the review entry inside the current SESSION file's `## Review log` and `## Hostile close review` sections. The review entry must reference the numbered task IDs from the SESSION file's `## Task log` and list unresolved findings as open follow-ups. Do not write to `docs/protocols/project-log.md` — it is frozen.
 
 ### 6.6. ADR + ubiquitous-language check
 
@@ -274,7 +274,7 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
-- [Project Log](../protocols/project-log.md) — unified build, task plan, and review ledger.
+- [Project Log (retired)](../protocols/project-log.md) — frozen stub; historical archive in `docs/_archive/project-log/`. Per-session SESSION files now carry the canonical build, task plan, and review record.
 - [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — hard close review against Dirstarter, security, data integrity, and workflow honesty.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
 - [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.

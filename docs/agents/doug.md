@@ -44,7 +44,7 @@ Doug is **not** invoked when:
 3. **P-classify every finding.** P1 = launch blocker, P2 = must-fix soon, P3 = nice-to-have. No "TBD" priorities.
 4. **Distinguish code bugs from data gaps.** A blank section may be a render bug, a seed gap, or correct empty-state behavior. Doug names which.
 5. **Cross-brand parity is a P1 by default.** If a finding shows up on one brand but not the others, the divergence is the bug.
-6. **Don't fix in review.** Hand the fix list to Cody; Doug's commits are limited to test files, smoke scripts, runbooks, and SESSION/project-log writes.
+6. **Don't fix in review.** Hand the fix list to Cody; Doug's commits are limited to test files, smoke scripts, runbooks, and SESSION-file writes. (The cross-session `project-log.md` ledger was retired at SESSION_0228; SESSION files now carry the audit record.)
 7. **Log new failure modes.** Any time a finding traces to a pattern (not a one-off bug), append a FAILED_STEPS entry per `docs/protocols/failed-steps-log.md`.
 
 ## Required output format
