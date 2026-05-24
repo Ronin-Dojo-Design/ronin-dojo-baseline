@@ -16,7 +16,7 @@ export const getCurrentCourseEnrollmentState = async ({
   organizationId: string
   userId: string
 }) => {
-  const [enrollment, membership] = await db.$transaction([
+  const [enrollment, membership, entitlement] = await db.$transaction([
     db.courseEnrollment.findFirst({
       where: {
         userId,
@@ -49,11 +49,21 @@ export const getCurrentCourseEnrollmentState = async ({
       },
       select: { id: true },
     }),
+    db.userEntitlement.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        entitlement: { key: "COURSE_ACCESS", brand },
+        OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+      },
+      select: { id: true },
+    }),
   ])
 
   return {
     enrollment,
     hasActiveMembership: Boolean(membership),
+    hasCourseAccessEntitlement: Boolean(entitlement),
   }
 }
 

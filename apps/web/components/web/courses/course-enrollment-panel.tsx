@@ -25,6 +25,7 @@ type CourseEnrollmentPanelProps = {
   organizationName: string
   isAuthenticated: boolean
   hasActiveMembership: boolean
+  hasCourseAccessEntitlement: boolean
   enrollment: CourseEnrollmentState
   completedItems: number
   totalItems: number
@@ -42,6 +43,7 @@ export function CourseEnrollmentPanel({
   organizationName,
   isAuthenticated,
   hasActiveMembership,
+  hasCourseAccessEntitlement,
   enrollment,
   completedItems,
   totalItems,
@@ -91,7 +93,7 @@ export function CourseEnrollmentPanel({
     )
   }
 
-  if (!hasActiveMembership && !enrollment) {
+  if (!hasActiveMembership && !hasCourseAccessEntitlement && !enrollment) {
     return (
       <Card hover={false}>
         <Stack direction="column" size="md">
@@ -101,6 +103,27 @@ export function CourseEnrollmentPanel({
             Course enrollment opens after an active membership exists. Invites create that
             membership when claimed.
           </Note>
+        </Stack>
+      </Card>
+    )
+  }
+
+  if (!hasActiveMembership && hasCourseAccessEntitlement && !enrollment) {
+    return (
+      <Card hover={false}>
+        <Stack direction="column" size="md">
+          <Badge variant="success">Course Access</Badge>
+          <H4>Enroll in this course</H4>
+          <Note>Your course access entitlement grants enrollment and completion tracking.</Note>
+          <Button
+            variant="primary"
+            isPending={enrollAction.isPending}
+            disabled={isPending}
+            prefix={<UserPlusIcon />}
+            onClick={() => enrollAction.execute({ courseId })}
+          >
+            Enroll
+          </Button>
         </Stack>
       </Card>
     )

@@ -1,18 +1,29 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
-import { Card } from "~/components/common/card"
+import { Card, CardHeader } from "~/components/common/card"
 import { H4, H5 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { CourseCard } from "~/components/web/courses/course-card"
 import { CourseEnrollmentPanel } from "~/components/web/courses/course-enrollment-panel"
 import { CurriculumCompletionList } from "~/components/web/courses/curriculum-completion-list"
+import { StructuredData } from "~/components/web/structured-data"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
+import { generateCollectionPage } from "~/lib/structured-data"
 import { getCurrentCourseEnrollmentState } from "~/server/web/course-enrollment/queries"
-import { findCourseBySlug } from "~/server/web/courses/queries"
+import {
+  findCourseBySlug,
+  findCourseInstructors,
+  findProgramSiblingCourses,
+  findRelatedCourses,
+} from "~/server/web/courses/queries"
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -55,7 +66,21 @@ export default async function CourseDetailPage({ params }: PageProps) {
         organizationId: course.organization.id,
         userId: session.user.id,
       })
-    : { enrollment: null, hasActiveMembership: false }
+    : { enrollment: null, hasActiveMembership: false, hasCourseAccessEntitlement: false }
+
+  const [instructors, programData] = await Promise.all([
+    findCourseInstructors(course.organization.id, brand),
+    findProgramSiblingCourses(course.id, brand),
+  ])
+
+  const programSiblingIds = programData.courses.map(c => c.id)
+  const relatedCourses = await findRelatedCourses({
+    courseId: course.id,
+    brand,
+    disciplineId: course.discipline?.id ?? null,
+    organizationId: course.organization.id,
+    excludeIds: programSiblingIds,
+  })
 
   const completedItems = enrollmentState.enrollment?.itemCompletions.length ?? 0
   const totalItems = course.curriculumItems.length
@@ -75,6 +100,13 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <Breadcrumbs
+        items={[
+          { url: "/courses", title: "Courses" },
+          { url: `/courses/${course.slug}`, title: course.title },
+        ]}
+      />
+
       <Intro>
         <IntroTitle>{course.title}</IntroTitle>
         {course.description && <IntroDescription>{course.description}</IntroDescription>}
@@ -104,6 +136,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
             organizationName={course.organization.name}
             isAuthenticated={Boolean(session?.user)}
             hasActiveMembership={enrollmentState.hasActiveMembership}
+            hasCourseAccessEntitlement={enrollmentState.hasCourseAccessEntitlement}
             enrollment={enrollmentForClient}
             completedItems={completedItems}
             totalItems={totalItems}
@@ -125,6 +158,108 @@ export default async function CourseDetailPage({ params }: PageProps) {
           </Section.Content>
         </Section>
       )}
+
+      {/* Instructors */}
+      {instructors.length > 0 && (
+        <Section>
+          <Section.Content>
+            <H4>Instructors</H4>
+            <div className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3 mt-4">
+              {instructors.map(instructor => (
+                <Card key={instructor.id} hover={false}>
+                  <CardHeader>
+                    <Stack size="sm" wrap={false}>
+                      <Avatar>
+                        {instructor.user.image && (
+                          <AvatarImage
+                            src={instructor.user.image}
+                            alt={instructor.user.name ?? ""}
+                          />
+                        )}
+                        <AvatarFallback>
+                          {(instructor.user.name ?? "?").slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Stack direction="column" size="xs">
+                        <span className="font-medium">{instructor.user.name ?? "Instructor"}</span>
+                        <Stack size="xs" className="flex-wrap">
+                          {instructor.roleAssignments.map(ra => (
+                            <Badge key={ra.role.code} variant="soft" size="sm">
+                              {ra.role.displayTitle ?? ra.role.code}
+                            </Badge>
+                          ))}
+                          {instructor.rank && (
+                            <Badge variant="outline" size="sm">
+                              {instructor.rank.name}
+                            </Badge>
+                          )}
+                          {instructor.discipline && (
+                            <Badge variant="outline" size="sm">
+                              {instructor.discipline.name}
+                            </Badge>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </Stack>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </Section.Content>
+        </Section>
+      )}
+
+      {/* Courses in this Program */}
+      {programData.courses.length > 0 && (
+        <Section>
+          <Section.Content>
+            <Stack direction="column" size="md">
+              <H4>
+                Courses in{" "}
+                {programData.programs.length === 1 ? programData.programs[0].name : "this program"}
+              </H4>
+              <Note>
+                Other courses in the same program
+                {programData.programs.length === 1 ? ` — ${programData.programs[0].name}` : ""}.
+              </Note>
+              <div className="grid gap-4 @md:grid-cols-2 @lg:grid-cols-3">
+                {programData.courses.map(c => (
+                  <CourseCard key={c.id} course={c} />
+                ))}
+              </div>
+            </Stack>
+          </Section.Content>
+        </Section>
+      )}
+
+      {/* Related Courses */}
+      {relatedCourses.length > 0 && (
+        <Section>
+          <Section.Content>
+            <Stack direction="column" size="md">
+              <H4>Related Courses</H4>
+              <div className="grid gap-4 @md:grid-cols-2 @lg:grid-cols-3">
+                {relatedCourses.map(c => (
+                  <CourseCard key={c.id} course={c} />
+                ))}
+              </div>
+            </Stack>
+          </Section.Content>
+        </Section>
+      )}
+
+      <StructuredData
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            generateCollectionPage(
+              `/courses/${course.slug}`,
+              course.title,
+              course.description ?? `Curriculum and certification for ${course.title}`,
+            ),
+          ],
+        }}
+      />
     </>
   )
 }

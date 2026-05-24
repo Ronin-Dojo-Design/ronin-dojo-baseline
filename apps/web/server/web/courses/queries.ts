@@ -64,3 +64,123 @@ export const findCourseBySlug = async (slug: string, brand: Brand) => {
     select: courseOnePayload,
   })
 }
+
+/**
+ * Find instructors for a course's organization.
+ * Instructors = active members with the INSTRUCTOR role assignment.
+ */
+export const findCourseInstructors = async (organizationId: string, brand: Brand) => {
+  "use cache"
+
+  cacheTag("course-instructors")
+  cacheLife("minutes")
+
+  return db.membership.findMany({
+    where: {
+      brand,
+      organizationId,
+      status: "ACTIVE",
+      roleAssignments: {
+        some: {
+          role: { code: "INSTRUCTOR" },
+        },
+      },
+    },
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      rank: { select: { id: true, name: true } },
+      discipline: { select: { id: true, name: true } },
+      roleAssignments: {
+        select: {
+          role: { select: { code: true, displayTitle: true } },
+        },
+      },
+    },
+    orderBy: { joinedAt: "asc" },
+    take: 12,
+  })
+}
+
+export type CourseInstructor = Awaited<ReturnType<typeof findCourseInstructors>>[number]
+
+/**
+ * Find sibling courses in the same program(s) as the given course.
+ * Excludes the current course.
+ */
+export const findProgramSiblingCourses = async (courseId: string, brand: Brand) => {
+  "use cache"
+
+  cacheTag("program-courses")
+  cacheLife("minutes")
+
+  // Find program IDs this course belongs to
+  const programLinks = await db.programCourse.findMany({
+    where: { courseId },
+    select: { programId: true, program: { select: { name: true } } },
+  })
+
+  if (programLinks.length === 0) return { programs: [], courses: [] }
+
+  const programIds = programLinks.map(l => l.programId)
+
+  const siblingCourses = await db.course.findMany({
+    where: {
+      brand,
+      isPublished: true,
+      id: { not: courseId },
+      programs: { some: { programId: { in: programIds } } },
+    },
+    select: courseManyPayload,
+    orderBy: { title: "asc" },
+    take: 12,
+  })
+
+  return {
+    programs: programLinks.map(l => l.program),
+    courses: siblingCourses,
+  }
+}
+
+/**
+ * Find related courses: same discipline or org, excluding the current course
+ * and any already-shown program siblings.
+ */
+export const findRelatedCourses = async ({
+  courseId,
+  brand,
+  disciplineId,
+  organizationId,
+  excludeIds,
+}: {
+  courseId: string
+  brand: Brand
+  disciplineId: string | null
+  organizationId: string
+  excludeIds: string[]
+}) => {
+  "use cache"
+
+  cacheTag("related-courses")
+  cacheLife("minutes")
+
+  const allExcluded = [courseId, ...excludeIds]
+
+  return db.course.findMany({
+    where: {
+      brand,
+      isPublished: true,
+      id: { notIn: allExcluded },
+      OR: [...(disciplineId ? [{ disciplineId }] : []), { organizationId }],
+    },
+    select: courseManyPayload,
+    orderBy: { title: "asc" },
+    take: 6,
+  })
+}
