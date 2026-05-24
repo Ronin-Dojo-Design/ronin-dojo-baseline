@@ -74,7 +74,7 @@ async function queryCanUploadMedia(
 }
 
 const BRAND = "BASELINE_MARTIAL_ARTS" as const
-const TEST_PREFIX = "test-entitlement-integ-"
+const TEST_PREFIX = `test-entitlement-integ-${Date.now()}-`
 
 // Track created IDs for cleanup
 const cleanup: {
