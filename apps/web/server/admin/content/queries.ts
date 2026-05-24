@@ -63,6 +63,12 @@ export const findContentAtomById = async (id: string) => {
           id: true,
           publicTitle: true,
           publicSlug: true,
+          renderedCopy: true,
+          excerpt: true,
+          cta: true,
+          thumbnailUrl: true,
+          videoUrl: true,
+          voiceNotes: true,
           channel: true,
           brand: true,
           status: true,
@@ -71,7 +77,7 @@ export const findContentAtomById = async (id: string) => {
         orderBy: { createdAt: "desc" },
       },
       mediaAttachments: {
-        orderBy: { sortOrder: "asc" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         select: {
           id: true,
           purpose: true,

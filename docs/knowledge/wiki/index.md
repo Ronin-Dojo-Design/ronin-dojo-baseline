@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-22
+updated: 2026-05-23
 author: Brian + Copilot
-last_agent: codex-session-0224
+last_agent: codex-session-0227
 ---
 
 # LLM Wiki Index
@@ -302,6 +302,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0222](../../sprints/SESSION_0222.md) | session--implement | closed-full |
 | [SESSION_0223](../../sprints/SESSION_0223.md) | session--implement | closed-quick |
 | [SESSION_0224](../../sprints/SESSION_0224.md) | session--implement | closed-full |
+| [SESSION_0225](../../sprints/SESSION_0225.md) | session--implement | closed-quick |
+| [SESSION_0226](../../sprints/SESSION_0226.md) | session--implement | closed-quick |
+| [SESSION_0227](../../sprints/SESSION_0227.md) | session--implement | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 
 ## Protocols

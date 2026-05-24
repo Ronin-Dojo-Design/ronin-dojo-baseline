@@ -84,6 +84,15 @@ describe("content-post queries — visibility contract", () => {
     expect(select.atom.select.tasks).toBeUndefined()
   })
 
+  it("includes atom tags in the list payload for card badges", async () => {
+    const { findPublishedContentPosts } = await import("./queries")
+    await findPublishedContentPosts("BASELINE_MARTIAL_ARTS" as any)
+
+    const select = (capturedFindManyArgs as any).select
+    expect(select.atom.select.tags.select).toEqual({ id: true, name: true, slug: true })
+    expect(select.atom.select.tags.orderBy).toEqual({ name: "asc" })
+  })
+
   it("orders list by publishDate descending", async () => {
     const { findPublishedContentPosts } = await import("./queries")
     await findPublishedContentPosts("BASELINE_MARTIAL_ARTS" as any)

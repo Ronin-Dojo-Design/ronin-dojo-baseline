@@ -3,6 +3,7 @@
 import { slugify } from "@dirstack/utils"
 import { after } from "next/server"
 import * as z from "zod"
+import { MediaType } from "~/.generated/prisma/client"
 import { getRequestBrand } from "~/lib/brand-context"
 import { adminActionClient } from "~/lib/safe-actions"
 import { contentAtomSchema, contentVariantSchema } from "~/server/admin/content/schema"
@@ -135,24 +136,41 @@ export const attachMediaToAtom = adminActionClient
     const { atomId, url, title, altText, purpose } = parsedInput
     const brand = await getRequestBrand()
 
+    const atom = await db.contentAtom.findFirst({
+      where: {
+        id: atomId,
+        variants: { some: { brand } },
+      },
+      select: { id: true },
+    })
+
+    if (!atom) {
+      throw new Error("Content atom not found")
+    }
+
+    const existingOrder = await db.mediaAttachment.aggregate({
+      where: { contentAtomId: atomId },
+      _max: { sortOrder: true },
+    })
+
     // Infer media type from URL extension
     const ext = url.split(".").pop()?.toLowerCase() ?? ""
-    const typeMap: Record<string, string> = {
-      jpg: "IMAGE",
-      jpeg: "IMAGE",
-      png: "IMAGE",
-      gif: "IMAGE",
-      webp: "IMAGE",
-      svg: "IMAGE",
-      mp4: "VIDEO",
-      webm: "VIDEO",
-      mov: "VIDEO",
-      mp3: "AUDIO",
-      wav: "AUDIO",
-      ogg: "AUDIO",
-      pdf: "DOCUMENT",
+    const typeMap: Record<string, MediaType> = {
+      jpg: MediaType.IMAGE,
+      jpeg: MediaType.IMAGE,
+      png: MediaType.IMAGE,
+      gif: MediaType.IMAGE,
+      webp: MediaType.IMAGE,
+      svg: MediaType.IMAGE,
+      mp4: MediaType.VIDEO,
+      webm: MediaType.VIDEO,
+      mov: MediaType.VIDEO,
+      mp3: MediaType.DOCUMENT,
+      wav: MediaType.DOCUMENT,
+      ogg: MediaType.DOCUMENT,
+      pdf: MediaType.DOCUMENT,
     }
-    const mediaType = (typeMap[ext] ?? "IMAGE") as any
+    const mediaType = typeMap[ext] ?? MediaType.IMAGE
 
     // Create the Media record first
     const media = await db.media.create({
@@ -170,6 +188,7 @@ export const attachMediaToAtom = adminActionClient
     const attachment = await db.mediaAttachment.create({
       data: {
         purpose,
+        sortOrder: (existingOrder._max.sortOrder ?? -1) + 1,
         contentAtomId: atomId,
         mediaId: media.id,
       },
@@ -183,6 +202,74 @@ export const attachMediaToAtom = adminActionClient
     })
 
     return attachment
+  })
+
+const reorderContentAtomMediaAttachmentsSchema = z.object({
+  atomId: z.string().min(1),
+  attachmentIds: z.array(z.string().min(1)),
+})
+
+export const reorderContentAtomMediaAttachments = adminActionClient
+  .inputSchema(reorderContentAtomMediaAttachmentsSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { atomId, attachmentIds } = parsedInput
+    const brand = await getRequestBrand()
+    const uniqueIds = new Set(attachmentIds)
+
+    if (uniqueIds.size !== attachmentIds.length) {
+      throw new Error("Media attachment order contains duplicate ids")
+    }
+
+    const atom = await db.contentAtom.findFirst({
+      where: {
+        id: atomId,
+        variants: { some: { brand } },
+      },
+      select: {
+        id: true,
+        mediaAttachments: {
+          select: { id: true },
+        },
+      },
+    })
+
+    if (!atom) {
+      throw new Error("Content atom not found")
+    }
+
+    const currentIds = new Set(atom.mediaAttachments.map(({ id }) => id))
+
+    for (const id of attachmentIds) {
+      if (!currentIds.has(id)) {
+        throw new Error("Media attachment order includes an invalid attachment")
+      }
+    }
+
+    if (attachmentIds.length !== currentIds.size) {
+      throw new Error("Media attachment order is stale")
+    }
+
+    await db.$transaction(async tx => {
+      for (const [sortOrder, id] of attachmentIds.entries()) {
+        const result = await tx.mediaAttachment.updateMany({
+          where: { id, contentAtomId: atomId },
+          data: { sortOrder },
+        })
+
+        if (result.count !== 1) {
+          throw new Error("Media attachment order could not be saved")
+        }
+      }
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/content", `/admin/content/${atomId}`],
+        tags: ["content-atoms", `content-atom-${atomId}`],
+      })
+    })
+
+    return true
   })
 
 export const removeMediaAttachment = adminActionClient

@@ -2,8 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
+import { EyeIcon, PencilIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import type { ComponentProps } from "react"
+import { type ComponentProps, useState } from "react"
 import { toast } from "sonner"
 import { ContentChannel, ContentVariantStatus } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
@@ -16,7 +17,7 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { H4 } from "~/components/common/heading"
-import { Input } from "~/components/common/input"
+import { Input, inputVariants } from "~/components/common/input"
 import {
   Select,
   SelectContent,
@@ -24,7 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
+import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import { Markdown } from "~/components/web/markdown"
 import { cx } from "~/lib/utils"
 import { upsertContentVariant } from "~/server/admin/content/actions"
 import type { findContentAtomById } from "~/server/admin/content/queries"
@@ -47,6 +50,7 @@ export function ContentVariantForm({
 }: ContentVariantFormProps) {
   const router = useRouter()
   const resolver = zodResolver(contentVariantSchema)
+  const [isRenderedCopyPreviewing, setIsRenderedCopyPreviewing] = useState(false)
 
   const { form, action } = useHookFormAction(upsertContentVariant, resolver, {
     formProps: {
@@ -57,12 +61,12 @@ export function ContentVariantForm({
         status: variant?.status ?? "DRAFT",
         publicTitle: variant?.publicTitle ?? "",
         publicSlug: variant?.publicSlug ?? "",
-        excerpt: "",
-        renderedCopy: "",
-        cta: "",
-        thumbnailUrl: "",
-        videoUrl: "",
-        voiceNotes: "",
+        excerpt: variant?.excerpt ?? "",
+        renderedCopy: variant?.renderedCopy ?? "",
+        cta: variant?.cta ?? "",
+        thumbnailUrl: variant?.thumbnailUrl ?? "",
+        videoUrl: variant?.videoUrl ?? "",
+        voiceNotes: variant?.voiceNotes ?? "",
         publishDate: variant?.publishDate ?? null,
       },
     },
@@ -190,15 +194,45 @@ export function ContentVariantForm({
         <FormField
           control={form.control}
           name="renderedCopy"
-          render={({ field }) => (
-            <FormItem className="col-span-full">
-              <FormLabel>Rendered Copy</FormLabel>
-              <FormControl>
-                <TextArea rows={4} {...field} value={field.value ?? ""} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const renderedCopy = field.value ?? ""
+
+            return (
+              <FormItem className="col-span-full items-stretch">
+                <Stack className="justify-between">
+                  <FormLabel>Rendered Copy</FormLabel>
+
+                  {renderedCopy && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setIsRenderedCopyPreviewing(prev => !prev)}
+                      prefix={isRenderedCopyPreviewing ? <PencilIcon /> : <EyeIcon />}
+                      className="-my-1"
+                    >
+                      {isRenderedCopyPreviewing ? "Edit" : "Preview"}
+                    </Button>
+                  )}
+                </Stack>
+
+                <FormControl>
+                  {renderedCopy && isRenderedCopyPreviewing ? (
+                    <Markdown
+                      code={renderedCopy}
+                      className={cx(
+                        inputVariants(),
+                        "max-w-none min-h-18 bg-card border leading-normal",
+                      )}
+                    />
+                  ) : (
+                    <TextArea rows={4} {...field} value={renderedCopy} />
+                  )}
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
         />
 
         <FormField
