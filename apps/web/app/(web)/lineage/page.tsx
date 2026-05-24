@@ -12,10 +12,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import {
-  createGraph,
-  generateCollectionPageWithItems,
-} from "~/lib/structured-data"
+import { createGraph, generateCollectionPageWithGenericItems } from "~/lib/structured-data"
 import { findPublishedLineageTrees } from "~/server/web/lineage/queries"
 
 const PAGE_URL = "/lineage"
@@ -65,11 +62,12 @@ export default async function LineageIndexPage() {
     <>
       <StructuredData
         data={createGraph([
-          generateCollectionPageWithItems(
+          generateCollectionPageWithGenericItems(
             PAGE_URL,
             PAGE_TITLE,
             PAGE_DESCRIPTION,
             itemListItems,
+            "CreativeWork",
           ),
         ])}
       />

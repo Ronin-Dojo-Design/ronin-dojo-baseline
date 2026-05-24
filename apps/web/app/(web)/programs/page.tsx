@@ -15,10 +15,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import {
-  createGraph,
-  generateCollectionPageWithItems,
-} from "~/lib/structured-data"
+import { createGraph, generateCollectionPageWithGenericItems } from "~/lib/structured-data"
 import { getProgramsByBrand } from "~/server/web/program/queries"
 
 const PAGE_URL = "/programs"
@@ -29,7 +26,11 @@ const PAGE_DESCRIPTION =
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
   { href: "/courses", label: "Courses", description: "Curriculum and certification programs" },
   { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
-  { href: "/disciplines", label: "Disciplines", description: "Martial arts styles and rank systems" },
+  {
+    href: "/disciplines",
+    label: "Disciplines",
+    description: "Martial arts styles and rank systems",
+  },
 ]
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,11 +54,12 @@ export default async function ProgramsPage() {
     <>
       <StructuredData
         data={createGraph([
-          generateCollectionPageWithItems(
+          generateCollectionPageWithGenericItems(
             PAGE_URL,
             PAGE_TITLE,
             PAGE_DESCRIPTION,
             itemListItems,
+            "Course",
           ),
         ])}
       />

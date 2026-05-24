@@ -1,18 +1,18 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Note } from "~/components/common/note"
+import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateCollectionPage } from "~/lib/structured-data"
-import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 import {
   findPublishedLineageTreeSlugs,
-  getLineageProfile,
+  findPublishedLineageTreeSummaryBySlug,
+  getLineageProfilesByIds,
   getLineageTreeBySlug,
 } from "~/server/web/lineage/queries"
 
@@ -47,18 +47,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { treeSlug } = await params
   const brand = await getRequestBrand()
-  const result = await getLineageTreeBySlug({ brand, slug: treeSlug })
+  const tree = await findPublishedLineageTreeSummaryBySlug({ brand, slug: treeSlug })
 
-  if (!result) {
+  if (!tree) {
     return { title: "Lineage Tree Not Found" }
   }
 
   return getPageMetadata({
     url: `/lineage/${treeSlug}`,
     metadata: {
-      title: `${result.tree.name} — Lineage`,
-      description:
-        result.tree.description ?? `Lineage tree for ${result.tree.name}`,
+      title: `${tree.name} — Lineage`,
+      description: tree.description ?? `Lineage tree for ${tree.name}`,
     },
   })
 }
@@ -76,9 +75,19 @@ export default async function LineageTreePage({ params }: Props) {
     notFound()
   }
 
+  const structuredData = createGraph([
+    generateCollectionPage(
+      `/lineage/${treeSlug}`,
+      result.tree.name,
+      result.tree.description ?? undefined,
+    ),
+  ])
+
   if (result.members.length === 0) {
     return (
       <>
+        <StructuredData data={structuredData} />
+
         <Breadcrumbs
           items={[
             { url: "/lineage", title: "Lineage Trees" },
@@ -110,28 +119,11 @@ export default async function LineageTreePage({ params }: Props) {
    * node id.
    */
   const visibleNodeIds = Array.from(new Set(result.members.map(member => member.nodeId)))
-
-  const profiles = await Promise.all(
-    visibleNodeIds.map(async id => [id, await getLineageProfile(id)] as const),
-  )
-
-  const profilesById: Record<string, LineageNodeProfile> = {}
-
-  for (const [id, profile] of profiles) {
-    if (profile) profilesById[id] = profile
-  }
+  const profilesById = await getLineageProfilesByIds(visibleNodeIds)
 
   return (
     <>
-      <StructuredData
-        data={createGraph([
-          generateCollectionPage(
-            `/lineage/${treeSlug}`,
-            result.tree.name,
-            result.tree.description ?? undefined,
-          ),
-        ])}
-      />
+      <StructuredData data={structuredData} />
 
       <Breadcrumbs
         items={[
@@ -142,9 +134,7 @@ export default async function LineageTreePage({ params }: Props) {
 
       <Intro>
         <IntroTitle>{result.tree.name}</IntroTitle>
-        {result.tree.description && (
-          <IntroDescription>{result.tree.description}</IntroDescription>
-        )}
+        {result.tree.description && <IntroDescription>{result.tree.description}</IntroDescription>}
       </Intro>
 
       <Section>

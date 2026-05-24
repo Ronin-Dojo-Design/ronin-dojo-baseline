@@ -8,6 +8,7 @@ import {
   type LineageTreePublicResult,
   type LineageTreePublicRow,
   type LineageTreeResult,
+  type LineageTreeSummary,
   lineageNodeProfilePayload,
   lineageNodeRowPayload,
   lineageRelationshipPayload,
@@ -240,6 +241,33 @@ export const getLineageProfile = cache(
   },
 )
 
+/**
+ * Fetch drawer profile payloads for a batch of visible nodes.
+ *
+ * The public route already materializes visible tree members before calling
+ * this helper. Keep the PUBLIC filter here anyway so the profile payload cannot
+ * be widened accidentally by a caller passing unfiltered ids.
+ */
+export const getLineageProfilesByIds = cache(
+  async (nodeIds: readonly string[]): Promise<Record<string, LineageNodeProfile>> => {
+    const uniqueNodeIds = Array.from(new Set(nodeIds))
+
+    if (uniqueNodeIds.length === 0) {
+      return {}
+    }
+
+    const profiles = await db.lineageNode.findMany({
+      where: {
+        id: { in: uniqueNodeIds },
+        visibility: { in: PUBLIC_VISIBILITY_SCOPE },
+      },
+      select: lineageNodeProfilePayload,
+    })
+
+    return Object.fromEntries(profiles.map(profile => [profile.id, profile]))
+  },
+)
+
 // ---------------------------------------------------------------------------
 // getLineageTreeBySlug — Lineage Tree v1 read model.
 // Public read path; cached.
@@ -433,6 +461,47 @@ export const getLineageTreeBySlug = async ({
   })
 }
 
+export type LineageTreeMetadataSummary = Pick<
+  LineageTreeSummary,
+  "id" | "brand" | "slug" | "name" | "description"
+>
+
+/**
+ * Lightweight public summary for page metadata.
+ *
+ * Do not call `getLineageTreeBySlug` from `generateMetadata` just to build a
+ * title/description; that query selects members and visual groups for the full
+ * public viewer payload.
+ */
+export const findPublishedLineageTreeSummaryBySlug = async ({
+  brand,
+  slug,
+}: {
+  brand: Brand
+  slug: string
+}): Promise<LineageTreeMetadataSummary | null> => {
+  "use cache"
+
+  cacheTag("lineage", `lineage-tree-summary-${brand}-${slug}`)
+  cacheLife("minutes")
+
+  return db.lineageTree.findFirst({
+    where: {
+      brand,
+      slug,
+      isPublished: true,
+      visibility: { in: PUBLIC_VISIBILITY_SCOPE },
+    },
+    select: {
+      id: true,
+      brand: true,
+      slug: true,
+      name: true,
+      description: true,
+    },
+  })
+}
+
 // ---------------------------------------------------------------------------
 // findPublishedLineageTreeSlugs — SSG params for /lineage/[treeSlug].
 // Public read path; cached.
@@ -511,7 +580,15 @@ export const findPublishedLineageTrees = async ({
       description: true,
       discipline: { select: { id: true, name: true, slug: true } },
       organization: { select: { id: true, name: true, slug: true } },
-      _count: { select: { members: true } },
+      _count: {
+        select: {
+          members: {
+            where: {
+              node: { visibility: { in: PUBLIC_VISIBILITY_SCOPE } },
+            },
+          },
+        },
+      },
     },
     orderBy: { name: "asc" },
     take,

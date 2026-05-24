@@ -22,6 +22,9 @@ import type {
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
 import {
+  findPublishedLineageTreeSummaryBySlug,
+  findPublishedLineageTrees,
+  getLineageProfilesByIds,
   getLineageTreeBySlug,
   materializeLineageTreeResult,
   resolveLineageVisibilityScope,
@@ -45,6 +48,11 @@ type Fixtures = {
   visualGroupAId: string
   visualGroupBId: string
   emptyGroupId: string
+  publicNodeAId: string
+  publicNodeBId: string
+  restrictedNodeId: string
+  unlistedNodeId: string
+  hiddenInstructorRelationshipId: string
   userIds: string[]
   nodeIds: string[]
   ownerUserId: string
@@ -173,6 +181,15 @@ beforeAll(async () => {
     data: { defaultRootMemberId: memberA.id },
   })
 
+  const hiddenInstructorRelationship = await db.lineageRelationship.create({
+    data: {
+      type: "INSTRUCTOR_STUDENT",
+      fromNodeId: nodeC.id,
+      toNodeId: nodeA.id,
+      isVerified: true,
+    },
+  })
+
   // Second tree — PUBLIC but NOT published → must return null.
   const privateTree = await db.lineageTree.create({
     data: {
@@ -196,6 +213,11 @@ beforeAll(async () => {
     visualGroupAId: groupA.id,
     visualGroupBId: groupB.id,
     emptyGroupId: emptyGroup.id,
+    publicNodeAId: nodeA.id,
+    publicNodeBId: nodeB.id,
+    restrictedNodeId: nodeC.id,
+    unlistedNodeId: nodeD.id,
+    hiddenInstructorRelationshipId: hiddenInstructorRelationship.id,
     userIds: [userA.id, userB.id, userC.id, userD.id],
     nodeIds: [nodeA.id, nodeB.id, nodeC.id, nodeD.id],
     ownerUserId: userA.id,
@@ -216,6 +238,7 @@ afterAll(async () => {
   await db.lineageTree.deleteMany({
     where: { id: { in: [fx.publishedTreeId, fx.privateTreeId] } },
   })
+  await db.lineageRelationship.deleteMany({ where: { id: fx.hiddenInstructorRelationshipId } })
   await db.lineageNode.deleteMany({ where: { id: { in: fx.nodeIds } } })
   await db.user.deleteMany({ where: { id: { in: fx.userIds } } })
 
@@ -329,6 +352,64 @@ describe("getLineageTreeBySlug", () => {
     })
     expect(noViewer).toBeNull()
     expect(withViewer).toBeNull()
+  })
+})
+
+describe("findPublishedLineageTrees", () => {
+  it("counts only PUBLIC-node members for public listing cards", async () => {
+    const trees = await findPublishedLineageTrees({ brand: TEST_BRAND, take: 500 })
+    const tree = trees.find(tree => tree.id === fx!.publishedTreeId)
+
+    expect(tree).toBeDefined()
+    expect(tree?.memberCount).toBe(2)
+  })
+})
+
+describe("getLineageProfilesByIds", () => {
+  it("returns profile payloads in one PUBLIC-only batch", async () => {
+    const profilesById = await getLineageProfilesByIds([
+      fx!.publicNodeAId,
+      fx!.publicNodeBId,
+      fx!.restrictedNodeId,
+      fx!.unlistedNodeId,
+      fx!.publicNodeAId,
+    ])
+
+    expect(Object.keys(profilesById).sort()).toEqual([fx!.publicNodeAId, fx!.publicNodeBId].sort())
+    expect(profilesById[fx!.restrictedNodeId]).toBeUndefined()
+    expect(profilesById[fx!.unlistedNodeId]).toBeUndefined()
+  })
+
+  it("does not leak non-public instructor relationships in public profiles", async () => {
+    const profilesById = await getLineageProfilesByIds([fx!.publicNodeAId])
+
+    expect(profilesById[fx!.publicNodeAId]?.relationshipsTo).toEqual([])
+  })
+})
+
+describe("findPublishedLineageTreeSummaryBySlug", () => {
+  it("returns lightweight metadata for published PUBLIC trees", async () => {
+    const summary = await findPublishedLineageTreeSummaryBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+    })
+
+    expect(summary).toEqual({
+      id: fx!.publishedTreeId,
+      brand: TEST_BRAND,
+      slug: fx!.publishedTreeSlug,
+      name: fx!.publishedTreeSlug,
+      description: null,
+    })
+  })
+
+  it("returns null for unpublished trees", async () => {
+    const summary = await findPublishedLineageTreeSummaryBySlug({
+      brand: TEST_BRAND,
+      slug: fx!.privateTreeSlug,
+    })
+
+    expect(summary).toBeNull()
   })
 })
 

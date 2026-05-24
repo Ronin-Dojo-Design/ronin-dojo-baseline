@@ -26,6 +26,14 @@ export interface ArticleData {
   content: string
 }
 
+type StructuredDataListItem = {
+  name: string
+  url: string
+  description?: string | null
+}
+
+type GenericStructuredDataType = "Thing" | "CreativeWork" | "Course" | "Organization" | "WebPage"
+
 /**
  * Converts relative URL to absolute URL
  */
@@ -169,7 +177,7 @@ export const generateCollectionPageWithItems = (
   url: string,
   name: string,
   description: string | null,
-  items: Array<{ name: string; url: string; description?: string | null }>,
+  items: StructuredDataListItem[],
 ): CollectionPage => {
   const absoluteUrl = toAbsoluteUrl(url)
   return {
@@ -187,12 +195,38 @@ export const generateCollectionPageWithItems = (
 }
 
 /**
+ * Generates collection page schema with generic non-tool items.
+ *
+ * Keep `generateCollectionPageWithItems` for real Tool/SoftwareApplication
+ * collections. Martial arts pages such as lineage, programs, and organizations
+ * should not advertise their cards as software.
+ */
+export const generateCollectionPageWithGenericItems = (
+  url: string,
+  name: string,
+  description: string | null,
+  items: StructuredDataListItem[],
+  itemType: GenericStructuredDataType = "Thing",
+): CollectionPage => {
+  const absoluteUrl = toAbsoluteUrl(url)
+  return {
+    "@type": "CollectionPage",
+    name,
+    description: description || undefined,
+    url: absoluteUrl,
+    hasPart: items.map(item => ({
+      "@type": itemType,
+      name: item.name,
+      url: toAbsoluteUrl(item.url),
+      description: item.description || undefined,
+    })),
+  } as CollectionPage
+}
+
+/**
  * Generates item list schema
  */
-export const generateItemList = (
-  items: Array<{ name: string; url: string; description?: string | null }>,
-  name?: string,
-): ItemList => ({
+export const generateItemList = (items: StructuredDataListItem[], name?: string): ItemList => ({
   "@type": "ItemList",
   name,
   numberOfItems: items.length,
@@ -207,6 +241,30 @@ export const generateItemList = (
     },
   })),
 })
+
+/**
+ * Generates item list schema for non-tool collections.
+ */
+export const generateGenericItemList = (
+  items: StructuredDataListItem[],
+  name?: string,
+  itemType: GenericStructuredDataType = "Thing",
+): ItemList =>
+  ({
+    "@type": "ItemList",
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": itemType,
+        name: item.name,
+        url: toAbsoluteUrl(item.url),
+        description: item.description || undefined,
+      },
+    })),
+  }) as ItemList
 
 /**
  * Generates FAQ schema

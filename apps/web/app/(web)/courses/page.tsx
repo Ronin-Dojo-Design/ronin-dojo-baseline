@@ -15,7 +15,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { generateCollectionPage, generateItemList } from "~/lib/structured-data"
+import { generateCollectionPage, generateGenericItemList } from "~/lib/structured-data"
 import { searchCourses } from "~/server/web/courses/queries"
 
 type PageProps = {
@@ -124,7 +124,7 @@ export default async function CoursesPage({ searchParams }: PageProps) {
           "@context": "https://schema.org",
           "@graph": [
             generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
-            generateItemList(itemListItems, PAGE_TITLE),
+            generateGenericItemList(itemListItems, PAGE_TITLE, "Course"),
           ],
         }}
       />

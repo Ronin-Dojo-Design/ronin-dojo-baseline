@@ -206,7 +206,10 @@ export const lineageNodeProfilePayload = {
   },
   // Instructors who pointed AT this node (this user is the student).
   relationshipsTo: {
-    where: { type: "INSTRUCTOR_STUDENT" as const },
+    where: {
+      type: "INSTRUCTOR_STUDENT" as const,
+      fromNode: { visibility: "PUBLIC" as const },
+    },
     select: {
       ...lineageRelationshipPayload,
       fromNode: {
