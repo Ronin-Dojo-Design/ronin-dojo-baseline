@@ -14,6 +14,7 @@ pairs_with:
   - docs/sprints/SESSION_0227.md
   - docs/sprints/SESSION_0228.md
   - docs/sprints/SESSION_0229.md
+  - docs/sprints/SESSION_0230.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -213,5 +214,46 @@ Ship the three remaining public-facing Content Engine features on `/posts` and `
 - [SESSION_0227](./SESSION_0227.md) — ContentVariant preview + media ordering + tag clicks; shipped variant hydration fix.
 - [SESSION_0228](./SESSION_0228.md) — Project-log retirement + hostile-review backfill; surfaced items A and FINDING_02 that 0229 closed.
 - [SESSION_0229](./SESSION_0229.md) — Admin brand-leak remediation; source of item B (deferred write-path test).
+- [SESSION_0230](./SESSION_0230.md) — Write-path brand-leak fixes + test debt closure; closed items A + B.
 - [Petey Plan Protocol](../protocols/petey-plan.md) — protocol this doc instantiates.
-- [Closing ritual](../rituals/closing.md) — both sessions end with full-close per this ritual.
+- [Closing ritual](../rituals/closing.md) — all sessions end with full-close per this ritual.
+
+---
+
+## SESSION_0232 — Pre-existing test suite failure triage
+
+### Bow-in carryover (paste into SESSION_0232 bow-in)
+
+SESSION_0230 confirmed 63 pre-existing test failures + 9 errors across `server/web/` test files (disciplines, enrollment, entitlements, lead, lineage, schedule, bookmarks, attendance, posts, tools, stripe). These failures are identical on clean `main` before and after SESSION_0230's changes — zero new failures introduced. The failures appear when running the full suite simultaneously; individual test files pass in isolation, suggesting concurrency/setup issues.
+
+### Goal
+
+Triage and fix the 63 pre-existing test failures across `server/web/` test files. Restore full suite to green.
+
+### Tasks
+
+#### SESSION_0232_TASK_01 — Triage: categorize failures
+
+- **Agent:** Cody
+- **What:** Run each failing test file in isolation to confirm it passes alone. Then run pairs/groups to identify concurrency conflicts (shared DB state, mock bleed, port collisions, etc.). Categorize into: (a) setup/teardown issues, (b) mock bleed across files, (c) genuine logic failures, (d) missing test infrastructure.
+- **Done means:** Categorized failure list with root causes identified.
+
+#### SESSION_0232_TASK_02 — Fix categorized failures
+
+- **Agent:** Cody
+- **What:** Fix each category. Likely fixes: better test isolation (unique prefixes), proper cleanup in afterAll, mock reset between files, or missing test DB seed data.
+- **Done means:** Full suite passes with 0 failures.
+
+#### SESSION_0232_TASK_03 — Verification + bow-out
+
+- **Agent:** Petey (inline)
+- **What:** Full suite green, typecheck, build. Full-close.
+
+### Scope guard
+
+- Do NOT fix any production code bugs discovered during triage — file them as findings.
+- Do NOT refactor test infrastructure beyond what's needed to fix the failures.
+
+### Expected size
+
+~90-120 minutes depending on root cause complexity.

@@ -22,16 +22,26 @@ export const upsertContentAtom = adminActionClient
     const toolIds = tools?.map(id => ({ id }))
 
     const atom = id
-      ? await db.contentAtom.update({
-          where: { id },
-          data: {
-            ...input,
-            slug,
-            canonicalId,
-            tags: { set: tagIds },
-            tools: { set: toolIds },
-          },
-        })
+      ? await (async () => {
+          // Brand-scope the update: verify the atom belongs to the current brand
+          const existing = await db.contentAtom.findFirst({
+            where: { id, variants: { some: { brand } } },
+            select: { id: true },
+          })
+          if (!existing) {
+            throw new Error("Content atom not found")
+          }
+          return db.contentAtom.update({
+            where: { id },
+            data: {
+              ...input,
+              slug,
+              canonicalId,
+              tags: { set: tagIds },
+              tools: { set: toolIds },
+            },
+          })
+        })()
       : await db.contentAtom.create({
           data: {
             ...input,
@@ -66,8 +76,11 @@ export const upsertContentAtom = adminActionClient
 export const deleteContentAtoms = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    const brand = await getRequestBrand()
+
+    // Only delete atoms that have at least one variant for the current brand
     await db.contentAtom.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, variants: { some: { brand } } },
     })
 
     revalidate({
@@ -110,8 +123,10 @@ export const upsertContentVariant = adminActionClient
 export const deleteContentVariant = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    const brand = await getRequestBrand()
+
     await db.contentVariant.deleteMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, brand },
     })
 
     revalidate({
