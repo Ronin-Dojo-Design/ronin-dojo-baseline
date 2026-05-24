@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-24
 author: Brian + Copilot
-last_agent: claude-session-0237
+last_agent: claude-session-0238
 ---
 
 # LLM Wiki Index
@@ -315,6 +315,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0235](../../sprints/SESSION_0235.md) | session--implement | closed-full |
 | [SESSION_0236](../../sprints/SESSION_0236.md) | session--implement | closed-quick |
 | [SESSION_0237](../../sprints/SESSION_0237.md) | session--implement | closed-full |
+| [SESSION_0238](../../sprints/SESSION_0238.md) | session--implement | closed-full |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 
@@ -395,6 +396,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [directory/directory-listing.tsx](files/directory-listing-component.md) | file | active |
 | [directory/directory-list.tsx](files/directory-list-component.md) | file | active |
 | [disciplines/[slug]/page.tsx](files/discipline-detail-page.md) | file | active |
+| [schools/queries.ts](files/schools-queries.md) | file | active |
+| [schools/[slug]/page.tsx](files/schools-detail-page.md) | file | active |
+| [courses/page.tsx](files/courses-listing-page.md) | file | active |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components
