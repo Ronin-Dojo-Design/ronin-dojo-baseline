@@ -3,12 +3,16 @@
 import { useHotkeys } from "@mantine/hooks"
 import {
   BookOpenIcon,
+  BuildingIcon,
   ChevronDownIcon,
+  GitBranchIcon,
   GraduationCapIcon,
   SearchIcon,
   ShieldIcon,
   ShoppingBagIcon,
+  StoreIcon,
   SwordsIcon,
+  SchoolIcon,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -80,6 +84,12 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                 <DropdownMenuItem render={<NavLink href="/disciplines" prefix={<ShieldIcon />} />}>
                   {t("navigation.disciplines")}
                 </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/schools" prefix={<SchoolIcon />} />}>
+                  {t("navigation.schools")}
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}>
+                  {t("navigation.organizations")}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   render={<NavLink href="/courses" prefix={<GraduationCapIcon />} />}
                 >
@@ -88,8 +98,14 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                 <DropdownMenuItem render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}>
                   {t("navigation.techniques")}
                 </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}>
+                  {t("navigation.lineage")}
+                </DropdownMenuItem>
                 <DropdownMenuItem render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}>
                   {t("navigation.gear")}
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/merch" prefix={<StoreIcon />} />}>
+                  {t("navigation.merch")}
                 </DropdownMenuItem>
                 <DropdownMenuItem render={<NavLink href="/blog" prefix={<BookOpenIcon />} />}>
                   {t("navigation.blog")}
@@ -129,9 +145,13 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           <NavLink href="/programs">{t("navigation.programs")}</NavLink>
           <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
           <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
+          <NavLink href="/schools">{t("navigation.schools")}</NavLink>
+          <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
           <NavLink href="/courses">{t("navigation.courses")}</NavLink>
           <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
+          <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
           <NavLink href="/gear">{t("navigation.gear")}</NavLink>
+          <NavLink href="/merch">{t("navigation.merch")}</NavLink>
           <NavLink href="/blog">{t("navigation.blog")}</NavLink>
           <NavLink href="/about">{t("navigation.about")}</NavLink>
         </nav>

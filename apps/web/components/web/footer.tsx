@@ -99,9 +99,13 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
           <NavLink href="/programs">{t("navigation.programs")}</NavLink>
           <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
           <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
+          <NavLink href="/schools">{t("navigation.schools")}</NavLink>
+          <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
           <NavLink href="/courses">{t("navigation.courses")}</NavLink>
           <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
+          <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
           <NavLink href="/gear">{t("navigation.gear")}</NavLink>
+          <NavLink href="/merch">{t("navigation.merch")}</NavLink>
         </Stack>
 
         <Stack direction="column" className="text-sm md:col-span-3">

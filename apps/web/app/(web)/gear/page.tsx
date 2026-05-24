@@ -1,12 +1,16 @@
 import type { Metadata } from "next"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
-import { Wrapper } from "~/components/common/wrapper"
 import {
   AffiliateGearBrowser,
   type AffiliateGearViewSection,
 } from "~/components/web/tuffbuffs/affiliate-gear-browser"
+import { StructuredData } from "~/components/web/structured-data"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
+import { getPageMetadata } from "~/lib/pages"
+import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 import {
   findAffiliateProducts,
   findAllGearRecommendations,
@@ -16,9 +20,16 @@ import type { TuffBuffsGearCategory, TuffBuffsProgramGearKey } from "~/types/tuf
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: "Training Gear",
-  description: "Amazon affiliate gear links for BJJ, Muay Thai, boxing, Eskrima, and self-defense.",
+const PAGE_URL = "/gear"
+const PAGE_TITLE = "Training Gear"
+const PAGE_DESCRIPTION =
+  "Amazon affiliate gear links for BJJ, Muay Thai, boxing, Eskrima, and self-defense."
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMetadata({
+    url: PAGE_URL,
+    metadata: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
+  })
 }
 
 const categoryOrder: TuffBuffsGearCategory[] = ["training", "accessories", "recovery"]
@@ -112,24 +123,36 @@ export default async function GearPage() {
     }
   })
   return (
-    <Wrapper gap="lg">
-      <Intro className="max-w-3xl">
-        <Stack size="sm" className="flex-wrap">
-          <Badge variant="outline">TuffBuffs</Badge>
-          <Badge variant="soft">Amazon affiliate</Badge>
-        </Stack>
-        <IntroTitle>Training Gear</IntroTitle>
-        <IntroDescription>
-          Curated Amazon gear links from the TuffBuffs catalog for BJJ, Muay Thai, boxing, Eskrima,
-          and self-defense training.
-        </IntroDescription>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Affiliate disclosure: qualifying purchases may earn a commission. Product pricing and
-          availability are controlled by Amazon.
-        </p>
-      </Intro>
+    <>
+      <StructuredData
+        data={createGraph([
+          generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
+        ])}
+      />
 
-      <AffiliateGearBrowser programSections={programSections} categorySections={categorySections} />
-    </Wrapper>
+      <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
+
+      <Section>
+        <Section.Content>
+          <Intro className="max-w-3xl">
+            <Stack size="sm" className="flex-wrap">
+              <Badge variant="outline">TuffBuffs</Badge>
+              <Badge variant="soft">Amazon affiliate</Badge>
+            </Stack>
+            <IntroTitle>{PAGE_TITLE}</IntroTitle>
+            <IntroDescription>
+              Curated Amazon gear links from the TuffBuffs catalog for BJJ, Muay Thai, boxing, Eskrima,
+              and self-defense training.
+            </IntroDescription>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Affiliate disclosure: qualifying purchases may earn a commission. Product pricing and
+              availability are controlled by Amazon.
+            </p>
+          </Intro>
+
+          <AffiliateGearBrowser programSections={programSections} categorySections={categorySections} />
+        </Section.Content>
+      </Section>
+    </>
   )
 }

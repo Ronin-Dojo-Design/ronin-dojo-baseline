@@ -1,32 +1,70 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
-import { Brand } from "~/.generated/prisma/client"
+import Link from "next/link"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
+import { Link as CommonLink } from "~/components/common/link"
+import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { StructuredData } from "~/components/web/structured-data"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
+import {
+  createGraph,
+  generateCollectionPageWithItems,
+} from "~/lib/structured-data"
 import { getOrganizationsByBrand } from "~/server/web/organization/queries"
 
-export const metadata: Metadata = {
-  title: "Organizations",
-  description: "Browse dojos, schools, clubs, and leagues.",
+const PAGE_URL = "/organizations"
+const PAGE_TITLE = "Organizations"
+const PAGE_DESCRIPTION =
+  "Browse dojos, schools, clubs, and leagues in the martial arts network."
+
+const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
+  { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
+  { href: "/disciplines", label: "Disciplines", description: "Martial arts styles and rank systems" },
+  { href: "/programs", label: "Programs", description: "Training programs and curriculum" },
+]
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMetadata({
+    url: PAGE_URL,
+    metadata: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
+  })
 }
 
 export default async function OrganizationsPage() {
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const orgs = await getOrganizationsByBrand(brand)
+
+  const itemListItems = orgs.map(o => ({
+    name: o.name,
+    url: `/organizations/${o.slug}`,
+  }))
 
   return (
     <>
+      <StructuredData
+        data={createGraph([
+          generateCollectionPageWithItems(
+            PAGE_URL,
+            PAGE_TITLE,
+            PAGE_DESCRIPTION,
+            itemListItems,
+          ),
+        ])}
+      />
+
+      <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
+
       <Intro>
-        <IntroTitle>Organizations</IntroTitle>
-        <IntroDescription>Browse dojos, schools, clubs, and leagues.</IntroDescription>
+        <IntroTitle>{PAGE_TITLE}</IntroTitle>
+        <IntroDescription>{PAGE_DESCRIPTION}</IntroDescription>
       </Intro>
 
       <Section>
@@ -35,15 +73,13 @@ export default async function OrganizationsPage() {
             <p className="text-sm text-muted-foreground">
               {orgs.length} organization{orgs.length !== 1 ? "s" : ""}
             </p>
-            <Button size="sm" render={<Link href="/organizations/new" />}>
+            <Button size="sm" render={<CommonLink href="/organizations/new" />}>
               Create Organization
             </Button>
           </Stack>
 
           {orgs.length === 0 ? (
-            <p className="text-secondary-foreground text-sm">
-              No organizations yet. Be the first to create one!
-            </p>
+            <Note>No organizations yet. Be the first to create one!</Note>
           ) : (
             <Grid>
               {orgs.map(org => (
@@ -79,6 +115,24 @@ export default async function OrganizationsPage() {
               ))}
             </Grid>
           )}
+        </Section.Content>
+      </Section>
+
+      {/* Cross-links */}
+      <Section>
+        <Section.Content>
+          <Grid>
+            {CROSS_LINKS.map(link => (
+              <Link key={link.href} href={link.href}>
+                <Card>
+                  <CardHeader>
+                    <H4>{link.label}</H4>
+                    <CardDescription>{link.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+          </Grid>
         </Section.Content>
       </Section>
     </>
