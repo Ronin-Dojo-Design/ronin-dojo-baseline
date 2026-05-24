@@ -1,12 +1,26 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
 import { db } from "~/services/db"
+
+export async function generateMetadata(): Promise<Metadata> {
+  return getPageMetadata({
+    url: "/dashboard/techniques/new",
+    metadata: {
+      title: "New Technique",
+      description: "Create a technique in the dashboard.",
+      robots: { index: false, follow: false },
+    },
+  })
+}
 
 export default async function NewTechniquePage() {
   const session = await getServerSession()
-  if (!session?.user) redirect("/login")
+  if (!session?.user) redirect("/auth/login?next=/dashboard/techniques/new")
 
   const brand = await getRequestBrand()
 
@@ -27,5 +41,17 @@ export default async function NewTechniquePage() {
     orderBy: { name: "asc" },
   })
 
-  return <TechniqueForm organizationId={membership.organization.id} disciplines={disciplines} />
+  return (
+    <>
+      <Breadcrumbs
+        items={[
+          { url: "/dashboard", title: "Dashboard" },
+          { url: "/dashboard", title: "Techniques" },
+          { url: "/dashboard/techniques/new", title: "New Technique" },
+        ]}
+      />
+
+      <TechniqueForm organizationId={membership.organization.id} disciplines={disciplines} />
+    </>
+  )
 }

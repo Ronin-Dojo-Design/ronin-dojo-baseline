@@ -1,14 +1,30 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
+import { getPageMetadata } from "~/lib/pages"
 import { db } from "~/services/db"
 
 type Props = { params: Promise<{ id: string }> }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+
+  return getPageMetadata({
+    url: `/dashboard/techniques/${id}`,
+    metadata: {
+      title: "Edit Technique",
+      description: "Manage a technique in the dashboard.",
+      robots: { index: false, follow: false },
+    },
+  })
+}
+
 export default async function EditTechniquePage({ params }: Props) {
   const { id } = await params
   const session = await getServerSession()
-  if (!session?.user) redirect("/login")
+  if (!session?.user) redirect(`/auth/login?next=/dashboard/techniques/${id}`)
 
   const technique = await db.technique.findUnique({
     where: { id },
@@ -54,10 +70,20 @@ export default async function EditTechniquePage({ params }: Props) {
   })
 
   return (
-    <TechniqueForm
-      organizationId={technique.organizationId}
-      disciplines={disciplines}
-      technique={technique}
-    />
+    <>
+      <Breadcrumbs
+        items={[
+          { url: "/dashboard", title: "Dashboard" },
+          { url: "/dashboard", title: "Techniques" },
+          { url: `/dashboard/techniques/${id}`, title: technique.name },
+        ]}
+      />
+
+      <TechniqueForm
+        organizationId={technique.organizationId}
+        disciplines={disciplines}
+        technique={technique}
+      />
+    </>
   )
 }

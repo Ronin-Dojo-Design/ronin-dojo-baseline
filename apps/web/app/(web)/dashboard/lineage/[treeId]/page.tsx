@@ -9,10 +9,12 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
 import { getLineageEditorTree } from "~/server/web/lineage/editor-queries"
 
 type Props = {
@@ -22,22 +24,39 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { treeId } = await params
   const session = await getServerSession()
+  const url = `/dashboard/lineage/${treeId}`
 
   if (!session?.user) {
-    return { title: "Lineage Editor" }
+    return getPageMetadata({
+      url,
+      metadata: {
+        title: "Lineage Editor",
+        robots: { index: false, follow: false },
+      },
+    })
   }
 
   const brand = await getRequestBrand()
   const result = await getLineageEditorTree({ brand, treeId, user: session.user })
 
   if (!result) {
-    return { title: "Lineage Editor" }
+    return getPageMetadata({
+      url,
+      metadata: {
+        title: "Lineage Editor",
+        robots: { index: false, follow: false },
+      },
+    })
   }
 
-  return {
-    title: `${result.tree.name} — Lineage Editor`,
-    description: result.tree.description ?? `Editor preview for ${result.tree.name}`,
-  }
+  return getPageMetadata({
+    url,
+    metadata: {
+      title: `${result.tree.name} — Lineage Editor`,
+      description: result.tree.description ?? `Editor preview for ${result.tree.name}`,
+      robots: { index: false, follow: false },
+    },
+  })
 }
 
 export default async function DashboardLineageEditorPage({ params }: Props) {
@@ -60,6 +79,13 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
 
   return (
     <>
+      <Breadcrumbs
+        items={[
+          { url: "/dashboard", title: "Dashboard" },
+          { url: `/dashboard/lineage/${treeId}`, title: result.tree.name },
+        ]}
+      />
+
       <Intro>
         <IntroTitle>{result.tree.name}</IntroTitle>
         <IntroDescription>
