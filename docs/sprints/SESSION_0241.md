@@ -2,7 +2,7 @@
 title: "SESSION 0241 — Repo cleanup, workflow refinement, velobase-harness parity review"
 slug: session-0241
 type: session--open
-status: in-progress
+status: closed-full
 created: 2026-05-24
 updated: 2026-05-24
 last_agent: copilot-session-0241
@@ -100,6 +100,7 @@ Start with TASK_01 (cleanup), then TASK_02 (workflow refinement). TASK_03 is alr
 | SESSION_0241_TASK_01 | done | Repo cleanup — archived 230 sprint docs (0001–0220 + oddly-named + closed petey-plans) to `docs/sprints/_archive/`, keeping only SESSION_0221+ active |
 | SESSION_0241_TASK_02 | done | Workflow refinement — updated WORKFLOW_5.0.md launch board (NOW/NEXT/READY/POST-LAUNCH reflect reality at day +6), updated launch strategy status, updated program-plan.md superseded note |
 | SESSION_0241_TASK_03 | done | Velobase-harness parity review — created `docs/architecture/velobase-harness-patterns.md` with 5 cherry-pickable patterns and implementation priority |
+| SESSION_0241_TASK_04 | done | Lineage BBL foundation slice: `findPublishedLineageTreeSlugs()` + `findPublishedLineageTrees()` queries, `/lineage/[treeSlug]` public parity uplift (getPageMetadata, Breadcrumbs, Intro, Section, StructuredData, generateStaticParams), `/lineage` index page with card grid + cross-links |
 
 ## What landed
 
@@ -107,6 +108,12 @@ Start with TASK_01 (cleanup), then TASK_02 (workflow refinement). TASK_03 is alr
 2. **WORKFLOW_5.0.md updated:** Launch board reflects reality (6 days past May 18 target), NOW/NEXT sections current, READY FOR LAUNCH includes recent parity uplift work, POST-LAUNCH includes velobase-harness patterns.
 3. **program-plan.md updated:** Superseded note now includes SESSION_0241 date and "6 days past target" reality check.
 4. **Velobase-harness patterns doc:** `docs/architecture/velobase-harness-patterns.md` documents 5 patterns (billing credits, BullMQ workers, anti-abuse, affiliate, ad attribution) with implementation priority and sprint targets. Decision: do NOT install/fork, cherry-pick only.
+5. **Lineage BBL foundation slice (SESSION_0240 continuation):**
+   - `findPublishedLineageTreeSlugs()` — cached SSG slug query for `generateStaticParams`
+   - `findPublishedLineageTrees({ brand, take })` — lightweight card/listing query with member count, discipline, organization
+   - `/lineage/[treeSlug]` uplifted — `getPageMetadata`, `Breadcrumbs`, `Intro`, `Section`, `StructuredData` (CollectionPage JSON-LD), `generateStaticParams`, removed ad-hoc `H4`/`Note`/`<section>` wrappers
+   - `/lineage` index page created — card grid with discipline/org badges + member count, cross-links to disciplines/schools/courses, CollectionPage JSON-LD
+   - TypeScript typecheck: zero errors
 
 ## Files touched
 
@@ -115,6 +122,9 @@ Start with TASK_01 (cleanup), then TASK_02 (workflow refinement). TASK_03 is alr
 - `docs/protocols/WORKFLOW_5.0.md` — launch board + launch strategy status updated
 - `docs/architecture/program-plan.md` — superseded note updated
 - `docs/architecture/velobase-harness-patterns.md` — created
+- `apps/web/server/web/lineage/queries.ts` — added `findPublishedLineageTreeSlugs` + `findPublishedLineageTrees`
+- `apps/web/app/(web)/lineage/[treeSlug]/page.tsx` — uplifted to public parity chrome
+- `apps/web/app/(web)/lineage/page.tsx` — created (index/listing page)
 
 ## Decisions resolved
 

@@ -432,3 +432,99 @@ export const getLineageTreeBySlug = async ({
     viewerUserId: viewer.userId,
   })
 }
+
+// ---------------------------------------------------------------------------
+// findPublishedLineageTreeSlugs — SSG params for /lineage/[treeSlug].
+// Public read path; cached.
+//
+// Author: Cody / SESSION_0241 TASK_01.
+// ---------------------------------------------------------------------------
+
+/**
+ * Return `{ slug, brand }[]` for all published, publicly visible lineage
+ * trees. Used by `generateStaticParams` on `/lineage/[treeSlug]`.
+ */
+export const findPublishedLineageTreeSlugs = async (): Promise<
+  Array<{ slug: string; brand: Brand }>
+> => {
+  "use cache"
+
+  cacheTag("lineage", "lineage-tree-slugs")
+  cacheLife("hours")
+
+  return db.lineageTree.findMany({
+    where: {
+      isPublished: true,
+      visibility: { in: PUBLIC_VISIBILITY_SCOPE },
+    },
+    select: { slug: true, brand: true },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// findPublishedLineageTrees — lightweight card/list query for /lineage index.
+// Public read path; cached.
+//
+// Author: Cody / SESSION_0241 TASK_01.
+// ---------------------------------------------------------------------------
+
+/** Lightweight tree summary for cards/listing — no members or visual groups. */
+export type LineageTreeCardRow = {
+  id: string
+  brand: Brand
+  slug: string
+  name: string
+  description: string | null
+  memberCount: number
+  discipline: { id: string; name: string; slug: string } | null
+  organization: { id: string; name: string; slug: string } | null
+}
+
+/**
+ * Fetch published, publicly visible lineage trees for a brand with summary
+ * data suitable for cards/listing. Includes member count, discipline, and
+ * organization for display without loading the full tree payload.
+ */
+export const findPublishedLineageTrees = async ({
+  brand,
+  take = 50,
+}: {
+  brand: Brand
+  take?: number
+}): Promise<LineageTreeCardRow[]> => {
+  "use cache"
+
+  cacheTag("lineage", `lineage-trees-${brand}`)
+  cacheLife("minutes")
+
+  const trees = await db.lineageTree.findMany({
+    where: {
+      brand,
+      isPublished: true,
+      visibility: { in: PUBLIC_VISIBILITY_SCOPE },
+    },
+    select: {
+      id: true,
+      brand: true,
+      slug: true,
+      name: true,
+      description: true,
+      discipline: { select: { id: true, name: true, slug: true } },
+      organization: { select: { id: true, name: true, slug: true } },
+      _count: { select: { members: true } },
+    },
+    orderBy: { name: "asc" },
+    take,
+  })
+
+  return trees.map(t => ({
+    id: t.id,
+    brand: t.brand,
+    slug: t.slug,
+    name: t.name,
+    description: t.description,
+    memberCount: t._count.members,
+    discipline: t.discipline,
+    organization: t.organization,
+  }))
+}

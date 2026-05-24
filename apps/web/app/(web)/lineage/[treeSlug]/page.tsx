@@ -1,12 +1,20 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
+import { StructuredData } from "~/components/web/structured-data"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
+import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Section } from "~/components/web/ui/section"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getPageMetadata } from "~/lib/pages"
+import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
-import { getLineageProfile, getLineageTreeBySlug } from "~/server/web/lineage/queries"
+import {
+  findPublishedLineageTreeSlugs,
+  getLineageProfile,
+  getLineageTreeBySlug,
+} from "~/server/web/lineage/queries"
 
 /**
  * Standalone public lineage tree viewer.
@@ -24,6 +32,15 @@ interface Props {
 }
 
 // ---------------------------------------------------------------------------
+// Static params
+// ---------------------------------------------------------------------------
+
+export async function generateStaticParams() {
+  const trees = await findPublishedLineageTreeSlugs()
+  return trees.map(({ slug }) => ({ treeSlug: slug }))
+}
+
+// ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
 
@@ -36,10 +53,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Lineage Tree Not Found" }
   }
 
-  return {
-    title: `${result.tree.name} — Lineage`,
-    description: result.tree.description ?? `Lineage tree for ${result.tree.name}`,
-  }
+  return getPageMetadata({
+    url: `/lineage/${treeSlug}`,
+    metadata: {
+      title: `${result.tree.name} — Lineage`,
+      description:
+        result.tree.description ?? `Lineage tree for ${result.tree.name}`,
+    },
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -57,12 +78,27 @@ export default async function LineageTreePage({ params }: Props) {
 
   if (result.members.length === 0) {
     return (
-      <section className="py-8">
-        <Stack size="xs" direction="column">
-          <H4 render={props => <h1 {...props}>{props.children}</h1>}>{result.tree.name}</H4>
-          <Note>This lineage tree has no visible members.</Note>
-        </Stack>
-      </section>
+      <>
+        <Breadcrumbs
+          items={[
+            { url: "/lineage", title: "Lineage Trees" },
+            { url: `/lineage/${treeSlug}`, title: result.tree.name },
+          ]}
+        />
+
+        <Intro>
+          <IntroTitle>{result.tree.name}</IntroTitle>
+          {result.tree.description && (
+            <IntroDescription>{result.tree.description}</IntroDescription>
+          )}
+        </Intro>
+
+        <Section>
+          <Section.Content>
+            <Note>This lineage tree has no visible members.</Note>
+          </Section.Content>
+        </Section>
+      </>
     )
   }
 
@@ -86,18 +122,41 @@ export default async function LineageTreePage({ params }: Props) {
   }
 
   return (
-    <section className="py-8">
-      <Stack size="xs" direction="column" className="mb-4">
-        <H4 render={props => <h1 {...props}>{props.children}</h1>}>{result.tree.name}</H4>
-        {result.tree.description && <Note>{result.tree.description}</Note>}
-      </Stack>
-
-      <LineageTreeBoard
-        members={result.members}
-        visualGroups={result.visualGroups}
-        defaultRootMemberId={result.defaultRootMemberId}
-        profilesById={profilesById}
+    <>
+      <StructuredData
+        data={createGraph([
+          generateCollectionPage(
+            `/lineage/${treeSlug}`,
+            result.tree.name,
+            result.tree.description ?? undefined,
+          ),
+        ])}
       />
-    </section>
+
+      <Breadcrumbs
+        items={[
+          { url: "/lineage", title: "Lineage Trees" },
+          { url: `/lineage/${treeSlug}`, title: result.tree.name },
+        ]}
+      />
+
+      <Intro>
+        <IntroTitle>{result.tree.name}</IntroTitle>
+        {result.tree.description && (
+          <IntroDescription>{result.tree.description}</IntroDescription>
+        )}
+      </Intro>
+
+      <Section>
+        <Section.Content>
+          <LineageTreeBoard
+            members={result.members}
+            visualGroups={result.visualGroups}
+            defaultRootMemberId={result.defaultRootMemberId}
+            profilesById={profilesById}
+          />
+        </Section.Content>
+      </Section>
+    </>
   )
 }
