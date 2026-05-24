@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import Markdown from "react-markdown"
+import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
@@ -110,7 +111,12 @@ export default async function (props: Props) {
         {!!post.atom.tags.length && (
           <Stack size="sm" className="mt-4" wrap>
             {post.atom.tags.map(tag => (
-              <Tag key={tag.id}>{tag.name}</Tag>
+              <Tag
+                key={tag.id}
+                render={<Link href={`/posts?tag=${encodeURIComponent(tag.slug)}`} />}
+              >
+                {tag.name}
+              </Tag>
             ))}
           </Stack>
         )}
