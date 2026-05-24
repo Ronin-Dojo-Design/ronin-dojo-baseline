@@ -49,8 +49,10 @@ export const findContentAtoms = async (search: ContentAtomsTableSchema) => {
 }
 
 export const findContentAtomById = async (id: string) => {
-  return db.contentAtom.findUnique({
-    where: { id },
+  const brand = await getRequestBrand()
+
+  return db.contentAtom.findFirst({
+    where: { id, variants: { some: { brand } } },
     include: {
       discipline: { select: { id: true, name: true } },
       style: { select: { id: true, name: true } },
@@ -107,7 +109,9 @@ export const findStyleOptions = async () => {
 }
 
 export const findContentVariantById = async (id: string) => {
-  return db.contentVariant.findUnique({
-    where: { id },
+  const brand = await getRequestBrand()
+
+  return db.contentVariant.findFirst({
+    where: { id, brand },
   })
 }

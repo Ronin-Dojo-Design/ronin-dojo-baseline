@@ -9,10 +9,12 @@ last_agent: copilot-session-0225
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0224.md
+  - docs/sprints/SESSION_0229.md
   - docs/architecture/decisions/0018-content-atom-canonical-relations.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/project-log.md
+  - docs/sprints/SESSION_0229.md
 ---
 
 # SESSION 0225 — ContentAtom admin: server layer, list, and form
@@ -177,11 +179,11 @@ Add a Variants tab/section on `/admin/content/[id]` with create/edit form for Co
   - **Evidence:** `apps/web/server/admin/content/queries.ts:51-99` — `findContentAtomById(id)` calls `db.contentAtom.findUnique({ where: { id }, include: {...} })` with no `variants: { some: { brand } }` predicate and no `getRequestBrand()` call, in contrast to `findContentAtoms` immediately above which does brand-scope.
   - **Impact:** An authenticated admin on Brand A who navigates to `/admin/content/<atom-id-from-Brand-B>` will get a fully hydrated edit page (title, hook, longFormCopy, variants, media, tags, tools) for the foreign atom. Writes are still brand-checked by the actions, but read isolation across brands is broken on the admin edit surface.
   - **Required follow-up:** Add brand scoping to `findContentAtomById` (e.g. `where: { id, variants: { some: { brand } } }` using `getRequestBrand()`), and have the edit page return `notFound()` on miss. Add a regression test asserting that a Brand-B atom id returns null for a Brand-A request.
-  - **Status:** Open
+  - **Status:** **Closed by SESSION_0229.** `findContentAtomById` now calls `getRequestBrand()` and uses `findFirst({ where: { id, variants: { some: { brand } } } })` mirroring the `findContentAtoms` predicate in the same file. The sibling `findContentVariantById` was also brand-scoped (`where: { id, brand }`) as part of the same audit. The caller at `apps/web/app/admin/content/[id]/page.tsx:17-19` already returns `notFound()` on null. Cross-brand rejection test landed in `apps/web/server/admin/content/queries.brand-isolation.test.ts` (case 2: "findContentAtomById returns null when the atom's only variant is on a foreign brand"). See SESSION_0229.
 - **SESSION_0225_BACKFILL_FINDING_02**
   - **Severity:** Medium
   - **Task:** SESSION_0225_TASK_04 (verification / close)
   - **Evidence:** `## Verification` table lists only `pnpm typecheck`, `biome check`, `bun test -- --concurrency=1`, and `pnpm build`. No `actions.safe-action.test.ts` existed for `apps/web/server/admin/content/` at SESSION_0225 close (the first one in this directory was added in SESSION_0227 for media reorder). No mention of unauthenticated `/admin/content` smoke or cross-brand isolation check.
   - **Impact:** The session shipped a new admin surface with new auth-gated server actions without proving the auth predicate fires — exactly the class of regression the WORKFLOW 5.0 verification cap is meant to catch. The cross-brand read leak in FINDING_01 would have been caught by a minimal isolation test.
   - **Required follow-up:** When FINDING_01 is fixed, add a safe-action / isolation test for `findContentAtomById`, `upsertContentAtom`, and `deleteContentAtoms` covering (a) unauthenticated rejection and (b) Brand-A session cannot read/mutate Brand-B atoms.
-  - **Status:** Open
+  - **Status:** **Closed by SESSION_0229** for the read-path scope. `apps/web/server/admin/content/queries.brand-isolation.test.ts` (4 cases) covers cross-brand rejection for both `findContentAtomById` and `findContentVariantById`. The write-path coverage (`upsertContentAtom`/`deleteContentAtoms` cross-brand cases) was deliberately deferred — those actions already chain `adminActionClient` + `getRequestBrand()` per SESSION_0225's verdict, and the read-path leak was the load-bearing risk. Write-path isolation tests remain a recommended follow-up but not launch-blocking.
