@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { courseManyPayload } from "~/server/web/courses/payloads"
 
 export const programOrganizationPayload = {
   id: true,
@@ -48,11 +49,7 @@ export const programDetailPayload = {
   courses: {
     select: {
       course: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
+        select: courseManyPayload,
       },
     },
     orderBy: { course: { title: "asc" as const } },

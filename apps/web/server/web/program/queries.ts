@@ -84,3 +84,43 @@ export const getEditableProgramOrganizations = cache(
     })
   },
 )
+
+/**
+ * Return all active program IDs for generateStaticParams.
+ */
+export const findProgramIds = cache(async () => {
+  return db.program.findMany({
+    where: { status: "ACTIVE" },
+    select: { id: true },
+  })
+})
+
+/**
+ * Find related programs: same org or discipline, excluding the current program.
+ * Limited to 6 results.
+ */
+export const findRelatedPrograms = cache(
+  async ({
+    programId,
+    brand,
+    disciplineId,
+    organizationId,
+  }: {
+    programId: string
+    brand: Brand
+    disciplineId: string | null
+    organizationId: string
+  }) => {
+    return db.program.findMany({
+      where: {
+        brand,
+        status: "ACTIVE",
+        id: { not: programId },
+        OR: [...(disciplineId ? [{ disciplineId }] : []), { organizationId }],
+      },
+      select: programManyPayload,
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      take: 6,
+    })
+  },
+)

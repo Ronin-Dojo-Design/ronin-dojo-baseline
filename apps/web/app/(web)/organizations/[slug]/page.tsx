@@ -5,6 +5,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { JoinOrganizationButton } from "~/components/web/organizations/join-organization-button"
 import { MembershipActions } from "~/components/web/organizations/membership-actions"
@@ -98,14 +99,9 @@ export default async function OrganizationDetailPage({ params }: Props) {
                   <>
                     <dt className="text-muted-foreground">Website</dt>
                     <dd>
-                      <a
-                        href={org.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline"
-                      >
+                      <Link href={org.websiteUrl} target="_blank" rel="noopener noreferrer">
                         {org.websiteUrl}
-                      </a>
+                      </Link>
                     </dd>
                   </>
                 )}
