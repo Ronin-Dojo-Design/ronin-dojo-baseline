@@ -88,3 +88,48 @@ export const getSystemRoles = async () => {
     orderBy: { name: "asc" },
   })
 }
+
+export const findOrganizationSlugs = async () => {
+  "use cache"
+
+  cacheTag("organization-slugs")
+  cacheLife("hours")
+
+  return db.organization.findMany({
+    select: { slug: true, brand: true },
+    orderBy: { name: "asc" },
+  })
+}
+
+export const findRelatedOrganizations = async ({
+  organizationId,
+  brand,
+  disciplineIds,
+  city,
+}: {
+  organizationId: string
+  brand: string
+  disciplineIds: string[]
+  city: string | null
+}) => {
+  "use cache"
+
+  cacheTag(`related-organizations-${organizationId}`)
+  cacheLife("minutes")
+
+  return db.organization.findMany({
+    where: {
+      brand: brand as any,
+      id: { not: organizationId },
+      OR: [
+        ...(disciplineIds.length > 0
+          ? [{ disciplines: { some: { disciplineId: { in: disciplineIds } } } }]
+          : []),
+        ...(city ? [{ city }] : []),
+      ],
+    },
+    select: organizationManyPayload,
+    take: 6,
+    orderBy: { name: "asc" },
+  })
+}
