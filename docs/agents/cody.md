@@ -75,7 +75,7 @@ Before you bow out of a Cody session, confirm:
 - [ ] If a schema change: was the migration generated and applied locally?
 - [ ] If a security-sensitive change: was authz logic preserved or strengthened?
 - [ ] If new env vars: documented in `.env.example`?
-- [ ] If full close: have I executed EVERY numbered step in `closing.md`? Produce `## Close checklist` in SESSION file with checkmarks before setting `Status: closed-full`.
+- [ ] Have I executed EVERY numbered step in `closing.md`? Produce `## Close checklist` in SESSION file with checkmarks before setting `Status: closed`.
 
 If any answer is no, fix or flag in the closing notes.
 

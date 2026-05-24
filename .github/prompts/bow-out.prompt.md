@@ -1,5 +1,5 @@
 ---
-description: "Closing ritual — end the current session (v5.0; default: quick close)"
+description: "Closing ritual — end the current session (v5.1; single close mode)"
 mode: "agent"
 ---
 
@@ -9,17 +9,11 @@ mode: "agent"
 
 This ritual is agent-agnostic. When you stamp `last_agent` on touched docs, name the agent that actually executed (e.g., `claude-session-NNNN`, `copilot-session-NNNN`, `codex-session-NNNN`). Do not rewrite past values.
 
-## Mode contract
+## Close mode
 
-The user's requested close mode is binding.
+One mode: **closed**. No quick/full/unclean distinction (consolidated SESSION_0241). Status values are `in-progress` or `closed`.
 
-- **Quick close** — default. Back-to-back execution sessions. Quick close steps only.
-- **Full close** — end of day, end of sprint, after a milestone, before any context loss, or when the user says "full close". Quick close steps + evidence artifact + Reflections + hostile review + Review & Recommend + memory sweep.
-- **Unclean close recovery** — previous session was never closed (status `in-progress` but session is over). Follow the UNCLEAN_CLOSING checklist in `closing.md` and log an incident.
-
-Defaulting to quick when the user only says "bow out", unless the session touched schema, auth, payments, deployment, production data, or governance protocols — then escalate to full and state why.
-
-## Minimum binding steps (quick close)
+## Binding steps
 
 Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
 
@@ -31,18 +25,8 @@ Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
    - `Open decisions / blockers` — anything unresolved.
    - `Next session: Goal + Inputs to read + First task`.
    - `Task Log` — the `TASK_PLAN_LOG` IDs touched this session.
-   - `Review Log` — the `TASK_REVIEW_LOG` entry for this session.
-   - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any.
-   - `ADR / ubiquitous-language check` — any architectural decision or domain term created/updated/explicitly-not-needed.
-   - **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line must update together in one edit pass. Never one without the other.
-3. **Project-log gate.** Before setting any closed status, verify the current session has at least one entry in [`docs/protocols/project-log.md`](../../docs/protocols/project-log.md) using Graphify-first discovery plus an exact-file check:
-
-   ```bash
-   graphify query "SESSION_NNNN TASK_PLAN_LOG TASK_REVIEW_LOG project-log" --budget 1000
-   awk 'index($0, "SESSION_NNNN") { count++ } END { print count + 0 }' docs/protocols/project-log.md
-   ```
-
-   Exact-file count must be >= 1. If 0, append the task plan entries before closing. **Do not use repo-wide `grep` / `rg` / `find` for this gate.**
+   - **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line must update together in one edit pass. Never one without the other. Set `status: closed`.
+3. **SESSION-file gate.** Verify the current session has at least one entry in its `## Task log`. The cross-session `project-log.md` is retired.
 
 4. **JETTY 3.0 sweep on touched files.** For every file in `Files touched`:
    - Doc frontmatter sweep — verify JETTY 3.0 frontmatter; bump `updated`; set `last_agent` to current agent identity.
@@ -53,7 +37,7 @@ Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
 
 5. **Refine session type.** Default at bow-in is `session--open`. At bow-out, narrow to `session--plan`, `session--implement`, or `session--review` only if the session was clearly one mode. Mixed sessions stay `session--open`. Legacy `session` (pre-0139) — leave as-is, do not backfill.
 
-6. **Git hygiene.** *(In full close mode, defer this until after steps 7–11 below to avoid a two-pass commit cycle.)*
+6. **Git hygiene.**
    - Branch check (`git branch --show-current`) — if on `main` but expected to be on a feature branch, stop and discuss.
    - Worktree check (`git worktree list`) — remove clean/merged worktrees; record any with unique commits.
    - Stage and review (`git add -A && git status`) — no secrets, no `.env`, no `node_modules`.
@@ -70,14 +54,15 @@ Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
 
 8. **Bow-out line.** State: `Bowed out — SESSION_NNNN closed. Next session goal: {one line}.`
 
-## Additional binding steps (full close only)
+## Optional deep items
 
-Run after quick close steps 1–5 (and before quick close steps 6–8 — the full-close execution order in `closing.md` defers git hygiene + Graphify + bow-out line to the end):
+Do when useful — end of day, milestone, schema/auth/payments touched:
 
-9. **Reflections** — add `## Reflections` to the SESSION file (surprises, near-misses, patterns/anti-patterns, lessons).
-10. **Hostile close review + Review & Recommend** — run [Giddy + Doug Hostile Close Review](../../docs/protocols/hostile-close-review.md) and [Review & Recommend](../../docs/protocols/review-recommend.md). Append the entry in `project-log.md` review section, referencing numbered TASK IDs and listing unresolved findings.
-11. **Full close evidence artifact** — add the `## Full close evidence` table to the SESSION file with proof per row (JETTY sweep, backlinks/index, wiki-lint, kaizen, hostile review, R&R, memory sweep, next-session unblock, git hygiene, Graphify). Generic checkmarks are not enough; each cell must state what was checked or what changed. Post-commit `git hygiene` and `Graphify` cells may say "final response will report" and the bow-out response carries the immutable commit hash and post-commit graph stats.
-12. **ADR + ubiquitous-language check** — if the session made/changed/rejected an architectural decision, create or update an ADR in `docs/architecture/decisions/`. Dirstarter-baseline-layer ADRs must include compact proof links to live Dirstarter docs. Update [Ubiquitous Language](../../docs/architecture/ubiquitous-language.md) for new/changed domain terms. If neither applies, record that explicitly.
+- **Reflections** — add `## Reflections` to the SESSION file (surprises, near-misses, patterns/anti-patterns, lessons).
+- **Hostile close review** — run [Giddy + Doug Hostile Close Review](../../docs/protocols/hostile-close-review.md).
+- **Evidence table** — add proof per row to the SESSION file (JETTY sweep, backlinks/index, wiki-lint, hostile review, next-session unblock, git hygiene, Graphify).
+- **ADR + ubiquitous-language check** — if the session made/changed/rejected an architectural decision, create or update an ADR. Update [Ubiquitous Language](../../docs/architecture/ubiquitous-language.md) for new/changed domain terms. If neither applies, record that explicitly.
+- **Memory sweep** — update any agent memory files with session learnings.
 13. **Memory sweep** — update operator-side memory only for project-scoped facts worth carrying across all future sessions (not session-scoped content).
 14. **Confirm next session unblocked** — re-read `Open decisions / blockers` and `Next session: First task`. If user input is required, mark "BLOCKED ON USER" with reason.
 15. Run quick close steps 6–8 (git hygiene → Graphify → bow-out line) as the final commit-and-report pass.

@@ -4,20 +4,17 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-13
-last_agent: codex-session-0158
+updated: 2026-05-24
+last_agent: copilot-session-0241
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
   - docs/knowledge/wiki/incidents.md
   - docs/protocols/failed-steps-log.md
-  - docs/protocols/project-log.md
   - docs/protocols/hostile-close-review.md
   - docs/architecture/ubiquitous-language.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0029.md
-  - docs/sprints/SESSION_0158.md
 ---
 
 # Closing ritual — bow out
@@ -36,26 +33,22 @@ When you record `last_agent` in the SESSION frontmatter or in this doc's frontma
 
 Any of: "Bow out" / "Close session" / "End session" / task complete / hitting a natural pause point.
 
-## Three modes
+## One close, one status
 
-| Mode | When to use | Required actions |
-| --- | --- | --- |
-| **Quick close** | Back-to-back execution sessions | Fill SESSION file; commit if needed; done |
-| **Full close** | End of day, end of sprint, after a milestone, before any context loss | Quick close + evidence artifact + Reflections + hostile review + Review & Recommend + memory sweep |
-| **Unclean close recovery** | Session crashed, compaction ate context, or bow-out was skipped | Recovery checklist below; creates incident entry |
+> **SESSION_0241 simplification:** Quick close and full close are merged into one ritual. Every session runs the same steps. Optional deep items (Reflections, hostile review, evidence artifact, memory sweep) are flagged inline — do them when useful, skip when not. Status is `closed` (not `closed-quick` or `closed-full`).
 
-Default to quick. Escalate to full when the moment warrants it. Use unclean close recovery when a previous session wasn't closed properly.
+| Status | Meaning |
+| --- | --- |
+| `in-progress` | Session is active |
+| `closed` | Session is done — all required steps completed |
+
+Legacy values `closed-quick`, `closed-full`, and `closed-unclean` are accepted in old SESSION files but should not be used in new ones.
 
 ## Mode contract
 
-The requested close mode is binding.
+Every session runs the full closing ritual below. The "optional" items (Reflections, hostile review, evidence table, memory sweep) are always available and recommended at end-of-day, end-of-sprint, after milestones, or when the session touched schema/auth/payments/deployment/production data/governance protocols. Skipping them is fine for back-to-back implementation sessions that touch only code files.
 
-- If the user asks for **quick close**, run quick close only unless there is an active safety reason to escalate. If you escalate, state why in the SESSION file.
-- If the user asks for **full close**, run every quick close step plus every full close step. Do not call it full close until the SESSION file contains the full-close evidence artifact below.
-- If the user says only "bow out" or "close", default to quick close unless the session touched schema, auth, payments, deployment, production data, or governance protocols.
-- `closed-full` is a proof state, not a tone. Missing evidence means the status stays `in-progress` or `closed-quick`.
-
-## Quick close steps
+## Close steps
 
 ### 1. Pause the work
 
@@ -74,18 +67,17 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - `Review log` — the `TASK_REVIEW_LOG` entry for this session
 - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
 - `ADR / ubiquitous-language check` — any architectural decision or domain term created, updated, or explicitly marked not needed
-- `Status: closed-quick`
+- `Status: closed`
 
 **Atomicity rule (FS-0015 / SESSION_0074_TASK_09):** The YAML frontmatter `status:` field and the body `### Status` line must be updated together in the same edit pass. Never change one without the other. A session file with `status: in-progress` in YAML but `closed-quick` in the body (or vice versa) is a data integrity violation.
 
-**SESSION-file gate:** Before setting any closed status, verify the current SESSION file has at least one entry in its `## Task log` table and `## Review log` section (or, for full close, also in `## Hostile close review`). The cross-session `project-log.md` ledger was retired at SESSION_0228 — the SESSION file is the canonical record. Use Graphify-first discovery plus an exact-file check:
+**SESSION-file gate:** Before setting `closed` status, verify the current SESSION file has at least one entry in its `## Task log` table. The cross-session `project-log.md` was retired at SESSION_0228. Use an exact-file check:
 
 ```bash
-graphify query "SESSION_NNNN task log review log hostile close" --budget 1000
 awk '/^## Task log/{flag=1; next} /^## /{flag=0} flag' docs/sprints/SESSION_NNNN.md | grep -c "SESSION_NNNN_TASK"
 ```
 
-The Graphify query should surface the current SESSION file; the exact-file check must return >= 1 task row. If it returns 0, append the task plan entries to the SESSION file before closing. An editor search inside the already-open SESSION file is also acceptable. Do not use repo-wide text search for this gate. Do not append to `docs/protocols/project-log.md` — it is frozen; the historical archive at [`docs/_archive/project-log/`](../_archive/project-log/) is read-only.
+Must return >= 1 before setting `closed`. Do not append to `docs/protocols/project-log.md` — it is frozen.
 
 If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
 
@@ -154,28 +146,11 @@ Skip only if Graphify is not installed or no files changed. Record the node/edge
 
 State to the user (or in the SESSION file): "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
 
-That's quick close done.
+That's the core close done.
 
-## Full close — additional steps
+## Optional deep items
 
-Run these after quick close steps 1–3. **In full close mode, defer steps 4/4b/5 (git hygiene, Graphify, bow-out line) until after step 8.** This lets all content, reviews, and evidence be written before the first commit. Final commit hash and post-commit Graphify stats may be reported in the bow-out response instead of written back into the committed SESSION file; this avoids a self-referential amend loop.
-
-### Execution order for full close
-
-1. Pause (step 1)
-2. Update SESSION file (step 2)
-3. JETTY/backlinks/wiki-lint sweep (step 3)
-4. Reflections (step 6)
-5. Review & Recommend + hostile close (step 6.5)
-6. Full close evidence artifact — draft with "final response will report" allowed for post-commit git/Graphify fields (step 6a)
-7. ADR + ubiquitous-language check (step 6.6)
-8. Memory sweep (step 7)
-9. Confirm next session unblocked (step 8)
-10. Git hygiene — single commit covering all committed content (step 4)
-11. Graphify update after git hygiene (step 4b)
-12. Bow-out line with final commit hash, push status, and Graphify stats (step 5)
-
-If the operator requires the SESSION file itself to contain the final commit hash and Graphify stats, amend once after step 11, rerun Graphify after the amend, and stop editing docs. Do not create an endless evidence-update cycle.
+Do these when useful — especially at end of day, end of sprint, milestone, or when the session touched schema/auth/payments/deployment/production data.
 
 ### 6. Reflections (in the SESSION file)
 
@@ -188,9 +163,9 @@ Add a `## Reflections` section to the SESSION file. Capture what's worth remembe
 
 This is the kaizen-style note from the legacy system, kept lightweight.
 
-### 6a. Full close evidence artifact
+### 6a. Evidence artifact (optional)
 
-For full close, add this block to the SESSION file before changing status to `closed-full`:
+For sessions that warrant extra proof, add this block to the SESSION file:
 
 ```markdown
 ## Full close evidence
@@ -274,7 +249,6 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
-- [Project Log (retired)](../protocols/project-log.md) — frozen stub; historical archive in `docs/_archive/project-log/`. Per-session SESSION files now carry the canonical build, task plan, and review record.
 - [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — hard close review against Dirstarter, security, data integrity, and workflow honesty.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
 - [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
@@ -298,18 +272,18 @@ Use when a previous session's bow-out was skipped — context loss, compaction, 
 
 1. **Read the unclosed SESSION file.** Identify what was done by reading `git log`, `git diff`, and any partial `What landed` entries.
 2. **Backfill the SESSION file.** Fill in `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session`.
-3. **Set status:** `Status: closed-unclean`
-4. **Add reason tag:** Add `**Reason for unclean close:** {one sentence}` below the Status line.
+3. **Set status:** `Status: closed` and add `**Close notes:** unclean recovery — {reason}` below the Status line.
+4. ~~**Add reason tag:**~~ *(merged into step 3 above)*
 5. **Log the incident.** Append an entry to [`docs/knowledge/wiki/incidents.md`](../knowledge/wiki/incidents.md) with date, session number, reason, and recovery actions.
 6. **JETTY 3.0 sweep.** Run step 3 from quick close on any files touched in the unclosed session.
 7. **Wiki index update.** Update session status in `wiki/index.md`.
 8. **Continue.** Create the next `SESSION_NNNN.md` and proceed with bow-in.
 
-### Status values (complete list)
+### Status values
 
 | Status | Meaning |
 | --- | --- |
 | `in-progress` | Session is active |
-| `closed-quick` | Normal quick close |
-| `closed-full` | Full close with reflections |
-| `closed-unclean` | Recovered from missed bow-out |
+| `closed` | Session is done |
+
+Legacy values (`closed-quick`, `closed-full`, `closed-unclean`) are accepted in old SESSION files but should not be used for new sessions.

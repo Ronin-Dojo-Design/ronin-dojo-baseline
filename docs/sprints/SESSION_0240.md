@@ -2,13 +2,14 @@
 title: "SESSION 0240 — Lineage public parity chrome plan"
 slug: session-0240
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-05-24
 updated: 2026-05-24
-last_agent: codex-session-0240
+last_agent: copilot-session-0241
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0239.md
+  - docs/sprints/SESSION_0241.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -171,8 +172,18 @@ SESSION_0239 intentionally left `/lineage/[treeSlug]` as the next public parity 
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0240_TASK_01 | replanning | Initial page-shell parity plan pivoted after BBL product signal; recommending public lineage slug/listing query as first foundation slice |
+| SESSION_0240_TASK_01 | done | Lineage public parity chrome + BBL foundation slice — planned in SESSION_0240 (Codex), implemented in SESSION_0241 (Copilot). `findPublishedLineageTreeSlugs`, `findPublishedLineageTrees`, `/lineage/[treeSlug]` public parity uplift, `/lineage` index page. |
+
+## What landed
+
+Work planned in this session was executed in SESSION_0241 (copilot-session-0241). See SESSION_0241 TASK_04 for full details.
+
+## Status
+
+### Status
+
+Closed — work landed in SESSION_0241.
 
 ## Open decisions / blockers
 
-- Awaiting Brian confirmation on the Petey grill questions before implementation.
+None — all resolved in SESSION_0241.

@@ -4,15 +4,14 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-13
-last_agent: codex-session-0158
+updated: 2026-05-24
+last_agent: copilot-session-0241
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
   - docs/runbooks/graphify-repo-memory.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0158.md
 ---
 
 # Opening ritual — bow in
@@ -176,7 +175,6 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
 - [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
-- [Project Log (retired)](../protocols/project-log.md) — frozen stub; historical archive in `docs/_archive/project-log/`. Per-session SESSION files now carry the canonical build, task plan, and review record.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

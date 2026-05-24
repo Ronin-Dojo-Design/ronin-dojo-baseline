@@ -41,20 +41,20 @@ Trigger: **"bow in"**, **"start session"**, or **"open session"**. Execute `docs
 
 ### Bow out (closing)
 
-Trigger: **"bow out"**, **"close session"**, or **"end session"**. Execute `docs/rituals/closing.md` (or `.github/prompts/bow-out.prompt.md`). Default to **quick close**; escalate to **full close** when the user says "full close", at end of day / sprint / milestone, or when the session touched schema, auth, payments, deployment, production data, or governance protocols.
+Trigger: **"bow out"**, **"close session"**, or **"end session"**. Execute `docs/rituals/closing.md` (or `.github/prompts/bow-out.prompt.md`). One close mode — no quick/full distinction (consolidated SESSION_0241).
 
-Quick close minimum binding steps:
+Close steps:
 
 1. Pause the work; let in-flight tool calls finish.
-2. Update the current `SESSION_NNNN.md`: `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session: Goal + Inputs to read + First task`, `Task Log` (TASK_PLAN_LOG IDs), `Review Log`, `Hostile close review`, `ADR / ubiquitous-language check`. **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line update together in one edit pass.
-3. **Project-log gate.** Verify current session has at least one entry in `docs/protocols/project-log.md` via Graphify discovery + exact-file count (`awk 'index($0, "SESSION_NNNN") { count++ } END { print count + 0 }' docs/protocols/project-log.md`). Must return >= 1 before any closed status. No repo-wide text search for this gate.
+2. Update the current `SESSION_NNNN.md`: `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session: Goal + Inputs to read + First task`, `Task Log` (TASK_PLAN_LOG IDs). **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line update together in one edit pass. Set `status: closed`.
+3. **SESSION-file gate.** Verify current session has at least one entry in its `## Task log`. The cross-session `project-log.md` is retired.
 4. JETTY 3.0 sweep on touched files — frontmatter, bidirectional backlinks, wiki-index completeness (FS-0019), `bun run wiki:lint` (record exact count + whether failures are pre-existing), G8/R8 incremental markdown fix.
 5. Refine session type if clearly one mode: `session--plan`, `session--implement`, or `session--review`. Mixed sessions stay `session--open`.
-6. Git hygiene — branch check, worktree check, stage/review, conventional commit, push only if authorized. *(Full close defers this to the end.)*
+6. Git hygiene — branch check, worktree check, stage/review, conventional commit, push only if authorized.
 7. `graphify update .` after git hygiene (if installed and files changed); report node/edge/community counts.
 8. State: "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
 
-Full close adds: `## Reflections`, Giddy + Doug Hostile Close Review + Review & Recommend, `## Full close evidence` table with proof per row, ADR/ubiquitous-language check, memory sweep, next-session unblock confirmation. Full close execution order defers git hygiene + Graphify + bow-out line to the very end to avoid a two-pass commit cycle. `closed-full` is a proof state — missing evidence means status stays `in-progress` or `closed-quick`.
+Optional deep items (do when useful — end of day, milestone, schema/auth/payments touched): `## Reflections`, hostile close review, evidence table, ADR/ubiquitous-language check, memory sweep, next-session unblock confirmation.
 
 ### Session macro (standard operating prompt)
 
@@ -64,11 +64,7 @@ The typical session follows this chain. Apply it automatically when the user say
 2. **Graphify-first navigation** — `graphify query` and `graphify explain` for finding files and docs. No raw `grep` / `rg` / `find` for task planning or file discovery. Only fall back to text search for exact-string edits within a known file. If the graph is ≤1 commit behind HEAD and was updated at end of the last session, skip `graphify update`; otherwise run it. See `docs/runbooks/graphify-repo-memory.md`.
 3. **Petey plans** — act as Petey (`docs/agents/petey.md`) to read the previous session's staged tasks, decompose if needed, then orchestrate and assign suitable agents (Cody for implementation, Doug for review). Manage handoffs between agents within the session. Parallelize independent reads/searches via subagents or worktrees when it pays off.
 4. **Cody executes** — hand off to Cody for implementation tasks, one at a time, type-check between tasks. Cody runs `docs/protocols/cody-preflight.md` before writing code.
-5. **Petey closes** — hand back to Petey for `docs/rituals/closing.md` bow-out:
-   - **Full close** if docs were touched, or if the user requests it, or at end of day/sprint/milestone.
-   - **Quick close** if only code files were touched in a `session--implement` or `session--review`.
-   - In full close mode, defer git hygiene until after all content/review steps (see closing.md execution order).
-   - Run `graphify update .` **after** git commit so the graph has the latest work.
+5. **Petey closes** — hand back to Petey for `docs/rituals/closing.md` bow-out. Run `graphify update .` **after** git commit so the graph has the latest work.
 
 ## Agent roles
 
@@ -102,10 +98,11 @@ Four layers, each with its own source of truth. They don't bleed into each other
 
 ## Current sprint context
 
-- **12-sprint MVP plan** targeting Baseline Martial Arts public launch (~3 months).
-- **Brand build order**: Baseline Martial Arts → Ronin Dojo Design → BBL → WEKAF.
-- **S1 (current)**: Phase 1 schema rev — 31 models, all enums. Design doc signed off; migration pending.
+- **⚠️ LAUNCH STATUS: 6 days past May 18, 2026 target.** Ship product, don't plan to ship. Every session must produce user-facing output.
+- **S6 (current)**: Content engine + public parity chrome. S1–S5 done (schema, auth, org, directory, tournaments, commerce).
+- **Brand build order**: Baseline Martial Arts → BBL → WEKAF → Ronin Dojo Design.
 - **Active personas**: Petey (planner), Cody (builder). Doug (QA) activates when needed.
+- **Close status**: Use `closed` (not `closed-quick` or `closed-full` — consolidated SESSION_0241).
 
 ## Database conventions
 
@@ -116,7 +113,7 @@ Four layers, each with its own source of truth. They don't bleed into each other
 
 ## SESSION file format
 
-Every session has one file: `docs/sprints/SESSION_NNNN.md` (4-digit zero-padded). Required sections: `Goal`, `Status`, `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session` (Goal + Inputs + First task). Full close adds `Reflections`. See `docs/protocols/chat-handoff.md` for the full spec.
+Every session has one file: `docs/sprints/SESSION_NNNN.md` (4-digit zero-padded). Required sections: `Goal`, `Status`, `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session` (Goal + Inputs + First task). Optional: `Reflections` (recommended at end of day/milestone). Status values: `in-progress` or `closed`. See `docs/protocols/chat-handoff.md` for the full spec.
 
 ## Key files
 

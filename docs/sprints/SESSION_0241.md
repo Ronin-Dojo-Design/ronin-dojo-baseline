@@ -2,7 +2,7 @@
 title: "SESSION 0241 — Repo cleanup, workflow refinement, velobase-harness parity review"
 slug: session-0241
 type: session--open
-status: closed-full
+status: closed
 created: 2026-05-24
 updated: 2026-05-24
 last_agent: copilot-session-0241
@@ -101,6 +101,7 @@ Start with TASK_01 (cleanup), then TASK_02 (workflow refinement). TASK_03 is alr
 | SESSION_0241_TASK_02 | done | Workflow refinement — updated WORKFLOW_5.0.md launch board (NOW/NEXT/READY/POST-LAUNCH reflect reality at day +6), updated launch strategy status, updated program-plan.md superseded note |
 | SESSION_0241_TASK_03 | done | Velobase-harness parity review — created `docs/architecture/velobase-harness-patterns.md` with 5 cherry-pickable patterns and implementation priority |
 | SESSION_0241_TASK_04 | done | Lineage BBL foundation slice: `findPublishedLineageTreeSlugs()` + `findPublishedLineageTrees()` queries, `/lineage/[treeSlug]` public parity uplift (getPageMetadata, Breadcrumbs, Intro, Section, StructuredData, generateStaticParams), `/lineage` index page with card grid + cross-links |
+| SESSION_0241_TASK_05 | done | Close status consolidation: merged `closed-quick`/`closed-full`/`closed-unclean` into single `closed` status. Updated `closing.md`, `opening.md`, `.github/copilot-instructions.md`, WORKFLOW_5.0.md. Removed 110-line stale session calendar from WORKFLOW_5.0. |
 
 ## What landed
 
