@@ -5,6 +5,7 @@ import {
   BookOpenIcon,
   BuildingIcon,
   ChevronDownIcon,
+  ContactRoundIcon,
   GitBranchIcon,
   GraduationCapIcon,
   SearchIcon,
@@ -13,6 +14,7 @@ import {
   StoreIcon,
   SwordsIcon,
   SchoolIcon,
+  UsersIcon,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -101,6 +103,12 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                 <DropdownMenuItem render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}>
                   {t("navigation.lineage")}
                 </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}>
+                  {t("navigation.directory")}
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<NavLink href="/members" prefix={<UsersIcon />} />}>
+                  {t("navigation.members")}
+                </DropdownMenuItem>
                 <DropdownMenuItem render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}>
                   {t("navigation.gear")}
                 </DropdownMenuItem>
@@ -150,6 +158,8 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           <NavLink href="/courses">{t("navigation.courses")}</NavLink>
           <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
           <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
+          <NavLink href="/directory">{t("navigation.directory")}</NavLink>
+          <NavLink href="/members">{t("navigation.members")}</NavLink>
           <NavLink href="/gear">{t("navigation.gear")}</NavLink>
           <NavLink href="/merch">{t("navigation.merch")}</NavLink>
           <NavLink href="/blog">{t("navigation.blog")}</NavLink>

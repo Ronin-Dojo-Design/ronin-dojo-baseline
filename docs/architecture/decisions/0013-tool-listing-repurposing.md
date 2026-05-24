@@ -4,8 +4,8 @@ slug: adr-0013-tool-listing-repurposing
 type: decision
 status: accepted
 created: 2026-05-04
-updated: 2026-05-04
-last_agent: copilot-session-0066
+updated: 2026-05-24
+last_agent: claude-session-0243
 deciders: Brian Scott
 pairs_with:
   - docs/sprints/SESSION_0066.md
@@ -87,3 +87,17 @@ All three domain models already exist in the schema (Technique, Passport+Directo
 
 - [ADR 0004 — Multi-brand as column](0004-multi-brand-as-column.md) — brand scoping applies to all three listing types
 - [ADR 0012 — Admin CRUD routing pattern](0012-admin-crud-routing-pattern.md) — admin-side CRUD for techniques follows this pattern
+
+## Follow-up sweep (deferred from SESSION_0243)
+
+**Status:** open — tracked for SESSION_0245+
+
+**Scope:** Public listing-page chrome parity (`getPageMetadata` + `Breadcrumbs` + `StructuredData` + `getRequestBrand` + cross-links) has been completed for every public route that has a `page.tsx` today (SESSIONs 0241–0243). The deeper Tool→DirectoryListing pattern repurposing across all admin-side call sites is **not yet swept**.
+
+**Remaining work (next session triage):**
+
+1. Audit any remaining admin CRUD surfaces (`apps/web/app/admin/`) that still reference the legacy "Tool" naming or pattern and confirm they have been migrated to the per-entity listings (Techniques, Members, Schools, Organizations, Lineage, Programs, Courses, Gear, Merch).
+2. Inventory any `(web)/categories`, `(web)/tags`, `(web)/certificates` directories — these currently have NO `page.tsx`; decide whether to author public listing pages or remove the directory shells.
+3. Confirm `Section` / `Wrapper` / `Note` / `Intro` primitives are consistent across all uplifted pages; SESSION_0242 standardized on `Section` and `Note` for empty states.
+
+**Why deferred:** SESSION_0243 prioritized Vercel prod rescue + the three remaining public-route uplifts (`/directory`, `/members`, `/techniques`). Deeper sweep is multi-session and lands cleaner after the Baseline content waterfall (SESSION_0244) so seeded data informs which surfaces are actually live.
