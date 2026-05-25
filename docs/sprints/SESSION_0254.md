@@ -373,15 +373,72 @@ Recorded in [SESSION_0253 `Open decisions / blockers`](./SESSION_0253.md#open-de
 
 ## Next session
 
-- **Goal (recommended A):** Resolve `SESSION_0254_FINDING_01` — add `e2e/privacy/data-subject-request.spec.ts` covering anonymous→login redirect and authenticated submit. Small, contained.
-- **Goal (alternative B):** Build admin DSR processing UI per `SESSION_0254_FINDING_02`. Mirrors membership-detail pattern. Medium, single lane.
-- **Goal (alternative C):** Clean up `packages/api-client` `TS2742` (FINDING_03) so repo-wide typecheck passes again. Small.
+**Goal:** Close the three open findings from SESSION_0254. All three are unblocked, all three are small-to-medium, all three are independently revertable. Tackle as a sequenced staged plan (in this order — smallest infra fix first, then product test coverage, then product surface).
+
+### SESSION_NEXT_TASK_01 — Clean up `packages/api-client/src/auth.ts` TS2742
+
+- **Resolves:** `SESSION_0254_FINDING_03`
+- **Agent:** Cody
+- **What:** Add an explicit return-type annotation to `createMobileAuthClient` (and any other inferred exports the diagnostic flags) so the inferred type stops needing a portable reference to `better-auth/dist/client/path-to-object.mjs` or `zod/v4/core`.
+- **Steps:**
+  1. Open `packages/api-client/src/auth.ts:29`; read the current inferred type via `tsc --noEmit --listEmittedFiles` or by hovering.
+  2. Import the concrete `ReturnType<typeof createAuthClient<...>>` (or the relevant Better Auth client type) and apply it as an `export const createMobileAuthClient: T = (...) => ...` annotation.
+  3. Re-run `bun run typecheck` from repo root; confirm both `packages/api-client` and `apps/web` exit 0.
+- **Done means:** Repo-wide `bun -r typecheck` exits 0. No other surface affected.
+- **Risk:** Very low — pure type annotation, no runtime change.
 - **Inputs to read:**
-  - `apps/web/app/(web)/privacy/request/_components/dsr-form.tsx`
-  - `apps/web/app/(web)/privacy/request/_actions.ts`
-  - `apps/web/prisma/schema.prisma` (DataSubjectRequest model)
-  - `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` (reference for authenticated e2e)
-- **First task:** Author the new spec, run it against the local dev server, confirm a real PENDING row is created.
+  - `packages/api-client/src/auth.ts`
+  - Better Auth client export types (`node_modules/better-auth/dist/client/index.d.ts`)
+
+### SESSION_NEXT_TASK_02 — Add Playwright spec for `/privacy/request` flow
+
+- **Resolves:** `SESSION_0254_FINDING_01`
+- **Agent:** Cody
+- **What:** Author `apps/web/e2e/privacy/data-subject-request.spec.ts` covering the three high-value assertions for the DSR intake.
+- **Cases to cover:**
+  1. **Anonymous → login redirect.** Hit `/privacy/request` with no session; assert final URL is `/auth/login?next=%2Fprivacy%2Frequest`.
+  2. **Authenticated submit creates a row.** Use the existing `createAuthenticatedUser` helper from `e2e/helpers/auth.ts`; fill in `type=EXPORT`, optional reason, check confirm; submit. Assert navigation to `/privacy/request/submitted?id=…` and assert a `DataSubjectRequest` row exists for the user with `status=PENDING`.
+  3. **Confirm-checkbox guard.** Submit without checking the confirm box; assert the inline `FormMessage` "Please confirm before submitting." renders and no DB row is created.
+- **DB assertions:** Add a tiny Bun-bridge helper (`e2e/helpers/dsr-db.ts`) mirroring the SESSION_0254 `seed-membership-db.ts` pattern: commands `list-by-user` (returns DSR rows for a userId) and `cleanup-by-user` (deletes them in afterAll).
+- **Done means:** New spec passes 3/3 in isolation; full collection (`bunx playwright test --list`) stays clean; no flake on three sequential runs.
+- **Risk:** Low — mechanical Playwright spec; the bridge pattern is established.
+- **Inputs to read:**
+  - `apps/web/app/(web)/privacy/request/page.tsx` (anonymous redirect target encoding)
+  - `apps/web/app/(web)/privacy/request/_actions.ts` (server action shape)
+  - `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` (canonical authenticated-spec reference)
+  - `apps/web/e2e/helpers/seed-membership-db.ts` (Bun-bridge pattern from SESSION_0254 lane A)
+
+### SESSION_NEXT_TASK_03 — Build `/admin/privacy/requests` triage UI
+
+- **Resolves:** `SESSION_0254_FINDING_02`
+- **Agent:** Cody (with Doug for verification)
+- **What:** Build the admin-only DSR processing surface so manual `prisma studio` is no longer the only path.
+- **Subtasks:**
+  1. **List page** `apps/web/app/admin/privacy/requests/page.tsx`: server component gated on `adminActionClient`-style role check; table columns `submittedAt`, `user.email`, `type`, `status`, `reason` preview, link to detail. Sorted by `submittedAt desc`. Status filter chips (PENDING/IN_PROGRESS/FULFILLED/REJECTED/all).
+  2. **Detail page** `apps/web/app/admin/privacy/requests/[id]/page.tsx`: full request data, submitter profile link, admin `notes` textarea, status-transition buttons (PENDING → IN_PROGRESS → FULFILLED, plus REJECTED). Mirrors the membership-detail pattern at `apps/web/app/admin/memberships/[id]/page.tsx`.
+  3. **Server action** `apps/web/app/admin/privacy/requests/_actions.ts`: `transitionDataSubjectRequest({ id, status, notes? })` running through `adminActionClient`. Sets `fulfilledAt = now()` and `fulfilledBy = ctx.user.id` when the target status is `FULFILLED` or `REJECTED`.
+  4. **Audit:** every status change writes an `AuditLog` row (`action: "dsr.transition"`, `entityType: "DataSubjectRequest"`, `entityId: req.id`, `metadata: { from, to, notes }`) using the existing audit pattern (search for `AuditLog.create` to confirm the convention).
+  5. **Playwright spec** `apps/web/e2e/admin/data-subject-request-triage.spec.ts`: non-admin is blocked from `/admin/privacy/requests`; admin can transition PENDING → FULFILLED and the row is updated.
+- **Out of scope (defer again):** Automated data-export job worker; automated anonymize-vs-hard-delete on FULFILLED DELETEs. Manual processing is acceptable for v1 of the UI too.
+- **Done means:** Two routes render; status transitions persist; audit row written; non-admin blocked; new spec passes.
+- **Risk:** Medium. New admin surface — needs the same role gate and audit hooks as the membership admin. Verify the existing admin layout already covers the role check or whether the route must gate itself.
+- **Inputs to read:**
+  - `apps/web/app/admin/memberships/[id]/page.tsx` + neighbors (status-transition pattern reference)
+  - `apps/web/lib/safe-actions.ts` (`adminActionClient`)
+  - `apps/web/prisma/schema.prisma` (`AuditLog`, `DataSubjectRequest` models)
+  - `apps/web/e2e/admin/membership-detail.spec.ts` (admin-spec reference)
+
+### Sequencing + risk
+
+1. **TASK_01 first** — pure type fix, unblocks repo-wide typecheck so the rest of the work has a clean baseline. ~15 min.
+2. **TASK_02 second** — locks in regression coverage for the DSR flow before TASK_03 starts touching it from the admin side.
+3. **TASK_03 last** — biggest scope, depends on TASK_02 if the e2e helper bridge files want to be reused.
+
+If time pressure forces a one-task pick: **TASK_01** is the highest leverage per minute. If product priority dominates: **TASK_03** is the most user-visible.
+
+### First action
+
+Open `packages/api-client/src/auth.ts:29`, read the current `createMobileAuthClient` signature, and write the explicit return-type annotation.
 
 ## Reflections
 
