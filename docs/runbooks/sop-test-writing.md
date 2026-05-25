@@ -4,14 +4,15 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-24
-last_agent: copilot-session-0233
+updated: 2026-05-25
+last_agent: codex-session-0249
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
   - docs/protocols/code-guardrails.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0249.md
 ---
 
 # SOP — Test Writing Patterns
@@ -680,9 +681,20 @@ it("creates audit log on transition", async () => {
 - `e2e/admin/bracket.spec.ts`
 - `e2e/admin/scoring.spec.ts`
 - `e2e/admin/tournament-list.spec.ts`
+- `e2e/lineage/public-visibility.spec.ts`
 - `e2e/tournaments/list.spec.ts`
 - `e2e/tournaments/register.spec.ts`
 - `e2e/tournaments/results.spec.ts`
+
+### E2E Prisma fixture bridge
+
+Playwright setup/spec files run in Node, while the generated Prisma client in this repo runs cleanly under Bun. Do not import `apps/web/.generated/prisma/client` directly from Playwright's Node-side files. Keep Prisma imports inside Bun-invoked helper files, and call them from Node-side Playwright helpers with `execFileSync("bun", [...])`.
+
+Current bridge files:
+
+- `e2e/helpers/seed-tournament-cli.ts` — wraps the existing tournament Prisma fixture for global setup/teardown.
+- `e2e/helpers/seed-lineage-db.ts` — Bun-only lineage fixture DB work.
+- `e2e/helpers/seed-lineage.ts` — Node-side Playwright wrapper that shells into `seed-lineage-db.ts`.
 
 ---
 
