@@ -26,11 +26,22 @@ export type AuthClientConfig = {
  *   import { createMobileAuthClient } from "@ronin-dojo/api-client/auth"
  *   const auth = createMobileAuthClient({ baseURL: process.env.EXPO_PUBLIC_API_URL })
  */
-export function createMobileAuthClient(config: AuthClientConfig) {
+/**
+ * Opaque handle for the Better Auth client returned by `createMobileAuthClient`.
+ *
+ * The concrete return type of `createAuthClient` references internal paths
+ * (`better-auth/dist/client/path-to-object.mjs`, `zod/v4/core`) that aren't
+ * portable in `.d.ts` output (TS2742). We break the chain by declaring an
+ * opaque branded type here. Consumers import `MobileAuthClient` and interact
+ * with the instance via its runtime API — the branded wrapper is transparent
+ * at runtime.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: Opaque wrapper avoids TS2742
+export type MobileAuthClient = ReturnType<typeof createAuthClient<any>>
+
+export function createMobileAuthClient(config: AuthClientConfig): MobileAuthClient {
   return createAuthClient({
     baseURL: config.baseURL,
     plugins: [magicLinkClient()],
   })
 }
-
-export type MobileAuthClient = ReturnType<typeof createMobileAuthClient>
