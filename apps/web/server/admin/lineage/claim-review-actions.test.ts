@@ -26,10 +26,8 @@ mock.module("~/lib/auth", () => ({
 }))
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
-import {
-  applyLineageClaimReview,
-  CLAIM_REVIEW_ERROR,
-} from "~/server/admin/lineage/claim-review-actions"
+import { applyLineageClaimReview } from "~/server/admin/lineage/claim-review-actions"
+import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import { db } from "~/services/db"
 
 const TS = Date.now()

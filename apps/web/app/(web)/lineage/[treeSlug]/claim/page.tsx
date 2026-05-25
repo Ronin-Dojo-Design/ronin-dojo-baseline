@@ -24,7 +24,7 @@ export default async function LineageClaimPage({ params }: Props) {
   // Auth gate: redirect to sign-in if no session.
   const session = await getServerSession()
   if (!session?.user) {
-    redirect(`/auth/sign-in?callbackUrl=/lineage/${treeSlug}/claim`)
+    redirect(`/auth/login?next=/lineage/${treeSlug}/claim`)
   }
 
   const brand = await getRequestBrand()

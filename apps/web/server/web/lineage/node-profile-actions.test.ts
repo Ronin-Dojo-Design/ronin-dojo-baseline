@@ -36,10 +36,8 @@ mock.module("~/lib/auth", () => ({
 }))
 
 import type { Brand } from "~/.generated/prisma/client"
-import {
-  applyLineageNodeProfileUpdate,
-  LINEAGE_NODE_PROFILE_ERROR,
-} from "~/server/web/lineage/node-profile-actions"
+import { applyLineageNodeProfileUpdate } from "~/server/web/lineage/node-profile-actions"
+import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import { getEditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import { db } from "~/services/db"
 

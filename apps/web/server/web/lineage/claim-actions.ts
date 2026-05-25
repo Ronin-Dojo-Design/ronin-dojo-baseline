@@ -10,7 +10,7 @@ import { submitLineageClaimSchema } from "~/server/web/lineage/claim-schemas"
  * Author: Cody / SESSION_0182 TASK_01.
  */
 
-export const LINEAGE_CLAIM_ERROR = {
+const LINEAGE_CLAIM_ERROR = {
   TREE_NOT_FOUND: "Tree not found or not published.",
   NODE_NOT_IN_TREE: "Node is not a member of this tree.",
   DUPLICATE_CLAIM: "You already have a pending or approved claim on this node.",

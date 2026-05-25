@@ -16,7 +16,7 @@ export default async function EditLineageNodeProfilePage({ params }: Props) {
 
   const session = await getServerSession()
   if (!session?.user) {
-    redirect(`/auth/sign-in?callbackUrl=/lineage/${treeSlug}/edit/${nodeId}`)
+    redirect(`/auth/login?next=/lineage/${treeSlug}/edit/${nodeId}`)
   }
 
   const brand = await getRequestBrand()

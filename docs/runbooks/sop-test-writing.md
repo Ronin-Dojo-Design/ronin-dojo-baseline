@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-25
-last_agent: codex-session-0249
+last_agent: codex-session-0251
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -13,6 +13,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0249.md
+  - docs/sprints/SESSION_0251.md
 ---
 
 # SOP — Test Writing Patterns
@@ -681,6 +682,7 @@ it("creates audit log on transition", async () => {
 - `e2e/admin/bracket.spec.ts`
 - `e2e/admin/scoring.spec.ts`
 - `e2e/admin/tournament-list.spec.ts`
+- `e2e/lineage/authenticated-lifecycle.spec.ts`
 - `e2e/lineage/public-visibility.spec.ts`
 - `e2e/tournaments/list.spec.ts`
 - `e2e/tournaments/register.spec.ts`
@@ -692,6 +694,10 @@ Playwright setup/spec files run in Node, while the generated Prisma client in th
 
 Current bridge files:
 
+- `e2e/helpers/auth.ts` — Node-side Playwright auth helper; loads `apps/web/.env`, shells DB user/session setup through `auth-db.ts`, then sets the Better Auth session cookie.
+- `e2e/helpers/auth-db.ts` — Bun-only Better Auth user/session fixture DB work.
+- `e2e/helpers/seed-lineage-lifecycle-db.ts` — Bun-only authenticated lineage lifecycle fixture DB work.
+- `e2e/helpers/seed-lineage-lifecycle.ts` — Node-side Playwright wrapper that shells into `seed-lineage-lifecycle-db.ts`.
 - `e2e/helpers/seed-tournament-cli.ts` — wraps the existing tournament Prisma fixture for global setup/teardown.
 - `e2e/helpers/seed-lineage-db.ts` — Bun-only lineage fixture DB work.
 - `e2e/helpers/seed-lineage.ts` — Node-side Playwright wrapper that shells into `seed-lineage-db.ts`.

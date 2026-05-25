@@ -2,6 +2,7 @@
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
+import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
 import type { db as appDb } from "~/services/db"
@@ -18,14 +19,6 @@ import type { db as appDb } from "~/services/db"
 const REVIEWABLE_STATUSES = ["PENDING", "NEEDS_INFO"] as const
 
 type AppDb = typeof appDb
-
-export const CLAIM_REVIEW_ERROR = {
-  NOT_FOUND: "Claim not found or does not belong to this brand.",
-  NOT_REVIEWABLE: "Claim is not in a reviewable status.",
-  NODE_NOT_IN_TREE: "Claim node is not a member of this tree.",
-  NODE_ALREADY_APPROVED: "Another claimant is already approved for this lineage node.",
-  CLAIMANT_HAS_NODE: "Claimant already owns a different lineage node.",
-} as const
 
 export type ReviewLineageClaimResult = {
   claimId: string
