@@ -117,6 +117,9 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
 
           <NavLink href="/blog">{t("navigation.blog")}</NavLink>
           <NavLink href="/about">{t("navigation.about")}</NavLink>
+          <NavLink href="/privacy">{t("navigation.privacy")}</NavLink>
+          <NavLink href="/terms">{t("navigation.terms")}</NavLink>
+          <NavLink href="/cookies">{t("navigation.cookies")}</NavLink>
         </Stack>
       </div>
 

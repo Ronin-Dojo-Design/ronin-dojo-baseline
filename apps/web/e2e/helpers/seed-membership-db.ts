@@ -1,0 +1,105 @@
+/**
+ * Bun-only Playwright membership DB bridge.
+ *
+ * Mirrors `auth-db.ts`: Playwright helpers run in Node, but the generated
+ * Prisma TS client only imports cleanly under Bun. Keep all fixture DB writes
+ * here and call it from `e2e/helpers/seed-membership.ts` via execFileSync.
+ */
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "../../.generated/prisma/client"
+
+const adapter = new PrismaPg({
+  connectionString:
+    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+})
+const prisma = new PrismaClient({ adapter })
+
+const TS = Date.now()
+
+export interface MembershipFixture {
+  organizationId: string
+  disciplineId: string
+  membershipId: string
+  roleId: string
+}
+
+const decodePayload = <T>() => {
+  const encoded = process.argv[3]
+  if (!encoded) return undefined as T | undefined
+
+  return JSON.parse(Buffer.from(encoded, "base64").toString("utf-8")) as T
+}
+
+async function seedMembership(userId: string): Promise<MembershipFixture> {
+  const org = await prisma.organization.create({
+    data: {
+      name: `E2E Org ${TS}`,
+      slug: `e2e-org-${TS}`,
+      type: "DOJO",
+      brand: "BASELINE_MARTIAL_ARTS",
+    },
+  })
+
+  const discipline = await prisma.discipline.create({
+    data: {
+      name: `E2E Discipline ${TS}`,
+      slug: `e2e-discipline-${TS}`,
+      isSystem: true,
+    },
+  })
+
+  const role = await prisma.role.create({
+    data: {
+      code: `MEMBER_${TS}`,
+      name: "Member",
+      isSystem: true,
+      brand: "BASELINE_MARTIAL_ARTS",
+    },
+  })
+
+  const membership = await prisma.membership.create({
+    data: {
+      brand: "BASELINE_MARTIAL_ARTS",
+      status: "PENDING",
+      userId,
+      organizationId: org.id,
+      disciplineId: discipline.id,
+    },
+  })
+
+  return {
+    organizationId: org.id,
+    disciplineId: discipline.id,
+    membershipId: membership.id,
+    roleId: role.id,
+  }
+}
+
+async function cleanupMembershipFixture(fixture: MembershipFixture) {
+  await prisma.membershipRoleAssignment.deleteMany({
+    where: { membership: { organizationId: fixture.organizationId } },
+  })
+  await prisma.membership.deleteMany({
+    where: { organizationId: fixture.organizationId },
+  })
+  await prisma.role.deleteMany({ where: { id: fixture.roleId } })
+  await prisma.organization.deleteMany({ where: { id: fixture.organizationId } })
+  await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
+}
+
+const command = process.argv[2]
+
+if (command === "seed-membership") {
+  const payload = decodePayload<{ userId: string }>()
+  if (!payload?.userId) throw new Error("Missing userId")
+
+  const fixture = await seedMembership(payload.userId)
+  process.stdout.write(JSON.stringify(fixture))
+} else if (command === "cleanup-membership") {
+  const payload = decodePayload<MembershipFixture>()
+  if (!payload?.organizationId) throw new Error("Missing fixture payload")
+
+  await cleanupMembershipFixture(payload)
+} else {
+  throw new Error(`Unknown seed-membership-db command: ${command ?? "<missing>"}`)
+}

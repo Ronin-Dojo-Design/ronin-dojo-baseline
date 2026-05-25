@@ -1,19 +1,11 @@
 /**
- * E2E seed helper — creates an Organization + Discipline + Membership
- * for Playwright membership admin tests.
+ * Playwright membership seed helper — Node-side shim.
  *
- * Uses the same standalone PrismaClient as auth.ts / seed-tournament.ts.
+ * Playwright runs this file in Node, but the generated Prisma TS client needs
+ * Bun. DB work is shelled out to `seed-membership-db.ts` via a Bun CLI bridge
+ * (same pattern as `auth.ts` → `auth-db.ts`).
  */
-import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../../.generated/prisma/client"
-
-const adapter = new PrismaPg({
-  connectionString:
-    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
-})
-const prisma = new PrismaClient({ adapter })
-
-const TS = Date.now()
+import { execFileSync } from "node:child_process"
 
 export interface MembershipFixture {
   organizationId: string
@@ -22,67 +14,33 @@ export interface MembershipFixture {
   roleId: string
 }
 
+function runMembershipDbCommand<T>(command: string, payload?: unknown): T {
+  const args = ["e2e/helpers/seed-membership-db.ts", command]
+
+  if (payload !== undefined) {
+    args.push(Buffer.from(JSON.stringify(payload), "utf-8").toString("base64"))
+  }
+
+  const raw = execFileSync("bun", args, {
+    cwd: process.cwd(),
+    encoding: "utf-8",
+  })
+
+  return raw ? (JSON.parse(raw) as T) : (undefined as T)
+}
+
 /**
  * Seeds an Organization, Discipline, Role, and a PENDING Membership
  * for the given userId. Returns IDs for test assertions and cleanup.
  */
 export async function seedMembership(userId: string): Promise<MembershipFixture> {
-  const org = await prisma.organization.create({
-    data: {
-      name: `E2E Org ${TS}`,
-      slug: `e2e-org-${TS}`,
-      type: "DOJO",
-      brand: "BASELINE_MARTIAL_ARTS",
-    },
-  })
-
-  const discipline = await prisma.discipline.create({
-    data: {
-      name: `E2E Discipline ${TS}`,
-      slug: `e2e-discipline-${TS}`,
-      isSystem: true,
-    },
-  })
-
-  const role = await prisma.role.create({
-    data: {
-      code: `MEMBER_${TS}`,
-      name: "Member",
-      isSystem: true,
-      brand: "BASELINE_MARTIAL_ARTS",
-    },
-  })
-
-  const membership = await prisma.membership.create({
-    data: {
-      brand: "BASELINE_MARTIAL_ARTS",
-      status: "PENDING",
-      userId,
-      organizationId: org.id,
-      disciplineId: discipline.id,
-    },
-  })
-
-  return {
-    organizationId: org.id,
-    disciplineId: discipline.id,
-    membershipId: membership.id,
-    roleId: role.id,
-  }
+  return runMembershipDbCommand<MembershipFixture>("seed-membership", { userId })
 }
 
 /**
  * Cleans up all seeded membership test data.
  * Call in afterAll to leave the DB clean.
  */
-export async function cleanupMembershipFixture(fixture: MembershipFixture) {
-  await prisma.membershipRoleAssignment.deleteMany({
-    where: { membership: { organizationId: fixture.organizationId } },
-  })
-  await prisma.membership.deleteMany({
-    where: { organizationId: fixture.organizationId },
-  })
-  await prisma.role.deleteMany({ where: { id: fixture.roleId } })
-  await prisma.organization.deleteMany({ where: { id: fixture.organizationId } })
-  await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
+export async function cleanupMembershipFixture(fixture: MembershipFixture): Promise<void> {
+  runMembershipDbCommand<void>("cleanup-membership", fixture)
 }

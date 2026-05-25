@@ -201,6 +201,38 @@ Replace every `defaultValue={field.value}` with `value={field.value}` inside rea
 - **Carried from SESSION_0252:** GDPR-like privacy work remains blocked on product/legal copy + the durable-models-vs-queue decision.
 - **Informational from this session's grill:** Plausible alone does not satisfy full GDPR-like compliance; it only removes the consent requirement for analytics. The next privacy session should plan: footer policy links + Privacy/Terms/Cookies pages, request-queue model (not auto-delete), DSR intake form gated on Better Auth, consent UI deferred until an opt-in feature actually requires it. Don't port BBL WP components verbatim — re-implement against Better Auth + Prisma.
 
+### Plausible/GDPR mutual understanding (locked at SESSION_0254 bow-in grill)
+
+> Captured here so the privacy session picks up cold without re-asking.
+
+**Q: Is Plausible enough for GDPR?**
+
+**A: No.** Plausible removes one (the easiest) consent obligation — analytics cookie consent — but GDPR-like compliance is a much larger surface. The compliance equation for ronin-dojo is:
+
+| Requirement | Plausible covers? | Still needed |
+| --- | --- | --- |
+| No analytics-cookie banner | ✅ Plausible is cookieless + IP-anonymized | — |
+| Privacy policy disclosure | ❌ | `/privacy` page (adapted from BBL, rewritten for ronin-dojo: Better Auth, Stripe, Prisma, Plausible, no Meta/GA) |
+| Terms of service | ❌ | `/terms` page (adapted from BBL) |
+| Cookie disclosure | ❌ | `/cookies` page listing **essential-only** cookies today: Better Auth session, Stripe Checkout, Plausible (none) |
+| Data Subject Rights (access, export, delete) | ❌ | `DataSubjectRequest` Prisma queue model + `/privacy/request` intake form gated on Better Auth session |
+| Consent UI / banner | ❌ but deferred | **Not needed today** — all current cookies are strictly-necessary. Add only when a non-essential tracker (Meta pixel, GA, retargeting) is introduced. |
+| Footer policy links | ❌ | Privacy / Terms / Cookies links in `<Footer>` site-wide |
+
+**Operational decisions:**
+
+1. **Request-queue, not auto-delete.** DSR submissions create a row in `DataSubjectRequest` with `status: PENDING`. Brian (or future admin UI) reviews and fulfills manually. Auto-delete on submit is rejected because (a) it can't satisfy "right to access" without a manual export step, (b) the cascade across `Membership`, `Registration`, `DirectoryProfile`, etc., must be audit-trailed.
+2. **DSR form gated on Better Auth session.** Submission requires logged-in user, so the `userId` is authoritative and no email verification round-trip is needed. Anonymous "I'm so-and-so, delete me" requests are out of scope for v1.
+3. **BBL pages are reference, not source.** `src/brands/blackbeltlegacy/components/BBL{Privacy,Terms}Page.jsx` and `shared/CookieConsentBanner.jsx` in the old monorepo are read for structure and topic coverage; prose is rewritten for ronin-dojo's actual stack and surfaces.
+4. **No cookie banner this session.** The decision to defer until an opt-in tracker requires it is recorded here so future sessions don't relitigate it.
+
+**Out of scope for SESSION_0254 (deferred to a follow-up privacy session):**
+
+- Admin UI for processing DSRs (pending → in-progress → fulfilled).
+- Data-export job worker (manual `prisma studio` export is acceptable for v1).
+- Auto-anonymization vs hard-delete tradeoff for fulfilled deletes (decision punted).
+- EU-only geo gating or DPO/data-controller contact endpoint.
+
 ## Verification
 
 | Check | Result |

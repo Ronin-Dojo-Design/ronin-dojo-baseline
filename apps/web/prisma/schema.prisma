@@ -142,6 +142,10 @@ model User {
   // Blog
   posts Post[]
 
+  // GDPR / privacy
+  dataSubjectRequests          DataSubjectRequest[] @relation("DataSubjectRequestSubmitter")
+  dataSubjectRequestsFulfilled DataSubjectRequest[] @relation("DataSubjectRequestFulfiller")
+
   // Indexes
   @@index([id])
 }
@@ -3484,4 +3488,39 @@ model Post {
   @@index([brand, slug])
   @@index([authorId])
   @@index([publishedAt])
+}
+
+enum DataSubjectRequestType {
+  EXPORT
+  DELETE
+  RECTIFY
+}
+
+enum DataSubjectRequestStatus {
+  PENDING
+  IN_PROGRESS
+  FULFILLED
+  REJECTED
+}
+
+/// GDPR-like Data Subject Request queue.
+/// Submissions go to this queue with status=PENDING; admin processes manually.
+/// See SESSION_0254 for the Plausible/GDPR mutual understanding that drove this.
+model DataSubjectRequest {
+  id          String                   @id @default(cuid())
+  userId      String
+  type        DataSubjectRequestType
+  status      DataSubjectRequestStatus @default(PENDING)
+  reason      String?
+  submittedAt DateTime                 @default(now())
+  fulfilledAt DateTime?
+  fulfilledBy String?
+  notes       String?
+
+  user      User  @relation("DataSubjectRequestSubmitter", fields: [userId], references: [id], onDelete: Cascade)
+  fulfiller User? @relation("DataSubjectRequestFulfiller", fields: [fulfilledBy], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([submittedAt])
 }
