@@ -147,7 +147,7 @@ export const CreateProgramForm = ({
                     field.onChange(value)
                     form.setValue("disciplineId", "none")
                   }}
-                  defaultValue={field.value}
+                  value={field.value}
                   disabled={isEditing}
                 >
                   <FormControl>
@@ -250,7 +250,7 @@ export const CreateProgramForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger size="lg">
                         <SelectValue placeholder="Select status" />

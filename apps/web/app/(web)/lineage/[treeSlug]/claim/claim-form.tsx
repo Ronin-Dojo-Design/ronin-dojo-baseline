@@ -145,7 +145,7 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   className="space-y-2"
                 >
                   {RELATIONSHIP_OPTIONS.map(opt => (

@@ -138,7 +138,7 @@ export function CourseForm({ children, className, title, course, ...props }: Cou
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
@@ -163,7 +163,7 @@ export function CourseForm({ children, className, title, course, ...props }: Cou
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Certification Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
