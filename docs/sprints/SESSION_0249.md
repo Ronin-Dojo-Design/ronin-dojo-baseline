@@ -151,7 +151,12 @@ Implement the staged lineage lifecycle coverage from `SESSION_0247_TASK_03`, sta
 - [ ] Session auth required
 - [ ] Org membership verified
 - [x] Brand column filtered
-- Authorization approach: anonymous browser read only; route must use public `getRequestBrand()` and public lineage query paths. The fixture uses `BASELINE_MARTIAL_ARTS` and test assertions prove non-public members stay absent from route-rendered HTML and visible text.
+- [x] Published tree required
+- [x] Public tree visibility required
+- [x] Public member/node visibility required
+- [x] Non-public member names excluded from visible text and serialized HTML
+- [x] Hidden visual-group labels excluded when attached only to non-public members
+- Authorization approach: anonymous browser read only; no session or org membership is required for public `/lineage` reads. The route must use `getRequestBrand()` plus public lineage query paths that enforce published/public tree and public member visibility. The fixture uses `BASELINE_MARTIAL_ARTS` and test assertions prove `UNLISTED`, `RESTRICTED`, and `PRIVATE` members stay absent from route-rendered HTML and visible text.
 
 ### 5. FAILED_STEPS check
 
