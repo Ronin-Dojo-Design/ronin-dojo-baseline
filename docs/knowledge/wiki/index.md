@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-24
+updated: 2026-05-25
 author: Brian + Copilot
-last_agent: codex-session-0247
+last_agent: codex-session-0248
 ---
 
 # LLM Wiki Index
@@ -325,6 +325,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0245](../../sprints/SESSION_0245.md) | session--implement | closed |
 | [SESSION_0246](../../sprints/SESSION_0246.md) | session--implement | closed |
 | [SESSION_0247](../../sprints/SESSION_0247.md) | session--plan | closed |
+| [SESSION_0248](../../sprints/SESSION_0248.md) | session--implement | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 
@@ -438,6 +439,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | MaterializeScheduleButton | `components/web/schedules/materialize-schedule-button.tsx` | S2 |
 | ScheduleInstructorList | `components/web/schedules/schedule-instructor-list.tsx` | S2 |
 | DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
+| LineageQuery/List/Listing/Search/Card | `components/web/lineage/lineage-*.tsx` | SESSION_0248 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |
 

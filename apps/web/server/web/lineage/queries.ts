@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
-import { type Brand, LineageVisibility } from "~/.generated/prisma/client"
+import { type Brand, LineageVisibility, type Prisma } from "~/.generated/prisma/client"
+import { parseSort } from "~/server/web/_shared/sortable"
 import {
   type LineageNodeProfile,
   type LineageNodeRow,
@@ -14,6 +15,11 @@ import {
   lineageRelationshipPayload,
   lineageTreePublicPayload,
 } from "~/server/web/lineage/payloads"
+import {
+  LINEAGE_DEFAULT_PER_PAGE,
+  type LineageFilterParams,
+  normalizeLineageSearchParams,
+} from "~/server/web/lineage/schema"
 import { db } from "~/services/db"
 
 /**
@@ -549,29 +555,80 @@ export type LineageTreeCardRow = {
   organization: { id: string; name: string; slug: string } | null
 }
 
+const SORTABLE_LINEAGE_COLUMNS = ["name", "createdAt", "updatedAt"] as const
+
+const getLineageOrderBy = (sort: string): Prisma.LineageTreeOrderByWithRelationInput[] => {
+  const { sortBy, sortOrder } = parseSort(sort, SORTABLE_LINEAGE_COLUMNS)
+
+  switch (sortBy) {
+    case "createdAt":
+      return [{ createdAt: sortOrder }, { id: "asc" }]
+    case "updatedAt":
+      return [{ updatedAt: sortOrder }, { id: "asc" }]
+    default:
+      return [{ name: sortOrder }, { id: "asc" }]
+  }
+}
+
+export type LineageTreeSearchResult = {
+  trees: LineageTreeCardRow[]
+  total: number
+  page: number
+  perPage: number
+}
+
 /**
- * Fetch published, publicly visible lineage trees for a brand with summary
- * data suitable for cards/listing. Includes member count, discipline, and
- * organization for display without loading the full tree payload.
+ * Search published, publicly visible lineage trees for a brand with summary
+ * data suitable for cards/listing.
+ *
+ * Privacy rule: search fields are limited to tree/listing fields plus public
+ * discipline and organization names. Member names are intentionally excluded.
+ * Member count only counts PUBLIC-node members.
  */
-export const findPublishedLineageTrees = async ({
+export const searchPublishedLineageTrees = async ({
   brand,
-  take = 50,
+  search = {
+    q: "",
+    sort: "name.asc",
+    page: 1,
+    perPage: LINEAGE_DEFAULT_PER_PAGE,
+    discipline: "",
+    organization: "",
+  },
 }: {
   brand: Brand
-  take?: number
-}): Promise<LineageTreeCardRow[]> => {
+  search?: LineageFilterParams
+}): Promise<LineageTreeSearchResult> => {
   "use cache"
 
   cacheTag("lineage", `lineage-trees-${brand}`)
   cacheLife("minutes")
 
+  const normalized = normalizeLineageSearchParams(search)
+  const q = normalized.q
+  const discipline = normalized.discipline.trim()
+  const organization = normalized.organization.trim()
+  const skip = (normalized.page - 1) * normalized.perPage
+
+  const where: Prisma.LineageTreeWhereInput = {
+    brand,
+    isPublished: true,
+    visibility: { in: PUBLIC_VISIBILITY_SCOPE },
+    ...(discipline && { discipline: { slug: discipline } }),
+    ...(organization && { organization: { slug: organization } }),
+  }
+
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+      { discipline: { name: { contains: q, mode: "insensitive" } } },
+      { organization: { name: { contains: q, mode: "insensitive" } } },
+    ]
+  }
+
   const trees = await db.lineageTree.findMany({
-    where: {
-      brand,
-      isPublished: true,
-      visibility: { in: PUBLIC_VISIBILITY_SCOPE },
-    },
+    where,
     select: {
       id: true,
       brand: true,
@@ -590,18 +647,50 @@ export const findPublishedLineageTrees = async ({
         },
       },
     },
-    orderBy: { name: "asc" },
-    take,
+    orderBy: getLineageOrderBy(normalized.sort),
+    take: normalized.perPage,
+    skip,
   })
+  const total = await db.lineageTree.count({ where })
 
-  return trees.map(t => ({
-    id: t.id,
-    brand: t.brand,
-    slug: t.slug,
-    name: t.name,
-    description: t.description,
-    memberCount: t._count.members,
-    discipline: t.discipline,
-    organization: t.organization,
-  }))
+  return {
+    trees: trees.map(t => ({
+      id: t.id,
+      brand: t.brand,
+      slug: t.slug,
+      name: t.name,
+      description: t.description,
+      memberCount: t._count.members,
+      discipline: t.discipline,
+      organization: t.organization,
+    })),
+    total,
+    page: normalized.page,
+    perPage: normalized.perPage,
+  }
+}
+
+/**
+ * Back-compat helper for callers that still need the unpaginated lightweight
+ * list. New listing pages should call `searchPublishedLineageTrees`.
+ */
+export const findPublishedLineageTrees = async ({
+  brand,
+  take = 50,
+}: {
+  brand: Brand
+  take?: number
+}): Promise<LineageTreeCardRow[]> => {
+  const { trees } = await searchPublishedLineageTrees({
+    brand,
+    search: {
+      q: "",
+      sort: "name.asc",
+      page: 1,
+      perPage: take,
+      discipline: "",
+      organization: "",
+    },
+  })
+  return trees
 }

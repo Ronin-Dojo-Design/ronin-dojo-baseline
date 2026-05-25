@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H5 } from "~/components/common/heading"
-import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
+import { LineageQuery } from "~/components/web/lineage/lineage-query"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
@@ -12,13 +10,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import {
-  createGraph,
-  generateBreadcrumbs,
-  generateCollectionPageWithGenericItems,
-  generateSchemaReference,
-} from "~/lib/structured-data"
-import { findPublishedLineageTrees } from "~/server/web/lineage/queries"
+import { createGraph, generateBreadcrumbs } from "~/lib/structured-data"
 
 const PAGE_URL = "/lineage"
 const PAGE_TITLE = "Lineage Trees"
@@ -53,46 +45,13 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-export default async function LineageIndexPage() {
+export default async function LineageIndexPage(props: PageProps<"/lineage">) {
   const brand = await getRequestBrand()
-  const trees = await findPublishedLineageTrees({ brand })
-
-  const itemListItems = trees.map(tree => ({
-    name: tree.name,
-    url: `/lineage/${tree.slug}`,
-    description: tree.description,
-    id: generateSchemaReference("CreativeWork", `/lineage/${tree.slug}`, tree.name, "lineage-tree")[
-      "@id"
-    ],
-    provider: tree.organization
-      ? generateSchemaReference(
-          "Organization",
-          `/organizations/${tree.organization.slug}`,
-          tree.organization.name,
-        )
-      : undefined,
-    about: tree.discipline
-      ? generateSchemaReference(
-          "Thing",
-          `/disciplines/${tree.discipline.slug}`,
-          tree.discipline.name,
-        )
-      : undefined,
-  }))
 
   return (
     <>
       <StructuredData
-        data={createGraph([
-          generateBreadcrumbs([{ url: PAGE_URL, title: PAGE_TITLE }]),
-          generateCollectionPageWithGenericItems(
-            PAGE_URL,
-            PAGE_TITLE,
-            PAGE_DESCRIPTION,
-            itemListItems,
-            "CreativeWork",
-          ),
-        ])}
+        data={createGraph([generateBreadcrumbs([{ url: PAGE_URL, title: PAGE_TITLE }])])}
       />
 
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
@@ -104,39 +63,13 @@ export default async function LineageIndexPage() {
 
       <Section>
         <Section.Content>
-          {trees.length === 0 ? (
-            <Note>No published lineage trees yet.</Note>
-          ) : (
-            <Grid>
-              {trees.map(tree => (
-                <Link key={tree.id} href={`/lineage/${tree.slug}`}>
-                  <Card>
-                    <CardHeader>
-                      <Stack size="xs" direction="column">
-                        <H5>{tree.name}</H5>
-                        {tree.description && (
-                          <CardDescription className="line-clamp-2">
-                            {tree.description}
-                          </CardDescription>
-                        )}
-                        <Stack size="xs">
-                          {tree.discipline && (
-                            <Badge variant="outline">{tree.discipline.name}</Badge>
-                          )}
-                          {tree.organization && (
-                            <Badge variant="soft">{tree.organization.name}</Badge>
-                          )}
-                          <Badge variant="soft">
-                            {tree.memberCount} {tree.memberCount === 1 ? "member" : "members"}
-                          </Badge>
-                        </Stack>
-                      </Stack>
-                    </CardHeader>
-                  </Card>
-                </Link>
-              ))}
-            </Grid>
-          )}
+          <LineageQuery
+            searchParams={props.searchParams}
+            brand={brand}
+            pageUrl={PAGE_URL}
+            pageTitle={PAGE_TITLE}
+            pageDescription={PAGE_DESCRIPTION}
+          />
         </Section.Content>
       </Section>
 

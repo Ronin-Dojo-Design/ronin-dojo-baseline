@@ -28,6 +28,7 @@ import {
   getLineageTreeBySlug,
   materializeLineageTreeResult,
   resolveLineageVisibilityScope,
+  searchPublishedLineageTrees,
 } from "~/server/web/lineage/queries"
 import { db } from "~/services/db"
 
@@ -39,10 +40,17 @@ const TEST_BRAND: Brand = "BASELINE_MARTIAL_ARTS"
 type Fixtures = {
   publishedTreeId: string
   privateTreeId: string
+  listingTreeAId: string
+  listingTreeBId: string
+  brandBTreeId: string
   publishedTreeSlug: string
   privateTreeSlug: string
+  listingTreeASlug: string
+  listingTreeBSlug: string
   publicMemberAId: string
   publicMemberBId: string
+  listingTreeAPublicMemberId: string
+  listingTreeAHiddenMemberId: string
   restrictedMemberId: string
   unlistedMemberId: string
   visualGroupAId: string
@@ -58,6 +66,8 @@ type Fixtures = {
   ownerUserId: string
   ownerNodeId: string
   nonOwnerUserId: string
+  disciplineId: string
+  organizationId: string
 }
 
 let fx: Fixtures | null = null
@@ -93,6 +103,21 @@ beforeAll(async () => {
     data: { userId: userD.id, slug: tag("node-d"), visibility: "UNLISTED" },
   })
 
+  const discipline = await db.discipline.create({
+    data: {
+      name: tag("discipline-search"),
+      slug: tag("discipline-search"),
+      brand: TEST_BRAND,
+    },
+  })
+  const organization = await db.organization.create({
+    data: {
+      name: tag("organization-search"),
+      slug: tag("organization-search"),
+      brand: TEST_BRAND,
+    },
+  })
+
   const publishedTree = await db.lineageTree.create({
     data: {
       brand: TEST_BRAND,
@@ -101,6 +126,54 @@ beforeAll(async () => {
       visibility: "PUBLIC",
       isPublished: true,
       ownerNodeId: nodeA.id,
+    },
+  })
+
+  const listingTreeA = await db.lineageTree.create({
+    data: {
+      brand: TEST_BRAND,
+      slug: tag("listing-a"),
+      name: tag("listing-alpha"),
+      description: tag("listing-description-alpha"),
+      visibility: "PUBLIC",
+      isPublished: true,
+      disciplineId: discipline.id,
+      organizationId: organization.id,
+    },
+  })
+  const listingTreeB = await db.lineageTree.create({
+    data: {
+      brand: TEST_BRAND,
+      slug: tag("listing-b"),
+      name: tag("listing-bravo"),
+      description: tag("listing-description-bravo"),
+      visibility: "PUBLIC",
+      isPublished: true,
+    },
+  })
+  const brandBTree = await db.lineageTree.create({
+    data: {
+      brand: "RONIN_DOJO_DESIGN",
+      slug: tag("listing-brand-b"),
+      name: tag("listing-brand-b"),
+      description: tag("listing-description-brand-b"),
+      visibility: "PUBLIC",
+      isPublished: true,
+    },
+  })
+
+  const listingTreeAPublicMember = await db.lineageTreeMember.create({
+    data: {
+      treeId: listingTreeA.id,
+      nodeId: nodeA.id,
+      visualSortOrder: 10,
+    },
+  })
+  const listingTreeAHiddenMember = await db.lineageTreeMember.create({
+    data: {
+      treeId: listingTreeA.id,
+      nodeId: nodeC.id,
+      visualSortOrder: 20,
     },
   })
 
@@ -204,10 +277,17 @@ beforeAll(async () => {
   fx = {
     publishedTreeId: publishedTree.id,
     privateTreeId: privateTree.id,
+    listingTreeAId: listingTreeA.id,
+    listingTreeBId: listingTreeB.id,
+    brandBTreeId: brandBTree.id,
     publishedTreeSlug: publishedTree.slug,
     privateTreeSlug: privateTree.slug,
+    listingTreeASlug: listingTreeA.slug,
+    listingTreeBSlug: listingTreeB.slug,
     publicMemberAId: memberA.id,
     publicMemberBId: memberB.id,
+    listingTreeAPublicMemberId: listingTreeAPublicMember.id,
+    listingTreeAHiddenMemberId: listingTreeAHiddenMember.id,
     restrictedMemberId: memberC.id,
     unlistedMemberId: memberD.id,
     visualGroupAId: groupA.id,
@@ -223,6 +303,8 @@ beforeAll(async () => {
     ownerUserId: userA.id,
     ownerNodeId: nodeA.id,
     nonOwnerUserId: userB.id,
+    disciplineId: discipline.id,
+    organizationId: organization.id,
   }
 })
 
@@ -230,14 +312,36 @@ afterAll(async () => {
   if (!fx) return
 
   await db.lineageTreeMember.deleteMany({
-    where: { treeId: { in: [fx.publishedTreeId, fx.privateTreeId] } },
+    where: {
+      treeId: {
+        in: [
+          fx.publishedTreeId,
+          fx.privateTreeId,
+          fx.listingTreeAId,
+          fx.listingTreeBId,
+          fx.brandBTreeId,
+        ],
+      },
+    },
   })
   await db.lineageVisualGroup.deleteMany({
     where: { treeId: { in: [fx.publishedTreeId, fx.privateTreeId] } },
   })
   await db.lineageTree.deleteMany({
-    where: { id: { in: [fx.publishedTreeId, fx.privateTreeId] } },
+    where: {
+      id: {
+        in: [
+          fx.publishedTreeId,
+          fx.privateTreeId,
+          fx.listingTreeAId,
+          fx.listingTreeBId,
+          fx.brandBTreeId,
+        ],
+      },
+    },
   })
+  await db.organization.deleteMany({ where: { id: fx.organizationId } })
+  await db.discipline.deleteMany({ where: { id: fx.disciplineId } })
   await db.lineageRelationship.deleteMany({ where: { id: fx.hiddenInstructorRelationshipId } })
   await db.lineageNode.deleteMany({ where: { id: { in: fx.nodeIds } } })
   await db.user.deleteMany({ where: { id: { in: fx.userIds } } })
@@ -362,6 +466,118 @@ describe("findPublishedLineageTrees", () => {
 
     expect(tree).toBeDefined()
     expect(tree?.memberCount).toBe(2)
+  })
+})
+
+describe("searchPublishedLineageTrees", () => {
+  const baseSearch = {
+    q: "",
+    sort: "name.asc",
+    page: 1,
+    perPage: 24,
+    discipline: "",
+    organization: "",
+  }
+
+  it("returns only brand-matched published PUBLIC trees", async () => {
+    const result = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing") },
+    })
+    const ids = result.trees.map(tree => tree.id)
+
+    expect(ids).toContain(fx!.listingTreeAId)
+    expect(ids).toContain(fx!.listingTreeBId)
+    expect(ids).not.toContain(fx!.brandBTreeId)
+    expect(ids).not.toContain(fx!.privateTreeId)
+    expect(result.total).toBe(2)
+  })
+
+  it("searches tree name and description", async () => {
+    const byName = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing-alpha") },
+    })
+    const byDescription = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing-description-bravo") },
+    })
+
+    expect(byName.trees.map(tree => tree.id)).toEqual([fx!.listingTreeAId])
+    expect(byDescription.trees.map(tree => tree.id)).toEqual([fx!.listingTreeBId])
+  })
+
+  it("searches discipline and organization names without member-name search", async () => {
+    const byDiscipline = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("discipline-search") },
+    })
+    const byOrganization = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("organization-search") },
+    })
+    const byHiddenMemberName = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("user-c") },
+    })
+
+    expect(byDiscipline.trees.map(tree => tree.id)).toEqual([fx!.listingTreeAId])
+    expect(byOrganization.trees.map(tree => tree.id)).toEqual([fx!.listingTreeAId])
+    expect(byHiddenMemberName.trees.map(tree => tree.id)).not.toContain(fx!.listingTreeAId)
+  })
+
+  it("filters by discipline and organization slug", async () => {
+    const byDiscipline = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing"), discipline: tag("discipline-search") },
+    })
+    const byOrganization = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing"), organization: tag("organization-search") },
+    })
+
+    expect(byDiscipline.trees.map(tree => tree.id)).toEqual([fx!.listingTreeAId])
+    expect(byOrganization.trees.map(tree => tree.id)).toEqual([fx!.listingTreeAId])
+  })
+
+  it("counts only PUBLIC-node members on listing cards", async () => {
+    const result = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing-alpha") },
+    })
+
+    expect(result.trees[0]?.id).toBe(fx!.listingTreeAId)
+    expect(result.trees[0]?.memberCount).toBe(1)
+    expect(result.trees[0]).not.toHaveProperty("hiddenMemberCount")
+  })
+
+  it("keeps total as the full match count while paginating page rows", async () => {
+    const pageOne = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing"), page: 1, perPage: 1 },
+    })
+    const pageTwo = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing"), page: 2, perPage: 1 },
+    })
+
+    expect(pageOne.total).toBe(2)
+    expect(pageTwo.total).toBe(2)
+    expect(pageOne.trees).toHaveLength(1)
+    expect(pageTwo.trees).toHaveLength(1)
+    expect(pageOne.trees[0]?.id).toBe(fx!.listingTreeAId)
+    expect(pageTwo.trees[0]?.id).toBe(fx!.listingTreeBId)
+  })
+
+  it("normalizes unsafe page and perPage values", async () => {
+    const result = await searchPublishedLineageTrees({
+      brand: TEST_BRAND,
+      search: { ...baseSearch, q: tag("listing"), page: 0, perPage: 0 },
+    })
+
+    expect(result.page).toBe(1)
+    expect(result.perPage).toBe(24)
+    expect(result.total).toBe(2)
   })
 })
 

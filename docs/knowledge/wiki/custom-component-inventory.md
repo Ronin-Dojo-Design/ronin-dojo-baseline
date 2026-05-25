@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-05-22
-last_agent: codex-session-0224
+updated: 2026-05-25
+last_agent: codex-session-0248
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0224.md
@@ -16,6 +16,7 @@ pairs_with:
   - docs/sprints/SESSION_0199.md
   - docs/sprints/SESSION_0200.md
   - docs/sprints/SESSION_0202.md
+  - docs/sprints/SESSION_0248.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -42,6 +43,11 @@ Conventions:
 | `LineageProfileDrawer` | `lineage-profile-drawer.tsx` | Selected node + open/close | Drawer that opens on canvas selection. Reads only from the public lineage payload — never from admin-only fields. |
 | `LineageTreeBoard` | `lineage-tree-board.tsx` | Tree + selection state | Layout shell that wires the canvas, drawer, and selection state. Owns the `selectedNodeId` source of truth for the public viewer surface. |
 | `LineageTree` | `lineage-tree.tsx` | Legacy entry | Older entry kept for fallback compatibility with the discipline detail section. Prefer `LineageTreeCanvas` directly for new surfaces. |
+| `LineageQuery` | `lineage-query.tsx` | `searchParams`, `brand`, page structured-data metadata, optional listing overrides | SESSION_0248: server query wrapper for `/lineage`. Parses `nuqs` search params, calls `searchPublishedLineageTrees`, renders `ResultsCount`, `LineageListing`, `LineageList`, and page-scoped collection structured data. |
+| `LineageListing` | `lineage-listing.tsx` | `pagination`, optional `search`, optional filter-provider options, children | SESSION_0248: client listing shell mirroring Tool/Technique listing architecture. Provides `FiltersProvider` with `lineageFilterParams`, renders `LineageSearch`, children, and shared `Pagination`. |
+| `LineageSearch` | `lineage-search.tsx` | Optional placeholder plus `Stack` props | SESSION_0248: client search control composed from shared `Filters` and `Sort`. Sort values are `name.asc`, `name.desc`, and `updatedAt.desc`; filter changes reset `page` through `FiltersProvider`. |
+| `LineageList` | `lineage-list.tsx` | `trees: LineageTreeCardRow[]` | SESSION_0248: public card grid. Empty state is explicit for no matching published trees. |
+| `LineageCard` | `lineage-card.tsx` | `tree: LineageTreeCardRow` | SESSION_0248: public lineage tree card. Displays only public listing fields plus `memberCount`; count is produced by the server query with `LineageNode.visibility = PUBLIC`, never hidden-member totals. |
 
 ### Lineage admin surfaces
 
