@@ -53,6 +53,7 @@ export const UserMenu = () => {
     >
       <DropdownMenu>
         <DropdownMenuTrigger
+          nativeButton={false}
           render={
             <Avatar
               className={cx(boxVariants({ hover: true, focus: true }), "size-6 duration-100")}
