@@ -15,7 +15,12 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { createGraph, generateCollectionPageWithGenericItems } from "~/lib/structured-data"
+import {
+  createGraph,
+  generateBreadcrumbs,
+  generateCollectionPageWithGenericItems,
+  generateSchemaReference,
+} from "~/lib/structured-data"
 import { getProgramsByBrand } from "~/server/web/program/queries"
 
 const PAGE_URL = "/programs"
@@ -48,12 +53,22 @@ export default async function ProgramsPage() {
     name: p.name,
     url: `/programs/${p.id}`,
     description: p.description,
+    id: generateSchemaReference("Course", `/programs/${p.id}`, p.name, "program")["@id"],
+    provider: generateSchemaReference(
+      "Organization",
+      `/organizations/${p.organization.slug}`,
+      p.organization.name,
+    ),
+    about: p.discipline
+      ? generateSchemaReference("Thing", `/disciplines/${p.discipline.slug}`, p.discipline.name)
+      : undefined,
   }))
 
   return (
     <>
       <StructuredData
         data={createGraph([
+          generateBreadcrumbs([{ url: PAGE_URL, title: PAGE_TITLE }]),
           generateCollectionPageWithGenericItems(
             PAGE_URL,
             PAGE_TITLE,

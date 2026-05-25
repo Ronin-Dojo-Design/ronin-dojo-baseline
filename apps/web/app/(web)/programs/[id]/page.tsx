@@ -17,7 +17,13 @@ import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { generateCollectionPage } from "~/lib/structured-data"
+import {
+  createGraph,
+  generateBreadcrumbs,
+  generateCollectionPage,
+  generateSchemaReference,
+  generateStructuredDataEntity,
+} from "~/lib/structured-data"
 import { findProgramIds, findRelatedPrograms, getProgramById } from "~/server/web/program/queries"
 
 interface Props {
@@ -64,15 +70,28 @@ export default async function ProgramDetailPage({ params }: Props) {
   })
 
   const ageRange = [program.ageMin, program.ageMax].filter(value => value !== null).join("-")
+  const programUrl = `/programs/${program.id}`
+  const programReference = generateSchemaReference("Course", programUrl, program.name, "program")
+  const providerReference = generateSchemaReference(
+    "Organization",
+    `/organizations/${program.organization.slug}`,
+    program.organization.name,
+  )
+  const aboutReference = program.discipline
+    ? generateSchemaReference(
+        "Thing",
+        `/disciplines/${program.discipline.slug}`,
+        program.discipline.name,
+      )
+    : undefined
+  const breadcrumbItems = [
+    { url: "/programs", title: "Programs" },
+    { url: programUrl, title: program.name },
+  ]
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { url: "/programs", title: "Programs" },
-          { url: `/programs/${program.id}`, title: program.name },
-        ]}
-      />
+      <Breadcrumbs items={breadcrumbItems} />
 
       <Intro>
         <IntroTitle>{program.name}</IntroTitle>
@@ -225,16 +244,28 @@ export default async function ProgramDetailPage({ params }: Props) {
       )}
 
       <StructuredData
-        data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            generateCollectionPage(
-              `/programs/${program.id}`,
-              program.name,
-              program.description ?? `Training program by ${program.organization.name}`,
-            ),
-          ],
-        }}
+        data={createGraph([
+          generateBreadcrumbs(breadcrumbItems),
+          generateCollectionPage(
+            programUrl,
+            program.name,
+            program.description ?? `Training program by ${program.organization.name}`,
+            {
+              mainEntity: programReference,
+              provider: providerReference,
+              about: aboutReference,
+            },
+          ),
+          generateStructuredDataEntity({
+            type: "Course",
+            url: programUrl,
+            name: program.name,
+            description: program.description,
+            id: programReference["@id"],
+            provider: providerReference,
+            about: aboutReference,
+          }),
+        ])}
       />
     </>
   )

@@ -15,7 +15,12 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { generateCollectionPage, generateGenericItemList } from "~/lib/structured-data"
+import {
+  generateBreadcrumbs,
+  generateCollectionPage,
+  generateGenericItemList,
+  generateSchemaReference,
+} from "~/lib/structured-data"
 import { searchCourses } from "~/server/web/courses/queries"
 
 type PageProps = {
@@ -65,6 +70,19 @@ export default async function CoursesPage({ searchParams }: PageProps) {
     name: course.title,
     url: `/courses/${course.slug}`,
     description: course.description,
+    id: generateSchemaReference("Course", `/courses/${course.slug}`, course.title)["@id"],
+    provider: generateSchemaReference(
+      "Organization",
+      `/organizations/${course.organization.slug}`,
+      course.organization.name,
+    ),
+    about: course.discipline
+      ? generateSchemaReference(
+          "Thing",
+          `/disciplines/${course.discipline.slug}`,
+          course.discipline.name,
+        )
+      : undefined,
   }))
 
   return (
@@ -123,6 +141,7 @@ export default async function CoursesPage({ searchParams }: PageProps) {
         data={{
           "@context": "https://schema.org",
           "@graph": [
+            generateBreadcrumbs([{ url: PAGE_URL, title: PAGE_TITLE }]),
             generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
             generateGenericItemList(itemListItems, PAGE_TITLE, "Course"),
           ],

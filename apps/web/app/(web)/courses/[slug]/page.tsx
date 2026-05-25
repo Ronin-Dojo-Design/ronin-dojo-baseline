@@ -16,7 +16,13 @@ import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { generateCollectionPage } from "~/lib/structured-data"
+import {
+  createGraph,
+  generateBreadcrumbs,
+  generateCollectionPage,
+  generateSchemaReference,
+  generateStructuredDataEntity,
+} from "~/lib/structured-data"
 import { getCurrentCourseEnrollmentState } from "~/server/web/course-enrollment/queries"
 import {
   findCourseBySlug,
@@ -97,15 +103,28 @@ export default async function CourseDetailPage({ params }: PageProps) {
       curriculumItemId: completion.curriculumItemId,
       completedAt: completion.completedAt.toISOString(),
     })) ?? []
+  const courseUrl = `/courses/${course.slug}`
+  const courseReference = generateSchemaReference("Course", courseUrl, course.title)
+  const providerReference = generateSchemaReference(
+    "Organization",
+    `/organizations/${course.organization.slug}`,
+    course.organization.name,
+  )
+  const aboutReference = course.discipline
+    ? generateSchemaReference(
+        "Thing",
+        `/disciplines/${course.discipline.slug}`,
+        course.discipline.name,
+      )
+    : undefined
+  const breadcrumbItems = [
+    { url: "/courses", title: "Courses" },
+    { url: courseUrl, title: course.title },
+  ]
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { url: "/courses", title: "Courses" },
-          { url: `/courses/${course.slug}`, title: course.title },
-        ]}
-      />
+      <Breadcrumbs items={breadcrumbItems} />
 
       <Intro>
         <IntroTitle>{course.title}</IntroTitle>
@@ -249,16 +268,28 @@ export default async function CourseDetailPage({ params }: PageProps) {
       )}
 
       <StructuredData
-        data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            generateCollectionPage(
-              `/courses/${course.slug}`,
-              course.title,
-              course.description ?? `Curriculum and certification for ${course.title}`,
-            ),
-          ],
-        }}
+        data={createGraph([
+          generateBreadcrumbs(breadcrumbItems),
+          generateCollectionPage(
+            courseUrl,
+            course.title,
+            course.description ?? `Curriculum and certification for ${course.title}`,
+            {
+              mainEntity: courseReference,
+              provider: providerReference,
+              about: aboutReference,
+            },
+          ),
+          generateStructuredDataEntity({
+            type: "Course",
+            url: courseUrl,
+            name: course.title,
+            description: course.description,
+            id: courseReference["@id"],
+            provider: providerReference,
+            about: aboutReference,
+          }),
+        ])}
       />
     </>
   )

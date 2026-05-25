@@ -30,9 +30,53 @@ type StructuredDataListItem = {
   name: string
   url: string
   description?: string | null
+  id?: string
+  provider?: StructuredDataEntityReference | null
+  creator?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  about?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  address?: StructuredDataPostalAddress | null
 }
 
 type GenericStructuredDataType = "Thing" | "CreativeWork" | "Course" | "Organization" | "WebPage"
+type StructuredDataEntityType = GenericStructuredDataType | "Person"
+
+export type StructuredDataEntityReference = {
+  "@type"?: StructuredDataEntityType
+  "@id": string
+  name?: string
+  url?: string
+}
+
+export type StructuredDataPostalAddress = {
+  streetAddress?: string | null
+  addressLocality?: string | null
+  addressRegion?: string | null
+  postalCode?: string | null
+  addressCountry?: string | null
+}
+
+type StructuredDataEntityInput = {
+  type: StructuredDataEntityType
+  url: string
+  name: string
+  description?: string | null
+  id?: string
+  fragment?: string
+  provider?: StructuredDataEntityReference | null
+  creator?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  about?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  address?: StructuredDataPostalAddress | null
+}
+
+type StructuredDataPageOptions = {
+  id?: string
+  breadcrumb?: StructuredDataEntityReference | null
+  isPartOf?: StructuredDataEntityReference | null
+  provider?: StructuredDataEntityReference | null
+  creator?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  about?: StructuredDataEntityReference | StructuredDataEntityReference[] | null
+  mainEntity?: StructuredDataEntityReference | null
+}
 
 /**
  * Converts relative URL to absolute URL
@@ -40,6 +84,117 @@ type GenericStructuredDataType = "Thing" | "CreativeWork" | "Course" | "Organiza
 const toAbsoluteUrl = (path: string): string => {
   return path.startsWith("http") ? path : `${siteConfig.url}${path}`
 }
+
+const toSchemaFragment = (value: string) => {
+  return value.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()
+}
+
+export const generateSchemaId = (url: string, fragment: string): string => {
+  return `${toAbsoluteUrl(url)}#${fragment}`
+}
+
+const getDefaultWebSiteReference = (): StructuredDataEntityReference => ({
+  "@id": `${siteConfig.url}/#/schema/website/1`,
+})
+
+const normalizeEntityReference = (
+  value?: StructuredDataEntityReference | null,
+): StructuredDataEntityReference | undefined => {
+  if (!value) return undefined
+
+  return {
+    ...value,
+    url: value.url ? toAbsoluteUrl(value.url) : undefined,
+  }
+}
+
+const normalizeEntityReferences = (
+  value?: StructuredDataEntityReference | StructuredDataEntityReference[] | null,
+): StructuredDataEntityReference | StructuredDataEntityReference[] | undefined => {
+  if (!value) return undefined
+
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map(item => normalizeEntityReference(item))
+      .filter((item): item is StructuredDataEntityReference => Boolean(item))
+    return normalized.length > 0 ? normalized : undefined
+  }
+
+  return normalizeEntityReference(value)
+}
+
+const normalizePostalAddress = (address?: StructuredDataPostalAddress | null) => {
+  if (!address) return undefined
+
+  const normalized = {
+    "@type": "PostalAddress",
+    ...(address.streetAddress && { streetAddress: address.streetAddress }),
+    ...(address.addressLocality && { addressLocality: address.addressLocality }),
+    ...(address.addressRegion && { addressRegion: address.addressRegion }),
+    ...(address.postalCode && { postalCode: address.postalCode }),
+    ...(address.addressCountry && { addressCountry: address.addressCountry }),
+  }
+
+  return Object.keys(normalized).length > 1 ? normalized : undefined
+}
+
+export const generateSchemaReference = (
+  type: StructuredDataEntityType,
+  url: string,
+  name: string,
+  fragment = toSchemaFragment(type),
+): StructuredDataEntityReference => {
+  const absoluteUrl = toAbsoluteUrl(url)
+  return {
+    "@type": type,
+    "@id": `${absoluteUrl}#${fragment}`,
+    name,
+    url: absoluteUrl,
+  }
+}
+
+export const generateStructuredDataEntity = ({
+  type,
+  url,
+  name,
+  description,
+  id,
+  fragment,
+  provider,
+  creator,
+  about,
+  address,
+}: StructuredDataEntityInput) => {
+  const absoluteUrl = toAbsoluteUrl(url)
+
+  return {
+    "@type": type,
+    "@id": id ?? `${absoluteUrl}#${fragment ?? toSchemaFragment(type)}`,
+    name,
+    url: absoluteUrl,
+    description: description || undefined,
+    provider: normalizeEntityReference(provider),
+    creator: normalizeEntityReferences(creator),
+    about: normalizeEntityReferences(about),
+    address: normalizePostalAddress(address),
+  }
+}
+
+const getPageRelationshipFields = (
+  absoluteUrl: string,
+  options: StructuredDataPageOptions = {},
+) => ({
+  "@id": options.id ?? `${absoluteUrl}#collection`,
+  isPartOf: normalizeEntityReference(options.isPartOf) ?? getDefaultWebSiteReference(),
+  breadcrumb:
+    options.breadcrumb === null
+      ? undefined
+      : (normalizeEntityReference(options.breadcrumb) ?? { "@id": `${absoluteUrl}#breadcrumb` }),
+  provider: normalizeEntityReference(options.provider),
+  creator: normalizeEntityReferences(options.creator),
+  about: normalizeEntityReferences(options.about),
+  mainEntity: normalizeEntityReference(options.mainEntity),
+})
 
 /**
  * Generates a random rating between 4.5 and 5.0
@@ -159,15 +314,16 @@ export const generateCollectionPage = (
   url: string,
   name: string,
   description?: string,
+  options: StructuredDataPageOptions = {},
 ): CollectionPage => {
   const absoluteUrl = toAbsoluteUrl(url)
   return {
     "@type": "CollectionPage",
-    "@id": absoluteUrl,
+    ...getPageRelationshipFields(absoluteUrl, options),
     url: absoluteUrl,
     name,
     description,
-  }
+  } as CollectionPage
 }
 
 /**
@@ -178,10 +334,12 @@ export const generateCollectionPageWithItems = (
   name: string,
   description: string | null,
   items: StructuredDataListItem[],
+  options: StructuredDataPageOptions = {},
 ): CollectionPage => {
   const absoluteUrl = toAbsoluteUrl(url)
   return {
     "@type": "CollectionPage",
+    ...getPageRelationshipFields(absoluteUrl, options),
     name,
     description: description || undefined,
     url: absoluteUrl,
@@ -191,7 +349,7 @@ export const generateCollectionPageWithItems = (
       url: toAbsoluteUrl(item.url),
       description: item.description || undefined,
     })),
-  }
+  } as CollectionPage
 }
 
 /**
@@ -207,19 +365,28 @@ export const generateCollectionPageWithGenericItems = (
   description: string | null,
   items: StructuredDataListItem[],
   itemType: GenericStructuredDataType = "Thing",
+  options: StructuredDataPageOptions = {},
 ): CollectionPage => {
   const absoluteUrl = toAbsoluteUrl(url)
   return {
     "@type": "CollectionPage",
+    ...getPageRelationshipFields(absoluteUrl, options),
     name,
     description: description || undefined,
     url: absoluteUrl,
-    hasPart: items.map(item => ({
-      "@type": itemType,
-      name: item.name,
-      url: toAbsoluteUrl(item.url),
-      description: item.description || undefined,
-    })),
+    hasPart: items.map(item =>
+      generateStructuredDataEntity({
+        type: itemType,
+        url: item.url,
+        name: item.name,
+        description: item.description,
+        id: item.id,
+        provider: item.provider,
+        creator: item.creator,
+        about: item.about,
+        address: item.address,
+      }),
+    ),
   } as CollectionPage
 }
 
@@ -257,12 +424,17 @@ export const generateGenericItemList = (
     itemListElement: items.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      item: {
-        "@type": itemType,
+      item: generateStructuredDataEntity({
+        type: itemType,
+        url: item.url,
         name: item.name,
-        url: toAbsoluteUrl(item.url),
-        description: item.description || undefined,
-      },
+        description: item.description,
+        id: item.id,
+        provider: item.provider,
+        creator: item.creator,
+        about: item.about,
+        address: item.address,
+      }),
     })),
   }) as ItemList
 

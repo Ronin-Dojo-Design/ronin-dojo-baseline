@@ -15,7 +15,13 @@ import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { generateCollectionPage } from "~/lib/structured-data"
+import {
+  createGraph,
+  generateBreadcrumbs,
+  generateCollectionPage,
+  generateSchemaReference,
+  generateStructuredDataEntity,
+} from "~/lib/structured-data"
 import {
   findOrganizationSlugs,
   findRelatedOrganizations,
@@ -78,15 +84,19 @@ export default async function OrganizationDetailPage({ params }: Props) {
     org.country,
   ].filter(Boolean)
   const formattedAddress = addressParts.length > 0 ? addressParts.join(", ") : null
+  const orgUrl = `/organizations/${org.slug}`
+  const orgReference = generateSchemaReference("Organization", orgUrl, org.name)
+  const disciplineReferences = org.disciplines.map(od =>
+    generateSchemaReference("Thing", `/disciplines/${od.discipline.slug}`, od.discipline.name),
+  )
+  const breadcrumbItems = [
+    { url: "/organizations", title: "Organizations" },
+    { url: orgUrl, title: org.name },
+  ]
 
   return (
     <>
-      <Breadcrumbs
-        items={[
-          { url: "/organizations", title: "Organizations" },
-          { url: `/organizations/${org.slug}`, title: org.name },
-        ]}
-      />
+      <Breadcrumbs items={breadcrumbItems} />
 
       <Intro>
         <IntroTitle>{org.name}</IntroTitle>
@@ -290,16 +300,28 @@ export default async function OrganizationDetailPage({ params }: Props) {
       )}
 
       <StructuredData
-        data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            generateCollectionPage(
-              `/organizations/${org.slug}`,
-              org.name,
-              org.description ?? `${org.type} — ${org._count.memberships} members`,
-            ),
-          ],
-        }}
+        data={createGraph([
+          generateBreadcrumbs(breadcrumbItems),
+          generateCollectionPage(orgUrl, org.name, org.description ?? `${org.type} organization`, {
+            mainEntity: orgReference,
+            about: orgReference,
+          }),
+          generateStructuredDataEntity({
+            type: "Organization",
+            url: orgUrl,
+            name: org.name,
+            description: org.description,
+            id: orgReference["@id"],
+            about: disciplineReferences.length > 0 ? disciplineReferences : undefined,
+            address: {
+              streetAddress: [org.addressLine1, org.addressLine2].filter(Boolean).join(", "),
+              addressLocality: org.city,
+              addressRegion: org.state,
+              postalCode: org.zip,
+              addressCountry: org.country,
+            },
+          }),
+        ])}
       />
     </>
   )

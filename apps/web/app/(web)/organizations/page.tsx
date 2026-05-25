@@ -14,7 +14,12 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { createGraph, generateCollectionPageWithGenericItems } from "~/lib/structured-data"
+import {
+  createGraph,
+  generateBreadcrumbs,
+  generateCollectionPageWithGenericItems,
+  generateSchemaReference,
+} from "~/lib/structured-data"
 import { getOrganizationsByBrand } from "~/server/web/organization/queries"
 
 const PAGE_URL = "/organizations"
@@ -45,12 +50,30 @@ export default async function OrganizationsPage() {
   const itemListItems = orgs.map(o => ({
     name: o.name,
     url: `/organizations/${o.slug}`,
+    description: o.description,
+    id: generateSchemaReference("Organization", `/organizations/${o.slug}`, o.name)["@id"],
+    about:
+      o.disciplines.length > 0
+        ? o.disciplines.map(od =>
+            generateSchemaReference(
+              "Thing",
+              `/disciplines/${od.discipline.slug}`,
+              od.discipline.name,
+            ),
+          )
+        : undefined,
+    address: {
+      addressLocality: o.city,
+      addressRegion: o.state,
+      addressCountry: o.country,
+    },
   }))
 
   return (
     <>
       <StructuredData
         data={createGraph([
+          generateBreadcrumbs([{ url: PAGE_URL, title: PAGE_TITLE }]),
           generateCollectionPageWithGenericItems(
             PAGE_URL,
             PAGE_TITLE,
