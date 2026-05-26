@@ -2097,15 +2097,19 @@ model Registration {
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String?
+
+  guestEmail   String?
+  guestName    String?
+  recipientKey String
 
   stripePaymentIntentId String?
 
   entries        RegistrationEntry[]
   weighInRecords WeighInRecord[]
 
-  @@unique([tournamentId, userId])
+  @@unique([tournamentId, recipientKey])
   @@index([tournamentId, status])
   @@index([userId])
   @@index([stripePaymentIntentId])

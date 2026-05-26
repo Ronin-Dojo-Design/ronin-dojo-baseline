@@ -18,7 +18,9 @@ export type RegistrationRow = {
   paymentStatus: PaymentStatus
   totalFeeCents: number
   createdAt: Date
-  user: { id: string; name: string | null; email: string }
+  user: { id: string; name: string | null; email: string } | null
+  guestEmail: string | null
+  guestName: string | null
   entries: { id: string; division: { id: string; name: string } }[]
 }
 
@@ -71,20 +73,25 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
       enableHiding: false,
       size: 160,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-      cell: ({ row }) => (
-        <Link
-          href={`/admin/tournaments/${row.original.tournamentId}/registrations/${row.original.id}`}
-          className="font-medium text-primary hover:underline"
-        >
-          {row.original.user.name ?? "—"}
-        </Link>
-      ),
+      cell: ({ row }) => {
+        const r = row.original
+        const displayName = r.user?.name ?? r.guestName ?? "—"
+        return (
+          <Link
+            href={`/admin/tournaments/${r.tournamentId}/registrations/${r.id}`}
+            className="font-medium text-primary hover:underline"
+          >
+            {displayName}
+            {r.user === null && <span className="ml-1 text-muted-foreground">(guest)</span>}
+          </Link>
+        )
+      },
     },
     {
       id: "email",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
       cell: ({ row }) => {
-        const email = row.original.user.email
+        const email = row.original.user?.email ?? row.original.guestEmail ?? ""
 
         return (
           <Note className="max-w-48 truncate">

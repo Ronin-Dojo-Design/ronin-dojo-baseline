@@ -9,6 +9,21 @@ import type {
 } from "~/server/admin/tournaments/schema"
 import { db } from "~/services/db"
 
+/**
+ * Active, non-placeholder users for the walk-in registration recipient picker.
+ * Top 200 ordered by name (nulls last via secondary email sort).
+ */
+export const findActiveUsers = async (): Promise<
+  Array<{ id: string; name: string | null; email: string }>
+> => {
+  return db.user.findMany({
+    where: { archivedAt: null, isPlaceholder: false },
+    select: { id: true, name: true, email: true },
+    orderBy: [{ name: "asc" }, { email: "asc" }],
+    take: 200,
+  })
+}
+
 export const findTournaments = async (
   search: TournamentsTableSchema,
   where?: Prisma.TournamentWhereInput,
@@ -211,6 +226,9 @@ export const findRegistrationById = async (id: string) => {
       submittedAt: true,
       createdAt: true,
       updatedAt: true,
+      userId: true,
+      guestEmail: true,
+      guestName: true,
       user: {
         select: { id: true, name: true, email: true, image: true },
       },
@@ -379,12 +397,15 @@ export const findMatAssignmentsByTournament = async (tournamentId: string) => {
 // -----------------------------------------------------------------------------
 
 export const findFightRecordsByTournament = async (tournamentId: string) => {
-  // Get all users who competed in this tournament, then their fight records
+  // Get all users who competed in this tournament, then their fight records.
+  // Guest registrations (userId null) have no FightRecord rows.
   const registrations = await db.registration.findMany({
     where: { tournamentId, status: "APPROVED" },
     select: { userId: true },
   })
-  const userIds = [...new Set(registrations.map(r => r.userId))]
+  const userIds = [
+    ...new Set(registrations.map(r => r.userId).filter((id): id is string => id !== null)),
+  ]
 
   if (userIds.length === 0) return []
 

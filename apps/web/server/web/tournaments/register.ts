@@ -62,9 +62,12 @@ export const createRegistrationCheckout = userActionClient
       throw new Error("Please complete your Passport profile before registering for a tournament")
     }
 
-    // 3. Check user doesn't already have a registration
+    // 3. Check user doesn't already have a registration. Public-checkout path
+    //    always has a userId, so recipientKey = userId.
     const existing = await db.registration.findUnique({
-      where: { tournamentId_userId: { tournamentId: input.tournamentId, userId } },
+      where: {
+        tournamentId_recipientKey: { tournamentId: input.tournamentId, recipientKey: userId },
+      },
     })
 
     if (existing) {
@@ -148,6 +151,7 @@ export const createRegistrationCheckout = userActionClient
               data: {
                 tournamentId: input.tournamentId,
                 userId,
+                recipientKey: userId,
                 status: "SUBMITTED",
                 paymentStatus: "PAID",
                 totalFeeCents: 0,

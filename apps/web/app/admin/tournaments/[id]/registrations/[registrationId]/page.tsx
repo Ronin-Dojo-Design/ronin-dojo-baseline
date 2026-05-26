@@ -80,8 +80,13 @@ export default withTournamentAdminPage(async ({ params }) => {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <Note className="text-xs font-medium uppercase tracking-wider">Competitor</Note>
-              <p className="mt-1 font-medium">{registration.user.name ?? "—"}</p>
-              <Note className="text-sm">{registration.user.email}</Note>
+              <p className="mt-1 font-medium">
+                {registration.user?.name ?? registration.guestName ?? "—"}
+              </p>
+              <Note className="text-sm">
+                {registration.user?.email ?? registration.guestEmail ?? "—"}
+                {registration.userId === null && " (guest)"}
+              </Note>
             </div>
             <div>
               <Note className="text-xs font-medium uppercase tracking-wider">Tournament</Note>
@@ -160,12 +165,18 @@ export default withTournamentAdminPage(async ({ params }) => {
         </div>
       </Card>
 
-      {/* Weigh-in panel */}
-      <WeighInPanel
-        registrationId={registrationId}
-        userId={registration.user.id}
-        weighInsPromise={weighInsPromise}
-      />
+      {/* Weigh-in panel — only available when the registration is linked to a
+          real User. Guest registrations have no userId and therefore no
+          WeighInRecord rows until they're linked to a User. */}
+      {registration.user ? (
+        <WeighInPanel
+          registrationId={registrationId}
+          userId={registration.user.id}
+          weighInsPromise={weighInsPromise}
+        />
+      ) : (
+        <Note>Weigh-in unavailable for guest registrations.</Note>
+      )}
     </Wrapper>
   )
 })

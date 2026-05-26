@@ -104,10 +104,10 @@ beforeAll(async () => {
 
   // Registrations + entries
   const r1 = await db.registration.create({
-    data: { tournamentId, userId: user1Id, status: "APPROVED" },
+    data: { tournamentId, userId: user1Id, recipientKey: user1Id, status: "APPROVED" },
   })
   const r2 = await db.registration.create({
-    data: { tournamentId, userId: user2Id, status: "APPROVED" },
+    data: { tournamentId, userId: user2Id, recipientKey: user2Id, status: "APPROVED" },
   })
   reg1Id = r1.id
   reg2Id = r2.id
@@ -193,7 +193,7 @@ describe("Tournament results page smoke", () => {
     expect(match.result).toBe("WIN_DECISION")
     expect(match.winnerEntryId).toBe(entry1Id)
     expect(match.competitors).toHaveLength(2)
-    expect(match.competitors[0].registrationEntry.registration.user.name).toContain("results-u1")
+    expect(match.competitors[0].registrationEntry.registration.user?.name).toContain("results-u1")
   })
 
   it("returns null for wrong brand", async () => {

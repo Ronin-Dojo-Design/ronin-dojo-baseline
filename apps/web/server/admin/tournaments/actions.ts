@@ -1,6 +1,7 @@
 "use server"
 
 import { after } from "next/server"
+import type { z } from "zod"
 import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
@@ -21,8 +22,13 @@ import {
   tournamentSchema,
   tournamentStaffAssignmentSchema,
   updateTournamentStatusSchema,
+  type walkInRecipientSchema,
   weighInRecordSchema,
 } from "~/server/admin/tournaments/schema"
+
+function buildRecipientKey(recipient: z.infer<typeof walkInRecipientSchema>): string {
+  return recipient.kind === "user" ? recipient.userId : recipient.email
+}
 
 // -----------------------------------------------------------------------------
 // Tournament CRUD
@@ -322,16 +328,12 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
   })
 
 // -----------------------------------------------------------------------------
-// Walk-in registration (SESSION_0260 — A2.5 fork)
+// Walk-in registration (SESSION_0261 — A3 schema delta)
 //
-// Admin-initiated registration creation. The `guest` branch auto-stubs a User
-// row (emailVerified: false, no auth credentials) inside the same transaction
-// so existing tournament reads stay non-null on `registration.user`. If the
-// guest email already maps to a real User, the action promotes to the user
-// branch and reuses that row — preventing P2002 collisions on User.email.
-//
-// A3 (drop userId FK to nullable + guestEmail/guestName columns) deferred to
-// a follow-up session — see SESSION_0260 Next Session block.
+// Admin-initiated registration creation. The `guest` branch writes guestEmail/
+// guestName columns directly on Registration; the `user` branch sets userId.
+// recipientKey = userId ?? guestEmail is populated at write time and powers
+// the @@unique([tournamentId, recipientKey]) constraint. See ADR-0020.
 // -----------------------------------------------------------------------------
 
 export const createWalkInRegistration = tournamentAdminActionClient
@@ -360,15 +362,17 @@ export const createWalkInRegistration = tournamentAdminActionClient
         throw new Error("Division does not belong to this tournament")
       }
 
-      // Resolve recipient: lookup or stub-create a User. If the guest branch's
-      // email already exists, reuse that User and treat as the user branch
-      // (avoids P2002 on User.email and gives the operator a sensible default).
+      // Resolve recipient: build recipientKey (= userId | guestEmail) and the
+      // notify shape (to/firstName) from the discriminated input. No stub-User
+      // create; the guest branch writes guestEmail/guestName columns directly.
+      const recipientKey = buildRecipientKey(recipient)
+
       const result = await db.$transaction(async tx => {
-        let userId: string
-        let userEmail: string
-        let userName: string | null
-        let recipientKind: "user" | "guest" = recipient.kind
-        let promotedFromGuest = false
+        let userId: string | null
+        let guestEmail: string | null
+        let guestName: string | null
+        let notifyTo: string
+        let notifyName: string | null
 
         if (recipient.kind === "user") {
           const u = await tx.user.findUniqueOrThrow({
@@ -376,46 +380,29 @@ export const createWalkInRegistration = tournamentAdminActionClient
             select: { id: true, email: true, name: true },
           })
           userId = u.id
-          userEmail = u.email
-          userName = u.name
+          guestEmail = null
+          guestName = null
+          notifyTo = u.email
+          notifyName = u.name
         } else {
-          const existing = await tx.user.findUnique({
-            where: { email: recipient.email },
-            select: { id: true, email: true, name: true },
-          })
-
-          if (existing) {
-            userId = existing.id
-            userEmail = existing.email
-            userName = existing.name
-            recipientKind = "user"
-            promotedFromGuest = true
-          } else {
-            const stub = await tx.user.create({
-              data: {
-                email: recipient.email,
-                name: recipient.name,
-                emailVerified: false,
-              },
-              select: { id: true, email: true, name: true },
-            })
-            userId = stub.id
-            userEmail = stub.email
-            userName = stub.name
-          }
+          userId = null
+          guestEmail = recipient.email
+          guestName = recipient.name
+          notifyTo = recipient.email
+          notifyName = recipient.name
         }
 
-        // Idempotency: if a Registration already exists for (tournament, user)
-        // the @@unique constraint would throw P2002. Detect explicitly and
-        // surface a clean error rather than a Prisma stack.
+        // Idempotency: if a Registration already exists for (tournament,
+        // recipientKey) the @@unique constraint would throw P2002. Detect
+        // explicitly and surface a clean error rather than a Prisma stack.
         const existingRegistration = await tx.registration.findUnique({
-          where: { tournamentId_userId: { tournamentId, userId } },
+          where: { tournamentId_recipientKey: { tournamentId, recipientKey } },
           select: { id: true },
         })
         if (existingRegistration) {
           throw new Error(
-            promotedFromGuest
-              ? "That email is already registered for this tournament (under an existing user account)."
+            recipient.kind === "guest"
+              ? "That email is already registered for this tournament."
               : "That user is already registered for this tournament.",
           )
         }
@@ -424,6 +411,9 @@ export const createWalkInRegistration = tournamentAdminActionClient
           data: {
             tournamentId,
             userId,
+            guestEmail,
+            guestName,
+            recipientKey,
             status: "APPROVED",
             paymentStatus,
             totalFeeCents: division.feeCents,
@@ -452,10 +442,11 @@ export const createWalkInRegistration = tournamentAdminActionClient
               divisionId,
               tournamentRoleId,
               userId,
+              guestEmail,
+              recipientKey,
               paymentStatus,
               source: "admin_walkin",
-              recipientKind,
-              promotedFromGuest,
+              recipientKind: recipient.kind,
             },
             userId: adminUser.id,
             organizationId: tournament.hostId,
@@ -464,10 +455,9 @@ export const createWalkInRegistration = tournamentAdminActionClient
 
         return {
           registrationId: registration.id,
-          userEmail,
-          userName,
+          notifyTo,
+          notifyName,
           divisionName: division.name,
-          promotedFromGuest,
         }
       })
 
@@ -478,8 +468,8 @@ export const createWalkInRegistration = tournamentAdminActionClient
 
         try {
           await notifyUserOfTournamentRegistration({
-            to: result.userEmail,
-            firstName: result.userName?.split(" ")[0] ?? null,
+            to: result.notifyTo,
+            firstName: result.notifyName?.split(" ")[0] ?? null,
             tournamentName: tournament.name,
             divisionName: result.divisionName,
             rank: null,
@@ -497,7 +487,6 @@ export const createWalkInRegistration = tournamentAdminActionClient
 
       return {
         registrationId: result.registrationId,
-        promotedFromGuest: result.promotedFromGuest,
       }
     },
   )
@@ -520,6 +509,8 @@ export const listDivisionSeedEntries = tournamentAdminActionClient
         registration: {
           select: {
             user: { select: { name: true } },
+            guestName: true,
+            guestEmail: true,
           },
         },
       },
@@ -528,7 +519,11 @@ export const listDivisionSeedEntries = tournamentAdminActionClient
 
     return entries.map(e => ({
       entryId: e.id,
-      competitorName: e.registration.user.name ?? "Unknown Competitor",
+      competitorName:
+        e.registration.user?.name ??
+        e.registration.guestName ??
+        e.registration.guestEmail ??
+        "Unknown Competitor",
     }))
   })
 
@@ -646,8 +641,12 @@ export const generateBracket = tournamentAdminActionClient
       }
 
       // Seed competitors into round 1 using selected seeding method
-      // Build FightRecord lookup for TOURNAMENT_RANKING
-      const userIds = entries.map(e => e.registration.user.id)
+      // Build FightRecord lookup for TOURNAMENT_RANKING. Guest registrations
+      // (userId null) have no FightRecord and no rank — they seed with null
+      // scores and fall to the back of TOURNAMENT_RANKING order.
+      const userIds = entries
+        .map(e => e.registration.user?.id)
+        .filter((id): id is string => id !== null && id !== undefined)
       const fightRecords =
         seedingMethod === "TOURNAMENT_RANKING"
           ? await tx.fightRecord.findMany({
@@ -665,13 +664,17 @@ export const generateBracket = tournamentAdminActionClient
 
       const manualSeedMap = new Map((manualSeeds ?? []).map(ms => [ms.entryId, ms.seed]))
 
-      const seedable = entries.map((e, i) => ({
-        id: e.id,
-        registrationOrder: i,
-        tournamentRankingScore: fightRecordMap.get(e.registration.user.id) ?? null,
-        martialArtsRankOrdinal: e.registration.user.rankAwards?.[0]?.rank?.sortOrder ?? null,
-        manualSeed: manualSeedMap.get(e.id) ?? null,
-      }))
+      const seedable = entries.map((e, i) => {
+        const seedUserId = e.registration.user?.id
+        return {
+          id: e.id,
+          registrationOrder: i,
+          tournamentRankingScore:
+            seedUserId !== undefined ? (fightRecordMap.get(seedUserId) ?? null) : null,
+          martialArtsRankOrdinal: e.registration.user?.rankAwards?.[0]?.rank?.sortOrder ?? null,
+          manualSeed: manualSeedMap.get(e.id) ?? null,
+        }
+      })
       const seeded = seedEntries(seedable, bracketSize, seedingMethod)
 
       // Place seeded entries into bracket slots (2 per match: slot 1 = even index, slot 2 = odd)
@@ -1207,9 +1210,11 @@ export const publishFightRecord = tournamentAdminActionClient
 
     const disciplineId = match.bracket.division.tournamentDiscipline.disciplineId
 
-    // Update fight records for each competitor
+    // Update fight records for each competitor. Guest registrations
+    // (userId null) carry no FightRecord — skip them.
     for (const competitor of match.competitors) {
       const userId = competitor.registrationEntry.registration.userId
+      if (!userId) continue
       const isWinner = competitor.registrationEntryId === match.winnerEntryId
       const isDraw = match.result === "DRAW"
       const isNoContest = match.result === "NO_CONTEST"

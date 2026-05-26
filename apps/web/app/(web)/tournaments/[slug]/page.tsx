@@ -35,9 +35,9 @@ export default async function TournamentDetailPage({ params, searchParams }: Pag
   const existingRegistration = session?.user
     ? await db.registration.findUnique({
         where: {
-          tournamentId_userId: {
+          tournamentId_recipientKey: {
             tournamentId: tournament.id,
-            userId: session.user.id,
+            recipientKey: session.user.id,
           },
         },
         select: {

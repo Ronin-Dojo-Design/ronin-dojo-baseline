@@ -60,15 +60,12 @@ const POINTS_RESULTS = new Set(["WIN_POINTS"])
 // -----------------------------------------------------------------------------
 
 function getCompetitorName(c: MatchWithCompetitors["competitors"][number]) {
-  return (
-    c.registrationEntry.registration.user.passport?.displayName ??
-    c.registrationEntry.registration.user.name ??
-    "Unknown"
-  )
+  const r = c.registrationEntry.registration
+  return r.user?.passport?.displayName ?? r.user?.name ?? r.guestName ?? r.guestEmail ?? "Unknown"
 }
 
 function getCompetitorAvatar(c: MatchWithCompetitors["competitors"][number]) {
-  return c.registrationEntry.registration.user.passport?.avatarUrl ?? undefined
+  return c.registrationEntry.registration.user?.passport?.avatarUrl ?? undefined
 }
 
 function getCompetitorOrg(c: MatchWithCompetitors["competitors"][number]) {

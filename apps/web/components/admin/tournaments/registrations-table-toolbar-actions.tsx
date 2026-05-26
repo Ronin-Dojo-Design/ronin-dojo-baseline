@@ -18,6 +18,7 @@ interface RegistrationsTableToolbarActionsProps {
   tournamentId: string
   divisions: Array<{ id: string; name: string; roleRequiredId: string | null }>
   roles: Array<{ id: string; name: string }>
+  users: Array<{ id: string; name: string | null; email: string }>
 }
 
 export function RegistrationsTableToolbarActions({
@@ -25,6 +26,7 @@ export function RegistrationsTableToolbarActions({
   tournamentId,
   divisions,
   roles,
+  users,
 }: RegistrationsTableToolbarActionsProps) {
   const router = useRouter()
   const [isWalkInOpen, setIsWalkInOpen] = useState(false)
@@ -132,6 +134,7 @@ export function RegistrationsTableToolbarActions({
             tournamentId={tournamentId}
             divisions={divisions}
             roles={roles}
+            users={users}
             isOpen={isWalkInOpen}
             setIsOpen={setIsWalkInOpen}
           />

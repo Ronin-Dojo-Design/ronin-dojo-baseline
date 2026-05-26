@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-25
+updated: 2026-05-26
 author: Brian + Copilot
 last_agent: claude-session-0259
 ---
@@ -126,6 +126,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0016 Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
 | [ADR 0017 Enable pnpm pre/post lifecycle scripts](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) | decision | accepted |
 | [ADR 0018 ContentAtom Canonical Relations](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
+| [ADR 0019 Membership Lifecycle Ownership](../../architecture/decisions/0019-membership-lifecycle-ownership.md) | decision | accepted |
+| [ADR 0020 Registration Recipient userId XOR Guest](../../architecture/decisions/0020-registration-recipient-userid-or-guest.md) | decision | accepted |
 
 ## Sessions
 
@@ -338,6 +340,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0258](../../sprints/SESSION_0258.md) | session--open | closed |
 | [SESSION_0259](../../sprints/SESSION_0259.md) | session--open | closed |
 | [SESSION_0260](../../sprints/SESSION_0260.md) | session--open | closed |
+| [SESSION_0261](../../sprints/SESSION_0261.md) | session--open | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 

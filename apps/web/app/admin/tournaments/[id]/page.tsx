@@ -68,7 +68,15 @@ export default withTournamentAdminPage(async ({ params }) => {
       competitors: {
         select: {
           registrationEntry: {
-            select: { registration: { select: { user: { select: { name: true } } } } },
+            select: {
+              registration: {
+                select: {
+                  user: { select: { name: true } },
+                  guestName: true,
+                  guestEmail: true,
+                },
+              },
+            },
           },
         },
         orderBy: { slot: "asc" },
@@ -85,7 +93,13 @@ export default withTournamentAdminPage(async ({ params }) => {
       matchNumber: m.matchNumber,
       status: m.status,
       divisionName: m.bracket.division.name,
-      competitorNames: m.competitors.map(c => c.registrationEntry.registration.user.name ?? "TBD"),
+      competitorNames: m.competitors.map(
+        c =>
+          c.registrationEntry.registration.user?.name ??
+          c.registrationEntry.registration.guestName ??
+          c.registrationEntry.registration.guestEmail ??
+          "TBD",
+      ),
     }))
 
   const completedMatches = allMatches
@@ -95,7 +109,13 @@ export default withTournamentAdminPage(async ({ params }) => {
       roundNumber: m.roundNumber,
       matchNumber: m.matchNumber,
       divisionName: m.bracket.division.name,
-      competitorNames: m.competitors.map(c => c.registrationEntry.registration.user.name ?? "TBD"),
+      competitorNames: m.competitors.map(
+        c =>
+          c.registrationEntry.registration.user?.name ??
+          c.registrationEntry.registration.guestName ??
+          c.registrationEntry.registration.guestEmail ??
+          "TBD",
+      ),
     }))
 
   return (

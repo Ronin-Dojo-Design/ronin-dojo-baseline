@@ -230,7 +230,10 @@ export function MatAssignmentPanel({
             <TableBody>
               {assignments.map(a => {
                 const competitors = a.match.competitors
-                  .map(c => c.registrationEntry.registration.user.name ?? "TBD")
+                  .map(c => {
+                    const r = c.registrationEntry.registration
+                    return r.user?.name ?? r.guestName ?? r.guestEmail ?? "TBD"
+                  })
                   .join(" vs ")
                 return (
                   <TableRow key={a.id}>

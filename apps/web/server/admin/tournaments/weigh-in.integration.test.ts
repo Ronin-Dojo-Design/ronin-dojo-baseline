@@ -97,6 +97,7 @@ beforeAll(async () => {
     data: {
       tournamentId,
       userId,
+      recipientKey: userId,
       status: "APPROVED",
     },
   })

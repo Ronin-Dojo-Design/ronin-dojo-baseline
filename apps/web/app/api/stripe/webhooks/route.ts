@@ -290,9 +290,10 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
       ? session.payment_intent
       : (session.payment_intent?.id ?? null)
 
-  // Upsert: if registration exists (race condition), just update payment status
+  // Upsert: if registration exists (race condition), just update payment status.
+  // Public-checkout path always has a userId, so recipientKey = userId.
   const existing = await db.registration.findUnique({
-    where: { tournamentId_userId: { tournamentId, userId } },
+    where: { tournamentId_recipientKey: { tournamentId, recipientKey: userId } },
   })
 
   if (existing) {
@@ -353,6 +354,7 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
             data: {
               tournamentId,
               userId,
+              recipientKey: userId,
               status: "CANCELLED",
               paymentStatus: "REFUNDED",
               totalFeeCents,
@@ -382,6 +384,7 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
           data: {
             tournamentId,
             userId,
+            recipientKey: userId,
             status: "SUBMITTED",
             paymentStatus: "PAID",
             totalFeeCents,

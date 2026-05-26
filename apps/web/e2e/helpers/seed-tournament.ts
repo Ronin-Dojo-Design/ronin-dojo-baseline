@@ -123,6 +123,7 @@ export async function seedTournamentFixture(): Promise<TournamentFixture> {
       data: {
         tournamentId: tournament.id,
         userId: user.id,
+        recipientKey: user.id,
         status: "SUBMITTED",
         paymentStatus: "PAID",
         totalFeeCents: 0,

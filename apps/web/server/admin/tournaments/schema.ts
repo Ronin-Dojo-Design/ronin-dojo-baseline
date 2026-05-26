@@ -180,9 +180,9 @@ export const bulkRegistrationStatusUpdateSchema = z.object({
 //
 // Admin-initiated registration creation for at-the-venue walk-ins. Discriminated
 // `recipient` lets the operator either point at an existing User or supply a
-// guest {email, name} pair; the action auto-stubs a User row in the guest branch.
-// Schema migration (A3) deferred to a follow-up session — see SESSION_0260
-// Next Session block.
+// guest {email, name} pair. A3 (SESSION_0261): guest branch writes guestEmail/
+// guestName columns directly; no stub-User row. recipientKey is built by the
+// action and stored on Registration for uniqueness (see ADR-0020).
 // -----------------------------------------------------------------------------
 
 export const walkInRecipientSchema = z.discriminatedUnion("kind", [

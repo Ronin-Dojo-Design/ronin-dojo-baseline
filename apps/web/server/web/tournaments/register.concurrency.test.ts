@@ -468,6 +468,7 @@ describe("createRegistrationCheckout — capacity race", () => {
       data: {
         tournamentId: fx.tournamentId,
         userId: fx.userId,
+        recipientKey: fx.userId,
         status: "SUBMITTED",
         paymentStatus: "PAID",
         totalFeeCents: 0,
@@ -514,6 +515,7 @@ describe("cancelRegistration — refunds", () => {
       data: {
         tournamentId: fx.tournamentId,
         userId: fx.userId,
+        recipientKey: fx.userId,
         status: "SUBMITTED",
         paymentStatus: "PAID",
         totalFeeCents: 2500,
@@ -563,6 +565,7 @@ describe("cancelRegistration — refunds", () => {
       data: {
         tournamentId: fx.tournamentId,
         userId: fx.userId,
+        recipientKey: fx.userId,
         status: "SUBMITTED",
         paymentStatus: "PAID",
         totalFeeCents: 0,
@@ -608,6 +611,7 @@ describe("cancelRegistration — refunds", () => {
       data: {
         tournamentId: fx.tournamentId,
         userId: fx.userId,
+        recipientKey: fx.userId,
         status: "SUBMITTED",
         paymentStatus: "PAID",
         totalFeeCents: 2500,

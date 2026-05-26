@@ -4,7 +4,11 @@ import { RegistrationsTable } from "~/components/admin/tournaments/registrations
 import { H4 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
 import { getRequestBrand } from "~/lib/brand-context"
-import { findTournamentById, findTournamentRoles } from "~/server/admin/tournaments/queries"
+import {
+  findActiveUsers,
+  findTournamentById,
+  findTournamentRoles,
+} from "~/server/admin/tournaments/queries"
 import { findRegistrationsByTournamentId } from "~/server/admin/tournaments/registrations-queries"
 
 export default withTournamentAdminPage(async ({ params }) => {
@@ -16,9 +20,10 @@ export default withTournamentAdminPage(async ({ params }) => {
     return notFound()
   }
 
-  const [registrations, roles] = await Promise.all([
+  const [registrations, roles, users] = await Promise.all([
     findRegistrationsByTournamentId(id, brand),
     findTournamentRoles(),
+    findActiveUsers(),
   ])
 
   const divisions = tournament.disciplines.flatMap(td =>
@@ -38,6 +43,7 @@ export default withTournamentAdminPage(async ({ params }) => {
         tournamentId={tournament.id}
         divisions={divisions}
         roles={roles.map(r => ({ id: r.id, name: r.name }))}
+        users={users}
       />
     </Wrapper>
   )

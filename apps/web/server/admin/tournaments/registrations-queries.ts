@@ -22,6 +22,8 @@ export const findRegistrationsByTournamentId = async (tournamentId: string, bran
           email: true,
         },
       },
+      guestEmail: true,
+      guestName: true,
       entries: {
         select: {
           id: true,

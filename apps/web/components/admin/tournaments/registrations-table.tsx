@@ -17,6 +17,7 @@ interface RegistrationsTableProps {
   tournamentId: string
   divisions: Array<{ id: string; name: string; roleRequiredId: string | null }>
   roles: Array<{ id: string; name: string }>
+  users: Array<{ id: string; name: string | null; email: string }>
 }
 
 export function RegistrationsTable({
@@ -25,6 +26,7 @@ export function RegistrationsTable({
   tournamentId,
   divisions,
   roles,
+  users,
 }: RegistrationsTableProps) {
   const columns = useMemo(() => getRegistrationColumns(), [])
 
@@ -60,6 +62,7 @@ export function RegistrationsTable({
             tournamentId={tournamentId}
             divisions={divisions}
             roles={roles}
+            users={users}
           />
           <DataTableViewOptions table={table} />
         </DataTableToolbar>
