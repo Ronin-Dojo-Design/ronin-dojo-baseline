@@ -29,7 +29,9 @@ type CompletedMatch = {
           id: string
           name: string | null
           passport: { displayName: string | null } | null
-        }
+        } | null
+        guestName: string | null
+        guestEmail: string | null
       }
       representingMembership: {
         organization: { name: string }
@@ -62,8 +64,8 @@ type MedalEntry = {
 }
 
 function getCompetitorName(competitor: CompletedMatch["competitors"][number]): string {
-  const passport = competitor.registrationEntry.registration.user.passport
-  return passport?.displayName ?? competitor.registrationEntry.registration.user.name ?? "Unknown"
+  const r = competitor.registrationEntry.registration
+  return r.user?.passport?.displayName ?? r.user?.name ?? r.guestName ?? r.guestEmail ?? "Unknown"
 }
 
 function getCompetitorOrg(competitor: CompletedMatch["competitors"][number]): string | null {
