@@ -9,7 +9,8 @@
     "lint": "pnpm -r lint",
     "wiki:lint": "bun run scripts/wiki-lint.ts",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @ronin-dojo/web test:e2e"
   },
   "engines": {
     "node": ">=20"

@@ -99,7 +99,7 @@ function ScoreMatchDialog({
 }: {
   match: MatchWithCompetitors
   scoringMethod: string
-  children: React.ReactNode
+  children: React.ReactElement
 }) {
   const [open, setOpen] = useState(false)
 
@@ -159,7 +159,7 @@ function ScoreMatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
 
       <DialogContent>
         <DialogHeader>

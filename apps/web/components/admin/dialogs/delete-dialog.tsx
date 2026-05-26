@@ -36,7 +36,7 @@ export const DeleteDialog = <ServerError, CVE, Data>({
 
   return (
     <Dialog {...props}>
-      {children && <DialogTrigger>{children as React.ReactNode}</DialogTrigger>}
+      {children && <DialogTrigger render={children as React.ReactElement} />}
 
       <DialogContent className="max-w-md">
         <DialogHeader>
