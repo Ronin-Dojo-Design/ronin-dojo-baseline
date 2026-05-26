@@ -5,8 +5,10 @@
  */
 "use server"
 
+import { after } from "next/server"
 import * as z from "zod"
 import { getRequestBrand } from "~/lib/brand-context"
+import { notifyMemberOfMembershipWelcome } from "~/lib/notifications"
 import { userActionClient } from "~/lib/safe-actions"
 
 const claimInviteSchema = z.object({
@@ -76,10 +78,39 @@ export const claimInvite = userActionClient
           status: "ACTIVE",
           joinedAt: new Date(),
         },
+        include: {
+          discipline: { select: { name: true } },
+        },
       })
 
-      return { membership, organizationName: invite.organization.name }
+      return {
+        membership,
+        organizationName: invite.organization.name,
+        disciplineName: membership.discipline.name,
+      }
     })
+
+    // Fire-and-forget welcome email. Resend failures must not unwind the
+    // membership write (already committed), so we run it post-tx in `after()`
+    // and wrap in try/catch.
+    if (user.email) {
+      after(async () => {
+        try {
+          await notifyMemberOfMembershipWelcome({
+            to: user.email,
+            firstName: user.name?.split(" ")[0] ?? null,
+            organizationName: result.organizationName,
+            disciplineName: result.disciplineName,
+            status: "ACTIVE",
+          })
+        } catch (error) {
+          console.error("[notify] claimInvite welcome email failed", {
+            membershipId: result.membership.id,
+            error,
+          })
+        }
+      })
+    }
 
     return result
   })

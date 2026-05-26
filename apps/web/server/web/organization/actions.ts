@@ -1,6 +1,11 @@
 "use server"
 
+import { after } from "next/server"
 import { isInSameBrand } from "~/lib/authz"
+import {
+  notifyMemberOfMembershipStatusChange,
+  notifyMemberOfMembershipWelcome,
+} from "~/lib/notifications"
 import { userActionClient } from "~/lib/safe-actions"
 import { slugify } from "~/lib/slug"
 import {
@@ -114,6 +119,11 @@ export const joinOrganization = userActionClient
     })
     if (existing) throw new Error("Already a member of this organization for this discipline")
 
+    const discipline = await db.discipline.findUnique({
+      where: { id: disciplineId },
+      select: { name: true },
+    })
+
     const membership = await db.membership.create({
       data: {
         brand,
@@ -123,6 +133,25 @@ export const joinOrganization = userActionClient
         status: "PENDING",
       },
     })
+
+    if (user.email && discipline) {
+      after(async () => {
+        try {
+          await notifyMemberOfMembershipWelcome({
+            to: user.email,
+            firstName: user.name?.split(" ")[0] ?? null,
+            organizationName: org.name,
+            disciplineName: discipline.name,
+            status: "PENDING",
+          })
+        } catch (error) {
+          console.error("[notify] joinOrganization welcome email failed", {
+            membershipId: membership.id,
+            error,
+          })
+        }
+      })
+    }
 
     revalidate({ paths: [`/organizations/${org.slug}`] })
     return membership
@@ -153,6 +182,11 @@ export const joinByInviteCode = userActionClient
     })
     if (existing) throw new Error("Already a member of this organization for this discipline")
 
+    const discipline = await db.discipline.findUnique({
+      where: { id: disciplineId },
+      select: { name: true },
+    })
+
     const membership = await db.membership.create({
       data: {
         brand: org.brand,
@@ -172,6 +206,25 @@ export const joinByInviteCode = userActionClient
       })
     }
 
+    if (user.email && discipline) {
+      after(async () => {
+        try {
+          await notifyMemberOfMembershipWelcome({
+            to: user.email,
+            firstName: user.name?.split(" ")[0] ?? null,
+            organizationName: org.name,
+            disciplineName: discipline.name,
+            status: "ACTIVE",
+          })
+        } catch (error) {
+          console.error("[notify] joinByInviteCode welcome email failed", {
+            membershipId: membership.id,
+            error,
+          })
+        }
+      })
+    }
+
     revalidate({ paths: [`/organizations/${org.slug}`] })
     return { membership, org }
   })
@@ -188,7 +241,11 @@ export const updateMembershipStatus = userActionClient
 
     const membership = await db.membership.findUnique({
       where: { id: membershipId },
-      include: { organization: true },
+      include: {
+        organization: true,
+        user: { select: { email: true, name: true } },
+        discipline: { select: { name: true } },
+      },
     })
     if (!membership) throw new Error("Membership not found")
 
@@ -210,6 +267,8 @@ export const updateMembershipStatus = userActionClient
       throw new Error(`Cannot transition from ${membership.status} to ${status}`)
     }
 
+    const previousStatus = membership.status
+
     const updated = await db.membership.update({
       where: { id: membershipId },
       data: {
@@ -218,6 +277,26 @@ export const updateMembershipStatus = userActionClient
         leftAt: status === "EXPIRED" ? new Date() : undefined,
       },
     })
+
+    if (membership.user.email) {
+      after(async () => {
+        try {
+          await notifyMemberOfMembershipStatusChange({
+            to: membership.user.email!,
+            firstName: membership.user.name?.split(" ")[0] ?? null,
+            organizationName: membership.organization.name,
+            disciplineName: membership.discipline.name,
+            previousStatus,
+            newStatus: status as typeof previousStatus,
+          })
+        } catch (error) {
+          console.error("[notify] updateMembershipStatus owner email failed", {
+            membershipId,
+            error,
+          })
+        }
+      })
+    }
 
     revalidate({ paths: [`/organizations/${membership.organization.slug}`] })
     return updated

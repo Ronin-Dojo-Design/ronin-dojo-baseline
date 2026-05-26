@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-25
 author: Brian + Copilot
-last_agent: copilot-session-0256
+last_agent: claude-session-0259
 ---
 
 # LLM Wiki Index
@@ -336,6 +336,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0256](../../sprints/SESSION_0256.md) | session--closed | closed |
 | [SESSION_0257](../../sprints/SESSION_0257.md) | session--open | closed |
 | [SESSION_0258](../../sprints/SESSION_0258.md) | session--open | closed |
+| [SESSION_0259](../../sprints/SESSION_0259.md) | session--open | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 

@@ -11,6 +11,7 @@ import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
 import { EmailInviteNotification } from "~/emails/invite-notification"
 import { EmailMembershipStatusChange } from "~/emails/membership-status-change"
+import { EmailMembershipWelcome, type MembershipWelcomeStatus } from "~/emails/membership-welcome"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
 import { EmailMerchShipmentNotification } from "~/emails/merch-shipment-notification"
 import { EmailSubmission } from "~/emails/submission"
@@ -335,6 +336,43 @@ export const notifyMemberOfMembershipStatusChange = async (
       disciplineName: params.disciplineName,
       previousStatus: params.previousStatus,
       newStatus: params.newStatus,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Membership welcome notifications (SESSION_0259 — fresh-membership semantics
+// for self-service join paths: claimInvite, joinByInviteCode, joinOrganization.
+// Distinct from membership-status-change which renders a Prev → New arrow for
+// true transitions.)
+// ---------------------------------------------------------------------------
+
+export type MembershipWelcomeParams = {
+  to: string
+  firstName?: string | null
+  organizationName: string
+  disciplineName: string
+  status: MembershipWelcomeStatus
+}
+
+export const notifyMemberOfMembershipWelcome = async (params: MembershipWelcomeParams) => {
+  if (await shouldSkipForRateLimit(`membership-welcome:${params.to}:${params.organizationName}`))
+    return
+
+  const subject =
+    params.status === "ACTIVE"
+      ? `Welcome to ${params.organizationName}`
+      : `Your ${params.organizationName} membership request is pending`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailMembershipWelcome({
+      to: params.to,
+      firstName: params.firstName,
+      organizationName: params.organizationName,
+      disciplineName: params.disciplineName,
+      status: params.status,
     }),
   })
 }
