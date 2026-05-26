@@ -2,6 +2,7 @@
 
 import { after } from "next/server"
 import { z } from "zod"
+import { notifyUserOfDsrStatusUpdate } from "~/lib/notifications"
 import { adminActionClient } from "~/lib/safe-actions"
 
 const transitionDsrSchema = z.object({
@@ -28,7 +29,12 @@ export const transitionDataSubjectRequestStatus = adminActionClient
     async ({ parsedInput: { id, toStatus, notes }, ctx: { db, revalidate, brand, user } }) => {
       const request = await db.dataSubjectRequest.findUnique({
         where: { id },
-        select: { id: true, status: true },
+        select: {
+          id: true,
+          status: true,
+          type: true,
+          user: { select: { email: true, name: true } },
+        },
       })
 
       if (!request) {
@@ -78,6 +84,26 @@ export const transitionDataSubjectRequestStatus = adminActionClient
         revalidate({
           paths: ["/admin/privacy/requests", `/admin/privacy/requests/${id}`],
         })
+
+        const recipient = request.user?.email
+        if (recipient) {
+          try {
+            await notifyUserOfDsrStatusUpdate({
+              to: recipient,
+              firstName: request.user?.name?.split(" ")[0] ?? null,
+              requestId: id,
+              type: request.type,
+              previousStatus,
+              newStatus: toStatus,
+              notes: notes ?? null,
+            })
+          } catch (error) {
+            console.error("[notifyUserOfDsrStatusUpdate] Failed to send status email", {
+              requestId: id,
+              error,
+            })
+          }
+        }
       })
 
       return updated

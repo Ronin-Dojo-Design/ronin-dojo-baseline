@@ -1,11 +1,11 @@
 ---
-title: "SESSION 0257 — MB-015 Transactional Email Plan (3-session roadmap)"
+title: "SESSION 0257 — MB-015 Transactional Email Plan + Session A Execution"
 slug: session-0257
-type: session--plan
+type: session--open
 status: closed
 created: 2026-05-25
 updated: 2026-05-25
-last_agent: copilot-session-0257
+last_agent: claude-session-0257
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0256.md
@@ -15,7 +15,11 @@ backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
-# SESSION 0257 — MB-015 Transactional Email Plan (3-session roadmap)
+# SESSION 0257 — MB-015 Transactional Email Plan + Session A Execution
+
+> Reopened from `status: closed` (plan-only) → `in-progress` to execute the planned Session A
+> in-place. Session A tasks (A1–A5) appended below the original plan. Sessions B and C remain
+> queued for future sessions.
 
 ## Date
 
@@ -221,47 +225,158 @@ Doc is **active but stale**. Existing content valid. Three sections missing. Ref
 - All sessions follow standard bow-in/bow-out ritual. Each ends with a Doug verification task.
 - Any session can be executed from a cold start by reading this plan + the previous session's close notes.
 
+---
+
 ## Task log
 
-### SESSION_0257_TASK_01
+> Originally a plan-only session (TASK_01). Reopened to execute Session A in-place; tasks A1–A5
+> appended below per the planned roadmap. Sessions B and C remain queued.
 
+### SESSION_0257_TASK_01 — MB-015 plan + SOP alignment check (original close)
+
+- **Agent:** Petey (copilot-session-0257)
 - **Status:** complete
 - **Notes:** SOP alignment check performed. 3 missing sections identified (§14 Privacy/DSR, §15 Lineage, §16 Email Touchpoints). 3-session MB-015 plan written with 15 total tasks.
 
+### SESSION_0257_TASK_A1 — Resend dashboard + DNS verification
+
+- **Agent:** Brian (manual)
+- **Status:** complete
+- **Notes:** Brian confirmed Resend dashboard shows verified domain + green DNS + live API key + sender email. `.env` `RESEND_API_KEY` + `RESEND_SENDER_EMAIL` already populated.
+
+### SESSION_0257_TASK_A2 — DSR submission confirmation email template
+
+- **Agent:** Cody (claude-session-0257)
+- **Status:** complete
+- **Notes:** Created `emails/dsr-submission-confirmation.tsx` following the `emails/lead-capture-confirmation.tsx` + `submission.tsx` pattern (EmailWrapper, Text). Includes request ID, type label, submitted timestamp, GDPR 30-day note. `PreviewProps` set for `bun run email:dev`.
+
+### SESSION_0257_TASK_A3 — Wire DSR submit → confirmation email
+
+- **Agent:** Cody (claude-session-0257)
+- **Status:** complete
+- **Notes:** `app/(web)/privacy/request/_actions.ts` now selects `submittedAt` + `type` from the created row and fires `notifyUserOfDsrSubmission` inside `after(...)`, wrapped in try/catch so a Resend failure cannot break the submit response. `firstName` derived from `ctx.user.name.split(" ")[0]` (better-auth session).
+
+### SESSION_0257_TASK_A4 — DSR status-update email + wire admin transitions
+
+- **Agent:** Cody (claude-session-0257)
+- **Status:** complete
+- **Notes:** Created `emails/dsr-status-update.tsx` (old → new status, optional notes block). `server/admin/privacy/actions.ts` extended to `select` the request's `user.{email,name}` + `type`, then fires `notifyUserOfDsrStatusUpdate` in the existing `after(...)` block alongside the audit-log write + revalidate, also wrapped in try/catch.
+
+### SESSION_0257_TASK_A5 — Doug verification
+
+- **Agent:** Doug (claude-session-0257)
+- **Status:** complete
+- **Notes:** Typecheck clean (one DSR-field rename fixed mid-flight: `createdAt` → `submittedAt` per schema). Biome `--write` clean (0 fixes applied). Playwright DSR specs **5/5 pass** in 2.3m against live `next dev --turbo` server. No regressions.
+
 ## What landed
 
-- SOP alignment check with 3 gap findings
-- 3-session MB-015 execution plan (Sessions A, B, C — 5 tasks each)
+- SOP alignment check with 3 gap findings (§14 Privacy/DSR, §15 Lineage, §16 Email Touchpoints — deferred to Session C).
+- 3-session MB-015 execution plan (Sessions A, B, C — 5 tasks each).
+- **Session A executed in full:** 2 new React Email templates + 2 notification helpers + 2 server actions wired + 5/5 Playwright specs green.
 
 ## Files touched
 
 | File | Note |
 | --- | --- |
-| `docs/sprints/SESSION_0257.md` | This planning session file. |
+| `docs/sprints/SESSION_0257.md` | This file — planning + Session A execution log. |
+| `apps/web/emails/dsr-submission-confirmation.tsx` | New template (A2). |
+| `apps/web/emails/dsr-status-update.tsx` | New template (A4). |
+| `apps/web/lib/notifications.ts` | Added `notifyUserOfDsrSubmission` + `notifyUserOfDsrStatusUpdate` helpers + DSR enum imports (A3/A4). |
+| `apps/web/app/(web)/privacy/request/_actions.ts` | Wired DSR submit → confirmation email via `after()` (A3). |
+| `apps/web/server/admin/privacy/actions.ts` | Extended DSR `select` for user email/name + fired status-update email in `after()` (A4). |
 
 ## Decisions resolved
 
 - **Next milestone:** MB-015 (Resend transactional email). Operator chose Option A.
 - **Session structure:** 3 sessions × 5 tasks. Infrastructure first, then domain emails, then production readiness + SOP.
+- **Reopen pattern:** Plan sessions may be reopened for execution rather than spawning a new SESSION number when the original is still the canonical plan and execution stays inside its planned scope (operator instruction). Recorded for future reference.
+- **Email failure-mode contract:** Resend errors in DSR flows are logged and swallowed (try/catch inside `after()`), never block the user action. Status emails skip silently when the user record has no email.
 
 ## Open decisions / blockers
 
-- None. All 3 sessions are independently startable.
+- **Session B not yet planned for a specific calendar slot.** Plan above is ready; assign when scheduling next session.
+- **Session C SOP refresh (§14/§15/§16)** still queued.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| `bunx @biomejs/biome check --write` on 5 touched files | Pass; 0 fixes applied |
+| `bun run typecheck` in `apps/web` | Pass after `submittedAt` rename |
+| `bunx playwright test e2e/privacy/...spec.ts e2e/admin/data-subject-request-triage.spec.ts` | 5/5 pass (2.3m) |
+
+## Review log
+
+### SESSION_0257_REVIEW_01 — Session A hostile pass
+
+- **Reviewed tasks:** SESSION_0257_TASK_A1 – A5.
+- **Dirstarter docs check:** No baseline primitives touched (email infra was already wired via existing `services/resend.ts` + `lib/email.ts`; this session only added domain templates and call-site wiring). No Dirstarter alignment risk.
+- **Verdict:** Aligned.
+
+## Hostile close review
+
+### SESSION_0257
+
+#### Review questions
+
+1. **Plan sanity:** Good. Session A plan executed exactly as written; no scope creep into Session B or C work.
+2. **Dirstarter compliance:** Good. Built on existing `lib/email.ts` + `services/resend.ts`; no replacement of baseline primitives.
+3. **Security:** Good. Email-send failures are logged + swallowed inside `after()`, cannot leak server state to the client or block the user-visible action. No PII leaks: emails include only the requester's own request metadata.
+4. **Data integrity:** Good. Added `submittedAt` + `type` to the create `select` (existing field, not a new column); admin action's nested `user.{email,name}` select is read-only.
+5. **Verification honesty:** Good. 5/5 specs pass with real `next dev` server (not just `--list`). Typecheck error caught mid-flight (`createdAt` vs `submittedAt`) and resolved before A5 ran.
+
+#### Findings
+
+- **SESSION_0257_FINDING_01:** Email-send rate limiting is still missing (planned for SESSION_C_TASK_02). Low severity now — Brian's manual A1 verification confirms domain is reputable and Resend has its own per-API-key throttle — but DSR spam via rapid-submit could trigger duplicate emails. Tracking under Session C.
+- **SESSION_0257_FINDING_02:** The two email templates currently duplicate the `DsrStatus` / `DsrType` string-union types locally (the Prisma generated enums are re-imported in `lib/notifications.ts` only). Acceptable while the schema is stable; revisit if more DSR-related emails appear.
+
+## ADR / ubiquitous-language check
+
+- No ADR needed. The "DSR notifications fire from `after()` and never block the action" pattern matches the existing audit-log convention in the same file — it's an instance of an existing decision, not a new one.
+- No new ubiquitous-language terms.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0257 frontmatter: type `session--plan` → `session--open` (mixed plan+implement), `last_agent` → `claude-session-0257`, `updated` 2026-05-25. No other docs touched; no other frontmatter changes needed. |
+| Backlinks/index sweep | No new cross-references introduced; wiki index entry for 0257 already exists. |
+| Wiki lint | Pre-existing baseline; not re-run because no wiki pages were edited this session. |
+| Kaizen reflection | Reflections section present below. |
+| Hostile close review | Above; two low-severity findings tracked. |
+| Review & Recommend | `Next session` block below — Session B is the unblocked starting point. |
+| Memory sweep | None needed — no new project-scoped facts beyond what's already in MEMORY.md (Vercel/Prisma/biome rules unchanged). |
+| Next session unblock check | Unblocked. Session B can start cold with the plan above. |
+| Git hygiene | Branch `main`, single commit, pushed to `origin/main` after this file is finalized. |
+| Graphify update | Run post-push with `GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .`; stats recorded in bow-out response. |
+
+## Reflections
+
+- The Session A → Session B/C split worked as intended: building templates + wiring against existing `sendEmail` + `after()` infrastructure took one focused execution session because the infra decisions were already made during SESSION_0257 planning. No re-litigation, no surprise lookups.
+- The `createdAt` vs `submittedAt` typecheck miss is a reminder that Petey-side planning should not name DB fields from memory; the plan blueprints templates by behavior, and Cody confirms field names against `schema.prisma` at preflight. Worth one extra typecheck pass — it's cheap insurance.
+- Reopening a closed plan-session rather than minting SESSION_0258 worked fine for a tight execution scope. Would not generalize to multi-day work — the file got noticeably longer and the original plan/execution boundary is only legible because of the explicit "appended on reopen" header.
+
+### Kaizen
+
+- **Safe and secure?** Yes. Email sends are isolated in `after()` + try/catch; user actions are unaffected by Resend faults.
+- **Failed steps preventable?** Yes — see `submittedAt` rename above. Petey-plan blueprints should not name DB fields without a Cody preflight pass.
+- **Confidence:** 9/10. Templates render, wiring fires, specs pass. Real-inbox delivery is Session C's job.
+- **WORKFLOW score:** 9/10. Clean bow-in (no graphify rebuild needed), parallel reads on context, in-place reopen of plan-session worked.
 
 ## Next session
 
-**Goal:** Execute Session A — verify Resend infrastructure + build DSR confirmation/status-update email templates + wire them.
+**Goal:** Execute Session B — membership status / invite / tournament email templates + wiring.
 
 ### First task
 
-A1: Brian verifies Resend dashboard (domain, DNS, API key).
+`SESSION_B_TASK_01` per the Session B plan above: create `emails/membership-status-change.tsx` template.
 
 ### Inputs to read
 
-- `lib/email.ts`, `lib/notifications.ts`, `emails/submission.tsx`
-- `server/admin/privacy/actions.ts`
-- MB-015 boundary in `manual-boundary-registry.md`
-- This plan (SESSION_0257)
+- `server/admin/memberships/actions.ts`, `server/admin/invites/actions.ts`
+- Existing `emails/invite-notification.tsx` to confirm wiring status
+- Tournament registration action (location TBD; use graphify query "tournament registration confirm action")
+- SESSION_0257 (this file) for the plan + the A-task wiring pattern
 
 ### Status
 

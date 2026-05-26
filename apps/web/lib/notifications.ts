@@ -1,6 +1,13 @@
-import { type Tool, ToolStatus } from "~/.generated/prisma/client"
+import {
+  type DataSubjectRequestStatus,
+  type DataSubjectRequestType,
+  type Tool,
+  ToolStatus,
+} from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
+import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
 import { EmailMerchShipmentNotification } from "~/emails/merch-shipment-notification"
 import { EmailSubmission } from "~/emails/submission"
@@ -205,6 +212,68 @@ export type PrintfulFailureNotificationParams = {
  *
  * @see app/api/printful/webhooks/route.ts — order_failed / package_returned handlers
  */
+// ---------------------------------------------------------------------------
+// Data Subject Request (privacy/GDPR) notifications
+// ---------------------------------------------------------------------------
+
+const DSR_TYPE_SUBJECT_LABEL: Record<DataSubjectRequestType, string> = {
+  EXPORT: "data export",
+  DELETE: "account deletion",
+  RECTIFY: "data rectification",
+}
+
+export type DsrSubmissionConfirmationParams = {
+  to: string
+  firstName?: string | null
+  requestId: string
+  type: DataSubjectRequestType
+  submittedAt: Date
+}
+
+export const notifyUserOfDsrSubmission = async (params: DsrSubmissionConfirmationParams) => {
+  const subject = `We've received your ${DSR_TYPE_SUBJECT_LABEL[params.type]} request`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailDsrSubmissionConfirmation({
+      to: params.to,
+      firstName: params.firstName,
+      requestId: params.requestId,
+      type: params.type,
+      submittedAt: params.submittedAt,
+    }),
+  })
+}
+
+export type DsrStatusUpdateParams = {
+  to: string
+  firstName?: string | null
+  requestId: string
+  type: DataSubjectRequestType
+  previousStatus: DataSubjectRequestStatus
+  newStatus: DataSubjectRequestStatus
+  notes?: string | null
+}
+
+export const notifyUserOfDsrStatusUpdate = async (params: DsrStatusUpdateParams) => {
+  const subject = `Update on your ${DSR_TYPE_SUBJECT_LABEL[params.type]} request`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailDsrStatusUpdate({
+      to: params.to,
+      firstName: params.firstName,
+      requestId: params.requestId,
+      type: params.type,
+      previousStatus: params.previousStatus,
+      newStatus: params.newStatus,
+      notes: params.notes,
+    }),
+  })
+}
+
 export const notifyAdminOfPrintfulFailure = async (params: PrintfulFailureNotificationParams) => {
   const to = siteConfig.email
   const subject = `⚠️ Printful order issue: ${params.merchOrderId}`
