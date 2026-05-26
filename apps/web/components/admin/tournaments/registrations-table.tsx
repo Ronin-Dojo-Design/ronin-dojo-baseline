@@ -14,11 +14,17 @@ import type { DataTableFilterField } from "~/types"
 interface RegistrationsTableProps {
   registrations: RegistrationRow[]
   tournamentName: string
+  tournamentId: string
+  divisions: Array<{ id: string; name: string; roleRequiredId: string | null }>
+  roles: Array<{ id: string; name: string }>
 }
 
 export function RegistrationsTable({
   registrations,
   tournamentName: _tournamentName,
+  tournamentId,
+  divisions,
+  roles,
 }: RegistrationsTableProps) {
   const columns = useMemo(() => getRegistrationColumns(), [])
 
@@ -49,7 +55,12 @@ export function RegistrationsTable({
     <DataTable table={table}>
       <DataTableHeader title="Registrations" total={registrations.length}>
         <DataTableToolbar table={table} filterFields={filterFields}>
-          <RegistrationsTableToolbarActions table={table} />
+          <RegistrationsTableToolbarActions
+            table={table}
+            tournamentId={tournamentId}
+            divisions={divisions}
+            roles={roles}
+          />
           <DataTableViewOptions table={table} />
         </DataTableToolbar>
       </DataTableHeader>

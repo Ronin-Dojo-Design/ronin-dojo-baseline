@@ -11,6 +11,7 @@ import {
   DivisionFormat,
   DivisionGender,
   MatchResult,
+  PaymentStatus,
   type RuleSet,
   ScoringMethod,
   SeedingMethod,
@@ -173,6 +174,38 @@ export const bulkRegistrationStatusUpdateSchema = z.object({
   registrationIds: z.array(z.string().min(1)).min(1),
   status: z.enum(RegistrationStatus),
 })
+
+// -----------------------------------------------------------------------------
+// Walk-in registration (SESSION_0260 — A2.5 fork)
+//
+// Admin-initiated registration creation for at-the-venue walk-ins. Discriminated
+// `recipient` lets the operator either point at an existing User or supply a
+// guest {email, name} pair; the action auto-stubs a User row in the guest branch.
+// Schema migration (A3) deferred to a follow-up session — see SESSION_0260
+// Next Session block.
+// -----------------------------------------------------------------------------
+
+export const walkInRecipientSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("user"),
+    userId: z.string().min(1, "User is required"),
+  }),
+  z.object({
+    kind: z.literal("guest"),
+    email: z.string().email("Valid email is required"),
+    name: z.string().min(1, "Name is required"),
+  }),
+])
+
+export const createWalkInRegistrationSchema = z.object({
+  tournamentId: z.string().min(1, "Tournament is required"),
+  divisionId: z.string().min(1, "Division is required"),
+  tournamentRoleId: z.string().min(1, "Role is required"),
+  paymentStatus: z.enum(PaymentStatus).default("UNPAID"),
+  recipient: walkInRecipientSchema,
+})
+
+export type CreateWalkInRegistrationInput = z.infer<typeof createWalkInRegistrationSchema>
 
 // -----------------------------------------------------------------------------
 // Public filter params

@@ -4,15 +4,20 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-12
-last_agent: copilot-session-0146
+updated: 2026-05-25
+last_agent: claude-session-0260
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/runbooks/resend-setup-runbook.md
   - docs/protocols/cody-preflight.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/ronin_dojo_baseline_systems_pack/09_SOP_E2E_USER_LIFECYCLE_BASELINE.md
   - docs/sprints/SESSION_0146.md
+  - docs/sprints/SESSION_0257.md
+  - docs/sprints/SESSION_0258.md
+  - docs/sprints/SESSION_0259.md
+  - docs/sprints/SESSION_0260.md
 ---
 
 # SOP — End-to-End User Lifecycle
@@ -525,6 +530,148 @@ flowchart TD
     DISC --> CERT[Certifications: issued per discipline]
     DISC --> GEAR[Affiliate links: discipline-specific gear]
 ```
+
+---
+
+# 14. Privacy / DSR lifecycle
+
+Added SESSION_0260 — closes MB-015 (transactional email) SOP gap §14.
+
+```text
+Authenticated user
+  |
+  v
+/privacy/request  (auth-gated)
+  |
+  v
+DsrForm: type (EXPORT | DELETE | RECTIFY) + reason
+  |
+  v
+submitDataSubjectRequest action
+  +--> create DataSubjectRequest row (status: PENDING)
+  +--> after(): notifyUserOfDsrSubmission email
+  +--> redirect /privacy/request/submitted
+  |
+  v
+Admin: /admin/privacy/requests
+  +--> list filterable by status
+  +--> drill in to /admin/privacy/requests/[id]
+  |
+  v
+transitionDataSubjectRequestStatus action
+  +--> enforced state machine:
+       PENDING       -> IN_PROGRESS | REJECTED
+       IN_PROGRESS   -> FULFILLED   | REJECTED
+       FULFILLED     -> (terminal)
+       REJECTED      -> (terminal)
+  +--> after(): notifyUserOfDsrStatusUpdate email (prev -> new + notes)
+  |
+  v
+Fulfillment
+  +--> manual external process (export/delete/rectify backend)
+  +--> AuditLog row written
+  +--> no automated fulfillment yet — manual boundary, tracked separately
+```
+
+**Schema reference:**
+
+- `DataSubjectRequest`: `id, userId, type, status, reason, submittedAt, fulfilledAt, fulfilledBy, notes`
+- `DataSubjectRequestType`: `EXPORT | DELETE | RECTIFY`
+- `DataSubjectRequestStatus`: `PENDING | IN_PROGRESS | FULFILLED | REJECTED`
+
+**Code surfaces:**
+
+- Submit form: `apps/web/app/(web)/privacy/request/page.tsx`
+- Submit action: `apps/web/app/(web)/privacy/request/_actions.ts::submitDataSubjectRequest`
+- Admin triage: `apps/web/app/admin/privacy/requests/page.tsx` + `[id]/page.tsx`
+- Admin transition: `apps/web/server/admin/privacy/actions.ts::transitionDataSubjectRequestStatus`
+
+---
+
+# 15. Lineage lifecycle
+
+Added SESSION_0260. Mirrors §13 (programs/tournaments) for the lineage domain.
+
+```text
+User creates LineageNode
+  |
+  +--> LineageNode row created (tied to passport)
+  +--> Lineage tree auto-initialized if first node for the discipline
+  |
+  v
+Privacy settings (per node)
+  +--> visibility: PUBLIC | UNLISTED | RESTRICTED | PRIVATE
+  +--> RESTRICTED scope = org/tree members; PRIVATE = owner-only
+  |
+  v
+Visibility scope on read
+  +--> Unauthenticated viewer:           PUBLIC
+  +--> Authenticated, not owner:         PUBLIC + UNLISTED
+  +--> Authenticated, org/tree member:   PUBLIC + UNLISTED + RESTRICTED
+  +--> Owner:                            ALL
+  |
+  v
+Display surfaces
+  +--> lineage-tree-board.tsx        (graph)
+  +--> lineage-node-card.tsx         (card cell)
+  +--> lineage-profile-drawer.tsx    (detail panel)
+  +--> lineage-search.tsx            (directory)
+  +--> lineage-listing.tsx           (paginated list)
+  +--> discipline-page embedded section
+  |
+  v
+Caching strategy (SESSION_0175)
+  +--> Public reads: "use cache" + cacheTag + cacheLife
+  +--> Auth-scoped reads: React cache() for request-scoped viewer awareness
+```
+
+**Schema reference:**
+
+- `Lineage` model — primary tree container
+- `LineageNode` — `userId, visibility, relationships`
+- `LineageVisibility`: `PUBLIC | UNLISTED | RESTRICTED | PRIVATE`
+- `LineageRelationType`: `INSTRUCTOR_STUDENT | PROMOTED_BY | TOURNAMENT_PARTNER | AFFILIATION | …`
+- `LineageVerificationStatus`: `PENDING | VERIFIED | DISPUTED`
+
+**Code surfaces:**
+
+- Queries: `apps/web/server/web/lineage/queries.ts` (`getLineageRootForUser`, `resolveLineageVisibilityScope`)
+- Display: `apps/web/components/web/lineage/*`
+
+---
+
+# 16. Transactional email touchpoints
+
+Added SESSION_0260 — canonical map of lifecycle event → template → trigger location.
+Maintained as MB-015 closes (`docs/knowledge/wiki/manual-boundary-registry.md`).
+
+Every helper below routes through `apps/web/lib/notifications.ts`, which gates on
+`shouldSkipForRateLimit()` (SESSION_0258) for duplicate suppression. Webhook + admin
+side-effect emails fire inside `after()` blocks with try/catch so a Resend failure can
+never unwind a write or cause an upstream retry.
+
+| # | Lifecycle event | Template | Helper | Trigger location | Recipient |
+| --- | --- | --- | --- | --- | --- |
+| 1 | DSR submission | `dsr-submission-confirmation.tsx` | `notifyUserOfDsrSubmission` | `app/(web)/privacy/request/_actions.ts::submitDataSubjectRequest` (after) | User |
+| 2 | DSR status update | `dsr-status-update.tsx` | `notifyUserOfDsrStatusUpdate` | `server/admin/privacy/actions.ts::transitionDataSubjectRequestStatus` (after) | User |
+| 3 | Tool submission | `submission.tsx` | `notifySubmitterOfToolSubmitted` | `server/web/actions/submit.ts` | User |
+| 4 | Tool scheduled | `submission-scheduled.tsx` | `notifySubmitterOfToolScheduled` | `app/api/cron/publish-tools/route.ts` + `server/admin/tools/actions.ts::upsertTool` (after) | User |
+| 5 | Tool published | `submission-published.tsx` | `notifySubmitterOfToolPublished` | `app/api/cron/publish-tools/route.ts` + `server/admin/tools/actions.ts::upsertTool` (after) | User |
+| 6 | Tool premium (submitter) | `submission-premium.tsx` | `notifySubmitterOfPremiumTool` | `server/admin/tools/actions.ts::upsertTool` (after, tier change) | User |
+| 7 | Tool premium (admin notice) | `admin-submission-premium.tsx` | `notifyAdminOfPremiumTool` | `server/admin/tools/actions.ts::upsertTool` (after, tier change) | Admin |
+| 8 | Merch order confirmation | `merch-order-confirmation.tsx` | `notifyCustomerOfMerchOrder` | `app/api/stripe/webhooks/route.ts::fulfillMerchOrder` (after) | User |
+| 9 | Merch shipment | `merch-shipment-notification.tsx` | `notifyCustomerOfShipment` | `app/api/printful/webhooks/route.ts::package_shipped` | User |
+| 10 | Printful failure (admin notice) | `merch-shipment-notification.tsx` (reused) | `notifyAdminOfPrintfulFailure` | `app/api/printful/webhooks/route.ts::order_failed / package_returned` | Admin |
+| 11 | Membership status change | `membership-status-change.tsx` | `notifyMemberOfMembershipStatusChange` | `server/admin/memberships/actions.ts::transitionMembershipStatus` + `server/web/organization/actions.ts::updateMembershipStatus` (after) | Member |
+| 12 | Membership welcome (fresh join) | `membership-welcome.tsx` | `notifyMemberOfMembershipWelcome` | `server/invites/actions.ts::claimInvite` + `server/web/organization/actions.ts::joinByInviteCode/joinOrganization` (after) | Member |
+| 13 | Invite | `invite-notification.tsx` | `notifyUserOfInvite` | `server/admin/invites/actions.ts::createInvite` (after) | User |
+| 14 | Tournament registration confirmation | `tournament-registration-confirmation.tsx` | `notifyUserOfTournamentRegistration` | `app/api/stripe/webhooks/route.ts::fulfillTournamentRegistration` (after) + `server/admin/tournaments/actions.ts::createWalkInRegistration` (SESSION_0260, after) | User / guest walk-in |
+
+**Boundaries:**
+
+- All helpers fail-open in dev (no Redis → rate-limit treated as not-limited).
+- Stripe webhook ack is independent of email success; Resend failures are logged but never trigger Stripe retries (which could double-write the underlying row).
+- Admin walk-in tournament registration (#14, SESSION_0260) accepts guest `{email,name}` and auto-stubs a User row inside the transaction; the email reaches the registrant whether they were promoted from a real account or stubbed in.
 
 ---
 

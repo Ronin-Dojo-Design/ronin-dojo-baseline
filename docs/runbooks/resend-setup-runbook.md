@@ -4,19 +4,25 @@ slug: resend-setup-runbook
 type: runbook
 status: active
 created: 2026-05-09
-updated: 2026-05-14
-last_agent: codex-session-0163
+updated: 2026-05-26
+last_agent: claude-session-0260
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/architecture/infrastructure/dns-verification-spec.md
+  - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/stripe-setup-runbook.md
   - docs/runbooks/vercel-domain-setup-runbook.md
+  - docs/knowledge/wiki/manual-boundary-registry.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/infrastructure/README.md
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
   - docs/sprints/SESSION_0163.md
+  - docs/sprints/SESSION_0257.md
+  - docs/sprints/SESSION_0258.md
+  - docs/sprints/SESSION_0259.md
+  - docs/sprints/SESSION_0260.md
 tags:
   - resend
   - email
@@ -36,27 +42,39 @@ Step-by-step operator guide for configuring Resend transactional email for the R
 
 ## Architecture Context
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    RESEND INTEGRATION POINTS                        │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  apps/web/                                                          │
-│  ├── env.ts ─────────────── RESEND_API_KEY, RESEND_SENDER_EMAIL    │
-│  ├── lib/                                                           │
-│  │   ├── email.ts ───────── Resend client (sends via API)          │
-│  │   └── notifications.ts ─ notifyCustomerOfMerchOrder()           │
-│  │                           notifyAdminOfPremiumTool()             │
-│  │                           notifySubmitterOfPremiumTool()         │
-│  ├── emails/ ────────────── React Email templates                   │
-│  │   ├── magic-link.tsx                                             │
-│  │   ├── merch-order-confirmation.tsx                               │
-│  │   ├── admin-submission-premium.tsx                               │
-│  │   └── submission-premium.tsx                                     │
-│  └── app/api/stripe/webhooks/route.ts                               │
-│       └── merch_purchase handler → after() → notifyCustomer()      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+> Updated SESSION_0260 — Resend now backs the full transactional surface added across
+> SESSION_0257 (DSR), SESSION_0258 (admin membership + invite + Stripe tournament),
+> SESSION_0259 (self-service membership welcome + owner transitions), and
+> SESSION_0260 (admin walk-in tournament registration). All helpers route through
+> `lib/notifications.ts` and gate on `shouldSkipForRateLimit`. The canonical
+> lifecycle-event → template → trigger-location table lives in
+> [SOP §16](sop-e2e-user-lifecycle.md#16-transactional-email-touchpoints) — keep that
+> table authoritative, this runbook only lists the integration points.
+
+```text
+apps/web/
+├── env.ts ─────────────── RESEND_API_KEY, RESEND_SENDER_EMAIL
+├── lib/
+│   ├── email.ts ───────── Resend client (sends via API + plain-text render)
+│   ├── notifications.ts ─ 14+ notify helpers, rate-limit-gated boundary
+│   └── rate-limiter.ts ── email_notify limiter (3/5min per template+recipient)
+├── emails/ ────────────── React Email templates
+│   ├── dsr-submission-confirmation.tsx
+│   ├── dsr-status-update.tsx
+│   ├── invite-notification.tsx
+│   ├── magic-link.tsx
+│   ├── membership-status-change.tsx
+│   ├── membership-welcome.tsx
+│   ├── merch-order-confirmation.tsx
+│   ├── merch-shipment-notification.tsx
+│   ├── submission.tsx / submission-scheduled.tsx / submission-published.tsx
+│   ├── submission-premium.tsx / admin-submission-premium.tsx
+│   └── tournament-registration-confirmation.tsx
+├── scripts/
+│   └── send-resend-production-test.tsx ── MB-015 proof script (SESSION_0260)
+└── app/api/
+    ├── stripe/webhooks/route.ts ── fulfillMerchOrder + fulfillTournamentRegistration
+    └── printful/webhooks/route.ts ── package_shipped / order_failed handlers
 ```
 
 ## Current DNS Source Note
@@ -168,21 +186,35 @@ RESEND_SENDER_EMAIL=hello@baselinemartialarts.com
 
 ### 7. Test email delivery
 
-```
-End-to-end test flow:
+Two paths — pick the lighter one (7a) for a key/domain smoke test; use 7b when
+you need end-to-end Stripe + webhook coverage.
 
+#### 7a. Quick smoke (MB-015 proof script, SESSION_0260)
+
+```bash
+cd apps/web
+bun run scripts/send-resend-production-test.tsx your-real-inbox@example.com
+```
+
+Confirms: live `RESEND_API_KEY` accepted, verified domain renders correct
+From/Reply-To headers, plain-text fallback present, no DKIM/SPF rejection.
+Leaves a Resend message id in stdout for the MB-015 closure proof.
+
+#### 7b. Full end-to-end (Stripe + merch handler)
+
+```text
 1. Start dev server:  cd apps/web && bun dev
 2. Start Stripe listener:  stripe listen --forward-to localhost:3001/api/stripe/webhooks
 3. Place a merch order through checkout
-4. Stripe webhook fires → merch_purchase handler → notifyCustomerOfMerchOrder()
+4. Stripe webhook fires → fulfillMerchOrder → notifyCustomerOfMerchOrder()
 5. Check inbox for order confirmation email
 
 Expected result:
 ┌─────────────────────────────────────────────┐
-│ From: Baseline Martial Arts                  │
-│       <hello@baselinemartialarts.com>        │
-│ Subject: Order Confirmation — TuffBuffs ...  │
-│ Body: React Email rendered template          │
+│ From: Baseline Martial Arts                 │
+│       <hello@baselinemartialarts.com>       │
+│ Subject: Order Confirmation — TuffBuffs ... │
+│ Body: React Email rendered template         │
 └─────────────────────────────────────────────┘
 ```
 

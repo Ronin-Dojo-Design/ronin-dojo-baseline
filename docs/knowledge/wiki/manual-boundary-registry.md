@@ -199,11 +199,14 @@ Blocker classes:
 - **Owner:** owner (Brian)
 - **Blocker class:** `deploy_env`
 - **Proof required:** (1) Resend dashboard shows verified domain, (2) `.env` has live `RESEND_API_KEY` + `RESEND_SENDER_EMAIL`, (3) test email delivered to real inbox (merch order confirmation or magic link).
-- **Status:** open
+- **Status:** verified
+- **Last verified:** 2026-05-26
 - **Specific gates:** Create Resend account → add sending domain (baselinemartialarts.com) → add DNS records (SPF, DKIM, DMARC) → verify → update `.env` → test delivery. Current sandbox key `re_DGuMPeUi_*` is placeholder. Magic link auth and merch order confirmation emails are both wired and waiting.
 - **Added:** SESSION_0113
 
-SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs. This boundary remains open until production email delivery is proven with a real magic-link or equivalent safe test email.
+SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs.
+
+**SESSION_0260 closure (2026-05-26):** Production email delivery proven by a real DSR submission lifecycle email in production — the `dsr-submission-confirmation` template rendered cleanly, the verified-domain sender resolved correctly, and the email arrived in the recipient inbox. Resend message id `5040dc0b-203c-4fed-8529-83d737e42e2a`. This is stronger proof than the synthetic `apps/web/scripts/send-resend-production-test.tsx` smoke script (which is also checked in and reusable for future MB-style proofs): a real lifecycle event went through the real helper boundary, the rate-limiter gate, and Resend's verified-domain DKIM/SPF path. All three proof requirements met; boundary closed.
 
 ### 2. Notes by boundary
 

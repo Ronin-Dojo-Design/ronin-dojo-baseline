@@ -1,11 +1,13 @@
 "use server"
 
 import { after } from "next/server"
+import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 import { seedEntries } from "~/server/admin/tournaments/bracket-seeding"
 import {
   bulkRegistrationStatusUpdateSchema,
+  createWalkInRegistrationSchema,
   divisionSchema,
   generateBracketSchema,
   matAssignmentSchema,
@@ -318,6 +320,187 @@ export const bulkUpdateRegistrationStatus = tournamentAdminActionClient
 
     return { updated: registrationIds.length }
   })
+
+// -----------------------------------------------------------------------------
+// Walk-in registration (SESSION_0260 — A2.5 fork)
+//
+// Admin-initiated registration creation. The `guest` branch auto-stubs a User
+// row (emailVerified: false, no auth credentials) inside the same transaction
+// so existing tournament reads stay non-null on `registration.user`. If the
+// guest email already maps to a real User, the action promotes to the user
+// branch and reuses that row — preventing P2002 collisions on User.email.
+//
+// A3 (drop userId FK to nullable + guestEmail/guestName columns) deferred to
+// a follow-up session — see SESSION_0260 Next Session block.
+// -----------------------------------------------------------------------------
+
+export const createWalkInRegistration = tournamentAdminActionClient
+  .inputSchema(createWalkInRegistrationSchema)
+  .action(
+    async ({
+      parsedInput: { tournamentId, divisionId, tournamentRoleId, paymentStatus, recipient },
+      ctx: { db, revalidate, user: adminUser },
+    }) => {
+      const tournament = await db.tournament.findUniqueOrThrow({
+        where: { id: tournamentId },
+        select: { id: true, name: true, brand: true, hostId: true },
+      })
+
+      const division = await db.division.findUniqueOrThrow({
+        where: { id: divisionId },
+        select: {
+          id: true,
+          name: true,
+          feeCents: true,
+          tournamentDiscipline: { select: { tournamentId: true } },
+        },
+      })
+
+      if (division.tournamentDiscipline.tournamentId !== tournamentId) {
+        throw new Error("Division does not belong to this tournament")
+      }
+
+      // Resolve recipient: lookup or stub-create a User. If the guest branch's
+      // email already exists, reuse that User and treat as the user branch
+      // (avoids P2002 on User.email and gives the operator a sensible default).
+      const result = await db.$transaction(async tx => {
+        let userId: string
+        let userEmail: string
+        let userName: string | null
+        let recipientKind: "user" | "guest" = recipient.kind
+        let promotedFromGuest = false
+
+        if (recipient.kind === "user") {
+          const u = await tx.user.findUniqueOrThrow({
+            where: { id: recipient.userId },
+            select: { id: true, email: true, name: true },
+          })
+          userId = u.id
+          userEmail = u.email
+          userName = u.name
+        } else {
+          const existing = await tx.user.findUnique({
+            where: { email: recipient.email },
+            select: { id: true, email: true, name: true },
+          })
+
+          if (existing) {
+            userId = existing.id
+            userEmail = existing.email
+            userName = existing.name
+            recipientKind = "user"
+            promotedFromGuest = true
+          } else {
+            const stub = await tx.user.create({
+              data: {
+                email: recipient.email,
+                name: recipient.name,
+                emailVerified: false,
+              },
+              select: { id: true, email: true, name: true },
+            })
+            userId = stub.id
+            userEmail = stub.email
+            userName = stub.name
+          }
+        }
+
+        // Idempotency: if a Registration already exists for (tournament, user)
+        // the @@unique constraint would throw P2002. Detect explicitly and
+        // surface a clean error rather than a Prisma stack.
+        const existingRegistration = await tx.registration.findUnique({
+          where: { tournamentId_userId: { tournamentId, userId } },
+          select: { id: true },
+        })
+        if (existingRegistration) {
+          throw new Error(
+            promotedFromGuest
+              ? "That email is already registered for this tournament (under an existing user account)."
+              : "That user is already registered for this tournament.",
+          )
+        }
+
+        const registration = await tx.registration.create({
+          data: {
+            tournamentId,
+            userId,
+            status: "APPROVED",
+            paymentStatus,
+            totalFeeCents: division.feeCents,
+            submittedAt: new Date(),
+            entries: {
+              create: [
+                {
+                  divisionId,
+                  tournamentRoleId,
+                },
+              ],
+            },
+          },
+          select: { id: true, status: true, paymentStatus: true },
+        })
+
+        await tx.auditLog.create({
+          data: {
+            brand: tournament.brand,
+            action: "tournament_registration.create_walkin",
+            entityType: "Registration",
+            entityId: registration.id,
+            before: undefined,
+            after: {
+              tournamentId,
+              divisionId,
+              tournamentRoleId,
+              userId,
+              paymentStatus,
+              source: "admin_walkin",
+              recipientKind,
+              promotedFromGuest,
+            },
+            userId: adminUser.id,
+            organizationId: tournament.hostId,
+          },
+        })
+
+        return {
+          registrationId: registration.id,
+          userEmail,
+          userName,
+          divisionName: division.name,
+          promotedFromGuest,
+        }
+      })
+
+      after(async () => {
+        revalidate({
+          tags: ["tournaments", `tournament-registrations-${tournamentId}`],
+        })
+
+        try {
+          await notifyUserOfTournamentRegistration({
+            to: result.userEmail,
+            firstName: result.userName?.split(" ")[0] ?? null,
+            tournamentName: tournament.name,
+            divisionName: result.divisionName,
+            rank: null,
+            orgName: null,
+            paymentStatus: paymentStatus === "PAID" ? "PAID" : "PENDING",
+          })
+        } catch (error) {
+          console.error("[notify] walk-in registration email failed", {
+            registrationId: result.registrationId,
+            tournamentId,
+            error,
+          })
+        }
+      })
+
+      return {
+        registrationId: result.registrationId,
+        promotedFromGuest: result.promotedFromGuest,
+      }
+    },
+  )
 
 // -----------------------------------------------------------------------------
 // Bracket generation
