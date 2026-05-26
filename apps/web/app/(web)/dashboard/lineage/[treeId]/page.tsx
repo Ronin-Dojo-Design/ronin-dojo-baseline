@@ -97,6 +97,9 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
         <Section.Content>
           {memberCount > 0 ? (
             <LineageTreeBoard
+              treeId={treeId}
+              capability={result.capability}
+              publicHref={result.tree.isPublished ? `/lineage/${result.tree.slug}` : null}
               members={result.members}
               visualGroups={result.visualGroups}
               defaultRootMemberId={result.defaultRootMemberId}

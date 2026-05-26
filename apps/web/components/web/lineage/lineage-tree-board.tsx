@@ -2,12 +2,14 @@
 
 import { useState } from "react"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
+import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
   LineageNodeProfile,
   LineageRelationshipRow,
   LineageTreeMemberRow,
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
+import { LineageEditorToolbar } from "./lineage-editor-toolbar"
 import { LineageProfileDrawer } from "./lineage-profile-drawer"
 import { LineageTreeCanvas } from "./lineage-tree-canvas"
 
@@ -23,6 +25,9 @@ import { LineageTreeCanvas } from "./lineage-tree-canvas"
 
 type LineageTreeBoardProps = {
   profilesById: Record<string, LineageNodeProfile>
+  treeId?: string
+  capability?: LineageEditorCapability
+  publicHref?: string | null
 
   /**
    * Preferred v1 source for `/lineage/[treeSlug]`.
@@ -39,6 +44,30 @@ type LineageTreeBoardProps = {
   edges?: LineageRelationshipRow[]
 }
 
+function displayNameForMember(member: LineageTreeMemberRow): string {
+  return member.node.user.passport?.displayName ?? member.node.user.name ?? "Unnamed"
+}
+
+function descendantMemberIds(members: LineageTreeMemberRow[], rootMemberId: string): Set<string> {
+  const childrenByParentId = new Map<string, string[]>()
+  for (const member of members) {
+    if (!member.primaryVisualParentMemberId) continue
+    const children = childrenByParentId.get(member.primaryVisualParentMemberId) ?? []
+    children.push(member.id)
+    childrenByParentId.set(member.primaryVisualParentMemberId, children)
+  }
+
+  const descendants = new Set<string>()
+  const stack = [...(childrenByParentId.get(rootMemberId) ?? [])]
+  while (stack.length > 0) {
+    const next = stack.pop()
+    if (!next || descendants.has(next)) continue
+    descendants.add(next)
+    stack.push(...(childrenByParentId.get(next) ?? []))
+  }
+  return descendants
+}
+
 export function LineageTreeBoard({
   rows,
   rootId,
@@ -47,13 +76,47 @@ export function LineageTreeBoard({
   members,
   visualGroups,
   defaultRootMemberId,
+  treeId,
+  capability,
+  publicHref,
 }: LineageTreeBoardProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [editMode, setEditMode] = useState(false)
 
   const selectedProfile = selectedNodeId ? (profilesById[selectedNodeId] ?? null) : null
+  const selectedMember =
+    selectedNodeId && members ? members.find(member => member.nodeId === selectedNodeId) : null
+  const selectedMemberDescendants =
+    members && selectedMember ? descendantMemberIds(members, selectedMember.id) : new Set<string>()
+  const promoterChangeContext =
+    treeId && capability?.canEditTree && selectedProfile && selectedMember && members
+      ? {
+          treeId,
+          memberId: selectedMember.id,
+          currentRankAwardId: selectedMember.selectedRankAward?.id ?? null,
+          rankAwards: selectedProfile.user.rankAwards,
+          candidates: members
+            .filter(
+              member =>
+                member.id !== selectedMember.id && !selectedMemberDescendants.has(member.id),
+            )
+            .map(member => ({ memberId: member.id, label: displayNameForMember(member) })),
+        }
+      : null
 
   return (
     <>
+      {treeId && capability && (
+        <LineageEditorToolbar
+          editMode={editMode}
+          onEditModeChange={setEditMode}
+          canEditPlacement={capability.canEditTree}
+          canManageGroups={capability.canManageGroups}
+          canPublish={capability.canPublish}
+          publicHref={publicHref}
+        />
+      )}
+
       <LineageTreeCanvas
         rows={rows}
         rootId={rootId}
@@ -63,6 +126,10 @@ export function LineageTreeBoard({
         defaultRootMemberId={defaultRootMemberId}
         selectedNodeId={selectedNodeId}
         onSelect={setSelectedNodeId}
+        treeId={treeId}
+        editMode={editMode}
+        canEditPlacement={capability?.canEditTree ?? false}
+        canManageGroups={capability?.canManageGroups ?? false}
       />
 
       <LineageProfileDrawer
@@ -71,6 +138,7 @@ export function LineageTreeBoard({
           if (!open) setSelectedNodeId(null)
         }}
         profile={selectedProfile}
+        promoterChangeContext={promoterChangeContext}
       />
     </>
   )

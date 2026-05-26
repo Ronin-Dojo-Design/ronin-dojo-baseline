@@ -46,6 +46,13 @@ export interface LineageLifecycleState {
   passportDisplayName: string | null
   nodeBio: string | null
   rankAwardedAt: string | null
+  promoterRelationship: {
+    fromNodeId: string
+    toNodeId: string
+    rankAwardId: string | null
+    verificationStatus: string
+    isVerified: boolean
+  } | null
 }
 
 function runLineageLifecycleCommand<T>(command: string, fixture?: LineageLifecycleFixture): T {

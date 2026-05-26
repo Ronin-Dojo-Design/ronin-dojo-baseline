@@ -358,52 +358,67 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
 async function readLineageLifecycleState(
   fixture: LineageLifecycleFixture,
 ): Promise<LineageLifecycleState> {
-  const [claim, node, placeholderUser, grant, passport, rankAward] = await Promise.all([
-    prisma.lineageClaimRequest.findFirst({
-      where: {
-        treeId: fixture.treeId,
-        nodeId: fixture.claimTargetNodeId,
-        claimantUserId: fixture.claimantUserId,
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        status: true,
-        claimantNote: true,
-        reviewerNote: true,
-        evidence: {
-          select: { label: true, url: true, text: true },
-          orderBy: { createdAt: "asc" },
+  const [claim, node, placeholderUser, grant, passport, rankAward, promoterRelationship] =
+    await Promise.all([
+      prisma.lineageClaimRequest.findFirst({
+        where: {
+          treeId: fixture.treeId,
+          nodeId: fixture.claimTargetNodeId,
+          claimantUserId: fixture.claimantUserId,
         },
-      },
-    }),
-    prisma.lineageNode.findUnique({
-      where: { id: fixture.claimTargetNodeId },
-      select: { userId: true, bio: true },
-    }),
-    prisma.user.findUnique({
-      where: { id: fixture.placeholderUserId },
-      select: { archivedAt: true },
-    }),
-    prisma.lineageTreeAccess.findFirst({
-      where: {
-        treeId: fixture.treeId,
-        userId: fixture.claimantUserId,
-        nodeId: fixture.claimTargetNodeId,
-        memberId: fixture.claimTargetMemberId,
-        revokedAt: null,
-      },
-      select: { id: true, role: true, userId: true },
-    }),
-    prisma.passport.findUnique({
-      where: { userId: fixture.claimantUserId },
-      select: { displayName: true },
-    }),
-    prisma.rankAward.findUnique({
-      where: { id: fixture.rankAwardId },
-      select: { awardedAt: true },
-    }),
-  ])
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          status: true,
+          claimantNote: true,
+          reviewerNote: true,
+          evidence: {
+            select: { label: true, url: true, text: true },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      }),
+      prisma.lineageNode.findUnique({
+        where: { id: fixture.claimTargetNodeId },
+        select: { userId: true, bio: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: fixture.placeholderUserId },
+        select: { archivedAt: true },
+      }),
+      prisma.lineageTreeAccess.findFirst({
+        where: {
+          treeId: fixture.treeId,
+          userId: fixture.claimantUserId,
+          nodeId: fixture.claimTargetNodeId,
+          memberId: fixture.claimTargetMemberId,
+          revokedAt: null,
+        },
+        select: { id: true, role: true, userId: true },
+      }),
+      prisma.passport.findUnique({
+        where: { userId: fixture.claimantUserId },
+        select: { displayName: true },
+      }),
+      prisma.rankAward.findUnique({
+        where: { id: fixture.rankAwardId },
+        select: { awardedAt: true },
+      }),
+      prisma.lineageRelationship.findFirst({
+        where: {
+          type: "PROMOTED_BY",
+          toNodeId: fixture.claimTargetNodeId,
+          rankAwardId: fixture.rankAwardId,
+        },
+        select: {
+          fromNodeId: true,
+          toNodeId: true,
+          rankAwardId: true,
+          verificationStatus: true,
+          isVerified: true,
+        },
+      }),
+    ])
 
   return {
     claim: claim
@@ -421,6 +436,7 @@ async function readLineageLifecycleState(
     passportDisplayName: passport?.displayName ?? null,
     nodeBio: node?.bio ?? null,
     rankAwardedAt: rankAward?.awardedAt?.toISOString() ?? null,
+    promoterRelationship,
   }
 }
 

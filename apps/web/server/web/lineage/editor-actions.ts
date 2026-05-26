@@ -1,8 +1,10 @@
 "use server"
 
 import type { Brand } from "~/.generated/prisma/client"
+import { isAdmin } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
+import { LINEAGE_EDITOR_ERROR } from "~/server/web/lineage/editor-errors"
 import {
   isLineageMemberInBranch,
   wouldCreateLineageParentCycle,
@@ -10,10 +12,12 @@ import {
 import type {
   UpdateLineageMemberPlacementInput,
   UpdateLineagePromotionRelationshipInput,
+  UpdateLineageVisualGroupInput,
 } from "~/server/web/lineage/editor-schemas"
 import {
   updateLineageMemberPlacementSchema,
   updateLineagePromotionRelationshipSchema,
+  updateLineageVisualGroupSchema,
 } from "~/server/web/lineage/editor-schemas"
 import type { db as appDb } from "~/services/db"
 
@@ -44,6 +48,9 @@ type EditorGraphMember = {
 type EditorVisualGroup = {
   id: string
   parentMemberId: string | null
+  label: string
+  showPublicLabel: boolean
+  isCollapsedDefault: boolean
 }
 
 type RelationshipAuditSnapshot = {
@@ -56,22 +63,6 @@ type RelationshipAuditSnapshot = {
   isVerified: boolean
   verificationStatus: string
 }
-
-export const LINEAGE_EDITOR_ERROR = {
-  TREE_NOT_FOUND: "Tree not found or does not belong to this brand.",
-  MEMBER_NOT_FOUND: "Member is not part of this lineage tree.",
-  PARENT_NOT_FOUND: "Parent member is not part of this lineage tree.",
-  PROMOTER_NOT_FOUND: "Promoter member is not part of this lineage tree.",
-  GROUP_NOT_FOUND: "Visual group is not part of this lineage tree.",
-  GROUP_PARENT_MISMATCH: "Visual group parent does not match the selected parent.",
-  EDITOR_ACCESS_REQUIRED: "Lineage tree editor access required.",
-  NODE_EDITOR_CANNOT_REPARENT: "Node editors cannot change lineage placement.",
-  BRANCH_EDITOR_CANNOT_DETACH: "Branch editors cannot detach a member from the assigned branch.",
-  BRANCH_SCOPE_REQUIRED: "Requested lineage change is outside the assigned branch scope.",
-  PARENT_CYCLE: "Selected parent would create a lineage cycle.",
-  SELF_PROMOTION: "A member cannot promote themselves.",
-  CLEAR_PROMOTER_REQUIRES_TREE_EDITOR: "Clearing a promoter requires tree editor access.",
-} as const
 
 export type UpdateLineageMemberPlacementResult = {
   treeId: string
@@ -88,6 +79,12 @@ export type UpdateLineagePromotionRelationshipResult = {
   relationshipId: string | null
 }
 
+export type UpdateLineageVisualGroupResult = {
+  treeId: string
+  treeSlug: string
+  groupId: string
+}
+
 function memberById(members: EditorGraphMember[]) {
   return new Map(members.map(member => [member.id, member]))
 }
@@ -98,6 +95,10 @@ function groupById(groups: EditorVisualGroup[]) {
 
 function hasTreeEditorGrant(grants: EditorGrant[]) {
   return grants.some(grant => grant.role === "TREE_ADMIN" || grant.role === "TREE_EDITOR")
+}
+
+function hasTreeAdminGrant(grants: EditorGrant[]) {
+  return grants.some(grant => grant.role === "TREE_ADMIN")
 }
 
 function relationshipAuditSnapshot(
@@ -179,18 +180,22 @@ async function getEditorTreeContext({
   brand,
   treeId,
   userId,
+  isGlobalAdmin = false,
 }: {
   db: AppDb
   brand: Brand
   treeId: string
   userId: string
+  isGlobalAdmin?: boolean
 }) {
-  const [tree, grants] = await Promise.all([
+  const [tree, explicitGrants] = await Promise.all([
     db.lineageTree.findFirst({
       where: { id: treeId, brand },
       select: {
         id: true,
         slug: true,
+        scopeType: true,
+        organizationId: true,
         members: {
           select: {
             id: true,
@@ -205,6 +210,9 @@ async function getEditorTreeContext({
           select: {
             id: true,
             parentMemberId: true,
+            label: true,
+            showPublicLabel: true,
+            isCollapsedDefault: true,
           },
         },
       },
@@ -227,6 +235,38 @@ async function getEditorTreeContext({
     throw new Error(LINEAGE_EDITOR_ERROR.TREE_NOT_FOUND)
   }
 
+  const grants = [...explicitGrants]
+
+  if (isGlobalAdmin) {
+    grants.push({ role: "TREE_ADMIN", rootMemberId: null })
+  } else if (tree.scopeType === "ORGANIZATION" && tree.organizationId) {
+    const organizationAdminGrant = await db.organization.findFirst({
+      where: {
+        id: tree.organizationId,
+        brand,
+        OR: [
+          { ownerId: userId },
+          {
+            memberships: {
+              some: {
+                userId,
+                status: "ACTIVE",
+                roleAssignments: {
+                  some: { role: { code: { in: ["OWNER", "ORG_ADMIN"] } } },
+                },
+              },
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    })
+
+    if (organizationAdminGrant) {
+      grants.push({ role: "TREE_ADMIN", rootMemberId: null })
+    }
+  }
+
   return { tree, grants }
 }
 
@@ -235,11 +275,13 @@ export const applyLineageMemberPlacementUpdate = async ({
   brand,
   userId,
   input,
+  isGlobalAdmin,
 }: {
   db: AppDb
   brand: Brand
   userId: string
   input: UpdateLineageMemberPlacementInput
+  isGlobalAdmin?: boolean
 }): Promise<UpdateLineageMemberPlacementResult> => {
   return db.$transaction(
     async tx => {
@@ -248,6 +290,7 @@ export const applyLineageMemberPlacementUpdate = async ({
         brand,
         treeId: input.treeId,
         userId,
+        isGlobalAdmin,
       })
 
       const members = tree.members
@@ -348,11 +391,13 @@ export const applyLineagePromotionRelationshipUpdate = async ({
   brand,
   userId,
   input,
+  isGlobalAdmin,
 }: {
   db: AppDb
   brand: Brand
   userId: string
   input: UpdateLineagePromotionRelationshipInput
+  isGlobalAdmin?: boolean
 }): Promise<UpdateLineagePromotionRelationshipResult> => {
   return db.$transaction(
     async tx => {
@@ -361,6 +406,7 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         brand,
         treeId: input.treeId,
         userId,
+        isGlobalAdmin,
       })
 
       const members = tree.members
@@ -384,6 +430,22 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         throw new Error(LINEAGE_EDITOR_ERROR.CLEAR_PROMOTER_REQUIRES_TREE_EDITOR)
       }
 
+      const rankAwardId = input.rankAwardId ?? member.rankAwardId
+      const verificationStatus = input.verificationStatus ?? "PENDING"
+      const auditNote = String(input.auditNote ?? "").trim()
+      if (rankAwardId) {
+        const rankAward = await tx.rankAward.findFirst({
+          where: {
+            id: rankAwardId,
+            user: { lineageNode: { id: member.nodeId } },
+          },
+          select: { id: true },
+        })
+        if (!rankAward) {
+          throw new Error(LINEAGE_EDITOR_ERROR.RANK_AWARD_NOT_FOUND)
+        }
+      }
+
       assertPlacementEditorAccess({
         grants,
         members,
@@ -396,9 +458,7 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         where: {
           type: "PROMOTED_BY",
           toNodeId: member.nodeId,
-          ...(member.rankAwardId
-            ? { rankAwardId: member.rankAwardId }
-            : { endedAt: null, rankAwardId: null }),
+          ...(rankAwardId ? { rankAwardId } : { endedAt: null, rankAwardId: null }),
         },
         select: {
           id: true,
@@ -425,8 +485,8 @@ export const applyLineagePromotionRelationshipUpdate = async ({
           data: {
             fromNodeId: promoterMember.nodeId,
             endedAt: null,
-            isVerified: false,
-            verificationStatus: "PENDING",
+            isVerified: verificationStatus === "VERIFIED",
+            verificationStatus,
           },
           select: { id: true },
         })
@@ -437,9 +497,9 @@ export const applyLineagePromotionRelationshipUpdate = async ({
             type: "PROMOTED_BY",
             fromNodeId: promoterMember.nodeId,
             toNodeId: member.nodeId,
-            rankAwardId: member.rankAwardId,
-            isVerified: false,
-            verificationStatus: "PENDING",
+            rankAwardId,
+            isVerified: verificationStatus === "VERIFIED",
+            verificationStatus,
           },
           select: { id: true },
         })
@@ -460,8 +520,10 @@ export const applyLineagePromotionRelationshipUpdate = async ({
             nodeId: member.nodeId,
             promoterMemberId: promoterMember?.id ?? null,
             promoterNodeId: promoterMember?.nodeId ?? null,
+            rankAwardId,
+            verificationStatus,
             relationshipId,
-            auditNote: input.auditNote,
+            auditNote,
           },
         },
       })
@@ -478,6 +540,91 @@ export const applyLineagePromotionRelationshipUpdate = async ({
   )
 }
 
+export const applyLineageVisualGroupUpdate = async ({
+  db,
+  brand,
+  userId,
+  input,
+  isGlobalAdmin,
+}: {
+  db: AppDb
+  brand: Brand
+  userId: string
+  input: UpdateLineageVisualGroupInput
+  isGlobalAdmin?: boolean
+}): Promise<UpdateLineageVisualGroupResult> => {
+  return db.$transaction(
+    async tx => {
+      const { tree, grants } = await getEditorTreeContext({
+        db: tx as AppDb,
+        brand,
+        treeId: input.treeId,
+        userId,
+        isGlobalAdmin,
+      })
+
+      if (!hasTreeAdminGrant(grants)) {
+        throw new Error(LINEAGE_EDITOR_ERROR.EDITOR_ACCESS_REQUIRED)
+      }
+
+      const groupsById = groupById(tree.visualGroups)
+      const group = groupsById.get(input.groupId)
+
+      if (!group) {
+        throw new Error(LINEAGE_EDITOR_ERROR.GROUP_NOT_FOUND)
+      }
+
+      const before = {
+        id: group.id,
+        label: group.label,
+        showPublicLabel: group.showPublicLabel,
+        isCollapsedDefault: group.isCollapsedDefault,
+      }
+
+      const data = {
+        ...(input.label !== undefined ? { label: input.label.trim() } : {}),
+        ...(input.showPublicLabel !== undefined ? { showPublicLabel: input.showPublicLabel } : {}),
+        ...(input.collapseByDefault !== undefined
+          ? { isCollapsedDefault: input.collapseByDefault }
+          : {}),
+      }
+
+      const updated = await tx.lineageVisualGroup.update({
+        where: { id: group.id },
+        data,
+        select: {
+          id: true,
+          label: true,
+          showPublicLabel: true,
+          isCollapsedDefault: true,
+        },
+      })
+
+      await tx.auditLog.create({
+        data: {
+          brand,
+          action: "lineage.visual_group.updated",
+          entityType: "LineageVisualGroup",
+          entityId: group.id,
+          userId,
+          before,
+          after: {
+            ...updated,
+            auditNote: String(input.auditNote ?? "").trim(),
+          },
+        },
+      })
+
+      return {
+        treeId: tree.id,
+        treeSlug: tree.slug,
+        groupId: updated.id,
+      }
+    },
+    { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
+  )
+}
+
 export const updateLineageMemberPlacement = userActionClient
   .inputSchema(updateLineageMemberPlacementSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
@@ -487,9 +634,13 @@ export const updateLineageMemberPlacement = userActionClient
       brand,
       userId: user.id,
       input: parsedInput,
+      isGlobalAdmin: isAdmin(user),
     })
 
-    revalidate({ paths: [`/lineage/${result.treeSlug}`], tags: ["lineage"] })
+    revalidate({
+      paths: [`/lineage/${result.treeSlug}`, `/dashboard/lineage/${result.treeId}`],
+      tags: ["lineage"],
+    })
 
     return result
   })
@@ -503,9 +654,33 @@ export const updateLineagePromotionRelationship = userActionClient
       brand,
       userId: user.id,
       input: parsedInput,
+      isGlobalAdmin: isAdmin(user),
     })
 
-    revalidate({ paths: [`/lineage/${result.treeSlug}`], tags: ["lineage"] })
+    revalidate({
+      paths: [`/lineage/${result.treeSlug}`, `/dashboard/lineage/${result.treeId}`],
+      tags: ["lineage"],
+    })
+
+    return result
+  })
+
+export const updateLineageVisualGroup = userActionClient
+  .inputSchema(updateLineageVisualGroupSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const brand = await getRequestBrand()
+    const result = await applyLineageVisualGroupUpdate({
+      db,
+      brand,
+      userId: user.id,
+      input: parsedInput,
+      isGlobalAdmin: isAdmin(user),
+    })
+
+    revalidate({
+      paths: [`/lineage/${result.treeSlug}`, `/dashboard/lineage/${result.treeId}`],
+      tags: ["lineage"],
+    })
 
     return result
   })

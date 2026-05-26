@@ -58,6 +58,50 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     )
   })
 
+  test("tree editor updates a promoter relationship from the drawer action menu", async ({
+    page,
+  }) => {
+    await createAuthenticatedSession(page, fixture.treeEditorUserId)
+
+    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+    await page.waitForLoadState("networkidle")
+
+    await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+      timeout: 20_000,
+    })
+
+    await page
+      .getByRole("button", {
+        name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.claimTargetName)}`),
+      })
+      .click()
+    await expect(page.getByRole("tab", { name: "Rank History" })).toBeVisible()
+
+    await page.getByRole("button", { name: "Open lineage profile actions" }).click()
+    await page.getByRole("menuitem", { name: "Change promoter..." }).click()
+
+    await expect(page.getByRole("dialog", { name: "Change promoter" })).toBeVisible()
+    await page.getByLabel("Verification status").click()
+    await page.getByRole("option", { name: "Verified" }).click()
+    await page
+      .getByLabel("Audit note")
+      .fill(`E2E promoter relationship update ${fixture.searchToken}`)
+    await page.getByRole("button", { name: "Save promoter" }).click()
+
+    await expect(page.getByText("Promoter relationship updated.")).toBeVisible({
+      timeout: 15_000,
+    })
+
+    const state = await readLineageLifecycleState(fixture)
+    expect(state.promoterRelationship).toMatchObject({
+      fromNodeId: fixture.nodeIds[1],
+      toNodeId: fixture.claimTargetNodeId,
+      rankAwardId: fixture.rankAwardId,
+      verificationStatus: "VERIFIED",
+      isVerified: true,
+    })
+  })
+
   test("authenticated non-owner can submit a public claim without hidden member leakage", async ({
     page,
   }) => {

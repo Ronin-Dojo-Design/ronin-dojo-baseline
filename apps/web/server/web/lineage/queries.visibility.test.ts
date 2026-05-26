@@ -36,6 +36,8 @@ function member({
   parentId = null,
   groupId = null,
   sortOrder = 0,
+  showRanks = true,
+  rankAwards = [],
 }: {
   id: string
   nodeId: string
@@ -43,6 +45,8 @@ function member({
   parentId?: string | null
   groupId?: string | null
   sortOrder?: number
+  showRanks?: boolean
+  rankAwards?: unknown[]
 }) {
   return {
     id,
@@ -59,6 +63,7 @@ function member({
       slug: nodeId,
       visibility,
       isVerified: true,
+      verificationStatus: "VERIFIED",
       bio: "public bio",
       userId: `user-${nodeId}`,
       user: {
@@ -66,8 +71,14 @@ function member({
         name: `User ${nodeId}`,
         image: null,
         passport: { displayName: `Display ${nodeId}` },
-        directoryProfile: null,
-        rankAwards: [],
+        directoryProfile: {
+          locationCity: null,
+          locationRegion: null,
+          locationCountry: null,
+          visibility: "PUBLIC",
+          showRanks,
+        },
+        rankAwards,
         memberships: [],
       },
     },
@@ -163,6 +174,7 @@ describe("lineage public payload allowlists", () => {
     expect(payloads.includes("auditLog")).toBe(false)
     expect(payloads.includes("password")).toBe(false)
     expect(payloads.includes("role")).toBe(false)
+    expect(payloads.includes("notes")).toBe(false)
   })
 })
 
@@ -184,6 +196,27 @@ describe("lineage tree visibility materialization", () => {
     const result = materializeLineageTreeResult(publicTree as never)
     expect(result.visualGroups.map(group => group.id)).toEqual(["public-group"])
     expect(result.visualGroups[0]?.parentMemberId).toBeNull()
+  })
+
+  it("redacts rank awards when the public profile opts out of rank display", () => {
+    const hiddenRankTree = {
+      ...publicTree,
+      defaultRootMemberId: "rank-hidden-member",
+      members: [
+        member({
+          id: "rank-hidden-member",
+          nodeId: "rank-hidden-node",
+          visibility: "PUBLIC" as LineageVisibility,
+          showRanks: false,
+          rankAwards: [{ id: "rank-award-1", awardedAt: "2020-01-01" }],
+        }),
+      ],
+      visualGroups: [],
+    }
+
+    const result = materializeLineageTreeResult(hiddenRankTree as never)
+
+    expect(result.members[0]?.node.user.rankAwards).toEqual([])
   })
 
   it("widens viewer scope without ever including PRIVATE in shared public paths", () => {

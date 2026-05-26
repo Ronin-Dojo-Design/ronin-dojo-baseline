@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-26
 author: Brian + Copilot
-last_agent: claude-session-0259
+last_agent: codex-session-0264
 ---
 
 # LLM Wiki Index
@@ -111,8 +111,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SCHEMA_NEEDS_MANIFEST](../../architecture/SCHEMA_NEEDS_MANIFEST.md) | file | deprecated |
 | [S2 Schema Additions](../../architecture/s2-schema-additions.md) | file | signed-off |
 | [Lineage Public Viewer And Editor Routes](../../architecture/lineage/lineage-public-viewer-editor-routes.md) | spec | active — dashboard editor preview landed SESSION_0202 |
-| [SESSION 0263 Audit Report](../../architecture/lineage/SESSION_0263_audit_report.md) | report | active — lineage v1 acceptance audit (4 P0 / 8 P1 gaps) |
+| [SESSION 0263 Audit Report](../../architecture/lineage/SESSION_0263_audit_report.md) | report | active — lineage v1 acceptance audit; SESSION_0264 cleared the four P0 editor gaps |
 | [SESSION 0263 BBL Recon](../../architecture/lineage/SESSION_0263_bbl_recon.md) | report | active — monorepo lineage data + brand asset inventory |
+| [BBL BJJ Rank + Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md) | architecture | active — SESSION_0264 BJJ rank/PODs field map |
 
 ### ADRs
 
@@ -345,6 +346,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0261](../../sprints/SESSION_0261.md) | session--open | closed |
 | [SESSION_0262](../../sprints/SESSION_0262.md) | session--review | closed |
 | [SESSION_0263](../../sprints/SESSION_0263.md) | session--review | closed |
+| [SESSION_0264](../../sprints/SESSION_0264.md) | session | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 

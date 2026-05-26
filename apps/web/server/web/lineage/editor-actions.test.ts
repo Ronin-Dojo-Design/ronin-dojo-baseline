@@ -37,8 +37,9 @@ import type { Brand } from "~/.generated/prisma/client"
 import {
   applyLineageMemberPlacementUpdate,
   applyLineagePromotionRelationshipUpdate,
-  LINEAGE_EDITOR_ERROR,
+  applyLineageVisualGroupUpdate,
 } from "~/server/web/lineage/editor-actions"
+import { LINEAGE_EDITOR_ERROR } from "~/server/web/lineage/editor-errors"
 import { db } from "~/services/db"
 
 const TS = Date.now()
@@ -56,6 +57,7 @@ type Fixtures = {
   childANodeId: string
   childBNodeId: string
   grandchildNodeId: string
+  treeAdminUserId: string
   treeEditorUserId: string
   branchEditorUserId: string
   nodeEditorUserId: string
@@ -91,6 +93,7 @@ beforeAll(async () => {
   const childAUser = await createUser("child-a-user")
   const childBUser = await createUser("child-b-user")
   const grandchildUser = await createUser("grandchild-user")
+  const treeAdmin = await createUser("tree-admin")
   const treeEditor = await createUser("tree-editor")
   const branchEditor = await createUser("branch-editor")
   const nodeEditor = await createUser("node-editor")
@@ -211,6 +214,12 @@ beforeAll(async () => {
   await db.lineageTreeAccess.createMany({
     data: [
       {
+        id: tag("tree-admin-grant"),
+        treeId: tree.id,
+        userId: treeAdmin.id,
+        role: "TREE_ADMIN",
+      },
+      {
         id: tag("tree-editor-grant"),
         treeId: tree.id,
         userId: treeEditor.id,
@@ -246,6 +255,7 @@ beforeAll(async () => {
     childANodeId: childANode.id,
     childBNodeId: childBNode.id,
     grandchildNodeId: grandchildNode.id,
+    treeAdminUserId: treeAdmin.id,
     treeEditorUserId: treeEditor.id,
     branchEditorUserId: branchEditor.id,
     nodeEditorUserId: nodeEditor.id,
@@ -255,6 +265,7 @@ beforeAll(async () => {
       childAUser.id,
       childBUser.id,
       grandchildUser.id,
+      treeAdmin.id,
       treeEditor.id,
       branchEditor.id,
       nodeEditor.id,
@@ -303,6 +314,15 @@ beforeEach(async () => {
   await db.auditLog.deleteMany({
     where: {
       userId: { in: fx.userIds },
+    },
+  })
+
+  await db.lineageVisualGroup.update({
+    where: { id: fx.visualGroupId },
+    data: {
+      label: "Test promotion cohort",
+      showPublicLabel: true,
+      isCollapsedDefault: false,
     },
   })
 })
@@ -498,6 +518,58 @@ describe("lineage editor placement actions", () => {
   })
 })
 
+describe("lineage visual group editor actions", () => {
+  it("allows TREE_ADMIN to update visual group label and public toggles", async () => {
+    const result = await applyLineageVisualGroupUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.treeAdminUserId,
+      input: {
+        treeId: fx!.treeId,
+        groupId: fx!.visualGroupId,
+        label: "Updated promotion cohort",
+        showPublicLabel: false,
+        collapseByDefault: true,
+        auditNote: "Update visual group display settings for hardening test.",
+      },
+    })
+
+    expect(result.groupId).toBe(fx!.visualGroupId)
+
+    const group = await db.lineageVisualGroup.findUnique({ where: { id: fx!.visualGroupId } })
+    expect(group?.label).toBe("Updated promotion cohort")
+    expect(group?.showPublicLabel).toBe(false)
+    expect(group?.isCollapsedDefault).toBe(true)
+
+    const audit = await db.auditLog.findFirst({
+      where: {
+        action: "lineage.visual_group.updated",
+        entityType: "LineageVisualGroup",
+        entityId: fx!.visualGroupId,
+        userId: fx!.treeAdminUserId,
+      },
+    })
+    expect(audit).not.toBeNull()
+  })
+
+  it("blocks TREE_EDITOR from managing visual groups", async () => {
+    await expectRejectsWithMessage(
+      applyLineageVisualGroupUpdate({
+        db,
+        brand: TEST_BRAND,
+        userId: fx!.treeEditorUserId,
+        input: {
+          treeId: fx!.treeId,
+          groupId: fx!.visualGroupId,
+          label: "Tree editor should not rename group",
+          auditNote: "Tree editor attempts to manage visual group settings.",
+        },
+      }),
+      LINEAGE_EDITOR_ERROR.EDITOR_ACCESS_REQUIRED,
+    )
+  })
+})
+
 describe("lineage promoter relationship actions", () => {
   it("allows TREE_EDITOR to create a PROMOTED_BY relationship and writes audit", async () => {
     const result = await applyLineagePromotionRelationshipUpdate({
@@ -508,6 +580,7 @@ describe("lineage promoter relationship actions", () => {
         treeId: fx!.treeId,
         memberId: fx!.childBMemberId,
         promoterMemberId: fx!.rootMemberId,
+        verificationStatus: "VERIFIED",
         auditNote: "Set root as child B promoter for hardening test.",
       },
     })
@@ -521,8 +594,8 @@ describe("lineage promoter relationship actions", () => {
     expect(relationship?.type).toBe("PROMOTED_BY")
     expect(relationship?.fromNodeId).toBe(fx!.rootNodeId)
     expect(relationship?.toNodeId).toBe(fx!.childBNodeId)
-    expect(relationship?.verificationStatus).toBe("PENDING")
-    expect(relationship?.isVerified).toBe(false)
+    expect(relationship?.verificationStatus).toBe("VERIFIED")
+    expect(relationship?.isVerified).toBe(true)
 
     const audit = await db.auditLog.findFirst({
       where: {
@@ -532,6 +605,24 @@ describe("lineage promoter relationship actions", () => {
       },
     })
     expect(audit).not.toBeNull()
+  })
+
+  it("rejects a rank award that is not attached to the edited member", async () => {
+    await expectRejectsWithMessage(
+      applyLineagePromotionRelationshipUpdate({
+        db,
+        brand: TEST_BRAND,
+        userId: fx!.treeEditorUserId,
+        input: {
+          treeId: fx!.treeId,
+          memberId: fx!.childBMemberId,
+          promoterMemberId: fx!.rootMemberId,
+          rankAwardId: tag("not-this-members-rank-award"),
+          auditNote: "Attempt to attach an unrelated rank award.",
+        },
+      }),
+      LINEAGE_EDITOR_ERROR.RANK_AWARD_NOT_FOUND,
+    )
   })
 
   it("updates an existing PROMOTED_BY relationship", async () => {

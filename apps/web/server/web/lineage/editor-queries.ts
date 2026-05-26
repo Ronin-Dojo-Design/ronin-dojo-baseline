@@ -17,8 +17,10 @@ export type LineageEditorCapability = {
   sources: LineageEditorGrantSource[]
   canPreview: boolean
   canEditTree: boolean
+  canManageGroups: boolean
   canManageAcl: boolean
   canReviewClaims: boolean
+  canPublish: boolean
 }
 
 type AccessInput = {
@@ -97,8 +99,10 @@ export function resolveLineageEditorCapability({
     sources,
     canPreview: roles.length > 0,
     canEditTree: roles.some(role => treeEditRoles.has(role)),
+    canManageGroups: hasTreeAdmin,
     canManageAcl: hasTreeAdmin,
     canReviewClaims: hasTreeAdmin,
+    canPublish: hasTreeAdmin,
   }
 }
 

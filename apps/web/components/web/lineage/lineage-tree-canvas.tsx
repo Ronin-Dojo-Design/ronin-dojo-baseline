@@ -1,6 +1,18 @@
 "use client"
 
 import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import {
   CalendarDaysIcon,
   Maximize2Icon,
   MinusIcon,
@@ -9,7 +21,10 @@ import {
   SparklesIcon,
   TreePineIcon,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useMemo, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H6 } from "~/components/common/heading"
@@ -17,12 +32,14 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import { cx } from "~/lib/utils"
+import { updateLineageMemberPlacement } from "~/server/web/lineage/editor-actions"
 import type {
   LineageNodeRow,
   LineageRelationshipRow,
   LineageTreeMemberRow,
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
+import { LineageGroupHeaderForm } from "./lineage-group-header-form"
 import { LineageNodeCard } from "./lineage-node-card"
 
 /**
@@ -37,8 +54,8 @@ import { LineageNodeCard } from "./lineage-node-card"
  * - legacy row+edge data from the discipline-page MVP
  * - existing LineageNodeCard + profile drawer selection flow
  *
- * This is intentionally not an editor yet. Drag/drop should not rewrite lineage
- * in v1. Editor mode comes later through explicit modals and audited actions.
+ * Editor mode is opt-in from the dashboard route. Drag/drop calls audited
+ * server actions; the public viewer path renders read-only.
  */
 
 type CanvasMember = {
@@ -54,6 +71,20 @@ type ChildGroup = {
   id: string
   group: LineageVisualGroupRow | null
   members: CanvasMember[]
+}
+
+type DragMemberData = {
+  memberId: string
+  parentMemberId: string | null
+  visualGroupId: string | null
+  visualSortOrder: number
+}
+
+type DropTargetData = {
+  targetType: "member" | "group"
+  parentMemberId: string | null
+  visualGroupId: string | null
+  visualSortOrder: number
 }
 
 type LineageTreeCanvasProps = {
@@ -73,6 +104,10 @@ type LineageTreeCanvasProps = {
 
   selectedNodeId?: string | null
   onSelect: (nodeId: string) => void
+  treeId?: string
+  editMode?: boolean
+  canEditPlacement?: boolean
+  canManageGroups?: boolean
 }
 
 const MIN_SCALE = 0.7
@@ -268,6 +303,22 @@ function buildChildGroups({
   return groups
 }
 
+function nextSortOrder(members: CanvasMember[]): number {
+  const maxSort = members.reduce(
+    (max, member) => Math.max(max, member.visualSortOrder),
+    members.length,
+  )
+  return maxSort + 1
+}
+
+function isDragMemberData(value: unknown): value is DragMemberData {
+  return Boolean(value && typeof value === "object" && "memberId" in value)
+}
+
+function isDropTargetData(value: unknown): value is DropTargetData {
+  return Boolean(value && typeof value === "object" && "targetType" in value)
+}
+
 function buildSelectedPathMemberIds({
   members,
   selectedNodeId,
@@ -307,13 +358,23 @@ function formatPromotionDate(value: Date | string | null) {
   }).format(date)
 }
 
-function GroupLabel({
+function GroupHeader({
   group,
   isHighlighted,
+  treeId,
+  editMode,
+  canManageGroups,
 }: {
   group: LineageVisualGroupRow | null
   isHighlighted: boolean
+  treeId: string | undefined
+  editMode: boolean
+  canManageGroups: boolean
 }) {
+  if (group && treeId && editMode && canManageGroups) {
+    return <LineageGroupHeaderForm treeId={treeId} group={group} />
+  }
+
   if (!group?.showPublicLabel) return null
 
   const promotionDate = formatPromotionDate(group.promotionDate)
@@ -343,6 +404,10 @@ function LineageBranch({
   visualGroupById,
   defaultRootMemberId,
   rootId,
+  treeId,
+  editMode,
+  canEditPlacement,
+  canManageGroups,
   selectedMemberId,
   selectedPathMemberIds,
   hasSelection,
@@ -354,12 +419,44 @@ function LineageBranch({
   visualGroupById: Map<string, LineageVisualGroupRow>
   defaultRootMemberId: string | null | undefined
   rootId: string | undefined
+  treeId: string | undefined
+  editMode: boolean
+  canEditPlacement: boolean
+  canManageGroups: boolean
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   visited: Set<string>
 }) {
+  const dndDisabled = !treeId || !editMode || !canEditPlacement
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: member.id,
+    disabled: dndDisabled,
+    data: {
+      memberId: member.id,
+      parentMemberId: member.primaryVisualParentMemberId,
+      visualGroupId: member.visualGroupId,
+      visualSortOrder: member.visualSortOrder,
+    } satisfies DragMemberData,
+  })
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `member-drop-${member.id}`,
+    disabled: dndDisabled,
+    data: {
+      targetType: "member",
+      parentMemberId: member.primaryVisualParentMemberId,
+      visualGroupId: member.visualGroupId,
+      visualSortOrder: member.visualSortOrder,
+    } satisfies DropTargetData,
+  })
+
   if (visited.has(member.id)) {
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -378,15 +475,27 @@ function LineageBranch({
   const isInSelectedPath = selectedPathMemberIds.has(member.id)
   const isDimmed = hasSelection && !isInSelectedPath
   const connectorClassName = isInSelectedPath ? "bg-primary/60" : "bg-border"
+  const dragAttributes = dndDisabled ? {} : attributes
+  const dragListeners = dndDisabled ? {} : listeners
 
   return (
-    <div className="flex min-w-fit flex-col items-center">
+    <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
       <div
+        ref={setDraggableRef}
+        style={{
+          transform: CSS.Translate.toString(transform),
+          zIndex: isDragging ? 20 : undefined,
+        }}
+        {...dragAttributes}
+        {...dragListeners}
         className={cx(
           "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
+          editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
           isSelected && "ring-2 ring-primary shadow-lg shadow-primary/25",
           !isSelected && isInSelectedPath && "ring-1 ring-primary/40 shadow-md shadow-primary/10",
           isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
+          isOver && "ring-2 ring-primary/70",
+          isDragging && "opacity-60 shadow-xl",
         )}
       >
         <LineageNodeCard node={member.node} isRoot={isRoot} onSelect={onSelect} />
@@ -406,60 +515,132 @@ function LineageBranch({
               />
             )}
 
-            {childGroups.map(group => {
-              const groupIsHighlighted = group.members.some(child =>
-                selectedPathMemberIds.has(child.id),
-              )
-
-              return (
-                <div key={group.id} className="flex min-w-fit flex-col items-center">
-                  <div
-                    className={cx(
-                      "h-4 w-px transition-colors duration-300",
-                      groupIsHighlighted ? "bg-primary/60" : "bg-border",
-                    )}
-                  />
-
-                  <GroupLabel group={group.group} isHighlighted={groupIsHighlighted} />
-
-                  <div
-                    className={cx(
-                      "rounded-3xl px-3 py-2 transition-all duration-300",
-                      group.group?.showPublicLabel &&
-                        "border border-dashed border-border/70 bg-muted/20",
-                      groupIsHighlighted &&
-                        "border-primary/40 bg-primary/5 shadow-sm shadow-primary/10",
-                    )}
-                  >
-                    <div
-                      className={cx(
-                        "flex min-w-fit items-start justify-center gap-6",
-                        group.group?.showPublicLabel ? "mt-1" : "mt-0",
-                      )}
-                    >
-                      {group.members.map(child => (
-                        <LineageBranch
-                          key={child.id}
-                          member={child}
-                          childrenByParentId={childrenByParentId}
-                          visualGroupById={visualGroupById}
-                          defaultRootMemberId={defaultRootMemberId}
-                          rootId={rootId}
-                          selectedMemberId={selectedMemberId}
-                          selectedPathMemberIds={selectedPathMemberIds}
-                          hasSelection={hasSelection}
-                          onSelect={onSelect}
-                          visited={nextVisited}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {childGroups.map(group => (
+              <LineageChildGroupColumn
+                key={group.id}
+                group={group}
+                parentMemberId={member.id}
+                childrenByParentId={childrenByParentId}
+                visualGroupById={visualGroupById}
+                defaultRootMemberId={defaultRootMemberId}
+                rootId={rootId}
+                treeId={treeId}
+                editMode={editMode}
+                canEditPlacement={canEditPlacement}
+                canManageGroups={canManageGroups}
+                selectedMemberId={selectedMemberId}
+                selectedPathMemberIds={selectedPathMemberIds}
+                hasSelection={hasSelection}
+                onSelect={onSelect}
+                visited={nextVisited}
+              />
+            ))}
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function LineageChildGroupColumn({
+  group,
+  parentMemberId,
+  childrenByParentId,
+  visualGroupById,
+  defaultRootMemberId,
+  rootId,
+  treeId,
+  editMode,
+  canEditPlacement,
+  canManageGroups,
+  selectedMemberId,
+  selectedPathMemberIds,
+  hasSelection,
+  onSelect,
+  visited,
+}: {
+  group: ChildGroup
+  parentMemberId: string
+  childrenByParentId: Map<string | null, CanvasMember[]>
+  visualGroupById: Map<string, LineageVisualGroupRow>
+  defaultRootMemberId: string | null | undefined
+  rootId: string | undefined
+  treeId: string | undefined
+  editMode: boolean
+  canEditPlacement: boolean
+  canManageGroups: boolean
+  selectedMemberId: string | null
+  selectedPathMemberIds: Set<string>
+  hasSelection: boolean
+  onSelect: (nodeId: string) => void
+  visited: Set<string>
+}) {
+  const groupIsHighlighted = group.members.some(child => selectedPathMemberIds.has(child.id))
+  const { setNodeRef, isOver } = useDroppable({
+    id: `group-drop-${group.id}`,
+    disabled: !treeId || !editMode || !canEditPlacement,
+    data: {
+      targetType: "group",
+      parentMemberId,
+      visualGroupId: group.group?.id ?? null,
+      visualSortOrder: nextSortOrder(group.members),
+    } satisfies DropTargetData,
+  })
+
+  return (
+    <div ref={setNodeRef} className="flex min-w-fit flex-col items-center">
+      <div
+        className={cx(
+          "h-4 w-px transition-colors duration-300",
+          groupIsHighlighted ? "bg-primary/60" : "bg-border",
+        )}
+      />
+
+      <GroupHeader
+        group={group.group}
+        isHighlighted={groupIsHighlighted}
+        treeId={treeId}
+        editMode={editMode}
+        canManageGroups={canManageGroups}
+      />
+
+      <div
+        className={cx(
+          "rounded-3xl px-3 py-2 transition-all duration-300",
+          group.group?.showPublicLabel && "border border-dashed border-border/70 bg-muted/20",
+          groupIsHighlighted && "border-primary/40 bg-primary/5 shadow-sm shadow-primary/10",
+          isOver && "ring-2 ring-primary/60",
+        )}
+      >
+        <div
+          className={cx(
+            "flex min-w-fit items-start justify-center gap-6",
+            group.group?.showPublicLabel || (group.group && editMode && canManageGroups)
+              ? "mt-1"
+              : "mt-0",
+          )}
+        >
+          {group.members.map(child => (
+            <LineageBranch
+              key={child.id}
+              member={child}
+              childrenByParentId={childrenByParentId}
+              visualGroupById={visualGroupById}
+              defaultRootMemberId={defaultRootMemberId}
+              rootId={rootId}
+              treeId={treeId}
+              editMode={editMode}
+              canEditPlacement={canEditPlacement}
+              canManageGroups={canManageGroups}
+              selectedMemberId={selectedMemberId}
+              selectedPathMemberIds={selectedPathMemberIds}
+              hasSelection={hasSelection}
+              onSelect={onSelect}
+              visited={visited}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -473,8 +654,29 @@ export function LineageTreeCanvas({
   edges,
   selectedNodeId,
   onSelect,
+  treeId,
+  editMode = false,
+  canEditPlacement = false,
+  canManageGroups = false,
 }: LineageTreeCanvasProps) {
+  const router = useRouter()
   const [scale, setScale] = useState(1)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+  const { execute: executePlacementUpdate, isExecuting: isPlacementSaving } = useAction(
+    updateLineageMemberPlacement,
+    {
+      onSuccess: () => {
+        toast.success("Lineage placement updated.")
+        router.refresh()
+      },
+      onError: ({ error }) => {
+        toast.error(error.serverError ?? "Failed to update lineage placement.")
+      },
+    },
+  )
 
   const normalizedMembers = useMemo(() => {
     if (members && members.length > 0) return normalizeMembers(members)
@@ -512,115 +714,160 @@ export function LineageTreeCanvas({
   const rootCount = rootMembers.length
   const hasSelection = Boolean(selectedMemberId)
 
+  function handleDragEnd(event: DragEndEvent) {
+    if (!treeId || !editMode || !canEditPlacement) return
+
+    const activeData = event.active.data.current
+    const targetData = event.over?.data.current
+
+    if (!isDragMemberData(activeData) || !isDropTargetData(targetData)) return
+    if (activeData.memberId === event.over?.id) return
+    if (activeData.parentMemberId !== targetData.parentMemberId) return
+
+    const isSamePlacement =
+      activeData.parentMemberId === targetData.parentMemberId &&
+      activeData.visualGroupId === targetData.visualGroupId &&
+      activeData.visualSortOrder === targetData.visualSortOrder
+
+    if (isSamePlacement) return
+
+    executePlacementUpdate({
+      treeId,
+      memberId: activeData.memberId,
+      parentMemberId: activeData.parentMemberId,
+      visualGroupId: targetData.visualGroupId,
+      visualSortOrder: targetData.visualSortOrder,
+      auditNote: "Drag placement update from lineage editor canvas.",
+    })
+  }
+
   if (memberCount === 0) {
     return <Note>This lineage has no recorded practitioners yet.</Note>
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card/40 p-4 shadow-sm">
-      <Stack size="sm" wrap className="mb-4 items-center justify-between gap-3" direction="row">
-        <Stack size="xs" wrap>
-          <Badge variant="primary" size="sm" prefix={<TreePineIcon />}>
-            {memberCount} {memberCount === 1 ? "member" : "members"}
-          </Badge>
-
-          {rootCount > 1 && (
-            <Badge variant="info" size="sm">
-              {rootCount} roots
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div className="overflow-hidden rounded-2xl border bg-card/40 p-4 shadow-sm">
+        <Stack size="sm" wrap className="mb-4 items-center justify-between gap-3" direction="row">
+          <Stack size="xs" wrap>
+            <Badge variant="primary" size="sm" prefix={<TreePineIcon />}>
+              {memberCount} {memberCount === 1 ? "member" : "members"}
             </Badge>
-          )}
 
-          {publicGroupCount > 0 && (
-            <Badge variant="soft" size="sm">
-              {publicGroupCount} public groups
-            </Badge>
-          )}
+            {rootCount > 1 && (
+              <Badge variant="info" size="sm">
+                {rootCount} roots
+              </Badge>
+            )}
 
-          {hasSelection && (
-            <Badge variant="outline" size="sm" prefix={<SparklesIcon />}>
-              Path highlighted
-            </Badge>
-          )}
-        </Stack>
+            {publicGroupCount > 0 && (
+              <Badge variant="soft" size="sm">
+                {publicGroupCount} public groups
+              </Badge>
+            )}
 
-        <Stack size="xs">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            aria-label="Zoom lineage tree out"
-            prefix={<MinusIcon />}
-            onClick={() => setScale(current => clampScale(current - SCALE_STEP))}
-          >
-            Zoom
-          </Button>
+            {hasSelection && (
+              <Badge variant="outline" size="sm" prefix={<SparklesIcon />}>
+                Path highlighted
+              </Badge>
+            )}
 
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            aria-label="Reset lineage tree zoom"
-            prefix={<RotateCcwIcon />}
-            onClick={() => setScale(1)}
-          >
-            Reset
-          </Button>
+            {editMode && canEditPlacement && (
+              <Badge variant="warning" size="sm">
+                Drag editing
+              </Badge>
+            )}
 
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            aria-label="Zoom lineage tree in"
-            prefix={<PlusIcon />}
-            onClick={() => setScale(current => clampScale(current + SCALE_STEP))}
-          >
-            Zoom
-          </Button>
-        </Stack>
-      </Stack>
-
-      <div className="relative overflow-auto rounded-xl border bg-background">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0,_transparent_32rem)] opacity-70" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent" />
-
-        <div
-          className="relative min-w-max p-8 transition-transform duration-300 ease-out"
-          style={{
-            transform: `scale(${scale})`,
-            transformOrigin: "top center",
-          }}
-        >
-          <Stack size="xs" direction="column" className="mb-8 items-center text-center">
-            <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
-              Scroll to explore
-            </Badge>
-            <H6
-              render={props => <h2 {...props}>{props.children}</h2>}
-              className="text-muted-foreground"
-            >
-              Click a practitioner to trace their path to the root
-            </H6>
+            {isPlacementSaving && (
+              <Badge variant="info" size="sm">
+                Saving placement
+              </Badge>
+            )}
           </Stack>
 
-          <div className="flex min-w-fit items-start justify-center gap-12">
-            {rootMembers.map(rootMember => (
-              <LineageBranch
-                key={rootMember.id}
-                member={rootMember}
-                childrenByParentId={childrenByParentId}
-                visualGroupById={visualGroupById}
-                defaultRootMemberId={defaultRootMemberId}
-                rootId={rootId}
-                selectedMemberId={selectedMemberId}
-                selectedPathMemberIds={selectedPathMemberIds}
-                hasSelection={hasSelection}
-                onSelect={onSelect}
-                visited={new Set()}
-              />
-            ))}
+          <Stack size="xs">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              aria-label="Zoom lineage tree out"
+              prefix={<MinusIcon />}
+              onClick={() => setScale(current => clampScale(current - SCALE_STEP))}
+            >
+              Zoom
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              aria-label="Reset lineage tree zoom"
+              prefix={<RotateCcwIcon />}
+              onClick={() => setScale(1)}
+            >
+              Reset
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              aria-label="Zoom lineage tree in"
+              prefix={<PlusIcon />}
+              onClick={() => setScale(current => clampScale(current + SCALE_STEP))}
+            >
+              Zoom
+            </Button>
+          </Stack>
+        </Stack>
+
+        <div className="relative overflow-auto rounded-xl border bg-background">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0,_transparent_32rem)] opacity-70" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent" />
+
+          <div
+            className="relative min-w-max p-8 transition-transform duration-300 ease-out"
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: "top center",
+            }}
+          >
+            <Stack size="xs" direction="column" className="mb-8 items-center text-center">
+              <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
+                Scroll to explore
+              </Badge>
+              <H6
+                render={props => <h2 {...props}>{props.children}</h2>}
+                className="text-muted-foreground"
+              >
+                Click a practitioner to trace their path to the root
+              </H6>
+            </Stack>
+
+            <div className="flex min-w-fit items-start justify-center gap-12">
+              {rootMembers.map(rootMember => (
+                <LineageBranch
+                  key={rootMember.id}
+                  member={rootMember}
+                  childrenByParentId={childrenByParentId}
+                  visualGroupById={visualGroupById}
+                  defaultRootMemberId={defaultRootMemberId}
+                  rootId={rootId}
+                  treeId={treeId}
+                  editMode={editMode}
+                  canEditPlacement={canEditPlacement}
+                  canManageGroups={canManageGroups}
+                  selectedMemberId={selectedMemberId}
+                  selectedPathMemberIds={selectedPathMemberIds}
+                  hasSelection={hasSelection}
+                  onSelect={onSelect}
+                  visited={new Set()}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </DndContext>
   )
 }

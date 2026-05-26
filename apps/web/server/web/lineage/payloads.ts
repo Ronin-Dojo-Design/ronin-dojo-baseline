@@ -22,6 +22,7 @@ const lineageUserDirectoryProfilePayload = {
   locationRegion: true,
   locationCountry: true,
   visibility: true,
+  showRanks: true,
 } satisfies Prisma.DirectoryProfileSelect
 
 // ---------------------------------------------------------------------------
@@ -55,6 +56,7 @@ export const lineageNodeRowPayload = {
   slug: true,
   visibility: true,
   isVerified: true,
+  verificationStatus: true,
   bio: true,
   userId: true,
   user: {
@@ -67,7 +69,6 @@ export const lineageNodeRowPayload = {
         select: {
           id: true,
           awardedAt: true,
-          notes: true,
           location: true,
           rank: {
             select: {
@@ -120,6 +121,7 @@ export const lineageRelationshipPayload = {
   type: true,
   description: true,
   isVerified: true,
+  verificationStatus: true,
   startedAt: true,
   endedAt: true,
   fromNodeId: true,
@@ -140,6 +142,7 @@ export const lineageNodeProfilePayload = {
   slug: true,
   visibility: true,
   isVerified: true,
+  verificationStatus: true,
   bio: true,
   userId: true,
   createdAt: true,
@@ -151,7 +154,6 @@ export const lineageNodeProfilePayload = {
         select: {
           id: true,
           awardedAt: true,
-          notes: true,
           location: true,
           rank: {
             select: {

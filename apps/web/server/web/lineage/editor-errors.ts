@@ -1,0 +1,16 @@
+export const LINEAGE_EDITOR_ERROR = {
+  TREE_NOT_FOUND: "Tree not found or does not belong to this brand.",
+  MEMBER_NOT_FOUND: "Member is not part of this lineage tree.",
+  PARENT_NOT_FOUND: "Parent member is not part of this lineage tree.",
+  PROMOTER_NOT_FOUND: "Promoter member is not part of this lineage tree.",
+  RANK_AWARD_NOT_FOUND: "Rank award is not attached to this lineage member.",
+  GROUP_NOT_FOUND: "Visual group is not part of this lineage tree.",
+  GROUP_PARENT_MISMATCH: "Visual group parent does not match the selected parent.",
+  EDITOR_ACCESS_REQUIRED: "Lineage tree editor access required.",
+  NODE_EDITOR_CANNOT_REPARENT: "Node editors cannot change lineage placement.",
+  BRANCH_EDITOR_CANNOT_DETACH: "Branch editors cannot detach a member from the assigned branch.",
+  BRANCH_SCOPE_REQUIRED: "Requested lineage change is outside the assigned branch scope.",
+  PARENT_CYCLE: "Selected parent would create a lineage cycle.",
+  SELF_PROMOTION: "A member cannot promote themselves.",
+  CLEAR_PROMOTER_REQUIRES_TREE_EDITOR: "Clearing a promoter requires tree editor access.",
+} as const

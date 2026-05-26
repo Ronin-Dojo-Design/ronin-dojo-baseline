@@ -1,0 +1,146 @@
+"use client"
+
+import { CheckIcon, ShieldOffIcon, TriangleAlertIcon } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
+import { Badge } from "~/components/common/badge"
+import { H6 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
+import { Separator } from "~/components/common/separator"
+import { Stack } from "~/components/common/stack"
+import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
+
+type RankAward = LineageNodeProfile["user"]["rankAwards"][number]
+
+function initials(name: string | null | undefined): string {
+  if (!name) return "?"
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
+}
+
+function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return "Unknown date"
+  const d = typeof date === "string" ? new Date(date) : date
+  if (Number.isNaN(d.getTime())) return "Unknown date"
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+}
+
+function sourceBadge(profile: LineageNodeProfile) {
+  if (profile.verificationStatus === "DISPUTED") {
+    return (
+      <Badge variant="danger" size="sm" prefix={<TriangleAlertIcon />}>
+        Disputed source
+      </Badge>
+    )
+  }
+  if (profile.verificationStatus === "VERIFIED" || profile.isVerified) {
+    return (
+      <Badge variant="success" size="sm" prefix={<CheckIcon />}>
+        Verified source
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
+      Unverified source
+    </Badge>
+  )
+}
+
+export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile }) {
+  const awards = profile.user.rankAwards
+
+  if (awards.length === 0) {
+    return (
+      <Stack direction="column" size="sm" className="w-full py-8 text-center">
+        <H6 render={props => <h6 {...props}>{props.children}</h6>}>No rank history yet</H6>
+        <Note>Rank awards have not been added to this profile.</Note>
+      </Stack>
+    )
+  }
+
+  return (
+    <Stack direction="column" size="md" className="w-full">
+      <Stack direction="column" size="xs">
+        <H6
+          render={props => <h6 {...props}>{props.children}</h6>}
+          className="text-muted-foreground uppercase tracking-wide"
+        >
+          Rank History
+        </H6>
+        <Stack size="xs" wrap>
+          {sourceBadge(profile)}
+          <Badge variant="soft" size="sm">
+            {awards.length} award{awards.length === 1 ? "" : "s"}
+          </Badge>
+        </Stack>
+        <Note className="text-xs">
+          Verification is currently tracked on the lineage profile and relationships, not on
+          individual rank awards.
+        </Note>
+      </Stack>
+
+      <Separator />
+
+      <Stack direction="column" size="sm">
+        {awards.map(award => (
+          <RankAwardRow key={award.id} award={award} />
+        ))}
+      </Stack>
+    </Stack>
+  )
+}
+
+function RankAwardRow({ award }: { award: RankAward }) {
+  return (
+    <article className="rounded-md border bg-background p-3">
+      <Stack direction="column" size="sm">
+        <Stack size="sm" wrap>
+          {award.rank.colorHex && (
+            <span
+              aria-hidden
+              className="inline-block h-3 w-6 rounded-sm border bg-(--rank-color)"
+              style={{ "--rank-color": award.rank.colorHex } as React.CSSProperties}
+            />
+          )}
+          <span className="font-medium text-sm">{award.rank.name}</span>
+          {award.rank.shortName && (
+            <Badge variant="soft" size="sm">
+              {award.rank.shortName}
+            </Badge>
+          )}
+          {award.rank.rankSystem.discipline?.name && (
+            <Badge variant="outline" size="sm">
+              {award.rank.rankSystem.discipline.name}
+            </Badge>
+          )}
+        </Stack>
+
+        <Stack size="xs" wrap className="text-sm text-muted-foreground">
+          <span>{formatDate(award.awardedAt)}</span>
+          {award.location && (
+            <>
+              <span aria-hidden>&middot;</span>
+              <span>{award.location}</span>
+            </>
+          )}
+        </Stack>
+
+        {award.awardedBy ? (
+          <Stack size="sm">
+            <Avatar className="size-7">
+              {award.awardedBy.image && (
+                <AvatarImage src={award.awardedBy.image} alt={award.awardedBy.name ?? "Awarder"} />
+              )}
+              <AvatarFallback>{initials(award.awardedBy.name)}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{award.awardedBy.name ?? "Unnamed awarder"}</span>
+          </Stack>
+        ) : (
+          <Note className="text-xs">Awarding instructor not resolved.</Note>
+        )}
+      </Stack>
+    </article>
+  )
+}

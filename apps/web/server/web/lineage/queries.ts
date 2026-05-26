@@ -53,6 +53,23 @@ import { db } from "~/services/db"
  */
 const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
 
+const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
+  node.user.directoryProfile?.showRanks !== false
+
+const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
+  if (shouldShowPublicRanks(node)) {
+    return node
+  }
+  return { ...node, user: { ...node.user, rankAwards: [] } }
+}
+
+const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
+  if (shouldShowPublicRanks(profile)) {
+    return profile
+  }
+  return { ...profile, user: { ...profile.user, rankAwards: [] } }
+}
+
 /**
  * Resolve the visibility scope for a viewer.
  *
@@ -101,13 +118,14 @@ export const getLineageRootForUser = async (userId: string): Promise<LineageNode
   cacheTag("lineage", `lineage-root-${userId}`)
   cacheLife("minutes")
 
-  return db.lineageNode.findFirst({
+  const node = await db.lineageNode.findFirst({
     where: {
       userId,
       visibility: { in: PUBLIC_VISIBILITY_SCOPE },
     },
     select: lineageNodeRowPayload,
   })
+  return node ? redactLineageNodeRowRanks(node) : null
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +171,7 @@ export const getLineageTreeForUser = async (
 
   const nodeMap = new Map<string, LineageNodeRow>()
   const edgeMap = new Map<string, LineageRelationshipRow>()
-  nodeMap.set(root.id, root)
+  nodeMap.set(root.id, redactLineageNodeRowRanks(root))
 
   let frontier: string[] = [root.id]
 
@@ -191,7 +209,7 @@ export const getLineageTreeForUser = async (
         select: lineageNodeRowPayload,
       })
       for (const n of neighbours) {
-        nodeMap.set(n.id, n)
+        nodeMap.set(n.id, redactLineageNodeRowRanks(n))
         visibleNeighbourIds.add(n.id)
       }
     }
@@ -237,13 +255,14 @@ export const getLineageTreeForUser = async (
  */
 export const getLineageProfile = cache(
   async (nodeId: string): Promise<LineageNodeProfile | null> => {
-    return db.lineageNode.findFirst({
+    const profile = await db.lineageNode.findFirst({
       where: {
         id: nodeId,
         visibility: { in: PUBLIC_VISIBILITY_SCOPE },
       },
       select: lineageNodeProfilePayload,
     })
+    return profile ? redactLineageNodeProfileRanks(profile) : null
   },
 )
 
@@ -270,7 +289,12 @@ export const getLineageProfilesByIds = cache(
       select: lineageNodeProfilePayload,
     })
 
-    return Object.fromEntries(profiles.map(profile => [profile.id, profile]))
+    return Object.fromEntries(
+      profiles.map(profile => {
+        const publicProfile = redactLineageNodeProfileRanks(profile)
+        return [publicProfile.id, publicProfile]
+      }),
+    )
   },
 )
 
@@ -318,12 +342,14 @@ export const materializeLineageTreeResult = (
     }
   }
 
-  const normalizedMembers = visibleMembers.map(member =>
-    member.primaryVisualParentMemberId &&
-    !survivingMemberIds.has(member.primaryVisualParentMemberId)
-      ? { ...member, primaryVisualParentMemberId: null }
-      : member,
-  )
+  const normalizedMembers = visibleMembers.map(member => {
+    const normalizedMember =
+      member.primaryVisualParentMemberId &&
+      !survivingMemberIds.has(member.primaryVisualParentMemberId)
+        ? { ...member, primaryVisualParentMemberId: null }
+        : member
+    return { ...normalizedMember, node: redactLineageNodeRowRanks(normalizedMember.node) }
+  })
 
   const normalizedGroups = tree.visualGroups
     .filter(group => referencedGroupIds.has(group.id))

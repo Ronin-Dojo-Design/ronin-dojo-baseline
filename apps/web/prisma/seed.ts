@@ -723,7 +723,7 @@ async function main() {
     return rs
   }
 
-  // --- 1. BJJ — IBJJF Belt System (30 ranks) ---
+  // --- 1. BJJ — IBJJF Belt System (31 ranks) ---
   const bjjRanks: Array<{ name: string; shortName: string; colorHex: string }> = []
   const bjjBelts = [
     { belt: "White Belt", prefix: "W", hex: "#FFFFFF" },
@@ -742,6 +742,7 @@ async function main() {
     }
   }
   bjjRanks.push(
+    { name: "Black Belt", shortName: "BK0", colorHex: "#000000" },
     { name: "Black Belt - 1st Degree", shortName: "BK1", colorHex: "#000000" },
     { name: "Black Belt - 2nd Degree", shortName: "BK2", colorHex: "#000000" },
     { name: "Black Belt - 3rd Degree", shortName: "BK3", colorHex: "#000000" },
@@ -754,7 +755,7 @@ async function main() {
     { name: "Red Belt - 10th Degree (Grand Master)", shortName: "R10", colorHex: "#FF0000" },
   )
   await seedRankSystem(bjj.id, "IBJJF Belt System", "BELT", true, null, bjjRanks)
-  console.log("Created BJJ rank system (30 ranks)")
+  console.log("Created BJJ rank system (31 ranks)")
 
   // --- 2. Eskrima — PIMA Denver Doce Pares (GM Steve Wolk) (22 ranks) ---
   const pimaDenverRanks: Array<{ name: string; shortName: string }> = []
