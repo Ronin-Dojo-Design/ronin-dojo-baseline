@@ -15,7 +15,7 @@ const transitionDsrSchema = z.object({
  * PENDING → IN_PROGRESS → FULFILLED | REJECTED
  * REJECTED is terminal. FULFILLED is terminal.
  */
-export const DSR_VALID_TRANSITIONS: Record<string, string[]> = {
+const DSR_VALID_TRANSITIONS: Record<string, string[]> = {
   PENDING: ["IN_PROGRESS", "REJECTED"],
   IN_PROGRESS: ["FULFILLED", "REJECTED"],
   FULFILLED: [],

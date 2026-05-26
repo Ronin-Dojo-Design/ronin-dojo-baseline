@@ -13,10 +13,18 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
-import {
-  DSR_VALID_TRANSITIONS,
-  transitionDataSubjectRequestStatus,
-} from "~/server/admin/privacy/actions"
+import { transitionDataSubjectRequestStatus } from "~/server/admin/privacy/actions"
+
+/**
+ * Valid DSR status transitions (duplicated from server module because
+ * `"use server"` modules only export action functions to the client).
+ */
+const DSR_VALID_TRANSITIONS: Record<string, string[]> = {
+  PENDING: ["IN_PROGRESS", "REJECTED"],
+  IN_PROGRESS: ["FULFILLED", "REJECTED"],
+  FULFILLED: [],
+  REJECTED: [],
+}
 
 type DsrForActions = {
   id: string

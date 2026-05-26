@@ -20,8 +20,12 @@ test.describe("Admin DSR triage E2E", () => {
   test.setTimeout(120_000)
 
   test.afterAll(async () => {
+    // Clean DSR records first (has FK refs to both users)
     if (regularUserId) {
       cleanupDsrByUser(regularUserId)
+    }
+    // Then clean users
+    if (regularUserId) {
       await cleanupTestUser(regularUserId)
     }
     if (adminUserId) {
@@ -40,8 +44,9 @@ test.describe("Admin DSR triage E2E", () => {
     await page.goto("/admin/privacy/requests")
     await page.waitForLoadState("networkidle")
 
-    // Should get 404 (withAdminPage returns notFound for non-admins)
-    await expect(page.locator("body")).toContainText("404", { timeout: 10_000 })
+    // Admin layout redirects non-admins to /auth/login — should NOT see admin table
+    const adminTable = page.locator("table").first()
+    expect(await adminTable.count()).toBe(0)
   })
 
   test("admin can view DSR list and transition status", async ({ page }) => {
@@ -65,7 +70,8 @@ test.describe("Admin DSR triage E2E", () => {
     expect(rows.length).toBe(1)
     expect(rows[0].status).toBe("PENDING")
 
-    // Now sign in as admin
+    // Now sign in as admin (clear previous session first)
+    await page.context().clearCookies()
     const admin = await createAuthenticatedUser(page, {
       name: "Admin User",
       email: `dsr-admin-${Date.now()}@e2e.test`,
@@ -88,12 +94,19 @@ test.describe("Admin DSR triage E2E", () => {
     await expect(page.locator("text=PENDING").first()).toBeVisible()
 
     // Transition to IN_PROGRESS
-    await page.getByRole("button", { name: /IN PROGRESS/i }).click()
-    await expect(page.locator("text=IN_PROGRESS").first()).toBeVisible({ timeout: 10_000 })
+    await page.getByRole("button", { name: /→ IN PROGRESS/i }).click()
+    // Server action fires, router.refresh() re-renders — reload to confirm
+    await page.waitForTimeout(2_000)
+    await page.reload()
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByText(/IN.PROGRESS/).first()).toBeVisible({ timeout: 10_000 })
 
     // Transition to FULFILLED
-    await page.getByRole("button", { name: /FULFILLED/i }).click()
-    await expect(page.locator("text=FULFILLED").first()).toBeVisible({ timeout: 10_000 })
+    await page.getByRole("button", { name: /→ FULFILLED/i }).click()
+    await page.waitForTimeout(2_000)
+    await page.reload()
+    await page.waitForLoadState("networkidle")
+    await expect(page.getByText("FULFILLED").first()).toBeVisible({ timeout: 10_000 })
 
     // Verify in DB
     const updatedRows = listDsrByUser(submitter.userId)

@@ -62,6 +62,10 @@ async function createUser(options: AuthUserOptions = {}) {
 }
 
 async function cleanupUser(userId: string) {
+  await prisma.auditLog.deleteMany({ where: { userId } })
+  await prisma.dataSubjectRequest.deleteMany({
+    where: { OR: [{ userId }, { fulfilledBy: userId }] },
+  })
   await prisma.registrationEntry.deleteMany({ where: { registration: { userId } } })
   await prisma.registration.deleteMany({ where: { userId } })
   await prisma.weighInRecord.deleteMany({ where: { userId } })
