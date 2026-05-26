@@ -458,28 +458,97 @@ If any of the following surface during execution, log under `Open decisions / bl
 
 ## Next session
 
-*Final pick TBD at next bow-in. Candidates, in priority order:*
+Locked at SESSION_0261 close: **15-session BBL launch roadmap** (0262 → 0276). Operator answered all 10 Petey questions; decisions captured here and in the session-stub blocks below.
 
-### Candidate Bracket-Doug (new) — bracket-viewer hydration mismatch fix
+### Locked BBL launch plan (0262 → 0276)
 
-Dedicated Doug session to fix `bracket-viewer.tsx:425` hydration mismatch (SESSION_0258_FINDING_01 / SESSION_0261_FINDING_02). The bracket-spec Playwright test has flaked across SESSIONS_0258 (failed) → 0259 (passed 29/29) → 0260 (re-failed). Today's session's edits to `bracket-viewer.tsx` only touched the helper functions (lines 62-72), so the line-425 Button render path is unchanged. Recommend:
+| # | Session | Goal (one line) |
+| --- | --- | --- |
+| 0262 | **Doug bracket-spec hydration fix** | Fix `bracket-viewer.tsx:425` hydration mismatch (SESSION_0258_FINDING_01 / 0261_FINDING_02). Unblock CI. |
+| 0263 | **Lineage editor audit + monorepo recon** | Walk every story in `lineage-v1-acceptance-test-plan.md`; produce sized gap backlog. **Also recon ronin-dojo-monorepo** (`wordpress/blackbeltlegacy-theme/`, `src/personas/lineage-sample.json`, sprints `WO-65/67/68/69`) for reusable lineage data + assets. |
+| 0264 | **Lineage editor gap fixes (round 1)** | Close P0/P1 gaps from 0263 audit. |
+| 0265 | **Rigan Machado coral-belt seed + hand-author** | Hand-author Rigan's Coral Belt cohort + immediate black belts via editor. Pull from monorepo's `lineage-sample.json` where applicable. |
+| 0266 | **BBL subscription tiers (UserEntitlement + Stripe)** | Three Stripe products (BBL_FREE / BBL_PREMIUM / BBL_ELITE) + UserEntitlement codes + subscription action + welcome emails. |
+| 0267 | **Tier-gated UI + verified rank badges + claimant system polish** | Premium content visibility checks on profile/lineage drawer; "Upgrade to Premium" UX with toaster on gate-hit. Verified rank badges (partially present today; harden). |
+| 0268 | **Profile claim workflow end-to-end** | Submit evidence → admin review → approved-claimant edit rights. Email lifecycle + admin UI. |
+| 0269 | **Tournament wins per belt + belt photos** | New profile section reading `FightRecord` joined to `RankAward` windows; belt photo uploads gated to Premium. Storage decision (Vercel Blob vs S3) in plan. |
+| 0270 | **Connection engine** | New relationships: `TRAINED_AT(user, org, dateRange)`, `TRAINED_WITH(userA, userB, context)`, plus harden existing `PROMOTED_BY`. Public display on profile. |
+| 0271 | **Signup + onboarding wizard (Q5=C, auto-claim-prompt)** | Tier pick → signup → match-placeholder by name/school → optional claim prompt. Better Auth integration. |
+| 0272 | **Printful merch v1 — single BBL storefront (Q7=A)** | Stripe product mirror + Printful order webhook + school-logo selection at checkout. Revenue to BBL operator. |
+| 0273 | **blackbeltlegacy.com DNS cutover + brand routing** | Add brand to Vercel domain config; verify BBL content gates per-brand. End of "Phase 1 — public BBL on new platform." |
+| 0274 | **Per-profile merch — Elite-tier monetization (Q7=B)** | Each Elite-tier profile gets a merch page with school logo. Revenue split BBL + profile owner. |
+| 0275 | **Per-school merch (Q7=C)** | Per-`Organization` merch page when school owner enables. Closes the Q7 trilogy. |
+| 0276 | **BBL launch polish + SEO + copy** | Marketing-ready surface for public launch. Desi UX pass + Brandon copy + hero/about/legal pages. |
 
-1. Reproduce the failure deterministically (run `bunx playwright test e2e/admin/bracket.spec.ts` in isolation 10× to confirm flake vs. broken).
-2. Inspect the line-425 Button render path for server/client divergence (likely a Date-format or random-id source).
-3. Wrap the offending render in `useEffect` + state, or use `suppressHydrationWarning` with a justification comment.
-4. Confirm full 29-spec passes 3× in a row.
+**Total: 15 sessions.** Phase 1 (public BBL live on new platform): 0262–0273 = 12 sessions. Phase 2 (merch + polish): 0274–0276 = 3 sessions.
 
-### Candidate C (carried from SESSION_0258/0259/0260) — Premium lineage listing parity
+### Locked decisions (from grill-me Q1–Q10)
 
-Unchanged. See SESSION_0258's `## Next session` for scope shape. Three baselines (Prisma + Stripe + email).
+- **Q1 = A (big-bang cutover):** new BBL stands up alone; DNS-cut from old WP at 0273.
+- **Q2 = hybrid:** hand-author + recon ronin-dojo-monorepo for existing lineage data. Already confirmed `src/personas/lineage-sample.json` + Rigan Machado badge SVG + WP theme exist; 0263 will catalogue what's reusable.
+- **Q3 = approved tier split** (read=free, owner-content=premium, monetization=elite) + verified rank badges + claimant system (some already present).
+- **Q4 = approved:** tournament-wins-per-belt is a derived view over `FightRecord` + `RankAward` windows. No new schema.
+- **Q5 = C:** signup wizard auto-prompts claim flow when a placeholder profile matches by name/school.
+- **Q6 = no new role primitives.** UserEntitlement for tier gates (per ADR-0019); LineageTreeAccess for tree edit perms (already in schema).
+- **Q7 = A → B → C:** single BBL storefront (0272) → per-profile Elite-tier merch (0274) → per-school merch (0275).
+- **Q8 = approved email lifecycle:** subscription welcome/cancel/renew/payment-fail, claim submitted/approved/denied/evidence-requested, "added to lineage tree," merch order/shipping. Builds on `lib/notifications.ts` + Resend infra (MB-015-verified).
+- **Q9 = A:** audit existing lineage editor first (one session) before building on top. SESSION_0263.
+- **Q10 = 15-session plan approved** (added one session to split Q7 merch into A/B/C).
 
-### Candidate D (carried from SESSION_0260) — ADR-numbering collisions cleanup
+### Pre-staged session stubs
 
-ADR 0012 (admin-crud-routing-pattern vs tier-auto-grant) and ADR 0016 (lineage-promotion-source-of-truth vs abandoned 0016) ambiguous in cross-references. Mechanical fix: renumber with backlink sweep, or document "latest wins" in `decisions/README.md`.
+#### SESSION_0262 stub — Doug bracket-spec hydration fix
 
-### Candidate UI-Hygiene (new, low priority) — RHF discriminated-union path inference cleanup
+- **Goal:** Fix `bracket-viewer.tsx:425` hydration mismatch causing `e2e/admin/bracket.spec.ts:27` to fail in SESSION_0258 → green in 0259 → fail again in 0260 → fail again in 0261. Genuinely flaky/broken at module load.
+- **Inputs to read at bow-in:**
+  - `apps/web/app/admin/tournaments/_components/bracket-viewer.tsx` line 425 specifically — the Button render path that fails hydration.
+  - `apps/web/e2e/admin/bracket.spec.ts` — the failing assertion.
+  - SESSION_0258 / 0259 / 0260 / 0261 Doug verification sections — the flake history.
+- **Steps:**
+  1. Reproduce: `bunx playwright test e2e/admin/bracket.spec.ts --repeat-each=10 --workers=1` to determine flake vs. broken.
+  2. Inspect the line-425 Button — typical sources of hydration mismatch: `Date.now()` / `Math.random()` / `new Date().toLocaleString()` / `typeof window` checks / unkeyed list children / context that differs server-vs-client.
+  3. Fix: wrap dynamic value in `useEffect` + state, or use `suppressHydrationWarning` with an inline justification comment.
+  4. Confirm 3× passes in a row; full 29-spec passes ≥27/29 (today's "isolated flake-pass" set).
+- **Done:** Bracket-spec passes in CI for the next 3 sessions consecutively.
+- **Risk:** Hydration fixes that mask symptoms; demand a *cause* explanation in the SESSION_0262 closure.
 
-Address SESSION_0261_FINDING_01: the 5 `as any` casts in `walk-in-registration-dialog.tsx`. Lift the recipient-kind toggle into form state via `useFormContext` + `useController`. Adds a `<recipient.kind>` field; the schema's discriminator-narrowing should then work without the casts. Small, isolated; good filler.
+#### SESSION_0263 stub — Lineage editor audit + monorepo BBL recon
+
+- **Goal:** Two parallel passes — (1) audit current lineage editor against `lineage-v1-acceptance-test-plan.md` and produce a sized gap backlog; (2) recon ronin-dojo-monorepo for existing BBL lineage data + assets that the new platform can reuse instead of authoring from scratch.
+- **Inputs to read at bow-in:**
+  - `docs/architecture/lineage/lineage-v1-acceptance-test-plan.md` — the audit checklist.
+  - `docs/architecture/lineage/lineage-tree-v1-requirements.md` — what v1 was supposed to be.
+  - `docs/architecture/lineage/lineage-editor-permissions-spec.md` — ACL semantics.
+  - `docs/architecture/lineage/lineage-editor-implementation-task-list.md` — what was scoped to be built.
+  - `apps/web/app/admin/lineage/` + `apps/web/server/admin/lineage/` — current code surface (whatever's actually there).
+  - **Monorepo recon paths** (read-only):
+    - `/Users/brianscott/dev/ronin-dojo-monorepo/src/personas/lineage-sample.json` — sample lineage data.
+    - `/Users/brianscott/dev/ronin-dojo-monorepo/wordpress/blackbeltlegacy-theme/` — live WP theme; check `functions.php` for custom post types, lineage shortcodes, ACF fields.
+    - `/Users/brianscott/dev/ronin-dojo-monorepo/dashboard/sprints/WO-65-BBL-Production-Polish`, `WO-67-BBL-Production-Launch`, `WO-68-BBL-API-Plugin`, `WO-69-BBL-Auth-Payment-Fix` — sprint history.
+    - `/Users/brianscott/dev/ronin-dojo-monorepo/RoninDashboard/GOALS/BBL` — strategic goals.
+    - `/Users/brianscott/dev/ronin-dojo-monorepo/public/brand/blackbeltlegacy/` — brand assets (Rigan Machado badge SVG + others).
+- **Steps:**
+  1. **Audit pass (Doug):** walk each acceptance story; mark Done / Partial / Stub / Missing. Output is a gap-fix table sized P0/P1/P2.
+  2. **Recon pass (Cody, parallel subagent):** catalogue every reusable artifact from the monorepo paths. Output: a one-page "Asset inventory" listing data files (with row counts/schemas), brand assets (with intended use), and code patterns worth porting (NOT a code port — just identification).
+  3. **Synthesize (Petey):** produce SESSION_0264's task plan as a follow-on stub.
+- **Done:** Gap backlog + asset inventory both committed under `docs/architecture/lineage/SESSION_0263_audit_report.md` (new) + `docs/architecture/lineage/SESSION_0263_bbl_recon.md` (new).
+- **Risk:** Audit could surface so many gaps that SESSION_0264 needs to be split. Acceptable — the plan can absorb that.
+
+#### SESSION_0264 stub — Lineage editor gap fixes (round 1)
+
+- **Goal:** Close P0/P1 gaps from SESSION_0263's audit. Specific tasks TBD until 0263 reports back.
+- **Inputs to read at bow-in:**
+  - `docs/architecture/lineage/SESSION_0263_audit_report.md` (created by 0263).
+  - `docs/architecture/lineage/SESSION_0263_bbl_recon.md` (created by 0263).
+  - SESSION_0263's `## Next session` block (which will contain a pre-staged task plan).
+- **Steps:** TBD at SESSION_0263 close.
+- **Done:** All P0 gaps closed. P1 gaps closed unless they exceed a one-session budget.
+- **Risk:** Out-of-scope edits to lineage editor — strict scope-guard against rewriting unrelated lineage surfaces.
+
+### Carried (not in BBL roadmap but still backlogged)
+
+- **Candidate UI-Hygiene** (SESSION_0261_FINDING_01) — clean up the 5 `as any` casts in `walk-in-registration-dialog.tsx`. Low priority; can slot as filler.
+- **Candidate D (carried from SESSION_0260)** — ADR-numbering collisions cleanup. Low priority; mechanical.
 
 ## Status
 
