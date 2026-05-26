@@ -1,5 +1,3 @@
-"use server"
-
 import { tryCatch } from "@dirstack/utils"
 import { Ratelimit } from "@upstash/ratelimit"
 import { headers } from "next/headers"
@@ -69,6 +67,15 @@ const limiters = redis
         redis,
         analytics: true,
         limiter: Ratelimit.slidingWindow(10, "1 m"), // 10 trial booking mutations per minute per actor
+      }),
+      // @added SESSION_0258 (2026-05-25) — keyed on `email:<template>:<recipient>`,
+      // shared across every helper in `lib/notifications.ts`. Catches duplicate-fire
+      // patterns (rapid resubmits, double-click on admin transition buttons, webhook
+      // retries) without blocking the action itself; fail-open in dev when redis is null.
+      email_notify: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(3, "5 m"), // 3 sends of same template to same recipient per 5 min
       }),
     }
   : null

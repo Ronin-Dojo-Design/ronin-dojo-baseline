@@ -7,6 +7,7 @@ import {
   notifyAdminOfPremiumTool,
   notifyCustomerOfMerchOrder,
   notifySubmitterOfPremiumTool,
+  notifyUserOfTournamentRegistration,
 } from "~/lib/notifications"
 import { upsertStripeCustomerMapping } from "~/server/web/billing/stripe-customers"
 import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
@@ -401,11 +402,55 @@ async function fulfillTournamentRegistration(session: Stripe.Checkout.Session) {
         return {
           type: "registered" as const,
           registrationId: registration.id,
+          divisionNames: divisions.map(d => d.name),
+          snapshotRankName,
+          snapshotOrgName,
         }
       },
       { isolationLevel: "Serializable" },
     ),
   )
+
+  if (result.type === "registered") {
+    // Fire-and-forget confirmation email. Webhook ack is independent of email
+    // success; any Resend failure is logged but never causes Stripe to retry the
+    // webhook (which would risk double-creating the registration).
+    after(async () => {
+      try {
+        const [tournament, registrant] = await Promise.all([
+          db.tournament.findUnique({
+            where: { id: tournamentId },
+            select: { name: true },
+          }),
+          db.user.findUnique({
+            where: { id: userId },
+            select: { email: true, name: true },
+          }),
+        ])
+
+        if (!tournament || !registrant?.email) return
+
+        await notifyUserOfTournamentRegistration({
+          to: registrant.email,
+          firstName: registrant.name?.split(" ")[0] ?? null,
+          tournamentName: tournament.name,
+          divisionName: result.divisionNames.join(", "),
+          rank: result.snapshotRankName,
+          orgName: result.snapshotOrgName,
+          paymentStatus: "PAID",
+        })
+      } catch (error) {
+        console.error("[notify] tournament registration email failed", {
+          registrationId: result.registrationId,
+          tournamentId,
+          userId,
+          error,
+        })
+      }
+    })
+
+    return
+  }
 
   if (result.type !== "refund-needed") return
 

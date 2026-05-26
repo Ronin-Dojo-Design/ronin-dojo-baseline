@@ -1,20 +1,19 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
+import type { DataSubjectRequestType } from "~/.generated/prisma/client"
 import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 
-const TYPE_LABEL: Record<DsrType, string> = {
+const TYPE_LABEL: Record<DataSubjectRequestType, string> = {
   EXPORT: "data export",
   DELETE: "account deletion",
   RECTIFY: "data rectification",
 }
 
-type DsrType = "EXPORT" | "DELETE" | "RECTIFY"
-
 type EmailProps = EmailWrapperProps & {
   firstName?: string | null
   requestId: string
-  type: DsrType
+  type: DataSubjectRequestType
   submittedAt: Date
 }
 

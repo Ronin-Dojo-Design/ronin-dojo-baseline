@@ -8,8 +8,7 @@
 import { after } from "next/server"
 import * as z from "zod"
 import { Prisma } from "~/.generated/prisma/client"
-import { EmailInviteNotification } from "~/emails/invite-notification"
-import { sendEmail } from "~/lib/email"
+import { notifyUserOfInvite } from "~/lib/notifications"
 import { adminActionClient } from "~/lib/safe-actions"
 import { inviteSchema } from "~/server/admin/invites/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
@@ -33,19 +32,20 @@ export const createInvite = adminActionClient
         tags: ["invites", `invite-${invite.id}`],
       })
 
-      // Send invite email if target email is in meta
+      // Send invite email if target email is in meta. Wrapped in try/catch so a
+      // Resend failure cannot mask a successful invite creation in the dashboard.
       const targetEmail = (meta as Record<string, unknown> | null)?.email as string | undefined
       if (targetEmail) {
-        await sendEmail({
-          to: targetEmail,
-          subject: `You're invited to join ${invite.organization.name}`,
-          react: EmailInviteNotification({
+        try {
+          await notifyUserOfInvite({
             to: targetEmail,
             organizationName: invite.organization.name,
             inviteCode: invite.code,
             expiresAt: invite.expiresAt,
-          }),
-        })
+          })
+        } catch (error) {
+          console.error("[notify] invite email failed", { inviteId: invite.id, error })
+        }
       }
     })
 

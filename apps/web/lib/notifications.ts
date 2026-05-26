@@ -1,6 +1,7 @@
 import {
   type DataSubjectRequestStatus,
   type DataSubjectRequestType,
+  type MembershipStatus,
   type Tool,
   ToolStatus,
 } from "~/.generated/prisma/client"
@@ -8,14 +9,39 @@ import { siteConfig } from "~/config/site"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
+import { EmailInviteNotification } from "~/emails/invite-notification"
+import { EmailMembershipStatusChange } from "~/emails/membership-status-change"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
 import { EmailMerchShipmentNotification } from "~/emails/merch-shipment-notification"
 import { EmailSubmission } from "~/emails/submission"
 import { EmailSubmissionPremium } from "~/emails/submission-premium"
 import { EmailSubmissionPublished } from "~/emails/submission-published"
 import { EmailSubmissionScheduled } from "~/emails/submission-scheduled"
+import {
+  EmailTournamentRegistrationConfirmation,
+  type TournamentRegistrationPaymentStatus,
+} from "~/emails/tournament-registration-confirmation"
 import { sendEmail } from "~/lib/email"
+import { isRateLimited } from "~/lib/rate-limiter"
 import { countSubmittedTools } from "~/server/web/tools/queries"
+
+/**
+ * Returns true when this (template, recipient) pair has been sent too frequently and the
+ * caller should silently skip.
+ *
+ * @added   SESSION_0258 (2026-05-25) — addresses SESSION_0257 Finding 01.
+ * @why     Duplicate-suppression at the helper boundary: catches double-clicks on admin
+ *          transition buttons, rapid resubmits, and Stripe-webhook retries without
+ *          requiring every call-site to coordinate. Fail-open if redis isn't configured
+ *          (dev), so it cannot break local flows.
+ */
+const shouldSkipForRateLimit = async (key: string): Promise<boolean> => {
+  const limited = await isRateLimited(`email:${key}`, "email_notify")
+  if (limited) {
+    console.warn(`[notify] rate-limited skip: ${key}`)
+  }
+  return limited
+}
 
 /**
  * Notify the submitter of a tool submission
@@ -231,6 +257,8 @@ export type DsrSubmissionConfirmationParams = {
 }
 
 export const notifyUserOfDsrSubmission = async (params: DsrSubmissionConfirmationParams) => {
+  if (await shouldSkipForRateLimit(`dsr-submission:${params.to}`)) return
+
   const subject = `We've received your ${DSR_TYPE_SUBJECT_LABEL[params.type]} request`
 
   return await sendEmail({
@@ -257,6 +285,8 @@ export type DsrStatusUpdateParams = {
 }
 
 export const notifyUserOfDsrStatusUpdate = async (params: DsrStatusUpdateParams) => {
+  if (await shouldSkipForRateLimit(`dsr-status:${params.to}:${params.newStatus}`)) return
+
   const subject = `Update on your ${DSR_TYPE_SUBJECT_LABEL[params.type]} request`
 
   return await sendEmail({
@@ -270,6 +300,107 @@ export const notifyUserOfDsrStatusUpdate = async (params: DsrStatusUpdateParams)
       previousStatus: params.previousStatus,
       newStatus: params.newStatus,
       notes: params.notes,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Membership lifecycle notifications (SESSION_0258 — admin transitions only;
+// self-service + system-driven paths deferred to SESSION_0259)
+// ---------------------------------------------------------------------------
+
+export type MembershipStatusChangeParams = {
+  to: string
+  firstName?: string | null
+  organizationName: string
+  disciplineName: string
+  previousStatus: MembershipStatus
+  newStatus: MembershipStatus
+}
+
+export const notifyMemberOfMembershipStatusChange = async (
+  params: MembershipStatusChangeParams,
+) => {
+  if (await shouldSkipForRateLimit(`membership-status:${params.to}:${params.newStatus}`)) return
+
+  const subject = `Your ${params.organizationName} membership is now ${params.newStatus.toLowerCase()}`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailMembershipStatusChange({
+      to: params.to,
+      firstName: params.firstName,
+      organizationName: params.organizationName,
+      disciplineName: params.disciplineName,
+      previousStatus: params.previousStatus,
+      newStatus: params.newStatus,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Invite notifications (SESSION_0258 — refactored from inline sendEmail in
+// server/admin/invites/actions.ts onto this helper)
+// ---------------------------------------------------------------------------
+
+export type InviteNotificationParams = {
+  to: string
+  organizationName: string
+  inviteCode: string
+  expiresAt?: Date | null
+}
+
+export const notifyUserOfInvite = async (params: InviteNotificationParams) => {
+  if (await shouldSkipForRateLimit(`invite:${params.to}:${params.inviteCode}`)) return
+
+  const subject = `You're invited to join ${params.organizationName}`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailInviteNotification({
+      to: params.to,
+      organizationName: params.organizationName,
+      inviteCode: params.inviteCode,
+      expiresAt: params.expiresAt,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Tournament registration notifications (SESSION_0258 — fired from the Stripe
+// webhook fulfillment path after registration row is created; admin walk-in
+// path deferred to SESSION_0259 since no admin-creation action exists today)
+// ---------------------------------------------------------------------------
+
+export type TournamentRegistrationParams = {
+  to: string
+  firstName?: string | null
+  tournamentName: string
+  divisionName: string
+  rank?: string | null
+  orgName?: string | null
+  paymentStatus?: TournamentRegistrationPaymentStatus
+}
+
+export const notifyUserOfTournamentRegistration = async (params: TournamentRegistrationParams) => {
+  if (await shouldSkipForRateLimit(`tournament-registration:${params.to}:${params.tournamentName}`))
+    return
+
+  const subject = `You're registered for ${params.tournamentName}`
+
+  return await sendEmail({
+    to: params.to,
+    subject,
+    react: EmailTournamentRegistrationConfirmation({
+      to: params.to,
+      firstName: params.firstName,
+      tournamentName: params.tournamentName,
+      divisionName: params.divisionName,
+      rank: params.rank,
+      orgName: params.orgName,
+      paymentStatus: params.paymentStatus,
     }),
   })
 }

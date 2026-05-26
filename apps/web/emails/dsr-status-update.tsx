@@ -1,30 +1,28 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
+import type { DataSubjectRequestStatus, DataSubjectRequestType } from "~/.generated/prisma/client"
 import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 
-const STATUS_LABEL: Record<DsrStatus, string> = {
+const STATUS_LABEL: Record<DataSubjectRequestStatus, string> = {
   PENDING: "Pending",
   IN_PROGRESS: "In progress",
   FULFILLED: "Fulfilled",
   REJECTED: "Rejected",
 }
 
-const TYPE_LABEL: Record<DsrType, string> = {
+const TYPE_LABEL: Record<DataSubjectRequestType, string> = {
   EXPORT: "data export",
   DELETE: "account deletion",
   RECTIFY: "data rectification",
 }
 
-type DsrStatus = "PENDING" | "IN_PROGRESS" | "FULFILLED" | "REJECTED"
-type DsrType = "EXPORT" | "DELETE" | "RECTIFY"
-
 type EmailProps = EmailWrapperProps & {
   firstName?: string | null
   requestId: string
-  type: DsrType
-  previousStatus: DsrStatus
-  newStatus: DsrStatus
+  type: DataSubjectRequestType
+  previousStatus: DataSubjectRequestStatus
+  newStatus: DataSubjectRequestStatus
   notes?: string | null
 }
 

@@ -1,6 +1,7 @@
 "use server"
 
 import { after } from "next/server"
+import { notifyMemberOfMembershipStatusChange } from "~/lib/notifications"
 import { adminActionClient } from "~/lib/safe-actions"
 import {
   roleAssignmentSchema,
@@ -18,7 +19,14 @@ export const transitionMembershipStatus = adminActionClient
     // (3) the AuditLog records brand provenance for forensic traceability.
     const membership = await db.membership.findUnique({
       where: { id },
-      select: { id: true, status: true, version: true },
+      select: {
+        id: true,
+        status: true,
+        version: true,
+        user: { select: { email: true, name: true } },
+        organization: { select: { name: true } },
+        discipline: { select: { name: true } },
+      },
     })
 
     if (!membership) {
@@ -82,6 +90,23 @@ export const transitionMembershipStatus = adminActionClient
           action: "STATUS_TRANSITION",
           error,
         })
+      }
+
+      // Email notify is fire-and-forget — matches the audit-log contract above.
+      // Skip silently when the member record has no email (legacy/manual rows).
+      if (membership.user.email) {
+        try {
+          await notifyMemberOfMembershipStatusChange({
+            to: membership.user.email,
+            firstName: membership.user.name?.split(" ")[0] ?? null,
+            organizationName: membership.organization.name,
+            disciplineName: membership.discipline.name,
+            previousStatus,
+            newStatus: toStatus,
+          })
+        } catch (error) {
+          console.error("[notify] membership status email failed", { entityId: id, error })
+        }
       }
 
       revalidate({
