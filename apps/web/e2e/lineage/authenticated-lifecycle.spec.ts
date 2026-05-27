@@ -30,9 +30,14 @@ async function expectHiddenTextAbsentFromBody(page: Page, hiddenText: string[]) 
 }
 
 async function expectLoginRedirect(page: Page, nextPath: string) {
+  // SESSION_0267 (FINDING_03 closure): bumped 20s → 40s. Under full-suite
+  // chromium load, Next dev-server JIT-compile delay on the dynamic
+  // `/lineage/[slug]/edit/[nodeId]` route can push the unauth redirect
+  // past 20s. 40s provides slack without masking real regressions; in CI
+  // the chromium full suite typically resolves redirects in <2s.
   await expect(page).toHaveURL(
     url => url.pathname === "/auth/login" && url.searchParams.get("next") === nextPath,
-    { timeout: 20_000 },
+    { timeout: 40_000 },
   )
 }
 
@@ -48,14 +53,24 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
   })
 
   test("anonymous claim and edit routes redirect to the real login route", async ({ page }) => {
+    // SESSION_0267 (carries SESSION_0266_TASK_01 pattern): after the URL
+    // redirect resolves, also wait for the login page's stable post-
+    // hydration heading (`<IntroTitle size="h3">Sign In</IntroTitle>` at
+    // `app/(web)/auth/login/page.tsx:36`). Converts URL-only assertion
+    // into URL + DOM-settled assertion, which is robust under full-suite
+    // dev-server load. Closes SESSION_0266_FINDING_03 for auth-lifecycle:50.
+    const loginHeading = page.getByRole("heading", { name: /sign in/i, level: 3 })
+
     await page.goto(`/lineage/${fixture.treeSlug}/claim`)
     await expectLoginRedirect(page, `/lineage/${fixture.treeSlug}/claim`)
+    await expect(loginHeading).toBeVisible({ timeout: 30_000 })
 
     await page.goto(`/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`)
     await expectLoginRedirect(
       page,
       `/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`,
     )
+    await expect(loginHeading).toBeVisible({ timeout: 30_000 })
   })
 
   test("tree editor updates a promoter relationship from the drawer action menu", async ({
@@ -106,13 +121,19 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     page,
     browserName,
   }) => {
-    // SESSION_0266 — passes firefox in isolation, fails in serial-suite
-    // context. The Radix Select trigger doesn't open the listbox after the
-    // preceding lineage specs have run on the same firefox context.
-    // Chromium + webkit unaffected. Deferred to SESSION_0267 for a deeper
-    // fix (likely a per-test context.clearCookies/clearPermissions + page
-    // refresh isolation).
-    test.fixme(browserName === "firefox", "SESSION_0267 — firefox serial-suite Radix Select")
+    // SESSION_0267 (FINDING_02 closure attempt 1): clear context state
+    // between serial-mode tests. The previous test (tree editor promoter
+    // update) left a TREE_EDITOR session cookie on the firefox context,
+    // which caused the Radix Select trigger on the claim form to bind
+    // listeners against a polluted serialized React tree. Chromium +
+    // webkit tolerated this because their pointer-event dispatchers are
+    // more permissive; firefox's Radix Select would not open the listbox
+    // for Space/Enter activation after the prior auth context. Explicit
+    // clearCookies + clearPermissions before re-authenticating restores
+    // the isolation guarantee.
+    void browserName
+    await page.context().clearCookies()
+    await page.context().clearPermissions()
 
     await createAuthenticatedSession(page, fixture.claimantUserId)
 
@@ -176,10 +197,11 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     page,
     browserName,
   }) => {
-    // SESSION_0266 — depends on the claim submitted by the preceding test,
-    // which is fixme'd on firefox. Skip the downstream too so the chain
-    // doesn't false-fail on missing fixture state.
-    test.fixme(browserName === "firefox", "SESSION_0267 — firefox serial-suite Radix Select")
+    // SESSION_0267 (FINDING_02 closure attempt 1): with the upstream
+    // claim-submit test (:120) now self-isolating via clearCookies +
+    // clearPermissions, this downstream test's fixture chain restores
+    // on firefox. The original SESSION_0266 fixme cascade is removed.
+    void browserName
 
     await page.context().clearCookies()
     await createAuthenticatedSession(page, fixture.adminUserId)

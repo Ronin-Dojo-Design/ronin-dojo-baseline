@@ -36,7 +36,7 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     // bracket page's stable first-render heading (`<h2>Bracket: …</h2>` at
     // `app/admin/tournaments/[id]/brackets/[bracketId]/page.tsx:57`).
     await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
-      timeout: 20_000,
+      timeout: 30_000,
     })
     await expect(page.locator("body")).not.toContainText("404")
   })

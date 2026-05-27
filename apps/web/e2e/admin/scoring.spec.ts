@@ -18,13 +18,23 @@ test.describe("Admin match scoring E2E", () => {
 
     // Go directly to the bracket page with seeded matches
     await page.goto(`/admin/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
-    await page.waitForLoadState("networkidle")
 
-    // Bracket viewer should be visible
-    await expect(page.getByText(/bracket:/i)).toBeVisible()
+    // SESSION_0267 (carries SESSION_0266_TASK_01 pattern): replaced
+    // `waitForLoadState("networkidle")` + `getByText(/bracket:/i)` with the
+    // bracket page's stable first-render heading. Same anchor as
+    // bracket.spec.ts:28; closes SESSION_0266_FINDING_03 for scoring.spec.
+    // 30s timeout chosen empirically: SESSION_0266's 20s passed isolation
+    // stress (6/6) but flaked under 30-spec full-suite load due to Next
+    // dev-server JIT-compile delay on dynamic routes.
+    await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
+      timeout: 30_000,
+    })
 
-    // Look for a match card with a "Score" button (pending matches)
-    const scoreButton = page.getByRole("button", { name: /score/i }).first()
+    // SESSION_0267: tightened `/score/i` → `/^Score$/i` so the locator
+    // can't match neighboring labels like "Score Match" (dialog title) or
+    // "Save Score" (submit button). Actual rendered button is literal
+    // `Score` at `bracket-viewer.tsx:423`.
+    const scoreButton = page.getByRole("button", { name: /^Score$/i }).first()
     const hasScoreButton = (await scoreButton.count()) > 0
 
     if (!hasScoreButton) {

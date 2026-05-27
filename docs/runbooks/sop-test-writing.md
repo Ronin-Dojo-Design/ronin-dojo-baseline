@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-25
-last_agent: codex-session-0251
+updated: 2026-05-27
+last_agent: claude-session-0267
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -713,6 +713,126 @@ Current bridge files:
 - Do not skip cleanup — zombie rows break future runs
 - Do not assert on revalidation calls — they're no-ops; just don't crash
 - Do not use SQLite or PGlite for tests — always real Postgres
+- **Do not use `page.waitForLoadState("networkidle")` in Playwright specs** — see §14 for the deterministic-locator pattern that replaces it
+
+---
+
+## 14. Playwright locator patterns (SESSION_0267)
+
+### Rule
+
+**`page.waitForLoadState("networkidle")` is banned in new Playwright specs.** Reviewers should reject any PR that adds it. Existing call sites are a cleanup backlog (see §14e).
+
+### Why
+
+`networkidle` waits for the network request stream to be quiet for 500ms. Under any meaningful background traffic — Next.js dev-server compilation, sibling Playwright specs streaming requests on a shared `bun run dev`, image lazy-loading, telemetry pings — that gate never resolves and times out at 30s. The full chromium suite in this repo runs 30+ specs that all share the same dev server, so background traffic is the norm, not the exception.
+
+This is the root cause of the flake-under-load pattern documented across SESSION_0260, SESSION_0262, SESSION_0265, SESSION_0266, and SESSION_0267.
+
+### Pattern — deterministic post-hydration element
+
+Anchor on the first stable element that the page renders after hydration. Use `getByRole(...)` with an explicit role + accessible name, and pass `timeout: 30_000` (20s is marginal under full-suite load).
+
+```typescript
+// ✅ Correct — deterministic locator with explicit timeout
+await page.goto(`/admin/tournaments/${id}/brackets/${bid}`)
+await expect(
+  page.getByRole("heading", { name: /^Bracket:/i, level: 2 })
+).toBeVisible({ timeout: 30_000 })
+
+// ❌ Wrong — networkidle waits for traffic to quiet (never happens under load)
+await page.goto(`/admin/tournaments/${id}/brackets/${bid}`)
+await page.waitForLoadState("networkidle")
+await expect(page.getByText(/bracket:/i)).toBeVisible()
+```
+
+For redirect tests (no DOM element pre-redirect), anchor on a post-redirect element with a longer timeout to cover JIT-compile delay on dynamic routes:
+
+```typescript
+// ✅ Correct — URL match + DOM-settled assertion
+await page.goto(`/lineage/${slug}/edit/${nodeId}`)
+await expect(page).toHaveURL(
+  url => url.pathname === "/auth/login",
+  { timeout: 40_000 },  // dynamic-route JIT slack
+)
+await expect(
+  page.getByRole("heading", { name: /sign in/i, level: 3 })
+).toBeVisible({ timeout: 30_000 })
+```
+
+### Picking the anchor
+
+Walk the page and ask: **what is the first element that exists, with a stable accessible name, the moment hydration completes?**
+
+- A page-level `<h1>` or `<h2>` heading is almost always the right answer.
+- Form labels and submit buttons are good fallbacks if the page has no heading.
+- Avoid `getByText(...)` — text content is shared across hidden/visible nodes (loading states, screen-reader-only spans) and rarely has a stable container guarantee.
+- Use `level: N` in heading locators to disambiguate.
+
+### Cross-engine considerations
+
+For firefox: Radix Select triggers don't reliably propagate synthetic `.click()` on placeholder text. Use `getByRole("combobox", { name: ... }).focus().press(" ")` to activate via keyboard (SESSION_0266 evidence).
+
+For firefox serial-suite mode: cookies persist across tests in the same browser context. If a downstream test mutates auth state, an upstream test's UI bindings may bind against polluted React tree. Reset between tests:
+
+```typescript
+test("downstream serial test", async ({ page }) => {
+  await page.context().clearCookies()
+  await page.context().clearPermissions()
+  await createAuthenticatedSession(page, fixture.userId)
+  // ...
+})
+```
+
+SESSION_0267_TASK_02 closed SESSION_0266_FINDING_02 with this pattern.
+
+### Timeout policy
+
+| Anchor type | Recommended timeout | Rationale |
+| --- | --- | --- |
+| Static-route heading visibility | `20_000` | Pre-compiled route; 20s covers cold-page-load + hydration. |
+| Dynamic-route heading visibility | `30_000` | `app/.../[slug]/page.tsx` may need JIT-compile under load. |
+| Redirect URL match (dynamic route) | `40_000` | URL-only assertion + middleware + JIT-compile chain. |
+| Drag/dnd-kit assertions | per-spec | dnd-kit needs the SESSION_0265 pointer recipe; timeouts are tuned per drag scenario. |
+
+### Audit recipe (go-forward enforcement)
+
+For every PR that touches `apps/web/e2e/`:
+
+```bash
+git diff --name-only origin/main...HEAD -- 'apps/web/e2e/**/*.spec.ts' \
+  | xargs -I{} grep -Hn 'waitForLoadState("networkidle")' {} \
+  | grep -v '^$'
+```
+
+If this returns any new lines (not just pre-existing), block the PR until the offender migrates to a deterministic locator.
+
+### Known offender backlog (cleanup queue)
+
+As of SESSION_0267, the following spec files contain `waitForLoadState("networkidle")` calls that flake under full-suite load. Each is queued for cleanup in a future session; new authors should NOT add to this list.
+
+| File | Approx call count | Notes |
+| --- | --- | --- |
+| `e2e/admin/data-subject-request-triage.spec.ts` | 5 | DSR triage workflow; needs per-form anchor picks |
+| `e2e/admin/membership-detail.spec.ts` | 4 | Membership tabs page |
+| `e2e/admin/membership-list.spec.ts` | 2 | Membership listing |
+| `e2e/admin/tournament-list.spec.ts` | 2 | Tournament listing |
+| `e2e/lineage/authenticated-lifecycle.spec.ts` | 9 | Largest spec; partial cleanup landed SESSION_0267 (`:50` only) |
+| `e2e/lineage/editor-drag-reorder.spec.ts` | 3 | Drag-reorder spec; uses SESSION_0265 pointer recipe |
+| `e2e/lineage/public-rank-redaction.spec.ts` | 2 | Public rank redaction |
+| `e2e/lineage/public-visibility.spec.ts` | 3 | Public lineage visibility |
+| `e2e/tournaments/list.spec.ts` | 1 | Tournament list page |
+| `e2e/tournaments/register.spec.ts` | 2 | Tournament registration |
+| `e2e/tournaments/results.spec.ts` | 3 | Tournament results |
+
+Total: ~36 calls across 11 files. Cleanup target: drain to zero across 3–5 future sessions, batching by feature area.
+
+### Cross-references
+
+- SESSION_0265 FINDING_02 — first identified the flake-under-load pattern.
+- SESSION_0266 TASK_01 — established the deterministic-locator pattern on `bracket.spec.ts`.
+- SESSION_0267 TASK_01 — extended the pattern to `scoring.spec.ts` + `authenticated-lifecycle.spec.ts:50`, bumped 20s → 30s, codified this rule.
+- SESSION_0266 FINDING_02 → SESSION_0267 TASK_02 — firefox serial-suite cookie isolation pattern.
 
 ---
 
