@@ -187,7 +187,7 @@ If any of the following surface, log under `Open decisions / blockers` and do **
 | --- | --- | --- | --- |
 | SESSION_0267_TASK_01 | Petey (claude) | done | Killed `waitForLoadState("networkidle")` on `scoring.spec.ts:21`; upgraded the bracket-text locator to `getByRole("heading", { name: /^Bracket:/i, level: 2 })`; tightened the score-button regex to `/^Score$/i` (matches literal `Score` at `bracket-viewer.tsx:423`). Added post-redirect login-heading wait (`getByRole("heading", { name: /sign in/i, level: 3 })`) after each `expectLoginRedirect` in `authenticated-lifecycle.spec.ts:50`. Bumped timeouts: 20s → 30s for heading-visibility waits (scoring + bracket); 20s → 40s for `expectLoginRedirect` (dynamic-route JIT-compile slack under load). Stress tests: scoring `--workers=4 --repeat-each=3` → 3/3 pass; auth-lifecycle:50 `--workers=1 --repeat-each=3` → 3/3 pass (workers>1 races on per-suite DB fixture seeding, orthogonal to FINDING_03). Full chromium suite: 30/33 first-pass on final run (was 27/30 in SESSION_0266); the 3 named carry-forwards are now clean. |
 | SESSION_0267_TASK_02 | Petey (claude) | done | **FINDING_02 closed in-session.** Attempt 1 succeeded: added `await page.context().clearCookies(); await page.context().clearPermissions()` at the top of `authenticated-lifecycle.spec.ts:120` (was :105) before `createAuthenticatedSession`. Removed both `test.fixme(browserName === "firefox", ...)` markers (at :130 and :197). Two consecutive firefox-project runs of the full auth-lifecycle spec: **4/4 pass, 4/4 pass.** Root cause confirmed: the upstream TREE_EDITOR session cookie left over from the preceding test (:71 promoter update) caused firefox's Radix Select to bind listeners against a polluted serialized React tree; chromium + webkit tolerated it but firefox's Space/Enter handler on the Select trigger silently failed. Cookie + permission reset between serial tests restores the isolation guarantee. |
-| SESSION_0267_TASK_03 | Petey (claude) | in-progress | Push + webkit-on-Linux CI watch occurs at bow-out. See `## Webkit CI signal` section below for the post-push update. |
+| SESSION_0267_TASK_03 | Petey (claude) | done — surfaced FINDING_02 | Post-push CI watch found **no `.github/workflows/` directory exists** in the repo. The only `.github/` content is `copilot-instructions.md` + `prompts/`. SESSION_0266's webkit+firefox project additions to `playwright.config.ts` documented "CI Linux runs all three" in the inline comment but no GitHub Actions workflow was ever authored to consume them. Webkit cross-browser proof remains pending until a CI workflow lands. Filed as `SESSION_0267_FINDING_02 — webkit (and firefox) cross-browser CI workflow gap`. See `## Webkit CI signal` below. |
 | SESSION_0267_TASK_04 | Petey (claude) | done | `bun run typecheck` clean (typegen + tsc, no errors). `bunx @biomejs/biome check --write` clean (0 fixes on 3 touched specs; `docs/runbooks/sop-test-writing.md` is markdown — outside biome scope). `bun test server/web/lineage/queries.visibility.test.ts` → **9 pass, 0 fail, 28 expect()** (unchanged from SESSION_0266; SESSION_0265 + SESSION_0266 privacy fixes intact). Full chromium suite: 30/33 first-pass with 1 known networkidle backlog flake on `auth-lifecycle.spec.ts:76` + 2 cascading-skip downstream tests; all 3 named SESSION_0267 carry-forwards (`bracket:14`, `bracket:28` + the original `:28` already cleaned in SESSION_0266, `scoring:14`, `auth-lifecycle:50`) clean. Firefox auth-lifecycle: 4/4 + 4/4. Webkit deferred to CI. |
 | SESSION_0267_TASK_05 | Petey (claude) | done | Extended `docs/runbooks/sop-test-writing.md` (the canonical test-patterns SOP, already in `wiki/index.md` row 409) with §14 "Playwright locator patterns (SESSION_0267)" covering: the rule (networkidle banned in new specs), the why (background dev-server traffic + sibling specs prevent the 500ms-quiet gate from resolving under load), the deterministic-locator pattern with code examples, anchor-picking guidance, cross-engine considerations (firefox Radix Select keyboard activation + serial-suite cookie isolation pattern from TASK_02), timeout policy table, go-forward audit recipe, and the known offender backlog (~36 calls across 11 files queued for cleanup over 3–5 future sessions). Also appended a single line to §13 "What not to do" pointing readers at §14. |
 
@@ -224,7 +224,18 @@ If any of the following surface, log under `Open decisions / blockers` and do **
 
 ## Webkit CI signal
 
-(Filled at bow-out after `gh run watch`.)
+**No CI signal available** — there is no GitHub Actions workflow in this repo. Confirmed via:
+
+```bash
+ls .github/workflows/   # → No such file or directory
+ls .github/             # → copilot-instructions.md, prompts/
+gh workflow list        # → only agent integrations (Claude, OpenAI Codex, Copilot)
+gh run list --limit 5   # → only agent automation runs, no Playwright CI
+```
+
+SESSION_0266's `playwright.config.ts` comment ("Note: WebKit cannot be installed on macOS 12 ... CI (Linux) runs all three") presumed a CI consumer that doesn't exist. The 3 Playwright projects (chromium + firefox + webkit) are testable locally but only chromium and firefox are runnable on Brian's mac12 dev box (webkit needs Linux). Without CI, webkit has never been exercised.
+
+This is **SESSION_0267_FINDING_02**, filed below. It is independent from FINDING_01 (networkidle backlog) — that one is application-test cleanup; this one is CI infrastructure.
 
 ## Verification
 
@@ -254,6 +265,15 @@ If any of the following surface, log under `Open decisions / blockers` and do **
 - **Verdict:** All in-scope tasks landed. The two carry-forward FINDING_03 specs pass under stress and full-suite. FINDING_02 firefox cookie-pollution root cause confirmed and fixed on Attempt 1 (clearCookies + clearPermissions) — no need for Attempt 2 fresh-context refactor. The mid-session scope decision (don't rip out all 36 networkidle calls in one session; codify the rule + backlog) traded short-term suite cleanliness for long-term durability + reviewer enforcement. The wiki rule in `sop-test-writing.md §14` is now the canonical reference for new spec authors.
 
 #### Findings
+
+**SESSION_0267_FINDING_02 — Webkit (and firefox) cross-browser CI workflow gap**
+
+- **Severity:** medium (cross-browser project config exists but has never been exercised; any webkit regression has been silently shipping).
+- **Task:** SESSION_0267_TASK_03.
+- **Evidence:** `ls .github/workflows/` → no such directory. `gh workflow list` returns only agent integrations. SESSION_0266's `playwright.config.ts` comment promised "CI (Linux) runs all three" projects but no `.yml` was authored. On Brian's mac12 dev box, webkit is uninstallable (Darwin 21.x), so it has zero coverage to date.
+- **Impact:** Webkit users (any Safari / iOS Safari / WebKit-based browser) would hit engine-specific regressions on bracket viewer, lineage drawer, claim form, drag-reorder canvas — none of which have ever been tested against webkit. Firefox has local-dev coverage (4 lineage specs pass per SESSION_0266 + SESSION_0267) but the broader suite (26 non-lineage specs) has zero firefox coverage either.
+- **Required follow-up:** Author `.github/workflows/playwright.yml` running the chromium full suite + the 4 lineage specs on firefox + webkit (per the per-project `testDir` scope). Use the Playwright official Linux runner image to satisfy webkit's Linux dependency. Cache the Playwright browser install. Run on `pull_request` to `main` + on `push` to `main`.
+- **Status:** open — carry-forward SESSION_0268 (or a dedicated CI-infra session).
 
 **SESSION_0267_FINDING_01 — Full-suite flake-under-load extends beyond the named carry-forward specs**
 
@@ -315,10 +335,11 @@ No new ubiquitous-language terms. `getByRole`, `waitForLoadState`, `test.fixme`,
 
 ## Next session
 
-- **Goal:** SESSION_0268 — first pass on the §14e networkidle backlog cleanup (target: `authenticated-lifecycle.spec.ts` — 9 calls — drain to zero). Review webkit CI signal from SESSION_0267's push if not closed in TASK_03.
-- **Inputs to read:** `docs/sprints/SESSION_0267.md` (this file, REVIEW_01 + FINDING_01), `docs/runbooks/sop-test-writing.md §14` (the rule + pattern + timeout policy + backlog table), `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` (9 `waitForLoadState("networkidle")` call sites — pick a heading anchor per site).
-- **First task:** Walk `authenticated-lifecycle.spec.ts` top-to-bottom; for each `waitForLoadState("networkidle")`, identify the page or modal that the test just navigated to and pick its first stable post-hydration heading (or form-control if no heading). Replace each call with `await expect(page.getByRole(...)).toBeVisible({ timeout: 30_000 })` (or `40_000` for any redirect URL match). Re-run the spec under chromium + firefox to verify still-green. Update `§14e` backlog table to reflect the drained file.
-- **Stretch task:** Apply the same cleanup to `public-visibility.spec.ts` (3 calls) since it's the next-largest lineage-cluster offender.
+- **Goal:** SESSION_0268 — pick one of two parallel tracks: (A) first pass on the §14e networkidle backlog cleanup (target: `authenticated-lifecycle.spec.ts` — 9 calls — drain to zero) OR (B) author `.github/workflows/playwright.yml` to close SESSION_0267_FINDING_02 and finally exercise the webkit + firefox cross-browser projects on CI. Both are independent and either is a clean SESSION_0268 scope; choose based on which gap is more pressing.
+- **Inputs to read:** `docs/sprints/SESSION_0267.md` (this file, REVIEW_01 + FINDING_01 + FINDING_02), `docs/runbooks/sop-test-writing.md §14` (the rule + pattern + timeout policy + backlog table). For track A: `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` (9 `waitForLoadState("networkidle")` call sites — pick a heading anchor per site). For track B: `apps/web/playwright.config.ts` (3 projects to drive on CI), Playwright official CI recipe (`https://playwright.dev/docs/ci-intro`), and `.github/copilot-instructions.md` to understand the existing `.github/` conventions.
+- **First task (track A):** Walk `authenticated-lifecycle.spec.ts` top-to-bottom; for each `waitForLoadState("networkidle")`, identify the page or modal that the test just navigated to and pick its first stable post-hydration heading (or form-control if no heading). Replace each call with `await expect(page.getByRole(...)).toBeVisible({ timeout: 30_000 })` (or `40_000` for any redirect URL match). Re-run the spec under chromium + firefox to verify still-green. Update `§14e` backlog table to reflect the drained file.
+- **First task (track B):** Author `.github/workflows/playwright.yml` running on `pull_request` and `push` to `main`. Steps: checkout, bun install, prisma generate, Playwright browser install with cache (`actions/cache` on `~/.cache/ms-playwright`), `bunx playwright test --project=chromium` (full suite) + `bunx playwright test --project=firefox --project=webkit e2e/lineage` (cross-browser subset). Upload `playwright-report` artifact on failure. Validate by pushing a no-op commit and watching the run with `gh run watch`.
+- **Stretch task:** If track A: apply the same cleanup to `public-visibility.spec.ts` (3 calls) since it's the next-largest lineage-cluster offender. If track B: configure branch-protection on `main` to require the new workflow's chromium check.
 
 ## Status
 
