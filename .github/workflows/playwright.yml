@@ -63,7 +63,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # `lib/i18n.ts` uses `fs.promises.glob` (Node 22+). Root
+          # package.json declares `engines.node: ">=20"` but the code
+          # actually requires 22+. Pinning 22 (LTS Jod) for CI.
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Setup Bun
