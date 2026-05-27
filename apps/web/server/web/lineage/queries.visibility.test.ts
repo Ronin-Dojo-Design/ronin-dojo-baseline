@@ -26,6 +26,7 @@ import {
 } from "~/server/web/lineage/payloads"
 import {
   materializeLineageTreeResult,
+  redactLineageNodeProfileRanks,
   resolveLineageVisibilityScope,
 } from "~/server/web/lineage/queries"
 
@@ -284,5 +285,115 @@ describe("lineage tree visibility materialization", () => {
         "PRIVATE" as LineageVisibility,
       ),
     ).toBe(false)
+  })
+
+  // SESSION_0266_FINDING_01 — `user.memberships[].rank.{name,shortName}` was
+  // an adjacent rank-leak path the SESSION_0264 / SESSION_0265 redactions
+  // missed. `redactLineageNodeProfileRanks` must null both `rankAwards`
+  // (existing contract) and embedded `Membership.rank` (new contract).
+  it("nulls memberships[].rank and clears rankAwards when showRanks=false", () => {
+    const profile = {
+      id: "node-hidden",
+      slug: "node-hidden",
+      visibility: "PUBLIC" as LineageVisibility,
+      isVerified: true,
+      verificationStatus: "VERIFIED",
+      bio: null,
+      userId: "user-hidden",
+      createdAt: new Date("2020-01-01"),
+      updatedAt: new Date("2020-01-01"),
+      user: {
+        id: "user-hidden",
+        name: "Hidden User",
+        image: null,
+        passport: { displayName: "Hidden" },
+        directoryProfile: {
+          locationCity: null,
+          locationRegion: null,
+          locationCountry: null,
+          visibility: "PUBLIC",
+          showRanks: false,
+        },
+        rankAwards: [{ id: "ra-1", awardedAt: new Date(), rank: { name: "Hidden BB" } }],
+        memberships: [
+          {
+            id: "m-1",
+            joinedAt: new Date(),
+            discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+            organization: {
+              id: "o-1",
+              name: "Org",
+              slug: "org",
+              type: "SCHOOL",
+              city: null,
+              state: null,
+              country: null,
+            },
+            rank: { id: "r-1", name: "Hidden Membership Rank", shortName: "HMR" },
+          },
+        ],
+      },
+      relationshipsTo: [],
+    }
+
+    const result = redactLineageNodeProfileRanks(profile as never)
+
+    expect(result.user.rankAwards).toEqual([])
+    expect(result.user.memberships).toHaveLength(1)
+    expect(result.user.memberships[0]?.rank).toBeNull()
+    // Discipline + organization metadata pass through (shared container fields).
+    expect(result.user.memberships[0]?.discipline?.name).toBe("BJJ")
+    expect(result.user.memberships[0]?.organization?.name).toBe("Org")
+  })
+
+  it("preserves memberships[].rank when showRanks=true", () => {
+    const profile = {
+      id: "node-shown",
+      slug: "node-shown",
+      visibility: "PUBLIC" as LineageVisibility,
+      isVerified: true,
+      verificationStatus: "VERIFIED",
+      bio: null,
+      userId: "user-shown",
+      createdAt: new Date("2020-01-01"),
+      updatedAt: new Date("2020-01-01"),
+      user: {
+        id: "user-shown",
+        name: "Shown User",
+        image: null,
+        passport: { displayName: "Shown" },
+        directoryProfile: {
+          locationCity: null,
+          locationRegion: null,
+          locationCountry: null,
+          visibility: "PUBLIC",
+          showRanks: true,
+        },
+        rankAwards: [{ id: "ra-2", awardedAt: new Date(), rank: { name: "Visible BB" } }],
+        memberships: [
+          {
+            id: "m-2",
+            joinedAt: new Date(),
+            discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+            organization: {
+              id: "o-1",
+              name: "Org",
+              slug: "org",
+              type: "SCHOOL",
+              city: null,
+              state: null,
+              country: null,
+            },
+            rank: { id: "r-2", name: "Shown Membership Rank", shortName: "SMR" },
+          },
+        ],
+      },
+      relationshipsTo: [],
+    }
+
+    const result = redactLineageNodeProfileRanks(profile as never)
+
+    expect(result.user.rankAwards).toHaveLength(1)
+    expect(result.user.memberships[0]?.rank).toMatchObject({ shortName: "SMR" })
   })
 })

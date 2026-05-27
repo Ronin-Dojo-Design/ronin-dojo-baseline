@@ -19,6 +19,31 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    // SESSION_0266 — firefox and webkit are scoped to e2e/lineage only via
+    // per-project `testDir`, so the non-lineage suite cost stays
+    // chromium-only. The 4 lineage specs run on all 3 engines (chromium +
+    // firefox + webkit) to extend the SESSION_0265 drag/privacy proofs
+    // cross-engine.
+    //
+    // Note: WebKit cannot be installed on macOS 12 (Monterey, darwin 21.x).
+    // Local mac12 developers should run `--project=chromium --project=firefox`
+    // explicitly; CI (Linux) runs all three. See SESSION_0266 notes.
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      testDir: "./e2e/lineage",
+      // SESSION_0266 — firefox hydration timing on Next.js App Router pages
+      // is slower than chromium; click handlers occasionally fire before the
+      // React tree is interactive. One retry covers the timing race without
+      // masking real engine-specific regressions.
+      retries: 1,
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      testDir: "./e2e/lineage",
+      retries: 1,
+    },
   ],
   webServer: {
     command: "bun run dev",

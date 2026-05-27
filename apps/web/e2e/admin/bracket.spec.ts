@@ -17,11 +17,12 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     const fixture = getFixture()
 
     await page.goto(`/admin/tournaments/${fixture.tournamentId}`)
-    await page.waitForLoadState("networkidle")
 
-    // Tournament detail page should render the edit form with tournament name
-    await expect(page.locator("body")).toBeVisible()
-    await expect(page.getByText(/edit/i).first()).toBeVisible()
+    // SESSION_0266: `waitForLoadState("networkidle")` flakes under full-suite
+    // load because Next dev-server background traffic from sibling specs keeps
+    // the request stream busy past the 30s timeout. Gate on a deterministic
+    // first-render element instead.
+    await expect(page.getByText(/edit/i).first()).toBeVisible({ timeout: 20_000 })
   })
 
   test("admin can navigate to bracket viewer from tournament detail", async ({ page }) => {
@@ -30,10 +31,13 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     const fixture = getFixture()
 
     await page.goto(`/admin/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
-    await page.waitForLoadState("networkidle")
 
-    // Bracket viewer should render
+    // SESSION_0266: replaced `waitForLoadState("networkidle")` with the
+    // bracket page's stable first-render heading (`<h2>Bracket: …</h2>` at
+    // `app/admin/tournaments/[id]/brackets/[bracketId]/page.tsx:57`).
+    await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
+      timeout: 20_000,
+    })
     await expect(page.locator("body")).not.toContainText("404")
-    await expect(page.getByText(/bracket:/i)).toBeVisible()
   })
 })

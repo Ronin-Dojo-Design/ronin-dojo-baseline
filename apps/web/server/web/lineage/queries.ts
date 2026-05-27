@@ -63,11 +63,25 @@ const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
   return { ...node, user: { ...node.user, rankAwards: [] } }
 }
 
-const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
+export const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
   if (shouldShowPublicRanks(profile)) {
     return profile
   }
-  return { ...profile, user: { ...profile.user, rankAwards: [] } }
+  // SESSION_0266_FINDING_01 — `user.memberships[].rank.{name,shortName}`
+  // was an adjacent rank-leak path the SESSION_0264/0265 redactions
+  // missed. Null out the embedded `Membership.rank` (nullable in schema)
+  // for `showRanks=false` viewers alongside the existing `rankAwards` blank.
+  return {
+    ...profile,
+    user: {
+      ...profile.user,
+      rankAwards: [],
+      memberships: profile.user.memberships.map(membership => ({
+        ...membership,
+        rank: null,
+      })),
+    },
+  }
 }
 
 /**
