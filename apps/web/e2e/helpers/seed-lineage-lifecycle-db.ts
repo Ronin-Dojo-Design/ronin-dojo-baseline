@@ -300,6 +300,76 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
     data: { defaultRootMemberId: publicMember.id },
   })
 
+  /**
+   * SESSION_0265 — drag/reorder e2e additive seed.
+   *
+   * Adds 3 public sibling members parented under publicMember, split across
+   * two sibling visual groups. Both groups have parentMemberId=publicMember so
+   * the canvas drag-end same-parent guard still permits cross-group moves.
+   * Existing lifecycle tests ignore these because they only assert on the
+   * original claim-target / hidden members.
+   */
+  const siblingEntries = await Promise.all(
+    (["Sibling A", "Sibling B", "Sibling C"] as const).map(label =>
+      createUserNode({ runId, label, visibility: "PUBLIC" }),
+    ),
+  )
+  // Seed group B with one anchor sibling so the column renders as a drop target
+  // (buildChildGroups in lineage-tree-canvas.tsx only emits groups that have at
+  // least one child member).
+  const siblingGroupBAnchor = await createUserNode({
+    runId,
+    label: "Sibling D Anchor",
+    visibility: "PUBLIC",
+  })
+
+  const siblingGroupA = await prisma.lineageVisualGroup.create({
+    data: {
+      treeId: tree.id,
+      parentMemberId: publicMember.id,
+      label: `E2E Drag Sibling Group A ${runId}`,
+      groupType: "CUSTOM",
+      promotionDate: new Date(Date.UTC(2027, 0, 1)),
+      showPublicLabel: true,
+      sortOrder: 100,
+    },
+  })
+  const siblingGroupB = await prisma.lineageVisualGroup.create({
+    data: {
+      treeId: tree.id,
+      parentMemberId: publicMember.id,
+      label: `E2E Drag Sibling Group B ${runId}`,
+      groupType: "CUSTOM",
+      promotionDate: new Date(Date.UTC(2027, 0, 2)),
+      showPublicLabel: true,
+      sortOrder: 200,
+    },
+  })
+
+  const siblingInitialSortOrders = [100, 200, 300] as const
+  const siblingMembers = await Promise.all(
+    siblingEntries.map((entry, index) =>
+      prisma.lineageTreeMember.create({
+        data: {
+          treeId: tree.id,
+          nodeId: entry.node.id,
+          primaryVisualParentMemberId: publicMember.id,
+          visualGroupId: siblingGroupA.id,
+          visualSortOrder: siblingInitialSortOrders[index]!,
+        },
+      }),
+    ),
+  )
+  const siblingGroupBAnchorMember = await prisma.lineageTreeMember.create({
+    data: {
+      treeId: tree.id,
+      nodeId: siblingGroupBAnchor.node.id,
+      primaryVisualParentMemberId: publicMember.id,
+      visualGroupId: siblingGroupB.id,
+      visualSortOrder: 100,
+    },
+  })
+
   await prisma.lineageTreeAccess.create({
     data: {
       treeId: tree.id,
@@ -339,27 +409,74 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
       unlistedEntry.user.id,
       restrictedEntry.user.id,
       privateEntry.user.id,
+      ...siblingEntries.map(entry => entry.user.id),
+      siblingGroupBAnchor.user.id,
     ],
     nodeIds: [
       publicEntry.node.id,
       unlistedEntry.node.id,
       restrictedEntry.node.id,
       privateEntry.node.id,
+      ...siblingEntries.map(entry => entry.node.id),
+      siblingGroupBAnchor.node.id,
     ],
-    memberIds: [publicMember.id, unlistedMember.id, restrictedMember.id, privateMember.id],
-    groupIds: [publicGroup.id, unlistedGroup.id, restrictedGroup.id, privateGroup.id],
+    memberIds: [
+      publicMember.id,
+      unlistedMember.id,
+      restrictedMember.id,
+      privateMember.id,
+      ...siblingMembers.map(member => member.id),
+      siblingGroupBAnchorMember.id,
+    ],
+    groupIds: [
+      publicGroup.id,
+      unlistedGroup.id,
+      restrictedGroup.id,
+      privateGroup.id,
+      siblingGroupA.id,
+      siblingGroupB.id,
+    ],
     rankAwardId: rankAward.id,
     rankId: rank.id,
     rankSystemId: rankSystem.id,
     disciplineId: discipline.id,
+    siblingParentMemberId: publicMember.id,
+    siblingGroupAId: siblingGroupA.id,
+    siblingGroupBId: siblingGroupB.id,
+    siblingGroupBLabel: siblingGroupB.label,
+    siblingMemberIds: [siblingMembers[0]!.id, siblingMembers[1]!.id, siblingMembers[2]!.id],
+    siblingNodeIds: [
+      siblingEntries[0]!.node.id,
+      siblingEntries[1]!.node.id,
+      siblingEntries[2]!.node.id,
+    ],
+    siblingNames: [
+      siblingEntries[0]!.displayName,
+      siblingEntries[1]!.displayName,
+      siblingEntries[2]!.displayName,
+    ],
+    siblingInitialSortOrders: [
+      siblingInitialSortOrders[0],
+      siblingInitialSortOrders[1],
+      siblingInitialSortOrders[2],
+    ],
   }
 }
 
 async function readLineageLifecycleState(
   fixture: LineageLifecycleFixture,
 ): Promise<LineageLifecycleState> {
-  const [claim, node, placeholderUser, grant, passport, rankAward, promoterRelationship] =
-    await Promise.all([
+  const [
+    claim,
+    node,
+    placeholderUser,
+    grant,
+    passport,
+    rankAward,
+    promoterRelationship,
+    siblingMembers,
+    siblingRelationshipCount,
+  ] = await Promise.all([
       prisma.lineageClaimRequest.findFirst({
         where: {
           treeId: fixture.treeId,
@@ -418,6 +535,24 @@ async function readLineageLifecycleState(
           isVerified: true,
         },
       }),
+      prisma.lineageTreeMember.findMany({
+        where: { id: { in: fixture.siblingMemberIds } },
+        select: {
+          id: true,
+          nodeId: true,
+          visualSortOrder: true,
+          visualGroupId: true,
+          primaryVisualParentMemberId: true,
+        },
+      }),
+      prisma.lineageRelationship.count({
+        where: {
+          OR: [
+            { fromNodeId: { in: fixture.siblingNodeIds } },
+            { toNodeId: { in: fixture.siblingNodeIds } },
+          ],
+        },
+      }),
     ])
 
   return {
@@ -437,6 +572,8 @@ async function readLineageLifecycleState(
     nodeBio: node?.bio ?? null,
     rankAwardedAt: rankAward?.awardedAt?.toISOString() ?? null,
     promoterRelationship,
+    siblings: siblingMembers,
+    siblingRelationshipCount,
   }
 }
 

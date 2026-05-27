@@ -30,6 +30,24 @@ export interface LineageLifecycleFixture {
   rankId: string
   rankSystemId: string
   disciplineId: string
+  /**
+   * SESSION_0265 — drag/reorder e2e additive fixture.
+   *
+   * Three sibling members all parented under `claimTargetMemberId`
+   * (publicMember), giving the editor canvas a non-trivial drag surface:
+   * - `siblingMemberIds` start in `siblingGroupAId` with ascending sortOrders.
+   * - `siblingGroupBId` is a second sibling group under the same parent so
+   *   cross-visual-group moves still satisfy the same-parent guard in
+   *   `handleDragEnd` (lineage-tree-canvas.tsx).
+   */
+  siblingParentMemberId: string
+  siblingGroupAId: string
+  siblingGroupBId: string
+  siblingGroupBLabel: string
+  siblingMemberIds: [string, string, string]
+  siblingNodeIds: [string, string, string]
+  siblingNames: [string, string, string]
+  siblingInitialSortOrders: [number, number, number]
 }
 
 export interface LineageLifecycleState {
@@ -53,6 +71,14 @@ export interface LineageLifecycleState {
     verificationStatus: string
     isVerified: boolean
   } | null
+  siblings: Array<{
+    id: string
+    nodeId: string
+    visualSortOrder: number
+    visualGroupId: string | null
+    primaryVisualParentMemberId: string | null
+  }>
+  siblingRelationshipCount: number
 }
 
 function runLineageLifecycleCommand<T>(command: string, fixture?: LineageLifecycleFixture): T {

@@ -348,7 +348,11 @@ export const materializeLineageTreeResult = (
       !survivingMemberIds.has(member.primaryVisualParentMemberId)
         ? { ...member, primaryVisualParentMemberId: null }
         : member
-    return { ...normalizedMember, node: redactLineageNodeRowRanks(normalizedMember.node) }
+    const redactedNode = redactLineageNodeRowRanks(normalizedMember.node)
+    const selectedRankAward = shouldShowPublicRanks(normalizedMember.node)
+      ? normalizedMember.selectedRankAward
+      : null
+    return { ...normalizedMember, node: redactedNode, selectedRankAward }
   })
 
   const normalizedGroups = tree.visualGroups

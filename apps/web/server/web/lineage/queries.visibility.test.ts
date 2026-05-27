@@ -38,6 +38,7 @@ function member({
   sortOrder = 0,
   showRanks = true,
   rankAwards = [],
+  selectedRankAward = null,
 }: {
   id: string
   nodeId: string
@@ -47,6 +48,7 @@ function member({
   sortOrder?: number
   showRanks?: boolean
   rankAwards?: unknown[]
+  selectedRankAward?: unknown
 }) {
   return {
     id,
@@ -58,6 +60,7 @@ function member({
     visualGroupId: groupId,
     treeId: "tree-1",
     nodeId,
+    selectedRankAward,
     node: {
       id: nodeId,
       slug: nodeId,
@@ -82,7 +85,6 @@ function member({
         memberships: [],
       },
     },
-    selectedRankAward: null,
   }
 }
 
@@ -209,6 +211,16 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC" as LineageVisibility,
           showRanks: false,
           rankAwards: [{ id: "rank-award-1", awardedAt: "2020-01-01" }],
+          selectedRankAward: {
+            id: "rank-award-1",
+            awardedAt: "2020-01-01",
+            rank: {
+              id: "rank-1",
+              name: "Hidden Black Belt",
+              shortName: "HBB",
+              colorHex: "#000000",
+            },
+          },
         }),
       ],
       visualGroups: [],
@@ -217,6 +229,40 @@ describe("lineage tree visibility materialization", () => {
     const result = materializeLineageTreeResult(hiddenRankTree as never)
 
     expect(result.members[0]?.node.user.rankAwards).toEqual([])
+    expect(result.members[0]?.selectedRankAward).toBeNull()
+  })
+
+  it("preserves selectedRankAward when the public profile shows ranks", () => {
+    const visibleRankTree = {
+      ...publicTree,
+      defaultRootMemberId: "rank-shown-member",
+      members: [
+        member({
+          id: "rank-shown-member",
+          nodeId: "rank-shown-node",
+          visibility: "PUBLIC" as LineageVisibility,
+          showRanks: true,
+          selectedRankAward: {
+            id: "rank-award-2",
+            awardedAt: "2021-01-01",
+            rank: {
+              id: "rank-2",
+              name: "Visible Black Belt",
+              shortName: "VBB",
+              colorHex: "#222222",
+            },
+          },
+        }),
+      ],
+      visualGroups: [],
+    }
+
+    const result = materializeLineageTreeResult(visibleRankTree as never)
+
+    expect(result.members[0]?.selectedRankAward).toMatchObject({
+      id: "rank-award-2",
+      rank: { shortName: "VBB" },
+    })
   })
 
   it("widens viewer scope without ever including PRIVATE in shared public paths", () => {
