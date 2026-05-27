@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import { createAuthenticatedSession } from "../helpers/auth"
 import {
@@ -64,6 +64,14 @@ async function expectAnonymousLoginRedirect(page: Page, nextPath: string) {
   await expect(page.getByRole("heading", { name: /sign in/i, level: 3 })).toBeVisible({
     timeout: 30_000,
   })
+}
+
+async function replaceTextInputValue(input: Locator, value: string) {
+  await expect(async () => {
+    await input.selectText()
+    await input.pressSequentially(value)
+    await expect(input).toHaveValue(value, { timeout: 2_000 })
+  }).toPass({ timeout: 30_000 })
 }
 
 test.describe("Lineage authenticated lifecycle E2E", () => {
@@ -281,12 +289,10 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     )
     const displayNameInput = page.getByLabel("Display name")
     await expect(displayNameInput).toHaveValue(/E2E Claimant/, { timeout: 30_000 })
-    await displayNameInput.fill(updatedDisplayName)
-    await expect(displayNameInput).toHaveValue(updatedDisplayName)
+    await replaceTextInputValue(displayNameInput, updatedDisplayName)
     await page.getByLabel("Promotion date").fill(updatedPromotionDate)
     await expect(page.getByLabel("Promotion date")).toHaveValue(updatedPromotionDate)
-    await page.getByLabel("Bio").fill(updatedBio)
-    await expect(page.getByLabel("Bio")).toHaveValue(updatedBio)
+    await replaceTextInputValue(page.getByLabel("Bio"), updatedBio)
     await page.getByRole("button", { name: "Save Lineage Profile" }).click()
 
     await expect(page.getByText("Lineage profile updated.")).toBeVisible({ timeout: 15_000 })

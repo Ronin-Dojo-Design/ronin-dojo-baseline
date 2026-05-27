@@ -122,13 +122,13 @@ Do not expand beyond `authenticated-lifecycle.spec.ts`, optional `public-visibil
 
 | ID | Owner | Status | Notes |
 | --- | --- | --- | --- |
-| SESSION_0268_TASK_01 | Cody (codex) | done | Drained `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` from 9 `networkidle` calls to zero. Added route-specific anchors: login redirect helper, lineage editor h1, claim-form combobox, 404 h1, admin claims h1, dashboard h1, edit-profile form values, public tree h1, and role-based drawer open retry. Verified chromium 4/4 and firefox 4/4. |
+| SESSION_0268_TASK_01 | Cody (codex) | done | Drained `apps/web/e2e/lineage/authenticated-lifecycle.spec.ts` from 9 `networkidle` calls to zero. Added route-specific anchors: login redirect helper, lineage editor h1, claim-form combobox, 404 h1, admin claims h1, dashboard h1, edit-profile form values, public tree h1, role-based drawer open retry, and a WebKit-stable text replacement helper for controlled edit fields. Verified chromium 4/4 and firefox 4/4. |
 | SESSION_0268_TASK_02 | Cody (codex) | done | Stretch completed. Drained `apps/web/e2e/lineage/public-visibility.spec.ts` from 3 `networkidle` calls to zero. Added listing heading/result anchors and the same role-based drawer open retry. Verified chromium 3/3 and firefox 3/3. |
 | SESSION_0268_TASK_03 | Giddy/Doug sidecar + Cody | done | CI review found latest serial workflow run took 29m59s and main has no branch protection/rulesets. Patched `.github/workflows/playwright.yml` into a three-browser matrix (`chromium`, `firefox`, `webkit`) with single-worker Playwright preserved per job, per-browser browser-cache keys, 45m timeout, and per-browser artifacts. |
 
 ## What landed
 
-- `authenticated-lifecycle.spec.ts` has zero `waitForLoadState("networkidle")` calls. The cleanup exposed two places where a visible heading was not deep enough: the claim form needs the combobox as the readiness anchor, and the edit page needs form-value readiness plus DB-state polling after save. Drawer opens now use a bounded role-based retry so firefox/chromium do not click before the client island is interactive.
+- `authenticated-lifecycle.spec.ts` has zero `waitForLoadState("networkidle")` calls. The cleanup exposed two places where a visible heading was not deep enough: the claim form needs the combobox as the readiness anchor, and the edit page needs form-value readiness plus DB-state polling after save. Drawer opens now use a bounded role-based retry so browsers do not click before the client island is interactive; the edit form uses select+sequential typing for controlled text fields after the first WebKit matrix run showed `locator.fill()` did not update `Display name` reliably.
 - `public-visibility.spec.ts` has zero `networkidle` calls. Listing routes anchor on the `Lineage Trees` h1 plus result count, and detail routes anchor on the tree h1 plus the drawer dialog.
 - `docs/runbooks/sop-test-writing.md §14e` now records both drained lineage files and corrects the remaining backlog audit to ~27 calls across 11 files. The audit also surfaced two admin files that were missing from the SESSION_0267 table (`bracket.spec.ts`, `scoring.spec.ts`).
 - `.github/workflows/playwright.yml` now runs the same useful Playwright signal as parallel browser jobs instead of one serial 30-minute job. The CI still uses `workers: 1`; only job-level browser parallelism changed.
@@ -153,7 +153,7 @@ Do not expand beyond `authenticated-lifecycle.spec.ts`, optional `public-visibil
 
 ## Open decisions / blockers
 
-- **First matrix CI run pending after push.** Expected improvement is wall time, not total compute time: each browser job still provisions dependencies, database, dev server, and browser cache independently. If the first run is green, consider branch protection requiring the three `Playwright (chromium)`, `Playwright (firefox)`, and `Playwright (webkit)` checks or a separate always-present aggregate check.
+- **Follow-up matrix CI run pending after second push.** First matrix run on commit `483b2e3` proved the duration improvement but failed WebKit in the edited auth-lifecycle save path: chromium passed in `17m12s`, firefox passed in `8m9s`, WebKit failed in `12m33s` because `locator.fill()` did not change the controlled `Display name` field before assertion. The follow-up patch replaces that field update path with select+sequential typing; WebKit proof must happen in CI because local Playwright reports WebKit unsupported on this Mac (`mac12`).
 - **§14e backlog remains open:** ~27 `networkidle` calls across 11 files. Next cleanup should pick the remaining lineage file (`editor-drag-reorder.spec.ts`) plus one admin cluster, or go straight to DSR triage as the largest remaining single file.
 
 ## Verification
@@ -166,6 +166,10 @@ Do not expand beyond `authenticated-lifecycle.spec.ts`, optional `public-visibil
 | `bunx playwright test --project=firefox --workers=1 e2e/lineage/authenticated-lifecycle.spec.ts` | Pass — 4/4. |
 | `bunx playwright test --project=chromium --workers=1 e2e/lineage/public-visibility.spec.ts` | Pass — 3/3. |
 | `bunx playwright test --project=firefox --workers=1 e2e/lineage/public-visibility.spec.ts` | Pass — 3/3. |
+| First pushed matrix run, `483b2e3` / `26527417684` | Partial pass — wall time improved to `17m12s`; chromium passed in `17m12s`, firefox passed in `8m9s`, WebKit failed in auth-lifecycle edit-form fill. |
+| Follow-up auth-lifecycle chromium after WebKit field helper | Pass — 4/4 in `3.9m`. |
+| Follow-up auth-lifecycle firefox after WebKit field helper | Pass — 4/4 in `4.2m`. |
+| Follow-up auth-lifecycle WebKit local | Blocked — `bunx playwright install webkit` fails because this Playwright package does not support WebKit on `mac12`; CI is the WebKit verification lane. |
 | `bunx @biomejs/biome check --write e2e/lineage/authenticated-lifecycle.spec.ts e2e/lineage/public-visibility.spec.ts` | Pass — checked 2 files; formatted 1 file. |
 | `bun run typecheck` in `apps/web` | Pass — `next typegen` + `tsc --noEmit`. |
 | Workflow YAML parse | Pass — Ruby YAML parser loaded `.github/workflows/playwright.yml`. |
@@ -184,7 +188,7 @@ Do not expand beyond `authenticated-lifecycle.spec.ts`, optional `public-visibil
 
 #### Findings
 
-- **SESSION_0268_FINDING_01 — First matrix Playwright run needs post-push review.** Severity: low. The YAML parses locally, but GitHub Actions matrix behavior and exact status contexts can only be proven after push. Required follow-up: inspect the triggered run and document wall time/check names before adding branch protection.
+- **SESSION_0268_FINDING_01 — WebKit matrix proof still needs the follow-up push.** Severity: medium. The first matrix run proved the duration win but exposed a WebKit-only controlled-input update failure in the edited auth-lifecycle path. Follow-up patch added a user-like replacement helper and re-verified chromium/firefox locally; WebKit must be proven by the next GitHub Actions matrix run.
 
 ## Hostile close review
 
@@ -193,9 +197,9 @@ Do not expand beyond `authenticated-lifecycle.spec.ts`, optional `public-visibil
 1. **Plan sanity:** Good. Petey plan had three tasks, one sidecar, and a clear scope guard. Stretch work stayed within the pre-authorized lineage file.
 2. **Dirstarter compliance:** Aligned. No baseline layer touched.
 3. **Security/data integrity:** No production data path changed. Tests gained stronger auth-context isolation and state-based assertions.
-4. **Verification honesty:** Strong for local test scope: exact zero-call audit, chromium/firefox runs for both changed specs, typecheck, Biome, YAML parse. CI matrix remains pending until push and is explicitly logged as a follow-up.
-5. **Workflow honesty:** Graphify-first discovery was used for file/doc selection. A sidecar reviewed CI duration independently. Branch protection was not changed because current repo settings are unprotected and required-check naming should wait for the matrix run.
-6. **Score:** 9.6/10. Cap avoided; no Dirstarter/data integrity failure. Residual risk is only post-push CI matrix validation.
+4. **Verification honesty:** Strong for local chromium/firefox scope: exact zero-call audit, chromium/firefox runs for both changed specs, typecheck, Biome, YAML parse. First matrix CI run is documented honestly: duration improved, WebKit failed on the edited form path, and the follow-up patch needs CI proof.
+5. **Workflow honesty:** Graphify-first discovery was used for file/doc selection. A sidecar reviewed CI duration independently. Branch protection was not changed because current repo settings are unprotected and required-check naming/check strategy should wait for a green matrix run.
+6. **Score:** 9.2/10. Cap avoided; no Dirstarter/data integrity failure. Residual risk is the WebKit follow-up matrix proof after the second push.
 
 ## ADR / ubiquitous-language check
 
@@ -205,9 +209,9 @@ No ubiquitous-language update required. Terms used are Playwright/GitHub Actions
 
 ## Next session
 
-- **Goal:** SESSION_0269 — continue §14e networkidle cleanup and review the first matrix Playwright CI run from SESSION_0268.
+- **Goal:** SESSION_0269 — continue §14e networkidle cleanup and review the latest matrix Playwright CI run from SESSION_0268.
 - **Inputs to read:** `docs/sprints/SESSION_0268.md`, `docs/runbooks/sop-test-writing.md §14e`, `.github/workflows/playwright.yml`, GitHub Actions run triggered by the SESSION_0268 push.
-- **First task:** Check the SESSION_0268 push run: confirm `Playwright (chromium)`, `Playwright (firefox)`, and `Playwright (webkit)` pass, record wall time and status context names, then decide whether branch protection should require those contexts or wait for an aggregate check.
+- **First task:** Check the SESSION_0268 follow-up push run: confirm `Playwright (chromium)`, `Playwright (firefox)`, and `Playwright (webkit)` pass, record wall time and status context names, then decide whether branch protection should require those contexts or wait for an aggregate check.
 - **Cleanup task:** Drain the next §14e offender. Recommended target: `apps/web/e2e/lineage/editor-drag-reorder.spec.ts` (3 calls) plus `apps/web/e2e/lineage/public-rank-redaction.spec.ts` (2 calls), or `apps/web/e2e/admin/data-subject-request-triage.spec.ts` (5 calls) if prioritizing largest remaining single file.
 
 ## Full close evidence
