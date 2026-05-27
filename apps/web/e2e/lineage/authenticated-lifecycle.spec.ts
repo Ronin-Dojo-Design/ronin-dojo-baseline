@@ -16,6 +16,20 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
+async function openLineageProfileDrawer(page: Page, displayName: string) {
+  const profileButton = page.getByRole("button", {
+    name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
+  })
+
+  await expect(profileButton).toBeVisible({ timeout: 30_000 })
+  await expect(async () => {
+    await profileButton.click()
+    await expect(page.getByRole("dialog", { name: displayName })).toBeVisible({
+      timeout: 3_000,
+    })
+  }).toPass({ timeout: 30_000 })
+}
+
 async function expectNoHiddenText(pageContent: string, hiddenText: string[]) {
   for (const hiddenValue of hiddenText) {
     expect(pageContent).not.toContain(hiddenValue)
@@ -41,6 +55,17 @@ async function expectLoginRedirect(page: Page, nextPath: string) {
   )
 }
 
+async function expectAnonymousLoginRedirect(page: Page, nextPath: string) {
+  await page.context().clearCookies()
+  await page.context().clearPermissions()
+  await page.goto("about:blank")
+  await page.goto(nextPath)
+  await expectLoginRedirect(page, nextPath)
+  await expect(page.getByRole("heading", { name: /sign in/i, level: 3 })).toBeVisible({
+    timeout: 30_000,
+  })
+}
+
 test.describe("Lineage authenticated lifecycle E2E", () => {
   test.setTimeout(120_000)
 
@@ -59,18 +84,11 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     // `app/(web)/auth/login/page.tsx:36`). Converts URL-only assertion
     // into URL + DOM-settled assertion, which is robust under full-suite
     // dev-server load. Closes SESSION_0266_FINDING_03 for auth-lifecycle:50.
-    const loginHeading = page.getByRole("heading", { name: /sign in/i, level: 3 })
-
-    await page.goto(`/lineage/${fixture.treeSlug}/claim`)
-    await expectLoginRedirect(page, `/lineage/${fixture.treeSlug}/claim`)
-    await expect(loginHeading).toBeVisible({ timeout: 30_000 })
-
-    await page.goto(`/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`)
-    await expectLoginRedirect(
+    await expectAnonymousLoginRedirect(page, `/lineage/${fixture.treeSlug}/claim`)
+    await expectAnonymousLoginRedirect(
       page,
       `/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`,
     )
-    await expect(loginHeading).toBeVisible({ timeout: 30_000 })
   })
 
   test("tree editor updates a promoter relationship from the drawer action menu", async ({
@@ -79,17 +97,12 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await createAuthenticatedSession(page, fixture.treeEditorUserId)
 
     await page.goto(`/dashboard/lineage/${fixture.treeId}`)
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
-      timeout: 20_000,
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
     })
 
-    await page
-      .getByRole("button", {
-        name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.claimTargetName)}`),
-      })
-      .click()
+    await openLineageProfileDrawer(page, fixture.claimTargetName)
     await expect(page.getByRole("tab", { name: "Rank History" })).toBeVisible()
 
     await page.getByRole("button", { name: "Open lineage profile actions" }).click()
@@ -138,9 +151,10 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await createAuthenticatedSession(page, fixture.claimantUserId)
 
     await page.goto(`/lineage/${fixture.treeSlug}/claim`)
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByRole("heading", { name: "Claim a Lineage Node" })).toBeVisible()
+    await expect(page.getByRole("combobox", { name: /which node are you claiming/i })).toBeVisible({
+      timeout: 30_000,
+    })
 
     const hiddenText = [
       ...Object.values(fixture.hiddenNames),
@@ -152,24 +166,25 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     const deniedResponse = await page.goto(
       `/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`,
     )
-    await page.waitForLoadState("networkidle")
     expect(deniedResponse?.status()).toBe(404)
+    await expect(page.getByRole("heading", { name: "404 Not Found", level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByRole("heading", { name: "Edit Lineage Profile" })).toHaveCount(0)
 
     await page.goto(`/lineage/${fixture.treeSlug}/claim`)
-    await page.waitForLoadState("networkidle")
 
     // SESSION_0266 — `getByText("Select a person").click()` clicked the
-    // placeholder text inside a Radix Select trigger, which firefox
-    // doesn't reliably propagate to the underlying combobox. Focus the
-    // combobox by role/label and activate with the keyboard; Radix Select
-    // listens for Space/Enter on the trigger and this path is more
-    // cross-engine-stable than synthetic click events on the trigger text.
+    // placeholder text inside the select trigger, which firefox doesn't
+    // reliably propagate to the underlying combobox. Target the combobox by
+    // role/label so the click lands on the interactive trigger itself.
     const claimCombobox = page.getByRole("combobox", { name: /which node are you claiming/i })
-    await claimCombobox.focus()
-    await claimCombobox.press(" ")
+    await expect(claimCombobox).toBeVisible({ timeout: 30_000 })
     const claimTargetOption = page.getByRole("option", { name: fixture.claimTargetName })
-    await expect(claimTargetOption).toBeVisible()
+    await expect(async () => {
+      await claimCombobox.click()
+      await expect(claimTargetOption).toBeVisible({ timeout: 3_000 })
+    }).toPass({ timeout: 30_000 })
     await expectHiddenTextAbsentFromBody(page, hiddenText)
     await expectNoHiddenText(await page.content(), hiddenText)
     await claimTargetOption.click()
@@ -207,7 +222,9 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await createAuthenticatedSession(page, fixture.adminUserId)
 
     await page.goto("/admin/lineage/claims")
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "Lineage Claims", level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
 
     const pendingState = await readLineageLifecycleState(fixture)
     const claimId = pendingState.claim?.id
@@ -241,14 +258,17 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await createAuthenticatedSession(page, fixture.claimantUserId)
 
     await page.goto("/dashboard")
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: "Dashboard", level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await page.getByRole("button", { name: "Lineage" }).click()
     await expect(page.getByText(fixture.treeName)).toBeVisible()
     await expect(page.getByText("node editor")).toBeVisible()
 
     await page.goto(`/dashboard/lineage/${fixture.treeId}`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible()
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByText(fixture.hiddenNames.private)).toBeVisible()
 
     const updatedDisplayName = `E2E Updated Claimant ${fixture.searchToken}`
@@ -256,14 +276,26 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     const updatedPromotionDate = "2024-05-17"
 
     await page.goto(`/lineage/${fixture.treeSlug}/edit/${fixture.claimTargetNodeId}`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.getByRole("heading", { name: "Edit Lineage Profile" })).toBeVisible()
-    await page.getByLabel("Display name").fill(updatedDisplayName)
+    await expect(page.getByRole("heading", { name: "Edit Lineage Profile", level: 1 })).toBeVisible(
+      { timeout: 30_000 },
+    )
+    const displayNameInput = page.getByLabel("Display name")
+    await expect(displayNameInput).toHaveValue(/E2E Claimant/, { timeout: 30_000 })
+    await displayNameInput.fill(updatedDisplayName)
+    await expect(displayNameInput).toHaveValue(updatedDisplayName)
     await page.getByLabel("Promotion date").fill(updatedPromotionDate)
+    await expect(page.getByLabel("Promotion date")).toHaveValue(updatedPromotionDate)
     await page.getByLabel("Bio").fill(updatedBio)
+    await expect(page.getByLabel("Bio")).toHaveValue(updatedBio)
     await page.getByRole("button", { name: "Save Lineage Profile" }).click()
 
     await expect(page.getByText("Lineage profile updated.")).toBeVisible({ timeout: 15_000 })
+
+    await expect
+      .poll(async () => (await readLineageLifecycleState(fixture)).passportDisplayName, {
+        timeout: 30_000,
+      })
+      .toBe(updatedDisplayName)
 
     const updatedState = await readLineageLifecycleState(fixture)
     expect(updatedState.passportDisplayName).toBe(updatedDisplayName)
@@ -273,13 +305,11 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     )
 
     await page.goto(`/lineage/${fixture.treeSlug}`)
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByText(updatedDisplayName)).toBeVisible()
-    await page
-      .getByRole("button", {
-        name: new RegExp(`Open lineage profile for ${escapeRegExp(updatedDisplayName)}`),
-      })
-      .click()
-    await expect(page.getByText(updatedBio)).toBeVisible()
+    await openLineageProfileDrawer(page, updatedDisplayName)
+    await expect(page.getByText(updatedBio)).toBeVisible({ timeout: 30_000 })
   })
 })

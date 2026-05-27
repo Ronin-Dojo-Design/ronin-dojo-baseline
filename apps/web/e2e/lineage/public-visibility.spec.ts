@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import {
   cleanupLineageVisibilityFixture,
@@ -11,6 +12,20 @@ test.describe.configure({ mode: "serial" })
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+async function openLineageProfileDrawer(page: Page, displayName: string) {
+  const profileButton = page.getByRole("button", {
+    name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
+  })
+
+  await expect(profileButton).toBeVisible({ timeout: 30_000 })
+  await expect(async () => {
+    await profileButton.click()
+    await expect(page.getByRole("dialog", { name: displayName })).toBeVisible({
+      timeout: 3_000,
+    })
+  }).toPass({ timeout: 30_000 })
 }
 
 async function expectNoHiddenText(pageContent: string, hiddenText: string[]) {
@@ -32,10 +47,11 @@ test.describe("Lineage public visibility E2E", () => {
     page,
   }) => {
     await page.goto(`/lineage?q=${encodeURIComponent(fixture.searchToken)}`)
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByRole("heading", { name: "Lineage Trees", exact: true })).toBeVisible()
-    await expect(page.getByText("1 lineage tree")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Lineage Trees", exact: true, level: 1 }),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText("1 lineage tree")).toBeVisible({ timeout: 30_000 })
     await expect(
       page.getByRole("link", { name: new RegExp(escapeRegExp(fixture.treeName)) }),
     ).toBeVisible()
@@ -56,9 +72,11 @@ test.describe("Lineage public visibility E2E", () => {
 
   test("anonymous listing search does not match hidden member names", async ({ page }) => {
     await page.goto(`/lineage?q=${encodeURIComponent(fixture.hiddenNames.unlisted)}`)
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByText("0 lineage trees")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Lineage Trees", exact: true, level: 1 }),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText("0 lineage trees")).toBeVisible({ timeout: 30_000 })
     await expect(page.getByText(fixture.treeName)).toHaveCount(0)
 
     const body = page.locator("body")
@@ -77,9 +95,10 @@ test.describe("Lineage public visibility E2E", () => {
 
   test("anonymous detail renders only public members and drawer profiles", async ({ page }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible()
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByText("1 member")).toBeVisible()
     await expect(page.getByText("4 members")).toHaveCount(0)
     await expect(page.getByText(fixture.publicName)).toBeVisible()
@@ -94,13 +113,11 @@ test.describe("Lineage public visibility E2E", () => {
     }
     await expectNoHiddenText(await page.content(), hiddenText)
 
-    await page
-      .getByRole("button", {
-        name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.publicName)}`),
-      })
-      .click()
+    await openLineageProfileDrawer(page, fixture.publicName)
 
-    await expect(page.getByRole("heading", { name: fixture.publicName })).toBeVisible()
+    await expect(page.getByRole("heading", { name: fixture.publicName })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByText("Current Rank")).toBeVisible()
 
     for (const hiddenValue of hiddenText) {

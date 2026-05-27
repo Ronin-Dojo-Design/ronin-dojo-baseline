@@ -36,11 +36,17 @@ concurrency:
 
 jobs:
   test:
-    name: Playwright (chromium full + lineage cross-browser)
+    name: Playwright (${{ matrix.project }})
     runs-on: ubuntu-latest
-    # First CI run finished tests at 27.8m but post-job cleanup pushed
-    # total past the 30m cap. 60m gives slack without losing the safety net.
-    timeout-minutes: 60
+    # SESSION_0268: split browsers into parallel single-worker jobs. This
+    # keeps the useful cross-browser signal from SESSION_0267 while reducing
+    # wall time versus one 30m serial job.
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
 
     services:
       postgres:
@@ -108,29 +114,29 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
+          key: playwright-${{ runner.os }}-${{ matrix.project }}-${{ hashFiles('apps/web/package.json') }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps chromium firefox webkit
+        run: bunx playwright install --with-deps ${{ matrix.project }}
         working-directory: apps/web
 
       - name: Install Playwright OS deps (cache hit path)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps chromium firefox webkit
+        run: bunx playwright install-deps ${{ matrix.project }}
         working-directory: apps/web
 
       - name: Run Playwright tests
         # Chromium runs the full e2e/ tree; firefox + webkit run only e2e/lineage/
         # per playwright.config.ts per-project `testDir` scoping (SESSION_0266).
-        run: bunx playwright test --project=chromium --project=firefox --project=webkit
+        run: bunx playwright test --project=${{ matrix.project }}
         working-directory: apps/web
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: apps/web/playwright-report/
           retention-days: 14
 
@@ -138,6 +144,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
+          name: playwright-test-results-${{ matrix.project }}
           path: apps/web/test-results/
           retention-days: 7
