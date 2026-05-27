@@ -7,10 +7,26 @@ name: Playwright E2E
 # push to main, and on demand.
 
 on:
+  # Skip on commits that only touch docs / agent context / IDE config.
+  # SESSION_0267 commit pattern shows ~30-50% of commits are docs-only
+  # (SESSION files, wiki updates, runbook edits). Path filters apply to
+  # both pull_request and push to keep behavior symmetric.
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.claude/**'
+      - '.github/copilot-instructions.md'
+      - '.github/prompts/**'
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.claude/**'
+      - '.github/copilot-instructions.md'
+      - '.github/prompts/**'
   workflow_dispatch:
 
 # Cancel in-flight runs on the same ref when a new commit lands.
