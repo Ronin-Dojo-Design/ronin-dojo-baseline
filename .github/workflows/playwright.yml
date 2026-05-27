@@ -1,0 +1,121 @@
+name: Playwright E2E
+
+# SESSION_0267_FINDING_02 closure: the playwright.config.ts cross-browser
+# project additions from SESSION_0266 have never been exercised on CI
+# because no GitHub Actions workflow existed. This workflow runs the
+# chromium full suite + firefox/webkit lineage subset on every PR, every
+# push to main, and on demand.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel in-flight runs on the same ref when a new commit lands.
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Playwright (chromium full + lineage cross-browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ronindojo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Required by env.ts t3-env validation
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ronindojo_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ronindojo_test
+      BETTER_AUTH_SECRET: ci-only-secret-not-for-production-32b
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_EMAIL: ci@ronindojo.test
+      # Optional but consumed by some seed/auth paths
+      CRON_SECRET: ci-cron-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: bunx prisma generate
+        working-directory: apps/web
+
+      - name: Apply Prisma migrations
+        run: bunx prisma migrate deploy
+        working-directory: apps/web
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium firefox webkit
+        working-directory: apps/web
+
+      - name: Install Playwright OS deps (cache hit path)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium firefox webkit
+        working-directory: apps/web
+
+      - name: Run Playwright tests
+        # Chromium runs the full e2e/ tree; firefox + webkit run only e2e/lineage/
+        # per playwright.config.ts per-project `testDir` scoping (SESSION_0266).
+        run: bunx playwright test --project=chromium --project=firefox --project=webkit
+        working-directory: apps/web
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 14
+
+      - name: Upload test-results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/web/test-results/
+          retention-days: 7

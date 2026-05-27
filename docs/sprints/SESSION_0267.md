@@ -273,7 +273,7 @@ This is **SESSION_0267_FINDING_02**, filed below. It is independent from FINDING
 - **Evidence:** `ls .github/workflows/` → no such directory. `gh workflow list` returns only agent integrations. SESSION_0266's `playwright.config.ts` comment promised "CI (Linux) runs all three" projects but no `.yml` was authored. On Brian's mac12 dev box, webkit is uninstallable (Darwin 21.x), so it has zero coverage to date.
 - **Impact:** Webkit users (any Safari / iOS Safari / WebKit-based browser) would hit engine-specific regressions on bracket viewer, lineage drawer, claim form, drag-reorder canvas — none of which have ever been tested against webkit. Firefox has local-dev coverage (4 lineage specs pass per SESSION_0266 + SESSION_0267) but the broader suite (26 non-lineage specs) has zero firefox coverage either.
 - **Required follow-up:** Author `.github/workflows/playwright.yml` running the chromium full suite + the 4 lineage specs on firefox + webkit (per the per-project `testDir` scope). Use the Playwright official Linux runner image to satisfy webkit's Linux dependency. Cache the Playwright browser install. Run on `pull_request` to `main` + on `push` to `main`.
-- **Status:** open — carry-forward SESSION_0268 (or a dedicated CI-infra session).
+- **Status:** workflow shipped post-close (see `## Post-close addendum` below); first CI run pending.
 
 **SESSION_0267_FINDING_01 — Full-suite flake-under-load extends beyond the named carry-forward specs**
 
@@ -340,6 +340,30 @@ No new ubiquitous-language terms. `getByRole`, `waitForLoadState`, `test.fixme`,
 - **First task (track A):** Walk `authenticated-lifecycle.spec.ts` top-to-bottom; for each `waitForLoadState("networkidle")`, identify the page or modal that the test just navigated to and pick its first stable post-hydration heading (or form-control if no heading). Replace each call with `await expect(page.getByRole(...)).toBeVisible({ timeout: 30_000 })` (or `40_000` for any redirect URL match). Re-run the spec under chromium + firefox to verify still-green. Update `§14e` backlog table to reflect the drained file.
 - **First task (track B):** Author `.github/workflows/playwright.yml` running on `pull_request` and `push` to `main`. Steps: checkout, bun install, prisma generate, Playwright browser install with cache (`actions/cache` on `~/.cache/ms-playwright`), `bunx playwright test --project=chromium` (full suite) + `bunx playwright test --project=firefox --project=webkit e2e/lineage` (cross-browser subset). Upload `playwright-report` artifact on failure. Validate by pushing a no-op commit and watching the run with `gh run watch`.
 - **Stretch task:** If track A: apply the same cleanup to `public-visibility.spec.ts` (3 calls) since it's the next-largest lineage-cluster offender. If track B: configure branch-protection on `main` to require the new workflow's chromium check.
+
+## Post-close addendum (2026-05-27 follow-up)
+
+Operator requested the FINDING_02 workflow gap be closed in-session rather than carried to SESSION_0268.
+
+**Closed:**
+
+- **`apps/web/test-results/.last-run.json` untracked.** The file was committed once in a prior session, then later added to both `.gitignore` files. Gitignore doesn't untrack already-tracked files, so it kept appearing as modified across SESSION_0264+. `git rm --cached` removes it from the index (file kept locally); future runs no longer dirty the working tree.
+- **`.github/workflows/playwright.yml` shipped** with the SESSION_0267 follow-up commit. Closes (modulo first-run validation) SESSION_0267_FINDING_02.
+  - **Triggers:** `pull_request` to `main`, `push` to `main`, `workflow_dispatch`.
+  - **Concurrency group:** per-ref with `cancel-in-progress: true` (so superseded PR pushes cancel in-flight runs).
+  - **Services:** `postgres:16` service container with healthcheck.
+  - **Setup:** `pnpm@9` + `node@20` + `bun@1.3.13` matching local package manifests.
+  - **DB:** `bunx prisma generate` + `bunx prisma migrate deploy` against the postgres service.
+  - **Cache:** Playwright browser binaries via `actions/cache` keyed on `apps/web/package.json` hash; falls back to `playwright install-deps` for OS deps on cache hits.
+  - **Browser scope:** `--project=chromium --project=firefox --project=webkit` — single Playwright invocation; chromium runs full e2e/, firefox + webkit run only e2e/lineage/ via `playwright.config.ts` per-project `testDir` scoping.
+  - **Artifacts:** `playwright-report` on every run (14-day retention), `test-results` on failure (7-day retention).
+  - **Env:** Inline non-secret CI values (`BETTER_AUTH_SECRET = ci-only-secret-not-for-production-32b`, etc.) — `apps/web/env.ts` t3-env validation requires only DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_SITE_EMAIL; everything else is optional.
+
+**First CI run signal:** filed below in `## Webkit CI signal — first run` once the post-push run completes.
+
+## Webkit CI signal — first run
+
+(Filled after `gh run watch` on the post-workflow-ship commit.)
 
 ## Status
 
