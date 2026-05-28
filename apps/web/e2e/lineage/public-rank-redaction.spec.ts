@@ -61,9 +61,10 @@ test.describe("Lineage public rank-redaction E2E", () => {
 
     try {
       await page.goto(`/lineage/${fixture.treeSlug}`)
-      await page.waitForLoadState("networkidle")
 
-      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible()
+      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+        timeout: 30_000,
+      })
 
       // Sanity: both PUBLIC members are listed in the tree.
       await expect(page.getByText(fixture.memberA.displayName)).toBeVisible()
@@ -72,9 +73,7 @@ test.describe("Lineage public rank-redaction E2E", () => {
       // Open Member-B's drawer (the redaction case).
       await page
         .getByRole("button", {
-          name: new RegExp(
-            `Open lineage profile for ${escapeRegExp(fixture.memberB.displayName)}`,
-          ),
+          name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.memberB.displayName)}`),
         })
         .click()
 
@@ -118,13 +117,13 @@ test.describe("Lineage public rank-redaction E2E", () => {
 
     try {
       await page.goto(`/lineage/${fixture.treeSlug}`)
-      await page.waitForLoadState("networkidle")
+      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+        timeout: 30_000,
+      })
 
       await page
         .getByRole("button", {
-          name: new RegExp(
-            `Open lineage profile for ${escapeRegExp(fixture.memberA.displayName)}`,
-          ),
+          name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.memberA.displayName)}`),
         })
         .click()
 

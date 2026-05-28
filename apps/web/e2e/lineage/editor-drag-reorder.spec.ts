@@ -77,8 +77,7 @@ async function dragWithPointer({
 }
 
 async function openEditMode(page: Page, treeName: string) {
-  await page.waitForLoadState("networkidle")
-  await expect(page.getByRole("heading", { name: treeName })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole("heading", { name: treeName })).toBeVisible({ timeout: 30_000 })
 
   const editToggle = page.getByRole("button", { name: "Edit", exact: true })
   await expect(editToggle).toBeVisible()
@@ -138,7 +137,9 @@ test.describe("Lineage editor drag/reorder E2E", () => {
       if (!toastVisible) continue
 
       await page.reload()
-      await page.waitForLoadState("networkidle")
+      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+        timeout: 30_000,
+      })
 
       reorderState = await readLineageLifecycleState(fixture)
       const movedB = reorderState.siblings.find(s => s.id === fixture.siblingMemberIds[1])
@@ -189,7 +190,9 @@ test.describe("Lineage editor drag/reorder E2E", () => {
       if (!toastVisible) continue
 
       await page.reload()
-      await page.waitForLoadState("networkidle")
+      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+        timeout: 30_000,
+      })
 
       groupState = await readLineageLifecycleState(fixture)
       const movedB = groupState.siblings.find(s => s.id === fixture.siblingMemberIds[1])

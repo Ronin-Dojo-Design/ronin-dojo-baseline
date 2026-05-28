@@ -42,7 +42,6 @@ test.describe("Admin DSR triage E2E", () => {
     regularUserId = user.userId
 
     await page.goto("/admin/privacy/requests")
-    await page.waitForLoadState("networkidle")
 
     // Admin layout redirects non-admins to /auth/login — should NOT see admin table
     const adminTable = page.locator("table").first()
@@ -81,31 +80,27 @@ test.describe("Admin DSR triage E2E", () => {
 
     // Navigate to admin DSR list
     await page.goto("/admin/privacy/requests")
-    await page.waitForLoadState("networkidle")
 
     // Should see the request
     await expect(page.locator("body")).toContainText(submitter.email, { timeout: 10_000 })
 
     // Click through to detail
     await page.getByText("View →").first().click()
-    await page.waitForLoadState("networkidle")
 
     // Should see PENDING badge
-    await expect(page.locator("text=PENDING").first()).toBeVisible()
+    await expect(page.locator("text=PENDING").first()).toBeVisible({ timeout: 10_000 })
 
     // Transition to IN_PROGRESS
     await page.getByRole("button", { name: /→ IN PROGRESS/i }).click()
     // Server action fires, router.refresh() re-renders — reload to confirm
     await page.waitForTimeout(2_000)
     await page.reload()
-    await page.waitForLoadState("networkidle")
     await expect(page.getByText(/IN.PROGRESS/).first()).toBeVisible({ timeout: 10_000 })
 
     // Transition to FULFILLED
     await page.getByRole("button", { name: /→ FULFILLED/i }).click()
     await page.waitForTimeout(2_000)
     await page.reload()
-    await page.waitForLoadState("networkidle")
     await expect(page.getByText("FULFILLED").first()).toBeVisible({ timeout: 10_000 })
 
     // Verify in DB

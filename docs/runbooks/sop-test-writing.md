@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-27
-last_agent: codex-session-0268
+last_agent: copilot-session-0269
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -814,20 +814,18 @@ As of SESSION_0267, the following spec files contain `waitForLoadState("networki
 | File | Approx call count | Notes |
 | --- | --- | --- |
 | `e2e/admin/bracket.spec.ts` | 2 | Bracket flow; partial cleanup landed SESSION_0266/0267 |
-| `e2e/admin/data-subject-request-triage.spec.ts` | 5 | DSR triage workflow; needs per-form anchor picks |
 | `e2e/admin/membership-detail.spec.ts` | 4 | Membership tabs page |
 | `e2e/admin/membership-list.spec.ts` | 2 | Membership listing |
 | `e2e/admin/scoring.spec.ts` | 1 | Scoring flow; partial cleanup landed SESSION_0267 |
 | `e2e/admin/tournament-list.spec.ts` | 2 | Tournament listing |
-| `e2e/lineage/editor-drag-reorder.spec.ts` | 3 | Drag-reorder spec; uses SESSION_0265 pointer recipe |
-| `e2e/lineage/public-rank-redaction.spec.ts` | 2 | Public rank redaction |
 | `e2e/tournaments/list.spec.ts` | 1 | Tournament list page |
 | `e2e/tournaments/register.spec.ts` | 2 | Tournament registration |
 | `e2e/tournaments/results.spec.ts` | 3 | Tournament results |
 
 SESSION_0268 drained `e2e/lineage/authenticated-lifecycle.spec.ts` and `e2e/lineage/public-visibility.spec.ts` to zero.
+SESSION_0269 drained `e2e/lineage/editor-drag-reorder.spec.ts`, `e2e/lineage/public-rank-redaction.spec.ts`, and `e2e/admin/data-subject-request-triage.spec.ts` to zero. The `e2e/lineage/` directory is now fully clean.
 
-Total remaining: ~27 calls across 11 files. Cleanup target: drain to zero across 3–4 future sessions, batching by feature area.
+Total remaining: ~17 calls across 8 files. Cleanup target: drain to zero across 2–3 future sessions, batching by feature area.
 
 ### Cross-references
 
