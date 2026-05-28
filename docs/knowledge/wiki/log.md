@@ -146,3 +146,10 @@ Use this file only as historical context for early wiki adoption.
 - Added `apps/web/lib/brand-context.ts` as the single source of truth for `HOST_TO_BRAND` / `resolveBrand` / `getRequestBrand`; refactored `apps/web/proxy.ts` and `apps/web/server/web/program/actions.ts` to import from it. MB-002 brand-scope hardening now has one resolution path.
 - Patched `docs/protocols/WORKFLOW_5.0.md` calendar: SESSION_0030 = planning close, SESSION_0031 = class schedule execution with security gates, downstream rows shifted by one (launch day moves to SESSION_0041).
 - Added MB-014 in `docs/knowledge/wiki/manual-boundary-registry.md` for production multi-domain + server-action hardening (apex domains, `HOST_TO_BRAND` rows, `serverActions.allowedOrigins`, env validation). Owner-gated; does not block SESSION_0031, blocks staging.
+
+## 2026-05-28 — SESSION_0276
+
+- Populated Brian Scott's Rigan Machado BJJ lineage tree member selected rank via `LineageTreeMember.rankAwardId` seed backfill to the BJJ `BK1` `RankAward`.
+- Migrated the Baseline discipline lineage section from the legacy row/edge fallback to the v1 `LineageTree` / `LineageTreeBoard` path for seeded discipline tree slugs.
+- Confirmed Bob Bass claim-flow readiness: Bob is a claimable placeholder node on the published Rigan Machado lineage tree; authenticated browser testing remains operator-side.
+- Updated the Black Belt Legacy gap matrix and SESSION_0276 close record.
