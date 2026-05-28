@@ -22,6 +22,7 @@ import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 type LineageNodeCardProps = {
   node: LineageNodeRow
   isRoot?: boolean
+  isClaimable?: boolean
   onSelect: (nodeId: string) => void
 }
 
@@ -33,7 +34,7 @@ function initials(name: string | null | undefined): string {
   return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
 }
 
-export function LineageNodeCard({ node, isRoot, onSelect }: LineageNodeCardProps) {
+export function LineageNodeCard({ node, isRoot, isClaimable, onSelect }: LineageNodeCardProps) {
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
   const latestRankAward = node.user.rankAwards?.[0]
   const rankLabel = latestRankAward?.rank
@@ -90,6 +91,16 @@ export function LineageNodeCard({ node, isRoot, onSelect }: LineageNodeCardProps
           {isRoot && (
             <Badge variant="primary" size="sm">
               Root
+            </Badge>
+          )}
+          {isClaimable === true && (
+            <Badge variant="info" size="sm">
+              Claimable
+            </Badge>
+          )}
+          {isClaimable === false && (
+            <Badge variant="soft" size="sm">
+              Display only
             </Badge>
           )}
         </Stack>

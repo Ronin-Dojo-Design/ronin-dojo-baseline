@@ -8,6 +8,7 @@ import {
   CreditCardIcon,
   FileTextIcon,
   FolderIcon,
+  GitBranchIcon,
   GraduationCapIcon,
   LayoutDashboardIcon,
   MailIcon,
@@ -46,6 +47,7 @@ const adminRoutes = [
   { label: "Programs", href: "/admin/programs", icon: GraduationCapIcon },
   { label: "Courses", href: "/admin/courses", icon: BookOpenIcon },
   { label: "Certificates", href: "/admin/certificates", icon: MedalIcon },
+  { label: "Lineage", href: "/admin/lineage", icon: GitBranchIcon },
   { label: "Memberships", href: "/admin/memberships", icon: CreditCardIcon },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: TicketIcon },
   { label: "Subscription Tiers", href: "/admin/subscription-tiers", icon: BarChart3Icon },
@@ -60,9 +62,19 @@ const adminRoutes = [
   { label: "Settings", href: "/admin/billing", icon: SettingsIcon },
 ] as const
 
-export const CommandPalette = () => {
+type CommandPaletteProps = {
+  userRole?: string
+}
+
+const LINEAGE_TREE_ADMIN_HREFS = new Set(["/admin/lineage"])
+
+export const CommandPalette = ({ userRole }: CommandPaletteProps) => {
   const [open, setOpen] = useState(false)
   const router = useRouter()
+  const routes =
+    userRole === "lineage_tree_admin"
+      ? adminRoutes.filter(route => LINEAGE_TREE_ADMIN_HREFS.has(route.href))
+      : adminRoutes
 
   useHotkeys([["mod+k", () => setOpen(o => !o)]])
 
@@ -79,7 +91,7 @@ export const CommandPalette = () => {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Pages">
-          {adminRoutes.map(route => (
+          {routes.map(route => (
             <CommandItem
               key={route.href}
               value={route.label}

@@ -13,7 +13,7 @@ export const Shell = ({ children, userRole }: ShellProps) => {
 
       <div className="grid content-start gap-4 flex-1 p-4 sm:px-6">{children}</div>
 
-      <CommandPalette />
+      <CommandPalette userRole={userRole} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import { H4 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
@@ -34,11 +35,31 @@ export default async function LineageClaimPage({ params }: Props) {
     notFound()
   }
 
+  if (!tree.tree.isClaimable) {
+    return (
+      <Stack direction="column" className="mx-auto max-w-2xl py-8">
+        <H4>Claim a Lineage Node</H4>
+        <Note>This lineage tree is not currently accepting profile claims.</Note>
+      </Stack>
+    )
+  }
+
   // Build member list for the node selector.
-  const members = tree.members.map(m => ({
-    nodeId: m.nodeId,
-    displayName: m.node.user?.passport?.displayName ?? m.node.user?.name ?? "Unknown",
-  }))
+  const members = tree.members
+    .filter(m => m.isClaimable)
+    .map(m => ({
+      nodeId: m.nodeId,
+      displayName: m.node.user?.passport?.displayName ?? m.node.user?.name ?? "Unknown",
+    }))
+
+  if (members.length === 0) {
+    return (
+      <Stack direction="column" className="mx-auto max-w-2xl py-8">
+        <H4>Claim a Lineage Node</H4>
+        <Note>No profiles in this lineage tree are currently accepting claims.</Note>
+      </Stack>
+    )
+  }
 
   return (
     <Stack direction="column" className="mx-auto max-w-2xl py-8">

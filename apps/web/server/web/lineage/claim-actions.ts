@@ -12,7 +12,9 @@ import { submitLineageClaimSchema } from "~/server/web/lineage/claim-schemas"
 
 const LINEAGE_CLAIM_ERROR = {
   TREE_NOT_FOUND: "Tree not found or not published.",
+  TREE_NOT_CLAIMABLE: "This lineage tree is not currently accepting profile claims.",
   NODE_NOT_IN_TREE: "Node is not a member of this tree.",
+  NODE_NOT_CLAIMABLE: "This lineage profile is not currently accepting claims.",
   DUPLICATE_CLAIM: "You already have a pending or approved claim on this node.",
 } as const
 
@@ -28,11 +30,15 @@ export const submitLineageClaimRequest = userActionClient
         brand,
         isPublished: true,
       },
-      select: { id: true },
+      select: { id: true, isClaimable: true },
     })
 
     if (!tree) {
       throw new Error(LINEAGE_CLAIM_ERROR.TREE_NOT_FOUND)
+    }
+
+    if (!tree.isClaimable) {
+      throw new Error(LINEAGE_CLAIM_ERROR.TREE_NOT_CLAIMABLE)
     }
 
     // 2. Validate the node belongs to the tree via LineageTreeMember.
@@ -41,11 +47,15 @@ export const submitLineageClaimRequest = userActionClient
         treeId: tree.id,
         nodeId: parsedInput.nodeId,
       },
-      select: { id: true },
+      select: { id: true, isClaimable: true },
     })
 
     if (!member) {
       throw new Error(LINEAGE_CLAIM_ERROR.NODE_NOT_IN_TREE)
+    }
+
+    if (!member.isClaimable) {
+      throw new Error(LINEAGE_CLAIM_ERROR.NODE_NOT_CLAIMABLE)
     }
 
     // 3. Duplicate guard: PENDING or APPROVED claim by same user on same node+tree.

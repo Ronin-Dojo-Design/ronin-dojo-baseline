@@ -2364,6 +2364,7 @@ model LineageTree {
   description         String?
   visibility          LineageVisibility    @default(PUBLIC)
   isPublished         Boolean              @default(false)
+  isClaimable         Boolean              @default(true)
   defaultRootMemberId String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
@@ -2395,6 +2396,7 @@ model LineageTreeMember {
   visualSortOrder         Int      @default(0)
   showPromotionDatePublic Boolean  @default(true)
   showRankPublic          Boolean  @default(true)
+  isClaimable             Boolean  @default(true)
   isCollapsedDefault      Boolean  @default(false)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt

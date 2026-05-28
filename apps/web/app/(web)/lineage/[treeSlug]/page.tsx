@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { Button } from "~/components/common/button"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -150,6 +153,19 @@ export default async function LineageTreePage({ params }: Props) {
         <IntroTitle>{result.tree.name}</IntroTitle>
         {result.tree.description && <IntroDescription>{result.tree.description}</IntroDescription>}
       </Intro>
+
+      {result.tree.isClaimable && (
+        <Stack size="sm" wrap>
+          <Button
+            variant="secondary"
+            size="sm"
+            render={<Link href={`/lineage/${treeSlug}/claim`} />}
+          >
+            Claim a profile
+          </Button>
+          <Note>Claimable profiles are marked on the tree.</Note>
+        </Stack>
+      )}
 
       <Section>
         <Section.Content>

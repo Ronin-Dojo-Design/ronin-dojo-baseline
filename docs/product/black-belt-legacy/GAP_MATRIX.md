@@ -4,8 +4,8 @@ slug: bbl-gap-matrix
 type: report
 status: active
 created: 2026-05-27
-updated: 2026-05-27
-last_agent: copilot-session-0272
+updated: 2026-05-28
+last_agent: codex-session-0273
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -30,7 +30,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | BBL-PROFILE-001 | View martial artist profile | 🔶 Partial | `/directory/[slug]` exists (directory listing). `LineageNode` has bio, slug, visibility. Profile drawer exists in lineage tree. **Missing:** Dedicated public profile page (e.g., `/people/[slug]`) with full bio, rank summary, school, verification status. |
-| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. **Missing:** End-to-end flow validation; evidence attachment UI unclear. |
+| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. **Missing:** End-to-end flow validation with authenticated browser session; evidence attachment UI unclear. |
 | BBL-PROFILE-003 | Admin approve/deny claims | ✅ Built | `/admin/lineage/claims/[id]` route exists. Server: `claim-review-actions.ts` with safe-action tests. Admin can approve/deny with audit note. |
 | BBL-PROFILE-004 | Trust badges (verified/unverified/disputed) | 🔶 Partial | `LineageNode.isVerified` and `LineageNode.visibility` exist in schema. `lineage-node-card.tsx` renders node cards. **Missing:** Consistent trust badge component across card, drawer, and detail page. No `disputed` or `imported` status enum on LineageNode (only `isVerified: boolean`). |
 | BBL-PROFILE-005 | Owner edits public bio/photo/links | 🔶 Partial | `node-profile-actions.ts` + `node-profile-schemas.ts` exist with tests. **Missing:** Public-facing edit UI for profile owners (separate from lineage editor). |
@@ -43,7 +43,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| BBL-LINEAGE-001 | View lineage tree | 🔶 Partial | `/lineage` index + `/lineage/[treeSlug]` routes exist. `lineage-tree-canvas.tsx`, `lineage-tree-board.tsx`, `lineage-node-card.tsx`, `lineage-profile-drawer.tsx` all exist. **Was 404ing** because no `LineageTree` records existed (fixed in SESSION_0272 TASK_02 seed). |
+| BBL-LINEAGE-001 | View lineage tree | 🔶 Partial | `/lineage` index + `/lineage/[treeSlug]` routes exist. `lineage-tree-canvas.tsx`, `lineage-tree-board.tsx`, `lineage-node-card.tsx`, `lineage-profile-drawer.tsx` all exist. SESSION_0273 local seed proof returned 200 for `/lineage` and `/lineage/rigan-machado-bjj-lineage`. **Missing:** Production seed/render proof; production env access blocked the seed and production currently shows 0 trees / detail 500. |
 | BBL-LINEAGE-002 | Click node → highlight root path | ❌ Not started | No root-path highlighting logic in `lineage-tree-canvas.tsx`. Node click opens drawer but doesn't dim unrelated branches. |
 | BBL-LINEAGE-003 | Grouped promotion rows | 🔶 Partial | `LineageVisualGroup` model exists. `lineage-group-header-form.tsx` exists. **Missing:** Public rendering of grouped rows with `showPublicLabel` logic. |
 | BBL-LINEAGE-004 | Unknown dates handled gracefully | 🔧 Infra only | `showPromotionDatePublic` flag exists on `LineageTreeMember`. **Missing:** UI logic to render "Unknown date" vs omit. |
@@ -135,9 +135,9 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 ### Highest-value next tasks (Petey recommendation)
 
-1. **BBL-LINEAGE-001 completion** — Verify `/lineage` index + `/lineage/[treeSlug]` render correctly with the new seed data. Re-run seed scripts on local and production. This unblocks all of Epic 2.
-2. **Admin lineage CRUD + sidebar nav** — No `/admin/lineage` list/detail CRUD pages. No "Lineage" tab in admin sidebar. Admin dashboard also lacks a clear close/back navigation pattern. These are blockers for all editor stories (Epic 3).
-3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Would need a verification status enum upgrade (VERIFIED / UNVERIFIED / DISPUTED / IMPORTED).
+1. **BBL-LINEAGE-001 production completion** — SESSION_0273 proved local seed/render, but production seed is still blocked on usable production DB access. First next step is to run `seed-baseline-lineage.ts` against production and re-check `/lineage` + `/lineage/rigan-machado-bjj-lineage`.
+2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
+3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
 4. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).
-5. **BBL-RANK-004** — Disputed status enum. Foundational for trust features across the board.
+5. **BBL-RANK-004** — Disputed status enum. Foundational for rank trust features across the board.
 6. **Public profile page** (BBL-PROFILE-001) — Dedicated `/people/[slug]` route. High user visibility.

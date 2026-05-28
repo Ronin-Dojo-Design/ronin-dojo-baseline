@@ -65,6 +65,7 @@ type CanvasMember = {
   visualSortOrder: number
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
+  isClaimable?: boolean
 }
 
 type ChildGroup = {
@@ -138,6 +139,7 @@ function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMe
     visualSortOrder: member.visualSortOrder,
     primaryVisualParentMemberId: member.primaryVisualParentMemberId,
     visualGroupId: member.visualGroupId,
+    isClaimable: member.isClaimable,
   }))
 }
 
@@ -188,6 +190,7 @@ function normalizeLegacyRows({
     visualSortOrder: orderByNodeId.get(node.id) ?? 0,
     primaryVisualParentMemberId: node.id === rootId ? null : (parentByNodeId.get(node.id) ?? null),
     visualGroupId: null,
+    isClaimable: undefined,
   }))
 }
 
@@ -498,7 +501,12 @@ function LineageBranch({
           isDragging && "opacity-60 shadow-xl",
         )}
       >
-        <LineageNodeCard node={member.node} isRoot={isRoot} onSelect={onSelect} />
+        <LineageNodeCard
+          node={member.node}
+          isRoot={isRoot}
+          isClaimable={member.isClaimable}
+          onSelect={onSelect}
+        />
       </div>
 
       {childGroups.length > 0 && (

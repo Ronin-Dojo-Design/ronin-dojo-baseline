@@ -13,6 +13,7 @@ import {
   FileTextIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
+  GitBranchIcon,
   HardDriveIcon,
   IdCardIcon,
   ImageIcon,
@@ -44,12 +45,14 @@ type SidebarProps = {
 }
 
 const TOURNAMENT_DIRECTOR_HREFS = new Set(["/admin", "/admin/tournaments"])
+const LINEAGE_TREE_ADMIN_HREFS = new Set(["/admin/lineage"])
 
 export const Sidebar = ({ userRole }: SidebarProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
   const search = useSearch()
   const isTournamentDirector = userRole === "tournament_director"
+  const isLineageTreeAdmin = userRole === "lineage_tree_admin"
 
   const handleOpenSite = (e: MouseEvent<HTMLElement>) => {
     e.preventDefault()
@@ -121,6 +124,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Certificates",
       href: "/admin/certificates",
       prefix: <ScrollTextIcon />,
+    },
+    {
+      title: "Lineage",
+      href: "/admin/lineage",
+      prefix: <GitBranchIcon />,
     },
     {
       title: "Media",
@@ -227,7 +235,18 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
           return allowed ? link : null
         }),
       )
-    : allLinks
+    : isLineageTreeAdmin
+      ? collapseSeparators(
+          allLinks.map(link => {
+            if (link === undefined) return undefined
+            const allowed =
+              LINEAGE_TREE_ADMIN_HREFS.has(link.href) ||
+              link.title === "Quick Menu" ||
+              link.title === "Logout"
+            return allowed ? link : null
+          }),
+        )
+      : allLinks
 
   return (
     <Nav

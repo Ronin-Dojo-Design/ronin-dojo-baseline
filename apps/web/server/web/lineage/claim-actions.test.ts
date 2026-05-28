@@ -178,12 +178,66 @@ describe("submitLineageClaimRequest — logic", () => {
     expect(tree).toBeNull()
   })
 
+  it("rejects when tree is not claimable", async () => {
+    await db.lineageTree.update({
+      where: { id: fx!.treeId },
+      data: { isClaimable: false },
+    })
+
+    try {
+      const tree = await db.lineageTree.findFirst({
+        where: { id: fx!.treeId, brand: TEST_BRAND, isPublished: true },
+        select: { id: true, isClaimable: true },
+      })
+
+      expect(tree).not.toBeNull()
+      expect(tree?.isClaimable).toBe(false)
+      if (tree && !tree.isClaimable) {
+        expect(() => {
+          throw new Error("This lineage tree is not currently accepting profile claims.")
+        }).toThrow("not currently accepting")
+      }
+    } finally {
+      await db.lineageTree.update({
+        where: { id: fx!.treeId },
+        data: { isClaimable: true },
+      })
+    }
+  })
+
   it("rejects when node is not a member of the tree", async () => {
     const member = await db.lineageTreeMember.findFirst({
       where: { treeId: fx!.treeId, nodeId: "nonexistent-node-id" },
     })
 
     expect(member).toBeNull()
+  })
+
+  it("rejects when member is not claimable", async () => {
+    await db.lineageTreeMember.update({
+      where: { id: fx!.memberId },
+      data: { isClaimable: false },
+    })
+
+    try {
+      const member = await db.lineageTreeMember.findFirst({
+        where: { treeId: fx!.treeId, nodeId: fx!.nodeId },
+        select: { id: true, isClaimable: true },
+      })
+
+      expect(member).not.toBeNull()
+      expect(member?.isClaimable).toBe(false)
+      if (member && !member.isClaimable) {
+        expect(() => {
+          throw new Error("This lineage profile is not currently accepting claims.")
+        }).toThrow("profile is not currently accepting")
+      }
+    } finally {
+      await db.lineageTreeMember.update({
+        where: { id: fx!.memberId },
+        data: { isClaimable: true },
+      })
+    }
   })
 
   it("allows claim after previous is DENIED", async () => {
