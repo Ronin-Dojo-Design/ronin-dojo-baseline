@@ -67,6 +67,23 @@ export default async function OrganizationDetailPage({ params }: Props) {
 
   const isOwner = session?.user?.id === org.ownerId
 
+  // Group memberships by unique user for display (Passport+Shell model:
+  // one person can have many discipline memberships in the same org).
+  const membersByUser = new Map<
+    string,
+    { user: (typeof org.memberships)[number]["user"]; memberships: typeof org.memberships }
+  >()
+  for (const m of org.memberships) {
+    const existing = membersByUser.get(m.user.id)
+    if (existing) {
+      existing.memberships.push(m)
+    } else {
+      membersByUser.set(m.user.id, { user: m.user, memberships: [m] })
+    }
+  }
+  const uniqueMembers = Array.from(membersByUser.values())
+  const uniqueMemberCount = uniqueMembers.length
+
   const relatedOrgs = await findRelatedOrganizations({
     organizationId: org.id,
     brand,
@@ -111,7 +128,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
               </Badge>
             ))}
             <span className="text-sm text-muted-foreground">
-              {org._count.memberships} member{org._count.memberships !== 1 ? "s" : ""}
+              {uniqueMemberCount} member{uniqueMemberCount !== 1 ? "s" : ""}
             </span>
           </Stack>
         </IntroDescription>
@@ -179,7 +196,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
 
           {/* Members */}
           <div className="space-y-3">
-            <H4>Members ({org._count.memberships})</H4>
+            <H4>Members ({uniqueMemberCount})</H4>
 
             {org.disciplines.length > 0 && (
               <div className="space-y-2">
@@ -198,44 +215,70 @@ export default async function OrganizationDetailPage({ params }: Props) {
             )}
 
             <div className="space-y-2">
-              {org.memberships.map(m => (
-                <Card key={m.id} hover={false}>
+              {uniqueMembers.map(({ user, memberships }) => (
+                <Card key={user.id} hover={false}>
                   <CardHeader>
-                    <span className="text-sm font-medium">{m.user.name ?? "Unknown"}</span>
-                    <Badge
-                      size="sm"
-                      variant={
-                        m.status === "ACTIVE"
-                          ? "success"
-                          : m.status === "SUSPENDED"
-                            ? "danger"
-                            : "warning"
-                      }
-                    >
-                      {m.status}
-                    </Badge>
-                    {m.discipline && (
-                      <Badge size="sm" variant="outline">
-                        {m.discipline.name}
-                      </Badge>
-                    )}
-                    {m.roleAssignments.map(ra => (
-                      <Badge key={ra.role.id} size="sm" variant="soft">
-                        {ra.role.name}
-                      </Badge>
-                    ))}
+                    <span className="text-sm font-medium">{user.name ?? "Unknown"}</span>
+                    {/* Aggregate status — show best status across all memberships */}
+                    {(() => {
+                      const hasActive = memberships.some(m => m.status === "ACTIVE")
+                      const hasSuspended = memberships.some(m => m.status === "SUSPENDED")
+                      const status = hasActive ? "ACTIVE" : hasSuspended ? "SUSPENDED" : memberships[0].status
+                      return (
+                        <Badge
+                          size="sm"
+                          variant={
+                            status === "ACTIVE"
+                              ? "success"
+                              : status === "SUSPENDED"
+                                ? "danger"
+                                : "warning"
+                          }
+                        >
+                          {status}
+                        </Badge>
+                      )
+                    })()}
                   </CardHeader>
-                  {isOwner && m.user.id !== org.ownerId && (
+                  <CardDescription>
+                    <Stack size="sm" className="flex-wrap">
+                      {memberships.map(m => (
+                        <Badge key={m.id} size="sm" variant="outline">
+                          {m.discipline?.name ?? "General"}
+                        </Badge>
+                      ))}
+                      {/* Deduplicated roles across all memberships */}
+                      {(() => {
+                        const seen = new Set<string>()
+                        return memberships.flatMap(m =>
+                          m.roleAssignments
+                            .filter(ra => {
+                              if (seen.has(ra.role.id)) return false
+                              seen.add(ra.role.id)
+                              return true
+                            })
+                            .map(ra => (
+                              <Badge key={ra.role.id} size="sm" variant="soft">
+                                {ra.role.name}
+                              </Badge>
+                            )),
+                        )
+                      })()}
+                    </Stack>
+                  </CardDescription>
+                  {isOwner && user.id !== org.ownerId && (
                     <MembershipActions
-                      membership={m}
+                      membership={memberships[0]}
                       roles={roles}
-                      assignedRoleIds={m.roleAssignments.map(ra => ra.role.id)}
+                      assignedRoleIds={memberships.flatMap(m =>
+                        m.roleAssignments.map(ra => ra.role.id),
+                      )}
                     />
                   )}
                 </Card>
               ))}
 
-              {org.memberships.length === 0 && (
+              {uniqueMembers.length === 0 && (
                 <p className="text-sm text-secondary-foreground">No members yet.</p>
               )}
             </div>
@@ -263,7 +306,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
             <CardDescription>
               <Stack direction="column" className="items-start">
                 <Badge variant="outline">{org.type}</Badge>
-                <span>{org._count.memberships} members</span>
+                <span>{uniqueMemberCount} members</span>
                 <span>{org.disciplines.length} disciplines</span>
               </Stack>
             </CardDescription>

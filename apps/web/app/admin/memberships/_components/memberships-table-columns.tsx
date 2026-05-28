@@ -85,18 +85,18 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
     {
       accessorKey: "organization.name",
       enableSorting: false,
-      size: 140,
+      size: 200,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Organization" />,
       cell: ({ row }) => (
-        <Note className="truncate max-w-35">{row.original.organization.name}</Note>
+        <Note className="truncate max-w-48">{row.original.organization.name}</Note>
       ),
     },
     {
       accessorKey: "discipline.name",
       enableSorting: false,
-      size: 120,
+      size: 160,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Discipline" />,
-      cell: ({ row }) => <Note className="truncate max-w-30">{row.original.discipline.name}</Note>,
+      cell: ({ row }) => <Note className="truncate max-w-40">{row.original.discipline.name}</Note>,
     },
     {
       accessorKey: "status",
@@ -110,9 +110,9 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
     {
       accessorKey: "rank.name",
       enableSorting: false,
-      size: 100,
+      size: 140,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Rank" />,
-      cell: ({ row }) => <Note>{row.original.rank?.name ?? "—"}</Note>,
+      cell: ({ row }) => <Note className="truncate max-w-32">{row.original.rank?.name ?? "—"}</Note>,
     },
     {
       id: "roles",

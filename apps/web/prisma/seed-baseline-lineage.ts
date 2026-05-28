@@ -517,12 +517,172 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------
+  // 4. Per-discipline LineageTree + LineageTreeMember rows.
+  //    Each tree is published + public so /lineage renders them.
+  // ---------------------------------------------------------------------
+
+  type TreeSeed = {
+    slug: string
+    name: string
+    disciplineCode: string
+    /** Node keys to include as members (order = visualSortOrder). */
+    memberKeys: string[]
+    /** Visual parent mapping: childKey → parentKey. */
+    parentMap: Record<string, string>
+  }
+
+  const TREE_SEEDS: TreeSeed[] = [
+    {
+      slug: "rigan-machado-bjj-lineage",
+      name: "Rigan Machado BJJ Lineage",
+      disciplineCode: "bjj",
+      memberKeys: [
+        "carlos-gracie-sr",
+        "carlos-gracie-jr",
+        "rigan-machado",
+        "bob-bass",
+        "rick-williams",
+        "david-meyer",
+        "chris-haueter",
+        "john-will",
+        "bill-hosken",
+        "jerry-smith",
+        "brian-truelson",
+        "OWNER",
+      ],
+      parentMap: {
+        "carlos-gracie-jr": "carlos-gracie-sr",
+        "rigan-machado": "carlos-gracie-jr",
+        "bob-bass": "rigan-machado",
+        "rick-williams": "rigan-machado",
+        "david-meyer": "rigan-machado",
+        "chris-haueter": "rigan-machado",
+        "john-will": "rigan-machado",
+        "bill-hosken": "rigan-machado",
+        "jerry-smith": "rigan-machado",
+        "brian-truelson": "bill-hosken",
+        OWNER: "bob-bass",
+      },
+    },
+    {
+      slug: "doce-pares-eskrima-lineage",
+      name: "Doce Pares Eskrima Lineage",
+      disciplineCode: "eskrima",
+      memberKeys: ["steve-wolk", "OWNER"],
+      parentMap: { OWNER: "steve-wolk" },
+    },
+    {
+      slug: "muay-thai-lineage",
+      name: "Muay Thai Lineage",
+      disciplineCode: "muay-thai",
+      memberKeys: ["sak-va-roon", "OWNER"],
+      parentMap: { OWNER: "sak-va-roon" },
+    },
+    {
+      slug: "kajukenbo-lineage",
+      name: "Kajukenbo Lineage",
+      disciplineCode: "kajukenbo",
+      memberKeys: ["tim-mills", "sam-carter", "hanyann-ng", "OWNER"],
+      parentMap: { OWNER: "tim-mills" }, // primary visual parent
+    },
+    {
+      slug: "karate-lineage",
+      name: "American Freestyle Karate Lineage",
+      disciplineCode: "karate",
+      memberKeys: ["tim-wolchek", "OWNER"],
+      parentMap: { OWNER: "tim-wolchek" },
+    },
+  ]
+
+  let treesCreated = 0
+  let treesFound = 0
+  let treeMembersCreated = 0
+  let treeMembersFound = 0
+
+  for (const ts of TREE_SEEDS) {
+    // Resolve discipline
+    const disc = await db.discipline.findFirst({
+      where: { code: ts.disciplineCode },
+      select: { id: true },
+    })
+    if (!disc) {
+      console.log(`   ⚠️  Discipline ${ts.disciplineCode} not found — skipping tree ${ts.slug}`)
+      continue
+    }
+
+    // Upsert tree
+    let tree = await db.lineageTree.findUnique({
+      where: { brand_slug: { brand: BRAND, slug: ts.slug } },
+      select: { id: true },
+    })
+    if (tree) {
+      treesFound++
+      console.log(`   LineageTree ${ts.slug}: already exists (id=${tree.id})`)
+    } else {
+      tree = await db.lineageTree.create({
+        data: {
+          brand: BRAND,
+          slug: ts.slug,
+          name: ts.name,
+          description: `${ts.name} — promotion lineage tree.`,
+          visibility: "PUBLIC",
+          isPublished: true,
+          disciplineId: disc.id,
+        },
+        select: { id: true },
+      })
+      treesCreated++
+      console.log(`   ✅ Created LineageTree: ${ts.slug} (id=${tree.id})`)
+    }
+
+    // Create LineageTreeMember rows with visual parent chain
+    const treeMemberIdByKey = new Map<string, string>()
+
+    for (let i = 0; i < ts.memberKeys.length; i++) {
+      const key = ts.memberKeys[i]
+      const nodeId = nodeIdByKey.get(key)
+      if (!nodeId) {
+        console.log(`   ⚠️  No LineageNode for key=${key} — skipping tree member`)
+        continue
+      }
+
+      let member = await db.lineageTreeMember.findUnique({
+        where: { treeId_nodeId: { treeId: tree.id, nodeId } },
+        select: { id: true },
+      })
+      if (member) {
+        treeMembersFound++
+        treeMemberIdByKey.set(key, member.id)
+        continue
+      }
+
+      // Resolve visual parent (only if parent already created in this loop)
+      const parentKey = ts.parentMap[key]
+      const parentMemberId = parentKey ? treeMemberIdByKey.get(parentKey) ?? null : null
+
+      member = await db.lineageTreeMember.create({
+        data: {
+          treeId: tree.id,
+          nodeId,
+          visualSortOrder: i,
+          primaryVisualParentMemberId: parentMemberId,
+        },
+        select: { id: true },
+      })
+      treeMemberIdByKey.set(key, member.id)
+      treeMembersCreated++
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Summary
   // ---------------------------------------------------------------------
   console.log("\n📊 seed-baseline-lineage summary:")
-  console.log(`   Users:        created=${counts.usersCreated}, found=${counts.usersFound}`)
-  console.log(`   LineageNodes: created=${counts.nodesCreated}, found=${counts.nodesFound}`)
-  console.log(`   Relationships:created=${counts.edgesCreated}, found=${counts.edgesFound}`)
+  console.log(`   Users:          created=${counts.usersCreated}, found=${counts.usersFound}`)
+  console.log(`   LineageNodes:   created=${counts.nodesCreated}, found=${counts.nodesFound}`)
+  console.log(`   Relationships:  created=${counts.edgesCreated}, found=${counts.edgesFound}`)
+  console.log(`   LineageTrees:   created=${treesCreated}, found=${treesFound}`)
+  console.log(`   TreeMembers:    created=${treeMembersCreated}, found=${treeMembersFound}`)
   console.log("\n🎉 seed-baseline-lineage.ts complete.\n")
 }
 
