@@ -147,6 +147,14 @@ export const findLineageTreeDetail = async (treeId: string) => {
           id: true,
           isClaimable: true,
           visualSortOrder: true,
+          rankAwardId: true,
+          selectedRankAward: {
+            select: {
+              id: true,
+              awardedAt: true,
+              rank: { select: { name: true, shortName: true, sortOrder: true } },
+            },
+          },
           node: {
             select: {
               id: true,
@@ -161,6 +169,26 @@ export const findLineageTreeDetail = async (treeId: string) => {
                   isPlaceholder: true,
                   archivedAt: true,
                   passport: { select: { displayName: true } },
+                  rankAwards: {
+                    orderBy: [{ awardedAt: "desc" }, { createdAt: "desc" }],
+                    select: {
+                      id: true,
+                      awardedAt: true,
+                      rank: {
+                        select: {
+                          name: true,
+                          shortName: true,
+                          sortOrder: true,
+                          rankSystem: {
+                            select: {
+                              name: true,
+                              discipline: { select: { name: true, code: true } },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               claimRequests: {

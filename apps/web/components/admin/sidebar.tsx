@@ -141,6 +141,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       prefix: <ContactIcon />,
     },
     {
+      title: "Email Ops",
+      href: "/admin/email",
+      prefix: <MailIcon />,
+    },
+    {
       title: "Categories",
       href: "/admin/categories",
       prefix: <GalleryHorizontalEndIcon />,

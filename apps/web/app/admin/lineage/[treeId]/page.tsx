@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { LineageClaimabilityToggle } from "~/app/admin/lineage/_components/lineage-claimability-toggle"
+import { LineageSelectedRankSelect } from "~/app/admin/lineage/_components/lineage-selected-rank-select"
 import { withLineageAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -136,9 +137,10 @@ export default withLineageAdminPage(async ({ params }: PageProps<"/admin/lineage
         </Stack>
 
         <div className="overflow-hidden rounded-lg border">
-          <div className="grid grid-cols-[minmax(18rem,1fr)_12rem_9rem_11rem] gap-3 border-b bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground max-lg:hidden">
+          <div className="grid grid-cols-[minmax(18rem,1fr)_12rem_16rem_9rem_11rem] gap-3 border-b bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground max-lg:hidden">
             <span>Profile</span>
             <span>Claim state</span>
+            <span>Selected rank</span>
             <span>Claimable</span>
             <span className="text-right">Actions</span>
           </div>
@@ -147,7 +149,7 @@ export default withLineageAdminPage(async ({ params }: PageProps<"/admin/lineage
             {tree.members.map(member => (
               <Card
                 key={member.id}
-                className="grid gap-3 rounded-none border-0 p-4 lg:grid-cols-[minmax(18rem,1fr)_12rem_9rem_11rem] lg:items-center"
+                className="grid gap-3 rounded-none border-0 p-4 lg:grid-cols-[minmax(18rem,1fr)_12rem_16rem_9rem_11rem] lg:items-center"
               >
                 <Stack direction="column" size="xs" className="min-w-0">
                   <span className="truncate font-medium">{displayName(member)}</span>
@@ -180,6 +182,12 @@ export default withLineageAdminPage(async ({ params }: PageProps<"/admin/lineage
                     </Note>
                   )}
                 </Stack>
+
+                <LineageSelectedRankSelect
+                  treeId={tree.id}
+                  member={member}
+                  label={`Select display rank for ${displayName(member)}`}
+                />
 
                 <Stack size="xs" className="items-center">
                   <LineageClaimabilityToggle

@@ -7,12 +7,14 @@ import { userActionClient } from "~/lib/safe-actions"
 import {
   toggleLineageTreeClaimabilitySchema,
   toggleLineageTreeMemberClaimabilitySchema,
+  updateLineageTreeMemberSelectedRankSchema,
 } from "~/server/admin/lineage/schema"
 import type { db as appDb } from "~/services/db"
 
 const LINEAGE_ADMIN_ERROR = {
   NOT_FOUND: "Lineage tree not found.",
   MEMBER_NOT_FOUND: "Lineage tree member not found.",
+  RANK_AWARD_NOT_FOUND: "Rank award is not attached to this lineage tree member.",
   NOT_AUTHORIZED: "You are not authorized to manage this lineage tree.",
 } as const
 
@@ -138,6 +140,77 @@ export const toggleLineageTreeMemberClaimability = userActionClient
         userId: user.id,
         before: { isClaimable: member.isClaimable },
         after: { isClaimable: updated.isClaimable, nodeId: member.nodeId, treeId: tree.id },
+      },
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
+        tags: ["lineage", `lineage-tree-${brand}-${tree.slug}`, `lineage-trees-${brand}`],
+      })
+    })
+
+    return updated
+  })
+
+export const updateLineageTreeMemberSelectedRank = userActionClient
+  .inputSchema(updateLineageTreeMemberSelectedRankSchema)
+  .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
+    const brand = await getRequestBrand()
+    const tree = await assertCanManageLineageTree({
+      db,
+      userId: user.id,
+      userRole: user.role,
+      brand,
+      treeId: parsedInput.treeId,
+    })
+
+    const member = await db.lineageTreeMember.findFirst({
+      where: {
+        id: parsedInput.memberId,
+        treeId: tree.id,
+      },
+      select: {
+        id: true,
+        nodeId: true,
+        rankAwardId: true,
+        node: { select: { userId: true } },
+      },
+    })
+
+    if (!member) {
+      throw new Error(LINEAGE_ADMIN_ERROR.MEMBER_NOT_FOUND)
+    }
+
+    if (parsedInput.rankAwardId) {
+      const rankAward = await db.rankAward.findFirst({
+        where: {
+          id: parsedInput.rankAwardId,
+          userId: member.node.userId,
+        },
+        select: { id: true },
+      })
+
+      if (!rankAward) {
+        throw new Error(LINEAGE_ADMIN_ERROR.RANK_AWARD_NOT_FOUND)
+      }
+    }
+
+    const updated = await db.lineageTreeMember.update({
+      where: { id: member.id },
+      data: { rankAwardId: parsedInput.rankAwardId },
+      select: { id: true, rankAwardId: true },
+    })
+
+    await db.auditLog.create({
+      data: {
+        brand,
+        action: "lineage.tree.member.selected_rank.updated",
+        entityType: "LineageTreeMember",
+        entityId: member.id,
+        userId: user.id,
+        before: { rankAwardId: member.rankAwardId },
+        after: { rankAwardId: updated.rankAwardId, nodeId: member.nodeId, treeId: tree.id },
       },
     })
 

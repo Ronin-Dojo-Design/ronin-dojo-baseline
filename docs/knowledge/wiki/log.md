@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-20
-last_agent: codex-pr39-intake
+updated: 2026-05-28
+last_agent: codex-session-0277
 ---
 
 # Wiki Change Log
@@ -153,3 +153,9 @@ Use this file only as historical context for early wiki adoption.
 - Migrated the Baseline discipline lineage section from the legacy row/edge fallback to the v1 `LineageTree` / `LineageTreeBoard` path for seeded discipline tree slugs.
 - Confirmed Bob Bass claim-flow readiness: Bob is a claimable placeholder node on the published Rigan Machado lineage tree; authenticated browser testing remains operator-side.
 - Updated the Black Belt Legacy gap matrix and SESSION_0276 close record.
+
+## 2026-05-28 — SESSION_0277
+
+- Added `docs/runbooks/sop-email-runbook.md` to document Resend transactional email operations, where sent emails display, where replies are read/responded to today, and future in-app inbox data flows.
+- Added `/admin/email` as an admin-facing email operations surface and linked it from admin navigation/command palette.
+- Added selected-rank admin controls for lineage tree members so `LineageTreeMember.rankAwardId` can be selected/cleared from the admin lineage detail page.

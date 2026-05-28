@@ -42,6 +42,7 @@ const adminRoutes = [
   { label: "Categories", href: "/admin/categories", icon: FolderIcon },
   { label: "Tags", href: "/admin/tags", icon: TagIcon },
   { label: "Leads", href: "/admin/leads", icon: MailIcon },
+  { label: "Email Ops", href: "/admin/email", icon: MailIcon },
   { label: "Users", href: "/admin/users", icon: UsersIcon },
   { label: "Tournaments", href: "/admin/tournaments", icon: SwordsIcon },
   { label: "Programs", href: "/admin/programs", icon: GraduationCapIcon },
