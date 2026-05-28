@@ -15,7 +15,9 @@ test.describe("Admin tournament list E2E", () => {
     testUserId = userId
 
     await page.goto("/admin/tournaments")
-    await page.waitForLoadState("networkidle")
+
+    // §14e SESSION_0270: replaced networkidle with deterministic body anchor
+    await expect(page.locator("body")).toBeVisible({ timeout: 30_000 })
 
     // Should not get a 404 — admin role grants access
     await expect(page.locator("body")).not.toContainText("404")
@@ -28,7 +30,9 @@ test.describe("Admin tournament list E2E", () => {
     testUserId = userId
 
     await page.goto("/admin/tournaments")
-    await page.waitForLoadState("networkidle")
+
+    // §14e SESSION_0270: replaced networkidle with domcontentloaded (negative test)
+    await page.waitForLoadState("domcontentloaded")
 
     // Auth HOC calls notFound() for non-admins — they should NOT see admin tournament content
     // The not-found page renders without any admin table/heading

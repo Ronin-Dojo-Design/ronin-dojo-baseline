@@ -21,7 +21,9 @@ test.describe("Admin membership list E2E", () => {
     fixture = await seedMembership(userId)
 
     await page.goto("/admin/memberships")
-    await page.waitForLoadState("networkidle")
+
+    // §14e SESSION_0270: replaced networkidle with deterministic table anchor
+    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
 
     // Should not get 404 — admin role grants access
     await expect(page.locator("body")).not.toContainText("404")
@@ -34,7 +36,9 @@ test.describe("Admin membership list E2E", () => {
     testUserId = userId
 
     await page.goto("/admin/memberships")
-    await page.waitForLoadState("networkidle")
+
+    // §14e SESSION_0270: replaced networkidle with domcontentloaded (negative test)
+    await page.waitForLoadState("domcontentloaded")
 
     // Auth HOC calls notFound() for non-admins — should NOT see admin table
     const adminTable = page.locator("table").first()

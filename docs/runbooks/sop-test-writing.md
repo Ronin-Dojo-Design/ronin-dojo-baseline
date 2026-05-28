@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-12
 updated: 2026-05-27
-last_agent: copilot-session-0269
+last_agent: copilot-session-0270
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -809,23 +809,19 @@ If this returns any new lines (not just pre-existing), block the PR until the of
 
 ### Known offender backlog (cleanup queue)
 
-As of SESSION_0267, the following spec files contain `waitForLoadState("networkidle")` calls that flake under full-suite load. Each is queued for cleanup in a future session; new authors should NOT add to this list.
+As of SESSION_0270, the following spec files contain `waitForLoadState("networkidle")` calls that flake under full-suite load. Each is queued for cleanup in a future session; new authors should NOT add to this list.
 
 | File | Approx call count | Notes |
 | --- | --- | --- |
-| `e2e/admin/bracket.spec.ts` | 2 | Bracket flow; partial cleanup landed SESSION_0266/0267 |
-| `e2e/admin/membership-detail.spec.ts` | 4 | Membership tabs page |
-| `e2e/admin/membership-list.spec.ts` | 2 | Membership listing |
-| `e2e/admin/scoring.spec.ts` | 1 | Scoring flow; partial cleanup landed SESSION_0267 |
-| `e2e/admin/tournament-list.spec.ts` | 2 | Tournament listing |
 | `e2e/tournaments/list.spec.ts` | 1 | Tournament list page |
 | `e2e/tournaments/register.spec.ts` | 2 | Tournament registration |
 | `e2e/tournaments/results.spec.ts` | 3 | Tournament results |
 
 SESSION_0268 drained `e2e/lineage/authenticated-lifecycle.spec.ts` and `e2e/lineage/public-visibility.spec.ts` to zero.
 SESSION_0269 drained `e2e/lineage/editor-drag-reorder.spec.ts`, `e2e/lineage/public-rank-redaction.spec.ts`, and `e2e/admin/data-subject-request-triage.spec.ts` to zero. The `e2e/lineage/` directory is now fully clean.
+SESSION_0270 drained `e2e/admin/membership-detail.spec.ts`, `e2e/admin/membership-list.spec.ts`, and `e2e/admin/tournament-list.spec.ts` to zero. Also corrected stale entries: `e2e/admin/bracket.spec.ts` and `e2e/admin/scoring.spec.ts` were already cleaned in SESSION_0266/0267 but never removed from this table. The `e2e/admin/` directory is now fully clean.
 
-Total remaining: ~17 calls across 8 files. Cleanup target: drain to zero across 2–3 future sessions, batching by feature area.
+Total remaining: ~6 calls across 3 files (tournament cluster only). Cleanup target: drain in 1 future session.
 
 ### Cross-references
 
