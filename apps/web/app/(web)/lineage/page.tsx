@@ -17,6 +17,8 @@ const PAGE_TITLE = "Lineage Trees"
 const PAGE_DESCRIPTION =
   "Explore martial arts lineage trees — who promoted whom, rank history, and the living legacy of instructors and students."
 
+export const dynamic = "force-dynamic"
+
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
   {
     href: "/disciplines",

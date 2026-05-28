@@ -19,7 +19,6 @@ import {
   generateStructuredDataEntity,
 } from "~/lib/structured-data"
 import {
-  findPublishedLineageTreeSlugs,
   findPublishedLineageTreeSummaryBySlug,
   getLineageProfilesByIds,
   getLineageTreeBySlug,
@@ -40,14 +39,7 @@ interface Props {
   params: Promise<{ treeSlug: string }>
 }
 
-// ---------------------------------------------------------------------------
-// Static params
-// ---------------------------------------------------------------------------
-
-export async function generateStaticParams() {
-  const trees = await findPublishedLineageTreeSlugs()
-  return trees.map(({ slug }) => ({ treeSlug: slug }))
-}
+export const dynamic = "force-dynamic"
 
 // ---------------------------------------------------------------------------
 // Metadata
