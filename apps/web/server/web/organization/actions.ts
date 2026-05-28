@@ -138,6 +138,7 @@ export const joinOrganization = userActionClient
       after(async () => {
         try {
           await notifyMemberOfMembershipWelcome({
+            brand,
             to: user.email,
             firstName: user.name?.split(" ")[0] ?? null,
             organizationName: org.name,
@@ -210,6 +211,7 @@ export const joinByInviteCode = userActionClient
       after(async () => {
         try {
           await notifyMemberOfMembershipWelcome({
+            brand: org.brand,
             to: user.email,
             firstName: user.name?.split(" ")[0] ?? null,
             organizationName: org.name,
@@ -282,6 +284,7 @@ export const updateMembershipStatus = userActionClient
       after(async () => {
         try {
           await notifyMemberOfMembershipStatusChange({
+            brand: membership.brand,
             to: membership.user.email!,
             firstName: membership.user.name?.split(" ")[0] ?? null,
             organizationName: membership.organization.name,

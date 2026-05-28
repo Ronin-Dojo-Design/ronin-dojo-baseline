@@ -8,12 +8,12 @@ import {
   ContactRoundIcon,
   GitBranchIcon,
   GraduationCapIcon,
+  SchoolIcon,
   SearchIcon,
   ShieldIcon,
   ShoppingBagIcon,
   StoreIcon,
   SwordsIcon,
-  SchoolIcon,
   UsersIcon,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
@@ -89,7 +89,9 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                 <DropdownMenuItem render={<NavLink href="/schools" prefix={<SchoolIcon />} />}>
                   {t("navigation.schools")}
                 </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}>
+                <DropdownMenuItem
+                  render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}
+                >
                   {t("navigation.organizations")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -103,7 +105,9 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                 <DropdownMenuItem render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}>
                   {t("navigation.lineage")}
                 </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}>
+                <DropdownMenuItem
+                  render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}
+                >
                   {t("navigation.directory")}
                 </DropdownMenuItem>
                 <DropdownMenuItem render={<NavLink href="/members" prefix={<UsersIcon />} />}>
@@ -140,6 +144,10 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               {t("navigation.programs")}
             </Button>
 
+            <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
+              Join Legacy
+            </Button>
+
             <UserMenu />
           </Stack>
         </div>
@@ -158,6 +166,7 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           <NavLink href="/courses">{t("navigation.courses")}</NavLink>
           <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
           <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
+          <NavLink href="/lineage/join">Join Legacy</NavLink>
           <NavLink href="/directory">{t("navigation.directory")}</NavLink>
           <NavLink href="/members">{t("navigation.members")}</NavLink>
           <NavLink href="/gear">{t("navigation.gear")}</NavLink>

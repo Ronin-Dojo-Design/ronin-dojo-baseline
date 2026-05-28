@@ -1333,12 +1333,28 @@ async function main() {
   })
   console.log("Created Baseline org")
 
+  const blackBeltLegacyOrg = await db.organization.create({
+    data: {
+      brand: "BBL",
+      name: "Black Belt Legacy",
+      slug: "black-belt-legacy",
+      type: "CLUB",
+      description:
+        "Black Belt Legacy preserves martial arts lineage, rank history, and legacy profile records.",
+      websiteUrl: "https://blackbeltlegacy.com",
+      email: "welcome@blackbeltlegacy.com",
+      country: "US",
+    },
+  })
+  console.log("Created Black Belt Legacy org")
+
   // Wire disciplines to org
   await db.organizationDiscipline.createMany({
     data: [
       { organizationId: baselineOrg.id, disciplineId: bjj.id },
       { organizationId: baselineOrg.id, disciplineId: muayThai.id },
       { organizationId: baselineOrg.id, disciplineId: eskrima.id },
+      { organizationId: blackBeltLegacyOrg.id, disciplineId: bjj.id },
     ],
   })
   console.log("Created org-discipline links")

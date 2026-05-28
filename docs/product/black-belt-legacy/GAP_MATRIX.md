@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-05-27
 updated: 2026-05-28
-last_agent: codex-session-0276
+last_agent: codex-session-0278
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -30,7 +30,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | BBL-PROFILE-001 | View martial artist profile | 🔶 Partial | `/directory/[slug]` exists (directory listing). `LineageNode` has bio, slug, visibility. Profile drawer exists in lineage tree. **Missing:** Dedicated public profile page (e.g., `/people/[slug]`) with full bio, rank summary, school, verification status. |
-| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. **Missing:** End-to-end flow validation with authenticated browser session; evidence attachment UI unclear. |
+| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. SESSION_0278 added `/lineage/join` intake that can create a `LineageClaimRequest` for a signed-in user selecting a claimable lineage node while also creating a lead and draft listing. **Missing:** End-to-end flow validation with authenticated browser session; evidence attachment UI unclear. |
 | BBL-PROFILE-003 | Admin approve/deny claims | ✅ Built | `/admin/lineage/claims/[id]` route exists. Server: `claim-review-actions.ts` with safe-action tests. Admin can approve/deny with audit note. |
 | BBL-PROFILE-004 | Trust badges (verified/unverified/disputed) | 🔶 Partial | `LineageNode.isVerified` and `LineageNode.visibility` exist in schema. `lineage-node-card.tsx` renders node cards. **Missing:** Consistent trust badge component across card, drawer, and detail page. No `disputed` or `imported` status enum on LineageNode (only `isVerified: boolean`). |
 | BBL-PROFILE-005 | Owner edits public bio/photo/links | 🔶 Partial | `node-profile-actions.ts` + `node-profile-schemas.ts` exist with tests. **Missing:** Public-facing edit UI for profile owners (separate from lineage editor). |
@@ -135,7 +135,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 ### Highest-value next tasks (Petey recommendation)
 
-1. **Authenticated Bob Bass claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim.
+1. **Authenticated claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim. Also smoke `/lineage/join` with a signed-in user to prove the lead + draft listing + `LineageClaimRequest` bridge.
 2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
 3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
 4. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).

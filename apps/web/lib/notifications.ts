@@ -1,4 +1,5 @@
 import {
+  type Brand,
   type DataSubjectRequestStatus,
   type DataSubjectRequestType,
   type MembershipStatus,
@@ -6,7 +7,9 @@ import {
   ToolStatus,
 } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
+import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
 import { EmailInviteNotification } from "~/emails/invite-notification"
@@ -22,7 +25,7 @@ import {
   EmailTournamentRegistrationConfirmation,
   type TournamentRegistrationPaymentStatus,
 } from "~/emails/tournament-registration-confirmation"
-import { sendEmail } from "~/lib/email"
+import { getBrandSenderEmail, sendEmail } from "~/lib/email"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { countSubmittedTools } from "~/server/web/tools/queries"
 
@@ -311,6 +314,7 @@ export const notifyUserOfDsrStatusUpdate = async (params: DsrStatusUpdateParams)
 // ---------------------------------------------------------------------------
 
 export type MembershipStatusChangeParams = {
+  brand?: Brand
   to: string
   firstName?: string | null
   organizationName: string
@@ -327,6 +331,7 @@ export const notifyMemberOfMembershipStatusChange = async (
   const subject = `Your ${params.organizationName} membership is now ${params.newStatus.toLowerCase()}`
 
   return await sendEmail({
+    brand: params.brand,
     to: params.to,
     subject,
     react: EmailMembershipStatusChange({
@@ -348,6 +353,7 @@ export const notifyMemberOfMembershipStatusChange = async (
 // ---------------------------------------------------------------------------
 
 export type MembershipWelcomeParams = {
+  brand?: Brand
   to: string
   firstName?: string | null
   organizationName: string
@@ -365,6 +371,7 @@ export const notifyMemberOfMembershipWelcome = async (params: MembershipWelcomeP
       : `Your ${params.organizationName} membership request is pending`
 
   return await sendEmail({
+    brand: params.brand,
     to: params.to,
     subject,
     react: EmailMembershipWelcome({
@@ -383,6 +390,7 @@ export const notifyMemberOfMembershipWelcome = async (params: MembershipWelcomeP
 // ---------------------------------------------------------------------------
 
 export type InviteNotificationParams = {
+  brand?: Brand
   to: string
   organizationName: string
   inviteCode: string
@@ -395,6 +403,7 @@ export const notifyUserOfInvite = async (params: InviteNotificationParams) => {
   const subject = `You're invited to join ${params.organizationName}`
 
   return await sendEmail({
+    brand: params.brand,
     to: params.to,
     subject,
     react: EmailInviteNotification({
@@ -439,6 +448,66 @@ export const notifyUserOfTournamentRegistration = async (params: TournamentRegis
       rank: params.rank,
       orgName: params.orgName,
       paymentStatus: params.paymentStatus,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Black Belt Legacy Join the Legacy notifications (SESSION_0278)
+// ---------------------------------------------------------------------------
+
+export type BblJoinLegacyMembershipPath = "FREE" | "PREMIUM" | "ELITE"
+
+export type BblJoinLegacyNotificationParams = {
+  brand: Brand
+  to: string
+  firstName?: string | null
+  fullName: string
+  membershipPath: BblJoinLegacyMembershipPath
+  leadId: string
+  rankSummary?: string | null
+  trainedUnder?: string | null
+  represent?: string | null
+  checkoutUrl?: string | null
+  claimCreated?: boolean
+}
+
+export const notifyUserOfBblJoinLegacy = async (params: BblJoinLegacyNotificationParams) => {
+  if (await shouldSkipForRateLimit(`bbl-join-legacy:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "We received your Black Belt Legacy lineage information",
+    react: EmailBblJoinLegacyConfirmation({
+      to: params.to,
+      firstName: params.firstName,
+      membershipPath: params.membershipPath,
+      checkoutUrl: params.checkoutUrl,
+      claimCreated: params.claimCreated,
+    }),
+  })
+}
+
+export const notifyAdminOfBblJoinLegacy = async (params: BblJoinLegacyNotificationParams) => {
+  const to = getBrandSenderEmail(params.brand)
+
+  return await sendEmail({
+    brand: params.brand,
+    to,
+    subject: `New Black Belt Legacy intake: ${params.fullName}`,
+    replyTo: params.to,
+    react: EmailAdminBblJoinLegacy({
+      to,
+      fullName: params.fullName,
+      email: params.to,
+      membershipPath: params.membershipPath,
+      rankSummary: params.rankSummary,
+      trainedUnder: params.trainedUnder,
+      represent: params.represent,
+      adminLeadUrl: `${siteConfig.url}/admin/leads/${params.leadId}`,
+      checkoutUrl: params.checkoutUrl,
+      claimCreated: params.claimCreated,
     }),
   })
 }

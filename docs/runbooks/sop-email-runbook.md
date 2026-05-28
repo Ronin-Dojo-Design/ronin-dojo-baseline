@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-28
 updated: 2026-05-28
-last_agent: codex-session-0277
+last_agent: codex-session-0278
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/runbooks/resend-setup-runbook.md
@@ -28,12 +28,13 @@ Ronin Dojo sends transactional email through Resend. Today the app can **send** 
 
 ## Key Ideas
 
-- The send boundary is `apps/web/lib/email.ts`, which prepares React Email content, sets `from` from `RESEND_SENDER_EMAIL`, defaults `replyTo` to `siteConfig.email`, renders plaintext, and calls Resend.
+- The send boundary is `apps/web/lib/email.ts`, which prepares React Email content, resolves brand-aware `from` senders, defaults `replyTo` to that sender, renders plaintext, and calls Resend.
 - The Resend client is `apps/web/services/resend.ts` and depends on `RESEND_API_KEY`.
 - Email templates live in `apps/web/emails/` and can be previewed with `pnpm --filter @ronin-dojo/web email`.
 - Delivered email activity is read in **Resend Dashboard → Emails**.
-- Replies are read/responded to from the external mailbox for `siteConfig.email` because inbound webhooks/thread storage are not implemented yet.
+- Replies are read/responded to from the external mailbox for the active brand sender because inbound webhooks/thread storage are not implemented yet.
 - `/admin/email` is an operator dashboard surface that explains the current read/reply paths without pretending the app is a full inbox.
+- Baseline and Black Belt Legacy use separate senders: `welcome@baselinemartialarts.com` and `welcome@blackbeltlegacy.com`. BBL requires `blackbeltlegacy.com` domain verification in Resend before production sends.
 
 ## Current operator answer
 
@@ -46,7 +47,7 @@ A: Sent/delivery events display in Resend Dashboard → Emails.
 
 Q: Where can I read and respond to them?
 A: Read delivery status in Resend. Read recipient replies in the external mailbox
-   configured as siteConfig.email / replyTo. Respond from that mailbox today.
+   configured as the active brand sender / replyTo. Respond from that mailbox today.
    Use /admin/email as the in-app ops page and /admin/leads follow-ups for CRM notes.
 ```
 
@@ -56,8 +57,9 @@ A: Read delivery status in Resend. Read recipient replies in the external mailbo
 /admin
   └─ Email Ops (/admin/email)
        ├─ Provider card: Resend + sender configured/missing
+       ├─ Brand sender setup: Baseline + Black Belt Legacy sender rows
        ├─ Read delivered emails: Resend Dashboard → Emails
-       ├─ Respond to replies: mailto:siteConfig.email
+       ├─ Respond to replies: active brand sender mailbox
        └─ Where email lives today table
 ```
 
@@ -73,7 +75,7 @@ flowchart LR
   C --> E[Resend SDK\napps/web/services/resend.ts]
   E --> F[Resend API]
   F --> G[Recipient inbox]
-  G --> H[Reply-To mailbox\nsiteConfig.email]
+  G --> H[Reply-To mailbox\nactive brand sender]
 ```
 
 ## Data flow — reading delivery status today
@@ -89,7 +91,7 @@ sequenceDiagram
   Admin-->>Operator: Shows provider, sender, Resend link, reply mailbox
   Operator->>Resend: Open Dashboard → Emails
   Resend-->>Operator: Sent events, delivery status, bounces, message ids
-  Operator->>Mailbox: Open siteConfig.email mailbox
+  Operator->>Mailbox: Open active brand sender mailbox
   Mailbox-->>Operator: Recipient replies
   Operator->>Mailbox: Respond externally
 ```
@@ -149,6 +151,7 @@ Examples:
 - Magic link auth email.
 - Merch order confirmation through the Stripe/webhook flow.
 - DSR submission/status lifecycle email.
+- Black Belt Legacy Join the Legacy intake at `/lineage/join`.
 - Lead/submission notification where applicable.
 
 ### 4. Read delivery evidence
@@ -159,7 +162,7 @@ Examples:
 
 ### 5. Read and respond to replies
 
-- Open the mailbox for `siteConfig.email` / the configured reply-to mailbox.
+- Open the active brand sender mailbox / the configured reply-to mailbox.
 - Respond from that mailbox.
 - If the reply is CRM-relevant, add a note/follow-up on the matching lead/admin record.
 

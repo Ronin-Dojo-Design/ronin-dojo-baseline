@@ -1,4 +1,5 @@
 import { ExternalLinkIcon, MailIcon, ReplyIcon } from "lucide-react"
+import { Brand } from "~/.generated/prisma/client"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -8,8 +9,26 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
-import { siteConfig } from "~/config/site"
 import { env } from "~/env"
+import { getBrandSenderEmail } from "~/lib/email"
+
+const brandSenders = [
+  {
+    label: "Baseline Martial Arts",
+    domain: "baselinemartialarts.com",
+    sender: getBrandSenderEmail(Brand.BASELINE_MARTIAL_ARTS),
+    envVar: "RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS",
+  },
+  {
+    label: "Black Belt Legacy",
+    domain: "blackbeltlegacy.com",
+    sender: getBrandSenderEmail(Brand.BBL),
+    envVar: "RESEND_SENDER_EMAIL_BBL",
+  },
+] as const
+
+const operatorReplyMailboxes = brandSenders.map(sender => sender.sender).join(" / ")
+const defaultReplyMailbox = getBrandSenderEmail(Brand.BASELINE_MARTIAL_ARTS)
 
 const emailSurfaces = [
   {
@@ -19,8 +38,8 @@ const emailSurfaces = [
   },
   {
     label: "Operator replies",
-    value: siteConfig.email,
-    note: "Outgoing app email defaults Reply-To to the site email, so recipient replies land in this mailbox.",
+    value: operatorReplyMailboxes,
+    note: "Outgoing brand email defaults Reply-To to the active brand sender unless a helper explicitly overrides it.",
   },
   {
     label: "Template previews",
@@ -30,7 +49,9 @@ const emailSurfaces = [
 ] as const
 
 export default withAdminPage(() => {
-  const senderConfigured = Boolean(env.RESEND_SENDER_EMAIL)
+  const senderConfigured = Boolean(
+    env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
+  )
 
   return (
     <Wrapper size="lg" gap="md">
@@ -54,7 +75,7 @@ export default withAdminPage(() => {
           <Button
             variant="secondary"
             size="sm"
-            render={<Link href={`mailto:${siteConfig.email}`} />}
+            render={<Link href={`mailto:${defaultReplyMailbox}`} />}
           >
             <ReplyIcon className="size-4" />
             Reply mailbox
@@ -94,12 +115,39 @@ export default withAdminPage(() => {
           <Stack direction="column" size="xs">
             <span className="font-medium">Respond to replies</span>
             <Note className="text-xs">
-              Reply from the external mailbox for {siteConfig.email}. Use Leads follow-ups for CRM
-              notes until an inbound-email store exists.
+              Reply from the external mailbox for the active brand sender. Use Leads follow-ups for
+              CRM notes until an inbound-email store exists.
             </Note>
           </Stack>
         </Card>
       </div>
+
+      <Card className="p-4">
+        <Stack direction="column" className="gap-3">
+          <span className="font-medium">Brand sender setup</span>
+          <div className="overflow-hidden rounded-md border">
+            <div className="grid gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid-cols-[12rem_1fr_1fr_1fr]">
+              <span>Brand</span>
+              <span>Domain</span>
+              <span>Sender</span>
+              <span>Env var</span>
+            </div>
+            <div className="divide-y">
+              {brandSenders.map(sender => (
+                <div
+                  key={sender.label}
+                  className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[12rem_1fr_1fr_1fr]"
+                >
+                  <span className="font-medium">{sender.label}</span>
+                  <span className="font-mono text-xs">{sender.domain}</span>
+                  <span className="break-words font-mono text-xs">{sender.sender}</span>
+                  <span className="break-words font-mono text-xs">{sender.envVar}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Stack>
+      </Card>
 
       <Card className="p-4">
         <Stack direction="column" className="gap-3">

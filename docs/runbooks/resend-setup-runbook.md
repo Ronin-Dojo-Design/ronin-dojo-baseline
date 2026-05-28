@@ -4,8 +4,8 @@ slug: resend-setup-runbook
 type: runbook
 status: active
 created: 2026-05-09
-updated: 2026-05-26
-last_agent: claude-session-0260
+updated: 2026-05-28
+last_agent: codex-session-0278
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/architecture/infrastructure/dns-verification-spec.md
@@ -53,14 +53,15 @@ Step-by-step operator guide for configuring Resend transactional email for the R
 
 ```text
 apps/web/
-├── env.ts ─────────────── RESEND_API_KEY, RESEND_SENDER_EMAIL
+├── env.ts ─────────────── RESEND_API_KEY, RESEND_SENDER_EMAIL, per-brand sender vars
 ├── lib/
-│   ├── email.ts ───────── Resend client (sends via API + plain-text render)
+│   ├── email.ts ───────── Resend client (brand-aware sender + plain-text render)
 │   ├── notifications.ts ─ 14+ notify helpers, rate-limit-gated boundary
 │   └── rate-limiter.ts ── email_notify limiter (3/5min per template+recipient)
 ├── emails/ ────────────── React Email templates
 │   ├── dsr-submission-confirmation.tsx
 │   ├── dsr-status-update.tsx
+│   ├── bbl-join-legacy-confirmation.tsx / admin-bbl-join-legacy.tsx
 │   ├── invite-notification.tsx
 │   ├── magic-link.tsx
 │   ├── membership-status-change.tsx
@@ -114,6 +115,13 @@ Resend will display required DNS records:
 
 Copy these values exactly. The dashboard/API record list for this domain is the authority, not generic examples in public docs or older runbooks.
 If Resend receiving is enabled for the domain, the dashboard may also request an apex inbound MX record. Add that only when requested.
+
+For Black Belt Legacy, repeat the same flow with:
+
+```text
+Domain: blackbeltlegacy.com
+Sender: welcome@blackbeltlegacy.com
+```
 ```
 
 ### 3. Add DNS records in Bluehost
@@ -181,7 +189,9 @@ Copy the key — it's shown only once.
 ```bash
 # apps/web/.env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
-RESEND_SENDER_EMAIL=hello@baselinemartialarts.com
+RESEND_SENDER_EMAIL=welcome@baselinemartialarts.com
+RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS=welcome@baselinemartialarts.com
+RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com
 ```
 
 ### 7. Test email delivery
@@ -212,7 +222,7 @@ Leaves a Resend message id in stdout for the MB-015 closure proof.
 Expected result:
 ┌─────────────────────────────────────────────┐
 │ From: Baseline Martial Arts                 │
-│       <hello@baselinemartialarts.com>       │
+│       <welcome@baselinemartialarts.com>     │
 │ Subject: Order Confirmation — TuffBuffs ... │
 │ Body: React Email rendered template         │
 └─────────────────────────────────────────────┘
@@ -256,7 +266,9 @@ After local testing works:
 1. Vercel Dashboard → Settings → Environment Variables
 2. Add:
    RESEND_API_KEY = re_xxxxxxxxxxxxxxxxxxxx
-   RESEND_SENDER_EMAIL = hello@baselinemartialarts.com
+   RESEND_SENDER_EMAIL = welcome@baselinemartialarts.com
+   RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS = welcome@baselinemartialarts.com
+   RESEND_SENDER_EMAIL_BBL = welcome@blackbeltlegacy.com
 3. Redeploy (or push to main)
 4. Test: place a real order on production
 ```
@@ -269,4 +281,4 @@ Repeat steps 2–4 for each brand domain as it goes live:
 - `wekafusa.com`
 - `blackbeltlegacy.com`
 
-Single API key works for all verified domains. Update `BRAND_SENDER` map in `lib/email.ts`.
+Single API key works for all verified domains. `apps/web/lib/email.ts` resolves the sender by brand and falls back to the Baseline sender only for Baseline/default contexts. Before sending BBL production email, verify `blackbeltlegacy.com` in Resend and set `RESEND_SENDER_EMAIL_BBL`.

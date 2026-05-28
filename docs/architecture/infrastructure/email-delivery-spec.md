@@ -4,8 +4,8 @@ slug: email-delivery-spec
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-05-28
+last_agent: codex-session-0278
 pairs_with:
   - docs/architecture/infrastructure/dns-verification-spec.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
@@ -65,10 +65,10 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 
 | Brand | Sending domain | From address | Verified? |
 |---|---|---|---|
-| BASELINE_MARTIAL_ARTS | `baselinemartialarts.com` | `hello@baselinemartialarts.com` | ⬜ todo |
-| RONIN_DOJO_DESIGN | `ronindojodesign.com` | `hello@ronindojodesign.com` | ⬜ todo |
-| WEKAF | `wekafusa.com` | `hello@wekafusa.com` | ⬜ todo |
-| BBL | `blackbeltlegacy.com` | `hello@blackbeltlegacy.com` | ⬜ todo |
+| BASELINE_MARTIAL_ARTS | `baselinemartialarts.com` | `welcome@baselinemartialarts.com` | ✅ verified |
+| BBL | `blackbeltlegacy.com` | `welcome@blackbeltlegacy.com` | ⬜ configure/verify |
+| RONIN_DOJO_DESIGN | `ronindojodesign.com` | `welcome@ronindojodesign.com` | ⬜ todo |
+| WEKAF | `wekafusa.com` | `welcome@wekafusa.com` | ⬜ todo |
 
 ## Resend Account Setup Steps
 
@@ -83,7 +83,8 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 5. Add records in Bluehost cPanel → Zone Editor
 6. Click "Verify" in Resend dashboard
 7. Copy API key → add to .env as RESEND_API_KEY
-8. Set RESEND_SENDER_EMAIL=hello@baselinemartialarts.com
+8. Set `RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS=welcome@baselinemartialarts.com`
+   and `RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com` once the BBL domain is verified.
 ```
 
 ## Brand-Aware Sender Resolution
@@ -93,10 +94,10 @@ The email client should resolve the `from` address based on the active brand:
 ```typescript
 // lib/email.ts (sketch)
 const BRAND_SENDER: Record<Brand, string> = {
-  BASELINE_MARTIAL_ARTS: "Baseline Martial Arts <hello@baselinemartialarts.com>",
-  RONIN_DOJO_DESIGN: "Ronin Dojo Design <hello@ronindojodesign.com>",
-  WEKAF: "WEKAF USA <hello@wekafusa.com>",
-  BBL: "Black Belt Legacy <hello@blackbeltlegacy.com>",
+  BASELINE_MARTIAL_ARTS: "Baseline Martial Arts <welcome@baselinemartialarts.com>",
+  BBL: "Black Belt Legacy <welcome@blackbeltlegacy.com>",
+  RONIN_DOJO_DESIGN: "Ronin Dojo Design <welcome@ronindojodesign.com>",
+  WEKAF: "WEKAF USA <welcome@wekafusa.com>",
 };
 ```
 
@@ -111,18 +112,22 @@ const BRAND_SENDER: Record<Brand, string> = {
 
 ## Multi-Domain Strategy
 
-**Phase 1 (now):** Single Resend API key, verify `baselinemartialarts.com` only. All emails send from BMA domain regardless of brand.
+**Phase 1 (now):** Single Resend API key, `baselinemartialarts.com` verified, Baseline sends from `welcome@baselinemartialarts.com`.
 
-**Phase 2 (post-launch):** Verify all brand domains in Resend. Update `BRAND_SENDER` map. Single API key can send from any verified domain.
+**Phase 2 (SESSION_0278 start):** Verify `blackbeltlegacy.com` in Resend and set `RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com`. The app now resolves sender by brand in `apps/web/lib/email.ts`; single API key can send from any verified domain.
 
 ## Environment Variables
 
 ```bash
 # .env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
-RESEND_SENDER_EMAIL=hello@baselinemartialarts.com  # default sender
+RESEND_SENDER_EMAIL=welcome@baselinemartialarts.com  # default / fallback sender
+RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS=welcome@baselinemartialarts.com
+RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com
 
-# Future: per-brand senders resolved in code, not env vars
+# Optional future senders
+RESEND_SENDER_EMAIL_RONIN_DOJO_DESIGN=welcome@ronindojodesign.com
+RESEND_SENDER_EMAIL_WEKAF=welcome@wekafusa.com
 ```
 
 ## Monitoring

@@ -38,6 +38,7 @@ export const createInvite = adminActionClient
       if (targetEmail) {
         try {
           await notifyUserOfInvite({
+            brand,
             to: targetEmail,
             organizationName: invite.organization.name,
             inviteCode: invite.code,

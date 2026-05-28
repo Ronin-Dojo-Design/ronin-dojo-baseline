@@ -5,7 +5,7 @@ type: protocol
 status: superseded
 created: 2026-04-26
 updated: 2026-05-28
-last_agent: codex-session-0277
+last_agent: codex-session-0278
 ---
 
 # Wiki Change Log
@@ -24,6 +24,12 @@ Current source of truth:
 - `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
 
 Use this file only as historical context for early wiki adoption.
+
+## 2026-05-28 — SESSION_0278
+
+- Added discoverability entry for `docs/sprints/SESSION_0278.md` to `docs/knowledge/wiki/index.md`.
+- Recorded the Black Belt Legacy `/lineage/join` intake bridge in `docs/product/black-belt-legacy/GAP_MATRIX.md`.
+- Updated email operations docs for brand-aware Baseline and Black Belt Legacy sender routing.
 
 ## 2026-05-20 — PR39 Baseline product pack intake
 

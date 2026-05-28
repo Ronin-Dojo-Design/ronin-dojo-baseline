@@ -3,8 +3,17 @@
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { z } from "zod"
+import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
+import { siteConfig } from "~/config/site"
+import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import {
+  type BblJoinLegacyMembershipPath,
+  notifyAdminOfBblJoinLegacy,
+  notifyUserOfBblJoinLegacy,
+} from "~/lib/notifications"
 import { publicActionClient } from "~/lib/safe-actions"
+import { createSlugTakenCheck, generateUniqueSlug } from "~/lib/slug"
 import { leadPayload } from "~/server/web/lead/payloads"
 
 const publicLeadSchema = z.object({
@@ -16,6 +25,54 @@ const publicLeadSchema = z.object({
   phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
 })
 
+const legacyInterestSchema = z.object({
+  firstName: z.string().trim().min(1).max(120),
+  lastName: z.string().trim().max(120).optional().or(z.literal("")),
+  email: z.string().trim().email(),
+  phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
+  currentRank: z.string().trim().max(200).optional().or(z.literal("")),
+  trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
+  represent: z.string().trim().max(500).optional().or(z.literal("")),
+  bio: z.string().trim().max(2000).optional().or(z.literal("")),
+  profileUrl: z.string().trim().url().optional().or(z.literal("")),
+  membershipPath: z.enum(["FREE", "PREMIUM", "ELITE"]).default("FREE"),
+  treeId: z.string().optional(),
+  nodeId: z.string().optional(),
+})
+
+const normalizeOptional = (value: string | undefined) => {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}
+
+const getPublicLeadIp = async () => {
+  const headersList = await headers()
+  return headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+}
+
+const checkPublicLeadRateLimit = async ({
+  db,
+  brand,
+  ip,
+}: {
+  db: any
+  brand: Awaited<ReturnType<typeof getRequestBrand>>
+  ip: string
+}) => {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+  const recentFromIp = await db.lead.count({
+    where: {
+      brand,
+      createdAt: { gte: oneHourAgo },
+      meta: { path: ["captureIp"], equals: ip },
+    },
+  })
+
+  if (recentFromIp >= 5) {
+    throw new Error("Too many submissions. Please try again later.")
+  }
+}
+
 /**
  * Public (unauthenticated) lead capture action.
  * Rate-limited by IP. No session required.
@@ -26,22 +83,8 @@ export const createPublicLead = publicActionClient
     const brand = await getRequestBrand()
 
     // Basic IP-based rate limiting
-    const headersList = await headers()
-    const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-
-    // Check rate: max 5 leads per IP per hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-    const recentFromIp = await db.lead.count({
-      where: {
-        brand,
-        createdAt: { gte: oneHourAgo },
-        meta: { path: ["captureIp"], equals: ip },
-      },
-    })
-
-    if (recentFromIp >= 5) {
-      throw new Error("Too many submissions. Please try again later.")
-    }
+    const ip = await getPublicLeadIp()
+    await checkPublicLeadRateLimit({ db, brand, ip })
 
     // Validate org belongs to brand
     const organization = await db.organization.findFirst({
@@ -76,4 +119,195 @@ export const createPublicLead = publicActionClient
     })
 
     return { id: lead.id }
+  })
+
+export const createJoinLegacyInterest = publicActionClient
+  .inputSchema(legacyInterestSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const brand = await getRequestBrand()
+    const session = await getServerSession()
+    const ip = await getPublicLeadIp()
+    await checkPublicLeadRateLimit({ db, brand, ip })
+
+    const organization = await db.organization.findFirst({
+      where: { brand },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true },
+    })
+
+    if (!organization) {
+      throw new Error("Join the Legacy is not configured for this brand yet.")
+    }
+
+    const firstName = parsedInput.firstName.trim()
+    const lastName = normalizeOptional(parsedInput.lastName)
+    const fullName = [firstName, lastName].filter(Boolean).join(" ")
+    const rankSummary = normalizeOptional(parsedInput.currentRank)
+    const trainedUnder = normalizeOptional(parsedInput.trainedUnder)
+    const represent = normalizeOptional(parsedInput.represent)
+    const bio = normalizeOptional(parsedInput.bio)
+    const profileUrl = normalizeOptional(parsedInput.profileUrl)
+    const membershipPath = parsedInput.membershipPath as BblJoinLegacyMembershipPath
+    const claimSelected = Boolean(parsedInput.treeId && parsedInput.nodeId)
+
+    const notes = [
+      rankSummary ? `Rank/history: ${rankSummary}` : null,
+      trainedUnder ? `Trained under: ${trainedUnder}` : null,
+      represent ? `Wants to represent/connect to: ${represent}` : null,
+      bio ? `Bio/history: ${bio}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n")
+
+    const lead = await db.lead.create({
+      data: {
+        brand,
+        organizationId: organization.id,
+        source: "WEBSITE",
+        firstName,
+        lastName: lastName ?? null,
+        email: parsedInput.email.trim().toLowerCase(),
+        phoneE164: normalizeOptional(parsedInput.phoneE164) ?? null,
+        notes: notes || null,
+        referredBy: trainedUnder ?? null,
+        meta: {
+          captureIp: ip,
+          source: "join-the-legacy",
+          membershipPath,
+          currentRank: rankSummary ?? null,
+          trainedUnder: trainedUnder ?? null,
+          represent: represent ?? null,
+          profileUrl: profileUrl ?? null,
+          claimIntent: claimSelected,
+        } satisfies Prisma.InputJsonObject,
+      },
+      select: leadPayload,
+    })
+
+    const toolSlug = await generateUniqueSlug({
+      source: `${fullName} legacy profile`,
+      isSlugTaken: createSlugTakenCheck(db.tool),
+    })
+
+    const tool = await db.tool.create({
+      data: {
+        name: `${fullName} Legacy Profile`,
+        slug: toolSlug,
+        websiteUrl: profileUrl ?? `https://blackbeltlegacy.com/people/${toolSlug}`,
+        tagline: rankSummary ?? "Black Belt Legacy profile submission",
+        description:
+          bio ?? `Lineage profile intake submitted through Join the Legacy for ${fullName}.`,
+        submitterName: fullName,
+        submitterEmail: parsedInput.email.trim().toLowerCase(),
+        submitterNote: notes || null,
+        status: ToolStatus.Pending,
+      },
+      select: { id: true, slug: true },
+    })
+
+    let claimCreated = false
+    if (session?.user?.id && parsedInput.treeId && parsedInput.nodeId) {
+      const tree = await db.lineageTree.findFirst({
+        where: {
+          id: parsedInput.treeId,
+          brand,
+          isPublished: true,
+          isClaimable: true,
+        },
+        select: { id: true },
+      })
+
+      const member = tree
+        ? await db.lineageTreeMember.findFirst({
+            where: { treeId: tree.id, nodeId: parsedInput.nodeId, isClaimable: true },
+            select: { id: true },
+          })
+        : null
+
+      const existingClaim =
+        tree && member
+          ? await db.lineageClaimRequest.findFirst({
+              where: {
+                treeId: tree.id,
+                nodeId: parsedInput.nodeId,
+                claimantUserId: session.user.id,
+                status: { in: ["PENDING", "APPROVED"] },
+              },
+              select: { id: true },
+            })
+          : null
+
+      if (tree && member && !existingClaim) {
+        await db.lineageClaimRequest.create({
+          data: {
+            treeId: tree.id,
+            nodeId: parsedInput.nodeId,
+            claimantUserId: session.user.id,
+            claimantNote: notes || "Submitted through Join the Legacy.",
+            evidence: {
+              create: [
+                {
+                  label: "Join the Legacy intake",
+                  text: notes || `Submitted by ${fullName} (${parsedInput.email}).`,
+                },
+              ],
+            },
+          },
+        })
+        claimCreated = true
+      }
+    }
+
+    await db.lead.update({
+      where: { id: lead.id },
+      data: {
+        meta: {
+          ...(lead.meta && typeof lead.meta === "object" && !Array.isArray(lead.meta)
+            ? lead.meta
+            : {}),
+          toolSlug: tool.slug,
+          claimCreated,
+        } satisfies Prisma.InputJsonObject,
+      },
+    })
+
+    const checkoutUrl =
+      membershipPath === "FREE" ? `/submit/${tool.slug}/success` : `/submit/${tool.slug}`
+    const absoluteCheckoutUrl = `${siteConfig.url}${checkoutUrl}`
+
+    after(async () => {
+      const notification = {
+        brand,
+        to: parsedInput.email.trim().toLowerCase(),
+        firstName,
+        fullName,
+        membershipPath,
+        leadId: lead.id,
+        rankSummary,
+        trainedUnder,
+        represent,
+        checkoutUrl: absoluteCheckoutUrl,
+        claimCreated,
+      }
+
+      try {
+        await notifyUserOfBblJoinLegacy(notification)
+        await notifyAdminOfBblJoinLegacy(notification)
+      } catch (error) {
+        console.error("[notify] Join the Legacy email failed", { leadId: lead.id, error })
+      }
+
+      revalidate({
+        paths: ["/admin/leads", "/lineage/join"],
+        tags: ["leads", "tools", `lead-${lead.id}`],
+      })
+    })
+
+    return {
+      leadId: lead.id,
+      toolSlug: tool.slug,
+      checkoutUrl,
+      claimCreated,
+      claimRequiresSignIn: claimSelected && !session?.user?.id,
+    }
   })

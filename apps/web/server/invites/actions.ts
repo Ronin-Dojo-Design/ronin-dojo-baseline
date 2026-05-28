@@ -97,6 +97,7 @@ export const claimInvite = userActionClient
       after(async () => {
         try {
           await notifyMemberOfMembershipWelcome({
+            brand,
             to: user.email,
             firstName: user.name?.split(" ")[0] ?? null,
             organizationName: result.organizationName,

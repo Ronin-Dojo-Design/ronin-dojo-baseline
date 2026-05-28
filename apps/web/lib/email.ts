@@ -2,6 +2,7 @@ import type { WithRequired } from "@dirstack/utils"
 import { render } from "@react-email/components"
 import type { CreateEmailOptions, CreateEmailResponse } from "resend"
 import wretch from "wretch"
+import { Brand } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { env, isProd } from "~/env"
 import { resend } from "~/services/resend"
@@ -13,7 +14,48 @@ import { resend } from "~/services/resend"
 export type EmailParams = WithRequired<
   Omit<CreateEmailOptions, "from" | "text" | "template">,
   "subject"
->
+> & {
+  brand?: Brand
+}
+
+const BRAND_SENDER_NAME: Record<Brand, string> = {
+  BASELINE_MARTIAL_ARTS: "Baseline Martial Arts",
+  BBL: "Black Belt Legacy",
+  RONIN_DOJO_DESIGN: "Ronin Dojo Design",
+  WEKAF: "WEKAF USA",
+}
+
+const BRAND_DEFAULT_SENDER_EMAIL: Record<Brand, string> = {
+  BASELINE_MARTIAL_ARTS: "welcome@baselinemartialarts.com",
+  BBL: "welcome@blackbeltlegacy.com",
+  RONIN_DOJO_DESIGN: "welcome@ronindojodesign.com",
+  WEKAF: "welcome@wekafusa.com",
+}
+
+const BRAND_CONFIGURED_SENDER_EMAIL: Record<Brand, string | undefined> = {
+  BASELINE_MARTIAL_ARTS: env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS ?? env.RESEND_SENDER_EMAIL,
+  BBL: env.RESEND_SENDER_EMAIL_BBL,
+  RONIN_DOJO_DESIGN: env.RESEND_SENDER_EMAIL_RONIN_DOJO_DESIGN,
+  WEKAF: env.RESEND_SENDER_EMAIL_WEKAF,
+}
+
+export const getBrandSenderName = (brand?: Brand) => {
+  return brand ? BRAND_SENDER_NAME[brand] : siteConfig.name
+}
+
+export const getBrandSenderEmail = (brand?: Brand) => {
+  if (!brand) return env.RESEND_SENDER_EMAIL ?? env.NEXT_PUBLIC_SITE_EMAIL
+
+  return (
+    BRAND_CONFIGURED_SENDER_EMAIL[brand] ??
+    (brand === Brand.BASELINE_MARTIAL_ARTS ? env.RESEND_SENDER_EMAIL : undefined) ??
+    BRAND_DEFAULT_SENDER_EMAIL[brand]
+  )
+}
+
+export const getBrandSenderAddress = (brand?: Brand) => {
+  return `${getBrandSenderName(brand)} <${getBrandSenderEmail(brand)}>`
+}
 
 /**
  * Prepares an email for sending by adding defaults
@@ -21,11 +63,14 @@ export type EmailParams = WithRequired<
  * @returns The prepared email with `from` and `text` fields
  */
 const prepareEmail = async (email: EmailParams): Promise<CreateEmailOptions> => {
+  const { brand, ...payload } = email
+  const senderEmail = getBrandSenderEmail(brand)
+
   return {
-    ...email,
-    from: `${siteConfig.name} <${env.RESEND_SENDER_EMAIL}>`,
-    replyTo: email.replyTo ?? siteConfig.email,
-    text: await render(email.react, { plainText: true }),
+    ...payload,
+    from: getBrandSenderAddress(brand),
+    replyTo: payload.replyTo ?? senderEmail,
+    text: await render(payload.react, { plainText: true }),
   }
 }
 
