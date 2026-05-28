@@ -1,11 +1,11 @@
 ---
 title: "SESSION 0279 — Lineage join smoke and BBL email readiness"
 slug: session-0279
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-05-28
 updated: 2026-05-28
-last_agent: codex-session-0279
+last_agent: copilot-session-0280
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0278.md

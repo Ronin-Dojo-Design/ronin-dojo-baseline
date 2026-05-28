@@ -8,6 +8,7 @@ const withPlausible = withPlausibleProxy({ customDomain: process.env.NEXT_PUBLIC
 const nextConfig: NextConfig = {
   typedRoutes: true,
   reactStrictMode: false,
+  allowedDevOrigins: ["bbl.local", "baseline.local", "wekaf.local"],
 
   cacheLife: {
     infinite: {
