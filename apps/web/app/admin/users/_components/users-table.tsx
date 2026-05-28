@@ -1,9 +1,12 @@
 "use client"
 
+import { UserPlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import type { User } from "~/.generated/prisma/browser"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
+import { Button } from "~/components/common/button"
+import { Link } from "~/components/common/link"
 import { DataTable } from "~/components/data-table/data-table"
 import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
@@ -53,7 +56,20 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
 
   return (
     <DataTable table={table}>
-      <DataTableHeader title="Users" total={usersTotal}>
+      <DataTableHeader
+        title="Users"
+        total={usersTotal}
+        callToAction={
+          <Button
+            variant="primary"
+            size="md"
+            prefix={<UserPlusIcon />}
+            render={<Link href="/admin/invites/new" />}
+          >
+            <div className="max-sm:sr-only">Invite user</div>
+          </Button>
+        }
+      >
         <DataTableToolbar table={table} filterFields={filterFields}>
           <UsersTableToolbarActions table={table} />
           <DateRangePicker align="end" />
