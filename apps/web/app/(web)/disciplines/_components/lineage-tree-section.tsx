@@ -1,16 +1,11 @@
 import { Brand } from "~/.generated/prisma/client"
+import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
-import { bucketByDepth } from "~/lib/lineage/tree-layout"
-import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
-import {
-  getLineageProfile,
-  getLineageRootForUser,
-  getLineageTreeForUser,
-} from "~/server/web/lineage/queries"
-import { db } from "~/services/db"
+import { getLineageProfilesByIds, getLineageTreeBySlug } from "~/server/web/lineage/queries"
 
 /**
  * Lineage tree + profile drawer section on the discipline detail page.
@@ -31,58 +26,69 @@ import { db } from "~/services/db"
 
 type LineageTreeSectionProps = {
   brand: Brand
+  disciplineCode?: string | null
 }
 
-export async function LineageTreeSection({ brand }: LineageTreeSectionProps) {
+const LINEAGE_TREE_SLUG_BY_DISCIPLINE_CODE: Record<string, string> = {
+  bjj: "rigan-machado-bjj-lineage",
+  eskrima: "doce-pares-eskrima-lineage",
+  "muay-thai": "muay-thai-lineage",
+  kajukenbo: "kajukenbo-lineage",
+  karate: "karate-lineage",
+}
+
+export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeSectionProps) {
   // Brand-guard: skip entirely for non-Baseline brands.
-  if (brand !== Brand.BASELINE_MARTIAL_ARTS) {
+  if (brand !== Brand.BASELINE_MARTIAL_ARTS || !disciplineCode) {
     return null
   }
 
-  // Resolve the lineage root user. MVP anchors every Baseline discipline page
-  // on the same person (Baseline org owner — Brian, per the seed). Future
-  // sessions will pivot per-discipline / per-school owner.
-  const baselineOrg = await db.organization.findFirst({
-    where: { brand: Brand.BASELINE_MARTIAL_ARTS, ownerId: { not: null } },
-    select: { ownerId: true },
-  })
-  if (!baselineOrg?.ownerId) return null
-
-  const rootNode = await getLineageRootForUser(baselineOrg.ownerId)
-  if (!rootNode) return null
-
-  const tree = await getLineageTreeForUser(baselineOrg.ownerId, 5)
-  if (!tree) return null
-
-  const rows = bucketByDepth(rootNode, tree.nodes, tree.edges)
-  const visibleNodeIds = Array.from(new Set(rows.flatMap(row => row.nodes.map(n => n.id))))
-
-  // Eager-load profiles for every visible node so the drawer can render
-  // synchronously without a server-action round trip. Tree is small (≤10
-  // nodes in seed); cheap enough to fetch upfront.
-  const profiles = await Promise.all(
-    visibleNodeIds.map(async id => [id, await getLineageProfile(id)] as const),
-  )
-  const profilesById: Record<string, LineageNodeProfile> = {}
-  for (const [id, profile] of profiles) {
-    if (profile) profilesById[id] = profile
+  const treeSlug = LINEAGE_TREE_SLUG_BY_DISCIPLINE_CODE[disciplineCode]
+  if (!treeSlug) {
+    return null
   }
+
+  const result = await getLineageTreeBySlug({ brand, slug: treeSlug })
+  if (!result || result.members.length === 0) {
+    return null
+  }
+
+  /**
+   * Eager-load profiles for drawer. Tree members are already materialized and
+   * visibility-filtered by the v1 LineageTree read model.
+   */
+  const visibleNodeIds = Array.from(new Set(result.members.map(member => member.nodeId)))
+  const profilesById = await getLineageProfilesByIds(visibleNodeIds)
 
   return (
     <section>
       <Stack size="xs" direction="column" className="mb-4">
         <H4 render={props => <h3 {...props}>{props.children}</h3>}>Lineage</H4>
         <Note>
-          Instructor lineage rooted at{" "}
-          {rootNode.user.passport?.displayName ?? rootNode.user.name ?? "the head instructor"}.
-          Click any tile to open the profile drawer.
+          {result.tree.name}. Click any tile to open the profile drawer.
         </Note>
       </Stack>
+
+      {result.tree.isClaimable && (
+        <Stack size="sm" wrap className="mb-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            render={<Link href={`/lineage/${treeSlug}/claim`} />}
+          >
+            Claim a profile
+          </Button>
+          <Note>Claimable profiles are marked on the tree.</Note>
+        </Stack>
+      )}
+
       <LineageTreeBoard
-        rows={rows}
-        rootId={rootNode.id}
+        members={result.members}
+        visualGroups={result.visualGroups}
+        defaultRootMemberId={result.defaultRootMemberId}
         profilesById={profilesById}
-        edges={tree.edges}
+        treeSlug={treeSlug}
+        isTreeClaimable={result.tree.isClaimable}
       />
     </section>
   )

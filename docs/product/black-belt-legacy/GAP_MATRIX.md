@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-05-27
 updated: 2026-05-28
-last_agent: codex-session-0273
+last_agent: codex-session-0276
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -43,13 +43,13 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| BBL-LINEAGE-001 | View lineage tree | ✅ Done | Production seed completed 2026-05-28: 17 users, 18 nodes, 17 relationships, 5 trees, 22 tree members created. `/lineage` returns 200, `/lineage/rigan-machado-bjj-lineage` returns 200. Tree renders Carlos Gracie Sr → Carlos Gracie Jr → Rigan Machado → Dirty Dozen → Brian Scott. Drawer shows profile info, rank history, lineage tab. SESSION_0275 added per-tree rank selection via `selectedRankAward`, admin drawer actions, and claim CTA. |
+| BBL-LINEAGE-001 | View lineage tree | ✅ Done | Production seed completed 2026-05-28: 17 users, 18 nodes, 17 relationships, 5 trees, 22 tree members created. `/lineage` returns 200, `/lineage/rigan-machado-bjj-lineage` returns 200. Tree renders Carlos Gracie Sr → Carlos Gracie Jr → Rigan Machado → Dirty Dozen → Brian Scott. Drawer shows profile info, rank history, lineage tab. SESSION_0275 added per-tree rank selection via `selectedRankAward`, admin drawer actions, and claim CTA. SESSION_0276 backfilled Brian's selected BJJ `BK1` `RankAward` in seed and migrated discipline pages to v1 tree rendering. |
 | BBL-LINEAGE-002 | Click node → highlight root path | ✅ Done | Root-path highlighting implemented in `lineage-tree-canvas.tsx` via `buildSelectedPathMemberIds`. Clicking a node dims unrelated branches and highlights the path to root with primary color ring/opacity. |
 | BBL-LINEAGE-003 | Grouped promotion rows | 🔶 Partial | `LineageVisualGroup` model exists. `lineage-group-header-form.tsx` exists. **Missing:** Public rendering of grouped rows with `showPublicLabel` logic. |
 | BBL-LINEAGE-004 | Unknown dates handled gracefully | 🔧 Infra only | `showPromotionDatePublic` flag exists on `LineageTreeMember`. **Missing:** UI logic to render "Unknown date" vs omit. |
 | BBL-LINEAGE-005 | Trust badges on nodes | 🔶 Partial | `isVerified` on `LineageNode`. `lineage-node-card.tsx` renders cards. **Missing:** Disputed/unverified badge rendering. Same gap as BBL-PROFILE-004. |
 
-**Epic 2 summary:** 0 ✅, 3 🔶, 1 ❌, 1 🔧. Tree viewer renders but lacks polish features (root path, grouped rows, trust badges).
+**Epic 2 summary:** 2 ✅, 2 🔶, 0 ❌, 1 🔧. Tree viewer renders with root-path highlighting, selected rank support, claim CTA, and discipline-page v1 tree reuse; grouped rows, unknown-date copy, and trust badges remain polish gaps.
 
 ---
 
@@ -73,11 +73,11 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | BBL-RANK-001 | View rank history | 🔶 Partial | `lineage-rank-history-tab.tsx` exists. `RankAward` model exists with rank, date, promoter. **Missing:** Verification status display in drawer/profile. |
-| BBL-RANK-002 | Link tree member to selected rank award | 🔧 Infra only | `LineageTreeMember.rankAwardId` FK exists. **Missing:** UI for selecting/displaying tree-specific rank award. |
+| BBL-RANK-002 | Link tree member to selected rank award | 🔶 Partial | `LineageTreeMember.rankAwardId` FK exists. SESSION_0275 displays `selectedRankAward` on cards/drawer; SESSION_0276 backfills Brian's Rigan Machado tree member to his BJJ `BK1` `RankAward` in seed. **Missing:** Admin UI for selecting/changing tree-specific rank awards. |
 | BBL-RANK-003 | Promoter ↔ rank sync | ❌ Not started | No automatic `PROMOTED_BY` relationship sync when promotion data changes. |
 | BBL-RANK-004 | Disputed promotion flags | ❌ Not started | No `disputed` status on `RankAward` or `LineageRelationship`. Only `isVerified: boolean`. Need enum (VERIFIED / UNVERIFIED / DISPUTED / IMPORTED). |
 
-**Epic 4 summary:** 0 ✅, 1 🔶, 2 ❌, 1 🔧. Rank history display exists but lacks trust/verification features.
+**Epic 4 summary:** 0 ✅, 2 🔶, 2 ❌, 0 🔧. Rank history display and selected-rank wiring exist, but admin selection UI and trust/verification features remain incomplete.
 
 ---
 
@@ -125,17 +125,17 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | Epic | ✅ Built | 🔶 Partial | ❌ Not started | 🔧 Infra only | Total |
 | --- | --- | --- | --- | --- | --- |
 | 1 — Public Legacy Profile | 1 | 4 | 0 | 0 | 5 |
-| 2 — Lineage Tree Viewer | 0 | 3 | 1 | 1 | 5 |
+| 2 — Lineage Tree Viewer | 2 | 2 | 0 | 1 | 5 |
 | 3 — Lineage Editor | 2 | 3 | 0 | 1 | 6 |
-| 4 — Rank History | 0 | 1 | 2 | 1 | 4 |
+| 4 — Rank History | 0 | 2 | 2 | 0 | 4 |
 | 5 — Curriculum + Cert | 0 | 2 | 2 | 1 | 5 |
 | 6 — Migration | 1 | 2 | 1 | 0 | 4 |
 | 7 — Search + Discovery | 0 | 2 | 1 | 0 | 3 |
-| **TOTAL** | **4** | **17** | **7** | **4** | **32** |
+| **TOTAL** | **6** | **17** | **6** | **3** | **32** |
 
 ### Highest-value next tasks (Petey recommendation)
 
-1. **BBL-LINEAGE-001 production — DONE** — Production seed completed SESSION_0275. Per-tree rank selection, admin drawer actions, claim CTA all wired. Next: populate `selectedRankAward` on Brian's tree member to show BJJ 1st Degree instead of overall latest rank.
+1. **Authenticated Bob Bass claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim.
 2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
 3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
 4. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).

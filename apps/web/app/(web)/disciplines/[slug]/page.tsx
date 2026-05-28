@@ -267,7 +267,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
       {/* Lineage (Baseline-only) */}
       <Section>
         <Section.Content>
-          <LineageTreeSection brand={brand} />
+          <LineageTreeSection brand={brand} disciplineCode={discipline.code} />
         </Section.Content>
       </Section>
 

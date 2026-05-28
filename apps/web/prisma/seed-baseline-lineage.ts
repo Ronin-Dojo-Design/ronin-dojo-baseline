@@ -319,6 +319,7 @@ type Counts = {
   nodesFound: number
   edgesCreated: number
   edgesFound: number
+  treeMembersUpdated: number
 }
 
 async function ensureUser(
@@ -437,6 +438,7 @@ async function main() {
     nodesFound: 0,
     edgesCreated: 0,
     edgesFound: 0,
+    treeMembersUpdated: 0,
   }
 
   // ---------------------------------------------------------------------
@@ -526,6 +528,11 @@ async function main() {
   //    Each tree is published + public so /lineage renders them.
   // ---------------------------------------------------------------------
 
+  type SelectedRankAwardSeed = {
+    disciplineCode: string
+    rankShortName: string
+  }
+
   type TreeSeed = {
     slug: string
     name: string
@@ -534,6 +541,8 @@ async function main() {
     memberKeys: string[]
     /** Visual parent mapping: childKey → parentKey. */
     parentMap: Record<string, string>
+    /** Per-tree selected rank award mapping: member key → rank lookup. */
+    selectedRankAwards?: Record<string, SelectedRankAwardSeed>
   }
 
   const TREE_SEEDS: TreeSeed[] = [
@@ -567,6 +576,9 @@ async function main() {
         "jerry-smith": "rigan-machado",
         "brian-truelson": "bill-hosken",
         OWNER: "bob-bass",
+      },
+      selectedRankAwards: {
+        OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
       },
     },
     {
@@ -651,11 +663,40 @@ async function main() {
         continue
       }
 
+      const selectedRankSeed = ts.selectedRankAwards?.[key]
+      const selectedRankAward = selectedRankSeed
+        ? await db.rankAward.findFirst({
+            where: {
+              userId: owner.id,
+              rank: {
+                shortName: selectedRankSeed.rankShortName,
+                rankSystem: { discipline: { code: selectedRankSeed.disciplineCode } },
+              },
+            },
+            select: { id: true },
+          })
+        : null
+
+      if (selectedRankSeed && !selectedRankAward) {
+        console.log(
+          `   ⚠️  RankAward not found for tree=${ts.slug} key=${key} discipline=${selectedRankSeed.disciplineCode} rank=${selectedRankSeed.rankShortName}`,
+        )
+      }
+
       let member = await db.lineageTreeMember.findUnique({
         where: { treeId_nodeId: { treeId: tree.id, nodeId } },
-        select: { id: true },
+        select: { id: true, rankAwardId: true },
       })
       if (member) {
+        if (selectedRankAward && member.rankAwardId !== selectedRankAward.id) {
+          member = await db.lineageTreeMember.update({
+            where: { id: member.id },
+            data: { rankAwardId: selectedRankAward.id },
+            select: { id: true, rankAwardId: true },
+          })
+          counts.treeMembersUpdated++
+          console.log(`   LineageTreeMember ${ts.slug}/${key}: exists, selected rank updated`)
+        }
         treeMembersFound++
         treeMemberIdByKey.set(key, member.id)
         continue
@@ -671,8 +712,9 @@ async function main() {
           nodeId,
           visualSortOrder: i,
           primaryVisualParentMemberId: parentMemberId,
+          rankAwardId: selectedRankAward?.id ?? null,
         },
-        select: { id: true },
+        select: { id: true, rankAwardId: true },
       })
       treeMemberIdByKey.set(key, member.id)
       treeMembersCreated++
@@ -687,7 +729,9 @@ async function main() {
   console.log(`   LineageNodes:   created=${counts.nodesCreated}, found=${counts.nodesFound}`)
   console.log(`   Relationships:  created=${counts.edgesCreated}, found=${counts.edgesFound}`)
   console.log(`   LineageTrees:   created=${treesCreated}, found=${treesFound}`)
-  console.log(`   TreeMembers:    created=${treeMembersCreated}, found=${treeMembersFound}`)
+  console.log(
+    `   TreeMembers:    created=${treeMembersCreated}, found=${treeMembersFound}, updated=${counts.treeMembersUpdated}`,
+  )
   console.log("\n🎉 seed-baseline-lineage.ts complete.\n")
 }
 
