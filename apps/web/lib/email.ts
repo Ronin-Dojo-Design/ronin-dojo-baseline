@@ -32,6 +32,13 @@ const BRAND_DEFAULT_SENDER_EMAIL: Record<Brand, string> = {
   WEKAF: "welcome@wekafusa.com",
 }
 
+const BRAND_SENDER_ENV_VAR: Record<Brand, string> = {
+  BASELINE_MARTIAL_ARTS: "RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS",
+  BBL: "RESEND_SENDER_EMAIL_BBL",
+  RONIN_DOJO_DESIGN: "RESEND_SENDER_EMAIL_RONIN_DOJO_DESIGN",
+  WEKAF: "RESEND_SENDER_EMAIL_WEKAF",
+}
+
 const BRAND_CONFIGURED_SENDER_EMAIL: Record<Brand, string | undefined> = {
   BASELINE_MARTIAL_ARTS: env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS ?? env.RESEND_SENDER_EMAIL,
   BBL: env.RESEND_SENDER_EMAIL_BBL,
@@ -41,6 +48,17 @@ const BRAND_CONFIGURED_SENDER_EMAIL: Record<Brand, string | undefined> = {
 
 export const getBrandSenderName = (brand?: Brand) => {
   return brand ? BRAND_SENDER_NAME[brand] : siteConfig.name
+}
+
+export const getBrandSenderEnvVar = (brand: Brand) => BRAND_SENDER_ENV_VAR[brand]
+
+export const getConfiguredBrandSenderEmail = (brand?: Brand) => {
+  if (!brand) return env.RESEND_SENDER_EMAIL
+  return BRAND_CONFIGURED_SENDER_EMAIL[brand]
+}
+
+export const isBrandSenderConfigured = (brand: Brand) => {
+  return Boolean(getConfiguredBrandSenderEmail(brand))
 }
 
 export const getBrandSenderEmail = (brand?: Brand) => {
@@ -53,8 +71,18 @@ export const getBrandSenderEmail = (brand?: Brand) => {
   )
 }
 
-export const getBrandSenderAddress = (brand?: Brand) => {
-  return `${getBrandSenderName(brand)} <${getBrandSenderEmail(brand)}>`
+const getBrandSenderEmailForSend = (brand?: Brand) => {
+  if (brand && isProd && !isBrandSenderConfigured(brand)) {
+    throw new Error(
+      `Missing ${getBrandSenderEnvVar(brand)}. Verify the ${BRAND_DEFAULT_SENDER_EMAIL[brand].split("@")[1]} Resend domain before sending ${getBrandSenderName(brand)} email.`,
+    )
+  }
+
+  return getBrandSenderEmail(brand)
+}
+
+export const getBrandSenderAddress = (brand?: Brand, senderEmail = getBrandSenderEmail(brand)) => {
+  return `${getBrandSenderName(brand)} <${senderEmail}>`
 }
 
 /**
@@ -64,11 +92,11 @@ export const getBrandSenderAddress = (brand?: Brand) => {
  */
 const prepareEmail = async (email: EmailParams): Promise<CreateEmailOptions> => {
   const { brand, ...payload } = email
-  const senderEmail = getBrandSenderEmail(brand)
+  const senderEmail = getBrandSenderEmailForSend(brand)
 
   return {
     ...payload,
-    from: getBrandSenderAddress(brand),
+    from: getBrandSenderAddress(brand, senderEmail),
     replyTo: payload.replyTo ?? senderEmail,
     text: await render(payload.react, { plainText: true }),
   }

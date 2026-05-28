@@ -10,24 +10,39 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { env } from "~/env"
-import { getBrandSenderEmail } from "~/lib/email"
+import {
+  getBrandSenderEmail,
+  getBrandSenderEnvVar,
+  getConfiguredBrandSenderEmail,
+  isBrandSenderConfigured,
+} from "~/lib/email"
 
 const brandSenders = [
   {
+    brand: Brand.BASELINE_MARTIAL_ARTS,
     label: "Baseline Martial Arts",
     domain: "baselinemartialarts.com",
-    sender: getBrandSenderEmail(Brand.BASELINE_MARTIAL_ARTS),
-    envVar: "RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS",
   },
   {
+    brand: Brand.BBL,
     label: "Black Belt Legacy",
     domain: "blackbeltlegacy.com",
-    sender: getBrandSenderEmail(Brand.BBL),
-    envVar: "RESEND_SENDER_EMAIL_BBL",
   },
-] as const
+].map(sender => {
+  const configuredSender = getConfiguredBrandSenderEmail(sender.brand)
 
-const operatorReplyMailboxes = brandSenders.map(sender => sender.sender).join(" / ")
+  return {
+    ...sender,
+    configured: isBrandSenderConfigured(sender.brand),
+    configuredSender,
+    intendedSender: getBrandSenderEmail(sender.brand),
+    envVar: getBrandSenderEnvVar(sender.brand),
+  }
+})
+
+const operatorReplyMailboxes = brandSenders
+  .map(sender => sender.configuredSender ?? `${sender.intendedSender} (${sender.envVar} pending)`)
+  .join(" / ")
 const defaultReplyMailbox = getBrandSenderEmail(Brand.BASELINE_MARTIAL_ARTS)
 
 const emailSurfaces = [
@@ -52,6 +67,7 @@ export default withAdminPage(() => {
   const senderConfigured = Boolean(
     env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
   )
+  const bblSenderConfigured = isBrandSenderConfigured(Brand.BBL)
 
   return (
     <Wrapper size="lg" gap="md">
@@ -92,11 +108,14 @@ export default withAdminPage(() => {
                 Resend
               </Badge>
               <Badge variant={senderConfigured ? "success" : "warning"} size="sm">
-                {senderConfigured ? "Sender configured" : "Sender missing"}
+                {senderConfigured ? "Baseline sender configured" : "Baseline sender missing"}
+              </Badge>
+              <Badge variant={bblSenderConfigured ? "success" : "warning"} size="sm">
+                {bblSenderConfigured ? "BBL sender configured" : "BBL sender pending"}
               </Badge>
             </Stack>
             <Note className="text-xs">
-              Sender: {env.RESEND_SENDER_EMAIL || "RESEND_SENDER_EMAIL not set"}
+              Default sender: {env.RESEND_SENDER_EMAIL || "RESEND_SENDER_EMAIL not set"}
             </Note>
           </Stack>
         </Card>
@@ -126,22 +145,28 @@ export default withAdminPage(() => {
         <Stack direction="column" className="gap-3">
           <span className="font-medium">Brand sender setup</span>
           <div className="overflow-hidden rounded-md border">
-            <div className="grid gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid-cols-[12rem_1fr_1fr_1fr]">
+            <div className="grid gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid-cols-[12rem_1fr_1fr_1fr_7rem]">
               <span>Brand</span>
               <span>Domain</span>
               <span>Sender</span>
               <span>Env var</span>
+              <span>Status</span>
             </div>
             <div className="divide-y">
               {brandSenders.map(sender => (
                 <div
                   key={sender.label}
-                  className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[12rem_1fr_1fr_1fr]"
+                  className="grid gap-3 px-4 py-3 text-sm md:grid-cols-[12rem_1fr_1fr_1fr_7rem]"
                 >
                   <span className="font-medium">{sender.label}</span>
                   <span className="font-mono text-xs">{sender.domain}</span>
-                  <span className="break-words font-mono text-xs">{sender.sender}</span>
+                  <span className="break-words font-mono text-xs">
+                    {sender.configuredSender ?? sender.intendedSender}
+                  </span>
                   <span className="break-words font-mono text-xs">{sender.envVar}</span>
+                  <Badge variant={sender.configured ? "success" : "warning"} size="sm">
+                    {sender.configured ? "Configured" : "Pending"}
+                  </Badge>
                 </div>
               ))}
             </div>

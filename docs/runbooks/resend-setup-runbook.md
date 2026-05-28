@@ -204,6 +204,9 @@ you need end-to-end Stripe + webhook coverage.
 ```bash
 cd apps/web
 bun run scripts/send-resend-production-test.tsx your-real-inbox@example.com
+
+# BBL sender proof after blackbeltlegacy.com is verified:
+bun run scripts/send-resend-production-test.tsx your-real-inbox@example.com --brand BBL
 ```
 
 Confirms: live `RESEND_API_KEY` accepted, verified domain renders correct

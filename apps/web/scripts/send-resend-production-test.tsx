@@ -8,7 +8,7 @@
  * SESSION_0260 + manual-boundary-registry.md MB-015 row.
  *
  * Usage:
- *   bun run apps/web/scripts/send-resend-production-test.ts <recipient-email>
+ *   bun run apps/web/scripts/send-resend-production-test.ts <recipient-email> [--brand BBL]
  *
  * Requires (in `apps/web/.env` or shell env):
  *   - RESEND_API_KEY  (live key, not test key)
@@ -17,12 +17,20 @@
  * @added SESSION_0260 (2026-05-25) — MB-015 production-readiness proof.
  */
 import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components"
-import { sendEmail } from "~/lib/email"
+import { Brand } from "~/.generated/prisma/client"
+import { getBrandSenderName, sendEmail } from "~/lib/email"
 
-const recipient = process.argv[2]
+const args = process.argv.slice(2)
+const recipient = args[0]
+const brandArg =
+  args.find(arg => arg.startsWith("--brand="))?.split("=")[1] ??
+  (args.includes("--brand") ? args[args.indexOf("--brand") + 1] : undefined)
+const brand = brandArg ? Brand[brandArg as keyof typeof Brand] : undefined
 
 if (!recipient) {
-  console.error("Usage: bun run apps/web/scripts/send-resend-production-test.ts <recipient-email>")
+  console.error(
+    "Usage: bun run apps/web/scripts/send-resend-production-test.ts <recipient-email> [--brand BBL]",
+  )
   process.exit(1)
 }
 
@@ -31,7 +39,13 @@ if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
   process.exit(1)
 }
 
+if (brandArg && !brand) {
+  console.error(`Invalid brand: ${brandArg}. Expected one of: ${Object.values(Brand).join(", ")}`)
+  process.exit(1)
+}
+
 const sentAt = new Date()
+const brandLabel = brand ? getBrandSenderName(brand) : "Default sender"
 
 const TestEmail = () => (
   <Html>
@@ -49,9 +63,11 @@ const TestEmail = () => (
           <br />
           <strong>Recipient:</strong> {recipient}
           <br />
+          <strong>Brand:</strong> {brandLabel}
+          <br />
           <strong>Script:</strong> apps/web/scripts/send-resend-production-test.ts
           <br />
-          <strong>Session:</strong> SESSION_0260
+          <strong>Session:</strong> SESSION_0279
         </Text>
         <Text>
           Confirm: (1) email arrived in inbox (not spam), (2) From/Reply-To headers match the
@@ -62,12 +78,13 @@ const TestEmail = () => (
   </Html>
 )
 
-console.log(`📧 Sending MB-015 proof email to ${recipient}...`)
+console.log(`📧 Sending MB-015 proof email to ${recipient} (${brandLabel})...`)
 
 try {
   const result = await sendEmail({
+    brand,
     to: recipient,
-    subject: `[MB-015 proof] Resend live-API delivery test — ${sentAt.toISOString()}`,
+    subject: `[MB-015 proof] ${brandLabel} Resend live-API delivery test — ${sentAt.toISOString()}`,
     react: TestEmail(),
   })
 
@@ -81,9 +98,10 @@ try {
   console.log(`   Resend id: ${result?.data?.id ?? "(no id in response)"}`)
   console.log(`   Sent at:   ${sentAt.toISOString()}`)
   console.log(`   Recipient: ${recipient}`)
+  console.log(`   Brand:     ${brandLabel}`)
   console.log("")
   console.log("Next: confirm the email arrived in the recipient inbox (not spam),")
-  console.log("then record the Resend id + delivery time in SESSION_0260 TASK_01.")
+  console.log("then record the Resend id + delivery time in the active SESSION file.")
 } catch (err) {
   console.error("❌ Send threw:")
   console.error(err)

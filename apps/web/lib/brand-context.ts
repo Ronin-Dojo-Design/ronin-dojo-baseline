@@ -39,6 +39,26 @@ const isBrand = (value: string | null | undefined): value is Brand => {
   return !!value && BRANDS.has(value)
 }
 
+const getHeaderHost = (requestHeaders: Headers) => {
+  return requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
+}
+
+const getHeaderProtocol = (requestHeaders: Headers, host: string) => {
+  const forwardedProtocol = requestHeaders.get("x-forwarded-proto")
+  if (forwardedProtocol) return forwardedProtocol.split(",")[0]?.trim() || "https"
+
+  const normalizedHost = host.toLowerCase()
+  if (
+    normalizedHost.startsWith("localhost") ||
+    normalizedHost.startsWith("127.0.0.1") ||
+    normalizedHost.includes(".local")
+  ) {
+    return "http"
+  }
+
+  return "https"
+}
+
 /** Edge-safe: derive brand from a raw host string. Used by middleware. */
 export const resolveBrand = (host: string | null | undefined): Brand => {
   if (!host) return DEFAULT_BRAND
@@ -47,6 +67,14 @@ export const resolveBrand = (host: string | null | undefined): Brand => {
     ?.toLowerCase()
     .replace(/^www\./, "")
   return (bare && HOST_TO_BRAND[bare]) || DEFAULT_BRAND
+}
+
+/** Edge-safe: derive an absolute request origin from forwarded headers. */
+export const resolveRequestOrigin = (requestHeaders: Headers) => {
+  const host = getHeaderHost(requestHeaders)
+  if (!host) return null
+
+  return `${getHeaderProtocol(requestHeaders, host)}://${host}`
 }
 
 /**
@@ -66,4 +94,8 @@ export const getRequestBrand = async (): Promise<Brand> => {
   }
 
   return resolveBrand(requestHeaders.get("host"))
+}
+
+export const getRequestOrigin = async () => {
+  return resolveRequestOrigin(await headers())
 }

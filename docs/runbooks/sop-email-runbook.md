@@ -31,6 +31,7 @@ Ronin Dojo sends transactional email through Resend. Today the app can **send** 
 - The send boundary is `apps/web/lib/email.ts`, which prepares React Email content, resolves brand-aware `from` senders, defaults `replyTo` to that sender, renders plaintext, and calls Resend.
 - The Resend client is `apps/web/services/resend.ts` and depends on `RESEND_API_KEY`.
 - Email templates live in `apps/web/emails/` and can be previewed with `pnpm --filter @ronin-dojo/web email`.
+- Better-Auth magic-link emails resolve their brand from the auth request host and use that same origin in the login URL.
 - Delivered email activity is read in **Resend Dashboard → Emails**.
 - Replies are read/responded to from the external mailbox for the active brand sender because inbound webhooks/thread storage are not implemented yet.
 - `/admin/email` is an operator dashboard surface that explains the current read/reply paths without pretending the app is a full inbox.

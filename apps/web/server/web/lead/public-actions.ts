@@ -4,9 +4,8 @@ import { headers } from "next/headers"
 import { after } from "next/server"
 import { z } from "zod"
 import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
-import { siteConfig } from "~/config/site"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { getRequestBrand, getRequestOrigin } from "~/lib/brand-context"
 import {
   type BblJoinLegacyMembershipPath,
   notifyAdminOfBblJoinLegacy,
@@ -125,6 +124,7 @@ export const createJoinLegacyInterest = publicActionClient
   .inputSchema(legacyInterestSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const brand = await getRequestBrand()
+    const requestOrigin = await getRequestOrigin()
     const session = await getServerSession()
     const ip = await getPublicLeadIp()
     await checkPublicLeadRateLimit({ db, brand, ip })
@@ -273,7 +273,10 @@ export const createJoinLegacyInterest = publicActionClient
 
     const checkoutUrl =
       membershipPath === "FREE" ? `/submit/${tool.slug}/success` : `/submit/${tool.slug}`
-    const absoluteCheckoutUrl = `${siteConfig.url}${checkoutUrl}`
+    const absoluteCheckoutUrl = new URL(
+      checkoutUrl,
+      requestOrigin ?? "https://baselinemartialarts.com",
+    ).toString()
 
     after(async () => {
       const notification = {
@@ -287,6 +290,7 @@ export const createJoinLegacyInterest = publicActionClient
         trainedUnder,
         represent,
         checkoutUrl: absoluteCheckoutUrl,
+        appUrl: requestOrigin,
         claimCreated,
       }
 

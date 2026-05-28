@@ -8,12 +8,40 @@ import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
 import { cache } from "react"
 import { claimsConfig } from "~/config/claims"
-import { siteConfig } from "~/config/site"
 import { EmailMagicLink } from "~/emails/magic-link"
 import { env } from "~/env"
-import { sendEmail } from "~/lib/email"
+import { resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
+import { getBrandSenderName, sendEmail } from "~/lib/email"
 import { generateUniqueProfileSlug } from "~/lib/slug"
 import { db } from "~/services/db"
+
+type AuthEndpointContext = {
+  headers?: Headers
+  request?: Request
+  context?: {
+    baseURL?: string
+  }
+}
+
+const getAuthContextHeaders = (ctx?: AuthEndpointContext) => ctx?.headers ?? ctx?.request?.headers
+
+const resolveAuthEmailBrand = (ctx?: AuthEndpointContext) => {
+  const requestHeaders = getAuthContextHeaders(ctx)
+  const host = requestHeaders?.get("x-forwarded-host") ?? requestHeaders?.get("host")
+  const contextHost = ctx?.context?.baseURL ? new URL(ctx.context.baseURL).host : null
+
+  return resolveBrand(host ?? contextHost)
+}
+
+const resolveAuthEmailUrl = (url: string, ctx?: AuthEndpointContext) => {
+  const requestHeaders = getAuthContextHeaders(ctx)
+  const requestOrigin = requestHeaders ? resolveRequestOrigin(requestHeaders) : null
+
+  if (!requestOrigin) return url
+
+  const parsedUrl = new URL(url)
+  return new URL(`${parsedUrl.pathname}${parsedUrl.search}`, requestOrigin).toString()
+}
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
@@ -104,10 +132,17 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url }) => {
+      sendMagicLink: async ({ email, url }, ctx) => {
+        const brand = resolveAuthEmailBrand(ctx)
+        const brandedUrl = resolveAuthEmailUrl(url, ctx)
         const to = email
-        const subject = `Your ${siteConfig.name} Login Link`
-        await sendEmail({ to, subject, react: EmailMagicLink({ to, url }) })
+        const subject = `Your ${getBrandSenderName(brand)} Login Link`
+        await sendEmail({
+          brand,
+          to,
+          subject,
+          react: EmailMagicLink({ to, url: brandedUrl }),
+        })
       },
     }),
 

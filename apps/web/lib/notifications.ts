@@ -469,6 +469,7 @@ export type BblJoinLegacyNotificationParams = {
   trainedUnder?: string | null
   represent?: string | null
   checkoutUrl?: string | null
+  appUrl?: string | null
   claimCreated?: boolean
 }
 
@@ -505,7 +506,7 @@ export const notifyAdminOfBblJoinLegacy = async (params: BblJoinLegacyNotificati
       rankSummary: params.rankSummary,
       trainedUnder: params.trainedUnder,
       represent: params.represent,
-      adminLeadUrl: `${siteConfig.url}/admin/leads/${params.leadId}`,
+      adminLeadUrl: `${params.appUrl ?? siteConfig.url}/admin/leads/${params.leadId}`,
       checkoutUrl: params.checkoutUrl,
       claimCreated: params.claimCreated,
     }),

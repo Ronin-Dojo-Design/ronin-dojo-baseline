@@ -77,9 +77,8 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 2. Dashboard → Domains → Add Domain
 3. Enter domain (e.g., baselinemartialarts.com)
 4. Resend shows required DNS records:
-   - TXT (verification)
-   - CNAME (DKIM)
-   - CNAME (return-path)
+   - Copy the exact TXT/MX/CNAME records shown for that domain
+   - Dashboard/API records are authoritative; public examples can differ by domain and feature set
 5. Add records in Bluehost cPanel → Zone Editor
 6. Click "Verify" in Resend dashboard
 7. Copy API key → add to .env as RESEND_API_KEY

@@ -5,7 +5,7 @@ type: protocol
 status: superseded
 created: 2026-04-26
 updated: 2026-05-28
-last_agent: codex-session-0278
+last_agent: codex-session-0279
 ---
 
 # Wiki Change Log
@@ -165,3 +165,9 @@ Use this file only as historical context for early wiki adoption.
 - Added `docs/runbooks/sop-email-runbook.md` to document Resend transactional email operations, where sent emails display, where replies are read/responded to today, and future in-app inbox data flows.
 - Added `/admin/email` as an admin-facing email operations surface and linked it from admin navigation/command palette.
 - Added selected-rank admin controls for lineage tree members so `LineageTreeMember.rankAwardId` can be selected/cleared from the admin lineage detail page.
+
+## 2026-05-28 — SESSION_0279
+
+- Created `docs/sprints/SESSION_0279.md` for the `/lineage/join` browser smoke and BBL email readiness session.
+- Patched BBL production email readiness: brand-aware magic links, request-origin Join links, explicit brand sender configuration status, `.env.example` sender vars, and BBL production proof-script support.
+- Recorded the local DB/browser-smoke blocker: Postgres.app was repaired to password auth, but further local DB commands require explicit approval after the approval-limit rejection.
