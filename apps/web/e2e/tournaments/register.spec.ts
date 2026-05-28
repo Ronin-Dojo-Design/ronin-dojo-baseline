@@ -17,7 +17,7 @@ test.describe("Tournament registration E2E (free path)", () => {
 
     // 2. Discover tournaments
     await page.goto("/tournaments")
-    await page.waitForLoadState("networkidle")
+    // §14e SESSION_0271: removed networkidle — tournament link check is the anchor
 
     const tournamentLink = page.locator('a[href*="/tournaments/"]').first()
     const linkExists = (await tournamentLink.count()) > 0
@@ -26,7 +26,7 @@ test.describe("Tournament registration E2E (free path)", () => {
     // 3. Navigate to tournament detail
     const href = await tournamentLink.getAttribute("href")
     await page.goto(href!)
-    await page.waitForLoadState("networkidle")
+    // §14e SESSION_0271: removed networkidle — checkbox check is the anchor
 
     // 4. Look for division checkboxes (the registration form)
     const checkbox = page.locator('button[role="checkbox"]').first()

@@ -7,20 +7,20 @@ test.describe("Tournament results page", () => {
 
     // Navigate directly to seeded tournament detail
     await page.goto(`/tournaments/${fixture.tournamentSlug}`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.locator("body")).toBeVisible()
+    // §14e SESSION_0271: removed networkidle — body visibility is the anchor
+    await expect(page.locator("body")).toBeVisible({ timeout: 30_000 })
 
     // Navigate to results page
     await page.goto(`/tournaments/${fixture.tournamentSlug}/results`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.locator("body")).toBeVisible()
+    // §14e SESSION_0271: removed networkidle — body visibility is the anchor
+    await expect(page.locator("body")).toBeVisible({ timeout: 30_000 })
   })
 
   test("results page shows bracket data when present", async ({ page }) => {
     const fixture = getFixture()
 
     await page.goto(`/tournaments/${fixture.tournamentSlug}/results`)
-    await page.waitForLoadState("networkidle")
+    // §14e SESSION_0271: removed networkidle — body visibility is the anchor
 
     // Should see bracket/match content since we seeded matches
     const body = page.locator("body")

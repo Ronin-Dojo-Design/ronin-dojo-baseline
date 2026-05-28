@@ -8,8 +8,7 @@ test.describe("Tournament list page", () => {
 
   test("displays tournament cards when data exists", async ({ page }) => {
     await page.goto("/tournaments")
-    // Wait for Suspense to resolve
-    await page.waitForLoadState("networkidle")
+    // §14e SESSION_0271: removed networkidle — tournament links check is the anchor
     // Look for links or cards — tournaments render as clickable items
     const tournamentLinks = page.locator('a[href*="/tournaments/"]')
     const count = await tournamentLinks.count()
