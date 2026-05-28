@@ -339,7 +339,7 @@ Do not add new lineage schema for trust status. A narrow additive claimability p
 ## Open decisions / blockers
 
 - **Production seed blocked on DB access:** `vercel env pull --environment=production` and `vercel env run -e production` did not expose a usable decrypted `DATABASE_URL` for the local seed command. Direct seed against production was not run.
-- **Production render still unproven:** read-only production checks before seeding showed `https://baselinemartialarts.com/lineage` returning 200 with 0 trees and `https://baselinemartialarts.com/lineage/rigan-machado-bjj-lineage` returning 500. This should be handled before more public lineage polish.
+- **Production seed still unproven:** final production smoke after the dynamic-render patch showed `https://baselinemartialarts.com/lineage` returning 200 and `https://baselinemartialarts.com/lineage/rigan-machado-bjj-lineage` returning 404 because the Rigan tree is absent. The prior production 500 was fixed, but the production seed still needs a usable DB path.
 - **Authenticated admin smoke pending:** `/admin/lineage` route registration/auth redirect was verified unauthenticated. A logged-in admin and logged-in `TREE_ADMIN` browser smoke should be run after production data access is resolved.
 
 ## Verification
@@ -350,6 +350,7 @@ Do not add new lineage schema for trust status. A narrow additive claimability p
 | `curl -L http://localhost:3000/lineage` | `200`, 199,969 bytes. |
 | `curl -L http://localhost:3000/lineage/rigan-machado-bjj-lineage` | `200`, 232,999 bytes. |
 | Production deploy check for `edb9294` | Vercel production deployment became Ready; post-deploy detail route still returned 500 with `DYNAMIC_SERVER_USAGE`, so a follow-up dynamic-render patch was added. |
+| Production deploy check for `7ef50e8` | Vercel production deployment became Ready and was aliased to `baselinemartialarts.com`; `/lineage` returned `200`, `/lineage/rigan-machado-bjj-lineage` returned `404` instead of 500 because production seed is still absent. |
 | `curl -I http://localhost:3000/admin/lineage` | `307` to `/auth/login?next=/admin/lineage`, proving route/auth gate registration. |
 | `pnpm --filter @ronin-dojo/web typecheck` | Passed. |
 | `cd apps/web && bun test server/web/lineage/claim-actions.test.ts` | Passed: 7 tests, 18 assertions. |
@@ -377,7 +378,7 @@ Do not add new lineage schema for trust status. A narrow additive claimability p
 
 - **Severity:** medium
 - **Task:** SESSION_0273_TASK_01
-- **Evidence:** `vercel env pull --environment=production --yes` produced empty encrypted local env values; `vercel env run -e production` did not expose `DATABASE_URL`; production `/lineage` showed 0 trees and BJJ detail returned 500 before seed.
+- **Evidence:** `vercel env pull --environment=production --yes` produced empty encrypted local env values; `vercel env run -e production` did not expose `DATABASE_URL`; final production smoke showed `/lineage` 200 and BJJ detail 404 because production lacks the seeded tree.
 - **Impact:** BBL-LINEAGE-001 is locally proven but not production complete.
 - **Required follow-up:** Obtain a usable production direct database URL or run the seed from a trusted production job, then re-check production index/detail routes.
 - **Status:** open

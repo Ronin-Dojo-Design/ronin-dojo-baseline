@@ -43,7 +43,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| BBL-LINEAGE-001 | View lineage tree | 🔶 Partial | `/lineage` index + `/lineage/[treeSlug]` routes exist. `lineage-tree-canvas.tsx`, `lineage-tree-board.tsx`, `lineage-node-card.tsx`, `lineage-profile-drawer.tsx` all exist. SESSION_0273 local seed proof returned 200 for `/lineage` and `/lineage/rigan-machado-bjj-lineage`. **Missing:** Production seed/render proof; production env access blocked the seed and production currently shows 0 trees / detail 500. |
+| BBL-LINEAGE-001 | View lineage tree | 🔶 Partial | `/lineage` index + `/lineage/[treeSlug]` routes exist. `lineage-tree-canvas.tsx`, `lineage-tree-board.tsx`, `lineage-node-card.tsx`, `lineage-profile-drawer.tsx` all exist. SESSION_0273 local seed proof returned 200 for `/lineage` and `/lineage/rigan-machado-bjj-lineage`; production `/lineage` returns 200 and the prior detail 500 was reduced to expected 404 while the tree is absent. **Missing:** Production seed proof; production env access blocked the seed, so Rigan tree does not exist in production yet. |
 | BBL-LINEAGE-002 | Click node → highlight root path | ❌ Not started | No root-path highlighting logic in `lineage-tree-canvas.tsx`. Node click opens drawer but doesn't dim unrelated branches. |
 | BBL-LINEAGE-003 | Grouped promotion rows | 🔶 Partial | `LineageVisualGroup` model exists. `lineage-group-header-form.tsx` exists. **Missing:** Public rendering of grouped rows with `showPublicLabel` logic. |
 | BBL-LINEAGE-004 | Unknown dates handled gracefully | 🔧 Infra only | `showPromotionDatePublic` flag exists on `LineageTreeMember`. **Missing:** UI logic to render "Unknown date" vs omit. |
