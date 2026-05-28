@@ -43,8 +43,8 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| BBL-LINEAGE-001 | View lineage tree | 🔶 Partial | `/lineage` index + `/lineage/[treeSlug]` routes exist. `lineage-tree-canvas.tsx`, `lineage-tree-board.tsx`, `lineage-node-card.tsx`, `lineage-profile-drawer.tsx` all exist. SESSION_0273 local seed proof returned 200 for `/lineage` and `/lineage/rigan-machado-bjj-lineage`; production `/lineage` returns 200 and the prior detail 500 was reduced to expected 404 while the tree is absent. **Missing:** Production seed proof; production env access blocked the seed, so Rigan tree does not exist in production yet. |
-| BBL-LINEAGE-002 | Click node → highlight root path | ❌ Not started | No root-path highlighting logic in `lineage-tree-canvas.tsx`. Node click opens drawer but doesn't dim unrelated branches. |
+| BBL-LINEAGE-001 | View lineage tree | ✅ Done | Production seed completed 2026-05-28: 17 users, 18 nodes, 17 relationships, 5 trees, 22 tree members created. `/lineage` returns 200, `/lineage/rigan-machado-bjj-lineage` returns 200. Tree renders Carlos Gracie Sr → Carlos Gracie Jr → Rigan Machado → Dirty Dozen → Brian Scott. Drawer shows profile info, rank history, lineage tab. SESSION_0275 added per-tree rank selection via `selectedRankAward`, admin drawer actions, and claim CTA. |
+| BBL-LINEAGE-002 | Click node → highlight root path | ✅ Done | Root-path highlighting implemented in `lineage-tree-canvas.tsx` via `buildSelectedPathMemberIds`. Clicking a node dims unrelated branches and highlights the path to root with primary color ring/opacity. |
 | BBL-LINEAGE-003 | Grouped promotion rows | 🔶 Partial | `LineageVisualGroup` model exists. `lineage-group-header-form.tsx` exists. **Missing:** Public rendering of grouped rows with `showPublicLabel` logic. |
 | BBL-LINEAGE-004 | Unknown dates handled gracefully | 🔧 Infra only | `showPromotionDatePublic` flag exists on `LineageTreeMember`. **Missing:** UI logic to render "Unknown date" vs omit. |
 | BBL-LINEAGE-005 | Trust badges on nodes | 🔶 Partial | `isVerified` on `LineageNode`. `lineage-node-card.tsx` renders cards. **Missing:** Disputed/unverified badge rendering. Same gap as BBL-PROFILE-004. |
@@ -135,7 +135,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 ### Highest-value next tasks (Petey recommendation)
 
-1. **BBL-LINEAGE-001 production completion** — SESSION_0273 proved local seed/render, but production seed is still blocked on usable production DB access. First next step is to run `seed-baseline-lineage.ts` against production and re-check `/lineage` + `/lineage/rigan-machado-bjj-lineage`.
+1. **BBL-LINEAGE-001 production — DONE** — Production seed completed SESSION_0275. Per-tree rank selection, admin drawer actions, claim CTA all wired. Next: populate `selectedRankAward` on Brian's tree member to show BJJ 1st Degree instead of overall latest rank.
 2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
 3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
 4. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).

@@ -19,10 +19,19 @@ import type { LineageNodeRow } from "~/server/web/lineage/payloads"
  * Author: Cody / SESSION_0175 TASK_03.
  */
 
+type SelectedRank = {
+  id: string
+  name: string
+  shortName: string | null
+  colorHex?: string | null
+  disciplineName?: string | null
+}
+
 type LineageNodeCardProps = {
   node: LineageNodeRow
   isRoot?: boolean
   isClaimable?: boolean
+  selectedRank?: SelectedRank | null
   onSelect: (nodeId: string) => void
 }
 
@@ -34,16 +43,26 @@ function initials(name: string | null | undefined): string {
   return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
 }
 
-export function LineageNodeCard({ node, isRoot, isClaimable, onSelect }: LineageNodeCardProps) {
+export function LineageNodeCard({
+  node,
+  isRoot,
+  isClaimable,
+  selectedRank,
+  onSelect,
+}: LineageNodeCardProps) {
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
+
+  // Prefer the tree-member's selectedRankAward over the user's latest overall rank
   const latestRankAward = node.user.rankAwards?.[0]
-  const rankLabel = latestRankAward?.rank
-    ? `${latestRankAward.rank.name}${
-        latestRankAward.rank.rankSystem?.discipline?.name
-          ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
-          : ""
-      }`
-    : null
+  const rankLabel = selectedRank
+    ? `${selectedRank.name}${selectedRank.disciplineName ? ` · ${selectedRank.disciplineName}` : ""}`
+    : latestRankAward?.rank
+      ? `${latestRankAward.rank.name}${
+          latestRankAward.rank.rankSystem?.discipline?.name
+            ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
+            : ""
+        }`
+      : null
 
   const latestMembership = node.user.memberships?.[0]
   const schoolLabel = latestMembership?.organization?.name ?? null

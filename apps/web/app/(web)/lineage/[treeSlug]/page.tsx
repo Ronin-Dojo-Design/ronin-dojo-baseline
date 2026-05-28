@@ -166,6 +166,8 @@ export default async function LineageTreePage({ params }: Props) {
             visualGroups={result.visualGroups}
             defaultRootMemberId={result.defaultRootMemberId}
             profilesById={profilesById}
+            treeSlug={treeSlug}
+            isTreeClaimable={result.tree.isClaimable}
           />
         </Section.Content>
       </Section>

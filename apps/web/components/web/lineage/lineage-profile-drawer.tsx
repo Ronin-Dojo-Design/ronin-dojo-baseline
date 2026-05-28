@@ -4,9 +4,12 @@ import {
   CheckIcon,
   EllipsisVerticalIcon,
   LockKeyholeIcon,
+  PencilIcon,
+  ShieldCheckIcon,
   ShieldOffIcon,
   TriangleAlertIcon,
   UserRoundCogIcon,
+  UserRoundPlusIcon,
 } from "lucide-react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
@@ -29,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/common/dropdown-menu"
 import { H6 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
@@ -55,11 +59,34 @@ import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
  *   - docs/knowledge/wiki/component-porting/specs/lineage-profile-drawer-port-spec.md
  */
 
+type SelectedRankAward = {
+  id: string
+  awardedAt: Date | null
+  rank: {
+    id: string
+    name: string
+    shortName: string | null
+    colorHex: string | null
+    rankSystem?: {
+      id: string
+      name: string
+      discipline?: { id: string; name: string; slug: string; code: string | null } | null
+    } | null
+  } | null
+} | null
+
 type LineageProfileDrawerProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   profile: LineageNodeProfile | null
   promoterChangeContext?: PromoterChangeContext | null
+  selectedRankAward?: SelectedRankAward
+  isClaimable?: boolean
+  isTreeClaimable?: boolean
+  treeSlug?: string
+  treeId?: string
+  nodeId?: string | null
+  isAdmin?: boolean
 }
 
 function initials(name: string | null | undefined): string {
@@ -104,6 +131,13 @@ export function LineageProfileDrawer({
   onOpenChange,
   profile,
   promoterChangeContext,
+  selectedRankAward,
+  isClaimable,
+  isTreeClaimable,
+  treeSlug,
+  treeId,
+  nodeId,
+  isAdmin,
 }: LineageProfileDrawerProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -116,7 +150,17 @@ export function LineageProfileDrawer({
             </DrawerHeader>
           </Stack>
         ) : (
-          <DrawerBody profile={profile} promoterChangeContext={promoterChangeContext ?? null} />
+          <DrawerBody
+            profile={profile}
+            promoterChangeContext={promoterChangeContext ?? null}
+            selectedRankAward={selectedRankAward ?? null}
+            isClaimable={isClaimable}
+            isTreeClaimable={isTreeClaimable}
+            treeSlug={treeSlug}
+            treeId={treeId}
+            nodeId={nodeId}
+            isAdmin={isAdmin}
+          />
         )}
       </DrawerContent>
     </Drawer>
@@ -126,17 +170,36 @@ export function LineageProfileDrawer({
 function DrawerBody({
   profile,
   promoterChangeContext,
+  selectedRankAward,
+  isClaimable,
+  isTreeClaimable,
+  treeSlug,
+  treeId,
+  nodeId,
+  isAdmin,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
+  selectedRankAward: SelectedRankAward
+  isClaimable?: boolean
+  isTreeClaimable?: boolean
+  treeSlug?: string
+  treeId?: string
+  nodeId?: string | null
+  isAdmin?: boolean
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const currentAward = profile.user.rankAwards[0] ?? null
-  const currentRank = currentAward?.rank
+  const currentRank = currentAward?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
   const latestMembership = profile.user.memberships[0] ?? null
   const instructorRelationship = profile.relationshipsTo[0] ?? null
   const [promoterModalOpen, setPromoterModalOpen] = useState(false)
+
+  // For the header subtitle, prefer selected rank name if set
+  const headerRankName = selectedRankAward?.rank?.name ?? currentRank?.name ?? null
+  const headerDisciplineName =
+    selectedRankAward?.rank?.rankSystem?.discipline?.name ?? discipline?.name ?? null
 
   return (
     <>
@@ -150,10 +213,10 @@ function DrawerBody({
             </Avatar>
             <Stack size="xs" direction="column" className="min-w-0 flex-1">
               <DrawerTitle>{displayName}</DrawerTitle>
-              {currentRank && (
+              {headerRankName && (
                 <Note className="truncate">
-                  {currentRank.name}
-                  {discipline?.name && <> · {discipline.name}</>}
+                  {headerRankName}
+                  {headerDisciplineName && <> · {headerDisciplineName}</>}
                 </Note>
               )}
               <Stack size="xs" wrap>
@@ -162,16 +225,24 @@ function DrawerBody({
             </Stack>
           </Stack>
 
-          {promoterChangeContext && (
+          {(promoterChangeContext || isAdmin) && (
             <>
-              <LineageDrawerActions onChangePromoter={() => setPromoterModalOpen(true)} />
-              <PromoterChangeModal
-                context={promoterChangeContext}
-                memberName={displayName}
-                open={promoterModalOpen}
-                onOpenChange={setPromoterModalOpen}
-                trigger={null}
+              <LineageDrawerActions
+                onChangePromoter={
+                  promoterChangeContext ? () => setPromoterModalOpen(true) : undefined
+                }
+                editHref={treeSlug && nodeId ? `/lineage/${treeSlug}/edit/${nodeId}` : undefined}
+                isAdmin={isAdmin}
               />
+              {promoterChangeContext && (
+                <PromoterChangeModal
+                  context={promoterChangeContext}
+                  memberName={displayName}
+                  open={promoterModalOpen}
+                  onOpenChange={setPromoterModalOpen}
+                  trigger={null}
+                />
+              )}
             </>
           )}
         </Stack>
@@ -204,13 +275,36 @@ function DrawerBody({
           <LineageRankHistoryTab profile={profile} />
         </TabsContent>
       </Tabs>
+
+      {/* Claim CTA — shown when node is claimable and tree accepts claims */}
+      {isClaimable && isTreeClaimable && treeSlug && (
+        <div className="border-t p-4">
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full"
+            prefix={<UserRoundPlusIcon />}
+            render={<Link href={`/lineage/${treeSlug}/claim`} />}
+          >
+            Claim this profile
+          </Button>
+        </div>
+      )}
     </>
   )
 }
 
-function LineageDrawerActions({ onChangePromoter }: { onChangePromoter: () => void }) {
+function LineageDrawerActions({
+  onChangePromoter,
+  editHref,
+  isAdmin,
+}: {
+  onChangePromoter?: () => void
+  editHref?: string
+  isAdmin?: boolean
+}) {
   function openPromoterModal() {
-    window.setTimeout(onChangePromoter, 0)
+    if (onChangePromoter) window.setTimeout(onChangePromoter, 0)
   }
 
   return (
@@ -237,18 +331,27 @@ function LineageDrawerActions({ onChangePromoter }: { onChangePromoter: () => vo
       <DropdownMenuContent align="end" sideOffset={8}>
         <DropdownMenuGroup>
           <DropdownMenuLabel>Admin</DropdownMenuLabel>
-          <DropdownMenuItem onClick={openPromoterModal} onSelect={openPromoterModal}>
-            <UserRoundCogIcon />
-            Change promoter...
-          </DropdownMenuItem>
+          {onChangePromoter && (
+            <DropdownMenuItem onClick={openPromoterModal} onSelect={openPromoterModal}>
+              <UserRoundCogIcon />
+              Change promoter...
+            </DropdownMenuItem>
+          )}
+          {editHref && isAdmin ? (
+            <DropdownMenuItem render={<Link href={editHref} />}>
+              <PencilIcon />
+              Edit profile
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled>
+              <LockKeyholeIcon />
+              Edit profile
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled>
-            <LockKeyholeIcon />
-            Edit profile later
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            <LockKeyholeIcon />
-            Manage verification later
+            <ShieldCheckIcon />
+            Manage verification (coming soon)
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

@@ -257,7 +257,7 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     fromKey: "bob-bass",
     toKey: "OWNER",
     description: "BJJ Black Belt 1st Degree under Bob Bass (Rigan Machado lineage).",
-    isVerified: false,
+    isVerified: true,
   },
 
   // Next generation — Bill Hosken → Brian Truelson (CORRECTED: was under Bob Bass in legacy)
@@ -401,8 +401,13 @@ async function ensureLineageRelationship(
     select: { id: true },
   })
   if (existing) {
+    // Update isVerified if it changed since initial seed
+    await db.lineageRelationship.update({
+      where: { id: existing.id },
+      data: { isVerified, description },
+    })
     counts.edgesFound++
-    console.log(`   Edge ${fromNodeId.slice(0, 6)} → ${toNodeId.slice(0, 6)}: already exists`)
+    console.log(`   Edge ${fromNodeId.slice(0, 6)} → ${toNodeId.slice(0, 6)}: exists, updated`)
     return
   }
   await db.lineageRelationship.create({
@@ -658,7 +663,7 @@ async function main() {
 
       // Resolve visual parent (only if parent already created in this loop)
       const parentKey = ts.parentMap[key]
-      const parentMemberId = parentKey ? treeMemberIdByKey.get(parentKey) ?? null : null
+      const parentMemberId = parentKey ? (treeMemberIdByKey.get(parentKey) ?? null) : null
 
       member = await db.lineageTreeMember.create({
         data: {

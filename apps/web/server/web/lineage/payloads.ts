@@ -287,7 +287,21 @@ export const lineageTreeMemberPayload = {
       id: true,
       awardedAt: true,
       rank: {
-        select: { id: true, name: true, shortName: true, colorHex: true },
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+          colorHex: true,
+          rankSystem: {
+            select: {
+              id: true,
+              name: true,
+              discipline: {
+                select: { id: true, name: true, slug: true, code: true },
+              },
+            },
+          },
+        },
       },
     },
   },

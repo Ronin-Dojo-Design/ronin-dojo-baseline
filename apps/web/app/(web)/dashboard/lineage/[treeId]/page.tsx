@@ -98,6 +98,8 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
           {memberCount > 0 ? (
             <LineageTreeBoard
               treeId={treeId}
+              treeSlug={result.tree.slug}
+              isTreeClaimable={result.tree.isClaimable}
               capability={result.capability}
               publicHref={result.tree.isPublished ? `/lineage/${result.tree.slug}` : null}
               members={result.members}

@@ -26,6 +26,8 @@ import { LineageTreeCanvas } from "./lineage-tree-canvas"
 type LineageTreeBoardProps = {
   profilesById: Record<string, LineageNodeProfile>
   treeId?: string
+  treeSlug?: string
+  isTreeClaimable?: boolean
   capability?: LineageEditorCapability
   publicHref?: string | null
 
@@ -77,6 +79,8 @@ export function LineageTreeBoard({
   visualGroups,
   defaultRootMemberId,
   treeId,
+  treeSlug,
+  isTreeClaimable,
   capability,
   publicHref,
 }: LineageTreeBoardProps) {
@@ -139,6 +143,13 @@ export function LineageTreeBoard({
         }}
         profile={selectedProfile}
         promoterChangeContext={promoterChangeContext}
+        selectedRankAward={selectedMember?.selectedRankAward ?? null}
+        isClaimable={selectedMember?.isClaimable}
+        isTreeClaimable={isTreeClaimable}
+        treeSlug={treeSlug}
+        treeId={treeId}
+        nodeId={selectedNodeId}
+        isAdmin={!!capability?.canEditTree}
       />
     </>
   )

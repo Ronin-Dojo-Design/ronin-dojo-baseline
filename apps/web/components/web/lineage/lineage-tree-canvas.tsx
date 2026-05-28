@@ -58,6 +58,14 @@ import { LineageNodeCard } from "./lineage-node-card"
  * server actions; the public viewer path renders read-only.
  */
 
+type SelectedRank = {
+  id: string
+  name: string
+  shortName: string | null
+  colorHex: string | null
+  disciplineName?: string | null
+}
+
 type CanvasMember = {
   id: string
   nodeId: string
@@ -66,6 +74,7 @@ type CanvasMember = {
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
   isClaimable?: boolean
+  selectedRank?: SelectedRank | null
 }
 
 type ChildGroup = {
@@ -140,6 +149,15 @@ function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMe
     primaryVisualParentMemberId: member.primaryVisualParentMemberId,
     visualGroupId: member.visualGroupId,
     isClaimable: member.isClaimable,
+    selectedRank: member.selectedRankAward?.rank
+      ? {
+          id: member.selectedRankAward.rank.id,
+          name: member.selectedRankAward.rank.name,
+          shortName: member.selectedRankAward.rank.shortName,
+          colorHex: member.selectedRankAward.rank.colorHex,
+          disciplineName: member.selectedRankAward.rank.rankSystem?.discipline?.name ?? null,
+        }
+      : null,
   }))
 }
 
@@ -505,6 +523,7 @@ function LineageBranch({
           node={member.node}
           isRoot={isRoot}
           isClaimable={member.isClaimable}
+          selectedRank={member.selectedRank}
           onSelect={onSelect}
         />
       </div>
