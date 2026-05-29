@@ -4,12 +4,13 @@ slug: adr-0022-brand-chrome-resolution
 type: decision
 status: accepted
 created: 2026-05-28
-updated: 2026-05-28
-last_agent: copilot-session-0281
+updated: 2026-05-29
+last_agent: copilot-session-0282
 pairs_with:
   - docs/architecture/decisions/0021-brand-aware-magic-links.md
   - apps/web/lib/brand-context.ts
   - apps/web/contexts/brand-context.tsx
+  - docs/sprints/SESSION_0282.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

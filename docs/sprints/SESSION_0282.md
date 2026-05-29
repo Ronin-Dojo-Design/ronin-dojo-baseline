@@ -2,7 +2,7 @@
 title: "SESSION 0282 — BBL red brand token + smoke"
 slug: session-0282
 type: session--open
-status: in-progress
+status: closed
 created: 2026-05-29
 updated: 2026-05-29
 last_agent: copilot-session-0282
@@ -70,7 +70,7 @@ Ship a minimal, safe BBL color-token correction and document the decision/follow
 | --- | --- | --- | --- |
 | SESSION_0282_TASK_01 | Petey | complete | Monorepo source-of-truth lookup blocked in sandbox (repo unavailable); proceeding with requested red token update + blocker noted |
 | SESSION_0282_TASK_02 | Cody | complete | BBL primary token updated to red in light/dark brand overrides |
-| SESSION_0282_TASK_03 | Cody + Petey | in-progress | Validation running; smoke blocked by missing env setup |
+| SESSION_0282_TASK_03 | Cody + Petey | complete | Validation evidence recorded; visual smoke explicitly blocked by sandbox env/host constraints |
 
 ## What landed
 
@@ -95,3 +95,73 @@ Ship a minimal, safe BBL color-token correction and document the decision/follow
 - **Monorepo brand source lookup:** `Ronin-Dojo-Design/ronin-dojo-monorepo` and expected BBL design tear-sheet are not accessible from this sandbox (404). Exact historical BBL red hex still needs confirmation.
 - **Runtime smoke env:** App requires additional env setup for successful page render in this sandbox, preventing full visual smoke proof.
 - **Admin accent color picker:** Not implemented in this slice; captured as follow-up feature candidate.
+
+## Files touched
+
+| Path | Note |
+| --- | --- |
+| `docs/sprints/SESSION_0282.md` | New session ledger, task tracking, close notes |
+| `apps/web/app/styles.css` | BBL primary token changed from gold to red |
+| `docs/architecture/decisions/0022-brand-chrome-resolution.md` | ADR updated to reflect BBL red primary |
+| `petey-plan.md` | Requested orchestration task plan with persona handoffs |
+| `docs/knowledge/wiki/index.md` | Added SESSION_0282 row and updated index metadata |
+
+## Decisions resolved
+
+- BBL chrome primary color should be red (not gold) for this branch update.
+- Admin accent color picker remains a follow-up feature, not part of this token-only change.
+
+## Review log
+
+| ID | Reviewer(s) | Verdict | Notes |
+| --- | --- | --- | --- |
+| SESSION_0282_REVIEW_01 | Giddy + Doug (simulated protocol pass) | pass-with-blockers | Change scope is low risk (token + docs). Visual smoke blocked by sandbox env/host limits; exact historical BBL hex pending monorepo access. |
+
+## Hostile close review
+
+- Dirstarter alignment: maintained (existing `[data-brand]` theming pattern extended, not replaced).
+- Security/data integrity: unaffected (no auth, schema, or payment logic changes).
+- Verification honesty: pre-existing lint/test/typecheck/build environment failures recorded; visual smoke explicitly marked blocked.
+- Score cap: not applied (no Dirstarter bypass or data integrity regression detected).
+
+## ADR / ubiquitous-language check
+
+- ADR 0022 updated to reflect BBL red primary token.
+- No new domain terms introduced; no ubiquitous-language update required.
+
+## Reflections
+
+- Brand-token changes are low-risk technically, but proof quality is gated by environment readiness (host routing + env vars + generated Prisma artifacts).
+- Running write-mode lint in a large workspace can introduce unrelated diffs; reverting immediately kept the commit clean.
+- Graphify-first workflow remains blocked in this sandbox until Graphify CLI is available.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | Updated `SESSION_0282.md`, `docs/architecture/decisions/0022-brand-chrome-resolution.md`, and `docs/knowledge/wiki/index.md` metadata (`updated`, `last_agent`, status sync) |
+| Backlinks/index sweep | Added SESSION_0282 row in wiki index; ADR 0022 now pairs with SESSION_0282 and SESSION_0282 references ADR 0022 |
+| Wiki lint | `bun run wiki:lint` from repo root: **233 errors, 621 warnings** (pre-existing repo-wide issues; includes one warning in this session file) |
+| Kaizen reflection | `## Reflections` section present: yes |
+| Hostile close review | `## Hostile close review` section included; low-risk token change with blockers recorded |
+| Review & Recommend | Next session goal/inputs/first task written below |
+| Memory sweep | None needed beyond SESSION/ADR documentation |
+| Next session unblock check | Partially blocked — exact BBL red hex and full visual smoke need monorepo access + sandbox env setup |
+| Git hygiene | Branch checked, worktree listed, scoped files committed via `engine-tools-report_progress` |
+| Graphify update | Skipped — Graphify CLI unavailable in sandbox |
+
+## Next session
+
+**Goal:** Confirm the exact BBL red hex from monorepo design docs, then complete full browser smoke on `bbl.local` with working env.
+
+**Inputs to read:**
+
+- `docs/sprints/SESSION_0282.md`
+- `petey-plan.md`
+- `docs/architecture/decisions/0022-brand-chrome-resolution.md`
+
+**First task:** Restore local env for `apps/web` (valid env vars + Prisma generation), then run browser smoke on `bbl.local` and verify header/footer/title + red primary token.
+
+### Status
+
+closed
