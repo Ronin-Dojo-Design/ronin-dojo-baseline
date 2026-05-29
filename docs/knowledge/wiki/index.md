@@ -366,6 +366,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0281](../../sprints/SESSION_0281.md) | session--implement | closed |
 | [SESSION_0282](../../sprints/SESSION_0282.md) | session--open | closed |
 | [SESSION_0283](../../sprints/SESSION_0283.md) | session--implement | closed |
+| [SESSION_0284](../../sprints/SESSION_0284.md) | session--open | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 
@@ -419,6 +420,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
 | [SOP — Email Operations Runbook](../../runbooks/sop-email-runbook.md) | runbook | active |
 | [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
+| [White-Label Site Runbook](../../runbooks/white-label-site-runbook.md) | runbook | active |
+| [Black Belt Legacy Production Runbook](../../runbooks/bbl-production-runbook.md) | runbook | active |
 | [Vercel Deploy Runbook](../../runbooks/vercel-deploy.md) | runbook | active |
 | [Baseline Listings Runbook](../../runbooks/baseline-listings-runbook.md) | runbook | active |
 | [Lineage Listing Runbook](../../runbooks/lineage-listing-runbook.md) | runbook | active |

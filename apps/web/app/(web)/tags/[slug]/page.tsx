@@ -7,7 +7,8 @@ import { ToolListingSkeleton } from "~/components/web/tools/tool-listing"
 import { ToolQuery } from "~/components/web/tools/tool-query"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 import { findTag, findTagSlugs } from "~/server/web/tags/queries"
@@ -22,6 +23,8 @@ const namespace = "pages.tag"
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const tag = await findTag({ where: { slug } })
 
   if (!tag) {
@@ -31,7 +34,7 @@ const getData = cache(async ({ params }: Props) => {
   const t = await getTranslations()
   const url = `/tags/${tag.slug}`
   const title = t(`${namespace}.title`, { name: tag.name })
-  const description = t(`${namespace}.description`, { name: tag.name, siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { name: tag.name, siteName: brandConfig.name })
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [

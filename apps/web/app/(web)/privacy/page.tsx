@@ -2,18 +2,22 @@ import type { Metadata } from "next"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 
 const PAGE_URL = "/privacy"
 const PAGE_TITLE = "Privacy Policy"
-const PAGE_DESCRIPTION = `How ${siteConfig.name} collects, uses, and safeguards information you provide.`
 const LAST_UPDATED = "2026-05-25"
 
-const getData = async () =>
-  getPageData(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION, {
+const getData = async () => {
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
+  const description = `How ${brandConfig.name} collects, uses, and safeguards information you provide.`
+  return getPageData(PAGE_URL, PAGE_TITLE, description, {
     breadcrumbs: [{ url: PAGE_URL, title: PAGE_TITLE }],
   })
+}
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
@@ -22,7 +26,8 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function PrivacyPolicyPage() {
   const { metadata } = await getData()
-  const siteName = siteConfig.name
+  const brand = await getRequestBrand()
+  const { name: siteName } = getBrandSiteConfig(brand)
 
   return (
     <>

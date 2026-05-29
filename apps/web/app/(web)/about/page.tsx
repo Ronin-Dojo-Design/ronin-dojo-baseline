@@ -7,7 +7,8 @@ import { ExternalLink } from "~/components/web/external-link"
 import { StructuredData } from "~/components/web/structured-data"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { linksConfig } from "~/config/links"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateAboutPage } from "~/lib/structured-data"
 
@@ -16,10 +17,12 @@ const namespace = "pages.about"
 
 // Get page data
 const getData = cache(async () => {
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const t = await getTranslations()
   const url = "/about"
   const title = t(`${namespace}.title`)
-  const description = t(`${namespace}.description`, { siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
   return getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],
@@ -34,6 +37,8 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function () {
   const { metadata, structuredData } = await getData()
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
 
   return (
     <>
@@ -43,10 +48,10 @@ export default async function () {
       </Intro>
 
       <Prose>
-        <h2>What is {siteConfig.name}?</h2>
+        <h2>What is {brandConfig.name}?</h2>
 
         <p>
-          <Link href="/">{siteConfig.name}</Link> is a community driven list of{" "}
+          <Link href="/">{brandConfig.name}</Link> is a community driven list of{" "}
           <strong>tools and resources for developers</strong>. The goal of the site is to be your
           first stop when researching for a new tool or resource to help you grow your business. It
           will help you find alternatives and reviews of the products you already use.

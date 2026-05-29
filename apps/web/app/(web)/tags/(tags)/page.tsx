@@ -6,7 +6,8 @@ import { TagListSkeleton } from "~/components/web/tags/tag-list"
 import { TagQuery } from "~/components/web/tags/tag-query"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 
@@ -15,10 +16,12 @@ const namespace = "pages.tags"
 
 // Get page data
 const getData = cache(async () => {
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const t = await getTranslations()
   const url = "/tags"
   const title = t(`${namespace}.title`)
-  const description = t(`${namespace}.description`, { siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
   return getPageData(url, title, description, {
     breadcrumbs: [{ url, title: t("navigation.tags") }],

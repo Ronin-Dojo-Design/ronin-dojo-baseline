@@ -15,7 +15,7 @@ import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
 import { feedbackConfig } from "~/config/feedback"
-import { siteConfig } from "~/config/site"
+import { useBrand } from "~/contexts/brand-context"
 import { useSession } from "~/lib/auth-client"
 import { cx } from "~/lib/utils"
 import { reportFeedback } from "~/server/web/actions/report"
@@ -30,6 +30,7 @@ const FeedbackWidgetForm = ({ toastId, setDismissed }: FeedbackWidgetFormProps) 
   const { data: session } = useSession()
   const t = useTranslations("forms.feedback")
   const tSchema = useTranslations("schema")
+  const { name: siteName } = useBrand()
 
   const schema = createFeedbackSchema(tSchema)
   const resolver = zodResolver(schema)
@@ -72,7 +73,7 @@ const FeedbackWidgetForm = ({ toastId, setDismissed }: FeedbackWidgetFormProps) 
         className="items-stretch w-full"
         render={<form onSubmit={handleSubmitWithAction} noValidate />}
       >
-        <p className="mb-1 text-xs">{t("question", { siteName: siteConfig.name })}</p>
+        <p className="mb-1 text-xs">{t("question", { siteName })}</p>
 
         {!session?.user && (
           <FormField
@@ -140,8 +141,9 @@ export const FeedbackWidget = () => {
   const startTime = useRef(Date.now())
   const [shouldShow, setShouldShow] = useState(false)
   const maxScrollRef = useRef(0)
-  const feedbackKey = `${siteConfig.slug}-feedback-dismissed`
-  const pageViewsKey = `${siteConfig.slug}-page-views`
+  const { slug } = useBrand()
+  const feedbackKey = `${slug}-feedback-dismissed`
+  const pageViewsKey = `${slug}-page-views`
   const { minTimeSpent, minPageView, minScroll, timeCheckInterval } = feedbackConfig.thresholds
 
   const [dismissed, setDismissed] = useLocalStorage({

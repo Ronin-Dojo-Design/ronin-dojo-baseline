@@ -4,7 +4,8 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { toolOnePayload } from "~/server/web/tools/payloads"
 import { db } from "~/services/db"
@@ -17,6 +18,8 @@ const namespace = "pages.submit"
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
 
   const tool = await db.tool.findFirst({
     where: { slug },
@@ -32,7 +35,7 @@ const getData = cache(async ({ params }: Props) => {
   const name = tool.name
   const url = `/submit/${tool.slug}/success`
   const title = t(`${namespace}.${prefix}.title`, { name })
-  const description = t(`${namespace}.${prefix}.description`, { name, siteName: siteConfig.name })
+  const description = t(`${namespace}.${prefix}.description`, { name, siteName: brandConfig.name })
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],

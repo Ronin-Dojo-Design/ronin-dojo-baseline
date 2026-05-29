@@ -7,7 +7,8 @@ import { ProductListSkeleton } from "~/components/web/products/product-list"
 import { ProductQuery } from "~/components/web/products/product-query"
 import { Stats } from "~/components/web/stats"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { isToolPublished } from "~/lib/tools"
 import { toolOnePayload } from "~/server/web/tools/payloads"
@@ -21,6 +22,8 @@ const namespace = "pages.submit"
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
 
   const tool = await db.tool.findFirst({
     where: { slug, tier: { not: ToolTier.Premium } },
@@ -36,7 +39,7 @@ const getData = cache(async ({ params }: Props) => {
   const name = tool.name
   const url = `/submit/${tool.slug}`
   const title = t(`${namespace}.${prefix}.title`, { name })
-  const description = t(`${namespace}.${prefix}.description`, { name, siteName: siteConfig.name })
+  const description = t(`${namespace}.${prefix}.description`, { name, siteName: brandConfig.name })
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],

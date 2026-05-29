@@ -23,6 +23,7 @@ import {
 } from "~/components/common/tooltip"
 import { ExternalLink } from "~/components/web/external-link"
 import { siteConfig } from "~/config/site"
+import { useBrand } from "~/contexts/brand-context"
 import { slot } from "~/lib/slot"
 import { cva, cx } from "~/lib/utils"
 
@@ -99,9 +100,10 @@ export const Nav = ({ className, title, previous, next, ...props }: NavProps) =>
   const t = useTranslations("tools.nav")
   const pathname = usePathname()
   const clipboard = useClipboard({ timeout: 2000 })
+  const { name } = useBrand()
 
   const currentUrl = encodeURIComponent(`${siteConfig.url}${pathname}`)
-  const shareTitle = encodeURIComponent(`${title} — ${siteConfig.name}`)
+  const shareTitle = encodeURIComponent(`${title} — ${name}`)
 
   const handleCopyLink = () => {
     clipboard.copy(window.location.href)

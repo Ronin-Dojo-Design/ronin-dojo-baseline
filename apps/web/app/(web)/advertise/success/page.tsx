@@ -8,7 +8,8 @@ import { AdForm } from "~/app/(web)/advertise/success/ad-form"
 import { AdCard } from "~/components/web/ads/ad-card"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { cx } from "~/lib/utils"
 import { adOnePayload } from "~/server/web/ads/payloads"
@@ -24,6 +25,8 @@ const namespace = "pages.advertise.success"
 const getData = cache(async ({ searchParams }: Props) => {
   const searchParamsLoader = createLoader({ sessionId: parseAsString.withDefault("") })
   const { sessionId } = await searchParamsLoader(searchParams)
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const { data: session, error } = await tryCatch(stripe.checkout.sessions.retrieve(sessionId))
 
   if (error || session.status !== "complete") {
@@ -33,7 +36,7 @@ const getData = cache(async ({ searchParams }: Props) => {
   const t = await getTranslations()
   const url = "/advertise/success"
   const title = t(`${namespace}.title`)
-  const description = t(`${namespace}.description`, { siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],

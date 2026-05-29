@@ -5,9 +5,10 @@ import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { getTranslations } from "next-intl/server"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
 import { EmailVerifyDomain } from "~/emails/verify-domain"
 import { auth } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { sendEmail } from "~/lib/email"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
@@ -63,6 +64,8 @@ const verifyEmailDomain = (email: string, toolWebsiteUrl: string) => {
  * Generate and send OTP email
  */
 const generateAndSendOtp = async (email: string) => {
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const { token: otp } = await auth.api.generateOneTimeToken({
     headers: await headers(),
   })
@@ -74,7 +77,7 @@ const generateAndSendOtp = async (email: string) => {
   // Send OTP email
   after(async () => {
     const to = email
-    const subject = `Your ${siteConfig.name} Verification Code`
+    const subject = `Your ${brandConfig.name} Verification Code`
     await sendEmail({ to, subject, react: EmailVerifyDomain({ to, otp }) })
   })
 

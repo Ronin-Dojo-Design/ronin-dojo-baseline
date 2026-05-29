@@ -5,7 +5,7 @@ import { PostList } from "~/components/web/posts/post-list"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateBlog } from "~/lib/structured-data"
@@ -17,12 +17,13 @@ const namespace = "pages.blog"
 // Get page data
 const getData = cache(async () => {
   const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const posts = await findPublishedPosts(brand)
 
   const t = await getTranslations()
   const url = "/blog"
   const title = t(`${namespace}.title`)
-  const description = t(`${namespace}.description`, { siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
   const data = getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],

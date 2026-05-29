@@ -2,7 +2,7 @@
 
 import { after } from "next/server"
 import type { Brand } from "~/.generated/prisma/client"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailMagicLink } from "~/emails/magic-link"
 import { canEditOrganization } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
@@ -598,12 +598,13 @@ export const convertLead = userActionClient
 
     // Send welcome email to newly created users directing them to log in
     if (result.isNewUser && lead.email) {
+      const brandConfig = getBrandSiteConfig(requestBrand)
       after(async () => {
         try {
           const loginUrl = `${siteConfig.url}/login`
           await sendEmail({
             to: lead.email as string,
-            subject: `Welcome to ${siteConfig.name} — Set Up Your Account`,
+            subject: `Welcome to ${brandConfig.name} — Set Up Your Account`,
             react: EmailMagicLink({ to: lead.email as string, url: loginUrl }),
           })
         } catch (err) {

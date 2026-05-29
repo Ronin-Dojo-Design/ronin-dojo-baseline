@@ -47,10 +47,10 @@ export const upsertTool = adminActionClient
     after(async () => {
       if (notifySubmitter && (!existingTool || existingTool.status !== tool.status)) {
         // Notify the submitter of the tool published
-        await notifySubmitterOfToolPublished(tool)
+        await notifySubmitterOfToolPublished(tool, brand)
 
         // Notify the submitter of the tool scheduled for publication
-        await notifySubmitterOfToolScheduled(tool)
+        await notifySubmitterOfToolScheduled(tool, brand)
       }
     })
 

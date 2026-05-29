@@ -5,7 +5,8 @@ import { createLoader, parseAsInteger, parseAsStringEnum } from "nuqs/server"
 import satori from "satori"
 import { ToolStatus } from "~/.generated/prisma/client"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { loadGoogleFont } from "~/lib/fonts"
 import { isToolPublished } from "~/lib/tools"
 import { findTool } from "~/server/web/tools/queries"
@@ -28,9 +29,10 @@ const THEMES = {
 type SvgBadgeProps = {
   theme: keyof typeof THEMES
   label: string
+  siteName: string
 }
 
-const SvgBadge = ({ theme, label }: SvgBadgeProps) => {
+const SvgBadge = ({ theme, label, siteName }: SvgBadgeProps) => {
   const colors = THEMES[theme]
 
   return (
@@ -89,7 +91,7 @@ const SvgBadge = ({ theme, label }: SvgBadgeProps) => {
             whiteSpace: "nowrap",
           }}
         >
-          {siteConfig.name}
+          {siteName}
         </span>
       </div>
 
@@ -119,6 +121,8 @@ const searchParamsLoader = createLoader({
 export const GET = async ({ url }: NextRequest, { params }: RouteContext<"/[slug]/badge.svg">) => {
   const { slug } = await params
   const { theme, width, height } = searchParamsLoader(url)
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
 
   const tool = await findTool({
     where: {
@@ -134,7 +138,7 @@ export const GET = async ({ url }: NextRequest, { params }: RouteContext<"/[slug
   const t = await getTranslations()
   const label = t(`common.${isToolPublished(tool) ? "featured" : "coming_soon"}`)
 
-  const svg = await satori(<SvgBadge theme={theme} label={label} />, {
+  const svg = await satori(<SvgBadge theme={theme} label={label} siteName={brandConfig.name} />, {
     width,
     height,
     fonts: [

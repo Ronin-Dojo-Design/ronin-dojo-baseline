@@ -4,7 +4,7 @@ import type { Tool } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { siteConfig } from "~/config/site"
+import { useBrand } from "~/contexts/brand-context"
 
 type FeatureNudgeProps = {
   tool: Tool
@@ -13,11 +13,12 @@ type FeatureNudgeProps = {
 
 export const FeatureNudge = ({ tool, t: toastId }: FeatureNudgeProps) => {
   const t = useTranslations("components.feature_nudge")
+  const { name: siteName } = useBrand()
 
   return (
     <>
       <p className="text-sm text-secondary-foreground">
-        {t("message", { name: tool.name, siteName: siteConfig.name })}
+        {t("message", { name: tool.name, siteName })}
       </p>
 
       <Stack size="sm" className="w-full mt-4">

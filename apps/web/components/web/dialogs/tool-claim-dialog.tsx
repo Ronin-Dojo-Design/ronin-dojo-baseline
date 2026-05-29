@@ -27,7 +27,7 @@ import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { claimsConfig } from "~/config/claims"
-import { siteConfig } from "~/config/site"
+import { useBrand } from "~/contexts/brand-context"
 import { useSession } from "~/lib/auth-client"
 import { sendToolClaimOtp, verifyToolClaimOtp } from "~/server/web/actions/claim"
 import { createClaimToolEmailSchema, createClaimToolOtpSchema } from "~/server/web/shared/schema"
@@ -44,6 +44,7 @@ export const ToolClaimDialog = ({ tool, isOpen, setIsOpen }: ToolClaimDialogProp
   const router = useRouter()
   const t = useTranslations("dialogs.claim")
   const tSchema = useTranslations("schema")
+  const { name: siteName } = useBrand()
   const [step, setStep] = useState<"email" | "otp">("email")
   const [verificationEmail, setVerificationEmail] = useState("")
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
@@ -171,7 +172,7 @@ export const ToolClaimDialog = ({ tool, isOpen, setIsOpen }: ToolClaimDialogProp
                 <ul className="mt-2 list-disc pl-4">
                   <li>{t("benefit_update")}</li>
                   <li>{t("benefit_manage")}</li>
-                  <li>{t("benefit_promote", { siteName: siteConfig.name })}</li>
+                  <li>{t("benefit_promote", { siteName })}</li>
                 </ul>
               </DialogDescription>
 

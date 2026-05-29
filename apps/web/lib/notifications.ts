@@ -6,7 +6,7 @@ import {
   type Tool,
   ToolStatus,
 } from "~/.generated/prisma/client"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
@@ -73,15 +73,17 @@ export const notifySubmitterOfToolSubmitted = async (tool: Tool) => {
  * Notify the submitter of a tool scheduled for publication
  *
  * @param tool - The tool to notify the submitter of
+ * @param brand - Optional brand override; falls back to siteConfig.name
  * @returns The email that was sent
  */
-export const notifySubmitterOfToolScheduled = async (tool: Tool) => {
+export const notifySubmitterOfToolScheduled = async (tool: Tool, brand?: Brand) => {
   if (!tool.submitterEmail || !tool.publishedAt || tool.status !== ToolStatus.Scheduled) {
     return
   }
 
+  const siteName = brand ? getBrandSiteConfig(brand).name : siteConfig.name
   const to = tool.submitterEmail
-  const subject = `Great news! ${tool.name} is scheduled for publication on ${siteConfig.name} 🎉`
+  const subject = `Great news! ${tool.name} is scheduled for publication on ${siteName} 🎉`
 
   return await sendEmail({
     to,
@@ -94,15 +96,17 @@ export const notifySubmitterOfToolScheduled = async (tool: Tool) => {
  * Notify the submitter of a tool published
  *
  * @param tool - The tool to notify the submitter of
+ * @param brand - Optional brand override; falls back to siteConfig.name
  * @returns The email that was sent
  */
-export const notifySubmitterOfToolPublished = async (tool: Tool) => {
+export const notifySubmitterOfToolPublished = async (tool: Tool, brand?: Brand) => {
   if (!tool.submitterEmail || !tool.publishedAt || tool.status !== ToolStatus.Published) {
     return
   }
 
+  const siteName = brand ? getBrandSiteConfig(brand).name : siteConfig.name
   const to = tool.submitterEmail
-  const subject = `${tool.name} has been published on ${siteConfig.name} 🎉`
+  const subject = `${tool.name} has been published on ${siteName} 🎉`
 
   return await sendEmail({
     to,

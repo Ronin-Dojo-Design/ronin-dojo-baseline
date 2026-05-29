@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import { Login } from "~/components/web/auth/login"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 
 // I18n page namespace
@@ -12,10 +13,12 @@ const namespace = "pages.auth.login"
 
 // Get page data
 const getData = cache(async () => {
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
   const t = await getTranslations()
   const url = "/auth/login"
   const title = t(`${namespace}.title`)
-  const description = t(`${namespace}.description`, { siteName: siteConfig.name })
+  const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
   return getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],
