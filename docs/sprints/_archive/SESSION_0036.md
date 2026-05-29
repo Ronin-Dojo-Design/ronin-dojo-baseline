@@ -67,6 +67,7 @@ Implement the entitlement-first commerce layer planned in SESSION_0035: schema (
 ## Next session
 
 **SESSION_0037** — scope TBD per WORKFLOW 5.0 calendar.
+
 - Likely candidates: admin UI for entitlement management, or certificate entitlements slice.
 - First task: check WORKFLOW 5.0 calendar for 0037 assignment.
 

@@ -36,8 +36,10 @@ git rebase --onto origin/main <last-merged-ancestor> <branch-name>
 
 - Use `--onto` when the branch carries commits from earlier sessions that were
   already squash-merged into main (common with stacked branches).
+
 - If all commits are unique to this session, a simple `git rebase origin/main`
   suffices.
+
 - Resolve conflicts by keeping **both** sides for docs (frontmatter dates,
   index entries, SESSION-file rows) and accepting **main** for code files that
   were already squash-merged.
@@ -115,8 +117,10 @@ diff <(git show origin/main:<file>) <(git show <branch>:<file>)
 
 - **Never merge without rebase** when the branch is >2 commits behind main.
   The squash merge will include stale content.
+
 - **Never auto-merge** a session PR without owner review. The hostile review
   score gates quality, but the owner gates scope and calendar.
+
 - **Never rebase a branch whose code is already on main** — just delete it.
 
 ## Evidence from SESSION_0034

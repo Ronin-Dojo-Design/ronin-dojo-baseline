@@ -60,11 +60,13 @@ in-progress
 ### Analysis of current seed state
 
 **What exists:**
+
 - 5 test users: Sensei Demo (PUBLIC/ACTIVE/BJJ/Blue belt), Student Alpha (PUBLIC/ACTIVE/BJJ/White belt), Student Beta (MEMBERS_ONLY/ACTIVE/Eskrima/L3), Ghost User (HIDDEN/ACTIVE/Muay Thai/no rank), Pending Patty (PUBLIC/PENDING/BJJ/no rank)
 - Memberships with `rankId` set for 3 of 5 users
 - No `ContentAtom` or `ContentVariant` records exist at all
 
 **What's missing for carousels:**
+
 - `ContentAtom` records scoped to disciplines (bjj, muay_thai, eskrima)
 - `ContentVariant` records with `videoUrl` (needed for `findDisciplineVideos`)
 - Muay Thai user (Ghost) has HIDDEN visibility — need ≥1 PUBLIC Muay Thai member with rank for that carousel

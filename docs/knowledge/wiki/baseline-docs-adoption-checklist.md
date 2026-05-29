@@ -33,6 +33,7 @@ Active. Phase 1–4 executed during SESSION_0010 (2026-04-27). Phase 5 next-targ
 ## Purpose
 
 Provide a repeatable adoption flow for any future ChatGPT-or-other-source doc pack so we never:
+
 - leave imports flat in `docs/`
 - end up with two differently-named files saying nearly the same thing
 - lose traceability between raw import → canonical version

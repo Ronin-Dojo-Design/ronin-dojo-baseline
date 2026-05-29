@@ -44,6 +44,7 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 **Problem:** No `Media` model. Current schema uses scattered `avatarUrl`, `imageUrl`, `mediaUrl`, `mediaUrls: Json` fields. No unified upload tracking, no YouTube link support, no S3 reference model.
 
 **Who needs it:**
+
 - Student: profile photos, promotion photos, training videos
 - Instructor: technique videos, profile media, class photos
 - School owner: promo reels, event galleries, logo/branding assets
@@ -58,6 +59,7 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 **Problem:** `CurriculumItem` is an ordered line inside a `Course` — not a standalone, browsable, filterable technique. No graph/prerequisite relationships between techniques.
 
 **Solution:**
+
 - `Technique` model — standalone, filterable, taggable, linked to discipline/style
 - `TechniquePrerequisite` self-join — directed graph (prereq → technique) for the TechniqueGraph component
 - `TechniqueCurriculumLink` M:N join — one technique appears in multiple curriculum items
@@ -68,12 +70,14 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 **Source:** User requirement — sell digital and physical belt certificates, seminar certificates, course completion certificates. Show on profile.
 
 **Problem:** `Certification` model exists but tracks credential STATUS only (ACTIVE/EXPIRED/REVOKED). It doesn't model:
+
 - A purchasable certificate PRODUCT (digital PDF, physical printed)
 - Order/fulfillment for physical certificates
 - The displayable certificate on a profile page
 - Pricing / payment linkage
 
 **Solution:**
+
 - `CertificateTemplate` — the template (layout, fields, branding) for a certificate type
 - `CertificateOrder` — purchase record linking user → template → payment
 - `CertificateIssuance` — the actual issued certificate (PDF URL, serial number, QR verification code)
@@ -122,12 +126,14 @@ Current `ContentAtomStatus`: INBOX, DRAFT, REVIEW, APPROVED, PUBLISHED, ARCHIVED
 **Source:** User requirement — gamification, rank, courses, techniques all need to be aligned.
 
 **Problem:** `GamificationEvent` links to `RankAward` and `Course` but NOT to:
+
 - Technique completion/mastery
 - CurriculumItem completion
 - Attendance streaks
 - Belt test passage
 
 **Solution:**
+
 - Add `techniqueId` FK to `GamificationEvent` — points for technique mastery
 - Add `curriculumItemCompletionId` FK to `GamificationEvent` — points for curriculum progress
 - Add `attendanceId` FK to `GamificationEvent` — points for attendance (closing the CheckIn → Attendance → GamificationEvent chain documented in s2-schema-additions)
@@ -812,6 +818,7 @@ interface TechniqueGraphNode {
 ```
 
 Schema supports this via:
+
 - `Technique` → filtered by discipline + org
 - `TechniquePrerequisite` → graph edges
 - `TechniqueProgress` → per-user coloring

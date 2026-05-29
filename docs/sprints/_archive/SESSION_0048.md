@@ -35,6 +35,7 @@ closed-quick
 ### Petey plan
 
 #### TASK_01 — F-03 Remediation: Brand-scope admin registrations query
+
 - **Agent:** Cody
 - **What:** Add brand filtering to `findRegistrationsByTournamentId` so admins only see registrations for tournaments belonging to their brand
 - **Steps:**
@@ -44,6 +45,7 @@ closed-quick
 - **Depends on:** nothing
 
 #### TASK_02 — Bracket generation Zod schema
+
 - **Agent:** Cody
 - **What:** Create `generateBracketSchema` in `server/admin/tournaments/schema.ts`
 - **Steps:**
@@ -52,6 +54,7 @@ closed-quick
 - **Depends on:** nothing
 
 #### TASK_03 — Bracket generation server action
+
 - **Agent:** Cody
 - **What:** Create `generateBracket` server action that builds single-elimination bracket + matches for a division
 - **Steps:**
@@ -65,6 +68,7 @@ closed-quick
 - **Depends on:** TASK_02
 
 #### TASK_04 — Admin UI: Generate Bracket button on division detail
+
 - **Agent:** Cody
 - **What:** Add "Generate Bracket" button to admin tournament division view
 - **Steps:**
@@ -75,6 +79,7 @@ closed-quick
 - **Depends on:** TASK_03
 
 #### TASK_05 — Type-check
+
 - **Agent:** Cody
 - **What:** Run `tsc --noEmit` to verify no type errors
 - **Done means:** Clean type-check

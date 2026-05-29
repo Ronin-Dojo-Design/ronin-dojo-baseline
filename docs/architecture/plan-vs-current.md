@@ -21,6 +21,7 @@ backlinks:
 This document treats the [ChatGPT-authored plan](source/chatgpt-original-plan.md) as a **functional spec** (what behaviors the system must support) and compares it against what's currently built in the codebase. We don't copy the plan's MySQL schema verbatim — we adopt its behavioral requirements onto the new Postgres + Prisma + Dirstarter foundation.
 
 Use this doc to:
+
 - judge whether each thing we ship covers a real spec'd requirement
 - track what's missing and why we're choosing to defer or prioritize it
 - not silently drift from the original product intent

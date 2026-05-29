@@ -110,20 +110,24 @@ Parallel execution: `wt-brand-launch` and `wt-school-ops` can run simultaneously
 ## Reflections
 
 ### What went well
+
 - The grill audit against blackbeltlegacy.com was the right call — surfaced 10 real gaps that would have been discovered painfully mid-sprint. Media, Technique, and Certificates are launch-blocking features that were completely missing.
 - The gamification alignment matrix forced us to close every loop in the GamificationEvent chain. Before this session, attendance → points was documented in the SOP but not wired in the schema.
 - Creating the schema-migration runbook before the actual migration means Cody has a repeatable SOP. No more ad-hoc "how do we push this?" during migration sessions.
 
 ### What almost broke
+
 - SESSION_0021 was planned but never activated. SESSION_0022 effectively absorbed its scope (schema prep). Need to close 0021 as unclean or mark it superseded at next bow-in.
 - The WORKFLOW_5.0 session calendar assigns SESSION_0022 to "Tenancy, roles, permissions, locations, org settings" but we used it for schema grill + runbooks. Calendar is a guide, not a mandate — but the drift should be acknowledged.
 
 ### Patterns observed
+
 - Petey-before-Cody works. This entire session was Petey work (planning, gap analysis, spec writing) and produced a clean execution packet for Cody. No code was written, and that's correct — the spec wasn't ready.
 - The baseline systems pack (files 08–12) proved valuable as a cross-check. They surface user flows that pure schema review misses.
 - `use_count` on runbooks is a lightweight way to track which SOPs are actually being used vs. gathering dust. Worth extending to protocols and rituals.
 
 ### What I'd tell the next session
+
 - Don't start Wave A migration until all 8 decisions are signed off. Partial sign-off = partial migration = pain.
 - Consider doing Waves A+B+C+D as a single `db push` in local dev (they're all additive). Split into separate commits for git history, but the DB can take them all at once.
 - The TechniqueGraph component will need sample technique data in seed.ts — flag this for the seed-data runbook session.

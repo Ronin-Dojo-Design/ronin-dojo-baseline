@@ -44,6 +44,7 @@ Verify SESSION_0106 deliverables work end-to-end in the browser, confirm monitor
 ### Tasks
 
 #### TASK_01 — Browser QA: Admin metadata editor round-trip
+
 - **Agent:** Doug (QA)
 - **What:** Boot dev server, navigate to `/admin/pricing-plans`, open a TuffBuffs product, verify metadata JSON textarea displays correctly, edit a value, save, verify it persists on reload.
 - **Steps:**
@@ -59,6 +60,7 @@ Verify SESSION_0106 deliverables work end-to-end in the browser, confirm monitor
 - **Depends on:** Nothing
 
 #### TASK_02 — Verify monitoring queries with DB-sourced asset paths
+
 - **Agent:** Cody (builder)
 - **What:** Review and verify `collectTuffBuffsPublicAssetPaths()` in `server/admin/storage/monitoring/queries.ts` works correctly after SESSION_0106 TASK_06 refactor from hardcoded arrays to Prisma DB queries.
 - **Steps:**
@@ -71,6 +73,7 @@ Verify SESSION_0106 deliverables work end-to-end in the browser, confirm monitor
 - **Depends on:** TASK_01 (dev server running)
 
 #### TASK_03 — Evaluate affiliate-gear.ts dependencies for extraction
+
 - **Agent:** Petey (planner)
 - **What:** Produce a concrete extraction plan for moving types, `formatGearPrice`, and collections out of `affiliate-gear.ts` into appropriate shared locations.
 - **Steps:**

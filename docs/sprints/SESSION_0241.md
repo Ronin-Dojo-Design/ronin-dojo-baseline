@@ -145,6 +145,7 @@ Start with TASK_01 (cleanup), then TASK_02 (workflow refinement). TASK_03 is alr
 Ship the next product-facing work (lineage public parity or Baseline content fill — whichever unblocks launch fastest).
 
 ### Inputs to read
+
 - SESSION_0240 close notes (when Codex finishes)
 - `docs/architecture/velobase-harness-patterns.md` for any Brian-approved items
 

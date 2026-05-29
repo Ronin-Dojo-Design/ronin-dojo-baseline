@@ -38,6 +38,7 @@ transitions, and both public + admin tournament registration paths. Petey pushed
 - `apps/web/app/api/cron/` only contains `publish-tools` — **no membership-expiry cron exists.**
 - `apps/web/app/api/stripe/webhooks/route.ts` exists but its membership-transition behavior is
   unverified (only graph neighbor is its own test file).
+
 - Admin tournament-registration directory shows only a detail page — the action surface for
   admin-created registrations needs tracing before email wiring.
 
@@ -73,6 +74,7 @@ SESSION_0259.
   `discipline` (whatever shape the membership model carries). Fire a new
   `notifyUserOfMembershipStatusChange` helper inside `after(...)` alongside the existing
   audit-log write, wrapped in try/catch.
+
 - **Done means:** Admin status transition in dev fires the email log line.
 - **Out of scope:** Self-service join/leave transitions and system-driven (cron/webhook)
   transitions → SESSION_0259 per spike output.
@@ -84,6 +86,7 @@ SESSION_0259.
   Migrate the existing `invite-notification.tsx` call-site in `server/admin/invites/actions.ts`
   to call the helper instead of `sendEmail` directly. If org name or role is missing from the
   template, add it. Verify the wiring fires in dev.
+
 - **Done means:** Invite creation fires the email log line via the new helper; old direct
   `sendEmail` call removed.
 
@@ -95,6 +98,7 @@ SESSION_0259.
   `paymentStatus` (defaults to `"PENDING"`). Add `notifyUserOfTournamentRegistration` helper.
   Wire into the **public** tournament-registration action only (TBD location — confirm via
   graphify or repo trace before editing).
+
 - **Done means:** Public registration fires the email log line. Template renders.
 - **Out of scope:** Admin-side registration wiring → SESSION_0259 per spike output.
 
@@ -134,6 +138,7 @@ SESSION_0259.
 - **Agent:** Doug
 - **What:** `bun run typecheck` (apps/web), `bunx @biomejs/biome check --write` on touched
   files, full Playwright regression (29-spec suite, not just DSR specs).
+
 - **Done means:** Typecheck clean. Biome clean. 29/29 specs pass with no regressions.
 
 ## Dependencies & cold-start notes
@@ -251,19 +256,24 @@ SESSION_0259.
 - 2 new React Email templates (`membership-status-change.tsx`,
   `tournament-registration-confirmation.tsx`) following the existing
   EmailWrapper + Text pattern.
+
 - 3 new helpers in `lib/notifications.ts`: `notifyMemberOfMembershipStatusChange`,
   `notifyUserOfInvite`, `notifyUserOfTournamentRegistration`.
 - Invite send-site refactored onto the new helper (no behavior change; same
   trigger point, now rate-limit-gated).
+
 - Membership admin status transitions fire confirmation emails via the same
   `after(...)` block as the existing audit-log write.
 - Tournament-registration emails fire from the Stripe webhook fulfillment
   handler after successful registration creation.
+
 - SESSION_0257 carry-overs both closed: DSR enum types pulled to the Prisma
   source (Finding 02); rate-limit added at the helper boundary so every email
   send inherits duplicate suppression (Finding 01).
+
 - Removed an erroneous `"use server"` pragma from `lib/rate-limiter.ts` — it's
   a utility module, not a server-action module.
+
 - SESSION_0259 starting tasks scoped against real code via the parallel spike,
   not assumptions. Operator-requested premium lineage parity lane staged in
   next-session candidate list.
@@ -288,6 +298,7 @@ SESSION_0259.
 - **Session B scope shape:** Tight + verify-only spike. Self-service + system-driven membership
   transitions and admin-side tournament registration deferred to SESSION_0259 pending TASK_07
   findings.
+
 - **Tournament template payment-status placeholder:** Render `paymentStatus` prop now (default
   `"PENDING"`) so Session C Stripe wiring can populate it without template churn.
 - **Carry-over findings:** Both DSR enum dedup (Finding 02) and email rate-limit (Finding 01)
@@ -300,10 +311,12 @@ SESSION_0259.
   module load on a clean baseline — `test.describe()` throws at file load, "No tests
   found" reported. Predates SESSION_0258. Not a blocker; flag for a future Doug triage
   session.
+
 - **SESSION_0259 lane selection unresolved.** Three candidates staged in `## Next
   session` below: (A) carry-over B-wiring informed by TASK_07 spike, (B) MB-015
   Session C, (C) operator-requested premium lineage listing parity. Operator picks at
   next bow-in.
+
 - **MB-015 Session C scope reduced:** Email rate-limit + DSR dedup landed this session,
   so Session C TASK_C2 is effectively pre-done; whoever picks up Session C should
   shrink to 4 tasks (production delivery test, SOP §14/§15/§16 refresh, MB-015 registry
@@ -328,6 +341,7 @@ SESSION_0259.
   a rate-limit layer at the boundary. The new `email_notify` action in
   `lib/rate-limiter.ts` extends the existing Upstash pattern rather than
   introducing a parallel mechanism.
+
 - **Verdict:** Aligned.
 
 ## Hostile close review
@@ -364,11 +378,13 @@ SESSION_0259.
   load on a clean baseline (`test.describe()` throws, "No tests found" reported).
   Predates this session — git log shows no touches since `e1cc02c`. Open
   follow-up for a Doug triage session; do not block this close.
+
 - **SESSION_0258_FINDING_02:** TASK_07 spike confirmed there is **no admin
   walk-in / comp-entry tournament-registration creation path** today. Operator
   may not realize this. If admin-created registrations are needed before launch,
   that's net-new work, not just an email-wiring follow-up. Flagged in next-session
   Candidate A.
+
 - **SESSION_0258_FINDING_03:** TASK_07 spike confirmed **`Membership.status` is
   never transitioned by Stripe webhooks** — entitlements are the single source
   of subscription-driven access today. If "subscription lapsed → SUSPENDED"
@@ -384,9 +400,11 @@ SESSION_0259.
   for `submission`/`report`/`schedule_write`/etc. — instance of an existing decision,
   not a new one. The "fire-and-forget email in `after()`, try/catch wrapped" pattern
   matches SESSION_0257's DSR convention exactly.
+
 - **ADR candidate flagged for next session (not this one):** the membership-vs-
   entitlements ownership question raised by TASK_07 / FINDING_03 is a real
   architectural decision and deserves an ADR if Candidate A lane is picked.
+
 - **No new ubiquitous-language terms.** `paymentStatus` on the tournament template
   uses existing `Registration.paymentStatus` enum values; no new vocabulary.
 
@@ -413,14 +431,17 @@ SESSION_0259.
   pushback right — wiring email into nonexistent code paths would have been
   ~half a session of phantom work. The scope-cut question + the spike together
   cost <2 minutes and saved an unknown but large amount of confused execution.
+
 - **Parallel spike was the right call.** Running TASK_07 as a background
   subagent while Cody worked on 01–06 meant the spike's findings landed in
   time to inform the next-session plan without serializing the session.
+
 - **Wiring-target surprise on TASK_04.** Plan said "wire into public registration
   action," but reading `server/web/tournaments/register.ts` revealed it only
   creates the Stripe checkout — the actual Registration row is born in the
   webhook. Glad this was caught at edit-time rather than after wiring something
   into an action that never creates the row. Cody preflight pays for itself.
+
 - **Operator mid-session steering (`"use server"` removal + premium lineage
   parity request)** showed up at the right moments — the `"use server"` cleanup
   rode along with rate-limiter changes naturally; the premium lineage idea
@@ -432,12 +453,15 @@ SESSION_0259.
 - **Safe and secure?** Yes. Every email helper is rate-limit-gated, every
   send-site is try/catch-wrapped inside `after()`, no user-visible action can
   be unwound by a Resend outage.
+
 - **Failed steps preventable?** Yes — see the TASK_04 wiring-target surprise
   above. Next session's Cody preflight should explicitly trace "where is the row
   created" before promising "where the email is wired."
+
 - **Confidence:** 9.5/10. Templates render, helpers compose, transitions fire,
   full Playwright passes (modulo the pre-existing failure). Real-inbox delivery
   is still Session C's job for MB-015 closure.
+
 - **WORKFLOW score:** 9.5/10. Tight bow-in (graphify-first, no rebuild needed),
   parallel spike, three deliverables landed within the rubric cap, operator
   signal incorporated mid-flight without scope creep.
@@ -454,6 +478,7 @@ spike findings:
 - **Self-service membership transitions** — wire `notifyMemberOfMembershipStatusChange`
   into member-initiated paths (e.g., invite acceptance flowing into `Membership.status →
   ACTIVE`). Identify call sites; reuse the existing helper as-is.
+
 - **System-driven membership transitions** — TASK_07 confirmed the Stripe webhook does
   **not** transition `Membership.status` today; only `UserEntitlement` /
   `ProgramEnrollment` move on subscription events. Decision needed: do we (a) extend the
@@ -461,6 +486,7 @@ spike findings:
   `invoice.payment_failed`, or (b) introduce a `membership-expiry` cron, or (c) leave
   this as a non-goal and use entitlements as the single source of truth? Petey plan
   candidate.
+
 - **Admin-side tournament-registration creation** — TASK_07 confirmed no admin
   walk-in/comp-entry action exists in `server/admin/tournaments/actions.ts` today
   (only `updateRegistrationStatus`). To wire the existing

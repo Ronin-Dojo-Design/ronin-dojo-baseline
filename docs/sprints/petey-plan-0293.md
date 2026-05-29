@@ -28,6 +28,7 @@ theme overrides that cascade: `styles.css → BrandSettings → OrgSettings`.
   `/admin/organizations/[id]/theme` (edit form). Org self-service deferred.
 - **Auth model**: `adminActionClient` (super admin only). Org admin self-service
   is SESSION 0294 scope.
+
 - **CSS injection on org pages**: Deferred to SESSION 0294. This session is
   CRUD only.
 

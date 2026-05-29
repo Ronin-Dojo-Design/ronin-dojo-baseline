@@ -142,6 +142,7 @@ Revised Kaizen aggregate: **9** (up from 7). All remediation items resolved in-s
 - `docs/architecture/program-plan.md` — check S4 scope
 
 **First task:** (Cody) Configure S3 env vars in `.env` for local dev (Cloudflare R2 or MinIO), then run authenticated visual QA of `/me` editor with actual file uploads.
+
 - Tier auto-grant trigger: webhook — signed off, implementation deferred
 
 ## Open Decisions / Blockers

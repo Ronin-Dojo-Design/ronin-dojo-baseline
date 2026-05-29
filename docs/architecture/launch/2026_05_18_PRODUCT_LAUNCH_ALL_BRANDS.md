@@ -181,6 +181,7 @@ All four brands go publicly live on May 18 with differentiated feature depth:
 - **P4 Ronin Dojo Design:** Assisted white-label sales + onboarding — not fully self-serve wizard
 
 Schema migration in 3 waves (see WORKFLOW_5.0.md for session calendar):
+
 - **Wave A (SESSION_0021–0022):** School ops models
 - **Wave B (SESSION_0023–0025):** Promotions, events, leads
 - **Wave C (SESSION_0027–0029):** Tournament execution

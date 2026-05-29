@@ -64,12 +64,14 @@ Close three long-deferred items: D-005 (cache pattern for read queries), D-011 (
 **Key distinction:** Auth-scoped queries (dashboard, enrollment, attendance) must NOT be cached with `"use cache"` — they return per-user data. Only public/anonymous queries get the treatment.
 
 **Queries to update:**
+
 - `server/web/tournaments/queries.ts` — `searchTournaments`, `findTournamentBySlug` (public listing)
 - `server/web/courses/queries.ts` — `searchCourses`, `findCourseBySlug` (public listing)
 - `server/web/organization/queries.ts` — `getOrganizationsByBrand`, `getOrganizationBySlug`, `getSystemRoles` (public/shared)
 - `server/web/directory/queries.ts` — already uses `cache()`, upgrade to `"use cache"`
 
 **Queries to SKIP (auth-scoped):**
+
 - `dashboard/queries.ts` — per-user
 - `enrollment/queries.ts` — per-user
 - `attendance/queries.ts` — per-session
@@ -207,6 +209,7 @@ No new ADRs. No new domain terms. `"use cache"` pattern is an existing L1 conven
 ## Next session
 
 **SESSION_0060** — Hostile-Close Review of all sessions
+
 - **Goal:** Surface bugs, security risks, scalability issues across sessions 0001–0037 + 0056–0059
 - **Inputs:** All SESSION files, drift register, admin action files
 - **First task:** Passport wiring audit

@@ -56,12 +56,15 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Playwright Proof Gate](component-porting/plawywright-component-conversion-method/PW-proof-gate.md) | concept | active |
 | [PWCC Discovery Command Center](component-porting/plawywright-component-conversion-method/PWCC-discovery-command-center.md) | concept | active |
 | [Simple Playwright Component Port Pipeline](component-porting/plawywright-component-conversion-method/simple-pipeline.md) | concept | active |
+| [Lineage Family Tree Port Spec](component-porting/specs/lineage-family-tree-port-spec.md) | spec | active |
+| [Lineage Profile Drawer Port Spec](component-porting/specs/lineage-profile-drawer-port-spec.md) | spec | active |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 | [Topic Index](topic-index.md) | index | active |
 | [Tournament Operations](concepts/tournament-ops.md) | concept | active |
 | [Dirstarter Uplift Backlog](dirstarter-uplift-backlog.md) | backlog | closed/superseded by uplift epic |
 | [Ronin Project Context](ronin-project-context.md) | concept | active — compact project-context canon |
 | [Doc Pruning Register](doc-pruning-register.md) | registry | active — doc consolidation/demotion register |
+| [Form Inventory](form-inventory.md) | registry | active — catalog of app forms + their actions/schemas |
 
 ## Product Docs
 

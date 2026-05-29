@@ -39,6 +39,7 @@ Execute SESSION_0196 plan Stages 1–2: build the parallel content-post read pat
 ### Deliverable 1 — Server query slice (TASK_01)
 
 Created `server/web/content-posts/`:
+
 - `payloads.ts` — `ContentPostOne`, `ContentPostMany` DTOs with Prisma select payloads. Atom data included (author, discipline, longFormCopy fallback). No task data exposed.
 - `queries.ts` — `findPublishedContentPosts(brand)`, `findPublishedContentPostBySlug(slug, brand)`. Visibility contract enforced:
   - Variant status = PUBLISHED
@@ -50,6 +51,7 @@ Created `server/web/content-posts/`:
 ### Deliverable 2 — Public routes (TASK_02)
 
 Created parallel `/posts` routes (existing `/blog` routes remain untouched per Stage 1 contract):
+
 - `app/(web)/posts/page.tsx` — list page sourced from `findPublishedContentPosts`
 - `app/(web)/posts/[slug]/page.tsx` — detail page sourced from `findPublishedContentPostBySlug`
 

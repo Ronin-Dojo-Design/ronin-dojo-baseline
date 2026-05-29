@@ -88,18 +88,21 @@ Dirstarter is our L1 pattern source, but the live docs move faster than our pinn
 ## Structure
 
 ### Setup
+
 - [Introduction](https://dirstarter.com/docs/introduction)
 - [Getting Started](https://dirstarter.com/docs/getting-started)
 - [Environment Setup](https://dirstarter.com/docs/environment-setup)
 - [First Steps](https://dirstarter.com/docs/first-steps)
 
 ### Codebase
+
 - [Project Structure](https://dirstarter.com/docs/codebase/structure)
 - [Editor Setup](https://dirstarter.com/docs/codebase/ide)
 - [Formatting & Linting](https://dirstarter.com/docs/codebase/linting)
 - [Updating the Codebase](https://dirstarter.com/docs/codebase/updates)
 
 ### Integrations
+
 - [Overview](https://dirstarter.com/docs/integrations)
 - [Email](https://dirstarter.com/docs/integrations/email)
 - [Storage](https://dirstarter.com/docs/integrations/storage)
@@ -113,6 +116,7 @@ Dirstarter is our L1 pattern source, but the live docs move faster than our pinn
 - [Analytics](https://dirstarter.com/docs/integrations/analytics)
 
 ### Features
+
 - [Content Management](https://dirstarter.com/docs/content)
 - [Monetization](https://dirstarter.com/docs/monetization)
 - [Automation](https://dirstarter.com/docs/automation)
@@ -121,10 +125,12 @@ Dirstarter is our L1 pattern source, but the live docs move faster than our pinn
 - [Internationalization](https://dirstarter.com/docs/i18n)
 
 ### Others
+
 - [Authentication](https://dirstarter.com/docs/authentication)
 - [Theming](https://dirstarter.com/docs/theming)
 
 ### Database and deployment
+
 - [Prisma Setup](https://dirstarter.com/docs/database/prisma)
 - [Postgres Hosting](https://dirstarter.com/docs/database/hosting)
 - [Deployment](https://dirstarter.com/docs/deployment)
@@ -157,6 +163,7 @@ Short verbatim anchors from the live docs:
 > Storage: "Amazon S3"
 
 Primary source links:
+
 - [Introduction](https://dirstarter.com/docs/introduction)
 - [Project Structure](https://dirstarter.com/docs/codebase/structure)
 - [Authentication](https://dirstarter.com/docs/authentication)

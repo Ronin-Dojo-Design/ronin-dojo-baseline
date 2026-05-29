@@ -163,6 +163,7 @@ Close the four P0 audit rows + two inline P1 pulls + reshape Admin/Edit as overf
 - **Wave 3 (Petey on main thread):** TASK_05 (e2e), validation, bow-out.
 
 Non-overlapping file edits between Cody-A and Cody-B:
+
 - Cody-A: drawer + new modal + new tab files + (maybe) payloads.ts.
 - Cody-B: shell + toolbar + tree-board + canvas + dashboard page + package.json deps.
 - Only shared touch is conceptually `capability` prop on `LineageTreeBoard` — Cody-B owns the prop addition; Cody-A consumes via type import.

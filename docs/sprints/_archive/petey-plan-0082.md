@@ -27,6 +27,7 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 **File:** `apps/web/server/web/tournaments/register.ts`
 
 **Existing protection mechanism:**
+
 - Lines 78-144: `db.$transaction(..., { isolationLevel: "Serializable" })`
 - Lines 80-87: Fetch divisions with ACTIVE entry count
 - Lines 89-93: Capacity check loop — throws if `div._count.entries >= div.capacity`
@@ -37,6 +38,7 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 2. **Paid (totalFeeCents > 0):** Capacity check passes, Stripe session created, actual registration happens in webhook → **outside test scope** (webhook mocking deferred to future session)
 
 **Test strategy:**
+
 - Focus on **free registrations only** (end-to-end transactional)
 - Parallel calls to `createRegistrationCheckout` with `divisionIds` pointing to capacity-constrained division
 - Assert: one succeeds, one fails with "Division ... is at capacity"
@@ -65,6 +67,7 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 6. Zombie sweep: find all `registration-test-` prefixed fixtures and delete
 
 **Done means:**
+
 - Test file compiles
 - `beforeAll` creates all fixtures successfully
 - `afterAll` cleans up without constraint violations
@@ -90,6 +93,7 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 7. Assert: `_count.entries === division.capacity` (no oversubscription)
 
 **Done means:**
+
 - Test passes consistently (run 5+ times)
 - No flakiness
 - Proves Serializable transaction prevents oversubscription
@@ -113,6 +117,7 @@ SESSION_0081 deferred TASK_02 (registration capacity race tests) per Petey scope
 6. Assert: `_count.entries === division.capacity` (capacity unchanged)
 
 **Done means:**
+
 - Test passes consistently
 - Proves both callers see capacity violation (fail-closed)
 

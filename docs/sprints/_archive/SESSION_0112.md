@@ -77,6 +77,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 #### Stream A — Stripe Product Setup (script + DB update)
 
 **TASK_01 — Create Stripe Products + Prices for merch items**
+
 - **Agent:** Cody
 - **What:** Extend `scripts/setup-ronin-stripe-products.ts` (or create `scripts/setup-merch-stripe-products.ts`) to create Stripe Products + Prices for the 24 merch items. Follow ADR 0014 naming (`BMA_merch_{product_id}`). Write `stripeProductId` and `stripePriceId` back to the PricingPlan rows.
 - **Steps:**
@@ -90,6 +91,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 #### Stream B — Customer Checkout Flow
 
 **TASK_02 — Create `createMerchCheckout` server action**
+
 - **Agent:** Cody
 - **What:** Create `server/web/merch/actions.ts` with a `createMerchCheckout` action following the `createProgramEnrollmentCheckout` pattern exactly.
 - **Input schema:**
@@ -125,6 +127,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 - **Done means:** Server action compiles, creates Stripe Checkout session with merch metadata + shipping.
 
 **TASK_03 — Merch product detail + checkout UI**
+
 - **Agent:** Cody
 - **What:** Create `/merch/[id]/page.tsx` product detail page with:
   1. Image gallery (carousel of `metadata.imagePaths`)
@@ -140,6 +143,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 - **Done means:** Product detail page renders, size/color selectable, "Buy Now" redirects to Stripe Checkout.
 
 **TASK_04 — Order success page**
+
 - **Agent:** Cody
 - **What:** Create `/merch/order/success/page.tsx` that:
   1. Reads `sessionId` from URL params
@@ -151,6 +155,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 #### Stream C — Admin Product Management
 
 **TASK_05 — Extend pricing-plan-form for merch fields**
+
 - **Agent:** Cody
 - **What:** Add merch-specific fields to the existing `pricing-plan-form.tsx` that appear conditionally when `metadata.source = "tuffbuffs-merch"`:
   1. **Image gallery manager:** Multi-image upload using `FormMedia` pattern — add/remove/reorder images for `metadata.imagePaths`
@@ -166,6 +171,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 - **Done means:** Admin can edit all merch-specific fields via the existing pricing-plan form.
 
 **TASK_06 — Role-based merch management permissions**
+
 - **Agent:** Cody
 - **What:** Wire merch management permissions using the existing role/user system:
   1. Admin users (existing `withAdminPage`) can always manage merch
@@ -175,6 +181,7 @@ Detailed planning for Phase 3: Stripe Checkout integration for the `/merch` stor
 - **Done means:** Org owners/admins can manage merch products. No new models or enums needed.
 
 **TASK_07 — Webhook extension for merch purchases**
+
 - **Agent:** Cody
 - **What:** In the existing webhook handler (`app/api/stripe/webhooks/route.ts`), add handling for `checkout.session.completed` events where `metadata.type = "merch_purchase"`:
   1. Create `Payment` record

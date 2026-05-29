@@ -141,6 +141,7 @@ Run dev server, navigate to `/disciplines`, verify dynamic population with the 1
 **Goal:** SESSION_0124 — Wire enrichment components into detail page + carousel comparison + hostile review.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0123.md` — this session
 - `docs/protocols/hostile-review-close.md` — hostile review protocol
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — MANDATORY (UI session)

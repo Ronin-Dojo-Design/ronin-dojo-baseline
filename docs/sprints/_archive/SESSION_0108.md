@@ -51,26 +51,31 @@ Extract types and `formatGearPrice` from `affiliate-gear.ts` into dedicated modu
 ### Tasks
 
 #### TASK_01 — Create `types/tuffbuffs-gear.ts`
+
 - **Agent:** Cody
 - **What:** Create `apps/web/types/tuffbuffs-gear.ts` with 4 type exports extracted from `affiliate-gear.ts`.
 - **Done means:** File exports `TuffBuffsGearCategory`, `TuffBuffsProgramGearKey`, `TuffBuffsAffiliateGearProduct`, `TuffBuffsAffiliateGearCollection`.
 
 #### TASK_02 — Create `lib/tuffbuffs/gear-utils.ts`
+
 - **Agent:** Cody
 - **What:** Create `apps/web/lib/tuffbuffs/gear-utils.ts` with `formatGearPrice`.
 - **Done means:** File exports `formatGearPrice` function.
 
 #### TASK_03 — Update `affiliate-gear.ts` to re-export from new locations
+
 - **Agent:** Cody
 - **What:** Replace inline type definitions and `formatGearPrice` with imports + re-exports from new modules. Maintains backward compatibility.
 - **Done means:** No duplicate type definitions. Original file re-exports from new locations.
 
 #### TASK_04 — Update direct importers to prefer new paths
+
 - **Agent:** Cody
 - **What:** Update `affiliate-gear-card.tsx`, `affiliate-gear-browser.tsx`, `affiliate-gear-grid.tsx`, `gear/page.tsx` to import types from `~/types/tuffbuffs-gear` and `formatGearPrice` from `~/lib/tuffbuffs/gear-utils`.
 - **Done means:** All 4 files import from new locations.
 
 #### TASK_05 — Type-check verification
+
 - **Agent:** Doug (QA)
 - **What:** Run `bun tsc --noEmit` to verify zero type errors.
 - **Done means:** Clean type-check.

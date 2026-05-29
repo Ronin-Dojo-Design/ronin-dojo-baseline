@@ -100,8 +100,10 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 
 - **Risk:** `useRender` + `render={…}` API change is per-call-site, not per-primitive. Underestimating the call-site count per phase is the dominant risk.
   **Mitigation:** Petey re-grills at each bow-in with actual call-site counts. Phases split when count exceeds session budget.
+
 - **Risk:** Base UI's positioner API (`<X.Positioner>` wrapping `<X.Popup>`) is structurally different from Radix's `Portal + Content`. Forgetting Positioner renders elements at viewport (0,0).
   **Mitigation:** Each popover-family migration includes a Playwright spot-check before phase close.
+
 - **Risk:** `lib/utils.ts` swap from `cva` package to `tailwind-variants` may surface object-form signature mismatches in existing primitives.
   **Mitigation:** Phase 2 typecheck is the gating step.
 

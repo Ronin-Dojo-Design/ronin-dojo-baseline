@@ -117,14 +117,17 @@ Now I'll proceed as **Cody** for TASK_01.
 ## Pre-flight: Schema — seed-baseline-listings.ts
 
 ### 1. Petey invocation
+
 - [x] Petey plan exists in SESSION file with task IDs (TASK_01, TASK_02, TASK_03)
 - Scope: ≤2 schema-touching files (0 new Prisma models, only new seed script); waiver not required
 
 ### 2. Design doc check
+
 - No design doc needed — Categories, Tags, and Tools are existing Dirstarter models, not new schema
 - Models match existing `schema.prisma`: confirmed (Category, Tag, Tool all read directly above)
 
 ### 3. Existing schema scan
+
 - Current model count: 31 (per S1)
 - Related existing models: Category (slug unique), Tag (slug unique), Tool (slug unique, ownerId optional)
 - Back-relations needed: none (using existing `categories: { connect }`, `tags: { connect }`)
@@ -135,13 +138,16 @@ Now I'll proceed as **Cody** for TASK_01.
   - `ToolStatus` enum values: `Draft`, `Published`, `Scheduled`
 
 ### 4. Runbook consulted
+
 - `docs/runbooks/product-catalog-seed.md` — prerequisites: "At least one Organization exists for the target brand" ✓ (created in SESSION_0172)
 - No migration needed — existing models only
 
 ### 5. Data flow reference
+
 - N/A — seed script, not a user-facing flow
 
 ### 6. FAILED_STEPS check
+
 - Prior failures in this area: FS-0008 (Prisma enum lookups — mitigation: paste exact enum/field values from schema.prisma, done above)
 - F-06 (NULL + skipDuplicates) — mitigation: using `findFirst + create` for Tools, `upsert` for Categories/Tags (all have non-nullable unique keys `slug`, no brand column → safe)
 - Mitigation acknowledged: yes

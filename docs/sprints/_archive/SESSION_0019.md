@@ -179,6 +179,7 @@ backlinks:
 4. **TASK_05 — Merge findings (partial):** Created `docs/knowledge/wiki/dirstarter-gap-audit.md` with three gap classes (live-doc drift, intentional divergence, internal conflicts). Updated wiki index with new pages. Updated SESSION_0019 with execution log.
 
 **Remaining:**
+
 - TASK_02 (source audit) — requires reading all security-relevant source files; not yet started
 - TASK_05 completion — drift register update, auth doc reconciliation pending
 

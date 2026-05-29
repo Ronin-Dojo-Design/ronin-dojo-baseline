@@ -56,11 +56,13 @@ One Resend API key serves all brands. Each brand's sending domain is verified in
 ## Consequences
 
 **Positive**
+
 - Clean break from legacy WordPress deploy tooling
 - Domain migration is incremental and reversible (just change DNS back)
 - Single API key for email across all brands reduces credential management
 
 **Negative**
+
 - Bluehost cPanel is the DNS management UI — not ideal but functional
 - During transition, some domains serve legacy WordPress while others serve Vercel — users could see inconsistent experiences across brands
 - Flywheel cancellation is blocked on BBL data migration (potentially months out)

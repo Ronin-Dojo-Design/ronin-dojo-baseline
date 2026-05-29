@@ -85,6 +85,7 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 | **S12** | Ronin Bar UI shell + Vercel/Neon staging deploy | **Superseded →** SESSION_0034 (Ronin Dojo Design lane) + SESSION_0039 (Launch readiness) |
 
 **After S12 (post-MVP):**
+
 - Per-brand rollout #2: Ronin Dojo Design (admin/umbrella)
 - Per-brand rollout #3: BBL with one-time data migration ([ADR 0007](decisions/0007-bbl-migration.md))
 - Per-brand rollout #4: WEKAF greenfield rebuild

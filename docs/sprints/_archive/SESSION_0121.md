@@ -64,6 +64,7 @@ SESSION_0120 produced three findings (all low severity) plus carried forward SES
 ### Task Breakdown
 
 #### TASK_01 — Create MerchLineItem Zod schema (FINDING_01)
+
 - **Agent:** Cody
 - **What:** Create a `MerchLineItem` Zod schema in `server/web/merch/actions.ts` (or a shared types file). Replace the `(item: any)` cast in `retryPrintfulOrder` with parsed + validated items.
 - **Files:** `apps/web/server/web/merch/actions.ts`
@@ -71,6 +72,7 @@ SESSION_0120 produced three findings (all low severity) plus carried forward SES
 - **Estimated effort:** 10 min
 
 #### TASK_02 — Add audit trail for admin status overrides (FINDING_02)
+
 - **Agent:** Cody
 - **What:** Log the admin user ID when `updateMerchOrderStatus` is called. Options: (a) add `lastUpdatedBy` field to MerchOrder model, or (b) use a lightweight JSON audit log in a `statusHistory` JSON field, or (c) console.log with structured logging. Recommendation: (a) add `lastUpdatedBy String?` to MerchOrder + populate from `ctx.user.id` in the action.
 - **Files:** `apps/web/prisma/schema.prisma`, `apps/web/server/web/merch/actions.ts`
@@ -78,6 +80,7 @@ SESSION_0120 produced three findings (all low severity) plus carried forward SES
 - **Estimated effort:** 15 min
 
 #### TASK_03 — Add DB indexes on search fields (FINDING_03)
+
 - **Agent:** Cody
 - **What:** Add composite indexes to MerchOrder for admin search performance:
   - `@@index([brand, customerEmail])` — admin search by email
@@ -88,6 +91,7 @@ SESSION_0120 produced three findings (all low severity) plus carried forward SES
 - **Note:** TASK_02 and TASK_03 touch schema — combine into a single migration.
 
 #### TASK_04 — Fix webhook brand scoping (SESSION_0119 FINDING_03)
+
 - **Agent:** Cody
 - **What:** The webhook at `route.ts:55` does `findUnique({ where: { id } })` without brand scoping. Since webhooks don't have a request brand context (they come from Printful, not a user browser), the fix is: the `findUnique` is actually fine here because `id` is a cuid and Printful can only know valid IDs we sent them. However, the lookup should still verify the order exists and belongs to a valid brand. Add a guard that logs a warning if the order's brand doesn't match any known brand, but don't filter by brand (webhooks are cross-brand by nature). Mark this as **verified-acceptable** with documentation.
 - **Files:** `apps/web/app/api/printful/webhooks/route.ts`
@@ -95,6 +99,7 @@ SESSION_0120 produced three findings (all low severity) plus carried forward SES
 - **Estimated effort:** 5 min
 
 #### TASK_05 — Type check + verify
+
 - **Agent:** Cody
 - **What:** Run `tsc --noEmit`. Verify all changes compile.
 - **Done criteria:** Zero type errors in touched files.
@@ -201,6 +206,7 @@ Not applicable — quick close. No Dirstarter baseline layer touched (backend-on
 **Goal:** SESSION_0122 — Build `/disciplines` list + detail pages as the Dirstarter-pattern reference implementation for the entity page arc.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0121.md` — this session (for carry-forward items)
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — MANDATORY pre-flight (UI session)
 - `apps/web/app/(web)/categories/[slug]/page.tsx` (Dirstarter template) — gold standard page layout
@@ -216,6 +222,7 @@ Not applicable — quick close. No Dirstarter baseline layer touched (backend-on
 **Context:** Brian wants all 4 public entity pages (Disciplines, Organizations, Programs, Tournaments) upgraded to the Dirstarter category page layout pattern: `Breadcrumbs → Intro → Suspense/Skeleton → QueryComponent → StructuredData`. Plus rich detail pages, shared filter toolbar, public/private visibility toggle, and eventual admin mirror pages.
 
 **Discipline detail page spec (Brian's requirements):**
+
 - Name, rank system count, org count
 - Brief history with links to content atoms
 - Year established, founded by

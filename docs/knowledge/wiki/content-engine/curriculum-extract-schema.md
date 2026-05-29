@@ -110,6 +110,7 @@ interface VideoExtract {
 ## Sources
 
 Extracted from:
+
 - `ronin_obsidian_starter_vault/04_Techniques/Technique - Jab.md` — technique metadata
 - `ronin_obsidian_starter_vault/03_Curriculum/Curriculum Unit - Foundations of Balance.md` — curriculum unit metadata
 - `ronin_obsidian_starter_vault/98_Admin/Property Dictionary.md` — property definitions

@@ -113,6 +113,7 @@ Make the commerce planning truth match current entitlement code and stage the ne
 ### Tasks
 
 #### TASK_01 - Bow-in, Graphify, and source selection
+
 - **Agent:** Petey + Giddy
 - **What:** Refresh Graphify, query commerce/doc needs, select files, and create this active session record.
 - **Steps:**
@@ -123,6 +124,7 @@ Make the commerce planning truth match current entitlement code and stage the ne
 - **Depends on:** nothing.
 
 #### TASK_02 - Commerce truth reconciliation docs
+
 - **Agent:** Cody
 - **What:** Patch `monetization-entitlements-spec.md` and MB-013 so they match the landed entitlement schema and payment proof target.
 - **Steps:**
@@ -134,6 +136,7 @@ Make the commerce planning truth match current entitlement code and stage the ne
 - **Depends on:** TASK_01.
 
 #### TASK_03 - Review, verify, and stage next session
+
 - **Agent:** Doug + Giddy + Petey
 - **What:** Run focused doc checks, hostile close review, full close, and next-session recommendation.
 - **Steps:**

@@ -158,11 +158,13 @@ Comprehensive hostile-close review of all sessions. Surface bugs, security risks
 ### 6. DRIFT ITEMS D-006 AND D-010
 
 **D-006 — `packages/api-client` not installed:**
+
 - The `api-client` package exists but isn't used by any code in `apps/web/`.
 - It was a placeholder from SESSION_0016 for future external API access.
 - **Recommendation:** Close as DEFERRED. It's not blocking anything. When we need cross-service calls, we'll wire it up. Running `pnpm install` won't fix anything meaningful — the package has no consumers.
 
 **D-010 — Program plan superseded by May 18 all-brand launch:**
+
 - `program-plan.md` already has a deprecation banner: "⚠️ PARTIALLY SUPERSEDED (SESSION_0020)."
 - WORKFLOW_5.0 is the governing document. The program-plan layered architecture and brand sequencing sections remain valid.
 - **Recommendation:** Close by adding a clear `status: partially-superseded` to the frontmatter and noting that WORKFLOW_5.0 governs the session calendar. The architectural sections remain authoritative.
@@ -233,6 +235,7 @@ We're in good shape. The core platform, school ops, tournaments, and content are
 ## Next session
 
 **SESSION_0061 — P1 Brand-Scoping Fixes**
+
 - **Goal:** Close all 6 P1 items from this review + add brand to `adminActionClient`
 - **Agent:** Cody
 - **Inputs:** This review table (§7)

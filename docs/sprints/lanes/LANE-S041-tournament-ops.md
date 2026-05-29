@@ -182,6 +182,7 @@ apps/web/server/web/tournaments/
 **IN scope:** Tournament CRUD, Division CRUD, public discovery, registration + payment.
 
 **OUT of scope (future sessions):**
+
 - Brackets, matches, scoring
 - Mat assignments, weigh-ins
 - Officials/staff assignment workflow

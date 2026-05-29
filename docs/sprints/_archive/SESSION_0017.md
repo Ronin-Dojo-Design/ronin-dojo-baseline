@@ -59,6 +59,7 @@ From `docs/architecture/s2-s4-pattern-audit.md`:
 ### Phase 2 — Payload files ✅
 
 Created Dirstarter L1 payload files:
+
 - `server/web/passport/payloads.ts` — `passportOnePayload`, `directoryProfileOnePayload` with `satisfies Prisma.*Select` + exported types
 - `server/web/organization/payloads.ts` — `organizationManyPayload`, `organizationOnePayload`, `organizationDetailPayload` with discipline/owner/membership sub-payloads
 - `server/web/directory/payloads.ts` — `directoryProfileListPayload` with user/membership/rankAward sub-payloads + filter option payloads

@@ -23,6 +23,7 @@ Two open items remain before the brand-settings surface is complete:
 
 - **D9**: `generateMetadata()` in `layout.tsx` still reads logo/favicon/OG from
   static `config/site.ts`. DB `logoUrl`/`faviconUrl`/`ogImageUrl` should override.
+
 - **Playwright e2e**: No test coverage for the brand-settings admin page or
   runtime CSS injection.
 
@@ -30,8 +31,10 @@ Two open items remain before the brand-settings surface is complete:
 
 - **D9 before Playwright**: Ship the behavior, then test it. Avoids writing a
   test against the static path and immediately invalidating it.
+
 - **D8 deferred**: Org-level theme admin UI is a separate admin surface with
   different auth context. Full page + queries + actions → own session (0293).
+
 - **S3 deferred**: Bucket provisioning needs AWS creds (operator task).
 
 ## Tasks

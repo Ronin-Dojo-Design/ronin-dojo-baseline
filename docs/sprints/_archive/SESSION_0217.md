@@ -57,6 +57,7 @@ Execute D-016 Phase 7: migrate Dialog, Popover, DropdownMenu, Select, and Drawer
 **Decision: Option B — 4 tasks in one session.**
 
 Evidence from bow-in drift assessment:
+
 - **5 primitives:** dialog (15 consumers), popover (6), dropdown-menu (24), select (33), drawer (1).
 - **35 consumer `asChild` trigger sites** need `render={}` rewrite (handled inside each primitive task).
 - **`popoverAnimationClasses`** must update from `data-[state=open/closed]` → `data-open/data-closed` + `--radix-popper-transform-origin` → `--transform-origin`. 3 primitive consumers (popover, dropdown-menu, select).

@@ -11,6 +11,7 @@ pairs_with:
   - knowledge/wiki/files/discipline-detail-page
   - knowledge/wiki/files/organization-new-page
   - knowledge/wiki/files/schema-prisma
+  - knowledge/wiki/files/schools-queries
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012

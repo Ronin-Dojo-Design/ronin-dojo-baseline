@@ -63,6 +63,7 @@ Stand up Playwright E2E infrastructure and write the first full athlete lifecycl
 ### Assessment
 
 **What exists:**
+
 - `@playwright/test` installed (v1.59.1) with Chromium + Firefox browsers
 - 14 integration tests from SESSION_0087 proving server-side tournament queries
 - All tournament web pages: list (`/tournaments`), detail (`/tournaments/[slug]`), results (`/tournaments/[slug]/results`)
@@ -70,6 +71,7 @@ Stand up Playwright E2E infrastructure and write the first full athlete lifecycl
 - Bracket generation, match scoring, results publication all wired
 
 **What's missing:**
+
 - No `playwright.config.ts`
 - No E2E test files
 - No test seed data strategy for E2E (need a running app + seeded tournament)
@@ -111,6 +113,7 @@ Admin-side bracket generation + scoring is tested via integration tests already.
 4. Verify: `bunx playwright test e2e/smoke.spec.ts` passes
 
 **Done means:**
+
 - Config file exists with sensible defaults
 - Smoke test passes against running dev server
 
@@ -125,6 +128,7 @@ Admin-side bracket generation + scoring is tested via integration tests already.
 4. Assert: no error state, page title correct
 
 **Done means:**
+
 - Test passes with seeded tournament data in dev DB
 
 #### TASK_03 — Tournament detail + free registration E2E
@@ -141,6 +145,7 @@ Admin-side bracket generation + scoring is tested via integration tests already.
 **Depends on:** Authenticated session in Playwright (may need auth setup helper)
 
 **Done means:**
+
 - Test proves the discover → register → confirm flow for a free tournament
 
 #### TASK_04 — Results page E2E
@@ -154,6 +159,7 @@ Admin-side bracket generation + scoring is tested via integration tests already.
 4. Assert: no empty state when data exists
 
 **Done means:**
+
 - Test passes with seeded bracket/match data
 
 ### Execution order

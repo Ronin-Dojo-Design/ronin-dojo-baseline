@@ -66,6 +66,7 @@ SESSION_0118 closed with three handoff items: (1) Resend domain still unverified
 ### Task Breakdown
 
 #### TASK_01 — Resend domain verification + test email
+
 - **Agent:** Brian (manual) + Cody (verification script)
 - **What:** Brian opens Resend dashboard → clicks Verify for `baselinemartialarts.com` → Cody sends test email to `mrbscott@gmail.com` via the existing `lib/email.ts` utility
 - **Done criteria:** Email received in inbox with correct sender domain
@@ -73,6 +74,7 @@ SESSION_0118 closed with three handoff items: (1) Resend domain still unverified
 - **Estimated effort:** 10 min (manual + script)
 
 #### TASK_02 — Hostile close review batch: Sessions 0114–0118
+
 - **Agent:** Giddy + Doug
 - **What:** Batch hostile-close review of the Printful integration arc per `docs/protocols/hostile-close-review.md`. Five sessions covering: Resend setup runbook (0114), Printful POD spec + Phase 1 service client (0114–0115), merch checkout flow (0116), Printful product sync (0117), Phase 2 webhooks (0118).
 - **Review scope:** All 8 review questions + 3 Kaizen questions per the protocol. One consolidated review entry in `TASK_REVIEW_LOG` covering the arc.
@@ -89,6 +91,7 @@ SESSION_0118 closed with three handoff items: (1) Resend domain still unverified
   - `apps/web/lib/notifications.ts`
 
 #### TASK_03 — Printful Phase 3 plan: Admin Merch Order Dashboard
+
 - **Agent:** Petey (plan only, no code)
 - **What:** Produce a scoped implementation plan for the admin merch order dashboard per the wireframe in `printful-pod-spec.md` §"Admin: Merch Order Dashboard". Plan covers:
   - Page route: `/admin/merch/orders` (list) + `/admin/merch/orders/[id]` (detail)

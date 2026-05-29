@@ -116,6 +116,7 @@ Read component inventory + Discipline schema, then create `findDisciplines()` an
 **Goal:** SESSION_0123 — Discipline detail enrichment + dynamic population verification.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0122.md` — this session
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — MANDATORY (UI session)
 - `docs/knowledge/wiki/content-engine/content-atoms.md` — ContentAtom relation for discipline histories
@@ -141,6 +142,7 @@ Read component inventory + Discipline schema, then create `findDisciplines()` an
 | TASK_11 | Type check + final verify |
 
 **Open decisions for S0123:**
+
 - Carousel library: `embla-carousel-react` confirmed (SESSION_0121 decision)
 - Schema migration: combine `foundedBy` + `yearEstablished` + `history` into single migration
 - Placeholder strategy: render sections with "Coming soon" if no data vs hide entirely?

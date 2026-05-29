@@ -12,6 +12,7 @@
 ### Phase 1 — Design doc review (Petey, sequential)
 
 Read `s1-schema-design.md` top-to-bottom. Validate:
+
 - All 31 model definitions match resolved Q1–Q8 + Gaps 1–6
 - All FK cross-references are consistent (every `@relation` has a matching reverse)
 - All enum usages are correct (no stale `MembershipRole` references)
@@ -22,6 +23,7 @@ Flag issues before writing any code.
 ### Phase 2 — Schema rewrite (Cody, single task)
 
 Rewrite `apps/web/prisma/schema.prisma`:
+
 - Keep Dirstarter template models (User core shape, Session, Account, Verification, Tool, Category, Tag, Report, Ad) intact
 - Replace all Ronin Dojo models with S1 design doc definitions
 - Remove `MembershipRole` enum
@@ -114,6 +116,7 @@ No parallel worktrees needed — this is a single-branch, single-migration task.
 **Goal:** Write seed file with all system defaults, update `data-model.md`, configure shadow DB.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0004.md` (this file)
 - `apps/web/prisma/schema.prisma` (for seed data shape)
 - `docs/knowledge/JETTY_3.0.md` (for any new wiki pages created during seed work)

@@ -71,6 +71,7 @@ LANE-S042 targeted 3 recipes across sessions 0132–0135. However, code inspecti
 ### Tasks
 
 #### TASK_01 — Compile check + type safety audit of tournament admin (Recipe 1)
+
 - **Agent:** Cody
 - **What:** Run type checker on tournament admin files. Identify any compile errors, missing imports, or schema mismatches.
 - **Steps:**
@@ -83,6 +84,7 @@ LANE-S042 targeted 3 recipes across sessions 0132–0135. However, code inspecti
 - **Depends on:** nothing
 
 #### TASK_02 — Compile check + type safety audit of public pages + registration (Recipes 2 & 3)
+
 - **Agent:** Cody
 - **What:** Same audit for public tournament pages and registration flow.
 - **Steps:**
@@ -95,6 +97,7 @@ LANE-S042 targeted 3 recipes across sessions 0132–0135. However, code inspecti
 - **Depends on:** nothing
 
 #### TASK_03 — Authenticated visual QA (Doug)
+
 - **Agent:** Doug (QA)
 - **What:** Dev-login → navigate admin tournament CRUD → create/edit tournament → visit public page → attempt registration
 - **Steps:**
@@ -107,6 +110,7 @@ LANE-S042 targeted 3 recipes across sessions 0132–0135. However, code inspecti
 - **Depends on:** TASK_01 + TASK_02 (no point QA-ing broken code)
 
 #### TASK_04 — Update lane manifest + program plan status
+
 - **Agent:** Petey
 - **What:** Mark LANE-S042 recipes as done/gap/blocked based on findings. Update program-plan.md S4 row.
 - **Done means:** Lane manifest updated with actual status; program plan reflects S4 progress

@@ -93,6 +93,7 @@ Build Recipe 1 from LANE-S040: Course + CurriculumItem admin CRUD. Follow Dirsta
 **Goal**: Recipe 2 — Technique library public pages (browse/search/filter with media)
 
 **Inputs to read**:
+
 - `docs/sprints/lanes/LANE-S040-content-curriculum.md` Recipe 2 section
 - `apps/web/app/(web)/tools/page.tsx` + `components/web/tools/` — public listing pattern
 - `apps/web/server/web/tools/queries.ts` — public query pattern

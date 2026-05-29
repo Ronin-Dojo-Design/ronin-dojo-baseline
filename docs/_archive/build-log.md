@@ -13,6 +13,7 @@ last_agent: copilot-session-0015
 Append-only execution log. One entry per completed task. Unlike SESSION files (which track planning + discussion), this tracks **what actually shipped and whether it works.**
 
 **Rules:**
+
 - Every Cody task that touches code gets an entry here.
 - Entries are never edited after creation (append-only).
 - Status is one of: `✅ verified`, `⚠️ needs-verification`, `❌ broken`, `🔄 superseded`.
@@ -38,6 +39,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 ## Log
 
 ### S1_SCHEMA — Phase 1 schema rev (31 models, all enums)
+
 - **Session:** SESSION_0003–0005
 - **Sprint:** S1
 - **Status:** ✅ verified
@@ -46,6 +48,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Smoke test:** migration applied, seed ran, Prisma Studio verified
 
 ### S2_AUTH — Better-Auth + Passport bootstrap
+
 - **Session:** SESSION_0007
 - **Sprint:** S2
 - **Status:** ✅ verified
@@ -54,6 +57,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Smoke test:** sign-up creates User + Passport + DirectoryProfile stubs
 
 ### S3_ORG — Organization create + join flow
+
 - **Session:** SESSION_0008–0013
 - **Sprint:** S3
 - **Status:** ✅ verified
@@ -62,6 +66,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Smoke test:** create org + join flow tested in browser
 
 ### S4_DIRECTORY — Directory search with privacy
+
 - **Session:** SESSION_0014
 - **Sprint:** S4
 - **Status:** ⚠️ needs-verification
@@ -71,6 +76,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Fix (SESSION_0015):** Added 5 test users to seed.ts with Passport + DirectoryProfile + Organization + Membership + RankAward. Reseeded. Awaiting browser verification.
 
 ### S15_SEED_FIX — Seed script: full identity graph
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (fix)
 - **Status:** ✅ verified
@@ -79,6 +85,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Smoke test:** `prisma db seed` ran successfully, all 5 users created with full graph
 
 ### S15_DOC_ADOPTION — SOP adoption + feature prerequisites + Cody pre-flight
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (housekeeping)
 - **Status:** ✅ verified
@@ -87,6 +94,7 @@ Append-only execution log. One entry per completed task. Unlike SESSION files (w
 - **Smoke test:** n/a
 
 ### S15_CLOSE_FIX — Full close steps remediation (FS-0004)
+
 - **Session:** SESSION_0015
 - **Sprint:** S4 (process fix)
 - **Status:** ✅ verified

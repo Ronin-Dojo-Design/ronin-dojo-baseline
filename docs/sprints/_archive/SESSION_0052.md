@@ -226,6 +226,7 @@ Resolve the L1 violations identified in SESSION_0051's component inventory (§10
 **Goal:** Update `dirstarter-component-inventory.md` to mark all P1/P2/P3 items as resolved + remaining cleanup
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0052.md` — this file
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — §10, §11 need status updates
 

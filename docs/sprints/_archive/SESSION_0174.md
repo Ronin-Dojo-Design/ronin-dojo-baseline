@@ -77,13 +77,16 @@ Write `apps/web/prisma/seed-baseline-programs.ts` — a production-safe idempote
 ## Pre-flight: Schema — seed-baseline-programs.ts
 
 ### 1. Petey invocation
+
 - [x] Petey plan exists with TASK_01, TASK_02
 - Scope: 0 new Prisma models, only new seed script; waiver not required
 
 ### 2. Design doc check
+
 - No design doc needed — all existing Dirstarter models
 
 ### 3. Existing schema scan
+
 - **Discipline**: id, name, slug, code?, isSystem, brand?, foundedBy?, yearEstablished?, history?, createdAt, updatedAt. `@@unique([code, brand])`, `@@unique([name, brand])`.
 - **RankSystem**: id, name, kind (RankSystemKind), isSystem, brand?, disciplineId, createdAt. `@@unique([disciplineId, name, brand])`.
 - **Rank**: id, sortOrder, name, shortName?, colorHex?, isSystem, brand?, rankSystemId, createdAt. `@@unique([rankSystemId, sortOrder])`, `@@unique([rankSystemId, name])`.
@@ -93,12 +96,15 @@ Write `apps/web/prisma/seed-baseline-programs.ts` — a production-safe idempote
 - **CurriculumItem**: id, order, title, notes?, mediaUrl?, mediaType?, courseId, createdAt, updatedAt. `@@index([courseId, order])`.
 
 ### 4. Runbook consulted
+
 - `docs/runbooks/product-catalog-seed.md` — prerequisites confirmed (Baseline org exists).
 
 ### 5. Data flow reference
+
 - N/A — seed script
 
 ### 6. FAILED_STEPS check
+
 - F-06 mitigation: using `findFirst + create` for all models with nullable brand in unique constraints.
 - F-08 mitigation: enum/field values pasted directly from schema.prisma above.
 

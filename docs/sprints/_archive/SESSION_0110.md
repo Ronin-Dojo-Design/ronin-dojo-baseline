@@ -54,26 +54,31 @@ Fully decommission `affiliate-gear.ts` as a runtime dependency. Move seed data i
 ### Tasks
 
 #### TASK_01 — Audit importers of `affiliate-gear.ts`
+
 - **Agent:** Cody
 - **What:** Confirm the full importer list. Graphify shows exactly 2: `seed-tuffbuffs-affiliate.ts` and `seed-gear-recommendations.ts`. Verify no other source files import from this module (excluding `.next/` build artifacts).
 - **Done means:** Documented importer list with zero surprises.
 
 #### TASK_02 — Inline product data into `seed-tuffbuffs-affiliate.ts`
+
 - **Agent:** Cody
 - **What:** Copy the `tuffBuffsAffiliateGearProducts` array from `affiliate-gear.ts` into `seed-tuffbuffs-affiliate.ts` as a local `const`. Remove the import from `affiliate-gear.ts`. Ensure seed script still compiles and functions.
 - **Done means:** `seed-tuffbuffs-affiliate.ts` no longer imports from `affiliate-gear.ts`. Types preserved.
 
 #### TASK_03 — Inline collection data into `seed-gear-recommendations.ts`
+
 - **Agent:** Cody
 - **What:** Copy the `tuffBuffsAffiliateGearCollections` array from `affiliate-gear.ts` into `seed-gear-recommendations.ts` as a local `const`. Remove the import from `affiliate-gear.ts`.
 - **Done means:** `seed-gear-recommendations.ts` no longer imports from `affiliate-gear.ts`.
 
 #### TASK_04 — Strip `affiliate-gear.ts` down to empty or delete
+
 - **Agent:** Cody
 - **What:** With zero importers remaining, either delete `affiliate-gear.ts` entirely or reduce it to a tombstone comment pointing to DB queries and seed scripts. Remove the backward-compat `formatGearPrice` re-export (direct importers already use `gear-utils.ts`). Remove `getTuffBuffsAffiliateGearByIds`.
 - **Done means:** No exports remain in `affiliate-gear.ts` (or file deleted). Zero import references across codebase.
 
 #### TASK_05 — Type-check + verification
+
 - **Agent:** Doug (QA)
 - **What:** Run `bunx tsc --noEmit`. Verify gear page still renders from DB data. Confirm no broken imports.
 - **Done means:** Clean type-check (pre-existing errors only). Zero new errors. Zero references to deleted exports.

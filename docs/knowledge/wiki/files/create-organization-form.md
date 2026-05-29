@@ -52,6 +52,7 @@ Client component form for creating a new Organization. Uses React Hook Form + Zo
 ## Pattern
 
 Follows the `SubmitForm` / `CTAForm` pattern from Dirstarter:
+
 - `useHookFormAction(serverAction, zodResolver, { formProps, actionProps })`
 - On success: toast + redirect to `/organizations/[slug]`
 - No new UI components — all from `components/common/`

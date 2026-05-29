@@ -165,6 +165,7 @@ For any task that adds server actions, queries, or API routes:
 ## Source
 
 Derived from:
+
 - Cody workflow §5 in `10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md`: "load lane docs → inspect target files → implement"
 - Loading order tiers in `07_NEXT_SESSION_LOADING_ORDER_BASELINE.md`
 - L1 pre-flight checklist added to `docs/agents/cody.md` in SESSION_0014

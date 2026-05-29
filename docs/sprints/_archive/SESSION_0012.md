@@ -31,6 +31,7 @@ Ship the minimum org UI that exercises the S3 server actions (`createOrganizatio
 ### Tasks
 
 #### TASK_01 — `/organizations/new` create form
+
 - **Agent:** Cody
 - **What:** React Hook Form + Zod wired to `createOrganization` server action. Brand comes from middleware/cookie. Discipline picker from DB.
 - **Steps:**
@@ -43,6 +44,7 @@ Ship the minimum org UI that exercises the S3 server actions (`createOrganizatio
 - **Depends on:** nothing
 
 #### TASK_02 — `/organizations` list page + `/organizations/[slug]` detail
+
 - **Agent:** Cody
 - **What:** List orgs by brand, show member count. Detail page shows org info + member list.
 - **Steps:**
@@ -53,6 +55,7 @@ Ship the minimum org UI that exercises the S3 server actions (`createOrganizatio
 - **Depends on:** TASK_01 (need at least one org to view)
 
 #### TASK_03 — Protocol dry-run + docs sweep (stretch)
+
 - **Agent:** Petey + Doug
 - **What:** Use this session as the first live test of the Petey Plan and Review & Recommend protocols. At bow-out, explicitly run Review & Recommend and note any friction or missing steps.
 - **Done means:** Protocols used, any gaps noted in SESSION file reflections

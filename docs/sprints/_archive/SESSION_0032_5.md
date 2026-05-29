@@ -40,14 +40,17 @@ family, waiver, and trial lifecycle work.
 
 - Previous session: `docs/sprints/SESSION_0032.md`, status `closed-full`,
   landed attendance/check-in write surface on commit `0886361`.
+
 - Owner instruction: preempt SESSION_0033 with full typecheck debt, pause after
   the debt is handled, then ask whether to bow out/close here or continue into
   SESSION_0033.
+
 - Worktree: `/Users/brianscott/dev/wt-qa-hardening` on
   `session-0032-typecheck-debt`, forked from `session-0032-attendance` at
   `0886361`.
 - FAILED_STEPS: FS-0006, FS-0007, and FS-0008 mitigations remain in force.
   This session records Petey plan and TASK_PLAN_LOG entries before code edits.
+
 - Drift register: D-005 remains open but is not directly touched; this is a
   compile-safety pass, not a cache-strategy pass.
 
@@ -119,8 +122,10 @@ listed and verification recorded. SESSION_0033 product work remains untouched.
   global types, content-collections generated imports, Better Auth user role
   typing/API assumptions, passport enum drift, DirectoryProfile payload drift,
   S3/media env typing, and one Prisma `include` stack-depth issue.
+
 - **Authorization/data boundary:** this pass must not relax auth checks or
   brand/org predicates. Any auth-related edit is typing alignment only.
+
 - **FAILED_STEPS check:** FS-0006/FS-0007/FS-0008 mitigated; no inferred Prisma
   enum spelling is allowed without direct `schema.prisma` spot-check.
 
@@ -133,6 +138,7 @@ Initial full typecheck failed on pre-existing baseline debt:
 - Better Auth session `user.role` and one-time-token API type drift.
 - Passport/Directory enum drift: `NON_BINARY` vs `NONBINARY`, `PRIVATE` vs
   schema-backed visibility values.
+
 - DirectoryProfile payload drift: missing `coverPhotoUrl` and `videoIntroUrl`.
 - Env-dependent typing in `lib/auth.ts`, `lib/media.ts`, and `services/s3.ts`.
 - Prisma `ToolInclude` excessive stack-depth in `server/web/tools/queries.ts`.
@@ -142,16 +148,20 @@ Initial full typecheck failed on pre-existing baseline debt:
 - Added `apps/web` `typecheck` script: `next typegen && tsc --noEmit --pretty
   false`. This generates Next App Router globals and content-collections types
   before raw TypeScript runs.
+
 - Aligned Better Auth typing with runtime configuration: added
   `BETTER_AUTH_SECRET`, gated optional Google provider config, and preserved
   plugin tuple inference for admin role and one-time-token APIs.
+
 - Aligned Passport/Directory literals with `schema.prisma`:
   `Gender.NONBINARY` and `DirectoryVisibility.HIDDEN`.
 - Added the missing `coverPhotoUrl` and `videoIntroUrl` fields to the
   DirectoryProfile select payload used by `/me`.
+
 - Normalized `Post` typing to the `content-collections` module alias.
 - Replaced optional env values in S3/media code with explicit runtime guards or
   conditional AWS credentials.
+
 - Narrowed public tool query argument types so Prisma does not compare the full
   `include` surface when a query always supplies its own `select`.
 
@@ -192,6 +202,7 @@ Initial full typecheck failed on pre-existing baseline debt:
 - `next typegen` emits a non-blocking content-collections deprecation warning:
   the collection relies on the package's implicit `content` property. This does
   not fail typecheck; it is a future cleanup candidate.
+
 - Including all generated `.next/types/**/*.ts` despite `exclude: [".next"]`
   surfaces a larger typed-routes/link-validation debt class. This session did
   not take that on because the handoff finding was raw `tsc` baseline debt and
@@ -208,6 +219,7 @@ SESSION_0033 has not started.
 
 - Owner chose to bow out and close SESSION_0032.5 here instead of running into
   SESSION_0033.
+
 - `SESSION_0032_FINDING_01` is addressed by this session. The clean command is
   now `bun run typecheck`, which runs `next typegen` before TypeScript so the
   ignored generated artifacts exist. The exact raw
@@ -216,6 +228,7 @@ SESSION_0033 has not started.
   Dirstarter-owned layer must use live `dirstarter.com/docs` pages as the
   implementation template before Cody starts. Hostile close still checks those
   same docs after the work lands.
+
 - Kaizen efficiency improvement landed: planning/review protocols now require
   process simplifications to preserve proof, security, Dirstarter alignment,
   and workflow honesty before they are accepted.
@@ -238,6 +251,7 @@ SESSION_0033 has not started.
 
 - **Goal:** Fresh bow-in for SESSION_0033: Program enrollments, family groups,
   waivers, and trial lifecycle.
+
 - **Inputs to read:** the pre-staged `docs/sprints/SESSION_0033.md` from
   `session-0032-attendance` commit `d1981fa`, `docs/protocols/petey-plan.md`,
   `docs/protocols/cody-preflight.md`,
@@ -287,19 +301,23 @@ product work.
   generated-artifact prerequisites and real source drift. Running `next typegen`
   first was the key planning move; it prevented editing blog/page code for
   errors that were only symptoms of missing generated files.
+
 - Dirstarter docs should guide the plan before implementation starts. The old
   flow checked Dirstarter alignment at hostile close, which catches bypasses
   late. The updated Petey plan protocol now makes the live docs the initial
   implementation template, then hostile close verifies that the implementation
   stayed aligned.
+
 - The most useful planning improvement for SESSION_0033 is a short
   "implementation template" block before task decomposition: docs read,
   baseline pattern to extend, custom delta, no-bypass proof. That makes it
   clear what is being built and how before Cody writes code.
+
 - Efficiency matters, but only if proof does not regress. The process
   improvement here is not more ceremony; it is moving Dirstarter alignment
   earlier and making `typecheck` generate prerequisites automatically. Fewer
   false failures, same or better proof.
+
 - Kaizen confidence: 100-user and 1,000-user tiers are 10/10 for this QA gate;
   10,000-user tier is 9/10 because typed-routes validator cleanup remains a
   possible future `next build` gate, but it is outside the raw generated

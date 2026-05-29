@@ -34,6 +34,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 ### Petey plan
 
 #### TASK_01 — Score match Zod schema
+
 - **Agent:** Cody
 - **What:** Create `scoreMatchSchema` in `server/admin/tournaments/schema.ts`
 - **Steps:**
@@ -43,6 +44,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 - **Depends on:** nothing
 
 #### TASK_02 — Score match server action
+
 - **Agent:** Cody
 - **What:** Create `scoreMatch` server action that records the result and advances the winner
 - **Steps:**
@@ -59,6 +61,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 - **Depends on:** TASK_01
 
 #### TASK_03 — Auto-advance BYE winners
+
 - **Agent:** Cody
 - **What:** After bracket generation, auto-advance competitors who received a BYE into round 2
 - **Steps:**
@@ -70,6 +73,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 - **Depends on:** TASK_02
 
 #### TASK_04 — Admin UI: Score match form
+
 - **Agent:** Cody
 - **What:** Add scoring UI to admin bracket/match view
 - **Steps:**
@@ -81,6 +85,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 - **Depends on:** TASK_02
 
 #### TASK_05 — Admin UI: Bracket viewer (read-only tree)
+
 - **Agent:** Cody
 - **What:** Simple bracket visualization showing rounds, matches, and competitors
 - **Steps:**
@@ -92,6 +97,7 @@ Design the match scoring flow and automatic winner advancement through single-el
 - **Depends on:** TASK_03, TASK_04
 
 #### TASK_06 — Type-check
+
 - **Agent:** Cody
 - **What:** Run `tsc --noEmit` to verify no type errors
 - **Done means:** Clean type-check

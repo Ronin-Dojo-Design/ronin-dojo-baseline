@@ -33,12 +33,14 @@ Run at bow-out (or on demand) to review what the session accomplished and recomm
 ### 1. Review what landed
 
 Read the current SESSION file's `What landed` section. For each item:
+
 - Did it fully close its task? If partial, note what remains.
 - Did it shift any boundary in the [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md)? Update if so.
 
 ### 2. Check the boundary registry
 
 Read `docs/knowledge/wiki/manual-boundary-registry.md`. Identify:
+
 - **Newly verified** boundaries (from this session)
 - **Next open boundary** by priority — the one that unblocks the most downstream work
 - **Stale boundaries** — any that should be re-evaluated
@@ -46,6 +48,7 @@ Read `docs/knowledge/wiki/manual-boundary-registry.md`. Identify:
 ### 3. Check the program plan
 
 Read `docs/architecture/program-plan.md`. Identify:
+
 - Current sprint row — is it done? Partially done?
 - Next sprint row — what's the deliverable?
 - Any slip risk?
@@ -68,6 +71,7 @@ Write into the SESSION file's `Next session` section:
 ### 5. Pre-stage the next SESSION file (optional)
 
 If the recommendation is clear and unlikely to change, create `SESSION_NNNN+1.md` with:
+
 - JETTY 3.0 frontmatter
 - `Goal` from the recommendation
 - `Status: pending` (flips to `in-progress` at next bow-in)

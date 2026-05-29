@@ -4,12 +4,14 @@ slug: organization-detail-page
 type: file
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-29
 author: Brian + Copilot
-last_agent: copilot-session-0012
+last_agent: claude-session-0298
 pairs_with:
   - knowledge/wiki/files/organizations-list-page
   - knowledge/wiki/files/join-organization-button
+  - knowledge/wiki/files/discipline-detail-page
+  - knowledge/wiki/files/schools-detail-page
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0012

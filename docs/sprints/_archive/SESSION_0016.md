@@ -47,6 +47,7 @@ backlinks:
 **Done:** `docs/architecture/decisions/0009-mobile-auth-strategy.md` exists, status Accepted.
 
 **Recommendation (Petey):** **Option A — Better-Auth mobile SDK.** Rationale:
+
 - Better-Auth already handles web sessions; its mobile SDK shares the session contract (no second auth system to maintain).
 - JWT bridge adds token lifecycle complexity (refresh rotation, revocation) that a solo dev doesn't need when Better-Auth already solves it.
 - ADR 0002 already assumed "Better-Auth's mobile flow" as the primary path; JWT bridge was the fallback only if Better-Auth's mobile UX was thin.
@@ -102,6 +103,7 @@ Created `docs/architecture/dirstarter-architecture-map.md` — master execution 
 ### Phase 5 — S2–S4 pattern compliance audit ✅
 
 Created `docs/architecture/s2-s4-pattern-audit.md`. Key findings:
+
 - All 3 entities missing `payloads.ts` files
 - No `"use cache"` + cacheTag on queries
 - Org queries use `include` instead of `select`
@@ -154,11 +156,13 @@ Created `docs/architecture/s2-s4-pattern-audit.md`. Key findings:
 ## Reflections
 
 ### What went well
+
 - The Dirstarter deep-dive was overdue. Having the architecture map as a single document means every future session can reference it instead of re-discovering patterns ad hoc. This will save 15–20 min per session.
 - TASK_05/06 executed cleanly because the decision space was already narrowed by ADR 0002. The ADR is a natural extension, not a controversial choice.
 - The S2–S4 audit reveals the gaps are mechanical (missing files, wrong Prisma method), not architectural. The bones are right; we just need to finish the last mile.
 
 ### What could improve
+
 - Should have created the architecture map BEFORE S3/S4, not after. The inline `include` patterns and missing payloads wouldn't have happened if the execution contract existed earlier. Lesson: L1 mapping document should be the FIRST artifact of any template-based project.
 - SESSION_0016 tried to do too many things (browser verify + TASK_05 + TASK_06 + architecture map + audit). The browser verify is STILL pending. Next session should limit scope to 2–3 tasks max.
 

@@ -71,6 +71,7 @@ Use these when canon is fuzzy, names are changing, release gates matter, or docu
 ### 3. Lane-specific loading
 
 #### A. Schema / backend lane
+
 - latest SESSION file
 - program plan
 - plan-vs-current
@@ -80,6 +81,7 @@ Use these when canon is fuzzy, names are changing, release gates matter, or docu
 - manual boundary registry if proof or migration safety matters
 
 #### B. Auth / brand-context lane
+
 - latest SESSION file
 - auth.md
 - ADR 0004
@@ -88,6 +90,7 @@ Use these when canon is fuzzy, names are changing, release gates matter, or docu
 - alias ledger
 
 #### C. Ritual / protocol / documentation lane
+
 - latest SESSION file
 - wiki index
 - JETTY 3.0 canonical doc
@@ -96,6 +99,7 @@ Use these when canon is fuzzy, names are changing, release gates matter, or docu
 - truth index if the page is doctrinal
 
 #### D. Content-engine lane
+
 - latest SESSION file
 - wiki index
 - truth index
@@ -105,6 +109,7 @@ Use these when canon is fuzzy, names are changing, release gates matter, or docu
 - alias ledger if brand-targeted publishing is involved
 
 #### E. Frontend/UI lane
+
 - latest SESSION file
 - program plan
 - lane-specific architecture docs

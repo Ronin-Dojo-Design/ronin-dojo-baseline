@@ -104,6 +104,7 @@ S2 has **four deliverables**. They decompose into independent worktrees where no
 ## Reflections
 
 ### What went well
+
 - Petey's 4-task decomposition was clean — T1/T2 parallel, T3/T4 parallel after T1. The plan held exactly.
 - Discovering T2 was already done saved 30 minutes. Reading existing code before building pays off.
 - Dirstarter patterns (safe-actions, `useHookFormAction`, Form components) are well-established — following them made T3/T4 fast.

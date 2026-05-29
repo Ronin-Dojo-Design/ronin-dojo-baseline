@@ -81,6 +81,7 @@ Printful POD integration planning + Resend email setup.
 ### Petey Plan (pre-staged for SESSION_0114)
 
 #### TASK_01 — Resend account + domain verification setup
+
 - **Agent:** Cody
 - **What:** Set up Resend account, verify sending domain, update `.env` with live API key + sender email. Test merch order email delivery end-to-end.
 - **Steps:**
@@ -92,6 +93,7 @@ Printful POD integration planning + Resend email setup.
 - **Depends on:** Nothing (user may need to do DNS verification step)
 
 #### TASK_02 — Printful POD integration research + spec
+
 - **Agent:** Petey
 - **What:** Research Printful API, document integration spec for TuffBuffs merch POD workflow. Brian already uses Printful for WEKAF Team USA uniforms and TuffBuffs/Baseline/BBL/WEKAF apparel.
 - **Steps:**
@@ -104,6 +106,7 @@ Printful POD integration planning + Resend email setup.
 - **Depends on:** Nothing
 
 #### TASK_03 — Printful API client scaffold (if runway permits)
+
 - **Agent:** Cody
 - **What:** Create `services/printful.ts` client wrapper + types. Create `server/web/merch/printful-actions.ts` with `createPrintfulOrder` server action stub.
 - **Steps:**
@@ -125,12 +128,14 @@ TASK_01 and TASK_02 can run in parallel (disjoint concerns). TASK_03 depends on 
 | TASK_03 | Cody | Implementation from spec, if runway permits |
 
 ### Open decisions (for SESSION_0114)
+
 - **Printful auth model:** OAuth app vs API key? (likely API key for server-to-server)
 - **Product sync direction:** Printful → DB (catalog sync) or DB → Printful (order push only)?
 - **Fulfillment webhook:** Does Printful webhook back to us with tracking info, or do we poll?
 - **Multi-brand POD:** Same Printful account for all brands, or per-brand accounts?
 
 ### Risks
+
 - Printful sandbox availability — need to verify test mode exists
 - Resend domain verification may take time (DNS propagation)
 
@@ -138,12 +143,14 @@ TASK_01 and TASK_02 can run in parallel (disjoint concerns). TASK_03 depends on 
 If additional work surfaces during execution, note it in SESSION file under `Open decisions / blockers` — do NOT expand scope mid-task.
 
 ### Dirstarter implementation template
+
 - **Docs read first:** Printful API docs, Dirstarter Payments/Stripe integration docs
 - **Baseline pattern to extend:** `stripe/webhooks/route.ts` merch handler, `services/stripe.ts` client pattern
 - **Custom delta:** Printful order creation from Stripe webhook, product catalog mapping, fulfillment tracking
 - **No-bypass proof:** Printful is a new external integration — no Dirstarter equivalent exists
 
 ### Inputs to read
+
 - This SESSION file (all tasks complete, Petey plan pre-staged)
 - `apps/web/app/api/stripe/webhooks/route.ts` — merch handler to extend
 - `apps/web/server/web/merch/actions.ts` — checkout flow for context
@@ -156,12 +163,14 @@ TASK_01 (Resend setup) — or TASK_02 (Printful spec) if Brian hasn't done DNS v
 ## Reflections
 
 ### What went well
+
 - Smoke test caught a real bug (FS-0018) — the success page was silently broken. Testing in a real browser with real Stripe checkout was the right call.
 - Stripe webhook listener confirmed working end-to-end with `stripe listen`.
 - Friendly product names fix was clean: one-time script + setup script update + success page fallback chain.
 - Email template wired quickly by following existing notification patterns exactly.
 
 ### What could improve
+
 - FS-0018 was a preventable bug — `shipping_details` should have been validated against Stripe API docs during SESSION_0112 TASK_04. Pre-flight should include Stripe API doc verification for any new Stripe SDK call.
 - Multiple dev server port conflicts wasted time. Consider documenting the canonical startup command in the runbook.
 - Project-log at 600 lines — manageable now but plan an archive split at S4 boundary (~1000 lines).

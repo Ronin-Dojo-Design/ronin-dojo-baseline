@@ -143,6 +143,7 @@ Add `entitlements UserEntitlement[]` relation to `User`.
 #### TASK_03 — Entitlement service: grant/revoke/check (Cody, 60 min)
 
 **What:** Create `apps/web/server/web/entitlement/` with:
+
 - `grant-entitlement.ts` — server action: given userId, entitlementKey, sourceType, sourceId, optional endsAt → create `UserEntitlement`. Idempotent (upsert by userId+entitlementId+sourceId).
 - `revoke-entitlement.ts` — server action: given userId, entitlementId (or entitlementKey+brand) → set status REVOKED.
 - `check-entitlement.ts` — utility (not action): given userId, entitlementKey, brand → returns boolean. Checks status=ACTIVE and endsAt not passed.
@@ -155,6 +156,7 @@ All functions must scope by brand (derived from context or explicit param). Use 
 #### TASK_04 — PricingPlan ↔ Entitlement admin wiring (Cody, 40 min)
 
 **What:** Create `apps/web/server/web/entitlement/manage-entitlements.ts`:
+
 - `createEntitlement` — admin action: create an `Entitlement` row (brand, key, name).
 - `linkPlanToEntitlement` — admin action: create `EntitlementGrant` row linking a PricingPlan to an Entitlement.
 - `listEntitlements` — read action: list all entitlements for a brand.
@@ -166,6 +168,7 @@ This gives staff the ability to define what access a plan grants.
 #### TASK_05 — Stripe webhook: checkout.session.completed → entitlement grant (Cody, 45 min)
 
 **What:** Extend the existing Dirstarter webhook handler at `app/api/stripe/webhooks/route.ts`:
+
 - On `checkout.session.completed`: look up the `PricingPlan` by `stripePriceId` from the session's line items. For each `EntitlementGrant` on that plan, call `grantEntitlement` for the purchasing user.
 - On `customer.subscription.deleted`: call `revokeEntitlement` for all entitlements sourced from that subscription.
 
@@ -176,6 +179,7 @@ Follow existing Dirstarter webhook pattern. Do not create a second webhook endpo
 #### TASK_06 — Smoke test script (Cody, 30 min)
 
 **What:** Create `apps/web/scripts/smoke-entitlements.ts`:
+
 - Creates a test entitlement
 - Links it to a pricing plan
 - Grants it to a user
@@ -259,6 +263,7 @@ If using worktrees: TASK_03 and TASK_04 could be split across two agents working
 ## Next session
 
 **SESSION_0036** — Entitlement-first commerce implementation (Cody session).
+
 - **Goal:** Implement TASK_01–07 from the plan above.
 - **Inputs to read:** This file (SESSION_0035), ADR 0011, monetization-entitlements-spec, current schema.prisma, Dirstarter webhook handler.
 - **First task:** TASK_01 — add entitlement models + enums to schema.prisma.

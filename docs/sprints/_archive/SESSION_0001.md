@@ -51,6 +51,7 @@
 None blocking SESSION_0002.
 
 Items deferred but tracked:
+
 - **Neon project setup** — only matters when we deploy; deferred until S12 staging.
 - **Better-Auth `lastActiveBrandId` configuration** — was queued before the program-plan revision. Will be revisited after S1's schema rev because the Brand enum may shift relative to the new `Organization`/`Discipline` model.
 - **Bucket B agent rework** (WORKFLOW_5.0, refreshed orchestrator/QA loops, Doug v5.0 persona) — postpone until the work warrants it; do not preemptively port.

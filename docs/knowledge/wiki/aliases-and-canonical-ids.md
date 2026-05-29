@@ -68,6 +68,7 @@ Practical alias rules:
 ### 3. Brand enum aliases
 
 Current enum labels:
+
 - `RONIN_DOJO_DESIGN`
 - `BASELINE_MARTIAL_ARTS`
 - `BBL`
@@ -93,6 +94,7 @@ Current enum labels:
 Use stable immutable canonical IDs for content/system objects.
 
 Recommended patterns:
+
 - `atom_{uuid}` = content atom
 - `variant_{uuid}` = content variant
 - `ctask_{uuid}` = content task
@@ -101,6 +103,7 @@ Recommended patterns:
 - `mb_{NNN}` = manual boundary registry item
 
 Mutable fields (these may change):
+
 - titles
 - public labels
 - slugs
@@ -130,6 +133,7 @@ Use `SESSION_0001.md`, `SESSION_0002.md`, etc.
 ### 8. Migration status labels
 
 Use these statuses:
+
 - `stable`
 - `transitional`
 - `legacy-reference`
@@ -138,6 +142,7 @@ Use these statuses:
 - `future-slot`
 
 Suggested status examples:
+
 - `ronin-dojo-baseline` → stable
 - `dirstarter` package name → transitional
 - `TuffBuffs` public reference in new repo → legacy-reference / active-migration depending context

@@ -96,6 +96,7 @@ import { adminActionClient } from "~/lib/safe-actions"
 ## 4. Closing Ritual Integration
 
 During the JETTY 3.0 sweep in the closing ritual:
+
 - Check all new files created this session for annotations
 - Add missing annotations before commit
 - This is part of the standard closing sweep, not a separate step

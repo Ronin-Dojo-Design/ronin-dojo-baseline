@@ -36,6 +36,7 @@ general-info editing are explicitly deferred.
 - Platform reuse refs: `assignRoleToMembership`/`removeRoleFromMembership`
   (`server/admin/memberships/actions.ts`, upsert/delete on `MembershipRoleAssignment`) and
   the `RoleAssignmentPanel` client (`admin/memberships/[id]/_components/`).
+
 - `getSystemRoles()` (`server/web/organization/queries.ts`) returns the assignable role list.
 - `MembershipRoleAssignment` is a simple join table with `@@unique([membershipId, roleId])`.
 - 0296 shipped `transitionOrgMembershipStatus` + the members page (roster + approval queue).
@@ -57,6 +58,7 @@ general-info editing are explicitly deferred.
      `/organizations/[slug]/settings/members`.
 - **Done means:** Owner/ORG_ADMIN can add/remove a role on a member of their org; cross-org
   and non-system-role attempts rejected.
+
 - **Depends on:** nothing.
 
 ### TASK_02 — Reject = hard-delete (F-0296-1)
@@ -73,6 +75,7 @@ general-info editing are explicitly deferred.
      `transitionOrgMembershipStatus({ toStatus: "CANCELLED" })`.
 - **Done means:** Rejecting a PENDING request removes the row; the user can re-request the
   same discipline (no `@@unique` collision). F-0296-1 closed.
+
 - **Depends on:** TASK_01 (same file — sequential edit).
 
 ### TASK_03 — Roster role UI
@@ -86,6 +89,7 @@ general-info editing are explicitly deferred.
      (replacing the read-only role badges from 0296).
 - **Done means:** Roster rows show assigned roles with remove (×) + an add-role dropdown;
   changes persist with toast + refresh.
+
 - **Depends on:** TASK_01.
 
 ### TASK_04 — Verification
@@ -117,6 +121,7 @@ None — three forks resolved at bow-in.
 
 - **Cross-org / role-validity guards** are load-bearing: an org admin must not assign roles
   to another org's member, nor assign a non-system or made-up role ID.
+
 - **Self-lockout:** a non-owner ORG_ADMIN could remove their own ORG_ADMIN role. Acceptable
   (owner retains access; low stakes) — note, don't over-engineer a guard this session.
 - **Reject delete vs audit ordering:** write the audit row BEFORE delete so the rejection is
@@ -132,8 +137,10 @@ suspend/reactivate from roster → future sessions. Note surfacing work in SESSI
 
 - **Docs read first:** not applicable — extends the existing custom org-settings surface;
   Better Auth session + Prisma patterns already aligned.
+
 - **Baseline pattern to extend:** `transitionOrgMembershipStatus` (auth + cross-org guard),
   platform `assignRoleToMembership`/`RoleAssignmentPanel`, `getSystemRoles`.
+
 - **Custom delta:** org-scoped (not platform-admin) role assignment + reject-as-delete.
 - **No-bypass proof:** Dirstarter has no org-scoped membership role management; Ronin domain
   logic on Membership/MembershipRoleAssignment/Role.

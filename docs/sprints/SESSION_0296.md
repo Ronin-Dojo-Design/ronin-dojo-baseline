@@ -108,6 +108,7 @@ org's member by ID. Brand sourced from the membership row (userActionClient ctx 
   (mirrors settings index/theme), breadcrumbs, Intro. Partitions members into a **Pending
   requests** approval queue (cards with Approve/Reject) and a read-only **Roster** (status +
   role badges). Empty states via `Note`.
+
 - `_components/member-approval-actions.tsx` — client component; `useAction` →
   `transitionOrgMembershipStatus` (Approve → ACTIVE, Reject → CANCELLED), sonner toasts,
   `router.refresh()`. Mirrors `membership-status-actions.tsx` conventions.
@@ -135,6 +136,7 @@ org's member by ID. Brand sourced from the membership row (userActionClient ctx 
 
 - **Slice 1 of member-management lane** — org admins (owner + ORG_ADMIN) can now approve/reject
   PENDING join requests for their org and view the roster, without platform-admin involvement.
+
 - **Reuse strategy** — new org-scoped action wrapping proven transition logic; platform-admin
   path (`/admin/memberships`) untouched (zero regression).
 

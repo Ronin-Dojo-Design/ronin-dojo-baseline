@@ -39,6 +39,7 @@ backlinks:
 **Path:** `/Users/brianscott/dev/ronin-dojo-monorepo/src/personas/lineage-sample.json`
 
 ### Metrics
+
 - **Row Count:** 8 records
 - **Tree Depth:** 4 levels (founder → senior → junior → descendant)
 - **ID Format:** `{role}-{index}` (e.g., `founder-1`, `senior-1`)
@@ -117,6 +118,7 @@ backlinks:
 4. **No Relationship Type:** Sample structure implies INSTRUCTOR_STUDENT (parent→child). Target schema requires explicit LineageRelationType enum. Default to INSTRUCTOR_STUDENT; can refine post-launch.
 
 **Recommendation:** Use lineage-sample.json as bulk-import fixture. Write migration script that:
+
 - Iterates records, creates LineageNode + User per record
 - Creates LineageRelationship with type=INSTRUCTOR_STUDENT for each parentId link
 - Assigns joined→awardedAt; flags school/location fields for manual org mapping
@@ -162,6 +164,7 @@ blackbeltlegacy-theme/
 ### Lineage Data Shapes in Theme
 
 **Verdict: No lineage-specific data structures.** Theme is pure presentation. All lineage logic lives in:
+
 - React components (`src/brands/blackbeltlegacy/components/`)
 - API endpoints (`wordpress/blackbeltlegacy-api.php`)
 - Database (Pods CPT + custom fields)
@@ -300,6 +303,7 @@ blackbeltlegacy-theme/
 **Status:** Planning sprint (Session 65 end, ~2 hours planned)
 
 **Key Decisions:**
+
 - Focus production-critical fixes only (no new features) — established MVP-first mindset
 - 7-phase approach: Assessment → Dashboard Fix → Logout Polish → Staging Deploy → Deployment Plan → Production Deploy → Documentation
 - Established rollback strategy (redirect dashboard→profile if needed) — important for risk management
@@ -313,6 +317,7 @@ blackbeltlegacy-theme/
 **Status:** Planning sprint (Session 67 @ 3:00 AM, ~2 hours planned, 🚨 CRITICAL)
 
 **Key Decisions:**
+
 - **MVP Philosophy:** "Ship MVP tonight. Polish features next week. Production-ready beats feature-complete."
 - **Clone Pattern:** Use proven TuffBuffs code as template for Admin Dashboard, payment integration, onboarding
 - **Payment Strategy:** Wire BBLRegisterForm to Stripe checkout via ronindojo-payments.php (45 min Phase 1)
@@ -330,6 +335,7 @@ blackbeltlegacy-theme/
 **Status:** Planning sprint (Session 68, ~15-30 min agent + 2-3 hours manual, CRITICAL)
 
 **Key Decisions:**
+
 - **Clone Strategy:** Don't write from scratch. Clone proven `tuffbuffs-api.php` (1,683 lines) and rebrand as `blackbeltlegacy-api.php`
 - **Architecture Decision:** Move from multi-brand plugin (ronindojo-api.php) to brand-specific plugins for maintainability + isolation
 - **Tier Structure:** Define BBL-specific tiers (visitor, member_free, member_premium, instructor, school_owner) — mirrors TuffBuffs pattern
@@ -343,6 +349,7 @@ blackbeltlegacy-theme/
 **Status:** Planning sprint (Session 69, ~2-3 hours planned, P0 — blocks launch)
 
 **Key Decisions:**
+
 - **Simplification:** Remove inline payment from registration; defer to dashboard upgrade flow (like TuffBuffs)
 - **Auth Approach:** Use cookie auth, NOT JWT complexity. Reason: TuffBuffs cookie auth works; JWT integration adds fragile moving parts
 - **Payment Flow:** Dashboard has "Upgrade to Premium" button → Stripe checkout → return to dashboard
@@ -371,6 +378,7 @@ blackbeltlegacy-theme/
 3. Track closure against implementation proof gates
 
 **Linked Resources:**
+
 - `RoninDashboard/sprints/active/ARCH_REFACTOR_2026/`
 - `RoninDashboard/protocols/RUN_BOOK.md`
 
@@ -397,10 +405,12 @@ blackbeltlegacy-theme/
 ## Gaps & Unavailable Artifacts
 
 **Path Not Found at Expected Location:**
+
 - `/RoninDashboard/GOALS/BBL/active/` (found `/current/` instead; may be reorganized)
 - `wordpress/blackbeltlegacy-api.php` (referenced in WO-68 plan but not yet created; **blocker for SESSION_0264 registration testing**)
 
 **Gaps Identified:**
+
 - **No Custom Rank Badges:** lineage-sample.json uses string ranks (`"8th Dan"`). No PNG/SVG rank badge icons found. SESSION_0265 must commission or use Coral-Belt.png as template.
 - **No Relationship Type Fixtures:** lineage-sample.json structure implies INSTRUCTOR_STUDENT but has no explicit type field. SESSION_0264 must decide enum values (INSTRUCTOR_STUDENT vs. PROMOTED_BY vs. AFFILIATION).
 - **No Organization Fixtures:** lineage-sample.json lists schools (Ronin Dojo, East Wing Dojo, Northern Peak) but no Organization seed data. SESSION_0264 must create orgs or link to existing.

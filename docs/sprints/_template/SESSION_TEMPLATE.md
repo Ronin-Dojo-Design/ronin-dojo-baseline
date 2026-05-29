@@ -10,6 +10,7 @@ How to use:
    they get filled at bow-out by the closing ritual.
 
 Sections you can DELETE if not applicable:
+
 - `Cody pre-flight` — drop the per-task subsections that don't apply; abbreviate for pure docs/governance work.
 - `Project-log waiver` — DELETE entirely. project-log is retired (SESSION_0228); SESSION files are canonical.
 - Any `Pre-flight: <task>` subsection where the task is not a Cody coding task.
@@ -24,8 +25,10 @@ updated: <YYYY-MM-DD>
 last_agent: <agent>-session-NNNN
 sprint: <S#>
 pairs_with:
+
   - docs/sprints/SESSION_<previous>.md
 backlinks:
+
   - docs/knowledge/wiki/index.md
 ---
 

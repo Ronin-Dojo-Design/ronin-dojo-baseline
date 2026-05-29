@@ -56,6 +56,7 @@ Open this registry:
 - whenever someone says "manual step" or "smoke pending"
 
 Status vocabulary:
+
 - `open`
 - `waiting_on_owner`
 - `waiting_on_credentials`
@@ -65,6 +66,7 @@ Status vocabulary:
 - `archived`
 
 Blocker classes:
+
 - `auth_decision`
 - `runtime_proof`
 - `brand_migration`

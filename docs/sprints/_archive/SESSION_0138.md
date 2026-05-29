@@ -134,6 +134,7 @@ None — all tasks are clear.
 ### Scope Guard
 
 Do NOT:
+
 - Modify `findPosts` behavior
 - Add new admin features
 - Touch non-blog/non-test functionality

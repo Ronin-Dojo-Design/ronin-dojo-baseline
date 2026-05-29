@@ -180,6 +180,7 @@ ADR 0014 updated: `proposed` → `accepted`. No new ADRs created. No new domain 
 ### Additional Work Performed
 
 **TASK_05 — Verified all TASK_01–04 changes in place.**
+
 - TASK_01: `export const revalidate = 3600` confirmed at line 19 of `apps/web/app/(web)/gear/page.tsx`
 - TASK_02: `TextArea` import, metadata default value, and metadata JSON field confirmed in `pricing-plan-form.tsx`; `z.union` confirmed in `schema.ts`
 - TASK_03: Catalog dependency audit confirmed — monitoring queries and seed script still import hardcoded catalogs
@@ -187,6 +188,7 @@ ADR 0014 updated: `proposed` → `accepted`. No new ADRs created. No new domain 
 
 **TASK_06 — Hardcoded catalog dependency resolution (monitoring queries → DB).**
 Refactored `apps/web/server/admin/storage/monitoring/queries.ts`:
+
 - Removed imports of `tuffBuffsAffiliateGearProducts` from `affiliate-gear.ts` and `tuffBuffsMerchProducts` from `merch-catalog.ts`
 - Added `import { db } from "~/services/db"`
 - Rewrote `collectTuffBuffsPublicAssetPaths()` from sync (reading hardcoded arrays) to async (querying `PricingPlan.metadata` for `imagePath`/`imagePaths` fields)

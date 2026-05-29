@@ -82,18 +82,21 @@ Complete the DB-backed browser smoke for `/lineage/join` (Free + Premium + Claim
 ## Browser smoke evidence
 
 ### Free path
+
 - URL: `http://bbl.local:3000/lineage/join`
 - Input: name + `ronindojodesign@gmail.com`, membership = FREE
 - Result: Redirected to success page with heart confirmation
 - DB: `Lead` row with `brand = BBL`, `email = ronindojodesign@gmail.com`
 
 ### Premium path
+
 - URL: `http://bbl.local:3000/lineage/join`
 - Input: name "Freddy Testington" + `premium-test@example.com`, membership = PREMIUM
 - Result: Redirected to `/submit/freddy-testington-legacy-profile` (checkout page showing "Choose a plan for Freddy Testington Legacy Profile")
 - DB: `Lead` row with `brand = BBL`, `email = premium-test@example.com`
 
 ### Observations
+
 - Header chrome shows "Baseline Martial Arts" instead of "Black Belt Legacy" — brand theming/chrome not yet wired for BBL. This is expected scope for a future sprint (L4 theming layer).
 - "1 Issue" badge was the HMR cross-origin warning, resolved by `allowedDevOrigins` config.
 
@@ -108,6 +111,7 @@ Complete the DB-backed browser smoke for `/lineage/join` (Free + Premium + Claim
 **Goal:** Wire BBL brand chrome (header, footer, theme tokens) so `bbl.local` shows Black Belt Legacy branding instead of Baseline.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0280.md`
 - `docs/architecture/decisions/0012-brand-aware-magic-links.md`
 - `apps/web/proxy.ts` (brand → host mapping)

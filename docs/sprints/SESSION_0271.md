@@ -166,6 +166,7 @@ No ubiquitous-language update required.
 ## Reflections
 
 The §14e networkidle cleanup campaign is a good example of systematic tech debt reduction:
+
 - **SESSION_0268:** Established pattern, drained 2 lineage files. ~27→~22 calls.
 - **SESSION_0269:** Finished lineage cluster + started admin. ~22→~17 calls.
 - **SESSION_0270:** Finished admin cluster + corrected stale bookkeeping. ~17→6 calls (actual was lower — bookkeeping was stale).

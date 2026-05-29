@@ -81,6 +81,7 @@ enum GearRecommendationType {
 ```
 
 **Why this over alternatives:**
+
 - Join table > JSON field: queryable, indexable, enforceable FK constraints
 - Uses existing `Discipline` and `PricingPlan` models — no new entity proliferation
 - `type` enum distinguishes required vs recommended (matches current data shape)
@@ -90,31 +91,37 @@ enum GearRecommendationType {
 ### Tasks
 
 #### TASK_01 — Add `GearRecommendation` model + enum to Prisma schema
+
 - **Agent:** Cody
 - **What:** Add `GearRecommendationType` enum and `GearRecommendation` model to `schema.prisma`. Add reverse relations on `Discipline` and `PricingPlan`.
 - **Done means:** Schema compiles (`bunx prisma validate`).
 
 #### TASK_02 — Run migration
+
 - **Agent:** Cody
 - **What:** `bunx prisma migrate dev --name add-gear-recommendation`
 - **Done means:** Migration file created and applied to local DB.
 
 #### TASK_03 — Create seed script for gear collections
+
 - **Agent:** Cody
 - **What:** Create `apps/web/prisma/seed-gear-recommendations.ts` that reads the 5 collections from `affiliate-gear.ts`, resolves discipline slugs + PricingPlan externalIds, and upserts `GearRecommendation` rows.
 - **Done means:** Script runs, creates rows for all 5 disciplines' required/recommended mappings.
 
 #### TASK_04 — Add DB query for gear recommendations
+
 - **Agent:** Cody
 - **What:** Add `findGearRecommendations(disciplineSlug)` to `apps/web/server/web/affiliate-products/queries.ts`.
 - **Done means:** Query returns joined PricingPlan data grouped by recommendation type.
 
 #### TASK_05 — Update gear page to use DB query
+
 - **Agent:** Cody
 - **What:** Update `apps/web/app/(web)/gear/page.tsx` to call new DB query instead of `getTuffBuffsAffiliateGearByIds` / hardcoded collections. Keep backward-compat exports in `affiliate-gear.ts` for now.
 - **Done means:** Gear page renders from DB data.
 
 #### TASK_06 — Type-check + verification
+
 - **Agent:** Doug (QA)
 - **What:** Run `bunx tsc --noEmit`, verify gear page renders.
 - **Done means:** Clean type-check (pre-existing errors only), gear page functional.

@@ -42,25 +42,33 @@ scoped, role-gated, rate-limited, and audit-logged.
 - Latest prior session: `docs/sprints/SESSION_0031_5.md`, status
   `closed-full`, WORKFLOW rubric 10/10, Kaizen aggregate 9/10. SESSION_0032 is
   unblocked.
+
 - Branch/worktree: `/Users/brianscott/dev/wt-school-ops` on
   `session-0032-attendance`. The branch was created from
   `session-0031-class-schedules` and then merged with `main` at `f2270f3`, so
   it contains both the schedule code commits and the closed 0031/0031.5 docs.
+
 - OD-A resolved: SESSION_0031 and SESSION_0031.5 are closed-full.
 - OD-B resolved: updated `docs/protocols/cody-preflight.md` is present with
   primitive API and schema spot-check sub-steps.
+
 - OD-C resolved: this branch is based on the closed schedule slice state, not
   the stale pre-close worktree state.
+
 - FAILED_STEPS: FS-0006, FS-0007, and FS-0008 are mitigated. This session keeps
   Petey-first planning, TASK_PLAN_LOG entries before implementation, and direct
   schema spot-check evidence.
+
 - SESSION_0031_5_FINDING_01: subagent tool-call budgets must be explicit. Two
   read-only explorers were dispatched with a stated ~20 tool-call budget each.
+
 - SESSION_0031_5_FINDING_02: malformed `dev-environment.md` frontmatter is a
   small docs debt; this session will fix it while docs are already open.
+
 - Drift register: D-005 remains open. Attendance reads are member-private, so
   no persistent `"use cache"` is allowed. Server helpers may use direct queries
   only; React per-request cache is acceptable only if a read helper needs it.
+
 - Manual boundaries: MB-002 is live for every Attendance/CheckIn query or
   mutation. MB-013 advances through this security slice. MB-014 remains
   owner-gated and does not block this session.
@@ -89,6 +97,7 @@ evidence.
 - **Agent:** Cody, reviewed by Giddy + Doug.
 - **What:** Add `apps/web/server/web/attendance/*` and generic school-ops audit
   support for Attendance/CheckIn.
+
 - **Steps:**
   1. Cody pre-flight: Backend + Schema spot-check recorded below before backend
      implementation.
@@ -103,6 +112,7 @@ evidence.
   check-in, mark attendance, and void a check-in for an active same-org member;
   students and cross-org/cross-brand users cannot; all writes are
   rate-limited, catalog-error-only, idempotent, and audit-logged.
+
 - **Depends on:** nothing.
 
 #### SESSION_0032_TASK_02 - Rejection matrix smoke and monitoring row
@@ -121,6 +131,7 @@ evidence.
      `security-privacy-payments-monitoring-plan.md`.
 - **Done means:** Tests and smoke can be rerun in the dev DB with tagged
   fixtures and cleanup; monitoring docs name the new rate-limit key.
+
 - **Depends on:** SESSION_0032_TASK_01.
 
 #### SESSION_0032_TASK_03 - Close evidence and handoff
@@ -135,14 +146,17 @@ evidence.
      wiki:lint`.
   3. Update this SESSION file, Project Log task/review entries, frontmatter,
      findings, next-session recommendation, and full-close evidence.
+
 - **Done means:** SESSION_0032 status is `closed-full` with concrete proof and
   SESSION_0033 is staged enough for an LLM-agnostic bow-in.
+
 - **Depends on:** SESSION_0032_TASK_01 and SESSION_0032_TASK_02.
 
 ### Parallelism
 
 - Two read-only explorer subagents run in parallel before code:
   audit/action shape and schema/smoke strategy. Budget: ~20 tool calls each.
+
 - All writes stay in one worktree/branch (`wt-school-ops` /
   `session-0032-attendance`) because attendance actions, tests, and smoke share
   fixtures and helper contracts. No parallel write worktree is justified until
@@ -167,8 +181,10 @@ evidence.
   `CheckIn` is unique through `matchedToAttendanceId`; repeated check-in for
   the same attendance returns/updates the existing attendance without creating
   duplicate matched check-ins.
+
 - Target eligibility: active same-org membership is the floor. Program
   enrollment, entitlement, family, waiver, and billing checks are deferred.
+
 - Future policy: past sessions are allowed for staff correction. Future
   sessions more than one day ahead are denied.
 
@@ -178,6 +194,7 @@ evidence.
   `Attendance -> ClassSession -> ClassSchedule`.
 - `canEditOrganization` is not brand-aware by itself, so actions must first
   resolve the `ClassSession` by server-derived brand and organization.
+
 - Shared dev DB tests need tagged fixture cleanup, including zombie sweeps, to
   avoid repeating the SESSION_0031.5 teardown leak.
 
@@ -212,6 +229,7 @@ CheckIn -> Attendance`. Models already exist from Wave A.
 - `ClassSchedule` fields used for scope: `brand`, `organizationId`,
   `programId`, `sessions ClassSession[]`; indexes `@@index([brand,
   organizationId])`, `@@index([programId])`.
+
 - `ClassSession` fields used for scope: `date`, `status`, `classScheduleId`,
   `attendances Attendance[]`; unique `@@unique([classScheduleId, date])`.
 - `CheckIn` fields: `method`, `deviceId`, `ipAddress`, `timestamp`,
@@ -219,6 +237,7 @@ CheckIn -> Attendance`. Models already exist from Wave A.
   `attendance Attendance?`; index `@@index([userId, timestamp])`. It has no
   brand/org/classSession column, so scope must flow through matched
   Attendance.
+
 - `Attendance` fields: `status`, `notes`, `userId`, `classSessionId`,
   `checkIn CheckIn?`, `gamificationEvents GamificationEvent[]`; unique
   `@@unique([userId, classSessionId])`; indexes `@@index([classSessionId])`,
@@ -255,6 +274,7 @@ enum spelling is being used.
   `classSchedule.organizationId`.
 - [x] Actor authority checked with `canEditOrganization` after the branded
   session lookup.
+
 - [x] Target student/member checked through active same-brand, same-org
   `Membership`.
 - [x] Student self-check-in denied because the actor must be staff for the
@@ -273,12 +293,15 @@ anchored through the scoped Attendance/ClassSession chain.
   `assignInstructor`, `unassignInstructor`, `materializeSchedule`).
 - Audit pattern: `server/web/schedule/audit.ts` input shape is already generic
   except for the name.
+
 - Error pattern: `server/web/schedule/errors.ts` literal catalog.
 - Schema pattern: `server/web/schedule/schemas.ts`, one zod schema per action.
 - Payload pattern: `server/web/schedule/payloads.ts`, strict `Prisma.*Select`
   with `satisfies`.
+
 - Test pattern: `server/web/schedule/actions.test.ts`, real Postgres fixtures,
   mocked `getServerSession`, `next/headers`, `next/cache`, and rate limiter.
+
 - Smoke pattern: `scripts/smoke-schedule.ts`, pure DB rejection matrix with
   tagged fixtures and explicit cleanup.
 
@@ -295,6 +318,7 @@ anchored through the scoped Attendance/ClassSession chain.
 - FS-0008: schema spot-check included above.
 - MB-002: every new Attendance/CheckIn query/mutation must include explicit
   brand and organization scoping through ClassSchedule/ClassSession.
+
 - D-005: no persistent `"use cache"` on attendance/member-private data.
 
 ### Pre-flight: Implementation decisions from source scan
@@ -302,6 +326,7 @@ anchored through the scoped Attendance/ClassSession chain.
 - Audit helper shape: add `server/web/school-ops/audit.ts` with
   `writeSchoolOpsAudit`; keep `server/web/schedule/audit.ts` as a
   backward-compatible re-export/wrapper for existing schedule imports.
+
 - Attendance action names: `recordCheckIn`, `markAttendance`, `voidCheckIn`.
 - Canonical audit actions: `check_in.recorded`, `attendance.marked`,
   `check_in.voided`.
@@ -326,9 +351,11 @@ anchored through the scoped Attendance/ClassSession chain.
   `ClassSession` through `ClassSchedule`, check `canEditOrganization`, require
   active same-org target membership, use the `ATTENDANCE_ERROR` catalog, and
   rate-limit through the new `attendance_write` key.
+
 - **TASK_01 audit shape.** New `apps/web/server/web/school-ops/audit.ts`
   exports `writeSchoolOpsAudit`. Existing `server/web/schedule/audit.ts`
   re-exports it as `writeScheduleAudit`, preserving schedule compatibility.
+
 - **TASK_02 tests and smoke proof.** New
   `apps/web/server/web/attendance/actions.test.ts` covers audit/rate-limit
   behavior for all three actions plus duplicate check-in idempotency. New
@@ -336,6 +363,7 @@ anchored through the scoped Attendance/ClassSession chain.
   allow, cross-org deny, cross-brand deny, unauthenticated/no-membership deny,
   student self-check-in deny, past session allow, future >1 day deny, and
   duplicate check-in idempotency.
+
 - **TASK_02 monitoring row.**
   `security-privacy-payments-monitoring-plan.md` now includes
   `attendance_write` in the rate-limiter-unavailable signal.
@@ -370,10 +398,12 @@ anchored through the scoped Attendance/ClassSession chain.
   `writeScheduleAudit` compatibility export.
 - Student self-check-in: explicitly denied for this slice; staff/admin actions
   only.
+
 - Idempotency: duplicate `recordCheckIn` keeps one `Attendance` and one matched
   `CheckIn`.
 - Void behavior: `voidCheckIn` unlinks `CheckIn.matchedToAttendanceId` and keeps
   the Attendance row, updating it to `NO_SHOW` or `EXCUSED` for correction.
+
 - Future policy: past sessions allowed; sessions more than one day ahead denied.
 
 ## Verification
@@ -417,11 +447,14 @@ hardening session.
 - The generic audit wrapper was the right small abstraction. It removed the
   schedule-specific name from new attendance code while preserving the schedule
   import contract and tests.
+
 - `CheckIn` being unscoped by brand/org is the load-bearing risk. Keeping every
   query anchored through Attendance/ClassSession/ClassSchedule is mandatory
   until a future schema change adds direct scope fields or a richer event model.
+
 - The one-day future window is intentionally conservative. It supports next-day
   class prep and timezone slop while rejecting arbitrary future check-ins.
+
 - Full repo typecheck debt is now the loudest residual quality issue. It is not
   from this slice, but it does reduce confidence in broad refactors.
 
@@ -429,6 +462,7 @@ hardening session.
 
 - MB-002 remains open globally. SESSION_0032 complies locally through explicit
   ClassSchedule/ClassSession brand/org scope.
+
 - MB-013 remains open but advanced by this slice.
 - MB-014 remains owner-gated and does not block local SESSION_0033 work.
 - SESSION_0032_FINDING_01: full app typecheck baseline debt remains open.

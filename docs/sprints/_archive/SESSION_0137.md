@@ -153,6 +153,7 @@ None — all decisions resolved in SESSION_0136 plan. This is pure execution.
 ### Scope Guard
 
 Do NOT:
+
 - Add Tiptap (future session)
 - Modify Post model or admin CRUD behavior beyond brand filter fix
 - Touch non-blog functionality

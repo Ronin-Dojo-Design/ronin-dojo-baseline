@@ -61,6 +61,7 @@ a Membership with role code `OWNER`, which diverges from the `hasOrgAdminAccess`
 - **What:** `getOrganizationInvites(organizationId, includeAll?)` in
   `server/web/organization/queries.ts` — invites for the org, default PENDING-only, `includeAll`
   returns every status; include `_count.claims`, order newest-first.
+
 - **Done means:** Returns the org's invites with claim counts; callable from the page.
 
 ### TASK_02 — Org invite actions
@@ -92,6 +93,7 @@ a Membership with role code `OWNER`, which diverges from the `hasOrgAdminAccess`
   5. Add **Invites** card to settings index.
 - **Done means:** Org admin sees their invites, filters Active/All, copies links, revokes, and
   generates new links with optional limits.
+
 - **Depends on:** TASK_01, TASK_02.
 
 ### TASK_04 — General-info action + settings section
@@ -107,6 +109,7 @@ a Membership with role code `OWNER`, which diverges from the `hasOrgAdminAccess`
   3. Add **General info** card to settings index.
 - **Done means:** Owner/ORG_ADMIN edits org general info from settings; saves succeed for the
   same users who can see the page.
+
 - **Depends on:** nothing (disjoint from invites except the shared index card).
 
 ### TASK_05 — Verification

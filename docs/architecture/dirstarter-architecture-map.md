@@ -167,41 +167,49 @@ This is the Rosetta Stone. Dirstarter's "Tool" is our primary entity in each spr
 When building any new feature, follow this exact sequence. No improvisation.
 
 ### Step 1: Schema (if not already done)
+
 - Add/modify models in `prisma/schema.prisma`
 - Run migration
 - Update `prisma/seed.ts` with test data
 
 ### Step 2: Payloads
+
 - Create `server/web/<entity>/payloads.ts`
 - Define `<entity>OnePayload` and `<entity>ManyPayload` (Prisma select objects)
 - Export inferred types: `type EntityOne = Prisma.EntityGetPayload<...>`
 
 ### Step 3: Schema (validation)
+
 - Create `server/web/<entity>/schema.ts`
 - Define filter params with `nuqs` parsers + `createSearchParamsCache`
 - Define form validation schemas with Zod
 
 ### Step 4: Queries
+
 - Create `server/web/<entity>/queries.ts`
 - Use `"use cache"` + `cacheTag` + `cacheLife` pattern
 - Return paginated results: `{ items, total, page, perPage }`
 
 ### Step 5: Actions (for writes)
+
 - Create `server/web/actions/<action>.ts`
 - Use `actionClient.inputSchema(...).action(...)` or `userActionClient` for auth-gated
 - Call `revalidate({ tags: [...] })` after mutations
 
 ### Step 6: Components
+
 - Create listing component (fetches data, renders list)
 - Create card component (displays one item)
 - Create filter component (search/filter UI)
 - Use existing `components/common/*` primitives — never rebuild button/card/dialog/etc.
 
 ### Step 7: Page
+
 - Create `app/(web)/<route>/page.tsx`
 - Follow the pattern: `getData()` (cached) → `generateMetadata()` → default export renders `<Intro>` + `<Suspense fallback={<Skeleton>}><Listing /></Suspense>`
 
 ### Step 8: Admin (if applicable)
+
 - Create `app/admin/<entity>/page.tsx` with data table
 - Use `components/data-table/*` patterns
 

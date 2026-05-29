@@ -161,6 +161,7 @@ export default async function DirectoryPage() {
 ## Consequences
 
 ### Positive
+
 - Aligns with Dirstarter L1 caching pattern (`"use cache"` + `cacheTag` + `cacheLife`)
 - Auth-scoped data cannot leak across users — `viewerUserId` is part of the cache key
 - Per-field privacy is deterministic and happens inside the cached function
@@ -168,11 +169,13 @@ export default async function DirectoryPage() {
 - `revalidateTag` provides targeted invalidation on mutations
 
 ### Negative
+
 - T2 caches proliferate entries per unique `viewerUserId` — on serverless (Vercel), these may not persist across requests anyway. Not a concern for MVP scale.
 - We must remember to call `revalidateTag` in every mutation action — easy to miss. Mitigate: add a helper pattern or lint check.
 - Requires `cacheComponents: true` in `next.config.ts` (Next.js 16 feature flag)
 
 ### Neutral
+
 - T3 (private) queries use only `React.cache()` — same pattern as today. No change needed for passport/membership queries.
 - We defer `"use cache: remote"` (Redis/KV) to post-MVP. In-memory LRU is sufficient.
 

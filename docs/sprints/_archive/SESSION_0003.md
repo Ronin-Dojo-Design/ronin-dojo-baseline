@@ -52,6 +52,7 @@ None — all 8 questions resolved + 6 gaps filled + all model cross-references c
 **Goal:** Review `s1-schema-design.md` carefully in fresh context, then write `schema.prisma` + run migration.
 
 **Inputs to read:**
+
 - `docs/architecture/s1-schema-design.md` — the full design doc (31 models, all enums, all resolved questions)
 - `apps/web/prisma/schema.prisma` — current schema (rewrite target)
 - This SESSION file for context

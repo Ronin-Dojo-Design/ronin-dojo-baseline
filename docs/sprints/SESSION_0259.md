@@ -59,6 +59,7 @@ Brian pivoted to **Q1 = entitlements-as-truth + ADR-0019**. Final scope:
 
 - ADR-0019 codifies the boundary (Membership = community/admin state;
   UserEntitlement = subscription-driven access).
+
 - Wire `notifyMemberOfMembershipWelcome` (new helper) into the 3 fresh-
   membership self-service write-sites: `claimInvite`, `joinByInviteCode`,
   `joinOrganization`.
@@ -67,6 +68,7 @@ Brian pivoted to **Q1 = entitlements-as-truth + ADR-0019**. Final scope:
 - New `apps/web/emails/membership-welcome.tsx` template (the existing
   `membership-status-change.tsx` requires a `previousStatus` for the arrow
   copy and is wrong for net-new memberships — Q5 grill).
+
 - Defer admin walk-in tournament-registration creation to SESSION_0260
   (Q3 — net-new action, not just an email-wiring follow-up).
 - Defer MB-015 Session C production-readiness to SESSION_0260 (Q4 — keeps

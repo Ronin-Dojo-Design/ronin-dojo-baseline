@@ -205,6 +205,7 @@ No parallelism needed. This is small governance work over already-open changes.
 **Goal:** Open a clean governance/schema cleanup session to resolve SESSION_0021 traceability drift and start converting Wave A risk findings into scoped follow-up tasks.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0023.md`
 - `docs/sprints/SESSION_0025.md`
 - `docs/protocols/task-review-log.md`

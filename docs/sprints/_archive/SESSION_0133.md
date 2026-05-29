@@ -182,10 +182,12 @@ Build the "Add Division" dialog inside `DivisionsEditor` — the last gap in LAN
 ### Tasks
 
 #### TASK_01 — (Giddy/Doug) Record hostile close review findings in TASK_REVIEW_LOG
+
 - **Agent:** Petey (already done above — record in project log if applicable)
 - **Done means:** Findings documented in SESSION file ✅
 
 #### TASK_02 — (Cody) Build Add Division dialog in DivisionsEditor
+
 - **Agent:** Cody
 - **What:** Add an "Add Division" button under each discipline card that opens a Dialog with a form matching `divisionSchema`. On submit, calls `upsertDivision` action.
 - **Steps:**
@@ -201,12 +203,14 @@ Build the "Add Division" dialog inside `DivisionsEditor` — the last gap in LAN
 - **Depends on:** nothing
 
 #### TASK_03 — (Doug) Visual QA of Add Division flow
+
 - **Agent:** Doug
 - **What:** Dev-login → create tournament → add discipline → add division → verify it appears
 - **Done means:** Division created, visible in list with correct badges (format, gender, age, capacity)
 - **Depends on:** TASK_02
 
 #### TASK_04 — (Petey) Update lane status
+
 - **Agent:** Petey
 - **What:** If TASK_02+03 pass, mark LANE-S042 Recipe 1 as ✅ complete
 - **Depends on:** TASK_03

@@ -169,10 +169,13 @@ path, decide S3 vs existing MinIO local-dev story, define CRUD surface).
 
 - The smoke was a 4-curl confirmation of an already-merged fix — the right call
   to do live rather than trust the static typecheck-only TASK_03 from SESSION_0285.
+
 - A pre-existing dev server was already on `:3000`; Next's "another dev server is
   already running" guard is a clean signal to reuse rather than fight for the port.
+
 - The shell-guard mangles multi-line `for` loops (curl dropped from PATH in the
   eval subshell); flat `;`-chained single-line commands are the reliable form.
+
 - Verifying the `localhost → Baseline` mapping against `brand-context.ts` source
   (rather than trusting the runbook table) surfaced a stale doc — fixed in passing.
 
@@ -189,15 +192,19 @@ path, decide S3 vs existing MinIO local-dev story, define CRUD surface).
 - **Plan sanity:** Single-lane verification + doc flip; finishes the explicitly
   deferred SESSION_0285_TASK_03. In scope, no scope creep (the assets→S3 lane was
   correctly deferred to its own session/plan).
+
 - **Dirstarter alignment:** No baseline capability bypassed — this verifies an
   existing extension of the Dirstarter metadata pipeline and corrects docs.
+
 - **Verification honesty:** Claims backed by literal `curl` + `grep` output
   (og:site_name, JSON-LD names, leak counts, HTTP 200) and a source read of
   `brand-context.ts`. No "should work" hand-waving.
 - **Data integrity / security:** N/A — no schema, no auth, no payments, no
   production data touched. Smoke ran against local dev only.
+
 - **WORKFLOW 5.0 compliance:** Petey waiver recorded (single-area, clear, finishes
   deferred verify); SESSION file has numbered tasks + task log; one primary lane.
+
 - **Score:** 9.6/10. No score cap (no Dirstarter or data-integrity failure).
 - **Unresolved findings:** none.
 
@@ -206,6 +213,7 @@ path, decide S3 vs existing MinIO local-dev story, define CRUD surface).
 - **ADR:** None needed. No architectural decision made, changed, or rejected —
   this session verified the SESSION_0285 decision (brand-aware metadata pipeline,
   already covered by ADR 0021/0022 brand chrome) and corrected a stale doc row.
+
 - **Ubiquitous language:** No new or changed domain terms.
 
 ## Full close evidence

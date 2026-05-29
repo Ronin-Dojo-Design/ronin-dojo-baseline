@@ -55,6 +55,7 @@ return db.organization.findUnique({
 **Impact:** No reusable typed shapes. Components can't type-check against a stable payload type. If two queries return the same entity with different shapes, there's no central definition.
 
 **Fix (S6 pre-work):** Create:
+
 - `server/web/passport/payloads.ts`
 - `server/web/organization/payloads.ts`
 - `server/web/directory/payloads.ts`

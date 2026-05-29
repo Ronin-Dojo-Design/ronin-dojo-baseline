@@ -14,12 +14,14 @@ Plan a **one-time, scripted migration** from the legacy WP DB into the new Postg
 ## Migration scope
 
 What moves:
+
 - **Users + profiles** from `wp_users` + Pods `bbl_member` → `User` + `Profile` (preserve email, name; capture `wp_user_id` as `legacyUserId` for support continuity).
 - **Schools** from Pods `bbl_school` → `School` with `brand: 'BBL'`.
 - **Memberships / lineage** from Pods relationships → `Membership` with appropriate role.
 - **Belt/progress data** if present → `Belt` + `Progress`.
 
 What does NOT move:
+
 - WP password hashes (different format; force password reset via Better-Auth's "forgot password" email blast on cutover day).
 - WP user meta beyond what Pods exposes for BBL.
 - WP comments/posts (irrelevant to app data).
@@ -38,6 +40,7 @@ What does NOT move:
 ## Rollback plan
 
 If migration is materially broken post-cutover:
+
 - DNS reverts to the legacy stack (TTL set low — 60–300s — for the 24h around cutover).
 - Legacy BBL writes were frozen; no data loss in the rollback.
 - Investigate, fix, re-run.

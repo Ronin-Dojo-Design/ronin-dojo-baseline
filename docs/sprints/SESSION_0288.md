@@ -115,6 +115,7 @@ Changes:
   (auth), resolves `getRequestBrand()`, throws `"User not authorized to upload media"`
   unless `canUploadMedia(ctx.user.id, brand)`; passes `{ brand }` into ctx for
   downstream media actions. Added the `canUploadMedia` import.
+
 - `server/web/actions/media.ts` — `uploadMedia` and `fetchMedia` switched from the
   public base `actionClient` to `mediaUploadActionClient` (the only edit; action
   bodies unchanged).
@@ -155,6 +156,7 @@ uploadMedia unauth-reject, uploadMedia entitled-reject, uploadMedia entitled-suc
      gap).
   3. `publicActionClient` exists for genuinely public forms (newsletter, feedback,
      report-tool, claim); media upload is not in that set.
+
   - **Behavioral note:** the gate is `canUploadMedia`, which is *narrower than "any
     authenticated user"* — a signed-in user with no S3_UPLOAD entitlement, no
     instructor/coach/owner/org-admin membership, and no owned org will now be rejected
@@ -167,8 +169,10 @@ uploadMedia unauth-reject, uploadMedia entitled-reject, uploadMedia entitled-suc
   public. They now run through `mediaUploadActionClient`, which requires an
   authenticated session and enforces `canUploadMedia(user.id, brand)` — closing a
   public-write-to-S3 / unauthenticated server-side-fetch exposure.
+
 - D1 resolved (tighten). The `/me` UI already gated upload on `canUploadMedia`; the
   server now matches that gate, so authorized users are unaffected.
+
 - New `media.safe-action.test.ts` (5 cases) proving the gate.
 
 ## Files touched
@@ -184,6 +188,7 @@ uploadMedia unauth-reject, uploadMedia entitled-reject, uploadMedia entitled-suc
 
 - **D2/D3/D4** (per-brand asset path; explicit `Media.key` column; `MediaAttachment`
   relations) remain open for later Thread-1/Thread-2 slices — unchanged this session.
+
 - No new blockers. The next slice (TASK_03 attach/detach, or TASK_04 metadata, or
   Thread-2 TASK_05/06) is doable without user input.
 
@@ -225,21 +230,27 @@ polymorphic), then build attach/detach server actions + a consuming surface + te
 - **Plan sanity:** One security slice (TASK_02), exactly as queued by SESSION_0287. No
   scope creep — D2/D3/D4 left untouched; the `MediaAttachment` and per-brand-asset
   work was *not* pulled in.
+
 - **Dirstarter alignment:** **Extension, not bypass.** Reused the existing
   next-safe-action client factory and the Wave-D `canUploadMedia` entitlement; added a
   6th client alongside the existing 5. No parallel auth path, no new storage client.
   *Live Better-Auth/Dirstarter docs not re-fetched — no auth-architecture change was
   made (existing client pattern applied), so §6.6 ADR proof is not triggered.*
+
 - **Verification honesty:** Gates are literal command output (5/5, biome clean, 0 tsc
   errors). Missing live upload smoke + full DB suite stated plainly.
+
 - **Data integrity / security:** **Net security improvement** — removes public write
   access to S3 and an unauthenticated server-side fetch-and-store vector. No migration,
   no data touched. Behavioral narrowing (non-entitled signed-in users now rejected by
   the action) is documented and matches the existing UI gate.
+
 - **WORKFLOW 5.0 compliance:** One lane; 3 numbered tasks + task log + review log;
   Petey plan (0287) referenced and updated.
+
 - **Score:** 9.5/10. No hard cap (no bypass, no data-integrity failure). Half-point off
   for the deferred live upload smoke (same local-env constraint as SESSION_0287).
+
 - **Unresolved findings:** none new.
 
 ## ADR / ubiquitous-language check
@@ -252,6 +263,7 @@ polymorphic), then build attach/detach server actions + a consuming surface + te
   **not warranted** because no baseline architecture changed. (If the operator wants
   the "media writes require `canUploadMedia`" policy recorded formally, that is a
   lightweight optional follow-up, not a blocker.)
+
 - **Ubiquitous language:** No new or changed domain terms.
 
 ## Reflections
@@ -260,9 +272,11 @@ polymorphic), then build attach/detach server actions + a consuming surface + te
   computing `canUploadMedia` for the UI. The intended policy existed; only enforcement
   was missing. Reading the *consumer* settled the decision faster than reasoning about
   exposure in the abstract.
+
 - Putting the gate in `safe-actions.ts` (vs inline in `media.ts`) cost one import but
   bought a reusable client for TASK_03/04 and kept the "all clients live in one file"
   convention intact.
+
 - Mocking `canUploadMedia` in the safe-action test (rather than DB fixtures) is correct
   *because* the entitlement logic already has its own integration test — the new test
   is about gate wiring, not re-proving the entitlement. Knowing the existing coverage

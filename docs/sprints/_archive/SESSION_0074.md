@@ -149,6 +149,7 @@ Petey dispatches Cody in sequential bundles (per subagent-dispatch budget): mech
 **Goal:** Begin S3 tournament ops completion lane. Implement TournamentRole + TournamentStaffAssignment CRUD, WeighInRecord workflow, and RuleSet CRUD — the three schema-only models with zero server/UI coverage.
 
 **Inputs to read at bow-in:**
+
 - `docs/knowledge/wiki/concepts/tournament-ops.md` — shipped vs open surfaces
 - `docs/knowledge/wiki/topic-index.md` — feature area context
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — L1 component reference

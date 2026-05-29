@@ -86,6 +86,7 @@ Carrying forward TASK_02, TASK_03, TASK_06 from SESSION_0053's plan. Architectur
 ### TASK_03 — Webhook fulfillment: program enrollment (Cody, 20 min)
 
 **What:** Extend `checkout.session.completed` handler:
+
 - If `metadata.programSlug` exists → create `ProgramEnrollment` record + grant entitlement
 - Pattern matches existing `fulfillTournamentRegistration()` and `grantEntitlementsFromCheckout()`
 
@@ -96,6 +97,7 @@ Carrying forward TASK_02, TASK_03, TASK_06 from SESSION_0053's plan. Architectur
 ### TASK_06 — User dashboard: active entitlements + enrollments (Cody, 30 min)
 
 **What:** Extend `app/(web)/dashboard/` or `app/(web)/me/`:
+
 - Active `UserEntitlement` rows (status, source, expiry)
 - Active `ProgramEnrollment` rows (progress)
 - Active `Registration` rows (tournaments)

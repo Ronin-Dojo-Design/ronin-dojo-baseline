@@ -65,6 +65,7 @@ Hostile close review of the Passport profile editor arc (sessions 0126–0128), 
 ### Tasks
 
 #### TASK_01 — Hostile close review batch: Sessions 0126–0128
+
 - **Agent:** Giddy + Doug
 - **What:** Batch hostile-close review of the Passport profile editor arc per `docs/protocols/hostile-close-review.md`. Three sessions covering: seed QA data + Muay Thai Mike (0126), FS-0001 remediation + missing Passport/DirectoryProfile fields (0127), FormMedia upload wiring + socialLinks editor + entitlement system + admin grant UI (0128).
 - **Steps:**
@@ -76,6 +77,7 @@ Hostile close review of the Passport profile editor arc (sessions 0126–0128), 
 - **Depends on:** nothing
 
 #### TASK_02 — Plan SESSION_0130: S3 infra + visual QA + tier auto-grant
+
 - **Agent:** Petey
 - **What:** Produce a plan for S3 bucket provisioning, visual QA of the full `/me` editor, and tier-based entitlement auto-grant architecture.
 - **Done means:** Plan block with tasks, agents, dependencies
@@ -151,6 +153,7 @@ Hostile close review of the Passport profile editor arc (sessions 0126–0128), 
 ### Score Gate
 
 Aggregate confidence: **7** → Stage remediation items:
+
 - Add integration test for `canUploadMedia` (3 code paths)
 - Consolidate `canUploadMedia` into a single Prisma query with OR conditions
 - Consider caching `hasEntitlement` result (short TTL)
@@ -196,36 +199,42 @@ Remediate hostile review findings + visual QA of `/me` editor + plan tier-based 
 ### Tasks
 
 #### TASK_01 — Remediate FINDING_01: Consolidate canUploadMedia queries
+
 - **Agent:** Cody
 - **What:** Rewrite `canUploadMedia` to use a single Prisma query with OR conditions instead of 3 sequential queries.
 - **Done means:** Single DB round-trip for upload authorization check
 - **Depends on:** nothing
 
 #### TASK_02 — Remediate FINDING_02: Cache entitlement queries
+
 - **Agent:** Cody
 - **What:** Move `hasEntitlement` and `canUploadMedia` to use `"use cache"` with appropriate cache tags and invalidation on grant/revoke.
 - **Done means:** Queries cached; grant/revoke actions invalidate the cache tag
 - **Depends on:** TASK_01
 
 #### TASK_03 — Remediate FINDING_03: Integration test for canUploadMedia
+
 - **Agent:** Cody
 - **What:** Create `server/web/entitlements/queries.integration.test.ts` with tests for all 3 authorization paths + negative case + revocation case.
 - **Done means:** 5+ test cases passing
 - **Depends on:** TASK_01
 
 #### TASK_04 — Visual QA: /me editor full walkthrough
+
 - **Agent:** Doug
 - **What:** Start dev server, browse `/me`, confirm all fields render: avatar FormMedia, DOB, gender, phone, emergency contact, bio, social links editor, DirectoryProfile slug/visibility/location/privacy toggles/cover photo/video intro.
 - **Done means:** Screenshot or session log confirmation of all sections rendering
 - **Depends on:** nothing (parallel)
 
 #### TASK_05 — Plan tier-based auto-grant architecture
+
 - **Agent:** Petey
 - **What:** Design the architecture for auto-granting S3_UPLOAD when a user subscribes to premium/elite/legend tier. Depends on Stripe webhook integration. Produce a design doc or ADR.
 - **Done means:** Architecture decision documented; implementation deferred until Stripe subscription wiring
 - **Depends on:** nothing (parallel)
 
 #### TASK_06 — Type check + final verify
+
 - **Agent:** Cody
 - **What:** `bun run typecheck` — 0 errors
 - **Depends on:** TASK_01–03

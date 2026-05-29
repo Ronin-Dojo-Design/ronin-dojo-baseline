@@ -258,6 +258,7 @@ Tracks B and C can run after A starts. All three are independent of each other.
 **Goal:** S2 — Better-Auth + Passport bootstrap. Sign-up creates User + Passport + DirectoryProfile stubs. `/me` route renders Passport editor. Brand cookie wired through middleware.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0005.md` (this file)
 - `docs/architecture/program-plan.md` (S2 row)
 - `apps/web/prisma/schema.prisma` (Passport + DirectoryProfile models)

@@ -79,6 +79,7 @@ Fix BBL primary color to exact `#E52421` from monorepo design tear sheet, make `
 ## Browser smoke evidence
 
 ### bbl.local:3000 (home page)
+
 - URL: `http://bbl.local:3000/`
 - Header: "Black Belt Legacy" ✅
 - Title: "Honor the Lineage. Build the Future. – Black Belt Legacy" ✅
@@ -116,6 +117,7 @@ Fix BBL primary color to exact `#E52421` from monorepo design tear sheet, make `
 **Goal:** Systematic audit of `siteConfig.name` usage across all page metadata — replace with brand-aware `getBrandSiteConfig(brand).name` where server context is available.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0283.md`
 - `grep -rn "siteConfig.name" apps/web/` output
 

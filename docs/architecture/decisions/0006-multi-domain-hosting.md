@@ -60,6 +60,7 @@ See [ADR 0008](0008-brand-switcher.md) for the switcher UX.
 ## DNS configuration
 
 Each brand's domain (registered at Bluehost or wherever) gets:
+
 - `A` record → Vercel's anycast IPs (or `CNAME` for subdomains)
 - Vercel custom-domain config in the project settings
 - Auto SSL via Vercel

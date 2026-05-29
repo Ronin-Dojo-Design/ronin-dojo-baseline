@@ -69,6 +69,7 @@ Complete the Passport profile editor by fixing component inventory violations an
 ### Tasks
 
 #### TASK_01 — Fix FS-0001 violations in passport-editor.tsx
+
 - **Agent:** Cody
 - **What:** Replace raw `<select>` with Dirstarter `Select`/`SelectTrigger`/`SelectValue`/`SelectContent`/`SelectItem`. Replace raw `<input type="checkbox">` with Dirstarter `Checkbox`. Replace raw `<h2>` with `H2` from `heading.tsx`.
 - **Steps:**
@@ -80,6 +81,7 @@ Complete the Passport profile editor by fixing component inventory violations an
 - **Depends on:** nothing
 
 #### TASK_02 — Add missing Passport fields to editor UI
+
 - **Agent:** Cody
 - **What:** Add form fields for `dob` (date input), `gender` (Select), `avatarUrl` (Input), `socialLinks` (key-value pairs)
 - **Steps:**
@@ -91,6 +93,7 @@ Complete the Passport profile editor by fixing component inventory violations an
 - **Depends on:** TASK_01
 
 #### TASK_03 — Add missing DirectoryProfile fields to editor UI
+
 - **Agent:** Cody
 - **What:** Add `slug` field to DirectoryProfile form. `coverPhotoUrl` and `videoIntroUrl` are media upload fields — add as simple URL inputs for now (media upload integration is future work).
 - **Steps:**
@@ -101,6 +104,7 @@ Complete the Passport profile editor by fixing component inventory violations an
 - **Depends on:** TASK_01
 
 #### TASK_04 — Type check + visual QA
+
 - **Agent:** Cody
 - **What:** Run `bun run typecheck`, browse `/me`, confirm all fields render and submit
 - **Steps:**

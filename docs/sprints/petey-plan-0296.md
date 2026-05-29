@@ -41,6 +41,7 @@ are deferred to the next session.
 - **Agent:** Cody
 - **What:** Add `getOrganizationMembers(organizationId)` (full roster) returning user,
   discipline, status, rank, roleAssignments, ordered by status then createdAt.
+
 - **Steps:**
   1. Add query to `server/web/organization/queries.ts` (or a new `membership-queries.ts`
      if `queries.ts` gets crowded — Cody's call, match file conventions).
@@ -62,6 +63,7 @@ are deferred to the next session.
   4. Revalidate `/organizations/[slug]/settings/members`.
 - **Done means:** Approve/reject a PENDING membership scoped to the org; unauthorized
   users throw ACCESS_DENIED; invalid transitions rejected.
+
 - **Depends on:** nothing (parallel with TASK_01).
 
 ### TASK_03 — Members settings page + UI
@@ -69,6 +71,7 @@ are deferred to the next session.
 - **Agent:** Cody
 - **What:** `/organizations/[slug]/settings/members/page.tsx` — auth gate + roster +
   approval queue. Client component for the approve/reject actions.
+
 - **Steps:**
   1. Server page: `hasOrgAdminAccess` gate (mirror settings index + theme page),
      breadcrumbs, Intro, fetch roster via TASK_01.
@@ -80,6 +83,7 @@ are deferred to the next session.
   5. Add a **Members** section card to the settings index (`settings/page.tsx`).
 - **Done means:** Org admin sees roster, can approve/reject pending members with optimistic
   UI + toast; non-admins get `OrgAccessDenied`. Settings index links to it.
+
 - **Depends on:** TASK_01, TASK_02.
 
 ### TASK_04 — Verification
@@ -113,8 +117,10 @@ new org-scoped actions; lane = 2 sessions).
 
 - **Primitive reuse:** must build on `components/common/` (Card/Badge/Stack/Table) — do
   NOT introduce new primitives (repeat-prone FS pattern). Read existing components first.
+
 - **Cross-org safety:** the org-scoped action MUST verify membership.organizationId matches
   the asserted org, or an org admin could transition another org's member by ID.
+
 - **Brand on audit/notify:** use the org's brand context, mirroring theme-actions revalidate.
 
 ## Scope guard
@@ -127,6 +133,7 @@ bulk actions, search/filter/pagination → next session. Note any surfacing work
 
 - **Docs read first:** not applicable — extends existing custom org-settings surface;
   reuses Better Auth session + Prisma patterns already aligned in prior sessions.
+
 - **Baseline pattern to extend:** `theme-actions.ts` (userActionClient + assertOrgAdminAccess),
   `admin/memberships/actions.ts` (transition logic), `settings/page.tsx` (section cards).
 - **Custom delta:** org-scoped (not platform-admin) membership roster + approval queue.

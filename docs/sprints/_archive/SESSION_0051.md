@@ -137,6 +137,7 @@ SESSION_0050 reflections identified that 3 sessions (0014, 0031, 0049) were wast
 **Goal:** Resolve audit gaps flagged in SESSION_0051 inventory — operator review items + L1 alignment fixes.
 
 **Inputs to read:**
+
 - `docs/knowledge/wiki/dirstarter-component-inventory.md` — §9m, §9n, §10, §11
 - `docs/sprints/SESSION_0051.md` — this file
 - `(web)/tournaments/page.tsx` — raw `<div>` Suspense fallback

@@ -306,10 +306,12 @@ Program plan shows S5 was "RankSystem + Rank seed data" — already done (pulled
 ### Tasks
 
 #### TASK_01 — (Giddy/Doug) Hostile close review + Dirstarter alignment audit
+
 - **Agent:** Petey (done above)
 - **Done means:** Findings documented ✅
 
 #### TASK_02 — (Doug) E2E Tournament Flow Visual QA
+
 - **Agent:** Doug
 - **What:** Dev-login → admin: create tournament → add discipline → add division → visit public tournament page → check registration button renders → attempt registration (Stripe test mode if wired)
 - **Steps:**
@@ -326,6 +328,7 @@ Program plan shows S5 was "RankSystem + Rank seed data" — already done (pulled
 - **Depends on:** nothing (code already exists)
 
 #### TASK_03 — (Petey) S5 Scope Planning
+
 - **Agent:** Petey
 - **What:** Based on program plan, LANE manifests, and current state, define the next sprint's deliverables
 - **Candidates for S5:**
@@ -338,6 +341,7 @@ Program plan shows S5 was "RankSystem + Rank seed data" — already done (pulled
 - **Depends on:** TASK_02 (QA results inform priorities)
 
 #### TASK_04 — (Cody) Address any critical gaps found in TASK_02
+
 - **Agent:** Cody
 - **What:** If E2E QA reveals broken pages or missing wiring, fix them
 - **Done means:** Tournament flow works end-to-end in dev
@@ -378,6 +382,7 @@ TASK_02 — (Doug) E2E Tournament Flow Visual QA.
 ### Current state assessment
 
 **Completed:**
+
 - S1: Schema rev (31 models, all enums, seed data) ✅
 - S2: Auth + Passport bootstrap ✅
 - S3: Organization create + join ✅
@@ -385,6 +390,7 @@ TASK_02 — (Doug) E2E Tournament Flow Visual QA.
 - LANE-S042: All 3 recipes code-complete ✅
 
 **Carried items:**
+
 - 🔴 Resend DNS (21 sessions — infra, not code)
 - 🟡 Pre-existing school-ops test failure (SESSION_0033)
 - 🟡 Blog DB migration gap (low priority)

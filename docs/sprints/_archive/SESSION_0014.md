@@ -59,6 +59,7 @@ Build a public-facing directory that lists users/practitioners while respecting 
 ### Tasks
 
 #### TASK_01 — Directory queries with privacy filtering
+
 - **Agent:** Cody
 - **What:** Create `server/web/directory/queries.ts` with:
   - `getDirectoryProfiles({ brand, filters, viewerUserId? })` — returns profiles honoring visibility
@@ -70,6 +71,7 @@ Build a public-facing directory that lists users/practitioners while respecting 
 - **Done means:** Query returns correct results with privacy enforced. Type-safe.
 
 #### TASK_02 — Directory list page (`/directory`)
+
 - **Agent:** Cody
 - **What:** Create `app/(web)/directory/page.tsx`:
   - Server component, reads auth session for viewer context
@@ -79,6 +81,7 @@ Build a public-facing directory that lists users/practitioners while respecting 
 - **Done means:** Page renders at `/directory`, shows only permitted profiles
 
 #### TASK_03 — Filter components
+
 - **Agent:** Cody
 - **What:** Create filter bar component with:
   - Org dropdown (from user's brand)
@@ -89,6 +92,7 @@ Build a public-facing directory that lists users/practitioners while respecting 
 - **Done means:** Filters narrow results, URL is shareable, page re-renders with filtered data
 
 #### TASK_04 — Smoke test + edge cases
+
 - **Agent:** Cody
 - **What:** Verify:
   1. Unauthenticated user sees only PUBLIC profiles
@@ -100,6 +104,7 @@ Build a public-facing directory that lists users/practitioners while respecting 
 - **Done means:** All 6 checks pass
 
 #### TASK_05 — S4 completion assessment
+
 - **Agent:** Petey
 - **What:** Compare built directory against program-plan S4 deliverable. Mark S4 complete or log gaps.
 - **Done means:** S4 status updated in program-plan. Milestone 1 assessed.
@@ -135,6 +140,7 @@ Cody → TASK_01: Build `server/web/directory/queries.ts` with privacy-aware dir
 - `app/(web)/directory/page.tsx` — thin page delegating to `DirectoryQuery`
 
 **Privacy enforcement verified:**
+
 - Unauthenticated → PUBLIC only
 - Authenticated → PUBLIC + MEMBERS_ONLY
 - HIDDEN → never returned

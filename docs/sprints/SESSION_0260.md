@@ -118,6 +118,7 @@ Close MB-015 (production-readiness + SOP §14/§15/§16 + registry flip + resend
   ```
 
   Inside `db.$transaction`: on `guest` branch, `db.user.create({ data: { email, name, emailVerified: false } })` and use that id; on `user` branch, validate `db.user.findUnique({ where: { id } })` exists. Then `db.registration.create({ tournamentId, userId, paymentStatus, status: "STARTED" })`. Then `db.registrationEntry.create({ registrationId, divisionId, tournamentRoleId, ... })`. Then `db.auditLog.create({ action: "tournament_registration.create_walkin", entityType: "Registration", entityId: registration.id, before: null, after: { tournamentId, userId, source: "admin_walkin", recipientKind: "user"|"guest" }, userId: <admin>, organizationId: <tournament.organizationId> })`. **Outside** the transaction, in `after(...)`, fire `notifyUserOfTournamentRegistration` with try/catch.
+
 - **Done means:** Action compiles + typechecks; the action's safe-action client wraps zod input; a manual dev run creates a Registration row + RegistrationEntry + AuditLog entry + logs the email send.
 - **Depends on:** TASK_05 (email helper signature change must land first if it's a breaking change, otherwise parallel).
 
@@ -140,6 +141,7 @@ Close MB-015 (production-readiness + SOP §14/§15/§16 + registry flip + resend
   - Payment status select (PaymentStatus enum values).
   - Submit button → calls `createWalkInRegistration` via `next-safe-action/hooks`'s `useAction`, toasts success/failure via `sonner`, closes dialog and `router.refresh()` on success.
   Match the visual pattern of any existing admin toolbar dialog (e.g., look at `tools-table-toolbar-actions.tsx` or `rule-sets-table-toolbar-actions.tsx`).
+
 - **Done means:** Dialog renders, form submits, success toast + table refresh; failure toast on error.
 - **Depends on:** TASK_04.
 
@@ -409,6 +411,7 @@ merge story for guest→signup).
 1. **Prisma migration** — `Registration.userId` from required → optional; add
    `guestEmail: String?` and `guestName: String?`; redo `@@unique([tournamentId, userId])`
    as either:
+
    - **Option A:** two partial-unique indexes — `@@unique([tournamentId, userId])` where userId is non-null AND `@@unique([tournamentId, guestEmail])` where guestEmail is non-null. Cleanest in SQL but Prisma's `@@unique` doesn't have a partial-where syntax; needs raw SQL migration with manual `CREATE UNIQUE INDEX … WHERE …`.
    - **Option B:** generated `recipientKey: String` column populated from `COALESCE(userId, guestEmail)`, with `@@unique([tournamentId, recipientKey])`. Less SQL-native but Prisma-clean.
 2. **Null-handling sweep** across the 7 source files:

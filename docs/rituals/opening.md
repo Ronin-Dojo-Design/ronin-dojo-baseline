@@ -37,6 +37,7 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 Find the highest-numbered file in `docs/sprints/`. That's the previous session.
 
 Read at minimum:
+
 - The previous session's `Goal` (was it achieved?)
 - `Open decisions / blockers` (any block today?)
 - `Next session: Goal` and `First task` (likely your starting point)
@@ -53,6 +54,7 @@ Then skim [`docs/architecture/program-plan.md`](../architecture/program-plan.md)
 ### 3. Skim relevant cross-references on demand
 
 Only the ones that bear on today's task:
+
 - [`docs/architecture/plan-vs-current.md`](../architecture/plan-vs-current.md) — if the task touches schema or data behavior.
 - [`docs/architecture/decisions/`](../architecture/decisions/) — if the task touches an architectural choice.
 - [`docs/runbooks/`](../runbooks/) — if the task involves the database, deploys, or environment.

@@ -164,6 +164,7 @@ This is the pattern to copy exactly:
 ### Navigation
 
 Add a sub-nav or link group on the tournaments list page header pointing to:
+
 - `/admin/tournaments` (main list — existing)
 - `/admin/tournaments/roles` (new)
 - `/admin/tournaments/rule-sets` (new)

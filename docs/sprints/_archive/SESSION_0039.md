@@ -36,11 +36,13 @@ Hard planning review session. Stop the build→fix→build cycle. Produce a comp
 Brian's observation: we are building then fixing, instead of planning then building. The Dirstarter boilerplate was purchased specifically because it provides a complete foundation. Every future feature should be an extension or slight modification of what already exists — not invented from scratch.
 
 ### Relevant drift entries
+
 - **D-008** 🟡 — Local `dirstarter_template/` inaccessible to remote agents → this index solves it
 - **D-012** 🟡 — Dirstarter source audit not completed → this session completes it
 - **D-014** ✅ — `Tool` residue → decided: repurpose as Directory Listing (Option B, see baseline index §14)
 
 ### Previous session (0038.5)
+
 - All 7 remediation tasks completed (lead CRUD hardening)
 - Accepted risks: email send not wired, status transitions via admin, trigram index at scale
 - Kaizen: 5→7
@@ -91,6 +93,7 @@ Brian's observation: we are building then fixing, instead of planning then build
 **Goal**: Content + Curriculum surfaces (Course CRUD, Technique library, Certificate templates) — see `docs/sprints/lanes/LANE-S040-content-curriculum.md`
 
 **Inputs to read**:
+
 - `docs/sprints/lanes/LANE-S040-content-curriculum.md` (lane manifest — all recipes + template files listed)
 - `docs/architecture/dirstarter-baseline-index.md` §3 (server patterns) — only if manifest is insufficient
 
@@ -135,14 +138,17 @@ Brian's observation: we are building then fixing, instead of planning then build
 ## Reflections
 
 ### What worked well
+
 - **The baseline index paid off immediately.** Building the 300+ file inventory first meant every drift resolution was a quick grep-and-compare, not a discovery expedition.
 - **Most "drifts" were phantom.** 5 of 6 high-confidence drifts turned out to be comparing against the wrong reference (dirstarter.com/docs = latest version, not our fork). The lesson: **template source code is the L1 truth, not the docs site.**
 - **Lane manifests are the right abstraction.** They solve the token waste problem by pre-computing "what to read" so Cody doesn't search 300+ files.
 
 ### What almost broke
+
 - The `replace_string_in_file` tool corrupted `dirstarter-gap-audit.md` frontmatter by matching an ambiguous string and injecting the resolved drift table into the YAML. Caught by wiki-lint. **Lesson:** Always verify frontmatter integrity after bulk edits to markdown files.
 
 ### Anti-patterns observed
+
 - Building a lane manifest for SESSION_0036 (already completed) — failed to check session history before planning. **Lesson:** Always verify what's already shipped before creating forward-looking artifacts.
 
 ### Framework insight: Lane Manifests
@@ -154,6 +160,7 @@ The lane manifest concept fills a gap between "read the whole baseline index" (t
 5. Scope guard: what's IN and what's explicitly OUT
 
 ### Kaizen score
+
 - Planning efficiency: 8/10 (wasted time on wrong lane manifest, recovered well)
 - Documentation quality: 9/10 (all artifacts are clean, cross-referenced, lint-passing)
 - Session discipline: 7/10 (scope expanded beyond original 5 tasks into gap audit + lane manifests — justified but unplanned)

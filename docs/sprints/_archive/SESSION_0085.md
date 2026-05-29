@@ -102,6 +102,7 @@ The trade-off Brian flagged in SESSION_0084's open question — *"is there any b
 ### Tasks
 
 #### TASK_01 — Petey plan (this artifact)
+
 - **Agent:** Petey (Claude)
 - **What:** Decide strategy + decompose into Cody-executable steps; surface open decisions for Brian's go.
 - **Steps:** (1) read context, (2) verify with graphify, (3) write Petey plan inline in SESSION_0085, (4) append task plan rows to project-log, (5) surface decisions, (6) wait for explicit "go" before TASK_02.
@@ -109,6 +110,7 @@ The trade-off Brian flagged in SESSION_0084's open question — *"is there any b
 - **Depends on:** nothing.
 
 #### TASK_02 — Cody implementation: webhook capacity re-check + refund
+
 - **Agent:** Cody (Claude, sequential — no subagent fan-out)
 - **What:** Wrap `fulfillTournamentRegistration` in a Serializable transaction that re-checks each requested division's `ACTIVE` entry count against `capacity` before creating the Registration. If any division would exceed capacity, create the Registration with `status = "CANCELLED"` and `paymentStatus = "REFUNDED"` and `entries.status = "CANCELLED"`, then call `stripe.refunds.create({ payment_intent: <session.payment_intent> })`. The success path stays unchanged.
 - **Steps:**
@@ -121,6 +123,7 @@ The trade-off Brian flagged in SESSION_0084's open question — *"is there any b
 - **Depends on:** TASK_01 approved.
 
 #### TASK_03 — Cody implementation: flip the SESSION_0084 oversubscription test + add parallel-race variant
+
 - **Agent:** Cody (Claude, same agent as TASK_02 — they share the same file)
 - **What:** Update `apps/web/app/api/stripe/webhooks/route.test.ts` to assert the fix:
   - Flip `expect(activeEntries).toBe(2)` → `toBe(1)` for the existing sequential oversubscription test.
@@ -136,6 +139,7 @@ The trade-off Brian flagged in SESSION_0084's open question — *"is there any b
 - **Depends on:** TASK_02 (test asserts behavior the fix produces).
 
 #### TASK_04 — Verification + bow-out
+
 - **Agent:** Cody → Petey (Claude)
 - **What:** Scoped typecheck, full test re-run, wiki-lint, project-log review block, full-close evidence per `closing.md`.
 - **Steps:**
@@ -155,6 +159,7 @@ The trade-off Brian flagged in SESSION_0084's open question — *"is there any b
 **No subagent fan-out, no worktree.** TASK_02 and TASK_03 touch the same two files (route.ts, route.test.ts) and share the same Serializable transaction reasoning. Splitting them across parallel agents would force one to wait for the other's edits to land. Per `feedback_subagent_dispatch`: a coupled two-file change with one decision surface does not amortize the per-window subagent overhead. **Sequential, single Cody session.**
 
 What WOULD parallelize (deferred to SESSION_0086+ if scope opens):
+
 - TASK_05 (deferred): cancel/refund flow tests + Registration UI smoke. UI work + backend tests are disjoint surfaces — split across two Cody agents in worktrees if SESSION_0086 picks them up.
 
 ### Agent assignments

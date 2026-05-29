@@ -48,6 +48,7 @@ The SESSION_0049 bracket-viewer uses raw `<input type="radio">`, `<select>`, `<f
 | Raw `<label>` elements | `Label` from `components/common/label.tsx` |
 
 #### TASK_01 — Refactor ScoreMatchForm to use Dirstarter Form/Dialog components
+
 - **Agent:** Cody
 - **What:** Replace the hand-rolled `ScoreMatchForm` with Dirstarter's `Form`, `FormField`, `FormItem`, `RadioGroup`, `Select`, `Input`, `Dialog` components + React Hook Form + Zod resolver
 - **Steps:**
@@ -61,6 +62,7 @@ The SESSION_0049 bracket-viewer uses raw `<input type="radio">`, `<select>`, `<f
 - **Depends on:** nothing
 
 #### TASK_02 — Refactor MatchCard to use Card + Avatar + Badge + Tooltip
+
 - **Agent:** Cody
 - **What:** Replace the raw div-based match card with Dirstarter's `Card` + `CardHeader` + `CardFooter`, add competitor identity display with `Avatar` + `Badge` + `Tooltip`
 - **Steps:**
@@ -76,6 +78,7 @@ The SESSION_0049 bracket-viewer uses raw `<input type="radio">`, `<select>`, `<f
 - **Depends on:** nothing
 
 #### TASK_03 — Build round-by-round 10-point must scoring form
+
 - **Agent:** Cody
 - **What:** Create a detailed scoring form for `TEN_POINT_MUST` disciplines that captures per-round scores
 - **Steps:**
@@ -93,6 +96,7 @@ The SESSION_0049 bracket-viewer uses raw `<input type="radio">`, `<select>`, `<f
 - **Depends on:** TASK_01
 
 #### TASK_04 — Auto-TKO detection (3 knockdowns/disarms)
+
 - **Agent:** Cody
 - **What:** When entering round-by-round scores, auto-detect if a competitor accumulates 3+ knockdowns or disarms and surface a TKO suggestion
 - **Steps:**
@@ -104,6 +108,7 @@ The SESSION_0049 bracket-viewer uses raw `<input type="radio">`, `<select>`, `<f
 - **Depends on:** TASK_03
 
 #### TASK_05 — Type-check + lint
+
 - **Agent:** Cody
 - **What:** Run `tsc --noEmit` and verify no new errors
 - **Done means:** Clean type-check (except pre-existing `TagInclude` stack depth)
@@ -193,6 +198,7 @@ Reference paths for this session (all exist in both `dirstarter_template/` and `
 **Goal**: Deep Dirstarter L1 audit — create a comprehensive component + pattern inventory covering ALL Dirstarter admin patterns (action client chain, `useHookFormAction`, `DataTable`, `DeleteDialog`, `DropdownMenu`, `RelationSelector`, `Stack`, `useComputedField`, etc.) and produce a gap analysis against all tournament/bracket/scoring code. Fix the planning process so execution doesn't require retroactive refactoring.
 
 **Inputs to read**:
+
 - `apps/web/app/admin/categories/_components/` — gold standard Dirstarter admin CRUD (form, table, delete, actions)
 - `apps/web/app/admin/tools/_components/` — second reference for Dirstarter admin patterns
 - `apps/web/lib/safe-actions.ts` — `adminActionClient` chain definition
@@ -206,6 +212,7 @@ Reference paths for this session (all exist in both `dirstarter_template/` and `
 ## Reflections
 
 ### What went right
+
 - FS-0014 logged and remediated in the same session. The bracket-viewer now uses 100% L1 components — zero raw HTML form elements verified by grep.
 - 10-point must scoring form with overtime round and auto-TKO detection is genuinely useful domain-specific UI.
 - Enriching the bracket query with passport + org data makes the competitor display actually informative.
@@ -241,6 +248,7 @@ Until this exists, every plan is flying blind on L1.
 
 ### Observation on admin pattern gap
 The Dirstarter categories admin uses patterns our tournament code doesn't touch:
+
 - `adminActionClient.inputSchema().action()` — we use raw server actions
 - `useHookFormAction` — we use manual `useForm` + try/catch + toast
 - `DataTable` + `DataTableHeader` + `DataTableToolbar` — we use custom tables

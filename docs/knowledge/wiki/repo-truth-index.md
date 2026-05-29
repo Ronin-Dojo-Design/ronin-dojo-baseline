@@ -53,6 +53,7 @@ Quick rule set:
 **Canonical source:** repo root README + `apps/web/` + `apps/mobile/`
 
 Confirms:
+
 - Next.js web app
 - Expo mobile app
 - Postgres backend
@@ -64,6 +65,7 @@ Confirms:
 
 #### B. Behavioral product truth
 **Canonical source:**
+
 - `docs/architecture/program-plan.md`
 - `docs/architecture/plan-vs-current.md`
 - `docs/architecture/source/chatgpt-original-plan.md`
@@ -81,6 +83,7 @@ The schema is the platform spine for: identity, memberships, tournaments, regist
 
 #### D. Brand truth
 **Canonical source:**
+
 - `docs/architecture/decisions/0004-multi-brand-as-column.md`
 - host-derived brand behavior in middleware
 - `activeBrandId` logic in auth/brand context docs
@@ -88,6 +91,7 @@ The schema is the platform spine for: identity, memberships, tournaments, regist
 Brand is a data and routing concern, not a separate backend stack.
 
 Current truth:
+
 - `BASELINE_MARTIAL_ARTS` = flagship outward training brand
 - `BBL` = Black Belt Legacy
 - `WEKAF` = WEKAF USA
@@ -112,6 +116,7 @@ The active state file for: what landed, what blocked, next session, files touche
 
 #### G. Ritual / protocol truth
 **Canonical source:**
+
 - `docs/rituals/opening.md`
 - `docs/rituals/closing.md`
 - `docs/protocols/chat-handoff.md`
@@ -155,6 +160,7 @@ Useful for: UI reference, migration comparison, historical intent, legacy behavi
 ### 2. Active vs reference
 
 **Active**
+
 - repo README
 - current Prisma schema
 - current ADRs
@@ -166,6 +172,7 @@ Useful for: UI reference, migration comparison, historical intent, legacy behavi
 - latest session file
 
 **Reference only**
+
 - old monorepo dashboard structures
 - old WP/PODS architectural assumptions
 - older planning packets not imported into this repo

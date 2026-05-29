@@ -32,6 +32,7 @@ Prove the S3 org UI works in the browser. Every page from SESSION_0012 needs to 
 ### Tasks
 
 #### TASK_01 — Smoke test: create → list → detail → join
+
 - **Agent:** Cody
 - **What:** Start dev server, exercise the full org flow manually. Fix any runtime errors.
 - **Steps:**
@@ -45,12 +46,14 @@ Prove the S3 org UI works in the browser. Every page from SESSION_0012 needs to 
 - **Depends on:** DB seeded with disciplines (S1 seed data)
 
 #### TASK_02 — Fix any runtime issues from TASK_01
+
 - **Agent:** Cody
 - **What:** If smoke test surfaces type errors, missing imports, auth guards, or DB issues — fix them.
 - **Done means:** All pages render and actions execute cleanly
 - **Depends on:** TASK_01 (only if issues found)
 
 #### TASK_03 — S3 completion assessment + S4 scope
+
 - **Agent:** Petey
 - **What:** Review program-plan S3 deliverable ("Organization create + join flow") against what's built. Determine if S3 is complete or has gaps. If complete, scope S4 ("Directory search with privacy").
 - **Steps:**
@@ -62,6 +65,7 @@ Prove the S3 org UI works in the browser. Every page from SESSION_0012 needs to 
 - **Depends on:** TASK_01 passing
 
 #### TASK_04 — Formal Review & Recommend protocol run (stretch)
+
 - **Agent:** Petey
 - **What:** Run the Review & Recommend protocol explicitly (SESSION_0012 noted this was skipped). Evaluate the org UI code surface for quality, patterns, missing edge cases.
 - **Done means:** Review notes in SESSION file. Any action items logged as open decisions.

@@ -161,6 +161,7 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
 - **Done means:** Staff/admin can mutate enrollment rows for active same-org members only; repeated
   calls do not create duplicates; capacity sends overflow to a monotonic waitlist; all writes are
   catalog-error-only, rate-limited, audited, and brand/org-scoped through `Program`.
+
 - **Depends on:** nothing.
 
 #### SESSION_0033_TASK_02 — Family + waiver write surface
@@ -168,6 +169,7 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
 - **Agent:** Cody, reviewed by Giddy + Doug.
 - **What:** Add `server/web/family/*` and `server/web/waiver/*` actions, schemas, payloads, queries,
   error catalogs, and tests.
+
 - **Steps:**
   1. Staff-manage `FamilyGroup` and `FamilyMember` rows through explicit target-user membership
      predicates because FamilyGroup has no brand/org columns.
@@ -180,6 +182,7 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
 - **Done means:** Family and waiver writes never enumerate cross-org ties; guardian signatures fail
   closed without a minor DOB and explicit family authority; waiver rows resolve by brand/org or
   program join only.
+
 - **Depends on:** nothing.
 
 #### SESSION_0033_TASK_03 — Lead/trial lifecycle, smoke proof, close evidence
@@ -187,6 +190,7 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
 - **Agent:** Cody + Doug, closed by Petey.
 - **What:** Add `server/web/lead/*`, consolidate school-ops extended smoke proof, update monitoring
   docs/project log/session close evidence.
+
 - **Steps:**
   1. Implement staff-managed `createLead`, `bookTrial`, `completeTrial`, and `convertLead` with
      `lead_write` / `trial_book`.
@@ -198,6 +202,7 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
   4. Update monitoring row, Project Log, SESSION file, JETTY/index links, and run closing ritual.
 - **Done means:** Lead lifecycle is staff-only, brand/org-scoped, audit-logged, and transactional;
   smoke proof covers cross-brand/org denials; SESSION_0033 closes with honest verification.
+
 - **Depends on:** SESSION_0033_TASK_01 and SESSION_0033_TASK_02 for conversion enrollment/waiver
   integration.
 
@@ -226,13 +231,17 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
 
 - OD-1 resolved by default: do **not** preempt with SESSION_0032_FINDING_01; carry full-app
   typecheck debt and verify touched slices.
+
 - OD-2 resolved: use existing free-form `AuditLog.entityType` / `action` strings; no new audit
   helper file beyond existing `writeSchoolOpsAudit`.
+
 - OD-3 resolved for this slice: FamilyGroup stays cross-org; every action gates on the target user's
   same-brand/same-org active membership and staff authority before returning or mutating rows.
+
 - OD-4 adjusted to source truth: `FamilyRole` enum is `GUARDIAN | CHILD | SPOUSE`, not
   `PARENT | GUARDIAN | ADMIN`; guardian signing uses `GUARDIAN` only and fails closed if target DOB
   is absent or not a minor.
+
 - OD-9 resolved: no public Lead intake; `createLead` is staff-managed only.
 
 ### Risks
@@ -241,8 +250,10 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
   `Program`, `Membership`, and target-user memberships.
 - `FamilyGroup` cross-org design can leak family ties if reads are widened. This session returns
   only target-org member rows from family queries.
+
 - `WaiverSignature` uniqueness is `(waiverId, userId)`, so one signer cannot create multiple
   distinct signatures for the same waiver. This is recorded as a schema constraint, not expanded.
+
 - `convertLead` touches User/Membership/Enrollment/WaiverSignature/Lead in one transaction; tests
   must prove rollback on invalid status and duplicate conversion idempotency.
 
@@ -266,9 +277,11 @@ predicates, rate limits, audit rows, smoke proof, and no UI/billing/entitlement 
   `Program.organizationId`; there is still no direct column on the enrollment row.
 - `FamilyGroup` remains cross-org by design; actions and reads scope through active target
   memberships instead of returning the full family graph.
+
 - `convertLead` is intentionally transactional, but hostile review forced the safer shape: preserve
   existing User/Passport/DirectoryProfile identity, respect `Program.maxEnrollment`, and keep
   converted/lost leads from being rewound into trial state.
+
 - D-005 remains active; this slice adds no persistent `"use cache"` member-private reads.
 
 ### Scope guard
@@ -318,6 +331,7 @@ add commerce, entitlement, public Lead intake, UI, or migrations.
 - `WaiverSignature` fields: `signedAt`, `ipAddress`, `userAgent`, `waiverId`, `userId`,
   `signedOnBehalfOfId`; unique `@@unique([waiverId, userId])`; index `@@index([userId])`.
   Back-relations: `User.waiverSignatures`, `User.waiverSignaturesOnBehalf`.
+
 - `Lead` fields: `brand`, `organizationId`, `programId?`, `status`, `source`, `firstName`,
   `lastName`, `email`, `phoneE164`, `trialBookedAt`, `convertedAt`, `convertedToUserId`,
   `followUps`; indexes `@@index([brand, organizationId, status])`, `@@index([email])`,
@@ -347,10 +361,12 @@ pre-implementation task IDs, and direct schema values pasted above.
 - [x] Organization resolved with `{ id, brand: requestBrand }` before staff actions.
 - [x] `canEditOrganization` checked for staff-managed enrollment, family, waiver revoke, and lead
   actions.
+
 - [x] Target users verified through active same-brand/same-org `Membership`.
 - [x] ProgramEnrollment scope flows through `Program.brand` + `Program.organizationId`.
 - [x] FamilyGroup/FamilyMember scope flows through the target user's `Membership` because those
   models have no brand/org columns.
+
 - [x] Waiver scope flows through `Waiver.brand/organizationId` and optional `ProgramWaiver` join.
 - [x] Lead scope uses native `Lead.brand` + `Lead.organizationId`.
 
@@ -369,6 +385,7 @@ branded resource lookup.
   `Prisma.*Select satisfies`.
 - Test pattern: `server/web/{schedule,attendance}/actions.test.ts` with real Postgres fixtures and
   mocked session/headers/cache/rate limiter.
+
 - Smoke pattern: `scripts/smoke-attendance.ts` with pure Prisma rejection matrix, tagged fixtures,
   and cleanup bag.
 
@@ -376,6 +393,7 @@ branded resource lookup.
 
 - Flow: Prospect/Lead -> Trial -> User/Passport/DirectoryProfile -> Membership ->
   ProgramEnrollment -> WaiverSignature.
+
 - Lifecycle stage: Prospect -> Member and Coach/Admin staff workflow. Billing, entitlement,
   public intake, and UI remain deferred.
 
@@ -385,6 +403,7 @@ branded resource lookup.
 - FS-0008: schema values above were read directly from `schema.prisma`.
 - MB-002: every new action/query must grep-prove explicit brand/org predicates or documented
   anti-corruption path through Program/Membership/Lead.
+
 - MB-013: advances via tests/smoke and monitoring rows; not fully closed.
 - D-005: no persistent `"use cache"` on enrollment/family/waiver/lead member-private reads.
 
@@ -460,6 +479,7 @@ branded resource lookup.
   same-brand/same-org target membership, rate-limits via `enrollment_write`, and audits through
   `writeSchoolOpsAudit`. Capacity uses `Program.maxEnrollment`; overflow enters a monotonic
   waitlist. Hostile review caught and fixed duplicate-active idempotency before close.
+
 - **TASK_02 — Family + waiver write surface.** Added
   `apps/web/server/web/family/*` and `apps/web/server/web/waiver/*`. Family writes are
   staff-managed and scope cross-org `FamilyGroup` rows through active target memberships. Waiver
@@ -472,6 +492,7 @@ branded resource lookup.
   signatures, and converted Lead state. Hostile review caught and fixed existing-identity
   preservation, capacity/waitlist handling, and post-conversion rebooking before close. Rate-limit
   keys: `lead_write`, `trial_book`.
+
 - **Tests and smoke.** Added consolidated action proof at
   `apps/web/server/web/lead/actions.test.ts` and pure Prisma smoke at
   `apps/web/scripts/smoke-school-ops-extended.ts`.
@@ -500,13 +521,16 @@ branded resource lookup.
 - OD-1: did not preempt with full-app typecheck debt; carried SESSION_0032_FINDING_01.
 - OD-2: reused free-form AuditLog strings through existing `writeSchoolOpsAudit`; no new audit
   helper.
+
 - OD-3: FamilyGroup stays cross-org; actions gate by target-user membership and staff authority.
 - OD-4: corrected to source truth: `GUARDIAN` is the only schema-supported guardian authority and
   minor proof uses `Passport.dob`.
+
 - OD-5: `bookTrial` is idempotent when already `TRIAL_BOOKED`.
 - OD-6: `convertLead` runs in a single transaction; audit rows share a correlation id after commit.
 - OD-7: waitlist uses `Program.maxEnrollment`, monotonic positions, and transaction-scoped reads;
   DB-level uniqueness/serializable locking remains a hardening candidate.
+
 - OD-8: rate-limit keys landed and monitoring docs updated.
 - OD-9: no public Lead intake; `createLead` is staff-managed.
 
@@ -563,9 +587,11 @@ represented minor before exposing global/brand waiver signatures.
 - The close sidecar was worth the overhead. It caught duplicate-active enrollment, conversion
   overfill, conversion identity overwrite, post-conversion trial rewind, and under-scoped waiver
   revocation before handoff; the action test and smoke now cover the repaired behavior.
+
 - The `WaiverSignature` shape is serviceable for MVP, but its uniqueness on `(waiverId, userId)`
   limits one signer to one signature per waiver. If guardian signatures become a larger workflow,
   revisit the schema rather than layering around it.
+
 - Keeping conversion staff-managed avoided public intake, payment, and entitlement drift. SESSION_0034
   can now build commerce on top of Membership/Enrollment state instead of mixing Stripe into this
   slice.

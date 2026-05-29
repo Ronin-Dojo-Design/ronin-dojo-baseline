@@ -82,29 +82,35 @@ Populate Brian's selected rank on the Rigan Machado BJJ lineage tree, prepare/ve
 ## Pre-flight: Seed/data update — Brian selectedRankAward
 
 ### 1. Petey invocation
+
 - [x] Petey plan exists in SESSION file with task IDs
 - [ ] Petey waived: N/A
 
 ### 2. Design doc check
+
 - Design doc consulted: SESSION_0275 next-session handoff and existing lineage seed file.
 - Models match design doc: pending direct model spot-check if schema changes are considered; no schema change planned.
 
 ### 3. Existing schema scan
+
 - Current model count: pending/not needed unless schema changes emerge.
 - Related existing models: `LineageTreeMember`, `RankAward`, `Rank`, `RankSystem`, `Discipline`.
 - Back-relations needed: none planned.
 - Schema spot-check: pending if code changes need Prisma model details beyond existing seed payload usage.
 
 ### 4. Runbook consulted
+
 - [ ] `docs/runbooks/schema-migration.md` read — not required unless schema changes emerge.
 - [ ] `docs/runbooks/prisma-workflow.md` read — not required unless migration/db command needed.
 - Migration strategy: no migration planned; seed update only.
 
 ### 5. Data flow reference
+
 - [ ] `docs/runbooks/sop-data-and-wiring-flows.md` — stale for selectedRankAward per SESSION_0275.
 - [ ] `docs/runbooks/sop-e2e-user-lifecycle.md` — stale for claims per SESSION_0275.
 
 ### 6. FAILED_STEPS check
+
 - Prior failures in this area: FS-0008 relevant for direct schema/model spot-check if touching schema or enum assumptions.
 - Mitigation acknowledged: yes — do not infer Prisma field names/enums from prose if schema changes become necessary.
 

@@ -60,6 +60,7 @@ Configure local S3 storage, visually QA the `/me` passport editor with auth, and
 ### Tasks
 
 #### TASK_01 — Configure S3 env vars for local dev (MinIO)
+
 - **Agent:** Cody
 - **What:** Set up MinIO via docker-compose for local S3-compatible storage; populate `.env` with MinIO credentials
 - **Steps:**
@@ -71,6 +72,7 @@ Configure local S3 storage, visually QA the `/me` passport editor with auth, and
 - **Depends on:** nothing
 
 #### TASK_02 — Authenticated visual QA of `/me` passport editor
+
 - **Agent:** Doug (QA)
 - **What:** Start dev server, log in, browse `/me`, confirm all editor sections render and file upload works
 - **Steps:**
@@ -83,6 +85,7 @@ Configure local S3 storage, visually QA the `/me` passport editor with auth, and
 - **Depends on:** TASK_01
 
 #### TASK_03 — S4 sprint scope planning
+
 - **Agent:** Petey
 - **What:** Review program-plan.md and plan-vs-current.md; draft S4 scope (content + curriculum lane or next priority)
 - **Steps:**
@@ -135,6 +138,7 @@ TASK_01 — (Cody) Configure MinIO in docker-compose + populate S3 env vars.
 **Out of scope for S4:** brackets, matches, scoring, mat assignments, weigh-ins, officials workflow. All explicitly scoped out in lane manifest.
 
 **Recommended S4 sessions:**
+
 - SESSION_0132: Tournament + Division admin CRUD (Recipe 1)
 - SESSION_0133: Public event discovery pages (Recipe 2)
 - SESSION_0134: Registration checkout + webhook (Recipe 3)
@@ -185,18 +189,22 @@ TASK_01 — (Cody) Configure MinIO in docker-compose + populate S3 env vars.
 ## Reflections
 
 ### What went well
+
 - Dev-login route is a significant DX win — eliminates the "can't test auth locally without Resend" blocker that's been carried for 17 sessions.
 - Runbook quality is high — ASCII diagrams, decision trees, and troubleshooting scenarios will prevent future agents from repeating the same debugging cycle.
 - S4 scope is clean and well-bounded — tournament ops lane has clear recipes and explicit "out of scope" list.
 
 ### What was harder than expected
+
 - Better-Auth's magic link flow throws 302 as an `APIError` — undocumented behavior. Required 3 iterations to find the working pattern (raw insert → self-fetch deadlock → in-process API calls with error catch).
 - Stale `.next/dev/lock` files and zombie Node processes caused repeated "Failed to fetch" hangs — not obvious from error messages alone.
 
 ### Process observations
+
 - The hostile review → remediation → visual QA → runbook arc (sessions 0129–0131) is a solid pattern. Findings get resolved, then documented, then tested.
 - Cross-linking runbooks (§11 additions to sop-data-and-wiring-flows.md) keeps the knowledge graph connected but adds time. Worth it for discoverability.
 
 ### Kaizen
+
 - Consider adding `bun dev:clean` script that kills zombies + removes lock files + clears `.next` cache in one command.
 - Dev-login route should log a warning banner at startup when `DEV_LOGIN_USER_ID` is set, so it's obvious the bypass is active.

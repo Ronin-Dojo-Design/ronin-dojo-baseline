@@ -169,6 +169,7 @@ SESSION_0135 Giddy research confirmed Dirstarter shipped a `Post` model upstream
 ### Scope Guard
 
 Do NOT:
+
 - Remove content-collections config/dependency (SESSION_0137)
 - Add Tiptap rich text editor (future session)
 - Migrate existing MDX content to DB (boilerplate content — just delete it later)

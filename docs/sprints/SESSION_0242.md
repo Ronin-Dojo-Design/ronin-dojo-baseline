@@ -113,6 +113,7 @@ Uplift the 4 remaining listing pages (`/programs`, `/organizations`, `/gear`, `/
 Desi UX pass on site chrome + verify Vercel deploy health + wire remaining routes (`/directory`, `/members`).
 
 ### Inputs to read
+
 - Vercel deployment logs
 - `docs/runbooks/nav-sidebar-menu-runbook.md` UX review notes
 - `docs/architecture/velobase-harness-patterns.md`

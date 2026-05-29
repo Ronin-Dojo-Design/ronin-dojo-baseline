@@ -64,48 +64,56 @@ SESSION_0119 produced a complete Phase 3 plan with file list, component mapping,
 ### Task Breakdown
 
 #### TASK_01 — Read component inventory + reference admin patterns
+
 - **Agent:** Cody (pre-flight)
 - **What:** Read `docs/knowledge/wiki/dirstarter-component-inventory.md`. Read `apps/web/app/admin/tools/` for DataTable + withAdmin HOC reference pattern. Read `apps/web/server/web/merch/printful-actions.ts` for existing merch server code.
 - **Done criteria:** Cody confirms component mapping matches SESSION_0119 plan; no conflicts found.
 - **Estimated effort:** 5 min
 
 #### TASK_02 — Create brand-scoped merch order queries
+
 - **Agent:** Cody
 - **What:** Create `apps/web/server/web/merch/queries.ts` with `findMerchOrders()` (list with brand/status/date/search/pagination filters) and `findMerchOrderById()` (detail, brand-scoped).
 - **Done criteria:** Queries compile (`tsc --noEmit`), brand-scoping enforced on all queries.
 - **Estimated effort:** 15 min
 
 #### TASK_03 — Create order-status-badge component
+
 - **Agent:** Cody
 - **What:** Create `apps/web/app/admin/merch/orders/_components/order-status-badge.tsx` — color-coded Badge for FulfillmentStatus enum values.
 - **Done criteria:** Uses Dirstarter `Badge` component, maps all FulfillmentStatus values to appropriate variants.
 - **Estimated effort:** 5 min
 
 #### TASK_04 — Create orders DataTable columns
+
 - **Agent:** Cody
 - **What:** Create `apps/web/app/admin/merch/orders/_components/orders-table.tsx` — DataTable column definitions (order ID, customer, items, total, status badge, date).
 - **Done criteria:** Uses Dirstarter `DataTable` + `useDataTable` hook, matches existing admin table patterns.
 - **Estimated effort:** 10 min
 
 #### TASK_05 — Create list page `/admin/merch/orders`
+
 - **Agent:** Cody
 - **What:** Create `apps/web/app/admin/merch/orders/page.tsx` — list page with `withAdmin` HOC, DataTable, brand/status/date filter toolbar.
 - **Done criteria:** Page renders with filters and table; uses all Dirstarter components per inventory.
 - **Estimated effort:** 15 min
 
 #### TASK_06 — Create detail page `/admin/merch/orders/[id]`
+
 - **Agent:** Cody
 - **What:** Create `apps/web/app/admin/merch/orders/[id]/page.tsx` — detail page with customer info, Printful status, line items, tracking link.
 - **Done criteria:** Page renders with Card sections; uses Heading, Badge, Stack, Button.
 - **Estimated effort:** 15 min
 
 #### TASK_07 — Add server actions (retry + status override)
+
 - **Agent:** Cody
 - **What:** Add `retryPrintfulOrder()` and `updateMerchOrderStatus()` to `apps/web/server/web/merch/actions.ts` (or extend `printful-actions.ts`).
 - **Done criteria:** Actions compile, brand-scoped, admin-gated.
 - **Estimated effort:** 10 min
 
 #### TASK_08 — Type check + manual verify
+
 - **Agent:** Cody + Doug (spot check)
 - **What:** Run `tsc --noEmit`. Verify list + detail pages in browser.
 - **Done criteria:** Zero type errors in new files. Pages render correctly.
@@ -195,6 +203,7 @@ TASK_08 (verify — final gate)
 **Verdict:** The implementation extends Dirstarter's admin patterns correctly. All UI uses Dirstarter components (Badge, Card, H3, Stack, Note, Button, DataTable, useDataTable, withAdminPage, DataTableSkeleton, DateRangePicker). No raw HTML replacements found. Brand scoping enforced on all queries and actions via `getRequestBrand()`. The Printful API integration uses `sync_variant_id` and `externalId` correctly per the service's TypeScript types and confirmed against Printful's live developer docs (Orders API: `sync_variant_id` for sync variant ordering, `external_id` for order referencing with `@` prefix). The `retryPrintfulOrder` action correctly guards against double-submission (PAID/FAILED only). One concern: the `lineItems` JSON field is parsed with `as any` — acceptable for an admin dashboard but should be typed in a follow-up.
 
 **Printful API alignment:**
+
 - ✅ `createOrder()` uses `external_id` in the request body (mapped from `externalId` param) — matches Printful docs
 - ✅ `sync_variant_id` used for order items (not `variant_id`) — correct for pre-configured sync products
 - ✅ `getOrderByExternalId()` uses `@` prefix — matches Printful external ID convention
@@ -263,6 +272,7 @@ Zero failed steps this session. Two type errors were caught by `tsc --noEmit` du
 ## Tests Assessment
 
 No tests are needed to gate this merge. Rationale:
+
 - This is an admin-only read dashboard with two guarded write actions
 - Type checking proves contract correctness
 - The Printful service layer (`services/printful.ts`) is already in production and tested via webhook flow
@@ -303,6 +313,7 @@ This was a clean execution session. The SESSION_0119 plan was precise enough tha
 **Goal:** Remediation session — address SESSION_0120 findings + Printful Phase 4 (webhook hardening).
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0120.md` — findings 01-03
 - `apps/web/app/api/printful/webhooks/route.ts` — current webhook handler
 - `docs/runbooks/printful-setup-runbook.md` — webhook configuration section
@@ -310,6 +321,7 @@ This was a clean execution session. The SESSION_0119 plan was precise enough tha
 **First task:** Create `MerchLineItem` Zod schema and replace `as any` in `retryPrintfulOrder` (FINDING_01 remediation).
 
 **Additional tasks (from SESSION_0119 + 0120 carry-forward):**
+
 - Add audit trail for admin status overrides (FINDING_02)
 - Add DB indexes on MerchOrder search fields (FINDING_03)
 - Verify brand scoping on webhook queries (SESSION_0119 FINDING_03)

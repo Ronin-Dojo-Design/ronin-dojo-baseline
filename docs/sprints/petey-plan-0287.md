@@ -32,6 +32,7 @@ A bow-in inventory (SESSION_0287, Graphify + direct source read) found the lane 
   for local dev; AWS S3 + CloudFront for staging/prod. See
   `local-dev-auth-storage.md` and `aws-s3-operator-runbook.md`. Public assets
   resolve via `NEXT_PUBLIC_MEDIA_BASE_URL` (blank locally → serves `apps/web/public`).
+
 - Upload path: `lib/media.ts:uploadToS3Storage()`, web `server/web/actions/media.ts`
   (`uploadMedia`/`fetchMedia`), `hooks/use-media-action.ts`, `components/common/form-media.tsx`.
 - Admin CRUD: `server/admin/media/{queries,actions}.ts`, `app/admin/media/page.tsx`.
@@ -74,6 +75,7 @@ not replacing them.
   with mimeType/sizeBytes/brand/uploader); `deleteMedia` best-effort `removeS3File`
   via new `getS3KeyFromUrl()`; enum → `IMAGE|VIDEO|YOUTUBE|DOCUMENT`; admin upload
   button + per-card delete; `lib/media.test.ts` (6 cases). typecheck/biome/test green.
+
 - **Depends on:** nothing.
 
 ### TASK_02 — Slice 2: harden web upload auth (security) ✅ DONE (SESSION_0288)
@@ -81,8 +83,10 @@ not replacing them.
 - **Agent:** Cody (+ Doug security review)
 - **What:** `uploadMedia`/`fetchMedia` move from public `actionClient` to an
   authenticated client and enforce `canUploadMedia(user.id, brand)`.
+
 - **Done means:** unauthenticated/ungated callers are rejected; `form-media.tsx`
   consumers still work for authorized users; safe-action test proves the gate.
+
 - **Depends on:** confirm intended exposure (Open decision D1).
 - **Outcome:** Added `mediaUploadActionClient` (auth + `canUploadMedia` gate) to
   `lib/safe-actions.ts`; both web actions now use it. New
@@ -97,8 +101,10 @@ not replacing them.
 - **What:** Server actions to attach/detach a `Media` to an entity (passport,
   technique, org, event, etc.) with `purpose` + `sortOrder`; decide id-only vs
   wired Prisma relation for the 5 currently-bare FK columns.
+
 - **Done means:** attach/detach actions + queries + a consuming surface (e.g.
   technique gallery or org gallery), tests.
+
 - **Depends on:** TASK_01.
 
 ### TASK_04 — Slice 4: upload metadata enrichment
@@ -121,6 +127,7 @@ not replacing them.
   `/images/brands/<slug>/...`).
 - **Done means:** `getBrandSiteConfig(brand)` returns per-brand asset paths;
   Baseline keeps current defaults.
+
 - **Depends on:** Open decision D2 (path convention).
 
 ### TASK_06 — Slice B: route logo/favicon/OG through resolvePublicMediaUrl
@@ -131,6 +138,7 @@ not replacing them.
   `resolvePublicMediaUrl()` so they serve from S3/CloudFront in prod, `public` in dev.
 - **Done means:** with `NEXT_PUBLIC_MEDIA_BASE_URL` set, BBL pages emit BBL asset
   URLs; blank → local `/public`. Brand-aware logo image (not just name text).
+
 - **Depends on:** TASK_05.
 
 ### TASK_07 — Slice C: produce BBL asset files
@@ -138,6 +146,7 @@ not replacing them.
 - **Agent:** Brandon (assets) + Cody (placement)
 - **What:** Obtain/produce BBL logo, wordmark, favicon, OG image; place under the
   per-brand path.
+
 - **Done means:** real BBL asset files committed (or in S3) at the convention path.
 - **Depends on:** TASK_05.
 
@@ -147,8 +156,10 @@ not replacing them.
 - **What:** `aws s3 sync` the per-brand asset paths into the prod/staging bucket;
   verify via `/admin/storage/monitoring`. Set `NEXT_PUBLIC_MEDIA_BASE_URL` for
   **Production + Preview** (FS-0023).
+
 - **Done means:** BBL assets resolve through the media domain in a deploy preview;
   Storage Monitor shows `CONFIGURED`, 0 missing paths.
+
 - **Depends on:** TASK_06, TASK_07. **Blocked on operator** (AWS secrets).
 
 ---
@@ -165,6 +176,7 @@ and "OG images" checklist rows when Thread 2 lands.
   `server/**/media`, `lib/media.ts`, `app/admin/media`; Thread 2 = `config/site.ts`,
   `app/layout.tsx`, `app/api/og`, `components/web/ui/logo*`). They can run in
   parallel across sessions / sub-agents.
+
 - Within Thread 1, TASK_02 touches the web action auth and can run parallel to
   TASK_03/04. Slice 1 (TASK_01) is the shared foundation — done first.
 
@@ -184,10 +196,12 @@ and "OG images" checklist rows when Thread 2 lands.
 
 - **D1 — Web upload exposure.** Is `uploadMedia`/`fetchMedia` being public+ungated
   intentional (Dirstarter default) or a gap to tighten? (TASK_02 gate.)
+
 - **D2 — Per-brand asset path convention.** `/images/brands/<slug>/...` in `public`
   (CDN-rewritten) vs distinct S3 keys per brand.
 - **D3 — Media `key` column.** Add an explicit S3 `key` field to `Media` (avoids
   URL-parsing on delete) or keep `getS3KeyFromUrl()`? (Migration cost vs robustness.)
+
 - **D4 — MediaAttachment relations.** Wire the 5 bare FK columns
   (passport/event/rankAward/course/organization) to real Prisma relations, or keep
   id-only polymorphic.
@@ -198,8 +212,10 @@ and "OG images" checklist rows when Thread 2 lands.
   `dirstarter.com/docs/integrations/storage` + `/media` should be re-verified at
   Thread-2 implementation; `local-dev-auth-storage.md` is the current proxy and
   records alignment (S3_ENDPOINT, `forcePathStyle`, `uploadToS3Storage`).
+
 - **AWS provisioning is operator-only** (secrets); new env vars must be scoped to
   Production **and** Preview (FS-0023) or t3-env validation fails preview builds.
+
 - **Local S3 env is blank** → upload flows are not testable locally without MinIO
   (`docker compose up -d minio minio-init` + the 6 `S3_*` vars per `local-dev-auth-storage.md`).
 
@@ -217,8 +233,10 @@ the tasks above — **not** inline into Slice 1.
 - **Baseline pattern to extend:** `uploadToS3Storage` (S3 primitive),
   `resolvePublicMediaUrl` (CDN rewrite), `services/s3.ts` (`forcePathStyle`),
   next-safe-action clients in `lib/safe-actions.ts`.
+
 - **Custom delta:** persist a `Media` record per upload (our Wave-D model);
   per-brand asset resolution on top of the shared CDN-rewrite layer.
+
 - **No-bypass proof:** Slice 1 builds on `uploadToS3Storage` + the `Media` model;
   it does not introduce a parallel storage client or bypass the upload primitive.
 

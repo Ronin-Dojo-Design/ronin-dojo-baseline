@@ -134,6 +134,7 @@ Useful for: auth docs, content engine docs, brand/migration docs, SOPs, runbooks
 ### 5. Identify good-fit pages for immediate retrofit
 
 Best candidates:
+
 - `docs/architecture/auth.md`
 - `docs/architecture/program-plan.md`
 - `docs/architecture/plan-vs-current.md`

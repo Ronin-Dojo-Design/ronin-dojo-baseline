@@ -115,6 +115,7 @@ This is the **40% white-label gap** identified in SESSION_0060 and the critical 
 **What:** Make `siteConfig`, `brand.json`, and `navigation.json` brand-aware so all downstream components render correct names, taglines, and nav labels.
 
 **Files to create/modify:**
+
 - `config/site.ts` → export a `getBrandSiteConfig(brand)` function instead of a static object
 - `messages/en/brand.json` → replace Dirstarter copy with Baseline Martial Arts copy (first brand)
 - `messages/en/navigation.json` → add keys: `programs`, `tournaments`, `courses`, `techniques`, `directory`, `schedules`
@@ -139,6 +140,7 @@ Courses | Techniques | Directory
 **Footer nav:** Mirror header sections + add Blog, Contact.
 
 **Files to modify:**
+
 - `components/web/header.tsx` — replace nav links
 - `components/web/footer.tsx` — replace nav links
 - Mobile nav (bottom of header.tsx) — same links
@@ -152,6 +154,7 @@ Courses | Techniques | Directory
 **What:** Replace the Dirstarter "Launch Your Directory" hero with a Baseline Martial Arts landing page. Show featured programs, upcoming tournaments, and a CTA to browse or sign up.
 
 **Files to modify:**
+
 - `app/(web)/(home)/hero.tsx` — branded tagline, description, CTA
 - `app/(web)/(home)/page.tsx` — replace `ToolQuery` with featured programs/tournaments
 - `app/(web)/(home)/count-badge.tsx` — show discipline/program/student counts instead of tool count
@@ -178,6 +181,7 @@ Courses | Techniques | Directory
 ```
 
 **Files to modify:**
+
 - `app/layout.tsx` — add `data-brand` attribute to `<html>` (read from `getRequestBrand()`)
 - `app/styles.css` — add brand color overrides after default theme
 - `components/web/ui/logo.tsx` — render brand-specific logo/wordmark
@@ -191,6 +195,7 @@ Courses | Techniques | Directory
 **What:** Build the brand switcher UI for admins and multi-brand members. Sets `activeBrandId` in session. Deferred to last because the middleware already resolves brand from host — the switcher is an admin convenience.
 
 **Files to create:**
+
 - `components/admin/brand-switcher.tsx` — dropdown showing available brands
 - Server action to update `session.user.activeBrandId`
 

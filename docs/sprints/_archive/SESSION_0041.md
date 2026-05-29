@@ -113,6 +113,7 @@ All tasks → **Cody** (builder). Pattern is well-defined in the lane manifest; 
 **Goal**: SESSION_0041.5 remediation — write integration tests for technique queries (brand isolation, isPublished filter, slug 404 for wrong brand)
 
 **Inputs to read**:
+
 - Existing test patterns in `apps/web/` (if any)
 - `server/web/techniques/queries.ts` — the functions under test
 - Vitest/Jest config

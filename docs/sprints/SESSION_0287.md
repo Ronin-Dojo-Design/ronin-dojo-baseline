@@ -69,6 +69,7 @@ S3 objects on delete, and fix the `MediaType` enum drift.
 - FS-0022/0023 (deploy chain / Vercel env scope): relevant only if this slice adds
   env vars (it does not) or a migration (it does not — `Media`/`MediaAttachment`
   already migrated in Wave D, SESSION_0026).
+
 - FS-0014/0001 (L1 component gate): in force for any new admin upload UI — reuse
   `form-media.tsx` + common primitives, no raw HTML form elements.
 
@@ -83,6 +84,7 @@ S3 objects on delete, and fix the `MediaType` enum drift.
 
 - Graph status: current (7378 nodes / 11930 edges / 1419 files; updated end of
   SESSION_0286).
+
 - Queries used: `"media upload S3 MinIO MediaAttachment storage presigned CRUD"`;
   `"presigned upload url S3 client storage service bucket MinIO media action route"`;
   `explain "canUploadMedia"`.
@@ -127,19 +129,24 @@ Changes:
 
 - `lib/media.ts` — new `getS3KeyFromUrl(url, bucket?)`; handles AWS virtual-hosted
   and MinIO path-style URLs, drops the `?v=` cache-buster via `URL.pathname`.
+
 - `server/admin/media/actions.ts` — fixed `MediaType` enum (`AUDIO`→`YOUTUBE`); new
   `uploadMediaToLibrary` admin action (S3 upload via `uploadToS3Storage` +
   `db.media.create` with mimeType/sizeBytes/brand/uploader); `deleteMedia` now
   best-effort `removeS3File` per row (`Promise.allSettled`, won't fail row delete).
+
 - `app/admin/media/_components/media-uploader.tsx` (new) — upload button + hidden
   file input → `uploadMediaToLibrary`, `router.refresh()` on success.
+
 - `app/admin/media/_components/delete-media-button.tsx` (new) — reuses the generic
   `DeleteDialog` (`components/admin/dialogs/delete-dialog.tsx`) wired to `deleteMedia`.
   *(Close-step inventory check caught a reuse miss: the first draft hand-rolled an
   inline confirm — refactored to the existing component per the custom-component
   inventory reuse rule.)*
+
 - `app/admin/media/page.tsx` — wired uploader into header + hover-revealed delete
   on each card.
+
 - `lib/media.test.ts` (new) — 6 `bun:test` cases for `getS3KeyFromUrl`.
 
 ### SESSION_0287_TASK_03 — verification (Doug)
@@ -157,6 +164,7 @@ Changes:
 - Slice 1 of the media CRUD epic: uploads now persist tracked `Media` records,
   deletes clean up the S3 object, the `MediaType` enum drift is fixed, and the admin
   media gallery is a working upload/delete CRUD surface (was read-only).
+
 - `petey-plan-0287.md` — the full two-thread epic scope for follow-up sessions.
 
 ## Files touched
@@ -174,8 +182,10 @@ Changes:
 
 - The "S3 vs MinIO local-dev story" SESSION_0286 flagged as undecided is **already
   decided + documented** (MinIO local, AWS S3+CloudFront prod). No new decision needed.
+
 - A **separate** admin `uploadMediaToLibrary` action (not extending web `uploadMedia`)
   keeps single-field form uploads (favicons, etc.) from creating junk `Media` rows.
+
 - Delete uses an inline confirm (no Dialog primitive) to avoid Base-UI API risk on
   the just-migrated `dialog.tsx` (D-016).
 
@@ -226,22 +236,28 @@ keeping `form-media.tsx` working for authorized users. Add a safe-action test.
 - **Plan sanity:** One foundational slice + a planning artifact for the rest of the
   epic. In scope; the security finding (D1) and attachment gaps were *queued*, not
   scope-crept into Slice 1.
+
 - **Dirstarter alignment:** **Extension, not bypass.** Slice 1 builds on the
   Dirstarter `uploadToS3Storage` primitive + the Wave-D `Media` model; it does not
   add a parallel storage client. The "S3 vs MinIO" backend decision was already made
   and documented (`local-dev-auth-storage.md` / `aws-s3-operator-runbook.md`).
   *Live Dirstarter storage/media docs not re-fetched this session — flagged in the
   plan's Risks; the runbooks are the recorded proxy.*
+
 - **Verification honesty:** Gates are literal command output (6/6 test, 0 tsc
   errors, biome clean). The missing live upload smoke is stated plainly, not papered
   over.
+
 - **Data integrity / security:** No migration (models pre-existed). **Surfaced a
   real security gap** (public, ungated web upload) and queued it as TASK_02 rather
   than silently leaving it — disclosed, not buried.
+
 - **WORKFLOW 5.0 compliance:** One primary lane; ≤3 deliverables; numbered tasks +
   task log + review log present; Petey plan written before/alongside the slice.
+
 - **Score:** 9.5/10. No hard cap (no Dirstarter bypass, no data-integrity failure).
   Half-point off for the deferred live storage smoke + un-fetched live Dirstarter docs.
+
 - **Unresolved findings:** D1 (web upload auth) — owned by petey-plan TASK_02.
 
 ## ADR / ubiquitous-language check
@@ -251,6 +267,7 @@ keeping `form-media.tsx` working for authorized users. Add a safe-action test.
   or rejected architectural choice. **If D1 is resolved by tightening upload auth**
   (TASK_02), that *may* warrant an ADR touching the storage/media + auth baseline
   layers (would require live Dirstarter docs proof links per closing §6.6).
+
 - **Ubiquitous language:** No new or changed domain terms ("media library", "Media
   record" are existing).
 
@@ -260,12 +277,15 @@ keeping `form-media.tsx` working for authorized users. Add a safe-action test.
   reading the *latest* SESSION file (0286), not just the one the prompt referenced
   (0285), caught it before any wasted work. Bow-in's "read the highest-numbered
   SESSION" step earned its keep.
+
 - The pass-4 schema plan called Media a "CRITICAL gap — no Media model." Source said
   otherwise: model + service + admin CRUD all existed. **Trust the code over the spec
   doc** — the spec froze in SESSION_0022 and the build moved past it.
+
 - Graphify pointed straight at the real files (`canUploadMedia`, the storage
   service, the two media-action files) in two queries; grep would have buried the
   signal under 466 nodes of imports.
+
 - The cleanest slice wasn't the flashiest (BBL assets→S3, launch-visible) but the
   most *foundational + locally-testable* (persist Media on upload). The asset thread
   is partly operator-blocked on AWS secrets anyway.

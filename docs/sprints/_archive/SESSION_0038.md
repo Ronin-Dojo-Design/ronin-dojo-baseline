@@ -174,11 +174,13 @@ The plan was structurally sound — 5 tasks, clear Dirstarter template reference
 - **No email templates.** Dirstarter sends emails on tool submission/publish/schedule via `emails/submission*.tsx`. Our lead lifecycle has no transactional emails at all. The `emails/` directory pattern was completely ignored.
 
 **3. Security:**
+
 - All admin CRUD actions use `adminActionClient` — role-gated. ✅
 - **BUT:** `LeadStatusActions` calls `bookTrial`, `completeTrial`, `convertLead` from `server/web/lead/actions.ts` — these use `userActionClient`, not `adminActionClient`. They're auth-gated + `canEditOrganization` so this is mitigated but architecturally wrong for admin pages.
 - **CRITICAL:** Public `LeadCaptureForm` calls `createLead` which requires `userActionClient` authentication. Unauthenticated visitors **cannot submit the form**. The "public" capture page is not actually public.
 
 **4. Data integrity:**
+
 - `createFollowUp` auto-transitions NEW → CONTACTED via `updateMany` (no optimistic lock). Acceptable at current scale.
 - `upsertLead` creates leads without audit trail (unlike `createLead` in web actions which calls `writeSchoolOpsAudit`). Admin mutations are unauditable.
 - Brand is derived from org on create, but admin update doesn't validate brand consistency — an admin could change `organizationId` to a different-brand org, creating cross-brand orphaned data.
@@ -190,6 +192,7 @@ The lead lifecycle (NEW → CONTACTED → TRIAL_BOOKED → TRIAL_COMPLETED → C
 TypeScript compiles clean (1 pre-existing error). **No runtime verification was done.** No browser smoke test. No `scripts/smoke-lead-lifecycle.ts`. "Done" means "compiles" — not "works."
 
 **7. Workflow honesty:**
+
 - No worktree used (plan specified `wt-school-ops`)
 - No task IDs logged in a project-log or TASK_REVIEW_LOG
 - No WORKFLOW 5.0 rubric was scored
@@ -215,10 +218,12 @@ TypeScript compiles clean (1 pre-existing error). **No runtime verification was 
 **Provably safe:** All admin CRUD actions use `adminActionClient` — role-gated. Delete operations are confirmation-dialog-guarded. Follow-up/status mutations are id-scoped.
 
 **Documented but not behaviorally proven:**
+
 - Brand scoping on admin queries — `findLeads()` returns all brands. Need a test: `findLeads()` called by admin of brand A should not return brand B leads (or explicitly document super-admin access).
 - `upsertLead` org-brand consistency — no validation that org's brand matches lead's brand on update.
 
 **Not safe:**
+
 - Public lead capture form requires authentication via `userActionClient`. An unauthenticated visitor hitting `/organizations/[slug]/get-started` will get an auth error. **Test:** curl the form submission endpoint without session cookie → expect lead created (currently: expect 401).
 - Status transitions via web actions are gated by `userActionClient` + `canEditOrganization`, not `adminActionClient`. **Test:** verify admin user passes `canEditOrganization` check.
 

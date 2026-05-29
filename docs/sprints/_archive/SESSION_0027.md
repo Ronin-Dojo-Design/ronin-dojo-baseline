@@ -314,12 +314,14 @@ Per `docs/knowledge/JETTY_3.0.md`:
 This session was the correction SESSION_0026 demanded. The governance audit surfaced what we suspected: two-thirds of the docs aren't enforced, health scores are theater, and the log proliferation (build-log + task-plan-log + task-review-log) created three places to write the same thing — which meant agents wrote in none of them consistently.
 
 **What worked:**
+
 - The Petey → Cody handoff was clean. Petey inventoried, user made decisions, Cody executed. No scope creep.
 - Dropping health scores was the right call. `status` is binary and enforceable; numeric self-assessment is not.
 - Merging three logs into one `project-log.md` reduces the "where do I write this?" confusion.
 - Wiring the SOP runbooks into cody-preflight gives them a concrete enforcement point instead of existing as aspirational reference.
 
 **What to watch:**
+
 - The expanded cody-preflight (Schema + Backend checklists) could become the next FS-0006 if agents skip it for "simple" changes. The 3+ model gate is the canary.
 - Drift register has 5 open entries (D-005, D-006, D-007, D-008, D-010, D-011, D-012, D-013). Some may be stale. Next governance pass should sweep them.
 - 15 wiki `files/*.md` pages are stale. They document S3-S4 code that has evolved. Not urgent but they erode trust in the wiki.

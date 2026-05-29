@@ -10,6 +10,7 @@ last_agent: claude-session-0237
 pairs_with:
   - knowledge/wiki/files/discipline-queries
   - knowledge/wiki/files/organization-detail-page
+  - knowledge/wiki/files/schools-detail-page
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0237

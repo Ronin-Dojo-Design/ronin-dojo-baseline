@@ -188,6 +188,7 @@ Each page uses `productFilter` to show only relevant products (Dirstarter's L1 p
 ### TASK_03 — Webhook fulfillment: program enrollment (Cody, 20 min)
 
 **What:** Extend `checkout.session.completed` handler:
+
 - If `metadata.programSlug` exists → create `ProgramEnrollment` record + grant entitlement
 - Pattern matches existing `fulfillTournamentRegistration()` and `grantEntitlementsFromCheckout()`
 
@@ -198,6 +199,7 @@ Each page uses `productFilter` to show only relevant products (Dirstarter's L1 p
 ### TASK_04 — Entitlement admin CRUD (Cody, 45 min)
 
 **What:** Create `app/admin/entitlements/` following categories gold standard:
+
 - `page.tsx` — `withAdminPage` HOC, data table
 - `_components/` — table, columns, delete-dialog, actions, toolbar-actions
 - `new/page.tsx` — create form (key, name, description)
@@ -212,6 +214,7 @@ Each page uses `productFilter` to show only relevant products (Dirstarter's L1 p
 ### TASK_05 — PricingPlan admin CRUD (Cody, 45 min)
 
 **What:** Create `app/admin/pricing-plans/` following categories gold standard:
+
 - Table: org, program, amount, interval, Stripe IDs
 - Create form linking to program + setting price + Stripe product
 - Link-to-entitlement UI (select entitlements → creates `EntitlementGrant` rows)
@@ -223,6 +226,7 @@ Each page uses `productFilter` to show only relevant products (Dirstarter's L1 p
 ### TASK_06 — User dashboard: active entitlements + enrollments (Cody, 30 min)
 
 **What:** Extend `app/(web)/dashboard/` or `app/(web)/me/`:
+
 - Active `UserEntitlement` rows (status, source, expiry)
 - Active `ProgramEnrollment` rows (progress)
 - Active `Registration` rows (tournaments)
@@ -335,6 +339,7 @@ No new ADRs needed. No new domain terms. EntitlementGrant sync pattern is a tact
 **Goal:** Wire the user-facing enrollment checkout flow end-to-end (TASK_02 + TASK_03) and user dashboard (TASK_06).
 
 **Inputs to read:**
+
 - `components/web/products/product-query.tsx` — L1 ProductQuery server component
 - `components/web/products/product.tsx` — L1 Product client component (uses `createStripeCheckout`)
 - `app/(web)/submit/[slug]/page.tsx` — L1 checkout page pattern to clone

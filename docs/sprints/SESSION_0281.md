@@ -164,6 +164,7 @@ Write ADR for brand chrome resolution pattern. Full close.
 **Goal:** Browser smoke `bbl.local` brand chrome — verify header shows "Black Belt Legacy", primary color is gold, metadata/title correct. Optionally wire BBL-specific logo SVG.
 
 **Inputs to read:**
+
 - `docs/sprints/SESSION_0281.md`
 - `docs/architecture/decisions/0022-brand-chrome-resolution.md`
 - `apps/web/contexts/brand-context.tsx`

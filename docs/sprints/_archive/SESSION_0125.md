@@ -122,6 +122,7 @@ TASK_01 — Wire `VideoCarousel`. Start by confirming `ContentAtom` schema shape
 ### Score Gate
 
 Aggregate confidence: **7** → Stage a remediation session covering:
+
 - Add integration test for privacy filter on member carousel
 - Add composite index `Membership(disciplineId, status, rankId)` for scale
 - Add global limit on video query results

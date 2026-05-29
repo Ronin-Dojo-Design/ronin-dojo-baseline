@@ -57,10 +57,12 @@ needs_fix:
 ## Original raw notes (archived)
 
 Project Overview:
+
 - Architecture: mo-fi wireframes for data structure and end-to-end user registration/lifecycle
 - Current work: building schema, enums, and tables for ranks, disciplines, roles, members, etc.
 
 Brand & White-label Sites:
+
 - ronindojodesign.com
   - Needs a record for ronindojodesign.com itself
   - Must include sales and demo preview white-label sites
@@ -75,6 +77,7 @@ Brand & White-label Sites:
   - Additional brands (Sensei Jays, NASKA, clients might have any type of martial art/workout/yoga/fitness/mental health/meditation tracking, training, course sales etc.) implied
 
 Client Intake & Onboarding:
+
 - Client intake information to capture: client details, needs, wants
 - Client onboarding wizard:
   - Funnels intake data into a custom template site
@@ -87,17 +90,20 @@ Client Intake & Onboarding:
     - Assistance vs. do-it-yourself
 
 Templates & Customization:
+
 - Templates should allow:
   - Quick population with client onboarding data
   - Further customization and template application per brand/white-label
 - Support for demo/preview white-labels to show customization options live
 
 Pricing & Sales Flow:
+
 - Pricing tiers and options determined by onboarding choices
 - Immediate visibility of available services based on selections
 - Options to combine services (posting, maintenance, builds, custom work)
 
 Tournament & Competition Schema Requirements:
+
 - WEKAF USA site and app: league-style tournament management for martial arts tournaments, specific for WEKAF but can work for any of the following, customizable tournament software/site/app
   - Support multiple formats: single elimination, double elimination, round robin, grand championship (winners of divisions feed into grand championship)
   - Bracket management (e.g., eight brackets)
@@ -114,6 +120,7 @@ Tournament & Competition Schema Requirements:
 - Customization required per tournament/organization
 
 Data Model & Schema Considerations (high-level list of needed entities):
+
 - Brands
 - Sites (including white-label demo sites and templates)
 - Templates and template customization
@@ -133,6 +140,7 @@ Data Model & Schema Considerations (high-level list of needed entities):
 - School owners/instructors can create their own courses to package and sell as well as give access to their own students
 
 Requirements / To-Do Items:
+
 - Create schema pass focused on full coverage and customization possibilities
 - Ensure onboarding wizard maps to all site fields for full pre-population
 - Design template system to allow rapid white-label demos and on-the-spot sales
@@ -142,5 +150,6 @@ Requirements / To-Do Items:
 - Support purchasing workflow for programs/certifications (e.g., Baseline Martial Arts)
 
 Notes / Constraints:
+
 - Extract and reflect only information provided (no assumptions beyond message and dirstarter.com/docs as only codebase we are using with customization and porting of tuffbuffs.com and blackbeltlegacy.com needs to new software and sites baselinemartialarts.com ronindojodesign.com and wekafusa.com as well as usastickfighting.com as another domain for wekafusa.com
 - Need another pass on schema: think in more detail and depth for all possibilities and customizations

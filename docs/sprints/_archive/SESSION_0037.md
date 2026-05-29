@@ -100,6 +100,7 @@ Dirstarter's admin CRUD pattern (the "Tools" entity is the canonical example):
 **Ronin extensions already following this pattern:** The `server/web/lead/` module already has `actions.ts`, `queries.ts`, `schemas.ts`, `payloads.ts`, `errors.ts` — this maps to Dirstarter's `server/admin/tools/` structure. But the **admin pages and components** don't exist yet.
 
 **Routing decision:** Dirstarter uses `/admin/tools/` (flat). Our leads are org-scoped, so we need either:
+
 - (A) `/admin/leads/` with org filter in the table (simpler, matches Dirstarter pattern)
 - (B) `/admin/organizations/[orgId]/leads/` (nested, more RESTful but no Dirstarter precedent)
 

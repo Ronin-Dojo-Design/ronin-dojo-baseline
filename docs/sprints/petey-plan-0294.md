@@ -23,6 +23,7 @@ exist and can be edited by super admins. Two pieces remain:
 
 - **D10**: Org-scoped CSS injection — org pages should render OrgSettings color
   overrides via `[data-org]` scoping. Cascade: `styles.css → BrandSettings → OrgSettings`.
+
 - **D11**: Org admin self-service theme page — org owners (and ORG_ADMIN role
   members) can edit their own org's theme at `/organizations/[slug]/settings/theme`.
 
@@ -30,8 +31,10 @@ exist and can be edited by super admins. Two pieces remain:
 
 - **CSS scoping**: `[slug]/layout.tsx` wraps children in `<div data-org={orgId}>`.
   Injects `<style>` with `[data-org="X"]` selector. Null fields inherit from brand.
+
 - **Color value hardening**: Regex guard `/^[\d.\s,/%]+$/` before CSS injection.
   Blocks any non-HSL characters.
+
 - **Auth model for self-service**: `userActionClient` + inline check for
   `org.ownerId === user.id` OR membership with `ORG_ADMIN` role code.
 - **403 page**: Martial-arts-styled "Access Denied" page with personality.

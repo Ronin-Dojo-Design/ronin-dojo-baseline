@@ -30,6 +30,7 @@ closed-quick
 ### Goal
 
 Remediate F-01 and F-02 from SESSION_0046 hostile close review:
+
 - **F-01**: Add `stripePaymentIntentId` column to Registration, store in webhook, use for refunds (replacing fragile `sessions.list(100)` lookup)
 - **F-02**: Add serializable transaction for capacity check to prevent concurrent registration races
 

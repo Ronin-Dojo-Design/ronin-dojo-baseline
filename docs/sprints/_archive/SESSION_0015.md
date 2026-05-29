@@ -75,11 +75,13 @@ backlinks:
 ## Reflections
 
 ### What went well
+
 - Petey plan → Cody execution pipeline worked cleanly. Plan identified the root cause (missing seed data), Cody fixed it, and all 6 tasks completed in one session.
 - The build log concept solves a real problem: SESSION files track planning/discussion but don't give a quick "what actually shipped and does it work" view. The build log is intentionally not a wiki page — it's a structured log with status fields, designed to be scanned not read.
 - Mermaid diagrams alongside ASCII is the right call — ASCII is universally readable (terminals, plain text, diffs), Mermaid renders in GitHub/Obsidian/VS Code preview.
 
 ### What could improve
+
 - The JETTY 3.0 frontmatter creates `MD025` lint warnings (multiple H1s) because the title is in both frontmatter and the body `#` heading. This is a repo-wide pattern issue, not specific to this session. Should consider either suppressing MD025 or removing the body `# Title` when frontmatter `title:` exists.
 - wiki/index.md wasn't updated this session — new files are orphaned from the index. Next session should do a wiki index sweep.
 - The dev-environment runbook still doesn't exist. Third session in a row where the dev server command was a pain point.

@@ -69,6 +69,7 @@ Assess Course admin CRUD completeness, then plan Program admin CRUD build-out fo
 ### Discovery Summary
 
 **Course admin CRUD — ALREADY EXISTS:**
+
 - `apps/web/app/admin/courses/page.tsx` — list page
 - `apps/web/app/admin/courses/new/page.tsx` — create page
 - `apps/web/app/admin/courses/[id]/page.tsx` — edit page
@@ -77,12 +78,14 @@ Assess Course admin CRUD completeness, then plan Program admin CRUD build-out fo
 - **Web-facing:** `apps/web/app/(web)/courses/page.tsx`, `[slug]/page.tsx`
 
 **Program admin CRUD — DOES NOT EXIST:**
+
 - Web-facing pages exist: `apps/web/app/(web)/programs/` (list, detail, edit, new, enroll, schedules)
 - Web server layer exists: `apps/web/server/web/program/` (queries, actions, schemas, payloads)
 - **No `apps/web/app/admin/programs/` directory** — no admin list, create, edit, or delete
 - **No `apps/web/server/admin/programs/` directory** — no admin queries/actions
 
 **Schema models (all exist in Prisma):**
+
 - `Program`, `ProgramCourse`, `ProgramWaiver`, `ProgramEnrollment`
 - `Course`, `CurriculumItem`, `CourseEnrollment`, `CurriculumItemCompletion`
 
@@ -189,6 +192,7 @@ Execution order: TASK_01 → (TASK_02 ∥ TASK_03) → (TASK_04 ∥ TASK_05)
 ### Scope Guard
 
 Do NOT:
+
 - Modify existing Course admin code (unless TASK_02 finds a critical bug)
 - Build ProgramEnrollment admin (future session)
 - Add Stripe/payment integration to Programs

@@ -23,6 +23,7 @@ tags:
 Explain how to use the new control docs inside the baseline repo: the truth index, the alias ledger, the manual-boundary registry, the JETTY 3.0 systems profile, and the loading order. Use these docs to reduce drift, not to create drag.
 
 Applies to:
+
 - `repo-truth-index.md`
 - `aliases-and-canonical-ids.md`
 - `manual-boundary-registry.md`

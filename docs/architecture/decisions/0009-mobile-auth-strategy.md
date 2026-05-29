@@ -72,12 +72,14 @@ The mobile auth client mirrors `dirstarter_template/lib/auth-client.ts` exactly 
 ## Consequences
 
 **Positive:**
+
 - Zero new server-side code for mobile auth
 - Session model is identical web/mobile — simplifies authorization logic
 - Magic link login works on mobile (deep link → app → session established)
 - Future plugins (social auth, passkeys) added once, work everywhere
 
 **Negative:**
+
 - Mobile app requires network access to the web app's auth endpoints (no offline-first auth)
 - Deep link configuration required for magic link callback on iOS/Android
 - If Better-Auth ever drops React Native support, we'd need to revisit (low risk — large community)

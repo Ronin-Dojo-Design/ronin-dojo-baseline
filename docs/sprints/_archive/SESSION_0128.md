@@ -72,6 +72,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 ### Tasks
 
 #### TASK_01 — Wire FormMedia for avatar upload
+
 - **Agent:** Cody
 - **What:** Replace the `avatarUrl` text `Input` in `passport-editor.tsx` with `FormMedia` component, using Dirstarter's existing `useMediaAction` hook and `uploadToS3Storage` from `lib/media.ts`. Add a server action `uploadPassportMedia` that accepts a file, validates auth, uploads to S3 at key `passports/{userId}/avatar`, and returns the URL.
 - **Steps:**
@@ -83,6 +84,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 - **Depends on:** nothing
 
 #### TASK_02 — Add coverPhotoUrl + videoIntroUrl to DirectoryProfile form
+
 - **Agent:** Cody
 - **What:** Add `coverPhotoUrl` as a `FormMedia` upload field. Add `videoIntroUrl` as a dual-mode field: text Input for YouTube/Vimeo URL (available to all), or `FormMedia` S3 upload (available only to users with `S3_UPLOAD` entitlement). For now, implement the URL input; gate the FormMedia behind a boolean prop `canUploadVideo` passed from the server page.
 - **Steps:**
@@ -95,6 +97,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 - **Depends on:** TASK_01 (shared media action pattern)
 
 #### TASK_03 — Build socialLinks key-value editor
+
 - **Agent:** Cody
 - **What:** Create a `SocialLinksEditor` component that renders a list of `{ platform, url }` entries with add/remove. Platforms: WEBSITE, INSTAGRAM, FACEBOOK, YOUTUBE, TIKTOK, TWITTER, LINKEDIN. Uses Dirstarter `Select` for platform picker, `Input` for URL, `Button` for add/remove.
 - **Steps:**
@@ -106,6 +109,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 - **Depends on:** TASK_01 (form structure established)
 
 #### TASK_04 — Seed S3_UPLOAD entitlement + wire entitlement check + auto-grant by tier
+
 - **Agent:** Cody
 - **What:** Add a seed for `S3_UPLOAD` entitlement (one per brand). Create a helper `hasEntitlement(userId, entitlementKey)` in `server/web/entitlements/queries.ts`. Also create `canUploadMedia(userId, brand)` that checks EITHER a UserEntitlement row OR membership tier/role (premium/elite/legend tiers, admin/instructor/coach/owner roles). Wire into `/me` server page.
 - **Steps:**
@@ -117,6 +121,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 - **Depends on:** nothing (can run parallel with TASK_01)
 
 #### TASK_05 — Admin UI: grant/revoke S3 upload entitlement
+
 - **Agent:** Cody
 - **What:** Add a "Grant Upload" action to the existing admin entitlements UI. This creates a `UserEntitlement` row with `sourceType: ADMIN_GRANT` for the selected user + `S3_UPLOAD` entitlement. Also add a revoke action. Leverage existing admin entitlements CRUD patterns.
 - **Steps:**
@@ -128,6 +133,7 @@ Wire Dirstarter's S3 upload machinery into the Passport profile editor for avata
 - **Depends on:** TASK_04 (entitlement seeded)
 
 #### TASK_06 — Type check + visual QA
+
 - **Agent:** Cody
 - **What:** Run `bun run typecheck`, browse `/me`, confirm all fields render. Test upload flow if S3 is configured.
 - **Steps:**

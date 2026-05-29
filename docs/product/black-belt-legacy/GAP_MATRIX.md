@@ -18,6 +18,7 @@ backlinks:
 Story-by-story implementation status mapped against `STORIES.md`.
 
 **Legend:**
+
 - ✅ Built — route, server, UI all wired and functional
 - 🔶 Partial — server logic or UI exists but feature incomplete or untested end-to-end
 - ❌ Not started — no implementation exists

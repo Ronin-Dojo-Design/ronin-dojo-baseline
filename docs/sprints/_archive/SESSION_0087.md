@@ -65,6 +65,7 @@ Plan and assign the remaining S3 tournament operations hardening tasks needed be
 All 10 open-work items from the S3 completion lane are marked complete except **#7: Integration tests — registration capacity race conditions, cross-brand isolation**.
 
 Sessions 0082–0086 attacked part of this:
+
 - SESSION_0082/0083: Registration capacity race condition tests (planning + partial execution)
 - SESSION_0084: Stripe webhook test harness + paid-path capacity oversubscription proof
 - SESSION_0085: Paid-path capacity oversubscription fix

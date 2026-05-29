@@ -72,6 +72,7 @@ backlinks:
 7. **Read Dirstarter auth** (`lib/auth.ts`): `getServerSession()` wrapped in `React.cache()` for per-request dedup. `lib/auth-hoc.ts` provides `withAuth()`/`withAdminAuth()` for API routes. Session uses `cookieCache: { enabled: true }`.
 
 **ADR 0010 drafted** — three-tier caching strategy:
+
 - **T1 (public):** `"use cache"` + `cacheLife("hours")` — orgs, roles, disciplines
 - **T2 (auth-variant):** `"use cache"` + `cacheLife("minutes")` with `viewerUserId` in cache key — directory profiles
 - **T3 (per-user private):** `React.cache()` only — passport, memberships

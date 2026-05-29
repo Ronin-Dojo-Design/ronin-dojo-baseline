@@ -104,6 +104,7 @@ Two parallel PRs (code lane + docs lane) + stale PR triage in the wait-on-Vercel
        }
        ```
        Type-safe: the returned `sortBy` is narrowed to `T[number] | undefined` so Prisma `orderBy: { [sortBy]: sortOrder }` stays sound.
+
      - Refactor `apps/web/server/web/courses/queries.ts`:
        - Keep `SORTABLE_COURSE_COLUMNS = ["title"] as const` (in-file constant).
        - Replace lines 26–30 with `const { sortBy, sortOrder } = parseSort(sort, SORTABLE_COURSE_COLUMNS)`.

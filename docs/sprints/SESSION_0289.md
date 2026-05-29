@@ -106,6 +106,7 @@ component + tests.
   `server/admin/media/actions.ts`. Attach creates a `MediaAttachment` linking a
   `Media` to exactly one target entity (by entity type + id). Detach removes by
   attachment id. Add `findMediaAttachments` query filtered by entity.
+
 - **Steps:**
   1. Define Zod schemas for attach (mediaId, entityType enum, entityId, purpose?,
      sortOrder?) and detach (attachmentId or ids)
@@ -119,6 +120,7 @@ component + tests.
 - **Agent:** Cody
 - **What:** Safe-action tests proving attach creates a `MediaAttachment` row,
   detach removes it, and invalid entity types are rejected.
+
 - **Done means:** Tests pass via `bun test`.
 - **Depends on:** TASK_02
 
@@ -163,6 +165,7 @@ the next session.
 
 - **Docs read first:** `schema.prisma` (direct), `petey-plan-0287.md`, admin media
   actions pattern (SESSION_0287).
+
 - **Baseline pattern to extend:** `adminActionClient` chain, existing
   `createMedia`/`deleteMedia` action shapes, `idsSchema` for detach.
 - **Custom delta:** `attachMedia`/`detachMedia` actions + entity-type routing +
@@ -188,11 +191,14 @@ the next session.
 - **`attachMedia` + `detachMedia` admin server actions** in
   `server/admin/media/actions.ts`. Attach creates a `MediaAttachment` linking a `Media`
   to any of the 8 entity types via dynamic FK routing. Detach deletes by id(s).
+
 - **`findMediaAttachments` query** in `server/admin/media/queries.ts` — returns
   attachments for a given entity type + id with media details, ordered by `sortOrder`.
+
 - **`AttachableEntityType` enum** exported from actions for type-safe consumers.
 - **4-case DB-backed safe-action test** (`media-attachment.safe-action.test.ts`):
   attach success, detach success, unauth rejection, non-admin rejection. All pass.
+
 - **JETTY annotations** added to all 8 `mediaAttachments` back-relations in schema
   and to the forward-relation block on `MediaAttachment`.
 
@@ -251,15 +257,19 @@ starting with BBL. Decide D2 (path convention).
 
 - **Plan sanity:** One TASK_03 slice as queued by SESSION_0288. No scope creep — Thread-2
   and TASK_04 (metadata enrichment) explicitly deferred.
+
 - **Dirstarter alignment:** **Extension, not bypass.** Reused `adminActionClient`,
   `idsSchema`, and existing Prisma relation patterns. No new action client, no parallel
   storage path.
+
 - **Verification honesty:** 4/4 tests, biome clean, 0 tsc errors — all literal.
 - **Data integrity:** Additive migration only (no column changes, no data touched).
   All 8 FK columns now have proper Prisma relations.
+
 - **WORKFLOW 5.0 compliance:** One lane; 4 numbered tasks + task log + review log.
 - **Score:** 9/10. Half-point off for no admin UI consuming surface (deferred, not skipped).
   Half-point off for no Dirstarter live docs re-check (no auth/storage architecture changed).
+
 - **Unresolved findings:** none new.
 
 ## ADR / ubiquitous-language check
@@ -268,6 +278,7 @@ starting with BBL. Decide D2 (path convention).
   added CRUD actions using the established admin action client pattern. No architectural
   decision was made, changed, or rejected — D4 was a schema hygiene fix, not an
   architecture change.
+
 - **Ubiquitous language:** No new or changed domain terms. `MediaAttachment` and
   `AttachableEntityType` are existing schema concepts, not new domain terms.
 
@@ -277,9 +288,11 @@ starting with BBL. Decide D2 (path convention).
   relies on the Zod enum matching column names exactly. If a column is ever renamed
   without updating the enum, the action silently sets the wrong FK. The Prisma type
   system catches this at compile time though, so the risk is low.
+
 - Adding JETTY annotations to pre-existing Wave D relations (Technique, ContentAtom,
   CertificateTemplate) retroactively is good incremental cleanup — future sessions
   reading the schema will know when and why each relation was added.
+
 - The 4-case test covers the auth gate (unauth, non-admin) and happy paths (attach,
   detach) with real DB fixtures. This is sufficient — the action bodies are thin
   Prisma wrappers, not complex business logic.

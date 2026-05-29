@@ -61,6 +61,7 @@ Repo-specific rule: do not force all three into one datastore on day one. Keep t
 New ideas not yet shaped.
 
 Fields:
+
 - source
 - captured_at
 - topic
@@ -73,6 +74,7 @@ Fields:
 Ideas that have passed triage and are becoming canonical atoms.
 
 Fields:
+
 - canonical_id
 - hook
 - promise
@@ -84,6 +86,7 @@ Fields:
 
 #### C. Media ops queue
 Everything waiting on:
+
 - footage
 - edit
 - thumbnail
@@ -93,6 +96,7 @@ Everything waiting on:
 
 #### D. Publish queue
 Ready variants waiting on:
+
 - review
 - channel selection
 - publish slot
@@ -100,6 +104,7 @@ Ready variants waiting on:
 
 #### E. Iteration queue
 Published things that should turn into:
+
 - reel -> short lesson
 - short -> blog
 - article -> curriculum extract
@@ -109,6 +114,7 @@ Published things that should turn into:
 ### Intake system
 
 #### Intake sources
+
 - quick note
 - wiki research page
 - session file
@@ -197,6 +203,7 @@ Rule: the command center should know which path is being used. Do not pretend ev
 
 #### ContentAtom
 Owns:
+
 - hook
 - promise
 - proof
@@ -209,6 +216,7 @@ Owns:
 
 #### ContentTask
 Owns:
+
 - task type
 - assignee
 - due
@@ -218,6 +226,7 @@ Owns:
 
 #### ContentVariant
 Owns:
+
 - output channel
 - output surface
 - copy transform
@@ -226,6 +235,7 @@ Owns:
 
 #### PublicationRecord
 Owns:
+
 - published channel/site
 - URL
 - date
@@ -237,6 +247,7 @@ Owns:
 Iggy's job is **not** to own the product. Iggy's job is to make repeated content workflow motion safer and easier.
 
 Iggy should own these support layers:
+
 - intake runner contracts
 - evidence bundle structure
 - media-ops task seed templates
@@ -245,6 +256,7 @@ Iggy should own these support layers:
 - follow-on task generation for repurposing
 
 Iggy should not own:
+
 - final editorial truth
 - brand voice
 - product decisions

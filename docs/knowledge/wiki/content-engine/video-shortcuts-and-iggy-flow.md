@@ -35,6 +35,7 @@ Iggy exists to make repeated content operations safer, lighter, and more traceab
 Iggy exists to make repeated content operations safer, lighter, and more traceable.
 
 In the video lane, that means:
+
 - repeated capture becomes structured intake
 - repeated edit prep becomes reusable task bundles
 - repeated publish prep becomes checklists / save-back flows
@@ -47,12 +48,14 @@ Iggy does **not** become the creative director.
 #### Shortcut 1 — Quick Clip Intake
 
 Use when:
+
 - class clip was filmed
 - tournament clip was filmed
 - quick talking-head idea was recorded
 - voice memo should become a content seed
 
 Output — a new intake record with:
+
 - title
 - date
 - brand target
@@ -81,6 +84,7 @@ send to INBOX queue
 Use when an intake item is worth building.
 
 Output — creates:
+
 - atom shell
 - default hook/promise/proof/CTA slots
 - linked media task seed
@@ -103,6 +107,7 @@ Promote to Atom shortcut
 Use when one atom should become multiple media tasks.
 
 Output — tasks like:
+
 - cut 20 second teaser
 - cut 60 second reel
 - make on-screen text
@@ -127,6 +132,7 @@ spawn edit/export/review tasks
 Use when a variant has shipped.
 
 Output — saves:
+
 - channel
 - surface
 - URL
@@ -155,6 +161,7 @@ Standardize what every intake artifact must include.
 
 #### Seed B — media-evidence bundle
 Each media job should be easy to verify:
+
 - source clip
 - derived exports
 - captions
@@ -163,6 +170,7 @@ Each media job should be easy to verify:
 
 #### Seed C — repurpose ladder generator
 When something publishes, create the next likely outputs automatically:
+
 - reel -> article
 - article -> email
 - class clip -> curriculum note
@@ -170,6 +178,7 @@ When something publishes, create the next likely outputs automatically:
 
 #### Seed D — dashboard task views
 Support views for:
+
 - waiting on footage
 - waiting on edit
 - waiting on review

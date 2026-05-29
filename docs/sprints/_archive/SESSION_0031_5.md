@@ -50,14 +50,18 @@ Aggregate-confidence target: **9/10 or higher** before SESSION_0032 begins.
   aggregate 7/10. Schedule slice landed in `wt-school-ops` on
   `session-0031-class-schedules` (commit `3e624e6`); main worktree carries the
   docs at commit `95bcf41`. Neither is pushed yet — push pending owner approval.
+
 - Kaizen findings carried into this session:
   - SESSION_0031_FINDING_01 — fresh-worktree bootstrap procedure is undocumented.
   - SESSION_0031_FINDING_02 — `Avatar` and `Badge variant` mistakes were caught
     by typecheck, not by Cody pre-flight; primitive API spot-check missing.
+
   - SESSION_0031_FINDING_03 — `bun:test` types not installed; worked around
     with `@ts-expect-error` (low priority — track but do not block).
+
 - FAILED_STEPS log: FS-0006 / FS-0007 mitigations remain in force. This session
   must not regress them.
+
 - Drift register: D-005 (cache strategy on auth-scoped data) remains open;
   pagination work must continue to use `react.cache` (per-request) only — never
   `"use cache"` (persistent) on member-private reads.
@@ -66,10 +70,12 @@ Aggregate-confidence target: **9/10 or higher** before SESSION_0032 begins.
   (production multi-domain) still owner-gated; does not block this session.
 - Lane: **Core platform governance** primary (protocol + runbook updates),
   **School operations** dependent sub-lane (schedule-list + tests).
+
 - Branch / worktree:
   - Code (TASK_01, TASK_02, TASK_05 instrumentation, TASK_06): continues on
     `wt-school-ops` / `session-0031-class-schedules`. No new branch — these are
     follow-ups to the same slice and should ship in the same PR.
+
   - Docs / protocol updates (TASK_03, TASK_04): main worktree
     (`/Users/brianscott/dev/ronin-dojo-app`) directly on `main`.
 
@@ -102,6 +108,7 @@ behavior. No spec amendment required. Bounded by:
 - SESSION_0031 — the slice this session hardens.
 - `docs/architecture/security-privacy-payments-monitoring-plan.md` — gate 4 + 9
   proof obligations.
+
 - `docs/protocols/cody-preflight.md` — protocol being updated.
 - `docs/runbooks/dev-environment.md` — runbook being extended.
 
@@ -157,6 +164,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
 - **What:** Add page size + status filter to
   `apps/web/app/(web)/programs/[programId]/schedules/page.tsx` and a paginated
   query in `server/web/schedule/queries.ts`.
+
 - **Steps:**
   1. Cody pre-flight: read the *updated* `cody-preflight.md` (after TASK_03
      lands, or speculatively if running in parallel — see parallelism note);
@@ -175,9 +183,11 @@ gap before SESSION_0032 attendance work depends on session-row stability.
      it currently); leave the cached non-paginated version exported for
      backward compat if the smoke or any other consumer depends on it, or
      delete if nothing else uses it. Decision: delete unless smoke breaks.
+
 - **Done means:**
   - List page renders 20 schedules max; page buttons work; status filter works
     via URL.
+
   - Brand + organization predicates remain explicit (MB-002).
   - Touched-slice typecheck clean; existing smoke still passes.
 - **Depends on:** ideally TASK_03 (so pre-flight uses the updated checklist).
@@ -189,6 +199,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
 - **Agent:** Doug + Cody.
 - **What:** Replace the gate-4 / gate-9 honesty gap with a real test of the
   server action stack, not the DB lookalike.
+
 - **Steps:**
   1. Add `apps/web/server/web/schedule/actions.test.ts` using `bun:test`
      (`// @ts-expect-error` import header pattern matches the existing
@@ -218,6 +229,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
 - **Agent:** Petey + Doug.
 - **What:** Update `docs/protocols/cody-preflight.md` so the recurring class of
   mistakes from SESSION_0031 cannot recur silently.
+
 - **Steps:**
   1. Add a sub-step to the **Component checklist** under "L1 template scan":
      "Read each composed primitive's component file (`components/common/<name>.tsx`)
@@ -236,6 +248,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
 - **Done means:**
   - `cody-preflight.md` has both new sub-steps with examples of correct
     pre-flight output.
+
   - `failed-steps-log.md` has a new mitigated entry.
 - **Depends on:** nothing.
 
@@ -265,14 +278,17 @@ gap before SESSION_0032 attendance work depends on session-row stability.
   materialize: created=%d cancelled=%d deleted=%d refreshed=%d duration=%dms",
   ...)` at the end of `materializeSchedule` before the AuditLog write. No
   behavior change.
+
 - **What (if promoted — full task):** Replace the per-row upsert loop with
   `db.classSession.createMany({ skipDuplicates: true })` for new dates,
   `db.classSession.updateMany` for time refreshes, plus a separate read of
   newly-created ids so AuditLog still has a per-mutation record. Only do this
   if a SESSION_0031 production slow-run produces data justifying it.
+
 - **Done means (default):** instrumentation line present; close evidence
   records that batch optimization was *deferred until evidence* per Kaizen
   reasoning.
+
 - **Depends on:** nothing.
 
 #### SESSION_0031_5_TASK_06 — DST + concurrency tests (promoted from optional)
@@ -280,6 +296,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
 - **Agent:** Doug + Cody.
 - **What:** Add unit tests for daylight-saving-time correctness and an
   integration test for concurrent `materializeSchedule` calls.
+
 - **Steps:**
   1. Add to `server/web/schedule/session-generator.test.ts`:
      - DST spring-forward case (US, 2026-03-08): schedule MON 17:00–18:00 in
@@ -287,11 +304,13 @@ gap before SESSION_0032 attendance work depends on session-row stability.
        startTime/endTime strings are unchanged across the boundary (the
        generator stores wall-clock time strings, so the test pins that
        contract).
+
      - DST fall-back case (US, 2026-11-01): same structure.
   2. Add `server/web/schedule/materialize.concurrency.test.ts` (integration):
      - Set up one schedule.
      - Fire two `materializeSchedule` calls in `Promise.all` against a real
        transaction-rolled-back DB.
+
      - Assert: total session count matches the single-call expected count;
        no duplicate `(classScheduleId, date)` rows; no exceptions surface to
        the caller (one call may experience a unique violation internally and
@@ -304,6 +323,7 @@ gap before SESSION_0032 attendance work depends on session-row stability.
   - One concurrency test passes.
   - Architecture confidence at scale of 10,000 (Kaizen Q3) demonstrably
     improved with reproducible evidence.
+
 - **Depends on:** TASK_02 may share helpers; not strictly required.
 
 ### Parallelism
@@ -445,10 +465,13 @@ Three concurrent execution agents produced pre-flight artifacts; consolidated be
 - `bunx prisma validate --schema apps/web/prisma/schema.prisma` (in worktree)
 - `bun test ./server/web/schedule/` — all generator + actions + concurrency
   tests pass
+
 - `bun scripts/smoke-schedule.ts` — existing 9/9 smoke still passes after
   pagination refactor
+
 - Touched-slice typecheck clean (treat `bun:test` `@ts-expect-error` as
   acceptable; treat any new error in schedule files as a blocker)
+
 - `git diff --check`
 - `bun run wiki:lint`
 - **Kaizen aggregate re-scored** with the three questions from
@@ -468,6 +491,7 @@ Three concurrent execution agents produced pre-flight artifacts; consolidated be
 - `apps/web/server/web/schedule/queries.ts` — paginated query function.
 - `apps/web/app/(web)/programs/[programId]/schedules/page.tsx` — pagination +
   status filter.
+
 - `apps/web/server/web/schedule/actions.test.ts` — gate 4 + gate 9 tests.
 - `apps/web/server/web/schedule/session-generator.test.ts` — DST cases added.
 - `apps/web/server/web/schedule/materialize.concurrency.test.ts` — new file.
@@ -476,6 +500,7 @@ Three concurrent execution agents produced pre-flight artifacts; consolidated be
 - `docs/protocols/cody-preflight.md` — primitive + schema spot-check sub-steps.
 - `docs/protocols/failed-steps-log.md` — mitigated entry referencing the
   primitive-API and enum-spelling slips from SESSION_0031.
+
 - `docs/runbooks/dev-environment.md` — fresh-worktree bootstrap section.
 - `docs/sprints/SESSION_0031_5.md` — close evidence + Kaizen re-score.
 - `docs/protocols/project-log.md` — task plan entries + review entry
@@ -487,6 +512,7 @@ Three concurrent execution agents produced pre-flight artifacts; consolidated be
   implementation patterns, not decisions worth an ADR. The Kaizen-triage
   protocol addition is documented in `hostile-close-review.md` already and
   does not need a separate ADR.
+
 - Ubiquitous language: no new terms. Defer
   `ScheduleSessionGenerator`/`ScheduleRecurrencePattern` until they appear on
   a public surface.
@@ -495,6 +521,7 @@ Three concurrent execution agents produced pre-flight artifacts; consolidated be
 
 - MB-002 brand-scope hardening — paginated query keeps explicit `{ brand,
   organizationId }` predicate. Verify by grep at close.
+
 - MB-013 / MB-014 unchanged; MB-014 still owner-gated.
 - D-005 cache strategy — pagination uses `react.cache` per-request (not
   `"use cache"`). Comment in `queries.ts` explicitly stating why.

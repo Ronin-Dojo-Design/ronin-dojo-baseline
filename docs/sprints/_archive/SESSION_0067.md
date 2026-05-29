@@ -46,6 +46,7 @@ Execute SESSION_0066 TASK plan — schema migration (add slug to DirectoryProfil
 ### Petey's pre-flight assessment
 
 SESSION_0066 planned 4 tasks for 0067. Three are already done:
+
 - SESSION_0067_TASK_01 (schema migrations): Only DirectoryProfile.slug remains.
 - SESSION_0067_TASK_02 (technique routes): Already built.
 - SESSION_0067_TASK_03 (member detail page): Needs /directory/[slug] + findProfileBySlug.

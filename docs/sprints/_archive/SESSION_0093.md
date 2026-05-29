@@ -150,6 +150,7 @@ Solidify the commerce contract and schedule the next sessions so payments are la
 ### Tasks
 
 #### TASK_01 — Commerce truth reconciliation
+
 - **Agent:** Petey + Giddy
 - **What:** Update the planning truth around entitlements, PricingPlans, Stripe IDs, and payment templates.
 - **Steps:**
@@ -161,6 +162,7 @@ Solidify the commerce contract and schedule the next sessions so payments are la
 - **Depends on:** nothing.
 
 #### TASK_02 — Payment proof template for subscriptions and one-time purchases
+
 - **Agent:** Cody + Doug
 - **What:** Reuse the tournament webhook test shape for subscription and one-time entitlement flows.
 - **Steps:**
@@ -173,6 +175,7 @@ Solidify the commerce contract and schedule the next sessions so payments are la
 - **Depends on:** TASK_01.
 
 #### TASK_03 — WORKFLOW 5.0 calendar and PWCC staging
+
 - **Agent:** Petey + Desi + Brandon
 - **What:** Keep the May 18 launch board honest after commerce is sequenced.
 - **Steps:**
