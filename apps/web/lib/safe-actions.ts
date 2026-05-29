@@ -4,6 +4,7 @@ import { createSafeActionClient } from "next-safe-action"
 import { Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { canUploadMedia } from "~/server/web/entitlements/queries"
 import { db } from "~/services/db"
 
 type RevalidateOptions = {
@@ -98,3 +99,16 @@ export const tournamentAdminActionClient = userActionClient.use(async ({ next, c
 // 5. Public client (no auth required — for unauthenticated forms)
 // -----------------------------------------------------------------------------
 export const publicActionClient = actionClient
+
+// -----------------------------------------------------------------------------
+// 6. Media-upload client (auth + canUploadMedia entitlement gate)
+// -----------------------------------------------------------------------------
+export const mediaUploadActionClient = userActionClient.use(async ({ next, ctx }) => {
+  const brand = await getRequestBrand()
+
+  if (!(await canUploadMedia(ctx.user.id, brand))) {
+    throw new Error("User not authorized to upload media")
+  }
+
+  return next({ ctx: { brand } })
+})

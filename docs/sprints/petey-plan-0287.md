@@ -75,7 +75,7 @@ not replacing them.
   button + per-card delete; `lib/media.test.ts` (6 cases). typecheck/biome/test green.
 - **Depends on:** nothing.
 
-#### TASK_02 — Slice 2: harden web upload auth (security)
+#### TASK_02 — Slice 2: harden web upload auth (security) ✅ DONE (SESSION_0288)
 
 - **Agent:** Cody (+ Doug security review)
 - **What:** `uploadMedia`/`fetchMedia` move from public `actionClient` to an
@@ -83,6 +83,12 @@ not replacing them.
 - **Done means:** unauthenticated/ungated callers are rejected; `form-media.tsx`
   consumers still work for authorized users; safe-action test proves the gate.
 - **Depends on:** confirm intended exposure (Open decision D1).
+- **Outcome:** Added `mediaUploadActionClient` (auth + `canUploadMedia` gate) to
+  `lib/safe-actions.ts`; both web actions now use it. New
+  `server/web/actions/media.safe-action.test.ts` (5 cases: unauth + unentitled
+  rejection for both actions, entitled upload success). D1 resolved → **tighten**
+  (the `/me` UI already gated on `canUploadMedia`; the server just never enforced
+  it). typecheck/biome/test green.
 
 #### TASK_03 — Slice 3: MediaAttachment attach/detach CRUD
 

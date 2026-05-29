@@ -4,10 +4,10 @@ import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import wretch from "wretch"
 import { getFaviconFetchUrl, getScreenshotFetchUrl, uploadToS3Storage } from "~/lib/media"
-import { actionClient } from "~/lib/safe-actions"
+import { mediaUploadActionClient } from "~/lib/safe-actions"
 import { createFetchMediaSchema, createUploadMediaSchema } from "~/server/web/shared/schema"
 
-export const fetchMedia = actionClient
+export const fetchMedia = mediaUploadActionClient
   .inputSchema(async () => {
     const t = await getTranslations("schema")
     return createFetchMediaSchema(t)
@@ -24,7 +24,7 @@ export const fetchMedia = actionClient
     return await uploadToS3Storage(data, path)
   })
 
-export const uploadMedia = actionClient
+export const uploadMedia = mediaUploadActionClient
   .inputSchema(async () => {
     const t = await getTranslations("schema")
     return createUploadMediaSchema(t)
