@@ -3,7 +3,7 @@
 import { after } from "next/server"
 import { z } from "zod/v4"
 import { userActionClient } from "~/lib/safe-actions"
-import { db } from "~/services/db"
+import { assertOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 
 /** Convert empty strings to null for DB storage */
 const toNullable = (v: string | undefined) => (v === "" || v === undefined ? null : v)
@@ -20,34 +20,6 @@ const orgThemeSchema = z.object({
 })
 
 /**
- * Check if a user is authorized to manage an org's theme.
- * Authorized = org owner OR has a membership with ORG_ADMIN role.
- */
-async function assertOrgThemeAccess(userId: string, organizationId: string) {
-  const org = await db.organization.findUnique({
-    where: { id: organizationId },
-    select: { ownerId: true },
-  })
-
-  if (!org) throw new Error("Organization not found")
-  if (org.ownerId === userId) return // owner is always authorized
-
-  const adminMembership = await db.membership.findFirst({
-    where: {
-      userId,
-      organizationId,
-      roleAssignments: {
-        some: { role: { code: "ORG_ADMIN" } },
-      },
-    },
-  })
-
-  if (!adminMembership) {
-    throw new Error("ACCESS_DENIED")
-  }
-}
-
-/**
  * Self-service org theme update. Authorized for org owner or ORG_ADMIN role.
  */
 export const updateOrgThemeSelfService = userActionClient
@@ -55,7 +27,7 @@ export const updateOrgThemeSelfService = userActionClient
   .action(async ({ parsedInput, ctx: { user, db: prisma, revalidate } }) => {
     const { organizationId, ...raw } = parsedInput
 
-    await assertOrgThemeAccess(user.id, organizationId)
+    await assertOrgAdminAccess(user.id, organizationId)
 
     const data = {
       primaryColor: toNullable(raw.primaryColor),

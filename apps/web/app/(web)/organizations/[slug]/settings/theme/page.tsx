@@ -6,29 +6,12 @@ import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { findOrgSettings } from "~/server/admin/org-settings/queries"
+import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import { getOrganizationBySlug } from "~/server/web/organization/queries"
-import { db } from "~/services/db"
 import { SelfServiceThemeForm } from "./_components/self-service-theme-form"
 
 interface Props {
   params: Promise<{ slug: string }>
-}
-
-/** Check if user is org owner or has ORG_ADMIN role in the org */
-async function hasOrgThemeAccess(userId: string, organizationId: string, ownerId: string) {
-  if (userId === ownerId) return true
-
-  const adminMembership = await db.membership.findFirst({
-    where: {
-      userId,
-      organizationId,
-      roleAssignments: {
-        some: { role: { code: "ORG_ADMIN" } },
-      },
-    },
-  })
-
-  return !!adminMembership
 }
 
 export default async function OrgThemeSettingsPage({ params }: Props) {
@@ -39,7 +22,7 @@ export default async function OrgThemeSettingsPage({ params }: Props) {
   if (!org) notFound()
   if (!session?.user) notFound()
 
-  const canEdit = await hasOrgThemeAccess(session.user.id, org.id, org.ownerId ?? "")
+  const canEdit = await hasOrgAdminAccess(session.user.id, org.id)
 
   if (!canEdit) {
     return (

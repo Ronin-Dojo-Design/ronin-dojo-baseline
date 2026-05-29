@@ -22,6 +22,7 @@ import {
   generateSchemaReference,
   generateStructuredDataEntity,
 } from "~/lib/structured-data"
+import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import {
   findOrganizationSlugs,
   findRelatedOrganizations,
@@ -66,6 +67,9 @@ export default async function OrganizationDetailPage({ params }: Props) {
   if (!org) notFound()
 
   const isOwner = session?.user?.id === org.ownerId
+
+  // Check if user can manage org settings (owner or ORG_ADMIN role)
+  const canManage = session?.user ? await hasOrgAdminAccess(session.user.id, org.id) : false
 
   // Group memberships by unique user for display (Passport+Shell model:
   // one person can have many discipline memberships in the same org).
@@ -223,7 +227,11 @@ export default async function OrganizationDetailPage({ params }: Props) {
                     {(() => {
                       const hasActive = memberships.some(m => m.status === "ACTIVE")
                       const hasSuspended = memberships.some(m => m.status === "SUSPENDED")
-                      const status = hasActive ? "ACTIVE" : hasSuspended ? "SUSPENDED" : memberships[0].status
+                      const status = hasActive
+                        ? "ACTIVE"
+                        : hasSuspended
+                          ? "SUSPENDED"
+                          : memberships[0].status
                       return (
                         <Badge
                           size="sm"
@@ -286,6 +294,22 @@ export default async function OrganizationDetailPage({ params }: Props) {
         </Section.Content>
 
         <Section.Sidebar>
+          {canManage && (
+            <Card isRevealed>
+              <CardHeader>
+                <H4>
+                  <Link href={`/organizations/${org.slug}/settings`}>
+                    <span className="absolute inset-0 z-10" />
+                    ⚙️ Organization Settings
+                  </Link>
+                </H4>
+              </CardHeader>
+              <CardDescription>
+                Manage theme, branding, and organization configuration.
+              </CardDescription>
+            </Card>
+          )}
+
           {isOwner && org.inviteCode && (
             <Card hover={false}>
               <CardHeader>
