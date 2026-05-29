@@ -194,11 +194,19 @@ NOT this session: email brand props, `.url/.email/.domain` conversion, S3 assets
 
 ### Goal
 
-BBL assets → S3 + begin media-upload CRUD improvement (shadcn parity with the tool-listing gold-standard page).
+SESSION_0285 — Brand-aware page metadata + JSON-LD: kill the `og:site_name` + JSON-LD "Baseline Martial Arts" leak across all pages (Flag 2 from this session). Plan pre-staged at `docs/sprints/petey-plan-0285.md`. Slotted ahead of assets→S3 per owner decision.
+
+### Inputs to read
+
+- `docs/sprints/petey-plan-0285.md` — the execution plan
+- `docs/runbooks/white-label-site-runbook.md` — audit backlog (flip og:site_name + JSON-LD rows on completion)
+- `apps/web/lib/pages.ts`, `apps/web/config/metadata.ts`, `apps/web/lib/structured-data.ts`
 
 ### First task
 
-Pull BBL logo/images from `ronin-dojo-monorepo`, decide the S3 transport path (AWS CLI bulk vs site media uploader) at execution time per file count/size, and upload to the configured bucket per `aws-s3-operator-runbook.md`.
+Execute petey-plan-0285 TASK_01: make `getPageData` / `getPageMetadata` in `lib/pages.ts` async + brand-aware via `getRequestBrand()`, threading brand into `structured-data.ts` and `metadataConfig`. Then await the 46 callers (TASK_02) and re-smoke (TASK_03).
+
+(Deferred to the session after: BBL assets → S3 + media-upload CRUD improvement, transport path decided at execution.)
 
 ## Review log
 
