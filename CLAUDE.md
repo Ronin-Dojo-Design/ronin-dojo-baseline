@@ -1,6 +1,53 @@
-# CLAUDE.md — LLM Wiki Schema
+# CLAUDE.md — ronin-dojo-app
 
-This file defines how AI agents should behave when maintaining the Ronin Dojo Baseline knowledge wiki.
+Standing context for every Claude Code session in this repo. Two parts:
+**Session operations** (how to run a session) and the original **LLM Wiki Schema**
+(how to maintain the knowledge wiki). Kept tight — this loads into context each session,
+so it does not need re-pasting at bow-in.
+
+## Session operations (bow-in / bow-out / orchestration)
+
+### Repo & environment
+
+- Repo: **ronin-dojo-app** (`/Users/brianscott/dev/ronin-dojo-app`, remote
+  `Ronin-Dojo-Design/ronin-dojo-baseline`). VSCode's primary cwd is the **read-only**
+  `dirstarter_template` boilerplate — never git/build/write there. Every Bash call
+  operates from the ronin-dojo-app cwd; run the FS-0024 `pwd` + `git remote` guard
+  before any mutating git (the shell guard blocks `git`/`gh`/`bun`/`vercel`/`graphify`
+  from the template dir).
+- App lives in `apps/web` (Next.js + Prisma + Better Auth, pnpm/bun workspace). Dev
+  server: `cd apps/web && npx next dev --turbo` (FS-0002 — not `bun dev`/`pnpm dev`).
+- Tooling available: **Vercel CLI, GitHub CLI (`gh`), Docker, MCP servers** — use for
+  PRs/merges/rebases (`gh`), deploy checks (`vercel`), local S3 (MinIO via Docker).
+
+### How sessions run
+
+- **Bow-in and bow-out are mandatory** (`/bow-in`, `/bow-out` → the rituals in
+  `docs/rituals/`). The default task is the **"Next session" block of the
+  highest-numbered `docs/sprints/SESSION_NNNN.md`** — read it; it does not need pasting.
+- **Discovery is Graphify-first**: `graphify stats`/`query` before repo-wide
+  `grep`/`find`/`ls` on cross-area work (`docs/runbooks/graphify-repo-memory.md`).
+- **Default to Petey orchestration** for multi-part or unclear lanes: plan via
+  `docs/protocols/petey-plan.md` (grill open decisions first), then Cody builds and
+  Doug verifies. Parallelize with sub-agents only when the work is genuinely disjoint;
+  do single coherent changes inline.
+
+### Bow-out = full close (default)
+
+- Run the **full** closing ritual including optional deep items: Reflections, hostile
+  close review, evidence table, ADR check, memory sweep, and documenting new components
+  in `docs/knowledge/wiki/custom-component-inventory.md`.
+- After git hygiene, refresh Graphify: `GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .`.
+- **Standing authorization: stage, commit (conventional message), and push to `main`
+  on completion** — trunk-based flow for this repo. Gates (typecheck / biome / tests /
+  wiki-lint) must pass first; never force-push; run the FS-0024 git guard.
+  *(Remove this bullet if you'd rather confirm each push.)*
+
+---
+
+## LLM Wiki Schema
+
+This section defines how AI agents should behave when maintaining the Ronin Dojo Baseline knowledge wiki.
 
 ## Purpose
 
