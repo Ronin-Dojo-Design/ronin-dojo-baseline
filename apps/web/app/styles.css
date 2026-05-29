@@ -157,6 +157,30 @@
     --color-chart-5: hsl(340 75% 55%);
   }
 
+  /* BBL (Black Belt Legacy) — gold/black theme */
+  [data-brand="BBL"] {
+    --color-primary: hsl(45 100% 50%);
+    --color-primary-foreground: hsl(0 0% 5%);
+  }
+
+  [data-brand="BBL"].dark,
+  .dark[data-brand="BBL"] {
+    --color-primary: hsl(45 100% 50%);
+    --color-primary-foreground: hsl(0 0% 5%);
+  }
+
+  /* WEKAF — red/blue Filipino flag theme */
+  [data-brand="WEKAF"] {
+    --color-primary: hsl(0 84% 50%);
+    --color-primary-foreground: hsl(0 0% 98%);
+  }
+
+  [data-brand="WEKAF"].dark,
+  .dark[data-brand="WEKAF"] {
+    --color-primary: hsl(0 84% 50%);
+    --color-primary-foreground: hsl(0 0% 98%);
+  }
+
   hr {
     @apply border-foreground/10!;
   }
