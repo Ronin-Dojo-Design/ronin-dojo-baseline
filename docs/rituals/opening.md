@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-24
-last_agent: copilot-session-0241
+updated: 2026-05-29
+last_agent: claude-session-0299
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -80,6 +80,8 @@ graphify query "<lane nouns and domain terms>" --budget 2000
 ```
 
 Then open the exact files Graphify identifies and verify them by direct source/doc inspection. Do not use repo-wide `grep`, `rg`, or `find` for task planning before the graph query. If a path is already known, open that exact file directly.
+
+**Doc discovery aids (optional, not gates):** when a task touches an operational area, start from the [runbooks domain hub](../runbooks/README.md) and jump to the relevant module instead of guessing filenames. For doc-only, full-text lookup, regenerate and search the navigator: `bun run docs:nav` then open `docs/index.html`. Division of labor — Graphify answers "what *code* relates to X"; the navigator answers "what *docs* exist about X."
 
 Record the query and selected files in the SESSION file if Graphify changes what you open. Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
 

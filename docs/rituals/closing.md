@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-24
-last_agent: copilot-session-0241
+updated: 2026-05-29
+last_agent: claude-session-0299
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -102,6 +102,7 @@ For every file listed in `Files touched`, run this dual sweep:
 - Verify the **current session** has an entry in the session table with correct status.
 - Verify no prior sessions are missing (spot-check the last 5 session numbers). If gaps exist, fill them before closing.
 - If any new wiki pages were created, or any page status/health changed, add/update the relevant rows.
+- If the session **added, moved, or retired a runbook**, update the [runbooks domain hub](../runbooks/README.md) in the same pass (same rule as the custom-component-inventory). Moving a runbook also requires relinking inbound references — never move without an atomic relink.
 - Bump `updated` on `wiki/index.md` itself.
 
 If you created new cross-references during the session, verify both pages list each other in `pairs_with` or `backlinks`.
@@ -141,6 +142,8 @@ GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
 Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response. See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
+
+**Docs Navigator** ([docs-navigator runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never commit it.** `docs/index.html` is generated (~7 MB) and git-ignored; run `bun run docs:nav` whenever you want to browse the latest docs. It is not a close gate and must not enter a commit (it would churn megabytes every session).
 
 ### 5. Bow-out line
 
