@@ -243,5 +243,5 @@ public-facing pages for visual consistency with the brand design system.
 | Review and Recommend | Next session goal written: Desi design review + Brandon branding audit |
 | Memory sweep | No new memory entries needed — test pattern is documented in SOP |
 | Next session unblock check | No blockers for next session |
-| Git hygiene | Pending — commit after this close |
-| Graphify update | Pending — after git commit |
+| Git hygiene | `18f5628` — committed and pushed to `main` |
+| Graphify update | Done — 116 nodes, 565 edges, 1328 communities |
