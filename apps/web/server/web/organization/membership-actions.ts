@@ -182,10 +182,12 @@ async function loadOrgMembership(membershipId: string, organizationId: string) {
 }
 
 /**
- * Assign a system role to a member of the org. Authorized for owner + ORG_ADMIN
- * (any org admin can grant any system role, mirroring the platform pattern).
+ * Assign a system role to a member of the org. Authorized for owner + ORG_ADMIN.
  * Validates the role is a system role and the member belongs to the org.
  * Idempotent via upsert on the compound unique.
+ *
+ * PRIVILEGE ESCALATION GUARD (F-0300-2): Only the org owner can assign the
+ * ORG_ADMIN role. An ORG_ADMIN cannot elevate another member to ORG_ADMIN.
  */
 export const assignOrgRole = userActionClient
   .inputSchema(orgRoleSchema)
@@ -203,6 +205,17 @@ export const assignOrgRole = userActionClient
       })
       if (!role?.isSystem) {
         throw new Error("Invalid role")
+      }
+
+      // F-0300-2: Only the org owner can assign ORG_ADMIN to prevent privilege escalation.
+      if (role.code === "ORG_ADMIN") {
+        const org = await db.organization.findUnique({
+          where: { id: organizationId },
+          select: { ownerId: true },
+        })
+        if (org?.ownerId !== user.id) {
+          throw new Error("ACCESS_DENIED")
+        }
       }
 
       const assignment = await db.membershipRoleAssignment.upsert({

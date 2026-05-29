@@ -189,6 +189,170 @@ SESSION_0099 local catalog estimate:
 
 If `NEXT_PUBLIC_MEDIA_BASE_URL` points at CloudFront, S3 transfer to CloudFront is not billed as direct public egress. CloudFront itself has either flat-rate plans or pay-as-you-go billing. As of the checked pricing page, the CloudFront Free flat-rate plan is `$0/month` with `100 GB` transfer, `1M` requests, and `5 GB` included S3 storage for one distribution. Re-check AWS pricing before production launch because CloudFront and S3 pricing can change.
 
+## Image Optimization
+
+### Next.js Image Loader for S3/CloudFront
+
+When `NEXT_PUBLIC_MEDIA_BASE_URL` points to CloudFront, configure the Next.js `<Image>` component
+to use it as an external image source. In `next.config.ts`:
+
+```ts
+images: {
+  remotePatterns: [
+    {
+      protocol: "https",
+      hostname: "media.baselinemartialarts.com", // or your CloudFront domain
+      pathname: "/images/**",
+    },
+  ],
+}
+```
+
+For self-hosted Next.js (Vercel), the built-in image optimizer handles format negotiation (WebP/AVIF)
+automatically when you use `<Image>`. For static exports or edge deployments, use a custom loader
+pointing to CloudFront.
+
+### WebP/AVIF Auto-Conversion via CloudFront
+
+Two approaches, in order of preference:
+
+1. **CloudFront Functions (simplest, free tier eligible):** Create a viewer-request function that
+   reads the `Accept` header and rewrites the origin path to serve pre-generated WebP/AVIF variants
+   if they exist in S3 (e.g., `image.jpg` → `image.webp`). This requires uploading variants at
+   upload time (see below).
+
+2. **Lambda@Edge (dynamic, more cost):** Attach a Lambda@Edge origin-response function that
+   converts images on the fly using `sharp`. Cache the result at CloudFront edge. Cost scales with
+   invocations — suitable if you have many images and don't want to pre-generate variants.
+
+For launch, rely on Next.js `<Image>` component's built-in optimization (Vercel handles this
+server-side). Add CloudFront-level conversion only if you move off Vercel or need edge-level
+optimization for non-Next.js consumers.
+
+### Upload-Time Compression and Resizing
+
+Add a processing step in the upload server action (or a post-upload async job):
+
+1. **Resize:** Generate standard variants (thumbnail 150px, card 600px, full 1200px) using `sharp`.
+2. **Compress:** Apply lossy compression (quality 80 for JPEG, quality 85 for WebP).
+3. **Format variants:** Generate `.webp` alongside the original format.
+4. **Upload all variants** to S3 with appropriate `Content-Type` and `Cache-Control` headers.
+
+This is not required for launch but should be added before the catalog exceeds ~500 images or
+if page load metrics show image size as a bottleneck.
+
+### Cost Impact
+
+Image optimization reduces CloudFront transfer costs significantly:
+
+- WebP is ~25-35% smaller than JPEG at equivalent quality
+- AVIF is ~50% smaller than JPEG
+- Proper resizing prevents serving 4000px originals to mobile devices
+
+At current catalog size (59 objects, 0.04 GB), optimization is nice-to-have. At growth scenario
+(10,000+ monthly views), it materially reduces transfer costs.
+
+## Operator Provisioning Checklist
+
+Follow these steps in order. Each step has a verification check.
+
+### Prerequisites
+
+- [ ] AWS account with billing enabled
+- [ ] AWS CLI installed locally (`brew install awscli`)
+- [ ] AWS CLI configured (`aws configure` — use a personal admin profile, NOT the app IAM user)
+- [ ] Domain DNS access (for custom media subdomain, optional)
+
+### Step-by-step
+
+1. **Create S3 bucket (staging)**
+   ```bash
+   aws s3 mb s3://ronin-dojo-media-staging --region us-east-2
+   ```
+   - [ ] Enable versioning: `aws s3api put-bucket-versioning --bucket ronin-dojo-media-staging --versioning-configuration Status=Enabled --region us-east-2`
+   - [ ] Block public access: `aws s3api put-public-access-block --bucket ronin-dojo-media-staging --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true --region us-east-2`
+   - [ ] Enable SSE-S3 encryption (default on new buckets, verify in console)
+   - ✅ Verify: `aws s3 ls s3://ronin-dojo-media-staging --region us-east-2` returns empty bucket
+
+2. **Create S3 bucket (production)**
+   ```bash
+   aws s3 mb s3://ronin-dojo-media-prod --region us-east-2
+   ```
+   - [ ] Same settings as staging (versioning, block public access, encryption)
+   - [ ] Add lifecycle rule: expire noncurrent versions after 90 days
+   - ✅ Verify: bucket exists and settings match
+
+3. **Create IAM policy**
+   - [ ] Go to IAM → Policies → Create Policy
+   - [ ] Use the JSON from the "Create App Upload IAM Policy" section above
+   - [ ] Name it `ronin-dojo-media-upload-policy`
+   - [ ] Create for staging bucket first, duplicate for prod
+
+4. **Create IAM user**
+   - [ ] Go to IAM → Users → Create User
+   - [ ] Name: `ronin-dojo-media-uploader`
+   - [ ] No console access — programmatic only
+   - [ ] Attach the policy from step 3
+   - [ ] Generate access key → copy `Access Key ID` and `Secret Access Key`
+   - ⚠️ Store credentials securely (1Password, not in chat/docs)
+
+5. **Create CloudFront distribution (staging)**
+   - [ ] Go to CloudFront → Create Distribution
+   - [ ] Origin: `ronin-dojo-media-staging.s3.us-east-2.amazonaws.com`
+   - [ ] Origin access: Origin Access Control → Create new OAC
+   - [ ] Viewer protocol: Redirect HTTP to HTTPS
+   - [ ] Cache policy: CachingOptimized
+   - [ ] Copy the bucket policy CloudFront generates → apply to S3 bucket
+   - ✅ Verify: distribution status = Deployed
+
+6. **Create CloudFront distribution (production)**
+   - [ ] Same as staging but with production bucket
+   - [ ] Optional: add custom domain `media.baselinemartialarts.com`
+   - [ ] If custom domain: create ACM certificate in `us-east-1` first
+   - [ ] If custom domain: add CNAME record in DNS
+
+7. **Sync local assets to staging**
+   ```bash
+   aws s3 sync apps/web/public/images/merch s3://ronin-dojo-media-staging/images/merch \
+     --region us-east-2 \
+     --cache-control "public,max-age=31536000,immutable" \
+     --exclude ".DS_Store"
+   ```
+   - ✅ Verify: `curl -I https://<cloudfront-domain>/images/merch/placeholder.svg` returns 200
+
+8. **Set Vercel environment variables (staging)**
+   - [ ] `S3_BUCKET` = `ronin-dojo-media-staging`
+   - [ ] `S3_REGION` = `us-east-2`
+   - [ ] `S3_ACCESS_KEY` = from step 4
+   - [ ] `S3_SECRET_ACCESS_KEY` = from step 4
+   - [ ] `S3_PUBLIC_URL` = CloudFront domain (e.g., `https://d1234abcdef.cloudfront.net`)
+   - [ ] `NEXT_PUBLIC_MEDIA_BASE_URL` = same as `S3_PUBLIC_URL`
+   - [ ] Redeploy preview/staging
+
+9. **Verify staging**
+   - [ ] Open `/gear` on staging — images load from CloudFront domain
+   - [ ] Open `/admin/storage/monitoring` — status shows `CONFIGURED`
+   - [ ] Check browser DevTools Network tab — images served from CloudFront
+
+10. **Repeat steps 7-9 for production** when ready to go live
+
+### Estimated time
+
+- Steps 1-4: ~20 minutes (AWS console)
+- Steps 5-6: ~15 minutes (CloudFront can take 5-10 min to deploy)
+- Steps 7-9: ~10 minutes (sync + verify)
+- Total: ~45 minutes for staging, ~30 additional for production
+
+### Cost estimate (monthly)
+
+| Scenario | S3 Storage | S3 Requests | CloudFront | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Launch (2K views/mo) | $0.001 | $0.01 | $0.00 (free tier) | ~$0.01 |
+| Growth (10K views/mo) | $0.001 | $0.05 | $0.00 (free tier) | ~$0.05 |
+| Heavy (50K views/mo) | $0.001 | $0.24 | $0.00 (free tier covers 100GB) | ~$0.24 |
+
+CloudFront free tier includes 1TB/month transfer + 10M requests. You won't exceed this until significant scale.
+
 ## Operating Rules
 
 - Keep private certificates, student media, and future protected downloads out of this public bucket unless signed/private delivery is implemented.

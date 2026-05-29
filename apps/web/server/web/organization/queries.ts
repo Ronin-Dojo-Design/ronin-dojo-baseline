@@ -1,3 +1,14 @@
+/**
+ * AUTH CONTRACT — Page-level gate, not query-level.
+ *
+ * These queries are called exclusively from server components wrapped in
+ * `requireAuth()` / `requireOrgAccess()` HOCs. Auth is enforced at the page
+ * boundary (L1 — Dirstarter pattern). Adding redundant auth checks here would
+ * diverge from L1, add unnecessary DB round-trips, and create a maintenance
+ * burden without improving security — all callers are already authenticated.
+ *
+ * See: SESSION_0302 grill Fork 2, F-0300-1 (accepted-risk).
+ */
 import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import {

@@ -77,6 +77,13 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(3, "5 m"), // 3 sends of same template to same recipient per 5 min
       }),
+      // @added SESSION_0302 — F-0300-3: rate-limit org invite generation.
+      // Keyed on userId to prevent any single admin from flooding invite links.
+      invite: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(5, "1 h"), // 5 invite generations per hour per actor
+      }),
     }
   : null
 

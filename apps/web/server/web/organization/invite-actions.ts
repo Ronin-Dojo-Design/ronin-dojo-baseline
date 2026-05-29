@@ -2,6 +2,7 @@
 
 import { after } from "next/server"
 import { z } from "zod/v4"
+import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { assertOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import { db } from "~/services/db"
@@ -29,6 +30,11 @@ export const createOrgInvite = userActionClient
   .inputSchema(createOrgInviteSchema)
   .action(
     async ({ parsedInput: { organizationId, maxUses, expiresAt }, ctx: { user, revalidate } }) => {
+      // F-0300-3: Rate-limit invite generation per user (5/hour).
+      if (await isRateLimited(user.id, "invite")) {
+        throw new Error("RATE_LIMITED")
+      }
+
       await assertOrgAdminAccess(user.id, organizationId)
 
       const org = await db.organization.findUnique({
