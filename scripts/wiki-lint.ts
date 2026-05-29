@@ -288,9 +288,45 @@ function R4_staleFrontmatter(pages: ParsedPage[]): LintResult[] {
   const results: LintResult[] = []
   const now = new Date()
 
+  // Document types and paths that are intentionally stable and should not
+  // trigger staleness warnings. These are reference docs, not living work.
+  const STABLE_TYPES = new Set([
+    "session--open", "session--implement", "session--review", "session--plan",
+    "adr", "decision",
+    "file",   // point-in-time reference docs — they don't rot
+    "plan",   // plans are signed-off or superseded, not living
+  ])
+  const STABLE_PATH_PATTERNS = [
+    /sprints\/_archive\//,       // archived sessions
+    /sprints\/SESSION_\d{4}\.md/, // all closed sessions (they don't change after close)
+    /architecture\/decisions\//,  // ADRs
+    /knowledge\/wiki\/files\//,   // wiki file explainer pages
+    /knowledge\/wiki\/component-porting\//, // component port maps
+    /knowledge\/wiki\/content-engine\//,    // content engine reference
+    /knowledge\/wiki\/concepts\//,          // concept pages
+    /^_archive\//,               // top-level archive
+    /^agents\//,                 // agent role definitions (stable reference)
+    /^protocols\//,              // protocols (stable unless actively revised)
+    /^knowledge\/JETTY/,         // JETTY spec (stable reference)
+    /^knowledge\/jetty-/,        // JETTY profiles (stable reference)
+    /^knowledge\/how-to-/,       // how-to guides (stable reference)
+    /^runbooks\/sops\//,         // SOPs (stable unless actively revised)
+  ]
+
   for (const page of pages) {
     const updated = page.frontmatter.updated
     if (typeof updated !== "string") continue
+
+    // Skip stable document types
+    const docType = page.frontmatter.type
+    if (typeof docType === "string" && STABLE_TYPES.has(docType)) continue
+
+    // Skip stable document status — closed sessions, superseded docs
+    const status = page.frontmatter.status
+    if (typeof status === "string" && (status === "closed" || status === "superseded" || status === "archived" || status === "signed-off" || status === "deprecated")) continue
+
+    // Skip stable path patterns
+    if (STABLE_PATH_PATTERNS.some(p => p.test(page.relativePath))) continue
 
     const updatedDate = new Date(updated)
     if (isNaN(updatedDate.getTime())) continue
@@ -379,13 +415,24 @@ function R7_healthDrift(_pages: ParsedPage[]): LintResult[] {
  */
 function R8_markdownFormatting(pages: ParsedPage[]): LintResult[] {
   const results: LintResult[] = []
+  const fs = require("node:fs") as typeof import("node:fs")
 
   for (const page of pages) {
     const lines = page.body.split("\n")
+
+    // Compute frontmatter line offset so reported line numbers are file-relative.
+    let fmOffset = 0
+    if (Object.keys(page.frontmatter).length > 0) {
+      const raw = fs.readFileSync(page.filePath, "utf-8")
+      const fmMatch = raw.match(/^---\n([\s\S]*?)\n---\n?/)
+      fmOffset = fmMatch ? fmMatch[0].split("\n").length - 1 : 0
+    }
+
     let inCodeFence = false
 
     for (let i = 0; i < lines.length - 1; i++) {
       const current = lines[i]
+      const fileLine = i + 1 + fmOffset
 
       // Track fenced code blocks — skip formatting checks inside them
       if (/^```/.test(current.trim())) {
@@ -402,27 +449,39 @@ function R8_markdownFormatting(pages: ParsedPage[]): LintResult[] {
           rule: "R8",
           severity: "warning",
           file: page.relativePath,
-          message: `Heading on line ${i + 1} immediately followed by list (missing blank line)`,
-          line: i + 1,
+          message: `Heading on line ${fileLine} immediately followed by list (missing blank line)`,
+          line: fileLine,
         })
       }
 
-      // Non-blank, non-list line followed by list item (common: bold text then list)
+      // Non-blank, non-list, non-heading, non-table, non-blockquote line
+      // followed by list item. Excludes:
+      //   - table rows (|)
+      //   - blockquote lines (>)
+      //   - "**Label:** value" definition-style lines (common before lists in session files)
+      //   - indented continuation lines (part of a multi-line list item)
       if (
         current.trim() !== "" &&
         !/^\s*[-*+]\s/.test(current) &&
         !/^\s*\d+[.)]\s/.test(current) &&
         !/^#{1,6}\s/.test(current) &&
+        !/^\s*\|/.test(current) &&
+        !/^\s*>/.test(current) &&
+        !/^\s{2,}/.test(current) && // indented continuation of a list item
         /^\s*[-*+]\s/.test(next)
       ) {
-        // Only flag if current line looks like prose (starts with ** or letter)
-        if (/^\*\*/.test(current.trim()) || /^[A-Za-z]/.test(current.trim())) {
+        const trimmed = current.trim()
+        if (
+          (/^\*\*/.test(trimmed) || /^[A-Za-z]/.test(trimmed)) &&
+          // Don't flag "**Label:** value" lines — definition-style pattern
+          !/^\*\*[^*]+:\*\*\s/.test(trimmed)
+        ) {
           results.push({
             rule: "R8",
             severity: "warning",
             file: page.relativePath,
-            message: `Text on line ${i + 1} immediately followed by list (missing blank line)`,
-            line: i + 1,
+            message: `Text on line ${fileLine} immediately followed by list (missing blank line)`,
+            line: fileLine,
           })
         }
       }

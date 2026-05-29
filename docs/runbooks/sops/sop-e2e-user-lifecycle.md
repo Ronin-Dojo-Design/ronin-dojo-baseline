@@ -70,6 +70,7 @@ The user now exists as:
 > - Role assignment/removal: org-admin gated, system-role validated, cross-org guarded.
 > - Reject (PENDING → delete): hard-deletes the row to avoid `@@unique` collision on re-request. Audit entry written before delete.
 > - Dashboard `updateOrganization` consolidated onto same `assertOrgAdminAccess` (D-017, SESSION_0300).
+> - **Behaviorally proven:** `server/web/organization/org-management.safe-action.test.ts` (SESSION_0301) — 18 test cases proving unauth rejection, cross-org rejection, and happy paths for all 6 org management actions.
 
 ```text
 Passport

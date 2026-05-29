@@ -117,9 +117,12 @@ Host brand and active app brand may align, but they are not always the same thin
 >
 > - Org-scoped mutations use `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role. See `server/web/organization/org-admin-access.ts`.
 > - Every org-scoped mutation enforces a **cross-org guard**: the target entity (membership, invite, etc.) must belong to the asserted `organizationId`. An org admin cannot act on another org's resources by ID.
+> - **Behaviorally proven:** `server/web/organization/org-management.safe-action.test.ts` (SESSION_0301) — 18 test cases proving unauth rejection, cross-org rejection, and happy paths for all 6 org management actions.
 > - Brand is **never client-trusted** — server derives brand from the org row or host header.
 > - Admin-only surfaces use `adminActionClient` (platform super-admin).
-> - Media uploads use `mediaUploadActionClient` with `canUploadMedia(userId, brand)` — no public S3 writes.text
+> - Media uploads use `mediaUploadActionClient` with `canUploadMedia(userId, brand)` — no public S3 writes.
+
+```text
 Visitor
   |
   v
