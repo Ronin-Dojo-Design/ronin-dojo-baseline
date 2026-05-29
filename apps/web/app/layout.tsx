@@ -27,6 +27,10 @@ export const generateMetadata = async (): Promise<Metadata> => {
     description: brandConfig.description,
     icons: { icon: [{ type: "image/png", url: "/favicon.png" }] },
     ...metadataConfig,
+    openGraph: {
+      ...metadataConfig.openGraph,
+      siteName: brandConfig.name,
+    },
   }
 }
 

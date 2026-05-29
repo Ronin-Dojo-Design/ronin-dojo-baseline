@@ -5,13 +5,16 @@ import { FeatureCards } from "~/app/(web)/(home)/feature-cards"
 import { Hero } from "~/app/(web)/(home)/hero"
 import { ValueProp } from "~/app/(web)/(home)/value-prop"
 import { StructuredData } from "~/components/web/structured-data"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData } from "~/lib/pages"
 
 // Get page data
 const getData = cache(async () => {
   const t = await getTranslations()
-  const title = `${siteConfig.name} - ${t("brand.tagline")}`
+  const brand = await getRequestBrand()
+  const brandConfig = getBrandSiteConfig(brand)
+  const title = `${brandConfig.name} - ${t("brand.tagline")}`
   const description = t("brand.description")
 
   return getPageData(siteConfig.url, title, description)

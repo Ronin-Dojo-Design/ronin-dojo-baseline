@@ -158,15 +158,18 @@
   }
 
   /* BBL (Black Belt Legacy) — red theme */
+  /* BBL — #E52421 BBL Red, accent gold #FFD700 */
   [data-brand="BBL"] {
-    --color-primary: hsl(0 84% 50%);
+    --color-primary: hsl(1 79% 51%);
     --color-primary-foreground: hsl(0 0% 98%);
+    --color-accent: hsl(51 100% 50%);
   }
 
   [data-brand="BBL"].dark,
   .dark[data-brand="BBL"] {
-    --color-primary: hsl(0 84% 50%);
+    --color-primary: hsl(1 79% 51%);
     --color-primary-foreground: hsl(0 0% 98%);
+    --color-accent: hsl(51 100% 50%);
   }
 
   /* WEKAF — red/blue Filipino flag theme */

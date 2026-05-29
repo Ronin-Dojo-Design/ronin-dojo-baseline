@@ -365,6 +365,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0280](../../sprints/SESSION_0280.md) | session--implement | closed |
 | [SESSION_0281](../../sprints/SESSION_0281.md) | session--implement | closed |
 | [SESSION_0282](../../sprints/SESSION_0282.md) | session--open | closed |
+| [SESSION_0283](../../sprints/SESSION_0283.md) | session--implement | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 

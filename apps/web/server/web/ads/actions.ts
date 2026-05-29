@@ -5,7 +5,8 @@ import { getTranslations } from "next-intl/server"
 import z from "zod"
 import { AdType, type Prisma } from "~/.generated/prisma/client"
 import { adsConfig } from "~/config/ads"
-import { siteConfig } from "~/config/site"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getFaviconFetchUrl } from "~/lib/media"
 import { actionClient } from "~/lib/safe-actions"
 import { fetchMedia } from "~/server/web/actions/media"
@@ -39,6 +40,8 @@ export const findAdWithFallback = actionClient
   .inputSchema(findAdWithFallbackSchema)
   .action(async ({ parsedInput: { type, explicitAd, fallback } }) => {
     const t = await getTranslations("ads")
+    const brand = await getRequestBrand()
+    const brandConfig = getBrandSiteConfig(brand)
     let ads: AdOne[] = []
 
     const defaultAd = {
@@ -46,7 +49,7 @@ export const findAdWithFallback = actionClient
       websiteUrl: `${siteConfig.url}/advertise`,
       name: t("default_ad.name"),
       description: t("default_ad.description"),
-      buttonLabel: t("default_ad.button_label", { siteName: siteConfig.name }),
+      buttonLabel: t("default_ad.button_label", { siteName: brandConfig.name }),
       faviconUrl: "/favicon.png",
       bannerUrl: null,
     } satisfies AdOne
