@@ -12,10 +12,9 @@ import { getRequestBrand } from "~/lib/brand-context"
 import { fontSans } from "~/lib/fonts"
 import "./styles.css"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages, getTimeZone, getTranslations } from "next-intl/server"
+import { getLocale, getMessages, getTimeZone } from "next-intl/server"
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const t = await getTranslations()
   const brand = await getRequestBrand()
   const brandConfig = getBrandSiteConfig(brand)
 

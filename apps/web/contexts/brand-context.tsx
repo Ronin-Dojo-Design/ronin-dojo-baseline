@@ -39,10 +39,7 @@ export const useBrand = (): BrandContextValue => {
  * <BrandProvider brand={brand}>{children}</BrandProvider>
  * ```
  */
-export const BrandProvider = ({
-  brand,
-  children,
-}: PropsWithChildren<{ brand: Brand }>) => {
+export const BrandProvider = ({ brand, children }: PropsWithChildren<{ brand: Brand }>) => {
   const config = getBrandSiteConfig(brand)
   const value: BrandContextValue = {
     brand,
