@@ -77,6 +77,32 @@ export const getUserMemberships = cache(async (userId: string) => {
   })
 })
 
+/**
+ * Org-scoped membership roster for the org settings → members surface.
+ * Not cached: status changes (approvals) must reflect immediately. Authorization
+ * is enforced at the page/action layer via `hasOrgAdminAccess`. The page
+ * partitions PENDING members into the approval queue.
+ */
+export const getOrganizationMembers = async (organizationId: string) => {
+  return db.membership.findMany({
+    where: { organizationId },
+    select: {
+      id: true,
+      status: true,
+      memberNumber: true,
+      joinedAt: true,
+      createdAt: true,
+      user: { select: { id: true, name: true, email: true, image: true } },
+      discipline: { select: { id: true, name: true } },
+      rank: { select: { id: true, name: true } },
+      roleAssignments: {
+        select: { role: { select: { id: true, code: true, name: true } } },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
 export const getSystemRoles = async () => {
   "use cache"
 

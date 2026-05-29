@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-29
-last_agent: claude-session-0287
+last_agent: claude-session-0296
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0287.md
@@ -195,6 +195,21 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Tool claim/embed/report dialogs | `components/web/dialogs/tool-*.tsx` | Public tool-action dialogs. |
 | `LeadCaptureForm` | `components/web/lead-capture-form.tsx` | Public lead capture. |
 | `CTAForm`, `CTAProof` | `components/web/cta-form.tsx`, `cta-proof.tsx` | Public CTA surfaces with social proof. |
+
+---
+
+## 7. Org self-service settings — `app/(web)/organizations/[slug]/settings/`
+
+> Owner + ORG_ADMIN gated surface (auth via `hasOrgAdminAccess` on pages, `assertOrgAdminAccess` in actions — `server/web/organization/org-admin-access.ts`). Distinct from the platform-admin `/admin/memberships` area: org-scoped, exposed to org admins, not platform staff.
+
+| Component | File | Purpose |
+| --- | --- | --- |
+| Settings index | `settings/page.tsx` | Section-card hub (Members, Theme & Branding). `hasOrgAdminAccess` gate; non-admins get `OrgAccessDenied`. SESSION_0295 (Theme), SESSION_0296 (Members). |
+| `SelfServiceThemeForm` | `settings/theme/_components/self-service-theme-form.tsx` | Org owner/ORG_ADMIN theme editor → `updateOrgThemeSelfService`. SESSION_0294. |
+| Members page | `settings/members/page.tsx` | Roster + approval queue. Partitions PENDING into an approval-queue section (Approve/Reject cards) and a read-only roster (status + role badges). Vertical layout uses plain `flex flex-col` — **not `Stack`** — because `Stack` defaults to `direction="row"` and `column` mode applies `items-start` (shrink-wraps full-width Cards). SESSION_0296. |
+| `MemberApprovalActions` | `settings/members/_components/member-approval-actions.tsx` | Client approve/reject for a PENDING join request → `transitionOrgMembershipStatus` (Approve→ACTIVE, Reject→CANCELLED). sonner toasts + `router.refresh()`. Mirrors platform `MembershipStatusActions` conventions. SESSION_0296. |
+
+> Server: `transitionOrgMembershipStatus` (`server/web/organization/membership-actions.ts`) mirrors the platform-admin transition contract (VALID_TRANSITIONS guard, optimistic lock, audit + email notify) but re-asserts org access and **guards `membership.organizationId === organizationId`** so an org admin cannot transition another org's member by ID. Brand sourced from the membership row (userActionClient ctx has no brand). Roster query: `getOrganizationMembers` in `server/web/organization/queries.ts` (uncached — approvals must reflect immediately).
 
 ---
 

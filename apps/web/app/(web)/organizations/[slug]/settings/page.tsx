@@ -19,6 +19,12 @@ interface Props {
 
 const settingsSections = [
   {
+    title: "Members",
+    description: "Review pending join requests and view your organization's roster.",
+    href: "settings/members",
+    icon: "👥",
+  },
+  {
     title: "Theme & Branding",
     description: "Customize your dojo's colors, logo, and visual identity.",
     href: "settings/theme",
