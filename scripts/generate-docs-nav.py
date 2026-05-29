@@ -295,7 +295,7 @@ function search(q){
 }
 
 document.getElementById('search').addEventListener('input', e=>search(e.target.value));
-document.getElementById('stat').textContent=DOCS.length+' docs · generated '+GEN;
+document.getElementById('stat').textContent=DOCS.length+' docs · '+GEN;
 buildTree(DOCS);
 </script>
 </body>
@@ -303,15 +303,34 @@ buildTree(DOCS);
 """
 
 
-def main():
+def git_stamp():
+    """Self-updating provenance: gen date + short HEAD + nearest tag (or hash)."""
     import datetime
+    import subprocess
+    out = datetime.date.today().isoformat()
+    try:
+        head = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=DOCS, stderr=subprocess.DEVNULL
+        ).decode().strip()
+        desc = subprocess.check_output(
+            ["git", "describe", "--tags", "--always"], cwd=DOCS, stderr=subprocess.DEVNULL
+        ).decode().strip()
+        out += f" · {head}"
+        if desc and desc != head:
+            out += f" · checkpoint {desc}"
+    except Exception:
+        pass
+    return out
+
+
+def main():
     docs = collect()
     data = json.dumps(docs, ensure_ascii=False)
     # Neutralize any closing tag (</script>, </style>, …) embedded in doc bodies
     # so it can't terminate the <script> block early. `<\/` is a valid JSON/JS escape.
     data = data.replace("</", "<\\/")
     html = TEMPLATE.replace("__DOCS_DATA__", data).replace(
-        "__GEN_DATE__", datetime.date.today().isoformat())
+        "__GEN_DATE__", "generated " + git_stamp())
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(html)
     size_mb = os.path.getsize(OUT) / 1048576
