@@ -58,6 +58,17 @@ export const organizationOnePayload = {
 
 export const organizationDetailPayload = {
   ...organizationOnePayload,
+  orgSettings: {
+    select: {
+      primaryColor: true,
+      primaryFgColor: true,
+      accentColor: true,
+      accentFgColor: true,
+      logoUrl: true,
+      faviconUrl: true,
+      ogImageUrl: true,
+    },
+  },
   memberships: {
     select: {
       id: true,
