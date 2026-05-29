@@ -126,11 +126,11 @@ No subagents needed. This was a small protocol edit over an already-open worktre
 
 ## Task log
 
-- [SESSION_0024_TASK_01](../protocols/project-log.md) — landed
+- [SESSION_0024_TASK_01](../../protocols/project-log.md) — landed
 
 ## Review log
 
-- [SESSION_0024_REVIEW_01](../protocols/project-log.md#session_0024_review_01---hostile-close-review-protocol-review)
+- [SESSION_0024_REVIEW_01](../../protocols/project-log.md#session_0024_review_01---hostile-close-review-protocol-review)
 
 ## Hostile close review
 

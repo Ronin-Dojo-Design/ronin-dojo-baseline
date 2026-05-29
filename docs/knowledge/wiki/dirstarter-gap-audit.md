@@ -95,7 +95,7 @@ Classification options: reference-only (keep but flag), scheduled removal, or ac
 ## Relationships
 
 - Pairs with: [Dirstarter Docs Inventory](dirstarter-docs-inventory.md)
-- Backlinks: [wiki index](index.md), [SESSION_0019](../../sprints/SESSION_0019.md)
+- Backlinks: [wiki index](index.md), [SESSION_0019](../../sprints/_archive/SESSION_0019.md)
 
 ## Sources
 

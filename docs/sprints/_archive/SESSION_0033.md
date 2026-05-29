@@ -49,11 +49,11 @@ Land the next School Operations slice: a write-surface aggregate covering **Prog
 - **Latest prior session:** [`docs/sprints/SESSION_0032.md`](SESSION_0032.md), `closed-full`, WORKFLOW rubric **10.0/10**, hostile review clean. SESSION_0033 is **unblocked** unless owner chooses to spend the slot on SESSION_0032_FINDING_01 first (see Open decisions OD-1).
 - **Branch / worktree:** Implementation in `/Users/brianscott/dev/wt-school-ops` on `session-0033-enrollments-family-waivers-trial` (create at session start, off `main` after SESSION_0032 PR merges, OR off `session-0032-attendance` if PR not yet merged). Main worktree `/Users/brianscott/dev/ronin-dojo-app` stays on `main` for orchestration only.
 - **Open SESSION_0032 PR:** https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/1 — confirm merged before starting, or branch off `session-0032-attendance` if review is still open.
-- **FAILED_STEPS:** FS-0006 (Petey-first for multi-part work), FS-0007 (protocol enforcement), FS-0008 (schema spot-check) all `mitigated`. **Cody pre-flight is mandatory** for backend + schema work — the updated [`docs/protocols/cody-preflight.md`](../protocols/cody-preflight.md) with primitive-API + schema spot-check sub-steps applies.
-- **Drift register ([`drift-register.md`](../knowledge/wiki/drift-register.md)):**
+- **FAILED_STEPS:** FS-0006 (Petey-first for multi-part work), FS-0007 (protocol enforcement), FS-0008 (schema spot-check) all `mitigated`. **Cody pre-flight is mandatory** for backend + schema work — the updated [`docs/protocols/cody-preflight.md`](../../protocols/cody-preflight.md) with primitive-API + schema spot-check sub-steps applies.
+- **Drift register ([`drift-register.md`](../../knowledge/wiki/drift-register.md)):**
   - **D-005** (cache strategy on auth-scoped data) remains open. Enrollment/family/waiver reads are member-private — no `"use cache"` on them. React per-request `cache` only for non-PII reads.
   - **D-014** (Dirstarter `Tool` residue) is orthogonal.
-- **Manual boundaries ([`manual-boundary-registry.md`](../knowledge/wiki/manual-boundary-registry.md)):**
+- **Manual boundaries ([`manual-boundary-registry.md`](../../knowledge/wiki/manual-boundary-registry.md)):**
   - **MB-002** (procedural brand-scope) is the live target — every new enrollment/family/waiver query/mutation must include explicit `brand` + `organizationId` predicates. **Note:** `ProgramEnrollment`, `FamilyGroup`, `FamilyMember` carry **no** direct brand/org column — enrollment predicates flow through `Program.brand` + `Program.organizationId`; family predicates flow through target-user `Membership.brand` + `Membership.organizationId`.
   - **MB-013** (security/financial readiness) advances; full closure requires later sessions.
   - **MB-014** (production multi-domain hardening) is owner-gated; does not block SESSION_0033, blocks staging deploy.
@@ -88,14 +88,14 @@ PII.
 
 This slice is bounded by these accepted specs. No requirement may be added that is not in one of them; any new requirement requires a spec amendment first.
 
-- Programs / Curriculum / Certification spec — [`docs/architecture/programs-curriculum-certification-spec.md`](../architecture/programs-curriculum-certification-spec.md)
-- Monetization / Entitlements spec — [`docs/architecture/monetization-entitlements-spec.md`](../architecture/monetization-entitlements-spec.md) (read-only — **no** entitlement code lands; ADR 0011 entitlement-first applies in SESSION_0034)
-- Security / privacy / payments / monitoring plan — [`docs/architecture/security-privacy-payments-monitoring-plan.md`](../architecture/security-privacy-payments-monitoring-plan.md)
+- Programs / Curriculum / Certification spec — [`docs/architecture/programs-curriculum-certification-spec.md`](../../architecture/programs-curriculum-certification-spec.md)
+- Monetization / Entitlements spec — [`docs/architecture/monetization-entitlements-spec.md`](../../architecture/monetization-entitlements-spec.md) (read-only — **no** entitlement code lands; ADR 0011 entitlement-first applies in SESSION_0034)
+- Security / privacy / payments / monitoring plan — [`docs/architecture/security-privacy-payments-monitoring-plan.md`](../../architecture/security-privacy-payments-monitoring-plan.md)
 - ADR 0004 (multi-brand as column), ADR 0011 (entitlement-first commerce)
 
 ## DDD framing
 
-Use one ubiquitous-language vocabulary across schema, server actions, and tests. Update [`docs/architecture/ubiquitous-language.md`](../architecture/ubiquitous-language.md) if any new term is introduced.
+Use one ubiquitous-language vocabulary across schema, server actions, and tests. Update [`docs/architecture/ubiquitous-language.md`](../../architecture/ubiquitous-language.md) if any new term is introduced.
 
 | DDD concept | Ronin term | Implementation surface |
 | --- | --- | --- |
@@ -128,7 +128,7 @@ The next operator's Cody pre-flight Schema spot-check **must** read these models
 
 ## Petey plan
 
-> **Filled by next operator.** Use [`docs/protocols/petey-plan.md`](../protocols/petey-plan.md) format. Suggested decomposition (subject to override):
+> **Filled by next operator.** Use [`docs/protocols/petey-plan.md`](../../protocols/petey-plan.md) format. Suggested decomposition (subject to override):
 >
 > - **TASK_01** — Enrollment write surface (`enrollment/{actions,errors,payloads,queries,schemas}.ts`): `enroll`, `withdraw`, `joinWaitlist`, `promoteFromWaitlist`. Idempotent on `(userId, programId)` unique. AuditLog + rate-limit (`enrollment_write` key).
 > - **TASK_02** — Family + Waiver write surface (`family/*` + `waiver/*`): `createFamilyGroup`, `addFamilyMember`, `removeFamilyMember`, `signWaiver` (with `signedOnBehalfOf` for minors), `revokeWaiverSignature`. AuditLog + rate-limit (`family_write`, `waiver_write`).
@@ -279,7 +279,7 @@ If commerce/entitlement decisions surface, record them in `Open decisions / bloc
 
 ## Pre-flight output
 
-> **Filled by Cody at bow-in BEFORE writing code.** Use the updated [`docs/protocols/cody-preflight.md`](../protocols/cody-preflight.md) Backend + Schema checklists. Schema spot-check section MUST paste exact enum values + back-relation field names read directly from `schema.prisma`, not from this file's cheat sheet (which can drift).
+> **Filled by Cody at bow-in BEFORE writing code.** Use the updated [`docs/protocols/cody-preflight.md`](../../protocols/cody-preflight.md) Backend + Schema checklists. Schema spot-check section MUST paste exact enum values + back-relation field names read directly from `schema.prisma`, not from this file's cheat sheet (which can drift).
 
 ### Pre-flight: Schema — Enrollment / Family / Waiver / Lead write surface (no schema additions)
 

@@ -62,7 +62,7 @@ Plan the full Dirstarter upstream uplift backlog as a multi-session epic — fil
 
 ## Petey plan
 
-> The detailed multi-session plan (lanes, tasks, files, ASCII flows, low-fi wireframes, "done means") lives in [`docs/architecture/uplift/epic-2026-05-19.md`](../architecture/uplift/epic-2026-05-19.md). This session writes that doc; it does not execute any of its lanes.
+> The detailed multi-session plan (lanes, tasks, files, ASCII flows, low-fi wireframes, "done means") lives in [`docs/architecture/uplift/epic-2026-05-19.md`](../../architecture/uplift/epic-2026-05-19.md). This session writes that doc; it does not execute any of its lanes.
 
 ### Goal
 

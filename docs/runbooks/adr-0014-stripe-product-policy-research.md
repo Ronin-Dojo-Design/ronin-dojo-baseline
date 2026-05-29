@@ -130,9 +130,9 @@ Pre-research for drafting ADR 0014 (Stripe Product Policy). This runbook catalog
 
 ## Cross-References
 
-- [SESSION_0100](../sprints/SESSION_0100.md) — planning session that created this runbook
-- [SESSION_0099](../sprints/SESSION_0099.md) — S3 media bridge (storage side of commerce infra)
-- [SESSION_0098](../sprints/SESSION_0098.md) — gear page (recommended PWCC port map)
+- [SESSION_0100](../sprints/_archive/SESSION_0100.md) — planning session that created this runbook
+- [SESSION_0099](../sprints/_archive/SESSION_0099.md) — S3 media bridge (storage side of commerce infra)
+- [SESSION_0098](../sprints/_archive/SESSION_0098.md) — gear page (recommended PWCC port map)
 - [ADR 0011](../architecture/decisions/0011-entitlement-first-commerce.md) — entitlement-first commerce
 - [Dirstarter Commerce Alignment](../architecture/dirstarter-commerce-alignment.md) — baseline Stripe patterns
 - [Stripe Setup Runbook](../runbooks/stripe-setup-runbook.md) — operational Stripe setup

@@ -144,7 +144,7 @@ Dirstarter is our L1 pattern source, but the live docs move faster than our pinn
 ## Relationships
 
 - Pairs with: [Dirstarter Gap Audit](dirstarter-gap-audit.md)
-- Backlinks: [wiki index](index.md), [SESSION_0019](../../sprints/SESSION_0019.md)
+- Backlinks: [wiki index](index.md), [SESSION_0019](../../sprints/_archive/SESSION_0019.md)
 
 ## Sources
 

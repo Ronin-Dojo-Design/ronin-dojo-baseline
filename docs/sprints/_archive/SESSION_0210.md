@@ -93,11 +93,11 @@ Out of scope (deferred per [petey-plan-0083](./petey-plan-0083.md) Phase 2 re-gr
 - **Agent:** Doug + Petey
 - **What:**
   - `apps/web/.dirstarter-upstream` — append partial-port note: "L6 Phase 2a: lib/utils.ts cva→tailwind-variants swap + animated-container.tsx Slot→slot(). Heading (Phase 2b) and Box (Phase 2c) split into separate sessions per D-016 re-phasing."
-  - Update [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) `D-016`: tick Phase 2a; insert Phase 2b (Heading) and Phase 2c (Box) rows; renumber downstream phases (current Phase 3 → SESSION_0213, etc.).
+  - Update [`docs/knowledge/wiki/drift-register.md`](../../knowledge/wiki/drift-register.md) `D-016`: tick Phase 2a; insert Phase 2b (Heading) and Phase 2c (Box) rows; renumber downstream phases (current Phase 3 → SESSION_0213, etc.).
   - Update [`docs/sprints/petey-plan-0083.md`](./petey-plan-0083.md): split Phase 2 into 2a/2b/2c; renumber phases 3-8 to 3-8 (no number change — those keep their session targets shifted by 2 sessions: 0213-0218).
-  - Update [`docs/architecture/uplift/lane-ledger.md`](../architecture/uplift/lane-ledger.md) with L6 Phase 2a row.
-  - Update [`docs/knowledge/wiki/custom-component-inventory.md`](../knowledge/wiki/custom-component-inventory.md) — annotate `AnimatedContainer` row with current source.
-  - Update [`docs/protocols/project-log.md`](../protocols/project-log.md) with TASK_01/02/03 rows + review log.
+  - Update [`docs/architecture/uplift/lane-ledger.md`](../../architecture/uplift/lane-ledger.md) with L6 Phase 2a row.
+  - Update [`docs/knowledge/wiki/custom-component-inventory.md`](../../knowledge/wiki/custom-component-inventory.md) — annotate `AnimatedContainer` row with current source.
+  - Update [`docs/protocols/project-log.md`](../../protocols/project-log.md) with TASK_01/02/03 rows + review log.
   - `pnpm --filter dirstarter typecheck` ✓
   - `bun run lint` ✓
   - `bun test --isolate --path-ignore-patterns='e2e/**' --concurrency=1` ✓ (244/244 baseline)

@@ -158,7 +158,7 @@ None — all four findings have clear scoping and owners.
 
 ## Review log
 
-See [SESSION_0026_REVIEW_01](../protocols/project-log.md#session_0026_review_01---full-close-hostile-review)
+See [SESSION_0026_REVIEW_01](../../protocols/project-log.md#session_0026_review_01---full-close-hostile-review)
 
 ## Hostile close review
 

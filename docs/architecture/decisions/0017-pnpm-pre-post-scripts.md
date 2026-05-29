@@ -80,5 +80,5 @@ This pattern aligns with the Dirstarter project structure runbook's deploy story
 ## Cross-references
 
 - [FS-0022 — pnpm 9 pre/post lifecycle hooks silently disabled on Vercel](../../protocols/failed-steps-log.md#fs-0022--pnpm-9-prepost-lifecycle-hooks-silently-disabled-on-vercel)
-- [SESSION_0188 — Enrollment Safe-Action Wrapper (session continuation)](../../sprints/SESSION_0188.md#session-continuation--unplanned-post-close-work)
+- [SESSION_0188 — Enrollment Safe-Action Wrapper (session continuation)](../../sprints/_archive/SESSION_0188.md#session-continuation--unplanned-post-close-work)
 - [Schema migration runbook](../../runbooks/schema-migration.md)

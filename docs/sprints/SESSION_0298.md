@@ -176,7 +176,7 @@ a11y error by associating the generate-form date/number inputs with `htmlFor`/`i
 | --- | --- |
 | JETTY/frontmatter sweep | Code files (no frontmatter). Docs: SESSION_0298 + petey-plan-0298 created with JETTY 3.0 frontmatter; wiki index + component inventory + drift register `last_agent`→claude-session-0298. |
 | Backlinks/index sweep | SESSION_0298 `pairs_with` SESSION_0297 + petey-plan-0298; index row added; component inventory §7 updated; drift-register entry links back to this session. |
-| Wiki lint | `bun run wiki:lint` → 232 errors / 699 warnings (exit 1). Error count unchanged from SESSION_0297 — all pre-existing archived-session broken links (incl. archived files using a wrong `../` depth to reach drift-register / custom-component-inventory). My 0298 index row resolves. Warnings +3 (text-followed-by-list heuristic, repo-standard). **No errors introduced.** |
+| Wiki lint | `bun run wiki:lint` → started 232 errors / 699 warnings. **Post-close cleanup (operator request): fixed all 232 broken-link errors → 0.** Root cause: files moved into `_archive/` without updating relative link depth (and `index.md` omitting the `_archive/` segment). Resolved via a basename resolver (`/tmp/fix_wiki_links2.py`) — 232 link-path swaps across 23 docs, all 1:1 (232 ins / 232 del), no content edits. 699 cosmetic markdown-style warnings (blank-line-around-lists) intentionally left. Final: **0 errors**. |
 | Kaizen reflection | Yes — Reflections present. |
 | Hostile close review | PASS; TASK_REVIEW_LOG above; one deferred follow-up (auth consolidation, in drift register). |
 | Review & Recommend | Yes — Next session goal below. |

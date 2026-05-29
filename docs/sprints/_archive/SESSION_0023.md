@@ -235,15 +235,15 @@ Hard cap applied: data integrity has open findings, so the score is capped at 8.
 
 ## Task log
 
-- [SESSION_0023_TASK_01](../protocols/project-log.md) — landed
-- [SESSION_0023_TASK_02](../protocols/project-log.md) — landed
-- [SESSION_0023_TASK_03](../protocols/project-log.md) — landed
-- [SESSION_0023_TASK_04](../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_01](../../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_02](../../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_03](../../protocols/project-log.md) — landed
+- [SESSION_0023_TASK_04](../../protocols/project-log.md) — landed
 
 ## Review log
 
-- [SESSION_0023_REVIEW_01](../protocols/project-log.md#session_0023_review_01---schema-wave-a-hostile-review)
-- [SESSION_0023_REVIEW_02](../protocols/project-log.md#session_0023_review_02---accountability-log-review)
+- [SESSION_0023_REVIEW_01](../../protocols/project-log.md#session_0023_review_01---schema-wave-a-hostile-review)
+- [SESSION_0023_REVIEW_02](../../protocols/project-log.md#session_0023_review_02---accountability-log-review)
 
 ## Hostile review findings
 

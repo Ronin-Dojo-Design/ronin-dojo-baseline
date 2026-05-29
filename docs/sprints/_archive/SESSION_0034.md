@@ -24,7 +24,7 @@ backlinks:
 
 > **Pre-staged skeleton.** This file was scaffolded by `claude-staging-0034` during a planning meta-session on 2026-05-03 (no SESSION number — invoked via `/bow-in` then ExitPlanMode rejected, plan accepted, `/bow-out` ran). The next operator runs `/bow-in`, fills the **Pre-flight output** + **Task log** + **What landed** sections, and bumps `last_agent` to their own `<agent>-session-0034` tag. Bow-in audit, Petey plan, scope guard, manual boundaries, risks, agent assignments, and verification template are pre-filled to minimize bow-in token cost.
 >
-> The verbatim Claude plan that produced this skeleton is preserved at [`docs/architecture/source/raw/SESSION_0034_close_out_merge_train_claude_raw.md`](../architecture/source/raw/SESSION_0034_close_out_merge_train_claude_raw.md).
+> The verbatim Claude plan that produced this skeleton is preserved at [`docs/architecture/source/raw/SESSION_0034_close_out_merge_train_claude_raw.md`](../../architecture/source/raw/SESSION_0034_close_out_merge_train_claude_raw.md).
 
 ## Date
 

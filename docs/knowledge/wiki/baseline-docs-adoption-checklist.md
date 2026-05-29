@@ -94,4 +94,4 @@ A new doc pack lands in the repo from an external authoring session (ChatGPT, de
 - [Aliases and Canonical IDs](aliases-and-canonical-ids.md)
 - [Manual Boundary Registry](manual-boundary-registry.md)
 - [Next Session Loading Order](../../protocols/next-session-loading-order.md)
-- [SESSION_0010](../../sprints/SESSION_0010.md) — the session that executed this checklist for the baseline systems pack
+- [SESSION_0010](../../sprints/_archive/SESSION_0010.md) — the session that executed this checklist for the baseline systems pack

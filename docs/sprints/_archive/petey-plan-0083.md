@@ -121,5 +121,5 @@ Migrate every Ronin `components/common/*.tsx` consumer of `radix-ui` to `@base-u
 - [SESSION_0214](./SESSION_0214.md) — Phase 5 implementation (HoverCard, Accordion).
 - [SESSION_0215](./SESSION_0215.md) — Phase 4 implementation (Tooltip).
 - [SESSION_0208](./SESSION_0208.md) — L5 UI primitives Part 1; documented the original PopoverTrigger deferral.
-- [Epic 2026-05-19](../architecture/uplift/epic-2026-05-19.md) — overall uplift lane plan.
-- [Drift register](../knowledge/wiki/drift-register.md) — `D-016`.
+- [Epic 2026-05-19](../../architecture/uplift/epic-2026-05-19.md) — overall uplift lane plan.
+- [Drift register](../../knowledge/wiki/drift-register.md) — `D-016`.

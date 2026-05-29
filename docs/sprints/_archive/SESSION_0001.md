@@ -12,12 +12,12 @@
 - **Program plan reviewed and signed off.** Decisions 1–5 from `docs/architecture/program-plan.md` Section 5 accepted: layered architecture (L1 Dirstarter / L2 GPT plan / L3 Brand / L4 legacy UI), Baseline-Martial-Arts as the first brand exposed, 12-sprint MVP scope, schema renames (`Style→Discipline`, `School→Organization`, `Profile→Passport`, `Belt→Rank`), multi-role memberships from S1.
 - **BaselineDashboard system created** at `docs/{agents,protocols,rituals,sprints}/`. Replaces the legacy `RoninDashboard/` system. Lean, model-agnostic, no JETTY metadata.
 - **Bucket A v5.0 files ported** (refresh of legacy v4.5):
-  - [`docs/agents/README.md`](../agents/README.md) — BaselineDashboard introduction
-  - [`docs/agents/petey.md`](../agents/petey.md) — Planner / orchestrator persona
-  - [`docs/agents/cody.md`](../agents/cody.md) — Builder / self-reviewer persona
-  - [`docs/protocols/chat-handoff.md`](../protocols/chat-handoff.md) — Slim handoff protocol (replaces multi-file legacy state machine)
-  - [`docs/rituals/opening.md`](../rituals/opening.md) — Bow-in ritual v5.0
-  - [`docs/rituals/closing.md`](../rituals/closing.md) — Bow-out ritual v5.0
+  - [`docs/agents/README.md`](../../agents/README.md) — BaselineDashboard introduction
+  - [`docs/agents/petey.md`](../../agents/petey.md) — Planner / orchestrator persona
+  - [`docs/agents/cody.md`](../../agents/cody.md) — Builder / self-reviewer persona
+  - [`docs/protocols/chat-handoff.md`](../../protocols/chat-handoff.md) — Slim handoff protocol (replaces multi-file legacy state machine)
+  - [`docs/rituals/opening.md`](../../rituals/opening.md) — Bow-in ritual v5.0
+  - [`docs/rituals/closing.md`](../../rituals/closing.md) — Bow-out ritual v5.0
 - **JETTY annotation system rejected** as fluff after a harsh field-by-field audit. Future docs use no metadata header by default; lightweight 4-line YAML front-matter (`status / pairs_with / version`) is acceptable on docs that need orientation.
 
 ## Files touched
@@ -92,4 +92,4 @@ After the bow-out line above, the user authorized handling the GitHub side of th
 - **Branch:** `main` tracking `origin/main`
 - **One config note:** `git config http.postBuffer 524288000` (500MB) was set locally to recover from an HTTP 400 on the initial push. Future pushes are normal-sized and don't need it; the config persists harmlessly.
 
-The `Ronin-Dojo-Design` GitHub org sits alongside the legacy `ronin-dojo-monorepo` repo. They are deliberately separate; this new repo does not import legacy backend code per the program plan's layer rules ([Layer 4](../architecture/program-plan.md) is the only place legacy assets feed in, and that's UI-only at S11).
+The `Ronin-Dojo-Design` GitHub org sits alongside the legacy `ronin-dojo-monorepo` repo. They are deliberately separate; this new repo does not import legacy backend code per the program plan's layer rules ([Layer 4](../../architecture/program-plan.md) is the only place legacy assets feed in, and that's UI-only at S11).

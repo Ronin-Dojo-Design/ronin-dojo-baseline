@@ -135,5 +135,5 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 - [Prisma Workflow](prisma-workflow.md) — local Prisma schema workflow, including `migrate dev` (which uses the same advisory lock locally but in a single-user environment where the lock never leaks).
 - [ADR 0017 — pnpm pre/post scripts](../architecture/decisions/0017-pnpm-pre-post-scripts.md) — why `prebuild` runs `prisma migrate deploy` in the first place.
 - [Closing Ritual](../rituals/closing.md) — full-close step 4 requires verifying Vercel deploy state, which is the bow-out gate that catches recurrences of this pattern.
-- [SESSION_0189](../sprints/SESSION_0189.md) — first recorded incident and recovery proof.
-- [SESSION_0201](../sprints/SESSION_0201.md) — structural fix: Prisma 7 CLI datasource routing to `DIRECT_URL` on Vercel.
+- [SESSION_0189](../sprints/_archive/SESSION_0189.md) — first recorded incident and recovery proof.
+- [SESSION_0201](../sprints/_archive/SESSION_0201.md) — structural fix: Prisma 7 CLI datasource routing to `DIRECT_URL` on Vercel.
