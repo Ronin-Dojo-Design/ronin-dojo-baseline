@@ -21,26 +21,13 @@ Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
 6. **Identify ONE task.** State the task, why it matters now (one sentence linking to program plan or user request), and what "done" looks like. If unclear or multi-part, invoke Petey ([`docs/protocols/petey-plan.md`](../../docs/protocols/petey-plan.md)) to plan first.
 7. **Number tasks in TASK_PLAN_LOG.** For every task in the session plan, add or update an entry in [`docs/protocols/project-log.md`](../../docs/protocols/project-log.md) using stable IDs (`SESSION_NNNN_TASK_01`, `_TASK_02`, …) before implementation starts.
 8. **Branch check.** `git branch --show-current` and `git status --short`. If on `main` and that's expected, proceed. If uncommitted changes from a previous session exist, raise them before starting new work. If on a stale feature branch, discuss with the user.
-9. **Create the new SESSION file** at `docs/sprints/SESSION_NNNN.md` (next number after the previous one). **Always include JETTY 3.0 frontmatter:**
+9. **Create the new SESSION file** by copying the template:
 
-   ```yaml
-   ---
-   title: "SESSION NNNN — <short description>"
-   slug: session-NNNN
-   type: session--open
-   status: in-progress
-   created: <today>
-   updated: <today>
-   last_agent: <agent>-session-NNNN
-   sprint: <current sprint, e.g. S6>
-   pairs_with:
-     - docs/sprints/SESSION_<previous>.md
-   backlinks:
-     - docs/knowledge/wiki/index.md
-   ---
+   ```bash
+   cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md
    ```
 
-   Fill `Date`, `Operator` (`Brian + <agent>`), and `Goal`. Status stays `in-progress` until bow-out. Session type values at bow-in default to `session--open`; refine at bow-out to `session--plan`, `session--implement`, or `session--review` if the session was clearly one mode.
+   Fill in every `<placeholder>`, delete all HTML comment blocks. Do NOT generate the file from scratch — the template is the source of truth for structure, section order, and lint compliance. The template already includes JETTY 3.0 frontmatter, all required sections, and the correct markdown formatting.
 
 10. **State the goal and first task** before starting any work. Then proceed as Petey or Cody (Cody must complete [`docs/protocols/cody-preflight.md`](../../docs/protocols/cody-preflight.md) before writing any code).
 

@@ -4,8 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-11
-last_agent: copilot-session-0134
+updated: 2026-05-29
+last_agent: copilot-session-0300
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -68,9 +68,11 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 - [ ] Runbook consulted: {which one, or "N/A"}
 
 ### 5. Dev environment confirmed
-- Dev server command: {command}
-- Working directory: {path}
+- Dev server command: `npx next dev --turbo` (from `apps/web/`)
+- Working directory: {path — must be `apps/web/`}
 - Brand/host for testing: {host:port}
+- Verification commands confirmed: `bun run typecheck`, `bun run lint`, `bun test` (from `apps/web/`)
+- Reference: [dev-environment.md — Verification commands](../runbooks/dev-environment/dev-environment.md)
 
 ### 6. FAILED_STEPS check
 - Prior failures in this area: {FS-NNNN or "none"}
@@ -120,8 +122,8 @@ For any task that adds or modifies Prisma models (3+ models = mandatory Petey fi
 - Migration strategy: {db push for dev / migrate dev for staging}
 
 ### 5. Data flow reference
-- [ ] `docs/runbooks/sop-data-and-wiring-flows.md` — relevant flow identified: {which}
-- [ ] `docs/runbooks/sop-e2e-user-lifecycle.md` — lifecycle stage covered: {which}
+- [ ] `docs/runbooks/sops/sop-data-and-wiring-flows.md` — relevant flow identified: {which}
+- [ ] `docs/runbooks/sops/sop-e2e-user-lifecycle.md` — lifecycle stage covered: {which}
 
 ### 6. FAILED_STEPS check
 - Prior failures in this area: {FS-NNNN or "none"}
@@ -148,8 +150,8 @@ For any task that adds server actions, queries, or API routes:
 - L1 pattern match: {dirstarter action client chain / custom}
 
 ### 3. Data flow reference
-- [ ] `docs/runbooks/sop-data-and-wiring-flows.md` — flow: {which}
-- [ ] `docs/runbooks/sop-e2e-user-lifecycle.md` — lifecycle stage: {which}
+- [ ] `docs/runbooks/sops/sop-data-and-wiring-flows.md` — flow: {which}
+- [ ] `docs/runbooks/sops/sop-e2e-user-lifecycle.md` — lifecycle stage: {which}
 
 ### 4. FAILED_STEPS check
 - Prior failures in this area: {FS-NNNN or "none"}

@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { userActionClient } from "~/lib/safe-actions"
+import { assertOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 
 const updateOrganizationSchema = z.object({
   organizationId: z.string(),
@@ -20,23 +21,20 @@ const updateOrganizationSchema = z.object({
   country: z.string().max(2).optional(),
 })
 
+/**
+ * Update organization general info from the dashboard school-form.
+ * Authorized via `assertOrgAdminAccess` — org owner (by `ownerId`) OR
+ * a member with the ORG_ADMIN role. Consolidated from the legacy OWNER
+ * role-assignment check (drift D-017, SESSION_0300).
+ *
+ * @see server/web/organization/org-admin-access.ts
+ */
 export const updateOrganization = userActionClient
   .inputSchema(updateOrganizationSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const { organizationId, ...data } = parsedInput
 
-    // Verify user is owner of this org
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: user.id,
-        organizationId,
-        roleAssignments: { some: { role: { code: "OWNER" } } },
-      },
-    })
-
-    if (!membership) {
-      throw new Error("You are not authorized to edit this organization")
-    }
+    await assertOrgAdminAccess(user.id, organizationId)
 
     const org = await db.organization.update({
       where: { id: organizationId },

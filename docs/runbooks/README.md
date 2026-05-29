@@ -5,9 +5,10 @@ type: index
 status: active
 created: 2026-05-29
 updated: 2026-05-29
-last_agent: claude-session-0298
+last_agent: copilot-session-0300
 pairs_with:
   - docs/knowledge/wiki/index.md
+  - docs/architecture/security-privacy-payments-monitoring-plan.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -59,11 +60,35 @@ browser of all docs, run `bun run docs:nav` (see [Docs Navigator](dev-environmen
 
 ## SOPs
 
-- [sop-data-and-wiring-flows](sops/sop-data-and-wiring-flows.md) — end-to-end data flows & wiring.
+- [sop-data-and-wiring-flows](sops/sop-data-and-wiring-flows.md) — end-to-end data flows & wiring. Includes security gates per flow.
 - [sop-test-writing](sops/sop-test-writing.md) — test-writing standard operating procedure.
-- [sop-e2e-user-lifecycle](sops/sop-e2e-user-lifecycle.md) — end-to-end user lifecycle.
+- [sop-e2e-user-lifecycle](sops/sop-e2e-user-lifecycle.md) — end-to-end user lifecycle. Includes security gates per stage.
 - [sop-agent-workflows-and-rituals](sops/sop-agent-workflows-and-rituals.md) — agent workflows & session rituals.
 - [sop-email-runbook](sops/sop-email-runbook.md) — email sending SOP.
+
+## Security & Data Integrity
+
+Cross-cutting security references — not a standalone runbook, because security gates live
+inline in each flow/lifecycle SOP above. This section indexes them.
+
+- **Architecture plan:** [security-privacy-payments-monitoring-plan.md](../architecture/security-privacy-payments-monitoring-plan.md) — data classification, hostile review findings, required gates.
+- **Auth design:** [auth.md](../architecture/auth.md) — Better-Auth session model, admin lockdown, cross-brand isolation, roles.
+- **Brand isolation:** ADRs [0004](../architecture/decisions/0004-multi-brand-as-column.md), [0006](../architecture/decisions/0006-multi-domain-hosting.md), [0008](../architecture/decisions/0008-brand-switcher.md) — `brand` column, host→brand middleware, per-brand themes.
+- **Org-admin auth helper:** `apps/web/server/web/organization/org-admin-access.ts` — canonical `assertOrgAdminAccess` / `hasOrgAdminAccess` shared by all org-scoped actions.
+- **Drift register:** [drift-register.md](../knowledge/wiki/drift-register.md) — tracks auth/data model divergences.
+
+### Security hardening done (SESSION_0287–0300)
+
+| Area | What was hardened | Session |
+| --- | --- | --- |
+| Media uploads | `uploadMedia`/`fetchMedia` gated by `canUploadMedia` via `mediaUploadActionClient`; no public write to S3 | 0288 |
+| Media attachments | Admin-only `attachMedia`/`detachMedia`; safe-action test suite proves unauth/non-admin rejection | 0289 |
+| Brand settings | `adminActionClient` gate — platform admin only | 0291 |
+| Org theme (self-service) | `assertOrgAdminAccess` — owner OR ORG_ADMIN | 0294, 0295 |
+| Org members | `assertOrgAdminAccess` + cross-org guard on every mutation; optimistic locking on status transitions | 0296, 0297 |
+| Org invites | `assertOrgAdminAccess` + cross-org guard on revoke; brand sourced server-side from org row | 0298 |
+| Org general info | `assertOrgAdminAccess` via `updateOrgGeneralInfo` | 0298 |
+| Dashboard school-form | `assertOrgAdminAccess` replaces legacy OWNER role-assignment check (D-017) | 0300 |
 
 ## Porting
 

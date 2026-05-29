@@ -66,6 +66,19 @@ Brian + <agent>-session-NNNN
 - Status at bow-in: <clean | uncommitted changes from previous session>
 - Current HEAD at bow-in: `<short SHA>`
 
+### Dirstarter alignment
+
+<!-- Required when the task touches any L1 area: storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting. Delete if not applicable. -->
+
+| Field | Answer |
+| --- | --- |
+| Dirstarter baseline touched | <list relevant baselines | None> |
+| Extension or replacement | Extension: <how it builds on Dirstarter> \| Replacement: <why a Dirstarter capability is being replaced> |
+| Why justified | <one sentence> |
+| Risk if bypassed | <one sentence> |
+
+Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Prisma, etc. | not applicable>.
+
 ### Graphify check
 
 <!-- Skim docs/runbooks/graphify-repo-memory.md for search-heavy lanes. Skip this whole subsection for small single-file tasks. -->
@@ -77,18 +90,17 @@ Brian + <agent>-session-NNNN
   - `<apps/web/...>`
 - Verification note: exact files opened after Graphify; Graphify used as navigation, not proof.
 
-### Dirstarter alignment
+### Grill outcome
 
-<!-- Required when the task touches any L1 area: storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting. -->
+<!-- Delete if no open forks to resolve. Record decisions made during Petey grill before execution starts. -->
 
-| Field | Answer |
-| --- | --- |
-| Dirstarter baseline touched | <list relevant baselines | None> |
-| Extension or replacement | Extension: <how it builds on Dirstarter> \| Replacement: <why a Dirstarter capability is being replaced> |
-| Why justified | <one sentence> |
-| Risk if bypassed | <one sentence> |
+<N forks resolved: bullet list of decision + rationale>
 
-Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Prisma, etc. | not applicable>.
+### Drift logged
+
+<!-- Delete if no drift discovered. Record any divergences noticed during bow-in. -->
+
+<Drift ID + one-line description, or delete this section>
 
 ## Petey plan
 
@@ -190,14 +202,21 @@ Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Pris
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_NNNN_TASK_01 | pending | <one-line summary> |
-| SESSION_NNNN_TASK_02 | pending | <one-line summary> |
+| SESSION_NNNN_TASK_01 | pending | TBD |
+| SESSION_NNNN_TASK_02 | pending | TBD |
 
 <!-- At task close: pending → landed | blocked | rejected. -->
+<!-- For detailed task logs, replace the table above with H3 entries: -->
+<!-- ### SESSION_NNNN_TASK_01 — <title> -->
+<!-- Prose description of what was done, decisions made, evidence. -->
 
 ## What landed
 
 <!-- Filled at bow-out. Bullet list of concrete outcomes. -->
+
+## Decisions resolved
+
+<!-- Bullets of decisions locked during the session (Petey grill, mid-session pivots). -->
 
 ## Files touched
 
@@ -214,10 +233,6 @@ Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Pris
 | Command / smoke | Result |
 | --- | --- |
 | `<command>` | <result> |
-
-## Decisions resolved
-
-<!-- Bullets of decisions locked during the session (Petey grill, mid-session pivots). -->
 
 ## Open decisions / blockers
 

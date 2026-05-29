@@ -58,8 +58,8 @@ Cody is **not** invoked when:
 1. Read [`docs/architecture/feature-data-prerequisites.md`](../architecture/feature-data-prerequisites.md) — find the section for the feature you're building
 2. Verify the seed script (`prisma/seed.ts`) creates all prerequisite records for that feature
 3. If seed data is missing → **update the seed script first, reseed, then build the feature**
-4. Read [`docs/runbooks/sop-e2e-user-lifecycle.md`](../runbooks/sops/sop-e2e-user-lifecycle.md) — confirm where this feature sits in the user journey
-5. Read [`docs/runbooks/sop-data-and-wiring-flows.md`](../runbooks/sops/sop-data-and-wiring-flows.md) — confirm the data flow pattern for this feature area
+4. Read [`docs/runbooks/sops/sop-e2e-user-lifecycle.md`](../runbooks/sops/sop-e2e-user-lifecycle.md) — confirm where this feature sits in the user journey
+5. Read [`docs/runbooks/sops/sop-data-and-wiring-flows.md`](../runbooks/sops/sop-data-and-wiring-flows.md) — confirm the data flow pattern for this feature area
 
 ## Self-review checklist (before declaring done)
 

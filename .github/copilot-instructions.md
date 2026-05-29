@@ -36,7 +36,7 @@ Trigger: **"bow in"**, **"start session"**, or **"open session"**. Execute `docs
 6. Identify ONE task with explicit "done" criteria. If unclear or multi-part, invoke Petey (`docs/protocols/petey-plan.md`) first.
 7. Number tasks in `docs/protocols/project-log.md` TASK_PLAN_LOG (`SESSION_NNNN_TASK_01`, …) before implementation starts.
 8. Branch check: `git branch --show-current` + `git status --short`. Raise uncommitted changes or stale feature branches before starting.
-9. Create `docs/sprints/SESSION_{NEXT}.md` with **full JETTY 3.0 frontmatter** — `title`, `slug`, `type: session--open`, `status: in-progress`, `created`, `updated`, `last_agent: <agent>-session-NNNN`, `sprint`, `pairs_with`, `backlinks`. Fill `Date`, `Operator: Brian + <agent>`, `Goal`.
+9. Create `docs/sprints/SESSION_{NEXT}.md` by **copying the template**: `cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md`. Fill in the `<placeholder>` fields and delete the HTML comment blocks. Do NOT generate the SESSION file from scratch — the template is the source of truth for structure, section order, and lint compliance.
 10. State the goal and first task before any work. Proceed as Petey or Cody (Cody must complete `docs/protocols/cody-preflight.md` before writing code).
 
 ### Bow out (closing)
@@ -76,6 +76,21 @@ The typical session follows this chain. Apply it automatically when the user say
 **Before writing ANY UI code**, read `docs/knowledge/wiki/dirstarter-component-inventory.md`. Every heading, input, select, card, badge, button, dialog, form, and layout wrapper has a provided Dirstarter component. Using raw HTML (`<h3>`, `<input>`, `<select>`, `<div className="flex">`, `<div className="rounded-lg border bg-card">`) when the inventory provides a component is a **FS-0001 class violation**. See `docs/protocols/code-guardrails.md` rule G6.
 
 When unsure which role to play: if the task is clear → Cody. If it needs decomposition or has open decisions → Petey first.
+
+## ⛔ HARD RULE: Verification Commands
+
+All commands run from `apps/web/`. Do not guess, improvise, or use alternative invocations.
+
+| Task | Command |
+|---|---|
+| Typecheck | `bun run typecheck` |
+| Lint | `bun run lint` |
+| Test | `bun test` |
+| Dev server | `npx next dev --turbo` |
+| DB generate | `bun run db:generate` |
+| Wiki lint | `bun run wiki:lint` (from **repo root**) |
+
+**After every code change**, run `bun run typecheck` then `bun run lint` from `apps/web/` before declaring done. Do not use `npx tsc`, `pnpm run`, or bare `tsc`. If typecheck takes >3 minutes, wait — do not cancel. See `docs/runbooks/dev-environment/dev-environment.md` § Verification commands for the full table.
 
 ## Layered architecture
 

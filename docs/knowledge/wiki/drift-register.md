@@ -224,5 +224,5 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source A:** `apps/web/server/web/school/actions.ts` — `updateOrganization` gates on a Membership with role code `OWNER` (a role-assignment).
 - **Source B:** `apps/web/server/web/organization/org-admin-access.ts` — `hasOrgAdminAccess` / `assertOrgAdminAccess` (org `ownerId` OR `ORG_ADMIN` role), used across org settings (theme, members, invites, general-info).
 - **Decision needed:** Consolidate `updateOrganization` onto `assertOrgAdminAccess` and retire the OWNER-role check, so the dashboard school-form and the settings surface share one auth model. An `ownerId` owner without an `OWNER` role-assignment currently passes the settings gate but would fail `updateOrganization`.
-- **Status:** open
-- **Opened:** SESSION_0298 (2026-05-29). Worked around by introducing the consistent `updateOrgGeneralInfo` (assertOrgAdminAccess) for the settings/general section; the legacy dashboard path was intentionally left untouched (scope guard).
+- **Status:** closed
+- **Opened:** SESSION_0298 (2026-05-29). **Closed:** SESSION_0300 (2026-05-29). `updateOrganization` now uses `assertOrgAdminAccess` — same auth model as all org settings surfaces. The OWNER role-assignment check is retired.

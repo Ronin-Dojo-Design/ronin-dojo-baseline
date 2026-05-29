@@ -4,8 +4,8 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-25
-last_agent: claude-session-0260
+updated: 2026-05-29
+last_agent: copilot-session-0300
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/resend-setup-runbook.md
@@ -62,6 +62,14 @@ The user now exists as:
 ---
 
 # 2. Identity -> organization shell
+
+> **🔒 Security gates (hardened SESSION_0294–0300):**
+>
+> - Org settings mutations (theme, general-info, members, invites) require `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role.
+> - Membership status transitions enforce: cross-org guard, `VALID_TRANSITIONS` state machine, optimistic version locking.
+> - Role assignment/removal: org-admin gated, system-role validated, cross-org guarded.
+> - Reject (PENDING → delete): hard-deletes the row to avoid `@@unique` collision on re-request. Audit entry written before delete.
+> - Dashboard `updateOrganization` consolidated onto same `assertOrgAdminAccess` (D-017, SESSION_0300).
 
 ```text
 Passport

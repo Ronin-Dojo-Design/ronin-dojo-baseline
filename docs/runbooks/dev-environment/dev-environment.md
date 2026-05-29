@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-28
-last_agent: claude-session-0286
+updated: 2026-05-29
+last_agent: copilot-session-0300
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -162,6 +162,45 @@ bun db:migrate dev
 
 # Open Prisma Studio
 bun db:studio
+```
+
+## Verification commands
+
+All commands run from `apps/web/` unless noted otherwise.
+
+| Task | Command | Notes |
+| --- | --- | --- |
+| **Typecheck** | `bun run typecheck` | Runs `next typegen` then `tsc --noEmit`. Can take 2–4 min on full project. |
+| **Lint** | `bun run lint` | Biome check + auto-fix. |
+| **Format** | `bun run format` | Biome format + auto-fix. |
+| **Test (all)** | `bun test` | Parallel, excludes e2e. |
+| **Test (file)** | `bun test ./path/to/file` | Single file or directory. |
+| **Test (e2e)** | `bun run test:e2e` | Playwright — requires dev server running. |
+| **DB generate** | `bun run db:generate` | Regenerate Prisma client after schema changes. |
+| **DB migrate** | `bun run db:migrate dev` | Create + apply migration (dev only). |
+| **DB push** | `bun run db:push` | Apply schema to dev DB without migration file. Dev only. |
+| **DB seed** | `bun run db:seed` | Run seed script. |
+| **DB studio** | `bun run db:studio` | Open Prisma Studio GUI. |
+| **Wiki lint** | `bun run wiki:lint` | From **repo root**. Checks docs links, frontmatter, structure. |
+| **Docs navigator** | `bun run docs:nav` | From **repo root**. Regenerates `docs/index.html`. |
+| **Dev server** | `npx next dev --turbo` | Port 3000. Use `npx`, not `bun dev`. |
+
+### Verification sequence for code changes
+
+Run in this order after any code change before declaring done:
+
+```bash
+cd apps/web
+bun run typecheck      # 1. types
+bun run lint           # 2. lint
+bun test               # 3. unit tests
+```
+
+If the task touched docs:
+
+```bash
+cd /Users/brianscott/dev/ronin-dojo-app   # repo root
+bun run wiki:lint
 ```
 
 ## Import paths

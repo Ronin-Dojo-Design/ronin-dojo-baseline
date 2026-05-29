@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-12
-last_agent: copilot-session-0148
+updated: 2026-05-29
+last_agent: copilot-session-0300
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -113,7 +113,13 @@ Host brand and active app brand may align, but they are not always the same thin
 
 ## 3. Auth + brand context flow (web)
 
-```text
+> **🔒 Security gates (hardened SESSION_0295–0300):**
+>
+> - Org-scoped mutations use `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role. See `server/web/organization/org-admin-access.ts`.
+> - Every org-scoped mutation enforces a **cross-org guard**: the target entity (membership, invite, etc.) must belong to the asserted `organizationId`. An org admin cannot act on another org's resources by ID.
+> - Brand is **never client-trusted** — server derives brand from the org row or host header.
+> - Admin-only surfaces use `adminActionClient` (platform super-admin).
+> - Media uploads use `mediaUploadActionClient` with `canUploadMedia(userId, brand)` — no public S3 writes.text
 Visitor
   |
   v
@@ -577,6 +583,13 @@ Notification email
 ---
 
 ## 14. Invite → Claim → Membership activation flow (SESSION_0146, updated SESSION_0148)
+
+> **🔒 Security gates (hardened SESSION_0298–0300):**
+>
+> - `createOrgInvite` / `revokeOrgInvite` require `assertOrgAdminAccess`. Revoke includes a cross-org guard (invite.organizationId must match).
+> - Brand is sourced server-side from the org row — never from client input.
+> - Claim flow validates: not expired, not over `maxUses`, not already claimed by this user.
+> - Invite type forced to `ORGANIZATION` server-side.
 
 ```text
 Admin creates Invite

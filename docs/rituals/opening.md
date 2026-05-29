@@ -121,24 +121,13 @@ Verify the current git branch (`git branch --show-current`) and working tree sta
 
 ### 6. Create the new SESSION file
 
-In `docs/sprints/`, create `SESSION_NNNN.md` (next number after the previous one). **Always include JETTY 3.0 frontmatter** at the top of the file:
+Copy the template — do NOT generate from scratch:
 
-```yaml
----
-title: "SESSION NNNN — <short description>"
-slug: session-NNNN
-type: session--open
-status: in-progress
-created: <today>
-updated: <today>
-last_agent: <agent>-session-NNNN
-sprint: <current sprint, e.g. S2>
-pairs_with:
-  - docs/sprints/SESSION_<previous>.md
-backlinks:
-  - docs/knowledge/wiki/index.md
----
+```bash
+cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md
 ```
+
+Then fill in every `<placeholder>` and delete the HTML comment blocks. The template is the source of truth for section order, frontmatter shape, and lint compliance. See [`docs/sprints/_template/SESSION_TEMPLATE.md`](../sprints/_template/SESSION_TEMPLATE.md).
 
 **Session type values (SESSION_0139+):**
 
