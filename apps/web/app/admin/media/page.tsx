@@ -5,6 +5,8 @@ import { H2 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
 import { getRequestBrand } from "~/lib/brand-context"
 import { findMedia } from "~/server/admin/media/queries"
+import { DeleteMediaButton } from "./_components/delete-media-button"
+import { MediaUploader } from "./_components/media-uploader"
 
 export default withAdminPage(async ({ searchParams }) => {
   const sp = await searchParams
@@ -29,6 +31,8 @@ export default withAdminPage(async ({ searchParams }) => {
             {total} file{total !== 1 ? "s" : ""}
           </p>
         </div>
+
+        <MediaUploader />
       </div>
 
       {media.length === 0 ? (
@@ -40,6 +44,10 @@ export default withAdminPage(async ({ searchParams }) => {
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {media.map(item => (
             <div key={item.id} className="group relative overflow-hidden rounded-lg border">
+              <div className="absolute right-2 top-2 z-10 opacity-0 transition group-hover:opacity-100">
+                <DeleteMediaButton id={item.id} />
+              </div>
+
               {item.type === "IMAGE" ? (
                 <img
                   src={item.url}

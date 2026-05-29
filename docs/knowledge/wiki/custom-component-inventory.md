@@ -4,10 +4,11 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-05-25
-last_agent: codex-session-0248
+updated: 2026-05-29
+last_agent: claude-session-0287
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/sprints/SESSION_0287.md
   - docs/sprints/SESSION_0224.md
   - docs/sprints/SESSION_0195.md
   - docs/sprints/SESSION_0196.md
@@ -176,6 +177,13 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | `MetricChart`, `MetricHeader`, `MetricValue` | `admin/metrics/*.tsx` | Admin metric tiles + charts. |
 | `Chart` | `admin/chart.tsx` | Shared chart wrapper. |
 | `DeleteDialog` | `admin/dialogs/delete-dialog.tsx` | Generic destructive-action confirm dialog. |
+
+### Media library admin — `app/admin/media/_components/`
+
+| Component | File | Purpose |
+| --- | --- | --- |
+| `MediaUploader` | `media-uploader.tsx` | Upload button + hidden file input → `uploadMediaToLibrary` admin action (S3 upload + `Media` record); `router.refresh()` on success. SESSION_0287. |
+| `DeleteMediaButton` | `delete-media-button.tsx` | Thin wrapper over the generic `DeleteDialog`, wired to `deleteMedia` (S3 object + DB row cleanup). Reuses — does not fork — the confirm dialog. SESSION_0287. |
 
 ---
 

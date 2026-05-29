@@ -106,6 +106,30 @@ export const removeS3File = async (key: string) => {
 }
 
 /**
+ * Derives the S3 object key from a stored media URL.
+ *
+ * Handles both AWS virtual-hosted URLs (`https://bucket.s3.region.amazonaws.com/media/x.png`)
+ * and path-style endpoints where the bucket is the first path segment
+ * (e.g. MinIO: `http://localhost:9000/ronindojo-dev/media/x.png`). The `?v=`
+ * cache-buster appended by `uploadToS3Storage` is dropped via `URL.pathname`.
+ * Returns null if the URL cannot be parsed.
+ */
+export const getS3KeyFromUrl = (url: string, bucket = env.S3_BUCKET): string | null => {
+  try {
+    const { pathname } = new URL(url)
+    let key = pathname.replace(/^\/+/, "")
+
+    if (bucket && (key === bucket || key.startsWith(`${bucket}/`))) {
+      key = key.slice(bucket.length).replace(/^\/+/, "")
+    }
+
+    return key || null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Gets the URL of the favicon API endpoint.
  * @param url - The URL of the website to fetch the favicon from.
  * @returns The URL of the favicon API endpoint.
