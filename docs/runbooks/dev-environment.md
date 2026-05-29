@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-20
-last_agent: codex-session-0205
+updated: 2026-05-28
+last_agent: claude-session-0286
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -134,9 +134,9 @@ cd apps/web && bun db:migrate dev
 ## Brand → Host mapping
 
 | Brand | Local host | Notes |
-|---|---|---|
-| `RONIN_DOJO_DESIGN` | `localhost:3000` | Default when no host match |
-| `BASELINE_MARTIAL_ARTS` | `baseline.local:3000` | Add `127.0.0.1 baseline.local` to `/etc/hosts` |
+| --- | --- | --- |
+| `RONIN_DOJO_DESIGN` | `ronindojo.local:3000` | Add to `/etc/hosts`; also the `DEFAULT_BRAND` fallback for any *unrecognized* host |
+| `BASELINE_MARTIAL_ARTS` | `baseline.local:3000` **or** `localhost:3000` | Add `127.0.0.1 baseline.local`; `localhost` is explicitly mapped to Baseline during MVP build — see `lib/brand-context.ts` |
 | `BBL` | `bbl.local:3000` | Add to `/etc/hosts` when needed |
 | `WEKAF` | `wekaf.local:3000` | Add to `/etc/hosts` when needed |
 

@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-28
 updated: 2026-05-28
-last_agent: claude-session-0284
+last_agent: claude-session-0286
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/bbl-production-runbook.md
@@ -91,7 +91,8 @@ Counts are `siteConfig.*` occurrences at SESSION_0284 (via `grep -rn "siteConfig
 | `siteConfig.domain` | 6 | ❌ env-global | ⛔ blocked | Derived from `NEXT_PUBLIC_SITE_URL`; same for all brands. |
 | `siteConfig.slug` | 5 | ✅ yes | ⬜ not started | Lower visibility; convert opportunistically. |
 | email templates (`apps/web/emails/**`) | — | ✅ yes (name) | ⬜ not started | Needs a `brand` prop threaded from each caller. |
-| JSON-LD (`lib/structured-data.ts`) | (subset of name) | ✅ yes | 🔶 see SESSION_0284 | `getOrganization()`/`getWebSite()` — convert if server context available. |
+| `og:site_name` + page metadata (`config/metadata.ts`) | all pages | ✅ yes | ✅ done | `getMetadataConfig(brand)` threaded via async `lib/pages.ts` helpers (SESSION_0285); verified live on `bbl.local` SESSION_0286. |
+| JSON-LD (`lib/structured-data.ts`) | (subset of name) | ✅ yes | ✅ done | `getOrganization(brand)`/`getWebSite(brand)` brand-threaded (SESSION_0285); verified live on `bbl.local` SESSION_0286. |
 
 <!-- SESSION_0284 TASK_01 produces the precise file-level categorization (server | client | email | static). Paste/refine it under "Per-file categorization" below at bow-out. -->
 
@@ -105,13 +106,13 @@ Counts are `siteConfig.*` occurrences at SESSION_0284 (via `grep -rn "siteConfig
 
 **Converted (server actions):** `server/web/actions/claim.ts`, `server/web/lead/actions.ts` → `getRequestBrand()`; `server/admin/tools/actions.ts` → passes `ctx.brand` into notifications. `lib/notifications.ts` → now takes optional `brand?: Brand`, falls back to `siteConfig.name`.
 
-**Deferred — needs metadata-as-function refactor (HIGHEST VALUE next):** `config/metadata.ts` is a **static module** with no request context, so every page that spreads its `openGraph` still emits `og:site_name="Baseline Martial Arts"`. This is the root cause of the subpage `og:site_name` leak observed on `bbl.local` (the `<title>` is already brand-aware; `og:site_name` is not). Fix = make metadata brand-aware per request (per-page `generateMetadata` calling `getRequestBrand`, or refactor `config/metadata.ts` into a `getBrandMetadata(brand)` function). **STAGED:** `docs/sprints/petey-plan-0285.md` (SESSION_0285, slotted ahead of assets→S3) — both `og:site_name` and JSON-LD funnel through the two `lib/pages.ts` helpers (`getPageMetadata` / `getPageData`), so one async brand-thread + `await` in 46 callers fixes both.
+**✅ RESOLVED (SESSION_0285, verified live SESSION_0286):** `config/metadata.ts` previously exposed only a static `metadataConfig`, so every page that spread its `openGraph` emitted `og:site_name="Baseline Martial Arts"` — the root cause of the subpage `og:site_name` leak on `bbl.local`. SESSION_0285 added `getMetadataConfig(brand)` and made the two `lib/pages.ts` helpers (`getPageMetadata` / `getPageData`) `async` so each resolves `getRequestBrand()` internally and threads the brand into both `og:site_name` and JSON-LD (one async brand-thread + `await` in 46 callers). The deprecated static `metadataConfig` export is retained as a build-time fallback.
 
-**Deferred — JSON-LD:** `lib/structured-data.ts` `getOrganization()` / `getWebSite()` still emit `name: "Baseline Martial Arts"` in the structured-data `<script>`. Crawler-only, not user-visible. Same fix shape (thread brand).
+**✅ RESOLVED (SESSION_0285, verified live SESSION_0286):** `lib/structured-data.ts` `getOrganization(brand)` / `getWebSite(brand)` now resolve the brand name via `getBrandSiteConfig(brand)`. Per-brand `url` in JSON-LD is still deferred (name only — `url`/`email`/`domain` are env-global today).
 
 **Deferred — emails (need a `brand` prop threaded from callers):** `lib/email.ts`, `emails/components/wrapper.tsx`, `emails/components/action-nudge.tsx`, `emails/invite-notification.tsx`, `emails/magic-link.tsx`, `emails/submission-published.tsx`, `emails/submission-scheduled.tsx`, `emails/verify-domain.tsx`.
 
-Verified at SESSION_0284 via `bun run typecheck` (0 errors), `biome check` (clean), and `bbl.local:3000` smoke: `/about` + `/terms` `<title>` = "… Black Belt Legacy"; residual "Baseline Martial Arts" hits = `og:site_name` (config/metadata.ts) + JSON-LD (structured-data.ts), both deferred above.
+Verified at SESSION_0284 via `bun run typecheck` (0 errors), `biome check` (clean), and `bbl.local:3000` smoke: `/about` + `/terms` `<title>` = "… Black Belt Legacy"; residual "Baseline Martial Arts" hits = `og:site_name` (config/metadata.ts) + JSON-LD (structured-data.ts) — both fixed in SESSION_0285 and **verified live in SESSION_0286**: `og:site_name` = "Black Belt Legacy" on `/about`, `/terms`, `/privacy`, `/blog`; JSON-LD Organization + WebSite = "Black Belt Legacy" on `/about` + `/blog` (`/terms` + `/privacy` emit no JSON-LD graph by design); **0** residual "Baseline Martial Arts" on any BBL page. Regression spot-check: `baseline.local` and `localhost` (mapped to Baseline during MVP — see `lib/brand-context.ts`) still resolve "Baseline Martial Arts".
 
 ---
 
@@ -119,10 +120,10 @@ Verified at SESSION_0284 via `bun run typecheck` (0 errors), `biome check` (clea
 
 When standing up or auditing a brand, confirm each surface resolves the brand (not a hardcoded default):
 
-- [ ] **Page metadata** — `<title>` template, description, `og:site_name`, `og:title` (layout + per-page `generateMetadata`).
+- [x] **Page metadata** — `<title>` template, description, `og:site_name`, `og:title` (layout + per-page `generateMetadata`). *(`<title>` + `og:site_name` brand-aware and verified SESSION_0286; per-brand description still env-global.)*
 - [ ] **OG images** — `app/api/og/route.tsx` brand name/colors.
 - [ ] **Favicon / logo / wordmark** — brand asset, not a shared default (depends on S3 asset pipeline — see roadmap).
-- [ ] **JSON-LD structured data** — `lib/structured-data.ts` organization + website name/url.
+- [x] **JSON-LD structured data** — `lib/structured-data.ts` organization + website name (url still env-global). *(verified SESSION_0286)*
 - [ ] **Navigation / header** — `components/web/nav.tsx` wordmark text.
 - [ ] **Emails** — transactional templates (`emails/**`): from-name, signature, brand name in copy.
 - [ ] **Ads / CTAs** — "Advertise on `{brand}`" labels (done SESSION_0283).
