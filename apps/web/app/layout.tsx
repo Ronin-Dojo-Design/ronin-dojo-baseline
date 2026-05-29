@@ -19,6 +19,11 @@ import { getLocale, getMessages, getTimeZone } from "next-intl/server"
 export const generateMetadata = async (): Promise<Metadata> => {
   const brand = await getRequestBrand()
   const brandConfig = getBrandSiteConfig(brand)
+  const brandSettings = await findBrandSettings(brand)
+
+  // DB asset URLs override static config/site.ts paths when present
+  const faviconUrl = brandSettings?.faviconUrl ?? resolvePublicMediaUrl(brandConfig.faviconSrc)
+  const ogImageUrl = brandSettings?.ogImageUrl ?? resolvePublicMediaUrl(brandConfig.ogImageSrc)
 
   return {
     metadataBase: new URL(siteConfig.url),
@@ -27,11 +32,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
       default: `${brandConfig.tagline} – ${brandConfig.name}`,
     },
     description: brandConfig.description,
-    icons: { icon: [{ type: "image/png", url: resolvePublicMediaUrl(brandConfig.faviconSrc) }] },
+    icons: { icon: [{ type: "image/png", url: faviconUrl }] },
     ...metadataConfig,
     openGraph: {
       ...metadataConfig.openGraph,
       siteName: brandConfig.name,
+      images: ogImageUrl ? [{ url: ogImageUrl }] : metadataConfig.openGraph?.images,
     },
   }
 }
