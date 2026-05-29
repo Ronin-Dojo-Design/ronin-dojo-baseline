@@ -423,6 +423,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
+| [Docs Navigator](../../runbooks/docs-navigator.md) | runbook | active — searchable HTML doc browser (`bun run docs:nav`) |
 | [Database](../../runbooks/database.md) | runbook | active |
 | [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
 | [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |

@@ -21,6 +21,9 @@ graphify-out/
 coverage/
 *.tsbuildinfo
 
+# Generated docs navigator (regenerate with `bun run docs:nav`)
+docs/index.html
+
 prisma/migrations/dev/
 .expo/
 ios/build/

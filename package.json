@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "wiki:lint": "bun run scripts/wiki-lint.ts",
+    "docs:nav": "python3 scripts/generate-docs-nav.py",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @ronin-dojo/web test:e2e"
