@@ -31,7 +31,7 @@ tags:
 
 Operational SOP for the course and curriculum system: data model, seed data, server actions, admin queries, and the end-to-end enrollment→completion→certification flow.
 
-For the high-level data flow diagram, see [sop-data-and-wiring-flows.md §12](sop-data-and-wiring-flows.md#12-program--course--enrollment-flow-session_0146). This runbook is the operational companion — how to set up, run, and extend the course system.
+For the high-level data flow diagram, see [sop-data-and-wiring-flows.md §12](../sops/sop-data-and-wiring-flows.md#12-program--course--enrollment-flow-session_0146). This runbook is the operational companion — how to set up, run, and extend the course system.
 
 ---
 
@@ -299,7 +299,7 @@ This is a simpler gate than the full entitlement key system (`checkEntitlement()
 
 ### How this connects to the payment flow
 
-See [sop-data-and-wiring-flows.md §13](sop-data-and-wiring-flows.md#13-payment--stripe-checkout-flow-session_0146) for the Stripe checkout → enrollment creation path. Currently:
+See [sop-data-and-wiring-flows.md §13](../sops/sop-data-and-wiring-flows.md#13-payment--stripe-checkout-flow-session_0146) for the Stripe checkout → enrollment creation path. Currently:
 
 1. User purchases membership via Stripe → `checkout.session.completed` webhook → Membership created
 2. User browses published courses → enrollment gate checks active membership
@@ -329,7 +329,7 @@ Course.rankId → target rank
   +--> Certification issuance
 ```
 
-See [sop-data-and-wiring-flows.md §15](sop-data-and-wiring-flows.md#15-certification-issuance-flow-session_0146) for the certification issuance flow.
+See [sop-data-and-wiring-flows.md §15](../sops/sop-data-and-wiring-flows.md#15-certification-issuance-flow-session_0146) for the certification issuance flow.
 
 This connection is **not yet wired** — it's a future SESSION task. Currently, completing a course sets `completedAt` but does not auto-create a RankAward or Certification.
 
@@ -384,11 +384,11 @@ The action checks `isPublished = true`. Unpublished courses are invisible to enr
 
 | Doc | What it covers |
 | --- | --- |
-| [sop-data-and-wiring-flows.md §12](sop-data-and-wiring-flows.md#12-program--course--enrollment-flow-session_0146) | High-level Program→Course→Enrollment data flow |
-| [sop-data-and-wiring-flows.md §13](sop-data-and-wiring-flows.md#13-payment--stripe-checkout-flow-session_0146) | Stripe checkout→enrollment creation |
-| [sop-data-and-wiring-flows.md §15](sop-data-and-wiring-flows.md#15-certification-issuance-flow-session_0146) | Certification issuance flow |
-| [sop-e2e-user-lifecycle.md §4](sop-e2e-user-lifecycle.md) | Course/curriculum lifecycle in user journey |
-| [stripe-setup-runbook.md](stripe-setup-runbook.md) | Stripe keys, webhooks, payment pipeline |
+| [sop-data-and-wiring-flows.md §12](../sops/sop-data-and-wiring-flows.md#12-program--course--enrollment-flow-session_0146) | High-level Program→Course→Enrollment data flow |
+| [sop-data-and-wiring-flows.md §13](../sops/sop-data-and-wiring-flows.md#13-payment--stripe-checkout-flow-session_0146) | Stripe checkout→enrollment creation |
+| [sop-data-and-wiring-flows.md §15](../sops/sop-data-and-wiring-flows.md#15-certification-issuance-flow-session_0146) | Certification issuance flow |
+| [sop-e2e-user-lifecycle.md §4](../sops/sop-e2e-user-lifecycle.md) | Course/curriculum lifecycle in user journey |
+| [stripe-setup-runbook.md](../integrations/stripe-setup-runbook.md) | Stripe keys, webhooks, payment pipeline |
 | [invites.md](invites.md) | Invite→claim→membership→enrollment path |
 
 ## Rollback

@@ -280,9 +280,9 @@ because the auth gate forces sign-up before reaching the claim page.
 
 ## Cross-references
 
-- [SOP Data Flows §14 — Invite → Claim → Membership activation](./sop-data-and-wiring-flows.md#14-invite--claim--membership-activation-flow-session_0146)
-- [SOP E2E Lifecycle §8b — Invite lifecycle](./sop-e2e-user-lifecycle.md#8b-invite-lifecycle-session_0146)
-- [SOP Data Flows §5 — Identity shell flow](./sop-data-and-wiring-flows.md#5-identity-shell-flow)
+- [SOP Data Flows §14 — Invite → Claim → Membership activation](../sops/sop-data-and-wiring-flows.md#14-invite--claim--membership-activation-flow-session_0146)
+- [SOP E2E Lifecycle §8b — Invite lifecycle](../sops/sop-e2e-user-lifecycle.md#8b-invite-lifecycle-session_0146)
+- [SOP Data Flows §5 — Identity shell flow](../sops/sop-data-and-wiring-flows.md#5-identity-shell-flow)
 
 ---
 

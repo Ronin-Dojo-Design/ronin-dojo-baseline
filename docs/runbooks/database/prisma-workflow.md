@@ -108,8 +108,8 @@ Check for new type errors. Pre-existing Dirstarter template errors (PageProps, c
 ## Related
 
 - [Database runbook](database.md) — full environment setup, Neon production, Docker alternative
-- [schema.prisma wiki page](../knowledge/wiki/files/schema-prisma.md)
-- [seed.ts wiki page](../knowledge/wiki/files/seed-ts.md)
+- [schema.prisma wiki page](../../knowledge/wiki/files/schema-prisma.md)
+- [seed.ts wiki page](../../knowledge/wiki/files/seed-ts.md)
 
 ## Last verified
 

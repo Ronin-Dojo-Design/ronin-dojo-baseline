@@ -227,5 +227,5 @@ BMA_directory_listing_premium
 - [Monetization & Entitlements Spec](monetization-entitlements-spec.md)
 - [Dirstarter Commerce Alignment](dirstarter-commerce-alignment.md)
 - [Security, Privacy, Payments Plan](security-privacy-payments-monitoring-plan.md)
-- [ADR Research Runbook](../runbooks/adr-0014-stripe-product-policy-research.md)
+- [ADR Research Runbook](../runbooks/integrations/adr-0014-stripe-product-policy-research.md)
 - [SESSION_0101](../sprints/_archive/SESSION_0101.md) — session that created this document

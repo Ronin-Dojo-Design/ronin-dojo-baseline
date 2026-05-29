@@ -28,12 +28,12 @@ Pre-research for drafting ADR 0014 (Stripe Product Policy). This runbook catalog
 
 | Document | Relevance | Key Takeaway |
 | --- | --- | --- |
-| [ADR 0011 — Entitlement-First Commerce](../architecture/decisions/0011-entitlement-first-commerce.md) | **Direct predecessor.** Established that payments grant entitlements, not direct access. | ADR 0014 must define how Stripe Products map to EntitlementGrants. Products → EntitlementGrant → UserEntitlement → access check. |
-| [Dirstarter Commerce Alignment](../architecture/dirstarter-commerce-alignment.md) | **Baseline patterns.** Maps Dirstarter's Stripe/payments/monetization docs to Ronin's needs. | Reuse Dirstarter Stripe client/service and checkout pattern. Do not introduce a second payment path. |
-| [Monetization & Entitlements Spec](../architecture/monetization-entitlements-spec.md) | **Domain model.** Defines PricingPlan, subscription, invoice, entitlement concepts. | ADR 0014 must reconcile Stripe Products with PricingPlan and future Product table. |
-| [Security, Privacy, Payments & Monitoring Plan](../architecture/security-privacy-payments-monitoring-plan.md) | **Security posture.** Payment security, PCI scope, webhook verification. | ADR 0014 must not expand PCI scope. Stripe Checkout handles card data. |
-| [Programs, Curriculum & Certification Spec](../architecture/programs-curriculum-certification-spec.md) | **Commerce verticals.** Programs, courses, certifications as paid content. | These are the things being sold — ADR 0014 defines how they become Stripe products. |
-| [ADR 0013 — Tool Listing Repurposing](../architecture/decisions/0013-tool-listing-repurposing.md) | **D-014 resolution.** Tool → Directory Listing with Free/Standard/Premium tiers. | Directory listing tiers are a monetization vertical that needs Stripe product mapping. |
+| [ADR 0011 — Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | **Direct predecessor.** Established that payments grant entitlements, not direct access. | ADR 0014 must define how Stripe Products map to EntitlementGrants. Products → EntitlementGrant → UserEntitlement → access check. |
+| [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) | **Baseline patterns.** Maps Dirstarter's Stripe/payments/monetization docs to Ronin's needs. | Reuse Dirstarter Stripe client/service and checkout pattern. Do not introduce a second payment path. |
+| [Monetization & Entitlements Spec](../../architecture/monetization-entitlements-spec.md) | **Domain model.** Defines PricingPlan, subscription, invoice, entitlement concepts. | ADR 0014 must reconcile Stripe Products with PricingPlan and future Product table. |
+| [Security, Privacy, Payments & Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md) | **Security posture.** Payment security, PCI scope, webhook verification. | ADR 0014 must not expand PCI scope. Stripe Checkout handles card data. |
+| [Programs, Curriculum & Certification Spec](../../architecture/programs-curriculum-certification-spec.md) | **Commerce verticals.** Programs, courses, certifications as paid content. | These are the things being sold — ADR 0014 defines how they become Stripe products. |
+| [ADR 0013 — Tool Listing Repurposing](../../architecture/decisions/0013-tool-listing-repurposing.md) | **D-014 resolution.** Tool → Directory Listing with Free/Standard/Premium tiers. | Directory listing tiers are a monetization vertical that needs Stripe product mapping. |
 
 ## Commerce Source Files
 
@@ -130,10 +130,10 @@ Pre-research for drafting ADR 0014 (Stripe Product Policy). This runbook catalog
 
 ## Cross-References
 
-- [SESSION_0100](../sprints/_archive/SESSION_0100.md) — planning session that created this runbook
-- [SESSION_0099](../sprints/_archive/SESSION_0099.md) — S3 media bridge (storage side of commerce infra)
-- [SESSION_0098](../sprints/_archive/SESSION_0098.md) — gear page (recommended PWCC port map)
-- [ADR 0011](../architecture/decisions/0011-entitlement-first-commerce.md) — entitlement-first commerce
-- [Dirstarter Commerce Alignment](../architecture/dirstarter-commerce-alignment.md) — baseline Stripe patterns
-- [Stripe Setup Runbook](../runbooks/stripe-setup-runbook.md) — operational Stripe setup
-- [AWS S3 Operator Runbook](../runbooks/aws-s3-operator-runbook.md) — media delivery for product images
+- [SESSION_0100](../../sprints/_archive/SESSION_0100.md) — planning session that created this runbook
+- [SESSION_0099](../../sprints/_archive/SESSION_0099.md) — S3 media bridge (storage side of commerce infra)
+- [SESSION_0098](../../sprints/_archive/SESSION_0098.md) — gear page (recommended PWCC port map)
+- [ADR 0011](../../architecture/decisions/0011-entitlement-first-commerce.md) — entitlement-first commerce
+- [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) — baseline Stripe patterns
+- [Stripe Setup Runbook](stripe-setup-runbook.md) — operational Stripe setup
+- [AWS S3 Operator Runbook](aws-s3-operator-runbook.md) — media delivery for product images

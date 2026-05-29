@@ -931,12 +931,12 @@ Each step gets its own Petey plan + Cody pre-flight + Doug/Giddy review per WORK
 ## Cross-references
 
 - [Baseline Listings Runbook](baseline-listings-runbook.md) — peer runbook for school/instructor/program listings.
-- [Lineage Rank Promotion Sync Rules](../architecture/lineage/lineage-rank-promotion-sync-rules.md) — promoter-change rules that apply after a claim is approved.
-- [Lineage v1 Acceptance Test Plan](../architecture/lineage/lineage-v1-acceptance-test-plan.md) — unit/UI/QA matrix the listing tier work must satisfy.
-- [ADR 0016 — Lineage Promotion Source of Truth](../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — RankAward is canonical; PROMOTED_BY is mirror.
-- [Directory Monetization Roadmap](../knowledge/wiki/content-engine/directory-monetization-roadmap.md) — overall directory monetization plan; lineage is one revenue surface inside it.
-- [SOP — Data and Wiring Flows](sop-data-and-wiring-flows.md) — canonical flow diagram conventions.
-- [SOP — E2E User Lifecycle](sop-e2e-user-lifecycle.md) — where claim + tier flows sit in the user lifecycle.
+- [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — promoter-change rules that apply after a claim is approved.
+- [Lineage v1 Acceptance Test Plan](../../architecture/lineage/lineage-v1-acceptance-test-plan.md) — unit/UI/QA matrix the listing tier work must satisfy.
+- [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — RankAward is canonical; PROMOTED_BY is mirror.
+- [Directory Monetization Roadmap](../../knowledge/wiki/content-engine/directory-monetization-roadmap.md) — overall directory monetization plan; lineage is one revenue surface inside it.
+- [SOP — Data and Wiring Flows](../sops/sop-data-and-wiring-flows.md) — canonical flow diagram conventions.
+- [SOP — E2E User Lifecycle](../sops/sop-e2e-user-lifecycle.md) — where claim + tier flows sit in the user lifecycle.
 
 **Planned Passion Produces Purpose.**
 **OSSS.**

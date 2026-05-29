@@ -184,7 +184,7 @@ curl -X POST 'https://api.printful.com/webhooks' \
 
 ## Cross-references
 
-- [Printful POD Spec](../architecture/printful-pod-spec.md) — full integration spec with wireframes, state machine, data flows
+- [Printful POD Spec](../../architecture/printful-pod-spec.md) — full integration spec with wireframes, state machine, data flows
 - [Stripe Setup Runbook](stripe-setup-runbook.md) — Stripe integration (payments flow into Printful orders)
 - [Resend Setup Runbook](resend-setup-runbook.md) — transactional email (order confirmations)
 - [`services/printful.ts`](../../apps/web/services/printful.ts) — API client implementation

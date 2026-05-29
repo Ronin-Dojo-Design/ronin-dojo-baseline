@@ -366,9 +366,9 @@ Each brand needs its own Resend domain entry and its own dedicated DKIM key — 
 
 ## Cross-References
 
-- [SESSION_0159](../sprints/_archive/SESSION_0159.md) — execution session this runbook is derived from.
-- [Resend Setup Runbook](resend-setup-runbook.md) — Resend account + API key + env var wiring; copy exact DNS records from the per-domain Resend dashboard/API.
-- [ADR 0006 — Multi-domain hosting on one Vercel deployment](../architecture/decisions/0006-multi-domain-hosting.md) — why all four brands share one Vercel deployment.
-- [ADR 0015 — Domain Hosting Infrastructure](../architecture/decisions/0015-domain-hosting-infrastructure.md) — why Bluehost stays as DNS registrar (record-based path, not delegation).
-- [DNS Verification Spec](../architecture/infrastructure/dns-verification-spec.md) — current shared DNS record reference.
-- [Graphify Repo Memory Runbook](graphify-repo-memory.md) — cross-domain discovery pattern used during SESSION_0159.
+- [SESSION_0159](../../sprints/_archive/SESSION_0159.md) — execution session this runbook is derived from.
+- [Resend Setup Runbook](../integrations/resend-setup-runbook.md) — Resend account + API key + env var wiring; copy exact DNS records from the per-domain Resend dashboard/API.
+- [ADR 0006 — Multi-domain hosting on one Vercel deployment](../../architecture/decisions/0006-multi-domain-hosting.md) — why all four brands share one Vercel deployment.
+- [ADR 0015 — Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) — why Bluehost stays as DNS registrar (record-based path, not delegation).
+- [DNS Verification Spec](../../architecture/infrastructure/dns-verification-spec.md) — current shared DNS record reference.
+- [Graphify Repo Memory Runbook](../dev-environment/graphify-repo-memory.md) — cross-domain discovery pattern used during SESSION_0159.

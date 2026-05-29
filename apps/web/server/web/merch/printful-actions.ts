@@ -20,7 +20,7 @@ import { createOrder, type PrintfulOrderItem, type PrintfulRecipient } from "~/s
 //     --header 'Authorization: Bearer $PRINTFUL_API_KEY' | python3 -m json.tool
 //
 // @see docs/architecture/printful-pod-spec.md — Product Mapping section
-// @see docs/runbooks/printful-setup-runbook.md
+// @see docs/runbooks/integrations/printful-setup-runbook.md
 // ---------------------------------------------------------------------------
 
 /**

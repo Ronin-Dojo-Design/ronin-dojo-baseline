@@ -835,6 +835,6 @@ Phase 3 (future):
 ## Related
 
 - [ADR 0014 — Stripe Product Policy](decisions/0014-stripe-product-policy.md)
-- [Stripe Setup Runbook](../runbooks/stripe-setup-runbook.md)
+- [Stripe Setup Runbook](../runbooks/integrations/stripe-setup-runbook.md)
 - [Email Delivery Spec](infrastructure/email-delivery-spec.md)
-- [Resend Setup Runbook](../runbooks/resend-setup-runbook.md)
+- [Resend Setup Runbook](../runbooks/integrations/resend-setup-runbook.md)

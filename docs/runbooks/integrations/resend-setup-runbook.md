@@ -48,7 +48,7 @@ Step-by-step operator guide for configuring Resend transactional email for the R
 > SESSION_0260 (admin walk-in tournament registration). All helpers route through
 > `lib/notifications.ts` and gate on `shouldSkipForRateLimit`. The canonical
 > lifecycle-event → template → trigger-location table lives in
-> [SOP §16](sop-e2e-user-lifecycle.md#16-transactional-email-touchpoints) — keep that
+> [SOP §16](../sops/sop-e2e-user-lifecycle.md#16-transactional-email-touchpoints) — keep that
 > table authoritative, this runbook only lists the integration points.
 
 ```text
@@ -82,7 +82,7 @@ apps/web/
 
 Baseline Resend DNS was verified in the Resend dashboard on 2026-05-13 15:04. The live Baseline shape is DKIM TXT at `resend._domainkey`, outbound MX at `send`, outbound SPF TXT at `send`, and inbound MX at the apex. Live Resend public docs checked on 2026-05-14 can show alternate tokenized examples, including DKIM CNAME examples; copy the exact per-domain records from the Resend dashboard/API when they differ from examples.
 
-Cross-check the shared record reference in [DNS Verification Spec](../architecture/infrastructure/dns-verification-spec.md) and the Bluehost/Vercel application flow in [Vercel Domain Setup Runbook](vercel-domain-setup-runbook.md).
+Cross-check the shared record reference in [DNS Verification Spec](../../architecture/infrastructure/dns-verification-spec.md) and the Bluehost/Vercel application flow in [Vercel Domain Setup Runbook](../deploy/vercel-domain-setup-runbook.md).
 
 ## Step-by-Step
 

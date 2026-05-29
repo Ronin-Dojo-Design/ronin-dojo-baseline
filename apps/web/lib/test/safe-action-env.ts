@@ -1,7 +1,7 @@
 /**
  * Reusable safe-action test environment.
  *
- * Installs the standard mocks documented in `docs/runbooks/sop-test-writing.md` §3
+ * Installs the standard mocks documented in `docs/runbooks/sops/sop-test-writing.md` §3
  * (next/headers, next/cache, ~/lib/auth, next/server, ~/lib/rate-limiter) so that
  * test files can invoke `userActionClient` / `adminActionClient`-wrapped server
  * actions end-to-end instead of only the exported helper functions.

@@ -423,33 +423,34 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
-| [Docs Navigator](../../runbooks/docs-navigator.md) | runbook | active — searchable HTML doc browser (`bun run docs:nav`) |
-| [Database](../../runbooks/database.md) | runbook | active |
-| [Schema Migration](../../runbooks/schema-migration.md) | runbook | active |
-| [Prisma Workflow](../../runbooks/prisma-workflow.md) | runbook | active |
-| [Neon Prisma Advisory-Lock Recovery](../../runbooks/neon-advisory-lock-recovery.md) | runbook | active |
+| [Runbooks — Domain Hub](../../runbooks/README.md) | index | active — grouped index of all runbooks |
+| [Docs Navigator](../../runbooks/dev-environment/docs-navigator.md) | runbook | active — searchable HTML doc browser (`bun run docs:nav`) |
+| [Database](../../runbooks/database/database.md) | runbook | active |
+| [Schema Migration](../../runbooks/database/schema-migration.md) | runbook | active |
+| [Prisma Workflow](../../runbooks/database/prisma-workflow.md) | runbook | active |
+| [Neon Prisma Advisory-Lock Recovery](../../runbooks/database/neon-advisory-lock-recovery.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
-| [SOP — Data and Wiring Flows](../../runbooks/sop-data-and-wiring-flows.md) | runbook | active |
-| [SOP — End-to-End User Lifecycle](../../runbooks/sop-e2e-user-lifecycle.md) | runbook | active |
-| [SOP — Agent Workflows and Rituals](../../runbooks/sop-agent-workflows-and-rituals.md) | runbook | active |
-| [Dev Environment](../../runbooks/dev-environment.md) | runbook | active |
-| [React to Next Component Porting Runbook](../../runbooks/react-to-next-component-porting-runbook.md) | runbook | active |
-| [Graphify Repo Memory Runbook](../../runbooks/graphify-repo-memory.md) | runbook | active |
-| [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) | runbook | active |
-| [AWS S3 Operator Runbook](../../runbooks/aws-s3-operator-runbook.md) | runbook | active |
-| [ADR 0014 Stripe Product Policy Research](../../runbooks/adr-0014-stripe-product-policy-research.md) | runbook | active |
-| [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) | runbook | active |
-| [SOP — Email Operations Runbook](../../runbooks/sop-email-runbook.md) | runbook | active |
-| [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/vercel-domain-setup-runbook.md) | runbook | active |
-| [White-Label Site Runbook](../../runbooks/white-label-site-runbook.md) | runbook | active |
-| [Black Belt Legacy Production Runbook](../../runbooks/bbl-production-runbook.md) | runbook | active |
-| [Vercel Deploy Runbook](../../runbooks/vercel-deploy.md) | runbook | active |
-| [Baseline Listings Runbook](../../runbooks/baseline-listings-runbook.md) | runbook | active |
-| [Lineage Listing Runbook](../../runbooks/lineage-listing-runbook.md) | runbook | active |
-| [MCP Usage Runbook](../../runbooks/mcp-usage-runbook.md) | runbook | active |
-| [Deployment](../../runbooks/deployment.md) | runbook | active |
-| [SOP — Test Writing Patterns](../../runbooks/sop-test-writing.md) | runbook | active |
-| [Course + Curriculum Runbook](../../runbooks/course-curriculum-runbook.md) | runbook | active |
+| [SOP — Data and Wiring Flows](../../runbooks/sops/sop-data-and-wiring-flows.md) | runbook | active |
+| [SOP — End-to-End User Lifecycle](../../runbooks/sops/sop-e2e-user-lifecycle.md) | runbook | active |
+| [SOP — Agent Workflows and Rituals](../../runbooks/sops/sop-agent-workflows-and-rituals.md) | runbook | active |
+| [Dev Environment](../../runbooks/dev-environment/dev-environment.md) | runbook | active |
+| [React to Next Component Porting Runbook](../../runbooks/porting/react-to-next-component-porting-runbook.md) | runbook | active |
+| [Graphify Repo Memory Runbook](../../runbooks/dev-environment/graphify-repo-memory.md) | runbook | active |
+| [Stripe Setup Runbook](../../runbooks/integrations/stripe-setup-runbook.md) | runbook | active |
+| [AWS S3 Operator Runbook](../../runbooks/integrations/aws-s3-operator-runbook.md) | runbook | active |
+| [ADR 0014 Stripe Product Policy Research](../../runbooks/integrations/adr-0014-stripe-product-policy-research.md) | runbook | active |
+| [Resend Setup Runbook](../../runbooks/integrations/resend-setup-runbook.md) | runbook | active |
+| [SOP — Email Operations Runbook](../../runbooks/sops/sop-email-runbook.md) | runbook | active |
+| [Vercel Domain Setup Runbook (Bluehost DNS)](../../runbooks/deploy/vercel-domain-setup-runbook.md) | runbook | active |
+| [White-Label Site Runbook](../../runbooks/deploy/white-label-site-runbook.md) | runbook | active |
+| [Black Belt Legacy Production Runbook](../../runbooks/deploy/bbl-production-runbook.md) | runbook | active |
+| [Vercel Deploy Runbook](../../runbooks/deploy/vercel-deploy.md) | runbook | active |
+| [Baseline Listings Runbook](../../runbooks/domain-features/baseline-listings-runbook.md) | runbook | active |
+| [Lineage Listing Runbook](../../runbooks/domain-features/lineage-listing-runbook.md) | runbook | active |
+| [MCP Usage Runbook](../../runbooks/dev-environment/mcp-usage-runbook.md) | runbook | active |
+| [Deployment](../../runbooks/deploy/deployment.md) | runbook | active |
+| [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) | runbook | active |
+| [Course + Curriculum Runbook](../../runbooks/domain-features/course-curriculum-runbook.md) | runbook | active |
 
 ## Code files (annotated)
 

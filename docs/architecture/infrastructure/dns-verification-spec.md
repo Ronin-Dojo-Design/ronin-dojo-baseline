@@ -31,7 +31,7 @@ All DNS records needed per domain for the Ronin Dojo platform. Records are manag
 
 Baseline Resend DNS was verified in the Resend dashboard on 2026-05-13 15:04 using DKIM TXT at `resend._domainkey`, outbound MX at `send`, outbound SPF TXT at `send`, and inbound MX at the apex. Live Resend public docs checked on 2026-05-14 can show alternate tokenized examples, including DKIM CNAME examples. For this repo, the per-domain Resend dashboard/API record list is authoritative when examples differ.
 
-See the operator flows in [Vercel Domain Setup Runbook](../../runbooks/vercel-domain-setup-runbook.md) and [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md).
+See the operator flows in [Vercel Domain Setup Runbook](../../runbooks/deploy/vercel-domain-setup-runbook.md) and [Resend Setup Runbook](../../runbooks/integrations/resend-setup-runbook.md).
 
 ## DNS Records by Service
 

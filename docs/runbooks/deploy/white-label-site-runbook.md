@@ -161,9 +161,9 @@ Do not re-derive DNS/Vercel steps here. Per ADR 0006 all brands share one Vercel
 
 - [Vercel Domain Setup Runbook](vercel-domain-setup-runbook.md) — Bluehost→Vercel domain attach for each brand.
 - [BBL Production Runbook](bbl-production-runbook.md) — BBL-specific cutover from WordPress/Flywheel.
-- [ADR 0006 — Multi-domain hosting on one Vercel deployment](../architecture/decisions/0006-multi-domain-hosting.md)
-- [ADR 0021 — Brand-aware magic links](../architecture/decisions/0021-brand-aware-magic-links.md)
-- [ADR 0022 — Brand Chrome Resolution](../architecture/decisions/0022-brand-chrome-resolution.md)
+- [ADR 0006 — Multi-domain hosting on one Vercel deployment](../../architecture/decisions/0006-multi-domain-hosting.md)
+- [ADR 0021 — Brand-aware magic links](../../architecture/decisions/0021-brand-aware-magic-links.md)
+- [ADR 0022 — Brand Chrome Resolution](../../architecture/decisions/0022-brand-chrome-resolution.md)
 
 **Planned Passion Produces Purpose.**
 **OSSS.**

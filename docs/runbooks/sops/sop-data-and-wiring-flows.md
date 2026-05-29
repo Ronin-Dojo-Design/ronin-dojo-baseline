@@ -389,7 +389,7 @@ Publication log / next iteration
 
 ## 11. Local dev auth + storage flow (SESSION_0131)
 
-See full runbook: [`docs/runbooks/local-dev-auth-storage.md`](./local-dev-auth-storage.md)
+See full runbook: [`docs/runbooks/local-dev-auth-storage.md`](../dev-environment/local-dev-auth-storage.md)
 
 ```text
 GET /api/auth/dev-login

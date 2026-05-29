@@ -135,7 +135,7 @@ async function findAllMarkdownFiles(dir: string): Promise<string[]> {
     const fullPath = path.join(dir, entry.name)
     if (entry.isDirectory()) {
       // Skip raw imports/source archives; active docs are checked elsewhere.
-      // graphify-out is generated navigation aid (per docs/runbooks/graphify-repo-memory.md)
+      // graphify-out is generated navigation aid (per docs/runbooks/dev-environment/graphify-repo-memory.md)
       // — its auto-generated cross-references aren't authored wiki content.
       if (
         entry.name === "templates" ||

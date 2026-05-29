@@ -38,7 +38,7 @@ Use this sequence when you spin up a brand-new git worktree off `main` (e.g.,
 to ship a feature slice in parallel with main). Each step has produced
 real-world friction in the past — copy-paste rather than improvise. This
 section is cross-linked from
-[`docs/protocols/cody-preflight.md`](../protocols/cody-preflight.md) step 5
+[`docs/protocols/cody-preflight.md`](../../protocols/cody-preflight.md) step 5
 ("Dev environment confirmed").
 
 ```bash

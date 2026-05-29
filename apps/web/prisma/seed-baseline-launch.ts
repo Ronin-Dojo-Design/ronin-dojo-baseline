@@ -27,7 +27,7 @@ import { PrismaClient } from "~/.generated/prisma/client"
  *   bun run apps/web/prisma/seed-baseline-launch.ts
  *
  * @see docs/sprints/SESSION_0172.md TASK_01
- * @see docs/runbooks/product-catalog-seed.md (Prerequisites section)
+ * @see docs/runbooks/integrations/product-catalog-seed.md (Prerequisites section)
  */
 
 const adapter = new PrismaPg({

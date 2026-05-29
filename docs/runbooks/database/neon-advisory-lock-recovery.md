@@ -130,10 +130,10 @@ Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire 
 
 ## Cross-references
 
-- [Failed Steps Log](../protocols/failed-steps-log.md) — FS-0022 (pnpm pre/post enablement) is the precondition that made `prisma migrate deploy` run on Vercel at all; FS-0023 (env var scope) is the trigger pattern that surfaced this lock leak.
-- [Vercel Deploy Runbook](vercel-deploy.md) — active app-root build settings, env-scope guard, and deployment-readiness gate.
+- [Failed Steps Log](../../protocols/failed-steps-log.md) — FS-0022 (pnpm pre/post enablement) is the precondition that made `prisma migrate deploy` run on Vercel at all; FS-0023 (env var scope) is the trigger pattern that surfaced this lock leak.
+- [Vercel Deploy Runbook](../deploy/vercel-deploy.md) — active app-root build settings, env-scope guard, and deployment-readiness gate.
 - [Prisma Workflow](prisma-workflow.md) — local Prisma schema workflow, including `migrate dev` (which uses the same advisory lock locally but in a single-user environment where the lock never leaks).
-- [ADR 0017 — pnpm pre/post scripts](../architecture/decisions/0017-pnpm-pre-post-scripts.md) — why `prebuild` runs `prisma migrate deploy` in the first place.
-- [Closing Ritual](../rituals/closing.md) — full-close step 4 requires verifying Vercel deploy state, which is the bow-out gate that catches recurrences of this pattern.
-- [SESSION_0189](../sprints/_archive/SESSION_0189.md) — first recorded incident and recovery proof.
-- [SESSION_0201](../sprints/_archive/SESSION_0201.md) — structural fix: Prisma 7 CLI datasource routing to `DIRECT_URL` on Vercel.
+- [ADR 0017 — pnpm pre/post scripts](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) — why `prebuild` runs `prisma migrate deploy` in the first place.
+- [Closing Ritual](../../rituals/closing.md) — full-close step 4 requires verifying Vercel deploy state, which is the bow-out gate that catches recurrences of this pattern.
+- [SESSION_0189](../../sprints/_archive/SESSION_0189.md) — first recorded incident and recovery proof.
+- [SESSION_0201](../../sprints/_archive/SESSION_0201.md) — structural fix: Prisma 7 CLI datasource routing to `DIRECT_URL` on Vercel.

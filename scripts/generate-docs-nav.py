@@ -30,14 +30,23 @@ RUNBOOK_DOMAIN = {
     "mcp-usage-runbook": "Dev Environment", "graphify-repo-memory": "Dev Environment",
     "stripe-setup-runbook": "Integrations", "resend-setup-runbook": "Integrations",
     "printful-setup-runbook": "Integrations", "aws-s3-operator-runbook": "Integrations",
-    "product-catalog-seed": "Integrations", "sop-email-runbook": "Integrations",
+    "product-catalog-seed": "Integrations",
+    "adr-0014-stripe-product-policy-research": "Integrations",
     "invites": "Domain Features", "course-curriculum-runbook": "Domain Features",
     "baseline-listings-runbook": "Domain Features", "lineage-listing-runbook": "Domain Features",
     "nav-sidebar-menu-runbook": "Domain Features",
     "sop-data-and-wiring-flows": "SOPs", "sop-test-writing": "SOPs",
     "sop-e2e-user-lifecycle": "SOPs", "sop-agent-workflows-and-rituals": "SOPs",
+    "sop-email-runbook": "SOPs",
     "react-to-next-component-porting-runbook": "Porting",
-    "adr-0014-stripe-product-policy-research": "ADR research",
+    "docs-navigator": "Dev Environment",
+}
+
+# Domain display name -> physical subdir slug (mirrors the runbooks/<dir>/ nesting)
+RUNBOOK_DIR = {
+    "Database": "database", "Deploy & Infra": "deploy", "Dev Environment": "dev-environment",
+    "Integrations": "integrations", "Domain Features": "domain-features", "SOPs": "sops",
+    "Porting": "porting",
 }
 
 FM_KEYS = ("title", "slug", "type", "status", "created", "updated")

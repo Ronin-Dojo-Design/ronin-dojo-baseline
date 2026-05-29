@@ -58,7 +58,7 @@ Set these in **Vercel → Settings → Environment Variables** for Production (a
 | `RESEND_SENDER_EMAIL` | Email from address |
 | `STRIPE_SECRET_KEY` | Payments |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook verification |
-| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `NEXT_PUBLIC_MEDIA_BASE_URL` | Media uploads and public media delivery; see [AWS S3 Operator Runbook](aws-s3-operator-runbook.md) |
+| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `NEXT_PUBLIC_MEDIA_BASE_URL` | Media uploads and public media delivery; see [AWS S3 Operator Runbook](../integrations/aws-s3-operator-runbook.md) |
 
 ## Google OAuth — Production Client
 

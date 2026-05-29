@@ -70,7 +70,7 @@ Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-regi
 
 ### 3c. Graphify-first discovery for search-heavy lanes
 
-Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/graphify-repo-memory.md) when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, old-monorepo mapping, or any lane where the agent would otherwise "search everything."
+Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/dev-environment/graphify-repo-memory.md) when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, old-monorepo mapping, or any lane where the agent would otherwise "search everything."
 
 For those lanes, run Graphify before any repo-wide text search:
 
@@ -176,7 +176,7 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
-- [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
+- [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
 - [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

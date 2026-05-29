@@ -169,10 +169,10 @@ Examples:
 
 ## Relationships
 
-- [Email Delivery Spec](../architecture/infrastructure/email-delivery-spec.md)
-- [Resend Setup Runbook](resend-setup-runbook.md)
+- [Email Delivery Spec](../../architecture/infrastructure/email-delivery-spec.md)
+- [Resend Setup Runbook](../integrations/resend-setup-runbook.md)
 - [SOP — E2E User Lifecycle](sop-e2e-user-lifecycle.md)
-- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md)
+- [Manual Boundary Registry](../../knowledge/wiki/manual-boundary-registry.md)
 
 ## Sources
 

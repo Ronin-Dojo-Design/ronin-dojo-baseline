@@ -47,10 +47,10 @@ This runbook documents only the **BBL-specific deltas**. The generic domain-atta
 | Attach domain + DNS records | [vercel-domain-setup-runbook](vercel-domain-setup-runbook.md) | Bluehost→Vercel; brand-rollout line already says `blackbeltlegacy.com → attach to bbl Vercel project`. |
 | Vercel build/deploy config | [vercel-deploy](vercel-deploy.md) | pnpm monorepo, root `apps/web`, lockfile gate. |
 | General deploy procedure | [deployment](deployment.md) | release steps. |
-| Transactional email | [resend-setup-runbook](resend-setup-runbook.md) | per-domain DKIM (BBL needs its own key). |
+| Transactional email | [resend-setup-runbook](../integrations/resend-setup-runbook.md) | per-domain DKIM (BBL needs its own key). |
 | White-label surfaces | [white-label-site-runbook](white-label-site-runbook.md) | confirm BBL name/theme resolve before go-live. |
 
-Governing ADRs: [ADR 0006](../architecture/decisions/0006-multi-domain-hosting.md) (one Vercel deployment, all brands), [ADR 0015](../architecture/decisions/0015-domain-hosting-infrastructure.md) (Bluehost stays DNS registrar, record-based — no Vercel nameserver delegation).
+Governing ADRs: [ADR 0006](../../architecture/decisions/0006-multi-domain-hosting.md) (one Vercel deployment, all brands), [ADR 0015](../../architecture/decisions/0015-domain-hosting-infrastructure.md) (Bluehost stays DNS registrar, record-based — no Vercel nameserver delegation).
 
 ---
 
@@ -143,9 +143,9 @@ Keep the pre-cutover `dig` output saved so rollback values are known.
 - [Vercel Deploy Runbook](vercel-deploy.md) — pnpm monorepo build config + lockfile gate.
 - [Deployment Runbook](deployment.md) — general release procedure.
 - [White-Label Site Runbook](white-label-site-runbook.md) — confirm BBL brand surfaces resolve before go-live.
-- [Resend Setup Runbook](resend-setup-runbook.md) — per-domain DKIM for blackbeltlegacy.com.
-- [ADR 0006 — Multi-domain hosting](../architecture/decisions/0006-multi-domain-hosting.md)
-- [ADR 0015 — Domain Hosting Infrastructure](../architecture/decisions/0015-domain-hosting-infrastructure.md)
+- [Resend Setup Runbook](../integrations/resend-setup-runbook.md) — per-domain DKIM for blackbeltlegacy.com.
+- [ADR 0006 — Multi-domain hosting](../../architecture/decisions/0006-multi-domain-hosting.md)
+- [ADR 0015 — Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md)
 
 **Honor the Lineage. Build the Future.**
 **OSSS.**

@@ -140,7 +140,7 @@ If the session changed tracked files and Graphify is installed locally, refresh 
 GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
-Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response. See [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) for full usage.
+Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response. See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
 
 ### 5. Bow-out line
 
@@ -245,16 +245,16 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 - [Opening ritual](opening.md) — paired counterpart at the start of a session.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format in full.
 - [Wiki lint protocol](../protocols/wiki-lint.md) — rules for JETTY 3.0 sweep verification.
-- [Schema Migration Runbook](../runbooks/schema-migration.md) — recurring schema change cycle.
+- [Schema Migration Runbook](../runbooks/database/schema-migration.md) — recurring schema change cycle.
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
 - [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — hard close review against Dirstarter, security, data integrity, and workflow honesty.
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
-- [SOP — Agent Workflows and Rituals](../runbooks/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
+- [SOP — Agent Workflows and Rituals](../runbooks/sops/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
 - [Petey Plan protocol](../protocols/petey-plan.md) — structured planning for staging the next session at bow-out.
 - [Review & Recommend protocol](../protocols/review-recommend.md) — the review + next-target recommendation cycle run at full close.
-- [Graphify Repo Memory Runbook](../runbooks/graphify-repo-memory.md) — local repo graph for cross-domain navigation.
+- [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) — local repo graph for cross-domain navigation.
 
 ---
 

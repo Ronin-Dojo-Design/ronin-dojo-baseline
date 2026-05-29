@@ -196,5 +196,5 @@ Run as Petey self-review (no Giddy/Doug subagent dispatched this session — ses
 
 - [SESSION_0242](SESSION_0242.md) — paired prior session
 - [ADR 0013 — Tool→Listing Pattern Repurposing](../architecture/decisions/0013-tool-listing-repurposing.md) — amended this session
-- [nav-sidebar-menu-runbook](../runbooks/nav-sidebar-menu-runbook.md) — landed in SESSION_0242, governed nav wiring this session
+- [nav-sidebar-menu-runbook](../runbooks/domain-features/nav-sidebar-menu-runbook.md) — landed in SESSION_0242, governed nav wiring this session
 - [Opening ritual](../rituals/opening.md), [Closing ritual](../rituals/closing.md) — both followed in full

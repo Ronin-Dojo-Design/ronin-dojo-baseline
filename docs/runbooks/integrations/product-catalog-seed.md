@@ -211,9 +211,9 @@ bun run prisma/seed-tuffbuffs-merch.ts
 
 ## Related docs
 
-- [Schema Migration Runbook](schema-migration.md) — for schema changes
+- [Schema Migration Runbook](../database/schema-migration.md) — for schema changes
 - [Stripe Setup Runbook](stripe-setup-runbook.md) — for Stripe product/price sync
-- [ADR 0014 — Stripe Product Policy](../architecture/decisions/0014-stripe-product-policy.md) — naming conventions
+- [ADR 0014 — Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) — naming conventions
 
 ## Lessons learned
 

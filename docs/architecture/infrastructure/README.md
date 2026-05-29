@@ -31,7 +31,7 @@ This folder contains the source-of-truth docs for domain management, hosting pro
 
 - [ADR 0006 — Multi-domain hosting](../decisions/0006-multi-domain-hosting.md) — single Vercel deploy, host→brand middleware
 - [ADR 0015 — Domain hosting infrastructure](../decisions/0015-domain-hosting-infrastructure.md) — Bluehost legacy, Vercel new stack, Flywheel BBL
-- [Deployment runbook](../../runbooks/deployment.md) — Vercel deploy flow + checklist
-- [Resend Setup Runbook](../../runbooks/resend-setup-runbook.md) — step-by-step Resend account + DNS verification
+- [Deployment runbook](../../runbooks/deploy/deployment.md) — Vercel deploy flow + checklist
+- [Resend Setup Runbook](../../runbooks/integrations/resend-setup-runbook.md) — step-by-step Resend account + DNS verification
 - [Printful POD Integration Spec](../printful-pod-spec.md) — merch fulfillment via Printful API
-- [Stripe Setup Runbook](../../runbooks/stripe-setup-runbook.md) — Stripe dashboard + webhook config
+- [Stripe Setup Runbook](../../runbooks/integrations/stripe-setup-runbook.md) — Stripe dashboard + webhook config
