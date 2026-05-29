@@ -1879,11 +1879,43 @@ model OrgSettings {
   allowBarterMembership      Boolean  @default(false)
   enableGamification         Boolean  @default(true)
   enableBeltTestScoring      Boolean  @default(false)
+
+  // Theme overrides (null = inherit from BrandSettings)
+  // @added   SESSION_0291 (2026-05-29)
+  // @why     White-label per-org theme customization (D5/D8)
+  primaryColor    String?
+  primaryFgColor  String?
+  accentColor     String?
+  accentFgColor   String?
+  logoUrl         String?
+  faviconUrl      String?
+  ogImageUrl      String?
+
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String       @unique
+}
+
+// ---------------------------------------------------------------------------
+// Models — Brand settings (per-brand theme + assets)
+// @added   SESSION_0291 (2026-05-29)
+// @why     DB-driven brand theming — foundation for white-label wizard (D5)
+// ---------------------------------------------------------------------------
+
+model BrandSettings {
+  id             String   @id @default(cuid())
+  brand          Brand    @unique
+  primaryColor   String?  // HSL values without hsl() wrapper, e.g. "1 79% 51%"
+  primaryFgColor String?
+  accentColor    String?
+  accentFgColor  String?
+  logoUrl        String?
+  faviconUrl     String?
+  ogImageUrl     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // ---------------------------------------------------------------------------

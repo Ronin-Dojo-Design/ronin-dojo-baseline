@@ -9,6 +9,7 @@ last_agent: claude-session-0287
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0287.md
+  - docs/sprints/petey-plan-0291.md
   - docs/runbooks/aws-s3-operator-runbook.md
   - docs/runbooks/local-dev-auth-storage.md
   - docs/runbooks/white-label-site-runbook.md
@@ -65,7 +66,7 @@ not replacing them.
 
 ## Thread 1 — Media-upload CRUD improvement
 
-#### TASK_01 — Slice 1: upload persists Media + delete cleans S3 + enum fix + admin UI ✅ DONE (SESSION_0287)
+### TASK_01 — Slice 1: upload persists Media + delete cleans S3 + enum fix + admin UI ✅ DONE (SESSION_0287)
 
 - **Agent:** Cody
 - **What:** Close the upload↔Media disconnect; make the admin gallery a working CRUD surface.
@@ -75,7 +76,7 @@ not replacing them.
   button + per-card delete; `lib/media.test.ts` (6 cases). typecheck/biome/test green.
 - **Depends on:** nothing.
 
-#### TASK_02 — Slice 2: harden web upload auth (security) ✅ DONE (SESSION_0288)
+### TASK_02 — Slice 2: harden web upload auth (security) ✅ DONE (SESSION_0288)
 
 - **Agent:** Cody (+ Doug security review)
 - **What:** `uploadMedia`/`fetchMedia` move from public `actionClient` to an
@@ -90,7 +91,7 @@ not replacing them.
   (the `/me` UI already gated on `canUploadMedia`; the server just never enforced
   it). typecheck/biome/test green.
 
-#### TASK_03 — Slice 3: MediaAttachment attach/detach CRUD ✅ DONE (SESSION_0289)
+### TASK_03 — Slice 3: MediaAttachment attach/detach CRUD ✅ DONE (SESSION_0289)
 
 - **Agent:** Cody
 - **What:** Server actions to attach/detach a `Media` to an entity (passport,
@@ -100,7 +101,7 @@ not replacing them.
   technique gallery or org gallery), tests.
 - **Depends on:** TASK_01.
 
-#### TASK_04 — Slice 4: upload metadata enrichment
+### TASK_04 — Slice 4: upload metadata enrichment
 
 - **Agent:** Cody
 - **What:** Capture `widthPx`/`heightPx` (image probe) and `durationSec` +
@@ -112,7 +113,7 @@ not replacing them.
 
 ## Thread 2 — BBL assets → S3
 
-#### TASK_05 — Slice A: per-brand asset fields in brandConfigs
+### TASK_05 — Slice A: per-brand asset fields in brandConfigs
 
 - **Agent:** Cody
 - **What:** Extend `brandConfigs` in `config/site.ts` with `logoSrc`, `faviconSrc`,
@@ -122,7 +123,7 @@ not replacing them.
   Baseline keeps current defaults.
 - **Depends on:** Open decision D2 (path convention).
 
-#### TASK_06 — Slice B: route logo/favicon/OG through resolvePublicMediaUrl
+### TASK_06 — Slice B: route logo/favicon/OG through resolvePublicMediaUrl
 
 - **Agent:** Cody
 - **What:** `app/layout.tsx` favicon, `app/api/og/route.tsx` favicon fallback, and
@@ -132,7 +133,7 @@ not replacing them.
   URLs; blank → local `/public`. Brand-aware logo image (not just name text).
 - **Depends on:** TASK_05.
 
-#### TASK_07 — Slice C: produce BBL asset files
+### TASK_07 — Slice C: produce BBL asset files
 
 - **Agent:** Brandon (assets) + Cody (placement)
 - **What:** Obtain/produce BBL logo, wordmark, favicon, OG image; place under the
@@ -140,7 +141,7 @@ not replacing them.
 - **Done means:** real BBL asset files committed (or in S3) at the convention path.
 - **Depends on:** TASK_05.
 
-#### TASK_08 — Slice D: provision per-brand assets in the real S3 bucket (operator)
+### TASK_08 — Slice D: provision per-brand assets in the real S3 bucket (operator)
 
 - **Agent:** Operator (Brian) — agent-assisted
 - **What:** `aws s3 sync` the per-brand asset paths into the prod/staging bucket;
@@ -170,7 +171,7 @@ and "OG images" checklist rows when Thread 2 lands.
 ## Agent assignments
 
 | Task | Agent | Rationale |
-|---|---|---|
+| --- | --- | --- |
 | TASK_01 | Cody | Clear execution; done this session |
 | TASK_02 | Cody + Doug | Security-sensitive auth change |
 | TASK_03 | Cody | CRUD extension |

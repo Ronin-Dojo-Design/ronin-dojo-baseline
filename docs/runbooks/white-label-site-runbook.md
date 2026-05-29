@@ -4,14 +4,16 @@ slug: white-label-site-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-05-28
-last_agent: claude-session-0286
+updated: 2026-05-29
+last_agent: copilot-session-0291
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/bbl-production-runbook.md
   - docs/architecture/decisions/0021-brand-aware-magic-links.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
   - docs/architecture/decisions/0006-multi-domain-hosting.md
+  - docs/sprints/SESSION_0291.md
+  - docs/sprints/petey-plan-0291.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -49,7 +51,9 @@ All brand-aware reads go through the layer added in SESSION_0282/0283. Do **not*
 | `getBrandSiteConfig(brand)` | `apps/web/config/site.ts` | server components / actions / route handlers | `{ name, slug, tagline, description, email, url, domain }` |
 | `getRequestBrand()` | `apps/web/lib/brand-context.ts` | server-side (async; reads request host) | `Brand` enum |
 | `useBrand()` | `apps/web/contexts/brand-context.tsx` | client components under `BrandProvider` | brand context value |
-| `data-brand` + CSS tokens | `apps/web/app/styles.css` | theming | per-brand color tokens via `data-brand="BBL"` etc. |
+| `findBrandSettings(brand)` | `apps/web/server/admin/brand-settings/queries.ts` | server-side (DB query) | `BrandSettings` row (theme colors + asset URLs) or `null` |
+| `data-brand` + CSS tokens | `apps/web/app/styles.css` | theming | per-brand color tokens via `data-brand="BBL"` etc. (compile-time defaults) |
+| Runtime CSS injection | `apps/web/app/layout.tsx` | theming | DB-driven `BrandSettings` override via `<style>` tag; falls back to `styles.css` defaults when no DB row exists |
 
 **Canonical server pattern** (from `apps/web/app/layout.tsx`, SESSION_0283):
 
@@ -122,7 +126,7 @@ When standing up or auditing a brand, confirm each surface resolves the brand (n
 
 - [x] **Page metadata** — `<title>` template, description, `og:site_name`, `og:title` (layout + per-page `generateMetadata`). *(`<title>` + `og:site_name` brand-aware and verified SESSION_0286; per-brand description still env-global.)*
 - [ ] **OG images** — `app/api/og/route.tsx` brand name/colors.
-- [ ] **Favicon / logo / wordmark** — brand asset, not a shared default (depends on S3 asset pipeline — see roadmap).
+- [x] **Favicon / logo / wordmark** — per-brand `logoSrc`/`faviconSrc`/`ogImageSrc` in `brandConfigs` + `resolvePublicMediaUrl` wiring (SESSION_0290). BBL assets committed. *(S3 upload deferred — local `public/` serving works.)*
 - [x] **JSON-LD structured data** — `lib/structured-data.ts` organization + website name (url still env-global). *(verified SESSION_0286)*
 - [ ] **Navigation / header** — `components/web/nav.tsx` wordmark text.
 - [ ] **Emails** — transactional templates (`emails/**`): from-name, signature, brand name in copy.
@@ -130,7 +134,7 @@ When standing up or auditing a brand, confirm each surface resolves the brand (n
 - [ ] **Legal pages** — privacy / terms / cookies brand name + contact email.
 - [ ] **Auth surfaces** — login / verify / magic-link copy.
 - [ ] **Social links / contact email** — per-brand (currently env-global — blocked, see audit).
-- [ ] **Theme tokens** — `data-brand` CSS custom properties (primary/accent) render per brand.
+- [x] **Theme tokens** — `data-brand` CSS custom properties (primary/accent) render per brand. Static `styles.css` provides compile-time defaults; `BrandSettings` DB model + runtime CSS injection in `layout.tsx` enables admin override without code deploy (SESSION_0291). `OrgSettings` theme fields also added for future per-org white-label override.
 
 ---
 
@@ -140,9 +144,10 @@ For RDD to be a credible white-label sales demo, in priority order:
 
 1. **Finish `siteConfig.name` tail** — client components + the email templates (brand prop threading).
 2. **Per-brand `url`/`email`** — decide the source (per-brand env vs `brandConfigs` rows vs host-derivation), then convert the 39 `.url` + 14 `.email` refs. This is the biggest remaining structural item.
-3. **Brand assets** — logo/wordmark/OG per brand from S3 (depends on the assets→S3 + media-upload work).
+3. **Brand assets** — ✅ per-brand `logoSrc`/`faviconSrc`/`ogImageSrc` wired in `brandConfigs` (SESSION_0290). BBL assets committed. S3 upload deferred — local `public/` serving works for launch.
 4. **Demo content** — a believable seeded brand so the demo isn't empty.
 5. **Domain live** — `ronindojodesign.com` attached + verified per [vercel-domain-setup-runbook](vercel-domain-setup-runbook.md) (brand-rollout section already lists it → `ronin-dojo-design` Vercel project).
+6. **Admin brand-settings page** — ✅ `/admin/brand-settings` CRUD for per-brand theme colors + asset URLs (SESSION_0291). `BrandSettings` model + runtime CSS injection in `layout.tsx`. Foundation for white-label wizard.
 
 ---
 

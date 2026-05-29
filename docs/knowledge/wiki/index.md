@@ -372,10 +372,13 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0287](../../sprints/SESSION_0287.md) | session--implement | closed |
 | [SESSION_0288](../../sprints/SESSION_0288.md) | session--implement | closed |
 | [SESSION_0289](../../sprints/SESSION_0289.md) | session--implement | closed |
+| [SESSION_0290](../../sprints/SESSION_0290.md) | session--implement | closed |
+| [SESSION_0291](../../sprints/SESSION_0291.md) | session--implement | closed |
 | [petey-plan-0083](../../sprints/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
 | [petey-plan-0287](../../sprints/petey-plan-0287.md) | petey-plan | active |
+| [petey-plan-0291](../../sprints/petey-plan-0291.md) | petey-plan | closed |
 
 ## Protocols
 

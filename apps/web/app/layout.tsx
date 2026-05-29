@@ -11,6 +11,7 @@ import { SearchProvider } from "~/contexts/search-context"
 import { getRequestBrand } from "~/lib/brand-context"
 import { fontSans } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
+import { findBrandSettings } from "~/server/admin/brand-settings/queries"
 import "./styles.css"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages, getTimeZone } from "next-intl/server"
@@ -40,6 +41,21 @@ export default async function ({ children }: LayoutProps<"/">) {
   const messages = await getMessages()
   const timeZone = await getTimeZone()
   const brand = await getRequestBrand()
+  const brandSettings = await findBrandSettings(brand)
+
+  // Build runtime CSS override from DB-driven BrandSettings
+  const cssOverrides: string[] = []
+  if (brandSettings?.primaryColor)
+    cssOverrides.push(`--color-primary: hsl(${brandSettings.primaryColor});`)
+  if (brandSettings?.primaryFgColor)
+    cssOverrides.push(`--color-primary-foreground: hsl(${brandSettings.primaryFgColor});`)
+  if (brandSettings?.accentColor)
+    cssOverrides.push(`--color-accent: hsl(${brandSettings.accentColor});`)
+  if (brandSettings?.accentFgColor)
+    cssOverrides.push(`--color-accent-foreground: hsl(${brandSettings.accentFgColor});`)
+  const brandCss = cssOverrides.length
+    ? `[data-brand="${brand}"] { ${cssOverrides.join(" ")} }`
+    : ""
 
   return (
     <html
@@ -49,6 +65,7 @@ export default async function ({ children }: LayoutProps<"/">) {
       data-brand={brand}
       suppressHydrationWarning
     >
+      {brandCss && <style dangerouslySetInnerHTML={{ __html: brandCss }} />}
       <body className="min-h-dvh flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
           <NuqsAdapter>

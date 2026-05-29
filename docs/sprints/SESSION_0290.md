@@ -9,6 +9,7 @@ last_agent: copilot-session-0290
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0289.md
+  - docs/sprints/SESSION_0291.md
   - docs/sprints/petey-plan-0287.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -69,6 +70,7 @@ Decide D2 (path convention).
 ### D2 Decision — RESOLVED: `/images/brands/<slug>/` convention
 
 Path: `public/images/brands/<slug>/{logo.png, favicon.png, opengraph.png}`.
+
 - Local dev: served from `public/` via Next.js static serving.
 - Prod: when `NEXT_PUBLIC_MEDIA_BASE_URL` is set, `resolvePublicMediaUrl()` prepends it
   (S3/CloudFront). When blank, falls back to relative path (local dev).
