@@ -966,6 +966,11 @@ model Passport {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
+
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     Wire MediaAttachment back-relation (D4 resolved: all 8 FK columns now have Prisma relations)
+  // @wired   server/admin/media/actions.ts (attachMedia/detachMedia), server/admin/media/queries.ts
+  mediaAttachments MediaAttachment[]
 }
 
 model DirectoryProfile {
@@ -1050,6 +1055,9 @@ model Organization {
   studentLists         StudentList[]
   certificateTemplates CertificateTemplate[]
   lineageTrees         LineageTree[]
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     Wire MediaAttachment back-relation (D4)
+  mediaAttachments     MediaAttachment[]
 
   // Merch / POD
   merchOrders MerchOrder[]
@@ -1901,6 +1909,9 @@ model RankAward {
   lineageTreeMembers   LineageTreeMember[]
   lineageRelationships LineageRelationship[]
   gamificationEvents   GamificationEvent[]
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     Wire MediaAttachment back-relation (D4)
+  mediaAttachments     MediaAttachment[]
 
   @@unique([userId, rankId])
   @@index([userId, awardedAt])
@@ -1935,6 +1946,9 @@ model Course {
   gamificationEvents GamificationEvent[]
   certifications     Certification[]
   programs           ProgramCourse[]
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     Wire MediaAttachment back-relation (D4)
+  mediaAttachments   MediaAttachment[]
 
   @@unique([brand, organizationId, slug])
   @@index([brand, organizationId])
@@ -2642,6 +2656,8 @@ model ContentAtom {
   publications     ContentPublication[]
   tags             Tag[]
   tools            Tool[]
+  // @added   Wave D (SESSION_0026)
+  // @why     ContentAtom ↔ MediaAttachment relation for attaching media to content atoms
   mediaAttachments MediaAttachment[]
 
   @@unique([slug])
@@ -2794,6 +2810,9 @@ model Event {
   disciplineId   String?
 
   registrations EventRegistration[]
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     Wire MediaAttachment back-relation (D4)
+  mediaAttachments MediaAttachment[]
 
   @@unique([brand, organizationId, slug])
   @@index([brand, organizationId])
@@ -3080,7 +3099,15 @@ model MediaAttachment {
   contentAtomId         String?
   certificateTemplateId String?
 
+  // @added   SESSION_0289 (2026-05-29)
+  // @why     D4 resolved: wire all 8 FK columns to full Prisma relations (5 were bare id-only)
+  // @wired   server/admin/media/actions.ts (attachMedia/detachMedia), server/admin/media/queries.ts
+  passport            Passport?            @relation(fields: [passportId], references: [id])
   technique           Technique?           @relation(fields: [techniqueId], references: [id])
+  event               Event?               @relation(fields: [eventId], references: [id])
+  rankAward           RankAward?           @relation(fields: [rankAwardId], references: [id])
+  course              Course?              @relation(fields: [courseId], references: [id])
+  organization        Organization?        @relation(fields: [organizationId], references: [id])
   contentAtom         ContentAtom?         @relation(fields: [contentAtomId], references: [id])
   certificateTemplate CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id])
 
@@ -3129,6 +3156,8 @@ model Technique {
   beltLevelMax   Rank?        @relation("TechBeltMax", fields: [beltLevelMaxId], references: [id])
   beltLevelMaxId String?
 
+  // @added   Wave D (SESSION_0026)
+  // @why     Technique ↔ MediaAttachment relation for attaching media to techniques
   mediaAttachments   MediaAttachment[]
   curriculumLinks    TechniqueCurriculumLink[]
   prerequisiteFor    TechniquePrerequisite[]   @relation("TechPrereqTarget")
@@ -3209,6 +3238,8 @@ model CertificateTemplate {
 
   orders           CertificateOrder[]
   issuances        CertificateIssuance[]
+  // @added   Wave D (SESSION_0026)
+  // @why     CertificateTemplate ↔ MediaAttachment relation for attaching media to certificate templates
   mediaAttachments MediaAttachment[]
 
   @@index([brand, type])

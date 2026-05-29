@@ -1,6 +1,8 @@
 import type { Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
+import type { AttachableEntityType } from "./actions"
+
 export const findMedia = async (params: {
   brand?: string
   type?: string
@@ -47,5 +49,27 @@ export const findMediaById = async (id: string) => {
       uploadedBy: { select: { id: true, name: true } },
       attachments: true,
     },
+  })
+}
+
+export const findMediaAttachments = async (entityType: AttachableEntityType, entityId: string) => {
+  const fkColumn = `${entityType}Id` as string
+  const where: Prisma.MediaAttachmentWhereInput = { [fkColumn]: entityId }
+
+  return db.mediaAttachment.findMany({
+    where,
+    include: {
+      media: {
+        select: {
+          id: true,
+          url: true,
+          type: true,
+          title: true,
+          mimeType: true,
+          thumbnailUrl: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" },
   })
 }

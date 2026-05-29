@@ -90,7 +90,7 @@ not replacing them.
   (the `/me` UI already gated on `canUploadMedia`; the server just never enforced
   it). typecheck/biome/test green.
 
-#### TASK_03 — Slice 3: MediaAttachment attach/detach CRUD
+#### TASK_03 — Slice 3: MediaAttachment attach/detach CRUD ✅ DONE (SESSION_0289)
 
 - **Agent:** Cody
 - **What:** Server actions to attach/detach a `Media` to an entity (passport,

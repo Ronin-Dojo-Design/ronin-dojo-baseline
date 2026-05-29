@@ -22,6 +22,7 @@ backlinks:
 ## Purpose
 
 Append-only log of SOP/guardrail violations. Every entry must have:
+
 - **What failed** — the specific step that was skipped or done wrong
 - **Which SOP** — the document that defined the correct behavior
 - **Root cause** — why it was skipped
@@ -37,6 +38,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 
 ```markdown
 ### FS-NNNN — {one-line title}
+
 - **Session:** SESSION_NNNN
 - **Agent:** Petey | Cody | Doug
 - **Step failed:** {exact step from SOP}
@@ -64,6 +66,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   1. L1 pre-flight checklist added to `docs/agents/cody.md`
   2. `docs/protocols/cody-preflight.md` created with proof-required gates
   3. This log created and added to Tier 1 loading order
+
 - **Verification:** Cody must produce `## Pre-flight output` in SESSION file before any code. Reviewable artifact, not a promise.
 - **Status:** mitigated
 
@@ -78,6 +81,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Corrective action:**
   1. `docs/runbooks/dev-environment.md` to be created (SESSION_0015 task)
   2. Bow-in checklist requires confirming dev server command
+
 - **Verification:** Dev server command appears in `dev-environment.md` runbook. Bow-in checklist has explicit field for it.
 - **Status:** closed — `docs/runbooks/dev-environment.md` created with dev server command, DB connection, brand hosts, Prisma commands, import paths, rollback steps.
 
@@ -95,6 +99,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   3. Wire `10_SOP_AGENT_WORKFLOWS` → `docs/runbooks/sop-agent-workflows.md`
   4. Wire `04_MANUAL_BOUNDARY_REGISTRY` → `docs/knowledge/wiki/manual-boundary-registry.md`
   5. Update `docs/rituals/opening.md` to reference the loading order protocol
+
 - **Verification:** `docs/protocols/next-session-loading-order.md` exists and is referenced in bow-in ritual. Wiki index links to all adopted docs.
 - **Status:** closed — all 12 canonical files exist with JETTY frontmatter, all cross-links wired per §8, wiki index has all 14 entries. Verified SESSION_0014.
 
@@ -110,6 +115,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   1. Add explicit gate to self-review checklist: "If full close: have I executed EVERY numbered step in closing.md, not just steps 1-2 and 4-5?"
   2. Full close must produce a **close checklist artifact** in the SESSION file proving each step was run — not just the outputs, but a checkmark per step
   3. The bow-out statement ("Bowed out — SESSION_NNNN closed") must be the LAST thing said, after ALL steps are verified complete
+
 - **Verification:** SESSION file must contain `## Close checklist` with checkmarks for each step before `Status: closed-full` is set. Any step without a checkmark blocks the status change.
 - **Status:** mitigated
 
@@ -126,6 +132,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. Full close must include a `## Full close evidence` artifact with JETTY/backlink proof, wiki-lint result, Kaizen reflections, review/recommend result, memory sweep decision, and next-session unblock check.
   3. `docs/protocols/wiki-lint.md` and root `package.json` now expose an explicit `bun run wiki:lint` command.
   4. `docs/architecture/ubiquitous-language.md` now defines Quick close, Full close, JETTY sweep, Wiki lint, Kaizen reflection, and Hostile close review.
+
 - **Verification:** A SESSION may only set `status: closed-full` when it contains `## Full close evidence` with the required proof fields and a recorded `wiki:lint` pass/fail summary. Closing without those fields is a failed step.
 - **Status:** mitigated
 
@@ -142,6 +149,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   2. Cody pre-flight must be run for schema changes, not just component work — expand scope of `cody-preflight.md` to cover schema/backend tasks
   3. TASK_PLAN_LOG entries must be created at planning time, not backfilled at close
   4. Agent must explicitly state "Invoking Petey" or "Petey waived because {reason}" in the SESSION file before starting work
+
 - **Verification:** SESSION file must contain either a `## Petey plan` with task plan entries created before implementation, or an explicit `Petey waived: {reason}` with the waiver meeting the criteria in `docs/agents/petey.md`. Hostile close review checks WORKFLOW 5.0 compliance (question 7). Additionally, `cody-preflight.md` now includes a Schema Checklist with a mandatory Petey invocation gate for 3+ model changes.
 - **Status:** mitigated — SESSION_0027 expanded `cody-preflight.md` with schema/backend checklists that require Petey invocation evidence. Enforcement: any schema pre-flight without a Petey plan or waiver is a FAILED_STEPS violation.
 
@@ -159,6 +167,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   3. Reduce protocol surface area to what agents actually enforce, rather than expanding it further
   4. Consider adding protocol names to copilot-instructions.md so they're in every agent's system prompt, not just discoverable via wiki
   5. Expand `cody-preflight.md` scope to cover schema/backend/migration work, not just UI components
+
 - **Verification:** SESSION_0027 governance audit completed:
   - 107 files had `health` field stripped (was decoration, not measurement)
   - 3 logs merged into `docs/protocols/project-log.md` (build-log + task-plan-log + task-review-log)
@@ -170,6 +179,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   - `agents/README.md` updated with all 6 WORKFLOW 5.0 personas
   - Protocol count reduced from 14 to 11 (3 merged into 1)
   - Every remaining protocol either active-enforced or explicitly wired into a ritual
+
 - **Status:** mitigated — SESSION_0027 reduced protocol surface, merged redundant logs, wired unenforced docs into active touchpoints, and expanded pre-flight to cover all work types.
 
 ### FS-0008 — Primitive API and Prisma enum lookups skipped during pre-flight
@@ -181,8 +191,10 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   the actual primitive component files or the actual `schema.prisma` source
   before composing/importing them. Cody inferred prop shapes and enum spellings
   from plan prose instead of from source.
+
 - **SOP source:** `docs/protocols/cody-preflight.md` — Component checklist
   field 2 (L1 template scan), Schema checklist field 3 (Existing schema scan).
+
 - **Root cause:** Pre-flight allowed "matched L1 pattern" / "related models
   listed" without proof that the actual prop names, variant unions, enum
   values, or field types had been read from source. Plan prose used the
@@ -190,6 +202,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   rather than by exact API; Cody copied that prose into the implementation.
   Both classes of mistake were caught only at typecheck time, not at
   pre-flight.
+
 - **Impact:** During SESSION_0031 schedule-slice work, two recurring slips
   surfaced: (a) `Avatar` and `Badge variant` props were imported with the
   wrong shape (e.g., a non-existent `size` value or a missing required prop)
@@ -199,6 +212,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   that pre-flight was supposed to prevent. Pattern matches FS-0001's class —
   agent skipped a documented inspection step because the protocol allowed a
   vague checkmark instead of a paste-from-source artifact.
+
 - **Corrective action:**
   1. `docs/protocols/cody-preflight.md` Component checklist field 2 now
      requires a "Primitive API spot-check" sub-step: read each composed
@@ -212,11 +226,13 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
      from plan prose is itself a FAILED_STEPS violation.
   3. Both sub-steps include concrete examples of correct pre-flight output so
      the bar is unambiguous.
+
 - **Verification:** Future SESSION pre-flight artifacts must contain the
   primitive-prop list and the enum-paste-from-source list. Doug's bow-out
   scan flags any pre-flight that names a primitive or enum without those
   fields. The cody-preflight update landed in SESSION_0031.5 TASK_03 is the
   verification artifact.
+
 - **Status:** mitigated
 
 ### FS-0010 — Blind `--theirs` conflict resolution without content inspection
@@ -230,17 +246,21 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   the "ours" side (main) contained newer content from a different session that
   should be preserved. The assumption was "branch has the latest" without
   verifying that main might have independently-landed parallel work.
+
 - **Impact:** In TASK_06, the attendance PR conflicts were ultimately correct
   to resolve as "theirs" because the branch was the canonical source. But the
   practice of blanket `--theirs` without `diff` inspection is dangerous when
   multiple branches land concurrently. Caught by operator review before merge.
+
 - **Corrective action:**
   1. Authored `docs/protocols/merge-to-main.md` with explicit conflict
      heuristics: "doc-only files → keep both sides; code files → diff first."
   2. Anti-pattern documented: "Never `git checkout --theirs .` without reading
      the diff."
+
 - **Verification:** SESSION_0034 TASK_08 (session-0033 rebase) applied the
   corrected approach — inspected conflicts, kept both sides of doc entries.
+
 - **Status:** mitigated
 
 ### FS-0011 — Git editor hanging on rebase continue
@@ -253,15 +273,19 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   (`$GIT_EDITOR` or `$EDITOR`) for commit message confirmation. In an
   automated/agent context this causes the process to hang indefinitely waiting
   for user input that never arrives.
+
 - **Impact:** Rebase operations stalled until the operator manually identified
   the editor was blocking and killed the process. Multiple minutes lost per
   occurrence.
+
 - **Corrective action:**
   1. Use `GIT_EDITOR=true git rebase --continue` to accept the default commit
      message without opening an editor.
   2. Documented in `merge-to-main.md` step 4.
+
 - **Verification:** TASK_08 rebase completed successfully with
   `GIT_EDITOR=true`.
+
 - **Status:** mitigated
 
 ### FS-0012 — Stacked branch rebase attempted on already-merged code
@@ -270,15 +294,19 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Session:** SESSION_0034 (TASK_07 session-0031 assessment)
 - **Class:** Process waste — unnecessary rebase of a branch whose code was
   already on main via a different merge path.
+
 - **SOP source:** `docs/protocols/merge-to-main.md` — Step 1 (assess
   divergence).
+
 - **Root cause:** The session-0031 branch was assumed to need rebasing because
   it existed as an unmerged branch. Investigation revealed all its code changes
   had already landed on main through the attendance squash merge (PR#1), making
   the branch a subset of main with no unique commits.
+
 - **Impact:** Six file conflicts appeared during rebase that were all
   no-ops (both sides identical). Time spent resolving before realizing the
   branch was redundant.
+
 - **Corrective action:**
   1. Before rebasing any branch, run `git diff main..<branch> -- <code paths>`
      to confirm the branch actually carries unique changes not on main.
@@ -286,8 +314,10 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
      merge.
   3. Added to `merge-to-main.md` step 1 as "confirm branch carries unique
      delta."
+
 - **Verification:** TASK_07 concluded by deleting the redundant remote branch
   instead of forcing a merge.
+
 - **Status:** mitigated
 
 ### FS-0013 — Doc-only conflicts resolved by dropping one side's entries
@@ -297,19 +327,24 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Class:** Data loss risk — doc conflict resolution defaulted to one side.
 - **SOP source:** `docs/protocols/merge-to-main.md` — Conflict heuristics:
   "Append-only logs → keep both."
+
 - **Root cause:** `project-log.md` and `wiki/index.md` had conflicts where
   main carried entries from SESSION_0032.5 and the branch carried entries from
   SESSION_0033. A naive single-side resolution would drop one session's
   documentation entries entirely.
+
 - **Impact:** Caught and resolved correctly by stripping conflict markers and
   preserving both sets of entries. No data loss occurred.
+
 - **Corrective action:**
   1. `merge-to-main.md` heuristics table explicitly states append-only log
      files should keep both sides.
   2. Used scripted regex to strip `<<<<<<<`/`=======`/`>>>>>>>` markers rather
      than manual selection, reducing human error.
+
 - **Verification:** Post-rebase `project-log.md` and `wiki/index.md` contain
   entries from both SESSION_0032.5 and SESSION_0033.
+
 - **Status:** mitigated
 
 ### FS-0014 — Cody built hand-rolled HTML form components instead of using Dirstarter L1 primitives (REPEAT of FS-0001)
@@ -326,6 +361,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
      - Add an explicit `## L1 component inventory` section to copilot-instructions.md listing every `components/common/*.tsx` file so it's in the system prompt for every agent invocation — not just discoverable via protocol
      - Cody pre-flight must include a `grep` for raw HTML form elements (`<input`, `<select`, `<form`, `<label`) in any new component file — if found, the pre-flight fails
   3. Future sessions: any PR containing raw HTML form elements when a Dirstarter primitive exists is an automatic failed-step, no excuses
+
 - **Verification:** SESSION_0050 bracket-viewer refactor eliminates all raw HTML form elements. Post-refactor `grep -n '<input\|<select\|<form' bracket-viewer.tsx` returns zero matches. Doug verifies at bow-out.
 - **Status:** closed — SESSION_0050 TASK_01+02 refactored all hand-rolled components to Dirstarter L1 primitives. FS-0014 is a repeat of FS-0001; root cause cluster: "L1 component inventory gate" (see pattern summary below).
 
@@ -340,6 +376,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   1. Backfill build log + task plan entries from SESSION files (SESSION_0061 task)
   2. Add project-log verification to closing ritual: closing.md must require `grep "SESSION_NNNN" docs/protocols/project-log.md` returns at least one hit before close is accepted
   3. Consider splitting project-log into archive (≤ SESSION_0033) + active (SESSION_0038+) to reduce file size and context window cost
+
 - **Verification:** Backfill entries exist; closing.md updated with project-log gate
 - **Status:** closed — 2026-05-05, SESSION_0074_TASK_01 backfilled task plan log rows for SESSION_0038 through SESSION_0072 (including half-numbered 0038.5, 0041.5, 0046.5). Block prefixed with `<!-- Backfilled SESSION_0074_TASK_01 (FS-0015) -->` in `docs/protocols/project-log.md`. Sessions still in YAML `status: in-progress` were marked `unknown`; closed sessions marked `landed`. Closing.md project-log gate is the next layer (SESSION_0074_TASK_09).
 
@@ -353,6 +390,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Corrective action:**
   1. Owner manually removed 3 duplicate blocks (2026-05-04) — file reduced to 667 lines
   2. Future append operations should `grep` for the entry ID before appending: `grep -c "SESSION_NNNN_REVIEW_XX" project-log.md` must return 0 before write
+
 - **Verification:** `grep -c "^### SESSION_0031_5_REVIEW_01" docs/protocols/project-log.md` returns 1
 - **Status:** resolved
 
@@ -367,6 +405,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Corrective action:**
   1. Second pass completed all missing steps: wiki index corrected, project-log entries added (4 tasks + 1 review), wiki-lint run (0 errors), JETTY sweep done, hostile close review recorded, full close evidence artifact added.
   2. SESSION_0100 upgraded from `closed-quick` to `closed-full` with complete evidence.
+
 - **Verification:** `grep -c SESSION_0100 docs/protocols/project-log.md` returns ≥ 1; `bun run wiki:lint` returns 0 errors; SESSION_0100.md contains Full Close Evidence table.
 - **Status:** resolved
 
@@ -381,6 +420,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Corrective action:**
   1. Removed `shipping_details` from the `expand` array — it's already returned as a top-level property.
   2. Fix applied in SESSION_0113 smoke test.
+
 - **Verification:** Refresh the success page URL with existing `sessionId` — should render order summary with line items, total, size/color badges, and shipping address.
 - **Status:** mitigated
 
@@ -460,6 +500,7 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   - **Claude Code:** `~/.claude/hooks/ronin-cwd-guard.sh` (PreToolUse:Bash) blocks any unprefixed `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` call. Source-of-truth copy committed to `.claude/hooks/` in this repo. Honors `RONIN_GUARD_BYPASS=1` for legitimate cross-workspace ops.
   - **Cross-LLM (Copilot/Codex/Cursor/any future agent):** `~/.shell-guards/ronin-cwd-guard.sh` defines `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` as shell functions that refuse to run from inside the dirstarter_template `$PWD`. Sourced from `~/.zshenv` + `~/.bashrc`, propagated to non-interactive bash via `BASH_ENV`. Source-of-truth copy at `.claude/shell-guards/`.
   - **Companion:** `~/.claude/hooks/dirstarter-readonly-guard.sh` (PreToolUse:Write|Edit|NotebookEdit) blocks any write whose `file_path` is inside the dirstarter_template.
+
 - **Follow-up:** Reinforced in operator memory. ~Consider adding a hook in `~/.claude/settings.json` that gates `git push` to `origin/main` behind a cwd allowlist~ — done (SESSION_0210). See `.claude/hooks/README.md` for the full install + hook map.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
@@ -483,5 +524,3 @@ Read this section at bow-in instead of skimming all 16 entries.
 **4 occurrences** in one session (SESSION_0034). Root cause: first time running multi-branch rebase in automated context. All mitigated via `merge-to-main.md`. **Current status: mitigated, low recurrence risk.**
 
 ### Pattern 5: Deploy chain drift — config + lockfile + migrations + env all desynced (FS-0022 → FS-0023 + lockfile gap)
-
-**1 incident producing 4 chained failures (SESSION_0188).** Root cause: multiple silent failures (lockfile out-of-sync, pnpm pre/post hooks disabled, env vars scoped wrong, migrations queued) were each individually harmless until one fix exposed the next. Each linear repair surfaced another buried failure. **Current status: mitigated for this incident; bow-out checklist updated.** Future at bow-out, must verify the latest preview/production Vercel deploy is `Ready` (not `Error`) before declaring closed. ADR_0001 codifies the pnpm pre/post scripts decision. Future env-var additions must record Vercel env scope in the SESSION file.

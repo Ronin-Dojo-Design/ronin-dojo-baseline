@@ -7,6 +7,23 @@ import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
 
+/**
+ * The set of entity types that can receive a MediaAttachment. Each value
+ * maps to a nullable FK column on the MediaAttachment model.
+ */
+const attachableEntityType = z.enum([
+  "passport",
+  "technique",
+  "event",
+  "rankAward",
+  "course",
+  "organization",
+  "contentAtom",
+  "certificateTemplate",
+])
+
+export type AttachableEntityType = z.infer<typeof attachableEntityType>
+
 const createMediaSchema = z.object({
   brand: z.string(),
   type: z.enum(["IMAGE", "VIDEO", "YOUTUBE", "DOCUMENT"]),
@@ -121,6 +138,69 @@ export const deleteMedia = adminActionClient
     revalidate({
       paths: ["/admin/media"],
       tags: ["media"],
+    })
+
+    return true
+  })
+
+// ---------------------------------------------------------------------------
+// MediaAttachment attach / detach
+// ---------------------------------------------------------------------------
+
+const attachMediaSchema = z.object({
+  mediaId: z.string().min(1),
+  entityType: attachableEntityType,
+  entityId: z.string().min(1),
+  purpose: z.string().optional(),
+  sortOrder: z.number().int().default(0),
+})
+
+/**
+ * Attach a Media record to an entity via MediaAttachment. Exactly one FK
+ * column (determined by `entityType`) is set; the rest stay null.
+ */
+export const attachMedia = adminActionClient
+  .inputSchema(attachMediaSchema)
+  .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
+    const { mediaId, entityType, entityId, purpose, sortOrder } = parsedInput
+
+    // Build the FK column dynamically: entityType "rankAward" → { rankAwardId: entityId }
+    const fkColumn = `${entityType}Id` as const
+
+    const attachment = await db.mediaAttachment.create({
+      data: {
+        mediaId,
+        [fkColumn]: entityId,
+        purpose,
+        sortOrder,
+      },
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/media"],
+        tags: ["media"],
+      })
+    })
+
+    return attachment
+  })
+
+/**
+ * Detach (delete) one or more MediaAttachment rows by id.
+ */
+export const detachMedia = adminActionClient
+  .inputSchema(idsSchema)
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+    await db.mediaAttachment.deleteMany({
+      where: { id: { in: ids } },
+    })
+
+    after(async () => {
+      revalidate({
+        paths: ["/admin/media"],
+        tags: ["media"],
+      })
     })
 
     return true
