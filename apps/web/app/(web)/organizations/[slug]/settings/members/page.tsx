@@ -11,8 +11,13 @@ import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
-import { getOrganizationBySlug, getOrganizationMembers } from "~/server/web/organization/queries"
+import {
+  getOrganizationBySlug,
+  getOrganizationMembers,
+  getSystemRoles,
+} from "~/server/web/organization/queries"
 import { MemberApprovalActions } from "./_components/member-approval-actions"
+import { OrgRoleAssignment } from "./_components/org-role-assignment"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -45,7 +50,11 @@ export default async function OrgMembersPage({ params }: Props) {
     )
   }
 
-  const members = await getOrganizationMembers(org.id)
+  const [members, systemRoles] = await Promise.all([
+    getOrganizationMembers(org.id),
+    getSystemRoles(),
+  ])
+  const roleList = systemRoles.map(r => ({ id: r.id, name: r.name, code: r.code }))
   const pending = members.filter(m => m.status === "PENDING")
   const roster = members.filter(m => m.status !== "PENDING")
 
@@ -126,11 +135,12 @@ export default async function OrgMembersPage({ params }: Props) {
                           </CardDescription>
                         </div>
                         <Stack size="sm" wrap>
-                          {member.roleAssignments.map(({ role }) => (
-                            <Badge key={role.id} variant="primary">
-                              {role.name}
-                            </Badge>
-                          ))}
+                          <OrgRoleAssignment
+                            organizationId={org.id}
+                            membershipId={member.id}
+                            roleAssignments={member.roleAssignments}
+                            roleList={roleList}
+                          />
                           <Badge variant={STATUS_VARIANT[member.status] ?? "outline"}>
                             {member.status}
                           </Badge>

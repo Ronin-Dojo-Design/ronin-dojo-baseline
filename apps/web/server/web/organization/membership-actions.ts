@@ -6,6 +6,7 @@ import { notifyMemberOfMembershipStatusChange } from "~/lib/notifications"
 import { userActionClient } from "~/lib/safe-actions"
 import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 import { assertOrgAdminAccess } from "~/server/web/organization/org-admin-access"
+import { db } from "~/services/db"
 
 const orgTransitionSchema = z.object({
   organizationId: z.string().min(1, "Organization ID is required"),
@@ -138,5 +139,205 @@ export const transitionOrgMembershipStatus = userActionClient
       })
 
       return updated
+    },
+  )
+
+const orgRoleSchema = z.object({
+  organizationId: z.string().min(1, "Organization ID is required"),
+  membershipId: z.string().min(1, "Membership ID is required"),
+  roleId: z.string().min(1, "Role ID is required"),
+})
+
+const orgRejectSchema = z.object({
+  organizationId: z.string().min(1, "Organization ID is required"),
+  membershipId: z.string().min(1, "Membership ID is required"),
+})
+
+/**
+ * Load a membership for an org-scoped mutation and enforce the cross-org guard.
+ * Throws ACCESS_DENIED if the membership does not belong to `organizationId`,
+ * so an org admin cannot act on another org's member by ID. Caller must have
+ * already passed `assertOrgAdminAccess` for `organizationId`.
+ */
+async function loadOrgMembership(membershipId: string, organizationId: string) {
+  const membership = await db.membership.findUnique({
+    where: { id: membershipId },
+    select: {
+      id: true,
+      status: true,
+      brand: true,
+      organizationId: true,
+      organization: { select: { slug: true } },
+    },
+  })
+
+  if (!membership) {
+    throw new Error("Membership not found")
+  }
+  if (membership.organizationId !== organizationId) {
+    throw new Error("ACCESS_DENIED")
+  }
+
+  return membership
+}
+
+/**
+ * Assign a system role to a member of the org. Authorized for owner + ORG_ADMIN
+ * (any org admin can grant any system role, mirroring the platform pattern).
+ * Validates the role is a system role and the member belongs to the org.
+ * Idempotent via upsert on the compound unique.
+ */
+export const assignOrgRole = userActionClient
+  .inputSchema(orgRoleSchema)
+  .action(
+    async ({
+      parsedInput: { organizationId, membershipId, roleId },
+      ctx: { user, db, revalidate },
+    }) => {
+      await assertOrgAdminAccess(user.id, organizationId)
+      const membership = await loadOrgMembership(membershipId, organizationId)
+
+      const role = await db.role.findUnique({
+        where: { id: roleId },
+        select: { id: true, code: true, isSystem: true },
+      })
+      if (!role?.isSystem) {
+        throw new Error("Invalid role")
+      }
+
+      const assignment = await db.membershipRoleAssignment.upsert({
+        where: { membershipId_roleId: { membershipId, roleId } },
+        create: { membershipId, roleId },
+        update: {},
+      })
+
+      after(async () => {
+        try {
+          await db.auditLog.create({
+            data: {
+              brand: membership.brand,
+              action: "ROLE_ASSIGNED",
+              entityType: "Membership",
+              entityId: membershipId,
+              after: { roleId, roleCode: role.code },
+              userId: user.id,
+            },
+          })
+        } catch (error) {
+          console.error("[AuditLog] Failed to write org ROLE_ASSIGNED entry", {
+            entityId: membershipId,
+            error,
+          })
+        }
+
+        revalidate({
+          paths: [`/organizations/${membership.organization.slug}/settings/members`],
+          tags: ["memberships", `membership-${membershipId}`],
+        })
+      })
+
+      return assignment
+    },
+  )
+
+/**
+ * Remove a system role from a member of the org. Authorized for owner + ORG_ADMIN.
+ * Idempotent via deleteMany (no P2025 on a double-click race).
+ */
+export const removeOrgRole = userActionClient
+  .inputSchema(orgRoleSchema)
+  .action(
+    async ({
+      parsedInput: { organizationId, membershipId, roleId },
+      ctx: { user, db, revalidate },
+    }) => {
+      await assertOrgAdminAccess(user.id, organizationId)
+      const membership = await loadOrgMembership(membershipId, organizationId)
+
+      const role = await db.role.findUnique({
+        where: { id: roleId },
+        select: { code: true },
+      })
+
+      await db.membershipRoleAssignment.deleteMany({ where: { membershipId, roleId } })
+
+      after(async () => {
+        try {
+          await db.auditLog.create({
+            data: {
+              brand: membership.brand,
+              action: "ROLE_REMOVED",
+              entityType: "Membership",
+              entityId: membershipId,
+              before: { roleId, roleCode: role?.code ?? null },
+              userId: user.id,
+            },
+          })
+        } catch (error) {
+          console.error("[AuditLog] Failed to write org ROLE_REMOVED entry", {
+            entityId: membershipId,
+            error,
+          })
+        }
+
+        revalidate({
+          paths: [`/organizations/${membership.organization.slug}/settings/members`],
+          tags: ["memberships", `membership-${membershipId}`],
+        })
+      })
+
+      return { removed: true }
+    },
+  )
+
+/**
+ * Reject (decline) a PENDING join request by hard-deleting the membership row.
+ * Resolves F-0296-1: leaving a CANCELLED row collided with
+ * `@@unique([userId, organizationId, disciplineId])` and blocked re-requests.
+ * A declined request is not a membership — removing it lets the user re-apply.
+ * Writes a REQUEST_REJECTED audit entry before the delete (AuditLog.entityId is
+ * a free string, so the record survives the row deletion).
+ */
+export const rejectOrgJoinRequest = userActionClient
+  .inputSchema(orgRejectSchema)
+  .action(
+    async ({ parsedInput: { organizationId, membershipId }, ctx: { user, db, revalidate } }) => {
+      await assertOrgAdminAccess(user.id, organizationId)
+      const membership = await loadOrgMembership(membershipId, organizationId)
+
+      if (membership.status !== "PENDING") {
+        throw new Error("Only pending join requests can be rejected")
+      }
+
+      // Record the rejection before the row disappears. Wrapped so an audit
+      // failure does not abort the reject itself.
+      try {
+        await db.auditLog.create({
+          data: {
+            brand: membership.brand,
+            action: "REQUEST_REJECTED",
+            entityType: "Membership",
+            entityId: membershipId,
+            before: { status: "PENDING" },
+            userId: user.id,
+          },
+        })
+      } catch (error) {
+        console.error("[AuditLog] Failed to write org REQUEST_REJECTED entry", {
+          entityId: membershipId,
+          error,
+        })
+      }
+
+      await db.membership.delete({ where: { id: membershipId } })
+
+      after(async () => {
+        revalidate({
+          paths: [`/organizations/${membership.organization.slug}/settings/members`],
+          tags: ["memberships", `membership-${membershipId}`],
+        })
+      })
+
+      return { rejected: true }
     },
   )
