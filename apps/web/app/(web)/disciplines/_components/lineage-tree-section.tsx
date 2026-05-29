@@ -64,9 +64,7 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
     <section>
       <Stack size="xs" direction="column" className="mb-4">
         <H4 render={props => <h3 {...props}>{props.children}</h3>}>Lineage</H4>
-        <Note>
-          {result.tree.name}. Click any tile to open the profile drawer.
-        </Note>
+        <Note>{result.tree.name}. Click any tile to open the profile drawer.</Note>
       </Stack>
 
       {result.tree.isClaimable && (

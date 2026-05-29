@@ -44,10 +44,7 @@ export interface LineageRankRedactionFixture {
   disciplineId: string
 }
 
-function runRankRedactionCommand<T>(
-  command: string,
-  fixture?: LineageRankRedactionFixture,
-): T {
+function runRankRedactionCommand<T>(command: string, fixture?: LineageRankRedactionFixture): T {
   const args = ["e2e/helpers/seed-lineage-rank-redaction-db.ts", command]
 
   if (fixture) {

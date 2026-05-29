@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
+import { StructuredData } from "~/components/web/structured-data"
 import {
   AffiliateGearBrowser,
   type AffiliateGearViewSection,
 } from "~/components/web/tuffbuffs/affiliate-gear-browser"
-import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
@@ -125,9 +125,7 @@ export default async function GearPage() {
   return (
     <>
       <StructuredData
-        data={createGraph([
-          generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
-        ])}
+        data={createGraph([generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION)])}
       />
 
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
@@ -141,8 +139,8 @@ export default async function GearPage() {
             </Stack>
             <IntroTitle>{PAGE_TITLE}</IntroTitle>
             <IntroDescription>
-              Curated Amazon gear links from the TuffBuffs catalog for BJJ, Muay Thai, boxing, Eskrima,
-              and self-defense training.
+              Curated Amazon gear links from the TuffBuffs catalog for BJJ, Muay Thai, boxing,
+              Eskrima, and self-defense training.
             </IntroDescription>
             <p className="max-w-2xl text-sm text-muted-foreground">
               Affiliate disclosure: qualifying purchases may earn a commission. Product pricing and
@@ -150,7 +148,10 @@ export default async function GearPage() {
             </p>
           </Intro>
 
-          <AffiliateGearBrowser programSections={programSections} categorySections={categorySections} />
+          <AffiliateGearBrowser
+            programSections={programSections}
+            categorySections={categorySections}
+          />
         </Section.Content>
       </Section>
     </>

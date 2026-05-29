@@ -112,7 +112,9 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
       enableSorting: false,
       size: 140,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Rank" />,
-      cell: ({ row }) => <Note className="truncate max-w-32">{row.original.rank?.name ?? "—"}</Note>,
+      cell: ({ row }) => (
+        <Note className="truncate max-w-32">{row.original.rank?.name ?? "—"}</Note>
+      ),
     },
     {
       id: "roles",

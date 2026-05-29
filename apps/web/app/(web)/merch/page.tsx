@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
-import { MerchBrowser, type MerchCategoryTab } from "~/components/web/tuffbuffs/merch-browser"
 import { StructuredData } from "~/components/web/structured-data"
+import { MerchBrowser, type MerchCategoryTab } from "~/components/web/tuffbuffs/merch-browser"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
@@ -62,9 +62,7 @@ export default async function MerchPage() {
   return (
     <>
       <StructuredData
-        data={createGraph([
-          generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
-        ])}
+        data={createGraph([generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION)])}
       />
 
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />

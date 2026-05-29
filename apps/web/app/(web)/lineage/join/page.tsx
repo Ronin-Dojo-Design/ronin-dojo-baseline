@@ -40,9 +40,9 @@ const getData = cache(async () => {
   })
 
   return {
-    ...await getPageData(url, title, description, {
+    ...(await getPageData(url, title, description, {
       breadcrumbs: [{ url, title }],
-    }),
+    })),
     claimableTree: claimableTree
       ? {
           id: claimableTree.id,

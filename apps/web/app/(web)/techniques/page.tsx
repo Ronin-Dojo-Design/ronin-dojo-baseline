@@ -17,11 +17,14 @@ import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 
 const PAGE_URL = "/techniques"
 const PAGE_TITLE = "Technique Library"
-const PAGE_DESCRIPTION =
-  "Browse techniques by category, position, and discipline."
+const PAGE_DESCRIPTION = "Browse techniques by category, position, and discipline."
 
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
-  { href: "/disciplines", label: "Disciplines", description: "Martial arts styles and rank systems" },
+  {
+    href: "/disciplines",
+    label: "Disciplines",
+    description: "Martial arts styles and rank systems",
+  },
   { href: "/courses", label: "Courses", description: "Curriculum and certification programs" },
   { href: "/programs", label: "Programs", description: "Active training programs and offerings" },
 ]
@@ -43,9 +46,7 @@ export default async function TechniquesPage({ searchParams }: PageProps) {
   return (
     <>
       <StructuredData
-        data={createGraph([
-          generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
-        ])}
+        data={createGraph([generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION)])}
       />
 
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />

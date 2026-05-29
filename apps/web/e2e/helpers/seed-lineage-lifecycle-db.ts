@@ -477,83 +477,83 @@ async function readLineageLifecycleState(
     siblingMembers,
     siblingRelationshipCount,
   ] = await Promise.all([
-      prisma.lineageClaimRequest.findFirst({
-        where: {
-          treeId: fixture.treeId,
-          nodeId: fixture.claimTargetNodeId,
-          claimantUserId: fixture.claimantUserId,
+    prisma.lineageClaimRequest.findFirst({
+      where: {
+        treeId: fixture.treeId,
+        nodeId: fixture.claimTargetNodeId,
+        claimantUserId: fixture.claimantUserId,
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        claimantNote: true,
+        reviewerNote: true,
+        evidence: {
+          select: { label: true, url: true, text: true },
+          orderBy: { createdAt: "asc" },
         },
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          status: true,
-          claimantNote: true,
-          reviewerNote: true,
-          evidence: {
-            select: { label: true, url: true, text: true },
-            orderBy: { createdAt: "asc" },
-          },
-        },
-      }),
-      prisma.lineageNode.findUnique({
-        where: { id: fixture.claimTargetNodeId },
-        select: { userId: true, bio: true },
-      }),
-      prisma.user.findUnique({
-        where: { id: fixture.placeholderUserId },
-        select: { archivedAt: true },
-      }),
-      prisma.lineageTreeAccess.findFirst({
-        where: {
-          treeId: fixture.treeId,
-          userId: fixture.claimantUserId,
-          nodeId: fixture.claimTargetNodeId,
-          memberId: fixture.claimTargetMemberId,
-          revokedAt: null,
-        },
-        select: { id: true, role: true, userId: true },
-      }),
-      prisma.passport.findUnique({
-        where: { userId: fixture.claimantUserId },
-        select: { displayName: true },
-      }),
-      prisma.rankAward.findUnique({
-        where: { id: fixture.rankAwardId },
-        select: { awardedAt: true },
-      }),
-      prisma.lineageRelationship.findFirst({
-        where: {
-          type: "PROMOTED_BY",
-          toNodeId: fixture.claimTargetNodeId,
-          rankAwardId: fixture.rankAwardId,
-        },
-        select: {
-          fromNodeId: true,
-          toNodeId: true,
-          rankAwardId: true,
-          verificationStatus: true,
-          isVerified: true,
-        },
-      }),
-      prisma.lineageTreeMember.findMany({
-        where: { id: { in: fixture.siblingMemberIds } },
-        select: {
-          id: true,
-          nodeId: true,
-          visualSortOrder: true,
-          visualGroupId: true,
-          primaryVisualParentMemberId: true,
-        },
-      }),
-      prisma.lineageRelationship.count({
-        where: {
-          OR: [
-            { fromNodeId: { in: fixture.siblingNodeIds } },
-            { toNodeId: { in: fixture.siblingNodeIds } },
-          ],
-        },
-      }),
-    ])
+      },
+    }),
+    prisma.lineageNode.findUnique({
+      where: { id: fixture.claimTargetNodeId },
+      select: { userId: true, bio: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: fixture.placeholderUserId },
+      select: { archivedAt: true },
+    }),
+    prisma.lineageTreeAccess.findFirst({
+      where: {
+        treeId: fixture.treeId,
+        userId: fixture.claimantUserId,
+        nodeId: fixture.claimTargetNodeId,
+        memberId: fixture.claimTargetMemberId,
+        revokedAt: null,
+      },
+      select: { id: true, role: true, userId: true },
+    }),
+    prisma.passport.findUnique({
+      where: { userId: fixture.claimantUserId },
+      select: { displayName: true },
+    }),
+    prisma.rankAward.findUnique({
+      where: { id: fixture.rankAwardId },
+      select: { awardedAt: true },
+    }),
+    prisma.lineageRelationship.findFirst({
+      where: {
+        type: "PROMOTED_BY",
+        toNodeId: fixture.claimTargetNodeId,
+        rankAwardId: fixture.rankAwardId,
+      },
+      select: {
+        fromNodeId: true,
+        toNodeId: true,
+        rankAwardId: true,
+        verificationStatus: true,
+        isVerified: true,
+      },
+    }),
+    prisma.lineageTreeMember.findMany({
+      where: { id: { in: fixture.siblingMemberIds } },
+      select: {
+        id: true,
+        nodeId: true,
+        visualSortOrder: true,
+        visualGroupId: true,
+        primaryVisualParentMemberId: true,
+      },
+    }),
+    prisma.lineageRelationship.count({
+      where: {
+        OR: [
+          { fromNodeId: { in: fixture.siblingNodeIds } },
+          { toNodeId: { in: fixture.siblingNodeIds } },
+        ],
+      },
+    }),
+  ])
 
   return {
     claim: claim

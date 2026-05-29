@@ -274,10 +274,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
 async function cleanupFixture(fixture: LineageRankRedactionFixture) {
   await prisma.lineageRelationship.deleteMany({
     where: {
-      OR: [
-        { fromNodeId: { in: fixture.nodeIds } },
-        { toNodeId: { in: fixture.nodeIds } },
-      ],
+      OR: [{ fromNodeId: { in: fixture.nodeIds } }, { toNodeId: { in: fixture.nodeIds } }],
     },
   })
   await prisma.lineageTreeMember.deleteMany({ where: { id: { in: fixture.memberIds } } })
@@ -299,9 +296,7 @@ const decodeFixture = () => {
   if (!encoded) {
     throw new Error("Missing encoded rank-redaction fixture")
   }
-  return JSON.parse(
-    Buffer.from(encoded, "base64").toString("utf-8"),
-  ) as LineageRankRedactionFixture
+  return JSON.parse(Buffer.from(encoded, "base64").toString("utf-8")) as LineageRankRedactionFixture
 }
 
 const command = process.argv[2]

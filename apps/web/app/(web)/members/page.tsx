@@ -22,7 +22,11 @@ const PAGE_DESCRIPTION =
   "Browse the member directory — find training partners and instructors in our community."
 
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
-  { href: "/directory", label: "Directory", description: "Practitioners, instructors, and schools" },
+  {
+    href: "/directory",
+    label: "Directory",
+    description: "Practitioners, instructors, and schools",
+  },
   { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
   { href: "/lineage", label: "Lineage", description: "Promotion history and living legacy" },
 ]
@@ -46,9 +50,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
   return (
     <>
       <StructuredData
-        data={createGraph([
-          generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION),
-        ])}
+        data={createGraph([generateCollectionPage(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION)])}
       />
 
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
