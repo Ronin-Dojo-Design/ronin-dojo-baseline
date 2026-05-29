@@ -10,6 +10,7 @@ import { BrandProvider } from "~/contexts/brand-context"
 import { SearchProvider } from "~/contexts/search-context"
 import { getRequestBrand } from "~/lib/brand-context"
 import { fontSans } from "~/lib/fonts"
+import { resolvePublicMediaUrl } from "~/lib/media"
 import "./styles.css"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages, getTimeZone } from "next-intl/server"
@@ -25,7 +26,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
       default: `${brandConfig.tagline} – ${brandConfig.name}`,
     },
     description: brandConfig.description,
-    icons: { icon: [{ type: "image/png", url: "/favicon.png" }] },
+    icons: { icon: [{ type: "image/png", url: resolvePublicMediaUrl(brandConfig.faviconSrc) }] },
     ...metadataConfig,
     openGraph: {
       ...metadataConfig.openGraph,

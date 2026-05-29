@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import type { ComponentProps } from "react"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
@@ -8,7 +9,8 @@ import { useBrand } from "~/contexts/brand-context"
 import { cx } from "~/lib/utils"
 
 export const Logo = ({ className, ...props }: ComponentProps<typeof Stack>) => {
-  const { name } = useBrand()
+  const { name, logoSrc } = useBrand()
+  const hasCustomLogo = logoSrc && !logoSrc.endsWith("/logo.png")
 
   return (
     <Stack
@@ -18,7 +20,18 @@ export const Logo = ({ className, ...props }: ComponentProps<typeof Stack>) => {
       render={<Link href="/" />}
       {...props}
     >
-      <LogoSymbol />
+      {hasCustomLogo ? (
+        <Image
+          src={logoSrc}
+          alt={`${name} logo`}
+          width={20}
+          height={20}
+          className="h-5 w-auto shrink-0"
+          unoptimized
+        />
+      ) : (
+        <LogoSymbol />
+      )}
       <span className="font-medium text-sm truncate">{name}</span>
     </Stack>
   )

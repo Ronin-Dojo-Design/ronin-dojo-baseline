@@ -10,6 +10,9 @@ type BrandContextValue = {
   slug: string
   tagline: string
   description: string
+  logoSrc: string
+  faviconSrc: string
+  ogImageSrc: string
 }
 
 const BrandContext = createContext<BrandContextValue | null>(null)
@@ -47,6 +50,9 @@ export const BrandProvider = ({ brand, children }: PropsWithChildren<{ brand: Br
     slug: config.slug,
     tagline: config.tagline,
     description: config.description,
+    logoSrc: config.logoSrc,
+    faviconSrc: config.faviconSrc,
+    ogImageSrc: config.ogImageSrc,
   }
 
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>

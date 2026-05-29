@@ -1,0 +1,10 @@
+<svg width="960" height="320" viewBox="0 0 960 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Black Belt Legacy Wordmark (placeholder)</title>
+  <desc id="desc">Placeholder logo for Black Belt Legacy using black background, white border, white text, and red highlight behind the word Belt.</desc>
+  <rect width="960" height="320" rx="24" fill="#050505"/>
+  <rect x="12" y="12" width="936" height="296" rx="18" stroke="#FFFFFF" stroke-width="12"/>
+  <rect x="408" y="48" width="228" height="224" fill="#E52421" rx="12"/>
+  <text x="120" y="184" fill="white" font-family="'Inter', 'Segoe UI', sans-serif" font-size="120" font-weight="800" letter-spacing="6">BLACK</text>
+  <text x="420" y="184" fill="white" font-family="'Inter', 'Segoe UI', sans-serif" font-size="120" font-weight="800" letter-spacing="6">BELT</text>
+  <text x="690" y="184" fill="white" font-family="'Inter', 'Segoe UI', sans-serif" font-size="80" font-weight="700" letter-spacing="8">LEGACY</text>
+</svg>

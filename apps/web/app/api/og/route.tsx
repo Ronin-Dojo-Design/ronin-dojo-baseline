@@ -6,6 +6,7 @@ import { OgBase } from "~/components/web/og/og-base"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { loadGoogleFont } from "~/lib/fonts"
+import { resolvePublicMediaUrl } from "~/lib/media"
 import { openGraphSearchParams } from "~/lib/opengraph"
 
 export const contentType = "image/png"
@@ -21,7 +22,7 @@ export const GET = async (req: NextRequest) => {
   const params = {
     title: title ?? brandConfig.name,
     description: description ?? t("brand.description"),
-    faviconUrl: faviconUrl ?? `${siteConfig.url}/favicon.png`,
+    faviconUrl: faviconUrl ?? `${siteConfig.url}${resolvePublicMediaUrl(brandConfig.faviconSrc)}`,
     siteName: brandConfig.name,
     siteTagline: t("brand.tagline"),
   }

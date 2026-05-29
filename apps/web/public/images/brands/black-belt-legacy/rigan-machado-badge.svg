@@ -1,0 +1,18 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Rigan Machado Crest (placeholder)</title>
+  <desc id="desc">Simplified circular crest inspired by the provided Rigan Machado Brazilian Jiu-Jitsu and Self Defense badge.</desc>
+  <circle cx="320" cy="320" r="300" fill="#0B0B0F" stroke="#4B5563" stroke-width="18"/>
+  <circle cx="320" cy="320" r="250" fill="#111827" stroke="#3E70B7" stroke-width="36"/>
+  <path d="M170 440C200 380 260 280 260 280H330L242 440H170Z" fill="#3E70B7"/>
+  <path d="M470 440L378 280H310L398 440H470Z" fill="#3E70B7"/>
+  <rect x="280" y="180" width="120" height="64" rx="12" fill="#2F3143" stroke="#9CA3AF" stroke-width="8"/>
+  <rect x="292" y="192" width="24" height="40" fill="#E52421"/>
+  <rect x="324" y="192" width="24" height="40" fill="#9CA3AF"/>
+  <rect x="356" y="192" width="24" height="40" fill="#E52421"/>
+  <rect x="388" y="192" width="12" height="40" fill="#9CA3AF"/>
+  <path d="M200 360C210 330 240 300 280 288" stroke="#E5E7EB" stroke-width="10" stroke-linecap="round"/>
+  <path d="M440 360C430 330 400 300 360 288" stroke="#E5E7EB" stroke-width="10" stroke-linecap="round"/>
+  <text x="320" y="360" text-anchor="middle" fill="#E5E7EB" font-family="'Inter', 'Segoe UI', sans-serif" font-size="44" font-weight="800">RM</text>
+  <text x="320" y="500" text-anchor="middle" fill="#E5E7EB" font-family="'Inter', 'Segoe UI', sans-serif" font-size="36" font-weight="700" letter-spacing="2">BRAZILIAN JIU-JITSU</text>
+  <text x="320" y="540" text-anchor="middle" fill="#E5E7EB" font-family="'Inter', 'Segoe UI', sans-serif" font-size="28" font-weight="600" letter-spacing="4">SELF DEFENSE</text>
+</svg>

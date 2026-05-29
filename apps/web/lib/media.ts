@@ -5,6 +5,25 @@ import { fileTypeFromBuffer } from "file-type"
 import { env, isProd } from "~/env"
 import { s3Client } from "~/services/s3"
 
+/**
+ * Resolves a public media asset path to a full URL.
+ *
+ * When `NEXT_PUBLIC_MEDIA_BASE_URL` is set (production / staging with S3/CloudFront),
+ * the path is prefixed with that base URL. When blank (local dev), the path is
+ * returned as-is so Next.js serves it from `public/`.
+ *
+ * @param path - A root-relative path, e.g. `/images/brands/black-belt-legacy/logo.png`
+ * @returns The resolved URL string.
+ */
+export const resolvePublicMediaUrl = (path: string): string => {
+  const base = env.NEXT_PUBLIC_MEDIA_BASE_URL
+  if (!base) return path
+  // Strip leading slash from path if base already has a trailing slash
+  const cleanBase = base.replace(/\/+$/, "")
+  const cleanPath = path.replace(/^\/+/, "")
+  return `${cleanBase}/${cleanPath}`
+}
+
 const requireEnv = (value: string | undefined, name: string) => {
   if (!value) {
     throw new Error(`${name} is required`)
