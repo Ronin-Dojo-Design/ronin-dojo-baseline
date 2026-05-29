@@ -39,7 +39,7 @@ A React context (`contexts/brand-context.tsx`) wraps the app in the root server 
 
 ### 3. CSS theme tokens via `data-brand`
 
-The root `<html>` element receives a `data-brand` attribute (e.g., `data-brand="BBL"`). CSS custom property overrides in `styles.css` target `[data-brand="BBL"]` to swap the primary color to gold, and `[data-brand="WEKAF"]` to swap to red. Both light and dark modes are covered.
+The root `<html>` element receives a `data-brand` attribute (e.g., `data-brand="BBL"`). CSS custom property overrides in `styles.css` target `[data-brand="BBL"]` to swap the primary color to red, and `[data-brand="WEKAF"]` to swap to red. Both light and dark modes are covered.
 
 ### 4. Brand config lives in `config/site.ts`
 

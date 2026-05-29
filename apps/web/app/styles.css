@@ -157,16 +157,16 @@
     --color-chart-5: hsl(340 75% 55%);
   }
 
-  /* BBL (Black Belt Legacy) — gold/black theme */
+  /* BBL (Black Belt Legacy) — red theme */
   [data-brand="BBL"] {
-    --color-primary: hsl(45 100% 50%);
-    --color-primary-foreground: hsl(0 0% 5%);
+    --color-primary: hsl(0 84% 50%);
+    --color-primary-foreground: hsl(0 0% 98%);
   }
 
   [data-brand="BBL"].dark,
   .dark[data-brand="BBL"] {
-    --color-primary: hsl(45 100% 50%);
-    --color-primary-foreground: hsl(0 0% 5%);
+    --color-primary: hsl(0 84% 50%);
+    --color-primary-foreground: hsl(0 0% 98%);
   }
 
   /* WEKAF — red/blue Filipino flag theme */
