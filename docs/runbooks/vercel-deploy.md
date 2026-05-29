@@ -35,7 +35,7 @@ The active project builds from `apps/web`, not from the repository root.
 | Framework Preset | `Next.js` |
 | Active config | `apps/web/vercel.json` |
 | Install command | `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile` |
-| Build command | `cd ../.. && pnpm --filter dirstarter build` |
+| Build command | `cd ../.. && pnpm --filter @ronin-dojo/web build` |
 | Cron path | `/api/cron/publish-tools` |
 
 The repo-root `vercel.json` is a historical/root fallback. Do not use it unless the project root setting changes.
@@ -85,7 +85,7 @@ Do not add Prisma `directUrl` to `schema.prisma` for this repo's Prisma 7 setup.
 Before an env/deploy lane closes:
 
 ```bash
-pnpm --filter dirstarter typecheck
+pnpm --filter @ronin-dojo/web typecheck
 cd apps/web && bun biome check .
 cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'
 bun scripts/check-vercel-env-parity.ts

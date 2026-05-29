@@ -79,7 +79,7 @@ Live Dirstarter deployment docs checked on 2026-05-14 describe a Vercel/Next.js 
 | Framework Preset | `Next.js` |
 | Output Directory | Next.js default |
 | Install Command | `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile` |
-| Build Command | `cd ../.. && pnpm --filter dirstarter build` |
+| Build Command | `cd ../.. && pnpm --filter @ronin-dojo/web build` |
 | Active app-root config | `apps/web/vercel.json` |
 
 Treat any repo-root `vercel.json` guidance as historical/root fallback only. Use it only when the active source for a project proves Vercel is building from the repo root.
