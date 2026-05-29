@@ -25,7 +25,7 @@ const getData = cache(async () => {
   const title = t(`${namespace}.title`)
   const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [{ url, title }],
     structuredData: [generateBlog(url, title, description, posts)],
   })
@@ -35,7 +35,7 @@ const getData = cache(async () => {
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function () {

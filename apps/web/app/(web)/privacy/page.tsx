@@ -14,14 +14,14 @@ const getData = async () => {
   const brand = await getRequestBrand()
   const brandConfig = getBrandSiteConfig(brand)
   const description = `How ${brandConfig.name} collects, uses, and safeguards information you provide.`
-  return getPageData(PAGE_URL, PAGE_TITLE, description, {
+  return await getPageData(PAGE_URL, PAGE_TITLE, description, {
     breadcrumbs: [{ url: PAGE_URL, title: PAGE_TITLE }],
   })
 }
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function PrivacyPolicyPage() {

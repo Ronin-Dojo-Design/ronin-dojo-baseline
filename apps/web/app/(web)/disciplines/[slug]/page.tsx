@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!discipline) return { title: "Discipline Not Found" }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/disciplines/${discipline.slug}`,
     metadata: {
       title: discipline.name,

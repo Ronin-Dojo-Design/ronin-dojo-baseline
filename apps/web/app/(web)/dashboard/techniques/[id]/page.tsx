@@ -11,7 +11,7 @@ type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/dashboard/techniques/${id}`,
     metadata: {
       title: "Edit Technique",

@@ -40,7 +40,7 @@ const getData = cache(async () => {
   })
 
   return {
-    ...getPageData(url, title, description, {
+    ...await getPageData(url, title, description, {
       breadcrumbs: [{ url, title }],
     }),
     claimableTree: claimableTree
@@ -58,7 +58,7 @@ const getData = cache(async () => {
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function JoinLegacyPage() {

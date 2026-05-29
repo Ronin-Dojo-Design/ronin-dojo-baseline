@@ -39,7 +39,7 @@ const getData = cache(async ({ params }: Props) => {
   const t = await getTranslations()
   const url = `/blog/${post.slug}`
 
-  const data = getPageData(url, post.title, post.description ?? "", {
+  const data = await getPageData(url, post.title, post.description ?? "", {
     breadcrumbs: [
       { url: "/blog", title: t("navigation.blog") },
       { url, title: post.title },
@@ -52,7 +52,7 @@ const getData = cache(async ({ params }: Props) => {
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function (props: Props) {

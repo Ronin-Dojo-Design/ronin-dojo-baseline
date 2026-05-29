@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!org) return { title: "Organization Not Found" }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/organizations/${org.slug}`,
     metadata: {
       title: org.name,

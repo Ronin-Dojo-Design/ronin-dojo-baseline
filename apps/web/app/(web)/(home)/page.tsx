@@ -17,7 +17,7 @@ const getData = cache(async () => {
   const title = `${brandConfig.name} - ${t("brand.tagline")}`
   const description = t("brand.description")
 
-  return getPageData(siteConfig.url, title, description)
+  return await getPageData(siteConfig.url, title, description)
 })
 
 export default async function (_props: PageProps<"/">) {

@@ -23,7 +23,7 @@ const getData = cache(async () => {
   const title = t(`${namespace}.title`)
   const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
-  return getPageData(url, title, description, {
+  return await getPageData(url, title, description, {
     breadcrumbs: [{ url, title: t("navigation.tags") }],
     structuredData: [generateCollectionPage(url, title, description)],
   })
@@ -31,7 +31,7 @@ const getData = cache(async () => {
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function (props: PageProps<"/tags">) {

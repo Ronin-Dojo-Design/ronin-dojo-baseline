@@ -32,7 +32,7 @@ type PageProps = {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  return getPageMetadata({
+  return await getPageMetadata({
     url: PAGE_URL,
     metadata: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
   })

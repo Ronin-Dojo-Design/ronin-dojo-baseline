@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Lineage Tree Not Found" }
   }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/lineage/${treeSlug}`,
     metadata: {
       title: `${tree.name} — Lineage`,

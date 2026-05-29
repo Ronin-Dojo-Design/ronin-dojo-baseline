@@ -47,7 +47,7 @@ const getData = cache(async ({ params }: Props) => {
   const title = `${tool.name}: ${tool.tagline}`
   const description = tool.description ?? ""
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [
       { url: "/", title: t("navigation.tools") },
       { url, title: tool.name },
@@ -72,7 +72,7 @@ export const generateMetadata = async (props: Props): Promise<Metadata> => {
     faviconUrl: String(tool.faviconUrl),
   }
 
-  return getPageMetadata({ url, metadata, ogImage })
+  return await getPageMetadata({ url, metadata, ogImage })
 }
 
 export default async function (props: Props) {

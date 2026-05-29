@@ -26,7 +26,7 @@ const PAGE_DESCRIPTION =
   "Amazon affiliate gear links for BJJ, Muay Thai, boxing, Eskrima, and self-defense."
 
 export async function generateMetadata(): Promise<Metadata> {
-  return getPageMetadata({
+  return await getPageMetadata({
     url: PAGE_URL,
     metadata: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
   })

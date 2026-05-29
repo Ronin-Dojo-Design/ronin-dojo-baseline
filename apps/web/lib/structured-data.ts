@@ -13,7 +13,8 @@ import type {
   WebPage,
   WebSite,
 } from "schema-dts"
-import { siteConfig } from "~/config/site"
+import type { Brand } from "~/.generated/prisma/client"
+import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import type { ToolMany, ToolOne } from "~/server/web/tools/payloads"
 
 export interface ArticleData {
@@ -218,22 +219,28 @@ export const generateReviewCount = (seed: string): number => {
 /**
  * Gets the organization schema reference
  */
-export const getOrganization = (): Organization => ({
-  "@type": "Organization",
-  "@id": `${siteConfig.url}/#/schema/organization/1`,
-  name: siteConfig.name,
-  url: siteConfig.url,
-})
+export const getOrganization = (brand?: Brand): Organization => {
+  const name = brand ? getBrandSiteConfig(brand).name : siteConfig.name
+  return {
+    "@type": "Organization",
+    "@id": `${siteConfig.url}/#/schema/organization/1`,
+    name,
+    url: siteConfig.url,
+  }
+}
 
 /**
  * Gets the website schema reference
  */
-export const getWebSite = (): WebSite => ({
-  "@type": "WebSite",
-  "@id": `${siteConfig.url}/#/schema/website/1`,
-  name: siteConfig.name,
-  url: siteConfig.url,
-})
+export const getWebSite = (brand?: Brand): WebSite => {
+  const name = brand ? getBrandSiteConfig(brand).name : siteConfig.name
+  return {
+    "@type": "WebSite",
+    "@id": `${siteConfig.url}/#/schema/website/1`,
+    name,
+    url: siteConfig.url,
+  }
+}
 
 /**
  * Generates breadcrumb list schema with automatic ID

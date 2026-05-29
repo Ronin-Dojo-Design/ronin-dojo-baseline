@@ -39,7 +39,7 @@ const getData = cache(async ({ params }: Props) => {
   const name = lcFirst(category.description ?? noCase(title))
   const description = t(`${namespace}.description`, { name, siteName: brandConfig.name })
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [
       { url: "/categories", title: t("navigation.categories") },
       { url, title: category.name },
@@ -57,7 +57,7 @@ export const generateStaticParams = async () => {
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function (props: Props) {

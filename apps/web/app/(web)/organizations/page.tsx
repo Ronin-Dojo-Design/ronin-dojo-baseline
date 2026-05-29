@@ -37,7 +37,7 @@ const CROSS_LINKS: Array<{ href: string; label: string; description: string }> =
 ]
 
 export async function generateMetadata(): Promise<Metadata> {
-  return getPageMetadata({
+  return await getPageMetadata({
     url: PAGE_URL,
     metadata: { title: PAGE_TITLE, description: PAGE_DESCRIPTION },
   })

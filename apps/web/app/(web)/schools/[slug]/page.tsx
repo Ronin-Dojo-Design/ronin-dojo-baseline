@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       school._count.memberships !== 1 ? "s" : ""
     }, ${school._count.programs} program${school._count.programs !== 1 ? "s" : ""}.`
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/schools/${school.slug}`,
     metadata: {
       title: school.name,

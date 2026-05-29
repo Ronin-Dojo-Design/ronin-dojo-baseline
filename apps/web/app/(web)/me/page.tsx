@@ -15,7 +15,7 @@ import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/p
 import { PassportEditor } from "./passport-editor"
 
 export async function generateMetadata(): Promise<Metadata> {
-  return getPageMetadata({
+  return await getPageMetadata({
     url: "/me",
     metadata: {
       title: "My Passport",

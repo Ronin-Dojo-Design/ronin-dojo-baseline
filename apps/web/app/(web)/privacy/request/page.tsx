@@ -14,7 +14,7 @@ const PAGE_DESCRIPTION =
   "Request access to, correction of, export of, or deletion of the personal data we hold about you."
 
 const getData = async () =>
-  getPageData(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION, {
+  await getPageData(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION, {
     breadcrumbs: [
       { url: "/privacy", title: "Privacy Policy" },
       { url: PAGE_URL, title: PAGE_TITLE },
@@ -23,7 +23,7 @@ const getData = async () =>
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function DataSubjectRequestPage() {

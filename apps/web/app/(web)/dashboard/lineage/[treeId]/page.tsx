@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = `/dashboard/lineage/${treeId}`
 
   if (!session?.user) {
-    return getPageMetadata({
+    return await getPageMetadata({
       url,
       metadata: {
         title: "Lineage Editor",
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const result = await getLineageEditorTree({ brand, treeId, user: session.user })
 
   if (!result) {
-    return getPageMetadata({
+    return await getPageMetadata({
       url,
       metadata: {
         title: "Lineage Editor",
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     })
   }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url,
     metadata: {
       title: `${result.tree.name} — Lineage Editor`,

@@ -36,7 +36,7 @@ const getData = cache(async ({ params }: Props) => {
   const title = t(`${namespace}.title`, { name: tag.name })
   const description = t(`${namespace}.description`, { name: tag.name, siteName: brandConfig.name })
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [
       { url: "/tags", title: t("navigation.tags") },
       { url, title: tag.name },
@@ -54,7 +54,7 @@ export const generateStaticParams = async () => {
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function (props: Props) {

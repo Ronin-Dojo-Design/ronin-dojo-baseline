@@ -11,7 +11,7 @@ const PAGE_TITLE = "Request received"
 const PAGE_DESCRIPTION = "Your data subject request has been queued for review."
 
 const getData = async () =>
-  getPageData(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION, {
+  await getPageData(PAGE_URL, PAGE_TITLE, PAGE_DESCRIPTION, {
     breadcrumbs: [
       { url: "/privacy", title: "Privacy Policy" },
       { url: "/privacy/request", title: "Submit a Data Subject Request" },
@@ -21,7 +21,7 @@ const getData = async () =>
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const { url, metadata } = await getData()
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 type SubmittedPageProps = {

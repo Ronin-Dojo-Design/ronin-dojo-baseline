@@ -26,7 +26,7 @@ const getData = cache(async ({ params }: Props) => {
   const title = `Enroll in ${program.name}`
   const description = `Choose a plan to enroll in ${program.name} at ${program.organization.name}.`
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [
       { url: `/programs/${program.id}`, title: program.name },
       { url, title: "Enroll" },
@@ -38,7 +38,7 @@ const getData = cache(async ({ params }: Props) => {
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function ProgramEnrollPage(props: Props) {

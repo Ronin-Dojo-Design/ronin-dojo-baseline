@@ -8,7 +8,7 @@ import { getPageMetadata } from "~/lib/pages"
 import { db } from "~/services/db"
 
 export async function generateMetadata(): Promise<Metadata> {
-  return getPageMetadata({
+  return await getPageMetadata({
     url: "/dashboard/techniques/new",
     metadata: {
       title: "New Technique",

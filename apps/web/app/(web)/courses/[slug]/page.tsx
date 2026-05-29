@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {}
   }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/courses/${course.slug}`,
     metadata: {
       title: course.title,

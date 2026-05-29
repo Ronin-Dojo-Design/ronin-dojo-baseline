@@ -47,7 +47,7 @@ const getData = cache(async ({ params }: Props) => {
     post.thumbnailUrl ??
     post.atom.mediaAttachments.find(({ media }) => media.type === "IMAGE")?.media.url
 
-  const data = getPageData(url, title, description, {
+  const data = await getPageData(url, title, description, {
     breadcrumbs: [
       { url: "/posts", title: t("navigation.blog") },
       { url, title },
@@ -70,7 +70,7 @@ const getData = cache(async ({ params }: Props) => {
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
   const { url, metadata } = await getData(props)
-  return getPageMetadata({ url, metadata })
+  return await getPageMetadata({ url, metadata })
 }
 
 export default async function (props: Props) {

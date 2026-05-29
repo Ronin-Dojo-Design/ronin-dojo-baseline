@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!program) return { title: "Program Not Found" }
 
-  return getPageMetadata({
+  return await getPageMetadata({
     url: `/programs/${program.id}`,
     metadata: {
       title: program.name,
