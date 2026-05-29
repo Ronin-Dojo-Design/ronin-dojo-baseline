@@ -19,10 +19,22 @@ interface Props {
 
 const settingsSections = [
   {
+    title: "General Info",
+    description: "Edit your organization's name, description, and contact details.",
+    href: "settings/general",
+    icon: "🏷️",
+  },
+  {
     title: "Members",
     description: "Review pending join requests and view your organization's roster.",
     href: "settings/members",
     icon: "👥",
+  },
+  {
+    title: "Invite Links",
+    description: "Generate and manage shareable links for people to join your organization.",
+    href: "settings/invites",
+    icon: "🔗",
   },
   {
     title: "Theme & Branding",

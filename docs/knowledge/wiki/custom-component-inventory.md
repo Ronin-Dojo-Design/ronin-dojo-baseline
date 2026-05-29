@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-29
-last_agent: claude-session-0297
+last_agent: claude-session-0298
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0287.md
@@ -204,13 +204,19 @@ SESSION_0202 added the user-dashboard editor preview surface:
 
 | Component | File | Purpose |
 | --- | --- | --- |
-| Settings index | `settings/page.tsx` | Section-card hub (Members, Theme & Branding). `hasOrgAdminAccess` gate; non-admins get `OrgAccessDenied`. SESSION_0295 (Theme), SESSION_0296 (Members). |
+| Settings index | `settings/page.tsx` | Section-card hub (General Info, Members, Invite Links, Theme & Branding). `hasOrgAdminAccess` gate; non-admins get `OrgAccessDenied`. SESSION_0295 (Theme), SESSION_0296 (Members), SESSION_0298 (General + Invites). |
 | `SelfServiceThemeForm` | `settings/theme/_components/self-service-theme-form.tsx` | Org owner/ORG_ADMIN theme editor → `updateOrgThemeSelfService`. SESSION_0294. |
+| General-info page + `OrgGeneralInfoForm` | `settings/general/page.tsx`, `_components/org-general-info-form.tsx` | Edit org name/slug/description/contact/address → `updateOrgGeneralInfo` (assertOrgAdminAccess). Reuses the dashboard school-form field set but is wired to the org-scoped action (consistent gating). Legacy `updateOrganization` left untouched — see drift D-017. SESSION_0298. |
+| Invites page | `settings/invites/page.tsx` | List + generate/revoke org invite links. `ButtonGroup` Active \| All filter rail via `?status=` searchParam; rows show `/invite/{code}`, status badge, `claims · used/max · expires`. SESSION_0298. |
+| `GenerateInviteForm` | `settings/invites/_components/generate-invite-form.tsx` | Generate button + optional maxUses/expiry → `createOrgInvite`; copies the new `/invite/{code}` link to clipboard on success. SESSION_0298. |
+| `InviteRowActions` | `settings/invites/_components/invite-row-actions.tsx` | Copy-link (`navigator.clipboard`, platform idiom) + revoke (PENDING only) → `revokeOrgInvite`. SESSION_0298. |
 | Members page | `settings/members/page.tsx` | Roster + approval queue. Partitions PENDING into an approval-queue section (Approve/Reject cards) and a read-only roster (status + role badges). Vertical layout uses plain `flex flex-col` — **not `Stack`** — because `Stack` defaults to `direction="row"` and `column` mode applies `items-start` (shrink-wraps full-width Cards). SESSION_0296. |
 | `MemberApprovalActions` | `settings/members/_components/member-approval-actions.tsx` | Client approve/reject for a PENDING join request. Approve→ACTIVE via `transitionOrgMembershipStatus`; **Reject hard-deletes** via `rejectOrgJoinRequest` (SESSION_0297, F-0296-1) so the applicant can re-request. sonner toasts + `router.refresh()`. SESSION_0296, SESSION_0297. |
 | `OrgRoleAssignment` | `settings/members/_components/org-role-assignment.tsx` | Client role controls per roster member — assigned-role badges with remove (×) + an "Add role…" dropdown of unassigned system roles. Wired to `assignOrgRole`/`removeOrgRole`. Mirrors platform `RoleAssignmentPanel`. SESSION_0297. |
 
 > Server (`server/web/organization/membership-actions.ts`): all org-scoped membership mutations share `loadOrgMembership(membershipId, organizationId)` — loads the row and enforces the **cross-org guard** (`membership.organizationId === organizationId`) so an org admin cannot act on another org's member by ID. Actions: `transitionOrgMembershipStatus` (mirrors platform transition: VALID_TRANSITIONS, optimistic lock, audit + email notify), `assignOrgRole`/`removeOrgRole` (upsert / idempotent deleteMany; `assignOrgRole` validates `role.isSystem`; any owner/ORG_ADMIN grants any system role), and `rejectOrgJoinRequest` (PENDING-only; writes `REQUEST_REJECTED` audit *before* deleting — AuditLog.entityId is a free string, so the record survives). Brand sourced from the membership row. Roster query: `getOrganizationMembers` (uncached); assignable roles via `getSystemRoles` — both in `server/web/organization/queries.ts`.
+>
+> Invite server (`server/web/organization/invite-actions.ts`): `createOrgInvite` forces `type: ORGANIZATION` + the asserted org (brand from the org row, `createdById` = user), optional `maxUses`/`expiresAt`; `revokeOrgInvite` is cross-org guarded (`invite.organizationId === organizationId`) → `status: REVOKED`. The public `/invite/[code]` claim flow (`server/invites/actions.ts`, creates an ACTIVE Membership) is **unchanged** — see `docs/runbooks/invites.md`. List query: `getOrganizationInvites(organizationId, includeAll)` (uncached, `_count.claims`). General-info: `updateOrgGeneralInfo` (`general-info-actions.ts`, assertOrgAdminAccess).
 
 ---
 

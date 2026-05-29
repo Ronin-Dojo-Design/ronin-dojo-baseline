@@ -103,6 +103,33 @@ export const getOrganizationMembers = async (organizationId: string) => {
   })
 }
 
+/**
+ * Org-scoped invite list for the org settings → invites surface. Not cached —
+ * generate/revoke must reflect immediately. Authorization is enforced at the
+ * page/action layer via `hasOrgAdminAccess`. Default shows active (PENDING)
+ * invites; `includeAll` returns every status. Includes claim count.
+ */
+export const getOrganizationInvites = async (organizationId: string, includeAll = false) => {
+  return db.invite.findMany({
+    where: {
+      organizationId,
+      type: "ORGANIZATION",
+      ...(includeAll ? {} : { status: "PENDING" }),
+    },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      maxUses: true,
+      currentUses: true,
+      expiresAt: true,
+      createdAt: true,
+      _count: { select: { claims: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
 export const getSystemRoles = async () => {
   "use cache"
 

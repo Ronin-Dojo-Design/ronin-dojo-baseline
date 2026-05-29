@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-22
-last_agent: copilot-session-0221
+updated: 2026-05-29
+last_agent: claude-session-0298
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -218,3 +218,11 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Remove `radix-ui`, `cmdk`, `cva`, `@radix-ui/react-accordion` from `apps/web/package.json` (−66 packages).
 - [x] Full sweep: zero residual `radix-ui`/`cmdk`/`cva`/`asChild` imports across `apps/web/`.
 - [x] tsc pass, biome pass, 244 tests pass, build pass, wiki-lint 0 errors.
+
+### D-017 — `updateOrganization` auth diverges from org-settings access model
+
+- **Source A:** `apps/web/server/web/school/actions.ts` — `updateOrganization` gates on a Membership with role code `OWNER` (a role-assignment).
+- **Source B:** `apps/web/server/web/organization/org-admin-access.ts` — `hasOrgAdminAccess` / `assertOrgAdminAccess` (org `ownerId` OR `ORG_ADMIN` role), used across org settings (theme, members, invites, general-info).
+- **Decision needed:** Consolidate `updateOrganization` onto `assertOrgAdminAccess` and retire the OWNER-role check, so the dashboard school-form and the settings surface share one auth model. An `ownerId` owner without an `OWNER` role-assignment currently passes the settings gate but would fail `updateOrganization`.
+- **Status:** open
+- **Opened:** SESSION_0298 (2026-05-29). Worked around by introducing the consistent `updateOrgGeneralInfo` (assertOrgAdminAccess) for the settings/general section; the legacy dashboard path was intentionally left untouched (scope guard).
