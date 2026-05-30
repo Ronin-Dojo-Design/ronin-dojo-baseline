@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-29
-last_agent: claude-session-0307
+updated: 2026-05-30
+last_agent: claude-session-0308
 ---
 
 # Wiki Change Log
@@ -200,3 +200,13 @@ Use this file only as historical context for early wiki adoption.
 - Reduced-motion mandate: `useReducedMotion()` drills as a boolean prop through `LineageBranch` → `LineageChildGroupColumn` recursion; reduced-motion users get `initial={false}` + `transition: { duration: 0 }` — full final state on first paint, no stagger.
 - DnD untouched: the `motion.div` wraps the existing draggable `<div ref={setDraggableRef}>` without owning its ref, so `@dnd-kit` translate, listeners, and drop targets keep working identically.
 - Plan-lock refinement (Petey): used the existing motion-system `ease-out` entrance token instead of `petey-plan-0305.md`'s bklit "Snappy" curve (`cubic-bezier(0.85, 0, 0.15, 1)`). Token-first discipline — introducing `--ease-snappy` belongs to a separate slice that bundles drawer + connector animations as multiple consumers of the new token.
+
+## 2026-05-30 — SESSION_0308
+
+- Advanced the lineage epic (`docs/petey-plan-0305.md`) **Phase 2 — tree animations, second slice**: added an animated path trace to `LineageTreeCanvas`. When a node is tapped the highlight rises sequentially from the tapped node up to the root — one ancestor edge (connector segments + ring) per step.
+- Promoted `buildSelectedPathMemberIds` to `buildSelectedPathTrace` that returns `{ pathMemberIds, pathDistanceById, maxDistance }`; distance is measured in ancestor hops from the tapped node (0 = tapped, 1 = parent, …). `maxDistance` drives the per-step delay scaling.
+- Per-step delay formula: `tracePerStepDelay(maxDistance) = clamp(0.05, min(0.2, 1.0 / maxDistance), 0.2)` seconds. Five-ancestor baseline (5 × 0.2s + 0.2s connector transition = 1.2s) matches the spec cap; deeper trees compress the per-step delay with a 50ms floor so even extreme depth keeps a perceivable cascade.
+- Threaded `pathDistanceById` + `perStepDelay` through `LineageBranch` → `LineageChildGroupColumn` recursion. Connector `transitionDelay` is computed per element: the `h-6 w-px` below a member and the `h-px` sibling bar share `(distance - 1) * perStep`; the `h-4 w-px` above each child group shares the same edge step via the parent's distance. Connector transitions bumped from `duration-300` to `duration-200` to match the motion-system `base` token.
+- Ring + highlight shadow moved off the dnd-kit draggable onto a transparent rounded wrapper that owns only `transition-all duration-200` plus inline `transitionDelay`. Hover lift (`hover:-translate-y-1 hover:shadow-lg`) and the dim filter (`opacity-45 grayscale-[15%]` + counter-dim) stay on the inner draggable so they keep their existing `duration-300` and are NEVER delayed by the trace.
+- Reduced-motion mandate: when `useReducedMotion()` is true, `perStepDelay = 0` so every connector and ring lights simultaneously — exactly the previous instant full-highlight behavior. DnD unchanged: the draggable ref, listeners, drop-target ring (`isOver`), and `CSS.Translate.toString(transform)` style all stay on the inner div.
+- Plan-lock refinement (Petey): per-element inline `transitionDelay` instead of bolting the delay onto the existing `transition-all` on the draggable — protects hover transitions from inheriting the trace delay (which would have made hover feel sluggish during a trace play). A dedicated highlight wrapper isolates the ring/shadow transitions cleanly.

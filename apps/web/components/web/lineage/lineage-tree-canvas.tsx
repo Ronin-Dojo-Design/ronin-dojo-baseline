@@ -142,6 +142,25 @@ function entranceDelay(generation: number, siblingIndex: number) {
   )
 }
 
+// Phase 2 animated path trace — connector + ring highlight rises from the tapped node to the root
+// one ancestor edge at a time. The per-connector transition is `base` 200ms (Tailwind
+// `transition-colors duration-200`). Total delay budget is 1.0s of step delays + 0.2s for the
+// final connector's transition → ≤1.2s end-to-end, matching the spec cap. Per-step delay scales
+// inversely with depth and is floored so even deep trees keep a perceivable cascade.
+const TRACE_TOTAL_BUDGET = 1.0
+const TRACE_MIN_STEP = 0.05
+const TRACE_MAX_STEP = 0.2
+
+function tracePerStepDelay(maxDistance: number) {
+  if (maxDistance <= 0) return 0
+  return Math.max(TRACE_MIN_STEP, Math.min(TRACE_MAX_STEP, TRACE_TOTAL_BUDGET / maxDistance))
+}
+
+function traceStepDelay(step: number, perStepDelay: number) {
+  if (step <= 0 || perStepDelay <= 0) return 0
+  return (step - 1) * perStepDelay
+}
+
 function clampScale(value: number) {
   return Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(value.toFixed(2))))
 }
@@ -358,30 +377,45 @@ function isDropTargetData(value: unknown): value is DropTargetData {
   return Boolean(value && typeof value === "object" && "targetType" in value)
 }
 
-function buildSelectedPathMemberIds({
+function buildSelectedPathTrace({
   members,
   selectedNodeId,
 }: {
   members: CanvasMember[]
   selectedNodeId: string | null | undefined
-}) {
-  const path = new Set<string>()
-  if (!selectedNodeId) return path
+}): {
+  pathMemberIds: Set<string>
+  pathDistanceById: Map<string, number>
+  maxDistance: number
+} {
+  const pathMemberIds = new Set<string>()
+  const pathDistanceById = new Map<string, number>()
+
+  if (!selectedNodeId) {
+    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
+  }
 
   const selectedMember = members.find(member => member.nodeId === selectedNodeId)
-  if (!selectedMember) return path
+  if (!selectedMember) {
+    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
+  }
 
   const parentById = new Map(members.map(member => [member.id, member.primaryVisualParentMemberId]))
   const visited = new Set<string>()
   let cursor: string | null = selectedMember.id
+  let distance = 0
+  let maxDistance = 0
 
   while (cursor && !visited.has(cursor)) {
-    path.add(cursor)
+    pathMemberIds.add(cursor)
+    pathDistanceById.set(cursor, distance)
     visited.add(cursor)
+    maxDistance = distance
     cursor = parentById.get(cursor) ?? null
+    distance += 1
   }
 
-  return path
+  return { pathMemberIds, pathDistanceById, maxDistance }
 }
 
 function formatPromotionDate(value: Date | string | null) {
@@ -449,6 +483,8 @@ function LineageBranch({
   canManageGroups,
   selectedMemberId,
   selectedPathMemberIds,
+  pathDistanceById,
+  perStepDelay,
   hasSelection,
   onSelect,
   visited,
@@ -467,6 +503,8 @@ function LineageBranch({
   canManageGroups: boolean
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
+  pathDistanceById: Map<string, number>
+  perStepDelay: number
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   visited: Set<string>
@@ -525,6 +563,15 @@ function LineageBranch({
 
   const delay = entranceDelay(generation, siblingIndex)
 
+  // Animated path trace (motion-system, ≤1.2s end-to-end). Distance is measured from the tapped
+  // node; tapped = 0, parent = 1, etc. The connector below this member is the upper half of the
+  // edge from its highlighted child up to this member, so its step index equals `distance`. The
+  // ring on this member appears as that edge completes — `ringDelay = distance * perStepDelay`
+  // so it lights as the next ancestor edge begins (the tapped node's ring is instant at delay 0).
+  const traceDistance = isInSelectedPath ? (pathDistanceById.get(member.id) ?? 0) : 0
+  const ringDelay = isInSelectedPath ? traceDistance * perStepDelay : 0
+  const connectorDelay = isInSelectedPath ? traceStepDelay(traceDistance, perStepDelay) : 0
+
   return (
     <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
       <motion.div
@@ -537,44 +584,55 @@ function LineageBranch({
         }
       >
         <div
-          ref={setDraggableRef}
-          style={{
-            transform: CSS.Translate.toString(transform),
-            zIndex: isDragging ? 20 : undefined,
-          }}
-          {...dragAttributes}
-          {...dragListeners}
           className={cx(
-            "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
-            editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
+            "rounded-2xl transition-all duration-200 ease-out",
             isSelected && "ring-2 ring-primary shadow-lg shadow-primary/25",
             !isSelected && isInSelectedPath && "ring-1 ring-primary/40 shadow-md shadow-primary/10",
-            isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
-            isOver && "ring-2 ring-primary/70",
-            isDragging && "opacity-60 shadow-xl",
           )}
+          style={ringDelay > 0 ? { transitionDelay: `${ringDelay}s` } : undefined}
         >
-          <LineageNodeCard
-            node={member.node}
-            isRoot={isRoot}
-            isClaimable={member.isClaimable}
-            selectedRank={member.selectedRank}
-            onSelect={onSelect}
-          />
+          <div
+            ref={setDraggableRef}
+            style={{
+              transform: CSS.Translate.toString(transform),
+              zIndex: isDragging ? 20 : undefined,
+            }}
+            {...dragAttributes}
+            {...dragListeners}
+            className={cx(
+              "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
+              editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
+              isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
+              isOver && "ring-2 ring-primary/70",
+              isDragging && "opacity-60 shadow-xl",
+            )}
+          >
+            <LineageNodeCard
+              node={member.node}
+              isRoot={isRoot}
+              isClaimable={member.isClaimable}
+              selectedRank={member.selectedRank}
+              onSelect={onSelect}
+            />
+          </div>
         </div>
       </motion.div>
 
       {childGroups.length > 0 && (
         <>
-          <div className={cx("h-6 w-px transition-colors duration-300", connectorClassName)} />
+          <div
+            className={cx("h-6 w-px transition-colors duration-200", connectorClassName)}
+            style={connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : undefined}
+          />
 
           <div className="relative flex items-start justify-center gap-4 md:gap-8">
             {childGroups.length > 1 && (
               <div
                 className={cx(
-                  "absolute top-0 right-8 left-8 h-px transition-colors duration-300",
+                  "absolute top-0 right-8 left-8 h-px transition-colors duration-200",
                   isInSelectedPath ? "bg-primary/30" : "bg-border",
                 )}
+                style={connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : undefined}
               />
             )}
 
@@ -593,6 +651,8 @@ function LineageBranch({
                 canManageGroups={canManageGroups}
                 selectedMemberId={selectedMemberId}
                 selectedPathMemberIds={selectedPathMemberIds}
+                pathDistanceById={pathDistanceById}
+                perStepDelay={perStepDelay}
                 hasSelection={hasSelection}
                 onSelect={onSelect}
                 visited={nextVisited}
@@ -620,6 +680,8 @@ function LineageChildGroupColumn({
   canManageGroups,
   selectedMemberId,
   selectedPathMemberIds,
+  pathDistanceById,
+  perStepDelay,
   hasSelection,
   onSelect,
   visited,
@@ -638,6 +700,8 @@ function LineageChildGroupColumn({
   canManageGroups: boolean
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
+  pathDistanceById: Map<string, number>
+  perStepDelay: number
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   visited: Set<string>
@@ -656,13 +720,21 @@ function LineageChildGroupColumn({
     } satisfies DropTargetData,
   })
 
+  // The `h-4 w-px` above each child group is the lower half of the edge whose upper half is the
+  // `h-6 w-px` below the parent. Both belong to the same animated step; the step index equals the
+  // parent's distance from the tapped node, so delay = `(parentDistance - 1) * perStepDelay`.
+  const parentDistance = groupIsHighlighted ? pathDistanceById.get(parentMemberId) : undefined
+  const groupConnectorDelay =
+    parentDistance !== undefined ? traceStepDelay(parentDistance, perStepDelay) : 0
+
   return (
     <div ref={setNodeRef} className="flex min-w-fit flex-col items-center">
       <div
         className={cx(
-          "h-4 w-px transition-colors duration-300",
+          "h-4 w-px transition-colors duration-200",
           groupIsHighlighted ? "bg-primary/60" : "bg-border",
         )}
+        style={groupConnectorDelay > 0 ? { transitionDelay: `${groupConnectorDelay}s` } : undefined}
       />
 
       <GroupHeader
@@ -703,6 +775,8 @@ function LineageChildGroupColumn({
               canManageGroups={canManageGroups}
               selectedMemberId={selectedMemberId}
               selectedPathMemberIds={selectedPathMemberIds}
+              pathDistanceById={pathDistanceById}
+              perStepDelay={perStepDelay}
               hasSelection={hasSelection}
               onSelect={onSelect}
               visited={visited}
@@ -874,9 +948,18 @@ export function LineageTreeCanvas({
     })
   }, [normalizedMembers, childrenByParentId, defaultRootMemberId, rootId])
 
-  const selectedPathMemberIds = useMemo(() => {
-    return buildSelectedPathMemberIds({ members: normalizedMembers, selectedNodeId })
+  const {
+    pathMemberIds: selectedPathMemberIds,
+    pathDistanceById,
+    maxDistance,
+  } = useMemo(() => {
+    return buildSelectedPathTrace({ members: normalizedMembers, selectedNodeId })
   }, [normalizedMembers, selectedNodeId])
+
+  const perStepDelay = useMemo(() => {
+    if (reduceMotion) return 0
+    return tracePerStepDelay(maxDistance)
+  }, [reduceMotion, maxDistance])
 
   const selectedMemberId = useMemo(() => {
     return normalizedMembers.find(member => member.nodeId === selectedNodeId)?.id ?? null
@@ -1044,6 +1127,8 @@ export function LineageTreeCanvas({
                   canManageGroups={canManageGroups}
                   selectedMemberId={selectedMemberId}
                   selectedPathMemberIds={selectedPathMemberIds}
+                  pathDistanceById={pathDistanceById}
+                  perStepDelay={perStepDelay}
                   hasSelection={hasSelection}
                   onSelect={onSelect}
                   visited={new Set()}
