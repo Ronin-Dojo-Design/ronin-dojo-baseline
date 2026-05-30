@@ -18,6 +18,12 @@ backlinks:
 
 ## Summary
 
+**This is the repo's canonical running P0/P1/P2 ledger.** Sessions *append* findings (stable IDs
+`WL-P0-N` / `WL-P1-N` / `WL-P2-N`) and *resolve* rows here rather than duplicating a severity list into
+every SESSION file — that pattern rots (see how `wiki/log.md` drifted). Per-session findings still live
+in each SESSION file's `### Findings (severity ≥ medium)` block, which should backlink here. The closing
+ritual's optional items include updating this ledger when a session surfaces or clears wiring debt.
+
 A living ledger of incomplete wiring, storage gaps, and raw handrolled components that slipped the
 FS-0001 primitive-composition rule across the Baseline Martial Arts public surfaces. Created at
 SESSION_0304 from a Desi audit of `apps/web/app/(web)` + `apps/web/components/web`. **Headline:
@@ -59,6 +65,7 @@ follow-ups, not silent nulls.
 | WL-P2-2 | `app/admin/tools/_components/tool-actions.tsx:44` | TODO (admin) | `// TODO: Think about how to handle unique website URLs or remove this feature` — handler is fully wired; design-debt comment, not dead code. No public risk. | Resolve or convert to a tracked backlog item. |
 | WL-P2-3 | `app/(web)/programs/[id]/schedules/[scheduleId]/page.tsx:130`, `components/web/schedules/schedule-instructor-list.tsx:81`, `components/web/lineage/lineage-rank-history-tab.tsx:97` | Handroll (row) | Repeated `rounded-md border p-3` list-row blocks (3+ instances). These are *rows*, not cards — acceptable today. | Extract a `ListRow` atom only if a 4th instance appears (YAGNI until then). |
 | WL-P2-4 | `app/(web)/disciplines/_components/black-belt-rail.tsx` | Schema follow-up | Belt-color now renders from `Rank.colorHex` (added SESSION_0304). Rows fall back to a muted token when `colorHex` is null — ranks without a seeded color show no belt color. | Seed `Rank.colorHex` for all system rank sets (data task, not schema). Surface as a note per LLM Wiki rule 8 — do not change schema from this ledger. |
+| WL-P2-5 | `components/web/lineage/lineage-profile-drawer.tsx:177` | Dead wiring (incomplete refactor) | `DrawerBody` destructures + types `treeId?: string` but never reads it — biome `noUnusedFunctionParameters` warning. Almost certainly plumbing threaded in for the unfinished "Manage verification (coming soon)" feature in the **same file** (WL-P2-1). Not a bug; dead wiring for a planned feature. | When the verification feature lands, consume `treeId`; until then either keep it (and silence the warning with `_treeId`) or remove it with WL-P2-1. Do not delete plumbing for in-flight work without confirming the feature is abandoned. |
 
 ## localStorage / sessionStorage gaps
 

@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-19
-last_agent: claude-session-0200
+updated: 2026-05-29
+last_agent: claude-session-0304
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -503,6 +503,18 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 
 - **Follow-up:** Reinforced in operator memory. ~Consider adding a hook in `~/.claude/settings.json` that gates `git push` to `origin/main` behind a cwd allowlist~ — done (SESSION_0210). See `.claude/hooks/README.md` for the full install + hook map.
 
+### FS-0025 — Two-pass commit on close: graphify stats + commit hash chased with a second "fill close evidence" push
+
+- **Session:** SESSION_0301, 0302, 0303, 0304 (four consecutive closes)
+- **Agent:** Claude / Petey
+- **Step failed:** [`closing.md`](../rituals/closing.md) §4 sequencing note (SESSION_0140) — *"defer git hygiene until after steps 6–8 … avoiding a two-pass commit cycle"* — and §4b — record graphify stats *"if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response."* Each of the four sessions instead ran git hygiene, **then** graphify, **then** a second `docs(SESSION_NNNN): fill close evidence` commit to write the commit hash + graphify stats into the SESSION file. Two pushes to `main` per close.
+- **SOP source:** `docs/rituals/closing.md` §4 / §4b / §6a (Full close evidence table).
+- **Root cause:** Two things colliding: (a) `graphify update` was run **after** the close commit rather than before, so its stats weren't available to the first commit; (b) the Full close evidence table asks for the **commit hash**, which can never be self-referential — so writing it always forced a second commit. The ritual wording ("graphify after git hygiene" + "hash in evidence table") actively nudged toward commit #2, and four sessions copied the prior session's pattern instead of the SESSION_0140 intent.
+- **Impact:** LOW — cosmetic. Two back-to-back pushes to `main` per session, an extra CI/Vercel build per close, noisier history. No data risk.
+- **Corrective action:** Locked the single-push order in `closing.md`. `.graphify/` is git-ignored and graphify indexes the **working tree** (not the commit), so `graphify update` now runs **before** the final commit; stats are written into the SESSION file pre-commit. The commit hash is **reported in the bow-out chat response** (git log is the record); the evidence table's hash cell reads "reported at bow-out — see `git log`" rather than demanding a self-referential value. One commit, one push.
+- **Verification:** A clean close from SESSION_0305 forward produces **exactly one** close commit — no `fill close evidence` follow-up commit appears in `git log`.
+- **Status:** mitigated
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.
@@ -511,9 +523,9 @@ Read this section at bow-in instead of skimming all 16 entries.
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
 
-### Pattern 2: Close ritual step skipping (FS-0004 → FS-0005 → FS-0015 → FS-0017 → FS-0019)
+### Pattern 2: Close ritual step skipping / drift (FS-0004 → FS-0005 → FS-0015 → FS-0017 → FS-0019 → FS-0025)
 
-**5 occurrences.** Root cause: agent declares "done" before completing all checklist steps. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. FS-0017 skipped project-log gate, JETTY sweep, wiki-lint, and wiki index update in SESSION_0100. FS-0019: wiki index and JETTY frontmatter drifted across 10 sessions (SESSION_0104–0113) because the sweep step lacked explicit sub-steps for index completeness and bidirectional backlinks. **Current status: mitigated.** Full close evidence artifact now required; project-log gate added (SESSION_0074_TASK_09); closing.md step 3 hardened with explicit sub-steps (SESSION_0113).
+**6 occurrences.** Root cause: agent declares "done" before completing all checklist steps, or copies the prior session's drift instead of the ritual's intent. FS-0004 skipped JETTY/review/memory steps. FS-0005 allowed vague proof. FS-0015 showed project-log entries never written for 20 sessions. FS-0017 skipped project-log gate, JETTY sweep, wiki-lint, and wiki index update in SESSION_0100. FS-0019: wiki index and JETTY frontmatter drifted across 10 sessions (SESSION_0104–0113) because the sweep step lacked explicit sub-steps. FS-0025: a two-pass close commit (graphify stats + hash chased with a second push) regressed across SESSION_0301–0304, undoing the SESSION_0140 single-commit intent. **Current status: mitigated.** Full close evidence artifact required; closing.md step 3 hardened (SESSION_0113); single-push order locked in closing.md §4/§4b/§6a (SESSION_0304 post-close fix).
 
 ### Pattern 3: Governance artifacts drift (FS-0006 → FS-0007)
 

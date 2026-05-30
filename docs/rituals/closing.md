@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-05-29
-last_agent: claude-session-0299
+last_agent: claude-session-0304
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -121,7 +121,13 @@ For every file in `Files touched`, fix any markdown formatting violations (blank
 
 ### 4. Git hygiene
 
-> **Sequencing note (SESSION_0140):** In full close mode, defer this step until after steps 6–8 (Reflections, Review & Recommend, ADR check, Memory sweep, Next session unblock). This lets the evidence artifact (step 6a) and all review content be written *before* the first commit, avoiding a two-pass commit cycle. In quick close mode, run git hygiene here as written.
+> **Sequencing note (SESSION_0140, hardened SESSION_0304 / FS-0025):** In full close mode, defer this step until after steps 6–8 (Reflections, Review & Recommend, ADR check, Memory sweep, Next session unblock). This lets the evidence artifact (step 6a) and all review content be written *before* the first commit, avoiding a two-pass commit cycle. **Single-push order (mandatory — do not regress to a second `fill close evidence` commit):**
+>
+> 1. Finish all SESSION-file content **including** the graphify stats (run step 4b *before* committing — see below).
+> 2. The **only** value you cannot write pre-commit is the commit hash itself. Do **not** chase it with a second commit. In the evidence table, the Git-hygiene hash cell reads `reported at bow-out — see git log`, and you state the actual hash in the **bow-out chat response**.
+> 3. `git add -A` → one commit → one push. Done.
+>
+> In quick close mode, run git hygiene here as written.
 
 Before committing:
 
@@ -135,13 +141,15 @@ If the user hasn't authorized commits, leave changes uncommitted and note that i
 
 ### 4b. Graphify update (if installed)
 
-If the session changed tracked files and Graphify is installed locally, refresh the repo graph after git hygiene so the next bow-in starts from the current commit/work:
+If the session changed tracked files and Graphify is installed locally, refresh the repo graph so the next bow-in starts from the current work.
+
+> **Run order (SESSION_0304 / FS-0025):** In **full close**, run `graphify update` **before the close commit**, not after. `.graphify/` is git-ignored and Graphify indexes the **working tree** (not the commit), so the tree is already final after step 2's doc edits — running it first means the node/edge/community count can be written into the SESSION file and captured by the single close commit. Running it *after* the commit is what historically forced the second `fill close evidence` push (FS-0025). In **quick close**, run it after git hygiene as before.
 
 ```bash
 GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
 ```
 
-Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file if doing so will not force a second commit loop; otherwise report the final stats in the bow-out response. See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
+Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file (it will not force a second commit when run in the order above). See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
 
 **Docs Navigator** ([docs-navigator runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never commit it.** `docs/index.html` is generated (~7 MB) and git-ignored; run `bun run docs:nav` whenever you want to browse the latest docs. It is not a close gate and must not enter a commit (it would churn megabytes every session).
 
@@ -183,8 +191,8 @@ For sessions that warrant extra proof, add this block to the SESSION file:
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
-| Git hygiene | <branch, worktree list result, status, commit/push plan, final response proof, or explicit no-commit reason> |
-| Graphify update | <node/edge/community count, final response proof, or "skipped — Graphify unavailable/no file changes"> |
+| Git hygiene | <branch, worktree list result, status, "single push — hash reported at bow-out / see git log", or explicit no-commit reason. Do NOT make a second `fill close evidence` commit (FS-0025).> |
+| Graphify update | <node/edge/community count — graphify run BEFORE the close commit so this is captured in the single push (FS-0025), or "skipped — Graphify unavailable/no file changes"> |
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
@@ -215,6 +223,10 @@ Baseline layers that require Dirstarter proof in the ADR:
 - theming/UI primitives
 
 If the session introduced or changed a domain term, update [Ubiquitous Language](../architecture/ubiquitous-language.md). If no ADR or glossary update is needed, record that explicitly in the SESSION file.
+
+### 6.7. Wiring ledger sweep
+
+If the session **surfaced** new wiring debt (incomplete handlers, storage gaps, FS-0001 handroll slips, dead plumbing for unfinished features) or **resolved** existing debt, update the canonical running ledger at [`docs/knowledge/wiki/wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) — append rows with stable `WL-P{0,1,2}-N` IDs, or flip resolved rows to a ✅/fixed status. This is the repo's single cross-session P0/P1/P2 list; do **not** duplicate a severity list into the SESSION file (it rots — see `wiki/log.md`). The SESSION file's `### Findings (severity ≥ medium)` block stays session-scoped and should backlink the ledger. Skip if the session surfaced/resolved no wiring debt.
 
 ### 7. Memory sweep
 
