@@ -74,6 +74,35 @@ run, satisfy one of:
 - **`--dangerously-skip-permissions`** in the script — simplest, but removes the guardrail
   while the loop pushes branches. Not recommended.
 
+## Hands-off mode: auto-merge + phone notifications
+
+For "laptop up, walk away" runs, use [`scripts/auto-session-automerge.sh`](../../../scripts/auto-session-automerge.sh):
+
+```bash
+caffeinate -i scripts/auto-session-automerge.sh 4   # keeps the laptop awake for the run
+```
+
+It runs N sessions and **auto-merges each green PR before the next branches from a fresh
+`main`** — so sessions never stack, which sidesteps the doc-collision conflicts the manual
+stacked flow hits (see lesson below). It **stops and pings you instead of auto-merging** when
+a human decision is needed:
+
+- the session touched `apps/web/prisma/` (schema/migration → review required);
+- CI stays red after one automatic flake re-run;
+- a safety brake trips (dirty tree / no-op session).
+
+**Phone pings** go through [`scripts/notify.sh`](../../../scripts/notify.sh) → ntfy.sh. Set the
+topic in the gitignored `.claude/notify.env` (`NTFY_TOPIC=...`) and subscribe to it in the ntfy
+app. Pings fire from the bash driver directly, so they work even if no Claude chat session is
+open. (Inside an active Claude session, the `PushNotification` tool also pushes to a paired phone
+via Remote Control, but only when you've been idle >60s.)
+
+**Stacked-PR lesson (SESSION_0306):** when running the manual `auto-session.sh` in PR-stacked
+mode, merge the PRs **one at a time promptly** and do **not** push unrelated commits to shared
+docs (wiki index/log, the epic plan) while they're open, nor `--delete-branch` a stacked base
+(it auto-closes the PRs stacked on it). The auto-merge driver above avoids all of this by merging
+before the next session starts.
+
 ## Safety model & limits
 
 - **PR gate:** nothing reaches `main` unattended — you review each PR. The self-assessed
