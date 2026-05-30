@@ -68,9 +68,12 @@ for ((i = 1; i <= N; i++)); do
   echo "════════ session ${i}/${N} → ${branch} (stacked on ${base_branch}) ════════"
   git switch -c "$branch" "$base_branch"
 
+  # Bash is intentionally NOT blanket-allowed here — it is governed by the scoped
+  # permissions.allow patterns in .claude/settings.local.json (gitignored). A bare
+  # "Bash" in --allowedTools would override that scoping and auto-allow every command.
   claude -p "$SESSION_PROMPT" \
     --permission-mode acceptEdits \
-    --allowedTools "Bash,Edit,Write,Read,Glob,Grep,TodoWrite,Agent"
+    --allowedTools "Edit,Write,Read,Glob,Grep,TodoWrite,Agent"
 
   # Brake 1: a clean close leaves no uncommitted changes.
   if [[ -n "$(git status --porcelain)" ]]; then

@@ -15,6 +15,7 @@ build/
 .idea/
 
 .claude/worktrees/
+.claude/settings.local.json
 graphify-out/
 .graphify/
 
