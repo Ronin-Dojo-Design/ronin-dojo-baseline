@@ -236,6 +236,56 @@ Captured via Playwright inspection of `https://balkan.app/OrgChartJS`. Key featu
 the Balkan demo page to capture DOM structure, interactions, responsive behavior, and visual patterns.
 See the script for the full inspection checklist.
 
+> **Capture caveat (SESSION_0306):** the automated run only reaches Balkan's *marketing* page — the
+> live chart is a lazy-loaded `<canvas>`, so DOM/style scraping returns noise. The canonical Phase-3
+> visual reference is the **operator screenshot of the live interactive chart** (see
+> `assets/balkan-orgchart-board.png` once dropped in) + the feature table above, not the scrape. Two
+> script TODOs for Phase 3: (1) its import is `from "playwright"` which doesn't resolve here — use
+> `@playwright/test`; (2) retarget at an interactive demo URL with screenshot-only capture.
+
+#### Org Chart Board — design lock (SESSION_0306 planning: live screenshot + ADR 0016 reconciliation)
+
+PWCC classification: **domain component → rewrite into Next pattern** (not a new primitive). Implement
+as a **`layout="board"` mode on the existing `LineageTreeCanvas`**, reusing the normalization, DnD,
+path-trace, zoom, and reduced-motion work already shipped (Phases 1–2) — no fork. Composite root reuses
+**`LineageVisualGroup`** rendered as one card. Features-not-pixels.
+
+**Data model — already solved by ADR 0016 + `lineage-rank-promotion-sync-rules.md`.** The multi-instructor
+reality (Blue ← Prof A, Purple/Brown ← Prof B @ a different school, Black ← Prof C) is a *dual model*:
+
+- **Provenance (truth):** `RankAward` is canonical (per-belt: `awardedBy` promoter, `awardedAt`, rank).
+  `LineageRelationship(type=PROMOTED_BY)` mirrors each award via `rankAwardId` (`fromNode`=promoter →
+  `toNode`=promoted) — a true multi-parent graph.
+- **Display (projection):** `LineageTreeMember.primaryVisualParentMemberId` = the single org-chart parent;
+  `selectedRankAward` = which belt the card shows; `isCollapsedDefault` already exists for collapse.
+- **Affiliation** is a separate axis: `Membership → Organization` (where they train now), distinct from
+  who promoted them.
+
+Grill outcomes (SESSION_0306), reconciled with ADR 0016:
+
+1. **Awarding school (NEW — additive, extends ADR 0016):** add nullable `RankAward.organizationId` (the
+   school that awarded the belt), keeping `location` as free-text fallback. This is the one genuine
+   schema change; consistent with "RankAward is the canonical promotion fact." Worth an ADR 0016 amendment note.
+2. **Card vs panel (already ADR 0016):** node card shows the `selectedRankAward` belt (belt-color); the
+   persistent panel shows a **full promotion history** (each belt → promoter → school → date → verification).
+   Matches sync-rules "drawer shows all relationships; selected RankAward controls compact display."
+3. **Primary-parent default + toggle (extends ADR 0016):** default `primaryVisualParentMemberId` to the
+   **highest-rank promoter**, with a per-tree **toggle to current-affiliation/org-head**. Sync-rules already
+   require the editor to *warn* when the primary visual parent differs from the linked rank-award promoter —
+   the affiliation toggle is exactly that explicit, warned override. Promoter change stays a dedicated modal, never drag/drop.
+
+**Phase 3 session breakdown (autonomous-loop ready):**
+
+| Slice | Scope | Notes |
+| --- | --- | --- |
+| **3-0 (schema)** | Add `RankAward.organizationId` (nullable FK) via `prisma migrate dev`; backfill null; regen client | Own session — DB-bound, follows `schema-migration.md`; routes through Petey/ADR per FS-0006 |
+| **3a** | `layout="board"` mode + `LineageCompactChildList` (inline expandable rows + counts) | Rendering-only on existing tree data |
+| **3b** | Collapse/expand subtrees + count badges (`isCollapsedDefault`), auto-collapse deep tiers | Solves large-tree perf open-question |
+| **3c** | Per-card/row `DropdownMenu` (View Profile / Edit / Change Promoter), capability-gated | Reuses L1 dropdown |
+| **3d** | Persistent panel: responsive `LineageProfileDrawer` (bottom-sheet mobile → fixed right panel `md+`) + **promotion-history** section wired to the node-profile editor; real storage, no localStorage | Highest-value; admin/dashboard, public stays read-only |
+| **3e** *(P2)* | SVG 90° connectors | Polish |
+| **3f** *(P2)* | Search-to-highlight + PDF export toolbar | Polish |
+
 #### Phase 4 install strategy — `components.json` + shadcn CLI
 
 When Phase 4 starts, add a minimal `components.json` to `apps/web/`:

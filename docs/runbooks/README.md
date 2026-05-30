@@ -53,6 +53,7 @@ browser of all docs, run `bun run docs:nav` (see [Docs Navigator](dev-environmen
 
 ## Domain Features
 
+- [lineage-hub](domain-features/lineage-hub.md) — **start here for lineage** — single index of all lineage docs (data model, specs, editor, claim, listing, epic, components).
 - [invites](domain-features/invites.md) — invite → claim → membership flow.
 - [course-curriculum-runbook](domain-features/course-curriculum-runbook.md) — courses & curriculum.
 - [baseline-listings-runbook](domain-features/baseline-listings-runbook.md) — Baseline directory listings.
