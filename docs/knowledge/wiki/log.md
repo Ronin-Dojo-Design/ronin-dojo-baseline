@@ -5,7 +5,7 @@ type: protocol
 status: superseded
 created: 2026-04-26
 updated: 2026-05-30
-last_agent: claude-session-0308
+last_agent: claude-session-0309
 ---
 
 # Wiki Change Log
@@ -24,6 +24,14 @@ Current source of truth:
 - `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
 
 Use this file only as historical context for early wiki adoption.
+
+## 2026-05-30 — SESSION_0309
+
+- Added discoverability entry for `docs/sprints/SESSION_0309.md` to `docs/knowledge/wiki/index.md`.
+- Recorded the lineage epic Phase 2 third slice (bundled): `--ease-snappy` `@theme` token +
+  `connector-grow-y/x` `@keyframes` + lineage tree connector grow-in on initial render + shared
+  `DrawerContent` snappy entrance refinement. Token-first bundling: 3 consumers ship in the same
+  commit as the new token.
 
 ## 2026-05-28 — SESSION_0278
 

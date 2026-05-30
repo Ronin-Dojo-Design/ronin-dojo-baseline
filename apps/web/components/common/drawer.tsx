@@ -115,6 +115,10 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
             "data-open:slide-in-from-bottom-full data-closed:slide-out-to-bottom-full",
             "md:data-open:slide-in-from-bottom-4 md:data-closed:slide-out-to-bottom-4",
             "data-open:fade-in-0 data-closed:fade-out-0",
+            // Motion-system: snappy entrance via --ease-snappy (300ms). Exit stays at the
+            // tailwindcss-animate default (150ms linear) so dismissal feel is unchanged.
+            "data-open:[animation-duration:300ms]",
+            "data-open:[animation-timing-function:var(--ease-snappy)]",
             className,
           )}
           style={{
