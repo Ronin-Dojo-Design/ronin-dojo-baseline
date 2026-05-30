@@ -40,6 +40,7 @@ browser of all docs, run `bun run docs:nav` (see [Docs Navigator](dev-environmen
 - [mcp-usage-runbook](dev-environment/mcp-usage-runbook.md) — using the available MCP servers.
 - [graphify-repo-memory](dev-environment/graphify-repo-memory.md) — Graphify repo-graph discovery.
 - [docs-navigator](dev-environment/docs-navigator.md) — searchable HTML docs browser.
+- [autonomous-sessions](dev-environment/autonomous-sessions.md) — drive N cold bow-in→bow-out sessions as stacked PRs (`scripts/auto-session.sh`).
 
 ## Integrations
 
