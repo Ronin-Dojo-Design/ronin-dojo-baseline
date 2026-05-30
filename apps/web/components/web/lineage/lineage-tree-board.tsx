@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
@@ -85,7 +85,40 @@ export function LineageTreeBoard({
   publicHref,
 }: LineageTreeBoardProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  const drawerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  /**
+   * Delay drawer open so the path highlight animates first (~400ms).
+   * Path highlighting is driven by `selectedNodeId` (set immediately);
+   * the drawer is driven by `drawerOpen` (set after the delay).
+   */
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    // Clear any pending drawer open
+    if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
+
+    // Set the path highlight immediately
+    setSelectedNodeId(nodeId)
+
+    // Open the drawer after a delay so the path lights up first
+    drawerTimerRef.current = setTimeout(() => {
+      setDrawerOpen(true)
+    }, 400)
+  }, [])
+
+  const handleDrawerClose = useCallback(() => {
+    if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
+    setDrawerOpen(false)
+    setSelectedNodeId(null)
+  }, [])
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
+    }
+  }, [])
 
   const selectedProfile = selectedNodeId ? (profilesById[selectedNodeId] ?? null) : null
   const selectedMember =
@@ -129,7 +162,7 @@ export function LineageTreeBoard({
         visualGroups={visualGroups}
         defaultRootMemberId={defaultRootMemberId}
         selectedNodeId={selectedNodeId}
-        onSelect={setSelectedNodeId}
+        onSelect={handleNodeSelect}
         treeId={treeId}
         editMode={editMode}
         canEditPlacement={capability?.canEditTree ?? false}
@@ -137,9 +170,9 @@ export function LineageTreeBoard({
       />
 
       <LineageProfileDrawer
-        open={selectedNodeId !== null}
+        open={drawerOpen}
         onOpenChange={open => {
-          if (!open) setSelectedNodeId(null)
+          if (!open) handleDrawerClose()
         }}
         profile={selectedProfile}
         promoterChangeContext={promoterChangeContext}

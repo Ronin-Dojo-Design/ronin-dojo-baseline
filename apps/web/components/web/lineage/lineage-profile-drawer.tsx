@@ -204,8 +204,8 @@ function DrawerBody({
   return (
     <>
       {/* Identity */}
-      <DrawerHeader className="border-b p-6">
-        <Stack size="md" className="items-start justify-between">
+      <DrawerHeader className="border-b p-6 min-w-0 overflow-hidden">
+        <Stack size="md" className="items-start justify-between min-w-0">
           <Stack size="md" className="min-w-0">
             <Avatar className="size-16">
               {profile.user.image && <AvatarImage src={profile.user.image} alt={displayName} />}
@@ -249,14 +249,14 @@ function DrawerBody({
       </DrawerHeader>
 
       {/* Tabs */}
-      <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
+      <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TabsList className="border-b px-6 py-3 rounded-none bg-transparent">
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>
           <TabsTrigger value="rank-history">Rank History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="flex-1 overflow-y-auto p-6 mt-0">
+        <TabsContent value="info" className="flex-1 overflow-y-auto overflow-x-hidden p-6 mt-0">
           <InfoTab
             profile={profile}
             currentRank={currentRank}

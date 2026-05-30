@@ -2,7 +2,7 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
-import type { ComponentProps } from "react"
+import { type ComponentProps, useCallback, useRef, useState } from "react"
 import { H4 } from "~/components/common/heading"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
@@ -50,6 +50,37 @@ function DrawerOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
 }
 
 function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
+  const touchStartY = useRef<number | null>(null)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only track swipe on the drag handle area (first 48px) or when scrolled to top
+    const el = contentRef.current
+    if (el && el.scrollTop > 0) return
+    touchStartY.current = e.touches[0]!.clientY
+    setSwipeOffset(0)
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === null) return
+    const deltaY = e.touches[0]!.clientY - touchStartY.current
+    // Only track downward swipes
+    if (deltaY > 0) {
+      setSwipeOffset(deltaY)
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback(() => {
+    if (swipeOffset > 80) {
+      // Programmatically trigger the close button
+      const closeBtn = contentRef.current?.querySelector('[data-slot="drawer-close"]')
+      if (closeBtn instanceof HTMLElement) closeBtn.click()
+    }
+    touchStartY.current = null
+    setSwipeOffset(0)
+  }, [swipeOffset])
+
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -65,8 +96,12 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
         )}
       >
         <DialogPrimitive.Popup
+          ref={contentRef}
           data-slot="drawer-content"
           aria-describedby={undefined}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className={cx(
             // Shared
             "relative w-full border bg-background shadow-md overflow-y-auto overscroll-contain",
@@ -82,10 +117,14 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
             "data-open:fade-in-0 data-closed:fade-out-0",
             className,
           )}
+          style={{
+            transform: swipeOffset > 0 ? `translateY(${swipeOffset}px)` : undefined,
+            transition: swipeOffset > 0 ? "none" : undefined,
+          }}
           {...props}
         >
-          {/* Drag handle (mobile visual cue) */}
-          <div className="mx-auto h-1.5 w-12 shrink-0 rounded-full bg-muted md:hidden" />
+          {/* Drag handle (mobile visual cue + swipe affordance) */}
+          <div className="mx-auto h-1.5 w-12 shrink-0 cursor-grab rounded-full bg-muted active:bg-muted-foreground/30 md:hidden" />
 
           {children}
 
