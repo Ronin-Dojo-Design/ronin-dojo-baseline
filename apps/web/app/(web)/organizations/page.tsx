@@ -3,9 +3,9 @@ import Link from "next/link"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Link as CommonLink } from "~/components/common/link"
-import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -103,7 +103,7 @@ export default async function OrganizationsPage() {
           </Stack>
 
           {orgs.length === 0 ? (
-            <Note>No organizations yet. Be the first to create one!</Note>
+            <EmptyList>No organizations yet. Be the first to create one!</EmptyList>
           ) : (
             <Grid>
               {orgs.map(org => (

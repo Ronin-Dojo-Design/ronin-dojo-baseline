@@ -5,7 +5,7 @@ type: index
 status: active
 created: 2026-05-29
 updated: 2026-05-29
-last_agent: copilot-session-0300
+last_agent: claude-session-0303
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -89,6 +89,11 @@ inline in each flow/lifecycle SOP above. This section indexes them.
 | Org invites | `assertOrgAdminAccess` + cross-org guard on revoke; brand sourced server-side from org row | 0298 |
 | Org general info | `assertOrgAdminAccess` via `updateOrgGeneralInfo` | 0298 |
 | Dashboard school-form | `assertOrgAdminAccess` replaces legacy OWNER role-assignment check (D-017) | 0300 |
+
+## Design
+
+- [baseline-design-system](design/baseline-design-system.md) — Baseline design-system hub: tokens, type/spacing scales, `[data-brand]` override model, v1 layering strategy. Pairs with ADR 0022.
+- [ui-library-candidates](design/ui-library-candidates.md) — bklit / trophy.so integration evaluation (research note).
 
 ## Porting
 

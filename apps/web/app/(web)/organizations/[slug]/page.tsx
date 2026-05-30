@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
@@ -286,9 +287,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
                 </Card>
               ))}
 
-              {uniqueMembers.length === 0 && (
-                <p className="text-sm text-secondary-foreground">No members yet.</p>
-              )}
+              {uniqueMembers.length === 0 && <EmptyList>No members yet.</EmptyList>}
             </div>
           </div>
         </Section.Content>

@@ -1,6 +1,7 @@
 import type { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card, CardHeader } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { db } from "~/services/db"
@@ -35,7 +36,7 @@ export async function CoursesSection({ disciplineId, brand }: CoursesSectionProp
     return (
       <section>
         <H4 render={props => <h3 {...props}>{props.children}</h3>}>Courses & Certifications</H4>
-        <p className="mt-2 text-sm text-muted-foreground">No published courses yet.</p>
+        <EmptyList>No published courses yet.</EmptyList>
       </section>
     )
   }

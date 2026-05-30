@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
@@ -122,7 +123,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground mt-2">No rank systems defined.</p>
+            <EmptyList>No rank systems defined.</EmptyList>
           )}
         </Section.Content>
 
@@ -197,7 +198,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground mt-2">No affiliated organizations.</p>
+            <EmptyList>No affiliated organizations.</EmptyList>
           )}
         </Section.Content>
       </Section>

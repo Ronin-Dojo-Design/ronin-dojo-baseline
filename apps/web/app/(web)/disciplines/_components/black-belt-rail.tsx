@@ -1,6 +1,7 @@
 import type { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { db } from "~/services/db"
@@ -37,7 +38,7 @@ export async function BlackBeltRail({ disciplineId, brand }: BlackBeltRailProps)
         <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-2 text-sm">
           Top Ranked
         </H4>
-        <p className="text-xs text-muted-foreground">No ranked members yet.</p>
+        <EmptyList className="text-xs">No ranked members yet.</EmptyList>
       </Card>
     )
   }

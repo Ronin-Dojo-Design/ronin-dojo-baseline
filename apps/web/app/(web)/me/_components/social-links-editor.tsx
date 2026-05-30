@@ -3,6 +3,7 @@
 import { PlusIcon, TrashIcon } from "lucide-react"
 import { type UseFormReturn, useFieldArray } from "react-hook-form"
 import { Button } from "~/components/common/button"
+import { EmptyList } from "~/components/common/empty-list"
 import { FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
 import { H2 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
@@ -104,9 +105,7 @@ export function SocialLinksEditor({ form }: SocialLinksEditorProps) {
         </div>
       ))}
 
-      {fields.length === 0 && (
-        <p className="text-muted-foreground text-sm">No social links added yet.</p>
-      )}
+      {fields.length === 0 && <EmptyList>No social links added yet.</EmptyList>}
     </div>
   )
 }

@@ -18,10 +18,13 @@ type RegistrationNoticeContent = {
   body: string
 }
 
+// Semantic tones mirror badge.tsx variants (success/warning/info) — keep in sync.
 const noticeStyles: Record<RegistrationNoticeTone, string> = {
-  success: "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400",
-  warning: "border-orange-500/30 bg-orange-500/10 text-orange-800 dark:text-orange-300",
-  info: "border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-300",
+  success:
+    "border-green-500/30 bg-green-500/15 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  warning:
+    "border-orange-500/30 bg-orange-500/15 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  info: "border-blue-500/30 bg-blue-500/15 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
 }
 
 export function isCancelledRegistration(registration?: RegistrationNoticeRegistration | null) {
