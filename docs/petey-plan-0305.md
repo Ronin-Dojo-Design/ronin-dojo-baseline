@@ -196,6 +196,7 @@ layout templates for different martial arts family trees.
 | **Radial / fan** | Root at center, generations as concentric rings | Large lineages with many branches (Rigan Machado BJJ network) | Balkan OrgChart fan layout |
 | **Horizontal flow** | Left-to-right flow, compact for deep but narrow lineages | Japanese martial arts (single-instructor chains like Kendo) | Balkan OrgChart left-to-right |
 | **Timeline** | Vertical timeline with promotion dates driving layout | Historical lineage documentation | bklit.com area chart timeline feel |
+| **Org Chart Board** | Multi-person root card + inline expandable child lists + persistent side-panel edit | Large school hierarchies with many instructors under one grandmaster; WEKAF organizational structure | [Balkan OrgChart JS](https://balkan.app/OrgChartJS) — see Playwright capture below |
 
 **Data templates (pre-seeded structures):**
 
@@ -212,6 +213,49 @@ layout templates for different martial arts family trees.
   placeholder node labels
 - A template is a JSON seed file in `apps/web/lib/lineage/templates/`
 - Admin can customize after seeding (templates are starting points, not constraints)
+
+#### Org Chart Board template — feature breakdown (from Balkan OrgChart JS capture)
+
+Captured via Playwright inspection of `https://balkan.app/OrgChartJS`. Key features to adapt:
+
+| Feature | Balkan implementation | Our adaptation |
+| --- | --- | --- |
+| **Multi-person root card** | Single card with multiple rows (name + role + avatar per person), featured leader has bio blurb + larger photo | Compose with `Card` + `Stack` + `Avatar` rows; featured member gets a larger avatar + `Note` bio |
+| **Inline expandable child lists** | Children rendered as sub-rows inside the parent card with expand caret `>` + avatar + role | Compose with nested `Stack` + `Button` rows; expand/collapse toggles child visibility |
+| **Persistent side-panel edit** | Right-side panel with form fields (Full Name, Job Title, Phone, Start Date, Country, City, Photo URL) + share/PDF/delete action buttons. Stays open while browsing the tree | Our `LineageProfileDrawer` is a bottom-sheet that closes on deselect. Option: add a desktop side-panel mode (Drawer on mobile, persistent panel on desktop) |
+| **3-dot card menu `⋯`** | Per-card top-right action menu | Add `DropdownMenu` trigger to `LineageNodeCard` — Edit, View Profile, Change Promoter |
+| **Colored title badges** | Role/title displayed as colored tag within the card | Map to `Badge` with `Rank.colorHex` or discipline-based variant |
+| **90° bend connectors** | Clean solid lines with right-angle bends between parent → children | Replace current `div` connectors with SVG path connectors using `M/L` commands for 90° bends |
+| **Compact child grouping** | Children of a node shown as a compact list within the parent card, not as separate full cards | New `LineageCompactChildList` component: avatar + name + role inline, expandable to full card on click |
+
+**Playwright capture script:** `scripts/capture-balkan-orgchart.ts` — runs the PWCC pipeline against
+the Balkan demo page to capture DOM structure, interactions, responsive behavior, and visual patterns.
+See the script for the full inspection checklist.
+
+#### Phase 4 install strategy — `components.json` + shadcn CLI
+
+When Phase 4 starts, add a minimal `components.json` to `apps/web/`:
+
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "tailwind": {
+    "config": "",
+    "css": "app/styles.css",
+    "baseColor": "neutral"
+  },
+  "aliases": {
+    "components": "~/components/vendor",
+    "utils": "~/lib/utils"
+  }
+}
+```
+
+This enables `npx shadcn@latest add` for both trophy.so and bklit registries. Components install
+to `components/vendor/` (isolated from L1 Dirstarter primitives in `components/common/`). Vet each
+component's imports before committing — swap any Radix primitive refs to existing Base UI equivalents.
+The `cn()` util alias points to our existing `cx()` in `lib/utils`.
 
 ### Phase 4 — Trophy.so gamification proof-of-concept (1–2 sessions)
 
