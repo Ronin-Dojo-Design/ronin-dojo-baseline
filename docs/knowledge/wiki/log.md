@@ -171,3 +171,11 @@ Use this file only as historical context for early wiki adoption.
 - Created `docs/sprints/SESSION_0279.md` for the `/lineage/join` browser smoke and BBL email readiness session.
 - Patched BBL production email readiness: brand-aware magic links, request-origin Join links, explicit brand sender configuration status, `.env.example` sender vars, and BBL production proof-script support.
 - Recorded the local DB/browser-smoke blocker: Postgres.app was repaired to password auth, but further local DB commands require explicit approval after the approval-limit rejection.
+
+## 2026-05-29 — SESSION_0304
+
+- Created the premium-motion epic foundation: `docs/runbooks/design/motion-system.md` (martial-arts motion language — easing/duration tokens, mandatory `prefers-reduced-motion` discipline, per-surface animation catalog, 4-phase staged epic) and `docs/knowledge/wiki/wiring-ledger.md` (Desi not-done audit: zero P0s, two FS-0001 handroll slips fixed, localStorage clean, black-belt-rail verdict, two verified mermaid wire-flows).
+- Enhanced `black-belt-rail` as the flagship motion surface: data-driven belt color from `Rank.colorHex`, member avatars, #1 emphasis, and a reduced-motion-gated staggered reveal (`motion/react`) via a new client `BlackBeltRailList`.
+- Added route-level `loading.tsx` boundaries to 7 listing routes (disciplines, organizations, programs, tournaments, schools, members, courses) via a shared `ListingSkeleton`, for instant navigation feedback.
+- Added a progressive `lib/haptics.ts` util (Android `navigator.vibrate`; iOS Safari / unsupported = silent no-op) wired to tournament register/select/cancel interactions; documented the iOS-web limitation + PWA/native path.
+- Fixed two FS-0001 handroll slips Desi surfaced: cert-verify trust card → `Card`, schedule empty state → `EmptyList`.

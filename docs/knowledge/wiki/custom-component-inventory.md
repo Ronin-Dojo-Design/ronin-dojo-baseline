@@ -5,9 +5,10 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-29
-last_agent: claude-session-0298
+last_agent: claude-session-0304
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0287.md
   - docs/sprints/SESSION_0224.md
   - docs/sprints/SESSION_0195.md
@@ -96,6 +97,7 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | `DisciplineCard` (+ named export `DisciplineCardSkeleton`) | `app/(web)/disciplines/_components/discipline-card.tsx` | `discipline` (incl. stat counts) | SESSION_0196: flipped from `<Link><Card hover>` to `<Card isRevealed>` + `<CardHeader wrap={false}>` + truncated `<H4 as="h3">` with `<Link>` + `<span className="absolute inset-0 z-10" />` (a11y win — H4 stays the screen-reader landmark while the whole card is clickable). Three-stat row (rank systems / orgs / members) moved behind the hover-reveal description overlay using `ShowMore limit={2}` outline badges. `DisciplineCardSkeleton` named export mirrors `ToolCardSkeleton` for reuse from `discipline-list-skeleton.tsx`. Card lives under `_components/` for now (move to `components/web/disciplines/` flagged as a follow-up). SESSION_0197: count chips render via `useTranslations("disciplines")` + next-intl ICU plural keys `counts.{ranks,orgs,members}` using CLDR-canonical `one`/`other` rules; inline ternary plural strings removed. |
 | `DisciplineList` | `app/(web)/disciplines/_components/discipline-list.tsx` | `brand` | SESSION_0196: adopted shared `Grid` primitive + `EmptyList` (replaced hand-rolled grid markup + paragraph empty state). SESSION_0197: async server component; empty literal replaced with `getTranslations("disciplines")` → `t("empty")` (server-async hook, not the client `useTranslations`). |
 | `DisciplineListSkeleton` | `app/(web)/disciplines/_components/discipline-list-skeleton.tsx` | none | SESSION_0196: consumes the new `DisciplineCardSkeleton` export inside `Grid` (replaced hand-rolled card skeleton markup). |
+| `BlackBeltRailList` (consumed by server `BlackBeltRail`) | `app/(web)/disciplines/_components/black-belt-rail-list.tsx` | `members: RankedMember[]` (`{id, name, image, rankName, colorHex}`) | SESSION_0304: **the repo's flagship motion surface + first list-stagger use of `motion/react`.** Client component that renders the top-ranked honor strip with a data-driven belt-color bar (`Rank.colorHex`, muted-token fallback when null), `Avatar` (initials fallback), `#1` emphasis (heavier weight + soft vs outline badge), and a restrained staggered fade-in-up reveal (200ms, 40ms stagger). **Gated on `useReducedMotion` (@mantine/hooks): when reduced motion is preferred, rows render in their final state with no animation — identical to the pre-0304 static list.** The server `BlackBeltRail` owns the query (now selecting `user.image` + `rank.colorHex`); the list owns the visual. Heading unified to "Top Ranked" across populated + empty branches. Do NOT make rows interactive / paginated — the members directory is the browse surface; this stays a glanceable honor strip. See [motion-system](../../runbooks/design/motion-system.md). |
 
 ---
 
@@ -135,6 +137,7 @@ SESSION_0202 added the user-dashboard editor preview surface:
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
+| `ListingSkeleton` | `apps/web/components/web/ui/listing-skeleton.tsx` | `count?: number` (default 6), `withIntro?: boolean` (default true) | SESSION_0304: server-renderable route-level loading placeholder for card-grid listing pages. Composes the `Skeleton` primitive into an Intro-shaped header (title + description bars) + a faithful `Grid` of card skeletons. Consumed by `loading.tsx` boundaries on 7 listing routes (disciplines, organizations, programs, tournaments, schools, members, courses) to give an **instant** navigation boundary (Next.js `loading.tsx` fires before the page's async work). Pass `withIntro={false}` for routes that render their own header above the boundary. See [motion-system](../../runbooks/design/motion-system.md) (skeleton → content crossfade). |
 | `ResultsCount` | `apps/web/components/web/ui/results-count.tsx` | `total: number`, `label: string`, plus any `<p>` attributes | SESSION_0199: generic server-renderable count line. Renders `label` (consumer is expected to pre-localize via `t("results", { count: total })` — see per-namespace ICU plural keys at `apps/web/messages/en/{courses,schools,techniques,disciplines}.json:results`). `total` is kept required in the public API for forward parity with a future animated variant (NumberFlow / `<Stat>` integration) even though the static render delegates the count to the plural inside `label`. Adopted in `course-query.tsx`, `school-query.tsx`, `technique-query.tsx` above each `*Listing`, and in `discipline-list.tsx` above `<Grid>` (both empty + populated branches via a single fragment). Use `<ResultsCount>` rather than a hand-rolled `<p>` whenever a listing surfaces a total count; this keeps cross-domain parity and gives the animated variant a single replacement point. |
 
 ---

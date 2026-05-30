@@ -6,6 +6,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
@@ -118,10 +119,10 @@ export default async function ScheduleDetailPage({ params }: Props) {
                 </Stack>
 
                 {upcomingSessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <EmptyList className="text-sm">
                     No upcoming sessions yet. Use “Generate sessions” to materialize the next 90
                     days.
-                  </p>
+                  </EmptyList>
                 ) : (
                   <ul className="grid gap-2">
                     {upcomingSessions.slice(0, 30).map(s => (

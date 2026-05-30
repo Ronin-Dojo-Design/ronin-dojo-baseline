@@ -389,6 +389,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0301](../../sprints/SESSION_0301.md) | session--implement | closed |
 | [SESSION_0302](../../sprints/SESSION_0302.md) | session--plan | closed |
 | [SESSION_0303](../../sprints/SESSION_0303.md) | session--open | closed |
+| [SESSION_0304](../../sprints/SESSION_0304.md) | session--open | closed |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -456,6 +457,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Deployment](../../runbooks/deploy/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) | runbook | active |
 | [Course + Curriculum Runbook](../../runbooks/domain-features/course-curriculum-runbook.md) | runbook | active |
+| [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
+| [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
+| [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
+| [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips (SESSION_0304) |
 
 ## Code files (annotated)
 

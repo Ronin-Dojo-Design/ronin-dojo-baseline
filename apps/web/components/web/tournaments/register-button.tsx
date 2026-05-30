@@ -21,6 +21,7 @@ import { H3 } from "~/components/common/heading"
 import { Label } from "~/components/common/label"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { haptics } from "~/lib/haptics"
 import { cancelRegistration, createRegistrationCheckout } from "~/server/web/tournaments/register"
 import { isCancelledRegistration, isRefundedRegistration } from "./registration-notice"
 
@@ -108,7 +109,10 @@ export function RegisterButton({
                 <DialogClose render={<Button variant="secondary" />}>Keep Registration</DialogClose>
                 <Button
                   variant="destructive"
-                  onClick={() => cancelAction.execute({ registrationId: existingRegistration.id })}
+                  onClick={() => {
+                    haptics.warning()
+                    cancelAction.execute({ registrationId: existingRegistration.id })
+                  }}
                   isPending={cancelAction.isPending}
                 >
                   Yes, Cancel
@@ -151,6 +155,7 @@ export function RegisterButton({
   }
 
   const toggle = (id: string) => {
+    haptics.select()
     setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
   }
 
@@ -160,6 +165,7 @@ export function RegisterButton({
 
   const handleRegister = () => {
     if (selectedIds.length === 0) return
+    haptics.success()
     registerAction.execute({
       tournamentId,
       divisionIds: selectedIds,

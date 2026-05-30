@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { Badge } from "~/components/common/badge"
+import { Card } from "~/components/common/card"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { findIssuanceByQrCode } from "~/server/admin/certificates/issuance-queries"
@@ -28,7 +29,7 @@ export default async function CertificateVerifyPage({ params }: PageProps) {
       </Intro>
 
       <Section>
-        <div className="mx-auto max-w-md space-y-6 rounded-lg border p-6">
+        <Card className="mx-auto max-w-md space-y-6 p-6">
           <div className="flex items-center justify-center">
             {isValid ? (
               <Badge variant="success" className="text-lg px-4 py-2">
@@ -65,7 +66,7 @@ export default async function CertificateVerifyPage({ params }: PageProps) {
               </div>
             )}
           </dl>
-        </div>
+        </Card>
       </Section>
     </>
   )

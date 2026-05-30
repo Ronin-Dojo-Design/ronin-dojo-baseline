@@ -94,6 +94,7 @@ inline in each flow/lifecycle SOP above. This section indexes them.
 
 - [baseline-design-system](design/baseline-design-system.md) — Baseline design-system hub: tokens, type/spacing scales, `[data-brand]` override model, v1 layering strategy. Pairs with ADR 0022.
 - [ui-library-candidates](design/ui-library-candidates.md) — bklit / trophy.so integration evaluation (research note).
+- [motion-system](design/motion-system.md) — martial-arts motion language: easing/duration tokens, `prefers-reduced-motion` discipline, per-surface animation catalog, staged epic. Pairs with the design hub + ADR 0022.
 
 ## Porting
 
