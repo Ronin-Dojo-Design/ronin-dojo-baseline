@@ -457,6 +457,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Vercel Deploy Runbook](../../runbooks/deploy/vercel-deploy.md) | runbook | active |
 | [Baseline Listings Runbook](../../runbooks/domain-features/baseline-listings-runbook.md) | runbook | active |
 | [Lineage Listing Runbook](../../runbooks/domain-features/lineage-listing-runbook.md) | runbook | active |
+| [Lineage Domain Hub](../../runbooks/domain-features/lineage-hub.md) | runbook | active — lineage doc index |
 | [MCP Usage Runbook](../../runbooks/dev-environment/mcp-usage-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deploy/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) | runbook | active |
