@@ -412,5 +412,5 @@ from `docs/runbooks/design/motion-system.md` or make the DESI-06 verified-badge 
 | Review & Recommend | Next session goal written: yes (browser-smoke + motion Phase 1 / DESI-06-07) |
 | Memory sweep | New project memory `motion-system-and-haptics-constraints.md` (motion idiom + iOS haptics dead-end + belt-color data field) |
 | Next session unblock check | First task (operator browser-smoke) needs a live DB/device — operator-side, flagged; epic Phase 1 is doable without |
-| Git hygiene | `<filled post-commit>` — committed + pushed to `main` (FS-0024 guard ran; worktree clean; no secrets) |
-| Graphify update | `<filled post-update>` |
+| Git hygiene | `65ae9fd` — committed + pushed to `main` (`d0d8dcf..65ae9fd`; FS-0024 guard ran; no secrets; `docs/index.html` confirmed git-ignored, not committed) |
+| Graphify update | Done — 8552 nodes, 12627 edges, 1343 communities, 1485 files tracked |
