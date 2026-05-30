@@ -364,5 +364,5 @@ re-token it to Baseline semantic colors, and render it behind a flag on a profil
 | Review & Recommend | Next session goal written: yes (DESI-06/07 + trophy.so pilot) |
 | Memory sweep | New project memory `design-system-layering-strategy.md` (v1 layering + Tuff Buffs deferral) |
 | Next session unblock check | Unblocked — first task (DESI-06 decision) is doable; no user gate |
-| Git hygiene | <commit hash — filled post-commit> |
-| Graphify update | <new stats — filled post-update> |
+| Git hygiene | `278ebf6` — committed and pushed to `main` (FS-0024 guard ran; worktree clean; no secrets) |
+| Graphify update | Done — 8488 nodes, 12522 edges, 1314 communities, 1473 files tracked |
