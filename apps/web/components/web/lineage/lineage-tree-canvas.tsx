@@ -25,7 +25,7 @@ import {
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -615,6 +615,13 @@ function LineageBranch({
   const connectorGrowY = connectorGrowStyleY(connectorGrowDelaySec, reduceMotion)
   const connectorGrowX = connectorGrowStyleX(connectorGrowDelaySec, reduceMotion)
 
+  // Phase 2 hover lift refinement — belt-color tint feeds a hover-only `--belt-tint` CSS variable
+  // so the inner draggable's hover box-shadow casts a glow in the practitioner's belt color. The
+  // arbitrary-value class baked into the hover cluster supplies the `--color-primary` fallback via
+  // `var(--belt-tint, var(--color-primary))`, so rankless members get the brand primary glow with
+  // no inline-style work needed here.
+  const beltTintColor = member.selectedRank?.colorHex ?? null
+
   return (
     <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
       <motion.div
@@ -639,11 +646,15 @@ function LineageBranch({
             style={{
               transform: CSS.Translate.toString(transform),
               zIndex: isDragging ? 20 : undefined,
+              ...(beltTintColor ? ({ "--belt-tint": beltTintColor } as CSSProperties) : null),
             }}
             {...dragAttributes}
             {...dragListeners}
             className={cx(
-              "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
+              "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1",
+              reduceMotion
+                ? "hover:shadow-lg"
+                : "hover:scale-[1.02] hover:shadow-[0_10px_25px_-5px_var(--belt-tint,var(--color-primary))]",
               editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
               isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
               isOver && "ring-2 ring-primary/70",

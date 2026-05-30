@@ -5,7 +5,7 @@ type: protocol
 status: superseded
 created: 2026-04-26
 updated: 2026-05-30
-last_agent: claude-session-0309
+last_agent: claude-session-0310
 ---
 
 # Wiki Change Log
@@ -24,6 +24,16 @@ Current source of truth:
 - `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
 
 Use this file only as historical context for early wiki adoption.
+
+## 2026-05-30 — SESSION_0310
+
+- Added discoverability entry for `docs/sprints/SESSION_0310.md` to `docs/knowledge/wiki/index.md`.
+- Recorded the lineage epic Phase 2 closing slice: node card hover lift refinement on
+  `LineageTreeCanvas`'s inner draggable — subtle `hover:scale-[1.02]` + belt-color glow via a
+  hover-only `--belt-tint` CSS variable sourced from `member.selectedRank.colorHex`, with
+  `var(--color-primary)` fallback for rankless members and a `useReducedMotion()`-gated path
+  that keeps the SESSION_0309 baseline cluster verbatim. Closes Phase 2's node-level
+  micro-interaction surface area before Phase 3 belt-rail integration begins.
 
 ## 2026-05-30 — SESSION_0309
 
