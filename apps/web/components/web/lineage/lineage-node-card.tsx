@@ -77,13 +77,13 @@ export function LineageNodeCard({
         />
       }
       className={cx(
-        "min-w-[200px] max-w-[260px] cursor-pointer p-4",
+        "min-w-40 max-w-50 cursor-pointer p-3 md:min-w-50 md:max-w-65 md:p-4",
         isRoot && "border-foreground/40",
       )}
     >
       <Stack size="sm" direction="column" className="w-full text-left">
         <Stack size="sm">
-          <Avatar className="size-12">
+          <Avatar className="size-10 md:size-12">
             {node.user.image && <AvatarImage src={node.user.image} alt={displayName} />}
             <AvatarFallback>{initials(displayName)}</AvatarFallback>
           </Avatar>

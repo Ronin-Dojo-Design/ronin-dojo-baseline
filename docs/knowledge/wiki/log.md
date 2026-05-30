@@ -179,3 +179,16 @@ Use this file only as historical context for early wiki adoption.
 - Added route-level `loading.tsx` boundaries to 7 listing routes (disciplines, organizations, programs, tournaments, schools, members, courses) via a shared `ListingSkeleton`, for instant navigation feedback.
 - Added a progressive `lib/haptics.ts` util (Android `navigator.vibrate`; iOS Safari / unsupported = silent no-op) wired to tournament register/select/cancel interactions; documented the iOS-web limitation + PWA/native path.
 - Fixed two FS-0001 handroll slips Desi surfaced: cert-verify trust card → `Card`, schedule empty state → `EmptyList`.
+
+## 2026-05-29 — SESSION_0305
+
+- Fixed three lineage drawer mobile UX bugs: drawer-open delay so the ancestor path highlights before the drawer slides in (split selection into path state + 400ms-delayed `drawerOpen`), swipe-to-close gesture on the Base UI Dialog `Drawer` (80px threshold, gated on `scrollTop === 0`), and mobile content overflow (`min-w-0` + `overflow-hidden`).
+- Authored `docs/petey-plan-0305.md` — the 4-phase lineage tree enhancement epic (mobile-first pinch-zoom, tree animations, black-belt-rail integration + family-tree templates, trophy.so gamification POC) with a Desi design review (8 animation opportunities, 3 mobile UX gaps).
+- (Backfilled by SESSION_0306: copilot's close left this log + the wiki index session row + wiki:lint unrun; SESSION_0306 added the index rows and fixed 6 broken cross-reference links in the plan doc.)
+
+## 2026-05-29 — SESSION_0306
+
+- Advanced the lineage epic (`docs/petey-plan-0305.md`) **Phase 1 — mobile-first tree**: added two-finger pinch-to-zoom over the lineage canvas, auto-fit-to-viewport initial scale on load, lowered the zoom floor (`MIN_SCALE` 0.7 → 0.5) so wide trees shrink to fit, and a touch-aware "Pinch to explore" hint.
+- Made `LineageNodeCard` responsive (narrower width/avatar/padding below `md`) and tightened sibling/root flex gaps on mobile so the unscaled tree is narrower — composition only, no FS-0001 slips.
+- All gesture/zoom animation respects `prefers-reduced-motion` (instant scale, no tween) and pinch is disabled in `editMode` so it never fights the `@dnd-kit` drag editor; native scroll still provides one-finger pan.
+- Plan-lock refinement (Petey): kept native scroll for pan + added pinch as the zoom driver, instead of a full transform-based pan/zoom rewrite — lower blast radius for the same Phase-1 mobile win before the S6 launch.

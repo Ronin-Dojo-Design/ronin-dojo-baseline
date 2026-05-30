@@ -5,9 +5,10 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-29
-last_agent: claude-session-0304
+last_agent: claude-session-0306
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/sprints/SESSION_0306.md
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0287.md
   - docs/sprints/SESSION_0224.md
@@ -40,8 +41,8 @@ Conventions:
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
-| `LineageTreeCanvas` (+ internal `GroupLabel`, `LineageBranch`) | `lineage-tree-canvas.tsx` | `members?`, `visualGroups?`, `defaultRootMemberId?`, `rows?`, `rootId?`, `edges?`, `selectedNodeId?`, `onSelect` | React-first lineage viewer that replaced the d3-org-chart wrapper. Supports v1 `LineageTreeMember` data and a legacy `rows + edges` fallback. Cycle-guarded recursive `LineageBranch`. Selected-node path highlighting via `buildSelectedPathMemberIds`. Promotion dates pass through `formatPromotionDate` which pins `Intl.DateTimeFormat` to `timeZone: "UTC"` — date-only ISO timestamps must render the saved calendar day for all viewers, including west-of-UTC. Zoom range `MIN_SCALE` 0.7 to `MAX_SCALE` 1.35 in `SCALE_STEP` 0.1 increments. |
-| `LineageNodeCard` | `lineage-node-card.tsx` | Node + selection callback | Card surface for each practitioner in the tree. Hover lifts and ring states are owned by the parent canvas; the card itself should stay style-light. |
+| `LineageTreeCanvas` (+ internal `GroupLabel`, `LineageBranch`) | `lineage-tree-canvas.tsx` | `members?`, `visualGroups?`, `defaultRootMemberId?`, `rows?`, `rootId?`, `edges?`, `selectedNodeId?`, `onSelect` | React-first lineage viewer that replaced the d3-org-chart wrapper. Supports v1 `LineageTreeMember` data and a legacy `rows + edges` fallback. Cycle-guarded recursive `LineageBranch`. Selected-node path highlighting via `buildSelectedPathMemberIds`. Promotion dates pass through `formatPromotionDate` which pins `Intl.DateTimeFormat` to `timeZone: "UTC"` — date-only ISO timestamps must render the saved calendar day for all viewers, including west-of-UTC. Zoom range `MIN_SCALE` 0.5 to `MAX_SCALE` 1.35 (SESSION_0306 lowered the floor from 0.7 so wide trees can shrink to fit) in `SCALE_STEP` 0.1 button increments. **Mobile (SESSION_0306, epic Phase 1):** two-finger pinch-to-zoom (non-passive `touchmove`, disabled in `editMode` to protect the `@dnd-kit` drag editor), auto-fit-to-viewport initial scale on mount via `ResizeObserver` (one-shot, won't fight manual zoom), native scroll for one-finger pan, and a touch-aware "Pinch to explore" hint. All zoom transitions respect `prefers-reduced-motion`. Responsive sibling/root flex gaps (`gap-4/6` mobile, `md:gap-8/12` desktop). |
+| `LineageNodeCard` | `lineage-node-card.tsx` | Node + selection callback | Card surface for each practitioner in the tree. Hover lifts and ring states are owned by the parent canvas; the card itself should stay style-light. **Responsive (SESSION_0306):** narrower below `md` (`min-w-40 max-w-50` + `size-10` avatar + `p-3`), full at desktop (`md:min-w-50 md:max-w-65` + `md:size-12` + `md:p-4`) so the tree fits a phone viewport. |
 | `LineageProfileDrawer` | `lineage-profile-drawer.tsx` | Selected node + open/close | Drawer that opens on canvas selection. Reads only from the public lineage payload — never from admin-only fields. |
 | `LineageTreeBoard` | `lineage-tree-board.tsx` | Tree + selection state | Layout shell that wires the canvas, drawer, and selection state. Owns the `selectedNodeId` source of truth for the public viewer surface. |
 | `LineageTree` | `lineage-tree.tsx` | Legacy entry | Older entry kept for fallback compatibility with the discipline detail section. Prefer `LineageTreeCanvas` directly for new surfaces. |

@@ -5,10 +5,11 @@ type: plan
 status: active
 created: 2026-05-29
 updated: 2026-05-29
-last_agent: copilot-session-0305
+last_agent: claude-session-0306
 pairs_with:
   - docs/runbooks/design/motion-system.md
   - docs/sprints/SESSION_0305.md
+  - docs/sprints/SESSION_0306.md
   - docs/knowledge/wiki/custom-component-inventory.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -297,14 +298,14 @@ Depends on: trophy.so components installed (`npx shadcn@latest add @trophyso/...
 
 ## Cross-references
 
-- [Motion System Epic Spec](docs/runbooks/design/motion-system.md) — motion tokens, easing curves,
+- [Motion System Epic Spec](runbooks/design/motion-system.md) — motion tokens, easing curves,
   reduced-motion discipline, per-surface animation catalog
-- [Baseline Design System Hub](docs/runbooks/design/baseline-design-system.md) — token architecture
-- [UI Library Candidates](docs/runbooks/design/ui-library-candidates.md) — trophy.so flagged here
-- [Custom Component Inventory](docs/knowledge/wiki/custom-component-inventory.md) — lineage components
-- [ADR 0022 — Brand Chrome Resolution](docs/architecture/decisions/0022-brand-chrome-resolution.md) —
+- [Baseline Design System Hub](runbooks/design/baseline-design-system.md) — token architecture
+- [UI Library Candidates](runbooks/design/ui-library-candidates.md) — trophy.so flagged here
+- [Custom Component Inventory](knowledge/wiki/custom-component-inventory.md) — lineage components
+- [ADR 0022 — Brand Chrome Resolution](architecture/decisions/0022-brand-chrome-resolution.md) —
   motion stays brand-neutral
-- [SESSION_0305](docs/sprints/SESSION_0305.md) — session executing the drawer fixes + this plan
+- [SESSION_0305](sprints/SESSION_0305.md) — session executing the drawer fixes + this plan
 
 ## Session estimates
 

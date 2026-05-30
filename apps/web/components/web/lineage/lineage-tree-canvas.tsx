@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core"
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { useReducedMotion } from "@mantine/hooks"
 import {
   CalendarDaysIcon,
   Maximize2Icon,
@@ -23,7 +24,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -120,7 +121,7 @@ type LineageTreeCanvasProps = {
   canManageGroups?: boolean
 }
 
-const MIN_SCALE = 0.7
+const MIN_SCALE = 0.5
 const MAX_SCALE = 1.35
 const SCALE_STEP = 0.1
 
@@ -532,7 +533,7 @@ function LineageBranch({
         <>
           <div className={cx("h-6 w-px transition-colors duration-300", connectorClassName)} />
 
-          <div className="relative flex items-start justify-center gap-8">
+          <div className="relative flex items-start justify-center gap-4 md:gap-8">
             {childGroups.length > 1 && (
               <div
                 className={cx(
@@ -641,7 +642,7 @@ function LineageChildGroupColumn({
       >
         <div
           className={cx(
-            "flex min-w-fit items-start justify-center gap-6",
+            "flex min-w-fit items-start justify-center gap-4 md:gap-6",
             group.group?.showPublicLabel || (group.group && editMode && canManageGroups)
               ? "mt-1"
               : "mt-0",
@@ -687,11 +688,112 @@ export function LineageTreeCanvas({
   canManageGroups = false,
 }: LineageTreeCanvasProps) {
   const router = useRouter()
+  const reduceMotion = useReducedMotion()
   const [scale, setScale] = useState(1)
+  const [isPinching, setIsPinching] = useState(false)
+  const [isTouch, setIsTouch] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const scaleRef = useRef(scale)
+  const autoFittedRef = useRef(false)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  // Mirror scale into a ref so the pinch listener can read it without re-binding.
+  useEffect(() => {
+    scaleRef.current = scale
+  }, [scale])
+
+  // Detect a coarse pointer (touch) to swap the explore hint label.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+    setIsTouch(window.matchMedia("(pointer: coarse)").matches)
+  }, [])
+
+  // Auto-fit the tree to the viewport width once on initial measure. Only ever
+  // shrinks to fit (never enlarges past 1.0), and never re-fits after the first
+  // pass so it won't fight a user who has manually zoomed. CSS transforms don't
+  // affect layout, so contentRef.scrollWidth is the unscaled natural tree width.
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    const contentEl = contentRef.current
+    if (!scrollEl || !contentEl) return
+
+    function autoFit() {
+      if (autoFittedRef.current || !scrollEl || !contentEl) return
+      const containerWidth = scrollEl.clientWidth
+      const naturalWidth = contentEl.scrollWidth
+      if (!containerWidth || !naturalWidth) return
+      autoFittedRef.current = true
+      setScale(clampScale(Math.min(1, containerWidth / naturalWidth)))
+    }
+
+    const raf = requestAnimationFrame(autoFit)
+    const observer = new ResizeObserver(() => {
+      if (!autoFittedRef.current) autoFit()
+    })
+    observer.observe(scrollEl)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+    }
+  }, [])
+
+  // Two-finger pinch-to-zoom (touch only). Disabled in edit mode so it never
+  // fights the @dnd-kit drag editor or drag-scroll. Single-finger touch falls
+  // through to native scroll for panning.
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl || editMode) return
+
+    let startDistance = 0
+    let startScale = 1
+    let active = false
+
+    function touchDistance(touches: TouchList) {
+      const a = touches[0]
+      const b = touches[1]
+      if (!a || !b) return 0
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+    }
+
+    function onTouchStart(event: TouchEvent) {
+      if (event.touches.length !== 2) return
+      active = true
+      startDistance = touchDistance(event.touches)
+      startScale = scaleRef.current
+      setIsPinching(true)
+    }
+
+    function onTouchMove(event: TouchEvent) {
+      if (!active || event.touches.length !== 2) return
+      event.preventDefault()
+      const ratio = touchDistance(event.touches) / (startDistance || 1)
+      setScale(clampScale(startScale * ratio))
+    }
+
+    function endPinch(event: TouchEvent) {
+      if (active && event.touches.length < 2) {
+        active = false
+        setIsPinching(false)
+      }
+    }
+
+    scrollEl.addEventListener("touchstart", onTouchStart, { passive: false })
+    scrollEl.addEventListener("touchmove", onTouchMove, { passive: false })
+    scrollEl.addEventListener("touchend", endPinch)
+    scrollEl.addEventListener("touchcancel", endPinch)
+
+    return () => {
+      scrollEl.removeEventListener("touchstart", onTouchStart)
+      scrollEl.removeEventListener("touchmove", onTouchMove)
+      scrollEl.removeEventListener("touchend", endPinch)
+      scrollEl.removeEventListener("touchcancel", endPinch)
+    }
+  }, [editMode])
   const { execute: executePlacementUpdate, isExecuting: isPlacementSaving } = useAction(
     updateLineageMemberPlacement,
     {
@@ -848,12 +950,24 @@ export function LineageTreeCanvas({
           </Stack>
         </Stack>
 
-        <div className="relative overflow-auto rounded-xl border bg-background">
+        <div
+          ref={scrollRef}
+          className={cx(
+            "relative overflow-auto rounded-xl border bg-background",
+            // Native one-finger scroll/pan stays; disable browser pinch so our
+            // two-finger handler drives zoom. Edit mode keeps default for @dnd-kit.
+            !editMode && "touch-pan-x touch-pan-y",
+          )}
+        >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0,_transparent_32rem)] opacity-70" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent" />
 
           <div
-            className="relative min-w-max p-8 transition-transform duration-300 ease-out"
+            ref={contentRef}
+            className={cx(
+              "relative min-w-max p-8",
+              !isPinching && !reduceMotion && "transition-transform duration-300 ease-out",
+            )}
             style={{
               transform: `scale(${scale})`,
               transformOrigin: "top center",
@@ -861,7 +975,7 @@ export function LineageTreeCanvas({
           >
             <Stack size="xs" direction="column" className="mb-8 items-center text-center">
               <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
-                Scroll to explore
+                {isTouch ? "Pinch to explore" : "Scroll to explore"}
               </Badge>
               <H6
                 render={props => <h2 {...props}>{props.children}</h2>}
@@ -871,7 +985,7 @@ export function LineageTreeCanvas({
               </H6>
             </Stack>
 
-            <div className="flex min-w-fit items-start justify-center gap-12">
+            <div className="flex min-w-fit items-start justify-center gap-6 md:gap-12">
               {rootMembers.map(rootMember => (
                 <LineageBranch
                   key={rootMember.id}
