@@ -161,6 +161,42 @@ function traceStepDelay(step: number, perStepDelay: number) {
   return (step - 1) * perStepDelay
 }
 
+// Phase 2 connector grow-in (motion-system, `--ease-snappy`). On initial render each connector
+// segment scales from 0 → 1 along its axis with a generation-tier stagger; all three pieces of one
+// edge (parent-below `h-6 w-px`, sibling `h-px` bar, child-above `h-4 w-px`) share the same
+// per-edge delay so the edge fills cohesively. The cap keeps deep trees inside a 1.0s envelope on
+// top of the 0.25s per-connector animation. Reduced-motion users get no animation at all.
+const CONNECTOR_GROW_DURATION = 0.25
+const CONNECTOR_GROW_STEP = 0.1
+const CONNECTOR_GROW_DELAY_CAP = 1.0
+
+function connectorGrowDelay(generation: number) {
+  if (generation <= 0) return 0
+  return Math.min(generation * CONNECTOR_GROW_STEP, CONNECTOR_GROW_DELAY_CAP)
+}
+
+function connectorGrowStyleY(
+  growDelay: number,
+  reduceMotion: boolean,
+): { animation: string; transformOrigin: string } | undefined {
+  if (reduceMotion) return undefined
+  return {
+    animation: `connector-grow-y ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
+    transformOrigin: "top",
+  }
+}
+
+function connectorGrowStyleX(
+  growDelay: number,
+  reduceMotion: boolean,
+): { animation: string; transformOrigin: string } | undefined {
+  if (reduceMotion) return undefined
+  return {
+    animation: `connector-grow-x ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
+    transformOrigin: "center",
+  }
+}
+
 function clampScale(value: number) {
   return Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(value.toFixed(2))))
 }
@@ -572,6 +608,13 @@ function LineageBranch({
   const ringDelay = isInSelectedPath ? traceDistance * perStepDelay : 0
   const connectorDelay = isInSelectedPath ? traceStepDelay(traceDistance, perStepDelay) : 0
 
+  // Connector grow-in on initial render. The `h-6 w-px` below this member and the `h-px` sibling
+  // bar are the upper pieces of the edges from this member down to its child groups; both share
+  // the parent's generation tier as the delay step.
+  const connectorGrowDelaySec = connectorGrowDelay(generation)
+  const connectorGrowY = connectorGrowStyleY(connectorGrowDelaySec, reduceMotion)
+  const connectorGrowX = connectorGrowStyleX(connectorGrowDelaySec, reduceMotion)
+
   return (
     <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
       <motion.div
@@ -622,7 +665,10 @@ function LineageBranch({
         <>
           <div
             className={cx("h-6 w-px transition-colors duration-200", connectorClassName)}
-            style={connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : undefined}
+            style={{
+              ...connectorGrowY,
+              ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
+            }}
           />
 
           <div className="relative flex items-start justify-center gap-4 md:gap-8">
@@ -632,7 +678,10 @@ function LineageBranch({
                   "absolute top-0 right-8 left-8 h-px transition-colors duration-200",
                   isInSelectedPath ? "bg-primary/30" : "bg-border",
                 )}
-                style={connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : undefined}
+                style={{
+                  ...connectorGrowX,
+                  ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
+                }}
               />
             )}
 
@@ -727,6 +776,11 @@ function LineageChildGroupColumn({
   const groupConnectorDelay =
     parentDistance !== undefined ? traceStepDelay(parentDistance, perStepDelay) : 0
 
+  // Connector grow-in on initial render. The `h-4 w-px` above each child group is the lower piece
+  // of the edge whose upper piece is the `h-6 w-px` below the parent — same generation tier.
+  const groupConnectorGrowDelaySec = connectorGrowDelay(generation - 1)
+  const groupConnectorGrowY = connectorGrowStyleY(groupConnectorGrowDelaySec, reduceMotion)
+
   return (
     <div ref={setNodeRef} className="flex min-w-fit flex-col items-center">
       <div
@@ -734,7 +788,10 @@ function LineageChildGroupColumn({
           "h-4 w-px transition-colors duration-200",
           groupIsHighlighted ? "bg-primary/60" : "bg-border",
         )}
-        style={groupConnectorDelay > 0 ? { transitionDelay: `${groupConnectorDelay}s` } : undefined}
+        style={{
+          ...groupConnectorGrowY,
+          ...(groupConnectorDelay > 0 ? { transitionDelay: `${groupConnectorDelay}s` } : null),
+        }}
       />
 
       <GroupHeader
