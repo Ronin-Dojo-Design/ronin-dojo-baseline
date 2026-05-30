@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-28
-last_agent: codex-session-0279
+updated: 2026-05-29
+last_agent: claude-session-0307
 ---
 
 # Wiki Change Log
@@ -192,3 +192,11 @@ Use this file only as historical context for early wiki adoption.
 - Made `LineageNodeCard` responsive (narrower width/avatar/padding below `md`) and tightened sibling/root flex gaps on mobile so the unscaled tree is narrower — composition only, no FS-0001 slips.
 - All gesture/zoom animation respects `prefers-reduced-motion` (instant scale, no tween) and pinch is disabled in `editMode` so it never fights the `@dnd-kit` drag editor; native scroll still provides one-finger pan.
 - Plan-lock refinement (Petey): kept native scroll for pan + added pinch as the zoom driver, instead of a full transform-based pan/zoom rewrite — lower blast radius for the same Phase-1 mobile win before the S6 launch.
+
+## 2026-05-29 — SESSION_0307
+
+- Advanced the lineage epic (`docs/petey-plan-0305.md`) **Phase 2 — tree animations, first slice**: added a generation-stepped node entrance stagger to `LineageTreeCanvas` using `motion/react`. Each node card fades in from `opacity: 0, y: 6` over 250ms (`deliberate`) with the motion-system `ease-out` entrance curve (`[0.16, 1, 0.3, 1]`).
+- Delay formula: `clamp(generation * 0.12 + siblingIndex * 0.06, 0, 0.9)` seconds — root nodes settle first, then each generation tier compounds the head start while sibling micro-stagger reads the row left-to-right. The 900ms ceiling keeps deep/wide trees from feeling draggy (motion-system "intentional stillness" + ~6–8 item stagger cap).
+- Reduced-motion mandate: `useReducedMotion()` drills as a boolean prop through `LineageBranch` → `LineageChildGroupColumn` recursion; reduced-motion users get `initial={false}` + `transition: { duration: 0 }` — full final state on first paint, no stagger.
+- DnD untouched: the `motion.div` wraps the existing draggable `<div ref={setDraggableRef}>` without owning its ref, so `@dnd-kit` translate, listeners, and drop targets keep working identically.
+- Plan-lock refinement (Petey): used the existing motion-system `ease-out` entrance token instead of `petey-plan-0305.md`'s bklit "Snappy" curve (`cubic-bezier(0.85, 0, 0.15, 1)`). Token-first discipline — introducing `--ease-snappy` belongs to a separate slice that bundles drawer + connector animations as multiple consumers of the new token.

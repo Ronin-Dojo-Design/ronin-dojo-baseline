@@ -22,6 +22,7 @@ import {
   SparklesIcon,
   TreePineIcon,
 } from "lucide-react"
+import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -124,6 +125,22 @@ type LineageTreeCanvasProps = {
 const MIN_SCALE = 0.5
 const MAX_SCALE = 1.35
 const SCALE_STEP = 0.1
+
+// Phase 2 entrance stagger (motion-system tokens — see docs/runbooks/design/motion-system.md).
+// Per-tier head start compounds with per-sibling 60ms (stagger-base), clamped so a deep/wide tree
+// never feels draggy. Easing is the entrance `ease-out` token.
+const ENTRANCE_DURATION = 0.25
+const ENTRANCE_EASE = [0.16, 1, 0.3, 1] as const
+const GENERATION_STAGGER = 0.12
+const SIBLING_STAGGER = 0.06
+const ENTRANCE_DELAY_CAP = 0.9
+
+function entranceDelay(generation: number, siblingIndex: number) {
+  return Math.min(
+    generation * GENERATION_STAGGER + siblingIndex * SIBLING_STAGGER,
+    ENTRANCE_DELAY_CAP,
+  )
+}
 
 function clampScale(value: number) {
   return Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(value.toFixed(2))))
@@ -435,6 +452,9 @@ function LineageBranch({
   hasSelection,
   onSelect,
   visited,
+  generation,
+  siblingIndex,
+  reduceMotion,
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -450,6 +470,9 @@ function LineageBranch({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   visited: Set<string>
+  generation: number
+  siblingIndex: number
+  reduceMotion: boolean
 }) {
   const dndDisabled = !treeId || !editMode || !canEditPlacement
   const {
@@ -500,34 +523,46 @@ function LineageBranch({
   const dragAttributes = dndDisabled ? {} : attributes
   const dragListeners = dndDisabled ? {} : listeners
 
+  const delay = entranceDelay(generation, siblingIndex)
+
   return (
     <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
-      <div
-        ref={setDraggableRef}
-        style={{
-          transform: CSS.Translate.toString(transform),
-          zIndex: isDragging ? 20 : undefined,
-        }}
-        {...dragAttributes}
-        {...dragListeners}
-        className={cx(
-          "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
-          editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
-          isSelected && "ring-2 ring-primary shadow-lg shadow-primary/25",
-          !isSelected && isInSelectedPath && "ring-1 ring-primary/40 shadow-md shadow-primary/10",
-          isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
-          isOver && "ring-2 ring-primary/70",
-          isDragging && "opacity-60 shadow-xl",
-        )}
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: ENTRANCE_DURATION, delay, ease: ENTRANCE_EASE }
+        }
       >
-        <LineageNodeCard
-          node={member.node}
-          isRoot={isRoot}
-          isClaimable={member.isClaimable}
-          selectedRank={member.selectedRank}
-          onSelect={onSelect}
-        />
-      </div>
+        <div
+          ref={setDraggableRef}
+          style={{
+            transform: CSS.Translate.toString(transform),
+            zIndex: isDragging ? 20 : undefined,
+          }}
+          {...dragAttributes}
+          {...dragListeners}
+          className={cx(
+            "rounded-2xl transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg",
+            editMode && canEditPlacement && "cursor-grab active:cursor-grabbing",
+            isSelected && "ring-2 ring-primary shadow-lg shadow-primary/25",
+            !isSelected && isInSelectedPath && "ring-1 ring-primary/40 shadow-md shadow-primary/10",
+            isDimmed && "opacity-45 grayscale-[15%] hover:opacity-100 hover:grayscale-0",
+            isOver && "ring-2 ring-primary/70",
+            isDragging && "opacity-60 shadow-xl",
+          )}
+        >
+          <LineageNodeCard
+            node={member.node}
+            isRoot={isRoot}
+            isClaimable={member.isClaimable}
+            selectedRank={member.selectedRank}
+            onSelect={onSelect}
+          />
+        </div>
+      </motion.div>
 
       {childGroups.length > 0 && (
         <>
@@ -561,6 +596,8 @@ function LineageBranch({
                 hasSelection={hasSelection}
                 onSelect={onSelect}
                 visited={nextVisited}
+                generation={generation + 1}
+                reduceMotion={reduceMotion}
               />
             ))}
           </div>
@@ -586,6 +623,8 @@ function LineageChildGroupColumn({
   hasSelection,
   onSelect,
   visited,
+  generation,
+  reduceMotion,
 }: {
   group: ChildGroup
   parentMemberId: string
@@ -602,6 +641,8 @@ function LineageChildGroupColumn({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   visited: Set<string>
+  generation: number
+  reduceMotion: boolean
 }) {
   const groupIsHighlighted = group.members.some(child => selectedPathMemberIds.has(child.id))
   const { setNodeRef, isOver } = useDroppable({
@@ -648,7 +689,7 @@ function LineageChildGroupColumn({
               : "mt-0",
           )}
         >
-          {group.members.map(child => (
+          {group.members.map((child, index) => (
             <LineageBranch
               key={child.id}
               member={child}
@@ -665,6 +706,9 @@ function LineageChildGroupColumn({
               hasSelection={hasSelection}
               onSelect={onSelect}
               visited={visited}
+              generation={generation}
+              siblingIndex={index}
+              reduceMotion={reduceMotion}
             />
           ))}
         </div>
@@ -986,7 +1030,7 @@ export function LineageTreeCanvas({
             </Stack>
 
             <div className="flex min-w-fit items-start justify-center gap-6 md:gap-12">
-              {rootMembers.map(rootMember => (
+              {rootMembers.map((rootMember, index) => (
                 <LineageBranch
                   key={rootMember.id}
                   member={rootMember}
@@ -1003,6 +1047,9 @@ export function LineageTreeCanvas({
                   hasSelection={hasSelection}
                   onSelect={onSelect}
                   visited={new Set()}
+                  generation={0}
+                  siblingIndex={index}
+                  reduceMotion={reduceMotion ?? false}
                 />
               ))}
             </div>

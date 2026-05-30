@@ -5,11 +5,12 @@ type: plan
 status: active
 created: 2026-05-29
 updated: 2026-05-29
-last_agent: claude-session-0306
+last_agent: claude-session-0307
 pairs_with:
   - docs/runbooks/design/motion-system.md
   - docs/sprints/SESSION_0305.md
   - docs/sprints/SESSION_0306.md
+  - docs/sprints/SESSION_0307.md
   - docs/knowledge/wiki/custom-component-inventory.md
 backlinks:
   - docs/knowledge/wiki/index.md
