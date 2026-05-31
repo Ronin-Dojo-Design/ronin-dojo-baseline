@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-30
+updated: 2026-05-31
 author: Brian + Copilot
-last_agent: claude-session-0310
+last_agent: codex-session-0313
 ---
 
 # LLM Wiki Index
@@ -97,6 +97,12 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Monetization and Entitlements Spec](../../architecture/monetization-entitlements-spec.md) | file | active |
 | [Dirstarter Commerce Alignment](../../architecture/dirstarter-commerce-alignment.md) | file | active |
 | [Security, Privacy, Payments, and Monitoring Plan](../../architecture/security-privacy-payments-monitoring-plan.md) | file | active |
+| [Ronin Security Review](../../security/README.md) | index | active — SESSION_0313 security hardening roadmap |
+| [Ronin Security Risk Register](../../security/ronin-security-risk-register.md) | file | active — priority security risk ledger |
+| [Brand-Scope Hardening Plan](../../security/brand-scope-hardening-plan.md) | file | active — P0 brand isolation implementation plan |
+| [Payment Security Checklist](../../security/payment-security-checklist.md) | file | active — Stripe/entitlement launch checklist |
+| [Privacy Data Classification](../../security/privacy-data-classification.md) | file | active — sensitive data boundaries |
+| [Security Test Plan](../../security/security-test-plan.md) | file | active — test matrix for hardening PRs |
 | [PWCC Commerce Port Map](../../architecture/pwcc-commerce-port-map.md) | file | active |
 | [Component Porting SOP](../../architecture/component-porting-sop.md) | file | active draft |
 | [Directory Monetization Roadmap Raw Source](../../architecture/source/directory-monetization-roadmap.md) | source | active |
@@ -397,6 +403,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0309](../../sprints/SESSION_0309.md) | session--implement | closed |
 | [SESSION_0310](../../sprints/SESSION_0310.md) | session--implement | closed |
 | [SESSION_0311](../../sprints/SESSION_0311.md) | session--implement | closed |
+| [SESSION_0313](../../sprints/SESSION_0313.md) | session--open | closed — security docs roadmap |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

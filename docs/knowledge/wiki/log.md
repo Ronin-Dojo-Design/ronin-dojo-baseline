@@ -238,3 +238,9 @@ Use this file only as historical context for early wiki adoption.
 - Ring + highlight shadow moved off the dnd-kit draggable onto a transparent rounded wrapper that owns only `transition-all duration-200` plus inline `transitionDelay`. Hover lift (`hover:-translate-y-1 hover:shadow-lg`) and the dim filter (`opacity-45 grayscale-[15%]` + counter-dim) stay on the inner draggable so they keep their existing `duration-300` and are NEVER delayed by the trace.
 - Reduced-motion mandate: when `useReducedMotion()` is true, `perStepDelay = 0` so every connector and ring lights simultaneously — exactly the previous instant full-highlight behavior. DnD unchanged: the draggable ref, listeners, drop-target ring (`isOver`), and `CSS.Translate.toString(transform)` style all stay on the inner div.
 - Plan-lock refinement (Petey): per-element inline `transitionDelay` instead of bolting the delay onto the existing `transition-all` on the draggable — protects hover transitions from inheriting the trace delay (which would have made hover feel sluggish during a trace play). A dedicated highlight wrapper isolates the ring/shadow transitions cleanly.
+
+## 2026-05-31 — SESSION_0313
+
+- Added the `docs/security/` documentation pack for the Ronin Dojo Baseline security review: hub, risk register, brand-scope hardening plan, payment security checklist, privacy data classification, and security test plan.
+- Recorded Graphify/Codex cloud setup failure: `graphify` was not installed and no `.graphify/` artifacts were present, so SESSION_0313 used exact known docs/source reads and documented the environment remediation.
+- Updated the wiki index and MB-013 manual boundary note so the new security pages are linked and discoverable; no runtime code, schema, auth, Stripe, or storage behavior changed in this docs-first slice.
