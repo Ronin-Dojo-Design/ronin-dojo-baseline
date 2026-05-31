@@ -4,8 +4,8 @@ slug: adr-0016
 type: adr
 status: accepted
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0178
+updated: 2026-05-30
+last_agent: claude-session-0311
 pairs_with:
   - docs/architecture/lineage/lineage-prisma-schema-patch-proposal.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
@@ -67,3 +67,15 @@ Multiple promotions between the same promoter and student are allowed. For that 
 
 - Any implicit assumption that `LineageRelationship(INSTRUCTOR_STUDENT)` alone is the promotion record.
 - Any implicit assumption that visual drag/drop placement changes promotion truth.
+
+## Amendments
+
+### SESSION_0311 (2026-05-30) — awarding-school link (lineage Phase 3-0)
+
+Added a nullable `RankAward.organizationId` FK → `Organization` (`ON DELETE SET NULL`, indexed).
+It records **the school that awarded a belt** — a third axis, distinct from `awardedBy` (the
+promoter) and from the member's current `Membership`/affiliation. The core decision above is
+unchanged: `RankAward` remains the canonical promotion fact; this only enriches it. Free-text
+`location` is retained as a fallback for unstructured/historical entries. Migration
+`20260531033236_add_rankaward_organization` is purely additive (no data loss). Consumed by lineage
+Phase 3d (promotion-history school links in the persistent profile panel) per `docs/petey-plan-0305.md`.
