@@ -1,0 +1,192 @@
+"use client"
+
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
+import { Badge } from "~/components/common/badge"
+import { Stack } from "~/components/common/stack"
+import {
+  buildChildGroups,
+  type CanvasMember,
+  memberInitials,
+  nodeDisplayName,
+} from "~/lib/lineage/canvas-model"
+import { cx } from "~/lib/utils"
+import type { LineageVisualGroupRow } from "~/server/web/lineage/payloads"
+
+/**
+ * Org-chart "board" layout — compact, inline, expandable child rows.
+ *
+ * Renders the direct children of a board node as a vertical list of compact
+ * rows (avatar + name + belt-color rank + descendant count + expand caret),
+ * grouped by `LineageVisualGroup` when a public label is set. A row's caret
+ * expands its own children inline (recursion into this same component); the
+ * row body selects the node (→ profile drawer), matching the Org Chart Board
+ * pattern from `docs/petey-plan-0305.md` Phase 3.
+ *
+ * Rendering-only: it reuses the canvas normalization (childrenByParentId,
+ * visualGroupById) and the selected-path set already computed by the canvas.
+ *
+ * Author: Cody / SESSION_0312 (Phase 3a).
+ */
+
+// Hard recursion ceiling — the canvas already cycle-guards via `visited`, this
+// is a defensive floor so malformed/very deep data can never blow the stack.
+const MAX_DEPTH = 24
+
+type CompactSharedProps = {
+  childrenByParentId: Map<string | null, CanvasMember[]>
+  visualGroupById: Map<string, LineageVisualGroupRow>
+  selectedMemberId: string | null
+  selectedPathMemberIds: Set<string>
+  onSelect: (nodeId: string) => void
+}
+
+type LineageCompactChildListProps = CompactSharedProps & {
+  parentMemberId: string
+  depth: number
+  visited: Set<string>
+}
+
+export function LineageCompactChildList({
+  parentMemberId,
+  depth,
+  visited,
+  ...shared
+}: LineageCompactChildListProps) {
+  const children = shared.childrenByParentId.get(parentMemberId) ?? []
+  if (children.length === 0 || depth > MAX_DEPTH) return null
+
+  const groups = buildChildGroups({ children, visualGroupById: shared.visualGroupById })
+
+  return (
+    <Stack
+      size="xs"
+      direction="column"
+      className={cx("w-full", depth > 0 && "ml-3 border-border/60 border-l pl-3")}
+    >
+      {groups.map(group => (
+        <Stack key={group.id} size="xs" direction="column" className="w-full">
+          {group.group?.showPublicLabel && (
+            <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
+              {group.group.label}
+            </span>
+          )}
+
+          {group.members.map(member => (
+            <LineageCompactChildRow
+              key={member.id}
+              member={member}
+              depth={depth}
+              visited={visited}
+              {...shared}
+            />
+          ))}
+        </Stack>
+      ))}
+    </Stack>
+  )
+}
+
+function LineageCompactChildRow({
+  member,
+  depth,
+  visited,
+  ...shared
+}: CompactSharedProps & {
+  member: CanvasMember
+  depth: number
+  visited: Set<string>
+}) {
+  const childCount = (shared.childrenByParentId.get(member.id) ?? []).length
+  const hasChildren = childCount > 0 && !visited.has(member.id)
+
+  const onPath = shared.selectedPathMemberIds.has(member.id)
+  const isSelected = member.id === shared.selectedMemberId
+
+  // Auto-expand ancestors of the selected node (rows on the highlighted path)
+  // until the viewer manually toggles a row, then honor their choice.
+  const [manualExpanded, setManualExpanded] = useState<boolean | null>(null)
+  const expanded = hasChildren && (manualExpanded ?? onPath)
+
+  const displayName = nodeDisplayName(member.node)
+  const rankLabel = member.selectedRank?.shortName ?? member.selectedRank?.name ?? null
+  const beltColor = member.selectedRank?.colorHex ?? null
+
+  return (
+    <div className="w-full">
+      <div
+        className={cx(
+          "flex items-center gap-1 rounded-lg pr-2 transition-colors duration-200",
+          isSelected && "bg-primary/10 ring-1 ring-primary",
+          !isSelected && onPath && "bg-primary/5 ring-1 ring-primary/30",
+        )}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setManualExpanded(prev => !(prev ?? onPath))}
+            aria-expanded={expanded}
+            aria-label={
+              expanded ? `Collapse ${displayName}'s lineage` : `Expand ${displayName}'s lineage`
+            }
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {expanded ? (
+              <ChevronDownIcon className="size-4" />
+            ) : (
+              <ChevronRightIcon className="size-4" />
+            )}
+          </button>
+        ) : (
+          <span className="size-6 shrink-0" aria-hidden />
+        )}
+
+        <button
+          type="button"
+          onClick={() => shared.onSelect(member.nodeId)}
+          aria-label={`Open lineage profile for ${displayName}`}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 text-left transition-colors hover:bg-muted/60"
+        >
+          <Avatar className="size-8 shrink-0">
+            {member.node.user.image && (
+              <AvatarImage src={member.node.user.image} alt={displayName} />
+            )}
+            <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+          </Avatar>
+
+          <Stack size="xs" direction="column" className="min-w-0 flex-1">
+            <span className="truncate font-medium text-sm">{displayName}</span>
+            {rankLabel && (
+              <Stack size="xs" className="items-center">
+                {beltColor && (
+                  <span
+                    className="size-2 shrink-0 rounded-full ring-1 ring-border/50"
+                    style={{ backgroundColor: beltColor }}
+                    aria-hidden
+                  />
+                )}
+                <span className="truncate text-muted-foreground text-xs">{rankLabel}</span>
+              </Stack>
+            )}
+          </Stack>
+        </button>
+
+        {childCount > 0 && (
+          <Badge variant="soft" size="sm" className="shrink-0">
+            {childCount}
+          </Badge>
+        )}
+      </div>
+
+      {expanded && (
+        <LineageCompactChildList
+          parentMemberId={member.id}
+          depth={depth + 1}
+          visited={new Set(visited).add(member.id)}
+          {...shared}
+        />
+      )}
+    </div>
+  )
+}

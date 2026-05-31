@@ -15,8 +15,10 @@ import { CSS } from "@dnd-kit/utilities"
 import { useReducedMotion } from "@mantine/hooks"
 import {
   CalendarDaysIcon,
+  ListTreeIcon,
   Maximize2Icon,
   MinusIcon,
+  NetworkIcon,
   PlusIcon,
   RotateCcwIcon,
   SparklesIcon,
@@ -32,6 +34,13 @@ import { Button } from "~/components/common/button"
 import { H6 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import {
+  buildChildGroups,
+  type CanvasMember,
+  type ChildGroup,
+  nodeDisplayName,
+  sortMembers,
+} from "~/lib/lineage/canvas-model"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import { cx } from "~/lib/utils"
 import { updateLineageMemberPlacement } from "~/server/web/lineage/editor-actions"
@@ -41,6 +50,7 @@ import type {
   LineageTreeMemberRow,
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
+import { LineageCompactChildList } from "./lineage-compact-child-list"
 import { LineageGroupHeaderForm } from "./lineage-group-header-form"
 import { LineageNodeCard } from "./lineage-node-card"
 
@@ -60,31 +70,6 @@ import { LineageNodeCard } from "./lineage-node-card"
  * server actions; the public viewer path renders read-only.
  */
 
-type SelectedRank = {
-  id: string
-  name: string
-  shortName: string | null
-  colorHex: string | null
-  disciplineName?: string | null
-}
-
-type CanvasMember = {
-  id: string
-  nodeId: string
-  node: LineageNodeRow
-  visualSortOrder: number
-  primaryVisualParentMemberId: string | null
-  visualGroupId: string | null
-  isClaimable?: boolean
-  selectedRank?: SelectedRank | null
-}
-
-type ChildGroup = {
-  id: string
-  group: LineageVisualGroupRow | null
-  members: CanvasMember[]
-}
-
 type DragMemberData = {
   memberId: string
   parentMemberId: string | null
@@ -98,6 +83,14 @@ type DropTargetData = {
   visualGroupId: string | null
   visualSortOrder: number
 }
+
+/**
+ * Visual layout for the canvas:
+ * - `tree`: the standard top-down vertical org chart (default).
+ * - `board`: the Org Chart Board — root cards with inline, expandable compact
+ *   child lists (Phase 3a). Mobile-friendly; reuses the same normalization.
+ */
+export type LineageLayout = "tree" | "board"
 
 type LineageTreeCanvasProps = {
   /**
@@ -120,6 +113,12 @@ type LineageTreeCanvasProps = {
   editMode?: boolean
   canEditPlacement?: boolean
   canManageGroups?: boolean
+
+  /**
+   * Initial layout. Viewers can switch between tree/board in the toolbar;
+   * this only seeds the first render.
+   */
+  defaultLayout?: LineageLayout
 }
 
 const MIN_SCALE = 0.5
@@ -199,18 +198,6 @@ function connectorGrowStyleX(
 
 function clampScale(value: number) {
   return Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(value.toFixed(2))))
-}
-
-function nodeDisplayName(node: LineageNodeRow): string {
-  return node.user.passport?.displayName ?? node.user.name ?? node.slug ?? node.id
-}
-
-function sortMembers(a: CanvasMember, b: CanvasMember): number {
-  if (a.visualSortOrder !== b.visualSortOrder) {
-    return a.visualSortOrder - b.visualSortOrder
-  }
-
-  return nodeDisplayName(a.node).localeCompare(nodeDisplayName(b.node))
 }
 
 function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMember[] {
@@ -351,50 +338,6 @@ function buildRootMembers({
   })
 
   return roots
-}
-
-function buildChildGroups({
-  children,
-  visualGroupById,
-}: {
-  children: CanvasMember[]
-  visualGroupById: Map<string, LineageVisualGroupRow>
-}): ChildGroup[] {
-  const groupsByKey = new Map<string, ChildGroup>()
-
-  for (const child of children) {
-    const group = child.visualGroupId ? (visualGroupById.get(child.visualGroupId) ?? null) : null
-    const key = group?.id ?? `ungrouped-${child.primaryVisualParentMemberId ?? "root"}`
-
-    const existing = groupsByKey.get(key) ?? {
-      id: key,
-      group,
-      members: [],
-    }
-
-    existing.members.push(child)
-    groupsByKey.set(key, existing)
-  }
-
-  const groups = Array.from(groupsByKey.values())
-
-  for (const group of groups) {
-    group.members.sort(sortMembers)
-  }
-
-  groups.sort((a, b) => {
-    const aSort = a.group?.sortOrder ?? Number.MAX_SAFE_INTEGER
-    const bSort = b.group?.sortOrder ?? Number.MAX_SAFE_INTEGER
-
-    if (aSort !== bSort) return aSort - bSort
-
-    const aLabel = a.group?.label ?? ""
-    const bLabel = b.group?.label ?? ""
-
-    return aLabel.localeCompare(bLabel)
-  })
-
-  return groups
 }
 
 function nextSortOrder(members: CanvasMember[]): number {
@@ -859,6 +802,67 @@ function LineageChildGroupColumn({
   )
 }
 
+/**
+ * Org Chart Board root card (Phase 3a).
+ *
+ * The composite root: the featured practitioner's full `LineageNodeCard` plus
+ * an optional bio blurb, with their direct reports rendered inline beneath via
+ * `LineageCompactChildList` (expandable rows, not separate full cards). Read-only
+ * navigation — selection drives the same path-highlight + drawer flow as the tree.
+ */
+function LineageBoardCard({
+  member,
+  childrenByParentId,
+  visualGroupById,
+  defaultRootMemberId,
+  rootId,
+  selectedMemberId,
+  selectedPathMemberIds,
+  onSelect,
+}: {
+  member: CanvasMember
+  childrenByParentId: Map<string | null, CanvasMember[]>
+  visualGroupById: Map<string, LineageVisualGroupRow>
+  defaultRootMemberId: string | null | undefined
+  rootId: string | undefined
+  selectedMemberId: string | null
+  selectedPathMemberIds: Set<string>
+  onSelect: (nodeId: string) => void
+}) {
+  const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
+  const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
+  const bio = member.node.bio?.trim()
+
+  return (
+    <div className="w-full rounded-2xl border bg-card/60 p-3 shadow-sm md:p-4">
+      <LineageNodeCard
+        node={member.node}
+        isRoot={isRoot}
+        isClaimable={member.isClaimable}
+        selectedRank={member.selectedRank}
+        onSelect={onSelect}
+      />
+
+      {bio && <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>}
+
+      {hasChildren && (
+        <div className="mt-3 border-border/60 border-t pt-3">
+          <LineageCompactChildList
+            parentMemberId={member.id}
+            depth={0}
+            visited={new Set([member.id])}
+            childrenByParentId={childrenByParentId}
+            visualGroupById={visualGroupById}
+            selectedMemberId={selectedMemberId}
+            selectedPathMemberIds={selectedPathMemberIds}
+            onSelect={onSelect}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function LineageTreeCanvas({
   members,
   visualGroups,
@@ -872,9 +876,11 @@ export function LineageTreeCanvas({
   editMode = false,
   canEditPlacement = false,
   canManageGroups = false,
+  defaultLayout = "tree",
 }: LineageTreeCanvasProps) {
   const router = useRouter()
   const reduceMotion = useReducedMotion()
+  const [layout, setLayout] = useState<LineageLayout>(defaultLayout)
   const [scale, setScale] = useState(1)
   const [isPinching, setIsPinching] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
@@ -1109,39 +1115,69 @@ export function LineageTreeCanvas({
             )}
           </Stack>
 
-          <Stack size="xs">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              aria-label="Zoom lineage tree out"
-              prefix={<MinusIcon />}
-              onClick={() => setScale(current => clampScale(current - SCALE_STEP))}
-            >
-              Zoom
-            </Button>
+          <Stack size="sm" wrap>
+            <Stack size="xs">
+              <Button
+                type="button"
+                variant={layout === "tree" ? "primary" : "secondary"}
+                size="sm"
+                aria-label="Tree layout"
+                aria-pressed={layout === "tree"}
+                prefix={<NetworkIcon />}
+                onClick={() => setLayout("tree")}
+              >
+                Tree
+              </Button>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              aria-label="Reset lineage tree zoom"
-              prefix={<RotateCcwIcon />}
-              onClick={() => setScale(1)}
-            >
-              Reset
-            </Button>
+              <Button
+                type="button"
+                variant={layout === "board" ? "primary" : "secondary"}
+                size="sm"
+                aria-label="Board layout"
+                aria-pressed={layout === "board"}
+                prefix={<ListTreeIcon />}
+                onClick={() => setLayout("board")}
+              >
+                Board
+              </Button>
+            </Stack>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              aria-label="Zoom lineage tree in"
-              prefix={<PlusIcon />}
-              onClick={() => setScale(current => clampScale(current + SCALE_STEP))}
-            >
-              Zoom
-            </Button>
+            {layout === "tree" && (
+              <Stack size="xs">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Zoom lineage tree out"
+                  prefix={<MinusIcon />}
+                  onClick={() => setScale(current => clampScale(current - SCALE_STEP))}
+                >
+                  Zoom
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Reset lineage tree zoom"
+                  prefix={<RotateCcwIcon />}
+                  onClick={() => setScale(1)}
+                >
+                  Reset
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Zoom lineage tree in"
+                  prefix={<PlusIcon />}
+                  onClick={() => setScale(current => clampScale(current + SCALE_STEP))}
+                >
+                  Zoom
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </Stack>
 
@@ -1160,18 +1196,25 @@ export function LineageTreeCanvas({
           <div
             ref={contentRef}
             className={cx(
-              "relative min-w-max p-8",
-              !isPinching && !reduceMotion && "transition-transform duration-300 ease-out",
+              "relative p-8",
+              layout === "tree" && "min-w-max",
+              layout === "tree" &&
+                !isPinching &&
+                !reduceMotion &&
+                "transition-transform duration-300 ease-out",
             )}
-            style={{
-              transform: `scale(${scale})`,
-              transformOrigin: "top center",
-            }}
+            style={
+              layout === "tree"
+                ? { transform: `scale(${scale})`, transformOrigin: "top center" }
+                : undefined
+            }
           >
             <Stack size="xs" direction="column" className="mb-8 items-center text-center">
-              <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
-                {isTouch ? "Pinch to explore" : "Scroll to explore"}
-              </Badge>
+              {layout === "tree" && (
+                <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
+                  {isTouch ? "Pinch to explore" : "Scroll to explore"}
+                </Badge>
+              )}
               <H6
                 render={props => <h2 {...props}>{props.children}</h2>}
                 className="text-muted-foreground"
@@ -1180,32 +1223,50 @@ export function LineageTreeCanvas({
               </H6>
             </Stack>
 
-            <div className="flex min-w-fit items-start justify-center gap-6 md:gap-12">
-              {rootMembers.map((rootMember, index) => (
-                <LineageBranch
-                  key={rootMember.id}
-                  member={rootMember}
-                  childrenByParentId={childrenByParentId}
-                  visualGroupById={visualGroupById}
-                  defaultRootMemberId={defaultRootMemberId}
-                  rootId={rootId}
-                  treeId={treeId}
-                  editMode={editMode}
-                  canEditPlacement={canEditPlacement}
-                  canManageGroups={canManageGroups}
-                  selectedMemberId={selectedMemberId}
-                  selectedPathMemberIds={selectedPathMemberIds}
-                  pathDistanceById={pathDistanceById}
-                  perStepDelay={perStepDelay}
-                  hasSelection={hasSelection}
-                  onSelect={onSelect}
-                  visited={new Set()}
-                  generation={0}
-                  siblingIndex={index}
-                  reduceMotion={reduceMotion ?? false}
-                />
-              ))}
-            </div>
+            {layout === "board" ? (
+              <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl">
+                {rootMembers.map(rootMember => (
+                  <LineageBoardCard
+                    key={rootMember.id}
+                    member={rootMember}
+                    childrenByParentId={childrenByParentId}
+                    visualGroupById={visualGroupById}
+                    defaultRootMemberId={defaultRootMemberId}
+                    rootId={rootId}
+                    selectedMemberId={selectedMemberId}
+                    selectedPathMemberIds={selectedPathMemberIds}
+                    onSelect={onSelect}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <div className="flex min-w-fit items-start justify-center gap-6 md:gap-12">
+                {rootMembers.map((rootMember, index) => (
+                  <LineageBranch
+                    key={rootMember.id}
+                    member={rootMember}
+                    childrenByParentId={childrenByParentId}
+                    visualGroupById={visualGroupById}
+                    defaultRootMemberId={defaultRootMemberId}
+                    rootId={rootId}
+                    treeId={treeId}
+                    editMode={editMode}
+                    canEditPlacement={canEditPlacement}
+                    canManageGroups={canManageGroups}
+                    selectedMemberId={selectedMemberId}
+                    selectedPathMemberIds={selectedPathMemberIds}
+                    pathDistanceById={pathDistanceById}
+                    perStepDelay={perStepDelay}
+                    hasSelection={hasSelection}
+                    onSelect={onSelect}
+                    visited={new Set()}
+                    generation={0}
+                    siblingIndex={index}
+                    reduceMotion={reduceMotion ?? false}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
