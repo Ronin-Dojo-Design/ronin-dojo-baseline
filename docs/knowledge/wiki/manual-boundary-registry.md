@@ -4,15 +4,17 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-15
+updated: 2026-05-31
 author: Brian + ChatGPT
-last_agent: claude-session-0171
+last_agent: codex-session-0313
 pairs_with:
+  - docs/security/README.md
   - repo-truth-index
   - docs/runbooks/stripe-setup-runbook.md
   - docs/runbooks/aws-s3-operator-runbook.md
   - docs/runbooks/resend-setup-runbook.md
 backlinks:
+  - docs/sprints/SESSION_0313.md
   - docs/knowledge/wiki/index.md
   - docs/protocols/chat-handoff.md
   - docs/rituals/closing.md
@@ -185,6 +187,8 @@ Blocker classes:
 - **Blocker class:** `qa_proof`
 - **Proof required:** security test matrix, monitoring hooks, Customer Portal/customer ID path, non-tournament ledger projection, subscription policy proof, manual payment entitlement path, payment/entitlement drift audit, and launch-readiness signoff
 - **Status:** open
+
+**SESSION_0313 update (2026-05-31):** Security readiness moved from narrative review to linked documentation artifacts: `docs/security/ronin-security-risk-register.md`, `docs/security/payment-security-checklist.md`, `docs/security/privacy-data-classification.md`, and `docs/security/security-test-plan.md`. This satisfies the documentation side of the security test matrix handoff, but MB-013 remains **open** until payment/customer portal proof, monitoring hooks, drift audit scheduling, manual payment entitlement parity, and launch signoff are implemented and verified.
 
 #### MB-014 — production multi-domain + server action hardening
 
