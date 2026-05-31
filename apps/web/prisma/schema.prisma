@@ -1062,6 +1062,10 @@ model Organization {
   // Merch / POD
   merchOrders MerchOrder[]
 
+  // @added   SESSION_0311 (2026-05-30) — lineage Phase 3-0
+  // @why     Awarding-school link for promotions (RankAward.organizationId); extends ADR 0016
+  rankAwards RankAward[]
+
   @@unique([brand, slug])
   @@index([brand])
   @@index([ownerId])
@@ -1937,6 +1941,13 @@ model RankAward {
   rankId      String
   awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
   awardedById String?
+  // @added   SESSION_0311 (2026-05-30) — lineage Phase 3-0; awarding school (extends ADR 0016).
+  // RankAward stays the canonical promotion fact; `organization` is the school that awarded this belt
+  // — distinct from `awardedBy` (the promoter) and from the member's current Membership/affiliation.
+  // Nullable; free-text `location` retained as fallback. onDelete: SetNull so removing an org never
+  // drops promotion history.
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationId String?
 
   lineageTreeMembers   LineageTreeMember[]
   lineageRelationships LineageRelationship[]
@@ -1949,6 +1960,7 @@ model RankAward {
   @@index([userId, awardedAt])
   @@index([rankId])
   @@index([awardedById])
+  @@index([organizationId])
 }
 
 // ---------------------------------------------------------------------------

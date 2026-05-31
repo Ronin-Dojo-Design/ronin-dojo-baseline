@@ -25,6 +25,16 @@ Current source of truth:
 
 Use this file only as historical context for early wiki adoption.
 
+## 2026-05-30 — SESSION_0311
+
+- Lineage epic Phase 3-0: added nullable `RankAward.organizationId` FK → `Organization` (awarding
+  school; `ON DELETE SET NULL`, indexed) + `Organization.rankAwards` back-relation; migration
+  `20260531033236_add_rankaward_organization` (purely additive, no data loss). Amended ADR 0016 with
+  the awarding-school axis (distinct from `awardedBy` promoter + `Membership` affiliation; core
+  decision unchanged). Operator-overseen (DB-bound, not autonomous).
+- Reverted 2 stale pre-session floating working-tree edits (`SESSION_0305.md` evidence rows,
+  emptied `scripts/capture-balkan-orgchart.ts`) — restored to `main`'s correct versions.
+
 ## 2026-05-30 — SESSION_0310
 
 - Added discoverability entry for `docs/sprints/SESSION_0310.md` to `docs/knowledge/wiki/index.md`.
