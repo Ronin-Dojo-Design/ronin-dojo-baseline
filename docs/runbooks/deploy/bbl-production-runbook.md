@@ -4,8 +4,8 @@ slug: bbl-production-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-05-28
-last_agent: claude-session-0284
+updated: 2026-05-31
+last_agent: codex-session-0314
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/vercel-deploy.md
@@ -82,6 +82,8 @@ No DNS changes were made in SESSION_0284 — this is documentation only.
 1. Confirm BBL brand renders correctly on Vercel preview/prod
    - data-brand=BBL, name/theme/metadata = Black Belt Legacy (white-label runbook)
    - BBL production deploy is green (vercel-deploy: lockfile committed)
+   - `/disciplines/bjj` renders the Rigan Machado BJJ Lineage section for the BBL brand
+   - `/lineage/rigan-machado-bjj-lineage` returns the BBL-scoped published tree
 2. Inventory WordPress content to migrate
    - landing-page content, articles (incl. Rigan Red-Belt / Rorion Gracie), media
    - decide fate: migrate into content engine vs keep WP as content source vs archive
@@ -91,7 +93,7 @@ No DNS changes were made in SESSION_0284 — this is documentation only.
 5. Apply DNS records at the confirmed host — vercel-domain-setup-runbook step 4
 6. Verify DNS + SSL + 200 serve — vercel-domain-setup-runbook steps 5-7
 7. Resend: add blackbeltlegacy.com domain + its own DKIM, verify — resend-setup-runbook
-8. Smoke prod: home, /lineage, a migrated article, an auth/magic-link email
+8. Smoke prod: home, `/disciplines/bjj`, `/lineage/rigan-machado-bjj-lineage`, a migrated article, an auth/magic-link email
 9. Retire or repoint Local-by-Flywheel (stop the push-button WP deploy path)
 ```
 

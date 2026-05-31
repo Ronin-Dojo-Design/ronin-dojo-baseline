@@ -14,7 +14,7 @@ import { getLineageProfilesByIds, getLineageTreeBySlug } from "~/server/web/line
  * pre-fetches every visible node's profile, then hands everything to a
  * client island (`LineageTreeBoard`) that owns drawer state.
  *
- * Brand-guard: Baseline-only for MVP. Non-Baseline brands render nothing —
+ * Brand-guard: Baseline + BBL for MVP. Other brands render nothing —
  * not a "Coming soon" copy block (per SESSION_0175 Open decisions).
  *
  * Author: Cody / SESSION_0175 TASK_03.
@@ -37,9 +37,11 @@ const LINEAGE_TREE_SLUG_BY_DISCIPLINE_CODE: Record<string, string> = {
   karate: "karate-lineage",
 }
 
+const LINEAGE_TREE_SECTION_BRANDS = new Set<Brand>([Brand.BASELINE_MARTIAL_ARTS, Brand.BBL])
+
 export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeSectionProps) {
-  // Brand-guard: skip entirely for non-Baseline brands.
-  if (brand !== Brand.BASELINE_MARTIAL_ARTS || !disciplineCode) {
+  // Brand-guard: skip entirely for brands without a seeded public lineage tree.
+  if (!LINEAGE_TREE_SECTION_BRANDS.has(brand) || !disciplineCode) {
     return null
   }
 
@@ -61,9 +63,9 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
   const profilesById = await getLineageProfilesByIds(visibleNodeIds)
 
   return (
-    <section>
+    <section className="w-full">
       <Stack size="xs" direction="column" className="mb-4">
-        <H4 render={props => <h3 {...props}>{props.children}</h3>}>Lineage</H4>
+        <H4>Lineage</H4>
         <Note>{result.tree.name}. Click any tile to open the profile drawer.</Note>
       </Stack>
 

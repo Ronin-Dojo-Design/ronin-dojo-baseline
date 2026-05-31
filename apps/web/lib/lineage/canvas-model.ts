@@ -16,6 +16,7 @@ export type SelectedRank = {
   name: string
   shortName: string | null
   colorHex: string | null
+  sortOrder?: number | null
   disciplineName?: string | null
 }
 

@@ -21,8 +21,6 @@ const nextConfig: NextConfig = {
   experimental: {
     useCache: true,
     turbopackFileSystemCacheForDev: true,
-    turbopackFileSystemCacheForBuild: true,
-    prefetchInlining: true,
 
     // SESSION_0031 gate 3 — Server Actions CSRF/Origin contract on multi-domain.
     // Each request enters from a single brand origin (e.g. baseline.local or

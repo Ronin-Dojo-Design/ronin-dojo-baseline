@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-05-30
-last_agent: claude-session-0306
+updated: 2026-05-31
+last_agent: codex-session-0314
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
@@ -72,6 +72,14 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 ## Epic plan & roadmap
 
 - [Petey Plan 0305 — Lineage Tree Enhancement Epic](../../petey-plan-0305.md) — Phase 1 mobile-first (done) → Phase 2 animations (in progress) → Phase 3 Org Chart Board + family-tree templates + belt-rail → Phase 4 trophy.so gamification. **Phase 3 Org Chart Board design is locked there** (board layout mode, the dual-model data plan, the `RankAward.organizationId` add, session breakdown 3-0→3f).
+
+## Current brand/domain wiring
+
+- `BASELINE_MARTIAL_ARTS` and `BBL` both expose the BJJ discipline-page lineage section for `discipline.code = bjj`.
+- The runtime tree lookup remains brand-scoped (`getLineageTreeBySlug({ brand, slug })`); do not add broad cross-brand fallbacks.
+- `apps/web/prisma/seed-baseline-lineage.ts` seeds the canonical Baseline `rigan-machado-bjj-lineage` projection.
+- `apps/web/prisma/seed-bbl-org.ts` syncs a BBL-scoped `rigan-machado-bjj-lineage` tree projection from the Baseline public projection when the Baseline seed exists. This reuses global `LineageNode` / `RankAward` facts while keeping `LineageTree` brand-scoped.
+- Local smoke target: `http://bbl.local:3000/disciplines/bjj` should show the Rigan Machado BJJ Lineage section; tree mode should be horizontally scrollable.
 
 ## Components
 

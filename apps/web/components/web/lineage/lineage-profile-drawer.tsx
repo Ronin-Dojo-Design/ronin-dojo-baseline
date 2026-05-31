@@ -11,7 +11,7 @@ import {
   UserRoundCogIcon,
   UserRoundPlusIcon,
 } from "lucide-react"
-import { useState } from "react"
+import { type CSSProperties, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -67,10 +67,12 @@ type SelectedRankAward = {
     name: string
     shortName: string | null
     colorHex: string | null
+    sortOrder?: number | null
     rankSystem?: {
       id: string
       name: string
       discipline?: { id: string; name: string; slug: string; code: string | null } | null
+      ranks?: { id: string; sortOrder: number }[] | null
     } | null
   } | null
 } | null
@@ -104,6 +106,31 @@ function formatDate(date: Date | string | null | undefined): string | null {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
 }
 
+function rankProgressPercent(
+  rank:
+    | {
+        id: string
+        sortOrder?: number | null
+        rankSystem?: { ranks?: { id: string; sortOrder: number }[] | null } | null
+      }
+    | null
+    | undefined,
+): number {
+  if (!rank) return 0
+
+  const ranks = [...(rank.rankSystem?.ranks ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)
+  if (ranks.length > 0) {
+    const index = ranks.findIndex(item => item.id === rank.id)
+    if (index >= 0) return Math.round(((index + 1) / ranks.length) * 100)
+  }
+
+  if (typeof rank.sortOrder === "number") {
+    return Math.max(12, Math.min(100, Math.round(rank.sortOrder * 10)))
+  }
+
+  return 0
+}
+
 function VerificationBadge({ profile }: { profile: LineageNodeProfile }) {
   if (profile.verificationStatus === "DISPUTED") {
     return (
@@ -135,13 +162,12 @@ export function LineageProfileDrawer({
   isClaimable,
   isTreeClaimable,
   treeSlug,
-  treeId,
   nodeId,
   isAdmin,
 }: LineageProfileDrawerProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent>
+      <DrawerContent className="md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0">
         {!profile ? (
           <Stack direction="column" size="md" className="p-6">
             <DrawerHeader>
@@ -157,7 +183,6 @@ export function LineageProfileDrawer({
             isClaimable={isClaimable}
             isTreeClaimable={isTreeClaimable}
             treeSlug={treeSlug}
-            treeId={treeId}
             nodeId={nodeId}
             isAdmin={isAdmin}
           />
@@ -174,7 +199,6 @@ function DrawerBody({
   isClaimable,
   isTreeClaimable,
   treeSlug,
-  treeId,
   nodeId,
   isAdmin,
 }: {
@@ -184,7 +208,6 @@ function DrawerBody({
   isClaimable?: boolean
   isTreeClaimable?: boolean
   treeSlug?: string
-  treeId?: string
   nodeId?: string | null
   isAdmin?: boolean
 }) {
@@ -195,22 +218,56 @@ function DrawerBody({
   const latestMembership = profile.user.memberships[0] ?? null
   const instructorRelationship = profile.relationshipsTo[0] ?? null
   const [promoterModalOpen, setPromoterModalOpen] = useState(false)
+  const selectedProfileAward = selectedRankAward?.id
+    ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
+    : null
+  const panelAward = selectedProfileAward ?? currentAward
+  const panelRank = panelAward?.rank ?? selectedRankAward?.rank ?? currentRank
+  const panelRankColor = panelRank?.colorHex ?? null
+  const panelRankProgress = rankProgressPercent(panelRank)
+  const panelHeaderStyle = panelRankColor
+    ? ({
+        "--rank-color": panelRankColor,
+        "--rank-progress": `${panelRankProgress}%`,
+      } as CSSProperties)
+    : undefined
 
   // For the header subtitle, prefer selected rank name if set
-  const headerRankName = selectedRankAward?.rank?.name ?? currentRank?.name ?? null
-  const headerDisciplineName =
-    selectedRankAward?.rank?.rankSystem?.discipline?.name ?? discipline?.name ?? null
+  const headerRankName = panelRank?.name ?? null
+  const headerDisciplineName = panelRank?.rankSystem?.discipline?.name ?? discipline?.name ?? null
 
   return (
     <>
       {/* Identity */}
-      <DrawerHeader className="border-b p-6 min-w-0 overflow-hidden">
+      <DrawerHeader
+        className="relative min-w-0 overflow-hidden border-b p-6 pt-7"
+        style={panelHeaderStyle}
+      >
+        {panelRankColor && (
+          <div className="absolute inset-x-0 top-0 h-1 bg-muted">
+            <span
+              aria-hidden
+              className="block h-full rounded-r-full bg-(--rank-color)"
+              style={{ width: "var(--rank-progress)" }}
+            />
+          </div>
+        )}
+
         <Stack size="md" className="items-start justify-between min-w-0">
           <Stack size="md" className="min-w-0">
-            <Avatar className="size-16">
-              {profile.user.image && <AvatarImage src={profile.user.image} alt={displayName} />}
-              <AvatarFallback>{initials(displayName)}</AvatarFallback>
-            </Avatar>
+            <div className="relative shrink-0">
+              {panelRankColor && (
+                <span
+                  aria-hidden
+                  className="absolute -inset-1 rounded-xl opacity-20"
+                  style={{ backgroundColor: panelRankColor }}
+                />
+              )}
+              <Avatar className="relative size-16">
+                {profile.user.image && <AvatarImage src={profile.user.image} alt={displayName} />}
+                <AvatarFallback>{initials(displayName)}</AvatarFallback>
+              </Avatar>
+            </div>
             <Stack size="xs" direction="column" className="min-w-0 flex-1">
               <DrawerTitle>{displayName}</DrawerTitle>
               {headerRankName && (
@@ -221,6 +278,11 @@ function DrawerBody({
               )}
               <Stack size="xs" wrap>
                 <VerificationBadge profile={profile} />
+                {panelAward?.organization?.name && (
+                  <Badge variant="outline" size="sm">
+                    {panelAward.organization.name}
+                  </Badge>
+                )}
               </Stack>
             </Stack>
           </Stack>
@@ -272,7 +334,10 @@ function DrawerBody({
         </TabsContent>
 
         <TabsContent value="rank-history" className="flex-1 overflow-y-auto p-6 mt-0">
-          <LineageRankHistoryTab profile={profile} />
+          <LineageRankHistoryTab
+            profile={profile}
+            selectedRankAwardId={selectedRankAward?.id ?? null}
+          />
         </TabsContent>
       </Tabs>
 
@@ -396,12 +461,7 @@ function InfoTab({
 
       {/* Current Rank */}
       <section aria-label="Current rank">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Current Rank
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Current Rank</H6>
         {currentRank ? (
           <Stack size="sm" wrap>
             {currentRank.colorHex && (
@@ -432,12 +492,7 @@ function InfoTab({
 
       {/* Awarded By — REQUIRED row per SESSION Open decisions 2026-05-16 */}
       <section aria-label="Awarded by">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Awarded By
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Awarded By</H6>
         {awardedBy ? (
           <Stack size="sm">
             <Avatar className="size-8">
@@ -459,12 +514,7 @@ function InfoTab({
 
       {/* Promoted On */}
       <section aria-label="Promoted on">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Promoted On
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Promoted On</H6>
         <span className="text-sm">{promotedOn ?? "Unknown date"}</span>
       </section>
 
@@ -472,12 +522,7 @@ function InfoTab({
 
       {/* Instructor */}
       <section aria-label="Instructor">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Instructor
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Instructor</H6>
         {instructorName ? (
           <Stack size="sm" wrap>
             <span className="text-sm font-medium">{instructorName}</span>
@@ -494,12 +539,7 @@ function InfoTab({
 
       {/* School */}
       <section aria-label="School">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          School
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">School</H6>
         {latestMembership?.organization ? (
           <Stack direction="column" size="xs">
             <span className="text-sm font-medium">{latestMembership.organization.name}</span>
@@ -532,12 +572,7 @@ function LineageTab({
   return (
     <Stack direction="column" size="md" className="w-full">
       <section aria-label="Promotion lineage">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Promotion Lineage
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Promotion Lineage</H6>
         {instructorName ? (
           <Stack direction="column" size="xs">
             <span className="text-sm font-medium">{instructorName}</span>
@@ -564,12 +599,7 @@ function LineageTab({
       <Separator />
 
       <section aria-label="Students">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="mb-1 text-muted-foreground uppercase tracking-wide"
-        >
-          Students
-        </H6>
+        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Students</H6>
         <Note>Student relationships are not loaded in this drawer yet.</Note>
       </section>
     </Stack>

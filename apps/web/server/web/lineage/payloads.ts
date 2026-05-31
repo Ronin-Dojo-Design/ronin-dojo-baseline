@@ -75,6 +75,8 @@ export const lineageNodeRowPayload = {
               id: true,
               name: true,
               shortName: true,
+              colorHex: true,
+              sortOrder: true,
               rankSystem: {
                 select: {
                   id: true,
@@ -169,12 +171,19 @@ export const lineageNodeProfilePayload = {
                   discipline: {
                     select: { id: true, name: true, slug: true, code: true },
                   },
+                  ranks: {
+                    select: { id: true, sortOrder: true },
+                    orderBy: { sortOrder: "asc" as const },
+                  },
                 },
               },
             },
           },
           awardedBy: {
             select: { id: true, name: true, image: true },
+          },
+          organization: {
+            select: { id: true, name: true, slug: true, city: true, state: true },
           },
         },
         orderBy: [{ awardedAt: "desc" as const }],
@@ -292,6 +301,7 @@ export const lineageTreeMemberPayload = {
           name: true,
           shortName: true,
           colorHex: true,
+          sortOrder: true,
           rankSystem: {
             select: {
               id: true,

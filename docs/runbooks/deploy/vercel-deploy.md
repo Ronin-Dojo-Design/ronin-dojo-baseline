@@ -4,8 +4,8 @@ slug: vercel-deploy
 type: runbook
 status: active
 created: 2026-05-20
-updated: 2026-05-20
-last_agent: codex-session-0205
+updated: 2026-05-31
+last_agent: codex-session-0314
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/neon-advisory-lock-recovery.md
@@ -28,6 +28,11 @@ Operational source for Ronin's active Vercel app deployment. This runbook is nar
 ## Active Vercel Truth
 
 The active project builds from `apps/web`, not from the repository root.
+
+Local development and production use different command surfaces. Local app work starts in
+`apps/web` with `bun run dev` (see the [dev-environment runbook](../dev-environment/dev-environment.md)).
+Vercel production still uses the monorepo `pnpm --filter @ronin-dojo/web build` command below,
+because that is the project setting and lockfile contract.
 
 | Setting | Current value |
 | --- | --- |

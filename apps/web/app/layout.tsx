@@ -71,7 +71,11 @@ export default async function ({ children }: LayoutProps<"/">) {
       data-brand={brand}
       suppressHydrationWarning
     >
-      {brandCss && <style dangerouslySetInnerHTML={{ __html: brandCss }} />}
+      <head>
+        {brandCss && (
+          <style id="brand-settings-css" dangerouslySetInnerHTML={{ __html: brandCss }} />
+        )}
+      </head>
       <body className="min-h-dvh flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
           <NuqsAdapter>

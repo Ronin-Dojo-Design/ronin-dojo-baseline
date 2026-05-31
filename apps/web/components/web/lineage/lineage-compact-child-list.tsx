@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react"
+import type { CSSProperties } from "react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
@@ -13,6 +14,7 @@ import {
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 import type { LineageVisualGroupRow } from "~/server/web/lineage/payloads"
+import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
 
 /**
  * Org-chart "board" layout — compact, inline, expandable child rows.
@@ -47,6 +49,7 @@ type CompactSharedProps = {
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
   onSelect: (nodeId: string) => void
+  canChangePromoter?: boolean
 }
 
 type LineageCompactChildListProps = CompactSharedProps & {
@@ -124,10 +127,12 @@ function LineageCompactChildRow({
   const displayName = nodeDisplayName(member.node)
   const rankLabel = member.selectedRank?.shortName ?? member.selectedRank?.name ?? null
   const beltColor = member.selectedRank?.colorHex ?? null
+  const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 
   return (
     <div className="w-full">
       <div
+        style={rowStyle}
         className={cx(
           "flex items-center gap-1 rounded-lg pr-2 transition-colors duration-200",
           isSelected && "bg-primary/10 ring-1 ring-primary",
@@ -152,6 +157,10 @@ function LineageCompactChildRow({
           </button>
         ) : (
           <span className="size-6 shrink-0" aria-hidden />
+        )}
+
+        {beltColor && (
+          <span aria-hidden className="h-8 w-1 shrink-0 rounded-full bg-(--rank-color)" />
         )}
 
         <button
@@ -194,6 +203,12 @@ function LineageCompactChildRow({
             {descendantCount}
           </Badge>
         )}
+
+        <LineageMemberActionsMenu
+          displayName={displayName}
+          onViewProfile={() => shared.onSelect(member.nodeId)}
+          canChangePromoter={shared.canChangePromoter}
+        />
       </div>
 
       {expanded && (

@@ -1,12 +1,14 @@
 "use client"
 
 import { CheckIcon, ShieldOffIcon, TriangleAlertIcon } from "lucide-react"
+import type { CSSProperties } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { H6 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
+import { cx } from "~/lib/utils"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 type RankAward = LineageNodeProfile["user"]["rankAwards"][number]
@@ -48,13 +50,19 @@ function sourceBadge(profile: LineageNodeProfile) {
   )
 }
 
-export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile }) {
+export function LineageRankHistoryTab({
+  profile,
+  selectedRankAwardId,
+}: {
+  profile: LineageNodeProfile
+  selectedRankAwardId?: string | null
+}) {
   const awards = profile.user.rankAwards
 
   if (awards.length === 0) {
     return (
       <Stack direction="column" size="sm" className="w-full py-8 text-center">
-        <H6 render={props => <h6 {...props}>{props.children}</h6>}>No rank history yet</H6>
+        <H6>No rank history yet</H6>
         <Note>Rank awards have not been added to this profile.</Note>
       </Stack>
     )
@@ -63,12 +71,7 @@ export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile
   return (
     <Stack direction="column" size="md" className="w-full">
       <Stack direction="column" size="xs">
-        <H6
-          render={props => <h6 {...props}>{props.children}</h6>}
-          className="text-muted-foreground uppercase tracking-wide"
-        >
-          Rank History
-        </H6>
+        <H6 className="text-muted-foreground uppercase tracking-wide">Rank History</H6>
         <Stack size="xs" wrap>
           {sourceBadge(profile)}
           <Badge variant="soft" size="sm">
@@ -85,16 +88,33 @@ export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile
 
       <Stack direction="column" size="sm">
         {awards.map(award => (
-          <RankAwardRow key={award.id} award={award} />
+          <RankAwardRow
+            key={award.id}
+            award={award}
+            isSelected={award.id === selectedRankAwardId}
+          />
         ))}
       </Stack>
     </Stack>
   )
 }
 
-function RankAwardRow({ award }: { award: RankAward }) {
+function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boolean }) {
+  const rankStyle = award.rank.colorHex
+    ? ({ "--rank-color": award.rank.colorHex } as CSSProperties)
+    : undefined
+
   return (
-    <article className="rounded-md border bg-background p-3">
+    <article
+      className={cx(
+        "relative overflow-hidden rounded-md border bg-background p-3",
+        isSelected && "border-primary bg-primary/5 ring-1 ring-primary/30",
+      )}
+      style={rankStyle}
+    >
+      {award.rank.colorHex && (
+        <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-(--rank-color)" />
+      )}
       <Stack direction="column" size="sm">
         <Stack size="sm" wrap>
           {award.rank.colorHex && (
@@ -115,10 +135,21 @@ function RankAwardRow({ award }: { award: RankAward }) {
               {award.rank.rankSystem.discipline.name}
             </Badge>
           )}
+          {isSelected && (
+            <Badge variant="primary" size="sm">
+              Selected
+            </Badge>
+          )}
         </Stack>
 
         <Stack size="xs" wrap className="text-sm text-muted-foreground">
           <span>{formatDate(award.awardedAt)}</span>
+          {award.organization?.name && (
+            <>
+              <span aria-hidden>&middot;</span>
+              <span>{award.organization.name}</span>
+            </>
+          )}
           {award.location && (
             <>
               <span aria-hidden>&middot;</span>

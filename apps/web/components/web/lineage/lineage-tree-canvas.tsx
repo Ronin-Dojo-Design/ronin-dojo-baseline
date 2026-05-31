@@ -53,6 +53,7 @@ import type {
 } from "~/server/web/lineage/payloads"
 import { LineageCompactChildList } from "./lineage-compact-child-list"
 import { LineageGroupHeaderForm } from "./lineage-group-header-form"
+import { LineageHonorStrip } from "./lineage-honor-strip"
 import { LineageNodeCard } from "./lineage-node-card"
 
 /**
@@ -217,6 +218,7 @@ function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMe
           name: member.selectedRankAward.rank.name,
           shortName: member.selectedRankAward.rank.shortName,
           colorHex: member.selectedRankAward.rank.colorHex,
+          sortOrder: member.selectedRankAward.rank.sortOrder,
           disciplineName: member.selectedRankAward.rank.rankSystem?.discipline?.name ?? null,
         }
       : null,
@@ -569,7 +571,11 @@ function LineageBranch({
   const beltTintColor = member.selectedRank?.colorHex ?? null
 
   return (
-    <div ref={setDroppableRef} className="flex min-w-fit flex-col items-center">
+    <div
+      id={`lineage-member-${member.id}`}
+      ref={setDroppableRef}
+      className="flex min-w-fit scroll-m-8 flex-col items-center"
+    >
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -613,6 +619,7 @@ function LineageBranch({
               isClaimable={member.isClaimable}
               selectedRank={member.selectedRank}
               onSelect={onSelect}
+              canChangePromoter={editMode && canEditPlacement}
             />
           </div>
         </div>
@@ -823,6 +830,7 @@ function LineageBoardCard({
   selectedMemberId,
   selectedPathMemberIds,
   onSelect,
+  canChangePromoter,
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -833,19 +841,24 @@ function LineageBoardCard({
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
   onSelect: (nodeId: string) => void
+  canChangePromoter: boolean
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
   const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
   const bio = member.node.bio?.trim()
 
   return (
-    <div className="w-full rounded-2xl border bg-card/60 p-3 shadow-sm md:p-4">
+    <div
+      id={`lineage-member-${member.id}`}
+      className="w-full scroll-m-8 rounded-2xl border bg-card/60 p-3 shadow-sm md:p-4"
+    >
       <LineageNodeCard
         node={member.node}
         isRoot={isRoot}
         isClaimable={member.isClaimable}
         selectedRank={member.selectedRank}
         onSelect={onSelect}
+        canChangePromoter={canChangePromoter}
       />
 
       {bio && <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>}
@@ -862,6 +875,7 @@ function LineageBoardCard({
             selectedMemberId={selectedMemberId}
             selectedPathMemberIds={selectedPathMemberIds}
             onSelect={onSelect}
+            canChangePromoter={canChangePromoter}
           />
         </div>
       )}
@@ -1087,8 +1101,13 @@ export function LineageTreeCanvas({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="overflow-hidden rounded-2xl border bg-card/40 p-4 shadow-sm">
-        <Stack size="sm" wrap className="mb-4 items-center justify-between gap-3" direction="row">
+      <div className="rounded-2xl border bg-card/40 p-3 shadow-sm md:p-4">
+        <Stack
+          size="sm"
+          wrap
+          className="sticky top-2 z-20 mb-4 items-center justify-between gap-3 rounded-xl border bg-card/95 p-2 shadow-sm backdrop-blur md:top-4"
+          direction="row"
+        >
           <Stack size="xs" wrap>
             <Badge variant="primary" size="sm" prefix={<TreePineIcon />}>
               {memberCount} {memberCount === 1 ? "member" : "members"}
@@ -1191,10 +1210,17 @@ export function LineageTreeCanvas({
           </Stack>
         </Stack>
 
+        <LineageHonorStrip
+          members={normalizedMembers}
+          selectedMemberId={selectedMemberId}
+          onSelect={onSelect}
+        />
+
         <div
           ref={scrollRef}
+          data-lineage-canvas-scroll
           className={cx(
-            "relative overflow-auto rounded-xl border bg-background",
+            "relative max-w-full overflow-x-auto overflow-y-auto rounded-xl border bg-background",
             // Native one-finger scroll/pan stays; disable browser pinch so our
             // two-finger handler drives zoom. Edit mode keeps default for @dnd-kit.
             !editMode && "touch-pan-x touch-pan-y",
@@ -1225,10 +1251,7 @@ export function LineageTreeCanvas({
                   {isTouch ? "Pinch to explore" : "Scroll to explore"}
                 </Badge>
               )}
-              <H6
-                render={props => <h2 {...props}>{props.children}</h2>}
-                className="text-muted-foreground"
-              >
+              <H6 className="text-muted-foreground">
                 Click a practitioner to trace their path to the root
               </H6>
             </Stack>
@@ -1247,6 +1270,7 @@ export function LineageTreeCanvas({
                     selectedMemberId={selectedMemberId}
                     selectedPathMemberIds={selectedPathMemberIds}
                     onSelect={onSelect}
+                    canChangePromoter={editMode && canEditPlacement}
                   />
                 ))}
               </Stack>

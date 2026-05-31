@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-05-29
-last_agent: claude-session-0303
+updated: 2026-05-31
+last_agent: codex-session-0314
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -17,6 +17,23 @@ backlinks:
 
 Operational runbooks, grouped by domain. Files live in `runbooks/<domain>/`. For a searchable
 browser of all docs, run `bun run docs:nav` (see [Docs Navigator](dev-environment/docs-navigator.md)).
+
+## Agent Start Points
+
+When a session touches setup, local dev, production, domains, or lineage, do not infer the process
+from package scripts alone. Start with these files, then record any drift you find:
+
+| Task area | Read first | Why |
+| --- | --- | --- |
+| Local app/dev server | [dev-environment](dev-environment/dev-environment.md) | Canonical app root, env, database, dev-server command, and local brand hosts. |
+| Production deploy | [vercel-deploy](deploy/vercel-deploy.md) | Active Vercel root/build/env truth for `apps/web`. |
+| Domain cutover/DNS | [vercel-domain-setup-runbook](deploy/vercel-domain-setup-runbook.md) | Record-based Bluehost → Vercel domain setup; do not rediscover DNS steps. |
+| BBL production | [bbl-production-runbook](deploy/bbl-production-runbook.md) | BBL-specific production gates and open DNS source-of-truth decision. |
+| White-label hosts | [white-label-site-runbook](deploy/white-label-site-runbook.md) | Host → brand behavior and local smoke expectations. |
+| Lineage work | [lineage-hub](domain-features/lineage-hub.md) | Source of lineage dual model, routes, specs, component inventory, and ADR links. |
+
+If a package script and a runbook disagree, treat that as documentation drift: verify the command,
+update the runbook, and note it in the active SESSION before continuing.
 
 ## Database
 

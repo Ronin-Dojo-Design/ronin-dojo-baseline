@@ -5,9 +5,10 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-05-31
-last_agent: claude-session-0312
+last_agent: codex-session-0314
 pairs_with:
   - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/sprints/SESSION_0314.md
   - docs/sprints/SESSION_0312.md
   - docs/sprints/SESSION_0310.md
   - docs/sprints/SESSION_0309.md
@@ -52,6 +53,8 @@ Conventions:
 | `LineageProfileDrawer` | `lineage-profile-drawer.tsx` | Selected node + open/close | Drawer that opens on canvas selection. Reads only from the public lineage payload — never from admin-only fields. |
 | `LineageTreeBoard` | `lineage-tree-board.tsx` | Tree + selection state | Layout shell that wires the canvas, drawer, and selection state. Owns the `selectedNodeId` source of truth for the public viewer surface. |
 | `LineageTree` | `lineage-tree.tsx` | Legacy entry | Older entry kept for fallback compatibility with the discipline detail section. Prefer `LineageTreeCanvas` directly for new surfaces. |
+| `LineageHonorStrip` | `lineage-honor-strip.tsx` | `members`, `selectedMemberId`, `onSelect` | SESSION_0314: tree-header belt/rank strip derived from normalized canvas members. Selects and scrolls to `#lineage-member-<member.id>` without owning lineage truth. |
+| `LineageMemberActionsMenu` | `lineage-member-actions-menu.tsx` | `displayName`, `onViewProfile`, optional promoter-change affordance | SESSION_0314: row/card ellipsis menu composed from L1 `DropdownMenu` + `Button`. `DropdownMenuLabel` must stay inside `DropdownMenuGroup`; public viewers get View Profile only. |
 | `LineageQuery` | `lineage-query.tsx` | `searchParams`, `brand`, page structured-data metadata, optional listing overrides | SESSION_0248: server query wrapper for `/lineage`. Parses `nuqs` search params, calls `searchPublishedLineageTrees`, renders `ResultsCount`, `LineageListing`, `LineageList`, and page-scoped collection structured data. |
 | `LineageListing` | `lineage-listing.tsx` | `pagination`, optional `search`, optional filter-provider options, children | SESSION_0248: client listing shell mirroring Tool/Technique listing architecture. Provides `FiltersProvider` with `lineageFilterParams`, renders `LineageSearch`, children, and shared `Pagination`. |
 | `LineageSearch` | `lineage-search.tsx` | Optional placeholder plus `Stack` props | SESSION_0248: client search control composed from shared `Filters` and `Sort`. Sort values are `name.asc`, `name.desc`, and `updatedAt.desc`; filter changes reset `page` through `FiltersProvider`. |
@@ -61,6 +64,11 @@ Conventions:
 ### Lineage admin surfaces
 
 Admin lineage editors live under `apps/web/app/admin/lineage/_components/` (claim review, node profile editor, placeholder archival actions). They consume the same payload types as the public viewer but use server actions for mutations — the public viewer remains read-only by contract.
+
+SESSION_0314 note: discipline-page lineage must render full-width (`Section.Content md:col-span-3`
+and `LineageTreeSection.w-full`) so the in-card toolbar and tree-mode horizontal scroll remain
+reachable on desktop. If this surface is redesigned, preserve the full-width app surface and verify
+tree mode reports `scrollWidth > clientWidth` for the Rigan Machado tree.
 
 SESSION_0202 added the user-dashboard editor preview surface:
 

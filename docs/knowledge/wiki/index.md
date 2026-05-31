@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-05-31
 author: Brian + Copilot
-last_agent: claude-session-0312
+last_agent: codex-session-0314
 ---
 
 # LLM Wiki Index
@@ -405,6 +405,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0311](../../sprints/SESSION_0311.md) | session--implement | closed |
 | [SESSION_0312](../../sprints/SESSION_0312.md) | session--implement | closed |
 | [SESSION_0313](../../sprints/SESSION_0313.md) | session--open | closed — security docs roadmap |
+| [SESSION_0314](../../sprints/SESSION_0314.md) | session--open | closed — lineage Phase 3 UX, BBL Rigan tree, dev/prod runbook pointers |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

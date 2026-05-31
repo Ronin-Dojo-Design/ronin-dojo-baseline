@@ -265,9 +265,9 @@ export default async function DisciplineDetailPage({ params }: Props) {
         </Section>
       )}
 
-      {/* Lineage (Baseline-only) */}
+      {/* Lineage */}
       <Section>
-        <Section.Content>
+        <Section.Content className="items-stretch md:col-span-3">
           <LineageTreeSection brand={brand} disciplineCode={discipline.code} />
         </Section.Content>
       </Section>
@@ -281,7 +281,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
               {relatedDisciplines.map(rd => (
                 <Card key={rd.id} isRevealed>
                   <CardHeader>
-                    <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
+                    <H4 className="truncate">
                       <Link href={`/disciplines/${rd.slug}`}>
                         <span className="absolute inset-0 z-10" />
                         {rd.name}

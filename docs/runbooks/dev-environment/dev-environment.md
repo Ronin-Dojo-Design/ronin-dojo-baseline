@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: copilot-session-0300
+updated: 2026-05-31
+last_agent: codex-session-0314
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -99,14 +99,29 @@ will fail until the dev DB is brought current.
 
 ```bash
 cd apps/web
-npx next dev --turbo
+bun run dev
 ```
 
 **Port:** `3000` (default)
 
-**Why `npx`?** `pnpm` is not reliably on PATH inside VS Code integrated terminal on macOS. `npx` resolves from `node_modules/.bin` without PATH issues. `bun dev` and `bun run dev` also fail in this context.
+**What this runs:** `apps/web/package.json` defines `"dev": "next dev --turbo"`.
+SESSION_0314 verified `PORT=3001 bun run dev` reaches Next dev; the only failure in that
+probe was the expected `.next/dev/lock` because another Next dev server was already running.
 
-**Do not try:** `bun dev`, `bun run dev`, `bunx next dev`, `pnpm dev`. These have all failed in VS Code terminal.
+**Fallback:** if the Bun script is unavailable in a specific shell, use the direct equivalent:
+
+```bash
+npx next dev --turbo
+```
+
+**Do not run two dev servers from the same `apps/web/.next/dev` directory.** If you see:
+
+```text
+Unable to acquire lock at apps/web/.next/dev/lock
+```
+
+terminate the existing `next dev` process first. Use a different worktree for parallel dev
+servers.
 
 ## Database
 
@@ -183,7 +198,7 @@ All commands run from `apps/web/` unless noted otherwise.
 | **DB studio** | `bun run db:studio` | Open Prisma Studio GUI. |
 | **Wiki lint** | `bun run wiki:lint` | From **repo root**. Checks docs links, frontmatter, structure. |
 | **Docs navigator** | `bun run docs:nav` | From **repo root**. Regenerates `docs/index.html`. |
-| **Dev server** | `npx next dev --turbo` | Port 3000. Use `npx`, not `bun dev`. |
+| **Dev server** | `bun run dev` | Port 3000 from `apps/web`; script runs `next dev --turbo`. |
 
 ### Verification sequence for code changes
 
@@ -221,4 +236,4 @@ If the dev server won't start:
 
 ## Last verified
 
-SESSION_0014 — 2026-04-27
+SESSION_0314 — 2026-05-31
