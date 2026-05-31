@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
     },
   },
 
+  turbopack: {
+    root: "../../",
+  },
+
   experimental: {
     useCache: true,
     turbopackFileSystemCacheForDev: true,
