@@ -27,7 +27,10 @@ Multi-session epic to transform the lineage tree from a functional org chart int
 animated, mobile-first family-tree experience with gamification. Builds on the motion-system
 foundation from SESSION_0304 and the drawer UX fixes from SESSION_0305.
 
+
+
 **Design inspiration sources:**
+
 - [bklit.com Studio](https://ui.bklit.com/studio) — motion easing curves, snappy cubic-bezier presets, chart animations
 - [bklit.com Charts](https://ui.bklit.com/charts) — animated data visualization patterns (spring physics, crosshair, slot-machine tickers)
 - [Balkan OrgChart JS](https://balkan.app/OrgChartJS) — org chart tree layout, pinch-zoom canvas, family tree modes, grouping
@@ -143,6 +146,7 @@ micro-interactions formalized).
 
 - When a node is tapped, animate the path highlight connector-by-connector from the tapped node
   up to the root (not all-at-once)
+
 - Each connector segment: color transition `bg-border → bg-primary/60` over `base` 200ms
 - Node rings appear sequentially as the trace reaches each ancestor
 - Total trace time capped at ~1.2s regardless of depth (scale per-step delay)
@@ -169,25 +173,37 @@ layout templates for different martial arts family trees.
 
 #### Black-belt-rail integration (3 modes with toggles)
 
+
+
 **Mode A — Tree header strip:**
+
 - Horizontal honor strip above the tree showing top-ranked members from the tree data
 - Clicking a member scrolls/zooms to their node and selects it
 - Reuses `BlackBeltRailList` component adapted for horizontal layout
+
 - Toggle: tree-level setting (on/off)
 
+
 **Mode B — Drawer belt-color bar:**
+
 - In the profile drawer header, add a prominent belt-color accent bar behind the avatar
 - Use `Rank.colorHex` data (already available in the drawer via `selectedRankAward`)
+
 - Bar width proportional to rank level within the discipline's rank system
 - Toggle: drawer-level setting (on/off)
 
+
 **Mode C — Node card belt accent:**
+
 - Each node card gets a subtle left-border or top-border in the member's belt color
+
 - Uses `selectedRank.colorHex` from the normalized member data
 - Fade intensity based on rank seniority (higher rank = more prominent accent)
 - Toggle: tree-level setting (on/off)
 
+
 **Toggle implementation:**
+
 - Tree-level preferences stored in `LineageTree` model or user preferences (localStorage for MVP)
 - UI: settings dropdown in the tree toolbar (next to zoom controls)
 
@@ -207,15 +223,19 @@ layout templates for different martial arts family trees.
 
 | Template | Discipline | Structure | Seed data |
 | --- | --- | --- | --- |
+
 | **BJJ Coral Belt Lineage** | Brazilian Jiu-Jitsu | Helio/Carlos → Red belt holders → Coral → Black | Rigan Machado, Jean Jacques, Carlos Gracie Jr lineages |
 | **Muay Thai Kru Lineage** | Muay Thai | Ajarn → Kru → Nak Muay | Traditional Thai camp lineages |
 | **Karate Soke Lineage** | Karate | Soke/Hanshi → Shihan → Sensei | Okinawan/Japanese system lineages |
 | **WEKAF Arnis Lineage** | Eskrima/Arnis | Grandmaster → Master → Instructor | Filipino martial arts teaching lineage |
 
+
 **Implementation approach:**
+
 - Template selection at tree creation (admin)
 - Templates define: default visual layout, default rank system, suggested visual groups,
   placeholder node labels
+
 - A template is a JSON seed file in `apps/web/lib/lineage/templates/`
 - Admin can customize after seeding (templates are starting points, not constraints)
 
@@ -259,6 +279,7 @@ reality (Blue ← Prof A, Purple/Brown ← Prof B @ a different school, Black �
   `toNode`=promoted) — a true multi-parent graph.
 - **Display (projection):** `LineageTreeMember.primaryVisualParentMemberId` = the single org-chart parent;
   `selectedRankAward` = which belt the card shows; `isCollapsedDefault` already exists for collapse.
+
 - **Affiliation** is a separate axis: `Membership → Organization` (where they train now), distinct from
   who promoted them.
 
@@ -364,11 +385,13 @@ Depends on: trophy.so components installed (`npx shadcn@latest add @trophyso/...
 
 - [Motion System Epic Spec](runbooks/design/motion-system.md) — motion tokens, easing curves,
   reduced-motion discipline, per-surface animation catalog
+
 - [Baseline Design System Hub](runbooks/design/baseline-design-system.md) — token architecture
 - [UI Library Candidates](runbooks/design/ui-library-candidates.md) — trophy.so flagged here
 - [Custom Component Inventory](knowledge/wiki/custom-component-inventory.md) — lineage components
 - [ADR 0022 — Brand Chrome Resolution](architecture/decisions/0022-brand-chrome-resolution.md) —
   motion stays brand-neutral
+
 - [SESSION_0305](sprints/SESSION_0305.md) — session executing the drawer fixes + this plan
 
 ## Session estimates
@@ -385,9 +408,11 @@ Depends on: trophy.so components installed (`npx shadcn@latest add @trophyso/...
 
 - Should family tree templates be selectable per-tree (admin setting) or per-viewer (user pref)?
   Lean: per-tree (admin sets canonical layout), with a viewer override for personal preference.
+
 - Trophy.so assumes Radix UI — do we need a compatibility shim for Base UI, or do the trophy.so
   components work standalone? Needs a POC install to verify.
+
 - Stagger cap for large trees (50+ nodes): progressive disclosure (show 2 generations, expand on
   demand) vs. render all with capped stagger? Lean: progressive disclosure for performance.
+
 - Should the animated path trace use SVG lines (for curved connectors) or keep the current
-  `div`-based connectors? SVG would enable Bezier curves but adds complexity.
