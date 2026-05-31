@@ -77,7 +77,11 @@ test.describe("Lineage public rank-redaction E2E", () => {
         })
         .click()
 
-      await expect(page.getByRole("heading", { name: fixture.memberB.displayName })).toBeVisible()
+      // Drawer opens ~1.6s after the tap (400ms open delay + path-trace) — give firefox
+      // headroom on the dev-server cold-compile path, matching the 30s page-load wait above.
+      await expect(page.getByRole("heading", { name: fixture.memberB.displayName })).toBeVisible({
+        timeout: 15_000,
+      })
 
       const drawerDialog = page.getByRole("dialog")
       await expect(drawerDialog).toBeVisible()
@@ -127,7 +131,9 @@ test.describe("Lineage public rank-redaction E2E", () => {
         })
         .click()
 
-      await expect(page.getByRole("heading", { name: fixture.memberA.displayName })).toBeVisible()
+      await expect(page.getByRole("heading", { name: fixture.memberA.displayName })).toBeVisible({
+        timeout: 15_000,
+      })
       const drawerDialog = page.getByRole("dialog")
       await expect(drawerDialog).toBeVisible()
 

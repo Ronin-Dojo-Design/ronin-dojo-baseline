@@ -2,6 +2,7 @@ import { getInitials } from "@dirstack/utils"
 import { LogOutIcon, ShieldHalfIcon, UserIcon } from "lucide-react"
 import { motion } from "motion/react"
 import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { boxVariants } from "~/components/common/box"
 import { Button } from "~/components/common/button"
@@ -23,8 +24,17 @@ import { cx } from "~/lib/utils"
 export const UserMenu = () => {
   const { data: session, isPending } = useSession()
   const t = useTranslations()
+  const [mounted, setMounted] = useState(false)
 
-  if (isPending) {
+  // The auth UI below diverges *structurally* on session state (plain Button vs a
+  // motion.div-wrapped Button/DropdownMenu). `useSession()` resolves client-side, so
+  // SSR and the client's first paint would otherwise render different trees → a
+  // hydration mismatch that makes React regenerate the whole page (it intermittently
+  // broke firefox e2e via slow client recovery). Gate on `mounted` so SSR + first
+  // client paint render the identical stable button; the animated auth UI mounts after.
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted || isPending) {
     return (
       <Button size="sm" variant="secondary" disabled>
         {t("navigation.sign_in")}
