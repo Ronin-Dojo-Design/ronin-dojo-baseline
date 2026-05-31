@@ -34,8 +34,15 @@ import type { LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 // is a defensive floor so malformed/very deep data can never blow the stack.
 const MAX_DEPTH = 24
 
+// Progressive disclosure (Phase 3b): rows at or below this list depth start
+// collapsed by default, so a large lineage opens to ~2 generations and the rest
+// expands on demand. depth 0 = the root's direct children (auto-expanded);
+// depth ≥ 1 = deeper tiers (collapsed unless on the selected path or opened).
+const AUTO_COLLAPSE_DEPTH = 1
+
 type CompactSharedProps = {
   childrenByParentId: Map<string | null, CanvasMember[]>
+  descendantCountById: Map<string, number>
   visualGroupById: Map<string, LineageVisualGroupRow>
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
@@ -100,14 +107,19 @@ function LineageCompactChildRow({
 }) {
   const childCount = (shared.childrenByParentId.get(member.id) ?? []).length
   const hasChildren = childCount > 0 && !visited.has(member.id)
+  const descendantCount = shared.descendantCountById.get(member.id) ?? 0
 
   const onPath = shared.selectedPathMemberIds.has(member.id)
   const isSelected = member.id === shared.selectedMemberId
 
-  // Auto-expand ancestors of the selected node (rows on the highlighted path)
-  // until the viewer manually toggles a row, then honor their choice.
+  // Default expansion (Phase 3b): open shallow tiers, collapse deep ones and any
+  // member flagged `isCollapsedDefault` — but always open rows on the selected
+  // path so deep selections reveal their ancestors. Once the viewer toggles a
+  // row, honor their choice (`manualExpanded`) over the default.
+  const deepTier = depth >= AUTO_COLLAPSE_DEPTH
+  const autoExpanded = onPath || (!member.isCollapsedDefault && !deepTier)
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null)
-  const expanded = hasChildren && (manualExpanded ?? onPath)
+  const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
   const displayName = nodeDisplayName(member.node)
   const rankLabel = member.selectedRank?.shortName ?? member.selectedRank?.name ?? null
@@ -125,7 +137,7 @@ function LineageCompactChildRow({
         {hasChildren ? (
           <button
             type="button"
-            onClick={() => setManualExpanded(prev => !(prev ?? onPath))}
+            onClick={() => setManualExpanded(prev => !(prev ?? autoExpanded))}
             aria-expanded={expanded}
             aria-label={
               expanded ? `Collapse ${displayName}'s lineage` : `Expand ${displayName}'s lineage`
@@ -172,9 +184,14 @@ function LineageCompactChildRow({
           </Stack>
         </button>
 
-        {childCount > 0 && (
-          <Badge variant="soft" size="sm" className="shrink-0">
-            {childCount}
+        {!expanded && descendantCount > 0 && (
+          <Badge
+            variant="soft"
+            size="sm"
+            className="shrink-0"
+            aria-label={`${descendantCount} ${descendantCount === 1 ? "person" : "people"} hidden under ${displayName}`}
+          >
+            {descendantCount}
           </Badge>
         )}
       </div>

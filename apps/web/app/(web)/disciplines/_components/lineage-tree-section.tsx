@@ -84,6 +84,7 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
         members={result.members}
         visualGroups={result.visualGroups}
         defaultRootMemberId={result.defaultRootMemberId}
+        defaultLayout="board"
         profilesById={profilesById}
         treeSlug={treeSlug}
         isTreeClaimable={result.tree.isClaimable}

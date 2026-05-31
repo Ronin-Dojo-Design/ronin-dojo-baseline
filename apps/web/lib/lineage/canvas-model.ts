@@ -27,6 +27,7 @@ export type CanvasMember = {
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
   isClaimable?: boolean
+  isCollapsedDefault: boolean
   selectedRank?: SelectedRank | null
 }
 
@@ -90,6 +91,39 @@ export function buildChildGroups({
   })
 
   return groups
+}
+
+/**
+ * Total descendant count per member (whole subtree below them, excluding self),
+ * computed once from the children map. Powers the board's count badges so a
+ * collapsed node shows how many people are hidden under it. Cycle-safe (a
+ * `seen` set on each path) so malformed/cyclic display data can't infinite-loop;
+ * results are memoized for an O(n) forest.
+ */
+export function buildDescendantCounts(
+  childrenByParentId: Map<string | null, CanvasMember[]>,
+): Map<string, number> {
+  const counts = new Map<string, number>()
+
+  function count(memberId: string, seen: Set<string>): number {
+    if (seen.has(memberId)) return 0
+    const cached = counts.get(memberId)
+    if (cached !== undefined) return cached
+
+    const nextSeen = new Set(seen).add(memberId)
+    const children = childrenByParentId.get(memberId) ?? []
+    let total = children.length
+    for (const child of children) total += count(child.id, nextSeen)
+
+    counts.set(memberId, total)
+    return total
+  }
+
+  for (const children of childrenByParentId.values()) {
+    for (const child of children) count(child.id, new Set())
+  }
+
+  return counts
 }
 
 /**

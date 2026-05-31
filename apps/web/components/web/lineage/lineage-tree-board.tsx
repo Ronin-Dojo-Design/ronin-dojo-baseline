@@ -11,7 +11,7 @@ import type {
 } from "~/server/web/lineage/payloads"
 import { LineageEditorToolbar } from "./lineage-editor-toolbar"
 import { LineageProfileDrawer } from "./lineage-profile-drawer"
-import { LineageTreeCanvas } from "./lineage-tree-canvas"
+import { type LineageLayout, LineageTreeCanvas } from "./lineage-tree-canvas"
 
 /**
  * Client island that owns drawer state + selected node id.
@@ -37,6 +37,13 @@ type LineageTreeBoardProps = {
   members?: LineageTreeMemberRow[]
   visualGroups?: LineageVisualGroupRow[]
   defaultRootMemberId?: string | null
+
+  /**
+   * Initial canvas layout (tree | board). The discipline page passes "board"
+   * because the vertical board layout has no horizontal overflow (the tree
+   * layout's transform-scale fit never produced a usable horizontal scrollbar).
+   */
+  defaultLayout?: LineageLayout
 
   /**
    * Legacy fallback source for discipline detail page.
@@ -78,6 +85,7 @@ export function LineageTreeBoard({
   members,
   visualGroups,
   defaultRootMemberId,
+  defaultLayout,
   treeId,
   treeSlug,
   isTreeClaimable,
@@ -161,6 +169,7 @@ export function LineageTreeBoard({
         members={members}
         visualGroups={visualGroups}
         defaultRootMemberId={defaultRootMemberId}
+        defaultLayout={defaultLayout}
         selectedNodeId={selectedNodeId}
         onSelect={handleNodeSelect}
         treeId={treeId}

@@ -36,6 +36,7 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import {
   buildChildGroups,
+  buildDescendantCounts,
   type CanvasMember,
   type ChildGroup,
   nodeDisplayName,
@@ -209,6 +210,7 @@ function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMe
     primaryVisualParentMemberId: member.primaryVisualParentMemberId,
     visualGroupId: member.visualGroupId,
     isClaimable: member.isClaimable,
+    isCollapsedDefault: member.isCollapsedDefault,
     selectedRank: member.selectedRankAward?.rank
       ? {
           id: member.selectedRankAward.rank.id,
@@ -269,6 +271,7 @@ function normalizeLegacyRows({
     primaryVisualParentMemberId: node.id === rootId ? null : (parentByNodeId.get(node.id) ?? null),
     visualGroupId: null,
     isClaimable: undefined,
+    isCollapsedDefault: false,
   }))
 }
 
@@ -813,6 +816,7 @@ function LineageChildGroupColumn({
 function LineageBoardCard({
   member,
   childrenByParentId,
+  descendantCountById,
   visualGroupById,
   defaultRootMemberId,
   rootId,
@@ -822,6 +826,7 @@ function LineageBoardCard({
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
+  descendantCountById: Map<string, number>
   visualGroupById: Map<string, LineageVisualGroupRow>
   defaultRootMemberId: string | null | undefined
   rootId: string | undefined
@@ -852,6 +857,7 @@ function LineageBoardCard({
             depth={0}
             visited={new Set([member.id])}
             childrenByParentId={childrenByParentId}
+            descendantCountById={descendantCountById}
             visualGroupById={visualGroupById}
             selectedMemberId={selectedMemberId}
             selectedPathMemberIds={selectedPathMemberIds}
@@ -1012,6 +1018,10 @@ export function LineageTreeCanvas({
   const childrenByParentId = useMemo(() => {
     return buildChildrenByParentId(normalizedMembers)
   }, [normalizedMembers])
+
+  const descendantCountById = useMemo(() => {
+    return buildDescendantCounts(childrenByParentId)
+  }, [childrenByParentId])
 
   const rootMembers = useMemo(() => {
     return buildRootMembers({
@@ -1230,6 +1240,7 @@ export function LineageTreeCanvas({
                     key={rootMember.id}
                     member={rootMember}
                     childrenByParentId={childrenByParentId}
+                    descendantCountById={descendantCountById}
                     visualGroupById={visualGroupById}
                     defaultRootMemberId={defaultRootMemberId}
                     rootId={rootId}

@@ -4,8 +4,8 @@ slug: petey-plan-0305
 type: plan
 status: active
 created: 2026-05-29
-updated: 2026-05-30
-last_agent: claude-session-0310
+updated: 2026-05-31
+last_agent: claude-session-0314
 pairs_with:
   - docs/runbooks/design/motion-system.md
   - docs/sprints/SESSION_0305.md
@@ -275,17 +275,27 @@ Grill outcomes (SESSION_0306), reconciled with ADR 0016:
    require the editor to *warn* when the primary visual parent differs from the linked rank-award promoter —
    the affiliation toggle is exactly that explicit, warned override. Promoter change stays a dedicated modal, never drag/drop.
 
-**Phase 3 session breakdown (autonomous-loop ready):**
+**Phase 3 session breakdown (re-sequenced SESSION_0314 — belt-rail + design promoted to first-class):**
+
+> **Replan note (SESSION_0314):** the original 3-0→3f breakdown silently dropped the **black-belt-rail
+> integration** (the 3 modes specced above) and treated card/design quality as incidental. Operator
+> call: belt-rail and design are **first-class**, not polish. The belt-rail's 3 modes are now mapped
+> onto concrete slices (Mode C + Mode A in the UX pass; Mode B with the 3d panel), and a dedicated
+> **3-UX** slice fixes the real usability debt (unusable discipline page, count-badge noise, card
+> inconsistency) before the remaining feature slices.
 
 | Slice | Scope | Notes |
 | --- | --- | --- |
-| **3-0 (schema)** | Add `RankAward.organizationId` (nullable FK) via `prisma migrate dev`; backfill null; regen client | Own session — DB-bound, follows `schema-migration.md`; routes through Petey/ADR per FS-0006 |
-| **3a** | `layout="board"` mode + `LineageCompactChildList` (inline expandable rows + counts) | Rendering-only on existing tree data |
-| **3b** | Collapse/expand subtrees + count badges (`isCollapsedDefault`), auto-collapse deep tiers | Solves large-tree perf open-question |
-| **3c** | Per-card/row `DropdownMenu` (View Profile / Edit / Change Promoter), capability-gated | Reuses L1 dropdown |
-| **3d** | Persistent panel: responsive `LineageProfileDrawer` (bottom-sheet mobile → fixed right panel `md+`) + **promotion-history** section wired to the node-profile editor; real storage, no localStorage | Highest-value; admin/dashboard, public stays read-only |
+| **3-0 (schema)** ✅ | `RankAward.organizationId` nullable FK | Done SESSION_0311 |
+| **3a** ✅ | `layout="board"` mode + `LineageCompactChildList` | Done SESSION_0312 |
+| **3b** ✅ | Collapse/expand + descendant-count badges (`isCollapsedDefault`), auto-collapse deep tiers | Done SESSION_0314; count badge refined to **collapsed-only** in 3-UX |
+| **3-UX** *(NEW, first-class)* | Lineage UX/design pass: (1) **board default on the discipline page** — fixes "tree can't be seen, no horizontal scroll" (tree-mode `transform: scale()` never made a usable scroll area); (2) **count badge collapsed-only** (was noise on small trees); (3) **card consistency** (uniform heights, sane rank display); (4) **belt-rail Mode C** — persistent belt-color accent on node cards + board rows; (5) **belt-rail Mode A** — tree-header honor strip (`LineageHonorStrip`, top-ranked tree members, click-to-select), sharing the `BlackBeltRailList` belt-bar idiom | SESSION_0314 |
+| **3c** | Per-card/row `DropdownMenu` (View Profile / Change Promoter), capability-gated | Reuses L1 dropdown |
+| **3d** | Persistent panel: responsive `LineageProfileDrawer` (bottom-sheet mobile → fixed right panel `md+`) + **promotion-history** section wired to the node-profile editor + **belt-rail Mode B** (drawer belt-color bar); real storage, no localStorage | Highest-value; admin/dashboard, public stays read-only |
 | **3e** *(P2)* | SVG 90° connectors | Polish |
 | **3f** *(P2)* | Search-to-highlight + PDF export toolbar | Polish |
+
+**Belt-rail mode → slice map (so it never falls through again):** Mode A (tree-header honor strip) → 3-UX · Mode B (drawer belt-color bar) → 3d · Mode C (node-card/row belt accent) → 3-UX.
 
 #### Phase 4 install strategy — `components.json` + shadcn CLI
 
