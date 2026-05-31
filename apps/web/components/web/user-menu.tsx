@@ -2,6 +2,7 @@ import { getInitials } from "@dirstack/utils"
 import { LogOutIcon, ShieldHalfIcon, UserIcon } from "lucide-react"
 import { motion } from "motion/react"
 import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { boxVariants } from "~/components/common/box"
 import { Button } from "~/components/common/button"
@@ -19,7 +20,6 @@ import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
 import { useSession } from "~/lib/auth-client"
 import { cx } from "~/lib/utils"
-import { useEffect, useState } from "react"
 
 export const UserMenu = () => {
   const { data: session, isPending } = useSession()
