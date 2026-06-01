@@ -7,4 +7,5 @@ export const WEB_MEDIA_ERROR = {
   TARGET_NOT_FOUND: "The item to attach media to was not found.",
   ATTACHMENT_NOT_FOUND: "Media attachment not found for this item.",
   INVALID_FILE: "Only image and video files up to 25MB are allowed.",
+  AVATAR_IMAGE_REQUIRED: "Only image attachments can be used as a Passport avatar.",
 } as const

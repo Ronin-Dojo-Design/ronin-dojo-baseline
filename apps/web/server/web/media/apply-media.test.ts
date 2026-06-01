@@ -7,10 +7,18 @@ mock.module("~/lib/media", () => ({
   removeS3File: async () => ({}),
 }))
 
-import { applyWebMediaRemoval, applyWebMediaUpload } from "~/server/web/media/apply-media"
+import {
+  applyPassportAvatarPromotion,
+  applyWebMediaRemoval,
+  applyWebMediaUpload,
+} from "~/server/web/media/apply-media"
 import { authorizeMediaTarget } from "~/server/web/media/media-authorization"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
-import { uploadWebMediaSchema, webMediaFileSchema } from "~/server/web/media/media-schemas"
+import {
+  promotePassportAvatarMediaSchema,
+  uploadWebMediaSchema,
+  webMediaFileSchema,
+} from "~/server/web/media/media-schemas"
 
 const brand = "BASELINE_MARTIAL_ARTS" as const
 const editorUser = { id: "user-editor", role: "user" }
@@ -18,6 +26,7 @@ const editorUser = { id: "user-editor", role: "user" }
 type FakeState = {
   authorizedOrgIds?: string[]
   techniques?: Record<string, string>
+  courses?: Record<string, string>
   passports?: Record<string, string>
   attachments?: Array<Record<string, unknown>>
 }
@@ -32,7 +41,14 @@ const FK_KEYS = [
 
 function makeDb(state: FakeState = {}) {
   const attachments = state.attachments ?? []
-  const created = { media: [] as any[], attachments: [] as any[], audits: [] as any[] }
+  const created = {
+    media: [] as any[],
+    attachments: [] as any[],
+    audits: [] as any[],
+    mediaUpdates: [] as any[],
+    passportUpdates: [] as any[],
+    passportUpdateMany: [] as any[],
+  }
 
   const db: any = {
     $transaction: async (callback: (tx: any) => Promise<unknown>) => callback(db),
@@ -53,12 +69,23 @@ function makeDb(state: FakeState = {}) {
       },
     },
     course: {
-      findFirst: async () => null,
+      findFirst: async ({ where }: any) => {
+        const organizationId = state.courses?.[where.id]
+        return organizationId ? { organizationId } : null
+      },
     },
     passport: {
       findFirst: async ({ where }: any) => {
         const userId = state.passports?.[where.id]
         return userId ? { userId } : null
+      },
+      update: async ({ where, data }: any) => {
+        created.passportUpdates.push({ where, data })
+        return { id: where.id, ...data }
+      },
+      updateMany: async ({ where, data }: any) => {
+        created.passportUpdateMany.push({ where, data })
+        return { count: 1 }
       },
     },
     media: {
@@ -66,6 +93,10 @@ function makeDb(state: FakeState = {}) {
         const row = { id: "media-created", ...data }
         created.media.push(row)
         return { id: row.id }
+      },
+      update: async ({ where, data }: any) => {
+        created.mediaUpdates.push({ where, data })
+        return { id: where.id, ...data }
       },
       delete: async ({ where }: any) => ({ id: where.id }),
     },
@@ -148,6 +179,17 @@ describe("web media authorization", () => {
     expect(ok).toBe(true)
   })
 
+  it("authorizes a course via its owning organization", async () => {
+    const { db } = makeDb({ authorizedOrgIds: ["org-1"], courses: { "course-1": "org-1" } })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: editorUser,
+      target: { kind: "course", id: "course-1" },
+    })
+    expect(ok).toBe(true)
+  })
+
   it("authorizes a passport for its own owner but not another user", async () => {
     const { db } = makeDb({
       passports: { "pass-self": editorUser.id, "pass-other": "someone-else" },
@@ -166,6 +208,92 @@ describe("web media authorization", () => {
     })
     expect(self).toBe(true)
     expect(other).toBe(false)
+  })
+})
+
+describe("passport avatar promotion", () => {
+  it("promotes a passport image attachment to avatarUrl and makes the media public", async () => {
+    const { db, created } = makeDb({
+      passports: { "pass-self": editorUser.id },
+      attachments: [
+        {
+          id: "attach-1",
+          mediaId: "media-1",
+          passportId: "pass-self",
+          media: {
+            id: "media-1",
+            url: "https://s3.example.com/media/avatar.png",
+            type: "IMAGE",
+          },
+        },
+      ],
+    })
+
+    const result = await applyPassportAvatarPromotion({
+      db,
+      brand,
+      user: editorUser,
+      input: {
+        target: { kind: "passport", id: "pass-self" },
+        attachmentId: "attach-1",
+      },
+    })
+
+    expect(result.avatarUrl).toBe("https://s3.example.com/media/avatar.png")
+    expect(created.mediaUpdates[0]).toMatchObject({
+      where: { id: "media-1" },
+      data: { isPublic: true },
+    })
+    expect(created.passportUpdates[0]).toMatchObject({
+      where: { id: "pass-self" },
+      data: { avatarUrl: "https://s3.example.com/media/avatar.png" },
+    })
+    expect(created.audits[0]).toMatchObject({
+      action: "passport.avatar.promoted",
+      entityType: "Passport",
+      entityId: "pass-self",
+      userId: "user-editor",
+    })
+  })
+
+  it("rejects non-image passport attachments", async () => {
+    const { db } = makeDb({
+      passports: { "pass-self": editorUser.id },
+      attachments: [
+        {
+          id: "attach-video",
+          mediaId: "media-video",
+          passportId: "pass-self",
+          media: {
+            id: "media-video",
+            url: "https://s3.example.com/media/video.mp4",
+            type: "VIDEO",
+          },
+        },
+      ],
+    })
+
+    await expectRejectsWithMessage(
+      applyPassportAvatarPromotion({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "passport", id: "pass-self" },
+          attachmentId: "attach-video",
+        },
+      }),
+      WEB_MEDIA_ERROR.AVATAR_IMAGE_REQUIRED,
+    )
+  })
+
+  it("rejects non-passport targets at the schema boundary", async () => {
+    const parsed = promotePassportAvatarMediaSchema.safeParse({
+      target: { kind: "organization", id: "org-1" },
+      attachmentId: "attach-1",
+    })
+
+    expect(parsed.success).toBe(false)
   })
 })
 
@@ -276,6 +404,32 @@ describe("web media removal", () => {
     expect(created.audits[0]).toMatchObject({
       action: "media.detached",
       entityType: "Organization",
+    })
+  })
+
+  it("clears passport avatarUrl when removing the current avatar attachment", async () => {
+    const { db, created } = makeDb({
+      passports: { "pass-self": editorUser.id },
+      attachments: [
+        {
+          id: "attach-avatar",
+          mediaId: "media-avatar",
+          passportId: "pass-self",
+          media: { url: "https://s3.example.com/media/avatar.png" },
+        },
+      ],
+    })
+
+    await applyWebMediaRemoval({
+      db,
+      brand,
+      user: editorUser,
+      input: { target: { kind: "passport", id: "pass-self" }, attachmentId: "attach-avatar" },
+    })
+
+    expect(created.passportUpdateMany[0]).toMatchObject({
+      where: { id: "pass-self", avatarUrl: "https://s3.example.com/media/avatar.png" },
+      data: { avatarUrl: null },
     })
   })
 })

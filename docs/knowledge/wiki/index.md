@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-01
 author: Brian + Copilot
-last_agent: codex-session-0323
+last_agent: codex-session-0324
 ---
 
 # LLM Wiki Index
@@ -416,6 +416,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0321](../../sprints/SESSION_0321.md) | session--implement | closed — capability-gated PromotionEvent editor action and minimal dashboard create/edit surface |
 | [SESSION_0322](../../sprints/SESSION_0322.md) | session--implement | closed — reusable capability-gated web media pipeline (`server/web/media/`) + shared `MediaAttachmentManager` mounted on the PromotionEvent gallery, Technique, and Organization surfaces |
 | [SESSION_0323](../../sprints/SESSION_0323.md) | session--implement | closed — Passport media manager mounted on the dashboard Profile tab with server-loaded `MediaAttachment` list |
+| [SESSION_0324](../../sprints/SESSION_0324.md) | session--implement | closed — Course media manager mounted on the admin Course editor and Passport image attachments can promote into `Passport.avatarUrl` |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

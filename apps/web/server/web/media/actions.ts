@@ -2,8 +2,16 @@
 
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
-import { applyWebMediaRemoval, applyWebMediaUpload } from "~/server/web/media/apply-media"
-import { removeWebMediaSchema, uploadWebMediaSchema } from "~/server/web/media/media-schemas"
+import {
+  applyPassportAvatarPromotion,
+  applyWebMediaRemoval,
+  applyWebMediaUpload,
+} from "~/server/web/media/apply-media"
+import {
+  promotePassportAvatarMediaSchema,
+  removeWebMediaSchema,
+  uploadWebMediaSchema,
+} from "~/server/web/media/media-schemas"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
 
 function revalidateForTarget(target: MediaAttachTarget) {
@@ -21,6 +29,14 @@ function revalidateForTarget(target: MediaAttachTarget) {
     case "organization":
       tags.push("organization")
       break
+    case "course":
+      paths.push("/courses", `/admin/courses/${target.id}`)
+      tags.push("courses")
+      break
+    case "passport":
+      paths.push("/me")
+      tags.push("passport")
+      break
     default:
       break
   }
@@ -33,6 +49,17 @@ export const uploadWebMedia = userActionClient
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const brand = await getRequestBrand()
     const result = await applyWebMediaUpload({ db, brand, user, input: parsedInput })
+
+    revalidate(revalidateForTarget(parsedInput.target))
+
+    return result
+  })
+
+export const promotePassportAvatarMedia = userActionClient
+  .inputSchema(promotePassportAvatarMediaSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const brand = await getRequestBrand()
+    const result = await applyPassportAvatarPromotion({ db, brand, user, input: parsedInput })
 
     revalidate(revalidateForTarget(parsedInput.target))
 

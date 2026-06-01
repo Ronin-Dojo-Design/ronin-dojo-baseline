@@ -38,5 +38,14 @@ export const removeWebMediaSchema = z.object({
   attachmentId: z.string().min(1),
 })
 
+export const promotePassportAvatarMediaSchema = z.object({
+  target: z.object({
+    kind: z.literal("passport"),
+    id: z.string().min(1),
+  }),
+  attachmentId: z.string().min(1),
+})
+
 export type UploadWebMediaInput = z.infer<typeof uploadWebMediaSchema>
 export type RemoveWebMediaInput = z.infer<typeof removeWebMediaSchema>
+export type PromotePassportAvatarMediaInput = z.infer<typeof promotePassportAvatarMediaSchema>

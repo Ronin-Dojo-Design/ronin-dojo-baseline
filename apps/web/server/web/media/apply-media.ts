@@ -5,7 +5,11 @@ import type { AuthzUser } from "~/lib/authz"
 import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
 import { authorizeMediaTarget } from "~/server/web/media/media-authorization"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
-import type { RemoveWebMediaInput, UploadWebMediaInput } from "~/server/web/media/media-schemas"
+import type {
+  PromotePassportAvatarMediaInput,
+  RemoveWebMediaInput,
+  UploadWebMediaInput,
+} from "~/server/web/media/media-schemas"
 import {
   MEDIA_TARGET_ENTITY_TYPE,
   type MediaAttachTarget,
@@ -21,6 +25,12 @@ export type WebMediaUploadResult = {
   mediaId: string
   url: string
   isPublic: boolean
+}
+
+export type PassportAvatarPromotionResult = {
+  attachmentId: string
+  mediaId: string
+  avatarUrl: string
 }
 
 // Only organization targets carry a meaningful org id for the audit row; the
@@ -135,6 +145,13 @@ export async function applyWebMediaRemoval({
 
   await db.mediaAttachment.delete({ where: { id: attachment.id } })
 
+  if (input.target.kind === "passport") {
+    await db.passport.updateMany({
+      where: { id: input.target.id, avatarUrl: attachment.media.url },
+      data: { avatarUrl: null },
+    })
+  }
+
   const remaining = await db.mediaAttachment.count({ where: { mediaId: attachment.mediaId } })
   if (remaining === 0) {
     const { error } = await tryCatch(db.media.delete({ where: { id: attachment.mediaId } }))
@@ -157,4 +174,78 @@ export async function applyWebMediaRemoval({
   })
 
   return { removed: true }
+}
+
+/**
+ * Explicitly promotes one Passport image attachment to the canonical avatar URL.
+ * The selected media is marked public because `Passport.avatarUrl` can be
+ * rendered outside private dashboard media management.
+ */
+export async function applyPassportAvatarPromotion({
+  db,
+  brand,
+  user,
+  input,
+}: {
+  db: AppDb
+  brand: Brand
+  user: AuthzUser
+  input: PromotePassportAvatarMediaInput
+}): Promise<PassportAvatarPromotionResult> {
+  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  if (!authorized) {
+    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+
+  const attachment = await db.mediaAttachment.findFirst({
+    where: { id: input.attachmentId, ...mediaTargetWhere(input.target) },
+    select: {
+      id: true,
+      mediaId: true,
+      media: { select: { id: true, url: true, type: true } },
+    },
+  })
+  if (!attachment) {
+    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
+  }
+  if (attachment.media.type !== "IMAGE") {
+    throw new Error(WEB_MEDIA_ERROR.AVATAR_IMAGE_REQUIRED)
+  }
+
+  return db.$transaction(async tx => {
+    const txDb = tx as AppDb
+
+    await txDb.media.update({
+      where: { id: attachment.mediaId },
+      data: { isPublic: true },
+    })
+
+    await txDb.passport.update({
+      where: { id: input.target.id },
+      data: { avatarUrl: attachment.media.url },
+      select: { id: true },
+    })
+
+    await txDb.auditLog.create({
+      data: {
+        brand,
+        action: "passport.avatar.promoted",
+        entityType: MEDIA_TARGET_ENTITY_TYPE.passport,
+        entityId: input.target.id,
+        organizationId: null,
+        userId: user.id,
+        after: {
+          mediaId: attachment.mediaId,
+          attachmentId: attachment.id,
+          avatarUrl: attachment.media.url,
+        },
+      },
+    })
+
+    return {
+      attachmentId: attachment.id,
+      mediaId: attachment.mediaId,
+      avatarUrl: attachment.media.url,
+    }
+  })
 }

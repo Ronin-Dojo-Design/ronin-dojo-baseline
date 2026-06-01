@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-01
-last_agent: codex-session-0323
+last_agent: codex-session-0324
 pairs_with:
+  - docs/sprints/SESSION_0324.md
   - docs/sprints/SESSION_0323.md
   - docs/sprints/SESSION_0322.md
   - docs/sprints/SESSION_0321.md
@@ -189,9 +190,9 @@ SESSION_0202 added the user-dashboard editor preview surface:
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
-| `MediaAttachmentManager` | `apps/web/components/web/media/media-attachment-manager.tsx` | `target: MediaAttachTarget`, `initialAttachments: DashboardMediaAttachment[]`, optional `title`, `description` | SESSION_0322: shared client manager — upload control (file input + per-upload public/private toggle + optional caption) and an attachment grid with per-item remove. Calls `uploadWebMedia`/`removeWebMedia`; every action is re-authorized server-side for `target`. Mounted on the PromotionEvent gallery (`/dashboard/events/[eventId]`), Technique (`/dashboard/techniques/[id]`), Organization settings (`/organizations/[slug]/settings/general`), and Passport media on the dashboard Profile tab (`/dashboard`). Mirrors results optimistically; composes L1 `Card`/`Button`/`Checkbox`/`Input`/`Stack`/`Badge`/`Hint`. |
-| `authorizeMediaTarget` (server) | `apps/web/server/web/media/media-authorization.ts` | — | SESSION_0322: per-target gate. organization → org author (OWNER/ORG_ADMIN/INSTRUCTOR/COACH); technique/course → org author of the owning org; passport → owner or OWNER/ORG_ADMIN of the owner's org; promotionEvent → existing `canAuthorPromotionEvent`. Global admin passes all. Course resolver exists but has no UI consumer yet. |
-| `uploadWebMedia` / `removeWebMedia` (server) | `apps/web/server/web/media/actions.ts` | — | SESSION_0322: `userActionClient` safe actions wrapping `applyWebMediaUpload`/`applyWebMediaRemoval` (S3 upload outside the tx; `Media` + `MediaAttachment` + `AuditLog`; orphan-`Media` + best-effort S3 cleanup on remove). |
+| `MediaAttachmentManager` | `apps/web/components/web/media/media-attachment-manager.tsx` | `target: MediaAttachTarget`, `initialAttachments: DashboardMediaAttachment[]`, optional `title`, `description`, `avatarUrl` | SESSION_0322: shared client manager — upload control (file input + per-upload public/private toggle + optional caption) and an attachment grid with per-item remove. Calls `uploadWebMedia`/`removeWebMedia`; every action is re-authorized server-side for `target`. Mounted on the PromotionEvent gallery (`/dashboard/events/[eventId]`), Technique (`/dashboard/techniques/[id]`), Organization settings (`/organizations/[slug]/settings/general`), Passport media on the dashboard Profile tab (`/dashboard`), and Course media on the admin Course editor (`/admin/courses/[id]`). SESSION_0324: Passport targets can explicitly promote an IMAGE attachment to `Passport.avatarUrl`; the server marks that media public and clears the avatar when the current avatar attachment is removed. Mirrors results optimistically; composes L1 `Card`/`Button`/`Checkbox`/`Input`/`Stack`/`Badge`/`Hint`. |
+| `authorizeMediaTarget` (server) | `apps/web/server/web/media/media-authorization.ts` | — | SESSION_0322: per-target gate. organization → org author (OWNER/ORG_ADMIN/INSTRUCTOR/COACH); technique/course → org author of the owning org; passport → owner or OWNER/ORG_ADMIN of the owner's org; promotionEvent → existing `canAuthorPromotionEvent`. Global admin passes all. SESSION_0324 mounted the Course resolver on the admin Course editor. |
+| `uploadWebMedia` / `removeWebMedia` / `promotePassportAvatarMedia` (server) | `apps/web/server/web/media/actions.ts` | — | SESSION_0322: `userActionClient` safe actions wrapping `applyWebMediaUpload`/`applyWebMediaRemoval` (S3 upload outside the tx; `Media` + `MediaAttachment` + `AuditLog`; orphan-`Media` + best-effort S3 cleanup on remove). SESSION_0324 adds `promotePassportAvatarMedia`, which verifies Passport target authorization, verifies the attachment belongs to the Passport and is IMAGE media, marks that media public, writes `Passport.avatarUrl`, and audits `passport.avatar.promoted`. |
 
 ---
 

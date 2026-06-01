@@ -36,6 +36,7 @@ export async function DashboardProfileTab() {
         <MediaAttachmentManager
           target={{ kind: "passport", id: passport.id }}
           initialAttachments={passportAttachments}
+          avatarUrl={passport.avatarUrl}
           title="Passport media"
           description="Upload profile images or clips tied to this Passport. Private items stay dashboard-only."
         />

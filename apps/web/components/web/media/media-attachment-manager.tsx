@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2Icon, UploadIcon } from "lucide-react"
+import { Trash2Icon, UploadIcon, UserRoundCheckIcon } from "lucide-react"
 import { useAction } from "next-safe-action/hooks"
 import { type ChangeEvent, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -12,7 +12,11 @@ import { H6 } from "~/components/common/heading"
 import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
-import { removeWebMedia, uploadWebMedia } from "~/server/web/media/actions"
+import {
+  promotePassportAvatarMedia,
+  removeWebMedia,
+  uploadWebMedia,
+} from "~/server/web/media/actions"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
 import type { DashboardMediaAttachment } from "~/server/web/media/queries"
 
@@ -21,6 +25,7 @@ type MediaAttachmentManagerProps = {
   initialAttachments: DashboardMediaAttachment[]
   title?: string
   description?: string
+  avatarUrl?: string | null
 }
 
 /**
@@ -36,10 +41,12 @@ export function MediaAttachmentManager({
   initialAttachments,
   title = "Media",
   description = "Upload images or video. Public items appear on the public page.",
+  avatarUrl = null,
 }: MediaAttachmentManagerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const publicToggleId = `media-public-${target.kind}-${target.id}`
   const [attachments, setAttachments] = useState<DashboardMediaAttachment[]>(initialAttachments)
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
   const [isPublic, setIsPublic] = useState(false)
   const [caption, setCaption] = useState("")
 
@@ -69,11 +76,33 @@ export function MediaAttachmentManager({
 
   const remove = useAction(removeWebMedia, {
     onSuccess: ({ input }) => {
+      const removedAttachment = attachments.find(item => item.attachmentId === input.attachmentId)
       setAttachments(current => current.filter(item => item.attachmentId !== input.attachmentId))
+      if (removedAttachment?.url === currentAvatarUrl) {
+        setCurrentAvatarUrl(null)
+      }
       toast.success("Media removed.")
     },
     onError: ({ error: { serverError } }) => {
       toast.error(serverError ?? "Failed to remove media.")
+    },
+  })
+
+  const promoteAvatar = useAction(promotePassportAvatarMedia, {
+    onSuccess: ({ data }) => {
+      if (!data) return
+      setCurrentAvatarUrl(data.avatarUrl)
+      setAttachments(current =>
+        current.map(item =>
+          item.attachmentId === data.attachmentId ? { ...item, isPublic: true } : item,
+        ),
+      )
+      toast.success("Avatar updated.")
+    },
+    onError: ({ error: { serverError, validationErrors } }) => {
+      toast.error(
+        validationErrors?.attachmentId?._errors?.[0] ?? serverError ?? "Failed to update avatar.",
+      )
     },
   })
 
@@ -149,17 +178,46 @@ export function MediaAttachmentManager({
                   {attachment.isPublic ? "Public" : "Private"}
                 </Badge>
 
-                <Button
-                  type="button"
-                  size="xs"
-                  variant="destructive"
-                  prefix={<Trash2Icon />}
-                  isPending={remove.isPending}
-                  onClick={() => remove.execute({ target, attachmentId: attachment.attachmentId })}
-                  className="absolute right-1 top-1"
-                >
-                  Remove
-                </Button>
+                {target.kind === "passport" && currentAvatarUrl === attachment.url && (
+                  <Badge size="sm" variant="info" className="absolute bottom-1 left-1">
+                    Avatar
+                  </Badge>
+                )}
+
+                <Stack size="xs" direction="column" className="absolute right-1 top-1">
+                  {target.kind === "passport" &&
+                    attachment.type === "IMAGE" &&
+                    currentAvatarUrl !== attachment.url && (
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="secondary"
+                        prefix={<UserRoundCheckIcon />}
+                        isPending={promoteAvatar.isPending}
+                        onClick={() =>
+                          promoteAvatar.execute({
+                            target: { kind: "passport", id: target.id },
+                            attachmentId: attachment.attachmentId,
+                          })
+                        }
+                      >
+                        Use as avatar
+                      </Button>
+                    )}
+
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="destructive"
+                    prefix={<Trash2Icon />}
+                    isPending={remove.isPending}
+                    onClick={() =>
+                      remove.execute({ target, attachmentId: attachment.attachmentId })
+                    }
+                  >
+                    Remove
+                  </Button>
+                </Stack>
               </div>
             ))}
           </div>
