@@ -45,6 +45,7 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 - [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — `RankAward` canonical; `PROMOTED_BY` mirror; tree never owns truth. **Authoritative.**
 - [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — create/update/delete promotion flows, conflict rules, verification, visual-group sync.
 - [Lineage Prisma Schema Patch Proposal](../../architecture/lineage/lineage-prisma-schema-patch-proposal.md) — the v1 schema patch shape.
+- [Promotion Event Model — design + plan](../../architecture/lineage/promotion-event-model.md) — **draft/staged (SESSION_0316).** First-class `PromotionEvent` (belt ceremony) grouping multiple `RankAward`s with a shared media gallery; discipline-agnostic; flagged the most important cross-brand domain logic. Build via dedicated ADR + epic.
 - Schema: `apps/web/prisma/schema.prisma` — `LineageNode`, `LineageRelationship`, `LineageTree`, `LineageTreeMember`, `LineageVisualGroup`, `LineageClaimRequest`, `LineageTreeAccess`, `RankAward`.
 
 ## Requirements & port specs

@@ -1252,12 +1252,14 @@ export function LineageTreeCanvas({
                 </Badge>
               )}
               <H6 className="text-muted-foreground">
-                Click a practitioner to trace their path to the root
+                {layout === "board"
+                  ? "Tap any practitioner to open their profile"
+                  : "Click a practitioner to trace their path to the root"}
               </H6>
             </Stack>
 
             {layout === "board" ? (
-              <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl">
+              <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl md:max-w-4xl">
                 {rootMembers.map(rootMember => (
                   <LineageBoardCard
                     key={rootMember.id}

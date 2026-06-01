@@ -309,6 +309,101 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// RankAwards (SESSION_0316)
+// ---------------------------------------------------------------------------
+// Every BJJ-lineage figure currently has NO rank, so lineage cards render
+// blank/yellow. Seed one RankAward per figure (global fact), linking the
+// awarding promoter, then point each rigan-tree LineageTreeMember at it.
+//
+// All dates are approximate era markers — flagged in `notes`.
+const RANK_AWARD_NOTE = "Approximate date — SESSION_0316 seed, refine later"
+
+type RankAwardSeed = {
+  /** Recipient user key (PLACEHOLDER_USERS key or "OWNER"). */
+  userKey: string
+  /** BJJ rank shortName (looked up in the BJJ rank system). */
+  rankShortName: string
+  /** Promoter user key, or null when unknown / root of the seeded tree. */
+  awardedByKey: string | null
+  /** Approximate award date (ISO). */
+  awardedAt: string
+}
+
+const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
+  {
+    userKey: "carlos-gracie-sr",
+    rankShortName: "R10",
+    awardedByKey: null,
+    awardedAt: "1955-01-01",
+  },
+  {
+    userKey: "carlos-gracie-jr",
+    rankShortName: "R9",
+    awardedByKey: "carlos-gracie-sr",
+    awardedAt: "2012-01-01",
+  },
+  {
+    userKey: "rigan-machado",
+    rankShortName: "CB8",
+    awardedByKey: "carlos-gracie-jr",
+    awardedAt: "2016-01-01",
+  },
+  {
+    userKey: "bob-bass",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2017-06-01",
+  },
+  {
+    userKey: "rick-williams",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2018-06-01",
+  },
+  {
+    userKey: "david-meyer",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2018-09-01",
+  },
+  {
+    userKey: "chris-haueter",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2019-03-01",
+  },
+  {
+    userKey: "john-will",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2019-09-01",
+  },
+  {
+    userKey: "bill-hosken",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2020-06-01",
+  },
+  {
+    userKey: "jerry-smith",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2021-06-01",
+  },
+  {
+    userKey: "brian-truelson",
+    rankShortName: "BK1",
+    awardedByKey: "bill-hosken",
+    awardedAt: "2008-01-01",
+  },
+  // OWNER (Brian Scott) → BK1. Spec assumed this was already seeded, but on
+  // local dev the owner had no BJJ RankAward, leaving his card blank. Seed it
+  // (awardedBy Bob Bass, matching the INSTRUCTOR_STUDENT edge) so the selected
+  // rank resolves. SESSION_0316 deviation, documented in the report.
+  { userKey: "OWNER", rankShortName: "BK1", awardedByKey: "bob-bass", awardedAt: "2005-01-01" },
+]
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -320,6 +415,8 @@ type Counts = {
   edgesCreated: number
   edgesFound: number
   treeMembersUpdated: number
+  rankAwardsCreated: number
+  rankAwardsFound: number
 }
 
 async function ensureUser(
@@ -364,9 +461,17 @@ async function ensureLineageNode(
 ): Promise<{ id: string; created: boolean }> {
   const existing = await db.lineageNode.findFirst({
     where: { userId },
-    select: { id: true },
+    select: { id: true, isVerified: true, verificationStatus: true },
   })
   if (existing) {
+    // SESSION_0316: flip existing nodes to verified on re-run.
+    if (!existing.isVerified || existing.verificationStatus !== "VERIFIED") {
+      await db.lineageNode.update({
+        where: { id: existing.id },
+        data: { isVerified: true, verificationStatus: "VERIFIED" },
+      })
+      console.log(`   LineageNode ${seed.userKey}: exists, flipped to VERIFIED`)
+    }
     counts.nodesFound++
     console.log(`   LineageNode ${seed.userKey}: already exists (id=${existing.id})`)
     return { id: existing.id, created: false }
@@ -377,7 +482,8 @@ async function ensureLineageNode(
       slug: seed.slug,
       bio: seed.bio,
       visibility: "PUBLIC",
-      isVerified: false,
+      isVerified: true,
+      verificationStatus: "VERIFIED",
     },
     select: { id: true },
   })
@@ -390,9 +496,11 @@ async function ensureLineageRelationship(
   fromNodeId: string,
   toNodeId: string,
   description: string,
-  isVerified: boolean,
+  _isVerified: boolean,
   counts: Counts,
 ): Promise<void> {
+  // SESSION_0316: all seeded relationships are verified facts. Override the
+  // per-edge isVerified flag and force VERIFIED status on create + update.
   const existing = await db.lineageRelationship.findFirst({
     where: {
       fromNodeId,
@@ -402,10 +510,9 @@ async function ensureLineageRelationship(
     select: { id: true },
   })
   if (existing) {
-    // Update isVerified if it changed since initial seed
     await db.lineageRelationship.update({
       where: { id: existing.id },
-      data: { isVerified, description },
+      data: { isVerified: true, verificationStatus: "VERIFIED", description },
     })
     counts.edgesFound++
     console.log(`   Edge ${fromNodeId.slice(0, 6)} → ${toNodeId.slice(0, 6)}: exists, updated`)
@@ -417,11 +524,153 @@ async function ensureLineageRelationship(
       toNodeId,
       type: "INSTRUCTOR_STUDENT",
       description,
-      isVerified,
+      isVerified: true,
+      verificationStatus: "VERIFIED",
     },
   })
   counts.edgesCreated++
   console.log(`   ✅ Created Edge ${fromNodeId.slice(0, 6)} → ${toNodeId.slice(0, 6)}`)
+}
+
+/**
+ * Upsert a BJJ RankAward (global promotion fact). Looks up the BJJ rank by
+ * shortName, then findFirst on (userId, rankId) — the @@unique key — and
+ * creates or refreshes. Returns the RankAward id so the tree member can point
+ * its selectedRankAward at it. FS-0006: never createMany on a nullable-unique.
+ */
+async function ensureRankAward(
+  userId: string,
+  rankShortName: string,
+  awardedById: string | null,
+  awardedAt: string,
+  counts: Counts,
+): Promise<string | null> {
+  const rank = await db.rank.findFirst({
+    where: {
+      shortName: rankShortName,
+      rankSystem: { discipline: { code: "bjj" } },
+    },
+    select: { id: true },
+  })
+  if (!rank) {
+    console.log(`   ⚠️  BJJ rank not found: shortName=${rankShortName} — skipping RankAward`)
+    return null
+  }
+
+  const existing = await db.rankAward.findFirst({
+    where: { userId, rankId: rank.id },
+    select: { id: true },
+  })
+  if (existing) {
+    await db.rankAward.update({
+      where: { id: existing.id },
+      data: {
+        awardedById: awardedById ?? undefined,
+        awardedAt: new Date(awardedAt),
+        notes: RANK_AWARD_NOTE,
+      },
+    })
+    counts.rankAwardsFound++
+    console.log(`   RankAward ${rankShortName} for ${userId.slice(0, 6)}: exists, refreshed`)
+    return existing.id
+  }
+  const created = await db.rankAward.create({
+    data: {
+      userId,
+      rankId: rank.id,
+      awardedById: awardedById ?? undefined,
+      awardedAt: new Date(awardedAt),
+      notes: RANK_AWARD_NOTE,
+    },
+    select: { id: true },
+  })
+  counts.rankAwardsCreated++
+  console.log(
+    `   ✅ Created RankAward ${rankShortName} for ${userId.slice(0, 6)} (id=${created.id})`,
+  )
+  return created.id
+}
+
+// The 7 "Dirty Dozen" cohort members assigned to the visual group.
+const DIRTY_DOZEN_KEYS = [
+  "bob-bass",
+  "rick-williams",
+  "david-meyer",
+  "chris-haueter",
+  "john-will",
+  "bill-hosken",
+  "jerry-smith",
+] as const
+
+const DIRTY_DOZEN_LABEL = "The Dirty Dozen — Rigan's First Black Belts (1992–96)"
+
+/**
+ * Ensure the Dirty Dozen cohort LineageVisualGroup on the rigan tree and
+ * assign the 7 cohort members to it. Idempotent: findFirst by the
+ * @@unique [treeId, parentMemberId, groupType, promotionDate].
+ */
+async function ensureDirtyDozenGroup(
+  treeId: string,
+  treeMemberIdByKey: Map<string, string>,
+): Promise<void> {
+  const riganMemberId = treeMemberIdByKey.get("rigan-machado")
+  if (!riganMemberId) {
+    console.log("   ⚠️  Rigan tree member not found — skipping Dirty Dozen visual group")
+    return
+  }
+
+  const promotionDate = new Date("1994-01-01")
+  const groupType = "PROMOTION_DATE" as const
+
+  let group = await db.lineageVisualGroup.findFirst({
+    where: {
+      treeId,
+      parentMemberId: riganMemberId,
+      groupType,
+      promotionDate,
+    },
+    select: { id: true },
+  })
+  if (group) {
+    await db.lineageVisualGroup.update({
+      where: { id: group.id },
+      data: {
+        label: DIRTY_DOZEN_LABEL,
+        showPublicLabel: true,
+        sortOrder: 0,
+      },
+    })
+    console.log(`   LineageVisualGroup Dirty Dozen: exists (id=${group.id}), refreshed`)
+  } else {
+    group = await db.lineageVisualGroup.create({
+      data: {
+        treeId,
+        parentMemberId: riganMemberId,
+        label: DIRTY_DOZEN_LABEL,
+        groupType,
+        promotionDate,
+        showPublicLabel: true,
+        sortOrder: 0,
+      },
+      select: { id: true },
+    })
+    console.log(`   ✅ Created LineageVisualGroup Dirty Dozen (id=${group.id})`)
+  }
+
+  let assigned = 0
+  for (const key of DIRTY_DOZEN_KEYS) {
+    const memberId = treeMemberIdByKey.get(key)
+    if (!memberId) {
+      console.log(`   ⚠️  Dozen member ${key} not found — skipping group assignment`)
+      continue
+    }
+    await db.lineageTreeMember.update({
+      where: { id: memberId },
+      data: { visualGroupId: group.id },
+    })
+    assigned++
+  }
+  console.log(`   LineageVisualGroup Dirty Dozen: assigned ${assigned} members`)
 }
 
 // ---------------------------------------------------------------------------
@@ -439,17 +688,61 @@ async function main() {
     edgesCreated: 0,
     edgesFound: 0,
     treeMembersUpdated: 0,
+    rankAwardsCreated: 0,
+    rankAwardsFound: 0,
   }
 
   // ---------------------------------------------------------------------
-  // 0. Resolve the owner user. Prefer production OWNER_ID; fall back to
-  //    the Baseline org owner on local dev where Brian's user isn't seeded.
+  // 0. Resolve the owner user (Brian Scott). SESSION_0316 hardening:
+  //    Prefer production OWNER_ID; else a User named exactly "Brian Scott";
+  //    else the owner of the Baseline Martial Arts org (by name/slug);
+  //    else the current arbitrary Baseline-brand org owner fallback.
   // ---------------------------------------------------------------------
   let owner = await db.user.findUnique({
     where: { id: OWNER_ID },
     select: { id: true, email: true, name: true },
   })
+  if (owner) {
+    console.log(`   Resolved owner via OWNER_ID: ${owner.email}`)
+  }
+
   if (!owner) {
+    owner = await db.user.findFirst({
+      where: { name: "Brian Scott" },
+      select: { id: true, email: true, name: true },
+    })
+    if (owner) {
+      console.log(`   Resolved owner via name="Brian Scott": ${owner.email}`)
+    }
+  }
+
+  if (!owner) {
+    // Owner of the Baseline Martial Arts org, matched by name ILIKE or slug.
+    const baselineMaOrg = await db.organization.findFirst({
+      where: {
+        ownerId: { not: null },
+        OR: [
+          { name: { equals: "Baseline Martial Arts", mode: "insensitive" } },
+          { slug: "baseline-martial-arts" },
+        ],
+      },
+      select: { ownerId: true, slug: true },
+    })
+    if (baselineMaOrg?.ownerId) {
+      owner = await db.user.findUnique({
+        where: { id: baselineMaOrg.ownerId },
+        select: { id: true, email: true, name: true },
+      })
+      if (owner) {
+        console.log(
+          `   Resolved owner via Baseline Martial Arts org owner: ${owner.email} (org=${baselineMaOrg.slug})`,
+        )
+      }
+    }
+  }
+
+  if (!owner) {
+    // Last resort: any Baseline-brand org owner (legacy arbitrary fallback).
     const baselineOrg = await db.organization.findFirst({
       where: { brand: BRAND, ownerId: { not: null } },
       select: { ownerId: true, slug: true },
@@ -461,15 +754,27 @@ async function main() {
       })
       if (owner) {
         console.log(
-          `   ⚠️  Production OWNER_ID not found; falling back to Baseline org owner: ${owner.email} (org=${baselineOrg.slug})`,
+          `   ⚠️  Falling back to arbitrary Baseline-brand org owner: ${owner.email} (org=${baselineOrg.slug})`,
         )
       }
     }
   }
   if (!owner) {
     throw new Error(
-      `No owner user found: tried OWNER_ID=${OWNER_ID} and Baseline org owner. Run seed-baseline-owner.ts (production) or seed.ts (local) first.`,
+      `No owner user found: tried OWNER_ID=${OWNER_ID}, name="Brian Scott", Baseline Martial Arts org owner, and Baseline-brand org owner. Run seed-baseline-owner.ts (production) or seed.ts (local) first.`,
     )
+  }
+
+  // If the resolved owner carries a fixture name (e.g. the local
+  // `test-entitlement-*` integration owner), correct it to "Brian Scott" so
+  // the lineage tree card reads correctly. Idempotent.
+  if (owner.name !== "Brian Scott" && (owner.name?.includes("test-entitlement") || !owner.name)) {
+    await db.user.update({
+      where: { id: owner.id },
+      data: { name: "Brian Scott" },
+    })
+    console.log(`   ✏️  Corrected owner name "${owner.name}" → "Brian Scott" (id=${owner.id})`)
+    owner = { ...owner, name: "Brian Scott" }
   }
   console.log(`   Found owner: ${owner.email} (name=${owner.name}, id=${owner.id})`)
 
@@ -524,6 +829,34 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------
+  // 3b. RankAwards (SESSION_0316). Global promotion facts — one per BJJ
+  //     figure, linking the awarding promoter. Keyed by recipient userId so
+  //     the rigan tree can point each member's selectedRankAward at it.
+  // ---------------------------------------------------------------------
+  const rankAwardIdByUserId = new Map<string, string>()
+  for (const ra of BJJ_RANK_AWARD_SEEDS) {
+    const userId = userIdByKey.get(ra.userKey)
+    if (!userId) {
+      console.log(`   ⚠️  No User for RankAward seed key=${ra.userKey} — skipping`)
+      continue
+    }
+    const awardedById = ra.awardedByKey ? (userIdByKey.get(ra.awardedByKey) ?? null) : null
+    if (ra.awardedByKey && !awardedById) {
+      console.log(`   ⚠️  Awarding promoter ${ra.awardedByKey} not found for ${ra.userKey}`)
+    }
+    const awardId = await ensureRankAward(
+      userId,
+      ra.rankShortName,
+      awardedById,
+      ra.awardedAt,
+      counts,
+    )
+    if (awardId) {
+      rankAwardIdByUserId.set(userId, awardId)
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // 4. Per-discipline LineageTree + LineageTreeMember rows.
   //    Each tree is published + public so /lineage renders them.
   // ---------------------------------------------------------------------
@@ -543,6 +876,8 @@ async function main() {
     parentMap: Record<string, string>
     /** Per-tree selected rank award mapping: member key → rank lookup. */
     selectedRankAwards?: Record<string, SelectedRankAwardSeed>
+    /** Per-member claimable override: member key → isClaimable. */
+    isClaimable?: Record<string, boolean>
   }
 
   const TREE_SEEDS: TreeSeed[] = [
@@ -578,7 +913,34 @@ async function main() {
         OWNER: "bob-bass",
       },
       selectedRankAwards: {
+        "carlos-gracie-sr": { disciplineCode: "bjj", rankShortName: "R10" },
+        "carlos-gracie-jr": { disciplineCode: "bjj", rankShortName: "R9" },
+        "rigan-machado": { disciplineCode: "bjj", rankShortName: "CB8" },
+        "bob-bass": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "rick-williams": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "david-meyer": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "chris-haueter": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "john-will": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "bill-hosken": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "jerry-smith": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "brian-truelson": { disciplineCode: "bjj", rankShortName: "BK1" },
         OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
+      },
+      // SESSION_0316: Carlos Sr & Jr are historical roots — not claimable.
+      // Everyone else (Rigan, the Dozen, Truelson, OWNER) is claimable.
+      isClaimable: {
+        "carlos-gracie-sr": false,
+        "carlos-gracie-jr": false,
+        "rigan-machado": true,
+        "bob-bass": true,
+        "rick-williams": true,
+        "david-meyer": true,
+        "chris-haueter": true,
+        "john-will": true,
+        "bill-hosken": true,
+        "jerry-smith": true,
+        "brian-truelson": true,
+        OWNER: true,
       },
     },
     {
@@ -663,19 +1025,23 @@ async function main() {
         continue
       }
 
+      // SESSION_0316: look the selected RankAward up by the MEMBER's own
+      // userId (was hardcoded to owner.id, which only worked for OWNER).
+      const memberUserId = userIdByKey.get(key)
       const selectedRankSeed = ts.selectedRankAwards?.[key]
-      const selectedRankAward = selectedRankSeed
-        ? await db.rankAward.findFirst({
-            where: {
-              userId: owner.id,
-              rank: {
-                shortName: selectedRankSeed.rankShortName,
-                rankSystem: { discipline: { code: selectedRankSeed.disciplineCode } },
+      const selectedRankAward =
+        selectedRankSeed && memberUserId
+          ? await db.rankAward.findFirst({
+              where: {
+                userId: memberUserId,
+                rank: {
+                  shortName: selectedRankSeed.rankShortName,
+                  rankSystem: { discipline: { code: selectedRankSeed.disciplineCode } },
+                },
               },
-            },
-            select: { id: true },
-          })
-        : null
+              select: { id: true },
+            })
+          : null
 
       if (selectedRankSeed && !selectedRankAward) {
         console.log(
@@ -683,19 +1049,30 @@ async function main() {
         )
       }
 
+      const isClaimable = ts.isClaimable?.[key]
+
       let member = await db.lineageTreeMember.findUnique({
         where: { treeId_nodeId: { treeId: tree.id, nodeId } },
-        select: { id: true, rankAwardId: true },
+        select: { id: true, rankAwardId: true, isClaimable: true },
       })
       if (member) {
+        const updateData: { rankAwardId?: string; isClaimable?: boolean } = {}
         if (selectedRankAward && member.rankAwardId !== selectedRankAward.id) {
+          updateData.rankAwardId = selectedRankAward.id
+        }
+        if (isClaimable !== undefined && member.isClaimable !== isClaimable) {
+          updateData.isClaimable = isClaimable
+        }
+        if (Object.keys(updateData).length > 0) {
           member = await db.lineageTreeMember.update({
             where: { id: member.id },
-            data: { rankAwardId: selectedRankAward.id },
-            select: { id: true, rankAwardId: true },
+            data: updateData,
+            select: { id: true, rankAwardId: true, isClaimable: true },
           })
           counts.treeMembersUpdated++
-          console.log(`   LineageTreeMember ${ts.slug}/${key}: exists, selected rank updated`)
+          console.log(
+            `   LineageTreeMember ${ts.slug}/${key}: exists, updated (${Object.keys(updateData).join(", ")})`,
+          )
         }
         treeMembersFound++
         treeMemberIdByKey.set(key, member.id)
@@ -713,11 +1090,19 @@ async function main() {
           visualSortOrder: i,
           primaryVisualParentMemberId: parentMemberId,
           rankAwardId: selectedRankAward?.id ?? null,
+          ...(isClaimable !== undefined ? { isClaimable } : {}),
         },
-        select: { id: true, rankAwardId: true },
+        select: { id: true, rankAwardId: true, isClaimable: true },
       })
       treeMemberIdByKey.set(key, member.id)
       treeMembersCreated++
+    }
+
+    // -------------------------------------------------------------------
+    // 4b. Dirty Dozen cohort visual group (rigan tree only). SESSION_0316.
+    // -------------------------------------------------------------------
+    if (ts.slug === "rigan-machado-bjj-lineage") {
+      await ensureDirtyDozenGroup(tree.id, treeMemberIdByKey)
     }
   }
 
@@ -728,6 +1113,9 @@ async function main() {
   console.log(`   Users:          created=${counts.usersCreated}, found=${counts.usersFound}`)
   console.log(`   LineageNodes:   created=${counts.nodesCreated}, found=${counts.nodesFound}`)
   console.log(`   Relationships:  created=${counts.edgesCreated}, found=${counts.edgesFound}`)
+  console.log(
+    `   RankAwards:     created=${counts.rankAwardsCreated}, found=${counts.rankAwardsFound}`,
+  )
   console.log(`   LineageTrees:   created=${treesCreated}, found=${treesFound}`)
   console.log(
     `   TreeMembers:    created=${treeMembersCreated}, found=${treeMembersFound}, updated=${counts.treeMembersUpdated}`,

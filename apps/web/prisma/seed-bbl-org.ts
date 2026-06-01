@@ -128,6 +128,7 @@ async function main() {
   const sourceTree = await db.lineageTree.findUnique({
     where: { brand_slug: { brand: BASELINE_BRAND, slug: RIGAN_TREE_SLUG } },
     select: {
+      id: true,
       name: true,
       description: true,
       visibility: true,
@@ -147,6 +148,7 @@ async function main() {
           isCollapsedDefault: true,
           rankAwardId: true,
           primaryVisualParentMemberId: true,
+          visualGroupId: true,
         },
       },
     },
@@ -245,6 +247,75 @@ async function main() {
             ? (targetMemberIdBySourceMemberId.get(sourceMember.primaryVisualParentMemberId) ?? null)
             : null,
         },
+      })
+    }
+
+    // SESSION_0316: clone the source tree's LineageVisualGroup rows (e.g. the
+    // "Dirty Dozen" cohort) into the BBL tree and re-point member.visualGroupId.
+    // Visual groups are brand-scoped projections like the tree itself, so the
+    // BBL discipline page needs its own copies. Idempotent (match by label).
+    const sourceGroups = await db.lineageVisualGroup.findMany({
+      where: { treeId: sourceTree.id },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true,
+        label: true,
+        groupType: true,
+        promotionDate: true,
+        showPublicLabel: true,
+        sortOrder: true,
+        parentMemberId: true,
+      },
+    })
+
+    const targetGroupIdBySourceGroupId = new Map<string, string>()
+    for (const g of sourceGroups) {
+      const targetParentMemberId = g.parentMemberId
+        ? (targetMemberIdBySourceMemberId.get(g.parentMemberId) ?? null)
+        : null
+
+      const groupData = {
+        label: g.label,
+        groupType: g.groupType,
+        promotionDate: g.promotionDate,
+        showPublicLabel: g.showPublicLabel,
+        sortOrder: g.sortOrder,
+        parentMemberId: targetParentMemberId,
+      }
+
+      let targetGroup = await db.lineageVisualGroup.findFirst({
+        where: { treeId: bblRiganTree.id, label: g.label },
+        select: { id: true },
+      })
+      if (!targetGroup) {
+        targetGroup = await db.lineageVisualGroup.create({
+          data: { treeId: bblRiganTree.id, ...groupData },
+          select: { id: true },
+        })
+        console.log(`  ✅ Cloned LineageVisualGroup "${g.label}": ${targetGroup.id}`)
+      } else {
+        targetGroup = await db.lineageVisualGroup.update({
+          where: { id: targetGroup.id },
+          data: groupData,
+          select: { id: true },
+        })
+        console.log(`  ⏭️  LineageVisualGroup "${g.label}" already exists: ${targetGroup.id}`)
+      }
+      targetGroupIdBySourceGroupId.set(g.id, targetGroup.id)
+    }
+
+    // Re-point each BBL target member's visualGroupId to the cloned group.
+    for (const sourceMember of sourceTree.members) {
+      const targetMemberId = targetMemberIdBySourceMemberId.get(sourceMember.id)
+      if (!targetMemberId) {
+        continue
+      }
+      const targetGroupId = sourceMember.visualGroupId
+        ? (targetGroupIdBySourceGroupId.get(sourceMember.visualGroupId) ?? null)
+        : null
+      await db.lineageTreeMember.update({
+        where: { id: targetMemberId },
+        data: { visualGroupId: targetGroupId },
       })
     }
 
