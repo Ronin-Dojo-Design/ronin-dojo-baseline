@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation"
+import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { OrgAccessDenied } from "~/components/web/organizations/org-access-denied"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import { getOrganizationBySlug } from "~/server/web/organization/queries"
 import { OrgGeneralInfoForm } from "./_components/org-general-info-form"
@@ -31,6 +33,13 @@ export default async function OrgGeneralSettingsPage({ params }: Props) {
     )
   }
 
+  const mediaAttachments =
+    (await getDashboardMediaAttachments({
+      brand,
+      user: session.user,
+      target: { kind: "organization", id: org.id },
+    })) ?? []
+
   return (
     <>
       <Breadcrumbs
@@ -52,6 +61,17 @@ export default async function OrgGeneralSettingsPage({ params }: Props) {
       <Section>
         <Section.Content>
           <OrgGeneralInfoForm organization={org} />
+        </Section.Content>
+      </Section>
+
+      <Section>
+        <Section.Content>
+          <MediaAttachmentManager
+            target={{ kind: "organization", id: org.id }}
+            initialAttachments={mediaAttachments}
+            title="Organization media"
+            description="Logos, photos, or video for your organization. Public items appear on your public pages."
+          />
         </Section.Content>
       </Section>
     </>

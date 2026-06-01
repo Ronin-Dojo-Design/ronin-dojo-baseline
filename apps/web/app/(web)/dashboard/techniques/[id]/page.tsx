@@ -1,9 +1,13 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
+import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
+import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
+import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { db } from "~/services/db"
 
 type Props = { params: Promise<{ id: string }> }
@@ -69,6 +73,14 @@ export default async function EditTechniquePage({ params }: Props) {
     orderBy: { name: "asc" },
   })
 
+  const brand = await getRequestBrand()
+  const mediaAttachments =
+    (await getDashboardMediaAttachments({
+      brand,
+      user: session.user,
+      target: { kind: "technique", id: technique.id },
+    })) ?? []
+
   return (
     <>
       <Breadcrumbs
@@ -84,6 +96,17 @@ export default async function EditTechniquePage({ params }: Props) {
         disciplines={disciplines}
         technique={technique}
       />
+
+      <Section>
+        <Section.Content>
+          <MediaAttachmentManager
+            target={{ kind: "technique", id: technique.id }}
+            initialAttachments={mediaAttachments}
+            title="Technique media"
+            description="Images or video that demonstrate this technique. Public items appear on the technique page."
+          />
+        </Section.Content>
+      </Section>
     </>
   )
 }

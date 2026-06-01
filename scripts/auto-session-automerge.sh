@@ -34,14 +34,17 @@ git pull --ff-only origin main
 
 read -r -d '' SESSION_PROMPT <<'PROMPT' || true
 Bow in per docs/rituals/opening.md. Your task is the "Next session" block of the
-highest-numbered docs/sprints/SESSION_NNNN.md, advancing docs/petey-plan-0305.md.
-Act as Petey: orchestrate Cody (build) and Doug (verify). SKIP any operator-only
-browser/device smoke. Implement only the next automatable code slice. Bow out per
-docs/rituals/closing.md as a FULL close: SESSION file, wiki sweep, `bun run wiki:lint`
-(MUST be 0 errors), typecheck/lint, `graphify update` BEFORE the commit (FS-0025).
-COMMIT to the CURRENT branch with a conventional message. DO NOT push, DO NOT open a
-PR — the wrapper handles that. Run the FS-0024 guard. If ANY gate fails, STOP and
-leave the tree UNCOMMITTED.
+highest-numbered docs/sprints/SESSION_NNNN.md (if it names an epic plan doc, READ IT
+FIRST and treat its locked decisions as binding). Act as Petey: orchestrate Cody
+(build) and Doug (verify). SKIP any operator-only browser/device smoke. Implement only
+the next automatable code slice. Bow out per docs/rituals/closing.md as a FULL close:
+SESSION file, wiki sweep, `bun run wiki:lint` (MUST be 0 errors), `bun run typecheck`,
+and changed-file Biome (`bunx biome check` on touched files). DO NOT run the root
+`bun run lint` — known-broken accepted-risk gate (FS-0017/SESSION_0317) that fails
+spuriously. Run `graphify update` BEFORE the commit (FS-0025). COMMIT to the CURRENT
+branch with a conventional message. DO NOT push, DO NOT open a PR — the wrapper handles
+that. Run the FS-0024 guard. If a REAL gate fails (typecheck, changed-file Biome,
+wiki:lint, or focused tests), STOP and leave the tree UNCOMMITTED.
 PROMPT
 
 for ((i = 1; i <= N; i++)); do

@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-01
-last_agent: codex-session-0321
+last_agent: claude-session-0322
 pairs_with:
+  - docs/sprints/SESSION_0322.md
   - docs/sprints/SESSION_0321.md
   - docs/sprints/SESSION_0320.md
   - docs/sprints/SESSION_0319.md
@@ -177,7 +178,19 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | --- | --- | --- | --- |
 | `PromotionTimeline` | `apps/web/components/web/promotion-events/promotion-timeline.tsx` | `entries: PromotionTimelineEntry[]`, optional `title`, optional `emptyMessage` | SESSION_0320: reusable org/school profile timeline for hosted `PromotionEvent`s and `RankAward.organizationId` awarded-school facts. Composes L1 `Card`/`Badge`/`Stack`/`Heading`/`EmptyList` only. Event-backed rows link to `/events/[slug]`; ungrouped rank awards render as read-only rows with no invented event link. Date formatting pins `timeZone: "UTC"` so date-only promotion facts keep the saved calendar day. Empty state is expected today for seeded orgs because SESSION_0319 global ceremony events currently have no `hostOrganizationId` and the seeded ceremony `RankAward`s have no `organizationId`; do not backfill those without a data-quality decision. |
 | `DashboardEventsTab` | `apps/web/app/(web)/dashboard/events-tab.tsx` | none (server component) | SESSION_0321: lists `PromotionEvent`s editable by the current user for the request brand via `findEditablePromotionEvents`; links to the dashboard edit route and public gallery when `slug` exists. Capability is server-derived from global admin, host/award organization roles, and lineage grants; the tab does not decide authorization client-side. |
-| `PromotionEventEditorForm` | `apps/web/app/(web)/dashboard/events/promotion-event-editor-form.tsx` | `event`, `hostOrganizations`, `rankAwards` | SESSION_0321: client dashboard form for ceremony title/date/location/description, host organization, linked `RankAward` IDs, and mandatory audit note. Calls `upsertPromotionEvent`; server action enforces authorization and writes `AuditLog`. No media upload field yet — upload remains the next slice through the existing Dirstarter media/storage pipeline. |
+| `PromotionEventEditorForm` | `apps/web/app/(web)/dashboard/events/promotion-event-editor-form.tsx` | `event`, `hostOrganizations`, `rankAwards` | SESSION_0321: client dashboard form for ceremony title/date/location/description, host organization, linked `RankAward` IDs, and mandatory audit note. Calls `upsertPromotionEvent`; server action enforces authorization and writes `AuditLog`. SESSION_0322 added gallery media upload alongside this form via the shared `MediaAttachmentManager` (see §3h), not as a form field. |
+
+---
+
+## 3h. Web media pipeline — `server/web/media/` + `components/web/media/`
+
+> SESSION_0322: a reusable **capability-gated** non-admin upload/remove path that reuses the existing `uploadToS3Storage`/`Media`/`MediaAttachment` plumbing (distinct from the admin-only media library in §5). Authorization is resolved **per target** server-side — there is deliberately no single broad gate.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `MediaAttachmentManager` | `apps/web/components/web/media/media-attachment-manager.tsx` | `target: MediaAttachTarget`, `initialAttachments: DashboardMediaAttachment[]`, optional `title`, `description` | SESSION_0322: shared client manager — upload control (file input + per-upload public/private toggle + optional caption) and an attachment grid with per-item remove. Calls `uploadWebMedia`/`removeWebMedia`; every action is re-authorized server-side for `target`. Mounted on the PromotionEvent gallery (`/dashboard/events/[eventId]`), Technique (`/dashboard/techniques/[id]`), and Organization settings (`/organizations/[slug]/settings/general`). Mirrors results optimistically; composes L1 `Card`/`Button`/`Checkbox`/`Input`/`Stack`/`Badge`/`Hint`. |
+| `authorizeMediaTarget` (server) | `apps/web/server/web/media/media-authorization.ts` | — | SESSION_0322: per-target gate. organization → org author (OWNER/ORG_ADMIN/INSTRUCTOR/COACH); technique/course → org author of the owning org; passport → owner or OWNER/ORG_ADMIN of the owner's org; promotionEvent → existing `canAuthorPromotionEvent`. Global admin passes all. Passport/course resolvers exist but have no UI consumer yet. |
+| `uploadWebMedia` / `removeWebMedia` (server) | `apps/web/server/web/media/actions.ts` | — | SESSION_0322: `userActionClient` safe actions wrapping `applyWebMediaUpload`/`applyWebMediaRemoval` (S3 upload outside the tx; `Media` + `MediaAttachment` + `AuditLog`; orphan-`Media` + best-effort S3 cleanup on remove). |
 
 ---
 

@@ -5,12 +5,14 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H6 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
+import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
 import { PromotionEventEditorForm } from "../promotion-event-editor-form"
 
@@ -46,6 +48,13 @@ export default async function EditPromotionEventPage({ params }: Props) {
     notFound()
   }
 
+  const galleryAttachments =
+    (await getDashboardMediaAttachments({
+      brand,
+      user: session.user,
+      target: { kind: "promotionEvent", id: data.event.id },
+    })) ?? []
+
   return (
     <>
       <Breadcrumbs
@@ -73,12 +82,17 @@ export default async function EditPromotionEventPage({ params }: Props) {
             <CardHeader direction="column" size="xs">
               <H6 render={props => <h2 {...props}>{props.children}</h2>}>Public gallery</H6>
               <CardDescription>
-                The public event page remains read-only; saved dashboard changes update its source data.
+                The public event page remains read-only; saved dashboard changes update its source
+                data.
               </CardDescription>
             </CardHeader>
             <Stack direction="column" size="xs" className="w-full">
               {data.event.slug && (
-                <Button variant="secondary" size="sm" render={<Link href={`/events/${data.event.slug}`} />}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  render={<Link href={`/events/${data.event.slug}`} />}
+                >
                   Open gallery
                 </Button>
               )}
@@ -88,6 +102,17 @@ export default async function EditPromotionEventPage({ params }: Props) {
             </Stack>
           </Card>
         </Section.Sidebar>
+      </Section>
+
+      <Section>
+        <Section.Content>
+          <MediaAttachmentManager
+            target={{ kind: "promotionEvent", id: data.event.id }}
+            initialAttachments={galleryAttachments}
+            title="Ceremony gallery"
+            description="Shared photos and clips for this ceremony. Public items appear on the event page."
+          />
+        </Section.Content>
       </Section>
     </>
   )
