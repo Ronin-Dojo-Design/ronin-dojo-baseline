@@ -187,6 +187,12 @@ Former name: `Progress`.
 
 Do not use `Progress` in new code.
 
+### PromotionEvent
+
+A belt ceremony that groups multiple RankAwards into one event (SESSION_0318).
+
+PromotionEvent holds a shared date, host venue (`hostOrganizationId`, distinct from each award's awarding school), description, and a shared media gallery (`MediaAttachment[]`). It is discipline-agnostic — one ceremony can group BJJ, FMA/WEKAF, and Muay Thai awards together — and global, displayed per-brand. It sits *above* RankAward as an optional grouping (`RankAward.promotionEventId`, nullable, `SET NULL`); it never owns promotion truth and carries **no verification signal** (verification stays role-gated on RankAward/LineageRelationship per ADR 0016). A per-tree LineageVisualGroup may point at the event via `promotionEventId` so a cohort box and its ceremony are one truth.
+
 ## Lineage
 
 ### LineageNode

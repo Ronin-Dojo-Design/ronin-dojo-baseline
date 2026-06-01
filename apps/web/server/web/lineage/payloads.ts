@@ -185,6 +185,10 @@ export const lineageNodeProfilePayload = {
           organization: {
             select: { id: true, name: true, slug: true, city: true, state: true },
           },
+          // @added SESSION_0318 — read-only PromotionEvent (ceremony) link for Rank History.
+          promotionEvent: {
+            select: { id: true, title: true, eventDate: true },
+          },
         },
         orderBy: [{ awardedAt: "desc" as const }],
       },

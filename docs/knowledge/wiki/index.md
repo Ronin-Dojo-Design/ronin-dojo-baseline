@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-01
+updated: 2026-05-31
 author: Brian + Copilot
-last_agent: codex-session-0317
+last_agent: claude-session-0318
 ---
 
 # LLM Wiki Index
@@ -123,7 +123,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION 0263 Audit Report](../../architecture/lineage/SESSION_0263_audit_report.md) | report | active — lineage v1 acceptance audit; SESSION_0264 cleared the four P0 editor gaps |
 | [SESSION 0263 BBL Recon](../../architecture/lineage/SESSION_0263_bbl_recon.md) | report | active — monorepo lineage data + brand asset inventory |
 | [BBL BJJ Rank + Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md) | architecture | active — SESSION_0264 BJJ rank/PODs field map |
-| [Promotion Event Model](../../architecture/lineage/promotion-event-model.md) | plan | draft — staged PromotionEvent schema/ADR plan; SESSION_0317 bridged April 10, 2026 ceremony through existing RankAward facts only |
+| [Promotion Event Model](../../architecture/lineage/promotion-event-model.md) | plan | accepted — SESSION_0318 amended ADR 0016, migrated PromotionEvent + nullable FKs, seeded the April 10, 2026 ceremony + cohort link + read-only Rank-History display |
 
 ### ADRs
 
@@ -410,6 +410,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0315](../../sprints/SESSION_0315.md) | session--open | closed — typecheck/dev-server baseline and Prisma client recovery |
 | [SESSION_0316](../../sprints/SESSION_0316.md) | session--implement | closed-partial — verified Rigan seed, board polish, staged non-modal panel/tree repair |
 | [SESSION_0317](../../sprints/SESSION_0317.md) | session | closed — lineage non-modal panel, tree repair, Rigan red-belt seed correction, and dev DB/runbook alignment |
+| [SESSION_0318](../../sprints/SESSION_0318.md) | session--implement | closed — PromotionEvent ADR/migration + April 10 ceremony seed + cohort link + read-only Rank-History event display; operator-confirmed data-quality corrections (Bob Bass, Haueter, Posnik, Magno) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

@@ -83,6 +83,10 @@ const PLACEHOLDER_USERS: PlaceholderUser[] = [
   { key: "erik-paulson", name: "Erik Paulson", email: "erik-paulson@placeholder.lineage" },
   { key: "casey-olsen", name: "Casey Olsen", email: "casey-olsen@placeholder.lineage" },
   { key: "rick-minter", name: "Rick Minter", email: "rick-minter@placeholder.lineage" },
+  // @added SESSION_0318 — operator-confirmed April 10, 2026 coral-belt recipient.
+  { key: "chris-posnik", name: "Chris Posnik", email: "chris-posnik@placeholder.lineage" },
+  // @added SESSION_0318 — promoted with Bob Bass on June 8, 2024 in Oklahoma City.
+  { key: "renato-magno", name: "Renato Magno", email: "renato-magno@placeholder.lineage" },
   { key: "david-meyer", name: "David Meyer", email: "david-meyer@placeholder.lineage" },
   { key: "chris-haueter", name: "Chris Haueter", email: "chris-haueter@placeholder.lineage" },
   { key: "john-will", name: "John Will", email: "john-will@placeholder.lineage" },
@@ -128,7 +132,7 @@ const NODE_SEEDS: LineageNodeSeed[] = [
   {
     userKey: "bob-bass",
     slug: "bob-bass",
-    bio: "Coral Belt · 1st American Black Belt under Rigan Machado · Founder of South Bay Jiu Jitsu, Hermosa Beach CA. Dirty Dozen #8.",
+    bio: "7th Degree Coral Belt · promoted by Rigan Machado on June 8, 2024 in Oklahoma City (with Renato Magno) · 1st American Black Belt under Rigan Machado · Founder of South Bay Jiu Jitsu, Hermosa Beach CA. Dirty Dozen #8.",
   },
   {
     userKey: "rick-williams",
@@ -151,6 +155,16 @@ const NODE_SEEDS: LineageNodeSeed[] = [
     bio: "7th Degree Coral Belt · promoted by Rigan Machado on April 10, 2026 at the CSW World Conference.",
   },
   {
+    userKey: "chris-posnik",
+    slug: "chris-posnik",
+    bio: "7th Degree Coral Belt · promoted by Rigan Machado on April 10, 2026 at the CSW World Conference.",
+  },
+  {
+    userKey: "renato-magno",
+    slug: "renato-magno",
+    bio: "7th Degree Coral Belt · promoted by Rigan Machado on June 8, 2024 in Oklahoma City (with Bob Bass).",
+  },
+  {
     userKey: "david-meyer",
     slug: "david-meyer",
     bio: "7th Degree Coral Belt · promoted by Rigan Machado on January 17, 2026 · Dirty Dozen under Rigan Machado · David Meyer BJJ, Seattle WA.",
@@ -158,7 +172,7 @@ const NODE_SEEDS: LineageNodeSeed[] = [
   {
     userKey: "chris-haueter",
     slug: "chris-haueter",
-    bio: "Coral Belt · Dirty Dozen #11 under Rigan Machado · Combat Base, California.",
+    bio: "6th Degree Black Belt · Dirty Dozen #11 under Rigan Machado · Combat Base, California.",
   },
   {
     userKey: "john-will",
@@ -237,7 +251,8 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
   {
     fromKey: "rigan-machado",
     toKey: "bob-bass",
-    description: "Bob Bass — 1st American Black Belt under Rigan Machado. Now Coral Belt.",
+    description:
+      "Bob Bass — 1st American Black Belt under Rigan Machado. Promoted to 7th Degree Coral Belt on June 8, 2024 in Oklahoma City.",
     isVerified: true,
   },
   {
@@ -270,6 +285,20 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
   },
   {
     fromKey: "rigan-machado",
+    toKey: "chris-posnik",
+    description:
+      "Chris Posnik — Rigan Machado black belt lineage. Promoted to 7th Degree Coral Belt on April 10, 2026 at the CSW World Conference.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
+    toKey: "renato-magno",
+    description:
+      "Renato Magno — Rigan Machado black belt lineage. Promoted to 7th Degree Coral Belt on June 8, 2024 in Oklahoma City.",
+    isVerified: true,
+  },
+  {
+    fromKey: "rigan-machado",
     toKey: "david-meyer",
     description: "David Meyer — Dirty Dozen #10 under Rigan Machado. Now Coral Belt.",
     isVerified: true,
@@ -277,7 +306,7 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
   {
     fromKey: "rigan-machado",
     toKey: "chris-haueter",
-    description: "Chris Haueter — Dirty Dozen #11 under Rigan Machado. Now Coral Belt.",
+    description: "Chris Haueter — Dirty Dozen #11 under Rigan Machado. 6th Degree Black Belt.",
     isVerified: true,
   },
   {
@@ -413,7 +442,10 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
     userKey: "bob-bass",
     rankShortName: "CB7",
     awardedByKey: "rigan-machado",
-    awardedAt: "2017-06-01",
+    awardedAt: "2024-06-08",
+    location: "Oklahoma City, OK",
+    notes:
+      "Operator-confirmed (SESSION_0318): 7th Degree Coral Belt, June 8, 2024, Oklahoma City — promoted with Renato Magno. Brian Scott attended April 10, 2026 but was not promoted that day.",
   },
   {
     userKey: "rick-williams",
@@ -448,6 +480,23 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
     notes: APRIL_2026_CEREMONY_NOTE,
   },
   {
+    userKey: "chris-posnik",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2026-04-10",
+    location: "Combat Submission Wrestling Headquarters",
+    notes: APRIL_2026_CEREMONY_NOTE,
+  },
+  {
+    userKey: "renato-magno",
+    rankShortName: "CB7",
+    awardedByKey: "rigan-machado",
+    awardedAt: "2024-06-08",
+    location: "Oklahoma City, OK",
+    notes:
+      "Operator-confirmed (SESSION_0318): 7th Degree Coral Belt, June 8, 2024, Oklahoma City — promoted with Bob Bass.",
+  },
+  {
     userKey: "david-meyer",
     rankShortName: "CB7",
     awardedByKey: "rigan-machado",
@@ -457,10 +506,15 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
       "Public source correction — Dave Meyer 7th Degree Coral Belt ceremony dated January 17, 2026; pre-PromotionEvent seed bridge.",
   },
   {
+    // Operator-confirmed (SESSION_0318): Chris Haueter is a 6th Degree BLACK belt,
+    // not a coral belt. Public sources (BJJ Heroes, Combat Base) corroborate 6th-degree
+    // black belt. Exact 6th-degree date unconfirmed — flagged approximate.
     userKey: "chris-haueter",
-    rankShortName: "CB7",
+    rankShortName: "BK6",
     awardedByKey: "rigan-machado",
     awardedAt: "2019-03-01",
+    notes:
+      "6th Degree Black Belt (operator-confirmed SESSION_0318). Exact promotion date unconfirmed — approximate.",
   },
   {
     userKey: "john-will",
@@ -784,6 +838,136 @@ async function ensureDirtyDozenGroup(
 }
 
 // ---------------------------------------------------------------------------
+// PromotionEvent (SESSION_0318) — April 10, 2026 Coral Belt Ceremony.
+// ONE GLOBAL ceremony grouping the five April-10 RankAwards (Rigan R9 by Rorion;
+// Erik Paulson / Casey Olsen / Rick Minter / Rick Williams CB7 by Rigan). No
+// attestor/attendee, no verification signal — verification stays role-gated on
+// RankAward/LineageRelationship (ADR 0016 → SESSION_0318 amendment).
+// ---------------------------------------------------------------------------
+const PROMOTION_EVENT_TITLE = "Coral Belt Ceremony — CSW World Conference"
+const PROMOTION_EVENT_DATE = new Date("2026-04-10")
+const PROMOTION_EVENT_DESCRIPTION =
+  "Rorion Gracie promoted Rigan Machado to Red Belt (9th degree); Rigan Machado promoted Erik Paulson, Casey Olsen, Rick Minter, and Rick Williams to 7th Degree Coral Belt. Hosted at Erik Paulson's Combat Submission Wrestling during the CSW World Conference."
+const PROMOTION_EVENT_LOCATION = "Combat Submission Wrestling Headquarters"
+
+/**
+ * Upsert the GLOBAL April 10, 2026 PromotionEvent and link the supplied ceremony
+ * RankAwards to it. Idempotent: findFirst by (title, eventDate). Returns the
+ * event id so per-tree cohort groups can point at it. SESSION_0318.
+ */
+async function ensurePromotionEvent(ceremonyAwardIds: string[]): Promise<string | null> {
+  let event = await db.promotionEvent.findFirst({
+    where: { title: PROMOTION_EVENT_TITLE, eventDate: PROMOTION_EVENT_DATE },
+    select: { id: true },
+  })
+  if (event) {
+    await db.promotionEvent.update({
+      where: { id: event.id },
+      data: { description: PROMOTION_EVENT_DESCRIPTION, location: PROMOTION_EVENT_LOCATION },
+    })
+    console.log(`   PromotionEvent April 10: exists (id=${event.id}), refreshed`)
+  } else {
+    event = await db.promotionEvent.create({
+      data: {
+        title: PROMOTION_EVENT_TITLE,
+        eventDate: PROMOTION_EVENT_DATE,
+        location: PROMOTION_EVENT_LOCATION,
+        description: PROMOTION_EVENT_DESCRIPTION,
+      },
+      select: { id: true },
+    })
+    console.log(`   ✅ Created PromotionEvent April 10 (id=${event.id})`)
+  }
+
+  if (ceremonyAwardIds.length > 0) {
+    const linked = await db.rankAward.updateMany({
+      where: { id: { in: ceremonyAwardIds } },
+      data: { promotionEventId: event.id },
+    })
+    console.log(`   PromotionEvent April 10: linked ${linked.count} RankAwards`)
+  }
+  return event.id
+}
+
+// New April-10 coral belts NOT already in the Dirty Dozen cohort — safe to place
+// in a dedicated ceremony cohort group without forcing a second group onto Dozen
+// members (SESSION_0317 scope guard). Rick Williams stays in Dirty Dozen; his
+// AWARD still links to the event above.
+const CEREMONY_COHORT_KEYS = ["erik-paulson", "casey-olsen", "rick-minter", "chris-posnik"] as const
+const CEREMONY_COHORT_LABEL = "Coral Belt Ceremony — Apr 10, 2026"
+
+/**
+ * Ensure the April-10 ceremony cohort LineageVisualGroup on the rigan tree, link
+ * it to the global PromotionEvent, and assign the new coral belts to it. Runs
+ * per-tree (Baseline + BBL) → many cohort boxes, one event. Idempotent via the
+ * @@unique [treeId, parentMemberId, groupType, promotionDate]. SESSION_0318.
+ */
+async function ensureCeremonyCohortGroup(
+  treeId: string,
+  treeMemberIdByKey: Map<string, string>,
+  promotionEventId: string,
+): Promise<void> {
+  const riganMemberId = treeMemberIdByKey.get("rigan-machado")
+  if (!riganMemberId) {
+    console.log("   ⚠️  Rigan tree member not found — skipping ceremony cohort group")
+    return
+  }
+  const groupType = "PROMOTION_DATE" as const
+
+  let group = await db.lineageVisualGroup.findFirst({
+    where: {
+      treeId,
+      parentMemberId: riganMemberId,
+      groupType,
+      promotionDate: PROMOTION_EVENT_DATE,
+    },
+    select: { id: true },
+  })
+  if (group) {
+    await db.lineageVisualGroup.update({
+      where: { id: group.id },
+      data: {
+        label: CEREMONY_COHORT_LABEL,
+        showPublicLabel: true,
+        sortOrder: 1,
+        promotionEventId,
+      },
+    })
+    console.log(`   LineageVisualGroup Ceremony: exists (id=${group.id}), refreshed + linked`)
+  } else {
+    group = await db.lineageVisualGroup.create({
+      data: {
+        treeId,
+        parentMemberId: riganMemberId,
+        label: CEREMONY_COHORT_LABEL,
+        groupType,
+        promotionDate: PROMOTION_EVENT_DATE,
+        showPublicLabel: true,
+        sortOrder: 1,
+        promotionEventId,
+      },
+      select: { id: true },
+    })
+    console.log(`   ✅ Created LineageVisualGroup Ceremony (id=${group.id}) linked to event`)
+  }
+
+  let assigned = 0
+  for (const key of CEREMONY_COHORT_KEYS) {
+    const memberId = treeMemberIdByKey.get(key)
+    if (!memberId) {
+      console.log(`   ⚠️  Ceremony member ${key} not found — skipping group assignment`)
+      continue
+    }
+    await db.lineageTreeMember.update({
+      where: { id: memberId },
+      data: { visualGroupId: group.id },
+    })
+    assigned++
+  }
+  console.log(`   LineageVisualGroup Ceremony: assigned ${assigned} members`)
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -943,7 +1127,42 @@ async function main() {
   //     figure, linking the awarding promoter. Keyed by recipient userId so
   //     the rigan tree can point each member's selectedRankAward at it.
   // ---------------------------------------------------------------------
+  // SESSION_0318 data-quality correction: Chris Haueter was previously seeded as a
+  // coral belt (CB7). He is a 6th Degree BLACK belt (BK6). Repoint any stale coral
+  // award to BK6 instead of deleting — preserves LineageTreeMember/relationship FKs.
+  // No-op on a fresh DB (no stale coral award) or after the first corrected run.
+  {
+    const haueterId = userIdByKey.get("chris-haueter")
+    const bk6 = await db.rank.findFirst({
+      where: { shortName: "BK6", rankSystem: { discipline: { code: "bjj" } } },
+      select: { id: true },
+    })
+    if (haueterId && bk6) {
+      const staleCoral = await db.rankAward.findFirst({
+        where: {
+          userId: haueterId,
+          rank: { shortName: { in: ["CB7", "CB8"] }, rankSystem: { discipline: { code: "bjj" } } },
+        },
+        select: { id: true },
+      })
+      if (staleCoral) {
+        const existingBk6 = await db.rankAward.findFirst({
+          where: { userId: haueterId, rankId: bk6.id },
+          select: { id: true },
+        })
+        if (existingBk6) {
+          await db.rankAward.delete({ where: { id: staleCoral.id } })
+        } else {
+          await db.rankAward.update({ where: { id: staleCoral.id }, data: { rankId: bk6.id } })
+        }
+        console.log("   Haueter correction: stale coral award repointed to BK6")
+      }
+    }
+  }
+
   const rankAwardIdByUserId = new Map<string, string>()
+  // SESSION_0318: collect the April-10 ceremony award ids to link to the PromotionEvent.
+  const ceremonyAwardIds: string[] = []
   for (const ra of BJJ_RANK_AWARD_SEEDS) {
     const userId = userIdByKey.get(ra.userKey)
     if (!userId) {
@@ -965,8 +1184,17 @@ async function main() {
     )
     if (awardId) {
       rankAwardIdByUserId.set(userId, awardId)
+      if (ra.awardedAt === "2026-04-10") {
+        ceremonyAwardIds.push(awardId)
+      }
     }
   }
+
+  // ---------------------------------------------------------------------
+  // 3c. PromotionEvent (SESSION_0318). One global April 10, 2026 ceremony
+  //     grouping the five April-10 awards. Per-tree cohort boxes link to it.
+  // ---------------------------------------------------------------------
+  const promotionEventId = await ensurePromotionEvent(ceremonyAwardIds)
 
   // ---------------------------------------------------------------------
   // 4. Per-discipline LineageTree + LineageTreeMember rows.
@@ -1008,6 +1236,8 @@ async function main() {
         "erik-paulson",
         "casey-olsen",
         "rick-minter",
+        "chris-posnik",
+        "renato-magno",
         "david-meyer",
         "chris-haueter",
         "john-will",
@@ -1024,6 +1254,8 @@ async function main() {
         "erik-paulson": "rigan-machado",
         "casey-olsen": "rigan-machado",
         "rick-minter": "rigan-machado",
+        "chris-posnik": "rigan-machado",
+        "renato-magno": "rigan-machado",
         "david-meyer": "rigan-machado",
         "chris-haueter": "rigan-machado",
         "john-will": "rigan-machado",
@@ -1041,8 +1273,10 @@ async function main() {
         "erik-paulson": { disciplineCode: "bjj", rankShortName: "CB7" },
         "casey-olsen": { disciplineCode: "bjj", rankShortName: "CB7" },
         "rick-minter": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "chris-posnik": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "renato-magno": { disciplineCode: "bjj", rankShortName: "CB7" },
         "david-meyer": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "chris-haueter": { disciplineCode: "bjj", rankShortName: "CB7" },
+        "chris-haueter": { disciplineCode: "bjj", rankShortName: "BK6" },
         "john-will": { disciplineCode: "bjj", rankShortName: "CB7" },
         "bill-hosken": { disciplineCode: "bjj", rankShortName: "CB7" },
         "jerry-smith": { disciplineCode: "bjj", rankShortName: "CB7" },
@@ -1060,6 +1294,8 @@ async function main() {
         "erik-paulson": true,
         "casey-olsen": true,
         "rick-minter": true,
+        "chris-posnik": true,
+        "renato-magno": true,
         "david-meyer": true,
         "chris-haueter": true,
         "john-will": true,
@@ -1257,9 +1493,14 @@ async function main() {
 
       // -------------------------------------------------------------------
       // 4b. Dirty Dozen cohort visual group (rigan tree only). SESSION_0316.
+      //     4c. April-10 ceremony cohort group linked to the PromotionEvent
+      //     (rigan tree only). SESSION_0318.
       // -------------------------------------------------------------------
       if (ts.slug === "rigan-machado-bjj-lineage") {
         await ensureDirtyDozenGroup(tree.id, treeMemberIdByKey)
+        if (promotionEventId) {
+          await ensureCeremonyCohortGroup(tree.id, treeMemberIdByKey, promotionEventId)
+        }
       }
     }
   }

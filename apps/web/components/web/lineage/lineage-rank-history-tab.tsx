@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckIcon, ShieldOffIcon, TriangleAlertIcon } from "lucide-react"
+import { CalendarDaysIcon, CheckIcon, ShieldOffIcon, TriangleAlertIcon } from "lucide-react"
 import type { CSSProperties } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
@@ -170,6 +170,13 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
           </Stack>
         ) : (
           <Note className="text-xs">Awarding instructor not resolved.</Note>
+        )}
+
+        {/* @added SESSION_0318 — read-only ceremony link when this award belongs to a PromotionEvent. */}
+        {award.promotionEvent && (
+          <Badge variant="soft" size="sm" prefix={<CalendarDaysIcon />}>
+            {award.promotionEvent.title}
+          </Badge>
         )}
       </Stack>
     </article>

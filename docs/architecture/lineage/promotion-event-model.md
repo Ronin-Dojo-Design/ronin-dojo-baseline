@@ -2,23 +2,26 @@
 title: "Promotion Event Model — design + plan (PromotionEvent / belt ceremony)"
 slug: promotion-event-model
 type: plan
-status: draft
+status: accepted
 created: 2026-05-31
 updated: 2026-05-31
-last_agent: claude-session-0316
+last_agent: claude-session-0318
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/petey-plan-0305.md
+  - docs/sprints/SESSION_0318.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
 # Promotion Event Model — design + plan
 
-> **Status: draft / staged.** Grilled and scoped in SESSION_0316; **not yet implemented.** Build via a
-> dedicated ADR (amends ADR 0016) + petey-plan epic + its own session(s). Brian flagged this as **the most
+> **Status: accepted / implementing (SESSION_0318).** Grilled and scoped in SESSION_0316; open questions
+> resolved and ADR 0016 amended in SESSION_0318 (see "Resolved (SESSION_0318)" below). The additive schema
+> spine + April 10 seed + read-only cohort/Rank-History wiring ship in SESSION_0318; the gallery page, media
+> upload, event editor, and permission model are deferred to a later epic. Brian flagged this as **the most
 > important domain logic across Ronin Dojo Design, BBL, WEKAF, Baseline, and the white-labeled sites sold on RDD.**
 
 ## Why this exists
@@ -67,6 +70,9 @@ to publish to BBL + Baseline.
 
 ## Proposed schema (additive; consistent with ADR 0016)
 
+> **SESSION_0318:** `attestedById` was **removed** (no attestor/attendee model in v1 — see Resolved below).
+> The `LineageVisualGroup.promotionEventId` cohort link was **added**. Final shape:
+
 ```prisma
 model PromotionEvent {
   id                 String    @id @default(cuid())
@@ -74,12 +80,12 @@ model PromotionEvent {
   eventDate          DateTime
   location           String?                             // free-text venue fallback
   description        String?
-  attestedById       String?                             // witness/attestor (e.g. Brian) — drives verification
   // host venue (where held), distinct from each award's awarding school of record
   hostOrganization   Organization? @relation(fields: [hostOrganizationId], references: [id], onDelete: SetNull)
   hostOrganizationId String?
   rankAwards         RankAward[]
   mediaAttachments   MediaAttachment[]                   // shared event gallery
+  visualGroups       LineageVisualGroup[]                // cohort boxes that represent this event
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   @@index([eventDate])
@@ -89,33 +95,44 @@ model PromotionEvent {
 // On RankAward (additive):
 //   promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
 //   promotionEventId String?
+// On MediaAttachment (additive, polymorphic per-owner column):
+//   promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id])
+//   promotionEventId String?
+// On LineageVisualGroup (additive — cohort link):
+//   promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
+//   promotionEventId String?
 ```
 
 - `RankAward` stays the canonical per-person promotion fact; `promotionEventId` (nullable) groups awards into a
   ceremony. Removing an event never drops promotion history (`SetNull`).
-- `LineageVisualGroup` (cohort display) should be derivable from / linkable to the event so the tree cohort and
-  the event are one truth, not two.
+- `LineageVisualGroup.promotionEventId` (nullable) links each per-tree cohort box to the one global event —
+  many boxes → one event — so the tree cohort and the event are one truth, not two.
 - Optional future `enum PromotionEventType { PROMOTION_CEREMONY, SEMINAR, GRADING, COMPETITION }` (deferred).
 
-## Open questions (resolve in the dedicated session / further grill rounds)
+## Resolved (SESSION_0318)
 
-- **Attestor type:** `attestedById` as a single `User` FK (e.g. Brian) vs. a richer attendees/witnesses relation.
-  Brian leaned to "media + attestation drives verification, no separate attendee model in v1" — confirm the
-  single-attestor FK is enough.
-- **Verification semantics:** does event media + attestor auto-set `VERIFIED`, or does an admin still confirm /
-  can DISPUTE? How does this interact with `LineageRelationship.verificationStatus`?
-- **WEKAF specifics:** WEKAF (Eskrima/Arnis) promotions may be competition/tournament-driven — does an event need
-  to link competition results, or is the manual-ceremony model sufficient for v1?
-- **Creation/edit permissions:** who can create/edit a `PromotionEvent` across brands + white-label (platform
-  admin, org owner/admin, the promoter)? Maps to the lineage editor capability model.
-- **Cohort group linkage:** does `LineageVisualGroup` gain a `promotionEventId`, or does the seed derive groups
-  from events at sync time?
+All five open questions were resolved in the SESSION_0318 Petey grill and ratified by Brian:
+
+- **Attestor type → DROPPED.** No `attestedById` and no attendee/witness model in v1. Its only stated purpose
+  was driving verification, which is now decoupled (below). The promoter is on `RankAward.awardedById` and the
+  uploader on `Media.uploadedById`. A `PromotionEventAttendee` join table can be added additively later if a real
+  consumer appears.
+- **Verification semantics → NO EVENT SIGNAL.** The event neither auto-verifies nor proposes status. Verification
+  stays role-gated on `RankAward` / `LineageRelationship.verificationStatus`, set by the promoting instructor /
+  admin / school-owner / instructor / user with a granted lineage capability — exactly per ADR 0016 + the sync
+  rules. Event media/attendance is not an authority over rank truth.
+- **WEKAF specifics → DEFERRED (v2).** The manual-ceremony model is sufficient for v1; competition/tournament
+  result linkage is out of scope.
+- **Creation/edit permissions → DEFERRED (later epic).** Event editor + capability model are not in the
+  SESSION_0318 spine; the schema is read-only-seeded for now.
+- **Cohort group linkage → FK ON GROUP.** Added nullable `LineageVisualGroup.promotionEventId` (`SetNull`).
+  Many per-tree cohort boxes point at one global event (many-to-one), not derived-at-sync date matching.
 
 ## Relationship to ADR 0016
 
 ADR 0016 ("RankAward is the canonical promotion fact; the tree never owns truth") stands. This adds a grouping
-fact (the event) above the award; **needs an ADR 0016 amendment note** (similar to the SESSION_0311
-`RankAward.organizationId` addition).
+fact (the event) above the award; the **ADR 0016 amendment was written in SESSION_0318** (similar to the
+SESSION_0311 `RankAward.organizationId` addition) — see ADR 0016 → "SESSION_0318 — PromotionEvent grouping fact".
 
 ## Staged task outline (for the dedicated epic)
 

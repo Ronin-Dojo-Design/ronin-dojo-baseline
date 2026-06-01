@@ -1066,6 +1066,9 @@ model Organization {
   // @why     Awarding-school link for promotions (RankAward.organizationId); extends ADR 0016
   rankAwards RankAward[]
 
+  // @added   SESSION_0318 (2026-05-31) — host venue for promotion ceremonies (PromotionEvent.hostOrganizationId)
+  hostedPromotionEvents PromotionEvent[] @relation("PromotionEventHostOrg")
+
   @@unique([brand, slug])
   @@index([brand])
   @@index([ownerId])
@@ -1871,32 +1874,32 @@ model OrgRelationship {
 }
 
 model OrgSettings {
-  id                         String   @id @default(cuid())
+  id                         String  @id @default(cuid())
   defaultInstructorTitle     String?
-  checkInWindowMinutes       Int      @default(30)
-  allowLateCheckIn           Boolean  @default(true)
-  requireWaiverBeforeCheckIn Boolean  @default(true)
+  checkInWindowMinutes       Int     @default(30)
+  allowLateCheckIn           Boolean @default(true)
+  requireWaiverBeforeCheckIn Boolean @default(true)
   waiverRenewalMonths        Int?
-  smsCostPassthrough         Boolean  @default(false)
+  smsCostPassthrough         Boolean @default(false)
   dropInFeeCents             Int?
-  dropInRequiresWaiver       Boolean  @default(true)
-  allowBarterMembership      Boolean  @default(false)
-  enableGamification         Boolean  @default(true)
-  enableBeltTestScoring      Boolean  @default(false)
+  dropInRequiresWaiver       Boolean @default(true)
+  allowBarterMembership      Boolean @default(false)
+  enableGamification         Boolean @default(true)
+  enableBeltTestScoring      Boolean @default(false)
 
   // Theme overrides (null = inherit from BrandSettings)
   // @added   SESSION_0291 (2026-05-29)
   // @why     White-label per-org theme customization (D5/D8)
-  primaryColor    String?
-  primaryFgColor  String?
-  accentColor     String?
-  accentFgColor   String?
-  logoUrl         String?
-  faviconUrl      String?
-  ogImageUrl      String?
+  primaryColor   String?
+  primaryFgColor String?
+  accentColor    String?
+  accentFgColor  String?
+  logoUrl        String?
+  faviconUrl     String?
+  ogImageUrl     String?
 
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String       @unique
@@ -1911,7 +1914,7 @@ model OrgSettings {
 model BrandSettings {
   id             String   @id @default(cuid())
   brand          Brand    @unique
-  primaryColor   String?  // HSL values without hsl() wrapper, e.g. "1 79% 51%"
+  primaryColor   String? // HSL values without hsl() wrapper, e.g. "1 79% 51%"
   primaryFgColor String?
   accentColor    String?
   accentFgColor  String?
@@ -1935,12 +1938,12 @@ model RankAward {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  user        User    @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  rank        Rank    @relation(fields: [rankId], references: [id], onDelete: Restrict)
-  rankId      String
-  awardedBy   User?   @relation("AwardedBy", fields: [awardedById], references: [id])
-  awardedById String?
+  user           User          @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  rank           Rank          @relation(fields: [rankId], references: [id], onDelete: Restrict)
+  rankId         String
+  awardedBy      User?         @relation("AwardedBy", fields: [awardedById], references: [id])
+  awardedById    String?
   // @added   SESSION_0311 (2026-05-30) — lineage Phase 3-0; awarding school (extends ADR 0016).
   // RankAward stays the canonical promotion fact; `organization` is the school that awarded this belt
   // — distinct from `awardedBy` (the promoter) and from the member's current Membership/affiliation.
@@ -1948,6 +1951,13 @@ model RankAward {
   // drops promotion history.
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   organizationId String?
+
+  // @added   SESSION_0318 (2026-05-31) — PromotionEvent grouping fact (extends ADR 0016).
+  // RankAward stays the canonical per-person promotion fact; `promotionEvent` (nullable) groups
+  // multiple people's awards into one ceremony. onDelete: SetNull so removing an event never drops
+  // promotion history. See docs/architecture/decisions/0016 → SESSION_0318 amendment.
+  promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
+  promotionEventId String?
 
   lineageTreeMembers   LineageTreeMember[]
   lineageRelationships LineageRelationship[]
@@ -1961,6 +1971,38 @@ model RankAward {
   @@index([rankId])
   @@index([awardedById])
   @@index([organizationId])
+  @@index([promotionEventId])
+}
+
+// ---------------------------------------------------------------------------
+// Model — PromotionEvent (belt ceremony grouping fact)
+// ---------------------------------------------------------------------------
+
+// @added SESSION_0318 (2026-05-31) — first-class ceremony that groups multiple RankAwards into one
+// event with a shared date, host venue, description, and shared media gallery. RankAward remains the
+// canonical promotion fact (ADR 0016); PromotionEvent sits above it as an OPTIONAL grouping. The event
+// carries NO verification signal — verification stays role-gated on RankAward/LineageRelationship.
+// No attestor/attendee model in v1 (promoter is RankAward.awardedById; uploader is Media.uploadedById).
+// Discipline-agnostic: one ceremony can group awards across BJJ / FMA-WEKAF / Muay Thai etc.
+model PromotionEvent {
+  id          String   @id @default(cuid())
+  title       String
+  eventDate   DateTime
+  location    String? // free-text venue fallback
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // host venue (where held), distinct from each RankAward.organizationId (awarding school of record)
+  hostOrganization   Organization? @relation("PromotionEventHostOrg", fields: [hostOrganizationId], references: [id], onDelete: SetNull)
+  hostOrganizationId String?
+
+  rankAwards       RankAward[]
+  mediaAttachments MediaAttachment[] // shared event gallery
+  visualGroups     LineageVisualGroup[] // per-tree cohort boxes that represent this event
+
+  @@index([eventDate])
+  @@index([hostOrganizationId])
 }
 
 // ---------------------------------------------------------------------------
@@ -2500,10 +2542,17 @@ model LineageVisualGroup {
   parentMember   LineageTreeMember? @relation("LineageGroupParentMember", fields: [parentMemberId], references: [id], onDelete: Cascade)
   parentMemberId String?
 
+  // @added SESSION_0318 (2026-05-31) — cohort link: this per-tree cohort box represents a global
+  // PromotionEvent. Many boxes (multiple brand trees; multiple parents within a tree) → one event.
+  // onDelete: SetNull so removing the event never drops the visual group.
+  promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
+  promotionEventId String?
+
   members LineageTreeMember[] @relation("LineageMemberVisualGroup")
 
   @@unique([treeId, parentMemberId, groupType, promotionDate])
   @@index([treeId, parentMemberId, sortOrder])
+  @@index([promotionEventId])
 }
 
 model LineageTreeAccess {
@@ -2853,7 +2902,7 @@ model Event {
   discipline     Discipline?  @relation(fields: [disciplineId], references: [id])
   disciplineId   String?
 
-  registrations EventRegistration[]
+  registrations    EventRegistration[]
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4)
   mediaAttachments MediaAttachment[]
@@ -3142,6 +3191,8 @@ model MediaAttachment {
   organizationId        String?
   contentAtomId         String?
   certificateTemplateId String?
+  // @added SESSION_0318 (2026-05-31) — shared PromotionEvent gallery (polymorphic per-owner pattern)
+  promotionEventId      String?
 
   // @added   SESSION_0289 (2026-05-29)
   // @why     D4 resolved: wire all 8 FK columns to full Prisma relations (5 were bare id-only)
@@ -3154,6 +3205,7 @@ model MediaAttachment {
   organization        Organization?        @relation(fields: [organizationId], references: [id])
   contentAtom         ContentAtom?         @relation(fields: [contentAtomId], references: [id])
   certificateTemplate CertificateTemplate? @relation(fields: [certificateTemplateId], references: [id])
+  promotionEvent      PromotionEvent?      @relation(fields: [promotionEventId], references: [id])
 
   @@index([mediaId])
   @@index([passportId])
@@ -3164,6 +3216,7 @@ model MediaAttachment {
   @@index([organizationId])
   @@index([contentAtomId])
   @@index([certificateTemplateId])
+  @@index([promotionEventId])
 }
 
 model Technique {

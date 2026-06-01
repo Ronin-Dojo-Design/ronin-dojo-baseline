@@ -79,3 +79,44 @@ unchanged: `RankAward` remains the canonical promotion fact; this only enriches 
 `location` is retained as a fallback for unstructured/historical entries. Migration
 `20260531033236_add_rankaward_organization` is purely additive (no data loss). Consumed by lineage
 Phase 3d (promotion-history school links in the persistent profile panel) per `docs/petey-plan-0305.md`.
+
+### SESSION_0318 (2026-05-31) — PromotionEvent grouping fact (belt ceremony)
+
+Added a first-class `PromotionEvent` model that **groups** multiple `RankAward`s into one ceremony
+with a shared date, host venue, description, and shared media gallery. The core decision above is
+unchanged: `RankAward` remains the canonical per-person promotion fact. `PromotionEvent` sits
+*above* the award as an **optional grouping**; removing an event never drops promotion history.
+
+Additive schema delta (SESSION_0318 migration; purely additive — `CREATE TABLE` + nullable
+`ADD COLUMN` + indexes/FKs, no drops, no NOT NULL backfill):
+
+- New `PromotionEvent { id, title, eventDate, location?, description?, hostOrganizationId? →
+  Organization (SET NULL), createdAt, updatedAt }`, indexed on `eventDate` and `hostOrganizationId`.
+- `RankAward.promotionEventId String?` → `PromotionEvent` (`SET NULL`, indexed). Nullable; an award
+  belongs to at most one event.
+- `MediaAttachment.promotionEventId String?` → `PromotionEvent` (indexed), following the existing
+  polymorphic per-owner FK pattern (`rankAwardId`, `eventId`, …), giving the event a shared gallery.
+- `LineageVisualGroup.promotionEventId String?` → `PromotionEvent` (`SET NULL`, indexed). A per-tree
+  cohort group (e.g. the SESSION_0316 "Dirty Dozen" box) may point at the global event it
+  represents — **many cohort boxes → one event** (multiple brand trees; multiple parents within a
+  tree). The group and the event become one truth instead of a fragile date-match.
+
+Decisions locked in the SESSION_0318 grill that constrain this model:
+
+- **No verification signal on the event.** `PromotionEvent` does not auto-verify and does not propose
+  verification status. Verification stays exactly where this ADR puts it — role-gated on
+  `RankAward` / `LineageRelationship.verificationStatus`, set by the promoting instructor / admin /
+  school-owner / instructor / user with a granted lineage capability. Event media and attendance are
+  **not** an authority over rank truth.
+- **No attestor / attendee model in v1.** The earlier `promotion-event-model.md` draft proposed
+  `attestedById` to "drive verification"; with verification decoupled (above), that field has no
+  consumer. The promoter is already on `RankAward.awardedById` and the photo uploader on
+  `Media.uploadedById`. A `PromotionEventAttendee` join table may be added additively later only when
+  a real feature needs it.
+- **Discipline-agnostic + dual org axis retained.** An event groups awards across any discipline;
+  each award keeps its own rank/discipline. `PromotionEvent.hostOrganizationId` (venue) is distinct
+  from each `RankAward.organizationId` (awarding school of record, per the SESSION_0311 amendment).
+
+Consumed by the April 10, 2026 Coral Belt Ceremony seed and a read-only Rank-History event link in
+SESSION_0318. The dedicated event/gallery page, media upload, event editor, and permission model are
+deferred to a later epic per `docs/architecture/lineage/promotion-event-model.md`.
