@@ -65,6 +65,7 @@ export function LineageHonorStrip({
         <ol className="flex w-full gap-2 overflow-x-auto pb-1">
           {featuredMembers.map((member, index) => {
             const displayName = nodeDisplayName(member.node)
+            const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
             const isSelected = member.id === selectedMemberId
             const beltColor = member.selectedRank?.colorHex ?? null
             const rankLabel = member.selectedRank?.name ?? null
@@ -101,9 +102,7 @@ export function LineageHonorStrip({
                     style={beltColor ? { backgroundColor: beltColor } : undefined}
                   />
                   <Avatar className="size-8">
-                    {member.node.user.image && (
-                      <AvatarImage src={member.node.user.image} alt={displayName} />
-                    )}
+                    {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
                     <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
                   </Avatar>
                   <Stack size="xs" direction="column" wrap={false} className="min-w-0">

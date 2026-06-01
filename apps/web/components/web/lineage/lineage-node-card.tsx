@@ -58,6 +58,7 @@ export function LineageNodeCard({
   canChangePromoter,
 }: LineageNodeCardProps) {
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
+  const avatarSrc = node.user.passport?.avatarUrl ?? node.user.image
 
   // Prefer the tree-member's selectedRankAward over the user's latest overall rank
   const latestRankAward = node.user.rankAwards?.[0]
@@ -110,7 +111,7 @@ export function LineageNodeCard({
         <Stack size="sm" direction="column" wrap={false} className="h-full w-full">
           <Stack size="sm" wrap={false} className="w-full items-start">
             <Avatar className="size-10 md:size-12">
-              {node.user.image && <AvatarImage src={node.user.image} alt={displayName} />}
+              {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
               <AvatarFallback>{initials(displayName)}</AvatarFallback>
             </Avatar>
             <Stack

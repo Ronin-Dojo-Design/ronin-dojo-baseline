@@ -13,6 +13,10 @@ export const directoryUserPayload = {
   name: true,
   image: true,
   email: true,
+  // Promoted Passport avatar is preferred over User.image at the projection
+  // layer (SESSION_0325). Only avatarUrl is selected — it is deliberately
+  // public (SESSION_0324); no other Passport field is widened into the list.
+  passport: { select: { avatarUrl: true } },
 } satisfies Prisma.UserSelect
 
 export const directoryMembershipPayload = {
@@ -84,6 +88,7 @@ export const directoryProfileDetailPayload = {
       email: true,
       passport: {
         select: {
+          avatarUrl: true,
           bio: true,
           socialLinks: true,
         },

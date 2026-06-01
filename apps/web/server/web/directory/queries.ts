@@ -97,7 +97,8 @@ export const getDirectoryProfiles = cache(
       id: profile.id,
       userId: profile.user.id,
       name: profile.user.name,
-      image: profile.user.image,
+      // Prefer the promoted Passport avatar, fall back to User.image.
+      image: profile.user.passport?.avatarUrl ?? profile.user.image,
       locationCity: profile.locationCity,
       locationRegion: profile.locationRegion,
       locationCountry: profile.locationCountry,
@@ -192,7 +193,8 @@ export const findProfileBySlug = async ({
     user: {
       id: profile.user.id,
       name: profile.user.name,
-      image: profile.user.image,
+      // Prefer the promoted Passport avatar, fall back to User.image.
+      image: profile.user.passport?.avatarUrl ?? profile.user.image,
       bio: profile.user.passport?.bio ?? null,
       socialLinks: profile.user.passport?.socialLinks ?? null,
       email: profile.showEmail ? profile.user.email : null,

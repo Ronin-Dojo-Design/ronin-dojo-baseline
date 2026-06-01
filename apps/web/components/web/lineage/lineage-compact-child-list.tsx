@@ -134,6 +134,7 @@ function LineageCompactChildRow({
   const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
   const displayName = nodeDisplayName(member.node)
+  const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
   const rankLabel = member.selectedRank?.name ?? null
   const beltColor = member.selectedRank?.colorHex ?? null
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
@@ -179,9 +180,7 @@ function LineageCompactChildRow({
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 text-left transition-colors hover:bg-muted/60"
         >
           <Avatar className="size-8 shrink-0">
-            {member.node.user.image && (
-              <AvatarImage src={member.node.user.image} alt={displayName} />
-            )}
+            {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
             <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
           </Avatar>
 

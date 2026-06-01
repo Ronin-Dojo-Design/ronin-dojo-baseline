@@ -245,6 +245,7 @@ function DrawerBody({
   isAdmin?: boolean
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
+  const avatarSrc = profile.user.passport?.avatarUrl ?? profile.user.image
   const currentAward = profile.user.rankAwards[0] ?? null
   const currentRank = currentAward?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
@@ -297,7 +298,7 @@ function DrawerBody({
                 />
               )}
               <Avatar className="relative size-16">
-                {profile.user.image && <AvatarImage src={profile.user.image} alt={displayName} />}
+                {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
                 <AvatarFallback>{initials(displayName)}</AvatarFallback>
               </Avatar>
             </div>

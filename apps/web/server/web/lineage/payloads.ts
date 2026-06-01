@@ -36,6 +36,9 @@ const lineageUserPayload = {
   passport: {
     select: {
       displayName: true,
+      // Lineage cards prefer the promoted Passport avatar over User.image
+      // (SESSION_0325), mirroring the existing displayName preference.
+      avatarUrl: true,
     },
   },
   directoryProfile: {

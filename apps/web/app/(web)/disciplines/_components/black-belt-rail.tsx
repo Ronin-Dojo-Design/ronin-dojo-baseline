@@ -25,7 +25,14 @@ export async function BlackBeltRail({ disciplineId, brand }: BlackBeltRailProps)
       rank: { sortOrder: { gte: 10 } },
     },
     include: {
-      user: { select: { id: true, name: true, image: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          passport: { select: { avatarUrl: true } },
+        },
+      },
       rank: { select: { name: true, sortOrder: true, colorHex: true } },
     },
     orderBy: { rank: { sortOrder: "desc" } },
@@ -35,7 +42,8 @@ export async function BlackBeltRail({ disciplineId, brand }: BlackBeltRailProps)
   const members: RankedMember[] = topMembers.map(m => ({
     id: m.id,
     name: m.user.name ?? "Member",
-    image: m.user.image ?? null,
+    // Prefer the promoted Passport avatar, fall back to User.image.
+    image: m.user.passport?.avatarUrl ?? m.user.image ?? null,
     rankName: m.rank?.name ?? null,
     colorHex: m.rank?.colorHex ?? null,
   }))

@@ -84,7 +84,8 @@ export const searchDirectoryProfiles = async (
     id: profile.id,
     slug: (profile as any).slug ?? profile.id,
     displayName: profile.user.name,
-    avatarUrl: profile.user.image,
+    // Prefer the promoted Passport avatar, fall back to User.image.
+    avatarUrl: profile.user.passport?.avatarUrl ?? profile.user.image,
     bio: null as string | null,
     locationCity: profile.locationCity,
     locationRegion: profile.locationRegion,
