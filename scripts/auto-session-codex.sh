@@ -84,10 +84,12 @@ for ((i = 1; i <= N; i++)); do
   echo "════════ codex session ${i}/${N} → ${branch} (stacked on ${base_branch}) ════════"
   git switch -c "$branch" "$base_branch"
 
+  # NB: ${arr[@]+"${arr[@]}"} guard — bash 3.2 (macOS default) errors on an empty
+  # array expansion under `set -u`; this expands to nothing when MODEL_ARGS is unset.
   codex exec \
     --cd "$ROOT" \
     --dangerously-bypass-approvals-and-sandbox \
-    "${MODEL_ARGS[@]}" \
+    ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} \
     "$SESSION_PROMPT"
 
   # Brake 1: a clean close leaves no uncommitted changes.
