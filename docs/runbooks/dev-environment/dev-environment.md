@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-04-27
 updated: 2026-06-01
-last_agent: codex-session-0317
+last_agent: claude-session-0319
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -108,15 +108,30 @@ bun run dev
 SESSION_0314 verified `PORT=3001 bun run dev` reaches Next dev; the only failure in that
 probe was the expected `.next/dev/lock` because another Next dev server was already running.
 
-**DB-backed page fallback:** SESSION_0316 found that `next dev --turbo` could boot but fail on
-DB-backed pages under the Prisma 7 generated client / `@prisma/adapter-pg` path. SESSION_0317
-rechecked `/disciplines/bjj` under Turbopack and got `200 OK` with Rigan Machado rendered and no
-Prisma/error overlay; first compile was slow, but functional. Keep webpack as the stable fallback if
-the Turbopack + Prisma error recurs on a DB-backed route:
+**DB-backed pages returning 500 locally? Check the Postgres.app access gate FIRST.**
+The most common cause (root-caused 2026-06-01, SESSION_0319 follow-up) is **Postgres.app 18's per-app
+database-access gate** — *not* Turbopack. It surfaces as
+`⨯ Error [DriverAdapterError]: Postgres.app failed to verify "trust" authentication` on every DB route
+(`/disciplines`, `/lineage/*`, `/events/*`), under **both** `--turbo` and `--webpack`. Postgres.app 18
+launches the server with `-c shared_preload_libraries=auth_permission_dialog` and keeps a
+`ClientApplicationPermissions` allow-list (`defaults read com.postgresapp.Postgres2`); the connecting
+binary must be on it. `psql`, standalone `bun`/`node`, and `Codex.app` are usually already approved (so
+they connect fine) — but the Next dev server's `node` binary (`/usr/local/bin/node`) often is not, so only
+the dev server 500s. Proof it's not app code: raw `pg` and the exact `services/db.ts` setup connect fine
+standalone.
+
+**Fix (one-time):** run `bun dev` in a real terminal and click **Allow** on the `PostgresPermissionDialog`
+prompt for `node`, **or** toggle the access-permission gate off in Postgres.app Settings. Once approved/off,
+**Turbopack renders DB pages fine — no `--webpack` needed.**
+
+**Separate/historical externalization error:** SESSION_0316 saw a genuine
+`Failed to load external module @prisma/client-<hash>/runtime/client` 500 under Turbopack; SESSION_0317 got
+`200 OK` and it has not recurred. Only if *that specific* error returns is the webpack fallback relevant
+(and `serverExternalPackages` tuning in `next.config.ts` is the candidate real fix):
 
 ```bash
 cd apps/web
-npx next dev --webpack
+npx next dev --webpack    # ONLY for the @prisma/client externalization error — does NOT fix the access gate
 ```
 
 **Fallback:** if the Bun script is unavailable in a specific shell, use the direct equivalent:
