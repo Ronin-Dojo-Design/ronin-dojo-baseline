@@ -4,8 +4,8 @@ slug: topic-index
 type: index
 status: active
 created: 2026-05-05
-updated: 2026-05-05
-last_agent: copilot-session-0074
+updated: 2026-06-01
+last_agent: codex-session-0317
 pairs_with:
   - docs/knowledge/wiki/index.md
 backlinks:
@@ -57,6 +57,22 @@ Quick lookup by feature area. For each area: the concept page (if it exists), th
 - **Sessions:** 0061 (brand scoping), 0062 (brand-aware config + nav), 0065 (homepage), 0066 (listing pattern ADR)
 - **Key paths:** `lib/brand-context.ts`, `config/blog.ts`, `app/(web)/page.tsx`
 - **Status:** Shipped. Brand-aware config, nav, homepage, listing pattern repurposing.
+
+## Lineage
+
+- **Runbook hub:** [`runbooks/domain-features/lineage-hub.md`](../../runbooks/domain-features/lineage-hub.md)
+- **Concept/spec pages:** [`component-porting/specs/lineage-family-tree-port-spec.md`](component-porting/specs/lineage-family-tree-port-spec.md), [`component-porting/specs/lineage-profile-drawer-port-spec.md`](component-porting/specs/lineage-profile-drawer-port-spec.md)
+- **Sessions:** 0178 (schema foundation), 0248 (public listing), 0260 (lifecycle SOP), 0305–0317 (lineage tree enhancement epic, Rigan Machado seed, persistent panel, and tree repair)
+- **Key paths:** `server/web/lineage/`, `components/web/lineage/`, `app/(web)/disciplines/`, `apps/web/prisma/seed-baseline-lineage.ts`, `apps/web/prisma/seed-bbl-org.ts`
+- **Status:** Active. BBL/Baseline BJJ discipline lineage is the current flagship surface; SESSION_0317 landed the non-modal persistent panel and desktop/mobile tree-layout repair. The dedicated [`Promotion Event Model`](../../architecture/lineage/promotion-event-model.md) remains staged for the later schema/ADR session.
+
+## Dev Environment / Postgres
+
+- **Runbook hub:** [`runbooks/README.md`](../../runbooks/README.md)
+- **Runbooks:** [`dev-environment.md`](../../runbooks/dev-environment/dev-environment.md), [`database.md`](../../runbooks/database/database.md), [`prisma-workflow.md`](../../runbooks/database/prisma-workflow.md)
+- **Sessions:** 0314 (dev/prod runbook pointers), 0316 (Turbopack + Prisma DB-backed page blocker), 0317 (local Postgres/Prisma adapter repro check)
+- **Key paths:** `apps/web/.env`, `apps/web/services/db.ts`, `apps/web/prisma.config.ts`, `apps/web/package.json`
+- **Status:** Local Postgres.app is canonical for dev. SESSION_0317 rechecked `next dev --turbo` on `/disciplines/bjj` successfully; keep `next dev --webpack` as the fallback if a DB-backed route regresses.
 
 ## Listing Pattern (Tool → Directory Listing)
 

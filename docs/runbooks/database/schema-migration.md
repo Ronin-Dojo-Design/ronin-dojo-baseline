@@ -4,8 +4,8 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-05-19
-last_agent: claude-session-0200
+updated: 2026-06-01
+last_agent: codex-session-0317
 use_count: 1
 pairs_with:
   - docs/runbooks/database.md
@@ -129,6 +129,15 @@ npx next dev --turbo
 # Verify: /organizations page loads
 # Verify: /directory page loads
 ```
+
+If Turbopack regresses on a DB-backed route, rerun the smoke with the stable webpack fallback:
+
+```bash
+npx next dev --webpack
+```
+
+SESSION_0317 rechecked `/disciplines/bjj` under Turbopack and got `200 OK` with no Prisma/error
+overlay. Treat webpack as the fallback, not the default, unless a specific smoke proves otherwise.
 
 ### 7. Commit
 

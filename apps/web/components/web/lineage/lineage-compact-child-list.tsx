@@ -125,7 +125,7 @@ function LineageCompactChildRow({
   const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
   const displayName = nodeDisplayName(member.node)
-  const rankLabel = member.selectedRank?.shortName ?? member.selectedRank?.name ?? null
+  const rankLabel = member.selectedRank?.name ?? null
   const beltColor = member.selectedRank?.colorHex ?? null
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 

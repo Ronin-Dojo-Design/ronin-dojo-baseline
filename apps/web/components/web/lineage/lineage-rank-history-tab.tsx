@@ -25,7 +25,12 @@ function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "Unknown date"
   const d = typeof date === "string" ? new Date(date) : date
   if (Number.isNaN(d.getTime())) return "Unknown date"
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d)
 }
 
 function sourceBadge(profile: LineageNodeProfile) {
@@ -125,11 +130,6 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
             />
           )}
           <span className="font-medium text-sm">{award.rank.name}</span>
-          {award.rank.shortName && (
-            <Badge variant="soft" size="sm">
-              {award.rank.shortName}
-            </Badge>
-          )}
           {award.rank.rankSystem.discipline?.name && (
             <Badge variant="outline" size="sm">
               {award.rank.rankSystem.discipline.name}

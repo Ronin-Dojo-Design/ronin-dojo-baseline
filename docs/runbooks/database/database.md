@@ -4,8 +4,8 @@ slug: database
 type: runbook
 status: active
 created: 2026-04-25
-updated: 2026-05-20
-last_agent: codex-session-0205
+updated: 2026-06-01
+last_agent: codex-session-0317
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -59,7 +59,7 @@ Sanity check:
 
 ```bash
 psql ronindojo_dev -c '\dx'
-# Expect: citext and pg_trgm in the extension list.
+# Expect: citext in the extension list. Current schema declares only `extensions = [citext]`.
 ```
 
 ### Start / stop
@@ -70,10 +70,12 @@ Postgres.app is just a Mac app — quit it from the menu bar to stop, launch it 
 
 ```bash
 dropdb ronindojo_dev && createdb ronindojo_dev
-psql ronindojo_dev -c 'CREATE EXTENSION citext; CREATE EXTENSION pg_trgm;'
 # Then re-run migrations
 bun db:migrate dev
 ```
+
+Do not manually create `pg_trgm` during reset unless the schema is updated to declare it. As of
+SESSION_0317, `apps/web/prisma/schema.prisma` declares only `citext`, and the local DB matches that.
 
 ## Local dev — Docker (alternative path, not active)
 
@@ -186,4 +188,6 @@ Don't run migrations against prod manually — that's what the Vercel deploy doe
 - **`relation "..." does not exist`** after a migration — run `bun db:generate` to regenerate the client.
 - **Port 5432 already in use** — another Postgres is running. `lsof -i :5432`, kill it, or change the port mapping in `docker-compose.yml` to `5433:5432`.
 - **`pgbouncer=true` errors on Neon migrations** — you used the pooled URL for migrations. Use `DIRECT_URL` instead.
-- **`citext` not found** — extension wasn't created. Connect and run `CREATE EXTENSION IF NOT EXISTS citext;`.
+- **`citext` not found** — the schema extension did not apply. Run the Prisma migration/push workflow
+  for the local dev DB; only create the extension manually as a temporary local unblocker if Prisma
+  cannot reach the database.

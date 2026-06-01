@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-31
-last_agent: codex-session-0314
+updated: 2026-06-01
+last_agent: codex-session-0317
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -107,6 +107,17 @@ bun run dev
 **What this runs:** `apps/web/package.json` defines `"dev": "next dev --turbo"`.
 SESSION_0314 verified `PORT=3001 bun run dev` reaches Next dev; the only failure in that
 probe was the expected `.next/dev/lock` because another Next dev server was already running.
+
+**DB-backed page fallback:** SESSION_0316 found that `next dev --turbo` could boot but fail on
+DB-backed pages under the Prisma 7 generated client / `@prisma/adapter-pg` path. SESSION_0317
+rechecked `/disciplines/bjj` under Turbopack and got `200 OK` with Rigan Machado rendered and no
+Prisma/error overlay; first compile was slow, but functional. Keep webpack as the stable fallback if
+the Turbopack + Prisma error recurs on a DB-backed route:
+
+```bash
+cd apps/web
+npx next dev --webpack
+```
 
 **Fallback:** if the Bun script is unavailable in a specific shell, use the direct equivalent:
 
@@ -236,4 +247,4 @@ If the dev server won't start:
 
 ## Last verified
 
-SESSION_0314 — 2026-05-31
+SESSION_0317 — 2026-06-01 local Postgres.app and Prisma adapter probes; DB-backed browser capture still uses `next dev --webpack` until the Turbopack blocker is fixed.

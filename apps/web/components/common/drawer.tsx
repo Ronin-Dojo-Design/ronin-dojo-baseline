@@ -49,7 +49,20 @@ function DrawerOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
   )
 }
 
-function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
+type DrawerContentProps = DialogPrimitive.Popup.Props & {
+  showOverlay?: boolean
+  overlayClassName?: string
+  containerClassName?: string
+}
+
+function DrawerContent({
+  className,
+  children,
+  showOverlay = true,
+  overlayClassName,
+  containerClassName,
+  ...props
+}: DrawerContentProps) {
   const touchStartY = useRef<number | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -83,7 +96,7 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
 
   return (
     <DrawerPortal>
-      <DrawerOverlay />
+      {showOverlay && <DrawerOverlay className={overlayClassName} />}
 
       {/* Mobile: bottom-sheet. Desktop: centered dialog. */}
       <div
@@ -93,6 +106,8 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
           "items-end justify-center",
           // Desktop: center vertically
           "md:items-start md:justify-center md:px-4 md:py-6 md:pt-[12.5vh] md:[@media(min-height:1000px)]:pt-[25vh]",
+          !showOverlay && "pointer-events-none",
+          containerClassName,
         )}
       >
         <DialogPrimitive.Popup
@@ -119,6 +134,7 @@ function DrawerContent({ className, children, ...props }: DialogPrimitive.Popup.
             // tailwindcss-animate default (150ms linear) so dismissal feel is unchanged.
             "data-open:[animation-duration:300ms]",
             "data-open:[animation-timing-function:var(--ease-snappy)]",
+            !showOverlay && "pointer-events-auto",
             className,
           )}
           style={{

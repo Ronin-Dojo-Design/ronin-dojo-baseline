@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-05-31
+updated: 2026-06-01
 author: Brian + Copilot
-last_agent: codex-session-0314
+last_agent: codex-session-0317
 ---
 
 # LLM Wiki Index
@@ -123,6 +123,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION 0263 Audit Report](../../architecture/lineage/SESSION_0263_audit_report.md) | report | active — lineage v1 acceptance audit; SESSION_0264 cleared the four P0 editor gaps |
 | [SESSION 0263 BBL Recon](../../architecture/lineage/SESSION_0263_bbl_recon.md) | report | active — monorepo lineage data + brand asset inventory |
 | [BBL BJJ Rank + Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md) | architecture | active — SESSION_0264 BJJ rank/PODs field map |
+| [Promotion Event Model](../../architecture/lineage/promotion-event-model.md) | plan | draft — staged PromotionEvent schema/ADR plan; SESSION_0317 bridged April 10, 2026 ceremony through existing RankAward facts only |
 
 ### ADRs
 
@@ -406,6 +407,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0312](../../sprints/SESSION_0312.md) | session--implement | closed |
 | [SESSION_0313](../../sprints/SESSION_0313.md) | session--open | closed — security docs roadmap |
 | [SESSION_0314](../../sprints/SESSION_0314.md) | session--open | closed — lineage Phase 3 UX, BBL Rigan tree, dev/prod runbook pointers |
+| [SESSION_0315](../../sprints/SESSION_0315.md) | session--open | closed — typecheck/dev-server baseline and Prisma client recovery |
+| [SESSION_0316](../../sprints/SESSION_0316.md) | session--implement | closed-partial — verified Rigan seed, board polish, staged non-modal panel/tree repair |
+| [SESSION_0317](../../sprints/SESSION_0317.md) | session | closed — lineage non-modal panel, tree repair, Rigan red-belt seed correction, and dev DB/runbook alignment |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

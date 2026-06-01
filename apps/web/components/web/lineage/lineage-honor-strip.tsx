@@ -67,7 +67,7 @@ export function LineageHonorStrip({
             const displayName = nodeDisplayName(member.node)
             const isSelected = member.id === selectedMemberId
             const beltColor = member.selectedRank?.colorHex ?? null
-            const rankLabel = member.selectedRank?.shortName ?? member.selectedRank?.name ?? null
+            const rankLabel = member.selectedRank?.name ?? null
 
             return (
               <motion.li

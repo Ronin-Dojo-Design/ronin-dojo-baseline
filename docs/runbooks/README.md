@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-05-31
-last_agent: codex-session-0314
+updated: 2026-06-01
+last_agent: codex-session-0317
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -25,7 +25,7 @@ from package scripts alone. Start with these files, then record any drift you fi
 
 | Task area | Read first | Why |
 | --- | --- | --- |
-| Local app/dev server | [dev-environment](dev-environment/dev-environment.md) | Canonical app root, env, database, dev-server command, and local brand hosts. |
+| Local app/dev server | [dev-environment](dev-environment/dev-environment.md) | Canonical app root, env, database, dev-server command, local brand hosts, and webpack fallback when Turbopack regresses on DB-backed page smoke tests. |
 | Production deploy | [vercel-deploy](deploy/vercel-deploy.md) | Active Vercel root/build/env truth for `apps/web`. |
 | Domain cutover/DNS | [vercel-domain-setup-runbook](deploy/vercel-domain-setup-runbook.md) | Record-based Bluehost → Vercel domain setup; do not rediscover DNS steps. |
 | BBL production | [bbl-production-runbook](deploy/bbl-production-runbook.md) | BBL-specific production gates and open DNS source-of-truth decision. |

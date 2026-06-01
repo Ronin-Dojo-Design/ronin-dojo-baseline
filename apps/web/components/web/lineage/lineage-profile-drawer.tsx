@@ -11,7 +11,7 @@ import {
   UserRoundCogIcon,
   UserRoundPlusIcon,
 } from "lucide-react"
-import { type CSSProperties, useState } from "react"
+import { type CSSProperties, useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -91,6 +91,24 @@ type LineageProfileDrawerProps = {
   isAdmin?: boolean
 }
 
+function useDesktopProfilePanel() {
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+
+    const media = window.matchMedia("(min-width: 768px)")
+    const update = () => setIsDesktop(media.matches)
+
+    update()
+    media.addEventListener("change", update)
+
+    return () => media.removeEventListener("change", update)
+  }, [])
+
+  return isDesktop
+}
+
 function initials(name: string | null | undefined): string {
   if (!name) return "?"
   const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -103,7 +121,12 @@ function formatDate(date: Date | string | null | undefined): string | null {
   if (!date) return null
   const d = typeof date === "string" ? new Date(date) : date
   if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d)
 }
 
 function rankProgressPercent(
@@ -165,9 +188,19 @@ export function LineageProfileDrawer({
   nodeId,
   isAdmin,
 }: LineageProfileDrawerProps) {
+  const isDesktopPanel = useDesktopProfilePanel()
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0">
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      modal={!isDesktopPanel}
+      disablePointerDismissal={isDesktopPanel}
+    >
+      <DrawerContent
+        showOverlay={!isDesktopPanel}
+        className="md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0"
+      >
         {!profile ? (
           <Stack direction="column" size="md" className="p-6">
             <DrawerHeader>
@@ -472,11 +505,6 @@ function InfoTab({
               />
             )}
             <span className="font-medium text-sm">{currentRank.name}</span>
-            {currentRank.shortName && (
-              <Badge variant="soft" size="sm">
-                {currentRank.shortName}
-              </Badge>
-            )}
             {discipline?.name && (
               <Badge variant="outline" size="sm">
                 {discipline.name}

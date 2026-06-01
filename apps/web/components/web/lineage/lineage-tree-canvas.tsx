@@ -202,6 +202,18 @@ function clampScale(value: number) {
   return Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(value.toFixed(2))))
 }
 
+function offsetLeftWithin(element: HTMLElement, ancestor: HTMLElement) {
+  let offset = 0
+  let node: HTMLElement | null = element
+
+  while (node && node !== ancestor) {
+    offset += node.offsetLeft
+    node = node.offsetParent as HTMLElement | null
+  }
+
+  return offset
+}
+
 function normalizeMembers(members: LineageTreeMemberRow[] | undefined): CanvasMember[] {
   return (members ?? []).map(member => ({
     id: member.id,
@@ -902,12 +914,14 @@ export function LineageTreeCanvas({
   const reduceMotion = useReducedMotion()
   const [layout, setLayout] = useState<LineageLayout>(defaultLayout)
   const [scale, setScale] = useState(1)
+  const [autoFitPass, setAutoFitPass] = useState(0)
   const [isPinching, setIsPinching] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scaleRef = useRef(scale)
   const autoFittedRef = useRef(false)
+  const autoPannedRef = useRef(false)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -924,11 +938,14 @@ export function LineageTreeCanvas({
     setIsTouch(window.matchMedia("(pointer: coarse)").matches)
   }, [])
 
-  // Auto-fit the tree to the viewport width once on initial measure. Only ever
-  // shrinks to fit (never enlarges past 1.0), and never re-fits after the first
-  // pass so it won't fight a user who has manually zoomed. CSS transforms don't
-  // affect layout, so contentRef.scrollWidth is the unscaled natural tree width.
+  // Auto-fit the tree to the viewport width once when tree mode is active.
+  // Only ever shrinks to fit (never enlarges past 1.0), and does not run while
+  // board mode is active so board's compact layout cannot seed tree zoom.
+  // CSS transforms don't affect layout, so contentRef.scrollWidth is the
+  // unscaled natural tree width.
   useEffect(() => {
+    if (layout !== "tree") return
+
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
     if (!scrollEl || !contentEl) return
@@ -940,6 +957,7 @@ export function LineageTreeCanvas({
       if (!containerWidth || !naturalWidth) return
       autoFittedRef.current = true
       setScale(clampScale(Math.min(1, containerWidth / naturalWidth)))
+      setAutoFitPass(pass => pass + 1)
     }
 
     const raf = requestAnimationFrame(autoFit)
@@ -952,7 +970,7 @@ export function LineageTreeCanvas({
       cancelAnimationFrame(raf)
       observer.disconnect()
     }
-  }, [])
+  }, [layout])
 
   // Two-finger pinch-to-zoom (touch only). Disabled in edit mode so it never
   // fights the @dnd-kit drag editor or drag-scroll. Single-finger touch falls
@@ -1045,6 +1063,37 @@ export function LineageTreeCanvas({
       rootId,
     })
   }, [normalizedMembers, childrenByParentId, defaultRootMemberId, rootId])
+
+  // After auto-fit, horizontally pan the scroll container so the configured
+  // root chain starts in view. This is especially important on narrow mobile
+  // viewports where the wide Dirty Dozen branch can otherwise put the root
+  // card off-screen at scrollLeft=0.
+  useEffect(() => {
+    if (layout !== "tree" || autoFitPass === 0 || autoPannedRef.current) return
+
+    const scrollEl = scrollRef.current
+    const contentEl = contentRef.current
+    const rootMember = rootMembers[0]
+    if (!scrollEl || !contentEl || !rootMember) return
+
+    const raf = requestAnimationFrame(() => {
+      const rootEl = document.getElementById(`lineage-member-${rootMember.id}`)
+      const targetEl =
+        rootEl?.querySelector<HTMLElement>('button[aria-label^="Open lineage profile"]') ?? rootEl
+      if (!targetEl) return
+
+      const scaleValue = scaleRef.current || 1
+      const targetCenter =
+        (offsetLeftWithin(targetEl, contentEl) + targetEl.offsetWidth / 2) * scaleValue
+      const targetScrollLeft = targetCenter - scrollEl.clientWidth / 2
+      const maxScrollLeft = scrollEl.scrollWidth - scrollEl.clientWidth
+
+      scrollEl.scrollLeft = Math.max(0, Math.min(maxScrollLeft, targetScrollLeft))
+      autoPannedRef.current = true
+    })
+
+    return () => cancelAnimationFrame(raf)
+  }, [layout, autoFitPass, rootMembers])
 
   const {
     pathMemberIds: selectedPathMemberIds,
@@ -1153,7 +1202,11 @@ export function LineageTreeCanvas({
                 aria-label="Tree layout"
                 aria-pressed={layout === "tree"}
                 prefix={<NetworkIcon />}
-                onClick={() => setLayout("tree")}
+                onClick={() => {
+                  autoFittedRef.current = false
+                  autoPannedRef.current = false
+                  setLayout("tree")
+                }}
               >
                 Tree
               </Button>
@@ -1241,7 +1294,7 @@ export function LineageTreeCanvas({
             )}
             style={
               layout === "tree"
-                ? { transform: `scale(${scale})`, transformOrigin: "top center" }
+                ? { transform: `scale(${scale})`, transformOrigin: "top left" }
                 : undefined
             }
           >

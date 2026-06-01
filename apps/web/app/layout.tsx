@@ -62,6 +62,9 @@ export default async function ({ children }: LayoutProps<"/">) {
   const brandCss = cssOverrides.length
     ? `[data-brand="${brand}"] { ${cssOverrides.join(" ")} }`
     : ""
+  const brandStyle = brandCss ? (
+    <style id="brand-settings-css" dangerouslySetInnerHTML={{ __html: brandCss }} />
+  ) : null
 
   return (
     <html
@@ -71,11 +74,7 @@ export default async function ({ children }: LayoutProps<"/">) {
       data-brand={brand}
       suppressHydrationWarning
     >
-      <head>
-        {brandCss && (
-          <style id="brand-settings-css" dangerouslySetInnerHTML={{ __html: brandCss }} />
-        )}
-      </head>
+      <head>{brandStyle}</head>
       <body className="min-h-dvh flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
           <NuqsAdapter>
