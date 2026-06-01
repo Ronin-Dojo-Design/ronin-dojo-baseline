@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-01
-last_agent: codex-session-0319
+last_agent: codex-session-0320
 pairs_with:
+  - docs/sprints/SESSION_0320.md
   - docs/sprints/SESSION_0319.md
   - docs/knowledge/wiki/dirstarter-component-inventory.md
   - docs/sprints/SESSION_0314.md
@@ -166,6 +167,14 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Utility | File | Public API | Notable behavior |
 | --- | --- | --- | --- |
 | `parseSort` | `apps/web/server/web/_shared/sortable.ts` | `parseSort<T extends readonly string[]>(sort: string \| undefined, columns: T, defaultOrder?: "asc" \| "desc"): { sortBy: T[number] \| undefined; sortOrder: "asc" \| "desc" }` | SESSION_0200: generic URL-injection-safe sort parser. Splits `<column>.<direction>` from the query string, narrows `sortBy` to a member of the caller's `as const` allowlist (or `undefined` for unknown/missing), sanitizes `sortOrder` to `"asc" \| "desc"` with a configurable default. Type-safe via `T extends readonly string[]` so Prisma `orderBy: { [sortBy]: sortOrder }` stays sound at every call site. Consolidates the SESSION_0198 (`searchCourses`) + SESSION_0199 (`searchOrganizations`) precedents into one helper at the third occurrence (`searchTechniques`); rule-of-three lift. Adopted in `apps/web/server/web/{courses,directory,techniques}/queries.ts` + `search-organizations.ts`. New callers should: (1) declare `const SORTABLE_<DOMAIN>_COLUMNS = [...] as const` in their query file, (2) call `parseSort(sort, SORTABLE_<DOMAIN>_COLUMNS)`, (3) keep their existing `orderBy` fallback for the `sortBy === undefined` branch. |
+
+## 3g. Promotion events — `components/web/promotion-events/`
+
+> Ronin-specific read surfaces for `PromotionEvent` display. These stay read-only until the SESSION_0321 editor/upload slice lands.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `PromotionTimeline` | `apps/web/components/web/promotion-events/promotion-timeline.tsx` | `entries: PromotionTimelineEntry[]`, optional `title`, optional `emptyMessage` | SESSION_0320: reusable org/school profile timeline for hosted `PromotionEvent`s and `RankAward.organizationId` awarded-school facts. Composes L1 `Card`/`Badge`/`Stack`/`Heading`/`EmptyList` only. Event-backed rows link to `/events/[slug]`; ungrouped rank awards render as read-only rows with no invented event link. Date formatting pins `timeZone: "UTC"` so date-only promotion facts keep the saved calendar day. Empty state is expected today for seeded orgs because SESSION_0319 global ceremony events currently have no `hostOrganizationId` and the seeded ceremony `RankAward`s have no `organizationId`; do not backfill those without a data-quality decision. |
 
 ---
 

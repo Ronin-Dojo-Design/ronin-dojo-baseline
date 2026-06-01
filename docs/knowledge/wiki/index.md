@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-01
 author: Brian + Copilot
-last_agent: codex-session-0319
+last_agent: codex-session-0320
 ---
 
 # LLM Wiki Index
@@ -412,6 +412,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0317](../../sprints/SESSION_0317.md) | session | closed — lineage non-modal panel, tree repair, Rigan red-belt seed correction, and dev DB/runbook alignment |
 | [SESSION_0318](../../sprints/SESSION_0318.md) | session--implement | closed — PromotionEvent ADR/migration + April 10 ceremony seed + cohort link + read-only Rank-History event display; operator-confirmed data-quality corrections (Bob Bass, Haueter, Posnik, Magno) |
 | [SESSION_0319](../../sprints/SESSION_0319.md) | session--implement | closed — PromotionEvent slug + CSW/OKC seeded events with gallery media and read-only `/events/[slug]` ceremony pages |
+| [SESSION_0320](../../sprints/SESSION_0320.md) | session--implement | closed — PromotionEvent org/school timeline query + reusable timeline component, `/events` index, and read-surface cross-links |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

@@ -8,6 +8,7 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { JoinOrganizationButton } from "~/components/web/organizations/join-organization-button"
 import { MembershipActions } from "~/components/web/organizations/membership-actions"
+import { PromotionTimeline } from "~/components/web/promotion-events/promotion-timeline"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
@@ -30,6 +31,7 @@ import {
   getOrganizationBySlug,
   getSystemRoles,
 } from "~/server/web/organization/queries"
+import { getPromotionTimelineForOrganization } from "~/server/web/promotion-events/queries"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -89,12 +91,15 @@ export default async function OrganizationDetailPage({ params }: Props) {
   const uniqueMembers = Array.from(membersByUser.values())
   const uniqueMemberCount = uniqueMembers.length
 
-  const relatedOrgs = await findRelatedOrganizations({
-    organizationId: org.id,
-    brand,
-    disciplineIds: org.disciplines.map(od => od.discipline.id),
-    city: org.city,
-  })
+  const [relatedOrgs, promotionTimeline] = await Promise.all([
+    findRelatedOrganizations({
+      organizationId: org.id,
+      brand,
+      disciplineIds: org.disciplines.map(od => od.discipline.id),
+      city: org.city,
+    }),
+    getPromotionTimelineForOrganization(org.id),
+  ])
 
   // Format address from expanded fields
   const addressParts = [
@@ -198,6 +203,8 @@ export default async function OrganizationDetailPage({ params }: Props) {
               )}
             </dl>
           </div>
+
+          <PromotionTimeline entries={promotionTimeline} />
 
           {/* Members */}
           <div className="space-y-3">
