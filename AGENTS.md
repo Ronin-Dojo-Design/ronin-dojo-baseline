@@ -1,4 +1,16 @@
-# AGENTS.md — LLM Wiki Schema
+# AGENTS.md — Ronin Dojo Baseline
+
+> **Session operations (bow-in / bow-out / orchestration) are binding for every agent, including Codex.**
+> They live in [`CLAUDE.md`](CLAUDE.md) → "Session operations" (repo paths, the `apps/web` dev-server +
+> Prisma gotchas, Graphify-first discovery, the FS-0024 git guard, and the standing commit/push flow) and
+> in the cross-agent rituals [`docs/rituals/opening.md`](docs/rituals/opening.md) /
+> [`docs/rituals/closing.md`](docs/rituals/closing.md). Read those first when starting a session — the
+> opening ritual is explicitly agent-agnostic and records `last_agent: codex-session-NNNN` for Codex runs.
+> The wiki-schema rules below govern knowledge-wiki maintenance.
+
+---
+
+## LLM Wiki Schema
 
 This file defines how AI agents should behave when maintaining the Ronin Dojo Baseline knowledge wiki.
 
