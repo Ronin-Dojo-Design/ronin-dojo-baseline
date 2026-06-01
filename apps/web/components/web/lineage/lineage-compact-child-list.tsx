@@ -5,6 +5,7 @@ import type { CSSProperties } from "react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import {
   buildChildGroups,
@@ -77,11 +78,19 @@ export function LineageCompactChildList({
     >
       {groups.map(group => (
         <Stack key={group.id} size="xs" direction="column" className="w-full">
-          {group.group?.showPublicLabel && (
-            <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
-              {group.group.label}
-            </span>
-          )}
+          {group.group?.showPublicLabel &&
+            (group.group.promotionEvent?.slug ? (
+              <Link
+                href={`/events/${group.group.promotionEvent.slug}`}
+                className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide hover:text-foreground"
+              >
+                {group.group.label}
+              </Link>
+            ) : (
+              <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
+                {group.group.label}
+              </span>
+            ))}
 
           {group.members.map(member => (
             <LineageCompactChildRow

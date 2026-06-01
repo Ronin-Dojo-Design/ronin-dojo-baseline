@@ -66,9 +66,19 @@ test.describe("Lineage public rank-redaction E2E", () => {
         timeout: 30_000,
       })
 
-      // Sanity: both PUBLIC members are listed in the tree.
-      await expect(page.getByText(fixture.memberA.displayName)).toBeVisible()
-      await expect(page.getByText(fixture.memberB.displayName)).toBeVisible()
+      // Sanity: both PUBLIC members are listed in the tree. Target the node-card button
+      // specifically — the name also renders in the board/compact-list + honor-strip now
+      // (Phase 3), so a bare getByText is ambiguous (strict-mode violation).
+      await expect(
+        page.getByRole("button", {
+          name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.memberA.displayName)}`),
+        }),
+      ).toBeVisible()
+      await expect(
+        page.getByRole("button", {
+          name: new RegExp(`Open lineage profile for ${escapeRegExp(fixture.memberB.displayName)}`),
+        }),
+      ).toBeVisible()
 
       // Open Member-B's drawer (the redaction case).
       await page

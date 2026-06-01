@@ -1987,6 +1987,9 @@ model RankAward {
 model PromotionEvent {
   id          String   @id @default(cuid())
   title       String
+  // @added SESSION_0319 (2026-06-01) — stable public route key for `/events/[slug]`.
+  // Nullable so the migration is additive; seed backfills canonical ceremony slugs.
+  slug        String?  @unique
   eventDate   DateTime
   location    String? // free-text venue fallback
   description String?

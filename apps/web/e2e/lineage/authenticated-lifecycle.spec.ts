@@ -314,7 +314,13 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
     })
-    await expect(page.getByText(updatedDisplayName)).toBeVisible()
+    // Target the node-card button specifically — the member name also renders in the
+    // board/compact-list + honor-strip now (Phase 3), so getByText is ambiguous (strict-mode).
+    await expect(
+      page.getByRole("button", {
+        name: new RegExp(`Open lineage profile for ${escapeRegExp(updatedDisplayName)}`),
+      }),
+    ).toBeVisible()
     await openLineageProfileDrawer(page, updatedDisplayName)
     await expect(page.getByText(updatedBio)).toBeVisible({ timeout: 30_000 })
   })
