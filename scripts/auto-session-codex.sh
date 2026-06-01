@@ -46,8 +46,15 @@ case "$remote" in
   *) echo "✗ wrong repo ($remote) — run from ronin-dojo-app." >&2; exit 2 ;;
 esac
 
-git switch main >/dev/null 2>&1
-git pull --ff-only origin main
+# Resume support: AUTO_BASE_BRANCH lets a follow-up run stack on an existing session
+# branch (e.g. after salvaging a halted session) instead of re-deriving from main.
+START_BASE="${AUTO_BASE_BRANCH:-main}"
+if [ "$START_BASE" = "main" ]; then
+  git switch main >/dev/null 2>&1
+  git pull --ff-only origin main
+else
+  git switch "$START_BASE" >/dev/null 2>&1 || { echo "✗ AUTO_BASE_BRANCH '$START_BASE' not found" >&2; exit 2; }
+fi
 
 read -r -d '' SESSION_PROMPT <<'PROMPT' || true
 Bow in per docs/rituals/opening.md. Your task is the "Next session" block of the
@@ -61,19 +68,24 @@ Implement only the next automatable code slice.
 
 Then bow out per docs/rituals/closing.md as a FULL close: fill the SESSION file
 (set last_agent: codex-session-NNNN), sweep wiki index/log + component inventory, run
-`bun run wiki:lint` (it MUST report 0 errors), run typecheck/lint, write the hostile
-close review, and run `graphify update` BEFORE the commit (FS-0025 single-push order).
+`bun run wiki:lint` (it MUST report 0 errors), run `bun run typecheck`, and run
+changed-file Biome (`bunx biome check` on the files you touched). DO NOT run the root
+`bun run lint` — it is a known-broken accepted-risk gate (packages/api-client `biome:
+command not found` PATH gap, FS-0017/SESSION_0317) that fails spuriously; per CLAUDE.md
+the real gate is "changed-file Biome + typecheck". Then write the hostile close review
+and run `graphify update` BEFORE the commit (FS-0025 single-push order).
 
 IMPORTANT OVERRIDE: COMMIT your close to the CURRENT branch with a conventional
 message, but DO NOT push and DO NOT open a PR — the wrapper script handles git
-push + PR. Run the FS-0024 pwd/remote guard before committing. If ANY gate fails
-(typecheck/lint/wiki-lint/tests), STOP and leave the working tree UNCOMMITTED.
+push + PR. Run the FS-0024 pwd/remote guard before committing. If a REAL gate fails
+(typecheck, changed-file Biome, wiki:lint, or focused tests), STOP and leave the working
+tree UNCOMMITTED. The root `bun run lint` is NOT a gate (known-broken) — do not block on it.
 PROMPT
 
 MODEL_ARGS=()
 [[ -n "${CODEX_MODEL:-}" ]] && MODEL_ARGS=(-m "$CODEX_MODEL")
 
-base_branch="main"
+base_branch="$START_BASE"
 
 for ((i = 1; i <= N; i++)); do
   last="$(find docs/sprints -name 'SESSION_*.md' | sed -E 's/.*SESSION_([0-9]+)\.md/\1/' | sort -n | tail -1)"
