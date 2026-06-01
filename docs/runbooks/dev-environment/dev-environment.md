@@ -212,7 +212,7 @@ All commands run from `apps/web/` unless noted otherwise.
 | Task | Command | Notes |
 | --- | --- | --- |
 | **Typecheck** | `bun run typecheck` | Runs `next typegen` then `tsc --noEmit`. Can take 2–4 min on full project. |
-| **Lint** | `bun run lint` | Biome check + auto-fix. |
+| **Lint** | `bun run lint` | Biome check + auto-fix (`biome check --write .`), **scoped to `apps/web`** — this is the gate. ⚠️ Do NOT use the *repo-root* `bun run lint` (`pnpm -r lint`): it fails on `packages/api-client` (`sh: biome: command not found` PATH gap, accepted-risk) and is **not** a gate. Use changed-file Biome + typecheck. |
 | **Format** | `bun run format` | Biome format + auto-fix. |
 | **Test (all)** | `bun test` | Parallel, excludes e2e. |
 | **Test (file)** | `bun test ./path/to/file` | Single file or directory. |
@@ -262,4 +262,4 @@ If the dev server won't start:
 
 ## Last verified
 
-SESSION_0317 — 2026-06-01 local Postgres.app and Prisma adapter probes; DB-backed browser capture still uses `next dev --webpack` until the Turbopack blocker is fixed.
+SESSION_0319 — 2026-06-01: local DB-page 500s root-caused to the **Postgres.app 18 access gate** (see Dev server section) and resolved by approving the `node` client / toggling the gate off; Turbopack now renders DB-backed pages, so the `next dev --webpack` workaround is **no longer required**. All scripts, paths, the `psql Versions/latest → 18.3` symlink, and the `/events/[slug]` route reference in this runbook were re-verified against the repo this session.
