@@ -6,6 +6,7 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { PromotionTimeline } from "~/components/web/promotion-events/promotion-timeline"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
@@ -15,6 +16,7 @@ import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
+import { getPromotionTimelineForOrganization } from "~/server/web/promotion-events/queries"
 import { findRelatedSchools, findSchoolBySlug, findSchoolSlugs } from "~/server/web/schools/queries"
 
 // Role codes that surface a membership as an "instructor" on the school page.
@@ -62,12 +64,15 @@ export default async function SchoolDetailPage({ params }: Props) {
 
   if (!school) notFound()
 
-  const relatedSchools = await findRelatedSchools({
-    schoolId: school.id,
-    brand,
-    city: school.city,
-    state: school.state,
-  })
+  const [relatedSchools, promotionTimeline] = await Promise.all([
+    findRelatedSchools({
+      schoolId: school.id,
+      brand,
+      city: school.city,
+      state: school.state,
+    }),
+    getPromotionTimelineForOrganization(school.id),
+  ])
 
   // Derived values --------------------------------------------------------
 
@@ -187,6 +192,11 @@ export default async function SchoolDetailPage({ params }: Props) {
               </Stack>
             </div>
           )}
+
+          <PromotionTimeline
+            entries={promotionTimeline}
+            emptyMessage="No hosted promotion events or awarded ranks are linked to this school yet."
+          />
         </Section.Content>
 
         <Section.Sidebar>

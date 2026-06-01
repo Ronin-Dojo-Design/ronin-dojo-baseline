@@ -157,6 +157,7 @@ export default async function PromotionEventPage({ params }: Props) {
                     const rankStyle = rankColor
                       ? ({ "--rank-color": rankColor } as CSSProperties)
                       : undefined
+                    const promoteeName = award.user.name ?? "Unnamed promotee"
 
                     return (
                       <Card key={award.id} hover={false} className="p-4" style={rankStyle}>
@@ -173,7 +174,15 @@ export default async function PromotionEventPage({ params }: Props) {
 
                           <Stack direction="column" size="xs" className="min-w-0 flex-1">
                             <Stack size="sm" wrap>
-                              <H5>{award.user.name ?? "Unnamed promotee"}</H5>
+                              <H5>
+                                {award.user.lineageNode?.slug ? (
+                                  <Link href={`/lineage?q=${encodeURIComponent(promoteeName)}`}>
+                                    {promoteeName}
+                                  </Link>
+                                ) : (
+                                  promoteeName
+                                )}
+                              </H5>
                               {award.rank.rankSystem.discipline?.name && (
                                 <Badge variant="outline" size="sm">
                                   {award.rank.rankSystem.discipline.name}
