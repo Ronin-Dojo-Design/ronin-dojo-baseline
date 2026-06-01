@@ -187,7 +187,7 @@ export const lineageNodeProfilePayload = {
           },
           // @added SESSION_0318 — read-only PromotionEvent (ceremony) link for Rank History.
           promotionEvent: {
-            select: { id: true, title: true, eventDate: true },
+            select: { id: true, title: true, slug: true, eventDate: true },
           },
         },
         orderBy: [{ awardedAt: "desc" as const }],
@@ -281,6 +281,9 @@ export const lineageVisualGroupPayload = {
   isCollapsedDefault: true,
   parentMemberId: true,
   treeId: true,
+  promotionEvent: {
+    select: { id: true, title: true, slug: true },
+  },
 } satisfies Prisma.LineageVisualGroupSelect
 
 export const lineageTreeMemberPayload = {

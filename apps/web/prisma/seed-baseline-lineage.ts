@@ -838,88 +838,355 @@ async function ensureDirtyDozenGroup(
 }
 
 // ---------------------------------------------------------------------------
-// PromotionEvent (SESSION_0318) — April 10, 2026 Coral Belt Ceremony.
-// ONE GLOBAL ceremony grouping the five April-10 RankAwards (Rigan R9 by Rorion;
-// Erik Paulson / Casey Olsen / Rick Minter / Rick Williams CB7 by Rigan). No
-// attestor/attendee, no verification signal — verification stays role-gated on
-// RankAward/LineageRelationship (ADR 0016 → SESSION_0318 amendment).
+// PromotionEvents (SESSION_0319) — data-driven ceremony seeds.
 // ---------------------------------------------------------------------------
-const PROMOTION_EVENT_TITLE = "Coral Belt Ceremony — CSW World Conference"
-const PROMOTION_EVENT_DATE = new Date("2026-04-10")
-const PROMOTION_EVENT_DESCRIPTION =
-  "Rorion Gracie promoted Rigan Machado to Red Belt (9th degree); Rigan Machado promoted Erik Paulson, Casey Olsen, Rick Minter, and Rick Williams to 7th Degree Coral Belt. Hosted at Erik Paulson's Combat Submission Wrestling during the CSW World Conference."
-const PROMOTION_EVENT_LOCATION = "Combat Submission Wrestling Headquarters"
 
-/**
- * Upsert the GLOBAL April 10, 2026 PromotionEvent and link the supplied ceremony
- * RankAwards to it. Idempotent: findFirst by (title, eventDate). Returns the
- * event id so per-tree cohort groups can point at it. SESSION_0318.
- */
-async function ensurePromotionEvent(ceremonyAwardIds: string[]): Promise<string | null> {
-  let event = await db.promotionEvent.findFirst({
-    where: { title: PROMOTION_EVENT_TITLE, eventDate: PROMOTION_EVENT_DATE },
-    select: { id: true },
-  })
-  if (event) {
-    await db.promotionEvent.update({
-      where: { id: event.id },
-      data: { description: PROMOTION_EVENT_DESCRIPTION, location: PROMOTION_EVENT_LOCATION },
+type PromotionEventAwardMatch = {
+  userKey: string
+  rankShortName: string
+  awardedAt: string
+  location: string
+}
+
+type PromotionEventMediaSeed = {
+  url: string
+  title: string
+  altText: string
+  sortOrder: number
+}
+
+type PromotionEventSeed = {
+  key: string
+  title: string
+  slug: string
+  eventDate: string
+  location: string
+  description: string
+  awardMatches: PromotionEventAwardMatch[]
+  cohortLabel: string
+  cohortKeys: string[]
+  cohortSortOrder: number
+  media: PromotionEventMediaSeed[]
+}
+
+function rankAwardSeedKey({
+  userKey,
+  rankShortName,
+  awardedAt,
+  location,
+}: PromotionEventAwardMatch) {
+  return [userKey, rankShortName, awardedAt, location].join("::")
+}
+
+const PROMOTION_EVENTS: PromotionEventSeed[] = [
+  {
+    key: "csw-2026",
+    title: "Coral Belt Ceremony — CSW World Conference",
+    slug: "coral-belt-ceremony-csw-world-conference-2026",
+    eventDate: "2026-04-10",
+    location: "Combat Submission Wrestling Headquarters",
+    description:
+      "Rorion Gracie promoted Rigan Machado to Red Belt (9th degree); Rigan Machado promoted Erik Paulson, Casey Olsen, Rick Minter, Rick Williams, and Chris Posnik to 7th Degree Coral Belt. Hosted at Erik Paulson's Combat Submission Wrestling during the CSW World Conference.",
+    awardMatches: [
+      {
+        userKey: "rigan-machado",
+        rankShortName: "R9",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+      {
+        userKey: "rick-williams",
+        rankShortName: "CB7",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+      {
+        userKey: "erik-paulson",
+        rankShortName: "CB7",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+      {
+        userKey: "casey-olsen",
+        rankShortName: "CB7",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+      {
+        userKey: "rick-minter",
+        rankShortName: "CB7",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+      {
+        userKey: "chris-posnik",
+        rankShortName: "CB7",
+        awardedAt: "2026-04-10",
+        location: "Combat Submission Wrestling Headquarters",
+      },
+    ],
+    // Rick Williams stays in Dirty Dozen; his RankAward still links to this event.
+    cohortLabel: "Coral Belt Ceremony — Apr 10, 2026",
+    cohortKeys: ["erik-paulson", "casey-olsen", "rick-minter", "chris-posnik"],
+    cohortSortOrder: 1,
+    media: [
+      {
+        url: "/seed/events/csw-2026/rigan-machado.jpg",
+        title: "Rigan Machado",
+        altText: "Rigan Machado (Red Belt, 9th degree)",
+        sortOrder: 0,
+      },
+      {
+        url: "/seed/events/csw-2026/rick-williams.jpg",
+        title: "Rick Williams",
+        altText: "Rick Williams",
+        sortOrder: 1,
+      },
+      {
+        url: "/seed/events/csw-2026/erik-paulson-csw.png",
+        title: "Combat Submission Wrestling",
+        altText: "Combat Submission Wrestling host school",
+        sortOrder: 2,
+      },
+      {
+        url: "/seed/events/csw-2026/belt-ceremony.jpg",
+        title: "Black belt instruction",
+        altText: "Black belt instruction ceremony context",
+        sortOrder: 3,
+      },
+    ],
+  },
+  {
+    key: "okc-2024",
+    title: "Coral Belt Ceremony — Oklahoma City",
+    slug: "coral-belt-ceremony-oklahoma-city-2024",
+    eventDate: "2024-06-08",
+    location: "Oklahoma City, OK",
+    description:
+      "Rigan Machado promoted Bob Bass and Renato Magno to 7th Degree Coral Belt in Oklahoma City.",
+    awardMatches: [
+      {
+        userKey: "bob-bass",
+        rankShortName: "CB7",
+        awardedAt: "2024-06-08",
+        location: "Oklahoma City, OK",
+      },
+      {
+        userKey: "renato-magno",
+        rankShortName: "CB7",
+        awardedAt: "2024-06-08",
+        location: "Oklahoma City, OK",
+      },
+    ],
+    // Bob Bass already occupies the Dirty Dozen group slot; do not double-assign him.
+    cohortLabel: "Coral Belt Ceremony — Jun 8, 2024",
+    cohortKeys: ["renato-magno"],
+    cohortSortOrder: 2,
+    media: [
+      {
+        url: "/seed/events/okc-2024/bob-bass-coral-belt-group.jpg",
+        title: "Bob Bass coral belt group",
+        altText:
+          "Bob Bass coral belt ceremony with Rigan, Renato Magno, Bill Hosken, and Dave Meyer",
+        sortOrder: 0,
+      },
+      {
+        url: "/seed/events/okc-2024/bob-bass-coral-belt.jpg",
+        title: "Bob Bass receiving coral belt",
+        altText: "Bob Bass receiving his 7th-degree coral belt",
+        sortOrder: 1,
+      },
+      {
+        url: "/seed/events/okc-2024/renato-magno.jpg",
+        title: "Renato Magno",
+        altText: "Renato Magno",
+        sortOrder: 2,
+      },
+      {
+        url: "/seed/events/okc-2024/bob-bass-and-rigan.jpeg",
+        title: "Bob Bass and Rigan Machado",
+        altText: "Bob Bass and Rigan Machado",
+        sortOrder: 3,
+      },
+    ],
+  },
+]
+
+async function ensurePromotionEventMedia({
+  promotionEventId,
+  uploadedById,
+  media,
+}: {
+  promotionEventId: string
+  uploadedById: string
+  media: PromotionEventMediaSeed[]
+}) {
+  for (const item of media) {
+    let row = await db.media.findFirst({
+      where: { url: item.url },
+      select: { id: true },
     })
-    console.log(`   PromotionEvent April 10: exists (id=${event.id}), refreshed`)
-  } else {
-    event = await db.promotionEvent.create({
-      data: {
-        title: PROMOTION_EVENT_TITLE,
-        eventDate: PROMOTION_EVENT_DATE,
-        location: PROMOTION_EVENT_LOCATION,
-        description: PROMOTION_EVENT_DESCRIPTION,
+    if (row) {
+      row = await db.media.update({
+        where: { id: row.id },
+        data: {
+          brand: "BBL",
+          type: "IMAGE",
+          title: item.title,
+          altText: item.altText,
+          isPublic: true,
+          uploadedById,
+        },
+        select: { id: true },
+      })
+    } else {
+      row = await db.media.create({
+        data: {
+          brand: "BBL",
+          type: "IMAGE",
+          url: item.url,
+          title: item.title,
+          altText: item.altText,
+          mimeType: item.url.endsWith(".png")
+            ? "image/png"
+            : item.url.endsWith(".jpeg")
+              ? "image/jpeg"
+              : "image/jpeg",
+          isPublic: true,
+          uploadedById,
+          sortOrder: item.sortOrder,
+        },
+        select: { id: true },
+      })
+    }
+
+    const existingAttachment = await db.mediaAttachment.findFirst({
+      where: {
+        mediaId: row.id,
+        promotionEventId,
       },
       select: { id: true },
     })
-    console.log(`   ✅ Created PromotionEvent April 10 (id=${event.id})`)
+    if (existingAttachment) {
+      await db.mediaAttachment.update({
+        where: { id: existingAttachment.id },
+        data: { purpose: "promotion-event-gallery", sortOrder: item.sortOrder },
+      })
+    } else {
+      await db.mediaAttachment.create({
+        data: {
+          mediaId: row.id,
+          promotionEventId,
+          purpose: "promotion-event-gallery",
+          sortOrder: item.sortOrder,
+        },
+      })
+    }
   }
-
-  if (ceremonyAwardIds.length > 0) {
-    const linked = await db.rankAward.updateMany({
-      where: { id: { in: ceremonyAwardIds } },
-      data: { promotionEventId: event.id },
-    })
-    console.log(`   PromotionEvent April 10: linked ${linked.count} RankAwards`)
-  }
-  return event.id
 }
 
-// New April-10 coral belts NOT already in the Dirty Dozen cohort — safe to place
-// in a dedicated ceremony cohort group without forcing a second group onto Dozen
-// members (SESSION_0317 scope guard). Rick Williams stays in Dirty Dozen; his
-// AWARD still links to the event above.
-const CEREMONY_COHORT_KEYS = ["erik-paulson", "casey-olsen", "rick-minter", "chris-posnik"] as const
-const CEREMONY_COHORT_LABEL = "Coral Belt Ceremony — Apr 10, 2026"
+/**
+ * Upsert global PromotionEvents, link their RankAwards, and seed read-only
+ * gallery media. Idempotent: find by slug first, then legacy title+eventDate.
+ */
+async function ensurePromotionEvents({
+  rankAwardIdBySeedKey,
+  uploadedById,
+}: {
+  rankAwardIdBySeedKey: Map<string, string>
+  uploadedById: string
+}): Promise<Map<string, string>> {
+  const eventIdByKey = new Map<string, string>()
+
+  for (const seed of PROMOTION_EVENTS) {
+    const eventDate = new Date(seed.eventDate)
+    let event = await db.promotionEvent.findFirst({
+      where: {
+        OR: [{ slug: seed.slug }, { title: seed.title, eventDate }],
+      },
+      select: { id: true },
+    })
+
+    if (event) {
+      await db.promotionEvent.update({
+        where: { id: event.id },
+        data: {
+          title: seed.title,
+          slug: seed.slug,
+          eventDate,
+          location: seed.location,
+          description: seed.description,
+        },
+      })
+      console.log(`   PromotionEvent ${seed.key}: exists (id=${event.id}), refreshed`)
+    } else {
+      event = await db.promotionEvent.create({
+        data: {
+          title: seed.title,
+          slug: seed.slug,
+          eventDate,
+          location: seed.location,
+          description: seed.description,
+        },
+        select: { id: true },
+      })
+      console.log(`   ✅ Created PromotionEvent ${seed.key} (id=${event.id})`)
+    }
+
+    const awardIds = seed.awardMatches
+      .map(match => rankAwardIdBySeedKey.get(rankAwardSeedKey(match)))
+      .filter((id): id is string => Boolean(id))
+
+    if (awardIds.length > 0) {
+      const linked = await db.rankAward.updateMany({
+        where: { id: { in: awardIds } },
+        data: { promotionEventId: event.id },
+      })
+      console.log(`   PromotionEvent ${seed.key}: linked ${linked.count} RankAwards`)
+    }
+
+    await ensurePromotionEventMedia({
+      promotionEventId: event.id,
+      uploadedById,
+      media: seed.media,
+    })
+    console.log(`   PromotionEvent ${seed.key}: seeded ${seed.media.length} gallery media`)
+    eventIdByKey.set(seed.key, event.id)
+  }
+
+  return eventIdByKey
+}
 
 /**
- * Ensure the April-10 ceremony cohort LineageVisualGroup on the rigan tree, link
- * it to the global PromotionEvent, and assign the new coral belts to it. Runs
- * per-tree (Baseline + BBL) → many cohort boxes, one event. Idempotent via the
- * @@unique [treeId, parentMemberId, groupType, promotionDate]. SESSION_0318.
+ * Ensure a per-tree ceremony cohort LineageVisualGroup, link it to the global
+ * PromotionEvent, and assign only cohort members that can safely leave their
+ * current visual group. Runs per tree (Baseline + BBL).
  */
 async function ensureCeremonyCohortGroup(
+  seed: PromotionEventSeed,
   treeId: string,
   treeMemberIdByKey: Map<string, string>,
   promotionEventId: string,
 ): Promise<void> {
+  if (seed.cohortKeys.length === 0) {
+    console.log(`   PromotionEvent ${seed.key}: no cohort keys — skipping visual group`)
+    return
+  }
+
   const riganMemberId = treeMemberIdByKey.get("rigan-machado")
   if (!riganMemberId) {
-    console.log("   ⚠️  Rigan tree member not found — skipping ceremony cohort group")
+    console.log(`   ⚠️  Rigan tree member not found — skipping ${seed.key} ceremony cohort group`)
     return
   }
   const groupType = "PROMOTION_DATE" as const
+  const promotionDate = new Date(seed.eventDate)
 
   let group = await db.lineageVisualGroup.findFirst({
     where: {
       treeId,
       parentMemberId: riganMemberId,
       groupType,
-      promotionDate: PROMOTION_EVENT_DATE,
+      promotionDate,
     },
     select: { id: true },
   })
@@ -927,32 +1194,32 @@ async function ensureCeremonyCohortGroup(
     await db.lineageVisualGroup.update({
       where: { id: group.id },
       data: {
-        label: CEREMONY_COHORT_LABEL,
+        label: seed.cohortLabel,
         showPublicLabel: true,
-        sortOrder: 1,
+        sortOrder: seed.cohortSortOrder,
         promotionEventId,
       },
     })
-    console.log(`   LineageVisualGroup Ceremony: exists (id=${group.id}), refreshed + linked`)
+    console.log(`   LineageVisualGroup ${seed.key}: exists (id=${group.id}), refreshed + linked`)
   } else {
     group = await db.lineageVisualGroup.create({
       data: {
         treeId,
         parentMemberId: riganMemberId,
-        label: CEREMONY_COHORT_LABEL,
+        label: seed.cohortLabel,
         groupType,
-        promotionDate: PROMOTION_EVENT_DATE,
+        promotionDate,
         showPublicLabel: true,
-        sortOrder: 1,
+        sortOrder: seed.cohortSortOrder,
         promotionEventId,
       },
       select: { id: true },
     })
-    console.log(`   ✅ Created LineageVisualGroup Ceremony (id=${group.id}) linked to event`)
+    console.log(`   ✅ Created LineageVisualGroup ${seed.key} (id=${group.id}) linked to event`)
   }
 
   let assigned = 0
-  for (const key of CEREMONY_COHORT_KEYS) {
+  for (const key of seed.cohortKeys) {
     const memberId = treeMemberIdByKey.get(key)
     if (!memberId) {
       console.log(`   ⚠️  Ceremony member ${key} not found — skipping group assignment`)
@@ -964,7 +1231,7 @@ async function ensureCeremonyCohortGroup(
     })
     assigned++
   }
-  console.log(`   LineageVisualGroup Ceremony: assigned ${assigned} members`)
+  console.log(`   LineageVisualGroup ${seed.key}: assigned ${assigned} members`)
 }
 
 // ---------------------------------------------------------------------------
@@ -1160,9 +1427,7 @@ async function main() {
     }
   }
 
-  const rankAwardIdByUserId = new Map<string, string>()
-  // SESSION_0318: collect the April-10 ceremony award ids to link to the PromotionEvent.
-  const ceremonyAwardIds: string[] = []
+  const rankAwardIdBySeedKey = new Map<string, string>()
   for (const ra of BJJ_RANK_AWARD_SEEDS) {
     const userId = userIdByKey.get(ra.userKey)
     if (!userId) {
@@ -1183,18 +1448,28 @@ async function main() {
       counts,
     )
     if (awardId) {
-      rankAwardIdByUserId.set(userId, awardId)
-      if (ra.awardedAt === "2026-04-10") {
-        ceremonyAwardIds.push(awardId)
+      if (ra.location) {
+        rankAwardIdBySeedKey.set(
+          rankAwardSeedKey({
+            userKey: ra.userKey,
+            rankShortName: ra.rankShortName,
+            awardedAt: ra.awardedAt,
+            location: ra.location,
+          }),
+          awardId,
+        )
       }
     }
   }
 
   // ---------------------------------------------------------------------
-  // 3c. PromotionEvent (SESSION_0318). One global April 10, 2026 ceremony
-  //     grouping the five April-10 awards. Per-tree cohort boxes link to it.
+  // 3c. PromotionEvents (SESSION_0319). Global ceremony rows group awards
+  //     and seed shared gallery media; per-tree cohort boxes link below.
   // ---------------------------------------------------------------------
-  const promotionEventId = await ensurePromotionEvent(ceremonyAwardIds)
+  const promotionEventIdByKey = await ensurePromotionEvents({
+    rankAwardIdBySeedKey,
+    uploadedById: owner.id,
+  })
 
   // ---------------------------------------------------------------------
   // 4. Per-discipline LineageTree + LineageTreeMember rows.
@@ -1493,13 +1768,16 @@ async function main() {
 
       // -------------------------------------------------------------------
       // 4b. Dirty Dozen cohort visual group (rigan tree only). SESSION_0316.
-      //     4c. April-10 ceremony cohort group linked to the PromotionEvent
-      //     (rigan tree only). SESSION_0318.
+      //     4c. Ceremony cohort groups linked to PromotionEvents
+      //     (rigan tree only). SESSION_0318/0319.
       // -------------------------------------------------------------------
       if (ts.slug === "rigan-machado-bjj-lineage") {
         await ensureDirtyDozenGroup(tree.id, treeMemberIdByKey)
-        if (promotionEventId) {
-          await ensureCeremonyCohortGroup(tree.id, treeMemberIdByKey, promotionEventId)
+        for (const eventSeed of PROMOTION_EVENTS) {
+          const promotionEventId = promotionEventIdByKey.get(eventSeed.key)
+          if (promotionEventId) {
+            await ensureCeremonyCohortGroup(eventSeed, tree.id, treeMemberIdByKey, promotionEventId)
+          }
         }
       }
     }

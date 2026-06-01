@@ -54,7 +54,7 @@ import { db } from "~/services/db"
 const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
 
 const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
-  node.user.directoryProfile?.showRanks !== false
+  node.user?.directoryProfile?.showRanks !== false
 
 const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
   if (shouldShowPublicRanks(node)) {

@@ -32,6 +32,7 @@ import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H6 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import {
@@ -447,6 +448,7 @@ function GroupHeader({
   if (!group?.showPublicLabel) return null
 
   const promotionDate = formatPromotionDate(group.promotionDate)
+  const eventHref = group.promotionEvent?.slug ? `/events/${group.promotionEvent.slug}` : null
 
   return (
     <div
@@ -456,7 +458,12 @@ function GroupHeader({
       )}
     >
       <Stack size="xs" className="items-center" wrap>
-        <Badge variant={isHighlighted ? "primary" : "soft"} size="sm" prefix={<CalendarDaysIcon />}>
+        <Badge
+          variant={isHighlighted ? "primary" : "soft"}
+          size="sm"
+          prefix={<CalendarDaysIcon />}
+          render={eventHref ? <Link href={eventHref} /> : undefined}
+        >
           {group.label}
         </Badge>
         {promotionDate && (

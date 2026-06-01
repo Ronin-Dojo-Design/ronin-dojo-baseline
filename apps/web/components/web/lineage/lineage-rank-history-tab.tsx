@@ -5,6 +5,7 @@ import type { CSSProperties } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { H6 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
@@ -174,7 +175,16 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
 
         {/* @added SESSION_0318 — read-only ceremony link when this award belongs to a PromotionEvent. */}
         {award.promotionEvent && (
-          <Badge variant="soft" size="sm" prefix={<CalendarDaysIcon />}>
+          <Badge
+            variant="soft"
+            size="sm"
+            prefix={<CalendarDaysIcon />}
+            render={
+              award.promotionEvent.slug ? (
+                <Link href={`/events/${award.promotionEvent.slug}`} />
+              ) : undefined
+            }
+          >
             {award.promotionEvent.title}
           </Badge>
         )}
