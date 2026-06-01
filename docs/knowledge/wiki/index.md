@@ -417,6 +417,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [petey-plan-0287](../../sprints/petey-plan-0287.md) | petey-plan | active |
 | [petey-plan-0291](../../sprints/petey-plan-0291.md) | petey-plan | closed |
 | [petey-plan-0305](../../petey-plan-0305.md) | petey-plan | active — lineage tree enhancement epic (4 phases) |
+| [petey-plan-0319](../../petey-plan-0319.md) | petey-plan | active — PromotionEvent display surfaces epic (S0319 seed-gen+OKC+`/events/[slug]`; S0320 org timeline+`/events` index; S0321 begin editor+upload) |
 
 ## Protocols
 

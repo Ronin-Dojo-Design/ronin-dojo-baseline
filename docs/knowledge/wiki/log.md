@@ -244,3 +244,10 @@ Use this file only as historical context for early wiki adoption.
 - Added the `docs/security/` documentation pack for the Ronin Dojo Baseline security review: hub, risk register, brand-scope hardening plan, payment security checklist, privacy data classification, and security test plan.
 - Recorded Graphify/Codex cloud setup failure: `graphify` was not installed and no `.graphify/` artifacts were present, so SESSION_0313 used exact known docs/source reads and documented the environment remediation.
 - Updated the wiki index and MB-013 manual boundary note so the new security pages are linked and discoverable; no runtime code, schema, auth, Stripe, or storage behavior changed in this docs-first slice.
+
+## 2026-05-31 — Planning: petey-plan-0319 (PromotionEvent display surfaces epic)
+
+- Petey grill + plan staging for the SESSION_0319→0321 arc (display surfaces for the `PromotionEvent` model landed in SESSION_0318). Wrote `docs/petey-plan-0319.md` and enriched SESSION_0318's "Next session" pointer with the four locked decisions so the unattended cold-process run executes without grilling.
+- Locked: route `/events/[slug]` (additive `PromotionEvent.slug`); gallery proved with **real Black Belt Legacy photos** pulled from `ronin-dojo-monorepo` (`dist-bbl/brand/blackbeltlegacy/images/`) into `apps/web/public/seed/events/` (downscaled, ~2 MB, 8 images) + empty state; split S0319 seed-gen+OKC+read page / S0320 org timeline+`/events` index / S0321 begin editor+upload; run via `scripts/auto-session.sh 3` (push + PR-per-session, no auto-merge, halt on failed gate).
+- Generalized `scripts/auto-session.sh`'s prompt to read whatever epic plan the SESSION "Next session" block names (was hardcoded to `petey-plan-0305.md`).
+- No runtime code or schema changed in this planning commit; the numbered sessions (0319–0321) own the build.

@@ -41,10 +41,13 @@ git pull --ff-only origin main
 
 read -r -d '' SESSION_PROMPT <<'PROMPT' || true
 Bow in per docs/rituals/opening.md. Your task is the "Next session" block of the
-highest-numbered docs/sprints/SESSION_NNNN.md, advancing docs/petey-plan-0305.md.
-Act as Petey: orchestrate Cody (build) and Doug (verify); use subagents only for
-genuinely disjoint work. SKIP any operator-only browser/device smoke — flag it as
-operator-side, do NOT block on it. Implement only the next automatable code slice.
+highest-numbered docs/sprints/SESSION_NNNN.md. If that block names an epic plan doc
+(e.g. docs/petey-plan-NNNN.md), READ IT FIRST and treat its locked decisions + the
+slice for this session number as binding — headless sessions cannot grill, so do not
+re-decide anything the plan already locked. Act as Petey: orchestrate Cody (build) and
+Doug (verify); use subagents only for genuinely disjoint work. SKIP any operator-only
+browser/device smoke — flag it as operator-side, do NOT block on it. Implement only the
+next automatable code slice.
 
 Then bow out per docs/rituals/closing.md as a FULL close: fill the SESSION file,
 sweep wiki index/log + component inventory, run `bun run wiki:lint` (it MUST report

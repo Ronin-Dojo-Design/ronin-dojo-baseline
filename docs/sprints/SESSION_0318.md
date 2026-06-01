@@ -239,7 +239,16 @@ SESSION_0319 — PromotionEvent display surfaces: dedicated event/gallery page p
 
 ### First task
 
-Generalize `ensurePromotionEvent` in `seed-baseline-lineage.ts` into a small data-driven list (April 10 2026 CSW + June 8 2024 OKC), seed the OKC event linking Bob Bass + Renato Magno, then scaffold the read-only `/events/[id]` (or lineage-scoped) ceremony/gallery page that resolves a `PromotionEvent` with its linked awards + shared `MediaAttachment` gallery. Media **upload**, the event **editor**, and the **permission/capability** model remain deferred until the read surface is proven.
+Generalize `ensurePromotionEvent` in `seed-baseline-lineage.ts` into a small data-driven list (April 10 2026 CSW + June 8 2024 OKC), seed the OKC event linking Bob Bass + Renato Magno, then scaffold the read-only `/events/[slug]` ceremony/gallery page that resolves a `PromotionEvent` with its linked awards + shared `MediaAttachment` gallery. Media **upload**, the event **editor**, and the **permission/capability** model remain deferred until the read surface is proven.
+
+### Locked decisions + full 3-session arc → `docs/petey-plan-0319.md`
+
+This next-session pointer was grilled and planned into a multi-session epic on 2026-05-31 (Petey). The cold/headless sessions **must read [`docs/petey-plan-0319.md`](../petey-plan-0319.md)** for the full S0319→S0320→S0321 decomposition and the locked decisions — they cannot grill. Locked (ratified by Brian):
+
+1. **Route = `/events/[slug]`** (global, brand-neutral). Add an additive `PromotionEvent.slug String? @unique` column + backfill.
+2. **Gallery proof = real BBL ceremony photos** committed at `apps/web/public/seed/events/` (see the epic's "Seed media mapping" table) + a "No photos yet" empty state. No upload UI.
+3. **Session split:** S0319 = seed-gen + OKC event + `/events/[slug]` read/gallery page; S0320 = org promotions timeline + `/events` index + cross-links; S0321 = **begin** the deferred editor + media upload (capability-gated).
+4. **Run:** `scripts/auto-session.sh 3` (push + one PR per session, no auto-merge; review/merge bottom-up). A failed gate leaves the tree uncommitted and halts the loop.
 
 ## Review log
 
