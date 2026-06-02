@@ -161,7 +161,16 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
       name: new RegExp(`Open lineage actions for ${escapeRegExp(fixture.claimTargetName)}`),
     })
     await expect(onCardMenu.first()).toBeVisible({ timeout: 30_000 })
-    await onCardMenu.first().click()
+    // webkit hydrates the dashboard + dnd canvas slower than chromium/firefox, so a
+    // single trigger click can fire before the dropdown is interactive and the menu
+    // never opens (SESSION_0266 timing race). Retry opening the menu until the item
+    // is present — the same `toPass` hardening `openLineageProfileDrawer` uses.
+    await expect(async () => {
+      await onCardMenu.first().click()
+      await expect(page.getByRole("menuitem", { name: "Change promoter..." })).toBeVisible({
+        timeout: 3_000,
+      })
+    }).toPass({ timeout: 30_000 })
     await page.getByRole("menuitem", { name: "Change promoter..." }).click()
 
     // The on-card action opens the profile drawer on the Rank History tab (where
