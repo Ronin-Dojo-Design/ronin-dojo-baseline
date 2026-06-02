@@ -138,13 +138,14 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     })
   })
 
-  test("on-card actions menu opens the promoter editor in edit mode (SESSION_0329 Phase 3c)", async ({
+  test("on-card actions menu opens the profile drawer on Rank History in edit mode (SESSION_0329 Phase 3c)", async ({
     page,
   }) => {
-    // SESSION_0329 / petey-plan-0305 Phase 3c: the per-card / per-row
-    // `LineageMemberActionsMenu` "Change promoter..." item must be a distinct
-    // capability-gated action that opens the promoter editor, not a silent
-    // fallback to View Profile. Editor mode must be on for the item to show.
+    // SESSION_0329 / petey-plan-0305 Phase 3c (descoped SESSION_0333): the per-card
+    // / per-row `LineageMemberActionsMenu` "Change promoter..." item is a distinct
+    // capability-gated action that opens the profile drawer on the Rank History tab
+    // — promotion history + the promoter editor entry — not a silent fallback to
+    // View Profile. Editor mode must be on for the item to show.
     await createAuthenticatedSession(page, fixture.treeEditorUserId)
 
     await page.goto(`/dashboard/lineage/${fixture.treeId}`)
@@ -161,14 +162,17 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     })
     await expect(onCardMenu.first()).toBeVisible({ timeout: 30_000 })
     await onCardMenu.first().click()
-
     await page.getByRole("menuitem", { name: "Change promoter..." }).click()
-    await expect(page.getByRole("dialog", { name: "Change promoter" })).toBeVisible({
+
+    // The on-card action opens the profile drawer on the Rank History tab (where
+    // the editor changes the promoter via the drawer action menu), rather than
+    // auto-opening a modal — a deterministic, capability-gated entry.
+    await expect(page.getByRole("dialog", { name: fixture.claimTargetName })).toBeVisible({
       timeout: 15_000,
     })
-
-    await page.getByRole("button", { name: "Cancel" }).click()
-    await expect(page.getByRole("dialog", { name: "Change promoter" })).toBeHidden()
+    await expect(page.getByRole("tab", { name: "Rank History", selected: true })).toBeVisible({
+      timeout: 15_000,
+    })
   })
 
   test("authenticated non-owner can submit a public claim without hidden member leakage", async ({

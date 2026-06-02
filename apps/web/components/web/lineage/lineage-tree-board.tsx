@@ -10,7 +10,7 @@ import type {
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
 import { LineageEditorToolbar } from "./lineage-editor-toolbar"
-import { LineageProfileDrawer } from "./lineage-profile-drawer"
+import { LineageProfileDrawer, type LineageProfileDrawerTab } from "./lineage-profile-drawer"
 import { type LineageLayout, LineageTreeCanvas } from "./lineage-tree-canvas"
 
 /**
@@ -95,7 +95,7 @@ export function LineageTreeBoard({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
-  const [autoOpenPromoter, setAutoOpenPromoter] = useState(false)
+  const [drawerTab, setDrawerTab] = useState<LineageProfileDrawerTab>("info")
   const drawerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /**
@@ -109,7 +109,7 @@ export function LineageTreeBoard({
 
     // Set the path highlight immediately
     setSelectedNodeId(nodeId)
-    setAutoOpenPromoter(false)
+    setDrawerTab("info")
 
     // Open the drawer after a delay so the path lights up first
     drawerTimerRef.current = setTimeout(() => {
@@ -118,29 +118,27 @@ export function LineageTreeBoard({
   }, [])
 
   /**
-   * Phase 3c: on-card / on-row "Change promoter..." path. Selects the node
-   * (so the path highlight runs), arms the drawer's single-shot auto-open
-   * flag, and opens the drawer with the same 400ms delay so the path trace
-   * still reads first before the modal mounts.
+   * Phase 3c (descoped SESSION_0333): on-card / on-row "Change promoter..." path.
+   * Selects the node (so the path highlight runs) and opens the profile drawer on
+   * the Rank History tab — promotion history + the promoter editor entry — with the
+   * same 400ms delay so the path trace still reads first. The editor changes the
+   * promoter from the drawer's action menu. This replaces the fragile auto-opened
+   * modal that depended on drawer mount timing and never reliably opened.
    */
   const handleChangePromoterIntent = useCallback((nodeId: string) => {
     if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
     setSelectedNodeId(nodeId)
-    setAutoOpenPromoter(true)
+    setDrawerTab("rank-history")
     drawerTimerRef.current = setTimeout(() => {
       setDrawerOpen(true)
     }, 400)
-  }, [])
-
-  const handleAutoOpenPromoterConsumed = useCallback(() => {
-    setAutoOpenPromoter(false)
   }, [])
 
   const handleDrawerClose = useCallback(() => {
     if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
     setDrawerOpen(false)
     setSelectedNodeId(null)
-    setAutoOpenPromoter(false)
+    setDrawerTab("info")
   }, [])
 
   // Clean up timer on unmount
@@ -215,8 +213,8 @@ export function LineageTreeBoard({
         treeId={treeId}
         nodeId={selectedNodeId}
         isAdmin={!!capability?.canEditTree}
-        autoOpenPromoterModal={autoOpenPromoter}
-        onAutoOpenPromoterConsumed={handleAutoOpenPromoterConsumed}
+        activeTab={drawerTab}
+        onTabChange={setDrawerTab}
       />
     </>
   )

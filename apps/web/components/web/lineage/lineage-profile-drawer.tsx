@@ -77,6 +77,8 @@ type SelectedRankAward = {
   } | null
 } | null
 
+export type LineageProfileDrawerTab = "info" | "lineage" | "rank-history"
+
 type LineageProfileDrawerProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -90,14 +92,13 @@ type LineageProfileDrawerProps = {
   nodeId?: string | null
   isAdmin?: boolean
   /**
-   * Single-shot signal that the on-card / on-row `LineageMemberActionsMenu`
-   * requested the promoter editor (Phase 3c). When true and a
-   * `promoterChangeContext` exists, the drawer auto-opens
-   * `PromoterChangeModal` once, then calls `onAutoOpenPromoterConsumed` so
-   * the parent can clear the flag.
+   * Controlled active drawer tab. The on-card / on-row `LineageMemberActionsMenu`
+   * "Change promoter..." action (Phase 3c) opens the drawer on the "rank-history"
+   * tab — promotion history + the promoter editor entry — while "View profile"
+   * opens "info". Board-owned so there is no mount-timing race (SESSION_0333).
    */
-  autoOpenPromoterModal?: boolean
-  onAutoOpenPromoterConsumed?: () => void
+  activeTab?: LineageProfileDrawerTab
+  onTabChange?: (tab: LineageProfileDrawerTab) => void
 }
 
 function useDesktopProfilePanel() {
@@ -196,8 +197,8 @@ export function LineageProfileDrawer({
   treeSlug,
   nodeId,
   isAdmin,
-  autoOpenPromoterModal,
-  onAutoOpenPromoterConsumed,
+  activeTab,
+  onTabChange,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -229,8 +230,8 @@ export function LineageProfileDrawer({
             treeSlug={treeSlug}
             nodeId={nodeId}
             isAdmin={isAdmin}
-            autoOpenPromoterModal={autoOpenPromoterModal}
-            onAutoOpenPromoterConsumed={onAutoOpenPromoterConsumed}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
           />
         )}
       </DrawerContent>
@@ -247,8 +248,8 @@ function DrawerBody({
   treeSlug,
   nodeId,
   isAdmin,
-  autoOpenPromoterModal,
-  onAutoOpenPromoterConsumed,
+  activeTab,
+  onTabChange,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
@@ -258,8 +259,8 @@ function DrawerBody({
   treeSlug?: string
   nodeId?: string | null
   isAdmin?: boolean
-  autoOpenPromoterModal?: boolean
-  onAutoOpenPromoterConsumed?: () => void
+  activeTab?: LineageProfileDrawerTab
+  onTabChange?: (tab: LineageProfileDrawerTab) => void
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const avatarSrc = profile.user.passport?.avatarUrl ?? profile.user.image
@@ -269,15 +270,6 @@ function DrawerBody({
   const latestMembership = profile.user.memberships[0] ?? null
   const instructorRelationship = profile.relationshipsTo[0] ?? null
   const [promoterModalOpen, setPromoterModalOpen] = useState(false)
-
-  // Phase 3c: when the on-card / on-row actions menu requested the promoter
-  // editor, open the modal as soon as the drawer's promoter context resolves,
-  // then signal the parent to clear the single-shot flag.
-  useEffect(() => {
-    if (!autoOpenPromoterModal || !promoterChangeContext || promoterModalOpen) return
-    setPromoterModalOpen(true)
-    onAutoOpenPromoterConsumed?.()
-  }, [autoOpenPromoterModal, promoterChangeContext, promoterModalOpen, onAutoOpenPromoterConsumed])
   const selectedProfileAward = selectedRankAward?.id
     ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
     : null
@@ -371,7 +363,11 @@ function DrawerBody({
       </DrawerHeader>
 
       {/* Tabs */}
-      <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <Tabs
+        value={activeTab ?? "info"}
+        onValueChange={value => onTabChange?.(value as LineageProfileDrawerTab)}
+        className="flex-1 flex flex-col overflow-hidden min-w-0"
+      >
         <TabsList className="border-b px-6 py-3 rounded-none bg-transparent">
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>
