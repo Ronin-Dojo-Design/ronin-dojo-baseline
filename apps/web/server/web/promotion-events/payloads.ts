@@ -4,6 +4,8 @@ const promotionEventPersonPayload = {
   id: true,
   name: true,
   image: true,
+  // Promotee avatar prefers the promoted Passport avatar (SESSION_0326); awarder renders name-only.
+  passport: { select: { avatarUrl: true } },
   lineageNode: {
     select: { slug: true },
   },

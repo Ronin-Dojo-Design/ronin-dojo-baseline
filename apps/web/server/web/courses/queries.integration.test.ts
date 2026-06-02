@@ -15,6 +15,11 @@ import { db } from "~/services/db"
 const BRAND = "BASELINE_MARTIAL_ARTS" as const
 const P = `test-cq-integ-${Date.now()}-`
 
+// Avatar-projection fixtures (SESSION_0326): prefer Passport.avatarUrl over User.image.
+const INSTRUCTOR_USER_IMG = "https://example.test/instructor-user.png"
+const INSTRUCTOR_PASSPORT_AVATAR = "https://example.test/instructor-passport.png"
+const INSTRUCTOR2_IMG = "https://example.test/instructor2-user.png"
+
 // --- Inline replicas (originals use "use cache" which requires Next.js runtime) ---
 
 const courseManySelect = {
@@ -34,7 +39,7 @@ const courseManySelect = {
 } as const
 
 async function findCourseInstructors(organizationId: string, brand: typeof BRAND) {
-  return db.membership.findMany({
+  const rows = await db.membership.findMany({
     where: {
       brand,
       organizationId,
@@ -43,7 +48,14 @@ async function findCourseInstructors(organizationId: string, brand: typeof BRAND
     },
     select: {
       id: true,
-      user: { select: { id: true, name: true, image: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          passport: { select: { avatarUrl: true } },
+        },
+      },
       rank: { select: { id: true, name: true } },
       discipline: { select: { id: true, name: true } },
       roleAssignments: { select: { role: { select: { code: true, displayTitle: true } } } },
@@ -51,6 +63,10 @@ async function findCourseInstructors(organizationId: string, brand: typeof BRAND
     orderBy: { joinedAt: "asc" },
     take: 12,
   })
+  return rows.map(({ user, ...rest }) => ({
+    ...rest,
+    user: { id: user.id, name: user.name, image: user.passport?.avatarUrl ?? user.image },
+  }))
 }
 
 async function findProgramSiblingCourses(courseId: string, brand: typeof BRAND) {
@@ -105,6 +121,8 @@ async function findRelatedCourses({
 
 let ownerId: string
 let instructorUserId: string
+let instructor2UserId: string
+let instructor2MembershipId: string
 let orgId: string
 let disciplineId: string
 let courseAId: string
@@ -123,9 +141,28 @@ beforeAll(async () => {
   ownerId = owner.id
 
   const instructorUser = await db.user.create({
-    data: { name: `${P}instructor`, email: `${P}instructor@test.local` },
+    data: {
+      name: `${P}instructor`,
+      email: `${P}instructor@test.local`,
+      image: INSTRUCTOR_USER_IMG,
+    },
   })
   instructorUserId = instructorUser.id
+
+  // Promote a Passport avatar for instructor 1 (prefer case).
+  await db.passport.create({
+    data: { userId: instructorUserId, avatarUrl: INSTRUCTOR_PASSPORT_AVATAR },
+  })
+
+  // Instructor 2 has only User.image, no promoted Passport avatar (fallback case).
+  const instructor2User = await db.user.create({
+    data: {
+      name: `${P}instructor2`,
+      email: `${P}instructor2@test.local`,
+      image: INSTRUCTOR2_IMG,
+    },
+  })
+  instructor2UserId = instructor2User.id
 
   // Org
   const org = await db.organization.create({
@@ -219,6 +256,22 @@ beforeAll(async () => {
     data: { membershipId: instructorMembershipId, roleId: instructorRoleId },
   })
 
+  // Instructor 2 membership + role assignment (fallback-avatar case)
+  const instr2Membership = await db.membership.create({
+    data: {
+      userId: instructor2UserId,
+      organizationId: orgId,
+      disciplineId,
+      brand: BRAND,
+      status: "ACTIVE",
+    },
+  })
+  instructor2MembershipId = instr2Membership.id
+
+  await db.membershipRoleAssignment.create({
+    data: { membershipId: instructor2MembershipId, roleId: instructorRoleId },
+  })
+
   // Regular membership (owner, no INSTRUCTOR role)
   const ownerMembership = await db.membership.create({
     data: {
@@ -235,16 +288,18 @@ beforeAll(async () => {
 afterAll(async () => {
   // Clean up in reverse dependency order
   await db.membershipRoleAssignment.deleteMany({
-    where: { membershipId: { in: [instructorMembershipId, regularMembershipId] } },
+    where: {
+      membershipId: { in: [instructorMembershipId, instructor2MembershipId, regularMembershipId] },
+    },
   })
   await db.programCourse.deleteMany({ where: { programId } })
   await db.program.deleteMany({ where: { id: programId } })
   await db.course.deleteMany({ where: { id: { in: [courseAId, courseBId, courseCId] } } })
   await db.membership.deleteMany({
-    where: { id: { in: [instructorMembershipId, regularMembershipId] } },
+    where: { id: { in: [instructorMembershipId, instructor2MembershipId, regularMembershipId] } },
   })
   await db.organization.deleteMany({ where: { id: orgId } })
-  for (const uid of [ownerId, instructorUserId]) {
+  for (const uid of [ownerId, instructorUserId, instructor2UserId]) {
     await db.passport.deleteMany({ where: { userId: uid } })
     await db.directoryProfile.deleteMany({ where: { userId: uid } })
     await db.account.deleteMany({ where: { userId: uid } })
@@ -273,6 +328,20 @@ describe("findCourseInstructors", () => {
   it("returns empty array for org with no instructors", async () => {
     const instructors = await findCourseInstructors("nonexistent-org-id", BRAND)
     expect(instructors).toEqual([])
+  })
+
+  it("prefers Passport.avatarUrl over User.image for the instructor avatar", async () => {
+    const instructors = await findCourseInstructors(orgId, BRAND)
+    const match = instructors.find(i => i.user.id === instructorUserId)
+    expect(match).toBeDefined()
+    expect(match!.user.image).toBe(INSTRUCTOR_PASSPORT_AVATAR)
+  })
+
+  it("falls back to User.image when the instructor has no promoted Passport avatar", async () => {
+    const instructors = await findCourseInstructors(orgId, BRAND)
+    const match = instructors.find(i => i.user.id === instructor2UserId)
+    expect(match).toBeDefined()
+    expect(match!.user.image).toBe(INSTRUCTOR2_IMG)
   })
 })
 

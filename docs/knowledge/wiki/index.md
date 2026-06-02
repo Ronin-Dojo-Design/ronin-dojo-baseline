@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-01
 author: Brian + Copilot
-last_agent: claude-session-0325
+last_agent: claude-session-0326
 ---
 
 # LLM Wiki Index
@@ -418,6 +418,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0323](../../sprints/SESSION_0323.md) | session--implement | closed — Passport media manager mounted on the dashboard Profile tab with server-loaded `MediaAttachment` list |
 | [SESSION_0324](../../sprints/SESSION_0324.md) | session--implement | closed — Course media manager mounted on the admin Course editor and Passport image attachments can promote into `Passport.avatarUrl` |
 | [SESSION_0325](../../sprints/SESSION_0325.md) | session--implement | closed — public/member-facing avatar surfaces (directory list/search/detail, lineage cards + drawer, black-belt rail) prefer `passport.avatarUrl ?? user.image` at the read-model projection layer; DirectoryProfile visibility preserved |
+| [SESSION_0326](../../sprints/SESSION_0326.md) | session--implement | closed — authenticated Playwright visual smoke confirmed the avatar swap across directory/member/lineage/disciplines; migrated course-instructor + promotion-event-promotee surfaces to prefer `passport.avatarUrl ?? user.image` (course read-model projection + test; event payload widen + JSX) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

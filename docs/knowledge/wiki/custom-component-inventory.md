@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-01
-last_agent: claude-session-0325
+last_agent: claude-session-0326
 pairs_with:
   - docs/sprints/SESSION_0325.md
   - docs/sprints/SESSION_0324.md
@@ -204,8 +204,10 @@ SESSION_0202 added the user-dashboard editor preview surface:
 - **Directory** (`server/web/directory/`): `directoryUserPayload` + the detail payload select `passport.avatarUrl`; `getDirectoryProfiles`, `searchDirectoryProfiles`, and `findProfileBySlug` project `passport.avatarUrl ?? user.image` into the existing `image`/`avatarUrl` return field. `DirectoryList`, `MemberCard`, and `members/[slug]/page.tsx` are unchanged — they consume the resolved value. DirectoryProfile visibility (`HIDDEN`/`MEMBERS_ONLY`/`PUBLIC`) is untouched; no per-field flag gates the avatar.
 - **Lineage** (`server/web/lineage/payloads.ts` `lineageUserPayload`): adds `passport.avatarUrl`; `LineageNodeCard`, `LineageProfileDrawer`, `LineageHonorStrip`, and `LineageCompactChildList` prefer `…user.passport?.avatarUrl ?? …user.image` (mirroring the pre-existing `passport?.displayName ?? user.name`). This closes the disconnect where the lineage node-profile editor *writes* `Passport.avatarUrl` but the cards rendered `user.image`. Awarder avatars (`awardedBy.image`) are a different person/select and intentionally stay on `user.image`.
 - **Black-belt rail** (`disciplines/_components/black-belt-rail.tsx`): see §3a.
-- **Deliberately excluded:** the schedule instructor list (`components/web/schedules/schedule-instructor-list.tsx`) is an admin management tool (assign/unassign/set-primary, exposes email), not a public member display — it stays on `user.image`. `dashboard/membership.tsx` already prefers `passport.avatarUrl` (self-view) and was left as-is.
-- **Proof:** `server/web/directory/queries.avatar-projection.integration.test.ts` (prefer / fallback / HIDDEN-excluded).
+- **Course instructors** (SESSION_0326, `server/web/courses/queries.ts` `findCourseInstructors`): selects `passport.avatarUrl` and `.map`-projects `passport.avatarUrl ?? user.image` into `user.image`, so the `/courses/[slug]` Instructors section renders the resolved value with **no page change** (directory pattern).
+- **Promotion-event promotee** (SESSION_0326, `server/web/promotion-events/payloads.ts` `promotionEventPersonPayload`): adds `passport.avatarUrl`; the `/events/[slug]` award cards prefer `award.user.passport?.avatarUrl ?? award.user.image` in JSX (lineage pattern). The **awarder** on the same payload intentionally stays name-only (no avatar rendered).
+- **Deliberately excluded:** the schedule instructor list (`components/web/schedules/schedule-instructor-list.tsx`) is a management widget (assign/unassign/set-primary, exposes email) — re-inspected SESSION_0326, no public face — stays on `user.image`. The `Author` byline (`components/web/ui/author.tsx`, used by blog/posts/testimonials) is content-authorship, not a member-directory avatar. `user-menu.tsx` (self/session) and admin avatars (bracket-viewer, user-form) are out of scope. `dashboard/membership.tsx` already prefers `passport.avatarUrl` (self-view).
+- **Proof:** `server/web/directory/queries.avatar-projection.integration.test.ts` (prefer / fallback / HIDDEN-excluded); `server/web/courses/queries.integration.test.ts` (course-instructor prefer / fallback, SESSION_0326); SESSION_0326 authenticated Playwright visual smoke across directory/member/lineage/disciplines.
 
 ---
 

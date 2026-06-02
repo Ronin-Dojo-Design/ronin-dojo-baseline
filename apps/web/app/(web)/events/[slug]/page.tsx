@@ -163,9 +163,11 @@ export default async function PromotionEventPage({ params }: Props) {
                       <Card key={award.id} hover={false} className="p-4" style={rankStyle}>
                         <Stack size="md" className="w-full items-start">
                           <Avatar className="size-11">
-                            {award.user.image && (
+                            {(award.user.passport?.avatarUrl ?? award.user.image) && (
                               <AvatarImage
-                                src={award.user.image}
+                                src={
+                                  award.user.passport?.avatarUrl ?? award.user.image ?? undefined
+                                }
                                 alt={award.user.name ?? "Promotee"}
                               />
                             )}

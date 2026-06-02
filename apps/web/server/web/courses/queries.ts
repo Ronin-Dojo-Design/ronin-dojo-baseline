@@ -75,7 +75,7 @@ export const findCourseInstructors = async (organizationId: string, brand: Brand
   cacheTag("course-instructors")
   cacheLife("minutes")
 
-  return db.membership.findMany({
+  const rows = await db.membership.findMany({
     where: {
       brand,
       organizationId,
@@ -93,6 +93,8 @@ export const findCourseInstructors = async (organizationId: string, brand: Brand
           id: true,
           name: true,
           image: true,
+          // Public instructor list prefers the promoted Passport avatar (SESSION_0326).
+          passport: { select: { avatarUrl: true } },
         },
       },
       rank: { select: { id: true, name: true } },
@@ -106,6 +108,16 @@ export const findCourseInstructors = async (organizationId: string, brand: Brand
     orderBy: { joinedAt: "asc" },
     take: 12,
   })
+
+  // Resolve `passport.avatarUrl ?? user.image` at the read model so the page needs no change.
+  return rows.map(({ user, ...rest }) => ({
+    ...rest,
+    user: {
+      id: user.id,
+      name: user.name,
+      image: user.passport?.avatarUrl ?? user.image,
+    },
+  }))
 }
 
 export type CourseInstructor = Awaited<ReturnType<typeof findCourseInstructors>>[number]
