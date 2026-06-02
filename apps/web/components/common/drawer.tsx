@@ -134,6 +134,12 @@ function DrawerContent({
             // tailwindcss-animate default (150ms linear) so dismissal feel is unchanged.
             "data-open:[animation-duration:300ms]",
             "data-open:[animation-timing-function:var(--ease-snappy)]",
+            // Reduced-motion: motion-system runbook §3 (MANDATORY) — under
+            // prefers-reduced-motion the popup renders at its resting state with no
+            // enter/exit keyframes. animation-none neutralizes the tw-animate
+            // slide/fade utilities; tw-animate's keyframes end at the resting state,
+            // so the popup remains visible and untransformed.
+            "motion-reduce:animate-none",
             !showOverlay && "pointer-events-auto",
             className,
           )}

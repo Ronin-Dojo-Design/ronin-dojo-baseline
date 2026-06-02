@@ -210,6 +210,7 @@ export function LineageProfileDrawer({
     >
       <DrawerContent
         showOverlay={!isDesktopPanel}
+        containerClassName="md:pt-6! md:[@media(min-height:1000px)]:pt-6!"
         className="md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0"
       >
         {!profile ? (

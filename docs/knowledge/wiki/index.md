@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-02
+updated: 2026-06-01
 author: Brian + Copilot
-last_agent: codex-session-0328
+last_agent: claude-session-0330
 ---
 
 # LLM Wiki Index
@@ -422,6 +422,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0327](../../sprints/SESSION_0327.md) | session--open | closed — promotion-events Bun directory tests now share the full `next/cache` no-op mock seam, fixing the `revalidatePath` import-time SyntaxError |
 | [SESSION_0328](../../sprints/SESSION_0328.md) | session--plan | closed — autonomous lineage Claude/Codex run preflight staged Phase 3c/3d/Run 3 constraints before launching `scripts/auto-session.sh 3` or `scripts/auto-session-codex.sh 3` |
 | [SESSION_0329](../../sprints/SESSION_0329.md) | session--implement | closed — lineage Phase 3c on-card / on-row `LineageMemberActionsMenu` "Change promoter..." wired as a distinct capability-gated action (auto-opens `PromoterChangeModal` via drawer); public read-only viewers see only View profile |
+| [SESSION_0330](../../sprints/SESSION_0330.md) | session--implement | closed — lineage Phase 3d hardening: `Drawer` primitive now honors `prefers-reduced-motion` (`motion-reduce:animate-none`); `LineageProfileDrawer` desktop persistent panel positions inside the viewport via a `containerClassName` override of the inherited `md:pt-[12.5vh]`/`md:[@media(min-height:1000px)]:pt-[25vh]` offsets |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
