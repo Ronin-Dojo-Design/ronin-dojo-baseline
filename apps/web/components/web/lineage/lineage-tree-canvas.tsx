@@ -112,6 +112,12 @@ type LineageTreeCanvasProps = {
 
   selectedNodeId?: string | null
   onSelect: (nodeId: string) => void
+  /**
+   * Distinct capability-gated promoter action for the per-card / per-row menu
+   * (Phase 3c). If omitted, the menu hides "Change promoter..." rather than
+   * falling back to View Profile.
+   */
+  onChangePromoter?: (nodeId: string) => void
   treeId?: string
   editMode?: boolean
   canEditPlacement?: boolean
@@ -490,6 +496,7 @@ function LineageBranch({
   perStepDelay,
   hasSelection,
   onSelect,
+  onChangePromoter,
   visited,
   generation,
   siblingIndex,
@@ -510,6 +517,7 @@ function LineageBranch({
   perStepDelay: number
   hasSelection: boolean
   onSelect: (nodeId: string) => void
+  onChangePromoter?: (nodeId: string) => void
   visited: Set<string>
   generation: number
   siblingIndex: number
@@ -561,7 +569,19 @@ function LineageBranch({
   const isInSelectedPath = selectedPathMemberIds.has(member.id)
   const isDimmed = hasSelection && !isInSelectedPath
   const connectorClassName = isInSelectedPath ? "bg-primary/60" : "bg-border"
-  const dragAttributes = dndDisabled ? {} : attributes
+  // dnd-kit marks the draggable wrapper `role="button"`, but this wrapper now
+  // contains the card's own ⋯ actions menu + profile buttons (Phase 3c). A button
+  // role there nests interactive buttons and shadowed the "Change promoter..."
+  // trigger in the accessibility tree — the wrapper absorbed the inner buttons'
+  // names ("Open lineage actions for X Open lineage profile for X"), so it matched
+  // `getByRole("button", { name: /Open lineage actions/ })` first and the real
+  // trigger was never clicked (SESSION_0329 Phase 3c regression). Expose the
+  // wrapper as a draggable group instead: mouse drag (listeners) and the
+  // `[aria-roledescription="draggable"]` drag-test hook are unaffected; keyboard
+  // drag-to-reorder (which relies on the button role) is dropped — mouse is primary.
+  const dragAttributes = dndDisabled
+    ? {}
+    : { ...attributes, role: "group", "aria-pressed": undefined, tabIndex: undefined }
   const dragListeners = dndDisabled ? {} : listeners
 
   const delay = entranceDelay(generation, siblingIndex)
@@ -639,6 +659,9 @@ function LineageBranch({
               selectedRank={member.selectedRank}
               onSelect={onSelect}
               canChangePromoter={editMode && canEditPlacement}
+              onChangePromoter={
+                onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
+              }
             />
           </div>
         </div>
@@ -687,6 +710,7 @@ function LineageBranch({
                 perStepDelay={perStepDelay}
                 hasSelection={hasSelection}
                 onSelect={onSelect}
+                onChangePromoter={onChangePromoter}
                 visited={nextVisited}
                 generation={generation + 1}
                 reduceMotion={reduceMotion}
@@ -716,6 +740,7 @@ function LineageChildGroupColumn({
   perStepDelay,
   hasSelection,
   onSelect,
+  onChangePromoter,
   visited,
   generation,
   reduceMotion,
@@ -736,6 +761,7 @@ function LineageChildGroupColumn({
   perStepDelay: number
   hasSelection: boolean
   onSelect: (nodeId: string) => void
+  onChangePromoter?: (nodeId: string) => void
   visited: Set<string>
   generation: number
   reduceMotion: boolean
@@ -819,6 +845,7 @@ function LineageChildGroupColumn({
               perStepDelay={perStepDelay}
               hasSelection={hasSelection}
               onSelect={onSelect}
+              onChangePromoter={onChangePromoter}
               visited={visited}
               generation={generation}
               siblingIndex={index}
@@ -849,6 +876,7 @@ function LineageBoardCard({
   selectedMemberId,
   selectedPathMemberIds,
   onSelect,
+  onChangePromoter,
   canChangePromoter,
 }: {
   member: CanvasMember
@@ -860,6 +888,7 @@ function LineageBoardCard({
   selectedMemberId: string | null
   selectedPathMemberIds: Set<string>
   onSelect: (nodeId: string) => void
+  onChangePromoter?: (nodeId: string) => void
   canChangePromoter: boolean
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
@@ -878,6 +907,7 @@ function LineageBoardCard({
         selectedRank={member.selectedRank}
         onSelect={onSelect}
         canChangePromoter={canChangePromoter}
+        onChangePromoter={onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined}
       />
 
       {bio && <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>}
@@ -895,6 +925,7 @@ function LineageBoardCard({
             selectedPathMemberIds={selectedPathMemberIds}
             onSelect={onSelect}
             canChangePromoter={canChangePromoter}
+            onChangePromoter={onChangePromoter}
           />
         </div>
       )}
@@ -911,6 +942,7 @@ export function LineageTreeCanvas({
   edges,
   selectedNodeId,
   onSelect,
+  onChangePromoter,
   treeId,
   editMode = false,
   canEditPlacement = false,
@@ -1332,6 +1364,7 @@ export function LineageTreeCanvas({
                     selectedMemberId={selectedMemberId}
                     selectedPathMemberIds={selectedPathMemberIds}
                     onSelect={onSelect}
+                    onChangePromoter={onChangePromoter}
                     canChangePromoter={editMode && canEditPlacement}
                   />
                 ))}
@@ -1356,6 +1389,7 @@ export function LineageTreeCanvas({
                     perStepDelay={perStepDelay}
                     hasSelection={hasSelection}
                     onSelect={onSelect}
+                    onChangePromoter={onChangePromoter}
                     visited={new Set()}
                     generation={0}
                     siblingIndex={index}

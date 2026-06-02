@@ -77,6 +77,8 @@ type SelectedRankAward = {
   } | null
 } | null
 
+export type LineageProfileDrawerTab = "info" | "lineage" | "rank-history"
+
 type LineageProfileDrawerProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -89,6 +91,14 @@ type LineageProfileDrawerProps = {
   treeId?: string
   nodeId?: string | null
   isAdmin?: boolean
+  /**
+   * Controlled active drawer tab. The on-card / on-row `LineageMemberActionsMenu`
+   * "Change promoter..." action (Phase 3c) opens the drawer on the "rank-history"
+   * tab — promotion history + the promoter editor entry — while "View profile"
+   * opens "info". Board-owned so there is no mount-timing race (SESSION_0333).
+   */
+  activeTab?: LineageProfileDrawerTab
+  onTabChange?: (tab: LineageProfileDrawerTab) => void
 }
 
 function useDesktopProfilePanel() {
@@ -187,6 +197,8 @@ export function LineageProfileDrawer({
   treeSlug,
   nodeId,
   isAdmin,
+  activeTab,
+  onTabChange,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -218,6 +230,8 @@ export function LineageProfileDrawer({
             treeSlug={treeSlug}
             nodeId={nodeId}
             isAdmin={isAdmin}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
           />
         )}
       </DrawerContent>
@@ -234,6 +248,8 @@ function DrawerBody({
   treeSlug,
   nodeId,
   isAdmin,
+  activeTab,
+  onTabChange,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
@@ -243,6 +259,8 @@ function DrawerBody({
   treeSlug?: string
   nodeId?: string | null
   isAdmin?: boolean
+  activeTab?: LineageProfileDrawerTab
+  onTabChange?: (tab: LineageProfileDrawerTab) => void
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const avatarSrc = profile.user.passport?.avatarUrl ?? profile.user.image
@@ -345,7 +363,11 @@ function DrawerBody({
       </DrawerHeader>
 
       {/* Tabs */}
-      <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <Tabs
+        value={activeTab ?? "info"}
+        onValueChange={value => onTabChange?.(value as LineageProfileDrawerTab)}
+        className="flex-1 flex flex-col overflow-hidden min-w-0"
+      >
         <TabsList className="border-b px-6 py-3 rounded-none bg-transparent">
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>

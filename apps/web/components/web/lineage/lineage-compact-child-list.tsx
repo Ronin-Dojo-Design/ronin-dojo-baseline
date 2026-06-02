@@ -51,6 +51,7 @@ type CompactSharedProps = {
   selectedPathMemberIds: Set<string>
   onSelect: (nodeId: string) => void
   canChangePromoter?: boolean
+  onChangePromoter?: (nodeId: string) => void
 }
 
 type LineageCompactChildListProps = CompactSharedProps & {
@@ -216,6 +217,9 @@ function LineageCompactChildRow({
           displayName={displayName}
           onViewProfile={() => shared.onSelect(member.nodeId)}
           canChangePromoter={shared.canChangePromoter}
+          onChangePromoter={
+            shared.onChangePromoter ? () => shared.onChangePromoter?.(member.nodeId) : undefined
+          }
         />
       </div>
 

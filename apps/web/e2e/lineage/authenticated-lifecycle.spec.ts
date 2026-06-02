@@ -138,6 +138,52 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     })
   })
 
+  test("on-card actions menu opens the profile drawer on Rank History in edit mode (SESSION_0329 Phase 3c)", async ({
+    page,
+  }) => {
+    // SESSION_0329 / petey-plan-0305 Phase 3c (descoped SESSION_0333): the per-card
+    // / per-row `LineageMemberActionsMenu` "Change promoter..." item is a distinct
+    // capability-gated action that opens the profile drawer on the Rank History tab
+    // — promotion history + the promoter editor entry — not a silent fallback to
+    // View Profile. Editor mode must be on for the item to show.
+    await createAuthenticatedSession(page, fixture.treeEditorUserId)
+
+    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
+
+    await page.getByRole("button", { name: "Edit", exact: true }).click()
+    await expect(page.getByRole("button", { name: "Editing", exact: true })).toBeVisible()
+
+    const onCardMenu = page.getByRole("button", {
+      name: new RegExp(`Open lineage actions for ${escapeRegExp(fixture.claimTargetName)}`),
+    })
+    await expect(onCardMenu.first()).toBeVisible({ timeout: 30_000 })
+    // webkit hydrates the dashboard + dnd canvas slower than chromium/firefox, so a
+    // single trigger click can fire before the dropdown is interactive and the menu
+    // never opens (SESSION_0266 timing race). Retry opening the menu until the item
+    // is present — the same `toPass` hardening `openLineageProfileDrawer` uses.
+    await expect(async () => {
+      await onCardMenu.first().click()
+      await expect(page.getByRole("menuitem", { name: "Change promoter..." })).toBeVisible({
+        timeout: 3_000,
+      })
+    }).toPass({ timeout: 30_000 })
+    await page.getByRole("menuitem", { name: "Change promoter..." }).click()
+
+    // The on-card action opens the profile drawer on the Rank History tab (where
+    // the editor changes the promoter via the drawer action menu), rather than
+    // auto-opening a modal — a deterministic, capability-gated entry.
+    await expect(page.getByRole("dialog", { name: fixture.claimTargetName })).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(page.getByRole("tab", { name: "Rank History", selected: true })).toBeVisible({
+      timeout: 15_000,
+    })
+  })
+
   test("authenticated non-owner can submit a public claim without hidden member leakage", async ({
     page,
     browserName,
