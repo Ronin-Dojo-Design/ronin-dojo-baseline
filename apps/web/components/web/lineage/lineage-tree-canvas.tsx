@@ -569,7 +569,19 @@ function LineageBranch({
   const isInSelectedPath = selectedPathMemberIds.has(member.id)
   const isDimmed = hasSelection && !isInSelectedPath
   const connectorClassName = isInSelectedPath ? "bg-primary/60" : "bg-border"
-  const dragAttributes = dndDisabled ? {} : attributes
+  // dnd-kit marks the draggable wrapper `role="button"`, but this wrapper now
+  // contains the card's own ⋯ actions menu + profile buttons (Phase 3c). A button
+  // role there nests interactive buttons and shadowed the "Change promoter..."
+  // trigger in the accessibility tree — the wrapper absorbed the inner buttons'
+  // names ("Open lineage actions for X Open lineage profile for X"), so it matched
+  // `getByRole("button", { name: /Open lineage actions/ })` first and the real
+  // trigger was never clicked (SESSION_0329 Phase 3c regression). Expose the
+  // wrapper as a draggable group instead: mouse drag (listeners) and the
+  // `[aria-roledescription="draggable"]` drag-test hook are unaffected; keyboard
+  // drag-to-reorder (which relies on the button role) is dropped — mouse is primary.
+  const dragAttributes = dndDisabled
+    ? {}
+    : { ...attributes, role: "group", "aria-pressed": undefined, tabIndex: undefined }
   const dragListeners = dndDisabled ? {} : listeners
 
   const delay = entranceDelay(generation, siblingIndex)
