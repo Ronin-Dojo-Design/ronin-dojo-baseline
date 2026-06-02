@@ -175,7 +175,16 @@ export const lineageNodeProfilePayload = {
                     select: { id: true, name: true, slug: true, code: true },
                   },
                   ranks: {
-                    select: { id: true, sortOrder: true },
+                    // @added SESSION_0332 — Trophy.so rank-progression proof.
+                    // Widened from {id, sortOrder} so the belt-ladder can render unearned levels
+                    // with canonical name + colorHex. No schema change.
+                    select: {
+                      id: true,
+                      sortOrder: true,
+                      name: true,
+                      shortName: true,
+                      colorHex: true,
+                    },
                     orderBy: { sortOrder: "asc" as const },
                   },
                 },

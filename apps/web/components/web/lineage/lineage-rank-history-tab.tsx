@@ -9,6 +9,7 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
+import { LineageRankProgressionPanel } from "~/components/web/lineage/lineage-rank-progression-panel"
 import { cx } from "~/lib/utils"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
@@ -76,6 +77,10 @@ export function LineageRankHistoryTab({
 
   return (
     <Stack direction="column" size="md" className="w-full">
+      <LineageRankProgressionPanel profile={profile} />
+
+      <Separator />
+
       <Stack direction="column" size="xs">
         <H6 className="text-muted-foreground uppercase tracking-wide">Rank History</H6>
         <Stack size="xs" wrap>
