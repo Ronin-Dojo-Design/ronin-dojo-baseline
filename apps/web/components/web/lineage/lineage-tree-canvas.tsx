@@ -56,6 +56,7 @@ import { LineageCompactChildList } from "./lineage-compact-child-list"
 import { LineageGroupHeaderForm } from "./lineage-group-header-form"
 import { LineageHonorStrip } from "./lineage-honor-strip"
 import { LineageNodeCard } from "./lineage-node-card"
+import { LineageSearchBar } from "./lineage-search-bar"
 
 /**
  * React-first lineage tree canvas.
@@ -1289,6 +1290,12 @@ export function LineageTreeCanvas({
             )}
           </Stack>
         </Stack>
+
+        <LineageSearchBar
+          members={normalizedMembers}
+          selectedMemberId={selectedMemberId}
+          onSelect={onSelect}
+        />
 
         <LineageHonorStrip
           members={normalizedMembers}
