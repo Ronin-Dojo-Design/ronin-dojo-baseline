@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, mock } from "bun:test"
 mock.module("next/cache", () => ({
   cacheLife: () => {},
   cacheTag: () => {},
+  revalidatePath: () => {},
+  revalidateTag: () => {},
+  updateTag: () => {},
 }))
 
 let promotionEventRows: any[] = []

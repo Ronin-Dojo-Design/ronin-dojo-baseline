@@ -4,8 +4,8 @@ slug: autonomous-sessions
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-05-29
-last_agent: claude-session-0306
+updated: 2026-06-02
+last_agent: codex-session-0327
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -27,7 +27,7 @@ This repo is a **file-based state machine**. Bow-in
 writes the next one and commits. The session-to-session handoff therefore lives in
 the **SESSION files + git**, not in any conversation.
 
-That means the right automation is **a fresh `claude -p` process per session** — not
+That means the right automation is **a fresh headless agent process per session** — not
 a long-running loop or kept-alive chat. Each process is cold, reads the latest SESSION
 file, does one session, closes, and the next cold process picks up the thread. No
 context decay, because there is no shared context to decay.
@@ -52,6 +52,23 @@ What it does each iteration:
 3. Verifies two safety brakes: the tree is clean (the close succeeded) and exactly one
    new commit exists (the session produced work). Either failing **halts the loop**.
 4. Pushes the branch and opens a PR with `gh pr create --fill`.
+
+### Codex variant
+
+[`scripts/auto-session-codex.sh`](../../../scripts/auto-session-codex.sh) is the Codex CLI
+variant. It mirrors the stacked-PR flow above, but invokes a cold `codex exec` process
+for each session and records `last_agent: codex-session-NNNN` through the normal bow-in /
+bow-out ritual.
+
+```bash
+scripts/auto-session-codex.sh 3
+CODEX_MODEL=gpt-5-codex scripts/auto-session-codex.sh 3
+```
+
+Codex does not currently have the same per-command allowlist shape as Claude, so the
+script uses `--dangerously-bypass-approvals-and-sandbox` for unattended local runs. The
+repo-level FS-0024 shell guard still blocks the read-only `dirstarter_template` path, and
+the stacked PRs remain the human review gate before anything reaches `main`.
 
 ### Stacked PRs — why, and how to merge
 

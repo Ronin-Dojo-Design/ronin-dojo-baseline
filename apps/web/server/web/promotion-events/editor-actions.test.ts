@@ -2,7 +2,10 @@
 import { describe, expect, it, mock } from "bun:test"
 
 mock.module("next/cache", () => ({
+  cacheLife: () => {},
+  cacheTag: () => {},
   revalidatePath: () => {},
+  revalidateTag: () => {},
   updateTag: () => {},
 }))
 
@@ -57,7 +60,9 @@ function makeDb(state: FakeDbState = {}) {
     promotionEvent: {
       findFirst: async ({ where }: any) => {
         if (where.slug) {
-          return events.find(event => event.slug === where.slug && event.id !== where.id?.not) ?? null
+          return (
+            events.find(event => event.slug === where.slug && event.id !== where.id?.not) ?? null
+          )
         }
 
         if (where.id) {
@@ -89,7 +94,10 @@ function makeDb(state: FakeDbState = {}) {
       },
       updateMany: async ({ where, data }: any) => {
         for (const award of rankAwards) {
-          if (where.id?.in?.includes(award.id) || award.promotionEventId === where.promotionEventId) {
+          if (
+            where.id?.in?.includes(award.id) ||
+            award.promotionEventId === where.promotionEventId
+          ) {
             award.promotionEventId = data.promotionEventId
           }
         }
