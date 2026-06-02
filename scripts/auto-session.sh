@@ -29,6 +29,10 @@ cd "$(git rev-parse --show-toplevel)"
 
 N="${1:-1}"
 case "$N" in (''|*[!0-9]*) echo "N must be a positive integer" >&2; exit 2 ;; esac
+if (( N < 1 )); then
+  echo "N must be a positive integer" >&2
+  exit 2
+fi
 
 # Guard: never run from the read-only dirstarter_template (FS-0024).
 remote="$(git remote get-url origin 2>/dev/null || true)"
@@ -56,6 +60,17 @@ re-decide anything the plan already locked. Act as Petey: orchestrate Cody (buil
 Doug (verify); use subagents only for genuinely disjoint work. SKIP any operator-only
 browser/device smoke — flag it as operator-side, do NOT block on it. Implement only the
 next automatable code slice.
+
+Before any UI, schema, or backend edits, write the SESSION Petey plan and Task log
+IDs, then complete the relevant Cody pre-flight. For lineage/petey-plan-0305 work,
+run Graphify queries over the lane terms from the latest SESSION handoff before
+opening broad code surfaces. If a slice mentions trophy.so, achievements, points,
+gamification, RankAward persistence, or schema work, treat it as schema/backend
+work first: read docs/runbooks/database/schema-migration.md,
+docs/runbooks/database/prisma-workflow.md, docs/protocols/cody-preflight.md,
+docs/runbooks/domain-features/lineage-hub.md, ADR 0016, and schema.prisma before
+editing. Reuse existing GamificationEventType/GamificationEvent/RankAward facts
+unless the schema pre-flight explicitly proves they are insufficient.
 
 Then bow out per docs/rituals/closing.md as a FULL close: fill the SESSION file,
 sweep wiki index/log + component inventory, run `bun run wiki:lint` (it MUST report
@@ -97,8 +112,13 @@ for ((i = 1; i <= N; i++)); do
     exit 1
   fi
   # Brake 2: the session must have produced exactly one new commit.
-  if [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$base_branch")" ]]; then
-    echo "✗ no new commit on ${branch} — session produced nothing. Stopping." >&2
+  new_commit_count="$(git rev-list --count "${base_branch}..HEAD")"
+  if [[ "$new_commit_count" -ne 1 ]]; then
+    if [[ "$new_commit_count" -eq 0 ]]; then
+      echo "✗ no new commit on ${branch} — session produced nothing. Stopping." >&2
+    else
+      echo "✗ ${branch} produced ${new_commit_count} commits; expected exactly one. Stopping." >&2
+    fi
     exit 1
   fi
 

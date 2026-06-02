@@ -5,11 +5,12 @@ type: runbook
 status: active
 created: 2026-05-29
 updated: 2026-06-02
-last_agent: codex-session-0327
+last_agent: codex-session-0328
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/petey-plan-0305.md
+  - docs/sprints/SESSION_0328.md
 backlinks:
   - docs/runbooks/README.md
 ---
@@ -69,6 +70,53 @@ Codex does not currently have the same per-command allowlist shape as Claude, so
 script uses `--dangerously-bypass-approvals-and-sandbox` for unattended local runs. The
 repo-level FS-0024 shell guard still blocks the read-only `dirstarter_template` path, and
 the stacked PRs remain the human review gate before anything reaches `main`.
+
+#### SESSION_0328 preflight — `petey-plan-0305` Claude/Codex run
+
+SESSION_0328 preflighted the next 3-session lineage epic run for both autonomous drivers. Use one
+of these commands from a clean `main` after SESSION_0328 is committed and pushed:
+
+```bash
+# Claude driver
+scripts/auto-session.sh 3
+
+# Codex driver
+scripts/auto-session-codex.sh 3
+```
+
+Both prompts now carry the same hard gates: write SESSION task IDs before edits, run the relevant
+Cody pre-flight, use Graphify-first discovery for lineage work, and treat Trophy.so/points/
+gamification/RankAward persistence as schema/backend work before vendor UI.
+
+The three cold Codex sessions are staged as:
+
+1. **Phase 3c actions menu proof:** bow in against `docs/petey-plan-0305.md`, run Graphify queries
+   over lineage canvas/drawer/action-menu/panel terms, create SESSION task IDs and Cody UI
+   pre-flight before edits, then verify public read-only behavior and dashboard/editor behavior
+   separately. Preflight note: `LineageMemberActionsMenu` already appears on full cards and compact
+   rows; the likely gap is wiring `Change promoter...` as a distinct capability-gated action instead
+   of falling back to View Profile.
+2. **Phase 3d persistent profile panel:** finish/polish the mobile bottom-sheet plus desktop
+   persistent side-panel contract. Preflight note: `LineageProfileDrawer` already contains a
+   desktop-panel direction, `LineageRankHistoryTab`, and a belt-color header progress bar, so the
+   run should harden and browser-prove those surfaces instead of duplicating them.
+3. **Trophy.so rank-progression proof:** treat this as schema/backend-aware work before vendor UI.
+   Read `docs/runbooks/database/schema-migration.md`, `docs/runbooks/database/prisma-workflow.md`,
+   `docs/protocols/cody-preflight.md`, `docs/runbooks/domain-features/lineage-hub.md`, ADR 0016,
+   and `apps/web/prisma/schema.prisma` before editing. Existing `GamificationEventType`,
+   `GamificationEvent`, and `RankAward.gamificationEvents` are already present; reuse them or record
+   why they are insufficient before adding any achievement/points schema.
+
+Path drift note: older handoffs may say `docs/runbooks/schema-migration.md` or
+`docs/runbooks/prisma-workflow.md`. The live runbooks are under `docs/runbooks/database/`. Record the
+drift in the SESSION file if it affects a schema run.
+
+Runner brakes: both autonomous drivers now reject `N=0` and assert that each cold session leaves a
+clean tree with **exactly one** new commit on its branch. A no-op session and a multi-commit session
+both halt the loop.
+
+Run 3 is a human-review PR before merge if it touches `apps/web/prisma/`, `prisma/migrations/`, or
+the rank/gamification persistence contract.
 
 ### Stacked PRs — why, and how to merge
 
