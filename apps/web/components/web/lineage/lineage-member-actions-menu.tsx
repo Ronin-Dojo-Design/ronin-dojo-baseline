@@ -73,7 +73,9 @@ export function LineageMemberActionsMenu({
       <DropdownMenuContent align="end" sideOffset={8}>
         <DropdownMenuGroup>
           <DropdownMenuLabel>Lineage</DropdownMenuLabel>
-          <DropdownMenuItem onSelect={onViewProfile}>
+          {/* Base UI Menu.Item fires onClick, not Radix-style onSelect — keep both
+              so pointer + keyboard activation both reach the handler (SESSION_0333). */}
+          <DropdownMenuItem onClick={onViewProfile} onSelect={onViewProfile}>
             <UserRoundIcon />
             View profile
           </DropdownMenuItem>
@@ -81,7 +83,7 @@ export function LineageMemberActionsMenu({
           {showChangePromoter && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={onChangePromoter}>
+              <DropdownMenuItem onClick={onChangePromoter} onSelect={onChangePromoter}>
                 <UserRoundCogIcon />
                 Change promoter...
               </DropdownMenuItem>
