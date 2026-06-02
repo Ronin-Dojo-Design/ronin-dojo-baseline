@@ -38,6 +38,7 @@ type LineageNodeCardProps = {
   onSelect: (nodeId: string) => void
   showActions?: boolean
   canChangePromoter?: boolean
+  onChangePromoter?: () => void
 }
 
 function initials(name: string | null | undefined): string {
@@ -56,6 +57,7 @@ export function LineageNodeCard({
   onSelect,
   showActions = true,
   canChangePromoter,
+  onChangePromoter,
 }: LineageNodeCardProps) {
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
   const avatarSrc = node.user.passport?.avatarUrl ?? node.user.image
@@ -98,6 +100,7 @@ export function LineageNodeCard({
             displayName={displayName}
             onViewProfile={() => onSelect(node.id)}
             canChangePromoter={canChangePromoter}
+            onChangePromoter={onChangePromoter}
           />
         </div>
       )}

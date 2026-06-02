@@ -89,6 +89,15 @@ type LineageProfileDrawerProps = {
   treeId?: string
   nodeId?: string | null
   isAdmin?: boolean
+  /**
+   * Single-shot signal that the on-card / on-row `LineageMemberActionsMenu`
+   * requested the promoter editor (Phase 3c). When true and a
+   * `promoterChangeContext` exists, the drawer auto-opens
+   * `PromoterChangeModal` once, then calls `onAutoOpenPromoterConsumed` so
+   * the parent can clear the flag.
+   */
+  autoOpenPromoterModal?: boolean
+  onAutoOpenPromoterConsumed?: () => void
 }
 
 function useDesktopProfilePanel() {
@@ -187,6 +196,8 @@ export function LineageProfileDrawer({
   treeSlug,
   nodeId,
   isAdmin,
+  autoOpenPromoterModal,
+  onAutoOpenPromoterConsumed,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -218,6 +229,8 @@ export function LineageProfileDrawer({
             treeSlug={treeSlug}
             nodeId={nodeId}
             isAdmin={isAdmin}
+            autoOpenPromoterModal={autoOpenPromoterModal}
+            onAutoOpenPromoterConsumed={onAutoOpenPromoterConsumed}
           />
         )}
       </DrawerContent>
@@ -234,6 +247,8 @@ function DrawerBody({
   treeSlug,
   nodeId,
   isAdmin,
+  autoOpenPromoterModal,
+  onAutoOpenPromoterConsumed,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
@@ -243,6 +258,8 @@ function DrawerBody({
   treeSlug?: string
   nodeId?: string | null
   isAdmin?: boolean
+  autoOpenPromoterModal?: boolean
+  onAutoOpenPromoterConsumed?: () => void
 }) {
   const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
   const avatarSrc = profile.user.passport?.avatarUrl ?? profile.user.image
@@ -252,6 +269,15 @@ function DrawerBody({
   const latestMembership = profile.user.memberships[0] ?? null
   const instructorRelationship = profile.relationshipsTo[0] ?? null
   const [promoterModalOpen, setPromoterModalOpen] = useState(false)
+
+  // Phase 3c: when the on-card / on-row actions menu requested the promoter
+  // editor, open the modal as soon as the drawer's promoter context resolves,
+  // then signal the parent to clear the single-shot flag.
+  useEffect(() => {
+    if (!autoOpenPromoterModal || !promoterChangeContext || promoterModalOpen) return
+    setPromoterModalOpen(true)
+    onAutoOpenPromoterConsumed?.()
+  }, [autoOpenPromoterModal, promoterChangeContext, promoterModalOpen, onAutoOpenPromoterConsumed])
   const selectedProfileAward = selectedRankAward?.id
     ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
     : null

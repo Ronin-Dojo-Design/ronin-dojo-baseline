@@ -138,6 +138,39 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     })
   })
 
+  test("on-card actions menu opens the promoter editor in edit mode (SESSION_0329 Phase 3c)", async ({
+    page,
+  }) => {
+    // SESSION_0329 / petey-plan-0305 Phase 3c: the per-card / per-row
+    // `LineageMemberActionsMenu` "Change promoter..." item must be a distinct
+    // capability-gated action that opens the promoter editor, not a silent
+    // fallback to View Profile. Editor mode must be on for the item to show.
+    await createAuthenticatedSession(page, fixture.treeEditorUserId)
+
+    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+
+    await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
+
+    await page.getByRole("button", { name: "Edit", exact: true }).click()
+    await expect(page.getByRole("button", { name: "Editing", exact: true })).toBeVisible()
+
+    const onCardMenu = page.getByRole("button", {
+      name: new RegExp(`Open lineage actions for ${escapeRegExp(fixture.claimTargetName)}`),
+    })
+    await expect(onCardMenu.first()).toBeVisible({ timeout: 30_000 })
+    await onCardMenu.first().click()
+
+    await page.getByRole("menuitem", { name: "Change promoter..." }).click()
+    await expect(page.getByRole("dialog", { name: "Change promoter" })).toBeVisible({
+      timeout: 15_000,
+    })
+
+    await page.getByRole("button", { name: "Cancel" }).click()
+    await expect(page.getByRole("dialog", { name: "Change promoter" })).toBeHidden()
+  })
+
   test("authenticated non-owner can submit a public claim without hidden member leakage", async ({
     page,
     browserName,

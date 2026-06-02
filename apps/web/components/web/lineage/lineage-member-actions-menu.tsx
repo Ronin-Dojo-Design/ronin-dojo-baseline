@@ -17,6 +17,11 @@ import { cx } from "~/lib/utils"
 type LineageMemberActionsMenuProps = {
   displayName: string
   onViewProfile: () => void
+  /**
+   * Show the "Change promoter..." item. Requires `onChangePromoter` to actually
+   * fire — without a handler the item is hidden, since a silent fallback to
+   * View Profile masks editor intent (SESSION_0329 / petey-plan-0305 Phase 3c).
+   */
   canChangePromoter?: boolean
   onChangePromoter?: () => void
   className?: string
@@ -29,6 +34,7 @@ export function LineageMemberActionsMenu({
   onChangePromoter,
   className,
 }: LineageMemberActionsMenuProps) {
+  const showChangePromoter = Boolean(canChangePromoter && onChangePromoter)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -72,10 +78,10 @@ export function LineageMemberActionsMenu({
             View profile
           </DropdownMenuItem>
 
-          {canChangePromoter && (
+          {showChangePromoter && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={onChangePromoter ?? onViewProfile}>
+              <DropdownMenuItem onSelect={onChangePromoter}>
                 <UserRoundCogIcon />
                 Change promoter...
               </DropdownMenuItem>
