@@ -27,7 +27,7 @@ import {
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -184,26 +184,123 @@ function connectorGrowDelay(generation: number) {
   return Math.min(generation * CONNECTOR_GROW_STEP, CONNECTOR_GROW_DELAY_CAP)
 }
 
-function connectorGrowStyleY(
-  growDelay: number,
-  reduceMotion: boolean,
-): { animation: string; transformOrigin: string } | undefined {
-  if (reduceMotion) return undefined
-  return {
-    animation: `connector-grow-y ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
-    transformOrigin: "top",
-  }
+// Phase 3e SVG 90° connectors. The connector band between a parent card and its children row is a
+// fixed-height strip (replacing the old `h-6` drop + `h-4` child stub = 24+16px). An absolutely
+// positioned, pointer-events-none <svg> draws one 90°-bend <path> per child: down from the parent's
+// bottom-centre to a horizontal bus, across to the child's centre, then down to the child's top. The
+// parent-drop x is the children-row centre — a layout invariant, since the parent card is centred
+// over its children by the column's `items-center`. Drawing in SVG (vs. the prior flow divs) gives
+// clean right-angle bends per the Balkan OrgChart idiom while keeping grow-in + path-trace parity.
+const CONNECTOR_BAND_PX = 40
+const CONNECTOR_BUS_PX = CONNECTOR_BAND_PX / 2
+
+// useLayoutEffect warns under SSR; the canvas is a client component but Next still renders its HTML
+// on the server. Fall back to useEffect on the server so measurement stays pre-paint in the browser
+// without the dev-only warning.
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+
+type ConnectorEdge = {
+  // Stable id of the child column this edge points to (matches the rendered child-group order).
+  id: string
+  // Whether this exact edge lies on the selected path (parent on path AND this child on path).
+  highlighted: boolean
+  // Path-trace cascade delay for this edge when highlighted (mirrors the old per-edge stub delay).
+  traceDelaySec: number
 }
 
-function connectorGrowStyleX(
-  growDelay: number,
-  reduceMotion: boolean,
-): { animation: string; transformOrigin: string } | undefined {
-  if (reduceMotion) return undefined
-  return {
-    animation: `connector-grow-x ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
-    transformOrigin: "center",
-  }
+// Measured SVG connector overlay for one parent → children band. Rendered as the first child of the
+// children-row container (position: relative) and offset up into the gap above it. Re-measures
+// child-column centres on mount, container resize (zoom/font), and structural change (collapse /
+// reorder).
+function LineageConnectorLayer({
+  edges,
+  growDelaySec,
+  reduceMotion,
+}: {
+  edges: ConnectorEdge[]
+  growDelaySec: number
+  reduceMotion: boolean
+}) {
+  const svgRef = useRef<SVGSVGElement | null>(null)
+  const [layout, setLayout] = useState<{ centerX: number; targets: number[] } | null>(null)
+  // Re-measure when the set/order of child columns changes even if the container width does not
+  // (e.g. drag-reorder), since ResizeObserver only fires on box-size changes.
+  const remeasureKey = edges.map(edge => edge.id).join("|")
+
+  // Measure off the svg's own parent (the children-row container). Reading this component's own ref
+  // in its own layout effect is reliable; a *parent* ref passed down would still be null here,
+  // because React attaches a parent's ref only after its children's layout effects run (bottom-up
+  // commit). `:scope >` limits the match to this level's direct child columns — a bare
+  // `[data-lineage-conn-col]` query is recursive and would also grab every nested descendant column.
+  useIsomorphicLayoutEffect(() => {
+    const container = svgRef.current?.parentElement
+    if (!container) return
+
+    const measure = () => {
+      const columns = container.querySelectorAll<HTMLElement>(":scope > [data-lineage-conn-col]")
+      if (columns.length === 0) {
+        setLayout(null)
+        return
+      }
+      const centerX = container.clientWidth / 2
+      const targets = Array.from(columns, col => col.offsetLeft + col.offsetWidth / 2)
+      setLayout({ centerX, targets })
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [remeasureKey])
+
+  // The svg always renders (so its ref — and thus the container — is available in the layout effect
+  // above); the paths appear once measured.
+  return (
+    <svg
+      ref={svgRef}
+      aria-hidden="true"
+      width="100%"
+      height={CONNECTOR_BAND_PX}
+      className="pointer-events-none absolute left-0 overflow-visible"
+      style={{ top: -CONNECTOR_BAND_PX }}
+    >
+      {layout?.targets.map((targetX, index) => {
+        const edge = edges[index]
+        if (!edge) return null
+        // 90° bend: parent-centre drop → horizontal bus → child-centre drop. A single centred child
+        // collapses to a straight vertical line (the bus segment has zero length).
+        const d = `M ${layout.centerX} 0 L ${layout.centerX} ${CONNECTOR_BUS_PX} L ${targetX} ${CONNECTOR_BUS_PX} L ${targetX} ${CONNECTOR_BAND_PX}`
+        return (
+          <path
+            key={edge.id}
+            d={d}
+            fill="none"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            // Normalised so one keyframe (connector-draw) draws any length; reduced-motion = full.
+            pathLength={1}
+            // Static stroke colour + transition live in Tailwind (same idiom as the old div
+            // connectors: `bg-primary/60` / `transition-colors`); `transition-colors` covers stroke.
+            className={cx(
+              "transition-colors duration-200",
+              edge.highlighted ? "stroke-primary/60" : "stroke-border",
+            )}
+            // Inline holds only the irreducibly per-edge runtime values: the path-trace cascade
+            // delay (a float derived from tree depth) and the grow-in animation timing. These have
+            // no static-class equivalent.
+            style={{
+              transitionDelay: edge.traceDelaySec > 0 ? `${edge.traceDelaySec}s` : undefined,
+              strokeDasharray: reduceMotion ? undefined : 1,
+              animation: reduceMotion
+                ? undefined
+                : `connector-draw ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelaySec}s both`,
+            }}
+          />
+        )
+      })}
+    </svg>
+  )
 }
 
 function clampScale(value: number) {
@@ -569,7 +666,6 @@ function LineageBranch({
   const isSelected = member.id === selectedMemberId
   const isInSelectedPath = selectedPathMemberIds.has(member.id)
   const isDimmed = hasSelection && !isInSelectedPath
-  const connectorClassName = isInSelectedPath ? "bg-primary/60" : "bg-border"
   // dnd-kit marks the draggable wrapper `role="button"`, but this wrapper now
   // contains the card's own ⋯ actions menu + profile buttons (Phase 3c). A button
   // role there nests interactive buttons and shadowed the "Change promoter..."
@@ -588,20 +684,28 @@ function LineageBranch({
   const delay = entranceDelay(generation, siblingIndex)
 
   // Animated path trace (motion-system, ≤1.2s end-to-end). Distance is measured from the tapped
-  // node; tapped = 0, parent = 1, etc. The connector below this member is the upper half of the
-  // edge from its highlighted child up to this member, so its step index equals `distance`. The
-  // ring on this member appears as that edge completes — `ringDelay = distance * perStepDelay`
-  // so it lights as the next ancestor edge begins (the tapped node's ring is instant at delay 0).
+  // node; tapped = 0, parent = 1, etc. The ring on this member appears as the edge below it
+  // completes — `ringDelay = distance * perStepDelay` so it lights as the next ancestor edge begins
+  // (the tapped node's ring is instant at delay 0).
   const traceDistance = isInSelectedPath ? (pathDistanceById.get(member.id) ?? 0) : 0
   const ringDelay = isInSelectedPath ? traceDistance * perStepDelay : 0
-  const connectorDelay = isInSelectedPath ? traceStepDelay(traceDistance, perStepDelay) : 0
 
-  // Connector grow-in on initial render. The `h-6 w-px` below this member and the `h-px` sibling
-  // bar are the upper pieces of the edges from this member down to its child groups; both share
-  // the parent's generation tier as the delay step.
+  // Connector grow-in on initial render shares this member's generation tier as the delay step.
   const connectorGrowDelaySec = connectorGrowDelay(generation)
-  const connectorGrowY = connectorGrowStyleY(connectorGrowDelaySec, reduceMotion)
-  const connectorGrowX = connectorGrowStyleX(connectorGrowDelaySec, reduceMotion)
+
+  // Phase 3e: one SVG path per child edge. An edge is on the selected path only when this member
+  // AND that child are both on it; its trace-cascade delay mirrors the old per-edge stub delay
+  // (`traceStepDelay(thisMemberDistance, perStepDelay)`), so the highlight still rises one ancestor
+  // edge at a time from the tapped node to the root.
+  const connectorEdges: ConnectorEdge[] = childGroups.map(group => {
+    const onPath =
+      isInSelectedPath && group.members.some(child => selectedPathMemberIds.has(child.id))
+    return {
+      id: group.id,
+      highlighted: onPath,
+      traceDelaySec: onPath ? traceStepDelay(traceDistance, perStepDelay) : 0,
+    }
+  })
 
   // Phase 2 hover lift refinement — belt-color tint feeds a hover-only `--belt-tint` CSS variable
   // so the inner draggable's hover box-shadow casts a glow in the practitioner's belt color. The
@@ -669,56 +773,39 @@ function LineageBranch({
       </motion.div>
 
       {childGroups.length > 0 && (
-        <>
-          <div
-            className={cx("h-6 w-px transition-colors duration-200", connectorClassName)}
-            style={{
-              ...connectorGrowY,
-              ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
-            }}
+        <div className="relative mt-10 flex items-start justify-center gap-4 md:gap-8">
+          <LineageConnectorLayer
+            edges={connectorEdges}
+            growDelaySec={connectorGrowDelaySec}
+            reduceMotion={reduceMotion}
           />
 
-          <div className="relative flex items-start justify-center gap-4 md:gap-8">
-            {childGroups.length > 1 && (
-              <div
-                className={cx(
-                  "absolute top-0 right-8 left-8 h-px transition-colors duration-200",
-                  isInSelectedPath ? "bg-primary/30" : "bg-border",
-                )}
-                style={{
-                  ...connectorGrowX,
-                  ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
-                }}
-              />
-            )}
-
-            {childGroups.map(group => (
-              <LineageChildGroupColumn
-                key={group.id}
-                group={group}
-                parentMemberId={member.id}
-                childrenByParentId={childrenByParentId}
-                visualGroupById={visualGroupById}
-                defaultRootMemberId={defaultRootMemberId}
-                rootId={rootId}
-                treeId={treeId}
-                editMode={editMode}
-                canEditPlacement={canEditPlacement}
-                canManageGroups={canManageGroups}
-                selectedMemberId={selectedMemberId}
-                selectedPathMemberIds={selectedPathMemberIds}
-                pathDistanceById={pathDistanceById}
-                perStepDelay={perStepDelay}
-                hasSelection={hasSelection}
-                onSelect={onSelect}
-                onChangePromoter={onChangePromoter}
-                visited={nextVisited}
-                generation={generation + 1}
-                reduceMotion={reduceMotion}
-              />
-            ))}
-          </div>
-        </>
+          {childGroups.map(group => (
+            <LineageChildGroupColumn
+              key={group.id}
+              group={group}
+              parentMemberId={member.id}
+              childrenByParentId={childrenByParentId}
+              visualGroupById={visualGroupById}
+              defaultRootMemberId={defaultRootMemberId}
+              rootId={rootId}
+              treeId={treeId}
+              editMode={editMode}
+              canEditPlacement={canEditPlacement}
+              canManageGroups={canManageGroups}
+              selectedMemberId={selectedMemberId}
+              selectedPathMemberIds={selectedPathMemberIds}
+              pathDistanceById={pathDistanceById}
+              perStepDelay={perStepDelay}
+              hasSelection={hasSelection}
+              onSelect={onSelect}
+              onChangePromoter={onChangePromoter}
+              visited={nextVisited}
+              generation={generation + 1}
+              reduceMotion={reduceMotion}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -779,31 +866,10 @@ function LineageChildGroupColumn({
     } satisfies DropTargetData,
   })
 
-  // The `h-4 w-px` above each child group is the lower half of the edge whose upper half is the
-  // `h-6 w-px` below the parent. Both belong to the same animated step; the step index equals the
-  // parent's distance from the tapped node, so delay = `(parentDistance - 1) * perStepDelay`.
-  const parentDistance = groupIsHighlighted ? pathDistanceById.get(parentMemberId) : undefined
-  const groupConnectorDelay =
-    parentDistance !== undefined ? traceStepDelay(parentDistance, perStepDelay) : 0
-
-  // Connector grow-in on initial render. The `h-4 w-px` above each child group is the lower piece
-  // of the edge whose upper piece is the `h-6 w-px` below the parent — same generation tier.
-  const groupConnectorGrowDelaySec = connectorGrowDelay(generation - 1)
-  const groupConnectorGrowY = connectorGrowStyleY(groupConnectorGrowDelaySec, reduceMotion)
-
+  // Phase 3e: the per-child connector (formerly an `h-4 w-px` stub) is now drawn by the parent's
+  // SVG LineageConnectorLayer; the column root is tagged so that layer can measure its centre.
   return (
-    <div ref={setNodeRef} className="flex min-w-fit flex-col items-center">
-      <div
-        className={cx(
-          "h-4 w-px transition-colors duration-200",
-          groupIsHighlighted ? "bg-primary/60" : "bg-border",
-        )}
-        style={{
-          ...groupConnectorGrowY,
-          ...(groupConnectorDelay > 0 ? { transitionDelay: `${groupConnectorDelay}s` } : null),
-        }}
-      />
-
+    <div ref={setNodeRef} data-lineage-conn-col className="flex min-w-fit flex-col items-center">
       <GroupHeader
         group={group.group}
         isHighlighted={groupIsHighlighted}
