@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-06-01
-last_agent: codex-session-0317
+updated: 2026-06-03
+last_agent: claude-session-0335
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -59,6 +59,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [docs-navigator](dev-environment/docs-navigator.md) — searchable HTML docs browser.
 - [autonomous-sessions](dev-environment/autonomous-sessions.md) — drive N cold bow-in→bow-out sessions as stacked PRs (`scripts/auto-session.sh`).
 - [ntfy-pushover-telegram](dev-environment/ntfy-pushover-telegram.md) — push-notification transports (ntfy/Pushover/Telegram) + the repo's Docker-cache / disk-pressure / CI monitors (`scripts/monitor`, `scripts/notify`).
+- [verification-and-testing](dev-environment/verification-and-testing.md) — **what runs where, and what gates** — verification layers, CI map, why DB tests fail locally, guard registry.
 
 ## Integrations
 

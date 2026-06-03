@@ -8,8 +8,8 @@ import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
-import { PromotionEventEditorForm } from "../promotion-event-editor-form"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
+import { PromotionEventEditorForm } from "../promotion-event-editor-form"
 
 const url = "/dashboard/events/new"
 

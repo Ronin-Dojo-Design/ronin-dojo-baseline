@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-29
-last_agent: claude-session-0304
+updated: 2026-06-03
+last_agent: claude-session-0335
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -224,9 +224,22 @@ Baseline layers that require Dirstarter proof in the ADR:
 
 If the session introduced or changed a domain term, update [Ubiquitous Language](../architecture/ubiquitous-language.md). If no ADR or glossary update is needed, record that explicitly in the SESSION file.
 
-### 6.7. Wiring ledger sweep
+### 6.7. Finding router — where each finding type goes
 
-If the session **surfaced** new wiring debt (incomplete handlers, storage gaps, FS-0001 handroll slips, dead plumbing for unfinished features) or **resolved** existing debt, update the canonical running ledger at [`docs/knowledge/wiki/wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) — append rows with stable `WL-P{0,1,2}-N` IDs, or flip resolved rows to a ✅/fixed status. This is the repo's single cross-session P0/P1/P2 list; do **not** duplicate a severity list into the SESSION file (it rots — see `wiki/log.md`). The SESSION file's `### Findings (severity ≥ medium)` block stays session-scoped and should backlink the ledger. Skip if the session surfaced/resolved no wiring debt.
+A session surfaces different kinds of findings; each has **one** canonical home so the record doesn't fragment. Route by type:
+
+| Finding type | Goes to | ID prefix |
+| --- | --- | --- |
+| Incomplete/dead wiring, storage gaps, FS-0001 handroll slips, dead plumbing | [`wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) | `WL-P{0,1,2}-N` |
+| Architectural divergence / two-sources-of-truth / spec-vs-impl drift | [`drift-register.md`](../knowledge/wiki/drift-register.md) | `D-NNN` |
+| SOP/protocol violation + its corrective action | [`failed-steps-log.md`](../protocols/failed-steps-log.md) | `FS-NNNN` |
+| Unclean close / crash / interrupted ritual | [`incidents.md`](../knowledge/wiki/incidents.md) | dated entry |
+| "Smoke pending" / manually-verified boundary the session shifted | [`manual-boundary-registry.md`](../knowledge/wiki/manual-boundary-registry.md) | registry row |
+| Architectural decision made/changed/rejected | new/updated ADR in [`architecture/decisions/`](../architecture/decisions/) | `ADR NNNN` |
+
+The SESSION file's `### Findings (severity ≥ medium)` block stays **session-scoped** and should backlink the canonical ledger row — never duplicate a cross-session severity list into the SESSION file (it rots; see `wiki/log.md`).
+
+**Wiring-ledger sweep:** if the session surfaced or resolved wiring debt, append rows with stable `WL-P{0,1,2}-N` IDs (or flip resolved rows to ✅/fixed). Skip if no wiring debt changed.
 
 ### 7. Memory sweep
 

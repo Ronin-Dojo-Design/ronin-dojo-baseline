@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-02
+updated: 2026-06-03
 author: Brian + Copilot
-last_agent: claude-session-0334
+last_agent: claude-session-0335
 ---
 
 # LLM Wiki Index
@@ -427,6 +427,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0332](../../sprints/SESSION_0332.md) | session--implement | closed — Trophy.so rank-progression proof (petey-plan-0305 Phase 4 Slice 2): no-new-schema Points/Levels belt ladder + Achievements Unlocked rail derived from existing `Rank` + `RankAward` + seeded `GamificationEventType.BELT_PROMOTION.defaultPoints`; new `LineageRankProgressionPanel` + `lib/lineage/rank-progression.ts` (with focused tests) renders inside `LineageRankHistoryTab`; widened `lineageNodeProfilePayload.user.rankAwards.rank.rankSystem.ranks` select (name/shortName/colorHex) — no migration |
 | [SESSION_0333](../../sprints/SESSION_0333.md) | session--implement | closed — orchestrated `auto-session.sh 3` (lineage Phase 3c/3d/3f + Trophy #56–#59), reviewed/grilled, **repaired #56's dead on-card menu** (dnd `role=group` reachability + Base UI `onClick` vs no-op `onSelect` + descoped fragile auto-open modal to drawer-on-Rank-History + webkit hydration test hardening), security-audited the stack (no new violations), merged all four to `main`; surfaced a systemic dead-`onSelect` bug across ~6 admin action menus (drift D-016 follow-up) |
 | [SESSION_0334](../../sprints/SESSION_0334.md) | session--implement | closed — swept 11 dead `DropdownMenuItem onSelect`→`onClick` across 6 admin/lineage files (incl. `user-actions` beyond the WL-P1-3 list) + a `bun test` guard (WL-P1-3 resolved); added 2 lineage privacy tests (public search can't surface non-PUBLIC; rank-progression adversarial-PII allowlist proof, which hardened a `discipline` passthrough — WL-P1-4 resolved); `awardedAt` stays public-by-default; pruned stale `auto/session-0307..0310`; wired ntfy.sh Docker-cache + disk-pressure + CI/auto-session monitors + a ntfy/Pushover/Telegram runbook; drift D-016 closed |
+| [SESSION_0335](../../sprints/SESSION_0335.md) | session--implement | closed — doc-system ergonomics + CI + deploy cadence: realigned wiki-lint **R4** to its own spec (working-tree-diff vs `updated` + `stable:` opt-out — killed the chronic 4 false positives); finding-router (closing.md §6.7) + canonical frontmatter table (`+domain/+stable`, deprecate `author`/`use_count`); enhanced `lineage-hub` (code entry points + guard map) + `repo-truth-index` domain-hub pointer; new **verification-and-testing** runbook + guard registry; **raised CI to best practice** — new `ci.yml` runs Biome/typecheck/unit (the gates that ran nowhere), least-privilege perms, fixed 8 latent `biome ci` errors; **decoupled prod deploys from pushes** via Vercel `ignoreCommand` |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

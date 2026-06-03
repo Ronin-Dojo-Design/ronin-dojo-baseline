@@ -263,7 +263,9 @@ export function canAuthorHostOrganization(
   scope: PromotionEventAuthoringScope,
   organizationId: string | null | undefined,
 ) {
-  return Boolean(scope.isGlobalAdmin || (organizationId && scope.organizationIds.has(organizationId)))
+  return Boolean(
+    scope.isGlobalAdmin || (organizationId && scope.organizationIds.has(organizationId)),
+  )
 }
 
 export function canAuthorRankAward({

@@ -4,8 +4,8 @@ slug: wiki-lint
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-04-29
-last_agent: codex-session-0025
+updated: 2026-06-03
+last_agent: claude-session-0335
 pairs_with:
   - docs/protocols/code-guardrails.md
   - docs/rituals/closing.md
@@ -48,13 +48,17 @@ Every wiki page should be reachable from `docs/knowledge/wiki/index.md` (directl
 
 If a file was modified this session but its `updated` date wasn't bumped, flag it.
 
-**Check:** Compare `git diff --name-only` against frontmatter `updated` dates. Flag files where the file changed but `updated` didn't.
+**Check:** Compare the working-tree diff (`git status --porcelain -- docs`) against frontmatter `updated` dates. Flag any doc with uncommitted changes whose `updated` isn't today. Historical bulk commits (renames/reformats) are ignored, and a clean tree yields zero R4 warnings — so this nags only the doc you actually edited this session, not stable reference docs that simply haven't changed.
+
+> **Implementation note (SESSION_0335):** the script previously drifted to a 30-day calendar threshold, which produced recurring false positives on stable docs. It now matches this spec (working-tree-diff vs `updated`). Closed sessions, ADRs, and `stable: true` docs are exempt (see the field table below).
+
+**Opt out:** set `stable: true` in frontmatter on intentionally-static reference docs (canonical-ID registries, point-in-time audits) so R4 never checks them even when edited.
 
 ### R5 — Missing required frontmatter
 
-Every wiki page must have: `title`, `slug`, `type`, `status`, `created`, `updated`, `health`.
+Every wiki page must have: `title`, `slug`, `type`, `status`, `created`, `updated` (see the canonical field table below). `health` was **removed** in SESSION_0027 and is no longer required.
 
-**Check:** Parse YAML frontmatter. Flag pages missing required fields per JETTY 3.0 spec.
+**Check:** Parse YAML frontmatter. Flag pages missing required fields.
 
 ### R6 — Empty or thin pages
 
@@ -65,6 +69,27 @@ Pages with fewer than 50 characters of body content (excluding frontmatter) are 
 ### R7 — ~~Health score drift~~ (REMOVED)
 
 > **Removed (SESSION_0027).** Health scores dropped from JETTY frontmatter. The `status` field handles doc freshness. No replacement rule needed.
+
+## Frontmatter fields (canonical)
+
+The single source of truth for what frontmatter a doc should carry (SESSION_0335). New docs and templates should follow this; do not mass-rewrite existing docs to match — fields are migrated when a doc is next touched.
+
+| Field | Tier | Notes |
+| --- | --- | --- |
+| `title` | required | Human title. |
+| `slug` | required | kebab-case; usually the filename stem. |
+| `type` | required | `concept` \| `protocol` \| `reference` \| `runbook` \| `session--*` \| `plan` \| `adr`/`decision` \| `file`. |
+| `status` | required | `active` \| `draft` \| `in-progress` \| `closed` \| `superseded` \| `archived` \| `deprecated`. |
+| `created` | required | Set once. |
+| `updated` | required | Bump to today whenever you change the doc (R4 enforces on the working-tree diff). |
+| `last_agent` | recommended | `<agent>-session-NNNN` of the last editor. **Canonical provenance field.** |
+| `pairs_with` / `backlinks` | recommended | Bidirectional links (R1/R2 enforce). |
+| `domain` | optional | Domain tag(s) — `lineage` \| `auth` \| `payments` \| `media` \| `tournaments` \| `platform` \| `docs-system` … Powers `docs/domains/` context cards; a doc may list more than one. |
+| `stable` | optional | `true` = intentionally-static reference doc; exempts it from R4. |
+| `tags` | optional | Free-form keyword tags. |
+| `sprint` / `source_pages` / `parent` | optional | Context-specific. |
+| ~~`author`~~ | **deprecated** | Superseded by `last_agent` (only ~13% of docs ever carried it). Stop adding it. |
+| ~~`use_count`~~ | **deprecated** | Aspirational metadata that was never maintained (mostly `0`). Drop it. |
 
 ## How to run
 

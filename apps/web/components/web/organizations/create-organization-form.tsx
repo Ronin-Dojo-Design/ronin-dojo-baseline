@@ -300,7 +300,6 @@ export const CreateOrganizationForm = ({
                         name="disciplineIds"
                         render={({ field }) => (
                           <FormItem>
-                            {/* biome-ignore lint/a11y/noLabelWithoutControl: FormControl wraps the Checkbox inside this label */}
                             <label className="flex items-center gap-2 text-sm cursor-pointer">
                               <FormControl>
                                 <Checkbox

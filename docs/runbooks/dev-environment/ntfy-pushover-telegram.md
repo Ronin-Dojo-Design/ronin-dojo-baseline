@@ -4,9 +4,9 @@ slug: ntfy-pushover-telegram
 type: runbook
 status: active
 created: 2026-06-02
-updated: 2026-06-02
-last_agent: claude-session-0334
-use_count: 0
+updated: 2026-06-03
+last_agent: claude-session-0335
+domain: ops
 pairs_with:
   - docs/runbooks/dev-environment/dev-environment.md
   - docs/runbooks/dev-environment/autonomous-sessions.md

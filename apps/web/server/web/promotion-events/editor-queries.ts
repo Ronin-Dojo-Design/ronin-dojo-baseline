@@ -104,7 +104,9 @@ export type PromotionEventEditorData = {
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
-const formatAwardLabel = (award: Prisma.RankAwardGetPayload<{ select: typeof editableRankAwardPayload }>) => {
+const formatAwardLabel = (
+  award: Prisma.RankAwardGetPayload<{ select: typeof editableRankAwardPayload }>,
+) => {
   const person = award.user.name ?? "Unnamed promotee"
   const rank = award.rank.shortName ?? award.rank.name
   return `${person} — ${rank}`

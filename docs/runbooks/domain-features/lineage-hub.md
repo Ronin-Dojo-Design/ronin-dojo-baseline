@@ -4,8 +4,9 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-05-31
-last_agent: codex-session-0314
+updated: 2026-06-03
+last_agent: claude-session-0335
+domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
@@ -91,8 +92,33 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 - [Lineage v1 Acceptance Test Plan](../../architecture/lineage/lineage-v1-acceptance-test-plan.md)
 - Point-in-time (candidates for `_archive/`): `SESSION_0263_audit_report.md`, `SESSION_0263_bbl_recon.md` in `architecture/lineage/` — session snapshots, not standing specs.
 
+## Code entry points (the file map)
+
+So a session can open the right file directly instead of grepping. Components are catalogued in [Custom Component Inventory § Lineage](../../knowledge/wiki/custom-component-inventory.md); this is the non-component code.
+
+| Surface | File(s) |
+| --- | --- |
+| **Public viewer route** | `apps/web/app/(web)/lineage/[treeSlug]/page.tsx`; discipline embed `app/(web)/disciplines/_components/lineage-tree-section.tsx` |
+| **Admin editor route** | `apps/web/app/admin/lineage/[treeId]/page.tsx` (+ `_components/`) |
+| **Dashboard** | `apps/web/app/(web)/dashboard/lineage-tab.tsx`; join flow `app/(web)/lineage/join/` |
+| **Public read model** | `apps/web/server/web/lineage/queries.ts` (brand-scoped fetch + visibility materialization) + `payloads.ts` (the public-field allowlist) + `node-profile-queries.ts` |
+| **Mutations + RBAC** | `server/web/lineage/editor-actions.ts` / `editor-queries.ts` / `editor-graph.ts` (placement edits, `assertPlacementEditorAccess`, audit-on-mutation); `node-profile-actions.ts`; `claim-actions.ts` |
+| **Pure libs (presentation-agnostic)** | `apps/web/lib/lineage/canvas-model.ts` (normalization), `tree-layout.ts`, `rank-progression.ts`, `search.ts`, `bbl-bjj-rank-map.ts` |
+| **Schema + seeds** | `apps/web/prisma/schema.prisma` (Lineage* models, `RankAward`); seeds `prisma/seed-baseline-lineage.ts`, `seed-bbl-org.ts` |
+
+## Open work & invariants (read before changing read-models)
+
+- **Current epic state:** [petey-plan-0305](../../petey-plan-0305.md) — Phases 1–2 done, Phase 3a–3d + 3-UX done; **next = Phase 3e (SVG 90° connectors) → 3f (PDF export) → Phase 4 (Trophy slices + leaderboard).**
+- **Privacy invariants — these are guarded by tests; do not regress:**
+  - `server/web/lineage/queries.visibility.test.ts` — public payload allowlist (no email/role/notes/audit) + PRIVATE/RESTRICTED dropped by the materializer.
+  - `lib/lineage/search.privacy.test.ts` — the public search bar can only surface members the materializer already passed (non-PUBLIC never reach it).
+  - `lib/lineage/rank-progression.privacy.test.ts` — the rank-progression read model is a strict allowlist projection (rank taxonomy + `awardedAt` only; no PII).
+  - Product rule (SESSION_0334): `awardedAt` promotion dates are **public by default**, opt-out via the per-member `showPromotionDatePublic` toggle.
+- **Tracked debt:** lineage rows in [wiring-ledger](../../knowledge/wiki/wiring-ledger.md) (WL-P2-1 "Manage verification (coming soon)" stub, WL-P2-5 `treeId` dead wiring) and [drift-register](../../knowledge/wiki/drift-register.md).
+
 ## Cross-references
 
 - [Runbooks Domain Hub](../README.md)
 - [Schema Migration Runbook](../database/schema-migration.md) — for the `RankAward.organizationId` migration (Phase 3 slice 3-0).
 - [Component Porting Pipeline](../../knowledge/wiki/component-porting/component-porting-pipeline-ASCII.md) — the PWCC method the Org Chart Board port follows.
+- [Verification & Testing](../dev-environment/verification-and-testing.md) — how the guards above run (unit/DB/e2e) and which is authoritative.

@@ -29,6 +29,11 @@ on:
       - '.github/prompts/**'
   workflow_dispatch:
 
+# Least privilege: the e2e job only needs to read the repo (SESSION_0335
+# security hardening — default GITHUB_TOKEN perms are broader than needed).
+permissions:
+  contents: read
+
 # Cancel in-flight runs on the same ref when a new commit lands.
 concurrency:
   group: playwright-${{ github.ref }}

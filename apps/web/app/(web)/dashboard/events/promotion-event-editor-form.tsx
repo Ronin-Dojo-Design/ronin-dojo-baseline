@@ -231,7 +231,9 @@ export function PromotionEventEditorForm({
                             />
                             <span className="grid gap-1">
                               <span className="font-medium">{award.label}</span>
-                              <span className="text-xs text-secondary-foreground">{award.detail}</span>
+                              <span className="text-xs text-secondary-foreground">
+                                {award.detail}
+                              </span>
                             </span>
                           </label>
                         )
