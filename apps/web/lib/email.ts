@@ -108,6 +108,17 @@ const prepareEmail = async (email: EmailParams): Promise<CreateEmailOptions> => 
  * @returns The response from Resend, or undefined in development
  */
 export const sendEmail = async (email: EmailParams): Promise<CreateEmailResponse | undefined> => {
+  // Resend isn't configured (CI, or local without a key): the `resend` client is
+  // null, so skip the send instead of crashing the calling flow (Stripe webhooks,
+  // notifications, DSR). In production a missing key is a real misconfiguration we
+  // still surface loudly.
+  if (!env.RESEND_API_KEY) {
+    if (isProd) {
+      throw new Error("RESEND_API_KEY is not configured — cannot send email in production.")
+    }
+    return undefined
+  }
+
   const payload = await prepareEmail(email)
 
   // Log payload in dev for debugging, but still send
