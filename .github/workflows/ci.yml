@@ -136,6 +136,11 @@ jobs:
       - name: Apply Prisma migrations
         run: bunx prisma migrate deploy
         working-directory: apps/web
+      # Some DB-backed unit tests require seeded reference data (disciplines,
+      # ranks, brands) and assert "run seed first" otherwise.
+      - name: Seed database
+        run: bun run db:seed
+        working-directory: apps/web
       # `bun run test` (not `bun test`) so the package.json script's
       # `--path-ignore-patterns='e2e/**'` applies — bare `bun test` would try to
       # run the Playwright e2e specs and error on `test.describe` outside the runner.
