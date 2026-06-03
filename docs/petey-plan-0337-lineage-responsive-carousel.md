@@ -5,9 +5,10 @@ type: plan
 status: active
 created: 2026-06-03
 updated: 2026-06-03
-last_agent: claude-session-0337
+last_agent: codex-session-0338
 pairs_with:
   - docs/sprints/SESSION_0337.md
+  - docs/sprints/SESSION_0338.md
   - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -66,7 +67,7 @@ Risk rises down the table; ship top-down. Each slice = one session / one autonom
 | Slice | Title | Risk | Story | PORTMAP | Spec |
 | --- | --- | --- | --- | --- | --- |
 | **S0** | Overflow + toolbar bugfixes | done (S0337) | -001/-005 | — | inline (this session) |
-| **S1** | Responsive mode switch (board < md, tree ≥ md) | low | -001 | PORTMAP-0002 | `specs/lineage-responsive-switch-port-spec.md` |
+| **S1** | Responsive mode switch (board < md, tree ≥ md) | done (S0338) | -001 | PORTMAP-0002 | `specs/lineage-responsive-switch-port-spec.md` |
 | **S2** | Mobile lineage list (flatten + indent < sm) | low–med | -001/-002 | PORTMAP-0003 | `specs/lineage-mobile-list-port-spec.md` |
 | **S3** | Carousel rail extension (adapt Embla `carousel.tsx`) | med | -003 | PORTMAP-0004 | `specs/lineage-carousel-rail-port-spec.md` |
 | **S4** | Generation rails in connector-free zones | med | -003 | PORTMAP-0005 | `specs/lineage-generation-rail-port-spec.md` |
@@ -82,6 +83,8 @@ Risk rises down the table; ship top-down. Each slice = one session / one autonom
   scrollable, toolbar controls reachable. ✓ verified.
 
 ### Slice 1 — Responsive mode switch
+
+**Status:** DONE in SESSION_0338. PORTMAP-0002 is `proven`.
 
 - **Adapt:** BBL's desktop-tree-vs-mobile decision (BBL switches to `MobileLineageList` at **< 640px**).
   We already have **tree** and **board** layouts in `lineage-tree-canvas.tsx` (`layout` state). Add a

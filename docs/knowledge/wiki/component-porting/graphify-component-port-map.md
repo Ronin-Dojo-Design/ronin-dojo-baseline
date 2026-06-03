@@ -4,12 +4,13 @@ slug: graphify-component-port-map
 type: concept
 status: active
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-06-03
 author: Brian + ChatGPT
-last_agent: chatgpt-hostile-review-pack
+last_agent: codex-session-0338
 pairs_with:
-  - docs/runbooks/react-to-next-component-porting-runbook.md
+  - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
+  - docs/sprints/SESSION_0338.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -102,7 +103,7 @@ legacy component
 
 ### PORTMAP-0002 — Lineage responsive mode switch
 
-**Status:** mapped
+**Status:** proven
 **Legacy path:** `blackbeltlegacy/components/lineage/MobileLineageList.jsx` (header) + parent route switch (~640px)
 **Legacy purpose:** decide desktop-tree vs mobile-list by viewport.
 **Target path:** `apps/web/components/web/lineage/lineage-tree-canvas.tsx` (initial `layout` state)
@@ -112,8 +113,8 @@ legacy component
 **Port strategy:** adapt (behavior only)
 **Server/client boundary:** client
 **Data dependency:** none (pure viewport)
-**Proof required:** measured card ≤ viewport at 390/768/1280; board default < md; user toggle persists.
-**Notes:** Slice 1. Lowest risk.
+**Proof required:** measured card ≤ viewport at 390/768/1280; board default < md; user toggle persists. Proven in SESSION_0338.
+**Notes:** Slice 1 landed in SESSION_0338. `LineageTreeCanvas` now defaults to board below 768px and tree at/above 768px until the viewer explicitly toggles; the manual toggle then persists across resize for the session.
 
 ### PORTMAP-0003 — Lineage mobile list (flatten + indent)
 

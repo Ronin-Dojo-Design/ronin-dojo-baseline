@@ -125,8 +125,9 @@ type LineageTreeCanvasProps = {
   canManageGroups?: boolean
 
   /**
-   * Initial layout. Viewers can switch between tree/board in the toolbar;
-   * this only seeds the first render.
+   * Optional explicit initial layout. When omitted, the canvas defaults from
+   * the viewport: board below md, tree at/above md. Viewers can switch between
+   * tree/board in the toolbar; an explicit toggle wins for the session.
    */
   defaultLayout?: LineageLayout
 }
@@ -134,6 +135,7 @@ type LineageTreeCanvasProps = {
 const MIN_SCALE = 0.5
 const MAX_SCALE = 1.35
 const SCALE_STEP = 0.1
+const RESPONSIVE_LAYOUT_QUERY = "(min-width: 768px)"
 
 // Phase 2 entrance stagger (motion-system tokens — see docs/runbooks/design/motion-system.md).
 // Per-tier head start compounds with per-sibling 60ms (stagger-base), clamped so a deep/wide tree
@@ -1014,11 +1016,11 @@ export function LineageTreeCanvas({
   editMode = false,
   canEditPlacement = false,
   canManageGroups = false,
-  defaultLayout = "tree",
+  defaultLayout,
 }: LineageTreeCanvasProps) {
   const router = useRouter()
   const reduceMotion = useReducedMotion()
-  const [layout, setLayout] = useState<LineageLayout>(defaultLayout)
+  const [layout, setLayout] = useState<LineageLayout>(defaultLayout ?? "tree")
   const [scale, setScale] = useState(1)
   const [autoFitPass, setAutoFitPass] = useState(0)
   const [isPinching, setIsPinching] = useState(false)
@@ -1028,10 +1030,33 @@ export function LineageTreeCanvas({
   const scaleRef = useRef(scale)
   const autoFittedRef = useRef(false)
   const autoPannedRef = useRef(false)
+  const layoutTouchedRef = useRef(false)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  // Seed the default layout from the viewport until the viewer explicitly picks
+  // a mode. This uses a layout effect so the mobile board default applies before
+  // the tree auto-fit effect can seed zoom from a layout we are about to replace.
+  useIsomorphicLayoutEffect(() => {
+    if (defaultLayout || typeof window === "undefined" || !window.matchMedia) return
+
+    const mediaQuery = window.matchMedia(RESPONSIVE_LAYOUT_QUERY)
+    const applyResponsiveDefault = (matches: boolean) => {
+      if (layoutTouchedRef.current) return
+      setLayout(matches ? "tree" : "board")
+    }
+
+    applyResponsiveDefault(mediaQuery.matches)
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      applyResponsiveDefault(event.matches)
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [defaultLayout])
 
   // Mirror scale into a ref so the pinch listener can read it without re-binding.
   useEffect(() => {
@@ -1316,6 +1341,7 @@ export function LineageTreeCanvas({
                 aria-pressed={layout === "tree"}
                 prefix={<NetworkIcon />}
                 onClick={() => {
+                  layoutTouchedRef.current = true
                   autoFittedRef.current = false
                   autoPannedRef.current = false
                   setLayout("tree")
@@ -1331,7 +1357,10 @@ export function LineageTreeCanvas({
                 aria-label="Board layout"
                 aria-pressed={layout === "board"}
                 prefix={<ListTreeIcon />}
-                onClick={() => setLayout("board")}
+                onClick={() => {
+                  layoutTouchedRef.current = true
+                  setLayout("board")
+                }}
               >
                 Board
               </Button>

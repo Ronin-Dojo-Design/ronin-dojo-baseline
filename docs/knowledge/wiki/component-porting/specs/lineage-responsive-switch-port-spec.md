@@ -2,13 +2,14 @@
 title: Lineage Responsive Mode Switch Port Spec
 slug: lineage-responsive-switch-port-spec
 type: spec
-status: draft
+status: proven
 created: 2026-06-03
 updated: 2026-06-03
-last_agent: claude-session-0337
+last_agent: codex-session-0338
 pairs_with:
   - docs/petey-plan-0337-lineage-responsive-carousel.md
   - docs/sprints/SESSION_0337.md
+  - docs/sprints/SESSION_0338.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -19,7 +20,7 @@ tags:
 
 # Lineage Responsive Mode Switch — Port Spec
 
-> Slice 1 / PORTMAP-0002 / SESSION_0337. Hard rule: adapt, never port-verbatim. Take the BBL responsive DECISION (which layout for which viewport); rebuild on the layout state we already have. No new component.
+> Slice 1 / PORTMAP-0002 / authored SESSION_0337 / proven SESSION_0338. Hard rule: adapt, never port-verbatim. Take the BBL responsive DECISION (which layout for which viewport); rebuild on the layout state we already have. No new component.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -120,9 +121,21 @@ None new. This slice is pure client viewport logic; it consumes the same member 
 - Persisting the choice beyond the session (no storage write in this slice).
 - Adding a new component or any server/schema change.
 
+## Proof status
+
+Proven in SESSION_0338:
+
+- 390px default: board; card 327px within a 390px viewport.
+- 768px default: tree; card 462px within a 768px viewport; canvas scrolls horizontally.
+- 1280px default: tree; card 672px within a 1280px viewport; canvas scrolls horizontally.
+- Manual Tree toggle from 390px persisted through 1280px and back to 390px.
+- Manual Board toggle from 1280px persisted through 390px and back to 1280px.
+- `bun run typecheck`, `bun biome ci` on touched files, and `bun test lib/lineage/` passed.
+
 ## Cross-references
 
 - Epic plan: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md) (Slice 1).
+- Proof session: [SESSION_0338](../../../../sprints/SESSION_0338.md).
 - Port map record: PORTMAP-0002 in [Graphify Component Port Map](../graphify-component-port-map.md).
 - Next slice: [Lineage Mobile List port spec](./lineage-mobile-list-port-spec.md) (< sm fallback).
 - BBL prior art (read for behavior only): `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/lineage/MobileLineageList.jsx` (the < 640px boundary in its header) + the parent route's desktop-tree-vs-mobile-list switch.

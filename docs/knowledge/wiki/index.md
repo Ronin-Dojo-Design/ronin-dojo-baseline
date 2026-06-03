@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-03
 author: Brian + Copilot
-last_agent: claude-session-0335
+last_agent: codex-session-0338
 ---
 
 # LLM Wiki Index
@@ -58,7 +58,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Simple Playwright Component Port Pipeline](component-porting/plawywright-component-conversion-method/simple-pipeline.md) | concept | active |
 | [Lineage Family Tree Port Spec](component-porting/specs/lineage-family-tree-port-spec.md) | spec | active |
 | [Lineage Profile Drawer Port Spec](component-porting/specs/lineage-profile-drawer-port-spec.md) | spec | active |
-| [Lineage Responsive Switch Port Spec](component-porting/specs/lineage-responsive-switch-port-spec.md) | spec | draft — petey-plan-0337 Slice 1 |
+| [Lineage Responsive Switch Port Spec](component-porting/specs/lineage-responsive-switch-port-spec.md) | spec | proven — SESSION_0338 Slice 1 responsive mode switch |
 | [Lineage Mobile List Port Spec](component-porting/specs/lineage-mobile-list-port-spec.md) | spec | draft — petey-plan-0337 Slice 2 |
 | [Lineage Carousel Rail Port Spec](component-porting/specs/lineage-carousel-rail-port-spec.md) | spec | draft — petey-plan-0337 Slice 3 (extends Embla carousel) |
 | [Lineage Generation Rail Port Spec](component-porting/specs/lineage-generation-rail-port-spec.md) | spec | draft — petey-plan-0337 Slice 4 |
@@ -435,6 +435,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0335](../../sprints/SESSION_0335.md) | session--implement | closed — doc-system ergonomics + CI + deploy cadence: realigned wiki-lint **R4** to its own spec (working-tree-diff vs `updated` + `stable:` opt-out — killed the chronic 4 false positives); finding-router (closing.md §6.7) + canonical frontmatter table (`+domain/+stable`, deprecate `author`/`use_count`); enhanced `lineage-hub` (code entry points + guard map) + `repo-truth-index` domain-hub pointer; new **verification-and-testing** runbook + guard registry; **raised CI to best practice** — new `ci.yml` runs Biome/typecheck/unit (the gates that ran nowhere), least-privilege perms, fixed 8 latent `biome ci` errors; **decoupled prod deploys from pushes** via Vercel `ignoreCommand` |
 | [SESSION_0336](../../sprints/SESSION_0336.md) | session--implement | closed — lineage epic **Phase 3e**: replaced the flow-laid `div` tree connectors with a measured SVG **90°-bend** overlay (`LineageConnectorLayer`) at full animation parity — `connector-draw` grow-in + the `traceStepDelay` path-trace cascade (runtime-verified: deep-leaf select lights 4 edges at 0/0.2/0.4/0.6s) + reduced-motion; `pointer-events-none` keeps dnd/scroll; removed dead `connector-grow-y/x` keyframes. Confirmed first `ci.yml` run green before coding. Verification smoke caught & fixed a parent-ref timing bug (FINDING_01). Operator-raised lineage **responsiveness/overflow/carousel** design review staged as next session (pushes 3f-PDF + Phase 4 leaderboard back) |
 | [SESSION_0337](../../sprints/SESSION_0337.md) | session--open | closed — Desi-led lineage design review: measured both reported bugs to root cause (Q2 overflow = `Stack` `items-start` shrink-to-content defeating `truncate`, span over-ran column by 166px; Q1 toolbar = card flex-`min-width:auto` blowout to 3672px → shell `overflow-clip` clips right half incl. controls). **Slice 0** fixed both (`max-w-full` on truncating spans across node-card/honor-strip/compact-list; `w-full min-w-0 max-w-full` on canvas card) — measured 0/70 spans overflow + toolbar reachable + tree scrollable. Authored `petey-plan-0337` (6-slice adapt-not-port epic) + PORTMAP-0002..0006 + 5 port-specs; reuse Embla carousel (no duplicate); connector×rail coexistence = adaptive bus+stubs (spike) |
+| [SESSION_0338](../../sprints/SESSION_0338.md) | session--implement | closed — petey-plan-0337 Slice 1 responsive mode switch: `LineageTreeCanvas` defaults to board below 768px and tree at/above 768px, removes the discipline page's forced board default, and preserves explicit Tree/Board toggles across resize without resetting the auto-fit zoom seed; PORTMAP-0002 proven with measured Playwright at 390/768/1280 |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -442,7 +443,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [petey-plan-0291](../../sprints/petey-plan-0291.md) | petey-plan | closed |
 | [petey-plan-0305](../../petey-plan-0305.md) | petey-plan | active — lineage tree enhancement epic (4 phases) |
 | [petey-plan-0319](../../petey-plan-0319.md) | petey-plan | active — PromotionEvent display surfaces epic (S0319 seed-gen+OKC+`/events/[slug]`; S0320 org timeline+`/events` index; S0321 begin editor+upload) |
-| [petey-plan-0337](../../petey-plan-0337-lineage-responsive-carousel.md) | petey-plan | active — lineage responsiveness + carousel epic (adapt-not-port): S0 bugfixes done; S1 responsive switch, S2 mobile list, S3 carousel-rail (extend Embla), S4 generation rails, S5 adaptive connector (spike) |
+| [petey-plan-0337](../../petey-plan-0337-lineage-responsive-carousel.md) | petey-plan | active — lineage responsiveness + carousel epic (adapt-not-port): S0 bugfixes done; S1 responsive switch proven; S2 mobile list next, S3 carousel-rail (extend Embla), S4 generation rails, S5 adaptive connector (spike) |
 
 ## Protocols
 

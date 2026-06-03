@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-03
-last_agent: claude-session-0336
+last_agent: codex-session-0338
 pairs_with:
+  - docs/sprints/SESSION_0338.md
   - docs/sprints/SESSION_0325.md
   - docs/sprints/SESSION_0324.md
   - docs/sprints/SESSION_0323.md
@@ -51,6 +52,11 @@ Conventions:
 ---
 
 ## 1. Lineage (public viewer + admin) — `components/web/lineage/`
+
+> SESSION_0338: `LineageTreeCanvas` now defaults responsively when no explicit `defaultLayout` is passed:
+> board below `md` (768px), tree at/above `md`. The existing Tree/Board toolbar remains the override; once
+> the viewer explicitly toggles, resize no longer overwrites that session choice. The responsive default does
+> not reset the tree auto-fit refs, so the one-shot zoom seed remains owned by tree mode.
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |

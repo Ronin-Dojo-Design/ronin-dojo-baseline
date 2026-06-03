@@ -39,9 +39,8 @@ type LineageTreeBoardProps = {
   defaultRootMemberId?: string | null
 
   /**
-   * Initial canvas layout (tree | board). The discipline page passes "board"
-   * because the vertical board layout has no horizontal overflow (the tree
-   * layout's transform-scale fit never produced a usable horizontal scrollbar).
+   * Optional explicit canvas layout (tree | board). When omitted, the canvas
+   * chooses a responsive default: board below md, tree at/above md.
    */
   defaultLayout?: LineageLayout
 
