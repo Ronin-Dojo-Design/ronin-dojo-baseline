@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-02
-last_agent: claude-session-0333
+last_agent: claude-session-0334
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -221,7 +221,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 
 #### Follow-up (SESSION_0333) — migration scanned imports, not Menu.Item semantics
 
-The D-016 residual sweep checked for radix *imports* but missed a *semantic* difference: Radix `Menu.Item` fires `onSelect`; Base UI `Menu.Item` fires **`onClick`** and has no `onSelect` (it resolves to the `<div>` text-selection event — typechecks, never fires). SESSION_0333 found the lineage on-card actions menu was silently dead from this (fixed), and the same dead `onSelect`-without-`onClick` pattern in ~6 admin action menus (`components/admin/tournaments/registration-actions.tsx`, `app/admin/leads|tools|tags|categories/_components/*-actions.tsx`). **Status:** open — sweep + a grep/lint guard tracked in [`wiring-ledger.md`](wiring-ledger.md) (WL-P1-3).
+The D-016 residual sweep checked for radix *imports* but missed a *semantic* difference: Radix `Menu.Item` fires `onSelect`; Base UI `Menu.Item` fires **`onClick`** and has no `onSelect` (it resolves to the `<div>` text-selection event — typechecks, never fires). SESSION_0333 found the lineage on-card actions menu was silently dead from this (fixed), and the same dead `onSelect`-without-`onClick` pattern in ~6 admin action menus (`components/admin/tournaments/registration-actions.tsx`, `app/admin/leads|tools|tags|categories/_components/*-actions.tsx`). **Status:** closed — SESSION_0334 swept all 11 instances across 6 files (the file list undercounted: `app/admin/users/_components/user-actions.tsx` had it too) to `onClick`-only, and added a `bun test` regression guard (`apps/web/components/common/dropdown-menu.guard.test.ts`) that fails CI if any `DropdownMenuItem` reintroduces `onSelect`. Confirmed at Base UI source that `Menu.Item` activates on `onClick` for pointer + keyboard (it synthesizes a click via `useButton`), so `onClick`-only is sufficient. Tracked-resolved in [`wiring-ledger.md`](wiring-ledger.md) (WL-P1-3 ✅).
 
 ### D-017 — `updateOrganization` auth diverges from org-settings access model
 

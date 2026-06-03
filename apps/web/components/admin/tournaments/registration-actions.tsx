@@ -75,14 +75,14 @@ export const RegistrationActions = ({
 
         <DropdownMenuContent align="end" sideOffset={8}>
           {allowed.includes("APPROVED") && (
-            <DropdownMenuItem onSelect={() => handleStatusChange("APPROVED")}>
+            <DropdownMenuItem onClick={() => handleStatusChange("APPROVED")}>
               <CheckCircleIcon className="size-4 text-green-600" />
               Approve
             </DropdownMenuItem>
           )}
 
           {allowed.includes("WAITLISTED") && (
-            <DropdownMenuItem onSelect={() => handleStatusChange("WAITLISTED")}>
+            <DropdownMenuItem onClick={() => handleStatusChange("WAITLISTED")}>
               <ClockIcon className="size-4 text-yellow-600" />
               Waitlist
             </DropdownMenuItem>
@@ -92,7 +92,7 @@ export const RegistrationActions = ({
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={() => handleStatusChange("CANCELLED")}
+                onClick={() => handleStatusChange("CANCELLED")}
                 className="text-red-600"
               >
                 <XCircleIcon className="size-4" />

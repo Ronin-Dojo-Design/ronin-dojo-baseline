@@ -86,7 +86,7 @@ export const ToolActions = ({ className, tool, ...props }: ToolActionsProps) => 
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onSelect={handleDuplicate}>
+          <DropdownMenuItem onClick={handleDuplicate}>
             <CopyIcon />
             Duplicate
           </DropdownMenuItem>

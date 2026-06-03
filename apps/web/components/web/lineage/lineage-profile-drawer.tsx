@@ -454,7 +454,7 @@ function LineageDrawerActions({
         <DropdownMenuGroup>
           <DropdownMenuLabel>Admin</DropdownMenuLabel>
           {onChangePromoter && (
-            <DropdownMenuItem onClick={openPromoterModal} onSelect={openPromoterModal}>
+            <DropdownMenuItem onClick={openPromoterModal}>
               <UserRoundCogIcon />
               Change promoter...
             </DropdownMenuItem>

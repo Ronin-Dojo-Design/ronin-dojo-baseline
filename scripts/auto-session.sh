@@ -90,6 +90,24 @@ PROMPT
 
 base_branch="$START_BASE"
 
+# ── ntfy failure trap ─────────────────────────────────────────────────────────
+# Fires on any unhandled error (set -e). Best-effort: never re-errors.
+# IMPORTANT: do not put launchctl/bootout here or anywhere in this script —
+# that would kill the launchd job mid-run (SESSION_0333 bug root cause).
+_NTFY_SEND_PATH="$(git rev-parse --show-toplevel)/scripts/notify/ntfy-send.sh"
+_ntfy_on_failure() {
+  local exit_code="$?"
+  if [ -x "${_NTFY_SEND_PATH}" ]; then
+    "${_NTFY_SEND_PATH}" \
+      --title "Auto-session FAILED" \
+      --priority 4 \
+      --tags "x,robot" \
+      "auto-session.sh exited with code ${exit_code}. Check the terminal or logs." \
+      2>/dev/null || true
+  fi
+}
+trap '_ntfy_on_failure' ERR
+
 for ((i = 1; i <= N; i++)); do
   last="$(find docs/sprints -name 'SESSION_*.md' | sed -E 's/.*SESSION_([0-9]+)\.md/\1/' | sort -n | tail -1)"
   next="$(printf '%04d' "$((10#$last + 1))")"
@@ -132,3 +150,16 @@ done
 echo ""
 echo "✓ ${N} session(s) complete. Review the stacked PRs and merge BOTTOM-UP into main:"
 echo "  the oldest PR (base main) first; GitHub auto-retargets the next onto main as you go."
+
+# ── ntfy completion notification ──────────────────────────────────────────────
+# Best-effort: if no topic is configured, ntfy-send.sh exits 0 silently.
+# Never let this block the script exit or produce an error.
+_NTFY_SEND="$(git rev-parse --show-toplevel)/scripts/notify/ntfy-send.sh"
+if [ -x "${_NTFY_SEND}" ]; then
+  "${_NTFY_SEND}" \
+    --title "Auto-session run complete" \
+    --priority 4 \
+    --tags "white_check_mark,robot" \
+    "${N} session(s) finished. Review stacked PRs and merge bottom-up into main." \
+    2>/dev/null || true
+fi

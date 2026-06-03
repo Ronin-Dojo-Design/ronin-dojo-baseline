@@ -62,21 +62,23 @@ export const LeadActions = ({ className, lead, ...props }: LeadActionsProps) => 
           </DropdownMenuItem>
 
           {canNurture && (
-            <DropdownMenuItem onSelect={() => executeNurture({ id: lead.id })}>
+            <DropdownMenuItem onClick={() => executeNurture({ id: lead.id })}>
               <CalendarIcon className="size-4 mr-2" /> Move to Nurture
             </DropdownMenuItem>
           )}
 
           {canMarkLost && (
-            <DropdownMenuItem onSelect={() => executeLost({ id: lead.id })}>
+            <DropdownMenuItem onClick={() => executeLost({ id: lead.id })}>
               <XCircleIcon className="size-4 mr-2" /> Mark Lost
             </DropdownMenuItem>
           )}
 
           <DropdownMenuSeparator />
 
+          {/* The DropdownMenuItem is the DeleteDialog's trigger (DialogTrigger render);
+              clicking opens the dialog — no menu handler needed (Base UI ignores onSelect). */}
           <LeadsDeleteDialog leads={[lead]}>
-            <DropdownMenuItem onSelect={e => e.preventDefault()}>
+            <DropdownMenuItem>
               <TrashIcon className="size-4 mr-2" /> Delete
             </DropdownMenuItem>
           </LeadsDeleteDialog>

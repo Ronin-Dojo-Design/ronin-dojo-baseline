@@ -58,6 +58,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [graphify-repo-memory](dev-environment/graphify-repo-memory.md) — Graphify repo-graph discovery.
 - [docs-navigator](dev-environment/docs-navigator.md) — searchable HTML docs browser.
 - [autonomous-sessions](dev-environment/autonomous-sessions.md) — drive N cold bow-in→bow-out sessions as stacked PRs (`scripts/auto-session.sh`).
+- [ntfy-pushover-telegram](dev-environment/ntfy-pushover-telegram.md) — push-notification transports (ntfy/Pushover/Telegram) + the repo's Docker-cache / disk-pressure / CI monitors (`scripts/monitor`, `scripts/notify`).
 
 ## Integrations
 
