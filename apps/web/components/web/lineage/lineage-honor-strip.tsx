@@ -105,10 +105,12 @@ export function LineageHonorStrip({
                     {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
                     <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
                   </Avatar>
-                  <Stack size="xs" direction="column" wrap={false} className="min-w-0">
-                    <span className="truncate font-medium text-sm">{displayName}</span>
+                  <Stack size="xs" direction="column" wrap={false} className="min-w-0 flex-1">
+                    <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
                     {rankLabel && (
-                      <span className="truncate text-muted-foreground text-xs">{rankLabel}</span>
+                      <span className="max-w-full truncate text-muted-foreground text-xs">
+                        {rankLabel}
+                      </span>
                     )}
                   </Stack>
                 </button>

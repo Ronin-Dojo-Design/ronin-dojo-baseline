@@ -186,9 +186,9 @@ function LineageCompactChildRow({
           </Avatar>
 
           <Stack size="xs" direction="column" className="min-w-0 flex-1">
-            <span className="truncate font-medium text-sm">{displayName}</span>
+            <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
             {rankLabel && (
-              <Stack size="xs" className="items-center">
+              <Stack size="xs" className="min-w-0 items-center">
                 {beltColor && (
                   <span
                     className="size-2 shrink-0 rounded-full ring-1 ring-border/50"
@@ -196,7 +196,9 @@ function LineageCompactChildRow({
                     aria-hidden
                   />
                 )}
-                <span className="truncate text-muted-foreground text-xs">{rankLabel}</span>
+                <span className="max-w-full truncate text-muted-foreground text-xs">
+                  {rankLabel}
+                </span>
               </Stack>
             )}
           </Stack>

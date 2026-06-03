@@ -1256,7 +1256,14 @@ export function LineageTreeCanvas({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="rounded-2xl border bg-card/40 p-3 shadow-sm md:p-4">
+      {/* `w-full min-w-0 max-w-full`: this card is a flex item in a `flex-col items-start`
+          page-layout ancestor, so without an explicit width it shrink-wraps to the tree's
+          intrinsic content width (~3.6kpx on a wide lineage) instead of the viewport. That
+          blowout defeats the canvas's own `overflow-x-auto` (it never scrolls) and the app
+          shell's `overflow-clip` then clips the right half — taking the right-justified
+          Tree/Board + zoom controls off-screen. Bounding the card here re-engages the canvas
+          horizontal scroll and keeps the toolbar within the viewport. (SESSION_0337) */}
+      <div className="w-full min-w-0 max-w-full rounded-2xl border bg-card/40 p-3 shadow-sm md:p-4">
         <Stack
           size="sm"
           wrap

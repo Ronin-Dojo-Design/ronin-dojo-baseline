@@ -123,9 +123,11 @@ export function LineageNodeCard({
               wrap={false}
               className={cx("min-w-0 flex-1", showActions && "pr-7")}
             >
-              <span className="truncate font-medium text-sm">{displayName}</span>
+              <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
               {rankLabel && (
-                <span className="truncate text-muted-foreground text-xs">{rankLabel}</span>
+                <span className="max-w-full truncate text-muted-foreground text-xs">
+                  {rankLabel}
+                </span>
               )}
             </Stack>
           </Stack>
