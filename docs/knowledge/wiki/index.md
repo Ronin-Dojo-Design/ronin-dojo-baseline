@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-02
 author: Brian + Copilot
-last_agent: claude-session-0332
+last_agent: claude-session-0333
 ---
 
 # LLM Wiki Index
@@ -425,6 +425,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0330](../../sprints/SESSION_0330.md) | session--implement | closed — lineage Phase 3d hardening: `Drawer` primitive now honors `prefers-reduced-motion` (`motion-reduce:animate-none`); `LineageProfileDrawer` desktop persistent panel positions inside the viewport via a `containerClassName` override of the inherited `md:pt-[12.5vh]`/`md:[@media(min-height:1000px)]:pt-[25vh]` offsets |
 | [SESSION_0331](../../sprints/SESSION_0331.md) | session--implement | closed — lineage Phase 3f smaller half: new `LineageSearchBar` (composes `Input`/`Button`/`Badge`/`Stack`) renders between the canvas toolbar and the honor strip; case-insensitive name match drives the existing `onSelect` + path-highlight + scroll-into-view flow, with Prev/Next cursor and Esc-to-clear; works identically in `tree` and `board` layouts (PDF export deferred) |
 | [SESSION_0332](../../sprints/SESSION_0332.md) | session--implement | closed — Trophy.so rank-progression proof (petey-plan-0305 Phase 4 Slice 2): no-new-schema Points/Levels belt ladder + Achievements Unlocked rail derived from existing `Rank` + `RankAward` + seeded `GamificationEventType.BELT_PROMOTION.defaultPoints`; new `LineageRankProgressionPanel` + `lib/lineage/rank-progression.ts` (with focused tests) renders inside `LineageRankHistoryTab`; widened `lineageNodeProfilePayload.user.rankAwards.rank.rankSystem.ranks` select (name/shortName/colorHex) — no migration |
+| [SESSION_0333](../../sprints/SESSION_0333.md) | session--implement | closed — orchestrated `auto-session.sh 3` (lineage Phase 3c/3d/3f + Trophy #56–#59), reviewed/grilled, **repaired #56's dead on-card menu** (dnd `role=group` reachability + Base UI `onClick` vs no-op `onSelect` + descoped fragile auto-open modal to drawer-on-Rank-History + webkit hydration test hardening), security-audited the stack (no new violations), merged all four to `main`; surfaced a systemic dead-`onSelect` bug across ~6 admin action menus (drift D-016 follow-up) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

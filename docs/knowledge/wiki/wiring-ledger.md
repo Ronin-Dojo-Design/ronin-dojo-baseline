@@ -4,8 +4,8 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-05-29
-last_agent: claude-session-0304
+updated: 2026-06-02
+last_agent: claude-session-0333
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/runbooks/design/motion-system.md
@@ -50,12 +50,14 @@ follow-ups, not silent nulls.
 - Discipline/school cross-links resolve to real slugs (`disciplines/[slug]/page.tsx:181,285`,
   `schools/[slug]/page.tsx:138,354`).
 
-## P1 — should-fix (both resolved this session)
+## P1 — should-fix
 
 | ID | File:line | Category | Finding | Status |
 | --- | --- | --- | --- | --- |
 | WL-P1-1 | `app/(web)/certificates/verify/[code]/page.tsx:31` | Handroll (FS-0001) | Public cert-verify result card was a raw `<div class="…rounded-lg border p-6">`, not `Card`. A public trust surface diverging from every branded card. | ✅ Fixed — swapped to `~/components/common/card::Card` |
 | WL-P1-2 | `app/(web)/programs/[id]/schedules/[scheduleId]/page.tsx:121` | Handroll (empty state) | Empty session list used a raw `<p class="text-sm text-muted-foreground">` instead of `EmptyList`. | ✅ Fixed — swapped to `~/components/common/empty-list::EmptyList` |
+| WL-P1-3 | `components/admin/tournaments/registration-actions.tsx`; `app/admin/{leads,tools,tags,categories}/_components/*-actions.tsx` | Dead handler (Base UI semantics) | `DropdownMenuItem onSelect={…}` without `onClick` — Base UI `Menu.Item` activates on `onClick` and has no `onSelect` (it resolves to the `<div>` text-selection event). D-016 migration gap (scanned imports, not Menu.Item semantics). Tournament Approve/Waitlist, lead Nurture/Lost, tool/tag/category Duplicate likely silently no-op. | ⛔ Open — SESSION_0333 fixed the lineage instance; admin sweep + a grep/lint guard queued (drift D-016 follow-up) |
+| WL-P1-4 | `apps/web/components/web/lineage/lineage-search-bar.tsx`; `apps/web/lib/lineage/rank-progression.ts` | Test coverage (privacy) | No dedicated test that the public lineage search can't surface non-PUBLIC members, nor that rank-progression on a public node leaks no PII. Implied by the payload allowlist (`queries.visibility.test.ts`) but unasserted for these SESSION_0331/0332 surfaces. | ⛔ Open — SESSION_0333 security audit; add focused tests |
 
 ## P2 — nice-to-have / follow-up (deferred, tracked here)
 
