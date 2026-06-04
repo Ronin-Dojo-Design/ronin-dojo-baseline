@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-08
 updated: 2026-06-04
-last_agent: codex-session-0344
+last_agent: claude-session-0345
 pairs_with:
   - docs/sprints/SESSION_0098.md
   - docs/sprints/SESSION_0344.md
@@ -190,6 +190,33 @@ line items and subscription retrieval.
 
 Use this proof before Stripe CLI or Baseline proxy rehearsals. It does **not** replace Stripe CLI signing
 secret verification or Dashboard webhook delivery checks.
+
+## Stripe CLI live test-mode rehearsal (SESSION_0345)
+
+The mock above bypasses signature verification and real Stripe objects. This rehearsal proves the **real**
+signed webhook -> entitlement path with `sk_test`, **off prod** (Baseline prod runs a `sk_live` key, so a test
+card cannot run against it — see drift D-018). Steps proven in SESSION_0345 for lineage membership checkout:
+
+1. Confirm `apps/web/.env` `STRIPE_SECRET_KEY` is `sk_test_…` and `STRIPE_WEBHOOK_SECRET` equals the CLI
+   listener secret: `stripe listen --print-secret` (compare hashes; never echo the secret).
+2. Create real **test-mode** Stripe objects: `stripe products create …`,
+   `stripe prices create --product <id> --unit-amount 9900 --currency usd` (one-time) and
+   `… -d "recurring[interval]=month"` (subscription). Record the `price_…` ids.
+3. Seed exactly one disposable, brand-scoped lineage-membership `PricingPlan` (+ `EntitlementGrant`,
+   `programId=null`, `metadata.surface=lineage_membership`) bound to those real price ids, plus a disposable
+   test user. Deterministic ids; clean by id afterward. (No prod `DATABASE_URL`.)
+4. Start the dev server (`DEV_LOGIN_USER_ID=<seeded user>` inline) + `stripe listen --forward-to
+   localhost:3000/api/stripe/webhooks --events checkout.session.completed,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed,charge.refunded,charge.dispute.created`.
+5. Drive `/lineage/join` -> real Stripe-hosted Checkout -> test card `4242 4242 4242 4242` (exp `12/34`, CVC
+   `123`). The hosted page seals card inputs in nested iframes and may flag agent automation — completing the
+   `cs_test_…` URL in a normal browser is the reliable path.
+6. Assert: `stripe listen` forwarded a `[200]` signature-verified `checkout.session.completed` ->
+   `UserEntitlement` grant; `stripe subscriptions cancel <sub>` -> `customer.subscription.deleted` -> revoke;
+   `membershipCount`/`programEnrollmentCount` stay `0` (ADR 0019).
+7. **Returning-customer gotcha (SESSION_0345_FINDING_01):** a second checkout reuses the existing Stripe
+   customer; `automatic_tax` + `tax_id_collection` then require `customer_update: { name: "auto", address:
+   "auto" }` or Stripe rejects the session. Fixed in `server/web/billing/actions.ts`.
+8. Clean up by id (plan/user/entitlement/customer/invoice/webhook rows) and deactivate the test product.
 
 ## Dashboard Setup for Staging or Production
 

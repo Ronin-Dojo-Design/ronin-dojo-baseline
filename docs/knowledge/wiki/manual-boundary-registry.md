@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: codex-session-0344
+last_agent: claude-session-0345
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -259,6 +259,19 @@ Baseline-branded lineage membership `PricingPlan` rows, drives the real Stripe w
 Stripe line items/subscription retrieval, grants/revokes `UserEntitlement`, and asserts no
 `Membership.status` or `ProgramEnrollment` mutation. MB-013 remains open until the same tier shape is
 rehearsed through Baseline live test-mode Stripe/webhook delivery and production cleanup/signoff.
+
+SESSION_0345 update: the real signed-webhook path is now proven via a **Stripe CLI local test-mode
+rehearsal** (`sk_test` + `stripe listen` -> real Stripe-hosted Checkout -> real signature-verified
+`checkout.session.completed`/`invoice.paid`/`customer.subscription.deleted` -> `UserEntitlement`
+grant/revoke; no `Membership.status`/`ProgramEnrollment` mutation; all rows cleaned by id). The rehearsal
+**caught + fixed a launch-blocking bug** (`SESSION_0345_FINDING_01`): `createLineageMembershipCheckout` and
+`createProgramEnrollmentCheckout` rejected checkout for any **returning customer** (existing Stripe customer +
+`automatic_tax`/`tax_id_collection` requires `customer_update`). Discovery that blocks a literal cutover:
+`baselinemartialarts.com` prod runs a **live** Stripe key, so the "test card on Baseline" step is not runnable
+(logged as drift D-018; CUTOVER proxy procedure corrected). What remains for MB-013: money-free verification
+of the deployed prod live-webhook destination/secret + a launch-day real-charge-and-refund smoke decision.
+Gate #4 below (manual/comp entitlement parity) is now specced as the gift/tier-gating epic
+(`GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md`).
 
 MB-013 still requires these launch gates:
 

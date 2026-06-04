@@ -510,6 +510,9 @@ describe("createProgramEnrollmentCheckout", () => {
     expect(checkoutArgs.line_items).toEqual([{ price: fx.validPriceId, quantity: 1 }])
     expect(checkoutArgs.customer).toBe("cus_test_checkout_0097_existing")
     expect(checkoutArgs.customer_creation).toBeUndefined()
+    // SESSION_0345: reusing an existing customer with automatic_tax + tax_id_collection
+    // requires customer_update or Stripe rejects the session (returning-customer bug).
+    expect(checkoutArgs.customer_update).toEqual({ name: "auto", address: "auto" })
     expect(checkoutArgs.discounts).toEqual([{ coupon: "coupon_test_0097" }])
     expect(checkoutArgs.metadata).toEqual({
       type: "program_enrollment",
@@ -545,6 +548,8 @@ describe("createProgramEnrollmentCheckout", () => {
     expect(checkoutArgs.line_items).toEqual([{ price: fx.validPriceId, quantity: 1 }])
     expect(checkoutArgs.customer).toBeUndefined()
     expect(checkoutArgs.customer_creation).toBe("always")
+    // No existing customer → no customer_update (would error against a fresh customer).
+    expect(checkoutArgs.customer_update).toBeUndefined()
     expect(checkoutArgs.metadata.userId).toBe(fx.userId)
     expect(checkoutArgs.metadata.programId).toBe(fx.programId)
     expect(checkoutArgs.success_url).toContain(`/programs/${fx.programId}/enroll/success`)
@@ -616,6 +621,8 @@ describe("createLineageMembershipCheckout", () => {
     expect(checkoutArgs.line_items).toEqual([{ price: fx.lineagePriceId, quantity: 1 }])
     expect(checkoutArgs.customer).toBe("cus_test_checkout_0097_lineage_existing")
     expect(checkoutArgs.customer_creation).toBeUndefined()
+    // SESSION_0345 returning-customer fix also covers the lineage membership action.
+    expect(checkoutArgs.customer_update).toEqual({ name: "auto", address: "auto" })
     expect(checkoutArgs.discounts).toEqual([{ coupon: "coupon_test_lineage_0097" }])
     expect(checkoutArgs.metadata).toEqual({
       type: LINEAGE_MEMBERSHIP_SURFACE,

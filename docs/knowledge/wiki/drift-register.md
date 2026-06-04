@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-02
-last_agent: claude-session-0334
+updated: 2026-06-04
+last_agent: claude-session-0345
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -230,3 +230,11 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Decision needed:** Consolidate `updateOrganization` onto `assertOrgAdminAccess` and retire the OWNER-role check, so the dashboard school-form and the settings surface share one auth model. An `ownerId` owner without an `OWNER` role-assignment currently passes the settings gate but would fail `updateOrganization`.
 - **Status:** closed
 - **Opened:** SESSION_0298 (2026-05-29). **Closed:** SESSION_0300 (2026-05-29). `updateOrganization` now uses `assertOrgAdminAccess` — same auth model as all org settings surfaces. The OWNER role-assignment check is retired.
+
+### D-018 — CUTOVER "test card on Baseline" assumed test-mode prod; prod is live-mode
+
+- **Source A:** `CUTOVER_CHECKLIST.md` §"Baseline staging-prod proxy procedure" step 4 — "run the same lineage membership tier shape on Baseline with a test-mode Stripe card".
+- **Source B:** `.env.production.local` Stripe key prefix `sk_live` (Baseline prod is live-mode); MB-013 / SESSION_0171 corroborate live-key intent.
+- **Decision needed:** A test card cannot run against live-mode prod (rejected; a real card = real money). Prove the real signed-webhook path off prod (Stripe CLI local test-mode rehearsal — done SESSION_0345 — or a Preview deploy); the deployed prod domain gets only a money-free webhook-destination/secret verification + a launch-day real-charge-and-refund smoke decision.
+- **Status:** resolved
+- **Resolved in:** SESSION_0345 — CUTOVER proxy step 4 corrected; rehearsal procedure documented in `stripe-setup-runbook.md`; bug caught in the same rehearsal tracked as `SESSION_0345_FINDING_01`.

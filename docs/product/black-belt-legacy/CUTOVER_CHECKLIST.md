@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-06-04
 updated: 2026-06-04
-last_agent: codex-session-0344
+last_agent: claude-session-0345
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -94,13 +94,20 @@ Vercel deployment, auth stack, brand-scoped DB, Stripe webhook, and Resend integ
    proxy-test email such as `bbl-proxy-YYYYMMDD-<initials>@...`, complete the magic link from the controlled
    inbox, and confirm `/me` renders **My Passport**. Record the account email and timestamp in the cutover
    evidence packet.
-4. **Baseline live checkout proxy:** run the same lineage membership tier shape on Baseline with a test-mode
-   Stripe card, confirm success/cancel behavior as applicable, and verify the webhook grants the expected
-   user-facing entitlement. This covers BBL's money path because ADR 0012 routes entitlement grants through
-   the shared webhook.
-5. **Cleanup expectation:** proxy-test accounts and any related Stripe customer/checkout artifacts live in
-   the shared production DB. Remove or archive them after proof capture; do not reuse a shared `brand`
-   `StripeCustomer` row for repeated proxy runs.
+4. **Real-network checkout proof (SESSION_0345 correction).** `baselinemartialarts.com` prod runs a **live**
+   Stripe key, so a test card cannot run against it (live key rejects test cards; a real card = real money).
+   Prove the real, signature-verified webhook -> entitlement path **off prod** instead, two equivalent ways:
+   - **Stripe CLI local test-mode rehearsal (done, SESSION_0345):** `sk_test` + `stripe listen --forward-to
+     localhost:3000/api/stripe/webhooks` -> real Stripe-hosted Checkout (test card `4242…`) -> real signed
+     `checkout.session.completed`/`invoice.paid`/`customer.subscription.deleted` -> `UserEntitlement`
+     grant/revoke. See `stripe-setup-runbook.md` "Stripe CLI live test-mode rehearsal".
+   - **Or a Vercel Preview deploy wired to test-mode Stripe** for a deployed-URL variant.
+   The **deployed prod domain** gets only a **money-free** verification: confirm the live webhook destination
+   and `STRIPE_WEBHOOK_SECRET` are wired (Stripe Dashboard delivery log), then a deliberate **launch-day
+   real-charge-and-refund** smoke decision — not a rehearsal.
+5. **Cleanup expectation:** any local/preview rehearsal rows are removed by id (SESSION_0345 cleaned plan,
+   user, entitlement, customer, invoice, webhook rows). If a launch-day real-charge smoke is run on prod,
+   refund + archive the artifacts; do not reuse a shared `brand` `StripeCustomer` row for repeated runs.
 
 ## Slice 5 (PORTMAP-0006) ordering
 

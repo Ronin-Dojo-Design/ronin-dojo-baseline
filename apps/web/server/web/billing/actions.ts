@@ -146,6 +146,10 @@ export const createProgramEnrollmentCheckout = userActionClient
       tax_id_collection: { enabled: true },
       customer: existingCustomer?.stripeCustomerId,
       customer_creation: mode === "payment" && !existingCustomer ? "always" : undefined,
+      // Reusing an existing Stripe customer with automatic_tax + tax_id_collection
+      // requires customer_update; otherwise Stripe rejects the session for any
+      // returning customer (SESSION_0345 live-mode rehearsal finding).
+      customer_update: existingCustomer ? { name: "auto", address: "auto" } : undefined,
       invoice_creation: mode === "payment" ? { enabled: true } : undefined,
       metadata: mode === "payment" ? metadata : undefined,
       subscription_data: mode === "subscription" ? { metadata } : undefined,
@@ -215,6 +219,10 @@ export const createLineageMembershipCheckout = userActionClient
       tax_id_collection: { enabled: true },
       customer: existingCustomer?.stripeCustomerId,
       customer_creation: mode === "payment" && !existingCustomer ? "always" : undefined,
+      // Reusing an existing Stripe customer with automatic_tax + tax_id_collection
+      // requires customer_update; otherwise Stripe rejects the session for any
+      // returning customer (SESSION_0345 live-mode rehearsal finding).
+      customer_update: existingCustomer ? { name: "auto", address: "auto" } : undefined,
       invoice_creation: mode === "payment" ? { enabled: true } : undefined,
       metadata: mode === "payment" ? metadata : undefined,
       subscription_data: mode === "subscription" ? { metadata } : undefined,
