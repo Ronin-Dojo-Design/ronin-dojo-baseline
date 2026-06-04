@@ -23,6 +23,16 @@ export type AuthenticatedUser = {
   token: string
 }
 
+export type RegisteredUserShell = {
+  userId: string
+  email: string
+  name: string
+  emailVerified: boolean
+  passportDisplayName: string | null
+  directorySlug: string | null
+  sessionCount: number
+}
+
 type AuthSession = {
   userId: string
   token: string
@@ -86,4 +96,16 @@ export async function createAuthenticatedSession(page: Page, userId: string) {
 
 export async function cleanupTestUser(userId: string) {
   runAuthDbCommand<void>("cleanup-user", { userId })
+}
+
+export function getMagicLinkToken(email: string) {
+  return runAuthDbCommand<string | null>("get-magic-link-token", { email })
+}
+
+export function readRegisteredUserByEmail(email: string) {
+  return runAuthDbCommand<RegisteredUserShell | null>("read-registered-user-by-email", { email })
+}
+
+export function cleanupTestUserByEmail(email: string) {
+  runAuthDbCommand<void>("cleanup-user-by-email", { email })
 }

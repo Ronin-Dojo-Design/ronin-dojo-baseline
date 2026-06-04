@@ -5,19 +5,21 @@ type: runbook
 status: active
 created: 2026-05-28
 updated: 2026-06-04
-last_agent: claude-session-0342
+last_agent: codex-session-0343
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/product/black-belt-legacy/GAP_MATRIX.md
-  - docs/runbooks/vercel-domain-setup-runbook.md
-  - docs/runbooks/vercel-deploy.md
-  - docs/runbooks/deployment.md
-  - docs/runbooks/white-label-site-runbook.md
-  - docs/runbooks/resend-setup-runbook.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
+  - docs/runbooks/deploy/vercel-domain-setup-runbook.md
+  - docs/runbooks/deploy/vercel-deploy.md
+  - docs/runbooks/deploy/deployment.md
+  - docs/runbooks/deploy/white-label-site-runbook.md
+  - docs/runbooks/integrations/resend-setup-runbook.md
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/decisions/0015-domain-hosting-infrastructure.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0343.md
 tags:
   - bbl
   - blackbeltlegacy
@@ -40,6 +42,9 @@ Take `blackbeltlegacy.com` live as the **BBL brand on the existing Vercel multi-
 
 This runbook documents only the **BBL-specific deltas**. The generic domain-attach + DNS mechanics live in [vercel-domain-setup-runbook](vercel-domain-setup-runbook.md) — follow it, do not re-derive it here.
 
+For launch sequencing across DNS, feature gaps, and e2e proof, use the
+[BBL cutover checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md).
+
 ---
 
 ## Reused runbooks (do these; this doc only adds BBL specifics)
@@ -56,31 +61,31 @@ Governing ADRs: [ADR 0006](../../architecture/decisions/0006-multi-domain-hostin
 
 ---
 
-## ⚠️ OPEN — resolve before any DNS change
+## ✅ RESOLVED — DNS source of truth (SESSION_0343)
 
-**`blackbeltlegacy.com` DNS source of truth is unconfirmed.** ADR 0015 assumes Bluehost is the registrar/DNS host for all brand domains, but BBL has been running on **Flywheel/WordPress**, which may mean the zone is currently managed at Flywheel (or another registrar), not Bluehost.
+`blackbeltlegacy.com` DNS source of truth is confirmed: Bluehost is the registrar + DNS authority, while
+Flywheel is the current WordPress origin behind Fastly.
 
-Confirm first:
+Read-only recon run during SESSION_0343:
 
 ```bash
-# Who is authoritative for the zone right now?
-dig +short blackbeltlegacy.com NS
-# Where does the apex currently point (Flywheel IP vs Vercel edge)?
-dig +short blackbeltlegacy.com A
-whois blackbeltlegacy.com | grep -iE "registrar|name server"
+dig +short blackbeltlegacy.com NS        # ns1.bluehost.com / ns2.bluehost.com
+dig +short blackbeltlegacy.com A         # 151.101.66.159 (Fastly/Flywheel)
+whois blackbeltlegacy.com                # Registrar: Bluehost Inc.
 ```
 
-- If NS = `ns1/ns2.bluehost.com` → proceed exactly per vercel-domain-setup-runbook.
-- If NS points at Flywheel / another host → decide: move the zone to Bluehost (to match ADR 0015), or edit records at the current host. **Record this decision + an ADR note before touching DNS.** Do not change DNS until this is resolved.
+- Proceed exactly per `vercel-domain-setup-runbook`: edit records at Bluehost; do **not** migrate the zone.
+- Cutover = apex A from `151.101.66.159` to Vercel + `www` CNAME to `cname.vercel-dns.com`.
+- Rollback = revert apex A to `151.101.66.159` and restore the prior `www` target if changed.
 
-No DNS changes were made in SESSION_0284 — this is documentation only.
+No DNS changes were made in SESSION_0284 or SESSION_0343 — this is documentation only.
 
 ---
 
 ## Cutover sequence (WordPress → Vercel)
 
 ```text
-0. Confirm DNS source of truth (above) — BLOCKING
+0. Confirm DNS source of truth (above) — RESOLVED in SESSION_0343
 1. Confirm BBL brand renders correctly on Vercel preview/prod
    - data-brand=BBL, name/theme/metadata = Black Belt Legacy (white-label runbook)
    - BBL production deploy is green (vercel-deploy: lockfile committed)
@@ -101,7 +106,7 @@ No DNS changes were made in SESSION_0284 — this is documentation only.
 
 ```mermaid
 flowchart TD
-    A[Confirm DNS source of truth] -->|BLOCKING| B[BBL brand renders on Vercel]
+    A[DNS source of truth resolved at Bluehost] --> B[BBL brand renders on Vercel]
     B --> C[Inventory WP content]
     C --> D[Build 301 redirect map]
     D --> E[Attach blackbeltlegacy.com to bbl Vercel project]

@@ -5,14 +5,16 @@ type: report
 status: active
 created: 2026-05-27
 updated: 2026-06-04
-last_agent: claude-session-0342
+last_agent: codex-session-0343
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0343.md
 tags:
   - bbl
   - blackbeltlegacy
@@ -143,6 +145,10 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | **TOTAL** | **6** | **17** | **6** | **3** | **32** |
 
 ### Highest-value next tasks (Petey recommendation)
+
+SESSION_0343 launch-readiness note: the cross-layer e2e gate order now lives in
+[`CUTOVER_CHECKLIST.md`](CUTOVER_CHECKLIST.md). Registration e2e gap #1 is green; the next shared-infra
+launch proof should cover Stripe checkout + tier/entitlement before the BBL-specific claim smoke below.
 
 1. **Authenticated claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim. Also smoke `/lineage/join` with a signed-in user to prove the lead + draft listing + `LineageClaimRequest` bridge.
 2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.

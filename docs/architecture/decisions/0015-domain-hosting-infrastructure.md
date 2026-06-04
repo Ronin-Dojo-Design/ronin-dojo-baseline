@@ -4,16 +4,19 @@ slug: adr-0015
 type: adr
 status: accepted
 created: 2026-05-09
-updated: 2026-05-13
-last_agent: claude-session-0160
+updated: 2026-06-04
+last_agent: codex-session-0343
 pairs_with:
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
-  - docs/runbooks/vercel-domain-setup-runbook.md
+  - docs/runbooks/deploy/vercel-domain-setup-runbook.md
+  - docs/runbooks/deploy/bbl-production-runbook.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0159.md
   - docs/sprints/SESSION_0160.md
+  - docs/sprints/SESSION_0343.md
 ---
 
 # ADR 0015 — Domain Hosting Infrastructure
@@ -43,7 +46,13 @@ All domains remain registered at Bluehost. DNS records are managed via Bluehost 
 
 ### 3. Flywheel decommissioned after BBL migration
 
-`blackbeltlegacy.com` stays on Flywheel until BBL data migration (ADR 0007) is complete. After migration, nameservers revert to Bluehost, DNS points to Vercel, and Flywheel hosting is cancelled.
+`blackbeltlegacy.com` stays on Flywheel until BBL data migration (ADR 0007) is complete. After migration,
+DNS points to Vercel and Flywheel hosting is cancelled.
+
+**SESSION_0343 clarification:** read-only DNS recon and operator confirmation showed `blackbeltlegacy.com`
+already delegates to `ns1.bluehost.com` / `ns2.bluehost.com`. Flywheel is the WordPress origin behind
+Fastly (`151.101.66.159`), not the DNS authority. Therefore BBL cutover does **not** require a nameserver
+reversion; it requires record edits at Bluehost, with rollback to the prior Flywheel/Fastly apex value.
 
 ### 4. Domain migration follows brand build order
 

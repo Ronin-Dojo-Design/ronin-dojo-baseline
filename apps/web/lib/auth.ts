@@ -18,9 +18,48 @@ import { db } from "~/services/db"
 type AuthEndpointContext = {
   headers?: Headers
   request?: Request
+  body?: {
+    id?: unknown
+    user?: {
+      id?: unknown
+      name?: unknown
+    }
+  }
   context?: {
     baseURL?: string
+    newSession?: {
+      user?: {
+        id?: unknown
+        name?: unknown
+      }
+    } | null
   }
+}
+
+async function ensureIdentityShell(userId: string, displayName: string | null) {
+  const existing = await db.passport.findUnique({ where: { userId } })
+  if (existing) return
+
+  const slug = await generateUniqueProfileSlug(
+    displayName,
+    async s => (await db.directoryProfile.count({ where: { slug: s } })) > 0,
+  )
+
+  await db.$transaction([
+    db.passport.create({
+      data: {
+        userId,
+        displayName,
+      },
+    }),
+    db.directoryProfile.create({
+      data: {
+        userId,
+        slug,
+        // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
+      },
+    }),
+  ])
 }
 
 const getAuthContextHeaders = (ctx?: AuthEndpointContext) => ctx?.headers ?? ctx?.request?.headers
@@ -99,32 +138,17 @@ export const auth = betterAuth({
         path === "/callback/:id" ||
         path.startsWith("/magic-link")
       ) {
-        const newUserId = context.body?.user?.id ?? context.body?.id
+        const userFromBody = context.body?.user
+        const userFromSession = context.newSession?.user
+        const newUserId = userFromBody?.id ?? context.body?.id ?? userFromSession?.id
         if (newUserId && typeof newUserId === "string") {
-          // Only create if not already present (idempotent for social re-auth)
-          const existing = await db.passport.findUnique({ where: { userId: newUserId } })
-          if (!existing) {
-            const displayName = context.body?.user?.name ?? null
-            const slug = await generateUniqueProfileSlug(
-              displayName,
-              async s => (await db.directoryProfile.count({ where: { slug: s } })) > 0,
-            )
-            await db.$transaction([
-              db.passport.create({
-                data: {
-                  userId: newUserId,
-                  displayName,
-                },
-              }),
-              db.directoryProfile.create({
-                data: {
-                  userId: newUserId,
-                  slug,
-                  // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
-                },
-              }),
-            ])
-          }
+          const displayName =
+            typeof userFromBody?.name === "string"
+              ? userFromBody.name
+              : typeof userFromSession?.name === "string"
+                ? userFromSession.name
+                : null
+          await ensureIdentityShell(newUserId, displayName)
         }
       }
     }),

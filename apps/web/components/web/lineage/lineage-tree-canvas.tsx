@@ -43,6 +43,13 @@ import {
   nodeDisplayName,
   sortMembers,
 } from "~/lib/lineage/canvas-model"
+import {
+  buildConnectorEdges,
+  buildSelectedPathTrace,
+  type ConnectorEdge,
+  connectorGrowDelay,
+  tracePerStepDelay,
+} from "~/lib/lineage/connector-geometry"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import { cx } from "~/lib/utils"
 import { updateLineageMemberPlacement } from "~/server/web/lineage/editor-actions"
@@ -155,38 +162,12 @@ function entranceDelay(generation: number, siblingIndex: number) {
   )
 }
 
-// Phase 2 animated path trace — connector + ring highlight rises from the tapped node to the root
-// one ancestor edge at a time. The per-connector transition is `base` 200ms (Tailwind
-// `transition-colors duration-200`). Total delay budget is 1.0s of step delays + 0.2s for the
-// final connector's transition → ≤1.2s end-to-end, matching the spec cap. Per-step delay scales
-// inversely with depth and is floored so even deep trees keep a perceivable cascade.
-const TRACE_TOTAL_BUDGET = 1.0
-const TRACE_MIN_STEP = 0.05
-const TRACE_MAX_STEP = 0.2
-
-function tracePerStepDelay(maxDistance: number) {
-  if (maxDistance <= 0) return 0
-  return Math.max(TRACE_MIN_STEP, Math.min(TRACE_MAX_STEP, TRACE_TOTAL_BUDGET / maxDistance))
-}
-
-function traceStepDelay(step: number, perStepDelay: number) {
-  if (step <= 0 || perStepDelay <= 0) return 0
-  return (step - 1) * perStepDelay
-}
-
 // Phase 2 connector grow-in (motion-system, `--ease-snappy`). On initial render each connector
 // segment scales from 0 → 1 along its axis with a generation-tier stagger; all three pieces of one
 // edge (parent-below `h-6 w-px`, sibling `h-px` bar, child-above `h-4 w-px`) share the same
 // per-edge delay so the edge fills cohesively. The cap keeps deep trees inside a 1.0s envelope on
 // top of the 0.25s per-connector animation. Reduced-motion users get no animation at all.
 const CONNECTOR_GROW_DURATION = 0.25
-const CONNECTOR_GROW_STEP = 0.1
-const CONNECTOR_GROW_DELAY_CAP = 1.0
-
-function connectorGrowDelay(generation: number) {
-  if (generation <= 0) return 0
-  return Math.min(generation * CONNECTOR_GROW_STEP, CONNECTOR_GROW_DELAY_CAP)
-}
 
 // Phase 3e SVG 90° connectors. The connector band between a parent card and its children row is a
 // fixed-height strip (replacing the old `h-6` drop + `h-4` child stub = 24+16px). An absolutely
@@ -202,15 +183,6 @@ const CONNECTOR_BUS_PX = CONNECTOR_BAND_PX / 2
 // on the server. Fall back to useEffect on the server so measurement stays pre-paint in the browser
 // without the dev-only warning.
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
-
-type ConnectorEdge = {
-  // Stable id of the child column this edge points to (matches the rendered child-group order).
-  id: string
-  // Whether this exact edge lies on the selected path (parent on path AND this child on path).
-  highlighted: boolean
-  // Path-trace cascade delay for this edge when highlighted (mirrors the old per-edge stub delay).
-  traceDelaySec: number
-}
 
 // Measured SVG connector overlay for one parent → children band. Rendered as the first child of the
 // children-row container (position: relative) and offset up into the gap above it. Re-measures
@@ -482,47 +454,6 @@ function isDropTargetData(value: unknown): value is DropTargetData {
   return Boolean(value && typeof value === "object" && "targetType" in value)
 }
 
-function buildSelectedPathTrace({
-  members,
-  selectedNodeId,
-}: {
-  members: CanvasMember[]
-  selectedNodeId: string | null | undefined
-}): {
-  pathMemberIds: Set<string>
-  pathDistanceById: Map<string, number>
-  maxDistance: number
-} {
-  const pathMemberIds = new Set<string>()
-  const pathDistanceById = new Map<string, number>()
-
-  if (!selectedNodeId) {
-    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
-  }
-
-  const selectedMember = members.find(member => member.nodeId === selectedNodeId)
-  if (!selectedMember) {
-    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
-  }
-
-  const parentById = new Map(members.map(member => [member.id, member.primaryVisualParentMemberId]))
-  const visited = new Set<string>()
-  let cursor: string | null = selectedMember.id
-  let distance = 0
-  let maxDistance = 0
-
-  while (cursor && !visited.has(cursor)) {
-    pathMemberIds.add(cursor)
-    pathDistanceById.set(cursor, distance)
-    visited.add(cursor)
-    maxDistance = distance
-    cursor = parentById.get(cursor) ?? null
-    distance += 1
-  }
-
-  return { pathMemberIds, pathDistanceById, maxDistance }
-}
-
 function formatPromotionDate(value: Date | string | null) {
   if (!value) return null
   const date = typeof value === "string" ? new Date(value) : value
@@ -701,14 +632,12 @@ function LineageBranch({
   // AND that child are both on it; its trace-cascade delay mirrors the old per-edge stub delay
   // (`traceStepDelay(thisMemberDistance, perStepDelay)`), so the highlight still rises one ancestor
   // edge at a time from the tapped node to the root.
-  const connectorEdges: ConnectorEdge[] = childGroups.map(group => {
-    const onPath =
-      isInSelectedPath && group.members.some(child => selectedPathMemberIds.has(child.id))
-    return {
-      id: group.id,
-      highlighted: onPath,
-      traceDelaySec: onPath ? traceStepDelay(traceDistance, perStepDelay) : 0,
-    }
+  const connectorEdges: ConnectorEdge[] = buildConnectorEdges({
+    childGroups,
+    isInSelectedPath,
+    selectedPathMemberIds,
+    traceDistance,
+    perStepDelay,
   })
 
   // Phase 2 hover lift refinement — belt-color tint feeds a hover-only `--belt-tint` CSS variable

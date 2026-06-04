@@ -6,17 +6,19 @@ status: active
 created: 2026-04-28
 updated: 2026-06-04
 author: Brian + Petey
-last_agent: claude-session-0342
+last_agent: codex-session-0343
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
   - docs/sprints/SESSION_0020.md
   - docs/sprints/SESSION_0342.md
+  - docs/sprints/SESSION_0343.md
   - docs/architecture/program-plan.md
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/runbooks/deploy/bbl-production-runbook.md
   - docs/product/black-belt-legacy/GAP_MATRIX.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
   - docs/protocols/WORKFLOW_5.0.md
 tags:
   - launch
@@ -45,21 +47,20 @@ tags:
 >
 > | Layer | Canonical doc | State (2026-06-04) |
 > | --- | --- | --- |
-> | Deploy / DNS cutover | [`bbl-production-runbook.md`](../../runbooks/deploy/bbl-production-runbook.md) | Solid; **1 blocking item** — confirm `blackbeltlegacy.com` DNS source of truth before any DNS change. |
+> | Deploy / DNS cutover | [`bbl-production-runbook.md`](../../runbooks/deploy/bbl-production-runbook.md) + [`CUTOVER_CHECKLIST.md`](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | DNS source of truth **resolved in SESSION_0343**: Bluehost DNS authority, Flywheel/Fastly WP origin, record repoint at Bluehost; no DNS mutation yet. |
 > | Feature readiness | [`GAP_MATRIX.md`](../../product/black-belt-legacy/GAP_MATRIX.md) + PRD/STORIES | 6 built / 17 partial / 6 not-started / 3 infra-only (of 32 stories). |
-> | Test / verification readiness | [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md) + e2e gap list | Unit gate **green** (SESSION_0342). Launch-critical e2e gaps still unwritten — see below. |
+> | Test / verification readiness | [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md) + e2e gap list | Unit gate **green** (SESSION_0342). Registration e2e gap #1 is built and green (SESSION_0343); e2e gaps #2–#5 remain. |
 >
-> **Launch-critical e2e gaps (none exist yet; gate a safe BBL cutover) — staged, not built (SESSION_0342):**
+> **Launch-critical e2e gaps (gate a safe BBL cutover):**
 >
-> 1. Registration / sign-up flow (member front door).
+> 1. Registration / sign-up flow (member front door) — **built and green in SESSION_0343**.
 > 2. Stripe checkout / purchase (test mode) → success/cancel pages — money path.
 > 3. Member join → tier → entitlement lifecycle (user-facing, not just admin).
 > 4. Authenticated claim flow (GAP_MATRIX #1).
 > 5. Role-scoped editor access enforcement (BRANCH_EDITOR / NODE_EDITOR — security-adjacent).
 >
-> **Next planning step:** a dedicated BBL launch-readiness replan session that sequences the GAP_MATRIX
-> partials + the e2e gaps + the DNS-confirmation blocker into a cutover checklist. Lineage Slice 5
-> (PORTMAP-0006) continues **within** this BBL-launch frame, not as a parallel track.
+> **Current sequencer:** SESSION_0343 created the BBL cutover checklist and confirmed Slice 5
+> (PORTMAP-0006) is behind the highest launch gates. Next build target is checkout + entitlement e2e proof.
 
 ## Scope change from program-plan.md
 

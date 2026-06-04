@@ -5,14 +5,16 @@ type: reference
 status: active
 created: 2026-06-04
 updated: 2026-06-04
-last_agent: claude-session-0342
+last_agent: codex-session-0343
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
+  - docs/sprints/SESSION_0343.md
   - docs/runbooks/sops/sop-test-writing.md
   - docs/knowledge/wiki/wiring-ledger.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
 ---
 
 # Test Fail Fix Ledger

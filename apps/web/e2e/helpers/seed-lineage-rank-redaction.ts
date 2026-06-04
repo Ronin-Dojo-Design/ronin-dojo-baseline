@@ -41,6 +41,7 @@ export interface LineageRankRedactionFixture {
   rankIds: string[]
   rankAwardIds: string[]
   rankSystemId: string
+  rankSystemIds: string[]
   disciplineId: string
 }
 

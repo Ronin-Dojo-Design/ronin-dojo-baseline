@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-04
-last_agent: codex-session-0341
+last_agent: codex-session-0343
 pairs_with:
+  - docs/sprints/SESSION_0343.md
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0339.md
   - docs/sprints/SESSION_0338.md
@@ -67,6 +68,10 @@ Conventions:
 > SESSION_0341: connector-free Slice 4 rails landed. The honor strip and wide board child groups now compose
 > the shared `Carousel`/`CarouselSlide` primitive from PORTMAP-0004. Board rails stay out of tree mode and do
 > not touch `LineageConnectorLayer`; mobile `< sm` remains owned by `LineageMobileList`.
+>
+> SESSION_0343: selected-path trace and connector edge timing math moved from `lineage-tree-canvas.tsx` to
+> `lib/lineage/connector-geometry.ts` with unit coverage. `LineageConnectorLayer` rendering behavior is
+> unchanged; future Slice 5 work should extend the pure helper first, then verify the SVG layer.
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |

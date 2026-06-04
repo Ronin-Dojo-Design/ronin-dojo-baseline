@@ -136,21 +136,29 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     },
   })
 
-  const rankSystem = await prisma.rankSystem.create({
+  const visibleRankSystem = await prisma.rankSystem.create({
     data: {
       brand: TEST_BRAND,
-      name: `${TAG_PREFIX} Rank System ${runId}`,
+      name: `${TAG_PREFIX} Visible Rank System ${runId}`,
+      disciplineId: discipline.id,
+    },
+  })
+
+  const hiddenRankSystem = await prisma.rankSystem.create({
+    data: {
+      brand: TEST_BRAND,
+      name: `${TAG_PREFIX} Hidden Rank System ${runId}`,
       disciplineId: discipline.id,
     },
   })
 
   // Use distinct, distinctive rank labels per member so spec assertions are
-  // unambiguous — finding "Member A" rank text in Member B's drawer cannot
-  // be a false positive from cross-tree shared strings.
+  // unambiguous — each control has its own rank system, so the visible
+  // member's public belt ladder cannot serialize the hidden control rank.
   const rankA = await prisma.rank.create({
     data: {
       brand: TEST_BRAND,
-      rankSystemId: rankSystem.id,
+      rankSystemId: visibleRankSystem.id,
       sortOrder: 1,
       name: `${TAG_PREFIX} Visible Black Belt ${runId}`,
       shortName: `VBB${runId.slice(-4)}`,
@@ -161,7 +169,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
   const rankB = await prisma.rank.create({
     data: {
       brand: TEST_BRAND,
-      rankSystemId: rankSystem.id,
+      rankSystemId: hiddenRankSystem.id,
       sortOrder: 2,
       name: `${TAG_PREFIX} Hidden Black Belt ${runId}`,
       shortName: `HBB${runId.slice(-4)}`,
@@ -246,7 +254,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       rankAwardId: rankAwardA.id,
       rankName: rankA.name,
       rankShortName: rankA.shortName ?? "",
-      rankSystemName: rankSystem.name,
+      rankSystemName: visibleRankSystem.name,
       disciplineName: discipline.name,
     },
     memberB: {
@@ -257,7 +265,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       rankAwardId: rankAwardB.id,
       rankName: rankB.name,
       rankShortName: rankB.shortName ?? "",
-      rankSystemName: rankSystem.name,
+      rankSystemName: hiddenRankSystem.name,
       disciplineName: discipline.name,
     },
     userIds: [memberAEntry.user.id, memberBEntry.user.id],
@@ -266,7 +274,8 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     groupIds: [publicGroup.id],
     rankIds: [rankA.id, rankB.id],
     rankAwardIds: [rankAwardA.id, rankAwardB.id],
-    rankSystemId: rankSystem.id,
+    rankSystemId: visibleRankSystem.id,
+    rankSystemIds: [visibleRankSystem.id, hiddenRankSystem.id],
     disciplineId: discipline.id,
   }
 }
@@ -283,7 +292,9 @@ async function cleanupFixture(fixture: LineageRankRedactionFixture) {
   await prisma.lineageNode.deleteMany({ where: { id: { in: fixture.nodeIds } } })
   await prisma.rankAward.deleteMany({ where: { id: { in: fixture.rankAwardIds } } })
   await prisma.rank.deleteMany({ where: { id: { in: fixture.rankIds } } })
-  await prisma.rankSystem.deleteMany({ where: { id: fixture.rankSystemId } })
+  await prisma.rankSystem.deleteMany({
+    where: { id: { in: fixture.rankSystemIds ?? [fixture.rankSystemId] } },
+  })
   await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
   await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.directoryProfile.deleteMany({ where: { userId: { in: fixture.userIds } } })
