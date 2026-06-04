@@ -4,11 +4,12 @@ slug: petey-plan-0337-lineage-responsive-carousel
 type: plan
 status: active
 created: 2026-06-03
-updated: 2026-06-03
-last_agent: codex-session-0338
+updated: 2026-06-04
+last_agent: codex-session-0339
 pairs_with:
   - docs/sprints/SESSION_0337.md
   - docs/sprints/SESSION_0338.md
+  - docs/sprints/SESSION_0339.md
   - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -68,7 +69,7 @@ Risk rises down the table; ship top-down. Each slice = one session / one autonom
 | --- | --- | --- | --- | --- | --- |
 | **S0** | Overflow + toolbar bugfixes | done (S0337) | -001/-005 | — | inline (this session) |
 | **S1** | Responsive mode switch (board < md, tree ≥ md) | done (S0338) | -001 | PORTMAP-0002 | `specs/lineage-responsive-switch-port-spec.md` |
-| **S2** | Mobile lineage list (flatten + indent < sm) | low–med | -001/-002 | PORTMAP-0003 | `specs/lineage-mobile-list-port-spec.md` |
+| **S2** | Mobile lineage list (flatten + indent < sm) | done (S0339) | -001/-002 | PORTMAP-0003 | `specs/lineage-mobile-list-port-spec.md` |
 | **S3** | Carousel rail extension (adapt Embla `carousel.tsx`) | med | -003 | PORTMAP-0004 | `specs/lineage-carousel-rail-port-spec.md` |
 | **S4** | Generation rails in connector-free zones | med | -003 | PORTMAP-0005 | `specs/lineage-generation-rail-port-spec.md` |
 | **S5** | Adaptive connector + rails inside wide tree generations | **high (spike)** | -002/-003 | PORTMAP-0006 | `specs/lineage-adaptive-connector-port-spec.md` |
@@ -98,16 +99,21 @@ Risk rises down the table; ship top-down. Each slice = one session / one autonom
 
 ### Slice 2 — Mobile lineage list (< sm)
 
+**Status:** DONE in SESSION_0339. PORTMAP-0003 is `proven`.
+
 - **Adapt:** BBL `MobileLineageList` **behavior** — `buildFlattenedTree` DFS → flat array with a
   computed `depth`; render `space-y-2` with `marginLeft: min(depth*16, 48)px` and a per-row L-connector
   glyph (div, not SVG). Belt colour from `Rank.colorHex`. Reuses our `LineageNodeCard`/compact-row shape,
   not BBL's card.
-- **Files:** new `apps/web/components/web/lineage/lineage-mobile-list.tsx`; `lib/lineage/` gets a pure
-  `flattenLineage(members) → {member, depth}[]` (unit-tested). Wire as the **< sm (640px)** render in
-  `lineage-tree-canvas.tsx`.
+- **Files:** `apps/web/components/web/lineage/lineage-mobile-list.tsx`; `apps/web/lib/lineage/flatten-lineage.ts`
+  exports pure `flattenLineage(members) → {member, depth}[]` (unit-tested). Wired as the **< sm (640px)**
+  render in `lineage-tree-canvas.tsx`.
 - **Done means:** at 390px the lineage renders as a single indented column (≤ 3 indent levels), every row
   tappable → drawer, ancestor chain legible (supports `-002`); measured: no horizontal overflow, no clip.
 - **Risk:** low–med. New component but pure-list; no zoom/connector interplay.
+- **Proof:** SESSION_0339 measured `pageScrollWidth=390`, `canvasScrollWidth=314`, `rowCount=17`,
+  `indentLevels=[0,16,32,48]`, `overflowingRows=[]`, `hasSvgConnectorColumns=false`,
+  `hasZoomControls=false`, and row click opened the profile drawer for Carlos Gracie Jr.
 
 ### Slice 3 — Carousel rail extension (adapt Embla `carousel.tsx`)
 

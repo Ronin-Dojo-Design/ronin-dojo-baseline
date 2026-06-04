@@ -4,13 +4,14 @@ slug: graphify-component-port-map
 type: concept
 status: active
 created: 2026-05-06
-updated: 2026-06-03
+updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: codex-session-0338
+last_agent: codex-session-0339
 pairs_with:
   - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/sprints/SESSION_0338.md
+  - docs/sprints/SESSION_0339.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -118,18 +119,18 @@ legacy component
 
 ### PORTMAP-0003 — Lineage mobile list (flatten + indent)
 
-**Status:** mapped
+**Status:** proven
 **Legacy path:** `blackbeltlegacy/components/lineage/MobileLineageList.jsx`
 **Legacy purpose:** vertical flatten-with-depth list for < 640px (indent `min(depth*16,48)px`, div L-connectors).
-**Target path:** new `apps/web/components/web/lineage/lineage-mobile-list.tsx` + `lib/lineage/flattenLineage.ts`
+**Target path:** `apps/web/components/web/lineage/lineage-mobile-list.tsx` + `apps/web/lib/lineage/flatten-lineage.ts`
 **Target route/page:** `/lineage/[treeSlug]` (< sm render)
-**Dirstarter primitive fit:** `Stack`, `Avatar`, `Badge`
-**Existing Ronin component fit:** reuse `LineageNodeCard`/compact-row shape; not BBL's card.
+**Dirstarter primitive fit:** `Stack`, `Avatar`, `Badge`, `Button`
+**Existing Ronin component fit:** reuses the compact row/action-menu/drawer selection contract; not BBL's card.
 **Port strategy:** adapt (re-derive the flatten algorithm; new TS, unit-tested)
 **Server/client boundary:** client
 **Data dependency:** existing canvas member payload
-**Proof required:** 390px renders single indented column ≤ 3 levels, every row → drawer, no overflow.
-**Notes:** Slice 2. Belt colour from `Rank.colorHex`.
+**Proof required:** 390px renders single indented column ≤ 3 levels, every row → drawer, no overflow. Proven in SESSION_0339.
+**Notes:** Slice 2 landed in SESSION_0339. `LineageTreeCanvas` now renders `LineageMobileList` below 640px, suppressing the tree SVG connector/zoom branch while keeping search, honor strip, selected-path state, and the drawer flow. `flattenLineage` is pure/cycle-safe and unit-tested. Belt colour from `Rank.colorHex`.
 
 ### PORTMAP-0004 — Carousel rail (Embla extension)
 

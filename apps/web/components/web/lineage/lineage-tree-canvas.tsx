@@ -55,6 +55,7 @@ import type {
 import { LineageCompactChildList } from "./lineage-compact-child-list"
 import { LineageGroupHeaderForm } from "./lineage-group-header-form"
 import { LineageHonorStrip } from "./lineage-honor-strip"
+import { LineageMobileList } from "./lineage-mobile-list"
 import { LineageNodeCard } from "./lineage-node-card"
 import { LineageSearchBar } from "./lineage-search-bar"
 
@@ -136,6 +137,7 @@ const MIN_SCALE = 0.5
 const MAX_SCALE = 1.35
 const SCALE_STEP = 0.1
 const RESPONSIVE_LAYOUT_QUERY = "(min-width: 768px)"
+const MOBILE_LIST_QUERY = "(max-width: 639.98px)"
 
 // Phase 2 entrance stagger (motion-system tokens — see docs/runbooks/design/motion-system.md).
 // Per-tier head start compounds with per-sibling 60ms (stagger-base), clamped so a deep/wide tree
@@ -1025,6 +1027,7 @@ export function LineageTreeCanvas({
   const [autoFitPass, setAutoFitPass] = useState(0)
   const [isPinching, setIsPinching] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
+  const [isMobileListViewport, setIsMobileListViewport] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scaleRef = useRef(scale)
@@ -1058,6 +1061,22 @@ export function LineageTreeCanvas({
     return () => mediaQuery.removeEventListener("change", handleChange)
   }, [defaultLayout])
 
+  useIsomorphicLayoutEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+
+    const mediaQuery = window.matchMedia(MOBILE_LIST_QUERY)
+    const updateMobileListViewport = (matches: boolean) => setIsMobileListViewport(matches)
+
+    updateMobileListViewport(mediaQuery.matches)
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      updateMobileListViewport(event.matches)
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [])
+
   // Mirror scale into a ref so the pinch listener can read it without re-binding.
   useEffect(() => {
     scaleRef.current = scale
@@ -1075,7 +1094,7 @@ export function LineageTreeCanvas({
   // CSS transforms don't affect layout, so contentRef.scrollWidth is the
   // unscaled natural tree width.
   useEffect(() => {
-    if (layout !== "tree") return
+    if (layout !== "tree" || isMobileListViewport) return
 
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
@@ -1101,7 +1120,7 @@ export function LineageTreeCanvas({
       cancelAnimationFrame(raf)
       observer.disconnect()
     }
-  }, [layout])
+  }, [layout, isMobileListViewport])
 
   // Two-finger pinch-to-zoom (touch only). Disabled in edit mode so it never
   // fights the @dnd-kit drag editor or drag-scroll. Single-finger touch falls
@@ -1200,7 +1219,9 @@ export function LineageTreeCanvas({
   // viewports where the wide Dirty Dozen branch can otherwise put the root
   // card off-screen at scrollLeft=0.
   useEffect(() => {
-    if (layout !== "tree" || autoFitPass === 0 || autoPannedRef.current) return
+    if (layout !== "tree" || isMobileListViewport || autoFitPass === 0 || autoPannedRef.current) {
+      return
+    }
 
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
@@ -1224,7 +1245,7 @@ export function LineageTreeCanvas({
     })
 
     return () => cancelAnimationFrame(raf)
-  }, [layout, autoFitPass, rootMembers])
+  }, [layout, isMobileListViewport, autoFitPass, rootMembers])
 
   const {
     pathMemberIds: selectedPathMemberIds,
@@ -1332,41 +1353,43 @@ export function LineageTreeCanvas({
           </Stack>
 
           <Stack size="sm" wrap>
-            <Stack size="xs">
-              <Button
-                type="button"
-                variant={layout === "tree" ? "primary" : "secondary"}
-                size="sm"
-                aria-label="Tree layout"
-                aria-pressed={layout === "tree"}
-                prefix={<NetworkIcon />}
-                onClick={() => {
-                  layoutTouchedRef.current = true
-                  autoFittedRef.current = false
-                  autoPannedRef.current = false
-                  setLayout("tree")
-                }}
-              >
-                Tree
-              </Button>
+            {!isMobileListViewport && (
+              <Stack size="xs">
+                <Button
+                  type="button"
+                  variant={layout === "tree" ? "primary" : "secondary"}
+                  size="sm"
+                  aria-label="Tree layout"
+                  aria-pressed={layout === "tree"}
+                  prefix={<NetworkIcon />}
+                  onClick={() => {
+                    layoutTouchedRef.current = true
+                    autoFittedRef.current = false
+                    autoPannedRef.current = false
+                    setLayout("tree")
+                  }}
+                >
+                  Tree
+                </Button>
 
-              <Button
-                type="button"
-                variant={layout === "board" ? "primary" : "secondary"}
-                size="sm"
-                aria-label="Board layout"
-                aria-pressed={layout === "board"}
-                prefix={<ListTreeIcon />}
-                onClick={() => {
-                  layoutTouchedRef.current = true
-                  setLayout("board")
-                }}
-              >
-                Board
-              </Button>
-            </Stack>
+                <Button
+                  type="button"
+                  variant={layout === "board" ? "primary" : "secondary"}
+                  size="sm"
+                  aria-label="Board layout"
+                  aria-pressed={layout === "board"}
+                  prefix={<ListTreeIcon />}
+                  onClick={() => {
+                    layoutTouchedRef.current = true
+                    setLayout("board")
+                  }}
+                >
+                  Board
+                </Button>
+              </Stack>
+            )}
 
-            {layout === "tree" && (
+            {layout === "tree" && !isMobileListViewport && (
               <Stack size="xs">
                 <Button
                   type="button"
@@ -1433,33 +1456,45 @@ export function LineageTreeCanvas({
           <div
             ref={contentRef}
             className={cx(
-              "relative p-8",
-              layout === "tree" && "min-w-max",
+              "relative",
+              isMobileListViewport ? "p-3" : "p-8",
+              layout === "tree" && !isMobileListViewport && "min-w-max",
               layout === "tree" &&
+                !isMobileListViewport &&
                 !isPinching &&
                 !reduceMotion &&
                 "transition-transform duration-300 ease-out",
             )}
             style={
-              layout === "tree"
+              layout === "tree" && !isMobileListViewport
                 ? { transform: `scale(${scale})`, transformOrigin: "top left" }
                 : undefined
             }
           >
             <Stack size="xs" direction="column" className="mb-8 items-center text-center">
-              {layout === "tree" && (
+              {layout === "tree" && !isMobileListViewport && (
                 <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
                   {isTouch ? "Pinch to explore" : "Scroll to explore"}
                 </Badge>
               )}
               <H6 className="text-muted-foreground">
-                {layout === "board"
+                {isMobileListViewport || layout === "board"
                   ? "Tap any practitioner to open their profile"
                   : "Click a practitioner to trace their path to the root"}
               </H6>
             </Stack>
 
-            {layout === "board" ? (
+            {isMobileListViewport ? (
+              <LineageMobileList
+                members={normalizedMembers}
+                rootMembers={rootMembers}
+                selectedMemberId={selectedMemberId}
+                selectedPathMemberIds={selectedPathMemberIds}
+                onSelect={onSelect}
+                canChangePromoter={editMode && canEditPlacement}
+                onChangePromoter={onChangePromoter}
+              />
+            ) : layout === "board" ? (
               <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl md:max-w-4xl">
                 {rootMembers.map(rootMember => (
                   <LineageBoardCard

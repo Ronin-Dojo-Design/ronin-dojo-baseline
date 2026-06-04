@@ -2,13 +2,14 @@
 title: Lineage Mobile List Port Spec
 slug: lineage-mobile-list-port-spec
 type: spec
-status: draft
+status: proven
 created: 2026-06-03
-updated: 2026-06-03
-last_agent: claude-session-0337
+updated: 2026-06-04
+last_agent: codex-session-0339
 pairs_with:
   - docs/petey-plan-0337-lineage-responsive-carousel.md
   - docs/sprints/SESSION_0337.md
+  - docs/sprints/SESSION_0339.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -21,6 +22,10 @@ tags:
 # Lineage Mobile List — Port Spec
 
 > Slice 2 / PORTMAP-0003 / SESSION_0337. Hard rule: adapt, never port-verbatim. Take BBL's flatten-and-indent BEHAVIOR; rebuild on our row shape + `Rank.colorHex`. NOT an accordion — a single flat indented column.
+>
+> **Status:** proven in SESSION_0339. At 390px the public Rigan Machado tree renders as a single
+> flattened list with indent levels `0/16/32/48`, no page or canvas horizontal overflow, no SVG connector
+> columns or zoom controls, and row selection opens the existing profile drawer/path context.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -32,7 +37,7 @@ tags:
 │ Target route:   /lineage/[treeSlug] (Baseline, < sm render)         │
 │ Target file:    apps/web/components/web/lineage/                     │
 │                  lineage-mobile-list.tsx (new) +                    │
-│                  apps/web/lib/lineage/flattenLineage.ts (new, pure,  │
+│                  apps/web/lib/lineage/flatten-lineage.ts (new, pure,  │
 │                  unit-tested); wired as the < sm branch inside       │
 │                  lineage-tree-canvas.tsx                            │
 └─────────────────────────────────────────────────────────────────────┘
@@ -75,7 +80,7 @@ tags:
 │   - Button (common/button) — each row is a button → drawer.        │
 │                                                                     │
 │ Custom delta (NOT a new primitive — domain composition):            │
-│   - lib/lineage/flattenLineage.ts — PURE TS:                        │
+│   - lib/lineage/flatten-lineage.ts — PURE TS:                        │
 │       flattenLineage(members) → { member, depth }[]                 │
 │     re-derived from BBL's buildFlattenedTree (parent→child map +     │
 │     DFS) — NOT a copy of the JSX. Unit-tested (roots, depth,        │
@@ -105,6 +110,10 @@ tags:
 ## Data shape this component consumes
 
 Consumes the EXISTING canvas member payload (the same list the tree/board modes already render); no new server query or schema. `flattenLineage` takes that member array (each member exposing its id, parent/instructor linkage, name, image, `Rank` with `colorHex`, verified/founder flags, optional school) and returns `{ member, depth }[]` with a computed integer `depth`. No backend change.
+
+SESSION_0339 implementation note: the helper lives at `apps/web/lib/lineage/flatten-lineage.ts` to match
+the repo's existing kebab-case lineage lib filenames while exporting the requested `flattenLineage`
+function.
 
 ## Responsive behavior
 
@@ -140,4 +149,5 @@ Consumes the EXISTING canvas member payload (the same list the tree/board modes 
 - Epic plan: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md) (Slice 2).
 - Port map record: PORTMAP-0003 in [Graphify Component Port Map](../graphify-component-port-map.md).
 - Prior slice: [Lineage Responsive Mode Switch port spec](./lineage-responsive-switch-port-spec.md) (board/tree default).
+- Proof session: [SESSION_0339](../../../../sprints/SESSION_0339.md).
 - BBL prior art (read for behavior only): `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/lineage/MobileLineageList.jsx` (`buildFlattenedTree` + indent/connector idiom).
