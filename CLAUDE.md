@@ -37,7 +37,7 @@ so it does not need re-pasting at bow-in.
 - Run the **full** closing ritual including optional deep items: Reflections, hostile
   close review, evidence table, ADR check, memory sweep, and documenting new components
   in `docs/knowledge/wiki/custom-component-inventory.md`.
-- After git hygiene, refresh Graphify: `GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .`.
+- After git hygiene, refresh Graphify: `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`.
 - Route findings to their canonical ledger via the **finding router** (closing.md §6.7):
   wiring→`wiring-ledger` (WL), drift→`drift-register` (D), SOP miss→`failed-steps-log` (FS),
   unclean close→`incidents`, smoke boundary→`manual-boundary-registry`, decision→ADR.

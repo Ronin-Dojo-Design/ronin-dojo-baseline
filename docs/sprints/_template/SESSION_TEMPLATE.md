@@ -48,9 +48,7 @@ Brian + <agent>-session-NNNN
 
 ## Status
 
-### Status: in-progress
-
-<!-- At bow-out, change to closed-full | closed-partial | closed-blocked per closing.md. -->
+Single source of truth is the frontmatter `status:` field (`in-progress` → `closed` at bow-out, per closing.md). Do not restate the value here.
 
 ## Bow-in
 

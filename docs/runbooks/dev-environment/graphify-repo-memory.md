@@ -4,9 +4,9 @@ slug: graphify-repo-memory
 type: runbook
 status: active
 created: 2026-05-06
-updated: 2026-05-14
+updated: 2026-06-04
 author: Brian + Codex
-last_agent: codex-session-0166
+last_agent: claude-session-0342
 pairs_with:
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
@@ -78,7 +78,9 @@ graphify watch .                        # Auto-rebuild on file changes (long-run
 graphify export --format html           # Export to HTML (also: json, graphml)
 ```
 
-Use `GRAPHIFY_VIZ_NODE_LIMIT=6000` env var if the graph exceeds the default 5000-node HTML viz limit.
+Use `GRAPHIFY_VIZ_NODE_LIMIT=10000` env var if the graph exceeds the default 5000-node HTML viz limit.
+
+**`update` refreshes data, not the dashboard viz.** `graphify update .` rebuilds the graph data in `.graphify/` (used by `query` / `explain` / `stats`). The admin dashboard's `/graphify.html` link is a *separate* artifact produced by `graphify export --format html` — `update` never touches it. Refresh it with `bun run graphify:viz` (= `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify export --format html --out apps/web/public/graphify.html`). That file is gitignored (a ~5MB map of the whole codebase — kept off the public web) and the dashboard link is gated to dev, so it is a local-only navigation aid. SESSION_0342 found it a month stale precisely because `update` ≠ `export`.
 
 ## Runbook
 
@@ -111,7 +113,7 @@ graphify update .
 If the graph exceeds the default HTML viz node limit (5000), set the env var:
 
 ```bash
-GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
+GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .
 ```
 
 If Graphify is not installed, do not block the session. Use the wiki index, direct directory listings, and exact-file reads. Reserve repo-wide text search as the fallback after graph/wiki paths fail.

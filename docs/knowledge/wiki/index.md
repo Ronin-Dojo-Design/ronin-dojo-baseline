@@ -439,6 +439,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0339](../../sprints/SESSION_0339.md) | session--implement | closed — petey-plan-0337 Slice 2 mobile lineage list: pure cycle-safe `flattenLineage`, `< sm` `LineageMobileList` branch, capped 0/16/32/48px indentation, no SVG/zoom branch at 390px, and row selection opens the existing profile drawer/path context; PORTMAP-0003 proven |
 | [SESSION_0340](../../sprints/SESSION_0340.md) | session--open | closed — petey-plan-0337 Slice 3 carousel rail extension: existing Embla `Carousel` gained optional dense-rail affordances (`emptyState`, labelled region, edge fades, desktop controls, slide width variants, ResizeObserver `reInit`) with all four consumers preserved; PORTMAP-0004 proven by Playwright dense-rail geometry and clean route smoke |
 | [SESSION_0341](../../sprints/SESSION_0341.md) | session--open | closed — petey-plan-0337 Slice 4 generation rails in connector-free zones: honor strip and wide board child groups now compose the shared Carousel rail; Playwright proof green at 390/768/1280; PORTMAP-0005 proven; test-fail-fix ledger created for repo-wide test clusters |
+| [SESSION_0342](../../sprints/SESSION_0342.md) | session--open | closed — test-suite stability gate: `test` script pinned to `--parallel=1` (deterministic 418 pass / 0 fail / ~67s, proven 4×); two-headed root cause (mock-leak vs Postgres over-subscription); TFF-001..005 resolved; SOP §2 + dev-env reconciled; ledger↔SOP cross-links wired; BBL-launch-framed e2e test-gap advisory + Fallow note; stale all-brands launch doc given a BBL-first banner |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -514,7 +515,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips (SESSION_0304) |
-| [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers and fix status (SESSION_0341) |
+| [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
 ## Code files (annotated)
 

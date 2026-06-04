@@ -4,17 +4,19 @@ slug: product-launch-all-brands
 type: file
 status: active
 created: 2026-04-28
-updated: 2026-04-29
+updated: 2026-06-04
 author: Brian + Petey
-last_agent: codex-session-0025
+last_agent: claude-session-0342
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
   - docs/sprints/SESSION_0020.md
+  - docs/sprints/SESSION_0342.md
   - docs/architecture/program-plan.md
 pairs_with:
   - docs/architecture/program-plan.md
-  - docs/architecture/SCHEMA_NEEDS_MANIFEST.md
+  - docs/runbooks/deploy/bbl-production-runbook.md
+  - docs/product/black-belt-legacy/GAP_MATRIX.md
   - docs/protocols/WORKFLOW_5.0.md
 tags:
   - launch
@@ -24,6 +26,40 @@ tags:
 ---
 
 # 2026-05-18 Production Launch — All Brands
+
+> ## ⚠️ CURRENT STATUS (2026-06-04) — superseded by a BBL-first cutover
+>
+> **The "all brands live May 18" plan below was NOT executed as written and is historical.** May 18 has
+> passed; brand work since then has focused on the lineage surface (responsive + carousel slices,
+> SESSION_0331–0341). This banner is the live framing; the sections below are preserved for history.
+>
+> **Current primary focus: launch `blackbeltlegacy.com` (BBL).** Cut over from the legacy WordPress site to
+> the BBL brand on the existing Vercel app. Target is **ASAP — soft aim this weekend (Fri/Sat/Sun), no hard
+> date — explicitly "not rushed or sloppy."** Safe + secure over fast.
+>
+> **Staging-prod strategy:** `baselinemartialarts.com` is the live "test-production" surface for BBL
+> behavior (phone checks + a few invited live users exercising registration). Local UI + Playwright remain
+> the dev-side gate. BBL itself goes live only when the readiness layers below are green.
+>
+> **Three readiness layers (each has a canonical doc — do not re-derive):**
+>
+> | Layer | Canonical doc | State (2026-06-04) |
+> | --- | --- | --- |
+> | Deploy / DNS cutover | [`bbl-production-runbook.md`](../../runbooks/deploy/bbl-production-runbook.md) | Solid; **1 blocking item** — confirm `blackbeltlegacy.com` DNS source of truth before any DNS change. |
+> | Feature readiness | [`GAP_MATRIX.md`](../../product/black-belt-legacy/GAP_MATRIX.md) + PRD/STORIES | 6 built / 17 partial / 6 not-started / 3 infra-only (of 32 stories). |
+> | Test / verification readiness | [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md) + e2e gap list | Unit gate **green** (SESSION_0342). Launch-critical e2e gaps still unwritten — see below. |
+>
+> **Launch-critical e2e gaps (none exist yet; gate a safe BBL cutover) — staged, not built (SESSION_0342):**
+>
+> 1. Registration / sign-up flow (member front door).
+> 2. Stripe checkout / purchase (test mode) → success/cancel pages — money path.
+> 3. Member join → tier → entitlement lifecycle (user-facing, not just admin).
+> 4. Authenticated claim flow (GAP_MATRIX #1).
+> 5. Role-scoped editor access enforcement (BRANCH_EDITOR / NODE_EDITOR — security-adjacent).
+>
+> **Next planning step:** a dedicated BBL launch-readiness replan session that sequences the GAP_MATRIX
+> partials + the e2e gaps + the DNS-confirmation blocker into a cutover checklist. Lineage Slice 5
+> (PORTMAP-0006) continues **within** this BBL-launch frame, not as a parallel track.
 
 ## Scope change from program-plan.md
 

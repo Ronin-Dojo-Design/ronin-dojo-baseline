@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-05-17
-last_agent: codex-session-0178
+updated: 2026-06-04
+last_agent: claude-session-0342
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -86,6 +86,22 @@ The Giddy + Doug close review that challenges plan sanity, Dirstarter alignment,
 ### ADR
 
 Architecture Decision Record. An ADR records an accepted, proposed, rejected, or superseded architecture choice that should outlive one session.
+
+### Bounded parallelism (test runner)
+
+The full Bun test suite runs with `--parallel=1` (`bun run test`), not the unbounded default. `--parallel` gives per-file process isolation (required to prevent `mock.module()` leakage), but its default worker count (CPU cores) over-subscribes the single Postgres.app test database at scale. `--parallel=1` keeps the isolation while running files sequentially — the deterministic green gate (SESSION_0342). See `sop-test-writing.md` §2.
+
+### Mock-module leakage
+
+The failure mode where `mock.module()` calls in one test file bleed into another's module resolution (symptom: `db.someModel is not a function`) because they share a process. Avoided by the parallel/isolate code path; reintroduced by running the full suite as bare `bun test` (no `--parallel`). The reason `--parallel` is mandatory.
+
+### Test Fail Fix Ledger
+
+`docs/knowledge/wiki/test-fail-fix-ledger.md` — the canonical pointer doc for expensive/recurring test-failure clusters (stable IDs `TFF-NNN`, focused repro commands, fix status). The close-router destination for test-stability findings. Read it (and `sop-test-writing.md` §2) before re-triaging a red suite.
+
+### Fallow vs Farrow
+
+**Fallow** (`fallow-rs/fallow`) is the Rust-native TS/JS codebase-intelligence scanner (unused code, duplication, circular deps, complexity, architecture boundaries; ships an MCP server + Agent Skill). Invoked via `npx fallow`, `npm i -D fallow`, or `cargo install fallow-cli`. **Farrow** is an unrelated TypeScript web framework. `npx farrow` is **not** the code-cleanliness tool — do not conflate them.
 
 If an ADR touches a Dirstarter baseline layer, it must include compact proof links to the relevant live `https://dirstarter.com/docs` pages.
 

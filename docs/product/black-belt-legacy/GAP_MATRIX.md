@@ -4,13 +4,21 @@ slug: bbl-gap-matrix
 type: report
 status: active
 created: 2026-05-27
-updated: 2026-05-28
-last_agent: codex-session-0278
+updated: 2026-06-04
+last_agent: claude-session-0342
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
+  - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
+  - docs/runbooks/deploy/bbl-production-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
+tags:
+  - bbl
+  - blackbeltlegacy
+  - launch
+  - cutover
+  - gap-matrix
 ---
 
 # Black Belt Legacy — Implementation Gap Matrix

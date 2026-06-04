@@ -6,7 +6,7 @@
     "dev": "next dev --turbo",
     "start": "next start",
     "build": "next build",
-    "test": "bun test --parallel --path-ignore-patterns='e2e/**'",
+    "test": "bun test --parallel=1 --path-ignore-patterns='e2e/**'",
     "lint": "bun biome check --write .",
     "format": "bun biome format --write .",
     "typecheck": "next typegen && tsc --noEmit --pretty false",

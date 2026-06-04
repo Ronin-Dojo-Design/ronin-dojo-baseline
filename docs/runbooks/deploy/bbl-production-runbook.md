@@ -4,9 +4,11 @@ slug: bbl-production-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-05-31
-last_agent: codex-session-0314
+updated: 2026-06-04
+last_agent: claude-session-0342
 pairs_with:
+  - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
+  - docs/product/black-belt-legacy/GAP_MATRIX.md
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/vercel-deploy.md
   - docs/runbooks/deployment.md

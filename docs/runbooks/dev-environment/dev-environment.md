@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-01
-last_agent: claude-session-0319
+updated: 2026-06-04
+last_agent: claude-session-0342
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -214,8 +214,8 @@ All commands run from `apps/web/` unless noted otherwise.
 | **Typecheck** | `bun run typecheck` | Runs `next typegen` then `tsc --noEmit`. Can take 2–4 min on full project. |
 | **Lint** | `bun run lint` | Biome check + auto-fix (`biome check --write .`), **scoped to `apps/web`** — this is the gate. ⚠️ Do NOT use the *repo-root* `bun run lint` (`pnpm -r lint`): it fails on `packages/api-client` (`sh: biome: command not found` PATH gap, accepted-risk) and is **not** a gate. Use changed-file Biome + typecheck. |
 | **Format** | `bun run format` | Biome format + auto-fix. |
-| **Test (all)** | `bun test` | Parallel, excludes e2e. |
-| **Test (file)** | `bun test ./path/to/file` | Single file or directory. |
+| **Test (all)** | `bun run test` | = `bun test --parallel=1 --path-ignore-patterns='e2e/**'`. **Deterministic gate** (~67s). Do NOT drop `--parallel` (mock-leak ~63 fails) or raise the worker count (Postgres over-subscription → flake). See `sop-test-writing.md` §2 + `test-fail-fix-ledger.md`. |
+| **Test (file)** | `bun test ./path/to/file` | Single file or directory (isolation not needed). |
 | **Test (e2e)** | `bun run test:e2e` | Playwright — requires dev server running. |
 | **DB generate** | `bun run db:generate` | Regenerate Prisma client after schema changes. |
 | **DB migrate** | `bun run db:migrate dev` | Create + apply migration (dev only). |
@@ -234,7 +234,7 @@ Run in this order after any code change before declaring done:
 cd apps/web
 bun run typecheck      # 1. types
 bun run lint           # 2. lint
-bun test               # 3. unit tests
+bun run test           # 3. unit tests (deterministic --parallel=1 gate)
 ```
 
 If the task touched docs:

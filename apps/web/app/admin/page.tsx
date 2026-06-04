@@ -53,21 +53,24 @@ export default withAdminPage(() => {
           </Suspense>
         </div>
 
-        <Card className="p-4">
-          <Link
-            href="/graphify.html"
-            target="_blank"
-            className="flex items-center gap-3 no-underline"
-          >
-            <NetworkIcon className="size-5 text-muted-foreground" />
-            <div>
-              <p className="font-medium text-sm">Repo Graph</p>
-              <p className="text-xs text-muted-foreground">
-                Interactive Graphify visualization of the codebase
-              </p>
-            </div>
-          </Link>
-        </Card>
+        {/* Local-only: /graphify.html is a gitignored 5MB codebase map (regenerate with `bun run graphify:viz`). Never deployed — gating to dev avoids a 404 in prod and keeps the codebase map off the public web. */}
+        {process.env.NODE_ENV === "development" && (
+          <Card className="p-4">
+            <Link
+              href="/graphify.html"
+              target="_blank"
+              className="flex items-center gap-3 no-underline"
+            >
+              <NetworkIcon className="size-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-sm">Repo Graph</p>
+                <p className="text-xs text-muted-foreground">
+                  Interactive Graphify visualization of the codebase (local dev)
+                </p>
+              </div>
+            </Link>
+          </Card>
+        )}
       </div>
     </Wrapper>
   )

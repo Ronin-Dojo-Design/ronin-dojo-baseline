@@ -5,9 +5,11 @@ type: reference
 status: active
 created: 2026-06-04
 updated: 2026-06-04
-last_agent: codex-session-0341
+last_agent: claude-session-0342
 pairs_with:
   - docs/sprints/SESSION_0341.md
+  - docs/sprints/SESSION_0342.md
+  - docs/runbooks/sops/sop-test-writing.md
   - docs/knowledge/wiki/wiring-ledger.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -27,6 +29,12 @@ This ledger complements the [Wiring Ledger](wiring-ledger.md):
 - `test-fail-fix-ledger.md` tracks failing test clusters, smallest useful reproduction commands, and fix
   status.
 
+> **Read this first when the suite is red:** the runner mechanics that explain most full-suite failures
+> (mock-module leakage vs. Postgres over-subscription) live in
+> [`sop-test-writing.md`](../../runbooks/sops/sop-test-writing.md) **§2 (runner)** and the test catalog in
+> **§12 (inventory)**. SESSION_0341 clustered 21 failures here *without* consulting §2 and re-derived the
+> runner behavior from scratch; SESSION_0342 found the answer was already documented. Start from §2.
+
 ## How To Use
 
 - Add a stable ID (`TFF-001`, `TFF-002`, ...).
@@ -35,39 +43,68 @@ This ledger complements the [Wiring Ledger](wiring-ledger.md):
 - Link the fixing session or commit when resolved.
 - Keep status terse: `open`, `investigating`, `fixed`, `accepted-risk`.
 
-Focused commands assume this package script shape from `apps/web/package.json`:
+Single-file reproduction needs no `--parallel` (a lone file is already isolated):
 
 ```bash
-bun test --parallel --path-ignore-patterns='e2e/**' <test-file>
+cd apps/web && bun test <test-file>
 ```
+
+Full-suite gate is `bun run test` (= `bun test --parallel=1 --path-ignore-patterns='e2e/**'`). Do **not**
+reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--parallel` (over-subscription)
+— see `sop-test-writing.md` §2.
 
 ## Active Clusters
 
-| ID | Last seen | Cluster | Representative files | Focused command | Suspected root | Status | Next action |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TFF-001 | SESSION_0341, `bun run test`: 309 pass / 21 fail / 1 error | DB/integration `beforeEach` / `afterEach` hook timeouts across unrelated domains | `server/web/course-enrollment/actions.safe-action.test.ts`, `server/web/lineage/queries.test.ts`, `server/web/lead/actions.test.ts`, `server/web/attendance/actions.test.ts`, `server/web/organization/org-management.safe-action.test.ts`, `server/web/schedule/materialize.concurrency.test.ts` | `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**' server/web/course-enrollment/actions.safe-action.test.ts` | Shared DB fixture lifecycle, cleanup ordering, or parallel connection contention. Not caused by SESSION_0341 carousel files. | open | Reproduce one focused timeout, then compare parallel vs isolated behavior and identify shared setup/cleanup helper. |
-| TFF-002 | SESSION_0341, `bun run test`: 1 error plus cleanup traces | Fixture cleanup runs after failed setup and dereferences missing IDs or violates FK order | `server/web/course-enrollment/actions.safe-action.test.ts`, `server/web/courses/queries.integration.test.ts`, `server/admin/tools/actions.safe-action.test.ts`, `app/api/stripe/webhooks/route.test.ts` | `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**' server/web/courses/queries.integration.test.ts` | Cleanup assumes fully-created fixtures; failed setup leaves undefined IDs or still-linked FK rows. | open | Add defensive cleanup only after locating the owning fixture helper; do not mask real setup failure. |
-| TFF-003 | SESSION_0341, `bun run test`: production dev-login test timed out | Dev-login production-mode route test timeout | `app/api/auth/dev-login/route.test.ts` | `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**' app/api/auth/dev-login/route.test.ts` | Unknown; likely environment branch or route setup hang. | open | Reproduce focused, then inspect env mocking and route handler import side effects. |
-| TFF-004 | SESSION_0341, `bun run test`: billing audit timeout + deterministic expectation mismatch | Billing drift audit both times out and reports an expectation mismatch in deterministic issue codes | `server/web/billing/drift-audit.test.ts` | `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**' server/web/billing/drift-audit.test.ts` | Mix of DB fixture slowness plus possible changed issue-code ordering/fixture data. | open | Separate timeout from expectation by running the file focused, then isolate the deterministic code assertion. |
-| TFF-005 | SESSION_0341, `bun run test`: lineage server tests timed out | Lineage server tests timed out outside the touched UI components | `server/web/lineage/node-profile-actions.test.ts`, `server/web/lineage/queries.test.ts`, `server/admin/lineage/claim-review-actions.test.ts` | `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**' server/web/lineage/queries.test.ts` | Likely same DB lifecycle class as TFF-001, but tracked separately because Slice 5 will touch lineage behavior. | open | Reproduce before PORTMAP-0006 so new connector work is not evaluated against an ambiguous lineage test baseline. |
+None. TFF-001..005 are resolved — see below.
 
 ## Resolved Clusters
 
-None yet.
+**TFF-001..005 — all one root cause: full-suite runner concurrency, not test logic.** Resolved by
+SESSION_0342.
+
+| ID | Cluster | Verdict |
+| --- | --- | --- |
+| TFF-001 | DB/integration hook timeouts across domains | Concurrency artifact. Postgres over-subscription under the default unbounded `--parallel` (8 workers) at 75-file scale. |
+| TFF-002 | Cleanup-after-failed-setup FK / undefined-ID traces | Same. The "errors" were teardown running after a hook timed out mid-setup — no real FK bug. |
+| TFF-003 | Dev-login production-mode route timeout | Same. Passes isolated. |
+| TFF-004 | Billing drift-audit timeout + "deterministic mismatch" | Same. The mismatch was a timeout-truncated assertion, **not** a real issue-code bug; passes 3 pass / 0 fail isolated. |
+| TFF-005 | Lineage server tests timed out | Same DB-lifecycle class. Passes isolated. Lineage logic is sound for PORTMAP-0006. |
+
+**Diagnosis (SESSION_0342):** every representative file passes in its own process
+(`bun test <file>` — course-enrollment 10/0, drift-audit 3/0, lineage queries 33/0, dev-login 3/0, stripe
+webhooks 10/0, courses-integration 11/0, node-profile-actions 5/0). The failures only appear in the full
+suite, and the trigger is the runner config, not the fixtures:
+
+- Bare `bun test` (no `--parallel`) → shared module registry → ~63 `mock.module()` leak failures (`db.x is
+  not a function`). Not the gate.
+- Unbounded `--parallel` (default 8 workers) → over-subscribes one Postgres.app instance → the 21
+  hook-timeout / FK-race failures above.
+- `--parallel=2` → ~30s but flakes ~1/3 on `checkout-actions::createProgramEnrollmentCheckout`
+  (two concurrent files contend on the shared-`brand` `StripeCustomer` lookup).
+
+**Fix:** `apps/web/package.json` `test` script pinned to `--parallel=1` (per-file isolation + sequential).
+Proven green 4× consecutively: **418 pass / 0 fail across 75 files, ~67s**. Mechanics now documented in
+[`sop-test-writing.md`](../../runbooks/sops/sop-test-writing.md) §2. Future speed-up path (per-worker DB
+isolation) noted there too.
 
 ## Relationships
 
+- [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) — **§2 (runner) explains most
+  full-suite failures; §12 is the test inventory. Read first.**
 - [SESSION_0341](../../sprints/SESSION_0341.md) — created this ledger from the first 21-failure clustered
-  full-suite run.
+  full-suite run (without consulting SOP §2).
+- [SESSION_0342](../../sprints/SESSION_0342.md) — root-caused and resolved TFF-001..005 (`--parallel=1`).
 - [Wiring Ledger](wiring-ledger.md) — companion ledger for product wiring and handroll gaps.
-- [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) — test-authoring guidance.
 
 ## Sources
 
 - SESSION_0341 close verification: `bun run test` from `apps/web` ended with 309 pass, 21 fail, 1 error
   across 75 files in 110.44s.
+- SESSION_0342 fix verification: `bun test --parallel=1 --path-ignore-patterns='e2e/**'` ended with
+  418 pass / 0 fail across 75 files in ~67s, reproduced green 4× consecutively.
 
 ## Open Questions
 
-- Should this ledger become a close-router destination in `docs/rituals/closing.md`, or stay a lightweight
-  wiki reference until it proves useful?
+- ~~Should this ledger become a close-router destination in `docs/rituals/closing.md`?~~ **Yes (decided
+  SESSION_0342).** Test-stability findings route here; this ledger should be the canonical pointer the
+  next agent reads before re-triaging a red suite.
