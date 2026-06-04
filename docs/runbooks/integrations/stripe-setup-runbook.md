@@ -4,10 +4,11 @@ slug: stripe-setup-runbook
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-05-14
-last_agent: codex-session-0166
+updated: 2026-06-04
+last_agent: codex-session-0344
 pairs_with:
   - docs/sprints/SESSION_0098.md
+  - docs/sprints/SESSION_0344.md
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -15,6 +16,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/runbooks/mcp-usage-runbook.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - stripe
   - payments
@@ -171,6 +173,23 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 Restart the dev server after changing `.env`.
+
+## Local Playwright Checkout Proof
+
+SESSION_0344 added an explicit local-only Stripe service mock for browser e2e proof:
+
+```bash
+cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+E2E_STRIPE_MOCK=1 bunx playwright test e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium
+```
+
+This mock is only enabled when `E2E_STRIPE_MOCK=1` and the app is not production. It returns a Checkout
+success URL for server-created Checkout Sessions so Playwright can prove the app-owned success shell, then
+the Bun bridge synthesizes webhook events against the real `/api/stripe/webhooks` route with mocked Stripe
+line items and subscription retrieval.
+
+Use this proof before Stripe CLI or Baseline proxy rehearsals. It does **not** replace Stripe CLI signing
+secret verification or Dashboard webhook delivery checks.
 
 ## Dashboard Setup for Staging or Production
 

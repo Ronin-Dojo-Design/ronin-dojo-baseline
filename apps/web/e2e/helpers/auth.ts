@@ -88,6 +88,10 @@ export async function createAuthenticatedUser(page: Page, options?: AuthUserOpti
   return authUser
 }
 
+export function createTestUser(options?: AuthUserOptions) {
+  return runAuthDbCommand<AuthenticatedUser>("create-user", options)
+}
+
 export async function createAuthenticatedSession(page: Page, userId: string) {
   const session = runAuthDbCommand<AuthSession>("create-session", { userId })
   await setSessionCookie(page, session.token)

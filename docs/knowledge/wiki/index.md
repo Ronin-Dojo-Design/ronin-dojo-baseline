@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-04
 author: Brian + Copilot
-last_agent: codex-session-0343
+last_agent: codex-session-0344
 ---
 
 # LLM Wiki Index
@@ -80,7 +80,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Martial Arts Stories](../../product/baseline-martial-arts/STORIES.md) | stories | active |
 | [Black Belt Legacy PRD](../../product/black-belt-legacy/PRD.md) | prd | active |
 | [Black Belt Legacy Stories](../../product/black-belt-legacy/STORIES.md) | stories | active |
-| [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0343 cross-layer BBL launch sequencer; DNS blocker resolved, registration e2e green, checkout/entitlement next |
+| [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0344 local lineage membership checkout/entitlement proof green; Baseline live proxy rehearsal next |
 
 ## Architecture
 
@@ -442,6 +442,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0341](../../sprints/SESSION_0341.md) | session--open | closed — petey-plan-0337 Slice 4 generation rails in connector-free zones: honor strip and wide board child groups now compose the shared Carousel rail; Playwright proof green at 390/768/1280; PORTMAP-0005 proven; test-fail-fix ledger created for repo-wide test clusters |
 | [SESSION_0342](../../sprints/SESSION_0342.md) | session--open | closed — test-suite stability gate: `test` script pinned to `--parallel=1` (deterministic 418 pass / 0 fail / ~67s, proven 4×); two-headed root cause (mock-leak vs Postgres over-subscription); TFF-001..005 resolved; SOP §2 + dev-env reconciled; ledger↔SOP cross-links wired; BBL-launch-framed e2e test-gap advisory + Fallow note; stale all-brands launch doc given a BBL-first banner |
 | [SESSION_0343](../../sprints/SESSION_0343.md) | session--open | closed — BBL launch-readiness frame: cutover checklist staged, DNS source of truth resolved (Bluehost authority + Flywheel/Fastly WP origin), registration e2e gap #1 green, Better Auth magic-link identity-shell bug fixed, lineage `canvas-model`/`connector-geometry` unit wedge landed, Slice 5 sequenced behind launch gates |
+| [SESSION_0344](../../sprints/SESSION_0344.md) | session--open | closed — BBL lineage membership checkout gate: `/lineage/join` paid tier section + success/cancel shells, trusted `PricingPlan`→`EntitlementGrant` checkout action, explicit local `E2E_STRIPE_MOCK=1` harness, Playwright+Bun webhook proof for purchase grant, subscription grant, and subscription revoke; no `Membership.status` or `ProgramEnrollment` mutation |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

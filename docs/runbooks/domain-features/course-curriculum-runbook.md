@@ -4,8 +4,8 @@ slug: course-curriculum-runbook
 type: runbook
 status: active
 created: 2026-05-13
-updated: 2026-05-13
-last_agent: codex-session-0157
+updated: 2026-06-04
+last_agent: codex-session-0344
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/sop-e2e-user-lifecycle.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0156.md
   - docs/sprints/SESSION_0157.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - course
   - curriculum
@@ -301,9 +302,14 @@ This is a simpler gate than the full entitlement key system (`checkEntitlement()
 
 See [sop-data-and-wiring-flows.md §13](../sops/sop-data-and-wiring-flows.md#13-payment--stripe-checkout-flow-session_0146) for the Stripe checkout → enrollment creation path. Currently:
 
-1. User purchases membership via Stripe → `checkout.session.completed` webhook → Membership created
-2. User browses published courses → enrollment gate checks active membership
-3. User enrolls → CourseEnrollment created
+1. User purchases a program-scoped plan via Stripe → `checkout.session.completed` webhook →
+   entitlement granted and `ProgramEnrollment` created for that program.
+2. User browses published courses → enrollment gate checks active `Membership` in the course organization.
+3. User enrolls → `CourseEnrollment` created by the course-enrollment action.
+
+Stripe does not create or transition `Membership.status`. Per
+[`ADR 0019`](../../architecture/decisions/0019-membership-lifecycle-ownership.md), Membership is
+community/admin state and paid access is represented by `UserEntitlement`.
 
 ### How this connects to invites
 

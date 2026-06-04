@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-05-27
 updated: 2026-06-04
-last_agent: codex-session-0343
+last_agent: codex-session-0344
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -15,6 +15,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0343.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - bbl
   - blackbeltlegacy
@@ -146,13 +147,17 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 ### Highest-value next tasks (Petey recommendation)
 
-SESSION_0343 launch-readiness note: the cross-layer e2e gate order now lives in
-[`CUTOVER_CHECKLIST.md`](CUTOVER_CHECKLIST.md). Registration e2e gap #1 is green; the next shared-infra
-launch proof should cover Stripe checkout + tier/entitlement before the BBL-specific claim smoke below.
+SESSION_0344 launch-readiness note: the cross-layer e2e gate order now lives in
+[`CUTOVER_CHECKLIST.md`](CUTOVER_CHECKLIST.md). Registration e2e gap #1 is green. The local Stripe
+checkout + lineage tier/entitlement proof is now green via
+`E2E_STRIPE_MOCK=1 bunx playwright test e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium`;
+Baseline live proxy rehearsal remains before cutover.
 
-1. **Authenticated claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim. Also smoke `/lineage/join` with a signed-in user to prove the lead + draft listing + `LineageClaimRequest` bridge.
-2. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
-3. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
-4. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).
-5. **BBL-RANK-004** — Disputed status enum. Foundational for rank trust features across the board.
-6. **Public profile page** (BBL-PROFILE-001) — Dedicated `/people/[slug]` route. High user visibility.
+1. **Baseline live checkout proxy** — Run the SESSION_0344 lineage membership tier shape on Baseline with a
+   test-mode Stripe card and clean the shared production fixture rows afterward.
+2. **Authenticated claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim. Also smoke `/lineage/join` with a signed-in user to prove the lead + draft listing + `LineageClaimRequest` bridge.
+3. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
+4. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
+5. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).
+6. **BBL-RANK-004** — Disputed status enum. Foundational for rank trust features across the board.
+7. **Public profile page** (BBL-PROFILE-001) — Dedicated `/people/[slug]` route. High user visibility.

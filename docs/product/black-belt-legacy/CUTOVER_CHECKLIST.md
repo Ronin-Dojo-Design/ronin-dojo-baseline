@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-06-04
 updated: 2026-06-04
-last_agent: codex-session-0343
+last_agent: codex-session-0344
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -15,6 +15,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0343.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - bbl
   - blackbeltlegacy
@@ -59,14 +60,13 @@ editor enforcement (BBL-EDITOR-003/004, security-adjacent). Full list + ranking 
 
 ## Layer 3 — Tests / verification
 
-Unit gate green + deterministic (`--parallel=1`, SESSION_0342). Launch-critical e2e gaps **ranked** (none
-built except #1, this session):
+Unit gate green + deterministic (`--parallel=1`, SESSION_0342). Launch-critical e2e gaps **ranked**:
 
 | Rank | e2e gap | Why | Baseline proxy? |
 | --- | --- | --- | --- |
 | 1 | **Registration / sign-up** | Member front door; every journey depends on it. | ✅ yes — exercise on Baseline |
-| 2 | **Stripe checkout (test mode)** → success/cancel | Money path. | ✅ yes — **live + works in prod on Baseline** (operator-confirmed) |
-| 3 | Member join → tier → entitlement lifecycle | User-facing entitlement gating. | ✅ yes — same webhook (ADR 0012) |
+| 2 | **Stripe checkout (local test-mode harness)** → success/cancel | Money path. | ✅ local proof green in SESSION_0344; Baseline proxy rehearsal still required before cutover |
+| 3 | Member join → tier → entitlement lifecycle | User-facing entitlement gating. | ✅ local proof green in SESSION_0344; same webhook (ADR 0012) |
 | 4 | Authenticated claim flow | GAP_MATRIX #1; BBL-PROFILE-002. | partial — claim is BBL-data, journey provable on Baseline |
 | 5 | Role-scoped editor access (BRANCH/NODE_EDITOR) | Security-adjacent; BBL-EDITOR-003/004. | ✅ yes — same RBAC |
 
@@ -84,15 +84,21 @@ Vercel deployment, auth stack, brand-scoped DB, Stripe webhook, and Resend integ
    `bunx playwright test e2e/auth/registration.spec.ts --project=chromium`. This proves the local
    `/auth/login` magic-link registration path creates a Better Auth session plus Passport and
    DirectoryProfile shells, then lands on `/me`.
-2. **Baseline live registration proxy:** open `https://baselinemartialarts.com/auth/login`, submit a unique
+2. **Local BBL paid-path gate:** run the lineage membership checkout proof from `apps/web`:
+   `E2E_STRIPE_MOCK=1 bunx playwright test e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium`.
+   This seeds disposable Baseline-branded lineage membership `PricingPlan` rows, proves `/lineage/join`
+   cancel and success shells, drives the real Stripe webhook route with mocked Stripe line items/subscription
+   retrieval, grants/revokes `UserEntitlement`, and asserts no `Membership.status` or `ProgramEnrollment`
+   mutation.
+3. **Baseline live registration proxy:** open `https://baselinemartialarts.com/auth/login`, submit a unique
    proxy-test email such as `bbl-proxy-YYYYMMDD-<initials>@...`, complete the magic link from the controlled
    inbox, and confirm `/me` renders **My Passport**. Record the account email and timestamp in the cutover
    evidence packet.
-3. **Baseline live checkout proxy:** run the already-proven Baseline purchase path with a test-mode Stripe
-   card, confirm success/cancel behavior as applicable, and verify the webhook grants the expected
-   user-facing entitlement. This covers BBL's money path only because ADR 0012 routes entitlement grants
-   through the shared webhook.
-4. **Cleanup expectation:** proxy-test accounts and any related Stripe customer/checkout artifacts live in
+4. **Baseline live checkout proxy:** run the same lineage membership tier shape on Baseline with a test-mode
+   Stripe card, confirm success/cancel behavior as applicable, and verify the webhook grants the expected
+   user-facing entitlement. This covers BBL's money path because ADR 0012 routes entitlement grants through
+   the shared webhook.
+5. **Cleanup expectation:** proxy-test accounts and any related Stripe customer/checkout artifacts live in
    the shared production DB. Remove or archive them after proof capture; do not reuse a shared `brand`
    `StripeCustomer` row for repeated proxy runs.
 

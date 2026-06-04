@@ -4,8 +4,8 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-05-16
-last_agent: claude-session-0179
+updated: 2026-06-04
+last_agent: codex-session-0344
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -15,6 +15,7 @@ pairs_with:
   - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - lineage
   - listings
@@ -40,7 +41,10 @@ This runbook exists so that:
 - The lineage tree v1 schema (landed in `SESSION_0178`) becomes a revenue surface alongside courses, programs, and school listings — not in place of them.
 - Future agents do not confuse `Tool` / `Listing` / `LineageNode` / `LineageTree` / `LineageClaimRequest` substrates.
 
-> This runbook is strategy + flow + monetization. It does **not** ship code. Implementation lands in later sessions on top of the existing `Tool` submission paths (`/submit`, `createStripeCheckout`, admin review) and the `LineageClaimRequest` model added in SESSION_0178.
+> This runbook is strategy + flow + monetization. SESSION_0344 shipped the first local paid lineage
+> membership proof on top of `PricingPlan`/`EntitlementGrant`/`UserEntitlement`; broader listing placement
+> and admin review behavior still lands in later sessions on top of the existing listing and
+> `LineageClaimRequest` surfaces.
 
 ---
 
@@ -53,11 +57,11 @@ Internal substrate (genealogy):  LineageNode + LineageRelationship + LineageTree
                                  + LineageTreeMember + LineageVisualGroup
                                  + LineageClaimRequest + LineageClaimEvidence
                                  + LineageTreeAccess
-Internal substrate (monetization): Tool / Listing tier mechanics
-                                   + createStripeCheckout
+Internal substrate (monetization): PricingPlan + EntitlementGrant + UserEntitlement
+                                   + Stripe Checkout Sessions
                                    + Stripe webhook
+                                   + Tool / Listing tier mechanics where public placement is needed
                                    + admin review queue
-                                   + entitlement/subscription wiring
 Public language:                  Lineage Listing / Lineage Tree Listing /
                                   Verified Lineage / Featured Lineage
 Do not rename LineageNode.        Do not rename Tool.
@@ -69,6 +73,19 @@ Why:
 - Dirstarter already provides submission UX, claim UX, admin review UX, Stripe Checkout Sessions, webhook tier upgrades, and ad/featured placement plumbing.
 - The lineage v1 schema (SESSION_0178) already provides `LineageClaimRequest` + `LineageClaimEvidence` + `LineageTreeAccess` first-class. Those are the natural peers of Tool's claim/admin/access surface.
 - Brian explicitly retains `Tool` as a "what the site is built on" portfolio surface; we are not deleting or renaming it.
+
+### SESSION_0344 first paid slice
+
+The first implemented lineage membership proof keeps `/lineage/join` as the BBL entry page. The intake/claim
+form remains separate from paid access, and a paid lineage membership section on that same page starts a
+DB-derived Checkout Session for active `PricingPlan` rows marked with:
+
+```json
+{ "surface": "lineage_membership" }
+```
+
+Webhook fulfillment grants or revokes `UserEntitlement` through `EntitlementGrant`. It does not create
+`ProgramEnrollment` and does not mutate `Membership.status` (see ADR 0019).
 
 ### Pairing with `baseline-listings-runbook.md`
 
@@ -108,14 +125,16 @@ Tool stays exactly where it is: showcase, portfolio, and substrate.
 
 ### Where the monetization columns live
 
-Two implementation options exist; pick at the SESSION that ships the first paid lineage tier (out of scope for this runbook):
+The first paid access slice uses `PricingPlan` metadata plus entitlement grants. Broader lineage listing
+placement still has two implementation options; pick at the SESSION that ships public paid placement:
 
 | Option | Shape | Pros | Cons |
 | --- | --- | --- | --- |
 | A. Native | Add `tier`, `tierExpiresAt`, `featuredUntil`, `verifiedAt`, `stripeSubscriptionId`, `claimStatus` to `LineageNode` and `LineageTree` directly. | One source of truth per node/tree. Cheaper join cost. Matches existing `LineageClaimRequest` peer pattern. | Adds Stripe coupling into the lineage model. |
 | B. Bridge | Add an optional `LineageListing` row (or reuse `Tool` with `listingType: LINEAGE_NODE \| LINEAGE_TREE`) that links to the lineage row by id. | Keeps lineage schema pure. Reuses Tool tier/ads infra unchanged. | Extra join. Bridge desync risk. |
 
-Petey decision deferred: until a paid lineage tier ships, treat both as valid. This runbook describes the *behavior*; the schema choice is recorded in the SESSION that lands it + an ADR if the choice is non-obvious.
+Petey decision deferred for paid placement. The SESSION that lands public placement records the schema choice
+and adds an ADR if the choice is non-obvious.
 
 ---
 

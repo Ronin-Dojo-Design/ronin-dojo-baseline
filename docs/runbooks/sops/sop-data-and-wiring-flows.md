@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: copilot-session-0300
+updated: 2026-06-04
+last_agent: codex-session-0344
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/ronin_dojo_baseline_systems_pack/08_SOP_DATA_AND_WIRING_FLOWS_BASELINE.md
   - docs/sprints/SESSION_0146.md
+  - docs/sprints/SESSION_0344.md
 ---
 
 # SOP — Data Flows and Wiring Flows
@@ -527,7 +528,7 @@ Dirstarter uses Stripe for directory-listing tiers (Free/Standard/Premium one-ti
 ### Payment wiring flow
 
 ```text
-User selects program / membership tier
+User selects program / lineage membership tier
   |
   v
 PricingPlan lookup (amountCents, stripeProductId, stripePriceId)
@@ -535,18 +536,18 @@ PricingPlan lookup (amountCents, stripeProductId, stripePriceId)
   v
 Stripe Checkout Session created
   |
-  +--> success_url: /enrollment/confirm?session_id={id}
-  +--> cancel_url: /programs/{slug}
+  +--> success_url: product-specific success shell
+  +--> cancel_url: product-specific selection surface
   |
   v
 Stripe webhook: checkout.session.completed
   |
   v
 Server handler:
-  +--> Create/activate Membership (if membership purchase)
-  +--> Create CourseEnrollment (if course purchase)
-  +--> Create/update UserBrandSubscription (if site subscription)
-  +--> Record payment in PaymentLog (future model)
+  +--> Grant UserEntitlement rows from EntitlementGrant
+  +--> Create ProgramEnrollment only for program-scoped checkout
+  +--> Sync subscription-sourced UserEntitlement rows for recurring tiers
+  +--> Record Invoice / Payment ledger rows
   |
   v
 Confirmation email via Resend
@@ -554,16 +555,20 @@ Confirmation email via Resend
 
 ```mermaid
 flowchart TD
-    SEL[User selects program / tier] --> PL[PricingPlan lookup\namountCents + stripeProductId]
+    SEL[User selects program / lineage tier] --> PL[PricingPlan lookup\namountCents + stripeProductId]
     PL --> SC[Stripe Checkout Session]
     SC -->|success| WH[Stripe webhook\ncheckout.session.completed]
-    SC -->|cancel| CANCEL[Back to program page]
-    WH --> MEM[Create/activate Membership]
-    WH --> ENR[Create CourseEnrollment]
-    WH --> SUB[Update UserBrandSubscription]
+    SC -->|cancel| CANCEL[Back to selection surface]
+    WH --> ENT[Grant UserEntitlement]
+    WH --> ENR[Create ProgramEnrollment\nif program-scoped]
+    WH --> SUB[Sync subscription access]
     WH --> LOG[Record payment]
-    MEM & ENR & SUB & LOG --> EMAIL[Confirmation email via Resend]
+    ENT & ENR & SUB & LOG --> EMAIL[Confirmation email via Resend]
 ```
+
+Membership status is intentionally outside the Stripe webhook. See
+[`ADR 0019`](../../architecture/decisions/0019-membership-lifecycle-ownership.md): `Membership`
+is community/admin state, while `UserEntitlement` owns subscription and purchase access.
 
 ### Subscription cancellation flow
 
@@ -571,16 +576,10 @@ flowchart TD
 Stripe webhook: customer.subscription.deleted
   |
   v
-Lookup Membership by stripeSubscriptionId
+Revoke subscription-sourced UserEntitlement rows
   |
   v
-transitionMembershipStatus(ACTIVE → EXPIRED)
-  |
-  v
-Entitlements revoked
-  |
-  v
-Notification email
+Suspend related ProgramEnrollment projections when the entitlement source maps to a program
 ```
 
 ---

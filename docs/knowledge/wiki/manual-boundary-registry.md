@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-31
+updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: codex-session-0313
+last_agent: codex-session-0344
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -34,6 +34,7 @@ backlinks:
   - docs/sprints/SESSION_0163.md
   - docs/sprints/SESSION_0170.md
   - docs/sprints/SESSION_0171.md
+  - docs/sprints/SESSION_0344.md
 tags:
   - blockers
   - ops
@@ -251,6 +252,13 @@ SESSION_0098 update: local Stripe test-mode proof added an admin-only billing mo
 SESSION_0098 late update: `/gear` now displays TuffBuffs/Amazon affiliate gear using local legacy assets and Grid/List/Carousel modes. This is not a Stripe product setup, not shippable merch checkout, not certificate/membership/tournament fee productization, and not outbound email implementation. Those decisions must be handled in a follow-up commerce/PWCC session before new Stripe products or customer emails are wired.
 
 SESSION_0099 update: public gear/catalog images now have a local-dev-to-S3 public media bridge. Local dev keeps `/images/...` from `apps/web/public`; staging/prod must set `NEXT_PUBLIC_MEDIA_BASE_URL` and `S3_PUBLIC_URL` to the approved S3/CloudFront media base. Owner-side AWS setup remains manual and is documented in `docs/runbooks/aws-s3-operator-runbook.md`. Until Brian creates the bucket/distribution, syncs `apps/web/public/images/merch`, and sets Vercel env vars, `/admin/storage/monitoring` should report `NEEDS_SETUP`.
+
+SESSION_0344 update: local BBL lineage membership checkout proof is green. `/lineage/join` now proves
+Checkout cancel and success shells with `E2E_STRIPE_MOCK=1`; the Playwright+Bun bridge seeds disposable
+Baseline-branded lineage membership `PricingPlan` rows, drives the real Stripe webhook route with mocked
+Stripe line items/subscription retrieval, grants/revokes `UserEntitlement`, and asserts no
+`Membership.status` or `ProgramEnrollment` mutation. MB-013 remains open until the same tier shape is
+rehearsed through Baseline live test-mode Stripe/webhook delivery and production cleanup/signoff.
 
 MB-013 still requires these launch gates:
 
