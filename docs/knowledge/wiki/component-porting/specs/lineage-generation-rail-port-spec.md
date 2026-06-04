@@ -2,13 +2,14 @@
 title: Lineage Generation Rail Port Spec
 slug: lineage-generation-rail-port-spec
 type: spec
-status: draft
+status: proven
 created: 2026-06-03
-updated: 2026-06-03
-last_agent: claude-session-0337
+updated: 2026-06-04
+last_agent: codex-session-0341
 pairs_with:
   - docs/petey-plan-0337-lineage-responsive-carousel.md
   - docs/sprints/SESSION_0337.md
+  - docs/sprints/SESSION_0341.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -132,6 +133,26 @@ Consumes the EXISTING canvas members passed as PROPS (no BBL-style self-fetch). 
 - BBL's self-fetching data model — data arrives as props.
 - Native HTML5 drag-and-drop (we use dnd-kit) and BBL's inline detail panel (we reuse the lineage drawer).
 - A new carousel dependency or a second rail component (reuse the Slice-3 Embla extension).
+
+## SESSION_0341 Proof
+
+PORTMAP-0005 is proven in SESSION_0341. `LineageHonorStrip` now replaces its raw horizontal
+`overflow-x-auto` strip with the shared `Carousel` / `CarouselSlide` primitive. Wide board child groups in
+`LineageCompactChildList` render as labelled carousel rails once the sibling set reaches the rail threshold;
+smaller groups remain the existing compact vertical rows.
+
+Playwright proof on `/lineage/rigan-machado-bjj-lineage`:
+
+- **1280px:** no page overflow; honor rail labelled `role="region"` with 6 slides and visible right control;
+  board mode exposed 2 child rails (`Dirty Dozen`, `Coral Belt Ceremony`) with 7 / 4 slides, visible controls,
+  existing profile click opened the drawer, and board connector SVG path count was 0.
+- **768px:** no page overflow; same honor + board rails proven with visible controls and 0 connector SVG paths.
+- **390px:** no page overflow; honor rail remained labelled and scrollable with mobile controls hidden by the
+  shared `desktop` control mode; board rails were absent because the existing mobile lineage list branch owns
+  `< sm` rendering.
+
+No schema, server, `LineageConnectorLayer`, tree-generation SVG overlay, autoplay/marquee motion, or BBL
+hardcoded belt map changed.
 
 ## Cross-references
 

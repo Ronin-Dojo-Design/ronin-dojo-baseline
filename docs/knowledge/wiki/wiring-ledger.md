@@ -4,11 +4,12 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-06-03
-last_agent: claude-session-0335
+updated: 2026-06-04
+last_agent: codex-session-0341
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/runbooks/design/motion-system.md
+  - docs/knowledge/wiki/test-fail-fix-ledger.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/custom-component-inventory.md
@@ -143,6 +144,7 @@ flowchart TD
 - [Motion System](../../runbooks/design/motion-system.md) — black-belt-rail is the flagship motion surface here.
 - [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) — primitive set the handroll slips should have used.
 - [Custom Component Inventory](custom-component-inventory.md) — where enhanced components are re-documented at close.
+- [Test Fail Fix Ledger](test-fail-fix-ledger.md) — companion ledger for clustered failing-test pointers.
 - [SESSION_0304](../../sprints/SESSION_0304.md) — session that produced this ledger + the fixes.
 
 ## Sources

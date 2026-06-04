@@ -4,6 +4,7 @@ import { useReducedMotion } from "@mantine/hooks"
 import { motion } from "motion/react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Stack } from "~/components/common/stack"
 import { type CanvasMember, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -51,7 +52,10 @@ export function LineageHonorStrip({
   if (featuredMembers.length === 0) return null
 
   return (
-    <section className="mb-4 rounded-xl border bg-background/80 p-3 shadow-sm">
+    <section
+      data-lineage-honor-rail
+      className="mb-4 rounded-xl border bg-background/80 p-3 shadow-sm"
+    >
       <Stack size="sm" direction="column" wrap={false} className="w-full">
         <Stack size="xs" wrap className="w-full items-center justify-between">
           <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
@@ -62,7 +66,7 @@ export function LineageHonorStrip({
           </Badge>
         </Stack>
 
-        <ol className="flex w-full gap-2 overflow-x-auto pb-1">
+        <Carousel ariaLabel="Honor strip" controls="desktop" edgeFades options={{ align: "start" }}>
           {featuredMembers.map((member, index) => {
             const displayName = nodeDisplayName(member.node)
             const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
@@ -71,53 +75,54 @@ export function LineageHonorStrip({
             const rankLabel = member.selectedRank?.name ?? null
 
             return (
-              <motion.li
-                key={member.id}
-                initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { duration: 0.2, delay: index * 0.04, ease: "easeOut" }
-                }
-                className="shrink-0"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelect(member.nodeId)
-                    scrollMemberIntoView(member.id, reduceMotion)
-                  }}
-                  className={cx(
-                    "flex min-w-48 max-w-60 items-center gap-2 rounded-lg border bg-card/80 p-2 text-left transition-colors duration-150 hover:bg-accent",
-                    isSelected && "border-primary bg-primary/10 ring-1 ring-primary/40",
-                  )}
+              <CarouselSlide key={member.id} width={248}>
+                <motion.div
+                  initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.2, delay: index * 0.04, ease: "easeOut" }
+                  }
+                  className="h-full"
                 >
-                  <span
-                    aria-hidden
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelect(member.nodeId)
+                      scrollMemberIntoView(member.id, reduceMotion)
+                    }}
                     className={cx(
-                      "h-9 w-1 shrink-0 rounded-full",
-                      beltColor ? "" : "bg-muted-foreground/30",
+                      "flex h-full w-full items-center gap-2 rounded-lg border bg-card/80 p-2 text-left transition-colors duration-150 hover:bg-accent",
+                      isSelected && "border-primary bg-primary/10 ring-1 ring-primary/40",
                     )}
-                    style={beltColor ? { backgroundColor: beltColor } : undefined}
-                  />
-                  <Avatar className="size-8">
-                    {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-                    <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
-                  </Avatar>
-                  <Stack size="xs" direction="column" wrap={false} className="min-w-0 flex-1">
-                    <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
-                    {rankLabel && (
-                      <span className="max-w-full truncate text-muted-foreground text-xs">
-                        {rankLabel}
-                      </span>
-                    )}
-                  </Stack>
-                </button>
-              </motion.li>
+                  >
+                    <span
+                      aria-hidden
+                      className={cx(
+                        "h-9 w-1 shrink-0 rounded-full",
+                        beltColor ? "" : "bg-muted-foreground/30",
+                      )}
+                      style={beltColor ? { backgroundColor: beltColor } : undefined}
+                    />
+                    <Avatar className="size-8">
+                      {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+                      <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+                    </Avatar>
+                    <Stack size="xs" direction="column" wrap={false} className="min-w-0 flex-1">
+                      <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
+                      {rankLabel && (
+                        <span className="max-w-full truncate text-muted-foreground text-xs">
+                          {rankLabel}
+                        </span>
+                      )}
+                    </Stack>
+                  </button>
+                </motion.div>
+              </CarouselSlide>
             )
           })}
-        </ol>
+        </Carousel>
       </Stack>
     </section>
   )

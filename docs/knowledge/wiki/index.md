@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-04
 author: Brian + Copilot
-last_agent: codex-session-0340
+last_agent: codex-session-0341
 ---
 
 # LLM Wiki Index
@@ -61,7 +61,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Lineage Responsive Switch Port Spec](component-porting/specs/lineage-responsive-switch-port-spec.md) | spec | proven — SESSION_0338 Slice 1 responsive mode switch |
 | [Lineage Mobile List Port Spec](component-porting/specs/lineage-mobile-list-port-spec.md) | spec | proven — SESSION_0339 Slice 2 mobile flatten-and-indent list |
 | [Lineage Carousel Rail Port Spec](component-porting/specs/lineage-carousel-rail-port-spec.md) | spec | proven — SESSION_0340 Slice 3 Embla carousel rail extension |
-| [Lineage Generation Rail Port Spec](component-porting/specs/lineage-generation-rail-port-spec.md) | spec | draft — petey-plan-0337 Slice 4 |
+| [Lineage Generation Rail Port Spec](component-porting/specs/lineage-generation-rail-port-spec.md) | spec | proven — SESSION_0341 Slice 4 connector-free generation rails |
 | [Lineage Adaptive Connector Port Spec](component-porting/specs/lineage-adaptive-connector-port-spec.md) | spec | draft — petey-plan-0337 Slice 5 (spike) |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 | [Topic Index](topic-index.md) | index | active |
@@ -438,6 +438,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0338](../../sprints/SESSION_0338.md) | session--implement | closed — petey-plan-0337 Slice 1 responsive mode switch: `LineageTreeCanvas` defaults to board below 768px and tree at/above 768px, removes the discipline page's forced board default, and preserves explicit Tree/Board toggles across resize without resetting the auto-fit zoom seed; PORTMAP-0002 proven with measured Playwright at 390/768/1280 |
 | [SESSION_0339](../../sprints/SESSION_0339.md) | session--implement | closed — petey-plan-0337 Slice 2 mobile lineage list: pure cycle-safe `flattenLineage`, `< sm` `LineageMobileList` branch, capped 0/16/32/48px indentation, no SVG/zoom branch at 390px, and row selection opens the existing profile drawer/path context; PORTMAP-0003 proven |
 | [SESSION_0340](../../sprints/SESSION_0340.md) | session--open | closed — petey-plan-0337 Slice 3 carousel rail extension: existing Embla `Carousel` gained optional dense-rail affordances (`emptyState`, labelled region, edge fades, desktop controls, slide width variants, ResizeObserver `reInit`) with all four consumers preserved; PORTMAP-0004 proven by Playwright dense-rail geometry and clean route smoke |
+| [SESSION_0341](../../sprints/SESSION_0341.md) | session--open | closed — petey-plan-0337 Slice 4 generation rails in connector-free zones: honor strip and wide board child groups now compose the shared Carousel rail; Playwright proof green at 390/768/1280; PORTMAP-0005 proven; test-fail-fix ledger created for repo-wide test clusters |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -513,6 +514,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips (SESSION_0304) |
+| [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers and fix status (SESSION_0341) |
 
 ## Code files (annotated)
 

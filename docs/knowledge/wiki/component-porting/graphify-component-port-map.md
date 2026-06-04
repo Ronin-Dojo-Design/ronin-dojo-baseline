@@ -6,13 +6,14 @@ status: active
 created: 2026-05-06
 updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: codex-session-0340
+last_agent: codex-session-0341
 pairs_with:
   - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/sprints/SESSION_0338.md
   - docs/sprints/SESSION_0339.md
   - docs/sprints/SESSION_0340.md
+  - docs/sprints/SESSION_0341.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -150,18 +151,23 @@ legacy component
 
 ### PORTMAP-0005 — Generation rail (connector-free zones)
 
-**Status:** mapped
+**Status:** proven
 **Legacy path:** `blackbeltlegacy/components/lineage/{StudentsCarousel,SchoolCarousel}.jsx`
 **Legacy purpose:** lineage-specific rails (belt-grouped buckets, school rails).
-**Target path:** `lineage-honor-strip.tsx`, `lineage-compact-child-list.tsx`, maybe `lineage-generation-rail.tsx`
+**Target path:** `lineage-honor-strip.tsx`, `lineage-compact-child-list.tsx`
 **Target route/page:** `/lineage/[treeSlug]` (honor strip + board child-lists)
 **Dirstarter primitive fit:** the Slice-3 extended `Carousel`
 **Existing Ronin component fit:** swap honor-strip raw `overflow-x-auto` for the rail; rail wide board groups.
 **Port strategy:** adapt
 **Server/client boundary:** client
 **Data dependency:** existing canvas members; `Rank.colorHex` for buckets
-**Proof required:** honor strip + wide board groups snap with reachable chevrons + aria; no connector touched.
-**Notes:** Slice 4. Connector-free zones ONLY (board has no connectors; honor strip has none).
+**Proof required:** honor strip + wide board groups snap with reachable chevrons + aria; no connector touched. Proven in SESSION_0341.
+**Notes:** Slice 4 landed in SESSION_0341. `LineageHonorStrip` now composes the shared Carousel rail; wide
+board child groups in `LineageCompactChildList` rail at the configured threshold while narrow groups remain
+vertical. Playwright at 1280 / 768 / 390 showed no page overflow; 1280 and 768 each exposed 2 labelled board
+rails with visible controls and 0 board connector SVG paths; 390 kept the mobile lineage list branch and
+hidden mobile carousel controls. No `LineageConnectorLayer`, tree-generation SVG overlay, schema/server path,
+or autoplay/marquee behavior changed.
 
 ### PORTMAP-0006 — Adaptive connector + rails inside wide tree generations (SPIKE)
 

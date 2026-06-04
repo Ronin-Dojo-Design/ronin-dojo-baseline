@@ -5,11 +5,13 @@ import type { CSSProperties } from "react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import {
   buildChildGroups,
   type CanvasMember,
+  type ChildGroup,
   memberInitials,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
@@ -42,6 +44,9 @@ const MAX_DEPTH = 24
 // expands on demand. depth 0 = the root's direct children (auto-expanded);
 // depth ≥ 1 = deeper tiers (collapsed unless on the selected path or opened).
 const AUTO_COLLAPSE_DEPTH = 1
+
+// Wide sibling sets get the shared rail; smaller groups stay as the compact vertical list.
+const CHILD_RAIL_THRESHOLD = 4
 
 type CompactSharedProps = {
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -77,34 +82,74 @@ export function LineageCompactChildList({
       direction="column"
       className={cx("w-full", depth > 0 && "ml-3 border-border/60 border-l pl-3")}
     >
-      {groups.map(group => (
-        <Stack key={group.id} size="xs" direction="column" className="w-full">
-          {group.group?.showPublicLabel &&
-            (group.group.promotionEvent?.slug ? (
-              <Link
-                href={`/events/${group.group.promotionEvent.slug}`}
-                className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide hover:text-foreground"
-              >
-                {group.group.label}
-              </Link>
-            ) : (
-              <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
-                {group.group.label}
-              </span>
-            ))}
+      {groups.map(group => {
+        const useRail = group.members.length >= CHILD_RAIL_THRESHOLD
 
-          {group.members.map(member => (
-            <LineageCompactChildRow
-              key={member.id}
-              member={member}
-              depth={depth}
-              visited={visited}
-              {...shared}
-            />
-          ))}
-        </Stack>
-      ))}
+        return (
+          <Stack key={group.id} size="xs" direction="column" className="w-full">
+            <LineageCompactGroupLabel group={group} />
+
+            {useRail ? (
+              <div data-lineage-board-child-rail className="w-full min-w-0">
+                <Carousel
+                  ariaLabel={childGroupRailLabel(group, depth)}
+                  controls="desktop"
+                  edgeFades
+                  options={{ align: "start" }}
+                >
+                  {group.members.map(member => (
+                    <CarouselSlide key={member.id} width={280}>
+                      <LineageCompactChildRow
+                        member={member}
+                        depth={depth}
+                        visited={visited}
+                        {...shared}
+                      />
+                    </CarouselSlide>
+                  ))}
+                </Carousel>
+              </div>
+            ) : (
+              group.members.map(member => (
+                <LineageCompactChildRow
+                  key={member.id}
+                  member={member}
+                  depth={depth}
+                  visited={visited}
+                  {...shared}
+                />
+              ))
+            )}
+          </Stack>
+        )
+      })}
     </Stack>
+  )
+}
+
+function childGroupRailLabel(group: ChildGroup, depth: number) {
+  if (group.group?.showPublicLabel) return `${group.group.label} students`
+  return `Generation ${depth + 1} students`
+}
+
+function LineageCompactGroupLabel({ group }: { group: ChildGroup }) {
+  if (!group.group?.showPublicLabel) return null
+
+  if (group.group.promotionEvent?.slug) {
+    return (
+      <Link
+        href={`/events/${group.group.promotionEvent.slug}`}
+        className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide hover:text-foreground"
+      >
+        {group.group.label}
+      </Link>
+    )
+  }
+
+  return (
+    <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
+      {group.group.label}
+    </span>
   )
 }
 
