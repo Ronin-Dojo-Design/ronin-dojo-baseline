@@ -24,11 +24,11 @@ export function MemberCarouselByRank({ members }: MemberCarouselByRankProps) {
   if (members.length === 0) return null
 
   return (
-    <section>
+    <section className="w-full min-w-0">
       <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Members by Rank
       </H4>
-      <Carousel>
+      <Carousel ariaLabel="Members by rank carousel" edgeFades controls="desktop">
         {members.map(m => (
           <CarouselSlide key={m.id} className="flex-[0_0_180px]">
             <Card className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">

@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-04
 author: Brian + Copilot
-last_agent: codex-session-0339
+last_agent: codex-session-0340
 ---
 
 # LLM Wiki Index
@@ -60,7 +60,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Lineage Profile Drawer Port Spec](component-porting/specs/lineage-profile-drawer-port-spec.md) | spec | active |
 | [Lineage Responsive Switch Port Spec](component-porting/specs/lineage-responsive-switch-port-spec.md) | spec | proven — SESSION_0338 Slice 1 responsive mode switch |
 | [Lineage Mobile List Port Spec](component-porting/specs/lineage-mobile-list-port-spec.md) | spec | proven — SESSION_0339 Slice 2 mobile flatten-and-indent list |
-| [Lineage Carousel Rail Port Spec](component-porting/specs/lineage-carousel-rail-port-spec.md) | spec | draft — petey-plan-0337 Slice 3 (extends Embla carousel) |
+| [Lineage Carousel Rail Port Spec](component-porting/specs/lineage-carousel-rail-port-spec.md) | spec | proven — SESSION_0340 Slice 3 Embla carousel rail extension |
 | [Lineage Generation Rail Port Spec](component-porting/specs/lineage-generation-rail-port-spec.md) | spec | draft — petey-plan-0337 Slice 4 |
 | [Lineage Adaptive Connector Port Spec](component-porting/specs/lineage-adaptive-connector-port-spec.md) | spec | draft — petey-plan-0337 Slice 5 (spike) |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
@@ -436,7 +436,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0336](../../sprints/SESSION_0336.md) | session--implement | closed — lineage epic **Phase 3e**: replaced the flow-laid `div` tree connectors with a measured SVG **90°-bend** overlay (`LineageConnectorLayer`) at full animation parity — `connector-draw` grow-in + the `traceStepDelay` path-trace cascade (runtime-verified: deep-leaf select lights 4 edges at 0/0.2/0.4/0.6s) + reduced-motion; `pointer-events-none` keeps dnd/scroll; removed dead `connector-grow-y/x` keyframes. Confirmed first `ci.yml` run green before coding. Verification smoke caught & fixed a parent-ref timing bug (FINDING_01). Operator-raised lineage **responsiveness/overflow/carousel** design review staged as next session (pushes 3f-PDF + Phase 4 leaderboard back) |
 | [SESSION_0337](../../sprints/SESSION_0337.md) | session--open | closed — Desi-led lineage design review: measured both reported bugs to root cause (Q2 overflow = `Stack` `items-start` shrink-to-content defeating `truncate`, span over-ran column by 166px; Q1 toolbar = card flex-`min-width:auto` blowout to 3672px → shell `overflow-clip` clips right half incl. controls). **Slice 0** fixed both (`max-w-full` on truncating spans across node-card/honor-strip/compact-list; `w-full min-w-0 max-w-full` on canvas card) — measured 0/70 spans overflow + toolbar reachable + tree scrollable. Authored `petey-plan-0337` (6-slice adapt-not-port epic) + PORTMAP-0002..0006 + 5 port-specs; reuse Embla carousel (no duplicate); connector×rail coexistence = adaptive bus+stubs (spike) |
 | [SESSION_0338](../../sprints/SESSION_0338.md) | session--implement | closed — petey-plan-0337 Slice 1 responsive mode switch: `LineageTreeCanvas` defaults to board below 768px and tree at/above 768px, removes the discipline page's forced board default, and preserves explicit Tree/Board toggles across resize without resetting the auto-fit zoom seed; PORTMAP-0002 proven with measured Playwright at 390/768/1280 |
-| [SESSION_0339](../../sprints/SESSION_0339.md) | session--implement | in-progress — petey-plan-0337 Slice 2 mobile lineage list: pure cycle-safe `flattenLineage`, `< sm` `LineageMobileList` branch, capped 0/16/32/48px indentation, no SVG/zoom branch at 390px, and row selection opens the existing profile drawer/path context; PORTMAP-0003 proof in progress |
+| [SESSION_0339](../../sprints/SESSION_0339.md) | session--implement | closed — petey-plan-0337 Slice 2 mobile lineage list: pure cycle-safe `flattenLineage`, `< sm` `LineageMobileList` branch, capped 0/16/32/48px indentation, no SVG/zoom branch at 390px, and row selection opens the existing profile drawer/path context; PORTMAP-0003 proven |
+| [SESSION_0340](../../sprints/SESSION_0340.md) | session--open | closed — petey-plan-0337 Slice 3 carousel rail extension: existing Embla `Carousel` gained optional dense-rail affordances (`emptyState`, labelled region, edge fades, desktop controls, slide width variants, ResizeObserver `reInit`) with all four consumers preserved; PORTMAP-0004 proven by Playwright dense-rail geometry and clean route smoke |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

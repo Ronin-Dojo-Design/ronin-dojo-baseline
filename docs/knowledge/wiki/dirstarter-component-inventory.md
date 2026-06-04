@@ -4,11 +4,12 @@ slug: dirstarter-component-inventory
 type: reference
 status: active
 created: 2026-05-04
-updated: 2026-05-21
-last_agent: codex-session-0215
+updated: 2026-06-04
+last_agent: codex-session-0340
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/knowledge/wiki/dirstarter-gap-audit.md
+  - docs/sprints/SESSION_0340.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0051.md
@@ -38,6 +39,7 @@ Every component below is in `~/components/common/`. Import from there.
 | `Wrapper` | `wrapper.tsx` | Layout wrapper | Page-level content wrapper |
 | `Separator` | `separator.tsx` | `orientation: horizontal\|vertical` | Visual dividers |
 | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `accordion.tsx` | Base UI Accordion; `type="multiple"` compatibility; `AccordionContent` wraps Base UI `Panel` | Collapsible sections. SESSION_0214: migrated off Radix; uses `data-open` / `data-closed` state selectors. |
+| `Carousel`, `CarouselSlide` | `carousel.tsx` | Embla-backed. `Carousel`: `options`, `className`, optional `emptyState`, `ariaLabel`, `role`, `edgeFades`, `controls: always\|desktop\|none`. `CarouselSlide`: optional `width: 168\|248\|280`; `className` flex-basis overrides still win. | Shared horizontal carousel/rail primitive. SESSION_0340: extended for PORTMAP-0004 dense-rail mode with labelled regions, optional edge fades, desktop-only control mode, empty-state bypass, and ResizeObserver-driven `reInit`; no second carousel component. |
 | `AnimatedContainer` | `animated-container.tsx` | `height`, `transition` | Smooth height transitions |
 | `Skeleton` | `skeleton.tsx` | — | Loading placeholders |
 | `Prose` | `prose.tsx` | — | Long-form text styling |

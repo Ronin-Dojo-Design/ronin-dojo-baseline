@@ -23,11 +23,11 @@ export function VideoCarousel({ videos, title = "Videos" }: VideoCarouselProps) 
   if (videos.length === 0) return null
 
   return (
-    <section>
+    <section className="w-full min-w-0">
       <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         {title}
       </H4>
-      <Carousel>
+      <Carousel ariaLabel={`${title} carousel`}>
         {videos.map(v => (
           <CarouselSlide key={v.id} className="flex-[0_0_300px]">
             <Card className="flex h-[180px] flex-col items-center justify-center overflow-hidden">

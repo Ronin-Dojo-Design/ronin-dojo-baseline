@@ -6,12 +6,13 @@ status: active
 created: 2026-05-06
 updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: codex-session-0339
+last_agent: codex-session-0340
 pairs_with:
   - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/sprints/SESSION_0338.md
   - docs/sprints/SESSION_0339.md
+  - docs/sprints/SESSION_0340.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -134,7 +135,7 @@ legacy component
 
 ### PORTMAP-0004 — Carousel rail (Embla extension)
 
-**Status:** mapped
+**Status:** proven
 **Legacy path:** `blackbeltlegacy/components/shared/CarouselRail.jsx`
 **Legacy purpose:** reusable horizontal snap-rail (chevron-when-scrollable, measured scroll-step, empty state, aria).
 **Target path:** `apps/web/components/common/carousel.tsx` (extend — do NOT add a second carousel)
@@ -144,8 +145,8 @@ legacy component
 **Port strategy:** wrap/extend (back-compatible API)
 **Server/client boundary:** client
 **Data dependency:** none (presentational)
-**Proof required:** dense rail snaps + chevrons toggle at ends + empty state + aria; existing consumers unregressed.
-**Notes:** Slice 3. Reuse-before-port per runbook; closes BBL's no-ResizeObserver gap.
+**Proof required:** dense rail snaps + chevrons toggle at ends + empty state + aria; existing consumers unregressed. Proven in SESSION_0340.
+**Notes:** Slice 3 landed in SESSION_0340. The existing Embla primitive now supports optional `emptyState`, `ariaLabel`, `role`, `edgeFades`, `controls`, slide width variants, and ResizeObserver-driven `reInit` while preserving current `className` basis overrides. Playwright proof at 390 / 768 / 1280 used a dynamic dense-rail fixture on `/disciplines/bjj`: no page overflow, mobile controls hidden, md+ controls visible, right-only start state, left-only end state, labelled region, and a clean seeded-route smoke with no console/page errors.
 
 ### PORTMAP-0005 — Generation rail (connector-free zones)
 

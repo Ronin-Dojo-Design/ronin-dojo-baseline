@@ -22,11 +22,11 @@ export function FounderCarousel({ founders }: FounderCarouselProps) {
   if (founderList.length === 0) return null
 
   return (
-    <section>
+    <section className="w-full min-w-0">
       <H4 render={props => <h3 {...props}>{props.children}</h3>} className="mb-4">
         Founders
       </H4>
-      <Carousel>
+      <Carousel ariaLabel="Discipline founders carousel">
         {founderList.map(name => (
           <CarouselSlide key={name} className="flex-[0_0_200px]">
             <Card className="flex h-full items-center justify-center p-4 text-center">

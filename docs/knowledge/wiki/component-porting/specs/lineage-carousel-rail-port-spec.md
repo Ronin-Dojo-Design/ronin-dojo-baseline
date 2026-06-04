@@ -2,13 +2,14 @@
 title: Lineage Carousel Rail Port Spec
 slug: lineage-carousel-rail-port-spec
 type: spec
-status: draft
+status: proven
 created: 2026-06-03
-updated: 2026-06-03
-last_agent: claude-session-0337
+updated: 2026-06-04
+last_agent: codex-session-0340
 pairs_with:
   - docs/petey-plan-0337-lineage-responsive-carousel.md
   - docs/sprints/SESSION_0337.md
+  - docs/sprints/SESSION_0340.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -115,6 +116,7 @@ type CarouselExtras = {
   role?: "region"               // a11y landmark
   ariaLabel?: string            // required when role="region"
   edgeFades?: boolean           // mount w-8 gradient fades on scroll edges
+  controls?: "always" | "desktop" | "none"
 }
 type CarouselSlideExtras = {
   width?: 168 | 248 | 280       // flex-basis variant; default 280 (back-compat)
@@ -148,6 +150,22 @@ type CarouselSlideExtras = {
 | Loaded, scrollable at end | Left chevron + left fade only; right chevron/fade unmounted. |
 | Content filtered in place | ResizeObserver → `reInit` recomputes scrollability; chevrons/fades update. |
 
+## SESSION_0340 proof summary
+
+Slice 3 landed in SESSION_0340 by extending `apps/web/components/common/carousel.tsx`; no second carousel
+component or new dependency was added.
+
+- API added: optional `emptyState`, `ariaLabel`, `role`, `edgeFades`, `controls`, and
+  `CarouselSlide width`.
+- Back-compat preserved: current `className` basis overrides still win for `100%`, `180px`, `200px`,
+  and `300px` consumers.
+- Dynamic proof: a Playwright fixture cloned the existing seeded rank rail in-place to eight slides and
+  verified no page overflow at 390 / 768 / 1280. The viewport stayed constrained to the page while
+  `viewport.scrollWidth > viewport.clientWidth`; controls were hidden on mobile and visible at md+.
+- End-state proof: chevron/fade state switched from right-only at the start to left-only at the end.
+- Clean route smoke: `/disciplines/bjj` returned 200 with no console errors or page errors; the existing
+  seeded rail remained a labelled `region` with two 180px slides and no page overflow.
+
 ## What is NOT in scope (Slice 3)
 
 - Lineage placement of the rail (honor strip / board groups) — that is Slice 4 (PORTMAP-0005).
@@ -173,6 +191,7 @@ assertions; screenshot before/after:
 - Epic: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md)
 - Port map: [PORTMAP-0004 — Carousel rail (Embla extension)](../graphify-component-port-map.md)
 - Session: [SESSION_0337](../../../../sprints/SESSION_0337.md)
+- Proof session: [SESSION_0340](../../../../sprints/SESSION_0340.md)
 - BBL source (read for behavior only):
   `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/shared/CarouselRail.jsx`
 - Existing primitive being extended: `apps/web/components/common/carousel.tsx`
