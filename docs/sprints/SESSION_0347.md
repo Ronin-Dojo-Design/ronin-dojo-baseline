@@ -460,3 +460,9 @@ No live Dirstarter API or baseline-layer replacement was introduced. Existing Ba
 | Git hygiene | Branch `main`; FS-0024 guard confirmed repo `/Users/brianscott/dev/ronin-dojo-app` and remote `https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline.git`; `git worktree list` showed only the main worktree. Single push planned; hash reported at bow-out — see git log. |
 | Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` passed before commit; stats after refresh: 9360 nodes, 14576 edges, 1376 communities, 1591 files tracked. |
 | Local show-and-tell artifacts | Generated ignored files for developer walkthrough: `apps/web/public/graphify.html` (served at `http://bbl.local:3000/graphify.html` / `http://localhost:3000/graphify.html`) and `docs/index.html` (served at `http://localhost:8088/index.html`). |
+
+## Post-close CI / deploy check
+
+- GitHub Actions failed on commit `efd7f8f` before any lint/typecheck/test/e2e execution because `pnpm install --frozen-lockfile` detected `qrcode.react` in `apps/web/package.json` but not in `pnpm-lock.yaml`.
+- Remediation: regenerated `pnpm-lock.yaml` with the existing root package-manager contract (`pnpm@9.0.0`) and verified the failed CI step locally with `pnpm install --frozen-lockfile`.
+- Production domain check: `https://baselinemartialarts.com` returned `200` from Vercel and set `brand=BASELINE_MARTIAL_ARTS`.
