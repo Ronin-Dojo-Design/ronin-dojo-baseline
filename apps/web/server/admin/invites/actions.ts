@@ -15,43 +15,63 @@ import { idsSchema } from "~/server/admin/shared/schema"
 
 export const createInvite = adminActionClient
   .inputSchema(inviteSchema)
-  .action(async ({ parsedInput: { id, meta, ...input }, ctx: { db, revalidate, brand, user } }) => {
-    const invite = await db.invite.create({
-      data: {
-        ...input,
-        brand,
-        createdById: user.id,
-        meta: meta === null ? Prisma.JsonNull : meta ? (meta as Prisma.InputJsonObject) : undefined,
-      },
-      include: { organization: { select: { name: true } } },
-    })
-
-    after(async () => {
-      revalidate({
-        paths: ["/admin/invites"],
-        tags: ["invites", `invite-${invite.id}`],
-      })
-
-      // Send invite email if target email is in meta. Wrapped in try/catch so a
-      // Resend failure cannot mask a successful invite creation in the dashboard.
-      const targetEmail = (meta as Record<string, unknown> | null)?.email as string | undefined
-      if (targetEmail) {
-        try {
-          await notifyUserOfInvite({
-            brand,
-            to: targetEmail,
-            organizationName: invite.organization.name,
-            inviteCode: invite.code,
-            expiresAt: invite.expiresAt,
-          })
-        } catch (error) {
-          console.error("[notify] invite email failed", { inviteId: invite.id, error })
+  .action(
+    async ({
+      parsedInput: { id, meta, compTier, compTermDays, ...input },
+      ctx: { db, revalidate, brand, user },
+    }) => {
+      const metaObject = meta ? { ...meta } : {}
+      if (compTier && compTier !== "NONE") {
+        metaObject.comp = {
+          tier: compTier,
+          ...(compTermDays ? { termDays: compTermDays } : {}),
         }
       }
-    })
 
-    return invite
-  })
+      const inviteMeta =
+        Object.keys(metaObject).length > 0
+          ? (metaObject as Prisma.InputJsonObject)
+          : meta === null
+            ? Prisma.JsonNull
+            : undefined
+
+      const invite = await db.invite.create({
+        data: {
+          ...input,
+          brand,
+          createdById: user.id,
+          meta: inviteMeta,
+        },
+        include: { organization: { select: { name: true } } },
+      })
+
+      after(async () => {
+        revalidate({
+          paths: ["/admin/invites"],
+          tags: ["invites", `invite-${invite.id}`],
+        })
+
+        // Send invite email if target email is in meta. Wrapped in try/catch so a
+        // Resend failure cannot mask a successful invite creation in the dashboard.
+        const targetEmail = (meta as Record<string, unknown> | null)?.email as string | undefined
+        if (targetEmail) {
+          try {
+            await notifyUserOfInvite({
+              brand,
+              to: targetEmail,
+              organizationName: invite.organization.name,
+              inviteCode: invite.code,
+              expiresAt: invite.expiresAt,
+            })
+          } catch (error) {
+            console.error("[notify] invite email failed", { inviteId: invite.id, error })
+          }
+        }
+      })
+
+      return invite
+    },
+  )
 
 export const revokeInvite = adminActionClient
   .inputSchema(z.object({ id: z.string().min(1) }))

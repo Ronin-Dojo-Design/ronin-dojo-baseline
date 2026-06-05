@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-04
+updated: 2026-06-05
 author: Brian + Copilot
-last_agent: claude-session-0345
+last_agent: codex-session-0346
 ---
 
 # LLM Wiki Index
@@ -445,6 +445,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0343](../../sprints/SESSION_0343.md) | session--open | closed — BBL launch-readiness frame: cutover checklist staged, DNS source of truth resolved (Bluehost authority + Flywheel/Fastly WP origin), registration e2e gap #1 green, Better Auth magic-link identity-shell bug fixed, lineage `canvas-model`/`connector-geometry` unit wedge landed, Slice 5 sequenced behind launch gates |
 | [SESSION_0344](../../sprints/SESSION_0344.md) | session--open | closed — BBL lineage membership checkout gate: `/lineage/join` paid tier section + success/cancel shells, trusted `PricingPlan`→`EntitlementGrant` checkout action, explicit local `E2E_STRIPE_MOCK=1` harness, Playwright+Bun webhook proof for purchase grant, subscription grant, and subscription revoke; no `Membership.status` or `ProgramEnrollment` mutation |
 | [SESSION_0345](../../sprints/SESSION_0345.md) | session--open | closed — BBL checkout gate proven on the REAL Stripe network: Stripe CLI test-mode rehearsal (real hosted Checkout + signature-verified webhook) → one-time grant, subscription grant, subscription-deletion revoke; **caught + fixed a launch-blocking returning-customer checkout bug** (`customer_update`) in both checkout actions + regression test; prod is live-mode (drift D-018, CUTOVER corrected); gift/comp+tier-gating epic staged |
+| [SESSION_0346](../../sprints/SESSION_0346.md) | session--open | closed — audited admin comp-grant spine landed (`grantComp`/`revokeComp`, `LINEAGE_PREMIUM`/`LINEAGE_ELITE`, admin actions), claim approval and invite acceptance now materialize server-derived comp grants, and deterministic multi-rank/multi-student fixture proves mixed tiers/idempotency/edge cases without a schema migration |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

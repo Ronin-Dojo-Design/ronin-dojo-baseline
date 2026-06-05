@@ -12,6 +12,7 @@ import {
 } from "nuqs/server"
 import * as z from "zod"
 import { type Invite, InviteStatus, InviteType } from "~/.generated/prisma/browser"
+import { lineageCompSelectionSchema } from "~/lib/entitlements/lineage-comp"
 import { getSortingStateParser } from "~/lib/parsers"
 
 export const invitesTableParamsSchema = {
@@ -39,6 +40,8 @@ export const inviteSchema = z.object({
   maxUses: z.coerce.number().int().positive().nullable().optional(),
   expiresAt: z.coerce.date().nullable().optional(),
   meta: z.record(z.string(), z.unknown()).nullable().optional(),
+  compTier: lineageCompSelectionSchema.optional(),
+  compTermDays: z.coerce.number().int().positive().nullable().optional(),
 })
 
 export type InviteSchema = z.infer<typeof inviteSchema>

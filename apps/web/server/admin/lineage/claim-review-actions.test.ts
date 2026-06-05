@@ -26,6 +26,10 @@ mock.module("~/lib/auth", () => ({
 }))
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
+import {
+  LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+} from "~/lib/entitlements/lineage-comp"
 import { applyLineageClaimReview } from "~/server/admin/lineage/claim-review-actions"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import { db } from "~/services/db"
@@ -44,6 +48,20 @@ type ClaimFixture = {
 }
 
 let adminUserId: string | null = null
+const createdEntitlementIds: string[] = []
+
+async function ensureEntitlement(key: string, name: string) {
+  const existing = await db.entitlement.findUnique({
+    where: { brand_key: { brand: TEST_BRAND, key } },
+  })
+  if (existing) return existing
+
+  const entitlement = await db.entitlement.create({
+    data: { brand: TEST_BRAND, key, name },
+  })
+  createdEntitlementIds.push(entitlement.id)
+  return entitlement
+}
 
 const expectRejectsWithMessage = async (promise: Promise<unknown>, message: string) => {
   try {
@@ -149,6 +167,8 @@ const createClaimFixture = async ({
 beforeAll(async () => {
   const admin = await createUser("admin")
   adminUserId = admin.id
+  await ensureEntitlement(LINEAGE_PREMIUM_ENTITLEMENT_KEY, "Lineage Premium")
+  await ensureEntitlement(LINEAGE_ELITE_ENTITLEMENT_KEY, "Lineage Elite")
 })
 
 afterAll(async () => {
@@ -157,6 +177,7 @@ afterAll(async () => {
       OR: [{ entityId: { startsWith: PREFIX } }, { userId: { startsWith: PREFIX } }],
     },
   })
+  await db.userEntitlement.deleteMany({ where: { userId: { startsWith: PREFIX } } })
   await db.lineageTreeAccess.deleteMany({
     where: {
       OR: [
@@ -178,7 +199,14 @@ afterAll(async () => {
   })
   await db.lineageTree.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.lineageNode.deleteMany({ where: { id: { startsWith: PREFIX } } })
+  await db.membership.deleteMany({ where: { userId: { startsWith: PREFIX } } })
+  await db.organization.deleteMany({ where: { id: { startsWith: PREFIX } } })
+  await db.discipline.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
+
+  for (const entitlementId of createdEntitlementIds) {
+    await db.entitlement.delete({ where: { id: entitlementId } })
+  }
 })
 
 describe("applyLineageClaimReview", () => {
@@ -309,6 +337,94 @@ describe("applyLineageClaimReview", () => {
     })
   })
 
+  it("approves a claim with a server-reviewed elite comp grant and does not mutate Membership", async () => {
+    const fx = await createClaimFixture({ name: "approve-with-comp" })
+    const org = await db.organization.create({
+      data: {
+        id: tag("approve-with-comp-org"),
+        brand: TEST_BRAND,
+        type: "DOJO",
+        name: tag("approve-with-comp-org"),
+        slug: tag("approve-with-comp-org"),
+      },
+    })
+    const discipline = await db.discipline.create({
+      data: {
+        id: tag("approve-with-comp-discipline"),
+        brand: TEST_BRAND,
+        name: tag("approve-with-comp-discipline"),
+        slug: tag("approve-with-comp-discipline"),
+      },
+    })
+    const membership = await db.membership.create({
+      data: {
+        brand: TEST_BRAND,
+        status: "ACTIVE",
+        userId: fx.claimantUserId,
+        organizationId: org.id,
+        disciplineId: discipline.id,
+        joinedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: {
+        claimId: fx.claimId,
+        decision: "APPROVED",
+        reviewerNote: "Verified identity and comped elite.",
+        comp: { tier: LINEAGE_ELITE_ENTITLEMENT_KEY, termDays: 365 },
+      },
+    })
+
+    const [grants, compAudits, claimAudit, unchangedMembership] = await Promise.all([
+      db.userEntitlement.findMany({
+        where: {
+          userId: fx.claimantUserId,
+          sourceType: "MANUAL_GRANT",
+          sourceId: `grant:${adminUserId}:lineage-claim-${fx.claimId}`,
+          status: "ACTIVE",
+        },
+        include: { entitlement: { select: { key: true } } },
+      }),
+      db.auditLog.findMany({
+        where: {
+          brand: TEST_BRAND,
+          action: "entitlement.comp.granted",
+          userId: adminUserId!,
+          entityId: { contains: fx.claimantUserId },
+        },
+      }),
+      db.auditLog.findFirst({
+        where: {
+          entityType: "LineageClaimRequest",
+          entityId: fx.claimId,
+          action: "lineage.claim.reviewed",
+        },
+      }),
+      db.membership.findUnique({ where: { id: membership.id } }),
+    ])
+    const claimAuditAfter = claimAudit?.after as Record<string, unknown> | null
+
+    expect(result.status).toBe("APPROVED")
+    expect(result.compGrantIds).toHaveLength(2)
+    expect(grants).toHaveLength(2)
+    expect(grants.map(grant => grant.entitlement.key).sort()).toEqual([
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+    ])
+    for (const grant of grants) {
+      expect(result.compGrantIds).toContain(grant.id)
+      expect(grant.endsAt).toBeInstanceOf(Date)
+    }
+    expect(compAudits).toHaveLength(2)
+    expect(claimAuditAfter?.compGrantIds).toEqual(result.compGrantIds)
+    expect(unchangedMembership?.status).toBe("ACTIVE")
+    expect(unchangedMembership?.version).toBe(0)
+  })
+
   it("does not archive a prior real user when ownership transfers from a non-placeholder owner", async () => {
     const fx = await createClaimFixture({
       name: "real-owner",
@@ -374,6 +490,42 @@ describe("applyLineageClaimReview", () => {
       }),
       CLAIM_REVIEW_ERROR.NODE_ALREADY_APPROVED,
     )
+  })
+
+  it("allows only one concurrent approval for competing claims on the same node", async () => {
+    const fx = await createClaimFixture({ name: "concurrent-approval" })
+    const competingClaimant = await createUser("concurrent-approval-competitor")
+    const competingClaim = await db.lineageClaimRequest.create({
+      data: {
+        id: tag("concurrent-approval-competing-claim"),
+        treeId: fx.treeId,
+        nodeId: fx.nodeId,
+        claimantUserId: competingClaimant.id,
+        status: "PENDING",
+      },
+    })
+
+    const outcomes = await Promise.allSettled([
+      applyLineageClaimReview({
+        db,
+        brand: TEST_BRAND,
+        reviewerUserId: adminUserId!,
+        input: { claimId: fx.claimId, decision: "APPROVED" },
+      }),
+      applyLineageClaimReview({
+        db,
+        brand: TEST_BRAND,
+        reviewerUserId: adminUserId!,
+        input: { claimId: competingClaim.id, decision: "APPROVED" },
+      }),
+    ])
+    const approvedCount = await db.lineageClaimRequest.count({
+      where: { treeId: fx.treeId, nodeId: fx.nodeId, status: "APPROVED" },
+    })
+
+    expect(outcomes.filter(outcome => outcome.status === "fulfilled")).toHaveLength(1)
+    expect(outcomes.filter(outcome => outcome.status === "rejected")).toHaveLength(1)
+    expect(approvedCount).toBe(1)
   })
 
   it("rejects approval when claimant already owns a different lineage node", async () => {

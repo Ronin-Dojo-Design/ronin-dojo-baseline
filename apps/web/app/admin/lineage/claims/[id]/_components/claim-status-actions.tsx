@@ -5,9 +5,22 @@ import { useAction } from "next-safe-action/hooks"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
+import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import {
+  LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+  type LineageCompTier,
+} from "~/lib/entitlements/lineage-comp"
 import type { ClaimDetail } from "~/server/admin/lineage/claim-queries"
 import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
 
@@ -25,6 +38,8 @@ type ClaimStatusActionsProps = {
 export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
   const router = useRouter()
   const [reviewerNote, setReviewerNote] = useState("")
+  const [compTier, setCompTier] = useState<"NONE" | LineageCompTier>("NONE")
+  const [compTermDays, setCompTermDays] = useState("")
 
   const refresh = () => router.refresh()
 
@@ -84,6 +99,38 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           />
         </div>
 
+        <Stack direction="row" className="gap-3">
+          <div className="min-w-56">
+            <Label htmlFor="claim-comp-tier">Comp Tier</Label>
+            <Select
+              value={compTier}
+              onValueChange={value => setCompTier(value as "NONE" | LineageCompTier)}
+            >
+              <SelectTrigger id="claim-comp-tier" className="mt-1">
+                <SelectValue placeholder="No comp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NONE">None</SelectItem>
+                <SelectItem value={LINEAGE_PREMIUM_ENTITLEMENT_KEY}>Lineage Premium</SelectItem>
+                <SelectItem value={LINEAGE_ELITE_ENTITLEMENT_KEY}>Lineage Elite</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="min-w-44">
+            <Label htmlFor="claim-comp-term-days">Term Days (optional)</Label>
+            <Input
+              id="claim-comp-term-days"
+              type="number"
+              placeholder="Lifetime"
+              disabled={compTier === "NONE"}
+              value={compTermDays}
+              onChange={event => setCompTermDays(event.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </Stack>
+
         <Stack direction="row" className="gap-2">
           <Button
             variant="primary"
@@ -93,6 +140,13 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
                 claimId: claim.id,
                 decision: "APPROVED",
                 reviewerNote: reviewerNote || undefined,
+                comp:
+                  compTier === "NONE"
+                    ? undefined
+                    : {
+                        tier: compTier,
+                        termDays: compTermDays ? Number(compTermDays) : undefined,
+                      },
               })
             }
           >

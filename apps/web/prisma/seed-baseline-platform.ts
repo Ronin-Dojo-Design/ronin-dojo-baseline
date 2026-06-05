@@ -6,7 +6,7 @@ import { type DayOfWeek, PrismaClient } from "~/.generated/prisma/client"
  *
  * Production-safe seed for platform-level data missing from production:
  *   - 6 system Roles
- *   - 4 S3_UPLOAD Entitlements (all brands)
+ *   - 12 Entitlements (S3_UPLOAD, LINEAGE_PREMIUM, LINEAGE_ELITE for all brands)
  *   - 4 system Tournament Roles
  *   - 6 system Gamification Event Types
  *   - 6 Subscription Tiers (1 universal FREE + 5 BBL)
@@ -122,26 +122,47 @@ async function main() {
   console.log(`   Roles: Created ${rolesCreated}, Skipped ${rolesSkipped}`)
 
   // -----------------------------------------------------------------------
-  // 2. Entitlements — S3_UPLOAD for all 4 brands
+  // 2. Entitlements — baseline catalog keys for all 4 brands
   // -----------------------------------------------------------------------
   const brands = ["RONIN_DOJO_DESIGN", "BASELINE_MARTIAL_ARTS", "BBL", "WEKAF"] as const
+  const entitlementCatalog = [
+    {
+      key: "S3_UPLOAD",
+      name: "Media Upload",
+      description:
+        "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
+    },
+    {
+      key: "LINEAGE_PREMIUM",
+      name: "Lineage Premium",
+      description:
+        "Premium lineage-tree access entitlement for paid or complimentary lineage membership.",
+    },
+    {
+      key: "LINEAGE_ELITE",
+      name: "Lineage Elite",
+      description:
+        "Elite lineage-tree access entitlement; grants the premium entitlement set plus elite extras.",
+    },
+  ] as const
   let entCreated = 0
   let entSkipped = 0
   for (const brand of brands) {
-    const existing = await db.entitlement.findFirst({ where: { brand, key: "S3_UPLOAD" } })
-    if (existing) {
-      entSkipped++
-    } else {
-      await db.entitlement.create({
-        data: {
-          brand,
-          key: "S3_UPLOAD",
-          name: "Media Upload",
-          description:
-            "Allows uploading images and videos to S3 storage (avatar, cover photo, video intro)",
-        },
+    for (const entitlement of entitlementCatalog) {
+      const existing = await db.entitlement.findFirst({
+        where: { brand, key: entitlement.key },
       })
-      entCreated++
+      if (existing) {
+        entSkipped++
+      } else {
+        await db.entitlement.create({
+          data: {
+            brand,
+            ...entitlement,
+          },
+        })
+        entCreated++
+      }
     }
   }
   console.log(`   Entitlements: Created ${entCreated}, Skipped ${entSkipped}`)
