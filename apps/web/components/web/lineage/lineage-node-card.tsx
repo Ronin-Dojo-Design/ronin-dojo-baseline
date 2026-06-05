@@ -7,6 +7,10 @@ import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
 import { cx } from "~/lib/utils"
 import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
@@ -39,6 +43,7 @@ type LineageNodeCardProps = {
   showActions?: boolean
   canChangePromoter?: boolean
   onChangePromoter?: () => void
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 function initials(name: string | null | undefined): string {
@@ -58,9 +63,11 @@ export function LineageNodeCard({
   showActions = true,
   canChangePromoter,
   onChangePromoter,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageNodeCardProps) {
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
   const avatarSrc = node.user.passport?.avatarUrl ?? node.user.image
+  const canRenderFullCard = renderPolicy.canRenderFullCard
 
   // Prefer the tree-member's selectedRankAward over the user's latest overall rank
   const latestRankAward = node.user.rankAwards?.[0]
@@ -78,12 +85,16 @@ export function LineageNodeCard({
   const schoolLabel = latestMembership?.organization?.name ?? null
   const beltColor = selectedRank?.colorHex ?? latestRankAward?.rank.colorHex ?? null
   const cardStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
+  const showActionsMenu = showActions && (canRenderFullCard || canChangePromoter)
 
   return (
     <Card
       style={cardStyle}
       className={cx(
-        "min-h-40 min-w-40 max-w-50 overflow-hidden p-0 md:min-h-44 md:min-w-50 md:max-w-65",
+        canRenderFullCard
+          ? "min-h-40 min-w-40 max-w-50 md:min-h-44 md:min-w-50 md:max-w-65"
+          : "min-h-28 min-w-36 max-w-48 md:min-w-44 md:max-w-56",
+        "overflow-hidden p-0",
         isRoot && "border-foreground/40",
       )}
     >
@@ -94,7 +105,7 @@ export function LineageNodeCard({
         />
       )}
 
-      {showActions && (
+      {showActionsMenu && (
         <div className="absolute top-2 right-2 z-10">
           <LineageMemberActionsMenu
             displayName={displayName}
@@ -108,20 +119,29 @@ export function LineageNodeCard({
       <button
         type="button"
         onClick={() => onSelect(node.id)}
-        aria-label={`Open lineage profile for ${displayName}`}
-        className="flex min-h-40 w-full cursor-pointer flex-col p-3 text-left md:min-h-44 md:p-4"
+        aria-label={
+          canRenderFullCard
+            ? `Open lineage profile for ${displayName}`
+            : `Highlight lineage path for ${displayName}`
+        }
+        className={cx(
+          "flex w-full cursor-pointer flex-col p-3 text-left md:p-4",
+          canRenderFullCard ? "min-h-40 md:min-h-44" : "min-h-28",
+        )}
       >
         <Stack size="sm" direction="column" wrap={false} className="h-full w-full">
           <Stack size="sm" wrap={false} className="w-full items-start">
-            <Avatar className="size-10 md:size-12">
-              {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-              <AvatarFallback>{initials(displayName)}</AvatarFallback>
-            </Avatar>
+            {renderPolicy.features.avatar && (
+              <Avatar className="size-10 md:size-12">
+                {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+                <AvatarFallback>{initials(displayName)}</AvatarFallback>
+              </Avatar>
+            )}
             <Stack
               size="xs"
               direction="column"
               wrap={false}
-              className={cx("min-w-0 flex-1", showActions && "pr-7")}
+              className={cx("min-w-0 flex-1", showActionsMenu && "pr-7")}
             >
               <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
               {rankLabel && (
@@ -132,34 +152,39 @@ export function LineageNodeCard({
             </Stack>
           </Stack>
 
-          {schoolLabel && <Note className="max-w-full truncate text-xs">{schoolLabel}</Note>}
+          {renderPolicy.features.school && schoolLabel && (
+            <Note className="max-w-full truncate text-xs">{schoolLabel}</Note>
+          )}
 
-          <Stack size="xs" wrap className="mt-auto min-h-5">
-            {node.isVerified ? (
-              <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-                Verified
-              </Badge>
-            ) : (
-              <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-                Unverified
-              </Badge>
-            )}
-            {isRoot && (
-              <Badge variant="primary" size="sm">
-                Root
-              </Badge>
-            )}
-            {isClaimable === true && (
-              <Badge variant="info" size="sm">
-                Claimable
-              </Badge>
-            )}
-            {isClaimable === false && (
-              <Badge variant="soft" size="sm">
-                Display only
-              </Badge>
-            )}
-          </Stack>
+          {canRenderFullCard && (
+            <Stack size="xs" wrap className="mt-auto min-h-5">
+              {renderPolicy.features.verificationBadge &&
+                (node.isVerified ? (
+                  <Badge variant="success" size="sm" prefix={<CheckIcon />}>
+                    Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
+                    Unverified
+                  </Badge>
+                ))}
+              {isRoot && (
+                <Badge variant="primary" size="sm">
+                  Root
+                </Badge>
+              )}
+              {renderPolicy.features.claimBadge && isClaimable === true && (
+                <Badge variant="info" size="sm">
+                  Claimable
+                </Badge>
+              )}
+              {renderPolicy.features.claimBadge && isClaimable === false && (
+                <Badge variant="soft" size="sm">
+                  Display only
+                </Badge>
+              )}
+            </Stack>
+          )}
         </Stack>
       </button>
     </Card>

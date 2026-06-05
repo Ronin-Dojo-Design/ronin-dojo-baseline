@@ -6,6 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Stack } from "~/components/common/stack"
+import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
 import { type CanvasMember, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 
@@ -41,10 +45,12 @@ export function LineageHonorStrip({
   members,
   selectedMemberId,
   onSelect,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: {
   members: CanvasMember[]
   selectedMemberId: string | null
   onSelect: (nodeId: string) => void
+  renderPolicy?: LineageListingRenderPolicy
 }) {
   const reduceMotion = useReducedMotion()
   const featuredMembers = honorMembers(members)
@@ -105,10 +111,12 @@ export function LineageHonorStrip({
                       )}
                       style={beltColor ? { backgroundColor: beltColor } : undefined}
                     />
-                    <Avatar className="size-8">
-                      {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-                      <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
-                    </Avatar>
+                    {renderPolicy.features.honorStripAvatar && (
+                      <Avatar className="size-8">
+                        {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+                        <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+                      </Avatar>
+                    )}
                     <Stack size="xs" direction="column" wrap={false} className="min-w-0 flex-1">
                       <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
                       {rankLabel && (

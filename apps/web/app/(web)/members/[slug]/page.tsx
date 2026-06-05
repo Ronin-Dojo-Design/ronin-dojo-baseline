@@ -4,11 +4,13 @@ import { Badge } from "~/components/common/badge"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
+import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 
 type PageProps = {
@@ -41,11 +43,21 @@ export default async function MemberDetailPage({ params }: PageProps) {
   }
 
   const { user } = profile
+  const origin = await getRequestOrigin()
+  const profileUrl = buildAbsoluteUrl(`/members/${slug}`, origin)
 
   return (
     <>
       <Intro>
-        <IntroTitle>{user.name ?? "Member"}</IntroTitle>
+        <Stack size="sm" wrap className="items-start justify-between">
+          <IntroTitle>{user.name ?? "Member"}</IntroTitle>
+          <QrShareButton
+            url={profileUrl}
+            title="Profile QR Code"
+            description="Scan to open this public member profile."
+            fileName={`member-${slug}`}
+          />
+        </Stack>
         {profile.locationCity && (
           <IntroDescription>
             {[profile.locationCity, profile.locationRegion, profile.locationCountry]

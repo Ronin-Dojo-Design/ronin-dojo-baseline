@@ -36,6 +36,10 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
+import {
   buildChildGroups,
   buildDescendantCounts,
   type CanvasMember,
@@ -138,6 +142,7 @@ type LineageTreeCanvasProps = {
    * tree/board in the toolbar; an explicit toggle wins for the session.
    */
   defaultLayout?: LineageLayout
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 const MIN_SCALE = 0.5
@@ -530,6 +535,7 @@ function LineageBranch({
   hasSelection,
   onSelect,
   onChangePromoter,
+  renderPolicy,
   visited,
   generation,
   siblingIndex,
@@ -551,6 +557,7 @@ function LineageBranch({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy: LineageListingRenderPolicy
   visited: Set<string>
   generation: number
   siblingIndex: number
@@ -700,6 +707,7 @@ function LineageBranch({
               onChangePromoter={
                 onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
               }
+              renderPolicy={renderPolicy}
             />
           </div>
         </div>
@@ -733,6 +741,7 @@ function LineageBranch({
               hasSelection={hasSelection}
               onSelect={onSelect}
               onChangePromoter={onChangePromoter}
+              renderPolicy={renderPolicy}
               visited={nextVisited}
               generation={generation + 1}
               reduceMotion={reduceMotion}
@@ -762,6 +771,7 @@ function LineageChildGroupColumn({
   hasSelection,
   onSelect,
   onChangePromoter,
+  renderPolicy,
   visited,
   generation,
   reduceMotion,
@@ -783,6 +793,7 @@ function LineageChildGroupColumn({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy: LineageListingRenderPolicy
   visited: Set<string>
   generation: number
   reduceMotion: boolean
@@ -846,6 +857,7 @@ function LineageChildGroupColumn({
               hasSelection={hasSelection}
               onSelect={onSelect}
               onChangePromoter={onChangePromoter}
+              renderPolicy={renderPolicy}
               visited={visited}
               generation={generation}
               siblingIndex={index}
@@ -878,6 +890,7 @@ function LineageBoardCard({
   onSelect,
   onChangePromoter,
   canChangePromoter,
+  renderPolicy,
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -890,6 +903,7 @@ function LineageBoardCard({
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
   canChangePromoter: boolean
+  renderPolicy: LineageListingRenderPolicy
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
   const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
@@ -908,9 +922,12 @@ function LineageBoardCard({
         onSelect={onSelect}
         canChangePromoter={canChangePromoter}
         onChangePromoter={onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined}
+        renderPolicy={renderPolicy}
       />
 
-      {bio && <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>}
+      {renderPolicy.features.bioPreview && bio && (
+        <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>
+      )}
 
       {hasChildren && (
         <div className="mt-3 border-border/60 border-t pt-3">
@@ -926,6 +943,7 @@ function LineageBoardCard({
             onSelect={onSelect}
             canChangePromoter={canChangePromoter}
             onChangePromoter={onChangePromoter}
+            renderPolicy={renderPolicy}
           />
         </div>
       )}
@@ -948,6 +966,7 @@ export function LineageTreeCanvas({
   canEditPlacement = false,
   canManageGroups = false,
   defaultLayout,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageTreeCanvasProps) {
   const router = useRouter()
   const reduceMotion = useReducedMotion()
@@ -1367,6 +1386,7 @@ export function LineageTreeCanvas({
           members={normalizedMembers}
           selectedMemberId={selectedMemberId}
           onSelect={onSelect}
+          renderPolicy={renderPolicy}
         />
 
         <div
@@ -1407,9 +1427,11 @@ export function LineageTreeCanvas({
                 </Badge>
               )}
               <H6 className="text-muted-foreground">
-                {isMobileListViewport || layout === "board"
-                  ? "Tap any practitioner to open their profile"
-                  : "Click a practitioner to trace their path to the root"}
+                {!renderPolicy.canOpenProfileDrawer
+                  ? "Select a practitioner to trace their path"
+                  : isMobileListViewport || layout === "board"
+                    ? "Tap any practitioner to open their profile"
+                    : "Click a practitioner to trace their path to the root"}
               </H6>
             </Stack>
 
@@ -1422,6 +1444,7 @@ export function LineageTreeCanvas({
                 onSelect={onSelect}
                 canChangePromoter={editMode && canEditPlacement}
                 onChangePromoter={onChangePromoter}
+                renderPolicy={renderPolicy}
               />
             ) : layout === "board" ? (
               <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl md:max-w-4xl">
@@ -1439,6 +1462,7 @@ export function LineageTreeCanvas({
                     onSelect={onSelect}
                     onChangePromoter={onChangePromoter}
                     canChangePromoter={editMode && canEditPlacement}
+                    renderPolicy={renderPolicy}
                   />
                 ))}
               </Stack>
@@ -1463,6 +1487,7 @@ export function LineageTreeCanvas({
                     hasSelection={hasSelection}
                     onSelect={onSelect}
                     onChangePromoter={onChangePromoter}
+                    renderPolicy={renderPolicy}
                     visited={new Set()}
                     generation={0}
                     siblingIndex={index}

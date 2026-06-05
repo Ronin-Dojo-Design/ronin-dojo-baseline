@@ -4,9 +4,10 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-04
-last_agent: codex-session-0343
+updated: 2026-06-05
+last_agent: codex-session-0347
 pairs_with:
+  - docs/sprints/SESSION_0347.md
   - docs/sprints/SESSION_0343.md
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0339.md
@@ -54,6 +55,14 @@ Conventions:
 
 ---
 
+## 0. Shared common components — `components/common/`
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `QrShareButton` / `QrSharePanel` | `apps/web/components/common/qr-share-button.tsx` | `url`, `title`, optional `description`, `buttonLabel`, `downloadFilename` | SESSION_0347: shared invite/claim/profile QR surface. Renders a `qrcode.react` SVG (`level="H"`) plus a hidden canvas used for PNG download. Copy uses `navigator.clipboard` with a textarea fallback; PNG download handles missing canvas/blob errors with a toast. URLs must be server-built absolute URLs via `lib/request-url.ts`; QR links are convenience carriers only and must never include or authorize tier/role/school state. |
+
+---
+
 ## 1. Lineage (public viewer + admin) — `components/web/lineage/`
 
 > SESSION_0338: `LineageTreeCanvas` now defaults responsively when no explicit `defaultLayout` is passed:
@@ -72,6 +81,12 @@ Conventions:
 > SESSION_0343: selected-path trace and connector edge timing math moved from `lineage-tree-canvas.tsx` to
 > `lib/lineage/connector-geometry.ts` with unit coverage. `LineageConnectorLayer` rendering behavior is
 > unchanged; future Slice 5 work should extend the pure helper first, then verify the SVG layer.
+>
+> SESSION_0347: public lineage tree/card surfaces now accept a `LineageListingRenderPolicy` from
+> `lib/entitlements/lineage-tier-policy.ts`. Free policy renders name/rank/path-highlight only and suppresses
+> avatar, school, verification/claim badges, action menus, honor-strip avatars, bio previews, and profile drawer
+> opening. Premium/elite policies render the existing full-card/drawer contract; dashboard/editor capability
+> elevates to the full policy so editor workflows are unchanged.
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |

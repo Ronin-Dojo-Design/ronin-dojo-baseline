@@ -6,6 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
+import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
 import { type CanvasMember, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
 import { flattenLineage } from "~/lib/lineage/flatten-lineage"
 import { cx } from "~/lib/utils"
@@ -19,6 +23,7 @@ type LineageMobileListProps = {
   onSelect: (nodeId: string) => void
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 function memberRankLabel(member: CanvasMember) {
@@ -54,6 +59,7 @@ export function LineageMobileList({
   onSelect,
   canChangePromoter,
   onChangePromoter,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageMobileListProps) {
   const flattenedMembers = useMemo(
     () => flattenLineage(members, { roots: rootMembers }),
@@ -126,15 +132,21 @@ export function LineageMobileList({
                   variant="ghost"
                   size="sm"
                   onClick={() => onSelect(member.nodeId)}
-                  aria-label={`Open lineage profile for ${displayName}`}
+                  aria-label={
+                    renderPolicy.canOpenProfileDrawer
+                      ? `Open lineage profile for ${displayName}`
+                      : `Highlight lineage path for ${displayName}`
+                  }
                   aria-current={isSelected ? "true" : undefined}
                   className="min-h-14 min-w-0 flex-1 justify-start px-2 py-1.5 text-left hover:bg-muted/60"
                 >
                   <div className="!flex min-w-0 flex-1 items-center gap-2">
-                    <Avatar className="size-9 shrink-0">
-                      {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-                      <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
-                    </Avatar>
+                    {renderPolicy.features.avatar && (
+                      <Avatar className="size-9 shrink-0">
+                        {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+                        <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+                      </Avatar>
+                    )}
 
                     <Stack size="xs" direction="column" wrap={false} className="min-w-0 flex-1">
                       <span className="sr-only">Generation {depth + 1}</span>
@@ -153,7 +165,7 @@ export function LineageMobileList({
                           </span>
                         </Stack>
                       )}
-                      {schoolLabel && (
+                      {renderPolicy.features.school && schoolLabel && (
                         <span className="max-w-full truncate text-muted-foreground text-xs">
                           {schoolLabel}
                         </span>
@@ -163,24 +175,29 @@ export function LineageMobileList({
                 </Button>
 
                 <Stack size="xs" wrap={false} className="shrink-0 items-center">
-                  {member.node.isVerified ? (
-                    <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-                      <span className="sr-only">Verified</span>
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-                      <span className="sr-only">Unverified</span>
-                    </Badge>
+                  {renderPolicy.features.verificationBadge &&
+                    (member.node.isVerified ? (
+                      <Badge variant="success" size="sm" prefix={<CheckIcon />}>
+                        <span className="sr-only">Verified</span>
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
+                        <span className="sr-only">Unverified</span>
+                      </Badge>
+                    ))}
+                  {renderPolicy.canOpenProfileDrawer && (
+                    <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
                   )}
-                  <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
-                  <LineageMemberActionsMenu
-                    displayName={displayName}
-                    onViewProfile={() => onSelect(member.nodeId)}
-                    canChangePromoter={canChangePromoter}
-                    onChangePromoter={
-                      onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
-                    }
-                  />
+                  {(renderPolicy.canOpenProfileDrawer || canChangePromoter) && (
+                    <LineageMemberActionsMenu
+                      displayName={displayName}
+                      onViewProfile={() => onSelect(member.nodeId)}
+                      canChangePromoter={canChangePromoter}
+                      onChangePromoter={
+                        onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
+                      }
+                    />
+                  )}
                 </Stack>
               </div>
             </li>

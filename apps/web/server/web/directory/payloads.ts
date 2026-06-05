@@ -26,6 +26,7 @@ export const directoryMembershipPayload = {
 } satisfies Prisma.MembershipSelect
 
 export const directoryRankAwardPayload = {
+  id: true,
   rank: {
     select: {
       id: true,

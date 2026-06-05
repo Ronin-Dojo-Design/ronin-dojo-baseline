@@ -1,6 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  ELITE_LINEAGE_LISTING_RENDER_POLICY,
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
@@ -43,6 +48,7 @@ type LineageTreeBoardProps = {
    * chooses a responsive default: board below md, tree at/above md.
    */
   defaultLayout?: LineageLayout
+  renderPolicy?: LineageListingRenderPolicy
 
   /**
    * Legacy fallback source for discipline detail page.
@@ -90,6 +96,7 @@ export function LineageTreeBoard({
   isTreeClaimable,
   capability,
   publicHref,
+  renderPolicy,
 }: LineageTreeBoardProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -102,19 +109,32 @@ export function LineageTreeBoard({
    * Path highlighting is driven by `selectedNodeId` (set immediately);
    * the drawer is driven by `drawerOpen` (set after the delay).
    */
-  const handleNodeSelect = useCallback((nodeId: string) => {
-    // Clear any pending drawer open
-    if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
+  const effectiveRenderPolicy =
+    capability?.canEditTree || capability?.canManageGroups
+      ? ELITE_LINEAGE_LISTING_RENDER_POLICY
+      : (renderPolicy ?? FREE_LINEAGE_LISTING_RENDER_POLICY)
 
-    // Set the path highlight immediately
-    setSelectedNodeId(nodeId)
-    setDrawerTab("info")
+  const handleNodeSelect = useCallback(
+    (nodeId: string) => {
+      // Clear any pending drawer open
+      if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
 
-    // Open the drawer after a delay so the path lights up first
-    drawerTimerRef.current = setTimeout(() => {
-      setDrawerOpen(true)
-    }, 400)
-  }, [])
+      // Set the path highlight immediately
+      setSelectedNodeId(nodeId)
+      setDrawerTab("info")
+
+      if (!effectiveRenderPolicy.canOpenProfileDrawer) {
+        setDrawerOpen(false)
+        return
+      }
+
+      // Open the drawer after a delay so the path lights up first
+      drawerTimerRef.current = setTimeout(() => {
+        setDrawerOpen(true)
+      }, 400)
+    },
+    [effectiveRenderPolicy.canOpenProfileDrawer],
+  )
 
   /**
    * Phase 3c (descoped SESSION_0333): on-card / on-row "Change promoter..." path.
@@ -196,14 +216,15 @@ export function LineageTreeBoard({
         editMode={editMode}
         canEditPlacement={capability?.canEditTree ?? false}
         canManageGroups={capability?.canManageGroups ?? false}
+        renderPolicy={effectiveRenderPolicy}
       />
 
       <LineageProfileDrawer
-        open={drawerOpen}
+        open={effectiveRenderPolicy.canOpenProfileDrawer && drawerOpen}
         onOpenChange={open => {
           if (!open) handleDrawerClose()
         }}
-        profile={selectedProfile}
+        profile={effectiveRenderPolicy.canOpenProfileDrawer ? selectedProfile : null}
         promoterChangeContext={promoterChangeContext}
         selectedRankAward={selectedMember?.selectedRankAward ?? null}
         isClaimable={selectedMember?.isClaimable}

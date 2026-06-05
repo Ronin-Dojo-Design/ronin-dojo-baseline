@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-30
-last_agent: claude-session-0310
+updated: 2026-06-05
+last_agent: codex-session-0347
 ---
 
 # Wiki Change Log
@@ -251,3 +251,9 @@ Use this file only as historical context for early wiki adoption.
 - Locked: route `/events/[slug]` (additive `PromotionEvent.slug`); gallery proved with **real Black Belt Legacy photos** pulled from `ronin-dojo-monorepo` (`dist-bbl/brand/blackbeltlegacy/images/`) into `apps/web/public/seed/events/` (downscaled, ~2 MB, 8 images) + empty state; split S0319 seed-gen+OKC+read page / S0320 org timeline+`/events` index / S0321 begin editor+upload; run via `scripts/auto-session.sh 3` (push + PR-per-session, no auto-merge, halt on failed gate).
 - Generalized `scripts/auto-session.sh`'s prompt to read whatever epic plan the SESSION "Next session" block names (was hardcoded to `petey-plan-0305.md`).
 - No runtime code or schema changed in this planning commit; the numbered sessions (0319–0321) own the build.
+
+## 2026-06-05 — SESSION_0347
+
+- Updated `wiring-ledger.md` with WL-P1-6 for the unaudited generic admin entitlement grant/revoke path and marked it fixed by routing through audited admin entitlement helpers.
+- Updated `sop-data-and-wiring-flows.md` with the comp/gift entitlement flow: trusted triggers, server-derived tier keys, audit-before-mutation, and lineage tier-policy read model.
+- Added the SESSION_0347 row to the wiki index and refreshed the wiring-ledger index summary.

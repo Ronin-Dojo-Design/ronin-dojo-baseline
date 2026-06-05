@@ -4,10 +4,11 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-06-04
-last_agent: codex-session-0341
+updated: 2026-06-05
+last_agent: codex-session-0347
 pairs_with:
   - docs/sprints/SESSION_0304.md
+  - docs/sprints/SESSION_0347.md
   - docs/runbooks/design/motion-system.md
   - docs/knowledge/wiki/test-fail-fix-ledger.md
 backlinks:
@@ -60,6 +61,7 @@ follow-ups, not silent nulls.
 | WL-P1-3 | `components/admin/tournaments/registration-actions.tsx`; `app/admin/{leads,tools,tags,categories,users}/_components/*-actions.tsx` | Dead handler (Base UI semantics) | `DropdownMenuItem onSelect={…}` without `onClick` — Base UI `Menu.Item` activates on `onClick` and has no `onSelect` (it resolves to the `<div>` text-selection event). D-016 migration gap (scanned imports, not Menu.Item semantics). Tournament Approve/Waitlist, lead Nurture/Lost, tool/tag/category Duplicate, user Ban/Unban/Revoke likely silently no-op. | ✅ Fixed — SESSION_0334 swept all 11 instances across 6 files (`user-actions.tsx` was beyond the original list) to `onClick`-only + added a `bun test` regression guard (`components/common/dropdown-menu.guard.test.ts`) anchored to `DropdownMenuItem`. Drift D-016 closed. |
 | WL-P1-4 | `apps/web/components/web/lineage/lineage-search-bar.tsx`; `apps/web/lib/lineage/rank-progression.ts` | Test coverage (privacy) | No dedicated test that the public lineage search can't surface non-PUBLIC members, nor that rank-progression on a public node leaks no PII. Implied by the payload allowlist (`queries.visibility.test.ts`) but unasserted for these SESSION_0331/0332 surfaces. | ✅ Fixed — SESSION_0334 added `lib/lineage/search.privacy.test.ts` (real materializer → extracted `lib/lineage/search.ts` matcher; PRIVATE/RESTRICTED unsearchable) and `lib/lineage/rank-progression.privacy.test.ts` (adversarial-PII allowlist proof — caught + hardened a whole-`discipline`-object passthrough in `buildBeltProgressions`). |
 | WL-P1-5 | `.github/workflows/` | CI enforcement gap | `bun test` (incl. the invariant guards) + `biome` ran on **no** automated gate — only `playwright.yml` (e2e) + Vercel's build typecheck existed, and there are no git hooks. So the SESSION_0333/0334 guards didn't actually gate, and SESSION_0334 called the dropdown guard "CI-verified" inaccurately. | ✅ Fixed & **green** — SESSION_0335 added `.github/workflows/ci.yml` (Biome `biome ci` + typecheck + unit tests against a Postgres service, least-privilege perms), hardened `playwright.yml` perms, cleared 8 latent `biome ci` errors. Getting the unit job green also required: workflow-level dummy `DATABASE_URL` (apps/web postinstall runs `prisma generate`), `bun run test` (not `bun test`, to honor `--path-ignore-patterns='e2e/**'`), an email no-op guard (`lib/email.ts` crashed when Resend unconfigured — also quiets e2e), and a `prisma db seed` step. All 3 jobs pass (run `26889391880`). See [verification-and-testing](../../runbooks/dev-environment/verification-and-testing.md). |
+| WL-P1-6 | `apps/web/server/admin/entitlements/actions.ts` | Audit gap (entitlements) | `grantUserEntitlement` / `revokeUserEntitlement` were admin-gated but wrote `UserEntitlement` rows directly with no `AuditLog`. Because the schema accepted any `entitlementKey`, that path could mint or revoke `LINEAGE_PREMIUM` / `LINEAGE_ELITE` outside the audited comp spine. | ✅ Fixed — SESSION_0347 routes the generic admin path through `server/entitlements/admin-grants.ts`, writing `entitlement.admin.granted` / `entitlement.admin.revoked` before mutation while preserving the S3-upload toggle. Regression proof: `server/admin/entitlements/actions.safe-action.test.ts` covers unauth/non-admin/admin wrappers plus audit-before-mutation for grant/revoke. |
 
 ## P2 — nice-to-have / follow-up (deferred, tracked here)
 
@@ -146,6 +148,7 @@ flowchart TD
 - [Custom Component Inventory](custom-component-inventory.md) — where enhanced components are re-documented at close.
 - [Test Fail Fix Ledger](test-fail-fix-ledger.md) — companion ledger for clustered failing-test pointers.
 - [SESSION_0304](../../sprints/SESSION_0304.md) — session that produced this ledger + the fixes.
+- [SESSION_0347](../../sprints/SESSION_0347.md) — session that closed the unaudited admin entitlement path.
 
 ## Sources
 

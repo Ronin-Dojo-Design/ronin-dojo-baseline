@@ -4,7 +4,9 @@ import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { H3, H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
+import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
+import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { findInviteById } from "~/server/admin/invites/queries"
 
 export default withAdminPage(async ({ params }: PageProps<"/admin/invites/[id]">) => {
@@ -15,25 +17,34 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/invites/[id]">
     notFound()
   }
 
-  const inviteUrl = `/invite/${invite.code}`
+  const origin = await getRequestOrigin()
+  const inviteUrl = buildAbsoluteUrl(`/invite/${invite.code}`, origin)
 
   return (
     <div className="space-y-6">
       <Stack className="justify-between">
         <H3>Invite Details</H3>
-        <Badge
-          variant={
-            invite.status === "PENDING"
-              ? "primary"
-              : invite.status === "ACCEPTED"
-                ? "success"
-                : invite.status === "REVOKED"
-                  ? "danger"
-                  : "outline"
-          }
-        >
-          {invite.status}
-        </Badge>
+        <Stack size="sm" wrap>
+          <QrShareButton
+            url={inviteUrl}
+            title="Invite QR Code"
+            description="Scan to open this invite claim link."
+            fileName={`invite-${invite.code}`}
+          />
+          <Badge
+            variant={
+              invite.status === "PENDING"
+                ? "primary"
+                : invite.status === "ACCEPTED"
+                  ? "success"
+                  : invite.status === "REVOKED"
+                    ? "danger"
+                    : "outline"
+            }
+          >
+            {invite.status}
+          </Badge>
+        </Stack>
       </Stack>
 
       <div className="grid gap-4 @lg:grid-cols-2">

@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-06-04
-last_agent: claude-session-0342
+updated: 2026-06-05
+last_agent: codex-session-0347
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -665,6 +665,7 @@ it("creates audit log on transition", async () => {
 ### Wrapped safe-action tests (bun:test, real DB, harness via `lib/test/safe-action-env.ts`)
 
 - `server/admin/lineage/claim-review-actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, admin approve
+- `server/admin/entitlements/actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, comp happy path, generic grant/revoke audit
 - `server/web/lineage/node-profile-actions.safe-action.test.ts` — `userActionClient` chain: unauth, authorized NODE_EDITOR
 - `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
 - `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit

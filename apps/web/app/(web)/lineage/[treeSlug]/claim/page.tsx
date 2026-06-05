@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation"
 import { H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
+import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { getLineageTreeBySlug } from "~/server/web/lineage/queries"
 import { LineageClaimForm } from "./claim-form"
 
@@ -61,9 +63,20 @@ export default async function LineageClaimPage({ params }: Props) {
     )
   }
 
+  const origin = await getRequestOrigin()
+  const claimUrl = buildAbsoluteUrl(`/lineage/${treeSlug}/claim`, origin)
+
   return (
     <Stack direction="column" className="mx-auto max-w-2xl py-8">
-      <H4>Claim a Lineage Node</H4>
+      <Stack size="sm" wrap className="items-start justify-between">
+        <H4>Claim a Lineage Node</H4>
+        <QrShareButton
+          url={claimUrl}
+          title="Lineage Claim QR Code"
+          description="Scan to open this lineage claim link."
+          fileName={`lineage-${treeSlug}-claim`}
+        />
+      </Stack>
       <p className="text-muted-foreground text-sm">
         Submit a claim to take ownership of a node on the <strong>{tree.tree.name}</strong> lineage
         tree. After review, you&#39;ll be able to edit your profile and choose a listing tier.

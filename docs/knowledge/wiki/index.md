@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-05
 author: Brian + Copilot
-last_agent: codex-session-0346
+last_agent: codex-session-0347
 ---
 
 # LLM Wiki Index
@@ -446,6 +446,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0344](../../sprints/SESSION_0344.md) | session--open | closed — BBL lineage membership checkout gate: `/lineage/join` paid tier section + success/cancel shells, trusted `PricingPlan`→`EntitlementGrant` checkout action, explicit local `E2E_STRIPE_MOCK=1` harness, Playwright+Bun webhook proof for purchase grant, subscription grant, and subscription revoke; no `Membership.status` or `ProgramEnrollment` mutation |
 | [SESSION_0345](../../sprints/SESSION_0345.md) | session--open | closed — BBL checkout gate proven on the REAL Stripe network: Stripe CLI test-mode rehearsal (real hosted Checkout + signature-verified webhook) → one-time grant, subscription grant, subscription-deletion revoke; **caught + fixed a launch-blocking returning-customer checkout bug** (`customer_update`) in both checkout actions + regression test; prod is live-mode (drift D-018, CUTOVER corrected); gift/comp+tier-gating epic staged |
 | [SESSION_0346](../../sprints/SESSION_0346.md) | session--open | closed — audited admin comp-grant spine landed (`grantComp`/`revokeComp`, `LINEAGE_PREMIUM`/`LINEAGE_ELITE`, admin actions), claim approval and invite acceptance now materialize server-derived comp grants, and deterministic multi-rank/multi-student fixture proves mixed tiers/idempotency/edge cases without a schema migration |
+| [SESSION_0347](../../sprints/SESSION_0347.md) | session--open | closed — BBL tier-gating read model + QR lane: generic admin entitlement grants/revokes now audit before mutation, lineage tree cards resolve free/premium/elite render policy from active entitlement keys, and invite/claim/profile QR sharing uses server-built URLs with no client-trusted tier state |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -520,7 +521,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
-| [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips (SESSION_0304) |
+| [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
 ## Code files (annotated)
@@ -577,6 +578,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | ScheduleInstructorList | `components/web/schedules/schedule-instructor-list.tsx` | S2 |
 | DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
 | LineageQuery/List/Listing/Search/Card | `components/web/lineage/lineage-*.tsx` | SESSION_0248 |
+| QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |
 

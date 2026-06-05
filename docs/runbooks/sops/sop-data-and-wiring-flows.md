@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-04
-last_agent: codex-session-0344
+updated: 2026-06-05
+last_agent: codex-session-0347
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -15,6 +15,7 @@ backlinks:
   - docs/ronin_dojo_baseline_systems_pack/08_SOP_DATA_AND_WIRING_FLOWS_BASELINE.md
   - docs/sprints/SESSION_0146.md
   - docs/sprints/SESSION_0344.md
+  - docs/sprints/SESSION_0347.md
 ---
 
 # SOP — Data Flows and Wiring Flows
@@ -584,7 +585,68 @@ Suspend related ProgramEnrollment projections when the entitlement source maps t
 
 ---
 
-## 14. Invite → Claim → Membership activation flow (SESSION_0146, updated SESSION_0148)
+## 14. Comp / gift entitlement flow (SESSION_0346, hardened SESSION_0347)
+
+Comp and gift access uses the same `UserEntitlement` signal as paid lineage membership. It does not
+mutate `Membership.status`, does not touch Stripe customer/payment records, and does not trust tier
+state from the client or QR URLs.
+
+```text
+Trusted comp trigger
+  |
+  +--> Admin grantUserComp action (adminActionClient)
+  +--> Invite meta.comp accepted by claimInvite
+  +--> Lineage claim review meta.comp approval
+  |
+  v
+Server derives tier keys
+  |
+  +--> LINEAGE_PREMIUM => [LINEAGE_PREMIUM]
+  +--> LINEAGE_ELITE   => [LINEAGE_PREMIUM, LINEAGE_ELITE]
+  |
+  v
+grantComp / revokeComp helper
+  |
+  +--> AuditLog written before UserEntitlement mutation
+  +--> sourceType = MANUAL_GRANT
+  +--> deterministic sourceId = grant:{grantor}:{reason-slug}
+  |
+  v
+UserEntitlement rows become the read signal
+  |
+  v
+Lineage tier policy maps active keys to free / premium / elite render policy
+```
+
+```mermaid
+flowchart TD
+    TRIG[Trusted comp trigger] --> ADM[Admin grantUserComp]
+    TRIG --> INV[Invite meta.comp accepted]
+    TRIG --> CLAIM[Claim review meta.comp]
+    ADM & INV & CLAIM --> KEYS[Server derives premium / elite keys]
+    KEYS --> AUDIT[AuditLog before mutation]
+    AUDIT --> UE[UserEntitlement rows\nsourceType MANUAL_GRANT]
+    UE --> POLICY[Lineage tier policy\nfree / premium / elite]
+```
+
+Generic admin entitlement grants use the same audit-before-mutation rule after SESSION_0347:
+`grantUserEntitlement` / `revokeUserEntitlement` write `entitlement.admin.granted` /
+`entitlement.admin.revoked` audit rows before changing `UserEntitlement`. This keeps the S3-upload
+toggle working while closing the unaudited premium/elite write path recorded in
+[`wiring-ledger.md`](../../knowledge/wiki/wiring-ledger.md).
+
+### Key rules
+
+- Tier/role/school values in URLs or QR links are display/navigation only, never authorization.
+- Claim and invite comp access is server-derived from stored `meta.comp`.
+- Admin adjustment events must have an audit row before the entitlement mutation.
+- Paid and comped lineage access converge on active `UserEntitlement` keys.
+- `Membership.status` remains community/admin state per
+  [`ADR 0019`](../../architecture/decisions/0019-membership-lifecycle-ownership.md).
+
+---
+
+## 15. Invite → Claim → Membership activation flow (SESSION_0146, updated SESSION_0148)
 
 > **🔒 Security gates (hardened SESSION_0298–0300):**
 >
@@ -653,7 +715,7 @@ flowchart TD
 
 ---
 
-## 15. Certification issuance flow (SESSION_0146)
+## 16. Certification issuance flow (SESSION_0146)
 
 ```text
 CertificateTemplate (per brand/discipline)
@@ -693,7 +755,7 @@ flowchart TD
 
 ---
 
-## 16. Punch card / drop-in session tracking flow (SESSION_0146)
+## 17. Punch card / drop-in session tracking flow (SESSION_0146)
 
 ```text
 User purchases PricingPlan (PUNCH_CARD)
@@ -747,7 +809,7 @@ model ClassAttendance {
 
 ---
 
-## 17. Dirstarter → Ronin Dojo monetization alignment map (SESSION_0146)
+## 18. Dirstarter → Ronin Dojo monetization alignment map (SESSION_0146)
 
 ### What Dirstarter provides (L1 baseline)
 
@@ -901,7 +963,7 @@ Discipline
 
 ---
 
-## 18. What not to do
+## 19. What not to do
 
 - do not let host brand logic replace active brand logic
 - do not let public blog output pretend to be the whole content system

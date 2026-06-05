@@ -5,6 +5,8 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
+import { getServerSession } from "~/lib/auth"
+import { getLineageListingRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 import { getLineageProfilesByIds, getLineageTreeBySlug } from "~/server/web/lineage/queries"
 
 /**
@@ -50,7 +52,11 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
     return null
   }
 
-  const result = await getLineageTreeBySlug({ brand, slug: treeSlug })
+  const session = await getServerSession()
+  const [result, renderPolicy] = await Promise.all([
+    getLineageTreeBySlug({ brand, slug: treeSlug }),
+    getLineageListingRenderPolicyForUser({ brand, userId: session?.user?.id ?? null }),
+  ])
   if (!result || result.members.length === 0) {
     return null
   }
@@ -89,6 +95,7 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
         profilesById={profilesById}
         treeSlug={treeSlug}
         isTreeClaimable={result.tree.isClaimable}
+        renderPolicy={renderPolicy}
       />
     </section>
   )

@@ -9,6 +9,10 @@ import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
+import {
   buildChildGroups,
   type CanvasMember,
   type ChildGroup,
@@ -57,6 +61,7 @@ type CompactSharedProps = {
   onSelect: (nodeId: string) => void
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 type LineageCompactChildListProps = CompactSharedProps & {
@@ -157,6 +162,7 @@ function LineageCompactChildRow({
   member,
   depth,
   visited,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
   ...shared
 }: CompactSharedProps & {
   member: CanvasMember
@@ -222,13 +228,19 @@ function LineageCompactChildRow({
         <button
           type="button"
           onClick={() => shared.onSelect(member.nodeId)}
-          aria-label={`Open lineage profile for ${displayName}`}
+          aria-label={
+            renderPolicy.canOpenProfileDrawer
+              ? `Open lineage profile for ${displayName}`
+              : `Highlight lineage path for ${displayName}`
+          }
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 text-left transition-colors hover:bg-muted/60"
         >
-          <Avatar className="size-8 shrink-0">
-            {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-            <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
-          </Avatar>
+          {renderPolicy.features.avatar && (
+            <Avatar className="size-8 shrink-0">
+              {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+              <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+            </Avatar>
+          )}
 
           <Stack size="xs" direction="column" className="min-w-0 flex-1">
             <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
@@ -260,14 +272,16 @@ function LineageCompactChildRow({
           </Badge>
         )}
 
-        <LineageMemberActionsMenu
-          displayName={displayName}
-          onViewProfile={() => shared.onSelect(member.nodeId)}
-          canChangePromoter={shared.canChangePromoter}
-          onChangePromoter={
-            shared.onChangePromoter ? () => shared.onChangePromoter?.(member.nodeId) : undefined
-          }
-        />
+        {(renderPolicy.canOpenProfileDrawer || shared.canChangePromoter) && (
+          <LineageMemberActionsMenu
+            displayName={displayName}
+            onViewProfile={() => shared.onSelect(member.nodeId)}
+            canChangePromoter={shared.canChangePromoter}
+            onChangePromoter={
+              shared.onChangePromoter ? () => shared.onChangePromoter?.(member.nodeId) : undefined
+            }
+          />
+        )}
       </div>
 
       {expanded && (
@@ -276,6 +290,7 @@ function LineageCompactChildRow({
           depth={depth + 1}
           visited={new Set(visited).add(member.id)}
           {...shared}
+          renderPolicy={renderPolicy}
         />
       )}
     </div>

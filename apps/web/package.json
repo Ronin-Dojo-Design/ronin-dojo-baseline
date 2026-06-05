@@ -63,6 +63,7 @@
     "next-themes": "^0.4.6",
     "nuqs": "^2.8.5",
     "plur": "^6.0.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.2",
     "react-day-picker": "^9.12.0",
     "react-dom": "^19.2.2",
