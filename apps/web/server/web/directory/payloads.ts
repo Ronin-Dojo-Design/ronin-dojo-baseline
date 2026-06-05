@@ -40,6 +40,7 @@ export const directoryRankAwardPayload = {
 
 export const directoryProfileListPayload = {
   id: true,
+  slug: true,
   visibility: true,
   locationCity: true,
   locationRegion: true,
@@ -55,6 +56,7 @@ export const directoryProfileListPayload = {
       rankAwards: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
+        take: 1,
       },
     },
   },
@@ -62,6 +64,34 @@ export const directoryProfileListPayload = {
 
 export type DirectoryProfileList = Prisma.DirectoryProfileGetPayload<{
   select: typeof directoryProfileListPayload
+}>
+
+// ---------------------------------------------------------------------------
+// Public preview payload — enough for free profile listing/detail preview.
+// Full profile fields are selected only after the owner/listing tier is known.
+// ---------------------------------------------------------------------------
+
+export const directoryProfilePreviewPayload = {
+  id: true,
+  slug: true,
+  visibility: true,
+  showRanks: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      passport: { select: { avatarUrl: true } },
+      rankAwards: {
+        select: directoryRankAwardPayload,
+        orderBy: { rank: { sortOrder: "desc" as const } },
+      },
+    },
+  },
+} satisfies Prisma.DirectoryProfileSelect
+
+export type DirectoryProfilePreview = Prisma.DirectoryProfileGetPayload<{
+  select: typeof directoryProfilePreviewPayload
 }>
 
 // ---------------------------------------------------------------------------

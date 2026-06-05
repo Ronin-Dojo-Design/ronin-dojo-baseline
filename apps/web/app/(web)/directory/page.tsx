@@ -16,10 +16,9 @@ import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 
 const PAGE_URL = "/directory"
 const PAGE_TITLE = "Directory"
-const PAGE_DESCRIPTION = "Find practitioners, instructors, and schools in the community."
+const PAGE_DESCRIPTION = "Find practitioners and lineage profiles in the community."
 
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
-  { href: "/members", label: "Members", description: "Browse the member directory" },
   { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
   {
     href: "/organizations",
@@ -62,6 +61,7 @@ export default async function DirectoryPage({ searchParams }: Props) {
             searchParams={searchParams}
             brand={brand}
             viewerUserId={session?.user?.id}
+            viewerRole={session?.user?.role}
           />
         </Section.Content>
       </Section>

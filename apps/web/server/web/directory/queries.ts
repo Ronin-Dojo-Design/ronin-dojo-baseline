@@ -2,12 +2,21 @@ import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
+  FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+  type LineageProfileDetailRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
+import {
   directoryProfileDetailPayload,
   directoryProfileListPayload,
+  directoryProfilePreviewPayload,
   filterDisciplinePayload,
   filterOrganizationPayload,
   filterRankPayload,
 } from "~/server/web/directory/payloads"
+import {
+  getLineageProfileDetailRenderPoliciesForUsers,
+  getLineageProfileDetailRenderPolicyForUser,
+} from "~/server/web/entitlements/lineage-tier-policy"
 import { db } from "~/services/db"
 
 export type DirectoryFilters = {
@@ -16,6 +25,32 @@ export type DirectoryFilters = {
   rankId?: string
   locationCity?: string
   locationRegion?: string
+}
+
+type ProfileViewer = {
+  viewerUserId?: string | null
+  viewerRole?: string | null
+}
+
+function canRenderFullProfileForViewer({
+  policy,
+  profileUserId,
+  viewerUserId,
+  viewerRole,
+}: {
+  policy: LineageProfileDetailRenderPolicy
+  profileUserId: string
+} & ProfileViewer) {
+  return policy.canRenderFullProfile || viewerRole === "admin" || viewerUserId === profileUserId
+}
+
+function rankSummaryForProfile<RankAward>(profile: {
+  showRanks?: boolean
+  user: {
+    rankAwards: RankAward[]
+  }
+}): RankAward[] {
+  return profile.showRanks === false ? [] : profile.user.rankAwards.slice(0, 1)
 }
 
 /**
@@ -33,10 +68,12 @@ export const getDirectoryProfiles = cache(
     brand,
     filters = {},
     viewerUserId,
+    viewerRole,
   }: {
     brand: Brand
     filters?: DirectoryFilters
     viewerUserId?: string | null
+    viewerRole?: string | null
   }) => {
     const allowedVisibility: DirectoryVisibility[] = viewerUserId
       ? ["PUBLIC", "MEMBERS_ONLY"]
@@ -92,27 +129,55 @@ export const getDirectoryProfiles = cache(
       orderBy: { user: { name: "asc" } },
     })
 
+    const policies = await getLineageProfileDetailRenderPoliciesForUsers({
+      userIds: profiles.map(profile => profile.user.id),
+      brand,
+    })
+
     // Apply per-field privacy flags — strip data the user chose to hide
-    return profiles.map(profile => ({
-      id: profile.id,
-      userId: profile.user.id,
-      name: profile.user.name,
-      // Prefer the promoted Passport avatar, fall back to User.image.
-      image: profile.user.passport?.avatarUrl ?? profile.user.image,
-      locationCity: profile.locationCity,
-      locationRegion: profile.locationRegion,
-      locationCountry: profile.locationCountry,
-      email: profile.showEmail ? profile.user.email : null,
-      organizations: profile.showOrgs
-        ? profile.user.memberships.map(m => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug,
-            discipline: m.discipline,
-          }))
-        : [],
-      ranks: profile.showRanks ? profile.user.rankAwards : [],
-    }))
+    return profiles.map(profile => {
+      const policy = policies.get(profile.user.id) ?? FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
+      const canRenderFullProfile = canRenderFullProfileForViewer({
+        policy,
+        profileUserId: profile.user.id,
+        viewerUserId,
+        viewerRole,
+      })
+
+      return {
+        id: profile.id,
+        slug: profile.slug ?? profile.id,
+        userId: profile.user.id,
+        name: profile.user.name,
+        profileTier: policy.tier,
+        canRenderFullProfile,
+        // Prefer the promoted Passport avatar, fall back to User.image.
+        image: profile.user.passport?.avatarUrl ?? profile.user.image,
+        locationCity:
+          canRenderFullProfile && policy.features.location ? profile.locationCity : null,
+        locationRegion:
+          canRenderFullProfile && policy.features.location ? profile.locationRegion : null,
+        locationCountry:
+          canRenderFullProfile && policy.features.location ? profile.locationCountry : null,
+        email:
+          canRenderFullProfile && policy.features.email && profile.showEmail
+            ? profile.user.email
+            : null,
+        organizations:
+          canRenderFullProfile && policy.features.organizations && profile.showOrgs
+            ? profile.user.memberships.map(m => ({
+                id: m.organization.id,
+                name: m.organization.name,
+                slug: m.organization.slug,
+                discipline: m.discipline,
+              }))
+            : [],
+        ranks:
+          canRenderFullProfile && policy.features.rankHistory && profile.showRanks
+            ? profile.user.rankAwards
+            : rankSummaryForProfile(profile),
+      }
+    })
   },
 )
 
@@ -159,16 +224,16 @@ export const findProfileBySlug = async ({
   slug,
   brand,
   viewerUserId,
+  viewerRole,
 }: {
   slug: string
   brand: Brand
-  viewerUserId?: string | null
-}) => {
+} & ProfileViewer) => {
   const allowedVisibility: DirectoryVisibility[] = viewerUserId
     ? ["PUBLIC", "MEMBERS_ONLY"]
     : ["PUBLIC"]
 
-  const profile = await db.directoryProfile.findFirst({
+  const preview = await db.directoryProfile.findFirst({
     where: {
       slug,
       visibility: { in: allowedVisibility },
@@ -176,6 +241,50 @@ export const findProfileBySlug = async ({
         memberships: { some: { organization: { brand } } },
       },
     },
+    select: directoryProfilePreviewPayload,
+  })
+
+  if (!preview) return null
+
+  const policy = await getLineageProfileDetailRenderPolicyForUser({
+    userId: preview.user.id,
+    brand,
+  })
+  const canRenderFullProfile = canRenderFullProfileForViewer({
+    policy,
+    profileUserId: preview.user.id,
+    viewerUserId,
+    viewerRole,
+  })
+
+  if (!canRenderFullProfile) {
+    return {
+      id: preview.id,
+      slug: preview.slug,
+      profileTier: policy.tier,
+      canRenderFullProfile: false,
+      isOwnProfile: viewerUserId === preview.user.id,
+      coverPhotoUrl: null,
+      videoIntroUrl: null,
+      locationCity: null,
+      locationRegion: null,
+      locationCountry: null,
+      user: {
+        id: preview.user.id,
+        name: preview.user.name,
+        image: preview.user.passport?.avatarUrl ?? preview.user.image,
+        bio: null,
+        socialLinks: null,
+        email: null,
+        organizations: [],
+        ranks: rankSummaryForProfile(preview),
+        techniqueProgress: [],
+      },
+    }
+  }
+
+  const profile = await db.directoryProfile.findFirst({
+    where: { id: preview.id },
     select: directoryProfileDetailPayload,
   })
 
@@ -185,6 +294,9 @@ export const findProfileBySlug = async ({
   return {
     id: profile.id,
     slug: profile.slug,
+    profileTier: policy.tier,
+    canRenderFullProfile: true,
+    isOwnProfile: viewerUserId === profile.user.id,
     coverPhotoUrl: profile.coverPhotoUrl,
     videoIntroUrl: profile.videoIntroUrl,
     locationCity: profile.locationCity,

@@ -19,6 +19,22 @@ export type LineageListingRenderPolicy = {
   }
 }
 
+export type LineageProfileDetailRenderPolicy = {
+  tier: LineageListingTier
+  canRenderFullProfile: boolean
+  features: {
+    avatar: boolean
+    rankSummary: boolean
+    location: boolean
+    organizations: boolean
+    rankHistory: boolean
+    email: boolean
+    bio: boolean
+    socialLinks: boolean
+    qrShare: boolean
+  }
+}
+
 export const FREE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   tier: "free",
   canRenderFullCard: false,
@@ -52,6 +68,43 @@ export const ELITE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   tier: "elite",
 }
 
+export const FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
+  tier: "free",
+  canRenderFullProfile: false,
+  features: {
+    avatar: true,
+    rankSummary: true,
+    location: false,
+    organizations: false,
+    rankHistory: false,
+    email: false,
+    bio: false,
+    socialLinks: false,
+    qrShare: false,
+  },
+}
+
+export const PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
+  tier: "premium",
+  canRenderFullProfile: true,
+  features: {
+    avatar: true,
+    rankSummary: true,
+    location: true,
+    organizations: true,
+    rankHistory: true,
+    email: true,
+    bio: true,
+    socialLinks: true,
+    qrShare: true,
+  },
+}
+
+export const ELITE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
+  ...PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+  tier: "elite",
+}
+
 export const LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS = [
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
@@ -71,4 +124,26 @@ export function resolveLineageListingRenderPolicyFromEntitlementKeys(
   }
 
   return FREE_LINEAGE_LISTING_RENDER_POLICY
+}
+
+export function resolveLineageProfileDetailRenderPolicyFromListingPolicy(
+  listingPolicy: LineageListingRenderPolicy,
+): LineageProfileDetailRenderPolicy {
+  if (listingPolicy.tier === "elite") {
+    return ELITE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
+  }
+
+  if (listingPolicy.tier === "premium") {
+    return PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
+  }
+
+  return FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
+}
+
+export function resolveLineageProfileDetailRenderPolicyFromEntitlementKeys(
+  entitlementKeys: Iterable<string>,
+): LineageProfileDetailRenderPolicy {
+  return resolveLineageProfileDetailRenderPolicyFromListingPolicy(
+    resolveLineageListingRenderPolicyFromEntitlementKeys(entitlementKeys),
+  )
 }

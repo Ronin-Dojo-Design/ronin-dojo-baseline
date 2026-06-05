@@ -4,8 +4,8 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-06-04
-last_agent: codex-session-0344
+updated: 2026-06-05
+last_agent: codex-session-0348
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -16,6 +16,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0344.md
+  - docs/sprints/SESSION_0348.md
 tags:
   - lineage
   - listings
@@ -86,6 +87,23 @@ DB-derived Checkout Session for active `PricingPlan` rows marked with:
 
 Webhook fulfillment grants or revokes `UserEntitlement` through `EntitlementGrant`. It does not create
 `ProgramEnrollment` and does not mutate `Membership.status` (see ADR 0019).
+
+### SESSION_0348 public profile consumption
+
+The public directory/profile read sites now consume an entitlement-derived render policy instead of reading
+payment state, Stripe IDs, or `Membership.status` directly. The policy axis is the profile owner/listing
+tier:
+
+- free owner/listing: canonical `/directory/[slug]` stays reachable but renders only a preview
+  (avatar/initials, name, and rank summary);
+- premium/elite owner/listing: `/directory/[slug]` publishes full profile detail fields allowed by
+  DirectoryProfile privacy flags;
+- owner/admin preview can render the full profile without changing what anonymous visitors receive;
+- `/members` and `/members/[slug]` are compatibility redirects to `/directory` so there is only one
+  public people/profile surface.
+
+This keeps ADR 0011/0019 intact: active `UserEntitlement` rows decide paid feature access, and membership
+lifecycle rows are not repurposed into commerce.
 
 ### Pairing with `baseline-listings-runbook.md`
 
@@ -350,9 +368,9 @@ Do not make `LINEAGE_NODE` the only paid surface. `LINEAGE_TREE` ownership is th
 
 | Tier | Intended use | Features |
 | --- | --- | --- |
-| Free | basic public visibility | Name, latest rank, public chain (depth 1), claim button |
+| Free | basic public visibility | Name, avatar/initials fallback, latest rank, public chain (depth 1), claim/upgrade button; no full public profile fields |
 | Verified | trust badge + claimable identity | "Verified" badge, claimed-by-user, profile drawer Info tab editable |
-| Premium | full lineage page | Hero image, full chain depth, multi-discipline rank history, lead form, drawer "Rank History" + "Lineage" tabs editable |
+| Premium | full lineage page/profile | Hero image, full chain depth, multi-discipline rank history, lead form, full `/directory/[slug]` public profile, drawer "Rank History" + "Lineage" tabs editable |
 | Featured | sponsored lineage placement | Pinned on `/lineage/<discipline>` index, homepage rotation, brand-page hero rotation |
 | Tree Owner | own + edit a full LineageTree | `TREE_ADMIN` access, member add/move, visual group rename, public-label toggles, claim approval rights for that tree |
 

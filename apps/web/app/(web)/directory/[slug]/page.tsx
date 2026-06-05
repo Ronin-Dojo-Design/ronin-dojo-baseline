@@ -1,142 +1,188 @@
-import type { Metadata } from "next"
-import { headers } from "next/headers"
+import { LockKeyholeIcon } from "lucide-react"
 import { notFound } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
+import { Note } from "~/components/common/note"
+import { Prose } from "~/components/common/prose"
+import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
+import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 
-interface Props {
+type PageProps = {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+function profileInitial(name: string | null | undefined) {
+  return (name ?? "M").charAt(0).toUpperCase()
+}
+
+export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const profile = await findProfileBySlug({ slug, brand })
 
-  if (!profile) return { title: "Member Not Found" }
+  if (!profile) return { title: "Profile Not Found" }
 
   return {
-    title: profile.user.name ?? "Member Profile",
-    description: profile.user.bio
-      ? profile.user.bio.slice(0, 160)
-      : `View ${profile.user.name}'s profile`,
+    title: profile.user.name ?? "Directory Profile",
+    description: profile.canRenderFullProfile
+      ? `View ${profile.user.name}'s profile in the directory.`
+      : `View ${profile.user.name}'s directory listing preview.`,
   }
 }
 
-export default async function MemberDetailPage({ params }: Props) {
+export default async function DirectoryProfilePage({ params }: PageProps) {
   const { slug } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const session = await getServerSession()
+  const viewerUserId = session?.user?.id ?? null
 
   const profile = await findProfileBySlug({
     slug,
     brand,
-    viewerUserId: session?.user?.id,
+    viewerUserId,
+    viewerRole: session?.user?.role,
   })
 
-  if (!profile) notFound()
+  if (!profile) {
+    notFound()
+  }
 
-  const locationParts = [
-    profile.locationCity,
-    profile.locationRegion,
-    profile.locationCountry,
-  ].filter(Boolean)
+  const { user } = profile
+  const origin = await getRequestOrigin()
+  const profileUrl = buildAbsoluteUrl(`/directory/${slug}`, origin)
 
   return (
     <>
       <Intro>
-        <IntroTitle>{profile.user.name ?? "Member"}</IntroTitle>
-        {locationParts.length > 0 && (
-          <IntroDescription>📍 {locationParts.join(", ")}</IntroDescription>
+        <Stack size="sm" wrap className="items-start justify-between">
+          <Stack size="xs" direction="column">
+            <IntroTitle>{user.name ?? "Directory Profile"}</IntroTitle>
+            <Stack size="xs" wrap>
+              <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
+                {profile.canRenderFullProfile ? "Full profile" : "Listing preview"}
+              </Badge>
+              {profile.profileTier !== "free" && (
+                <Badge variant="outline">
+                  {profile.profileTier === "elite" ? "Elite" : "Premium"}
+                </Badge>
+              )}
+            </Stack>
+          </Stack>
+          {profile.canRenderFullProfile && (
+            <QrShareButton
+              url={profileUrl}
+              title="Profile QR Code"
+              description="Scan to open this public directory profile."
+              fileName={`directory-${slug}`}
+            />
+          )}
+        </Stack>
+        {profile.locationCity && (
+          <IntroDescription>
+            {[profile.locationCity, profile.locationRegion, profile.locationCountry]
+              .filter(Boolean)
+              .join(", ")}
+          </IntroDescription>
         )}
       </Intro>
 
-      {/* Bio */}
-      {profile.user.bio && (
+      <Section>
+        <div className="flex items-start gap-6">
+          <Avatar className="size-20">
+            {user.image && <AvatarImage src={user.image} alt={user.name ?? "Directory profile"} />}
+            <AvatarFallback>{profileInitial(user.name)}</AvatarFallback>
+          </Avatar>
+          <Stack size="sm">
+            {user.bio ? (
+              <Prose>
+                <p>{user.bio}</p>
+              </Prose>
+            ) : (
+              !profile.canRenderFullProfile && (
+                <Note>
+                  This profile is currently published as a free listing. Full bio, links, school
+                  details, and rank history unlock when the listing upgrades.
+                </Note>
+              )
+            )}
+            {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
+          </Stack>
+        </div>
+      </Section>
+
+      {user.ranks.length > 0 && (
         <Section>
-          <Section.Content>
-            <p className="text-secondary-foreground italic">&ldquo;{profile.user.bio}&rdquo;</p>
-          </Section.Content>
+          <H4>{profile.canRenderFullProfile ? "Ranks & Achievements" : "Rank Summary"}</H4>
+          <Stack size="sm">
+            {user.ranks.map(rankAward => (
+              <div key={rankAward.id} className="flex items-center gap-2">
+                <Badge variant="outline">{rankAward.rank?.name ?? "Rank"}</Badge>
+                {rankAward.rank?.rankSystem?.name && (
+                  <span className="text-sm text-muted-foreground">
+                    {rankAward.rank.rankSystem.name}
+                  </span>
+                )}
+              </div>
+            ))}
+          </Stack>
         </Section>
       )}
 
-      {/* Ranks */}
-      {profile.user.ranks.length > 0 && (
+      {user.organizations.length > 0 && (
         <Section>
-          <Section.Content>
-            <H4>Ranks</H4>
-            <Stack size="sm" className="flex-wrap mt-2">
-              {profile.user.ranks.map(award => (
-                <Badge key={award.rank.id} variant="soft">
-                  {award.rank.name} — {award.rank.rankSystem.name}
-                </Badge>
-              ))}
-            </Stack>
-          </Section.Content>
-        </Section>
-      )}
-
-      {/* Organizations */}
-      {profile.user.organizations.length > 0 && (
-        <Section>
-          <Section.Content>
-            <H4>Schools</H4>
-            <div className="grid gap-3 mt-2">
-              {profile.user.organizations.map(org => (
-                <Link
-                  key={org.id}
-                  href={`/organizations/${org.slug}`}
-                  className="flex items-center gap-2 text-sm hover:underline"
-                >
-                  <span className="font-medium">{org.name}</span>
-                  {org.discipline && (
-                    <Badge size="sm" variant="outline">
-                      {org.discipline.name}
-                    </Badge>
-                  )}
+          <H4>Schools &amp; Organizations</H4>
+          <Stack size="sm">
+            {user.organizations.map(org => (
+              <div key={org.id} className="flex items-center gap-2">
+                <Link href={`/schools/${org.slug}`} className="font-medium">
+                  {org.name}
                 </Link>
-              ))}
-            </div>
-          </Section.Content>
+                {org.discipline && <Badge variant="soft">{org.discipline.name}</Badge>}
+              </div>
+            ))}
+          </Stack>
         </Section>
       )}
 
-      {/* Technique Progress */}
-      {profile.user.techniqueProgress.length > 0 && (
+      {user.socialLinks && Object.keys(user.socialLinks).length > 0 && (
         <Section>
-          <Section.Content>
-            <H4>Technique Progress</H4>
-            <p className="text-sm text-muted-foreground mt-2">
-              {profile.user.techniqueProgress.length} technique
-              {profile.user.techniqueProgress.length !== 1 ? "s" : ""} logged
-              {" · "}
-              {profile.user.techniqueProgress.filter(tp => tp.verifiedById).length} verified
-            </p>
-          </Section.Content>
+          <H4>Social</H4>
+          <Stack size="sm" className="flex-wrap">
+            {Object.entries(user.socialLinks as Record<string, string>).map(([platform, url]) => (
+              <Link key={platform} href={url} target="_blank" rel="noopener noreferrer">
+                <Badge variant="outline">{platform}</Badge>
+              </Link>
+            ))}
+          </Stack>
         </Section>
       )}
 
-      {/* Contact */}
-      {profile.user.email && (
+      {!profile.canRenderFullProfile && (
         <Section>
-          <Section.Content>
-            <H4>Contact</H4>
-            <p className="text-sm mt-2">
-              ✉{" "}
-              <a href={`mailto:${profile.user.email}`} className="text-primary underline">
-                {profile.user.email}
-              </a>
-            </p>
-          </Section.Content>
+          <Stack direction="column" size="sm" className="max-w-xl">
+            <H4>Publish the full profile</H4>
+            <Note>
+              Premium and elite lineage listings publish the full public profile while free listings
+              stay intentionally compact.
+            </Note>
+            <Button
+              variant="primary"
+              size="md"
+              prefix={<LockKeyholeIcon />}
+              render={<Link href="/lineage/join" />}
+            >
+              Upgrade listing
+            </Button>
+          </Stack>
         </Section>
       )}
     </>

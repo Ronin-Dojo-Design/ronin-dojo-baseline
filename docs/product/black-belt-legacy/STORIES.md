@@ -4,9 +4,9 @@ slug: black-belt-legacy-stories
 type: stories
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-06-05
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-session-0348
 backlinks:
   - docs/product/README.md
   - docs/product/black-belt-legacy/PRD.md
@@ -36,7 +36,7 @@ Profile -> Claim -> Rank History -> Lineage -> Curriculum -> Certification -> Co
 
 | ID | Story | Acceptance criteria |
 | --- | --- | --- |
-| BBL-PROFILE-001 | As a visitor, I want to view a martial artist profile so I can understand who they are, what they train, and where they fit in the community. | Public profile shows name, photo, rank summary, discipline, school/team, bio, and verification status. |
+| BBL-PROFILE-001 | As a visitor, I want to view a martial artist listing/profile so I can understand who they are, what they train, and where they fit in the community. | Free public listing shows name, avatar/initials fallback, and rank summary only. Premium/elite listing owners publish the full public profile with bio, contact/share affordances, rank history, school/team, and verification status. |
 | BBL-PROFILE-002 | As a practitioner, I want to claim my profile so I can correct and maintain my own legacy information. | Claim flow accepts evidence, creates pending review, and does not expose evidence publicly. |
 | BBL-PROFILE-003 | As an admin, I want to approve or deny profile claims so that placeholder profiles can become owned profiles safely. | Admin can approve/deny with audit note; claimant gets ownership/edit rights only after approval. |
 | BBL-PROFILE-004 | As a visitor, I want to see whether a profile is verified, unverified, disputed, imported, or claimed so I can judge trust level. | Profile displays trust badge consistently across card, drawer, and detail page. |
@@ -95,7 +95,7 @@ Profile -> Claim -> Rank History -> Lineage -> Curriculum -> Certification -> Co
 
 | ID | Story | Acceptance criteria |
 | --- | --- | --- |
-| BBL-DISCOVER-001 | As a visitor, I want to search people by name, discipline, rank, school, and location so I can find practitioners. | Search returns public profiles only and respects brand/visibility. |
+| BBL-DISCOVER-001 | As a visitor, I want to search people by name, discipline, rank, school, and location so I can find practitioners. | Search returns public profiles only, respects brand/visibility, and uses `/directory` as the canonical browse slug. |
 | BBL-DISCOVER-002 | As a visitor, I want to filter lineage trees by discipline/style/school so I can explore the right branch. | Filters update tree/list results without exposing private trees. |
 | BBL-DISCOVER-003 | As a visitor, I want related profiles suggested from a profile page so I can explore instructors, students, and schools. | Suggestions use visible relationships only. |
 

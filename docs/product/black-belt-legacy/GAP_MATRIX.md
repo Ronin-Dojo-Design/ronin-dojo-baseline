@@ -4,8 +4,8 @@ slug: bbl-gap-matrix
 type: report
 status: active
 created: 2026-05-27
-updated: 2026-06-04
-last_agent: codex-session-0344
+updated: 2026-06-05
+last_agent: codex-session-0348
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -41,7 +41,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| BBL-PROFILE-001 | View martial artist profile | 🔶 Partial | `/directory/[slug]` exists (directory listing). `LineageNode` has bio, slug, visibility. Profile drawer exists in lineage tree. **Missing:** Dedicated public profile page (e.g., `/people/[slug]`) with full bio, rank summary, school, verification status. |
+| BBL-PROFILE-001 | View martial artist profile | 🔶 Partial | SESSION_0348 made `/directory` the canonical public browse/profile slug. `/directory/[slug]` now owner-tier gates public profile detail: free listing owners publish avatar/initials + name + rank summary preview only; premium/elite owners publish full profile fields; `/members` and `/members/[slug]` redirect to `/directory`. Profile drawer exists in lineage tree. **Missing:** Consistent trust badge/status component across card, drawer, and detail page; future faceted directory across people/schools/orgs remains follow-up. |
 | BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. SESSION_0278 added `/lineage/join` intake that can create a `LineageClaimRequest` for a signed-in user selecting a claimable lineage node while also creating a lead and draft listing. **Missing:** End-to-end flow validation with authenticated browser session; evidence attachment UI unclear. |
 | BBL-PROFILE-003 | Admin approve/deny claims | ✅ Built | `/admin/lineage/claims/[id]` route exists. Server: `claim-review-actions.ts` with safe-action tests. Admin can approve/deny with audit note. |
 | BBL-PROFILE-004 | Trust badges (verified/unverified/disputed) | 🔶 Partial | `LineageNode.isVerified` and `LineageNode.visibility` exist in schema. `lineage-node-card.tsx` renders node cards. **Missing:** Consistent trust badge component across card, drawer, and detail page. No `disputed` or `imported` status enum on LineageNode (only `isVerified: boolean`). |
@@ -160,4 +160,4 @@ Baseline live proxy rehearsal remains before cutover.
 4. **BBL-PROFILE-004 + BBL-LINEAGE-005** — Trust badge component. Shared dependency across Epics 1 and 2. Use existing `LineageVerificationStatus` before adding any new enum.
 5. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).
 6. **BBL-RANK-004** — Disputed status enum. Foundational for rank trust features across the board.
-7. **Public profile page** (BBL-PROFILE-001) — Dedicated `/people/[slug]` route. High user visibility.
+7. **Faceted `/directory` follow-up** (BBL-DISCOVER-001) — Expand the canonical directory beyond people/profile browse into people, schools, organizations, and lineage-tree facets without restoring a duplicate `/members` surface.

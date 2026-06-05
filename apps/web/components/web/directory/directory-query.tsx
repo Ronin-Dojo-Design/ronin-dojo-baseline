@@ -12,12 +12,14 @@ type DirectoryQueryProps = Omit<DirectoryListingProps, "children"> & {
   searchParams: Promise<SearchParams>
   brand: Brand
   viewerUserId?: string | null
+  viewerRole?: string | null
 }
 
 const DirectoryQuery = async ({
   searchParams,
   brand,
   viewerUserId,
+  viewerRole,
   ...props
 }: DirectoryQueryProps) => {
   const params = directoryFilterParamsCache.parse(await searchParams)
@@ -25,6 +27,7 @@ const DirectoryQuery = async ({
   const profiles = await getDirectoryProfiles({
     brand,
     viewerUserId,
+    viewerRole,
     filters: {
       organizationId: params.org || undefined,
       disciplineId: params.discipline || undefined,

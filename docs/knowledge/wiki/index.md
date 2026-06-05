@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-05
 author: Brian + Copilot
-last_agent: codex-session-0347
+last_agent: codex-session-0348
 ---
 
 # LLM Wiki Index
@@ -80,6 +80,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Martial Arts Stories](../../product/baseline-martial-arts/STORIES.md) | stories | active |
 | [Black Belt Legacy PRD](../../product/black-belt-legacy/PRD.md) | prd | active |
 | [Black Belt Legacy Stories](../../product/black-belt-legacy/STORIES.md) | stories | active |
+| [Black Belt Legacy Gap Matrix](../../product/black-belt-legacy/GAP_MATRIX.md) | report | active — SESSION_0348 records `/directory` as the canonical people/profile slug, with free preview vs premium/elite full-profile tier gating |
 | [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
 | [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan |
 
@@ -447,6 +448,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0345](../../sprints/SESSION_0345.md) | session--open | closed — BBL checkout gate proven on the REAL Stripe network: Stripe CLI test-mode rehearsal (real hosted Checkout + signature-verified webhook) → one-time grant, subscription grant, subscription-deletion revoke; **caught + fixed a launch-blocking returning-customer checkout bug** (`customer_update`) in both checkout actions + regression test; prod is live-mode (drift D-018, CUTOVER corrected); gift/comp+tier-gating epic staged |
 | [SESSION_0346](../../sprints/SESSION_0346.md) | session--open | closed — audited admin comp-grant spine landed (`grantComp`/`revokeComp`, `LINEAGE_PREMIUM`/`LINEAGE_ELITE`, admin actions), claim approval and invite acceptance now materialize server-derived comp grants, and deterministic multi-rank/multi-student fixture proves mixed tiers/idempotency/edge cases without a schema migration |
 | [SESSION_0347](../../sprints/SESSION_0347.md) | session--open | closed — BBL tier-gating read model + QR lane: generic admin entitlement grants/revokes now audit before mutation, lineage tree cards resolve free/premium/elite render policy from active entitlement keys, and invite/claim/profile QR sharing uses server-built URLs with no client-trusted tier state |
+| [SESSION_0348](../../sprints/SESSION_0348.md) | session--open | closed — BBL profile/detail tier-gating consumption: `/directory` canonical browse/detail, `/members` compatibility redirects, free owner preview vs premium/elite full profile, and focused no-leak tests |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

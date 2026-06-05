@@ -7,9 +7,12 @@ import { Stack } from "~/components/common/stack"
 
 type DirectoryProfile = {
   id: string
+  slug: string
   userId: string
   name: string | null
   image: string | null
+  profileTier: "free" | "premium" | "elite"
+  canRenderFullProfile: boolean
   locationCity: string | null
   locationRegion: string | null
   locationCountry: string | null
@@ -54,13 +57,26 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
                 <AvatarFallback>{(profile.name ?? "?").charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <H4>{profile.name ?? "Anonymous"}</H4>
+                <H4>
+                  <Link href={`/directory/${profile.slug}`}>{profile.name ?? "Anonymous"}</Link>
+                </H4>
                 {(profile.locationCity || profile.locationRegion) && (
                   <CardDescription>
                     {[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ")}
                   </CardDescription>
                 )}
               </div>
+            </Stack>
+
+            <Stack direction="row" className="mt-2 flex-wrap gap-1">
+              <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
+                {profile.canRenderFullProfile ? "Full profile" : "Preview"}
+              </Badge>
+              {profile.profileTier !== "free" && (
+                <Badge variant="outline">
+                  {profile.profileTier === "elite" ? "Elite" : "Premium"}
+                </Badge>
+              )}
             </Stack>
 
             {profile.organizations.length > 0 && (

@@ -4,9 +4,9 @@ slug: black-belt-legacy-prd
 type: prd
 status: active
 created: 2026-05-18
-updated: 2026-05-18
+updated: 2026-06-05
 author: Brian + Giddy
-last_agent: chatgpt-giddy
+last_agent: codex-session-0348
 backlinks:
   - docs/product/README.md
   - docs/knowledge/wiki/ronin-project-context.md
@@ -62,7 +62,7 @@ Black Belt Legacy solves this by turning identity, lineage, rank history, and tr
 
 ## Goals
 
-1. Give each practitioner a clear public profile.
+1. Give each practitioner a clear directory listing, with full public profiles reserved for paid listing tiers.
 2. Let placeholder historical profiles be claimed through review.
 3. Render public lineage trees with grouped rows and trust badges.
 4. Provide safe editor workflows for tree, branch, and node stewards.
@@ -84,9 +84,9 @@ Black Belt Legacy solves this by turning identity, lineage, rank history, and tr
 
 ### 1. Legacy Profiles
 
-Public and claimed martial artist profiles.
+Public and claimed martial artist listings and profiles.
 
-Users should be able to understand who a person is, what they train, their rank context, school/team affiliation, lineage position, and trust status.
+Free listings should expose a compact public preview: name, avatar/initials fallback, and rank summary. Premium and elite listings unlock the full public profile: bio, links, school/team affiliation, rank history, lineage position, share/QR affordances, and trust status.
 
 ### 2. Lineage Trees
 
@@ -136,7 +136,8 @@ This is the product's credibility layer.
 
 ### Profile and claims
 
-- View public legacy profile.
+- View free public legacy listing preview.
+- View full public legacy profile when the profile owner/listing tier is premium or elite.
 - Claim placeholder historical profile.
 - Submit private claim evidence.
 - Admin approves or denies with audit note.
@@ -200,4 +201,4 @@ Business/content health:
 2. Which trust states are public in v1: verified, unverified, disputed, claimed, imported?
 3. Should BBL premium features include private archive/media access?
 4. Which certification flows are first: instructor certification, rank certificate, or legacy credential verification?
-5. Which public pages should launch first: `/lineage`, `/profiles`, `/legends`, `/certificates`, or `/archive`?
+5. After `/directory` becomes the canonical public browse/profile slug, which faceted surfaces should it include first: people, schools, organizations, lineage trees, or certificates?

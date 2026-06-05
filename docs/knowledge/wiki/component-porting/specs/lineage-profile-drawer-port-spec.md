@@ -4,10 +4,11 @@ slug: lineage-profile-drawer-port-spec
 type: spec
 status: draft
 created: 2026-05-16
-updated: 2026-05-16
-last_agent: claude-session-0175
+updated: 2026-06-05
+last_agent: codex-session-0348
 pairs_with:
   - docs/sprints/SESSION_0175.md
+  - docs/sprints/SESSION_0348.md
   - docs/knowledge/wiki/component-porting/plawywright-component-conversion-method/component-port-spec.md
   - docs/knowledge/wiki/component-porting/specs/lineage-family-tree-port-spec.md
 backlinks:
@@ -115,10 +116,11 @@ tags:
 │   ("No tournament records for this belt level").                    │
 │ - Missing avatar: AvatarFallback shows initials.                    │
 │ - Error: not observed; surface as toast + close drawer.             │
-│ - Visibility gating: a node with LineageVisibility !== PUBLIC and   │
-│   no viewer ACL → drawer opens with a redacted body (name + rank    │
-│   only, no bio/tournaments/achievements). Out-of-scope for MVP      │
-│   (all seeded data is PUBLIC); MVP renders the full body.           │
+│ - Visibility + tier gating: a node/profile without public access or │
+│   without a premium/elite owner/listing tier renders a redacted      │
+│   body (avatar/initials + name + rank summary only; no bio, school, │
+│   links, tournaments, achievements, QR, or full rank history).       │
+│   SESSION_0348 makes this an active launch rule, not future polish. │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -213,8 +215,10 @@ type LineageProfile = {
 | Closed | Drawer not in DOM (per primitive default). |
 | Opening (loading data) | `Skeleton` rows in the identity block + tab body. |
 | Loaded — PUBLIC node | Full Info tab; other tabs render data or empty state. |
-| Loaded — UNLISTED node, no viewer ACL | Out-of-scope for MVP. Default to PUBLIC-only filter in queries. |
-| Loaded — RESTRICTED/PRIVATE | Out-of-scope for MVP. Treat as 404 → drawer doesn't open; toast "Profile not available". |
+| Loaded — free owner/listing tier | Redacted preview only: avatar/initials, name, rank summary, and upgrade/claim CTA. |
+| Loaded — premium/elite owner/listing tier | Full Info tab, still bounded by profile privacy flags and public visibility. |
+| Loaded — UNLISTED node, no viewer ACL | Default to PUBLIC-only filter in queries unless an authenticated ACL path is explicitly implemented. |
+| Loaded — RESTRICTED/PRIVATE | Treat as 404 → drawer doesn't open; toast "Profile not available". |
 | No data for a tab | Tab-body empty state copy (e.g. "No tournaments recorded"). |
 | Error fetching profile | Close the drawer + toast error; do NOT show a broken drawer body. |
 
@@ -227,7 +231,7 @@ type LineageProfile = {
 - Photos / Videos pills and media gallery.
 - Students mini-search list.
 - "Open Full Viewer" route.
-- Visibility-gated redacted body (treat as 404 + toast for now).
+- Full tournament/achievement body for free listings; free tier renders the compact preview only.
 - Mobile bottom-sheet polish; primitive default is acceptable.
 
 ## Cross-references
