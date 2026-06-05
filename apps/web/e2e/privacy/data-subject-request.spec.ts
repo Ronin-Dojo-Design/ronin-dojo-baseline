@@ -10,7 +10,11 @@
  * @resolves SESSION_0254_FINDING_01
  */
 import { expect, test } from "@playwright/test"
-import { cleanupTestUser, createAuthenticatedSession, createAuthenticatedUser } from "../helpers/auth"
+import {
+  cleanupTestUser,
+  createAuthenticatedSession,
+  createAuthenticatedUser,
+} from "../helpers/auth"
 import { cleanupDsrByUser, listDsrByUser } from "../helpers/dsr"
 
 test.describe.configure({ mode: "serial" })
