@@ -450,7 +450,9 @@ describe("createRegistrationCheckout — capacity race", () => {
     // (Prisma P2034 serializable write conflict). Both are correct fail-closed behavior.
     // A leaked raw Prisma message would mean the catch in `register.ts` is missing a case.
     expect(failures[0]?.serverError).toMatch(/at capacity|Registration conflict/)
-    expect(failures[0]?.serverError).not.toMatch(/PrismaClient|Unique constraint/)
+    expect(failures[0]?.serverError).not.toMatch(
+      /PrismaClient|Unique constraint|TransactionWriteConflict/,
+    )
 
     const activeEntries = await db.registrationEntry.count({
       where: { divisionId: fx.divisionId, status: "ACTIVE" },

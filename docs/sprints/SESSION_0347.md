@@ -465,4 +465,5 @@ No live Dirstarter API or baseline-layer replacement was introduced. Existing Ba
 
 - GitHub Actions failed on commit `efd7f8f` before any lint/typecheck/test/e2e execution because `pnpm install --frozen-lockfile` detected `qrcode.react` in `apps/web/package.json` but not in `pnpm-lock.yaml`.
 - Remediation: regenerated `pnpm-lock.yaml` with the existing root package-manager contract (`pnpm@9.0.0`) and verified the failed CI step locally with `pnpm install --frozen-lockfile`.
+- Follow-up CI failure on `ba1b09b`: the existing tournament capacity-race test exposed that Prisma's Postgres adapter can surface serializable conflicts as raw `TransactionWriteConflict` instead of `P2034`. Remediation: normalized that adapter error in `createRegistrationCheckout` to the existing user-facing "Registration conflict" retry message and tightened the regression test so the raw adapter string cannot leak.
 - Production domain check: `https://baselinemartialarts.com` returned `200` from Vercel and set `brand=BASELINE_MARTIAL_ARTS`.
