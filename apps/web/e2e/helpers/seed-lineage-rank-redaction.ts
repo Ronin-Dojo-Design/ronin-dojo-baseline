@@ -12,6 +12,8 @@ export interface LineageRankRedactionFixture {
   treeId: string
   treeSlug: string
   treeName: string
+  viewerUserId: string
+  viewerPremiumEntitlementId: string
   memberA: {
     userId: string
     nodeId: string

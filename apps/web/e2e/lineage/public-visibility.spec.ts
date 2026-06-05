@@ -14,18 +14,20 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-async function openLineageProfileDrawer(page: Page, displayName: string) {
-  const profileButton = page.getByRole("button", {
-    name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
+async function expectFreeTierPathControl(page: Page, displayName: string) {
+  const pathButton = page.getByRole("button", {
+    name: new RegExp(`Highlight lineage path for ${escapeRegExp(displayName)}`),
   })
 
-  await expect(profileButton).toBeVisible({ timeout: 30_000 })
-  await expect(async () => {
-    await profileButton.click()
-    await expect(page.getByRole("dialog", { name: displayName })).toBeVisible({
-      timeout: 3_000,
-    })
-  }).toPass({ timeout: 30_000 })
+  await expect(pathButton).toBeVisible({ timeout: 30_000 })
+  await expect(
+    page.getByRole("button", {
+      name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
+    }),
+  ).toHaveCount(0)
+
+  await pathButton.click()
+  await expect(page.getByRole("dialog", { name: displayName })).toHaveCount(0)
 }
 
 async function expectNoHiddenText(pageContent: string, hiddenText: string[]) {
@@ -93,7 +95,9 @@ test.describe("Lineage public visibility E2E", () => {
     ])
   })
 
-  test("anonymous detail renders only public members and drawer profiles", async ({ page }) => {
+  test("anonymous detail renders free-tier public members without profile drawer", async ({
+    page,
+  }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
 
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
@@ -113,12 +117,7 @@ test.describe("Lineage public visibility E2E", () => {
     }
     await expectNoHiddenText(await page.content(), hiddenText)
 
-    await openLineageProfileDrawer(page, fixture.publicName)
-
-    await expect(page.getByRole("heading", { name: fixture.publicName })).toBeVisible({
-      timeout: 30_000,
-    })
-    await expect(page.getByText("Current Rank")).toBeVisible()
+    await expectFreeTierPathControl(page, fixture.publicName)
 
     for (const hiddenValue of hiddenText) {
       await expect(body).not.toContainText(hiddenValue)

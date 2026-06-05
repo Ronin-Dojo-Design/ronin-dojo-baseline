@@ -18,6 +18,7 @@ const prisma = new PrismaClient({ adapter })
 
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
 const TAG_PREFIX = "session-0265-rank-redaction-e2e"
+const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM"
 
 const makeRunId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-")
@@ -58,9 +59,66 @@ async function sweepStaleRows() {
   await prisma.rankSystem.deleteMany({ where: { name: { contains: TAG_PREFIX } } })
   await prisma.discipline.deleteMany({ where: { slug: { contains: TAG_PREFIX } } })
   await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.userEntitlement.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.directoryProfile.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.passport.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: userIds } } })
+}
+
+async function createUser({ runId, label }: { runId: string; label: string }) {
+  const displayName = `E2E ${label} ${runId}`
+  const slug = slugify(`${TAG_PREFIX}-${label}-${runId}`)
+
+  const user = await prisma.user.create({
+    data: {
+      name: displayName,
+      email: `${slug}@test.local`,
+      emailVerified: true,
+      role: "user",
+    },
+  })
+
+  await prisma.passport.create({
+    data: { userId: user.id, displayName },
+  })
+  await prisma.directoryProfile.create({
+    data: {
+      userId: user.id,
+      slug,
+      visibility: "PUBLIC",
+    },
+  })
+
+  return { user, displayName, slug }
+}
+
+async function grantLineagePremiumEntitlement({
+  userId,
+  sourceId,
+}: {
+  userId: string
+  sourceId: string
+}) {
+  const entitlement = await prisma.entitlement.upsert({
+    where: { brand_key: { brand: TEST_BRAND, key: LINEAGE_PREMIUM_ENTITLEMENT_KEY } },
+    update: {},
+    create: {
+      brand: TEST_BRAND,
+      key: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      name: "Lineage Premium",
+      description: "Premium lineage-tree access entitlement for E2E fixtures.",
+    },
+  })
+
+  return prisma.userEntitlement.create({
+    data: {
+      userId,
+      entitlementId: entitlement.id,
+      sourceType: "MANUAL_GRANT",
+      sourceId,
+      status: "ACTIVE",
+    },
+  })
 }
 
 async function createUserNode({
@@ -125,6 +183,11 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     runId,
     label: "Rank Hidden Member B",
     showRanks: false,
+  })
+  const premiumViewer = await createUser({ runId, label: "Premium Rank Viewer" })
+  const viewerPremiumEntitlement = await grantLineagePremiumEntitlement({
+    userId: premiumViewer.user.id,
+    sourceId: `${TAG_PREFIX}:viewer:${runId}`,
   })
 
   const discipline = await prisma.discipline.create({
@@ -246,6 +309,8 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     treeId: tree.id,
     treeSlug,
     treeName,
+    viewerUserId: premiumViewer.user.id,
+    viewerPremiumEntitlementId: viewerPremiumEntitlement.id,
     memberA: {
       userId: memberAEntry.user.id,
       nodeId: memberAEntry.node.id,
@@ -268,7 +333,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       rankSystemName: hiddenRankSystem.name,
       disciplineName: discipline.name,
     },
-    userIds: [memberAEntry.user.id, memberBEntry.user.id],
+    userIds: [memberAEntry.user.id, memberBEntry.user.id, premiumViewer.user.id],
     nodeIds: [memberAEntry.node.id, memberBEntry.node.id],
     memberIds: [memberA.id, memberB.id],
     groupIds: [publicGroup.id],
@@ -297,6 +362,7 @@ async function cleanupFixture(fixture: LineageRankRedactionFixture) {
   })
   await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
   await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
+  await prisma.userEntitlement.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.directoryProfile.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })

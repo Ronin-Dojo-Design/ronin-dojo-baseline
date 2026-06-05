@@ -13,6 +13,8 @@ import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
 import { cleanupDsrByUser, listDsrByUser } from "../helpers/dsr"
 
+test.describe.configure({ mode: "serial" })
+
 test.describe("Data Subject Request flow", () => {
   test.setTimeout(60_000)
 
