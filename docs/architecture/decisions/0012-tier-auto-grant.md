@@ -4,12 +4,13 @@ slug: adr-0012-tier-auto-grant
 type: decision
 status: accepted
 created: 2026-05-11
-updated: 2026-05-11
-last_agent: copilot-session-0130
+updated: 2026-06-06
+last_agent: codex-session-0349
 deciders: Brian Scott
 pairs_with:
   - docs/sprints/SESSION_0129.md
   - docs/sprints/SESSION_0130.md
+  - docs/sprints/SESSION_0349.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -70,12 +71,16 @@ User cancels   → UserEntitlement rows with sourceId = stripeSubscriptionId set
 | Tier Code | Level | Gets S3_UPLOAD |
 | --- | --- | --- |
 | FREE | 0 | ❌ |
-| BASIC | 1 | ❌ |
 | PREMIUM | 2 | ✅ |
 | ELITE | 3 | ✅ |
 | LEGEND | 4 | ✅ |
 
 Configuration lives in `EntitlementGrant` join table rows (PricingPlan → Entitlement). Adding a new entitlement to a tier is a DB row insert, not a code change.
+
+SESSION_0349 alignment note: `BASIC` is retired from the product tier ladder. `LEGEND` is the all-features,
+free-for-life tier used for recognized lifetime cohorts across brands (for example Dirty Dozen members in BBL or
+Grandmasters in WEKAF). Code may recognize `LEGEND` entitlement keys before checkout/webhook/seed migration is fully
+expanded; broad Stripe and seed-data migration remains a follow-up.
 
 ### Implementation Helper
 

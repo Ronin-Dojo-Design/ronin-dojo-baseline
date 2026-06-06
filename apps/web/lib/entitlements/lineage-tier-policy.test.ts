@@ -1,7 +1,9 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 import {
+  getLineageCompEntitlementKeys,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
 } from "~/lib/entitlements/lineage-comp"
 import {
@@ -17,6 +19,8 @@ describe("lineage listing render policy", () => {
     expect(policy.canRenderFullCard).toBe(false)
     expect(policy.canOpenProfileDrawer).toBe(false)
     expect(policy.features.avatar).toBe(false)
+    expect(policy.features.verificationBadge).toBe(true)
+    expect(policy.features.claimBadge).toBe(true)
   })
 
   it("maps premium entitlement to full-card rendering", () => {
@@ -49,6 +53,26 @@ describe("lineage listing render policy", () => {
     expect(policy.tier).toBe("elite")
   })
 
+  it("treats legend as the top full-feature tier", () => {
+    const policy = resolveLineageListingRenderPolicyFromEntitlementKeys([
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_LEGEND_ENTITLEMENT_KEY,
+    ])
+
+    expect(policy.tier).toBe("legend")
+    expect(policy.canRenderFullCard).toBe(true)
+    expect(policy.canOpenProfileDrawer).toBe(true)
+  })
+
+  it("expands legend comp grants to all lineage listing feature entitlements", () => {
+    expect(getLineageCompEntitlementKeys(LINEAGE_LEGEND_ENTITLEMENT_KEY)).toEqual([
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_LEGEND_ENTITLEMENT_KEY,
+    ])
+  })
+
   it("keeps free profile detail to avatar/name/rank summary features", () => {
     const policy = resolveLineageProfileDetailRenderPolicyFromEntitlementKeys([])
 
@@ -71,6 +95,17 @@ describe("lineage listing render policy", () => {
     expect(policy.features.bio).toBe(true)
     expect(policy.features.socialLinks).toBe(true)
     expect(policy.features.rankHistory).toBe(true)
+    expect(policy.features.qrShare).toBe(true)
+  })
+
+  it("maps legend profile detail to full public profile publishing", () => {
+    const policy = resolveLineageProfileDetailRenderPolicyFromEntitlementKeys([
+      LINEAGE_LEGEND_ENTITLEMENT_KEY,
+    ])
+
+    expect(policy.tier).toBe("legend")
+    expect(policy.canRenderFullProfile).toBe(true)
+    expect(policy.features.bio).toBe(true)
     expect(policy.features.qrShare).toBe(true)
   })
 })

@@ -1,16 +1,21 @@
 "use client"
 
-import { CheckIcon, ShieldOffIcon } from "lucide-react"
 import type { CSSProperties } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
+import {
+  pickLineageClaimStatus,
+  resolveLineageClaimBadgeStatus,
+  resolveLineageTrustStatus,
+} from "~/lib/lineage/trust-status"
 import { cx } from "~/lib/utils"
 import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
@@ -68,6 +73,14 @@ export function LineageNodeCard({
   const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
   const avatarSrc = node.user.passport?.avatarUrl ?? node.user.image
   const canRenderFullCard = renderPolicy.canRenderFullCard
+  const claimStatus = pickLineageClaimStatus(node.claimRequests)
+  const trustStatus = resolveLineageTrustStatus({
+    verificationStatus: node.verificationStatus,
+    isVerified: node.isVerified,
+    isPlaceholder: node.user.isPlaceholder,
+    claimStatus,
+  })
+  const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })
 
   // Prefer the tree-member's selectedRankAward over the user's latest overall rank
   const latestRankAward = node.user.rankAwards?.[0]
@@ -156,32 +169,20 @@ export function LineageNodeCard({
             <Note className="max-w-full truncate text-xs">{schoolLabel}</Note>
           )}
 
-          {canRenderFullCard && (
+          {(renderPolicy.features.verificationBadge ||
+            renderPolicy.features.claimBadge ||
+            isRoot) && (
             <Stack size="xs" wrap className="mt-auto min-h-5">
-              {renderPolicy.features.verificationBadge &&
-                (node.isVerified ? (
-                  <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-                    Verified
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-                    Unverified
-                  </Badge>
-                ))}
+              {renderPolicy.features.verificationBadge && (
+                <LineageTrustBadge status={trustStatus} />
+              )}
               {isRoot && (
                 <Badge variant="primary" size="sm">
                   Root
                 </Badge>
               )}
-              {renderPolicy.features.claimBadge && isClaimable === true && (
-                <Badge variant="info" size="sm">
-                  Claimable
-                </Badge>
-              )}
-              {renderPolicy.features.claimBadge && isClaimable === false && (
-                <Badge variant="soft" size="sm">
-                  Display only
-                </Badge>
+              {renderPolicy.features.claimBadge && claimBadgeStatus && (
+                <LineageClaimBadge status={claimBadgeStatus} />
               )}
             </Stack>
           )}

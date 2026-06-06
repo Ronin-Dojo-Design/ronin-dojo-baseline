@@ -4,6 +4,8 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
+import type { LineageClaimBadgeStatus, LineageTrustStatus } from "~/lib/lineage/trust-status"
 
 type DirectoryProfile = {
   id: string
@@ -11,8 +13,10 @@ type DirectoryProfile = {
   userId: string
   name: string | null
   image: string | null
-  profileTier: "free" | "premium" | "elite"
+  profileTier: "free" | "premium" | "elite" | "legend"
   canRenderFullProfile: boolean
+  trustStatus: LineageTrustStatus
+  claimBadgeStatus: LineageClaimBadgeStatus | null
   locationCity: string | null
   locationRegion: string | null
   locationCountry: string | null
@@ -31,6 +35,13 @@ type DirectoryProfile = {
 
 type DirectoryListProps = {
   profiles: DirectoryProfile[]
+}
+
+function profileTierLabel(tier: DirectoryProfile["profileTier"]) {
+  if (tier === "legend") return "Legend"
+  if (tier === "elite") return "Elite"
+  if (tier === "premium") return "Premium"
+  return "Free"
 }
 
 const DirectoryList = ({ profiles }: DirectoryListProps) => {
@@ -69,13 +80,13 @@ const DirectoryList = ({ profiles }: DirectoryListProps) => {
             </Stack>
 
             <Stack direction="row" className="mt-2 flex-wrap gap-1">
+              <LineageTrustBadge status={profile.trustStatus} />
+              {profile.claimBadgeStatus && <LineageClaimBadge status={profile.claimBadgeStatus} />}
               <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
                 {profile.canRenderFullProfile ? "Full profile" : "Preview"}
               </Badge>
               {profile.profileTier !== "free" && (
-                <Badge variant="outline">
-                  {profile.profileTier === "elite" ? "Elite" : "Premium"}
-                </Badge>
+                <Badge variant="outline">{profileTierLabel(profile.profileTier)}</Badge>
               )}
             </Stack>
 

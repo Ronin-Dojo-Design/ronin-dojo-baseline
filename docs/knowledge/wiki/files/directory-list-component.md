@@ -4,18 +4,20 @@ slug: directory-list-component
 type: file
 status: active
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-06-06
 author: Brian + Copilot
-last_agent: copilot-session-0014
+last_agent: codex-session-0349
 pairs_with:
   - knowledge/wiki/files/directory-query-component
   - knowledge/wiki/files/directory-listing-component
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0014
+  - sprints/SESSION_0349
 wiring:
   - "apps/web/components/common/card.tsx — Card/CardHeader/CardDescription"
   - "apps/web/components/common/badge.tsx — Badge"
+  - "apps/web/components/web/lineage/lineage-trust-badge.tsx — LineageTrustBadge/LineageClaimBadge"
   - "apps/web/components/common/heading.tsx — H4"
   - "apps/web/components/common/link.tsx — Link"
 tags: [directory, component, card-grid, s4]
@@ -25,4 +27,7 @@ tags: [directory, component, card-grid, s4]
 
 **Path:** `apps/web/components/web/directory/directory-list.tsx`
 
-Renders directory profiles as a card grid. Displays name, location, org badges (linked), rank badges, and email (per privacy flags). Shows empty state when no profiles match.
+Renders directory profiles as a card grid. Displays name, trust badge, listing-preview/full-profile badge, tier badge
+when non-free, location, org badges (linked), rank badges, and email (per privacy flags). Shows empty state when no
+profiles match. SESSION_0349 added the shared lineage trust badge so cards match `/directory/[slug]` and lineage drawer
+status labels.

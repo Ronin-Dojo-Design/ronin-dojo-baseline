@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-04
-last_agent: claude-session-0345
+updated: 2026-06-06
+last_agent: codex-session-0349
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -238,3 +238,15 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Decision needed:** A test card cannot run against live-mode prod (rejected; a real card = real money). Prove the real signed-webhook path off prod (Stripe CLI local test-mode rehearsal — done SESSION_0345 — or a Preview deploy); the deployed prod domain gets only a money-free webhook-destination/secret verification + a launch-day real-charge-and-refund smoke decision.
 - **Status:** resolved
 - **Resolved in:** SESSION_0345 — CUTOVER proxy step 4 corrected; rehearsal procedure documented in `stripe-setup-runbook.md`; bug caught in the same rehearsal tracked as `SESSION_0345_FINDING_01`.
+
+### D-019 — Tier ladder still documented BASIC and code lacked LEGEND lineage policy
+
+- **Source A:** `docs/architecture/decisions/0012-tier-auto-grant.md` — qualifying tier table still listed `BASIC`
+  level 1 and `LEGEND` level 4.
+- **Source B:** SESSION_0349 operator direction — `basic` should be retired; `legend` is the all-features,
+  free-for-life tier used across brands for lifetime cohorts.
+- **Decision needed:** Retire `BASIC` from active tier docs and recognize `LEGEND` in lineage policy code without
+  expanding checkout/webhook/seed migration in this trust-badge session.
+- **Status:** resolved
+- **Resolved in:** SESSION_0349 — ADR 0012 tier-auto-grant table removed `BASIC`; lineage comp/policy helpers recognize
+  `LINEAGE_LEGEND`; broad checkout/webhook/seed migration deferred to a follow-up.

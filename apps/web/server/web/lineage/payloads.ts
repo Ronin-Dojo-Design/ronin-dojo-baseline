@@ -33,6 +33,7 @@ const lineageUserPayload = {
   id: true,
   name: true,
   image: true,
+  isPlaceholder: true,
   passport: {
     select: {
       displayName: true,
@@ -62,6 +63,10 @@ export const lineageNodeRowPayload = {
   verificationStatus: true,
   bio: true,
   userId: true,
+  claimRequests: {
+    where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
+    select: { status: true },
+  },
   user: {
     select: {
       ...lineageUserPayload,
@@ -150,6 +155,10 @@ export const lineageNodeProfilePayload = {
   verificationStatus: true,
   bio: true,
   userId: true,
+  claimRequests: {
+    where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
+    select: { status: true },
+  },
   createdAt: true,
   updatedAt: true,
   user: {

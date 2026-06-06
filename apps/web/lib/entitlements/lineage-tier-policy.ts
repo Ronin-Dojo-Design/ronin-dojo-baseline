@@ -1,9 +1,10 @@
 import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
 } from "~/lib/entitlements/lineage-comp"
 
-export type LineageListingTier = "free" | "premium" | "elite"
+export type LineageListingTier = "free" | "premium" | "elite" | "legend"
 
 export type LineageListingRenderPolicy = {
   tier: LineageListingTier
@@ -42,8 +43,8 @@ export const FREE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   features: {
     avatar: false,
     school: false,
-    verificationBadge: false,
-    claimBadge: false,
+    verificationBadge: true,
+    claimBadge: true,
     bioPreview: false,
     honorStripAvatar: false,
   },
@@ -66,6 +67,11 @@ export const PREMIUM_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy =
 export const ELITE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   ...PREMIUM_LINEAGE_LISTING_RENDER_POLICY,
   tier: "elite",
+}
+
+export const LEGEND_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
+  ...PREMIUM_LINEAGE_LISTING_RENDER_POLICY,
+  tier: "legend",
 }
 
 export const FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
@@ -105,15 +111,25 @@ export const ELITE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRen
   tier: "elite",
 }
 
+export const LEGEND_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
+  ...PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+  tier: "legend",
+}
+
 export const LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS = [
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
 ] as const
 
 export function resolveLineageListingRenderPolicyFromEntitlementKeys(
   entitlementKeys: Iterable<string>,
 ): LineageListingRenderPolicy {
   const keys = new Set(entitlementKeys)
+
+  if (keys.has(LINEAGE_LEGEND_ENTITLEMENT_KEY)) {
+    return LEGEND_LINEAGE_LISTING_RENDER_POLICY
+  }
 
   if (keys.has(LINEAGE_ELITE_ENTITLEMENT_KEY)) {
     return ELITE_LINEAGE_LISTING_RENDER_POLICY
@@ -129,6 +145,10 @@ export function resolveLineageListingRenderPolicyFromEntitlementKeys(
 export function resolveLineageProfileDetailRenderPolicyFromListingPolicy(
   listingPolicy: LineageListingRenderPolicy,
 ): LineageProfileDetailRenderPolicy {
+  if (listingPolicy.tier === "legend") {
+    return LEGEND_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
+  }
+
   if (listingPolicy.tier === "elite") {
     return ELITE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY
   }

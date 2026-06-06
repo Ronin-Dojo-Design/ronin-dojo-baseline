@@ -6,6 +6,11 @@ import {
   type LineageProfileDetailRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
 import {
+  pickLineageClaimStatus,
+  resolveLineageClaimBadgeStatus,
+  resolveLineageTrustStatus,
+} from "~/lib/lineage/trust-status"
+import {
   directoryProfileDetailPayload,
   directoryProfileListPayload,
   directoryProfilePreviewPayload,
@@ -32,6 +37,15 @@ type ProfileViewer = {
   viewerRole?: string | null
 }
 
+type UserTrustSource = {
+  isPlaceholder?: boolean | null
+  lineageNode?: {
+    isVerified?: boolean | null
+    verificationStatus?: "PENDING" | "VERIFIED" | "DISPUTED" | null
+    claimRequests?: { status: "PENDING" | "APPROVED" | "DENIED" | "NEEDS_INFO" | "CANCELLED" }[]
+  } | null
+}
+
 function canRenderFullProfileForViewer({
   policy,
   profileUserId,
@@ -51,6 +65,22 @@ function rankSummaryForProfile<RankAward>(profile: {
   }
 }): RankAward[] {
   return profile.showRanks === false ? [] : profile.user.rankAwards.slice(0, 1)
+}
+
+function trustSummaryForUser(user: UserTrustSource) {
+  const claimStatus = pickLineageClaimStatus(user.lineageNode?.claimRequests)
+
+  return {
+    trustStatus: resolveLineageTrustStatus({
+      verificationStatus: user.lineageNode?.verificationStatus,
+      isVerified: user.lineageNode?.isVerified,
+      isPlaceholder: user.isPlaceholder,
+      claimStatus,
+    }),
+    claimBadgeStatus: resolveLineageClaimBadgeStatus({
+      claimStatus,
+    }),
+  }
 }
 
 /**
@@ -151,6 +181,7 @@ export const getDirectoryProfiles = cache(
         name: profile.user.name,
         profileTier: policy.tier,
         canRenderFullProfile,
+        ...trustSummaryForUser(profile.user),
         // Prefer the promoted Passport avatar, fall back to User.image.
         image: profile.user.passport?.avatarUrl ?? profile.user.image,
         locationCity:
@@ -264,6 +295,7 @@ export const findProfileBySlug = async ({
       profileTier: policy.tier,
       canRenderFullProfile: false,
       isOwnProfile: viewerUserId === preview.user.id,
+      ...trustSummaryForUser(preview.user),
       coverPhotoUrl: null,
       videoIntroUrl: null,
       locationCity: null,
@@ -297,6 +329,7 @@ export const findProfileBySlug = async ({
     profileTier: policy.tier,
     canRenderFullProfile: true,
     isOwnProfile: viewerUserId === profile.user.id,
+    ...trustSummaryForUser(profile.user),
     coverPhotoUrl: profile.coverPhotoUrl,
     videoIntroUrl: profile.videoIntroUrl,
     locationCity: profile.locationCity,

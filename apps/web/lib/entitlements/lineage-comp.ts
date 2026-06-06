@@ -2,16 +2,19 @@ import { z } from "zod"
 
 export const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM" as const
 export const LINEAGE_ELITE_ENTITLEMENT_KEY = "LINEAGE_ELITE" as const
+export const LINEAGE_LEGEND_ENTITLEMENT_KEY = "LINEAGE_LEGEND" as const
 
 export const lineageCompTierSchema = z.enum([
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
 ])
 
 export const lineageCompSelectionSchema = z.enum([
   "NONE",
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
 ])
 
 export const lineageCompGrantSpecSchema = z.object({
@@ -23,6 +26,14 @@ export type LineageCompTier = z.infer<typeof lineageCompTierSchema>
 export type LineageCompGrantSpec = z.infer<typeof lineageCompGrantSpecSchema>
 
 export function getLineageCompEntitlementKeys(tier: LineageCompTier): readonly string[] {
+  if (tier === LINEAGE_LEGEND_ENTITLEMENT_KEY) {
+    return [
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_LEGEND_ENTITLEMENT_KEY,
+    ]
+  }
+
   if (tier === LINEAGE_ELITE_ENTITLEMENT_KEY) {
     return [LINEAGE_PREMIUM_ENTITLEMENT_KEY, LINEAGE_ELITE_ENTITLEMENT_KEY]
   }

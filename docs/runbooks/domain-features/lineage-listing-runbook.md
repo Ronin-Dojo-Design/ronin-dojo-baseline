@@ -4,8 +4,8 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-06-05
-last_agent: codex-session-0348
+updated: 2026-06-06
+last_agent: codex-session-0349
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -17,6 +17,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0344.md
   - docs/sprints/SESSION_0348.md
+  - docs/sprints/SESSION_0349.md
 tags:
   - lineage
   - listings
@@ -104,6 +105,25 @@ tier:
 
 This keeps ADR 0011/0019 intact: active `UserEntitlement` rows decide paid feature access, and membership
 lifecycle rows are not repurposed into commerce.
+
+### SESSION_0349 trust badges and legend tier alignment
+
+Public trust badges are presentation over existing lineage and claim fields, not a new schema/status system:
+
+- `LineageNode.verificationStatus` drives `Disputed`, `Verified`, and default pending/unverified states;
+- legacy `LineageNode.isVerified` remains a compatibility fallback for `Verified`;
+- `User.isPlaceholder` drives the launch `Imported` badge when no stronger status exists;
+- `LineageClaimRequest.status` drives `Claimed` and `Claim pending` labels without selecting public claim evidence,
+  claimant notes, reviewer notes, or reviewer identity;
+- `LineageTreeMember.isClaimable` / tree claimability can drive the secondary `Claimable` badge where the surface has
+  that context.
+
+`RankAward` still has no verification/dispute enum. Rank-specific disputed promotion facts remain `BBL-RANK-004` and
+need a later schema decision.
+
+Tier code now recognizes `free`, `premium`, `elite`, and `legend`; `basic` is retired from the product tier ladder.
+`legend` is the all-features, free-for-life cohort tier. SESSION_0349 added limited policy/helper support only; broad
+checkout, webhook, and seed-data migration is a follow-up.
 
 ### Pairing with `baseline-listings-runbook.md`
 

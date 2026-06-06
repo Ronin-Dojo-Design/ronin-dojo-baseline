@@ -7,7 +7,6 @@ import {
   PencilIcon,
   ShieldCheckIcon,
   ShieldOffIcon,
-  TriangleAlertIcon,
   UserRoundCogIcon,
   UserRoundPlusIcon,
 } from "lucide-react"
@@ -39,10 +38,16 @@ import { Stack } from "~/components/common/stack"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/common/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { LineageRankHistoryTab } from "~/components/web/lineage/lineage-rank-history-tab"
+import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import {
   type PromoterChangeContext,
   PromoterChangeModal,
 } from "~/components/web/lineage/promoter-change-modal"
+import {
+  pickLineageClaimStatus,
+  resolveLineageClaimBadgeStatus,
+  resolveLineageTrustStatus,
+} from "~/lib/lineage/trust-status"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 /**
@@ -164,28 +169,6 @@ function rankProgressPercent(
   return 0
 }
 
-function VerificationBadge({ profile }: { profile: LineageNodeProfile }) {
-  if (profile.verificationStatus === "DISPUTED") {
-    return (
-      <Badge variant="danger" size="sm" prefix={<TriangleAlertIcon />}>
-        Disputed
-      </Badge>
-    )
-  }
-  if (profile.verificationStatus === "VERIFIED" || profile.isVerified) {
-    return (
-      <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-        Verified
-      </Badge>
-    )
-  }
-  return (
-    <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-      Unverified
-    </Badge>
-  )
-}
-
 export function LineageProfileDrawer({
   open,
   onOpenChange,
@@ -288,6 +271,14 @@ function DrawerBody({
   // For the header subtitle, prefer selected rank name if set
   const headerRankName = panelRank?.name ?? null
   const headerDisciplineName = panelRank?.rankSystem?.discipline?.name ?? discipline?.name ?? null
+  const claimStatus = pickLineageClaimStatus(profile.claimRequests)
+  const trustStatus = resolveLineageTrustStatus({
+    verificationStatus: profile.verificationStatus,
+    isVerified: profile.isVerified,
+    isPlaceholder: profile.user.isPlaceholder,
+    claimStatus,
+  })
+  const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })
 
   return (
     <>
@@ -330,7 +321,8 @@ function DrawerBody({
                 </Note>
               )}
               <Stack size="xs" wrap>
-                <VerificationBadge profile={profile} />
+                <LineageTrustBadge status={trustStatus} />
+                {claimBadgeStatus && <LineageClaimBadge status={claimBadgeStatus} />}
                 {panelAward?.organization?.name && (
                   <Badge variant="outline" size="sm">
                     {panelAward.organization.name}

@@ -4,9 +4,9 @@ slug: black-belt-legacy-prd
 type: prd
 status: active
 created: 2026-05-18
-updated: 2026-06-05
+updated: 2026-06-06
 author: Brian + Giddy
-last_agent: codex-session-0348
+last_agent: codex-session-0349
 backlinks:
   - docs/product/README.md
   - docs/knowledge/wiki/ronin-project-context.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/architecture/lineage/lineage-editor-permissions-spec.md
 pairs_with:
   - docs/product/black-belt-legacy/STORIES.md
+  - docs/sprints/SESSION_0349.md
   - docs/architecture/lineage/lineage-tree-v1-requirements.md
   - docs/architecture/lineage/lineage-editor-permissions-spec.md
 tags:
@@ -86,7 +87,7 @@ Black Belt Legacy solves this by turning identity, lineage, rank history, and tr
 
 Public and claimed martial artist listings and profiles.
 
-Free listings should expose a compact public preview: name, avatar/initials fallback, and rank summary. Premium and elite listings unlock the full public profile: bio, links, school/team affiliation, rank history, lineage position, share/QR affordances, and trust status.
+Free listings should expose a compact public preview: name, avatar/initials fallback, and rank summary. Premium, elite, and legend listings unlock the full public profile: bio, links, school/team affiliation, rank history, lineage position, share/QR affordances, and trust status.
 
 ### 2. Lineage Trees
 
@@ -137,7 +138,7 @@ This is the product's credibility layer.
 ### Profile and claims
 
 - View free public legacy listing preview.
-- View full public legacy profile when the profile owner/listing tier is premium or elite.
+- View full public legacy profile when the profile owner/listing tier is premium, elite, or legend.
 - Claim placeholder historical profile.
 - Submit private claim evidence.
 - Admin approves or denies with audit note.

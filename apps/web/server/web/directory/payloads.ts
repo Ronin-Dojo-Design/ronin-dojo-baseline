@@ -8,15 +8,28 @@ import type { Prisma } from "~/.generated/prisma/client"
 // returned. The privacy stripping happens in the query function, not here.
 // ---------------------------------------------------------------------------
 
+const directoryLineageTrustPayload = {
+  id: true,
+  isVerified: true,
+  verificationStatus: true,
+  visibility: true,
+  claimRequests: {
+    where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
+    select: { status: true },
+  },
+} satisfies Prisma.LineageNodeSelect
+
 export const directoryUserPayload = {
   id: true,
   name: true,
   image: true,
   email: true,
+  isPlaceholder: true,
   // Promoted Passport avatar is preferred over User.image at the projection
   // layer (SESSION_0325). Only avatarUrl is selected — it is deliberately
   // public (SESSION_0324); no other Passport field is widened into the list.
   passport: { select: { avatarUrl: true } },
+  lineageNode: { select: directoryLineageTrustPayload },
 } satisfies Prisma.UserSelect
 
 export const directoryMembershipPayload = {
@@ -81,7 +94,9 @@ export const directoryProfilePreviewPayload = {
       id: true,
       name: true,
       image: true,
+      isPlaceholder: true,
       passport: { select: { avatarUrl: true } },
+      lineageNode: { select: directoryLineageTrustPayload },
       rankAwards: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
@@ -117,6 +132,7 @@ export const directoryProfileDetailPayload = {
       name: true,
       image: true,
       email: true,
+      isPlaceholder: true,
       passport: {
         select: {
           avatarUrl: true,
@@ -124,6 +140,7 @@ export const directoryProfileDetailPayload = {
           socialLinks: true,
         },
       },
+      lineageNode: { select: directoryLineageTrustPayload },
       memberships: {
         select: {
           ...directoryMembershipPayload,

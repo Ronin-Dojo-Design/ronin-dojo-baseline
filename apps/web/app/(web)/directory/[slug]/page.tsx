@@ -9,6 +9,7 @@ import { Note } from "~/components/common/note"
 import { Prose } from "~/components/common/prose"
 import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
+import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
@@ -22,6 +23,13 @@ type PageProps = {
 
 function profileInitial(name: string | null | undefined) {
   return (name ?? "M").charAt(0).toUpperCase()
+}
+
+function profileTierLabel(tier: string) {
+  if (tier === "legend") return "Legend"
+  if (tier === "elite") return "Elite"
+  if (tier === "premium") return "Premium"
+  return "Free"
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -67,13 +75,13 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
           <Stack size="xs" direction="column">
             <IntroTitle>{user.name ?? "Directory Profile"}</IntroTitle>
             <Stack size="xs" wrap>
+              <LineageTrustBadge status={profile.trustStatus} />
+              {profile.claimBadgeStatus && <LineageClaimBadge status={profile.claimBadgeStatus} />}
               <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
                 {profile.canRenderFullProfile ? "Full profile" : "Listing preview"}
               </Badge>
               {profile.profileTier !== "free" && (
-                <Badge variant="outline">
-                  {profile.profileTier === "elite" ? "Elite" : "Premium"}
-                </Badge>
+                <Badge variant="outline">{profileTierLabel(profile.profileTier)}</Badge>
               )}
             </Stack>
           </Stack>

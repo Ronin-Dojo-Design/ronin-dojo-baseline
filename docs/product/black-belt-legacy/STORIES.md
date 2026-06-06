@@ -4,9 +4,9 @@ slug: black-belt-legacy-stories
 type: stories
 status: active
 created: 2026-05-18
-updated: 2026-06-05
+updated: 2026-06-06
 author: Brian + Giddy
-last_agent: codex-session-0348
+last_agent: codex-session-0349
 backlinks:
   - docs/product/README.md
   - docs/product/black-belt-legacy/PRD.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/architecture/lineage/lineage-editor-permissions-spec.md
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
+  - docs/sprints/SESSION_0349.md
 tags:
   - product
   - black-belt-legacy
@@ -36,7 +37,7 @@ Profile -> Claim -> Rank History -> Lineage -> Curriculum -> Certification -> Co
 
 | ID | Story | Acceptance criteria |
 | --- | --- | --- |
-| BBL-PROFILE-001 | As a visitor, I want to view a martial artist listing/profile so I can understand who they are, what they train, and where they fit in the community. | Free public listing shows name, avatar/initials fallback, and rank summary only. Premium/elite listing owners publish the full public profile with bio, contact/share affordances, rank history, school/team, and verification status. |
+| BBL-PROFILE-001 | As a visitor, I want to view a martial artist listing/profile so I can understand who they are, what they train, and where they fit in the community. | Free public listing shows name, avatar/initials fallback, and rank summary only. Premium/elite/legend listing owners publish the full public profile with bio, contact/share affordances, rank history, school/team, and verification status. |
 | BBL-PROFILE-002 | As a practitioner, I want to claim my profile so I can correct and maintain my own legacy information. | Claim flow accepts evidence, creates pending review, and does not expose evidence publicly. |
 | BBL-PROFILE-003 | As an admin, I want to approve or deny profile claims so that placeholder profiles can become owned profiles safely. | Admin can approve/deny with audit note; claimant gets ownership/edit rights only after approval. |
 | BBL-PROFILE-004 | As a visitor, I want to see whether a profile is verified, unverified, disputed, imported, or claimed so I can judge trust level. | Profile displays trust badge consistently across card, drawer, and detail page. |

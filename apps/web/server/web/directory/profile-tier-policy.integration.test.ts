@@ -30,6 +30,7 @@ const createdRankSystemIds: string[] = []
 const createdRankIds: string[] = []
 const createdEntitlementIds: string[] = []
 const createdUserEntitlementIds: string[] = []
+const createdLineageNodeIds: string[] = []
 
 let organizationId: string
 let disciplineId: string
@@ -161,6 +162,15 @@ beforeAll(async () => {
 
   const freeUser = await createProfileFixture("free")
   freeUserId = freeUser.id
+  const freeLineageNode = await db.lineageNode.create({
+    data: {
+      userId: freeUser.id,
+      slug: tag("free-node"),
+      verificationStatus: "DISPUTED",
+      isVerified: true,
+    },
+  })
+  createdLineageNodeIds.push(freeLineageNode.id)
 
   const premiumUser = await createProfileFixture("premium")
   premiumUserId = premiumUser.id
@@ -180,6 +190,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.userEntitlement.deleteMany({ where: { id: { in: createdUserEntitlementIds } } })
+  await db.lineageNode.deleteMany({ where: { id: { in: createdLineageNodeIds } } })
   await db.rankAward.deleteMany({ where: { userId: { in: createdUserIds } } })
   await db.membership.deleteMany({ where: { userId: { in: createdUserIds } } })
   await db.directoryProfile.deleteMany({ where: { userId: { in: createdUserIds } } })
@@ -203,6 +214,7 @@ describe("directory profile detail tier policy", () => {
 
     expect(profile?.profileTier).toBe("free")
     expect(profile?.canRenderFullProfile).toBe(false)
+    expect(profile?.trustStatus).toBe("disputed")
     expect(profile?.locationCity).toBeNull()
     expect(profile?.user.image).toBe(`https://example.com/${tag("free")}-avatar.jpg`)
     expect(profile?.user.bio).toBeNull()
