@@ -314,6 +314,9 @@ Graphify is the discovery accelerator instead.
   component-inventory updates.
 - `fallow` introduced as a **read-only bow-out spike** (not a CI gate): it flagged dead code from this refactor
   (`getDirectoryFilterOptions`, `DIRECTORY_FACET_TABS`) which were removed.
+- Operator-requested deliverable: `claude-mobile-runbook.md` + `codex-mobile-runbook.md` — drive a future session
+  from the phone (dispatch/cowork) via SSH+tmux/Tailscale (full local parity) or cloud (Claude cloud / Codex Cloud),
+  folding in the autonomous-session drivers + a cloud-container prerequisites table and operator checklist.
 
 ## Decisions resolved
 
@@ -345,6 +348,9 @@ Graphify is the discovery accelerator instead.
 | `apps/web/components/web/directory/directory-filters.tsx` | Deleted (dead FS-0001 raw-HTML artifact). |
 | `apps/web/components/web/members/*` (6 files) | Deleted (orphaned behind `/members → /directory` redirect). |
 | `docs/runbooks/sops/lineage-data-wiring-flow.md` | New lineage + directory data/wiring flow SOP (peer to `sop-data-and-wiring-flows.md`). |
+| `docs/runbooks/dev-environment/claude-mobile-runbook.md` | New — drive a Claude session from the phone (dispatch/cowork): canonical SSH+tmux/Tailscale transport + cloud-container prerequisites. |
+| `docs/runbooks/dev-environment/codex-mobile-runbook.md` | New — Codex peer (Codex Cloud + `codex` CLI + `auto-session-codex.sh`) with operator setup checklist. |
+| `docs/runbooks/README.md` | Linked the two mobile runbooks under dev-environment. |
 | `docs/knowledge/wiki/drift-register.md` | Added `D-020` (enum-redundancy consolidation backlog, document-only). |
 | `docs/product/black-belt-legacy/GAP_MATRIX.md` | Updated BBL-DISCOVER-001/002 + BBL-PROFILE-001 + next-task recommendation. |
 | `docs/runbooks/domain-features/lineage-listing-runbook.md` | Added SESSION_0350 faceted `/directory` section. |

@@ -507,6 +507,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Dev Environment](../../runbooks/dev-environment/dev-environment.md) | runbook | active |
 | [React to Next Component Porting Runbook](../../runbooks/porting/react-to-next-component-porting-runbook.md) | runbook | active |
 | [Graphify Repo Memory Runbook](../../runbooks/dev-environment/graphify-repo-memory.md) | runbook | active |
+| [Claude Mobile Runbook](../../runbooks/dev-environment/claude-mobile-runbook.md) | runbook | active — SESSION_0350 drive a Claude session from the phone (SSH+tmux/Tailscale or cloud); canonical transport + cloud-container prereqs |
+| [Codex Mobile Runbook](../../runbooks/dev-environment/codex-mobile-runbook.md) | runbook | active — SESSION_0350 Codex peer (Codex Cloud / `codex` CLI) + operator setup checklist |
 | [Stripe Setup Runbook](../../runbooks/integrations/stripe-setup-runbook.md) | runbook | active |
 | [AWS S3 Operator Runbook](../../runbooks/integrations/aws-s3-operator-runbook.md) | runbook | active |
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/integrations/adr-0014-stripe-product-policy-research.md) | runbook | active |
