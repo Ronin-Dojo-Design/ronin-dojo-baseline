@@ -85,7 +85,7 @@ type DatabasePost = {
 ## Field mapping
 
 | Public post field | Source |
-|---|---|
+| --- | --- |
 | title | `ContentVariant.publicTitle ?? ContentAtom.title` |
 | slug | `ContentVariant.publicSlug` |
 | excerpt | `ContentVariant.excerpt` |
@@ -103,10 +103,10 @@ type DatabasePost = {
 A database post is public only when all of these are true:
 
 1. `ContentVariant.channel = BLOG`
-2. `ContentVariant.brand` matches request brand
-3. `ContentVariant.status = PUBLISHED`
-4. `ContentVariant.publicSlug` is present
-5. Parent `ContentAtom.status` is `APPROVED` or `PUBLISHED`
+1. `ContentVariant.brand` matches request brand
+1. `ContentVariant.status = PUBLISHED`
+1. `ContentVariant.publicSlug` is present
+1. Parent `ContentAtom.status` is `APPROVED` or `PUBLISHED`
 
 Draft, review, archived, or cross-brand variants must not render publicly.
 
@@ -144,12 +144,12 @@ apps/web/app/(web)/posts/[slug]/page.tsx
 ## Migration rules
 
 1. Existing MDX posts should be imported into `ContentAtom` records.
-2. Each imported MDX article gets at least one `ContentVariant(channel=BLOG)`.
-3. Source file path should be preserved in `ContentAtom.sourceAssets` or `ContentAtom.meta.sourcePath`.
-4. MDX body becomes `ContentAtom.longFormCopy` initially.
-5. Brand-specific rendering/copy goes in `ContentVariant.renderedCopy`.
-6. Public routes must read from database posts only after migration switch-over.
-7. MDX routes should be redirected, archived, or marked reference-only once database parity is proven.
+1. Each imported MDX article gets at least one `ContentVariant(channel=BLOG)`.
+1. Source file path should be preserved in `ContentAtom.sourceAssets` or `ContentAtom.meta.sourcePath`.
+1. MDX body becomes `ContentAtom.longFormCopy` initially.
+1. Brand-specific rendering/copy goes in `ContentVariant.renderedCopy`.
+1. Public routes must read from database posts only after migration switch-over.
+1. MDX routes should be redirected, archived, or marked reference-only once database parity is proven.
 
 ## Non-goals
 
@@ -162,10 +162,10 @@ apps/web/app/(web)/posts/[slug]/page.tsx
 ## First implementation slice
 
 1. Add `content-posts` server query slice.
-2. Add public post list/detail routes backed by `ContentVariant`.
-3. Seed or migrate one known article from AtomCenter into `ContentAtom + ContentVariant`.
-4. Add tests for brand scoping, status gating, and draft leakage prevention.
-5. Keep legacy MDX available until parity is proven.
+1. Add public post list/detail routes backed by `ContentVariant`.
+1. Seed or migrate one known article from AtomCenter into `ContentAtom + ContentVariant`.
+1. Add tests for brand scoping, status gating, and draft leakage prevention.
+1. Keep legacy MDX available until parity is proven.
 
 ## Done when
 

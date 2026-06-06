@@ -8,6 +8,8 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "wiki:lint": "bun run scripts/wiki-lint.ts",
+    "markdown:lint:architecture": "npx markdownlint-cli2 \"docs/architecture/**/*.md\" \"docs/architecture/*.md\"",
+    "markdown:fix:architecture": "bun run scripts/fix-architecture-markdownlint.ts",
     "docs:nav": "python3 scripts/generate-docs-nav.py",
     "graphify:viz": "GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify export --format html --out apps/web/public/graphify.html",
     "typecheck": "pnpm -r typecheck",

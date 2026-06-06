@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-17
 updated: 2026-05-17
-last_agent: claude-session-0188
+last_agent: codex-session-0351
 pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/sprints/SESSION_0188.md
@@ -31,7 +31,7 @@ We considered three alternatives, then chose the smallest change.
 
 ## Decision
 
-**Add `.npmrc` at the repo root containing `enable-pre-post-scripts=true`. Keep the `prebuild` script in `apps/web/package.json` as the authoritative spot for "what runs before `next build`."**
+### Add `.npmrc` at the repo root containing `enable-pre-post-scripts=true`. Keep the `prebuild` script in `apps/web/package.json` as the authoritative spot for "what runs before `next build`."
 
 ## Alternatives considered
 
@@ -68,7 +68,7 @@ This pattern aligns with the Dirstarter project structure runbook's deploy story
 
 | Layer | URL | Date checked |
 | --- | --- | --- |
-| Project structure | https://dirstarter.com/docs/project-structure | 2026-05-17 |
+| Project structure | <https://dirstarter.com/docs/project-structure> | 2026-05-17 |
 
 ## Consequences
 

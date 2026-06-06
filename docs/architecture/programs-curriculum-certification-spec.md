@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-30
 updated: 2026-04-30
-last_agent: codex-session-0029
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
@@ -259,6 +259,6 @@ Do not build yet:
 ## Open Questions
 
 1. Should credential cataloging use `CertificationDefinition`, `CredentialDefinition`, or a refactor of current `Certification`?
-2. Do public course previews need a `CurriculumItem.isPreview` field before the Course CRUD slice?
-3. Should certificate purchases continue using inline `CertificateTemplate.priceCents`, or should certificate templates map to `PricingPlan` once entitlements exist?
-4. Should Program visibility use a new `ProgramVisibility` enum or be derived from status plus entitlement requirements?
+1. Do public course previews need a `CurriculumItem.isPreview` field before the Course CRUD slice?
+1. Should certificate purchases continue using inline `CertificateTemplate.priceCents`, or should certificate templates map to `PricingPlan` once entitlements exist?
+1. Should Program visibility use a new `ProgramVisibility` enum or be derived from status plus entitlement requirements?

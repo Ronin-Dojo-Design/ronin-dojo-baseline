@@ -13,13 +13,13 @@ Use **Expo** at `apps/mobile/`. Mobile consumes the web app's `app/api/v1/*` rou
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - Best-in-class DX for solo dev: OTA updates via EAS Update, managed builds via EAS Build, Expo Router for file-based routing.
 - React Native ecosystem (Reanimated, Gesture Handler, Skia) for native feel.
 - Web/mobile share zod schemas and types via `packages/shared/`, but NOT screens — RN doesn't render in browsers.
 
-**Negative**
+### Negative
 
 - Cannot deploy mobile UI to the WP site as a shortcode (was never on the table once WP was dropped, but worth recording).
 - Two UI codebases to evolve in parallel (web in Next.js, mobile in RN).

@@ -10,6 +10,7 @@ import {
   CreditCardIcon,
   DockIcon,
   ExternalLinkIcon,
+  FileSearchIcon,
   FileTextIcon,
   GalleryHorizontalEndIcon,
   GemIcon,
@@ -197,6 +198,11 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
       title: "Storage Monitor",
       href: "/admin/storage/monitoring",
       prefix: <HardDriveIcon />,
+    },
+    {
+      title: "Repo Docs",
+      href: "/admin/repo-docs",
+      prefix: <FileSearchIcon />,
     },
 
     undefined, // Separator

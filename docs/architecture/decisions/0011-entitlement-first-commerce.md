@@ -5,7 +5,7 @@ type: decision
 status: accepted
 created: 2026-04-30
 updated: 2026-05-03
-last_agent: copilot-session-0039
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/programs-curriculum-certification-spec.md
@@ -20,9 +20,9 @@ backlinks:
 
 # ADR 0011 — Entitlement-First Commerce
 
-**Status:** Accepted  
-**Date:** 2026-04-30  
-**Deciders:** Brian + Codex acting as Petey  
+**Status:** Accepted
+**Date:** 2026-04-30
+**Deciders:** Brian + Codex acting as Petey
 **Related:** SESSION_0029, `D-014`, `docs/architecture/monetization-entitlements-spec.md`
 
 ## Context
@@ -43,11 +43,11 @@ Payments, subscriptions, manual grants, memberships, and promos grant or revoke 
 
 | Baseline area | Proof |
 | --- | --- |
-| Project structure | Dirstarter organizes server-side code by feature folders: https://dirstarter.com/docs/codebase/structure |
-| Prisma/database | Dirstarter uses Prisma schema, seed, and generated client as data backbone: https://dirstarter.com/docs/database/prisma |
-| Auth | Dirstarter uses Better Auth with session and role-based access control: https://dirstarter.com/docs/authentication |
-| Payments/Stripe | Dirstarter uses Stripe for payments and subscriptions: https://dirstarter.com/docs/integrations/payments |
-| Monetization | Dirstarter monetization is plan/product driven: https://dirstarter.com/docs/monetization |
+| Project structure | Dirstarter organizes server-side code by feature folders: <https://dirstarter.com/docs/codebase/structure> |
+| Prisma/database | Dirstarter uses Prisma schema, seed, and generated client as data backbone: <https://dirstarter.com/docs/database/prisma> |
+| Auth | Dirstarter uses Better Auth with session and role-based access control: <https://dirstarter.com/docs/authentication> |
+| Payments/Stripe | Dirstarter uses Stripe for payments and subscriptions: <https://dirstarter.com/docs/integrations/payments> |
+| Monetization | Dirstarter monetization is plan/product driven: <https://dirstarter.com/docs/monetization> |
 
 ## Consequences
 

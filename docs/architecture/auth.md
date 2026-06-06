@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-25
 updated: 2026-04-30
-last_agent: codex-session-0030
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/security-privacy-payments-monitoring-plan.md
 backlinks:
@@ -22,18 +22,20 @@ backlinks:
 ## Web flow
 
 1. User signs up / signs in via Dirstarter's auth pages.
-2. Better-Auth issues a session cookie (HTTP-only, SameSite=Lax).
-3. Server components and route handlers call `auth.getSession()` to authenticate.
-4. Authorization checks live in `apps/web/lib/authz.ts` — pure functions like `canEditSchool(user, school)`, `isInSameBrand(user, target)`, `isAdmin(user)`. Every API route imports one.
+1. Better-Auth issues a session cookie (HTTP-only, SameSite=Lax).
+1. Server components and route handlers call `auth.getSession()` to authenticate.
+1. Authorization checks live in `apps/web/lib/authz.ts` — pure functions like `canEditSchool(user, school)`, `isInSameBrand(user, target)`, `isAdmin(user)`. Every API route imports one.
 
 ## Mobile flow
 
 Two viable approaches (decide once Better-Auth's mobile SDK maturity is verified):
 
-**A. Better-Auth mobile SDK (preferred if mature)**
+### A. Better-Auth mobile SDK (preferred if mature)
+
 Expo app uses the Better-Auth client; same session contract as web; native cookie/storage handling.
 
-**B. JWT bridge (fallback)**
+### B. JWT bridge (fallback)
+
 Web `app/api/v1/mobile-token` mints a short-lived JWT signed with the same secret. Mobile stores the JWT in `expo-secure-store`; refreshes on 401.
 
 ## Roles
@@ -57,14 +59,15 @@ Multi-brand users (instructors, admins): can diverge. An admin browsing `wekafus
 Belt-and-suspenders strategy:
 
 1. **Application layer:** every authenticated query passes through `authz` helpers that check `isInSameBrand(user, target)` against `session.user.activeBrandId`.
-2. **Data layer (defense in depth):** a Prisma client extension at `apps/web/lib/db.ts` requires brand-scoped models include a `where: { brand: session.user.activeBrandId }` clause. Throws in dev if missing; logs + alerts in prod.
+1. **Data layer (defense in depth):** a Prisma client extension at `apps/web/lib/db.ts` requires brand-scoped models include a `where: { brand: session.user.activeBrandId }` clause. Throws in dev if missing; logs + alerts in prod.
 
 ## Brand switcher
 
 Visible only when `userBrands.length > 1 || authz.isAdmin(session)`. Selecting a brand:
+
 1. Updates `session.user.activeBrandId` server-side.
-2. Persists `lastActiveBrandId` on the `User` row so the choice survives sessions.
-3. Triggers full page navigation so server components re-render with the new context (avoids stale RSC data).
+1. Persists `lastActiveBrandId` on the `User` row so the choice survives sessions.
+1. Triggers full page navigation so server components re-render with the new context (avoids stale RSC data).
 
 ## Cookie scoping (forward-looking)
 

@@ -4,8 +4,8 @@ slug: session-0263-audit-report
 type: report
 status: active
 created: 2026-05-26
-updated: 2026-05-26
-last_agent: codex-session-0264
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0263.md
   - docs/sprints/SESSION_0264.md
@@ -30,7 +30,7 @@ The schema is complete, adapter & unit tests are comprehensive, UI test harness 
 ## Audit Table
 
 | Story group | Story (verbatim from plan) | Status | Evidence (file:line) | P-size | Notes |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Schema Checks | Prisma schema validates | Done | apps/web/prisma/schema.prisma:2310–2515 | — | Full lineage models present: LineageNode, LineageTree, LineageTreeMember, LineageVisualGroup, LineageTreeAccess, LineageClaimRequest, LineageClaimEvidence. |
 | Schema Checks | Additive migration is generated with `migrate dev` | Done | apps/web/prisma/schema.prisma (all lineage models present) | — | Schema compiles; no blockers visible in migration structure. |
 | Schema Checks | Existing lineage seed still runs or has a documented additive replacement | Stub | No direct evidence of seeding strategy; appears to rely on existing seed | P2 | Seed operations not explicitly documented for v1 tables; assumed covered by existing data loading. |
@@ -106,15 +106,15 @@ The schema is complete, adapter & unit tests are comprehensive, UI test harness 
    - SESSION_0264 replaced the stale tab set with `Info`, `Lineage`, and `Rank History`.
    - Evidence: apps/web/components/web/lineage/lineage-profile-drawer.tsx; apps/web/components/web/lineage/lineage-rank-history-tab.tsx.
 
-2. ✅ done — **Promoter modal UI not wired (only server actions exist)** (UI Tests — Editor: promoter change opens modal)
+1. ✅ done — **Promoter modal UI not wired (only server actions exist)** (UI Tests — Editor: promoter change opens modal)
    - SESSION_0264 adds the drawer-header vertical-ellipsis action menu and `PromoterChangeModal`.
    - Evidence: apps/web/components/web/lineage/lineage-profile-drawer.tsx; apps/web/components/web/lineage/promoter-change-modal.tsx; apps/web/e2e/lineage/authenticated-lifecycle.spec.ts.
 
-3. ✅ done — **Editor toolbar and drag/reorder not implemented** (UI Tests — Editor: authorized user sees editor toolbar; drag reorder changes visual order only)
+1. ✅ done — **Editor toolbar and drag/reorder not implemented** (UI Tests — Editor: authorized user sees editor toolbar; drag reorder changes visual order only)
    - SESSION_0264 adds `LineageEditorToolbar` and edit-mode dnd-kit handlers that call the audited placement action.
    - Evidence: apps/web/components/web/lineage/lineage-editor-toolbar.tsx; apps/web/components/web/lineage/lineage-tree-canvas.tsx; apps/web/server/web/lineage/editor-actions.ts.
 
-4. ✅ done — **Visual group management UI missing (rename, hide label, collapse)** (UI Tests — Editor: admin can rename group; admin can hide public group label; admin can collapse group by default)
+1. ✅ done — **Visual group management UI missing (rename, hide label, collapse)** (UI Tests — Editor: admin can rename group; admin can hide public group label; admin can collapse group by default)
    - SESSION_0264 adds TREE_ADMIN-only inline group header forms and `updateLineageVisualGroup`.
    - Evidence: apps/web/components/web/lineage/lineage-group-header-form.tsx; apps/web/server/web/lineage/editor-actions.ts; apps/web/server/web/lineage/editor-actions.test.ts.
 
@@ -126,7 +126,7 @@ The schema is complete, adapter & unit tests are comprehensive, UI test harness 
 
 - **Missing promotion date display logic** (Unit Tests: missing promotion dates display as `Unknown date`; missing promotion dates are omitted when public date display is disabled)
   - Schema field `showPromotionDatePublic` exists; materialization logic may filter dates, but explicit test coverage unclear.
-  
+
 - **Unverified/disputed badge rendering not verified** (UI Tests — Public: unverified and disputed badges show publicly; Unit Tests: disputed and unverified badges are present in compact node props)
   - Payload includes verification status; actual badge rendering in node card not inspected.
 

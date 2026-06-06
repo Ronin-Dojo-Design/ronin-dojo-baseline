@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-06
 updated: 2026-06-06
-last_agent: claude-session-0350
+last_agent: codex-session-0351
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -44,6 +44,8 @@ commit) so the term is concrete, not abstract.
   laptop; **Neon** is the cloud version. Same engine, different location.
 - **dev server** — a private running copy of the site on the laptop (`next dev`) used to check changes
   before they go live. Example this session: it served `http://localhost:3000/directory` for the smoke test.
+- **App Router** — the Next.js folder system where folders become URLs. Example: `apps/web/app/admin/repo-docs/page.tsx` becomes `/admin/repo-docs`.
+- **route handler** — server code that answers a URL directly instead of rendering a page. Example: `apps/web/app/admin/repo-docs/docs-navigator/route.ts` serves the generated docs navigator HTML.
 
 ## How code ships (gets to the live site)
 
@@ -60,6 +62,8 @@ commit) so the term is concrete, not abstract.
   for errors.
 - **Vercel / deploy** — the hosting service. A "deploy" is publishing a new version of the live site;
   pushing app code triggers one automatically. "Ready" = the new version is live.
+- **production** — the real live site and live services. In this repo, production money movement can use live Stripe keys, so test cards do not belong there.
+- **preview / staging** — a temporary hosted copy used to prove changes before production. It should be treated as real enough to catch env/domain/auth mistakes, but not as the canonical live site.
 
 ## Code-quality tools
 
@@ -70,6 +74,8 @@ commit) so the term is concrete, not abstract.
   `npx fallow audit`; it caught two unused pieces that were then deleted.
 - **graphify** — a repo "map" tool: ask it about a topic and it lists the related files, so you don't
   have to search blindly. See [graphify-repo-memory](../../runbooks/dev-environment/graphify-repo-memory.md).
+- **docs navigator** — a generated HTML map of the repo docs. Build it with `bun run docs:nav`; in admin it is exposed through `/admin/repo-docs`.
+- **Graphify HTML** — the visual graph export at `/graphify.html`. Build it with `bun run graphify:viz`; it is useful for navigation but not proof by itself.
 
 ## Concepts that came up this session
 
@@ -88,6 +94,37 @@ commit) so the term is concrete, not abstract.
   `components/web/members/*` (it was unreachable behind a redirect).
 - **drift / drift register** — a written record of places where the docs and the code disagree, so they
   don't get silently lost. Example: `D-020` in [drift-register](drift-register.md).
+- **wiring ledger** — the repo's list of known code/documentation gaps that should not disappear into memory. Example: [wiring-ledger](wiring-ledger.md).
+- **manual boundary** — a thing that cannot be closed by code alone, such as DNS setup, live payment proof, or owner approval. Example: [manual-boundary-registry](manual-boundary-registry.md).
+- **ADR (Architecture Decision Record)** — a short document that records a real architecture decision and its consequences. Example: [ADR 0008](../../architecture/decisions/0008-brand-switcher.md).
+- **source of truth** — the place we trust first for a fact. Example: `schema.prisma` is the source of truth for database shape; ADRs are the source of truth for accepted architecture decisions.
+- **payload / allowlist** — the exact fields a query is allowed to return. Think of it as a packing list: if a private field is not on the list, it cannot accidentally show up in the UI.
+- **server action** — a trusted server-side function a form or button can call. It is where validation, permissions, writes, and cache invalidation should happen.
+- **brand** — the public face/domain the user is visiting or operating in: Baseline Martial Arts, BBL, WEKAF, or Ronin Dojo Design. Brand affects chrome, data scope, email links, and launch behavior.
+- **host-derived brand** — the brand inferred from the current domain, such as `bbl.local` resolving to BBL. It controls public site chrome.
+- **active brand** — the app-data brand an admin or multi-brand user is currently working inside. It is planned in [ADR 0008](../../architecture/decisions/0008-brand-switcher.md) and stored as `User.lastActiveBrandId`, but the full switcher flow is still open.
+- **admin monitor** — an admin page that summarizes operational health. Current examples: `/admin/billing/monitoring` for Stripe webhooks and `/admin/storage/monitoring` for S3/media readiness.
+- **pulse** — a planned scheduled or on-demand digest that runs monitor checks and reports a small owner-readable status. Current pulse candidates are documented in [repo-alignment-report](../../architecture/repo-alignment-report.md).
+- **cron** — a scheduled job. In this repo, cron should be used only for durable scheduled work like audits, expiry checks, publish/sync jobs, and pulse reports, with a secret guard and clear failure policy.
+- **Graphify-first discovery** — the rule that cross-area sessions query Graphify before broad file searching, then verify by opening exact files. It reduces blind searching but does not replace source review.
+- **repo alignment report** — a repeatable sweep that compares current code/session truth against docs, ADRs, ledgers, and generated navigation artifacts. See [repo-alignment-report](../../architecture/repo-alignment-report.md).
+
+## Domain words in this repo
+
+- **Passport** — a person's global identity record: name, profile basics, emergency/contact fields. It is not the same as their membership in a school.
+- **DirectoryProfile** — the public/private directory face of a person. It controls visibility and which profile fields may show up.
+- **Organization** — a school, dojo, club, league, or federation. It is the main container for memberships, programs, schedules, billing, and events.
+- **Discipline** — a martial art or training discipline, such as BJJ, Muay Thai, Eskrima, Karate, or Judo.
+- **RankSystem** — a rank ladder for one discipline, such as belt ranks, kyu/dan ranks, prajioud, grade levels, or forms progression.
+- **Rank** — one step on a RankSystem, such as White Belt, Blue Belt, or Level 3.
+- **Membership** — a user's relationship to an Organization for one Discipline. This is where active/pending/suspended status, rank, and roles come together.
+- **RegistrationEntry** — one specific event/tournament entry with rank and organization snapshots, so competitive history does not change when someone is promoted later.
+- **Entitlement** — a durable access permission. Payment, comp, membership, or promo can grant it; features check it instead of guessing from Stripe metadata.
+- **ContentAtom** — one canonical teaching/marketing idea that can become posts, curriculum, social copy, videos, or other variants.
+- **ContentVariant** — a brand/channel-specific version of a ContentAtom, such as a Baseline blog post or BBL social caption.
+- **LineageTree** — a public or private family-tree-style view of martial arts relationships.
+- **LineageNode** — the person identity point inside lineage data.
+- **LineageTreeMember** — a person's membership in a specific lineage tree, including visual parent, sort order, and public display flags.
 
 ## Cross-references
 

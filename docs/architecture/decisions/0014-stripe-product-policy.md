@@ -5,7 +5,7 @@ type: decision
 status: accepted
 created: 2026-05-08
 updated: 2026-05-08
-last_agent: copilot-session-0106
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/pwcc-commerce-port-map.md
@@ -46,7 +46,7 @@ Dirstarter's baseline is simple: three listing-tier products (Free/Standard/Prem
 
 The platform owns one Stripe account for the Baseline Martial Arts launch. Organizations do not get individual Stripe Connect accounts at Baseline launch.
 
-**Brand-specific Connect plan (signed off 2026-05-08):**
+### Brand-specific Connect plan (signed off 2026-05-08)
 
 | Brand | Stripe Model | Rationale |
 | --- | --- | --- |
@@ -111,9 +111,10 @@ Every Stripe Price must include:
 ```
 
 This metadata is used by the webhook handler to:
+
 1. Route events to the correct brand context
-2. Map checkout completion to the correct `EntitlementGrant`
-3. Audit which admin or script created the product
+1. Map checkout completion to the correct `EntitlementGrant`
+1. Audit which admin or script created the product
 
 ### 4. One Stripe Product per sellable unit
 
@@ -160,12 +161,13 @@ Brand routing uses `event.data.object.metadata.brand` to scope all database oper
 ### 8. Product creation script
 
 Extend Dirstarter's `scripts/setup-stripe-products.ts` pattern. Created `scripts/setup-ronin-stripe-products.ts` that:
+
 1. Defines products per brand using parameterized `getSharedProducts(brand, code)` + brand-specific extensions (e.g., `getRddProducts()`)
-2. Creates corresponding Stripe Products and Prices via Stripe SDK
-3. Is idempotent (checks for existing products by name before creating)
-4. Supports `--brand BMA|RDD` filter to target a single brand
-5. Supports `--dry-run` to preview all products without Stripe API calls
-6. Future: DB-driven mode that reads `PricingPlan` rows and writes `stripeProductId`/`stripePriceId` back
+1. Creates corresponding Stripe Products and Prices via Stripe SDK
+1. Is idempotent (checks for existing products by name before creating)
+1. Supports `--brand BMA|RDD` filter to target a single brand
+1. Supports `--dry-run` to preview all products without Stripe API calls
+1. Future: DB-driven mode that reads `PricingPlan` rows and writes `stripeProductId`/`stripePriceId` back
 
 **Current product inventory (SESSION_0103):** 22 products — 20 shared per brand (membership ×3, program ×3, course ×2, tournament, certificate, belt test, event ×2, org fee, merch ×3, directory ×3) + 2 RDD-only (platform maintenance basic/pro). All subscription-eligible verticals have monthly, quarterly (3-month), and annual pricing.
 
@@ -206,5 +208,5 @@ Extend Dirstarter's `scripts/setup-stripe-products.ts` pattern. Created `scripts
 ## Open Questions (for user sign-off)
 
 1. **Tournament fee model:** One Stripe Product per tournament (with Division fees as line items), or one Product per Division? Recommendation: per-tournament with line items.
-2. **Certificate pricing:** Flat fee per certificate type, or variable based on rank level? Recommendation: flat fee per template initially.
-3. ~~**Connect timeline:**~~ **Resolved 2026-05-08.** Baseline launches without Connect; Connect added before whitelabel. BBL and WEKAF get individual Connect accounts at port time.
+1. **Certificate pricing:** Flat fee per certificate type, or variable based on rank level? Recommendation: flat fee per template initially.
+1. ~~**Connect timeline:**~~ **Resolved 2026-05-08.** Baseline launches without Connect; Connect added before whitelabel. BBL and WEKAF get individual Connect accounts at port time.

@@ -4,8 +4,8 @@ slug: lineage-react-canvas-port-plan
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0177
+updated: 2026-06-06
+last_agent: codex-session-0351
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/knowledge/wiki/index.md
@@ -118,11 +118,11 @@ Use `@use-gesture/react` for pan/zoom and drag gestures. Keep the core layout de
 ## Migration Strategy
 
 1. Build the adapter beside the current D3 chart and unit-test it.
-2. Build the React canvas behind a feature flag or local component switch.
-3. Wire the embedded discipline section to the new canvas for Baseline.
-4. Add standalone `/lineage/[treeSlug]`.
-5. Add editor-only controls under the dashboard route.
-6. Remove `d3-org-chart` and its type shim only after public and editor parity are verified.
+1. Build the React canvas behind a feature flag or local component switch.
+1. Wire the embedded discipline section to the new canvas for Baseline.
+1. Add standalone `/lineage/[treeSlug]`.
+1. Add editor-only controls under the dashboard route.
+1. Remove `d3-org-chart` and its type shim only after public and editor parity are verified.
 
 ## Non-Goals
 

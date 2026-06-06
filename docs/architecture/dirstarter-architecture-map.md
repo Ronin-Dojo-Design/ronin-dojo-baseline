@@ -4,8 +4,8 @@ slug: dirstarter-architecture-map
 type: file
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0016
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/plan-vs-current.md
@@ -25,7 +25,7 @@ Dirstarter is a **tool directory SaaS template**. Its domain: users submit tools
 
 ### File structure convention
 
-```
+```text
 app/
   (web)/              ← public-facing routes (marketing + user features)
     auth/             ← login, verify
@@ -102,14 +102,14 @@ Every feature in Dirstarter follows a **5-layer vertical slice**:
 
 ### Layer A: Data (Prisma schema + payloads)
 
-```
+```text
 prisma/schema.prisma          → model definition
 server/web/<entity>/payloads.ts → select shapes (what fields to return)
 ```
 
 ### Layer B: Server Logic (queries + actions)
 
-```
+```text
 server/web/<entity>/queries.ts  → cached read queries (findMany, findOne, search)
 server/web/<entity>/schema.ts   → Zod validation + nuqs search param parsers
 server/web/actions/<action>.ts  → write mutations via safe-actions chain
@@ -117,7 +117,7 @@ server/web/actions/<action>.ts  → write mutations via safe-actions chain
 
 ### Layer C: Components (display + interaction)
 
-```
+```text
 components/web/<entity>-card.tsx    → list item display
 components/web/<entity>-list.tsx    → list container
 components/web/<entity>-filters.tsx → search/filter controls
@@ -126,7 +126,7 @@ components/web/<entity>-listing.tsx → orchestrator (fetches + renders list + f
 
 ### Layer D: Pages (routes)
 
-```
+```text
 app/(web)/<route>/page.tsx     → getData() + generateMetadata() + render
 app/(web)/<route>/listing.tsx  → searchParams → query → list component
 app/admin/<entity>/page.tsx    → admin data table view
@@ -134,7 +134,7 @@ app/admin/<entity>/page.tsx    → admin data table view
 
 ### Layer E: Config + i18n
 
-```
+```text
 config/<entity>.ts             → static config (if needed)
 messages/en.json               → page titles, descriptions, form labels
 ```
@@ -145,11 +145,11 @@ messages/en.json               → page titles, descriptions, form labels
 
 This is the Rosetta Stone. Dirstarter's "Tool" is our primary entity in each sprint:
 
-| Dirstarter concept | Ronin Dojo equivalent | Sprint |
-|---|---|---|
+| Dirstarter concept | Ronin Dojo equivalent |
+| --- | --- |
 | `Tool` | `Organization` (S3), `DirectoryProfile` (S4), `Course` (S6), `Tournament` (S8) |
-| `Category` | `Discipline` | S1 (done) |
-| `Tag` | `RankSystem`, `Rank` | S1 (done) |
+| `Category` | `Discipline` (S1 done) |
+| `Tag` | `RankSystem`, `Rank` (S1 done) |
 | `Tool submission` | Org create (S3), Course create (S6), Tournament create (S8) |
 | `Tool listing/search` | Directory search (S4), Tournament browse (S8) |
 | `Tool detail page` | DirectoryProfile detail, Org detail, Tournament detail |
@@ -174,25 +174,25 @@ When building any new feature, follow this exact sequence. No improvisation.
 
 ### Step 2: Payloads
 
-- Create `server/web/<entity>/payloads.ts`
-- Define `<entity>OnePayload` and `<entity>ManyPayload` (Prisma select objects)
+- Create `server/web/&lt;entity&gt;/payloads.ts`
+- Define `&lt;entity&gt;OnePayload` and `&lt;entity&gt;ManyPayload` (Prisma select objects)
 - Export inferred types: `type EntityOne = Prisma.EntityGetPayload<...>`
 
 ### Step 3: Schema (validation)
 
-- Create `server/web/<entity>/schema.ts`
+- Create `server/web/&lt;entity&gt;/schema.ts`
 - Define filter params with `nuqs` parsers + `createSearchParamsCache`
 - Define form validation schemas with Zod
 
 ### Step 4: Queries
 
-- Create `server/web/<entity>/queries.ts`
+- Create `server/web/&lt;entity&gt;/queries.ts`
 - Use `"use cache"` + `cacheTag` + `cacheLife` pattern
 - Return paginated results: `{ items, total, page, perPage }`
 
 ### Step 5: Actions (for writes)
 
-- Create `server/web/actions/<action>.ts`
+- Create `server/web/actions/&lt;action&gt;.ts`
 - Use `actionClient.inputSchema(...).action(...)` or `userActionClient` for auth-gated
 - Call `revalidate({ tags: [...] })` after mutations
 
@@ -205,12 +205,12 @@ When building any new feature, follow this exact sequence. No improvisation.
 
 ### Step 7: Page
 
-- Create `app/(web)/<route>/page.tsx`
+- Create `app/(web)/&lt;route&gt;/page.tsx`
 - Follow the pattern: `getData()` (cached) → `generateMetadata()` → default export renders `<Intro>` + `<Suspense fallback={<Skeleton>}><Listing /></Suspense>`
 
 ### Step 8: Admin (if applicable)
 
-- Create `app/admin/<entity>/page.tsx` with data table
+- Create `app/admin/&lt;entity&gt;/page.tsx` with data table
 - Use `components/data-table/*` patterns
 
 ---
@@ -220,7 +220,7 @@ When building any new feature, follow this exact sequence. No improvisation.
 Each sprint maps to specific Dirstarter patterns:
 
 | Sprint | Primary pattern to follow | Reference file in Dirstarter |
-|---|---|---|
+| --- | --- | --- |
 | **S3** (Org CRUD) | Tool submission + admin tools | `server/web/actions/submit.ts`, `app/admin/tools/` |
 | **S4** (Directory) | Tool listing + search + filters | `server/web/tools/queries.ts`, `components/web/tool-listing.tsx` |
 | **S6** (Courses) | Tool detail + categories | `app/(web)/[slug]/`, `server/web/categories/` |
@@ -236,28 +236,34 @@ Each sprint maps to specific Dirstarter patterns:
 ## 6. Anti-Patterns (what NOT to do)
 
 1. **Don't create new `lib/` files** unless Dirstarter has an equivalent. If it doesn't exist in the template, you probably don't need it.
-2. **Don't make custom API routes** for things that should be server actions. Dirstarter uses API routes only for: auth callbacks, Stripe webhooks, cron jobs, OG image generation.
-3. **Don't build custom form components.** Use `components/common/form.tsx` (React Hook Form) + `components/common/input.tsx`, `select.tsx`, etc.
-4. **Don't invent a new data fetching pattern.** Use the `server/web/<entity>/queries.ts` → `"use cache"` → component pattern.
-5. **Don't build custom auth middleware.** Use `lib/auth-hoc.ts` (`withAuth`, `withAdminAuth`) for API routes. Use `userActionClient` for server actions. Use `getServerSession()` for pages.
-6. **Don't restructure the component hierarchy.** `common/` = primitives, `web/` = domain, `admin/` = admin. That's it.
-7. **Don't skip the payloads file.** Every entity needs typed Prisma select shapes. No `select: { ... }` inline in queries.
+1. **Don't make custom API routes** for things that should be server actions. Dirstarter uses API routes only for: auth callbacks, Stripe webhooks, cron jobs, OG image generation.
+1. **Don't build custom form components.** Use `components/common/form.tsx` (React Hook Form) + `components/common/input.tsx`, `select.tsx`, etc.
+1. **Don't invent a new data fetching pattern.** Use the `server/web/&lt;entity&gt;/queries.ts` → `"use cache"` → component pattern.
+1. **Don't build custom auth middleware.** Use `lib/auth-hoc.ts` (`withAuth`, `withAdminAuth`) for API routes. Use `userActionClient` for server actions. Use `getServerSession()` for pages.
+1. **Don't restructure the component hierarchy.** `common/` = primitives, `web/` = domain, `admin/` = admin. That's it.
+1. **Don't skip the payloads file.** Every entity needs typed Prisma select shapes. No `select: { ... }` inline in queries.
 
 ---
 
 ## 7. Current State Audit
 
-What we've built so far vs. what the Dirstarter pattern demands:
+This table was written early in the rebuild and is no longer the operational truth for every entity. Current source maps are:
+
+- `docs/architecture/data-model.md` for schema inventory.
+- `docs/architecture/repo-alignment-report.md` for on-demand stale-doc and wiring sweeps.
+- `docs/knowledge/wiki/custom-component-inventory.md` and `docs/knowledge/wiki/wiring-ledger.md` for component/wiring state.
+
+Historical snapshot from the original map:
 
 | Entity | Schema ✅ | Payloads | Queries | Actions | Components | Pages | Status |
-|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | Organization | ✅ | ⚠️ check | ⚠️ check | ✅ (create/join) | ⚠️ check | ✅ (list/create/detail) | S3 done |
 | DirectoryProfile | ✅ | ⚠️ check | ⚠️ check | — | ⚠️ check | ✅ (/directory) | S4 verify |
 | Passport | ✅ | ⚠️ check | ⚠️ check | — | ⚠️ check | ✅ (/me) | S2 done |
-| Course | ✅ (schema) | ❌ | ❌ | ❌ | ❌ | ❌ | S6 planned |
-| Tournament | ✅ (schema) | ❌ | ❌ | ❌ | ❌ | ❌ | S8 planned |
+| Course | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Later sessions landed Course/Curriculum admin and public slices; verify exact current files before new work. |
+| Tournament | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Tournament CRUD/registration/execution slices landed after this map; verify exact current files before new work. |
 
-**Action item:** Before S6 begins, audit S2–S4 code to confirm it follows the full 5-layer pattern. If any shortcuts were taken (inline selects, missing payloads files, etc.), fix them as part of the next sprint's opening.
+**Action item:** Treat this document as a pattern guide, not a live status board. For live status, run the repo alignment sweep and update the wiring ledger.
 
 ---
 
@@ -265,20 +271,20 @@ What we've built so far vs. what the Dirstarter pattern demands:
 
 Follow Dirstarter exactly:
 
-- **Entity folder:** `server/web/<entity-plural>/` (e.g. `server/web/organizations/`)
+- **Entity folder:** `server/web/&lt;entity-plural&gt;/` (e.g. `server/web/organizations/`)
 - **Payloads:** `payloads.ts` — select shapes + exported types
 - **Queries:** `queries.ts` — cached reads
 - **Schema:** `schema.ts` — Zod + nuqs params
-- **Actions:** `server/web/actions/<verb-noun>.ts` (e.g. `create-organization.ts`)
-- **Components:** `components/web/<entity>-<variant>.tsx` (e.g. `organization-card.tsx`)
-- **Pages:** `app/(web)/<route>/page.tsx` + optional `listing.tsx` for search pages
+- **Actions:** `server/web/actions/&lt;verb-noun&gt;.ts` (e.g. `create-organization.ts`)
+- **Components:** `components/web/&lt;entity&gt;-&lt;variant&gt;.tsx` (e.g. `organization-card.tsx`)
+- **Pages:** `app/(web)/&lt;route&gt;/page.tsx` + optional `listing.tsx` for search pages
 
 ---
 
 ## 9. Key Dirstarter Utilities We Must Use
 
 | Utility | Location | Use for |
-|---|---|---|
+| --- | --- | --- |
 | `actionClient` / `userActionClient` / `adminActionClient` | `lib/safe-actions.ts` | All server actions |
 | `getServerSession()` | `lib/auth.ts` | Session access in pages/actions |
 | `withAuth()` / `withAdminAuth()` | `lib/auth-hoc.ts` | API route protection |

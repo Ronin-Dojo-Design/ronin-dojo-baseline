@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-25
 updated: 2026-05-25
-last_agent: claude-session-0259
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0258.md
   - docs/sprints/SESSION_0259.md
@@ -26,17 +26,17 @@ backlinks:
 SESSION_0258 TASK_07 ran a focused spike on the Stripe webhook and membership write-sites to resolve a hanging question raised during MB-015 Session B email wiring: *should subscription lifecycle events drive `Membership.status`?* The spike returned two facts read directly from `app/api/stripe/webhooks/route.ts` and the surrounding schema:
 
 1. **The webhook never touches `Membership.status` today.** It manages `UserEntitlement` (`grantEntitlementsFromCheckout`, `syncSubscriptionEntitlements`, `revokeEntitlementsFromSubscription`), `ProgramEnrollment` (`fulfillProgramEnrollment`, `suspendProgramEnrollmentsForEntitlementSource`), `Registration` (`fulfillTournamentRegistration`), and `Tool` (`isFeatured` + `tier` for the premium-tool flow). Membership remains a community/admin concept driven by `server/admin/memberships/actions.ts::transitionMembershipStatus` and four self-service paths.
-2. **`invoice.payment_failed` does not suspend anything.** It calls `applySubscriptionPaymentGrace` which only sets `UserEntitlement.endsAt = now + 7 days`. There is no expiry cron — entitlements lapse implicitly via the read-site time checks. The only cron in `apps/web/app/api/cron/` is `publish-tools`.
+1. **`invoice.payment_failed` does not suspend anything.** It calls `applySubscriptionPaymentGrace` which only sets `UserEntitlement.endsAt = now + 7 days`. There is no expiry cron — entitlements lapse implicitly via the read-site time checks. The only cron in `apps/web/app/api/cron/` is `publish-tools`.
 
 SESSION_0259 grill-me then surfaced a third, schema-shaped fact:
 
-3. **There is no `PricingPlan → Discipline` link.** A subscription resolves to a `PricingPlan` which carries `organizationId` and optional `programId`. A `Membership` is keyed by `(userId, organizationId, disciplineId)`, and a user can hold N memberships in the same org (one per discipline). Without a `PricingPlanDiscipline` join (or `Membership.pricingPlanId` foreign key), there is no deterministic rule for *which* of a user's memberships a `customer.subscription.deleted` event should suspend.
+1. **There is no `PricingPlan → Discipline` link.** A subscription resolves to a `PricingPlan` which carries `organizationId` and optional `programId`. A `Membership` is keyed by `(userId, organizationId, disciplineId)`, and a user can hold N memberships in the same org (one per discipline). Without a `PricingPlanDiscipline` join (or `Membership.pricingPlanId` foreign key), there is no deterministic rule for *which* of a user's memberships a `customer.subscription.deleted` event should suspend.
 
 The pressure that prompted the question — "membership status should reflect whether the user is paying" — was real, but applying it would have required (1) a schema delta, (2) admin UI to maintain the new link, (3) webhook mapping logic, (4) a decision on `invoice.payment_failed` semantics (immediate suspend vs grace-then-cron), and (5) the membership-expiry cron we declined building separately. Realistically two to three sessions of work for a behavior that `UserEntitlement` already provides.
 
 ## Decision
 
-**`Membership.status` is community/admin state. `UserEntitlement` is subscription-driven access.**
+### `Membership.status` is community/admin state. `UserEntitlement` is subscription-driven access
 
 - `Membership.status` (`INVITED`/`PENDING`/`ACTIVE`/`SUSPENDED`/`CANCELLED`/`EXPIRED`) is owned by:
   - Admins, via `server/admin/memberships/actions.ts::transitionMembershipStatus`.

@@ -6,7 +6,7 @@ status: active
 created: 2026-04-28
 updated: 2026-06-04
 author: Brian + Petey
-last_agent: codex-session-0343
+last_agent: codex-session-0351
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
@@ -168,7 +168,7 @@ The following entities were referenced in the schema needs manifest but did NOT 
 
 ## What exists today (S1–S5 complete + S2 design)
 
-**Live in schema (36 models):**
+### Live in schema (36 models)
 
 - User + Passport + DirectoryProfile (S2)
 - Organization CRUD + membership + join flow (S3)
@@ -177,7 +177,7 @@ The following entities were referenced in the schema needs manifest but did NOT 
 - Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry (schema only, no UI)
 - Courses + CurriculumItem + Gamification + Subscriptions + Lineage + Waivers + Certifications + Content Engine
 
-**Designed, migration pending (38 models):**
+### Designed, migration pending (38 models)
 
 - Programs, scheduling, attendance, check-in, belt testing, family, billing, contracts, notifications, org settings (Pass 1 — 24 models)
 - Invitations, generic events, brackets, matches, fight records, audit log (Pass 2 — 9 models)
@@ -246,16 +246,16 @@ Schema migration in 3 waves (see WORKFLOW_5.0.md for session calendar):
 All items completed during SESSION_0020 Petey deep dive:
 
 1. ✅ **Schema needs pass** — reconciled against current schema; produced [s2-schema-additions.md](../s2-schema-additions.md) with 38 new models, 29 new enums across 3 passes
-2. ✅ **Per-brand feature matrix** — Option A-plus defines differentiated depth per brand (see above)
-3. ✅ **Launch strategy decision** — Option A-plus selected (all brands live May 18, differentiated depth)
-4. ✅ **Sprint replan** — replaced S6–S12 with WORKFLOW 5.0 session calendar (SESSION_0021–0040)
-5. ✅ **Parallel workstream plan** — 5 worktrees defined in WORKFLOW 5.0 (core-platform, school-ops, tournaments, brand-launch, qa-hardening)
-6. ⏸ **Cache strategy finalization** — ADR 0010 still `proposed`; scheduled for SESSION_0022
+1. ✅ **Per-brand feature matrix** — Option A-plus defines differentiated depth per brand (see above)
+1. ✅ **Launch strategy decision** — Option A-plus selected (all brands live May 18, differentiated depth)
+1. ✅ **Sprint replan** — replaced S6–S12 with WORKFLOW 5.0 session calendar (SESSION_0021–0040)
+1. ✅ **Parallel workstream plan** — 5 worktrees defined in WORKFLOW 5.0 (core-platform, school-ops, tournaments, brand-launch, qa-hardening)
+1. ⏸ **Cache strategy finalization** — ADR 0010 still `proposed`; scheduled for SESSION_0022
 
 ## Open questions for Brian ✅ RESOLVED
 
 1. ✅ **Hard deadline.** May 18 is a hard launch date, not a target.
-2. ✅ **Option A-plus.** All brands live May 18 with differentiated depth. Not staggered, not deferred.
-3. ✅ **Single operator + AI agents.** No additional developers. 6 AI personas (Petey, Cody, Doug, Desi, Brandon, Giddy).
-4. ✅ **Complete spec.** s2-schema-additions.md (3 passes) + ChatGPT deep research brief = complete spec. SCHEMA_NEEDS_MANIFEST.md is deprecated.
-5. ✅ **P4 white-label.** Assisted onboarding is launch scope. Self-serve wizard is post-launch.
+1. ✅ **Option A-plus.** All brands live May 18 with differentiated depth. Not staggered, not deferred.
+1. ✅ **Single operator + AI agents.** No additional developers. 6 AI personas (Petey, Cody, Doug, Desi, Brandon, Giddy).
+1. ✅ **Complete spec.** s2-schema-additions.md (3 passes) + ChatGPT deep research brief = complete spec. SCHEMA_NEEDS_MANIFEST.md is deprecated.
+1. ✅ **P4 white-label.** Assisted onboarding is launch scope. Self-serve wizard is post-launch.

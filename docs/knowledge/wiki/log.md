@@ -257,3 +257,10 @@ Use this file only as historical context for early wiki adoption.
 - Updated `wiring-ledger.md` with WL-P1-6 for the unaudited generic admin entitlement grant/revoke path and marked it fixed by routing through audited admin entitlement helpers.
 - Updated `sop-data-and-wiring-flows.md` with the comp/gift entitlement flow: trusted triggers, server-derived tier keys, audit-before-mutation, and lineage tier-policy read model.
 - Added the SESSION_0347 row to the wiki index and refreshed the wiring-ledger index summary.
+
+## 2026-06-06 — SESSION_0351
+
+- Added `enter-the-dojo-schema-intake.md` to translate legacy WordPress/Pods doctrine into the current Prisma/Next/ContentAtom language and route bigger schema ideas to the wiring ledger.
+- Added `repo-alignment-report.md` for weekly/on-demand architecture/admin/schema/docs alignment sweeps.
+- Expanded `repo-code-glossary.md` with repo/project/session/schema/monitoring terms and updated the wiki index for SESSION_0351.
+- Added WL-P2-6 through WL-P2-10 for tournament content shell, org/staff chart, pulse automation, brand-switcher proof, and fallow cleanup follow-ups.

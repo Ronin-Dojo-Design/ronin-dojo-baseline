@@ -4,8 +4,8 @@ slug: lineage-rank-promotion-sync-rules
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0177
+updated: 2026-06-06
+last_agent: codex-session-0351
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/sprints/SESSION_0178.md
@@ -36,21 +36,21 @@ This avoids rewriting every existing tree adapter at the same time as the schema
 When an authorized editor records a promotion:
 
 1. Create or update the promoted user's `RankAward`.
-2. Set `RankAward.userId` to the promoted user.
-3. Set `RankAward.rankId` to the awarded rank.
-4. Set `RankAward.awardedById` to the promoter user when the promoter is known as a `User`.
-5. Allow `RankAward.awardedAt` to be `null` for unknown historical dates.
-6. Ensure both people have `LineageNode` rows.
-7. Create or update a `LineageRelationship` row:
+1. Set `RankAward.userId` to the promoted user.
+1. Set `RankAward.rankId` to the awarded rank.
+1. Set `RankAward.awardedById` to the promoter user when the promoter is known as a `User`.
+1. Allow `RankAward.awardedAt` to be `null` for unknown historical dates.
+1. Ensure both people have `LineageNode` rows.
+1. Create or update a `LineageRelationship` row:
    - `type = PROMOTED_BY`
    - `fromNodeId = promoterNode.id`
    - `toNodeId = promotedNode.id`
    - `rankAwardId = rankAward.id`
    - `startedAt = rankAward.awardedAt`
    - `verificationStatus = selected editor status`
-8. Add or update the relevant `LineageTreeMember` row for the promoted person in the current tree.
-9. Assign or create the materialized visual group from the promotion date.
-10. Write an `AuditLog` entry for the action.
+1. Add or update the relevant `LineageTreeMember` row for the promoted person in the current tree.
+1. Assign or create the materialized visual group from the promotion date.
+1. Write an `AuditLog` entry for the action.
 
 ## Update Promotion
 

@@ -4,9 +4,9 @@ slug: data-model
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-04-30
+updated: 2026-06-06
 author: Brian + Copilot
-last_agent: codex-session-0029
+last_agent: codex-session-0351
 pairs_with:
   - architecture/s1-schema-design
   - docs/architecture/s2-schema-additions.md
@@ -20,7 +20,7 @@ backlinks:
   - knowledge/wiki/content-engine/content-atoms
   - docs/sprints/SESSION_0029.md
 wiring:
-  - "apps/web/prisma/schema.prisma — 97 models and 65 enums live after Schema Waves A-D"
+  - "apps/web/prisma/schema.prisma — 119 models and 80 enums live as of SESSION_0351"
   - "apps/web/prisma/seed.ts — seed data for disciplines, ranks, roles, etc."
   - "apps/web/lib/authz.ts — permission checks reference Organization, Rank, Role"
 tags: [schema, prisma, data-model, s1, s2]
@@ -32,11 +32,11 @@ Source of truth: `apps/web/prisma/schema.prisma`. This document is the human-rea
 
 ## Summary
 
-97 Prisma models and 65 enums are currently in schema after Schema Waves A-D. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage, waivers, certifications, substyle taxonomy, class scheduling, attendance tracking, belt testing, family/guardian accounts, invoicing/payments (Stripe Connect), CRM/lead pipeline, membership contracts, notification preferences, org network relationships, media, techniques, certificate products, favorites, student lists, and audit logging.
+119 Prisma models and 80 enums are currently in schema. The schema supports a multi-brand martial arts SaaS platform with identity (Passport + DirectoryProfile), organization membership with per-discipline ranks and multi-role assignments, curriculum and course tracking, tournament registration with rank snapshots, gamification, subscriptions, lineage trees, waivers, certifications, substyle taxonomy, class scheduling, attendance tracking, belt testing, family/guardian accounts, invoicing/payments (Stripe Connect), CRM/lead pipeline, membership contracts, notification preferences, org network relationships, media, techniques, certificate products, favorites, student lists, merch/POD, GDPR/DSR handling, Stripe webhook event tracking, and audit logging.
 
 ## Status
 
-Schema is live in local dev with 97 models. Migration work is still local/dev-oriented; production migration hardening is tracked for SESSION_0039. Seed file populates disciplines, rank systems, roles, tournament roles, gamification event types, subscription tiers, styles, and current School Ops fixture data.
+Schema is live in local dev with 119 models. Migration work has moved well past the original S1/S2 waves, but launch-readiness still depends on the current security/payment/storage/domain proof ledgers rather than model count alone. Seed file populates disciplines, rank systems, roles, tournament roles, gamification event types, subscription tiers, styles, lineage, tournament, product, and current School Ops fixture data.
 
 **S2 additions:** Schema Waves A-D have landed in `schema.prisma`. Feature slices and production migration artifacts are still staged across `WORKFLOW_5.0.md`. See [s2-schema-additions.md](s2-schema-additions.md), [PETEY_PLAN_S2_SCHEMA_PASS4.md](PETEY_PLAN_S2_SCHEMA_PASS4.md), and [WORKFLOW_5.0](../protocols/WORKFLOW_5.0.md) for execution status.
 

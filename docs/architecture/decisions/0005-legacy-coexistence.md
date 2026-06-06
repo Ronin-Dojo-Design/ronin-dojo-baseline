@@ -15,14 +15,14 @@ The new stack (Ronin Dojo Design, Baseline Martial Arts, BBL, WEKAF) runs on its
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - Existing TuffBuffs users are not disrupted.
 - The new stack stays clean — no legacy data shapes leaking into the new schema.
 - Migration becomes a deliberate one-time effort if/when it happens, not an architectural constraint.
 - The "starting fresh with a better backend" goal is preserved.
 
-**Negative**
+### Negative
 
 - Two systems to keep alive. Legacy TuffBuffs needs occasional security patching (WP core, plugins) until it's eventually retired.
 - TuffBuffs users cannot use the new platform without re-registering — when/if Baseline Martial Arts launches publicly, expect a re-onboarding moment.
@@ -36,7 +36,8 @@ The new stack (Ronin Dojo Design, Baseline Martial Arts, BBL, WEKAF) runs on its
 ## Future migration (deferred decision)
 
 If/when TuffBuffs users migrate to Baseline Martial Arts:
+
 1. Add `TUFFBUFFS` to the `Brand` enum in the new DB.
-2. One-time export from legacy WP DB → import script into new Postgres (preserve user IDs as a `legacyUserId` field for support continuity).
-3. Force password reset on first login (don't migrate WP password hashes — different format).
-4. DNS plan: keep `tuffbuffs.com` pointing at the new stack OR redirect to `baselinemartialarts.com` — to be decided at migration time.
+1. One-time export from legacy WP DB → import script into new Postgres (preserve user IDs as a `legacyUserId` field for support continuity).
+1. Force password reset on first login (don't migrate WP password hashes — different format).
+1. DNS plan: keep `tuffbuffs.com` pointing at the new stack OR redirect to `baselinemartialarts.com` — to be decided at migration time.

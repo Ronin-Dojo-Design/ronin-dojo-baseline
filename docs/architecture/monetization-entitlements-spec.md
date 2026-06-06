@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-30
 updated: 2026-05-08
-last_agent: codex-session-0097
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/dirstarter-commerce-alignment.md
@@ -340,11 +340,11 @@ Public Program Page
 Use the tournament webhook harness as the proof shape for every launch-critical paid-access path:
 
 1. Mock Stripe signature verification and outbound Stripe calls; never hit live Stripe in tests.
-2. Synthesize the exact `checkout.session.completed` or subscription lifecycle event payload the webhook reads.
-3. Build real Prisma fixtures with the same brand, user, organization, price, and entitlement relationships production uses.
-4. POST to the real webhook handler.
-5. Assert durable database state, not only response status: entitlement, projection, payment/ledger row where required, cancellation/revocation, and refund calls.
-6. Include a negative or lifecycle proof where money and access can drift, such as cancellation, failed renewal, refund, dispute, or capacity rejection.
+1. Synthesize the exact `checkout.session.completed` or subscription lifecycle event payload the webhook reads.
+1. Build real Prisma fixtures with the same brand, user, organization, price, and entitlement relationships production uses.
+1. POST to the real webhook handler.
+1. Assert durable database state, not only response status: entitlement, projection, payment/ledger row where required, cancellation/revocation, and refund calls.
+1. Include a negative or lifecycle proof where money and access can drift, such as cancellation, failed renewal, refund, dispute, or capacity rejection.
 
 ## Remaining Gaps Before Paid Launch
 
@@ -369,6 +369,6 @@ Use the tournament webhook harness as the proof shape for every launch-critical 
 ## Open Questions
 
 1. Certificate pricing: should `CertificateTemplate.priceCents` remain inline for launch, or should paid certificates become `PricingPlan` rows immediately?
-2. Should `UserBrandSubscription` be folded into the entitlement model or remain a separate brand-tier concept?
-3. Should tournament paid registration also write `Invoice`/`Payment` before launch, or stay registration-local until after launch?
-4. Should `PricingPlan.stripePriceId` and Stripe-sourced `UserEntitlement` rows get DB-level uniqueness before launch?
+1. Should `UserBrandSubscription` be folded into the entitlement model or remain a separate brand-tier concept?
+1. Should tournament paid registration also write `Invoice`/`Payment` before launch, or stay registration-local until after launch?
+1. Should `PricingPlan.stripePriceId` and Stripe-sourced `UserEntitlement` rows get DB-level uniqueness before launch?

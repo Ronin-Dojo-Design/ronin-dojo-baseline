@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-04
-last_agent: claude-session-0342
+updated: 2026-06-06
+last_agent: codex-session-0351
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -103,7 +103,7 @@ The failure mode where `mock.module()` calls in one test file bleed into another
 
 **Fallow** (`fallow-rs/fallow`) is the Rust-native TS/JS codebase-intelligence scanner (unused code, duplication, circular deps, complexity, architecture boundaries; ships an MCP server + Agent Skill). Invoked via `npx fallow`, `npm i -D fallow`, or `cargo install fallow-cli`. **Farrow** is an unrelated TypeScript web framework. `npx farrow` is **not** the code-cleanliness tool — do not conflate them.
 
-If an ADR touches a Dirstarter baseline layer, it must include compact proof links to the relevant live `https://dirstarter.com/docs` pages.
+If an ADR touches a Dirstarter baseline layer, it must include compact proof links to the relevant live `<https://dirstarter.com/docs`> pages.
 
 ### Dirstarter docs proof
 
@@ -513,7 +513,7 @@ Brand is currently an enum/column, not a table.
 ## AI naming rules
 
 1. Do not introduce aliases for locked terms.
-2. Do not use legacy terms in new code unless writing migration notes.
-3. Do not use `school`, `style`, `belt`, or `profile` as new model names.
-4. Use `Organization`, `Discipline`, `Rank`, and `Passport` everywhere in new code.
-5. If a domain word feels unclear, stop and update this glossary before coding.
+1. Do not use legacy terms in new code unless writing migration notes.
+1. Do not use `school`, `style`, `belt`, or `profile` as new model names.
+1. Use `Organization`, `Discipline`, `Rank`, and `Passport` everywhere in new code.
+1. If a domain word feels unclear, stop and update this glossary before coding.

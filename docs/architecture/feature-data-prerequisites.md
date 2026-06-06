@@ -4,8 +4,8 @@ slug: feature-data-prerequisites
 type: architecture
 status: active
 created: 2026-04-27
-updated: 2026-05-13
-last_agent: codex-session-0157
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -107,7 +107,7 @@ User → RankAward (userId, rankId, awardedById)
 - **Minimum:** 1 RankAward linking user→rank, 1 GamificationEvent
 - **Seed covers:** ⚠️ RankAwards exist (sensei=Blue, alpha=White, beta=L3). GamificationEvents not yet seeded.
 
-## Tournament (S8–S9 — upcoming)
+## Tournament (S8–S9 — live seed/proof exists)
 
 ```text
 Organization → Tournament (orgId, brand, status)
@@ -118,12 +118,13 @@ Organization → Tournament (orgId, brand, status)
 ```
 
 - **Minimum:** 1 Published Tournament with 1 Division, 1 Registration with snapshot
-- **Seed covers:** ❌ Not yet seeded — add before building S8
+- **Seed covers:** ✅ Current seed/test stack includes tournament fixture data and later registration proof. Before new tournament work, still confirm the specific event/division/registration shape needed by that feature.
+- **Proof note:** tournament CRUD/registration work landed after the original version of this doc; do not treat this section as a blocker unless the target feature needs new fixture variants.
 
 ---
 
 ## How to use this doc
 
 1. **Before building a feature:** Find the section above. Confirm every record type listed exists in your dev DB.
-2. **If missing:** Update `prisma/seed.ts` to create the missing records, then `dropdb ronindojo_dev && createdb ronindojo_dev && npx prisma migrate dev` (or use Postgres.app binaries if not on PATH).
-3. **After adding seed data:** Update this doc to mark the section as ✅.
+1. **If missing:** Update `prisma/seed.ts` to create the missing records, then `dropdb ronindojo_dev && createdb ronindojo_dev && npx prisma migrate dev` (or use Postgres.app binaries if not on PATH).
+1. **After adding seed data:** Update this doc to mark the section as ✅.

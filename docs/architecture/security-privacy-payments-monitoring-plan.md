@@ -4,8 +4,8 @@ slug: security-privacy-payments-monitoring-plan
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-05-08
-last_agent: codex-session-0097
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -37,18 +37,18 @@ Live Dirstarter docs checked on 2026-04-30 and re-checked for the commerce lane 
 
 | Baseline area | Source | Ronin security implication |
 | --- | --- | --- |
-| Project structure | https://dirstarter.com/docs/codebase/structure | Keep server code in feature folders under `server/web` and `server/admin`; do not add parallel CGR auth/db stacks. |
-| Prisma/database | https://dirstarter.com/docs/database/prisma | Use `schema.prisma`, generated Prisma client, `prisma/seed.ts`, and `services/db.ts`; validate schema and seed paths. |
-| Authentication | https://dirstarter.com/docs/authentication | Better Auth session and role checks are baseline; route protection is not enough without server-side authorization. |
-| Environment secrets | https://dirstarter.com/docs/environment-setup | Never commit `.env`; production must validate Better Auth, database, Stripe, Redis, S3, analytics, and cron secrets. |
-| Payments/Stripe | https://dirstarter.com/docs/integrations/payments | Use Stripe checkout/webhooks; verify webhook signatures and map payment events into Ronin ledgers/entitlements. |
-| Monetization | https://dirstarter.com/docs/monetization | Paid features must flow through a plan/product access model; Ronin translates this into entitlements before paid UI. |
-| Rate limiting | https://dirstarter.com/docs/integrations/rate-limiting | Use centralized rate limits for auth-adjacent actions, submissions, payments, and certificate verification abuse. |
-| Analytics | https://dirstarter.com/docs/integrations/analytics | Track operational events without collecting private student, roster, payment, or certificate secrets. |
-| Storage/media | https://dirstarter.com/docs/integrations/storage | Dirstarter's public media pattern is acceptable for public assets only; private certificates/media require private objects or signed access. |
-| Deployment | https://dirstarter.com/docs/deployment | Production env, preview deploys, and domain config must be verified before launch. |
-| Cron jobs | https://dirstarter.com/docs/cron-jobs | Scheduled publishing/sync work belongs in explicit cron routes guarded by secrets and logs. |
-| Content workflow | https://dirstarter.com/docs/content | Draft/review/publish rules apply to public curriculum and marketing content; credentials remain approval-gated. |
+| Project structure | <https://dirstarter.com/docs/codebase/structure> | Keep server code in feature folders under `server/web` and `server/admin`; do not add parallel CGR auth/db stacks. |
+| Prisma/database | <https://dirstarter.com/docs/database/prisma> | Use `schema.prisma`, generated Prisma client, `prisma/seed.ts`, and `services/db.ts`; validate schema and seed paths. |
+| Authentication | <https://dirstarter.com/docs/authentication> | Better Auth session and role checks are baseline; route protection is not enough without server-side authorization. |
+| Environment secrets | <https://dirstarter.com/docs/environment-setup> | Never commit `.env`; production must validate Better Auth, database, Stripe, Redis, S3, analytics, and cron secrets. |
+| Payments/Stripe | <https://dirstarter.com/docs/integrations/payments> | Use Stripe checkout/webhooks; verify webhook signatures and map payment events into Ronin ledgers/entitlements. |
+| Monetization | <https://dirstarter.com/docs/monetization> | Paid features must flow through a plan/product access model; Ronin translates this into entitlements before paid UI. |
+| Rate limiting | <https://dirstarter.com/docs/integrations/rate-limiting> | Use centralized rate limits for auth-adjacent actions, submissions, payments, and certificate verification abuse. |
+| Analytics | <https://dirstarter.com/docs/integrations/analytics> | Track operational events without collecting private student, roster, payment, or certificate secrets. |
+| Storage/media | <https://dirstarter.com/docs/integrations/storage> | Dirstarter's public media pattern is acceptable for public assets only; private certificates/media require private objects or signed access. |
+| Deployment | <https://dirstarter.com/docs/deployment> | Production env, preview deploys, and domain config must be verified before launch. |
+| Cron jobs | <https://dirstarter.com/docs/cron-jobs> | Scheduled publishing/sync work belongs in explicit cron routes guarded by secrets and logs. |
+| Content workflow | <https://dirstarter.com/docs/content> | Draft/review/publish rules apply to public curriculum and marketing content; credentials remain approval-gated. |
 
 ## Data Classification
 
@@ -166,7 +166,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Stripe webhook handling | Signature verification, persisted processed-event records, idempotent state changes, no raw secrets/log payloads. | Revisit when adding Connect or multi-org payouts. |
 | Public certificate verification | Lookup by `qrVerificationCode`; return verification-safe fields only. | Revisit if certificate fraud/abuse requires stronger proof or captcha/rate limits. |
 | Storage | Public assets may use public URLs; private certificates/media require signed/private access. | Revisit when certificate PDFs are implemented. |
-| Monitoring | Start with structured logs and threshold alerts; graduate to dashboards before staging. | SESSION_0098 adds `/admin/billing/monitoring` plus local drift audit proof; revisit at staging deploy to configure alert destination, recipients, and scheduled audit execution. |
+| Monitoring | Start with admin dashboards and local/on-demand checks; graduate to scheduled pulses and alerts before staging. | `/admin/billing/monitoring` and `/admin/storage/monitoring` exist; local drift/audit proof exists for billing. SESSION_0351 records pulse candidates in `repo-alignment-report.md`; revisit after the pulse summary is supplied to choose cron routes, recipients, and failure policy. |
 
 ## Required Security Gates
 
@@ -209,6 +209,8 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Env validation failures | Detect missing production secrets or wrong URLs. | Cody | Any deploy with missing required secret. |
 | Private storage access failures | Detect bad signed URL or object policy. | Cody | Any private artifact served publicly or blocked incorrectly. |
 | Rate limiter unavailable (fail-open) | Detect when Upstash Redis is unreachable and `isRateLimited` falls back to allowing all calls. Important for `schedule_write` / `instructor_search` keys added in SESSION_0031, `attendance_write` added in SESSION_0032, and SESSION_0033 keys `enrollment_write`, `family_write`, `waiver_write`, `lead_write`, `trial_book`, plus any future auth-adjacent limiter. | Doug + Cody | Any sustained `Rate limiter error:` log span > 5 min in production, or any consecutive failure during a deploy window. |
+| Storage readiness | Detect missing S3/env/media setup before public media or uploaded assets depend on it. | Cody + Doug | `/admin/storage/monitoring` reports `NEEDS_SETUP`, missing local catalog paths, or mismatched public media URLs in staging/prod. |
+| Repo/docs navigator freshness | Detect stale generated docs/Graphify artifacts used for operator decisions. | Petey + Doug | `docs/index.html` or `apps/web/public/graphify.html` is older than the latest substantial docs/code session, or Graphify stats/export fails. |
 
 ## Test Plan
 

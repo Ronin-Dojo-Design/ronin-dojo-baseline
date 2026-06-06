@@ -4,8 +4,8 @@ slug: hosting-data-flow
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
@@ -24,7 +24,7 @@ End-to-end request flow diagrams for the Ronin Dojo multi-brand platform.
 
 ## Current State (legacy)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     CURRENT STATE — LEGACY HOSTING                      │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -43,7 +43,7 @@ End-to-end request flow diagrams for the Ronin Dojo multi-brand platform.
 
 ## Target State (new stack)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    TARGET STATE — VERCEL + NEON                          │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -77,7 +77,7 @@ End-to-end request flow diagrams for the Ronin Dojo multi-brand platform.
 
 ## Request Flow — Detailed
 
-```
+```text
 User browser
     │
     │ GET https://baselinemartialarts.com/merch
@@ -110,7 +110,7 @@ HTML Response → Browser
 
 During the migration period, each domain transitions independently:
 
-```
+```text
 Phase 1                          Phase 2+
 ─────────                        ────────
 BMA → Vercel ✅                  RDD → Vercel

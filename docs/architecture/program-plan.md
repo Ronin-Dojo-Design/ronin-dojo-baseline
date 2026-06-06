@@ -5,7 +5,7 @@ type: file
 status: partially-superseded
 created: 2026-04-25
 updated: 2026-05-11
-last_agent: copilot-session-0134
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/s1-schema-design.md
@@ -21,9 +21,9 @@ backlinks:
 A real plan we can review together, edit, and execute against. Built to address four threads:
 
 1. **Layered architecture** — what's the source of truth for code vs. data behavior vs. UI/UX
-2. **Brand sequencing** — which brand gets built first and why
-3. **12-sprint MVP** — week-by-week scope to get from today to a Baseline Martial Arts public launch
-4. **Agent / protocol system triage** — what to bring forward from the legacy `RoninDashboard/`, what to rework, what to drop
+1. **Brand sequencing** — which brand gets built first and why
+1. **12-sprint MVP** — week-by-week scope to get from today to a Baseline Martial Arts public launch
+1. **Agent / protocol system triage** — what to bring forward from the legacy `RoninDashboard/`, what to rework, what to drop
 
 Status: **draft for review.** Don't execute against it until we sign it off.
 
@@ -34,11 +34,11 @@ Status: **draft for review.** Don't execute against it until we sign it off.
 The rebuild is **four layers**, each with its own source of truth. The layers are intentionally separate so we can change one without rewriting another.
 
 | Layer | Source of truth | Authority |
-|---|---|---|
+| --- | --- | --- |
 | **L1 — Code patterns** | [Dirstarter](https://github.com/dirstarter/dirstarter) (Polarsoft template; copied into `apps/web/` at upstream `c42e8bb` — see `apps/web/.dirstarter-upstream`) | How files are organized; framework choices (Next.js + Prisma + Better-Auth + Bun); HOC patterns; action client chain; content collections; env config |
 | **L2 — Data & behavioral spec** | [ChatGPT plan](source/chatgpt-original-plan.md) (sections 1–7) | What the system DOES: Passport + Shells, Org × Discipline × Membership, RankSystem per discipline, Tournament/Division/Registration with rank snapshots, Directory privacy, lifecycle states |
 | **L3 — Multi-tenant** | Our addition ([ADR 0004](decisions/0004-multi-brand-as-column.md), [0006](decisions/0006-multi-domain-hosting.md), [0008](decisions/0008-brand-switcher.md)) | `brand` column on tenant-scoped tables; host→brand middleware; per-brand themes |
-| **L4 — UX, content, theming** | TuffBuffs / BBL / WEKAF legacy frontends in [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (paths `src/` and `wordpress/<brand>-theme/`) | Visual design tokens, branded copy, screen layouts, component idioms — ported on top of the new APIs |
+| **L4 — UX, content, theming** | TuffBuffs / BBL / WEKAF legacy frontends in [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) (paths `src/` and `wordpress/&lt;brand&gt;-theme/`) | Visual design tokens, branded copy, screen layouts, component idioms — ported on top of the new APIs |
 
 **Critical rule:** these layers don't bleed into each other. We don't import legacy backend code. We don't put UI assumptions into the schema. We don't let Dirstarter's "tool directory" defaults drive the data model.
 
@@ -48,7 +48,7 @@ The rebuild is **four layers**, each with its own source of truth. The layers ar
 
 You raised the question: start with **Ronin Dojo Design** as a clean greenfield, or use **TuffBuffs (becoming Baseline Martial Arts)** as the foundation since it has the richest features (styles, curriculum, gamification, tournaments)?
 
-**Recommendation:** **Build the foundation brand-agnostic, then make Baseline Martial Arts the first brand we expose to users.**
+### Recommendation: Build the foundation brand-agnostic, then make Baseline Martial Arts the first brand we expose to users
 
 - TuffBuffs is the most behaviorally complete reference. We use it as the **"this is what done looks like"** cross-check, but we don't build *on top of* it. It keeps running on the legacy stack at tuffbuffs.com per [ADR 0005](decisions/0005-legacy-coexistence.md).
 - The new build's foundation is **brand-aware from day one** but generic — every feature works for any brand because `brand` is a column, not a code path.
@@ -70,7 +70,7 @@ It's tempting because there's no legacy to compare against. But that's the probl
 One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Arts public launch. Each sprint has one major deliverable + supporting work.
 
 | Sprint | Major deliverable | Notes |
-|---|---|---|
+| --- | --- | --- |
 | **S1** ✅ | Phase 1 schema rev: rename `Style→Discipline`, `School→Organization`, `Profile→Passport`; add `RankSystem`, `Rank` (replacing `Belt`), `DirectoryProfile`, `MembershipRoleAssignment`; expand `Membership` with `disciplineId` + `status` enum; reshape `Tournament` into `Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry`. Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank. | Done — 31 models, all enums, seed data loaded (12 disciplines, 13 rank systems, 194 ranks). Sessions 0003–0005. |
 | **S2** ✅ | Better-Auth + Passport bootstrap | Sign-up creates `User + Passport + DirectoryProfile` stubs. `/me` route renders the Passport editor. Brand cookie wired through middleware. Session 0007. |
 | **S3** ✅ | Organization create + join flow | Create org (DOJO/LEAGUE/SCHOOL/CLUB) + owner ACTIVE membership + discipline links. Join button creates PENDING membership. Pages: list, create, detail. Smoke-tested SESSION_0013. **Deferred to future sprint:** invite link flow, multi-role assignment UI, status lifecycle transitions, address field expansion. Sessions 0008–0013. |
@@ -84,7 +84,7 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 | **S11** | Baseline Martial Arts brand rollout | **Superseded →** SESSION_0031 (Baseline brand lane) |
 | **S12** | Ronin Bar UI shell + Vercel/Neon staging deploy | **Superseded →** SESSION_0034 (Ronin Dojo Design lane) + SESSION_0039 (Launch readiness) |
 
-**After S12 (post-MVP):**
+### After S12 (post-MVP)
 
 - Per-brand rollout #2: Ronin Dojo Design (admin/umbrella)
 - Per-brand rollout #3: BBL with one-time data migration ([ADR 0007](decisions/0007-bbl-migration.md))
@@ -96,7 +96,7 @@ One week per sprint, ~3 months from today (2026-04-25) to a Baseline Martial Art
 
 ---
 
-## 4. Agent / protocol system — bring forward, rework, or drop?
+## 4. Agent / protocol system — bring forward, rework, or drop
 
 The legacy `RoninDashboard/` system is mature: 6 personas, 10+ protocol loops, versioned rituals up to v4.5, and 14 Petey session prompts spanning sessions 606–619. That's real operational ROI we shouldn't blanket-discard. But it was tuned for a multi-brand WP+React+Pods+REST stack — some of it doesn't map cleanly onto the new foundation.
 
@@ -147,12 +147,12 @@ For SESSION_0021 onward (governed by WORKFLOW 5.0):
 ## 5. Open decisions before we execute ✅ ALL RESOLVED
 
 1. ✅ **Layer model signed off.** L1/L2/L3/L4 accepted as-is.
-2. ✅ **Baseline-first signed off.** Build order: Baseline → BBL → WEKAF → Ronin Dojo Design.
-3. ✅ **12-sprint scope signed off** (S1–S5 executed). S6–S12 superseded by WORKFLOW 5.0 session calendar.
-4. ✅ **Naming locks**: `Style→Discipline`, `School→Organization`, `Profile→Passport`, `Belt→Rank` — all done in S1.
-5. ✅ **Multi-role memberships from S1** — `MembershipRoleAssignment` implemented.
-6. ✅ **Agent system ported** — Bucket A/B done, Bucket C partially resurrected (see Section 4 above).
-7. ✅ **Agent system location** — `docs/agents/`, `docs/protocols/`, `docs/rituals/`, `docs/sprints/` as recommended.
+1. ✅ **Baseline-first signed off.** Build order: Baseline → BBL → WEKAF → Ronin Dojo Design.
+1. ✅ **12-sprint scope signed off** (S1–S5 executed). S6–S12 superseded by WORKFLOW 5.0 session calendar.
+1. ✅ **Naming locks**: `Style→Discipline`, `School→Organization`, `Profile→Passport`, `Belt→Rank` — all done in S1.
+1. ✅ **Multi-role memberships from S1** — `MembershipRoleAssignment` implemented.
+1. ✅ **Agent system ported** — Bucket A/B done, Bucket C partially resurrected (see Section 4 above).
+1. ✅ **Agent system location** — `docs/agents/`, `docs/protocols/`, `docs/rituals/`, `docs/sprints/` as recommended.
 
 ---
 

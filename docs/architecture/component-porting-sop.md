@@ -6,7 +6,7 @@ status: active
 created: 2026-05-06
 updated: 2026-05-06
 author: Brian + ChatGPT
-last_agent: chatgpt-hostile-review-pack
+last_agent: codex-session-0351
 pairs_with:
   - docs/runbooks/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/dirstarter-component-inventory.md
@@ -102,5 +102,6 @@ Pick one low-risk, high-value old component:
 
 Run the full pipeline once and update this SOP with real results.
 
-**Planned Passion Produces Purpose.**
-**OSSS.**
+### Planned Passion Produces Purpose
+
+### OSSS

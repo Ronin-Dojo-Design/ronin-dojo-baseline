@@ -1,7 +1,28 @@
+---
+title: "ADR 0008 — Brand switcher: visible to admins + multi-brand members only"
+slug: adr-0008-brand-switcher
+type: decision
+status: accepted
+created: 2026-04-25
+updated: 2026-06-06
+last_agent: codex-session-0351
+pairs_with:
+  - docs/architecture/decisions/0004-multi-brand-as-column.md
+  - docs/architecture/decisions/0022-brand-chrome-resolution.md
+  - docs/knowledge/wiki/manual-boundary-registry.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # ADR 0008 — Brand switcher: visible to admins + multi-brand members only
 
-**Status:** Accepted
-**Date:** 2026-04-25
+## Status
+
+Accepted
+
+## Date
+
+2026-04-25
 
 ## Context
 
@@ -25,7 +46,7 @@ const isAdmin = authz.isAdmin(session);
 const showSwitcher = isAdmin || userBrands.length > 1;
 ```
 
-Selecting a brand updates `session.user.activeBrandId` (Better-Auth session field), which the Prisma client extension then enforces on every authenticated query.
+Selecting a brand updates the user's active app-data brand. The current schema field is `User.lastActiveBrandId`; the full UI/session persistence and smoke proof remain open in `MB-003`.
 
 ## Interaction with the host-derived `brand`
 
@@ -38,13 +59,13 @@ For a single-brand user, they're always equal — the switcher is invisible and 
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - No confusion for students (the 99%): they don't know about other brands; they don't see a switcher.
 - Admins and multi-brand instructors get the unified-DB benefit they signed up for.
 - Auth / session changes are isolated to one field.
 
-**Negative**
+### Negative
 
 - Tests must cover the cross-context case (admin with `activeBrandId` ≠ host brand). Easy to forget.
 - "Brand switching" UI must be obvious enough that multi-brand users find it but unobtrusive enough that single-brand users never notice.
@@ -54,3 +75,7 @@ For a single-brand user, they're always equal — the switcher is invisible and 
 - Switcher placement: top-right of the app shell (next to user menu), with the active brand's logo + name.
 - On switch: full page navigation (not silent context flip) so server components re-render with the new `activeBrandId`. Avoids stale data from the old context.
 - Persistence: stored on the `User` record as `lastActiveBrandId` so the choice survives sessions.
+
+## Current implementation note
+
+As of SESSION_0351, brand chrome resolution is implemented separately by ADR 0022 (`host -> Brand` for public chrome). The active-brand switcher described here is still a runtime proof item, not a completed UI flow. Do not infer from ADR 0022 that admin app-data switching is complete.

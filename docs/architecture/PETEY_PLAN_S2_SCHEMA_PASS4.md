@@ -5,7 +5,7 @@ type: plan
 status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
-last_agent: copilot-session-0022
+last_agent: codex-session-0351
 sprint: S2
 pairs_with:
   - docs/architecture/s2-schema-additions.md
@@ -25,9 +25,9 @@ backlinks:
 Pass 1–3 of `s2-schema-additions.md` landed 38 new models and 29 new enums. This pass closes the remaining gaps identified by:
 
 1. **Grill audit** against blackbeltlegacy.com advertised features
-2. **SOP sweep** across `08_DATA_FLOWS`, `09_E2E_LIFECYCLE`, `10_AGENT_WORKFLOWS`, `11_CONTENT_ENGINE`
-3. **User requirements**: media uploads, technique library + graph, certificates (purchasable digital/physical), favorites, student lists, gamification alignment
-4. **Content engine status alignment** — `ContentAtomStatus` enum vs. content engine SOP states
+1. **SOP sweep** across `08_DATA_FLOWS`, `09_E2E_LIFECYCLE`, `10_AGENT_WORKFLOWS`, `11_CONTENT_ENGINE`
+1. **User requirements**: media uploads, technique library + graph, certificates (purchasable digital/physical), favorites, student lists, gamification alignment
+1. **Content engine status alignment** — `ContentAtomStatus` enum vs. content engine SOP states
 
 ## Objective
 
@@ -43,7 +43,7 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 
 **Problem:** No `Media` model. Current schema uses scattered `avatarUrl`, `imageUrl`, `mediaUrl`, `mediaUrls: Json` fields. No unified upload tracking, no YouTube link support, no S3 reference model.
 
-**Who needs it:**
+### Who needs it
 
 - Student: profile photos, promotion photos, training videos
 - Instructor: technique videos, profile media, class photos
@@ -58,7 +58,7 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 
 **Problem:** `CurriculumItem` is an ordered line inside a `Course` — not a standalone, browsable, filterable technique. No graph/prerequisite relationships between techniques.
 
-**Solution:**
+### Solution
 
 - `Technique` model — standalone, filterable, taggable, linked to discipline/style
 - `TechniquePrerequisite` self-join — directed graph (prereq → technique) for the TechniqueGraph component
@@ -76,7 +76,7 @@ Add all remaining models/enums to `s2-schema-additions.md` so the spec is **comp
 - The displayable certificate on a profile page
 - Pricing / payment linkage
 
-**Solution:**
+### Solution
 
 - `CertificateTemplate` — the template (layout, fields, branding) for a certificate type
 - `CertificateOrder` — purchase record linking user → template → payment
@@ -132,7 +132,7 @@ Current `ContentAtomStatus`: INBOX, DRAFT, REVIEW, APPROVED, PUBLISHED, ARCHIVED
 - Attendance streaks
 - Belt test passage
 
-**Solution:**
+### Solution
 
 - Add `techniqueId` FK to `GamificationEvent` — points for technique mastery
 - Add `curriculumItemCompletionId` FK to `GamificationEvent` — points for curriculum progress
@@ -755,7 +755,7 @@ model CurriculumItemCompletion {
 ## Pass 4 model count
 
 | Category | New models | New enums |
-|---|---|---|
+| --- | --- | --- |
 | Media system | 2 (Media, MediaAttachment) | 1 (MediaType) |
 | Technique library + graph | 4 (Technique, TechniquePrerequisite, TechniqueCurriculumLink, TechniqueProgress) | 4 (TechniqueCategory, TechniquePosition, DifficultyLevel, TechniqueProgressStatus) |
 | Certificate products | 3 (CertificateTemplate, CertificateOrder, CertificateIssuance) | 2 (CertificateDeliveryMethod, ShippingStatus) |
@@ -770,7 +770,7 @@ model CurriculumItemCompletion {
 ## Updated grand total (Pass 1 + 2 + 3 + 4)
 
 | | Pass 1 | Pass 2 | Pass 3 | Pass 4 | Combined |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | New models | 24 | 9 | 5 | 12 | **50** |
 | New enums | 17 | 8 | 4 | 9 | **38** |
 | **Total platform models** | | | | | **~86** (36 existing + 50 new) |
@@ -782,7 +782,7 @@ model CurriculumItemCompletion {
 This closes the loop: every meaningful user action can trigger points.
 
 | User action | Trigger entity | GamificationEvent FK | Seed event type code |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Attend class | Attendance | `attendanceId` | `CLASS_ATTENDED` |
 | 7-day streak | Attendance (derived) | `attendanceId` | `ATTENDANCE_STREAK_7` |
 | 30-day streak | Attendance (derived) | `attendanceId` | `ATTENDANCE_STREAK_30` |
@@ -862,7 +862,7 @@ Public verification via QR code → /verify/:qrVerificationCode
 ## SOP alignment check
 
 | SOP document | Schema gaps found | Resolution |
-|---|---|---|
+| --- | --- | --- |
 | `08_DATA_FLOWS` §5 Identity shell | No gap — Passport + DirectoryProfile + Membership chain complete | ✅ |
 | `08_DATA_FLOWS` §6 Tournament flow | No gap — extended with Bracket/Match/MatAssignment in pass 2-3 | ✅ |
 | `08_DATA_FLOWS` §7 Content truth | `ContentSourceType` added for intake tracking | ✅ fixed |
@@ -882,7 +882,7 @@ Public verification via QR code → /verify/:qrVerificationCode
 ## Decision log (for Brian sign-off)
 
 | # | Decision | Recommendation | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | D1 | Media: polymorphic FKs vs MediaAttachment join table | **Join table** — cleaner, extensible, no null FK sprawl | ✅ signed off |
 | D2 | ContentAtomStatus: expand to 10 states or keep 6 | **Keep 6** — workflow phases tracked via ContentTask | ✅ signed off |
 | D3 | Content intake: separate model or ContentAtom+INBOX | **ContentAtom+INBOX** + sourceType field | ✅ signed off |
@@ -897,15 +897,19 @@ Public verification via QR code → /verify/:qrVerificationCode
 ## Execution plan (for Cody, post sign-off)
 
 ### Wave A (school ops — already defined in SESSION_0021)
+
 Pass 1 models: Program through OrgSettings (~24 models)
 
 ### Wave B (competition + CRM — pass 2 + 3)
+
 Pass 2+3 models: Invite, Event, Bracket, Match, Lead, RuleSet, etc. (~14 models)
 
 ### Wave C (media + technique + certificates + gamification — pass 4)
+
 Pass 4 models: Media, Technique, Certificate, Favorite, StudentList, gamification FKs (~12 models)
 
 ### Wave D (field modifications to existing models)
+
 All `ALTER TABLE` additions across passes 1-4 on existing models.
 
 Each wave = one Prisma migration. Waves run in order. Total: 4 migrations before UI wiring begins.
@@ -976,10 +980,10 @@ All runbooks need `use_count: 0` added to their JETTY frontmatter. This tracks h
 ## Next steps
 
 1. Brian reviews this plan + decision table
-2. Brian signs off (or requests changes)
-3. Decisions get locked into s2-schema-additions.md as Pass 4
-4. Cody executes migrations in 4 waves
-5. SOPs get updated with Pass 4 model references post-migration
+1. Brian signs off (or requests changes)
+1. Decisions get locked into s2-schema-additions.md as Pass 4
+1. Cody executes migrations in 4 waves
+1. SOPs get updated with Pass 4 model references post-migration
 
 ---
 
@@ -989,5 +993,6 @@ All runbooks need `use_count: 0` added to their JETTY frontmatter. This tracks h
 
 The recipe is written. The ingredients list is complete. Sign off and we cook.
 
-**Planned Passion Produces Purpose.**
-**OSSS.**
+### Planned Passion Produces Purpose
+
+### OSSS

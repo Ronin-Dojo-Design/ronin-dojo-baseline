@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-06
 author: Brian + Copilot
-last_agent: codex-session-0349
+last_agent: codex-session-0351
 ---
 
 # LLM Wiki Index
@@ -30,7 +30,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
-| [Repo Code Glossary](repo-code-glossary.md) | reference | active — SESSION_0350 plain-English glossary of technical terms (CI, SHA, enum, adapter…) with repo examples; optional on-demand bow-out spike |
+| [Repo Code Glossary](repo-code-glossary.md) | reference | active — SESSION_0351 expanded repo/project/session/schema/monitoring terms for technical and non-technical readers |
+| [ENTER_THE_DOJO Schema Intake](concepts/enter-the-dojo-schema-intake.md) | concept | active — legacy WordPress/Pods doctrine translated to current Prisma/server-action/query-payload language |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
@@ -98,6 +99,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Program Plan](../../architecture/program-plan.md) | file | active |
 | [Plan vs Current](../../architecture/plan-vs-current.md) | file | active |
 | [Data Model](../../architecture/data-model.md) | concept | active |
+| [Repo Alignment Report](../../architecture/repo-alignment-report.md) | report | active — on-demand/weekly schema, docs, admin navigator, monitoring, and ledger alignment sweep |
 | [Auth](../../architecture/auth.md) | file | active |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active |
@@ -196,7 +198,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0037](../../sprints/_archive/SESSION_0037.md) | session | closed-quick |
 | [SESSION_0038](../../sprints/_archive/SESSION_0038.md) | session | closed-full |
 | [SESSION_0038.5](../../sprints/_archive/SESSION_0038_5.md) | session | closed-full |
-| [SESSION_0039](../../sprints/_archive/SESSION_0039.md) | session | in-progress |
+| [SESSION_0039](../../sprints/_archive/SESSION_0039.md) | session | closed-full |
 | [SESSION_0071](../../sprints/_archive/SESSION_0071.md) | session | closed-quick |
 | [SESSION_0072](../../sprints/_archive/SESSION_0072.md) | session | closed-full |
 | [SESSION_0098](../../sprints/_archive/SESSION_0098.md) | session | closed-full |
@@ -224,7 +226,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0120](../../sprints/_archive/SESSION_0120.md) | session | closed-full |
 | [SESSION_0121](../../sprints/_archive/SESSION_0121.md) | session | closed-quick |
 | [SESSION_0122](../../sprints/_archive/SESSION_0122.md) | session | closed-quick |
-| [SESSION_0123](../../sprints/_archive/SESSION_0123.md) | session | in-progress |
+| [SESSION_0123](../../sprints/_archive/SESSION_0123.md) | session | closed-quick |
 | [SESSION_0124](../../sprints/_archive/SESSION_0124.md) | session | closed-quick |
 | [SESSION_0125](../../sprints/_archive/SESSION_0125.md) | session | closed-quick |
 | [SESSION_0126](../../sprints/_archive/SESSION_0126.md) | session | closed-quick |
@@ -452,6 +454,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0348](../../sprints/SESSION_0348.md) | session--open | closed — BBL profile/detail tier-gating consumption: `/directory` canonical browse/detail, `/members` compatibility redirects, free owner preview vs premium/elite full profile, and focused no-leak tests |
 | [SESSION_0349](../../sprints/SESSION_0349.md) | session--open | closed — BBL trust badges and discovery polish: shared trust-status adapter over existing lineage/claim fields, directory/detail/lineage badge surfaces, limited `legend` tier policy support, and faceted `/directory` follow-up planning |
 | [SESSION_0350](../../sprints/SESSION_0350.md) | session--implement | closed — first faceted `/directory` browse slice (people / schools-orgs / lineage trees) via a presentation-only `DirectoryFacetResult` adapter + shared `FacetResultCard` + result-type segmented control reusing the `search*` family; working people search; deleted orphaned `members/*` + dead directory components; `fallow` bow-out trial |
+| [SESSION_0351](../../sprints/SESSION_0351.md) | session--open | closed — quick schema/repo cleanup alignment: legacy `ENTER_THE_DOJO.md` schema intake, admin Repo Docs navigator + Graphify links, repo alignment report, archive status cleanup, DavidAnson markdownlint tooling, pulse/glossary expansion, and fallow follow-up ledger |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |

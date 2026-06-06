@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-22
 updated: 2026-05-22
-last_agent: codex-session-0224
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0224.md
   - docs/knowledge/wiki/content-engine/content-atoms.md
@@ -57,12 +57,12 @@ Store post metadata and media at the `ContentAtom` level:
 
 | Layer | URL | Date checked |
 | --- | --- | --- |
-| Prisma/database | https://dirstarter.com/docs/database/prisma | 2026-05-22 |
-| Content | https://dirstarter.com/docs/content | 2026-05-22 |
-| Blog | https://dirstarter.com/docs/blog | 2026-05-22 |
-| SEO | https://dirstarter.com/docs/seo | 2026-05-22 |
-| Media | https://dirstarter.com/docs/integrations/media | 2026-05-22 |
-| Storage | https://dirstarter.com/docs/integrations/storage | 2026-05-22 |
+| Prisma/database | <https://dirstarter.com/docs/database/prisma> | 2026-05-22 |
+| Content | <https://dirstarter.com/docs/content> | 2026-05-22 |
+| Blog | <https://dirstarter.com/docs/blog> | 2026-05-22 |
+| SEO | <https://dirstarter.com/docs/seo> | 2026-05-22 |
+| Media | <https://dirstarter.com/docs/integrations/media> | 2026-05-22 |
+| Storage | <https://dirstarter.com/docs/integrations/storage> | 2026-05-22 |
 
 ## Consequences
 

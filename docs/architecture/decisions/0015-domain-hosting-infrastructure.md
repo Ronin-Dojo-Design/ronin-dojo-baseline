@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-09
 updated: 2026-06-04
-last_agent: codex-session-0343
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
@@ -29,10 +29,11 @@ backlinks:
 The Ronin Dojo platform serves four brands across six domains. Legacy infrastructure uses Bluehost shared hosting (WordPress) for five domains and Flywheel managed WordPress for BBL. The legacy deploy process used SSH + rsync to push WordPress themes/plugins to Bluehost.
 
 With the migration to Next.js on Vercel (ADR 0006), the legacy deploy scripts are obsolete. We need to document:
+
 1. The current state of all domains and hosting providers
-2. The migration path from legacy hosting to Vercel
-3. DNS records required for Vercel, Resend, and other services
-4. What happens to Bluehost and Flywheel after migration
+1. The migration path from legacy hosting to Vercel
+1. DNS records required for Vercel, Resend, and other services
+1. What happens to Bluehost and Flywheel after migration
 
 ## Decision
 
@@ -64,13 +65,13 @@ One Resend API key serves all brands. Each brand's sending domain is verified in
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - Clean break from legacy WordPress deploy tooling
 - Domain migration is incremental and reversible (just change DNS back)
 - Single API key for email across all brands reduces credential management
 
-**Negative**
+### Negative
 
 - Bluehost cPanel is the DNS management UI — not ideal but functional
 - During transition, some domains serve legacy WordPress while others serve Vercel — users could see inconsistent experiences across brands
