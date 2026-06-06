@@ -163,7 +163,7 @@ const publicTree = {
 }
 
 describe("lineage public payload allowlists", () => {
-  it("does not select account emails, editor grants, claims, evidence, or audit logs", () => {
+  it("selects claim STATUS only — never account emails, editor grants, evidence, reviewer/claimant identity, notes, or audit logs", () => {
     const payloads = JSON.stringify({
       lineageTreePublicPayload,
       lineageNodeRowPayload,
@@ -172,12 +172,17 @@ describe("lineage public payload allowlists", () => {
 
     expect(payloads.includes("email")).toBe(false)
     expect(payloads.includes("accessGrants")).toBe(false)
-    expect(payloads.includes("claimRequests")).toBe(false)
     expect(payloads.includes("evidence")).toBe(false)
     expect(payloads.includes("auditLog")).toBe(false)
     expect(payloads.includes("password")).toBe(false)
     expect(payloads.includes("role")).toBe(false)
     expect(payloads.includes("notes")).toBe(false)
+    // SESSION_0349 trust badges: claim STATUS is selected for public surfaces,
+    // but claim evidence, claimant/reviewer identity, and notes never are.
+    expect(payloads.includes("claimant")).toBe(false)
+    expect(payloads.includes("reviewer")).toBe(false)
+    expect(payloads.includes("claimRequests")).toBe(true)
+    expect(payloads.includes('"status":true')).toBe(true)
   })
 })
 

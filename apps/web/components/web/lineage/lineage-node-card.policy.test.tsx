@@ -78,7 +78,7 @@ const node = {
 } as LineageNodeRow
 
 describe("LineageNodeCard tier policy", () => {
-  it("renders free listings as name and rank only", () => {
+  it("renders free listings with name, rank, and public trust/claim badges (avatar, school, drawer gated)", () => {
     const html = renderToStaticMarkup(
       <LineageNodeCard
         node={node}
@@ -91,10 +91,12 @@ describe("LineageNodeCard tier policy", () => {
 
     expect(html).toContain("Public Name")
     expect(html).toContain("Black Belt")
+    // SESSION_0349: free lineage cards DO show public trust/claim badges...
+    expect(html).toContain("Verified")
+    expect(html).toContain("Claimable")
+    // ...while avatar, school, and the drawer-open action stay tier-gated.
     expect(html).not.toContain("https://images.test/passport.jpg")
     expect(html).not.toContain("Hidden School")
-    expect(html).not.toContain("Verified")
-    expect(html).not.toContain("Claimable")
     expect(html).not.toContain("Open lineage profile")
     expect(html).toContain("Highlight lineage path")
   })

@@ -364,6 +364,8 @@ Graphify is the discovery accelerator instead.
 | `bun run wiki:lint` | Passed — 605 markdown files, 0 violations. |
 | Local Playwright smoke (fresh Chromium) — `/directory` people/organizations/trees + `?q=a`, desktop 1280 + mobile 390 | PASS — all 200, segmented control active per tab, no horizontal overflow, 0 console/page errors; `q=a` narrows people 4→3 (search now works). |
 | `npx fallow audit` (trial) | Useful — flagged dead `getDirectoryFilterOptions` + `DIRECTORY_FACET_TABS` (removed); remaining flags are pre-existing exported-payload conventions + out-of-scope deps. |
+| Post-push CI "CI" job (commit `3bcb665`) | Failed on 2 **pre-existing SESSION_0349** unit tests (CI was already red on `991a948`): `lineage-node-card.policy.test.tsx` (free cards now show trust/claim badges by design) and `queries.visibility.test.ts` (payload now selects claim *status* by design). Not the webkit infra flake. |
+| CI fix (follow-up commit) | Updated both stale tests to the documented SESSION_0349 contract — free cards assert `Verified`+`Claimable` shown while avatar/school/drawer stay gated; visibility test asserts claim **status-only** (no evidence/notes/claimant/reviewer identity). `bun test` both files: 10 pass, 0 fail. |
 
 ## Open decisions / blockers
 
