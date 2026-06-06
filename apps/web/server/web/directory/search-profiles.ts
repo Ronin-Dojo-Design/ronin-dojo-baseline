@@ -1,8 +1,11 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
+import { FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY } from "~/lib/entitlements/lineage-tier-policy"
 import type { MemberFilterParams } from "~/server/web/directory/member-schema"
 import { directoryProfileListPayload } from "~/server/web/directory/payloads"
+import { projectDirectoryProfileListItem } from "~/server/web/directory/profile-projection"
+import { getLineageProfileDetailRenderPoliciesForUsers } from "~/server/web/entitlements/lineage-tier-policy"
 import { db } from "~/services/db"
 
 /**
@@ -13,6 +16,7 @@ export const searchDirectoryProfiles = async (
   search: MemberFilterParams,
   brand: Brand,
   viewerUserId?: string | null,
+  viewerRole?: string | null,
 ) => {
   "use cache"
 
@@ -52,6 +56,7 @@ export const searchDirectoryProfiles = async (
     where.OR = [
       { user: { name: { contains: q, mode: "insensitive" } } },
       { locationCity: { contains: q, mode: "insensitive" } },
+      { locationRegion: { contains: q, mode: "insensitive" } },
     ]
   }
 
@@ -79,20 +84,19 @@ export const searchDirectoryProfiles = async (
 
   console.log(`Directory search: ${Math.round(performance.now() - start)}ms`)
 
-  // Apply per-field privacy flags
-  const members = profiles.map(profile => ({
-    id: profile.id,
-    slug: (profile as any).slug ?? profile.id,
-    displayName: profile.user.name,
-    // Prefer the promoted Passport avatar, fall back to User.image.
-    avatarUrl: profile.user.passport?.avatarUrl ?? profile.user.image,
-    bio: null as string | null,
-    locationCity: profile.locationCity,
-    locationRegion: profile.locationRegion,
-    disciplines: profile.showOrgs
-      ? profile.user.memberships.filter(m => m.discipline).map(m => ({ name: m.discipline!.name }))
-      : [],
-  }))
+  const policies = await getLineageProfileDetailRenderPoliciesForUsers({
+    userIds: profiles.map(profile => profile.user.id),
+    brand,
+  })
+
+  const members = profiles.map(profile =>
+    projectDirectoryProfileListItem({
+      profile,
+      policy: policies.get(profile.user.id) ?? FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+      viewerUserId,
+      viewerRole,
+    }),
+  )
 
   return { members, total, page, perPage }
 }

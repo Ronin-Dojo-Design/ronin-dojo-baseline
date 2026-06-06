@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-06
 updated: 2026-06-06
-last_agent: codex-session-0351
+last_agent: codex-session-0352
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -90,6 +90,19 @@ commit) so the term is concrete, not abstract.
   a People / Schools & Orgs / Lineage Trees switcher to `/directory`.
 - **query param (nuqs)** — a setting stored in the web address, like `?type=people`, so a filtered view
   is shareable and survives a refresh. **nuqs** is the library that keeps the URL and the screen in sync.
+- **slug** — a human-readable ID used in URLs and filters, such as `brazilian-jiu-jitsu` instead of a
+  database ID. This session standardized `/directory?discipline=` on `Discipline.slug`.
+- **cross-facet filter** — one filter that applies across several result types at once. Example:
+  `/directory?discipline=bjj` narrows People, Schools & Orgs, and Lineage Trees by the same discipline
+  slug.
+- **pagination** — splitting a large result list into pages with `page`, `perPage`, and `total`, instead
+  of loading everything at once. This session moved the People facet toward the same paginated shape as
+  Organizations and Lineage Trees.
+- **projection** — the server-side shape returned to the UI after privacy and tier rules are applied.
+  Example: `projectDirectoryProfileListItem` keeps People cards aligned without exposing hidden profile
+  fields.
+- **penetration test / pen test** — a deliberate attempt to prove a security boundary holds, such as
+  trying `/directory?discipline=<other-brand-slug>` to confirm public search cannot cross brand scope.
 - **dead code / orphaned** — code that nothing else uses. This session deleted the orphaned
   `components/web/members/*` (it was unreachable behind a redirect).
 - **drift / drift register** — a written record of places where the docs and the code disagree, so they

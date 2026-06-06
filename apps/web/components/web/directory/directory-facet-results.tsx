@@ -24,9 +24,8 @@ function countLabel(tab: DirectoryFacetTab, count: number) {
 }
 
 /**
- * Renders one facet's grouped results: count line, shared card grid, and (for
- * the paginated facets) the reused `Pagination` control. People is unpaginated
- * for now (`total === null`).
+ * Renders one facet's grouped results: count line, shared card grid, and the
+ * reused `Pagination` control.
  */
 export function DirectoryFacetResults({ facets }: { facets: DirectoryFacetPage }) {
   if (facets.results.length === 0) {
@@ -39,11 +38,9 @@ export function DirectoryFacetResults({ facets }: { facets: DirectoryFacetPage }
     )
   }
 
-  const displayCount = facets.total ?? facets.results.length
-
   return (
     <div className="space-y-5">
-      <ResultsCount total={displayCount} label={countLabel(facets.tab, displayCount)} />
+      <ResultsCount total={facets.total} label={countLabel(facets.tab, facets.total)} />
 
       <Grid>
         {facets.results.map(result => (
@@ -51,9 +48,7 @@ export function DirectoryFacetResults({ facets }: { facets: DirectoryFacetPage }
         ))}
       </Grid>
 
-      {facets.total !== null && (
-        <Pagination total={facets.total} perPage={facets.perPage} page={facets.page} />
-      )}
+      <Pagination total={facets.total} perPage={facets.perPage} page={facets.page} />
     </div>
   )
 }

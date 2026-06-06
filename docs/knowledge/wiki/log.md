@@ -264,3 +264,9 @@ Use this file only as historical context for early wiki adoption.
 - Added `repo-alignment-report.md` for weekly/on-demand architecture/admin/schema/docs alignment sweeps.
 - Expanded `repo-code-glossary.md` with repo/project/session/schema/monitoring terms and updated the wiki index for SESSION_0351.
 - Added WL-P2-6 through WL-P2-10 for tournament content shell, org/staff chart, pulse automation, brand-switcher proof, and fallow cleanup follow-ups.
+
+## 2026-06-06 — SESSION_0352
+
+- Added the shared `/directory` discipline filter on `Discipline.slug` and moved the People facet onto paginated `searchDirectoryProfiles`.
+- Added `profile-projection.ts` and a focused projection test to preserve DirectoryProfile privacy, lineage trust badges, and listing-tier behavior across directory People cards.
+- Updated the custom component inventory and glossary for `DirectoryFilters`, slug/cross-facet/pagination/projection terms, and recorded the fallow cleanup of the dead unpaginated People list query.

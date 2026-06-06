@@ -6,18 +6,16 @@ import {
   mapOrganizationToFacet,
   mapPersonToFacet,
 } from "~/lib/directory/facet-result"
-import { getDirectoryProfiles } from "~/server/web/directory/queries"
 import { searchOrganizations } from "~/server/web/directory/search-organizations"
+import { searchDirectoryProfiles } from "~/server/web/directory/search-profiles"
 import { searchPublishedLineageTrees } from "~/server/web/lineage/queries"
 
 /**
  * Faceted `/directory` dispatcher (SESSION_0350).
  *
  * Keeps each entity's existing privacy-aware query separate and only normalizes
- * the result rows into the shared `DirectoryFacetResult` card shape. No new
- * query substrate: people reuse `getDirectoryProfiles` (trust + tier gating),
- * organizations reuse `searchOrganizations`, trees reuse
- * `searchPublishedLineageTrees`.
+ * the result rows into the shared `DirectoryFacetResult` card shape. People,
+ * organizations, and trees now all reuse paginated `search*` read models.
  */
 
 const DIRECTORY_FACET_TABS = ["people", "organizations", "trees"] as const
@@ -41,8 +39,7 @@ export type DirectoryFacetParams = {
 export type DirectoryFacetPage = {
   tab: DirectoryFacetTab
   results: DirectoryFacetResult[]
-  /** Total matches for paginated facets; null for the unpaginated people facet. */
-  total: number | null
+  total: number
   page: number
   perPage: number
 }
@@ -97,23 +94,26 @@ export async function getDirectoryFacets({
     return { tab, results: trees.map(mapLineageTreeToFacet), total, page, perPage }
   }
 
-  // People (default). getDirectoryProfiles is not paginated yet — convergence
-  // onto the paginated search* family is a documented follow-up.
-  const profiles = await getDirectoryProfiles({
+  const { members, total } = await searchDirectoryProfiles(
+    {
+      q: params.q ?? "",
+      discipline: params.discipline ?? "",
+      sort: "",
+      page,
+      perPage,
+      city: "",
+      region: "",
+    },
     brand,
     viewerUserId,
     viewerRole,
-    filters: {
-      q: params.q || undefined,
-      disciplineSlug: params.discipline || undefined,
-    },
-  })
+  )
 
   return {
     tab: "people",
-    results: profiles.map(mapPersonToFacet),
-    total: null,
-    page: 1,
-    perPage: profiles.length,
+    results: members.map(mapPersonToFacet),
+    total,
+    page,
+    perPage,
   }
 }

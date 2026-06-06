@@ -7,6 +7,7 @@ import {
   type DirectoryListingProps,
 } from "~/components/web/directory/directory-listing"
 import { getDirectoryFacets, normalizeDirectoryFacetTab } from "~/server/web/directory/facets"
+import { getDirectoryFilterOptions } from "~/server/web/directory/filter-options"
 import { directoryFilterParamsCache } from "~/server/web/directory/schema"
 
 type DirectoryQueryProps = Omit<DirectoryListingProps, "children"> & {
@@ -38,9 +39,10 @@ const DirectoryQuery = async ({
       perPage: params.perPage,
     },
   })
+  const filterOptions = await getDirectoryFilterOptions(brand)
 
   return (
-    <DirectoryListing {...props}>
+    <DirectoryListing {...props} filterOptions={filterOptions}>
       <DirectoryFacetTabs activeTab={tab} />
       <DirectoryFacetResults facets={facets} />
     </DirectoryListing>
