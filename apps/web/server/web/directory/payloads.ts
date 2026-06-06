@@ -166,22 +166,6 @@ export type DirectoryProfileDetail = Prisma.DirectoryProfileGetPayload<{
   select: typeof directoryProfileDetailPayload
 }>
 
-// ---------------------------------------------------------------------------
-// Filter options payloads
-// ---------------------------------------------------------------------------
-
-export const filterOrganizationPayload = {
-  id: true,
-  name: true,
-} satisfies Prisma.OrganizationSelect
-
-export const filterDisciplinePayload = {
-  id: true,
-  name: true,
-} satisfies Prisma.DisciplineSelect
-
-export const filterRankPayload = {
-  id: true,
-  name: true,
-  sortOrder: true,
-} satisfies Prisma.RankSelect
+// Filter-options payloads (id/name/sortOrder selects) were removed in
+// SESSION_0350 with their only consumer `getDirectoryFilterOptions`; the
+// cross-facet filter follow-up will reintroduce a slug-aware options query.

@@ -1,11 +1,12 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
-import { DirectoryList } from "~/components/web/directory/directory-list"
+import { DirectoryFacetResults } from "~/components/web/directory/directory-facet-results"
+import { DirectoryFacetTabs } from "~/components/web/directory/directory-facet-tabs"
 import {
   DirectoryListing,
   type DirectoryListingProps,
 } from "~/components/web/directory/directory-listing"
-import { getDirectoryProfiles } from "~/server/web/directory/queries"
+import { getDirectoryFacets, normalizeDirectoryFacetTab } from "~/server/web/directory/facets"
 import { directoryFilterParamsCache } from "~/server/web/directory/schema"
 
 type DirectoryQueryProps = Omit<DirectoryListingProps, "children"> & {
@@ -23,23 +24,25 @@ const DirectoryQuery = async ({
   ...props
 }: DirectoryQueryProps) => {
   const params = directoryFilterParamsCache.parse(await searchParams)
+  const tab = normalizeDirectoryFacetTab(params.type)
 
-  const profiles = await getDirectoryProfiles({
+  const facets = await getDirectoryFacets({
     brand,
+    tab,
     viewerUserId,
     viewerRole,
-    filters: {
-      organizationId: params.org || undefined,
-      disciplineId: params.discipline || undefined,
-      rankId: params.rank || undefined,
-      locationCity: params.city || undefined,
-      locationRegion: params.region || undefined,
+    params: {
+      q: params.q || undefined,
+      discipline: params.discipline || undefined,
+      page: params.page,
+      perPage: params.perPage,
     },
   })
 
   return (
     <DirectoryListing {...props}>
-      <DirectoryList profiles={profiles} />
+      <DirectoryFacetTabs activeTab={tab} />
+      <DirectoryFacetResults facets={facets} />
     </DirectoryListing>
   )
 }

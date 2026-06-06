@@ -125,6 +125,29 @@ Tier code now recognizes `free`, `premium`, `elite`, and `legend`; `basic` is re
 `legend` is the all-features, free-for-life cohort tier. SESSION_0349 added limited policy/helper support only; broad
 checkout, webhook, and seed-data migration is a follow-up.
 
+### SESSION_0350 faceted `/directory` browse slice
+
+`/directory` became the single faceted public discovery surface across three result groups, reusing each entity's
+existing privacy-aware read model rather than building a new search substrate:
+
+- A result-type **segmented control** (`?type=` → `people` (default) / `organizations` / `trees`) switches the active
+  facet; the shared `FiltersProvider`/`Filters` (nuqs) search box and the reused `Pagination` are unchanged primitives.
+- A presentation-only `DirectoryFacetResult` adapter (`lib/directory/facet-result.ts`) + shared `FacetResultCard`
+  normalize each row to title / href / subtitle / trust badges / tags. **No schema or enum was added** — the discriminator
+  is a TS union (`"person" | "organization" | "lineageTree"`).
+- Dispatch (`server/web/directory/facets.ts`): people → `getDirectoryProfiles` (trust + tier gating, now with a working
+  `q` filter), organizations/schools → `searchOrganizations`, trees → `searchPublishedLineageTrees`.
+- **Card link routing:** schools/dojos/clubs → `/schools/[slug]`; LEAGUE/federations/affiliations → `/organizations/[slug]`.
+  `/organizations` is intentionally retained (affiliations / governing bodies like WEKAF), not redirected.
+- **Trust signals:** people reuse the SESSION_0349 badges. Lineage-tree cards expose only `isClaimable → Claimable`
+  (the published-tree summary deliberately excludes node/member verification, so a true Verified/Disputed *tree* badge
+  needs aggregated member verification — deferred).
+- **Cleanup:** the orphaned `components/web/members/*` browse UI (dead behind the `/members → /directory` redirect) was
+  deleted, along with the dead `directory-list.tsx` + FS-0001 `directory-filters.tsx`. The paginated
+  `searchDirectoryProfiles` is retained as the seed for the people-pagination convergence follow-up.
+- **Deferred (next increment):** cross-facet discipline/rank/school/location filter dropdowns (standardize the
+  `discipline` param on slug), people-list pagination (converge onto the `search*` family), and org-logo avatars.
+
 ### Pairing with `baseline-listings-runbook.md`
 
 The baseline listings runbook covers school / instructor / program / event / vendor / resource listings via the `Tool` substrate. This runbook is the lineage peer: same monetization spine, different substrate for the *data*, same substrate for the *paid surface*.

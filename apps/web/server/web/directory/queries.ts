@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
@@ -14,9 +13,6 @@ import {
   directoryProfileDetailPayload,
   directoryProfileListPayload,
   directoryProfilePreviewPayload,
-  filterDisciplinePayload,
-  filterOrganizationPayload,
-  filterRankPayload,
 } from "~/server/web/directory/payloads"
 import {
   getLineageProfileDetailRenderPoliciesForUsers,
@@ -25,8 +21,12 @@ import {
 import { db } from "~/services/db"
 
 export type DirectoryFilters = {
+  /** Free-text search over profile name + location (SESSION_0350). */
+  q?: string
   organizationId?: string
   disciplineId?: string
+  /** Discipline filter by slug — the cross-facet directory filter value. */
+  disciplineSlug?: string
   rankId?: string
   locationCity?: string
   locationRegion?: string
@@ -116,6 +116,8 @@ export const getDirectoryProfiles = cache(
     }
     if (filters.disciplineId) {
       membershipWhere.disciplineId = filters.disciplineId
+    } else if (filters.disciplineSlug) {
+      membershipWhere.discipline = { slug: filters.disciplineSlug }
     }
 
     // If org/discipline/rank filters are set, we need users who have a matching membership
@@ -136,6 +138,15 @@ export const getDirectoryProfiles = cache(
         }),
         ...(filters.locationRegion && {
           locationRegion: { contains: filters.locationRegion, mode: "insensitive" as const },
+        }),
+        // Free-text search over name + location (SESSION_0350) — previously the
+        // shared directory search box was a no-op for people.
+        ...(filters.q && {
+          OR: [
+            { user: { name: { contains: filters.q, mode: "insensitive" as const } } },
+            { locationCity: { contains: filters.q, mode: "insensitive" as const } },
+            { locationRegion: { contains: filters.q, mode: "insensitive" as const } },
+          ],
         }),
         user: {
           // Brand scoping: user must have at least one membership in this brand
@@ -211,36 +222,6 @@ export const getDirectoryProfiles = cache(
     })
   },
 )
-
-/**
- * Available filter options for the directory within a brand.
- */
-export const getDirectoryFilterOptions = async (brand: Brand) => {
-  "use cache"
-
-  cacheTag("directory-filters")
-  cacheLife("minutes")
-
-  const [organizations, disciplines, ranks] = await Promise.all([
-    db.organization.findMany({
-      where: { brand },
-      select: filterOrganizationPayload,
-      orderBy: { name: "asc" },
-    }),
-    db.discipline.findMany({
-      where: { brand },
-      select: filterDisciplinePayload,
-      orderBy: { name: "asc" },
-    }),
-    db.rank.findMany({
-      where: { rankSystem: { brand } },
-      select: filterRankPayload,
-      orderBy: { sortOrder: "asc" },
-    }),
-  ])
-
-  return { organizations, disciplines, ranks }
-}
 
 /**
  * Find a single directory profile by slug for the detail page.

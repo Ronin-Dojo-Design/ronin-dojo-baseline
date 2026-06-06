@@ -450,6 +450,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0347](../../sprints/SESSION_0347.md) | session--open | closed — BBL tier-gating read model + QR lane: generic admin entitlement grants/revokes now audit before mutation, lineage tree cards resolve free/premium/elite render policy from active entitlement keys, and invite/claim/profile QR sharing uses server-built URLs with no client-trusted tier state |
 | [SESSION_0348](../../sprints/SESSION_0348.md) | session--open | closed — BBL profile/detail tier-gating consumption: `/directory` canonical browse/detail, `/members` compatibility redirects, free owner preview vs premium/elite full profile, and focused no-leak tests |
 | [SESSION_0349](../../sprints/SESSION_0349.md) | session--open | closed — BBL trust badges and discovery polish: shared trust-status adapter over existing lineage/claim fields, directory/detail/lineage badge surfaces, limited `legend` tier policy support, and faceted `/directory` follow-up planning |
+| [SESSION_0350](../../sprints/SESSION_0350.md) | session--implement | closed — first faceted `/directory` browse slice (people / schools-orgs / lineage trees) via a presentation-only `DirectoryFacetResult` adapter + shared `FacetResultCard` + result-type segmented control reusing the `search*` family; working people search; deleted orphaned `members/*` + dead directory components; `fallow` bow-out trial |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -500,6 +501,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Neon Prisma Advisory-Lock Recovery](../../runbooks/database/neon-advisory-lock-recovery.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sops/sop-data-and-wiring-flows.md) | runbook | active |
+| [Lineage Data + Wiring Flows](../../runbooks/sops/lineage-data-wiring-flow.md) | runbook | active — SESSION_0350 lineage genealogy + trust + faceted `/directory` flow map (peer to SOP Data and Wiring Flows) |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sops/sop-e2e-user-lifecycle.md) | runbook | active |
 | [SOP — Agent Workflows and Rituals](../../runbooks/sops/sop-agent-workflows-and-rituals.md) | runbook | active |
 | [Dev Environment](../../runbooks/dev-environment/dev-environment.md) | runbook | active |
@@ -582,6 +584,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
 | LineageQuery/List/Listing/Search/Card | `components/web/lineage/lineage-*.tsx` | SESSION_0248 |
 | LineageTrustBadge/LineageClaimBadge | `components/web/lineage/lineage-trust-badge.tsx` | SESSION_0349 |
+| FacetResultCard + DirectoryFacetResult + getDirectoryFacets | `components/web/directory/facet-result-card.tsx`, `lib/directory/facet-result.ts`, `server/web/directory/facets.ts` | SESSION_0350 |
 | QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |

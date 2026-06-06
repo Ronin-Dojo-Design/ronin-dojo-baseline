@@ -10,6 +10,8 @@ export const directoryFilterParams = {
   sort: parseAsString.withDefault(""),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(24),
+  // Faceted result-type segmented control (SESSION_0350): "" → people (default).
+  type: parseAsString.withDefault(""),
   org: parseAsString.withDefault(""),
   discipline: parseAsString.withDefault(""),
   rank: parseAsString.withDefault(""),

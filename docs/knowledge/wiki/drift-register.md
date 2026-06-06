@@ -250,3 +250,22 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Status:** resolved
 - **Resolved in:** SESSION_0349 — ADR 0012 tier-auto-grant table removed `BASIC`; lineage comp/policy helpers recognize
   `LINEAGE_LEGEND`; broad checkout/webhook/seed migration deferred to a follow-up.
+
+### D-020 — Overlapping enum vocabularies (visibility / lifecycle-status / tier)
+
+- **Source A:** `apps/web/prisma/schema.prisma` enums — three visibility vocabularies coexist:
+  `DirectoryVisibility { HIDDEN, MEMBERS_ONLY, PUBLIC }`, `LineageVisibility { PUBLIC, UNLISTED, RESTRICTED, PRIVATE }`,
+  and `Organization` (no visibility enum — brand-scoped + `isPublished`/listing tier only).
+- **Source B:** ~6 lifecycle enums share the `ACTIVE / EXPIRED / CANCELLED`(+variant) shape —
+  `MembershipStatus`, `SubscriptionStatus`, `EntitlementStatus`, `CertificationStatus`, `ContractStatus`,
+  `EnrollmentStatus` — and two tier vocabularies coexist: `ToolTier { Free, Standard, Premium }` (PascalCase, Tool
+  substrate) vs the profile/lineage tier string union `free | premium | elite | legend` (code-only, lowercase).
+- **Decision needed:** none forced. The visibility enums are semantically distinct (member-gating vs web-style
+  unlisted/restricted), the lifecycle enums are domain-distinct (a membership ≠ a subscription ≠ an entitlement), and the
+  tier vocabularies sit on different substrates — so consolidation is a deliberate cross-domain migration, not a quick win.
+  Recorded here as the consolidation backlog; `DirectoryFacetResult` (SESSION_0350) deliberately added **no** enum
+  (presentation-only TS union `"person" | "organization" | "lineageTree"`).
+- **Status:** documented (deferred)
+- **Logged in:** SESSION_0350 — enum inventory taken during the faceted `/directory` grill; operator chose document-only.
+  Revisit if/when a session has a concrete reason to unify one vocabulary (most likely the tier dualism, building on the
+  SESSION_0349 `legend` work).

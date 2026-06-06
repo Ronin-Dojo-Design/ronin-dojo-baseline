@@ -597,6 +597,7 @@ export type LineageTreeCardRow = {
   memberCount: number
   discipline: { id: string; name: string; slug: string } | null
   organization: { id: string; name: string; slug: string } | null
+  isClaimable: boolean
 }
 
 const SORTABLE_LINEAGE_COLUMNS = ["name", "createdAt", "updatedAt"] as const
@@ -681,6 +682,7 @@ export const searchPublishedLineageTrees = async ({
       description: true,
       discipline: { select: { id: true, name: true, slug: true } },
       organization: { select: { id: true, name: true, slug: true } },
+      isClaimable: true,
       _count: {
         select: {
           members: {
@@ -707,6 +709,7 @@ export const searchPublishedLineageTrees = async ({
       memberCount: t._count.members,
       discipline: t.discipline,
       organization: t.organization,
+      isClaimable: t.isClaimable,
     })),
     total,
     page: normalized.page,
