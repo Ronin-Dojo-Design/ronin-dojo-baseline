@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-04
-last_agent: claude-session-0342
+updated: 2026-06-06
+last_agent: claude-session-0350
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -196,6 +196,14 @@ For sessions that warrant extra proof, add this block to the SESSION file:
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
+
+### 6b. Repo code glossary (optional, on-demand)
+
+Not a gate and not run every session. Add to [`repo-code-glossary.md`](../knowledge/wiki/repo-code-glossary.md)
+when the **operator asks** ("add X to the glossary") or when this session used a technical term a
+non-technical reader would stumble on (e.g., `CI`, `SHA`, `enum`, `adapter`). Keep each entry to 1–2
+plain-English lines + one concrete example (a repo file or a commit SHA from the session). Skip silently
+when nothing new came up.
 
 ### 6.5. Review & Recommend (stage the next session)
 

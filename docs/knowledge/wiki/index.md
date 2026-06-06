@@ -30,6 +30,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
+| [Repo Code Glossary](repo-code-glossary.md) | reference | active — SESSION_0350 plain-English glossary of technical terms (CI, SHA, enum, adapter…) with repo examples; optional on-demand bow-out spike |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
