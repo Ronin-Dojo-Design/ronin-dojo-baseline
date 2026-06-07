@@ -141,7 +141,20 @@ export function MatAssignmentPanel({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Match</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          items={Object.fromEntries(
+                            unassignedMatches.map(m => [
+                              m.id,
+                              `${m.divisionName} — R${m.roundNumber} M${m.matchNumber}${
+                                m.competitorNames.length > 0
+                                  ? ` (${m.competitorNames.join(" vs ")})`
+                                  : ""
+                              }`,
+                            ]),
+                          )}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a match" />

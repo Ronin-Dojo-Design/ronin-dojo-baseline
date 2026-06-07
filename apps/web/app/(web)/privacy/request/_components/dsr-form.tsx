@@ -80,7 +80,11 @@ export function DsrForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Request type</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                items={Object.fromEntries(DSR_TYPES.map(type => [type, TYPE_LABELS[type]]))}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a request type" />

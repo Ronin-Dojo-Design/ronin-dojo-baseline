@@ -152,6 +152,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0018 ContentAtom Canonical Relations](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
 | [ADR 0019 Membership Lifecycle Ownership](../../architecture/decisions/0019-membership-lifecycle-ownership.md) | decision | accepted |
 | [ADR 0020 Registration Recipient userId XOR Guest](../../architecture/decisions/0020-registration-recipient-userid-or-guest.md) | decision | accepted |
+| [ADR 0023 Generic Profile Claim (member/org)](../../architecture/decisions/0023-generic-profile-claim.md) | decision | accepted |
 
 ## Sessions
 
@@ -457,6 +458,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0351](../../sprints/SESSION_0351.md) | session--open | closed — quick schema/repo cleanup alignment: legacy `ENTER_THE_DOJO.md` schema intake, admin Repo Docs navigator + Graphify links, repo alignment report, archive status cleanup, DavidAnson markdownlint tooling, pulse/glossary expansion, and fallow follow-up ledger |
 | [SESSION_0352](../../sprints/SESSION_0352.md) | session--implement | closed — `/directory` discipline filter standardized on `Discipline.slug`, shared `DirectoryFilters` Select added, People facet moved to paginated `searchDirectoryProfiles` with shared trust/tier/privacy projection, and fallow removed the dead unpaginated list query |
 | [SESSION_0353](../../sprints/SESSION_0353.md) | session--implement | closed — `/directory` location (Region→City) + org/school combobox filters with per-facet visibility on the shared brand-scoped projection; `ComboboxSelector` promoted admin→common (size parity + accessible clear); Base UI Select `items` label fix (Bug A: rank/discipline showed cuids/slugs) on discipline + lineage selected-rank; pure cross-brand/leak where-builder test; Desi motion-reduce + parity fixes; WL-P2-10 dep triage + WL-P1-7 systemic Select; prod lineage drawer (tier-gated) + 12-vs-17 (visibility) classified non-code |
+| [SESSION_0354](../../sprints/SESSION_0354.md) | session--implement | closed — WL-P1-7 systemic Select label fix via new `DataSelect` wrapper (+ filters converted, ~30 consumers `items`-fixed, `tool-filters` ReactNode exception); generic directory claim system (`ProfileClaimRequest` model + migration, `/admin/claims` review queue, public `ProfileClaimTeaser` + `ProfileHero`, owner live-preview); `organizationHref` link-through 404 fix; WL-P2-10 deps removed + 3 lockfiles regenerated (frozen-lockfile verified) |
+| [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -595,6 +598,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | FacetResultCard + DirectoryFacetResult + getDirectoryFacets | `components/web/directory/facet-result-card.tsx`, `lib/directory/facet-result.ts`, `server/web/directory/facets.ts` | SESSION_0350 |
 | DirectoryFilters + profile projection | `components/web/directory/directory-filters.tsx`, `server/web/directory/profile-projection.ts` | SESSION_0352 |
 | ComboboxSelector (promoted) + directory location/org filters + `buildDirectoryProfileWhere` | `components/common/combobox-selector.tsx`, `components/web/directory/directory-filters.tsx`, `server/web/directory/{filter-options,profile-where}.ts` | SESSION_0353 |
+| `DataSelect` (id/slug-aware Select) + generic profile-claim system (`ProfileHero`, `ProfileClaimTeaser`, `/admin/claims`) | `components/common/data-select.tsx`, `components/web/profile/profile-hero.tsx`, `components/web/claims/*`, `server/{web,admin}/claims/*`, `app/admin/claims/*` | SESSION_0354 |
 | QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |

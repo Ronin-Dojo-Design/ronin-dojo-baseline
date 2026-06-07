@@ -102,8 +102,12 @@ describe("mapOrganizationToFacet", () => {
   it("routes leagues/federations to /organizations", () => {
     expect(organizationHref("LEAGUE", "wekaf")).toBe("/organizations/wekaf")
     expect(organizationHref("DOJO", "x")).toBe("/schools/x")
+    expect(organizationHref("SCHOOL", "x")).toBe("/schools/x")
     expect(organizationHref("CLUB", "x")).toBe("/schools/x")
-    expect(organizationHref(null, "x")).toBe("/schools/x")
+    // null/unknown types route to /organizations (resolves for ANY org), NOT
+    // /schools (which 404s non-school types). Regression: WL link-through fix.
+    expect(organizationHref(null, "x")).toBe("/organizations/x")
+    expect(organizationHref("FEDERATION", "x")).toBe("/organizations/x")
 
     const result = mapOrganizationToFacet({
       slug: "wekaf",

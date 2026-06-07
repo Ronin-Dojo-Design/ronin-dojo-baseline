@@ -116,7 +116,11 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Which node are you claiming?</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={Object.fromEntries(members.map(m => [m.nodeId, m.displayName]))}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a person" />

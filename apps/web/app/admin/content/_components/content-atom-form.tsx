@@ -234,7 +234,11 @@ export function ContentAtomForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Discipline</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value ?? ""}
+                items={{ "": "None", ...Object.fromEntries(disciplines.map(d => [d.id, d.name])) }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select discipline" />
@@ -260,7 +264,11 @@ export function ContentAtomForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Style</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value ?? ""}
+                items={{ "": "None", ...Object.fromEntries(styles.map(s => [s.id, s.name])) }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select style" />

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAction } from "next-safe-action/hooks"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { Badge } from "~/components/common/badge"
@@ -20,6 +20,8 @@ import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import { ProfileHero } from "~/components/web/profile/profile-hero"
+import { initialsOf } from "~/lib/directory/facet-result"
 import { updateOrganization } from "~/server/web/school/actions"
 
 const schoolFormSchema = z.object({
@@ -93,8 +95,20 @@ function SchoolFormContent({ organization }: { organization: OrganizationData })
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to save"),
   })
 
+  // Live preview — same hero the public org/school page header uses.
+  const previewName = useWatch({ control: form.control, name: "name" })
+  const previewCity = useWatch({ control: form.control, name: "city" })
+  const previewState = useWatch({ control: form.control, name: "state" })
+
   return (
     <Stack size="lg" direction="column">
+      <ProfileHero
+        name={previewName || null}
+        subtitle={[previewCity, previewState].filter(Boolean).join(", ") || null}
+        initials={initialsOf(previewName)}
+        tags={(organization.disciplines ?? []).map(d => d.discipline.name)}
+      />
+
       <section>
         <H4>School Details</H4>
 

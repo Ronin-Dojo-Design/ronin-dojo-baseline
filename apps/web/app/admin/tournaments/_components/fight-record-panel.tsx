@@ -94,6 +94,14 @@ export function FightRecordPanel({ fightRecordsPromise, completedMatches }: Figh
                 <Select
                   onValueChange={v => setSelectedMatchId(v as string)}
                   value={selectedMatchId}
+                  items={Object.fromEntries(
+                    completedMatches.map(m => [
+                      m.id,
+                      `${m.divisionName} — R${m.roundNumber} M${m.matchNumber}${
+                        m.competitorNames.length > 0 ? ` (${m.competitorNames.join(" vs ")})` : ""
+                      }`,
+                    ]),
+                  )}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a completed match" />

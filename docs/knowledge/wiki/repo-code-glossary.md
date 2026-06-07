@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-06
-last_agent: codex-session-0352
+updated: 2026-06-07
+last_agent: claude-session-0354
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -138,6 +138,11 @@ commit) so the term is concrete, not abstract.
 - **LineageTree** — a public or private family-tree-style view of martial arts relationships.
 - **LineageNode** — the person identity point inside lineage data.
 - **LineageTreeMember** — a person's membership in a specific lineage tree, including visual parent, sort order, and public display flags.
+- **DataSelect** — the id/slug-aware `Select` wrapper (`components/common/data-select.tsx`). Takes `options:{value,label}[]` and forwards a `value→label` map to Base UI `Select.Root` so a preset id renders its label, not the raw cuid (the systemic WL-P1-7 fix). Use it for any Select whose value is an id/slug; exceptions are Selects with ReactNode labels (see `tool-filters`).
+- **ProfileClaimRequest** — a request to take ownership of an "unclaimed" directory subject, reviewed by an admin (mirrors `LineageClaimRequest` but for the directory). Subject is an owner-less `Organization` or a placeholder-`User` `DirectoryProfile`. Distinct from a lineage claim (which targets a `LineageNode` on a tree).
+- **Claimable** — a directory subject that can be claimed: an `Organization` with no `ownerId`, or a `DirectoryProfile` whose `User.isPlaceholder` is true (a legacy import with no login account).
+- **Claim teaser** — the public "mock profile" shown on `/directory/[slug]` for a claimable placeholder person instead of an empty profile/404: a `ProfileHero` preview + skeleton sections + a "Claim this profile" CTA, designed to entice the real owner to claim it.
+- **ProfileHero** — the shared presentation hero (`components/web/profile/profile-hero.tsx`) used by the claim teaser and the owner live-preview in the create/edit forms. Renders only display values passed in (no data fetch, no private fields).
 
 ## Cross-references
 

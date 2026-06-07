@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAction } from "next-safe-action/hooks"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
@@ -27,6 +27,8 @@ import {
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
+import { ProfileHero } from "~/components/web/profile/profile-hero"
+import { initialsOf } from "~/lib/directory/facet-result"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
 
 const passportFormSchema = z.object({
@@ -116,8 +118,22 @@ export function ProfileForm({ passport, directoryProfile }: ProfileFormProps) {
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to save"),
   })
 
+  // Live preview — mirrors form state into the same hero the public profile and
+  // claim teaser use, so the owner sees their profile forming as they type.
+  const previewName = useWatch({ control: passportForm.control, name: "displayName" })
+  const previewAvatar = useWatch({ control: passportForm.control, name: "avatarUrl" })
+  const previewCity = useWatch({ control: profileForm.control, name: "locationCity" })
+  const previewRegion = useWatch({ control: profileForm.control, name: "locationRegion" })
+
   return (
     <Stack size="lg" direction="column">
+      <ProfileHero
+        name={previewName || null}
+        avatarUrl={previewAvatar || null}
+        subtitle={[previewCity, previewRegion].filter(Boolean).join(", ") || null}
+        initials={initialsOf(previewName)}
+      />
+
       {/* Passport Section */}
       <section>
         <H4>Personal Info</H4>

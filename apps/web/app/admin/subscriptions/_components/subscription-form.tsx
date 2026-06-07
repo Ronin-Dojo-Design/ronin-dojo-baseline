@@ -103,7 +103,11 @@ export function SubscriptionForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>User</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={Object.fromEntries(users.map(user => [user.id, user.name ?? user.email]))}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a user" />
@@ -129,7 +133,13 @@ export function SubscriptionForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tier</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={Object.fromEntries(
+                  tiers.map(tier => [tier.id, `${tier.name} (L${tier.level})`]),
+                )}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a tier" />
@@ -154,7 +164,16 @@ export function SubscriptionForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={{
+                  ACTIVE: "Active",
+                  EXPIRED: "Expired",
+                  CANCELLED: "Cancelled",
+                  PAST_DUE: "Past Due",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />

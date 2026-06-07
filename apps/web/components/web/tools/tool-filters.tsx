@@ -15,6 +15,13 @@ import { useFilters } from "~/contexts/filter-context"
 import { findFilterOptions } from "~/server/web/actions/filters"
 import type { ToolFilterSchema } from "~/server/web/tools/schema"
 
+// NOTE: DataSelect is intentionally NOT used here — `FilterOption.name` is TYPED
+// `ReactNode` (Dirstarter boilerplate `FilterOption` shape), so it isn't
+// assignable to DataSelect's string-only `label`. At runtime the value is a
+// plain string (`category.name`), so this could move onto DataSelect with a
+// `String(name)` coercion — or DataSelect could be extended to accept a ReactNode
+// dropdown label (which would also let every filter show the `count` it already
+// fetches, e.g. "Spaces (12)"). Left as the lower-level inline `items` fix for now.
 export const ToolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   const t = useTranslations("tools.filters")
   const { filters, updateFilters } = useFilters<ToolFilterSchema>()
@@ -29,6 +36,7 @@ export const ToolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
           key={type}
           value={filters[type]}
           onValueChange={value => updateFilters({ [type]: value as string })}
+          items={Object.fromEntries(options.map(({ slug, name }) => [slug, name]))}
           {...props}
         >
           <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">

@@ -102,7 +102,13 @@ export function CertificateTemplateForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(Brand).map(b => [b, b.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
@@ -129,7 +135,13 @@ export function CertificateTemplateForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Certification Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(CertificationType).map(ct => [ct, ct.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -154,7 +166,16 @@ export function CertificateTemplateForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Delivery Method</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(CertificateDeliveryMethod).map(dm => [
+                        dm,
+                        dm.replace(/_/g, " "),
+                      ]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select method" />

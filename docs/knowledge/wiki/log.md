@@ -5,7 +5,7 @@ type: protocol
 status: superseded
 created: 2026-04-26
 updated: 2026-06-06
-last_agent: claude-session-0353
+last_agent: claude-session-0354
 ---
 
 # Wiki Change Log
@@ -277,3 +277,11 @@ Use this file only as historical context for early wiki adoption.
 - Promoted `ComboboxSelector` admin→common (added `size`/`clearLabel` + accessible clear button) and applied Desi's parity + site-wide `motion-reduce` fixes.
 - Fixed Bug A (Base UI Select rendered raw id/slug on preset) via `items` on the discipline + lineage selected-rank Selects; cataloged the systemic ~17-consumer sweep as WL-P1-7.
 - Triaged WL-P2-10 deps (keep `tailwind-merge`/`@react-email/preview-server`; `@ai-sdk/google`/`github-slugger` removable, deferred for triple-lockfile reconciliation) and classified two prod lineage reports as non-code (drawer tier-gate; 12-vs-17 visibility).
+
+## 2026-06-06 — SESSION_0354
+
+- Resolved WL-P1-7 systemically: new `DataSelect` wrapper (`components/common/data-select.tsx`) + render test; dogfooded in the new claim form; converted `school-filters`/`technique-filters`; the other ~30 id/enum Select consumers got the inline `items` fix; `tool-filters` documented as a ReactNode-label exception.
+- Built a generic directory claim system mirroring the lineage flow: `ProfileClaimRequest` model + additive migration, submit action (dedup guard), `/admin/claims` review queue (org approval grants `ownerId`; person approval flagged for manual merge).
+- Added the `ProfileHero` + `ProfileClaimTeaser` public "mock profile" on `/directory/[slug]` for placeholder persons, and an owner live-preview in `profile-form`/`school-form`; fixed `organizationHref` null/unknown→`/organizations` link-through 404.
+- Resolved WL-P2-10: removed `@ai-sdk/google` + `github-slugger` and regenerated all 3 lockfiles; `pnpm install --frozen-lockfile` verified green.
+- Updated the custom component inventory + glossary (`DataSelect`, `ProfileHero`, `ProfileClaimRequest`, claimable, claim teaser); wrote `docs/petey-plan-0355.md` as the feature spec.

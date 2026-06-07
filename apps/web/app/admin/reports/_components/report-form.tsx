@@ -82,7 +82,17 @@ export function ReportForm({ children, className, title, report, ...props }: Rep
           render={({ field: { value, onChange, ...field } }) => (
             <FormItem>
               <FormLabel isRequired>Type</FormLabel>
-              <Select value={value} onValueChange={onChange} {...field}>
+              <Select
+                value={value}
+                onValueChange={onChange}
+                items={Object.fromEntries(
+                  reportsConfig.allReportTypes.map(type => [
+                    type,
+                    reportsConfig.reportTypeLabels[type],
+                  ]),
+                )}
+                {...field}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a report type" />

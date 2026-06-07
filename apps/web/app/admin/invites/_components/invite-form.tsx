@@ -119,7 +119,16 @@ export function InviteForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Invite Type</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={{
+                  ORGANIZATION: "Organization",
+                  PROGRAM: "Program",
+                  TOURNAMENT: "Tournament",
+                  EVENT: "Event",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -180,7 +189,15 @@ export function InviteForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Comp Tier</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value ?? "NONE"}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value ?? "NONE"}
+                items={{
+                  NONE: "None",
+                  [LINEAGE_PREMIUM_ENTITLEMENT_KEY]: "Lineage Premium",
+                  [LINEAGE_ELITE_ENTITLEMENT_KEY]: "Lineage Elite",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="No comp" />

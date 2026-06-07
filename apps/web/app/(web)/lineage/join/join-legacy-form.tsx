@@ -155,7 +155,15 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Legacy membership path</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={{
+                  FREE: "Free profile",
+                  PREMIUM: "Premium listing",
+                  ELITE: "Elite legacy listing",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger size="lg">
                     <SelectValue />
@@ -193,7 +201,13 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
             render={({ field }) => (
               <FormItem className="md:col-span-2">
                 <FormLabel>Claim an existing lineage profile</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={Object.fromEntries(
+                    claimableTree.members.map(member => [member.nodeId, member.displayName]),
+                  )}
+                >
                   <FormControl>
                     <SelectTrigger size="lg">
                       <SelectValue placeholder={`Optional: select from ${claimableTree.name}`} />

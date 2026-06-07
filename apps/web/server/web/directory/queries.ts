@@ -68,6 +68,9 @@ export const findProfileBySlug = async ({
       slug: preview.slug,
       profileTier: policy.tier,
       canRenderFullProfile: false,
+      // A legacy placeholder profile (no real login account) is "claimable":
+      // the detail page renders the claim teaser instead of an empty profile.
+      isClaimablePlaceholder: preview.user.isPlaceholder,
       isOwnProfile: viewerUserId === preview.user.id,
       ...trustSummaryForUser(preview.user),
       coverPhotoUrl: null,
@@ -102,6 +105,7 @@ export const findProfileBySlug = async ({
     slug: profile.slug,
     profileTier: policy.tier,
     canRenderFullProfile: true,
+    isClaimablePlaceholder: preview.user.isPlaceholder,
     isOwnProfile: viewerUserId === profile.user.id,
     ...trustSummaryForUser(profile.user),
     coverPhotoUrl: profile.coverPhotoUrl,

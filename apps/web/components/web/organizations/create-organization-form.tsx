@@ -136,7 +136,11 @@ export const CreateOrganizationForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Organization Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={{ DOJO: "Dojo", SCHOOL: "School", CLUB: "Club", LEAGUE: "League" }}
+                >
                   <FormControl>
                     <SelectTrigger size="lg">
                       <SelectValue placeholder="Select type" />

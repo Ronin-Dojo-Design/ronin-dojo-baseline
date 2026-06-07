@@ -93,7 +93,11 @@ export type LineageTreeFacetSource = {
 const SCHOOL_ORG_TYPES = new Set(["DOJO", "SCHOOL", "CLUB"])
 
 export function organizationHref(type: string | null, slug: string): string {
-  return type && !SCHOOL_ORG_TYPES.has(type) ? `/organizations/${slug}` : `/schools/${slug}`
+  // Only confirmed school types resolve at `/schools/[slug]` (findSchoolBySlug
+  // 404s any non-school type). Everything else — LEAGUE, null/unknown, future
+  // types — routes to `/organizations/[slug]`, which resolves for ANY org.
+  // (Previously the null/unknown fallback went to `/schools` → a 404.)
+  return type && SCHOOL_ORG_TYPES.has(type) ? `/schools/${slug}` : `/organizations/${slug}`
 }
 
 export function initialsOf(name: string | null | undefined): string {

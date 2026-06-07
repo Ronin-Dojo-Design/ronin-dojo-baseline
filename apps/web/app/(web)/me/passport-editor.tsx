@@ -175,6 +175,12 @@ function PassportForm({ passport, userId }: { passport: Passport; userId: string
                 <Select
                   value={field.value ?? ""}
                   onValueChange={v => field.onChange(v || undefined)}
+                  items={{
+                    MALE: "Male",
+                    FEMALE: "Female",
+                    NONBINARY: "Non-binary",
+                    PREFER_NOT_TO_SAY: "Prefer not to say",
+                  }}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -364,7 +370,15 @@ function DirectoryProfileForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Visibility</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  items={{
+                    HIDDEN: "Hidden",
+                    MEMBERS_ONLY: "Members only",
+                    PUBLIC: "Public",
+                  }}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select visibility" />

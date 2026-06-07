@@ -58,7 +58,11 @@ export function SocialLinksEditor({ form }: SocialLinksEditorProps) {
             render={({ field: platformField }) => (
               <FormItem className="w-40 shrink-0">
                 {index === 0 && <FormLabel>Platform</FormLabel>}
-                <Select value={platformField.value} onValueChange={platformField.onChange}>
+                <Select
+                  value={platformField.value}
+                  onValueChange={platformField.onChange}
+                  items={Object.fromEntries(PLATFORMS.map(p => [p.value, p.label]))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Platform" />
                   </SelectTrigger>

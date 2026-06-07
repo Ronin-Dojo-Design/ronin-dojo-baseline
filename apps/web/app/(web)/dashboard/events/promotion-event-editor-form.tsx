@@ -149,7 +149,19 @@ export function PromotionEventEditorForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Host organization</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={{
+                        [noHostValue]: "No host organization",
+                        ...Object.fromEntries(
+                          hostOrganizations.map(organization => [
+                            organization.id,
+                            organization.name,
+                          ]),
+                        ),
+                      }}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="No host organization" />

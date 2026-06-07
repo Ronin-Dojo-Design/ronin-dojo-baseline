@@ -149,6 +149,7 @@ export const CreateProgramForm = ({
                   }}
                   value={field.value}
                   disabled={isEditing}
+                  items={Object.fromEntries(organizations.map(org => [org.id, org.name]))}
                 >
                   <FormControl>
                     <SelectTrigger size="lg">
@@ -224,7 +225,16 @@ export const CreateProgramForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Discipline</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value ?? "none"}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value ?? "none"}
+                    items={{
+                      none: "No discipline",
+                      ...Object.fromEntries(
+                        disciplines.map(({ discipline }) => [discipline.id, discipline.name]),
+                      ),
+                    }}
+                  >
                     <FormControl>
                       <SelectTrigger size="lg">
                         <SelectValue placeholder="Optional discipline" />
@@ -250,7 +260,11 @@ export const CreateProgramForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={{ ACTIVE: "Active", DRAFT: "Draft" }}
+                  >
                     <FormControl>
                       <SelectTrigger size="lg">
                         <SelectValue placeholder="Select status" />

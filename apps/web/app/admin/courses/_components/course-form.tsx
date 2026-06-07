@@ -138,7 +138,13 @@ export function CourseForm({ children, className, title, course, ...props }: Cou
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(Brand).map(b => [b, b.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
@@ -163,7 +169,13 @@ export function CourseForm({ children, className, title, course, ...props }: Cou
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Certification Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(CertificationType).map(ct => [ct, ct.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />

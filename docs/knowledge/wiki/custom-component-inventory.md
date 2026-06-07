@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-07
-last_agent: claude-session-0353
+last_agent: claude-session-0354
 pairs_with:
   - docs/sprints/SESSION_0352.md
   - docs/sprints/SESSION_0349.md
@@ -63,6 +63,8 @@ Conventions:
 | --- | --- | --- | --- |
 | `QrShareButton` / `QrSharePanel` | `apps/web/components/common/qr-share-button.tsx` | `url`, `title`, optional `description`, `buttonLabel`, `downloadFilename` | SESSION_0347: shared invite/claim/profile QR surface. Renders a `qrcode.react` SVG (`level="H"`) plus a hidden canvas used for PNG download. Copy uses `navigator.clipboard` with a textarea fallback; PNG download handles missing canvas/blob errors with a toast. URLs must be server-built absolute URLs via `lib/request-url.ts`; QR links are convenience carriers only and must never include or authorize tier/role/school state. |
 | `ComboboxSelector` | `apps/web/components/common/combobox-selector.tsx` | `options:{id,name}[]`, `value`, `onValueChange`, `clearable`, `size` (default `md`; use `lg` to match `Select` triggers), `clearLabel`, placeholders | SESSION_0353: **promoted from `components/admin/`** (was already used by a public consumer — `invite/[code]/claim-form`). Generic searchable single-select composing `Command` + `Popover` + `Button` (FS-0001 — do not handroll a typeahead). The clear affordance is a real focusable sibling `<button aria-label={clearLabel}>` at full trigger height (not an icon nested in the trigger). Note: this combobox does its own `value→name` lookup so it does NOT have the Base UI `Select` preset-label bug (WL-P1-7). |
+| `DataSelect` | `apps/web/components/common/data-select.tsx` | `options:{value,label,disabled?}[]`, plus all `Select.Root` props (`value`/`onValueChange`/`defaultValue`/…), `placeholder`, `size`, `id`, `disabled`, `triggerClassName`, `contentClassName`, `align` | SESSION_0354: **the systemic WL-P1-7 fix.** Forwards a `value→label` map (`buildSelectItems`) to Base UI `Select.Root` so a DB/URL-preset id renders its label, not the raw cuid (the id stays only in the hidden form input). Use for any id/slug-valued Select. `label` is **string-only** (needed for the trigger/a11y/typeahead) — Selects whose option labels are `ReactNode` (e.g. `tool-filters`) keep the lower-level inline `items` prop until DataSelect grows a ReactNode dropdown-label slot (planned). |
+| `ProfileHero` | `apps/web/components/web/profile/profile-hero.tsx` | `name`, `subtitle?`, `avatarUrl?`, `initials`, `tags?`, `badges?` | SESSION_0354: presentation-only "above-the-fold" hero shared by the claim teaser and the owner live-preview in `profile-form`/`school-form`. Renders ONLY display values passed in (no data fetch, no private fields) — safe against HIDDEN-profile leakage. |
 
 ---
 
@@ -324,6 +326,18 @@ SESSION_0202 added the user-dashboard editor preview surface:
 > Server (`server/web/organization/membership-actions.ts`): all org-scoped membership mutations share `loadOrgMembership(membershipId, organizationId)` — loads the row and enforces the **cross-org guard** (`membership.organizationId === organizationId`) so an org admin cannot act on another org's member by ID. Actions: `transitionOrgMembershipStatus` (mirrors platform transition: VALID_TRANSITIONS, optimistic lock, audit + email notify), `assignOrgRole`/`removeOrgRole` (upsert / idempotent deleteMany; `assignOrgRole` validates `role.isSystem`; any owner/ORG_ADMIN grants any system role), and `rejectOrgJoinRequest` (PENDING-only; writes `REQUEST_REJECTED` audit *before* deleting — AuditLog.entityId is a free string, so the record survives). Brand sourced from the membership row. Roster query: `getOrganizationMembers` (uncached); assignable roles via `getSystemRoles` — both in `server/web/organization/queries.ts`.
 >
 > Invite server (`server/web/organization/invite-actions.ts`): `createOrgInvite` forces `type: ORGANIZATION` + the asserted org (brand from the org row, `createdById` = user), optional `maxUses`/`expiresAt`; `revokeOrgInvite` is cross-org guarded (`invite.organizationId === organizationId`) → `status: REVOKED`. The public `/invite/[code]` claim flow (`server/invites/actions.ts`, creates an ACTIVE Membership) is **unchanged** — see `docs/runbooks/invites.md`. List query: `getOrganizationInvites(organizationId, includeAll)` (uncached, `_count.claims`). General-info: `updateOrgGeneralInfo` (`general-info-actions.ts`, assertOrgAdminAccess).
+
+---
+
+## 8. Profile claims (generic member/org claim) — `components/web/claims/` + `app/admin/claims/`
+
+Mirrors the lineage claim flow (request → admin review queue → approve) for the directory. Subjects: owner-less `Organization` or placeholder-`User` `DirectoryProfile`. See `ProfileClaimRequest` in the schema; glossary terms: claimable, claim teaser.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `ProfileClaimTeaser` | `apps/web/components/web/claims/profile-claim-teaser.tsx` | `subjectType`, `subjectId`, `name`, `avatarUrl?`, `subtitle?`, `tags?` | SESSION_0354: the public "mock profile" shown on `/directory/[slug]` for a claimable placeholder person instead of an empty profile/404. `ProfileHero` + skeleton sections + `ProfileClaimForm`. Renders only display values passed by the page (no fetch). |
+| `ProfileClaimForm` | `apps/web/components/web/claims/profile-claim-form.tsx` | `subjectType`, `subjectId`, `subjectLabel` | SESSION_0354: client island; relationship picker **dogfoods `DataSelect`**; submits `submitProfileClaimRequest` (next-safe-action) with a dedup guard server-side. |
+| Admin claims queue + review | `apps/web/app/admin/claims/page.tsx`, `[id]/page.tsx`, `[id]/_components/profile-claim-review-actions.tsx` | route pages + `claimId` | SESSION_0354: `withAdminPage`-guarded list + detail; review action approves/denies/needs-info. Approve grants org `ownerId`; person approval is flagged for a manual placeholder→account merge. |
 
 ---
 

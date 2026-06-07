@@ -9,6 +9,7 @@ import { Note } from "~/components/common/note"
 import { Prose } from "~/components/common/prose"
 import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
+import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser"
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
@@ -65,6 +66,23 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
   }
 
   const { user } = profile
+
+  // Legacy placeholder (no real account) → show the claim teaser instead of an
+  // empty profile. HIDDEN/private already 404'd above (findProfileBySlug); a
+  // tier-gated profile still renders its listing preview below.
+  if (profile.isClaimablePlaceholder) {
+    return (
+      <ProfileClaimTeaser
+        subjectType="PERSON"
+        subjectId={profile.id}
+        name={user.name}
+        avatarUrl={user.image}
+        subtitle={[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null}
+        tags={user.ranks.map(rankAward => rankAward.rank?.name).filter(Boolean) as string[]}
+      />
+    )
+  }
+
   const origin = await getRequestOrigin()
   const profileUrl = buildAbsoluteUrl(`/directory/${slug}`, origin)
 

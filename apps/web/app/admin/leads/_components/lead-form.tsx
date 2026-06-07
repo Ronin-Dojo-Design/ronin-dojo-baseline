@@ -170,7 +170,13 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={Object.fromEntries(
+                    Object.values(LeadSource).map(s => [s, s.replace(/_/g, " ")]),
+                  )}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select source..." />
