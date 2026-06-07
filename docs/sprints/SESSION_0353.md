@@ -304,6 +304,7 @@ TASK_01 and TASK_02 are disjoint (admin imports vs directory server) and can run
 - **WL-P2-10:** `@ai-sdk/google` + `github-slugger` confirmed removable, but the triple-lockfile reconciliation must be a dedicated deps session to keep the deploy green.
 - **Bug B (prod):** enabling the Rigan tree drawer = grant the tree owner a lineage PREMIUM/ELITE entitlement (operator/billing), or a deliberate policy change. Not a code task.
 - **Bug C (prod):** show all 17 publicly = set the 5 non-PUBLIC members' node visibility to PUBLIC in admin (data task).
+- **Directory discipline-filter bug (fixed):** `/directory` showed schools/region/city but not the discipline filter. Root cause: the 12 disciplines are **system rows** (`isSystem: true`, `brand: null`), but `getDirectoryFilterOptions` queried strict `where: { brand }`, excluding every system discipline. Fixed to match the `/disciplines` page scope (`OR: [{ isSystem: true }, { brand }]`). (Pre-existing in the SESSION_0352 filter; this session also added `items`.) **Note:** prod has all 12 disciplines (an earlier "10" reading was a `curl | head` truncation artifact — `comm` confirmed zero missing); no discipline seed gap.
 
 ## Next session
 

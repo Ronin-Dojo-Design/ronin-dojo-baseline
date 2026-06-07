@@ -23,8 +23,11 @@ export async function getDirectoryFilterOptions(brand: Brand): Promise<Directory
   // Plain sequential awaits on the single connection. Neither Promise.all nor
   // $transaction([]) is safe with the local pg driver adapter — both pipeline
   // queries and trip "client is already executing a query" (SESSION_0352/0353).
+  // Disciplines are mostly system rows (`brand: null`, `isSystem: true`); match the
+  // /disciplines page scope (system + brand-specific) so the filter isn't empty —
+  // a plain `where: { brand }` excluded every system discipline (SESSION_0353).
   const disciplines = await db.discipline.findMany({
-    where: { brand },
+    where: { OR: [{ isSystem: true }, { brand }] },
     select: { name: true, slug: true },
     orderBy: { name: "asc" },
   })
