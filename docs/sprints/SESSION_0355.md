@@ -302,11 +302,11 @@ Fix the lineage profile-drawer gate: in `lib/entitlements/lineage-tier-policy` s
 | --- | --- |
 | JETTY/frontmatter sweep | SESSION_0355 + petey-plan-0356/0357 stamped `last_agent: claude-session-0355`, `2026-06-07`; 0337 frontmatter refreshed. |
 | Backlinks/index sweep | `wiki/index.md` + `wiki/log.md` entries; `custom-component-inventory.md` (`DataSelect` content, `BeltSwatch`, `OrgClaimCta`, `ListingRegisterCta`). |
-| Wiki lint | `bun run wiki:lint` — see verification at bow-out. |
+| Wiki lint | `bun run wiki:lint` — ✅ no violations (619 md files). |
 | Kaizen reflection | Reflections section present. |
 | Hostile close review | SESSION_0355_REVIEW_01 + Giddy/Doug/Desi/security + 2 findings. |
 | Review & Recommend | Next session goal + first task written. |
-| Memory sweep | Memory updated (discovery-process feedback; drawer-gate; register-vs-claim). |
+| Memory sweep | `discovery-domain-hub-before-planning` (new); updated drawer-gate (now a bug), Select (rich rows + Combobox rule), MEMORY.md index. |
 | Next session unblock check | Unblocked: drawer-gate fix + domain hubs are self-contained. |
-| Git hygiene | Branch `main`; FS-0024 guard passed; commit pushed (see bow-out). |
-| Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` at bow-out. |
+| Git hygiene | Branch `main`; FS-0024 guard passed; commit `0cae6ac` pushed `67681f9..0cae6ac`. |
+| Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` — incremental (146 nodes / 824 edges touched; communities 1453). |
