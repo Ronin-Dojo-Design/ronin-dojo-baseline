@@ -3,26 +3,18 @@
 import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
 import plur from "plur"
-import { type ComponentProps, useEffect } from "react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/common/select"
+import { useEffect } from "react"
+import { DataSelect } from "~/components/common/data-select"
 import { useFilters } from "~/contexts/filter-context"
 import { findFilterOptions } from "~/server/web/actions/filters"
 import type { ToolFilterSchema } from "~/server/web/tools/schema"
 
-// NOTE: DataSelect is intentionally NOT used here — `FilterOption.name` is TYPED
-// `ReactNode` (Dirstarter boilerplate `FilterOption` shape), so it isn't
-// assignable to DataSelect's string-only `label`. At runtime the value is a
-// plain string (`category.name`), so this could move onto DataSelect with a
-// `String(name)` coercion — or DataSelect could be extended to accept a ReactNode
-// dropdown label (which would also let every filter show the `count` it already
-// fetches, e.g. "Spaces (12)"). Left as the lower-level inline `items` fix for now.
-export const ToolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
+// Moved back onto DataSelect (SESSION_0355): the prior inline-`items` exception
+// existed only because `FilterOption.name` is typed `ReactNode` (Dirstarter
+// boilerplate shape) and wasn't assignable to DataSelect's string-only `label`.
+// DataSelect now accepts an optional ReactNode row `content`, so the name renders
+// in the dropdown row while a coerced string drives the trigger/typeahead/a11y.
+export const ToolFilters = () => {
   const t = useTranslations("tools.filters")
   const { filters, updateFilters } = useFilters<ToolFilterSchema>()
   const { result, execute } = useAction(findFilterOptions)
@@ -32,25 +24,22 @@ export const ToolFilters = ({ ...props }: ComponentProps<typeof Select>) => {
   return (
     <>
       {result.data?.map(({ type, options }) => (
-        <Select
+        <DataSelect
           key={type}
           value={filters[type]}
           onValueChange={value => updateFilters({ [type]: value as string })}
-          items={Object.fromEntries(options.map(({ slug, name }) => [slug, name]))}
-          {...props}
-        >
-          <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">
-            <SelectValue placeholder={t(`all_${plur(type)}`)} />
-          </SelectTrigger>
-
-          <SelectContent align="end">
-            {options.map(({ slug, name }) => (
-              <SelectItem key={slug} value={slug}>
-                {name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={options.map(({ slug, name }) => ({
+            value: slug,
+            // `name` is a plain string at runtime; coerce for the string-only
+            // trigger/typeahead label and pass the original node as the row content.
+            label: String(name),
+            content: name,
+          }))}
+          placeholder={t(`all_${plur(type)}`)}
+          size="lg"
+          triggerClassName="w-auto min-w-40 max-sm:flex-1"
+          align="end"
+        />
       ))}
     </>
   )

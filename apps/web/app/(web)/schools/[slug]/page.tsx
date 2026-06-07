@@ -6,6 +6,7 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { OrgClaimCta } from "~/components/web/claims/org-claim-cta"
 import { PromotionTimeline } from "~/components/web/promotion-events/promotion-timeline"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -13,6 +14,7 @@ import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { siteConfig } from "~/config/site"
+import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
@@ -64,7 +66,7 @@ export default async function SchoolDetailPage({ params }: Props) {
 
   if (!school) notFound()
 
-  const [relatedSchools, promotionTimeline] = await Promise.all([
+  const [relatedSchools, promotionTimeline, session] = await Promise.all([
     findRelatedSchools({
       schoolId: school.id,
       brand,
@@ -72,6 +74,7 @@ export default async function SchoolDetailPage({ params }: Props) {
       state: school.state,
     }),
     getPromotionTimelineForOrganization(school.id),
+    getServerSession(),
   ])
 
   // Derived values --------------------------------------------------------
@@ -152,6 +155,16 @@ export default async function SchoolDetailPage({ params }: Props) {
           </Stack>
         </IntroDescription>
       </Intro>
+
+      {!school.ownerId && (
+        <OrgClaimCta
+          organizationId={school.id}
+          organizationName={school.name}
+          noun="school"
+          returnPath={`/schools/${school.slug}`}
+          isSignedIn={Boolean(session?.user)}
+        />
+      )}
 
       {/* Address + Disciplines content / Overview + Contact + Affiliation sidebar */}
       <Section>

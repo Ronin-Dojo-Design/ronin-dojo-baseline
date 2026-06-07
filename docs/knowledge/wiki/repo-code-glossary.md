@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-06
 updated: 2026-06-07
-last_agent: claude-session-0354
+last_agent: claude-session-0355
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -138,7 +138,10 @@ commit) so the term is concrete, not abstract.
 - **LineageTree** — a public or private family-tree-style view of martial arts relationships.
 - **LineageNode** — the person identity point inside lineage data.
 - **LineageTreeMember** — a person's membership in a specific lineage tree, including visual parent, sort order, and public display flags.
-- **DataSelect** — the id/slug-aware `Select` wrapper (`components/common/data-select.tsx`). Takes `options:{value,label}[]` and forwards a `value→label` map to Base UI `Select.Root` so a preset id renders its label, not the raw cuid (the systemic WL-P1-7 fix). Use it for any Select whose value is an id/slug; exceptions are Selects with ReactNode labels (see `tool-filters`).
+- **DataSelect** — the id/slug-aware `Select` wrapper (`components/common/data-select.tsx`). Takes `options:{value,label}[]` and forwards a `value→label` map to Base UI `Select.Root` so a preset id renders its label, not the raw cuid (the systemic WL-P1-7 fix). Use it for any Select whose value is an id/slug. SESSION_0355 added an optional per-option `content?: ReactNode` (resolved by `dataSelectRowContent`) that renders a **rich dropdown row** (e.g. a belt swatch) while `label` still drives the collapsed trigger, typeahead, and a11y — so the prior ReactNode-label exception is removed and `tool-filters` is back on `DataSelect`. (For *searchable* person/org pickers use `ComboboxSelector`, not `DataSelect`.)
+- **BeltSwatch** — the small belt-color swatch primitive (`components/common/belt-swatch.tsx`), driven by `Rank.colorHex` data via a data-bound SVG `fill` (never a hardcoded colour or inline `style`). The reusable consolidation of the per-surface bespoke belt-color treatments.
+- **Person-presentation contract** — the role-agnostic rule that a person is rendered the same everywhere (avatar `passport.avatarUrl ?? user.image` + name + belt/rank + disciplines + location), regardless of role (member/student/instructor/owner). "The instructor avatar should not be just for instructors." Staged in `petey-plan-0356`.
+- **Register vs Claim** — two distinct directory entry points. **Register** = a visitor self-creates a *new* entity (org via `/organizations/new`; person via signup→onboarding). **Claim** = a user takes ownership of an *existing* owner-less/placeholder entity (`ProfileClaimRequest`). The unified "search-first → claim if it exists, else create" funnel (the Dirstarter submit pattern, to govern all registers/claims/invites) is staged in `petey-plan-0356`.
 - **ProfileClaimRequest** — a request to take ownership of an "unclaimed" directory subject, reviewed by an admin (mirrors `LineageClaimRequest` but for the directory). Subject is an owner-less `Organization` or a placeholder-`User` `DirectoryProfile`. Distinct from a lineage claim (which targets a `LineageNode` on a tree).
 - **Claimable** — a directory subject that can be claimed: an `Organization` with no `ownerId`, or a `DirectoryProfile` whose `User.isPlaceholder` is true (a legacy import with no login account).
 - **Claim teaser** — the public "mock profile" shown on `/directory/[slug]` for a claimable placeholder person instead of an empty profile/404: a `ProfileHero` preview + skeleton sections + a "Claim this profile" CTA, designed to entice the real owner to claim it.

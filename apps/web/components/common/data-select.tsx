@@ -12,11 +12,24 @@ import {
 /**
  * A single option for {@link DataSelect}. `value` is the id/slug stored in
  * state/DB/URL; `label` is what the user sees.
+ *
+ * `label` stays a required string because Base UI resolves the collapsed
+ * trigger value, typeahead, and a11y name from the `items` map (see
+ * {@link buildSelectItems}) — never from the dropdown row's React tree. The
+ * optional `content` overrides ONLY the open dropdown row, letting a row carry
+ * a belt-color swatch, school logo, person avatar, etc. while the trigger stays
+ * the plain `label`.
  */
 export type DataSelectOption = {
   value: string
   label: string
   disabled?: boolean
+  /**
+   * Optional rich dropdown-row content (e.g. swatch/logo/avatar + text). Renders
+   * ONLY in the open popup row; the collapsed trigger + typeahead still use
+   * `label`. Falls back to `label` when omitted.
+   */
+  content?: ReactNode
 }
 
 /**
@@ -29,6 +42,18 @@ export type DataSelectOption = {
  */
 export function buildSelectItems(options: DataSelectOption[]): Record<string, string> {
   return Object.fromEntries(options.map(option => [option.value, option.label]))
+}
+
+/**
+ * The dropdown-row content for an option: the rich `content` when provided,
+ * else the plain string `label`.
+ *
+ * Exported so the fallback rule is unit-tested — the open popup is portaled
+ * (`SelectContent` → `SelectPrimitive.Portal`) and never renders into the SSR
+ * markup, so a render test can't assert the row's ReactNode directly.
+ */
+export function dataSelectRowContent(option: DataSelectOption): ReactNode {
+  return option.content ?? option.label
 }
 
 type SelectRootProps = ComponentProps<typeof Select>
@@ -75,8 +100,16 @@ export function DataSelect({
       </SelectTrigger>
       <SelectContent align={align} className={contentClassName}>
         {options.map(option => (
-          <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+            // Always forward the string `label`: when `content` is a ReactNode,
+            // SelectItem can't derive a typeahead/a11y label from the row's React
+            // tree, so without this the item's typeahead label would be undefined.
+            label={option.label}
+          >
+            {dataSelectRowContent(option)}
           </SelectItem>
         ))}
       </SelectContent>

@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-06-06
-last_agent: claude-session-0354
+updated: 2026-06-07
+last_agent: claude-session-0355
 ---
 
 # Wiki Change Log
@@ -285,3 +285,12 @@ Use this file only as historical context for early wiki adoption.
 - Added the `ProfileHero` + `ProfileClaimTeaser` public "mock profile" on `/directory/[slug]` for placeholder persons, and an owner live-preview in `profile-form`/`school-form`; fixed `organizationHref` null/unknown→`/organizations` link-through 404.
 - Resolved WL-P2-10: removed `@ai-sdk/google` + `github-slugger` and regenerated all 3 lockfiles; `pnpm install --frozen-lockfile` verified green.
 - Updated the custom component inventory + glossary (`DataSelect`, `ProfileHero`, `ProfileClaimRequest`, claimable, claim teaser); wrote `docs/petey-plan-0355.md` as the feature spec.
+
+## 2026-06-07 — SESSION_0355
+
+- Extended `DataSelect` with an optional per-option `content?: ReactNode` dropdown row (`dataSelectRowContent`) keeping `label` string-only for the trigger/typeahead/a11y; render test added; `tool-filters` moved back onto `DataSelect` (ReactNode exception removed).
+- Added `BeltSwatch` (data-driven SVG `fill`, no inline style) driven by `Rank.colorHex`; first consumer = the admin rank-award `DataSelect` rows (`colorHex` added to that query).
+- Completed the claim funnel discoverability: `OrgClaimCta` (owner-less org/school, sign-in-gated per SOP §5) + `ListingRegisterCta` ("Add your school" / "Join the directory") + a dedup hint on the create-org form (interim of the Dirstarter search-first pattern).
+- Browser-smoked the claimant-side flows (register CTAs + org claim CTA both auth states); admin-side smoke + person teaser env-blocked (non-admin dev user, no placeholder seed) — flagged.
+- Staged `docs/petey-plan-0356-profile-redesign.md` (one Person-presentation contract + BBL shell + unified register/claim/invite funnel) and `docs/petey-plan-0357-bbl-galaxy.md`; stamped `petey-plan-0337` dormant.
+- Logged 2 findings: the lineage profile-drawer tier/role gate must open for everyone (FINDING_01); the org/directory/profile domain-hub discovery gap (FINDING_02).

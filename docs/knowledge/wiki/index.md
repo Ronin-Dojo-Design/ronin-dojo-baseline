@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-07
 author: Brian + Copilot
-last_agent: claude-session-0353
+last_agent: claude-session-0355
 ---
 
 # LLM Wiki Index
@@ -459,7 +459,10 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0352](../../sprints/SESSION_0352.md) | session--implement | closed — `/directory` discipline filter standardized on `Discipline.slug`, shared `DirectoryFilters` Select added, People facet moved to paginated `searchDirectoryProfiles` with shared trust/tier/privacy projection, and fallow removed the dead unpaginated list query |
 | [SESSION_0353](../../sprints/SESSION_0353.md) | session--implement | closed — `/directory` location (Region→City) + org/school combobox filters with per-facet visibility on the shared brand-scoped projection; `ComboboxSelector` promoted admin→common (size parity + accessible clear); Base UI Select `items` label fix (Bug A: rank/discipline showed cuids/slugs) on discipline + lineage selected-rank; pure cross-brand/leak where-builder test; Desi motion-reduce + parity fixes; WL-P2-10 dep triage + WL-P1-7 systemic Select; prod lineage drawer (tier-gated) + 12-vs-17 (visibility) classified non-code |
 | [SESSION_0354](../../sprints/SESSION_0354.md) | session--implement | closed — WL-P1-7 systemic Select label fix via new `DataSelect` wrapper (+ filters converted, ~30 consumers `items`-fixed, `tool-filters` ReactNode exception); generic directory claim system (`ProfileClaimRequest` model + migration, `/admin/claims` review queue, public `ProfileClaimTeaser` + `ProfileHero`, owner live-preview); `organizationHref` link-through 404 fix; WL-P2-10 deps removed + 3 lockfiles regenerated (frozen-lockfile verified) |
+| [SESSION_0355](../../sprints/SESSION_0355.md) | session--open | closed — rich `DataSelect` labels (`content?: ReactNode` row + render test; `BeltSwatch` belt swatches on the rank select; `tool-filters` back on `DataSelect`); owner-less-org `OrgClaimCta` + `ListingRegisterCta` register discoverability + create-org dedup hint; claimant-side browser smoke; profile-redesign assessment (`petey-plan-0356`) + Galaxy staging (`petey-plan-0357`); 0337 stamped dormant; findings: drawer tier-gate + domain-hub discovery gap |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
+| [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
+| [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -599,6 +602,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | DirectoryFilters + profile projection | `components/web/directory/directory-filters.tsx`, `server/web/directory/profile-projection.ts` | SESSION_0352 |
 | ComboboxSelector (promoted) + directory location/org filters + `buildDirectoryProfileWhere` | `components/common/combobox-selector.tsx`, `components/web/directory/directory-filters.tsx`, `server/web/directory/{filter-options,profile-where}.ts` | SESSION_0353 |
 | `DataSelect` (id/slug-aware Select) + generic profile-claim system (`ProfileHero`, `ProfileClaimTeaser`, `/admin/claims`) | `components/common/data-select.tsx`, `components/web/profile/profile-hero.tsx`, `components/web/claims/*`, `server/{web,admin}/claims/*`, `app/admin/claims/*` | SESSION_0354 |
+| `DataSelect` rich rows (`content?: ReactNode`) + `BeltSwatch` + `OrgClaimCta` + `ListingRegisterCta` | `components/common/{data-select,belt-swatch}.tsx`, `components/web/claims/org-claim-cta.tsx`, `components/web/directory/listing-register-cta.tsx` | SESSION_0355 |
 | QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |

@@ -4,8 +4,8 @@ slug: petey-plan-0337-lineage-responsive-carousel
 type: plan
 status: active
 created: 2026-06-03
-updated: 2026-06-04
-last_agent: codex-session-0339
+updated: 2026-06-07
+last_agent: claude-session-0355
 pairs_with:
   - docs/sprints/SESSION_0337.md
   - docs/sprints/SESSION_0338.md
@@ -24,6 +24,15 @@ tags:
 ---
 
 # Petey Plan 0337 — Lineage Responsiveness + Carousel (adapt-not-port epic)
+
+> **⏸ DORMANT (SESSION_0355).** S0/S1/S2 are done (sessions 0337–0339); **S3 (carousel rail) /
+> S4 (generation rails) / S5 (adaptive-connector spike) are paused** and untouched for 15 sessions.
+> The plan is structurally valid — this is a *paused*, not abandoned, epic. **Resume pointer:** bow in
+> against this doc + the slice's `specs/*.md` + its `PORTMAP-NNNN`, then execute S3 next (operator may
+> run S3–S5 as the autonomous 3-session loop per the "Autonomous-run protocol" below). Reviewed dormant
+> by Petey at SESSION_0355 bow-in (operator chose "keep deferred").
+
+<!-- dormant banner above; original governing principle below -->
 
 > **Governing principle — features-not-pixels.** Operator (SESSION_0337): *"adapt old features to the
 > existing ones… take inspiration and feature behavior from old → new."* This is the porting runbook's

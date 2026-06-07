@@ -4,6 +4,7 @@ import type { SearchParams } from "nuqs"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H5 } from "~/components/common/heading"
 import { DirectoryQuery } from "~/components/web/directory/directory-query"
+import { ListingRegisterCta } from "~/components/web/directory/listing-register-cta"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
@@ -54,6 +55,15 @@ export default async function DirectoryPage({ searchParams }: Props) {
         <IntroTitle>{PAGE_TITLE}</IntroTitle>
         <IntroDescription>{PAGE_DESCRIPTION}</IntroDescription>
       </Intro>
+
+      {!session?.user && (
+        <ListingRegisterCta
+          title="Train martial arts?"
+          description="Join the directory to claim your profile, track your rank, and connect with schools."
+          href="/auth/login?next=/me"
+          cta="Join the directory"
+        />
+      )}
 
       <Section>
         <Section.Content>

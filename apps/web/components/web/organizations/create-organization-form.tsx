@@ -17,6 +17,8 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { Input } from "~/components/common/input"
+import { Link } from "~/components/common/link"
+import { Note } from "~/components/common/note"
 import {
   Select,
   SelectContent,
@@ -96,6 +98,16 @@ export const CreateOrganizationForm = ({
         <Stack direction="column" className="gap-5">
           {/* Hidden brand field */}
           <input type="hidden" {...form.register("brand")} />
+
+          {/* Dedup hint — interim of the Dirstarter search-first submit pattern
+              (unified claim-or-create funnel staged in the profile/onboarding epic). */}
+          <Note>
+            Already on the directory?{" "}
+            <Link href="/organizations" className="underline">
+              Search to claim your existing organization
+            </Link>{" "}
+            instead of creating a duplicate.
+          </Note>
 
           <FormField
             control={form.control}
