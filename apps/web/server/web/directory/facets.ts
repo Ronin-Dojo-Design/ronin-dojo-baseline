@@ -30,6 +30,11 @@ export type DirectoryFacetParams = {
   q?: string
   /** Discipline slug — shared cross-facet filter (people via membership slug). */
   discipline?: string
+  /** Organization (school) slug — applies to People (membership) + Trees (tree org). */
+  org?: string
+  /** Location filters — apply to People (profile) + Organizations (org city/state). */
+  city?: string
+  region?: string
   /** Organization type filter (orgs facet) — UI deferred; not the tab `type`. */
   orgType?: string
   page?: number
@@ -63,11 +68,14 @@ export async function getDirectoryFacets({
   const perPage = params.perPage && params.perPage > 0 ? params.perPage : DEFAULT_PER_PAGE
 
   if (tab === "organizations") {
+    // Orgs facet: discipline + location apply; org-slug does not (it would just be self-selection).
     const { schools, total } = await searchOrganizations(
       {
         q: params.q ?? "",
         type: params.orgType ?? "",
         discipline: params.discipline ?? "",
+        city: params.city ?? "",
+        region: params.region ?? "",
         sort: "",
         page,
         perPage,
@@ -79,6 +87,7 @@ export async function getDirectoryFacets({
   }
 
   if (tab === "trees") {
+    // Trees facet: discipline + org-slug apply; trees carry no location.
     const { trees, total } = await searchPublishedLineageTrees({
       brand,
       search: {
@@ -87,22 +96,24 @@ export async function getDirectoryFacets({
         page,
         perPage,
         discipline: params.discipline ?? "",
-        organization: "",
+        organization: params.org ?? "",
       },
     })
 
     return { tab, results: trees.map(mapLineageTreeToFacet), total, page, perPage }
   }
 
+  // People facet: discipline + org-slug + location all apply.
   const { members, total } = await searchDirectoryProfiles(
     {
       q: params.q ?? "",
       discipline: params.discipline ?? "",
+      org: params.org ?? "",
       sort: "",
       page,
       perPage,
-      city: "",
-      region: "",
+      city: params.city ?? "",
+      region: params.region ?? "",
     },
     brand,
     viewerUserId,

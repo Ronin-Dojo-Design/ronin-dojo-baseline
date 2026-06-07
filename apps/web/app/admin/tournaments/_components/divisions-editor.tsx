@@ -30,10 +30,10 @@ import { useAction } from "next-safe-action/hooks"
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Dialog,
   DialogContent,

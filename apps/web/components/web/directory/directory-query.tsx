@@ -35,6 +35,9 @@ const DirectoryQuery = async ({
     params: {
       q: params.q || undefined,
       discipline: params.discipline || undefined,
+      org: params.org || undefined,
+      city: params.city || undefined,
+      region: params.region || undefined,
       page: params.page,
       perPage: params.perPage,
     },

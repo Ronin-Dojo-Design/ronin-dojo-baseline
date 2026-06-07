@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-06-05
-last_agent: codex-session-0347
+updated: 2026-06-06
+last_agent: claude-session-0353
 ---
 
 # Wiki Change Log
@@ -270,3 +270,10 @@ Use this file only as historical context for early wiki adoption.
 - Added the shared `/directory` discipline filter on `Discipline.slug` and moved the People facet onto paginated `searchDirectoryProfiles`.
 - Added `profile-projection.ts` and a focused projection test to preserve DirectoryProfile privacy, lineage trust badges, and listing-tier behavior across directory People cards.
 - Updated the custom component inventory and glossary for `DirectoryFilters`, slug/cross-facet/pagination/projection terms, and recorded the fallow cleanup of the dead unpaginated People list query.
+
+## 2026-06-06 — SESSION_0353
+
+- Added `/directory` location (Region→City selects) + org/school searchable-combobox filters with per-facet visibility, on the shared brand-scoped projection; extracted the testable `buildDirectoryProfileWhere`.
+- Promoted `ComboboxSelector` admin→common (added `size`/`clearLabel` + accessible clear button) and applied Desi's parity + site-wide `motion-reduce` fixes.
+- Fixed Bug A (Base UI Select rendered raw id/slug on preset) via `items` on the discipline + lineage selected-rank Selects; cataloged the systemic ~17-consumer sweep as WL-P1-7.
+- Triaged WL-P2-10 deps (keep `tailwind-merge`/`@react-email/preview-server`; `@ai-sdk/google`/`github-slugger` removable, deferred for triple-lockfile reconciliation) and classified two prod lineage reports as non-code (drawer tier-gate; 12-vs-17 visibility).

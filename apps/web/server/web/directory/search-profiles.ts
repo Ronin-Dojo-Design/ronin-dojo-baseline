@@ -1,10 +1,11 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
-import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
+import type { Brand } from "~/.generated/prisma/client"
 import { FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY } from "~/lib/entitlements/lineage-tier-policy"
 import type { MemberFilterParams } from "~/server/web/directory/member-schema"
 import { directoryProfileListPayload } from "~/server/web/directory/payloads"
 import { projectDirectoryProfileListItem } from "~/server/web/directory/profile-projection"
+import { buildDirectoryProfileWhere } from "~/server/web/directory/profile-where"
 import { getLineageProfileDetailRenderPoliciesForUsers } from "~/server/web/entitlements/lineage-tier-policy"
 import { db } from "~/services/db"
 
@@ -23,42 +24,18 @@ export const searchDirectoryProfiles = async (
   cacheTag("directory-profiles")
   cacheLife("minutes")
 
-  const { q, discipline, city, region, sort, page, perPage } = search
+  const { q, discipline, org, city, region, sort, page, perPage } = search
   const start = performance.now()
   const skip = (page - 1) * perPage
   const take = perPage
   const [sortBy, sortOrder] = sort ? sort.split(".") : [undefined, undefined]
 
-  const allowedVisibility: DirectoryVisibility[] = viewerUserId
-    ? ["PUBLIC", "MEMBERS_ONLY"]
-    : ["PUBLIC"]
-
-  // Build the where clause
-  const where: Record<string, unknown> = {
-    visibility: { in: allowedVisibility },
-    user: {
-      memberships: {
-        some: {
-          organization: { brand },
-          ...(discipline && { discipline: { slug: discipline } }),
-        },
-      },
-    },
-  }
-
-  if (city) {
-    where.locationCity = { contains: city, mode: "insensitive" }
-  }
-  if (region) {
-    where.locationRegion = { contains: region, mode: "insensitive" }
-  }
-  if (q) {
-    where.OR = [
-      { user: { name: { contains: q, mode: "insensitive" } } },
-      { locationCity: { contains: q, mode: "insensitive" } },
-      { locationRegion: { contains: q, mode: "insensitive" } },
-    ]
-  }
+  // Brand-pinned, privacy-aware where clause (extracted + unit-tested in profile-where.ts).
+  const where = buildDirectoryProfileWhere(
+    { q, discipline, org, city, region },
+    brand,
+    viewerUserId,
+  )
 
   const [profiles, total] = await db.$transaction([
     db.directoryProfile.findMany({

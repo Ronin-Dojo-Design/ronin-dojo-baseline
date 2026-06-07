@@ -12,6 +12,8 @@ export const schoolFilterParams = {
   perPage: parseAsInteger.withDefault(24),
   type: parseAsString.withDefault(""),
   discipline: parseAsString.withDefault(""),
+  city: parseAsString.withDefault(""),
+  region: parseAsString.withDefault(""),
 }
 
 export const schoolFilterParamsCache = createSearchParamsCache(schoolFilterParams)

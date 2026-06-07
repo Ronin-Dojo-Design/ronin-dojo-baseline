@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 import { type ComponentProps, use } from "react"
 import { toast } from "sonner"
 import { LeadSource } from "~/.generated/prisma/browser"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Form,
   FormControl,

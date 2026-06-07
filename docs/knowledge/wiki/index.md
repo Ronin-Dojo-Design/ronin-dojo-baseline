@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-06
+updated: 2026-06-07
 author: Brian + Copilot
-last_agent: codex-session-0352
+last_agent: claude-session-0353
 ---
 
 # LLM Wiki Index
@@ -456,6 +456,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0350](../../sprints/SESSION_0350.md) | session--implement | closed — first faceted `/directory` browse slice (people / schools-orgs / lineage trees) via a presentation-only `DirectoryFacetResult` adapter + shared `FacetResultCard` + result-type segmented control reusing the `search*` family; working people search; deleted orphaned `members/*` + dead directory components; `fallow` bow-out trial |
 | [SESSION_0351](../../sprints/SESSION_0351.md) | session--open | closed — quick schema/repo cleanup alignment: legacy `ENTER_THE_DOJO.md` schema intake, admin Repo Docs navigator + Graphify links, repo alignment report, archive status cleanup, DavidAnson markdownlint tooling, pulse/glossary expansion, and fallow follow-up ledger |
 | [SESSION_0352](../../sprints/SESSION_0352.md) | session--implement | closed — `/directory` discipline filter standardized on `Discipline.slug`, shared `DirectoryFilters` Select added, People facet moved to paginated `searchDirectoryProfiles` with shared trust/tier/privacy projection, and fallow removed the dead unpaginated list query |
+| [SESSION_0353](../../sprints/SESSION_0353.md) | session--implement | closed — `/directory` location (Region→City) + org/school combobox filters with per-facet visibility on the shared brand-scoped projection; `ComboboxSelector` promoted admin→common (size parity + accessible clear); Base UI Select `items` label fix (Bug A: rank/discipline showed cuids/slugs) on discipline + lineage selected-rank; pure cross-brand/leak where-builder test; Desi motion-reduce + parity fixes; WL-P2-10 dep triage + WL-P1-7 systemic Select; prod lineage drawer (tier-gated) + 12-vs-17 (visibility) classified non-code |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -593,6 +594,7 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | LineageTrustBadge/LineageClaimBadge | `components/web/lineage/lineage-trust-badge.tsx` | SESSION_0349 |
 | FacetResultCard + DirectoryFacetResult + getDirectoryFacets | `components/web/directory/facet-result-card.tsx`, `lib/directory/facet-result.ts`, `server/web/directory/facets.ts` | SESSION_0350 |
 | DirectoryFilters + profile projection | `components/web/directory/directory-filters.tsx`, `server/web/directory/profile-projection.ts` | SESSION_0352 |
+| ComboboxSelector (promoted) + directory location/org filters + `buildDirectoryProfileWhere` | `components/common/combobox-selector.tsx`, `components/web/directory/directory-filters.tsx`, `server/web/directory/{filter-options,profile-where}.ts` | SESSION_0353 |
 | QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |

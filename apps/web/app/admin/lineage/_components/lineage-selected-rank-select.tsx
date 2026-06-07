@@ -51,6 +51,13 @@ export function LineageSelectedRankSelect({
     return <Note className="text-xs">No rank awards on this profile yet.</Note>
   }
 
+  // Base UI Select resolves the trigger label from `items` even before the popup
+  // mounts; without it a DB-preset value renders as the raw rankAward id (cuid).
+  const rankItems: Record<string, string> = {
+    [CLEAR_SELECTED_RANK]: "No selected rank",
+    ...Object.fromEntries(rankAwards.map(award => [award.id, rankAwardLabel(award)])),
+  }
+
   function handleValueChange(nextValue: string) {
     const previousValue = value
     setValue(nextValue)
@@ -82,7 +89,11 @@ export function LineageSelectedRankSelect({
       <Label className="sr-only" htmlFor={`selected-rank-${member.id}`}>
         {label}
       </Label>
-      <Select value={value} onValueChange={next => handleValueChange(String(next))}>
+      <Select
+        value={value}
+        onValueChange={next => handleValueChange(String(next))}
+        items={rankItems}
+      >
         <SelectTrigger id={`selected-rank-${member.id}`} size="sm" disabled={action.isExecuting}>
           <SelectValue placeholder="Select display rank" />
         </SelectTrigger>

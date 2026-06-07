@@ -2,7 +2,7 @@
 
 import { CheckIcon, ChevronsUpDownIcon, XIcon } from "lucide-react"
 import { useState } from "react"
-import { Button } from "~/components/common/button"
+import { Button, type ButtonProps } from "~/components/common/button"
 import {
   Command,
   CommandEmpty,
@@ -27,6 +27,10 @@ type ComboboxSelectorProps = {
   searchPlaceholder?: string
   emptyMessage?: string
   clearable?: boolean
+  /** Trigger height/radius token. Defaults to `md`; use `lg` to align with `Select` triggers. */
+  size?: ButtonProps["size"]
+  /** Accessible label for the clear button (when `clearable`). */
+  clearLabel?: string
 }
 
 export function ComboboxSelector({
@@ -37,42 +41,49 @@ export function ComboboxSelector({
   searchPlaceholder = "Search...",
   emptyMessage = "No results found.",
   clearable = false,
+  size = "md",
+  clearLabel = "Clear selection",
 }: ComboboxSelectorProps) {
   const [open, setOpen] = useState(false)
   const selected = options.find(o => o.id === value)
+  const showClear = clearable && Boolean(value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="secondary"
-            size="md"
-            role="combobox"
-            aria-expanded={open}
-            className={cx(
-              "w-full justify-between font-normal",
-              !selected && "text-muted-foreground",
-            )}
-            suffix={
-              clearable && value ? (
-                <XIcon
-                  className="size-3.5 shrink-0 opacity-50 hover:opacity-100"
-                  onClick={e => {
-                    e.stopPropagation()
-                    onValueChange("")
-                    setOpen(false)
-                  }}
-                />
-              ) : (
-                <ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-50" />
-              )
-            }
-          />
-        }
-      >
-        {selected?.name ?? placeholder}
-      </PopoverTrigger>
+      <div className="relative w-full">
+        <PopoverTrigger
+          render={
+            <Button
+              variant="secondary"
+              size={size}
+              role="combobox"
+              aria-expanded={open}
+              className={cx(
+                "w-full justify-between font-normal",
+                showClear && "pr-14",
+                !selected && "text-muted-foreground",
+              )}
+              suffix={<ChevronsUpDownIcon className="size-3.5 shrink-0 opacity-50" />}
+            />
+          }
+        >
+          {selected?.name ?? placeholder}
+        </PopoverTrigger>
+
+        {showClear && (
+          <button
+            type="button"
+            aria-label={clearLabel}
+            onClick={() => {
+              onValueChange("")
+              setOpen(false)
+            }}
+            className="absolute inset-y-0 right-7 z-10 inline-flex items-center px-1.5 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <XIcon className="size-3.5 shrink-0" />
+          </button>
+        )}
+      </div>
 
       <PopoverContent className="w-(--anchor-width) p-0" align="start">
         <Command>

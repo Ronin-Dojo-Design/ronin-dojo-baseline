@@ -5,8 +5,8 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Dialog,
   DialogContent,

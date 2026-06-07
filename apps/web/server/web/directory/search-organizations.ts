@@ -17,12 +17,13 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
   cacheTag("organizations")
   cacheLife("minutes")
 
-  const { q, type, discipline, sort, page, perPage } = search
+  const { q, type, discipline, city, region, sort, page, perPage } = search
   const start = performance.now()
   const skip = (page - 1) * perPage
   const take = perPage
   const { sortBy, sortOrder } = parseSort(sort, SORTABLE_ORGANIZATION_COLUMNS)
 
+  // brand is always server-derived; filters only narrow within the brand.
   const where: Record<string, unknown> = { brand }
 
   if (type) {
@@ -30,6 +31,13 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
   }
   if (discipline) {
     where.disciplines = { some: { discipline: { slug: discipline } } }
+  }
+  if (city) {
+    where.city = { contains: city, mode: "insensitive" }
+  }
+  if (region) {
+    // Organizations store region in the `state` column.
+    where.state = { contains: region, mode: "insensitive" }
   }
   if (q) {
     where.OR = [
