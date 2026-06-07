@@ -2,9 +2,9 @@
 title: "SESSION 0354 — Select label fix, directory link-through + claim teaser, generic claim model, deps hygiene"
 slug: session-0354
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-06
-updated: 2026-06-06
+updated: 2026-06-07
 last_agent: claude-session-0354
 sprint: S6
 pairs_with:
@@ -349,5 +349,5 @@ Extend `DataSelect` with a ReactNode dropdown label (keep `label: string` for th
 | Review & Recommend | Next session goal + first task written. |
 | Memory sweep | Memory updated (DataSelect pattern + claim system). |
 | Next session unblock check | Unblocked: browser smoke + org-claim CTA are self-contained. |
-| Git hygiene | Branch `main`; FS-0024 guard passed; single push at close. |
-| Graphify update | `graphify update` run at bow-out — stats reported in commit/close. |
+| Git hygiene | Branch `main`; FS-0024 guard passed; commit `5667d0f` pushed `6b0b57f..5667d0f` (+ docs-only finalization commit). |
+| Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` at bow-out — incremental rebuild (206 nodes / 1447 edges touched; report refreshed). |
