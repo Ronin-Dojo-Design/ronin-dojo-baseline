@@ -1,10 +1,10 @@
 ---
 title: "SESSION 0356 — Drawer-gate removal + combined directory/org/profile hub (+ bow-in step) + owed oRPC ADR"
 slug: session-0356
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-06-07
-updated: 2026-06-07
+updated: 2026-06-08
 last_agent: claude-session-0356
 sprint: S6
 pairs_with:
@@ -316,5 +316,5 @@ Graphify-query the BBL launch set + read `CUTOVER_CHECKLIST.md` (done partially 
 | Review & Recommend | Next session = BBL cutover focus + school-source fix. |
 | Memory sweep | drawer-gate memory (bug→fixed-by-removal); member view-model; BBL-focus + school-source; oRPC-state. |
 | Next session unblock check | BBL launch set + cutover checklist read; school-source mapping is the first concrete step. |
-| Git hygiene | Branch `main`; FS-0024 guard passed; commit `<filled at push>`. |
-| Graphify update | `<filled at push>`. |
+| Git hygiene | Branch `main`; FS-0024 guard passed; commit `cfacaa0` pushed `a687b13..cfacaa0`. |
+| Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` — incremental (265 nodes / 1113 edges touched; communities 1443). |
