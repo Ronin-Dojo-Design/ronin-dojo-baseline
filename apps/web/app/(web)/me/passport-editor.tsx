@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { toast } from "sonner"
-import type { DirectoryProfile, Passport } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
 import {
@@ -26,6 +25,7 @@ import {
 } from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
+import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
 import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
 import { SocialLinksEditor } from "./_components/social-links-editor"
 
@@ -33,8 +33,8 @@ import { SocialLinksEditor } from "./_components/social-links-editor"
 const str = (v: string | null | undefined) => v ?? ""
 
 type Props = {
-  passport: Passport
-  directoryProfile: DirectoryProfile
+  passport: PassportOne
+  directoryProfile: DirectoryProfileOne
   userId: string
   canUploadVideo: boolean
 }
@@ -56,7 +56,7 @@ export function PassportEditor({ passport, directoryProfile, userId, canUploadVi
 // Passport form
 // ---------------------------------------------------------------------------
 
-function PassportForm({ passport, userId }: { passport: Passport; userId: string }) {
+function PassportForm({ passport, userId }: { passport: PassportOne; userId: string }) {
   const { form, handleSubmitWithAction } = useHookFormAction(
     updatePassport,
     zodResolver(updatePassportSchema),
@@ -310,7 +310,7 @@ function DirectoryProfileForm({
   userId,
   canUploadVideo,
 }: {
-  directoryProfile: DirectoryProfile
+  directoryProfile: DirectoryProfileOne
   userId: string
   canUploadVideo: boolean
 }) {
