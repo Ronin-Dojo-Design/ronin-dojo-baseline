@@ -5,8 +5,8 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Form,
   FormControl,
@@ -25,6 +25,10 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
+import {
+  LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+} from "~/lib/entitlements/lineage-comp"
 import { cx } from "~/lib/utils"
 import { createInvite } from "~/server/admin/invites/actions"
 import { inviteSchema } from "~/server/admin/invites/schema"
@@ -52,6 +56,8 @@ export function InviteForm({
         maxUses: null,
         expiresAt: null,
         meta: null,
+        compTier: "NONE" as const,
+        compTermDays: null,
       },
     },
 
@@ -66,6 +72,7 @@ export function InviteForm({
       },
     },
   })
+  const compTier = form.watch("compTier")
 
   return (
     <Form {...form}>
@@ -112,7 +119,16 @@ export function InviteForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Invite Type</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={{
+                  ORGANIZATION: "Organization",
+                  PROGRAM: "Program",
+                  TOURNAMENT: "Tournament",
+                  EVENT: "Event",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -160,6 +176,57 @@ export function InviteForm({
                   type="datetime-local"
                   value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : ""}
                   onChange={e => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="compTier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Comp Tier</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value ?? "NONE"}
+                items={{
+                  NONE: "None",
+                  [LINEAGE_PREMIUM_ENTITLEMENT_KEY]: "Lineage Premium",
+                  [LINEAGE_ELITE_ENTITLEMENT_KEY]: "Lineage Elite",
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No comp" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="NONE">None</SelectItem>
+                  <SelectItem value={LINEAGE_PREMIUM_ENTITLEMENT_KEY}>Lineage Premium</SelectItem>
+                  <SelectItem value={LINEAGE_ELITE_ENTITLEMENT_KEY}>Lineage Elite</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="compTermDays"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Comp Term Days (optional)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Lifetime"
+                  disabled={!compTier || compTier === "NONE"}
+                  value={field.value != null ? String(field.value) : ""}
+                  onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
                 />
               </FormControl>
               <FormMessage />

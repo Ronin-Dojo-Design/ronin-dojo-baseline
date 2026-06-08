@@ -4,8 +4,8 @@ slug: dirstarter-commerce-alignment
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/monetization-entitlements-spec.md
@@ -25,7 +25,7 @@ backlinks:
 
 Map the Programs/Curriculum/Certification monetization work to current Dirstarter docs so Ronin extends the baseline instead of bypassing it.
 
-This page is a SESSION_0029 Dirstarter-baseline check artifact. It uses the live Dirstarter docs as of 2026-04-30. Note that the current Dirstarter URLs are `https://dirstarter.com/docs/content` and `https://dirstarter.com/docs/seo`; pre-SESSION_0029 references to `content-management` and `search-engine-optimization` are stale aliases.
+This page is a SESSION_0029 Dirstarter-baseline check artifact. It uses the live Dirstarter docs as of 2026-04-30. Note that the current Dirstarter URLs are `<https://dirstarter.com/docs/content`> and `<https://dirstarter.com/docs/seo`>; pre-SESSION_0029 references to `content-management` and `search-engine-optimization` are stale aliases.
 
 ## Required Alignment Table
 
@@ -45,7 +45,7 @@ This page is a SESSION_0029 Dirstarter-baseline check artifact. It uses the live
 
 | Baseline fact | Relevance to Ronin |
 | --- | --- |
-| Dirstarter uses modular App Router directories with `app`, `components`, `lib`, `prisma`, `server`, and `services`. | Ronin feature slices should keep using `server/web/<entity>` and existing component groups. |
+| Dirstarter uses modular App Router directories with `app`, `components`, `lib`, `prisma`, `server`, and `services`. | Ronin feature slices should keep using `server/web/&lt;entity&gt;` and existing component groups. |
 | Server-side code is organized by feature, with actions, queries, schemas, and related server code in feature folders. | Future Course/Entitlement/Checkout work should mirror Program CRUD and Dirstarter products/actions patterns. |
 | Dirstarter's Prisma docs name `prisma/schema.prisma`, `prisma/seed.ts`, and `services/db.ts` as core files. | Schema work must update seed/proof paths and run Prisma validation/generation where models change. |
 | Dirstarter uses Better Auth with role-based access control and session management. | Entitlements complement auth; they do not replace auth or role checks. |
@@ -90,14 +90,18 @@ This page is a SESSION_0029 Dirstarter-baseline check artifact. It uses the live
 ## Launch-Safe Alignment Path
 
 1. Keep SESSION_0029 docs as the contract.
-2. Build the entitlement layer before further monetized UI.
-3. Add Stripe IDs to current `PricingPlan` before introducing an internal `Product` table.
-4. Gate protected Program/Course/Certification content through auth + brand + entitlement/enrollment checks.
-5. Add public landing pages using Dirstarter page/SEO/theming patterns.
-6. Add cron-backed expiry/sync only after the billing/entitlement tables exist.
+1. Build the entitlement layer before further monetized UI.
+1. Add Stripe IDs to current `PricingPlan` before introducing an internal `Product` table.
+1. Gate protected Program/Course/Certification content through auth + brand + entitlement/enrollment checks.
+1. Add public landing pages using Dirstarter page/SEO/theming patterns.
+1. Add cron-backed expiry/sync only after the billing/entitlement tables exist.
 
 ## Open Questions
 
 1. Should the local [Dirstarter Docs Inventory](../knowledge/wiki/dirstarter-docs-inventory.md) be refreshed because current live paths changed?
-2. Should `D-014` resolve by quarantining Dirstarter `Tool` monetization or by promoting its patterns into the entitlement design?
-3. Should the future internal `Product` catalog live in core platform or school operations ownership?
+1. Should the future internal `Product` catalog live in core platform or school operations ownership?
+
+## Resolved Since Original Draft
+
+- `D-014` is resolved: Dirstarter `Tool` stays and is repurposed as the paid directory/listing substrate until a focused relabel/promotion lane changes it.
+- Stripe/webhook/entitlement proof has advanced beyond this original alignment artifact; use [Monetization and Entitlements Spec](monetization-entitlements-spec.md), the payment/security docs, and the latest SESSION file for launch-state truth.

@@ -84,7 +84,13 @@
       "a11y": {
         "useAnchorContent": "off",
         "useValidAnchor": "off",
-        "useAltText": "off"
+        "useAltText": "off",
+        "noLabelWithoutControl": {
+          "level": "error",
+          "options": {
+            "inputComponents": ["Checkbox"]
+          }
+        }
       },
       "nursery": {
         "useSortedClasses": {

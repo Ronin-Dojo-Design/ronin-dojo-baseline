@@ -5,8 +5,8 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Dialog,
   DialogContent,
@@ -233,6 +233,7 @@ export function WalkInRegistrationDialog({
                           form.setValue("tournamentRoleId", division.roleRequiredId)
                         }
                       }}
+                      items={Object.fromEntries(divisions.map(d => [d.id, d.name]))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select division" />
@@ -258,7 +259,11 @@ export function WalkInRegistrationDialog({
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(roles.map(r => [r.id, r.name]))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
@@ -283,7 +288,13 @@ export function WalkInRegistrationDialog({
                 <FormItem>
                   <FormLabel>Payment status</FormLabel>
                   <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(
+                        PAYMENT_STATUS_OPTIONS.map(opt => [opt.value, opt.label]),
+                      )}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Payment status" />
                       </SelectTrigger>

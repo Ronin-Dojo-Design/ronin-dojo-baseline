@@ -8,10 +8,10 @@ import type { ComponentProps } from "react"
 import type { FieldValues } from "react-hook-form"
 import { toast } from "sonner"
 import { Brand, ProgramStatus } from "~/.generated/prisma/browser"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { RelationSelector } from "~/components/admin/relation-selector"
 import { AnimatedContainer } from "~/components/common/animated-container"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Form,
   FormControl,
@@ -167,7 +167,13 @@ export function ProgramForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(Brand).map(b => [b, b.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />

@@ -4,9 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-04-29
-author: Brian + ChatGPT
-last_agent: codex-session-0025
+updated: 2026-06-03
+last_agent: claude-session-0335
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -188,6 +187,15 @@ When there is conflict, resolve in this order:
 4. current auth doc for auth/brand context
 5. latest session file for in-flight operational state
 6. legacy/reference docs only if needed
+
+### 4. Domain hubs — start here for domain-scoped work
+
+For work scoped to one feature domain, the fastest path is the domain hub, not a repo-wide search. Each hub maps that domain's canonical docs **and** code entry points so a session opens the right file directly. Hubs live in [`docs/runbooks/domain-features/`](../../runbooks/domain-features/) and are listed in the [Runbooks Domain Hub](../../runbooks/README.md#domain-features); a doc's `domain:` frontmatter field tags it to one.
+
+- [Lineage Domain Hub](../../runbooks/domain-features/lineage-hub.md) — `domain: lineage` (data model, ADR 0016, routes, read model, libs, privacy invariants, epic state).
+- Other domain runbooks (courses, listings, invites, nav) live alongside it; promote any to a full hub when its doc set spans multiple locations.
+
+When no hub exists for a domain yet, the truth-resolution order above still governs.
 
 ## Relationships
 

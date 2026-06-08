@@ -4,8 +4,8 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: copilot-session-0300
+updated: 2026-06-04
+last_agent: codex-session-0344
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/resend-setup-runbook.md
@@ -18,6 +18,7 @@ backlinks:
   - docs/sprints/SESSION_0258.md
   - docs/sprints/SESSION_0259.md
   - docs/sprints/SESSION_0260.md
+  - docs/sprints/SESSION_0344.md
 ---
 
 # SOP — End-to-End User Lifecycle
@@ -156,7 +157,7 @@ Membership
 Browse programs (filtered by AgeGroup + SkillLevel eligibility)
    |
    v
-Select PricingPlan (monthly / drop-in / punch card / private lesson)
+Select PricingPlan (monthly / drop-in / punch card / private lesson / lineage membership)
    |
    v
 Payment (Stripe checkout → webhook → entitlement created)
@@ -185,6 +186,10 @@ flowchart TD
 ## Outcome
 
 The user can progress in a structured training path.
+
+Stripe does not create or transition `Membership.status`. Per
+[`ADR 0019`](../../architecture/decisions/0019-membership-lifecycle-ownership.md),
+Membership remains community/admin state; paid access is represented by `UserEntitlement`.
 
 ---
 
@@ -329,7 +334,7 @@ flowchart TD
 # 8c. Payment lifecycle (SESSION_0146)
 
 ```text
-User selects program / membership / tournament
+User selects program / lineage membership tier / tournament
   |
   v
 PricingPlan lookup (amountCents, Stripe IDs)
@@ -337,14 +342,15 @@ PricingPlan lookup (amountCents, Stripe IDs)
   v
 Stripe Checkout Session
   |
-  +--> success: webhook → create Membership/Enrollment/Entitlement
+  +--> success: webhook → grant UserEntitlement
+  +--> program-scoped success: webhook → create ProgramEnrollment
   +--> cancel: return to selection
   |
   v
 Ongoing: subscription renewals / punch card tracking / expiry
   |
   v
-Cancellation: webhook → transition to EXPIRED
+Cancellation: webhook → revoke/sunset subscription-sourced UserEntitlement
 ```
 
 ## Lifecycle variants by pricing model
@@ -356,6 +362,9 @@ Cancellation: webhook → transition to EXPIRED
 | PUNCH_CARD | One-time prepay | Session count tracked via Entitlement |
 | PRIVATE_LESSON | One-time per lesson | No ongoing tracking |
 | FREE_TRIAL | No charge | Expiry date on Entitlement |
+
+Membership status is not owned by Stripe. `Membership.status` is community/admin state; subscription
+and purchase access live in `UserEntitlement` and read helpers.
 
 ---
 

@@ -4,7 +4,7 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-29
+updated: 2026-06-08
 last_agent: claude-session-0299
 pairs_with:
   - docs/rituals/closing.md
@@ -84,6 +84,17 @@ Then open the exact files Graphify identifies and verify them by direct source/d
 **Doc discovery aids (optional, not gates):** when a task touches an operational area, start from the [runbooks domain hub](../runbooks/README.md) and jump to the relevant module instead of guessing filenames. For doc-only, full-text lookup, regenerate and search the navigator: `bun run docs:nav` then open `docs/index.html`. Division of labor — Graphify answers "what *code* relates to X"; the navigator answers "what *docs* exist about X."
 
 Record the query and selected files in the SESSION file if Graphify changes what you open. Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
+
+### 3d. Domain-hub-first for feature lanes (read before grilling/planning)
+
+When today's task touches a **feature domain that has a domain hub**, read it **before** you grill or plan — in this order: **domain hub → the SOP/ADR it points to → the route inventory** in the hub. The hub is a surface-index that prevents re-discovering capability that already exists (the SESSION_0356 "are we querying in the right workflow timeline?" fix; FINDING_02). Querying Graphify by a narrow task noun *after* you know the surface beats guessing the surface from the noun.
+
+Current domain hubs (`docs/runbooks/domain-features/`):
+
+- [Lineage Domain Hub](../runbooks/domain-features/lineage-hub.md) — promotion provenance, trees, canvas, claim.
+- [Directory / Organization / Profile Domain Hub](../runbooks/domain-features/directory-org-profile-hub.md) — discovery, org/school/person profiles, the register vs claim funnels.
+
+If the lane touches a domain with **no** hub yet, that is a signal to build one as part of the work (mirror an existing hub). **Never assert a capability is missing from an errored/empty search** — confirm against the hub + route inventory first.
 
 ### 4. Identify ONE task for this session
 

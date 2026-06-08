@@ -4,12 +4,13 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-05-27
-last_agent: copilot-session-0271
+updated: 2026-06-05
+last_agent: codex-session-0347
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
   - docs/protocols/code-guardrails.md
+  - docs/knowledge/wiki/test-fail-fix-ledger.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0249.md
@@ -92,31 +93,62 @@ flowchart TD
 
 - **Runtime:** Bun (`bun:test`)
 - **Run single file:** `cd apps/web && bun test <path>`
-- **Run all (non-e2e):** `cd apps/web && bun test --parallel --path-ignore-patterns='e2e/**'`
+- **Run all (non-e2e):** `cd apps/web && bun run test` (= `bun test --parallel=1 --path-ignore-patterns='e2e/**'`)
 - **Package script:** `bun run test` (defined in `apps/web/package.json`)
 - **No `@types/bun`** — use `// @ts-expect-error` on bun:test imports
 - **Real Postgres** — all tests hit `ronindojo_dev`, not mocks or SQLite
 
-### ⚠ `--parallel` is mandatory for the full suite
+### ⚠ The full suite is a two-headed concurrency problem — use `--parallel=1`
 
-Bun's default test runner shares the module registry across files in the same process. When `mock.module()` is used (as in all safe-action tests), the mocks leak into other test files' module resolution — causing `db.someModel` to be `undefined` and ~63 false failures.
+The full suite has **two** failure modes that pull in opposite directions. The canonical command
+`bun run test` (= `bun test --parallel=1 --path-ignore-patterns='e2e/**'`) is the only setting that avoids
+both. See [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md) (TFF-001..005) for the
+clustered evidence.
 
-**Always use `--parallel`** when running the full suite. This spawns separate worker processes per test file, providing true process isolation. `--parallel` implies `--isolate`, so no isolation is lost. Individual files (`bun test <path>`) work fine without it.
+**Head 1 — mock-module leakage (needs the parallel/isolate code path).** Bun's *non-parallel* runner
+shares the module registry across files in one process. When `mock.module()` is used (as in all
+safe-action tests), the mocks leak into other files' module resolution — `db.someModel` becomes
+`undefined` and ~63 false failures appear. So plain `bun test --path-ignore-patterns='e2e/**'` (no
+`--parallel`) is **wrong**.
 
-> **History:** Prior to SESSION_0232, the SOP recommended `--isolate`. That flag isolates globals but shares the module registry, which is insufficient when `mock.module()` is used. `--parallel` was adopted in SESSION_0232 after diagnosing 63 false failures caused by mock cross-contamination.
+**Head 2 — DB over-subscription + cross-file worker pollution (needs bounded concurrency).** `--parallel`
+isolates *across* worker processes, but each worker still runs many files **in-process**, and the default
+worker count is the CPU core count (8 here). At 75-file scale, that over-subscribes the single Postgres.app
+instance (`ronindojo_dev`) → `beforeAll`/`afterAll` hook timeouts + cleanup FK races (SESSION_0341:
+21 fail + 1 error in 110s). Lowering to `--parallel=2` cut it to ~30s but still flaked ~1/3 of runs on
+`checkout-actions::createProgramEnrollmentCheckout` (two concurrent files contend on the shared-`brand`
+`StripeCustomer` lookup).
+
+**Resolution — `--parallel=1`.** One worker on the parallel/isolate path: per-file isolation (no Head-1
+leak) **and** sequential execution (no Head-2 contention). SESSION_0342 proved it green 4× consecutively:
+**418 pass / 0 fail across 75 files in ~67s**. Determinism beats the ~37s a higher worker count would save
+on a release gate.
+
+> **Scaling note:** if ~67s wall-clock becomes a pain, the industry-standard next step is **per-worker DB
+> isolation** (a separate database/schema per worker, e.g. clone a template DB or set a per-worker
+> `search_path`). That removes the shared-state contention so concurrency (`--parallel=N`) can return
+> safely. Do not just raise the worker count without it — you will reintroduce Head 2.
+>
+> **History:** Pre-SESSION_0232 the SOP recommended `--isolate` (isolates globals, shares the module
+> registry — insufficient under `mock.module()`). SESSION_0232 adopted `--parallel` after 63 mock-leak
+> failures. SESSION_0342 pinned it to `--parallel=1` after the suite grew to 75 files and the unbounded
+> default began over-subscribing Postgres.
 
 ```bash
-# ✅ Correct — full suite
-bun test --parallel --path-ignore-patterns='e2e/**'
+# ✅ Correct — full suite (deterministic green gate)
+bun run test                                        # = bun test --parallel=1 --path-ignore-patterns='e2e/**'
 
 # ✅ Correct — single file (isolation not needed)
 bun test server/web/disciplines/queries.integration.test.ts
 
-# ❌ Wrong — full suite without --parallel will show ~63 false failures
+# ❌ Wrong — no --parallel: shared module registry → ~63 mock.module() leak failures
 bun test --path-ignore-patterns='e2e/**'
 
-# ❌ Wrong — --isolate alone does not prevent mock.module() leakage
-bun test --isolate --path-ignore-patterns='e2e/**'
+# ❌ Wrong — unbounded --parallel (8 workers): over-subscribes Postgres → hook timeouts + FK races
+bun test --parallel --path-ignore-patterns='e2e/**'
+
+# ⚠ Faster but flaky (~1/3) — not a trustworthy gate without per-worker DB isolation
+bun test --parallel=2 --path-ignore-patterns='e2e/**'
 ```
 
 ---
@@ -633,6 +665,7 @@ it("creates audit log on transition", async () => {
 ### Wrapped safe-action tests (bun:test, real DB, harness via `lib/test/safe-action-env.ts`)
 
 - `server/admin/lineage/claim-review-actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, admin approve
+- `server/admin/entitlements/actions.safe-action.test.ts` — `adminActionClient` chain: unauth, non-admin, comp happy path, generic grant/revoke audit
 - `server/web/lineage/node-profile-actions.safe-action.test.ts` — `userActionClient` chain: unauth, authorized NODE_EDITOR
 - `server/web/enrollment/actions.safe-action.test.ts` — `userActionClient` chain: unauth, rate-limited, authorized enroll
 - `server/web/schedule/actions.safe-action.test.ts` — `userActionClient` chain: unauth, Zod validationErrors, authorized create + audit

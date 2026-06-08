@@ -37,11 +37,19 @@ so it does not need re-pasting at bow-in.
 - Run the **full** closing ritual including optional deep items: Reflections, hostile
   close review, evidence table, ADR check, memory sweep, and documenting new components
   in `docs/knowledge/wiki/custom-component-inventory.md`.
-- After git hygiene, refresh Graphify: `GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .`.
+- After git hygiene, refresh Graphify: `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`.
+- Route findings to their canonical ledger via the **finding router** (closing.md §6.7):
+  wiring→`wiring-ledger` (WL), drift→`drift-register` (D), SOP miss→`failed-steps-log` (FS),
+  unclean close→`incidents`, smoke boundary→`manual-boundary-registry`, decision→ADR.
 - **Standing authorization: stage, commit (conventional message), and push to `main`
   on completion** — trunk-based flow for this repo. Gates (typecheck / biome / tests /
   wiki-lint) must pass first; never force-push; run the FS-0024 git guard.
   *(Remove this bullet if you'd rather confirm each push.)*
+- **Push cadence:** one push per session at close — don't push mid-session. Production
+  deploys are decoupled from pushes: `vercel.json`'s `ignoreCommand` skips the prod build
+  unless `apps/web` / `pnpm-lock.yaml` / `package.json` / `vercel.json` changed, so docs /
+  governance / CI / `scripts` sessions push without deploying. App-code sessions deploy on
+  push as before. (SESSION_0335 — see `docs/runbooks/dev-environment/verification-and-testing.md`.)
 
 ---
 

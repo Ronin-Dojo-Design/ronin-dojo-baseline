@@ -1,149 +1,19 @@
-import { cacheLife, cacheTag } from "next/cache"
-import { cache } from "react"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
   directoryProfileDetailPayload,
-  directoryProfileListPayload,
-  filterDisciplinePayload,
-  filterOrganizationPayload,
-  filterRankPayload,
+  directoryProfilePreviewPayload,
 } from "~/server/web/directory/payloads"
+import {
+  canRenderFullProfileForViewer,
+  rankSummaryForProfile,
+  trustSummaryForUser,
+} from "~/server/web/directory/profile-projection"
+import { getLineageProfileDetailRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 import { db } from "~/services/db"
 
-export type DirectoryFilters = {
-  organizationId?: string
-  disciplineId?: string
-  rankId?: string
-  locationCity?: string
-  locationRegion?: string
-}
-
-/**
- * Privacy-aware directory listing.
- *
- * - No viewer (unauthenticated) → PUBLIC profiles only
- * - Authenticated viewer → PUBLIC + MEMBERS_ONLY
- * - HIDDEN → never returned
- *
- * Per-field flags (showEmail, showPhone, showOrgs, showRanks) are projected
- * in the select so sensitive data never leaves the server.
- */
-export const getDirectoryProfiles = cache(
-  async ({
-    brand,
-    filters = {},
-    viewerUserId,
-  }: {
-    brand: Brand
-    filters?: DirectoryFilters
-    viewerUserId?: string | null
-  }) => {
-    const allowedVisibility: DirectoryVisibility[] = viewerUserId
-      ? ["PUBLIC", "MEMBERS_ONLY"]
-      : ["PUBLIC"]
-
-    // Build membership-level filters (org, discipline, rank)
-    const membershipWhere: Record<string, unknown> = {}
-    if (filters.organizationId) {
-      membershipWhere.organizationId = filters.organizationId
-    }
-    if (filters.disciplineId) {
-      membershipWhere.disciplineId = filters.disciplineId
-    }
-
-    // If org/discipline/rank filters are set, we need users who have a matching membership
-    const userMembershipFilter =
-      Object.keys(membershipWhere).length > 0
-        ? { some: { ...membershipWhere, organization: { brand } } }
-        : undefined
-
-    // Rank filter works through RankAward
-    const userRankFilter = filters.rankId ? { some: { rankId: filters.rankId } } : undefined
-
-    const profiles = await db.directoryProfile.findMany({
-      where: {
-        visibility: { in: allowedVisibility },
-        // Location filters
-        ...(filters.locationCity && {
-          locationCity: { contains: filters.locationCity, mode: "insensitive" as const },
-        }),
-        ...(filters.locationRegion && {
-          locationRegion: { contains: filters.locationRegion, mode: "insensitive" as const },
-        }),
-        user: {
-          // Brand scoping: user must have at least one membership in this brand
-          memberships: userMembershipFilter ?? { some: { organization: { brand } } },
-          // Rank filter
-          ...(userRankFilter && { rankAwards: userRankFilter }),
-        },
-      },
-      select: {
-        ...directoryProfileListPayload,
-        user: {
-          select: {
-            ...directoryProfileListPayload.user.select,
-            memberships: {
-              where: { organization: { brand } },
-              select: directoryProfileListPayload.user.select.memberships.select,
-            },
-          },
-        },
-      },
-      orderBy: { user: { name: "asc" } },
-    })
-
-    // Apply per-field privacy flags — strip data the user chose to hide
-    return profiles.map(profile => ({
-      id: profile.id,
-      userId: profile.user.id,
-      name: profile.user.name,
-      // Prefer the promoted Passport avatar, fall back to User.image.
-      image: profile.user.passport?.avatarUrl ?? profile.user.image,
-      locationCity: profile.locationCity,
-      locationRegion: profile.locationRegion,
-      locationCountry: profile.locationCountry,
-      email: profile.showEmail ? profile.user.email : null,
-      organizations: profile.showOrgs
-        ? profile.user.memberships.map(m => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug,
-            discipline: m.discipline,
-          }))
-        : [],
-      ranks: profile.showRanks ? profile.user.rankAwards : [],
-    }))
-  },
-)
-
-/**
- * Available filter options for the directory within a brand.
- */
-export const getDirectoryFilterOptions = async (brand: Brand) => {
-  "use cache"
-
-  cacheTag("directory-filters")
-  cacheLife("minutes")
-
-  const [organizations, disciplines, ranks] = await Promise.all([
-    db.organization.findMany({
-      where: { brand },
-      select: filterOrganizationPayload,
-      orderBy: { name: "asc" },
-    }),
-    db.discipline.findMany({
-      where: { brand },
-      select: filterDisciplinePayload,
-      orderBy: { name: "asc" },
-    }),
-    db.rank.findMany({
-      where: { rankSystem: { brand } },
-      select: filterRankPayload,
-      orderBy: { sortOrder: "asc" },
-    }),
-  ])
-
-  return { organizations, disciplines, ranks }
+type ProfileViewer = {
+  viewerUserId?: string | null
+  viewerRole?: string | null
 }
 
 /**
@@ -159,16 +29,16 @@ export const findProfileBySlug = async ({
   slug,
   brand,
   viewerUserId,
+  viewerRole,
 }: {
   slug: string
   brand: Brand
-  viewerUserId?: string | null
-}) => {
+} & ProfileViewer) => {
   const allowedVisibility: DirectoryVisibility[] = viewerUserId
     ? ["PUBLIC", "MEMBERS_ONLY"]
     : ["PUBLIC"]
 
-  const profile = await db.directoryProfile.findFirst({
+  const preview = await db.directoryProfile.findFirst({
     where: {
       slug,
       visibility: { in: allowedVisibility },
@@ -176,6 +46,54 @@ export const findProfileBySlug = async ({
         memberships: { some: { organization: { brand } } },
       },
     },
+    select: directoryProfilePreviewPayload,
+  })
+
+  if (!preview) return null
+
+  const policy = await getLineageProfileDetailRenderPolicyForUser({
+    userId: preview.user.id,
+    brand,
+  })
+  const canRenderFullProfile = canRenderFullProfileForViewer({
+    policy,
+    profileUserId: preview.user.id,
+    viewerUserId,
+    viewerRole,
+  })
+
+  if (!canRenderFullProfile) {
+    return {
+      id: preview.id,
+      slug: preview.slug,
+      profileTier: policy.tier,
+      canRenderFullProfile: false,
+      // A legacy placeholder profile (no real login account) is "claimable":
+      // the detail page renders the claim teaser instead of an empty profile.
+      isClaimablePlaceholder: preview.user.isPlaceholder,
+      isOwnProfile: viewerUserId === preview.user.id,
+      ...trustSummaryForUser(preview.user),
+      coverPhotoUrl: null,
+      videoIntroUrl: null,
+      locationCity: null,
+      locationRegion: null,
+      locationCountry: null,
+      user: {
+        id: preview.user.id,
+        name: preview.user.name,
+        image: preview.user.passport?.avatarUrl ?? preview.user.image,
+        bio: null,
+        socialLinks: null,
+        email: null,
+        organizations: [],
+        ranks: rankSummaryForProfile(preview),
+        techniqueProgress: [],
+      },
+    }
+  }
+
+  const profile = await db.directoryProfile.findFirst({
+    where: { id: preview.id },
     select: directoryProfileDetailPayload,
   })
 
@@ -185,6 +103,11 @@ export const findProfileBySlug = async ({
   return {
     id: profile.id,
     slug: profile.slug,
+    profileTier: policy.tier,
+    canRenderFullProfile: true,
+    isClaimablePlaceholder: preview.user.isPlaceholder,
+    isOwnProfile: viewerUserId === profile.user.id,
+    ...trustSummaryForUser(profile.user),
     coverPhotoUrl: profile.coverPhotoUrl,
     videoIntroUrl: profile.videoIntroUrl,
     locationCity: profile.locationCity,

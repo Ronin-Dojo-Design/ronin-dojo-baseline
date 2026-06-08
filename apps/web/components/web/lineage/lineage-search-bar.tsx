@@ -7,20 +7,13 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
-import { type CanvasMember, nodeDisplayName } from "~/lib/lineage/canvas-model"
-
-const MIN_QUERY_LENGTH = 1
+import type { CanvasMember } from "~/lib/lineage/canvas-model"
+import { findLineageMatches, MIN_QUERY_LENGTH } from "~/lib/lineage/search"
 
 type LineageSearchBarProps = {
   members: CanvasMember[]
   selectedMemberId: string | null
   onSelect: (nodeId: string) => void
-}
-
-type Match = {
-  member: CanvasMember
-  index: number
-  displayName: string
 }
 
 function scrollMemberIntoView(memberId: string, reduceMotion: boolean | null) {
@@ -33,33 +26,13 @@ function scrollMemberIntoView(memberId: string, reduceMotion: boolean | null) {
   }, 0)
 }
 
-function findMatches(members: CanvasMember[], query: string): Match[] {
-  const needle = query.trim().toLowerCase()
-  if (needle.length < MIN_QUERY_LENGTH) return []
-
-  const matches: Match[] = []
-  for (const member of members) {
-    const displayName = nodeDisplayName(member.node)
-    const index = displayName.toLowerCase().indexOf(needle)
-    if (index < 0) continue
-    matches.push({ member, index, displayName })
-  }
-
-  matches.sort((a, b) => {
-    if (a.index !== b.index) return a.index - b.index
-    return a.displayName.localeCompare(b.displayName)
-  })
-
-  return matches
-}
-
 export function LineageSearchBar({ members, selectedMemberId, onSelect }: LineageSearchBarProps) {
   const reduceMotion = useReducedMotion()
   const [query, setQuery] = useState("")
   const [cursorIndex, setCursorIndex] = useState(0)
   const lastSelectedRef = useRef<string | null>(null)
 
-  const matches = useMemo(() => findMatches(members, query), [members, query])
+  const matches = useMemo(() => findLineageMatches(members, query), [members, query])
   const hasQuery = query.trim().length >= MIN_QUERY_LENGTH
   const matchCount = matches.length
   const safeCursor = matchCount === 0 ? 0 : Math.min(cursorIndex, matchCount - 1)

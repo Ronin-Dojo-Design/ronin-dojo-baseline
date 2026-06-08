@@ -30,12 +30,12 @@ What does NOT move:
 ## Cutover sequence
 
 1. Build BBL fully in the new stack (UI, API, auth, screens) before any migration runs.
-2. **Dry run:** point script at a copy of the legacy DB; inspect output in a staging Postgres; verify counts and spot-check 5–10 users.
-3. **Freeze legacy BBL writes** (10–30 min window): put a maintenance banner up.
-4. **Run migration** against production legacy → production new Postgres.
-5. **Send password-reset email** to every migrated user via Better-Auth's flow (Resend is already wired in Dirstarter).
-6. **Cut DNS** for BBL's domain to the new Vercel deployment.
-7. **Smoke test:** sign in as a known migrated user via reset flow; verify school/membership/belt data appears correctly.
+1. **Dry run:** point script at a copy of the legacy DB; inspect output in a staging Postgres; verify counts and spot-check 5–10 users.
+1. **Freeze legacy BBL writes** (10–30 min window): put a maintenance banner up.
+1. **Run migration** against production legacy → production new Postgres.
+1. **Send password-reset email** to every migrated user via Better-Auth's flow (Resend is already wired in Dirstarter).
+1. **Cut DNS** for BBL's domain to the new Vercel deployment.
+1. **Smoke test:** sign in as a known migrated user via reset flow; verify school/membership/belt data appears correctly.
 
 ## Rollback plan
 
@@ -47,12 +47,12 @@ If migration is materially broken post-cutover:
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - BBL users land on the new stack with their identity preserved (same email, history of belt awards, school affiliations).
 - One disruption, well-scoped, well-tested before it happens.
 
-**Negative**
+### Negative
 
 - Password reset on cutover is a friction moment (mitigated by clear comms email pre-cutover + a banner).
 - Legacy → Pods relationship mapping requires careful schema reading. Allocate real time to writing the script; don't underestimate.

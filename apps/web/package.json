@@ -6,7 +6,7 @@
     "dev": "next dev --turbo",
     "start": "next start",
     "build": "next build",
-    "test": "bun test --parallel --path-ignore-patterns='e2e/**'",
+    "test": "bun test --parallel=1 --path-ignore-patterns='e2e/**'",
     "lint": "bun biome check --write .",
     "format": "bun biome format --write .",
     "typecheck": "next typegen && tsc --noEmit --pretty false",
@@ -23,7 +23,6 @@
     "test:e2e": "bunx playwright test"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.46",
     "@ai-sdk/react": "^2.0.114",
     "@aws-sdk/client-s3": "^3.948.0",
     "@aws-sdk/lib-storage": "^3.948.0",
@@ -54,8 +53,6 @@
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "file-type": "^21.1.1",
-    "github-slugger": "^2.0.0",
-    "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.26",
     "next": "^16.0.9",
@@ -66,6 +63,7 @@
     "next-themes": "^0.4.6",
     "nuqs": "^2.8.5",
     "plur": "^6.0.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.2",
     "react-day-picker": "^9.12.0",
     "react-dom": "^19.2.2",

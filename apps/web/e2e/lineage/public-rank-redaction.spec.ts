@@ -17,6 +17,7 @@
  *     e2e/lineage/public-rank-redaction.spec.ts --project=chromium
  */
 import { expect, test } from "@playwright/test"
+import { createAuthenticatedSession } from "../helpers/auth"
 import {
   cleanupLineageRankRedactionFixture,
   type LineageRankRedactionFixture,
@@ -50,7 +51,9 @@ test.describe("Lineage public rank-redaction E2E", () => {
     if (fixture) await cleanupLineageRankRedactionFixture(fixture)
   })
 
-  // Fresh, unauthenticated context — no storage state — for both flows.
+  // Fresh context for both flows; the fixture's premium viewer exercises the
+  // entitlement-gated drawer surface while preserving anonymous/free coverage in
+  // public-visibility.spec.ts.
   test.use({ storageState: { cookies: [], origins: [] } })
 
   test("public drawer for showRanks=false member contains no rank text or metadata", async ({
@@ -60,6 +63,7 @@ test.describe("Lineage public rank-redaction E2E", () => {
     const page = await context.newPage()
 
     try {
+      await createAuthenticatedSession(page, fixture.viewerUserId)
       await page.goto(`/lineage/${fixture.treeSlug}`)
 
       await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
@@ -130,6 +134,7 @@ test.describe("Lineage public rank-redaction E2E", () => {
     const page = await context.newPage()
 
     try {
+      await createAuthenticatedSession(page, fixture.viewerUserId)
       await page.goto(`/lineage/${fixture.treeSlug}`)
       await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
         timeout: 30_000,

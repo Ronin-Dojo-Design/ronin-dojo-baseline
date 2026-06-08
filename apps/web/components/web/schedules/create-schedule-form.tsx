@@ -342,7 +342,14 @@ export const CreateScheduleForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Discipline</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value ?? "none"}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value ?? "none"}
+                    items={{
+                      none: "No discipline",
+                      ...Object.fromEntries(disciplines.map(d => [d.id, d.name])),
+                    }}
+                  >
                     <FormControl>
                       <SelectTrigger size="lg">
                         <SelectValue placeholder="Optional discipline" />
@@ -368,7 +375,11 @@ export const CreateScheduleForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={{ ACTIVE: "Active", PAUSED: "Paused" }}
+                  >
                     <FormControl>
                       <SelectTrigger size="lg">
                         <SelectValue placeholder="Select status" />

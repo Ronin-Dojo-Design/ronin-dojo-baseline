@@ -14,7 +14,10 @@
 
 import { readdir, readFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import path from "node:path"
+
+const REPO_ROOT = path.resolve(import.meta.dir, "..")
 
 // ---------------------------------------------------------------------------
 // Config
@@ -24,7 +27,6 @@ const DOCS_ROOT = path.resolve(import.meta.dir, "../docs")
 const WIKI_ROOT = path.join(DOCS_ROOT, "knowledge/wiki")
 const INDEX_PATH = path.join(WIKI_ROOT, "index.md")
 const MIN_BODY_LENGTH = 50
-const STALE_DAYS = 30
 
 const REQUIRED_FRONTMATTER = ["title", "slug", "type", "status", "created", "updated"]
 // health was removed from JETTY 3.0 in SESSION_0027 — status field handles freshness
@@ -284,9 +286,40 @@ function R3_orphanPages(pages: ParsedPage[]): LintResult[] {
   return results
 }
 
+/** Repo-relative paths with uncommitted changes under docs/ (changed "now"). */
+function gitDirtyDocs(): Set<string> {
+  const set = new Set<string>()
+  try {
+    const out = execFileSync("git", ["status", "--porcelain", "--", "docs"], {
+      cwd: REPO_ROOT,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+    for (const line of out.split("\n")) {
+      const f = line.slice(3).trim()
+      if (f) set.add(f)
+    }
+  } catch {
+    /* ignore */
+  }
+  return set
+}
+
+/**
+ * R4 — Stale frontmatter (per docs/protocols/wiki-lint.md): flag a doc that was
+ * **changed this session** (uncommitted working-tree edit) without bumping its
+ * `updated` field to today. This is the real, actionable bug — editing a doc but
+ * leaving a lying `updated` — scoped to the current diff, like the protocol says
+ * ("compare `git diff --name-only` against `updated`"). It replaces the old
+ * 30-day calendar threshold, which nagged stable reference docs that simply
+ * hadn't changed, and doesn't re-flag docs touched by historical bulk commits
+ * (renames/reformats) that never warranted an `updated` bump. A clean working
+ * tree yields zero R4 warnings. Opt out entirely with `stable: true`.
+ */
 function R4_staleFrontmatter(pages: ParsedPage[]): LintResult[] {
   const results: LintResult[] = []
-  const now = new Date()
+  const today = new Date().toISOString().slice(0, 10)
+  const dirty = gitDirtyDocs()
 
   // Document types and paths that are intentionally stable and should not
   // trigger staleness warnings. These are reference docs, not living work.
@@ -317,6 +350,9 @@ function R4_staleFrontmatter(pages: ParsedPage[]): LintResult[] {
     const updated = page.frontmatter.updated
     if (typeof updated !== "string") continue
 
+    // Explicit opt-out for intentionally-static reference docs.
+    if (page.frontmatter.stable === "true") continue
+
     // Skip stable document types
     const docType = page.frontmatter.type
     if (typeof docType === "string" && STABLE_TYPES.has(docType)) continue
@@ -328,16 +364,19 @@ function R4_staleFrontmatter(pages: ParsedPage[]): LintResult[] {
     // Skip stable path patterns
     if (STABLE_PATH_PATTERNS.some(p => p.test(page.relativePath))) continue
 
-    const updatedDate = new Date(updated)
-    if (isNaN(updatedDate.getTime())) continue
+    if (Number.isNaN(new Date(updated).getTime())) continue
 
-    const daysSinceUpdate = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24))
-    if (daysSinceUpdate > STALE_DAYS) {
+    // Only check files changed THIS session (uncommitted). Historical commits are
+    // water under the bridge; a clean tree is silent.
+    const repoRel = path.relative(REPO_ROOT, page.filePath)
+    if (!dirty.has(repoRel)) continue
+
+    if (updated < today) {
       results.push({
         rule: "R4",
         severity: "warning",
         file: page.relativePath,
-        message: `Last updated ${daysSinceUpdate} days ago (>${STALE_DAYS}d threshold)`,
+        message: `changed this session but 'updated: ${updated}' isn't today (${today}) — bump 'updated' or set 'stable: true'`,
       })
     }
   }

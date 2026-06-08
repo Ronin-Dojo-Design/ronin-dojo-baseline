@@ -6,6 +6,7 @@ import { EmptyList } from "~/components/common/empty-list"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { OrgClaimCta } from "~/components/web/claims/org-claim-cta"
 import { JoinOrganizationButton } from "~/components/web/organizations/join-organization-button"
 import { MembershipActions } from "~/components/web/organizations/membership-actions"
 import { PromotionTimeline } from "~/components/web/promotion-events/promotion-timeline"
@@ -143,6 +144,15 @@ export default async function OrganizationDetailPage({ params }: Props) {
           </Stack>
         </IntroDescription>
       </Intro>
+
+      {!org.ownerId && (
+        <OrgClaimCta
+          organizationId={org.id}
+          organizationName={org.name}
+          returnPath={orgUrl}
+          isSignedIn={Boolean(session?.user)}
+        />
+      )}
 
       <Section>
         <Section.Content>

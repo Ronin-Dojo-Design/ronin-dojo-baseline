@@ -42,6 +42,59 @@ export function nodeDisplayName(node: LineageNodeRow): string {
   return node.user.passport?.displayName ?? node.user.name ?? node.slug ?? node.id
 }
 
+/**
+ * Public avatar source for a member — passport avatar first, then the account
+ * image (the role-agnostic Passport-avatar rule, SESSION_0326). Null → render
+ * the `memberInitials` fallback. Shared so every member surface resolves it
+ * identically instead of re-inlining the `?? image` fallback.
+ */
+export function memberAvatarSrc(node: LineageNodeRow): string | null {
+  return node.user.passport?.avatarUrl ?? node.user.image ?? null
+}
+
+/**
+ * Belt color hex for the member's *shown* rank — the tree-member's selected
+ * rank award wins, else the user's latest overall award. Null → no swatch.
+ */
+export function memberBeltColor(
+  node: LineageNodeRow,
+  selectedRank?: SelectedRank | null,
+): string | null {
+  return selectedRank?.colorHex ?? node.user.rankAwards?.[0]?.rank.colorHex ?? null
+}
+
+/**
+ * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's *shown*
+ * rank — selected rank award first, else latest overall award. Null → no rank.
+ */
+export function memberRankLabel(
+  node: LineageNodeRow,
+  selectedRank?: SelectedRank | null,
+): string | null {
+  if (selectedRank) {
+    return `${selectedRank.name}${
+      selectedRank.disciplineName ? ` · ${selectedRank.disciplineName}` : ""
+    }`
+  }
+
+  const latestRankAward = node.user.rankAwards?.[0]
+  if (!latestRankAward?.rank) return null
+
+  return `${latestRankAward.rank.name}${
+    latestRankAward.rank.rankSystem?.discipline?.name
+      ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
+      : ""
+  }`
+}
+
+/**
+ * Current-school label for the member (latest membership's organization). Null →
+ * unaffiliated / not shown. Affiliation is a separate axis from promotion lineage.
+ */
+export function memberSchoolLabel(node: LineageNodeRow): string | null {
+  return node.user.memberships?.[0]?.organization?.name ?? null
+}
+
 export function sortMembers(a: CanvasMember, b: CanvasMember): number {
   if (a.visualSortOrder !== b.visualSortOrder) {
     return a.visualSortOrder - b.visualSortOrder

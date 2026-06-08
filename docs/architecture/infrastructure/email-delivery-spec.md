@@ -4,8 +4,8 @@ slug: email-delivery-spec
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-28
-last_agent: codex-session-0278
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/infrastructure/dns-verification-spec.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
@@ -24,7 +24,7 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 
 ## Architecture
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────┐
 │                        EMAIL DELIVERY FLOW                         │
 ├────────────────────────────────────────────────────────────────────┤
@@ -64,7 +64,7 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 ## Per-Brand Sender Configuration
 
 | Brand | Sending domain | From address | Verified? |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | BASELINE_MARTIAL_ARTS | `baselinemartialarts.com` | `welcome@baselinemartialarts.com` | ✅ verified |
 | BBL | `blackbeltlegacy.com` | `welcome@blackbeltlegacy.com` | ⬜ configure/verify |
 | RONIN_DOJO_DESIGN | `ronindojodesign.com` | `welcome@ronindojodesign.com` | ⬜ todo |
@@ -72,7 +72,7 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 
 ## Resend Account Setup Steps
 
-```
+```text
 1. Create account at https://resend.com
 2. Dashboard → Domains → Add Domain
 3. Enter domain (e.g., baselinemartialarts.com)
@@ -103,7 +103,7 @@ const BRAND_SENDER: Record<Brand, string> = {
 ## Email Templates (existing)
 
 | Template | File | Used by |
-|---|---|---|
+| --- | --- | --- |
 | Magic link login | `emails/magic-link.tsx` | Better-Auth sign-in |
 | Merch order confirmation | `emails/merch-order-confirmation.tsx` | Stripe webhook (SESSION_0113) |
 | Admin submission premium | `emails/admin-submission-premium.tsx` | Admin notifications |

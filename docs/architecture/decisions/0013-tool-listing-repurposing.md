@@ -5,7 +5,7 @@ type: decision
 status: accepted
 created: 2026-05-04
 updated: 2026-05-24
-last_agent: claude-session-0243
+last_agent: codex-session-0351
 deciders: Brian Scott
 pairs_with:
   - docs/sprints/SESSION_0066.md
@@ -37,8 +37,8 @@ Dirstarter's core concept is a "Tool Directory" — a generic listing pattern wi
 Ronin Dojo has no use for "tools" — it's a martial arts platform. However, it needs three analogous directory listing patterns:
 
 1. **Technique Listing** — public technique library per school, filterable by discipline/position/difficulty/belt range
-2. **Public User Profile** — member directory with privacy controls (DirectoryProfile visibility + per-field toggles)
-3. **School/Org Page** — public school pages with programs, techniques, content, and join CTA
+1. **Public User Profile** — member directory with privacy controls (DirectoryProfile visibility + per-field toggles)
+1. **School/Org Page** — public school pages with programs, techniques, content, and join CTA
 
 All three domain models already exist in the schema (Technique, Passport+DirectoryProfile, Organization). The UI and routing layer is what needs to be built.
 
@@ -47,9 +47,9 @@ All three domain models already exist in the schema (Technique, Passport+Directo
 **Extend the Dirstarter Tool/Listing L1 pattern for all three domain listing types.** Specifically:
 
 1. **Preserve the structural pattern** — slug-based routing, card grid listings, detail pages, dashboard management, query/filter/search, DataTable for owner management.
-2. **Map domain models onto the pattern** — each listing type gets its own route group, server queries, card component, and filter set. No shared "generic listing" abstraction — each type is its own concrete implementation following the L1 pattern.
-3. **Keep the original Tool model in the schema** as reference until pre-prod cleanup (per existing TODO comment in schema.prisma).
-4. **Do not modify the L1 Tool components.** Create new domain-specific components (`technique-card.tsx`, `member-card.tsx`, `school-card.tsx`) that follow the same structural patterns.
+1. **Map domain models onto the pattern** — each listing type gets its own route group, server queries, card component, and filter set. No shared "generic listing" abstraction — each type is its own concrete implementation following the L1 pattern.
+1. **Keep the original Tool model in the schema** as reference until pre-prod cleanup (per existing TODO comment in schema.prisma).
+1. **Do not modify the L1 Tool components.** Create new domain-specific components (`technique-card.tsx`, `member-card.tsx`, `school-card.tsx`) that follow the same structural patterns.
 
 ## Consequences
 
@@ -80,8 +80,8 @@ All three domain models already exist in the schema (Technique, Passport+Directo
 ## Alternatives considered
 
 1. **Build from scratch** — rejected. Ignores the most reusable L1 pattern in the template.
-2. **Generic listing abstraction** — rejected. Premature generalization. The three types differ enough (privacy model, authorization, field sets) that a shared component would leak domain logic.
-3. **Keep "Tools" naming and rebrand** — rejected. Confusing. "Technique" / "Profile" / "School" are the ubiquitous language.
+1. **Generic listing abstraction** — rejected. Premature generalization. The three types differ enough (privacy model, authorization, field sets) that a shared component would leak domain logic.
+1. **Keep "Tools" naming and rebrand** — rejected. Confusing. "Technique" / "Profile" / "School" are the ubiquitous language.
 
 ## Related decisions
 
@@ -94,10 +94,10 @@ All three domain models already exist in the schema (Technique, Passport+Directo
 
 **Scope:** Public listing-page chrome parity (`getPageMetadata` + `Breadcrumbs` + `StructuredData` + `getRequestBrand` + cross-links) has been completed for every public route that has a `page.tsx` today (SESSIONs 0241–0243). The deeper Tool→DirectoryListing pattern repurposing across all admin-side call sites is **not yet swept**.
 
-**Remaining work (next session triage):**
+### Remaining work (next session triage)
 
 1. Audit any remaining admin CRUD surfaces (`apps/web/app/admin/`) that still reference the legacy "Tool" naming or pattern and confirm they have been migrated to the per-entity listings (Techniques, Members, Schools, Organizations, Lineage, Programs, Courses, Gear, Merch).
-2. Inventory any `(web)/categories`, `(web)/tags`, `(web)/certificates` directories — these currently have NO `page.tsx`; decide whether to author public listing pages or remove the directory shells.
-3. Confirm `Section` / `Wrapper` / `Note` / `Intro` primitives are consistent across all uplifted pages; SESSION_0242 standardized on `Section` and `Note` for empty states.
+1. Inventory any `(web)/categories`, `(web)/tags`, `(web)/certificates` directories — these currently have NO `page.tsx`; decide whether to author public listing pages or remove the directory shells.
+1. Confirm `Section` / `Wrapper` / `Note` / `Intro` primitives are consistent across all uplifted pages; SESSION_0242 standardized on `Section` and `Note` for empty states.
 
 **Why deferred:** SESSION_0243 prioritized Vercel prod rescue + the three remaining public-route uplifts (`/directory`, `/members`, `/techniques`). Deeper sweep is multi-session and lands cleaner after the Baseline content waterfall (SESSION_0244) so seeded data informs which surfaces are actually live.

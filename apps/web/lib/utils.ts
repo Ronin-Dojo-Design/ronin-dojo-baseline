@@ -1,4 +1,4 @@
-export type { ClassValue, VariantProps } from "tailwind-variants"
+export type { VariantProps } from "tailwind-variants"
 export { cn as cx, tv as cva } from "tailwind-variants"
 
 export const popoverAnimationClasses = [
@@ -9,4 +9,6 @@ export const popoverAnimationClasses = [
   "data-[side=left]:slide-in-from-right-2 data-[side=left]:slide-out-to-right-2",
   "data-[side=right]:slide-in-from-left-2 data-[side=right]:slide-out-to-left-2",
   "data-[side=top]:slide-in-from-bottom-2 data-[side=top]:slide-out-to-bottom-2",
+  // Honor prefers-reduced-motion (repo idiom: drawer.tsx). Applies to every popover/select.
+  "motion-reduce:animate-none",
 ]

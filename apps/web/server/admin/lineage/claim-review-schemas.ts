@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { lineageCompGrantSpecSchema } from "~/lib/entitlements/lineage-comp"
 
 /**
  * Zod schemas for admin lineage claim review actions.
@@ -14,6 +15,7 @@ export const reviewLineageClaimSchema = z.object({
   claimId: z.string().cuid(),
   decision: lineageClaimDecision,
   reviewerNote: z.string().max(2000).optional(),
+  comp: lineageCompGrantSpecSchema.optional(),
 })
 
 export type ReviewLineageClaimInput = z.infer<typeof reviewLineageClaimSchema>

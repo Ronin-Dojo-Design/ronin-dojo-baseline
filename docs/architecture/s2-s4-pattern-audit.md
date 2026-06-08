@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-27
 updated: 2026-04-27
-last_agent: copilot-session-0016
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/dirstarter-architecture-map.md
 backlinks:
@@ -36,14 +36,16 @@ Audited against the 5-layer vertical slice pattern defined in `docs/architecture
 
 **Problem:** Dirstarter's pattern extracts Prisma select/include shapes into `payloads.ts` with typed exports. Our entities inline these directly in queries.
 
-**Where Dirstarter does it right:**
+### Where Dirstarter does it right
+
 ```typescript
 // server/web/tools/payloads.ts
 export const toolManyPayload = { id: true, name: true, ... } satisfies Prisma.ToolSelect
 export type ToolMany = Prisma.ToolGetPayload<{ select: typeof toolManyPayload }>
 ```
 
-**What we do instead:**
+### What we do instead
+
 ```typescript
 // server/web/organization/queries.ts
 return db.organization.findUnique({
@@ -63,6 +65,7 @@ return db.organization.findUnique({
 ### 2. MISSING: `"use cache"` + `cacheTag` + `cacheLife` (all queries)
 
 **Problem:** Dirstarter uses Next.js caching directives on all read queries:
+
 ```typescript
 export const searchTools = async (...) => {
   "use cache"
@@ -73,13 +76,14 @@ export const searchTools = async (...) => {
 ```
 
 Our queries use only `cache` from React (deduplication, not persistent caching):
+
 ```typescript
 export const getDirectoryProfiles = cache(async (...) => { ... })
 ```
 
 **Impact:** Every page load hits the DB. No ISR-style caching. Fine for dev, but needs fixing before production.
 
-**Fix:** Add `"use cache"` + `cacheTag("<entity>")` to all read queries. Add `revalidate({ tags: ["<entity>"] })` to corresponding actions.
+**Fix:** Add `"use cache"` + `cacheTag("&lt;entity&gt;")` to all read queries. Add `revalidate({ tags: ["&lt;entity&gt;"] })` to corresponding actions.
 
 ### 3. Organization queries use `include` instead of `select`
 
@@ -99,7 +103,7 @@ select: { disciplines: { select: disciplineManyPayload } }
 
 ### 4. Passport page doesn't follow the page pattern
 
-**Problem:** `/me/page.tsx` uses raw `<h1>` and `<p>` tags instead of Dirstarter's `<Intro>`, `<IntroTitle>`, `<IntroDescription>` components.
+**Problem:** `/me/page.tsx` uses raw `&lt;h1&gt;` and `&lt;p&gt;` tags instead of Dirstarter's `<Intro>`, `<IntroTitle>`, `<IntroDescription>` components.
 
 ```tsx
 // Our code
@@ -140,6 +144,7 @@ export const metadata: Metadata = { title: "Organizations", ... }
 ### 6. Directory page correctly follows the pattern ✅
 
 `/directory/page.tsx` properly uses:
+
 - `<Intro>` + `<IntroTitle>` + `<IntroDescription>`
 - `<Section>` + `<Section.Content>`
 - Passes `searchParams` to a listing component
@@ -150,6 +155,7 @@ This is the best-implemented page of the three.
 ### 7. Organization actions properly use `userActionClient` ✅
 
 `server/web/organization/actions.ts` correctly:
+
 - Uses `"use server"` directive
 - Uses `userActionClient.inputSchema(...).action(...)`
 - Accesses `ctx.user`, `ctx.db`, `ctx.revalidate`
@@ -177,7 +183,7 @@ This follows Dirstarter's `submit.ts` pattern well.
 
 Before shipping any new feature page, verify:
 
-- [ ] `server/web/<entity>/payloads.ts` exists with typed select shapes
+- [ ] `server/web/&lt;entity&gt;/payloads.ts` exists with typed select shapes
 - [ ] Queries use `"use cache"` + `cacheTag` + `cacheLife`
 - [ ] Queries use `select` (from payloads), not `include`
 - [ ] Actions call `revalidate({ tags: [...] })` after mutations

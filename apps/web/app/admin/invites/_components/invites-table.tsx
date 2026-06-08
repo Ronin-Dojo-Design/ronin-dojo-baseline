@@ -1,5 +1,6 @@
 "use client"
 
+import type { ColumnDef } from "@tanstack/react-table"
 import { CircleCheckIcon, CircleDotIcon, CircleIcon, CircleXIcon, PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
@@ -28,11 +29,11 @@ export function InvitesTable({ invitesPromise, organizations: _organizations }: 
   const { invites, invitesTotal, pageCount } = use(invitesPromise)
   const [{ perPage, sort }] = useQueryStates(invitesTableParamsSchema)
 
-  const columns = useMemo(() => getColumns(), [])
+  const columns = useMemo<ColumnDef<InviteRow>[]>(() => getColumns(), [])
 
   const filterFields: DataTableFilterField<InviteRow>[] = [
     {
-      id: "code" as keyof InviteRow,
+      id: "code",
       label: "Code",
       placeholder: "Filter by code...",
     },

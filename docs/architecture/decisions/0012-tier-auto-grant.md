@@ -4,12 +4,13 @@ slug: adr-0012-tier-auto-grant
 type: decision
 status: accepted
 created: 2026-05-11
-updated: 2026-05-11
-last_agent: copilot-session-0130
+updated: 2026-06-06
+last_agent: codex-session-0351
 deciders: Brian Scott
 pairs_with:
   - docs/sprints/SESSION_0129.md
   - docs/sprints/SESSION_0130.md
+  - docs/sprints/SESSION_0349.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -21,17 +22,17 @@ backlinks:
 Users with premium/elite/legend subscription tiers should automatically receive the `S3_UPLOAD` entitlement (and potentially other tier-gated entitlements in the future). Currently, upload capability is granted via:
 
 1. Manual admin grant (`MANUAL_GRANT` source type)
-2. Role-based auto-check (INSTRUCTOR/COACH/OWNER/ORG_ADMIN roles, org ownership)
+1. Role-based auto-check (INSTRUCTOR/COACH/OWNER/ORG_ADMIN roles, org ownership)
 
 We need a third path: **subscription-driven auto-grant** that activates when a user subscribes to a qualifying tier and deactivates when they cancel or downgrade.
 
 ## Decision
 
-**Use Stripe webhook events to create/revoke `UserEntitlement` rows with `sourceType: SUBSCRIPTION`.**
+### Use Stripe webhook events to create/revoke `UserEntitlement` rows with `sourceType: SUBSCRIPTION`
 
 ### Architecture
 
-```
+```text
 Stripe Event → app/api/stripe/webhooks/route.ts → syncSubscriptionEntitlements()
 ```
 
@@ -45,7 +46,7 @@ Stripe Event → app/api/stripe/webhooks/route.ts → syncSubscriptionEntitlemen
 
 #### Data Flow
 
-```
+```text
 PricingPlan (e.g., "Elite Monthly")
   └── EntitlementGrant (join table)
         └── Entitlement (e.g., "S3_UPLOAD")
@@ -60,22 +61,26 @@ User cancels   → UserEntitlement rows with sourceId = stripeSubscriptionId set
 #### Key Design Rules
 
 1. **`sourceType: SUBSCRIPTION`** — distinguishes auto-granted entitlements from manual admin grants. Revoking a subscription does NOT revoke manual grants.
-2. **`sourceId: stripeSubscriptionId`** — ties the entitlement to a specific subscription for clean revocation.
-3. **Idempotent** — webhook handler uses upsert pattern (reactivate REVOKED if exists, create if not). Stripe webhook replay is safe.
-4. **Cache invalidation** — after granting/revoking, invalidate `user-entitlements-{userId}` cache tag (same tag used by `canUploadMedia`).
-5. **`canUploadMedia` is unchanged** — it already checks `UserEntitlement` status, so subscription-granted entitlements are automatically picked up.
+1. **`sourceId: stripeSubscriptionId`** — ties the entitlement to a specific subscription for clean revocation.
+1. **Idempotent** — webhook handler uses upsert pattern (reactivate REVOKED if exists, create if not). Stripe webhook replay is safe.
+1. **Cache invalidation** — after granting/revoking, invalidate `user-entitlements-{userId}` cache tag (same tag used by `canUploadMedia`).
+1. **`canUploadMedia` is unchanged** — it already checks `UserEntitlement` status, so subscription-granted entitlements are automatically picked up.
 
 ### Qualifying Tiers
 
 | Tier Code | Level | Gets S3_UPLOAD |
 | --- | --- | --- |
 | FREE | 0 | ❌ |
-| BASIC | 1 | ❌ |
 | PREMIUM | 2 | ✅ |
 | ELITE | 3 | ✅ |
 | LEGEND | 4 | ✅ |
 
 Configuration lives in `EntitlementGrant` join table rows (PricingPlan → Entitlement). Adding a new entitlement to a tier is a DB row insert, not a code change.
+
+SESSION_0349 alignment note: `BASIC` is retired from the product tier ladder. `LEGEND` is the all-features,
+free-for-life tier used for recognized lifetime cohorts across brands (for example Dirty Dozen members in BBL or
+Grandmasters in WEKAF). Code may recognize `LEGEND` entitlement keys before checkout/webhook/seed migration is fully
+expanded; broad Stripe and seed-data migration remains a follow-up.
 
 ### Implementation Helper
 
@@ -180,8 +185,8 @@ case "customer.subscription.deleted": {
 ## Alternatives Considered
 
 1. **Polling** — Check subscription status on every `canUploadMedia` call. Rejected: adds latency, doesn't scale, fights the caching strategy.
-2. **Eager materialization at login** — Sync entitlements when user logs in. Rejected: misses mid-session subscription changes, doesn't handle cancellation promptly.
-3. **Computed view (no UserEntitlement row)** — `canUploadMedia` checks subscription tier directly. Rejected: breaks the single-source pattern where `UserEntitlement` is the authoritative table for all entitlement sources.
+1. **Eager materialization at login** — Sync entitlements when user logs in. Rejected: misses mid-session subscription changes, doesn't handle cancellation promptly.
+1. **Computed view (no UserEntitlement row)** — `canUploadMedia` checks subscription tier directly. Rejected: breaks the single-source pattern where `UserEntitlement` is the authoritative table for all entitlement sources.
 
 ## Consequences
 
@@ -198,7 +203,7 @@ case "customer.subscription.deleted": {
 ## Prerequisites for Implementation
 
 1. Stripe products + prices created for subscription tiers
-2. `PricingPlan` rows seeded with tier linkage
-3. `EntitlementGrant` rows mapping plans → entitlements (e.g., Elite plan → S3_UPLOAD)
-4. `UserBrandSubscription` creation wired in checkout webhook
-5. This ADR's `syncSubscriptionEntitlements` + `revokeSubscriptionEntitlements` functions
+1. `PricingPlan` rows seeded with tier linkage
+1. `EntitlementGrant` rows mapping plans → entitlements (e.g., Elite plan → S3_UPLOAD)
+1. `UserBrandSubscription` creation wired in checkout webhook
+1. This ADR's `syncSubscriptionEntitlements` + `revokeSubscriptionEntitlements` functions

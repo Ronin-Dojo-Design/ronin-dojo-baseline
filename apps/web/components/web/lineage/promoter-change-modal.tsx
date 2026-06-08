@@ -149,7 +149,11 @@ export function PromoterChangeModal({
         <Stack direction="column" size="md">
           <Stack direction="column" size="xs">
             <Label htmlFor="promoter-rank-award">Rank award</Label>
-            <Select value={rankAwardId} onValueChange={value => setRankAwardId(String(value))}>
+            <Select
+              value={rankAwardId}
+              onValueChange={value => setRankAwardId(String(value))}
+              items={Object.fromEntries(rankOptions.map(option => [option.id, option.label]))}
+            >
               <SelectTrigger id="promoter-rank-award">
                 <SelectValue placeholder="Select a rank award" />
               </SelectTrigger>
@@ -168,6 +172,12 @@ export function PromoterChangeModal({
             <Select
               value={promoterMemberId}
               onValueChange={value => setPromoterMemberId(String(value))}
+              items={{
+                [CLEAR_PROMOTER]: "Clear promoter",
+                ...Object.fromEntries(
+                  context.candidates.map(candidate => [candidate.memberId, candidate.label]),
+                ),
+              }}
             >
               <SelectTrigger id="promoter-member">
                 <SelectValue placeholder="Select a promoter" />
@@ -193,6 +203,7 @@ export function PromoterChangeModal({
                   setVerificationStatus(next as "PENDING" | "VERIFIED" | "DISPUTED")
                 }
               }}
+              items={{ PENDING: "Pending", VERIFIED: "Verified", DISPUTED: "Disputed" }}
             >
               <SelectTrigger id="promoter-verification-status">
                 <SelectValue placeholder="Select status" />

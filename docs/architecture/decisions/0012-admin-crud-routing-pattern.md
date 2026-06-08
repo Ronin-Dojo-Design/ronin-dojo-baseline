@@ -5,7 +5,7 @@ type: decision
 status: accepted
 created: 2026-05-03
 updated: 2026-05-03
-last_agent: copilot-session-0037
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0004-multi-brand-as-column.md
 backlinks:
@@ -26,20 +26,20 @@ Our domain entities (Leads, Schedules, Enrollments, etc.) are organization-scope
 
 ## Decision
 
-**Option A — flat routing.** All admin CRUD pages live at `/admin/<entity>/` with organization as a filterable column.
+**Option A — flat routing.** All admin CRUD pages live at `/admin/&lt;entity&gt;/` with organization as a filterable column.
 
 ## Rationale
 
-1. **Dirstarter alignment.** The entire admin layer (auth HOC, data-table hooks, searchParams caching, toolbar patterns) assumes flat `/admin/<feature>/` routes. Fighting this creates maintenance debt on every upstream update.
-2. **Consistency.** All future admin entities (schedules, enrollments, entitlements, events) follow the same pattern — one convention to learn.
-3. **Brand scoping via ADR 0004.** Brand is already enforced server-side via the `brand` column predicate. The admin table adds org as a query-param filter, not a route segment.
-4. **Super-admin visibility.** Flat routing naturally supports a super-admin viewing leads across all orgs, with org as a faceted filter.
+1. **Dirstarter alignment.** The entire admin layer (auth HOC, data-table hooks, searchParams caching, toolbar patterns) assumes flat `/admin/&lt;feature&gt;/` routes. Fighting this creates maintenance debt on every upstream update.
+1. **Consistency.** All future admin entities (schedules, enrollments, entitlements, events) follow the same pattern — one convention to learn.
+1. **Brand scoping via ADR 0004.** Brand is already enforced server-side via the `brand` column predicate. The admin table adds org as a query-param filter, not a route segment.
+1. **Super-admin visibility.** Flat routing naturally supports a super-admin viewing leads across all orgs, with org as a faceted filter.
 
 ## Consequences
 
 - Every `findX(search)` admin query must accept an optional `organizationId` filter param.
-- The `server/admin/<feature>/schema.ts` nuqs config includes an `organizationId` parser.
-- Detail pages use `/admin/<entity>/[id]/` (by cuid), not `/admin/<entity>/[slug]/`.
+- The `server/admin/&lt;feature&gt;/schema.ts` nuqs config includes an `organizationId` parser.
+- Detail pages use `/admin/&lt;entity&gt;/[id]/` (by cuid), not `/admin/&lt;entity&gt;/[slug]/`.
 - No nested `[orgId]` segments in admin routes.
 
 ## Applies to

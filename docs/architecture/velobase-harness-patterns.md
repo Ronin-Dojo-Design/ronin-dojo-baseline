@@ -4,8 +4,8 @@ slug: velobase-harness-patterns
 type: backlog-note
 status: active
 created: 2026-05-24
-updated: 2026-05-24
-last_agent: copilot-session-0241
+updated: 2026-06-06
+last_agent: codex-session-0351
 backlinks:
   - docs/sprints/SESSION_0241.md
   - docs/architecture/program-plan.md
@@ -74,7 +74,7 @@ Evaluated `github.com/velobase/velobase-harness` (MIT, Next.js 15 + Prisma + Str
 ## Implementation priority
 
 1. **Rate limiting** (anti-abuse) — highest ROI, smallest effort
-2. **Email queue** (BullMQ pattern) — decouple email from request cycle
-3. **Billing credits** — when S10 Stripe work begins
-4. **Referral engine** — post-launch
-5. **Ad attribution** — post-launch with marketing budget
+1. **Email queue** (BullMQ pattern) — decouple email from request cycle
+1. **Billing credits** — when S10 Stripe work begins
+1. **Referral engine** — post-launch
+1. **Ad attribution** — post-launch with marketing budget

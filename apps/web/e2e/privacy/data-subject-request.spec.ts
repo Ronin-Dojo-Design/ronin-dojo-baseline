@@ -10,8 +10,14 @@
  * @resolves SESSION_0254_FINDING_01
  */
 import { expect, test } from "@playwright/test"
-import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
+import {
+  cleanupTestUser,
+  createAuthenticatedSession,
+  createAuthenticatedUser,
+} from "../helpers/auth"
 import { cleanupDsrByUser, listDsrByUser } from "../helpers/dsr"
+
+test.describe.configure({ mode: "serial" })
 
 test.describe("Data Subject Request flow", () => {
   test.setTimeout(60_000)
@@ -67,14 +73,17 @@ test.describe("Data Subject Request flow", () => {
   })
 
   test("submit without confirm checkbox shows validation error", async ({ page }) => {
-    // Reuse the authenticated session from previous test (serial mode)
     if (!userId) {
       const user = await createAuthenticatedUser(page, {
         name: "DSR Confirm Test",
         email: `dsr-confirm-${Date.now()}@e2e.test`,
       })
       userId = user.userId
+    } else {
+      await createAuthenticatedSession(page, userId)
     }
+
+    const rowsBefore = listDsrByUser(userId).length
 
     await page.goto("/privacy/request")
     await expect(page.locator("h1")).toContainText("Data Subject Request", { timeout: 20_000 })
@@ -88,9 +97,7 @@ test.describe("Data Subject Request flow", () => {
       timeout: 5_000,
     })
 
-    // Verify no new row was created (should still be just the one from previous test, or 0 if this runs independently)
-    const rows = listDsrByUser(userId)
-    // At most 1 row from the previous test — no new row from this attempt
-    expect(rows.length).toBeLessThanOrEqual(1)
+    const rowsAfter = listDsrByUser(userId)
+    expect(rowsAfter).toHaveLength(rowsBefore)
   })
 })

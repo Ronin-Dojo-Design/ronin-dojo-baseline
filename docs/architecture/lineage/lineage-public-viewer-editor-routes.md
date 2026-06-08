@@ -4,8 +4,8 @@ slug: lineage-public-viewer-editor-routes
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-05-19
-last_agent: codex-session-0202
+updated: 2026-06-06
+last_agent: codex-session-0351
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/sprints/SESSION_0202.md
@@ -145,9 +145,9 @@ Tournament, belt story, and achievements stay out of the v1 drawer and move to t
 ## Rollout Order
 
 1. Create read models and adapter behind the current embedded surface.
-2. Add standalone public route.
-3. Add dashboard editor route with read-only preview. **Landed SESSION_0202.**
-4. Add visual group controls.
-5. Add promotion modal and audited parent changes.
-6. Add claims and ACL management.
-7. Remove D3 when parity is proven.
+1. Add standalone public route.
+1. Add dashboard editor route with read-only preview. **Landed SESSION_0202.**
+1. Add visual group controls.
+1. Add promotion modal and audited parent changes.
+1. Add claims and ACL management.
+1. Remove D3 when parity is proven.

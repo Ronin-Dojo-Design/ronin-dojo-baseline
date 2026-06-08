@@ -83,7 +83,7 @@ export const CategoryActions = ({ category, className, ...props }: CategoryActio
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onSelect={handleDuplicate}>
+          <DropdownMenuItem onClick={handleDuplicate}>
             <CopyIcon />
             Duplicate
           </DropdownMenuItem>

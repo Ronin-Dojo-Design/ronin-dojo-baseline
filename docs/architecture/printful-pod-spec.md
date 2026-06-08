@@ -4,8 +4,8 @@ slug: printful-pod-spec
 type: spec
 status: draft
 created: 2026-05-09
-updated: 2026-05-10
-last_agent: copilot-session-0115
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0014-stripe-product-policy.md
   - docs/runbooks/stripe-setup-runbook.md
@@ -31,7 +31,7 @@ Brian already uses Printful for WEKAF Team USA uniforms and TuffBuffs/Baseline/B
 
 ## Current State
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                 CURRENT MERCH FLOW (manual fulfillment)          │
 ├──────────────────────────────────────────────────────────────────┤
@@ -58,7 +58,7 @@ Brian already uses Printful for WEKAF Team USA uniforms and TuffBuffs/Baseline/B
 
 ## Target State
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                 TARGET MERCH FLOW (automated POD)                │
 ├──────────────────────────────────────────────────────────────────┤
@@ -551,7 +551,7 @@ sequenceDiagram
 
 ## Printful API Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                      PRINTFUL API ENDPOINTS                         │
 ├─────────────────────────────────────────────────────────────────────┤
@@ -588,7 +588,7 @@ sequenceDiagram
 
 Map DB `PricingPlan` merch products to Printful catalog variants.
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    PRODUCT MAPPING TABLE                              │
 ├──────────────────────────────────────────────────────────────────────┤
@@ -616,7 +616,7 @@ Map DB `PricingPlan` merch products to Printful catalog variants.
 
 ## Order Creation Flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                  PRINTFUL ORDER CREATION FLOW                        │
 ├─────────────────────────────────────────────────────────────────────┤
@@ -666,7 +666,7 @@ Map DB `PricingPlan` merch products to Printful catalog variants.
 
 ## Fulfillment Webhook Flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │              PRINTFUL WEBHOOK → FULFILLMENT TRACKING                 │
 ├─────────────────────────────────────────────────────────────────────┤
@@ -699,7 +699,7 @@ Map DB `PricingPlan` merch products to Printful catalog variants.
 
 ## File Structure
 
-```
+```text
 apps/web/
 ├── services/
 │   └── printful.ts ──────────── Printful API client wrapper
@@ -734,7 +734,7 @@ PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
 
 ## Decisions (Resolved SESSION_0115)
 
-```
+```text
 ┌──────┬──────────────────────────────────┬───────────────────────────┬──────────┐
 │  #   │ Decision                         │ Resolution                │ Status   │
 ├──────┼──────────────────────────────────┼───────────────────────────┼──────────┤
@@ -813,7 +813,7 @@ sequenceDiagram
 
 ## Implementation Priority
 
-```
+```text
 Phase 1 (this sprint):
   ✅ Spec doc (this file)
   → services/printful.ts client

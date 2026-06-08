@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-25
 updated: 2026-04-30
-last_agent: codex-session-0029
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/program-plan.md
   - docs/architecture/s1-schema-design.md
@@ -33,7 +33,7 @@ Use this doc to:
 The plan is built around **two primitives** (sections 1–2):
 
 1. **Passport** — global identity. *One per user.* Holds: legal/display name, DOB, gender, phone, emergency contact, avatar. Independent of any org/league/tournament.
-2. **Shells** — context-specific identity. The same person has **different attributes** in different contexts:
+1. **Shells** — context-specific identity. The same person has **different attributes** in different contexts:
    - **Organization Shell** (dojo/league/school): membership status, roles, rank
    - **Discipline Shell** (Karate vs BJJ vs TKD): different rank system per discipline
    - **Tournament Shell**: registration status, role for that event, **rank snapshotted at registration time** so future promotions don't rewrite competitive history
@@ -43,7 +43,7 @@ This model isn't optional — it's the spine of the data architecture and resolv
 ### Plan's primary entities (section 2)
 
 | Entity | Role |
-|---|---|
+| --- | --- |
 | **User** | Login/account |
 | **Passport** | Global profile (1:1 with User) |
 | **DirectoryProfile** | Privacy/visibility settings (1:1 with User) |
@@ -66,7 +66,7 @@ This model isn't optional — it's the spine of the data architecture and resolv
 ### S1 models (live in schema)
 
 | Plan entity | Our model | Status |
-|---|---|---|
+| --- | --- | --- |
 | User | `User` (Better-Auth) | ✅ exists |
 | Passport | `Passport` | ✅ renamed from `Profile`; has DOB, gender, legal names, emergency contact, avatar |
 | DirectoryProfile | `DirectoryProfile` | ✅ exists — visibility + per-field privacy flags |
@@ -124,12 +124,12 @@ Practically: a `School` (or, post-rename, `Organization`) belongs to a `Brand`. 
 ### Original plan requirements (S1 — all met)
 
 1. **Membership lifecycle**: invited → pending → active → suspended → expired. ✅ Live.
-2. **Multiple roles per membership**: ✅ `MembershipRoleAssignment` join table. Live.
-3. **Rank-at-registration snapshot**: ✅ `RegistrationEntry` snapshot fields. Live.
-4. **Directory search with privacy**: ✅ `DirectoryProfile` + UI. Live (S4).
-5. **Tournament division eligibility**: ✅ `Division` model with constraints. Schema live, enforcement logic pending.
-6. **Idempotent registration submission**: ✅ `idempotencyKey` on `Registration`. Schema live, server action pending.
-7. **Per-discipline rank systems**: ✅ 13 rank systems, 194 ranks seeded. Live.
+1. **Multiple roles per membership**: ✅ `MembershipRoleAssignment` join table. Live.
+1. **Rank-at-registration snapshot**: ✅ `RegistrationEntry` snapshot fields. Live.
+1. **Directory search with privacy**: ✅ `DirectoryProfile` + UI. Live (S4).
+1. **Tournament division eligibility**: ✅ `Division` model with constraints. Schema live, enforcement logic pending.
+1. **Idempotent registration submission**: ✅ `idempotencyKey` on `Registration`. Schema live, server action pending.
+1. **Per-discipline rank systems**: ✅ 13 rank systems, 194 ranks seeded. Live.
 
 ### Operational requirements (S2 design — all addressed)
 
@@ -190,13 +190,13 @@ The plan's recommended build order (section 6):
 
 1. **Milestone 1 — Identity + Membership Shells**
    1. Auth + User + Passport CRUD
-   2. Organization create/join
-   3. Membership per (org × discipline)
-   4. Directory search (basic) with privacy controls
-2. **Milestone 2 — Tournament registration**
+   1. Organization create/join
+   1. Membership per (org × discipline)
+   1. Directory search (basic) with privacy controls
+1. **Milestone 2 — Tournament registration**
    1. Tournament create (draft → published)
-   2. Add disciplines + divisions
-   3. Registration + entries + rank/org snapshotting
+   1. Add disciplines + divisions
+   1. Registration + entries + rank/org snapshotting
 
 Our current todo list jumps to per-brand rollouts (Ronin Dojo Design, BBL, etc.) without first nailing the Identity + Membership Shells milestone. **The plan's order is better** — get the identity/membership/directory loop working once, then per-brand work becomes data + theming, not architectural rework.
 
@@ -216,24 +216,25 @@ Our current todo list jumps to per-brand rollouts (Ronin Dojo Design, BBL, etc.)
 ### Phase 1 — schema rev to align with Passport + Shells ✅ DONE (S1)
 
 Completed in SESSION_0003–0005:
+
 1. ✅ Renamed `Style` → `Discipline`, `School` → `Organization`, `Belt` → `Rank`, `Profile` → `Passport`
-2. ✅ Added `Organization.type` enum
-3. ✅ Created `RankSystem` with `kind` enum
-4. ✅ Expanded `Passport` with all plan-required fields
-5. ✅ Added `DirectoryProfile`
-6. ✅ Reshaped `Membership` with `disciplineId`, `status` enum, `MembershipRoleAssignment`
-7. ✅ Reshaped `Tournament` → `Tournament` + `TournamentDiscipline` + `Division`
-8. ✅ Added `RegistrationEntry` with snapshot fields
-9. ✅ Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank
-10. ✅ Seeded 12 disciplines, 13 rank systems, 194 ranks, roles, tiers, styles
+1. ✅ Added `Organization.type` enum
+1. ✅ Created `RankSystem` with `kind` enum
+1. ✅ Expanded `Passport` with all plan-required fields
+1. ✅ Added `DirectoryProfile`
+1. ✅ Reshaped `Membership` with `disciplineId`, `status` enum, `MembershipRoleAssignment`
+1. ✅ Reshaped `Tournament` → `Tournament` + `TournamentDiscipline` + `Division`
+1. ✅ Added `RegistrationEntry` with snapshot fields
+1. ✅ Added `isSystem` + `brand` extensibility to Discipline/RankSystem/Rank
+1. ✅ Seeded 12 disciplines, 13 rank systems, 194 ranks, roles, tiers, styles
 
 ### Phase 2 — Milestone 1 (Identity + Membership Shells) ✅ DONE (S2–S4)
 
 1. ✅ Better-Auth wired with Passport linkage (S2).
-2. ✅ Passport CRUD UI — `/me` route (S2).
-3. ✅ Organization create + join flow (S3).
-4. ✅ Membership creation tied to (Organization × Discipline) with role assignment (S3).
-5. ✅ Directory search with `DirectoryProfile` privacy filters (S4).
+1. ✅ Passport CRUD UI — `/me` route (S2).
+1. ✅ Organization create + join flow (S3).
+1. ✅ Membership creation tied to (Organization × Discipline) with role assignment (S3).
+1. ✅ Directory search with `DirectoryProfile` privacy filters (S4).
 
 ### Phase 3 — Schema Wave A–C + operational features (SESSION_0021–0029)
 
@@ -264,10 +265,10 @@ Each brand gets:
 All five questions were resolved during SESSION_0003–0005:
 
 1. ✅ **`School` → `Organization`** — renamed.
-2. ✅ **`Style` → `Discipline`** — renamed.
-3. ✅ **`Profile` → `Passport`** — renamed.
-4. ✅ **`Belt` → `Rank`** with `RankSystem` parent — done.
-5. ✅ **Multiple roles per membership** — `MembershipRoleAssignment` join table implemented.
+1. ✅ **`Style` → `Discipline`** — renamed.
+1. ✅ **`Profile` → `Passport`** — renamed.
+1. ✅ **`Belt` → `Rank`** with `RankSystem` parent — done.
+1. ✅ **Multiple roles per membership** — `MembershipRoleAssignment` join table implemented.
 
 ---
 

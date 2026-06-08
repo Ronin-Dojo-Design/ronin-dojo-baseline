@@ -85,21 +85,18 @@
     }
   }
 
-  @keyframes connector-grow-y {
+  /*
+   * Phase 3e SVG connector draw-on. Each <path> is normalised with pathLength=1
+   * + stroke-dasharray:1, so this single keyframe draws any path length 0→full
+   * by sliding stroke-dashoffset 1→0. Animated with --ease-snappy + the existing
+   * per-generation connector grow delay; reduced-motion skips it (path renders full).
+   */
+  @keyframes connector-draw {
     from {
-      transform: scaleY(0);
+      stroke-dashoffset: 1;
     }
     to {
-      transform: scaleY(1);
-    }
-  }
-
-  @keyframes connector-grow-x {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
+      stroke-dashoffset: 0;
     }
   }
 

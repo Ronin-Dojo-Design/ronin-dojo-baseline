@@ -4,8 +4,8 @@ slug: session-0263-bbl-recon
 type: report
 status: active
 created: 2026-05-26
-updated: 2026-05-26
-last_agent: claude-session-0263
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0263.md
   - docs/architecture/lineage/SESSION_0263_audit_report.md
@@ -17,20 +17,20 @@ backlinks:
 
 **Context:** Cataloguing every reusable artifact from the legacy monorepo (`/Users/brianscott/dev/ronin-dojo-monorepo`) to prevent re-authoring during SESSION_0264/0265 BBL lineage hand-entry and DNS cutover (SESSION_0273).
 
-**Recon Date:** 2026-05-26  
+**Recon Date:** 2026-05-26
 **Scanned:** lineage data, WordPress theme, brand assets, sprint history, strategic goals, code patterns.
 
 ---
 
 ## Summary
 
-**Top 3 Reusable Artifacts (Ordered by SESSION_0264/0265 Value):**
+### Top 3 Reusable Artifacts (Ordered by SESSION_0264/0265 Value)
 
 1. **lineage-sample.json** (8 records, parent-child tree structure, 100% schema-ready) — Direct seed into LineageNode + LineageRelationship. Minor field gaps (no awardDate, no style/discipline codes) but core hierarchy intact. **Verdict: Import as-is, backfill rank dates in UI.**
 
-2. **72 Brand Assets** (logos, Rigan badge, 60 member/lineage/hero photos, 10 school crests) — Complete asset inventory at `/public/brand/blackbeltlegacy/`. No re-shoot needed. Standout: Rigan Machado badge (SVG), hero image library, school crests (SBJJ, John Will). **Verdict: Copy to new app, reference in profile cards + tree nodes.**
+1. **72 Brand Assets** (logos, Rigan badge, 60 member/lineage/hero photos, 10 school crests) — Complete asset inventory at `/public/brand/blackbeltlegacy/`. No re-shoot needed. Standout: Rigan Machado badge (SVG), hero image library, school crests (SBJJ, John Will). **Verdict: Copy to new app, reference in profile cards + tree nodes.**
 
-3. **WO-67 Payment Integration Pattern** + **WO-68 API Plugin Architecture** — Proven Stripe checkout + brand-specific REST API plugin approach (clone TuffBuffs pattern). Directly applicable to SESSION_0264 payment flow + registration. **Verdict: Reference for payment UX + backend structure.**
+1. **WO-67 Payment Integration Pattern** + **WO-68 API Plugin Architecture** — Proven Stripe checkout + brand-specific REST API plugin approach (clone TuffBuffs pattern). Directly applicable to SESSION_0264 payment flow + registration. **Verdict: Reference for payment UX + backend structure.**
 
 ---
 
@@ -48,7 +48,7 @@ backlinks:
 ### Schema Shape (Sample Fields)
 
 | Field | Type | Target Schema | Status |
-|-------|------|---------------|--------|
+| --- | --- | --- | --- |
 | id | string | LineageNode.id | ✅ Maps 1:1 |
 | parentId | string | LineageRelationship.fromNodeId | ✅ Maps 1:1 (inverse) |
 | name | string | LineageNode.user.name | ✅ Maps via User |
@@ -109,13 +109,14 @@ backlinks:
 
 ### Target Schema Fit Assessment
 
-**Suitability Verdict: 85% READY — Import with Known Gaps**
+### Suitability Verdict: 85% READY — Import with Known Gaps
 
-**Gaps to Backfill in SESSION_0264/0265:**
+### Gaps to Backfill in SESSION_0264/0265
+
 1. **Rank Enum Values:** Sample uses strings (`"8th Dan"`, `"6th Dan"`). Target schema needs Rank.id (enum: INSTRUCTOR_STUDENT, PROMOTED_BY, etc.). Require rank-name-to-id mapping or manual fixture.
-2. **School/Organization:** Sample has `school` field. Target has no direct Organization link in LineageNode. Need org creation script or manual org assignment.
-3. **Join Date vs. Award Date:** `joined` is ambiguous. Maps to RankAward.awardedAt but may mean "joined school," not "earned rank." SESSION_0264 must clarify intent.
-4. **No Relationship Type:** Sample structure implies INSTRUCTOR_STUDENT (parent→child). Target schema requires explicit LineageRelationType enum. Default to INSTRUCTOR_STUDENT; can refine post-launch.
+1. **School/Organization:** Sample has `school` field. Target has no direct Organization link in LineageNode. Need org creation script or manual org assignment.
+1. **Join Date vs. Award Date:** `joined` is ambiguous. Maps to RankAward.awardedAt but may mean "joined school," not "earned rank." SESSION_0264 must clarify intent.
+1. **No Relationship Type:** Sample structure implies INSTRUCTOR_STUDENT (parent→child). Target schema requires explicit LineageRelationType enum. Default to INSTRUCTOR_STUDENT; can refine post-launch.
 
 **Recommendation:** Use lineage-sample.json as bulk-import fixture. Write migration script that:
 
@@ -131,7 +132,7 @@ backlinks:
 
 ### Files Identified
 
-```
+```text
 blackbeltlegacy-theme/
 ├── functions.php (4,728 bytes)  — Theme hooks, script enqueue, React bootstrap
 ├── style.css (330 bytes)         — Minimal; theme is SPA-driven
@@ -182,26 +183,30 @@ blackbeltlegacy-theme/
 ### Asset Catalog by Category
 
 #### Logos & Wordmarks (2 files)
+
 | Path | Format | Size/Dims | Intended Use |
-|------|--------|-----------|--------------|
+| --- | --- | --- | --- |
 | `logo-wordmark.svg` | SVG | Vector | Header, nav bar, print |
 | `rigan-machado-badge.svg` | SVG | Vector | Founder badge, profile hero, certificates |
 
 #### Main Brand Images (2 files)
+
 | Path | Format | Size | Intended Use |
-|------|--------|------|--------------|
+| --- | --- | --- | --- |
 | `no circle bbl logo-official.png` | PNG | ~400x400px | Social, profile headers |
 | `no-circle-bbl-logo-official-white.png` | PNG | ~400x400px | Dark mode, inverse backgrounds |
 
 #### Founder & VIP Photos (2 files)
+
 | Path | Format | Size | Intended Use |
-|------|--------|------|--------------|
+| --- | --- | --- | --- |
 | `Kidjitsu-Rigan-Machado_1.jpg` | JPEG | ~1200px wide | Founder profile, homepage hero |
 | `Rigan-Machado.jpg` | JPEG | ~1200px wide | Alternate founder image, about section |
 
 #### Hero/Marketing Images (9 files)
+
 | Path | Format | Intended Use |
-|------|--------|--------------|
+| --- | --- | --- |
 | `hero-bbl-technical-standup.jpg` | JPEG | Landing page hero, class marketing |
 | `hero-belt-on-mat.jpg` | JPEG | Course cards, progression visuals |
 | `hero-black_belt_and_blue_belt_BBL.jpg` | JPEG | Partnership/team visual |
@@ -214,8 +219,9 @@ blackbeltlegacy-theme/
 | `hero-no-gi-x.jpg` | JPEG | No-gi training focus |
 
 #### Lineage & Historical Photos (10 files)
+
 | Path | Format | Notable Subjects |
-|------|--------|------------------|
+| --- | --- | --- |
 | `lineage/Bob-Bass-Rick-Williams.jpg` | JPEG | Bob Bass + Rick Williams (instructor lineage) |
 | `lineage/Bob-Carlos-Jr.jpg` | JPEG | Bob + Carlos Jr. relationship |
 | `lineage/Bob-Rigan-2.jpg` | JPEG | Bob Bass + Rigan Machado (key founder relationship) |
@@ -228,8 +234,9 @@ blackbeltlegacy-theme/
 | `lineage/Rigan-Machado.jpg` | JPEG | Rigan Machado formal photo |
 
 #### Member Headshots & Profiles (19 files)
+
 | Path | Format | Notable Members |
-|------|--------|-----------------|
+| --- | --- | --- |
 | `members/Bob-Bass-Coral-Belt-Rigan-Renato-Magno-Bill-Hosken-Dave-Meyer.jpg` | JPEG | Group photo (key VIPs) |
 | `members/Bob-Bass-Coral-Belt.png` | PNG | Bob Bass formal portrait |
 | `members/Bob-Bass-headshot.jpg` | JPEG | Bob Bass headshot |
@@ -254,8 +261,9 @@ blackbeltlegacy-theme/
 | `members/bill-hosken.jpg` | JPEG | Bill Hosken |
 
 #### School Crests & Partner Logos (10 files)
+
 | Path | Format | Organization |
-|------|--------|---------------|
+| --- | --- | --- |
 | `school logos/CSBJJ-logo.png` | PNG | CSBJJ |
 | `school logos/John-will-school-logo.png` | PNG | John Will lineage school |
 | `school logos/Lima-TKD-BJJ.jpg` | JPEG | Lima TKD-BJJ affiliate |
@@ -271,28 +279,30 @@ blackbeltlegacy-theme/
 | `school logos/rigan_original_png.png` | PNG | Rigan original logo |
 
 #### Belt Rank Badge (1 file)
+
 | Path | Format | Intended Use |
-|------|--------|--------------|
+| --- | --- | --- |
 | `badges/Coral-Belt.png` | PNG | Coral belt rank indicator, profile badge |
 
 ### Standout Assets (Most Valuable for New Platform)
 
 1. **Rigan Machado Badge SVG** — Use as founder/VIP indicator throughout app
-2. **Hero Image Library (9 files)** — Ready for carousel on landing, course cards, onboarding
-3. **School Logos (SBJJ, John Will, CSBJJ)** — For affiliation display in member profiles
-4. **Lineage Historical Photos (10 files)** — Critical for lineage tree node images (Bob, Rigan, Carlos, John Will, Chris, Dave Meyer)
-5. **Member Headshots (19 files)** — For profile avatars + directory listings
+1. **Hero Image Library (9 files)** — Ready for carousel on landing, course cards, onboarding
+1. **School Logos (SBJJ, John Will, CSBJJ)** — For affiliation display in member profiles
+1. **Lineage Historical Photos (10 files)** — Critical for lineage tree node images (Bob, Rigan, Carlos, John Will, Chris, Dave Meyer)
+1. **Member Headshots (19 files)** — For profile avatars + directory listings
 
 ### Asset Recommendations
 
 **Copy Strategy:** Migrate all 72 files to `/public/brand/blackbeltlegacy/` in new app. No re-shoot/re-design needed.
 
-**Priority Integrations (SESSION_0264/0265):**
+### Priority Integrations (SESSION_0264/0265)
+
 1. Hero images → Landing page carousel
-2. Rigan badge + VIP headshots → Profile cards in lineage tree
-3. School crests → Organization profile headers
-4. Member headshots → Directory + profile pages
-5. Logo + wordmark → Header/nav, certificates, print templates
+1. Rigan badge + VIP headshots → Profile cards in lineage tree
+1. School crests → Organization profile headers
+1. Member headshots → Directory + profile pages
+1. Logo + wordmark → Header/nav, certificates, print templates
 
 ---
 
@@ -302,7 +312,7 @@ blackbeltlegacy-theme/
 
 **Status:** Planning sprint (Session 65 end, ~2 hours planned)
 
-**Key Decisions:**
+### Key Decisions
 
 - Focus production-critical fixes only (no new features) — established MVP-first mindset
 - 7-phase approach: Assessment → Dashboard Fix → Logout Polish → Staging Deploy → Deployment Plan → Production Deploy → Documentation
@@ -316,7 +326,7 @@ blackbeltlegacy-theme/
 
 **Status:** Planning sprint (Session 67 @ 3:00 AM, ~2 hours planned, 🚨 CRITICAL)
 
-**Key Decisions:**
+### Key Decisions
 
 - **MVP Philosophy:** "Ship MVP tonight. Polish features next week. Production-ready beats feature-complete."
 - **Clone Pattern:** Use proven TuffBuffs code as template for Admin Dashboard, payment integration, onboarding
@@ -334,7 +344,7 @@ blackbeltlegacy-theme/
 
 **Status:** Planning sprint (Session 68, ~15-30 min agent + 2-3 hours manual, CRITICAL)
 
-**Key Decisions:**
+### Key Decisions
 
 - **Clone Strategy:** Don't write from scratch. Clone proven `tuffbuffs-api.php` (1,683 lines) and rebrand as `blackbeltlegacy-api.php`
 - **Architecture Decision:** Move from multi-brand plugin (ronindojo-api.php) to brand-specific plugins for maintainability + isolation
@@ -348,7 +358,7 @@ blackbeltlegacy-theme/
 
 **Status:** Planning sprint (Session 69, ~2-3 hours planned, P0 — blocks launch)
 
-**Key Decisions:**
+### Key Decisions
 
 - **Simplification:** Remove inline payment from registration; defer to dashboard upgrade flow (like TuffBuffs)
 - **Auth Approach:** Use cookie auth, NOT JWT complexity. Reason: TuffBuffs cookie auth works; JWT integration adds fragile moving parts
@@ -364,20 +374,21 @@ blackbeltlegacy-theme/
 
 ### GOAL-BBL-001: BBL Architecture Refactor Alignment
 
-**Status:** Incomplete  
-**Owner:** Petey + Cody + Giddy  
+**Status:** Incomplete
+**Owner:** Petey + Cody + Giddy
 **Updated:** 2026-03-02
 
 **Intent:** Complete BBL architecture refactor outcomes with shared runtime and governance contracts.
 
 **Why Now:** BBL is third-lane priority and must follow stabilized WEKAF/TB execution pattern.
 
-**Next 3 Steps:**
-1. Queue BBL goals from ARCH sprint map into GOALS directory
-2. Reuse validated execution packet from WEKAF/TB lanes
-3. Track closure against implementation proof gates
+### Next 3 Steps
 
-**Linked Resources:**
+1. Queue BBL goals from ARCH sprint map into GOALS directory
+1. Reuse validated execution packet from WEKAF/TB lanes
+1. Track closure against implementation proof gates
+
+### Linked Resources
 
 - `RoninDashboard/sprints/active/ARCH_REFACTOR_2026/`
 - `RoninDashboard/protocols/RUN_BOOK.md`
@@ -388,28 +399,28 @@ blackbeltlegacy-theme/
 
 ## Code Patterns Worth ID-Only Mention
 
-*(Identified for Petey's SESSION_0263_TASK_03 consideration; not proposed for immediate port)*
+### (Identified for Petey's SESSION_0263_TASK_03 consideration; not proposed for immediate port)
 
 1. **TuffBuffs Admin Dashboard Clone Pattern** (`src/brands/tuffbuffs/components/AdminDashboard.jsx`, 670 lines) — Proven stats cards + member table + orders display. BBL can directly clone with rebrand (see WO-67 Phase 4). **Applicability:** Saves 2+ hours vs. building admin UX from scratch.
 
-2. **Brand-Specific API Plugin Architecture** (`tuffbuffs-api.php` + `blackbeltlegacy-api.php`, ~1,700 lines each) — Clear separation: multi-brand plugin dies; each brand owns `/brand/v1/*` namespace. Reduces cross-brand breakage risk. **Applicability:** Model for SESSION_0265 API stability.
+1. **Brand-Specific API Plugin Architecture** (`tuffbuffs-api.php` + `blackbeltlegacy-api.php`, ~1,700 lines each) — Clear separation: multi-brand plugin dies; each brand owns `/brand/v1/*` namespace. Reduces cross-brand breakage risk. **Applicability:** Model for SESSION_0265 API stability.
 
-3. **ProfileSlideIn Component** (`src/shared/components/ProfileSlideIn.jsx`, 141 lines) — Reddit-style drawer for user profile access (logout button, edit, view). Reusable across brands. **Applicability:** Drop-in for profile access UX.
+1. **ProfileSlideIn Component** (`src/shared/components/ProfileSlideIn.jsx`, 141 lines) — Reddit-style drawer for user profile access (logout button, edit, view). Reusable across brands. **Applicability:** Drop-in for profile access UX.
 
-4. **FirstUseOverlay Onboarding Pattern** (`src/components/FirstUseOverlay.jsx`) — Persistent onboarding wizard with localStorage flag (`bbl_onboarding_complete`). TuffBuffs uses successfully. **Applicability:** Proven UX pattern for new user guidance.
+1. **FirstUseOverlay Onboarding Pattern** (`src/components/FirstUseOverlay.jsx`) — Persistent onboarding wizard with localStorage flag (`bbl_onboarding_complete`). TuffBuffs uses successfully. **Applicability:** Proven UX pattern for new user guidance.
 
-5. **Vite Multi-Brand Build Config** (`vite.config.bbl.js`, separate from TB/WEKAF configs) — Each brand has own build target, own output (dist-bbl/, dist-tuffbuffs/, dist-wekaf/). Prevents bundle bloat. **Applicability:** SESSION_0264 should adopt same pattern if adding new brand features.
+1. **Vite Multi-Brand Build Config** (`vite.config.bbl.js`, separate from TB/WEKAF configs) — Each brand has own build target, own output (dist-bbl/, dist-tuffbuffs/, dist-wekaf/). Prevents bundle bloat. **Applicability:** SESSION_0264 should adopt same pattern if adding new brand features.
 
 ---
 
 ## Gaps & Unavailable Artifacts
 
-**Path Not Found at Expected Location:**
+### Path Not Found at Expected Location
 
 - `/RoninDashboard/GOALS/BBL/active/` (found `/current/` instead; may be reorganized)
 - `wordpress/blackbeltlegacy-api.php` (referenced in WO-68 plan but not yet created; **blocker for SESSION_0264 registration testing**)
 
-**Gaps Identified:**
+### Gaps Identified
 
 - **No Custom Rank Badges:** lineage-sample.json uses string ranks (`"8th Dan"`). No PNG/SVG rank badge icons found. SESSION_0265 must commission or use Coral-Belt.png as template.
 - **No Relationship Type Fixtures:** lineage-sample.json structure implies INSTRUCTOR_STUDENT but has no explicit type field. SESSION_0264 must decide enum values (INSTRUCTOR_STUDENT vs. PROMOTED_BY vs. AFFILIATION).
@@ -420,7 +431,7 @@ blackbeltlegacy-theme/
 ## Recon Summary Statistics
 
 | Category | Count | Verdict |
-|----------|-------|---------|
+| --- | --- | --- |
 | Lineage JSON Records | 8 | 85% ready; backfill rank/org mapping |
 | Brand Assets (images + SVG) | 72 | 100% ready; copy as-is |
 | Theme Files | 6 | Presentational only; architecture sound |
@@ -430,6 +441,6 @@ blackbeltlegacy-theme/
 
 ---
 
-**Prepared by:** SESSION_0263 Recon Agent  
-**Recon Date:** 2026-05-26  
-**Ready for:** SESSION_0264/0265 lineage hand-entry + SESSION_0273 DNS cutover  
+**Prepared by:** SESSION_0263 Recon Agent
+**Recon Date:** 2026-05-26
+**Ready for:** SESSION_0264/0265 lineage hand-entry + SESSION_0273 DNS cutover

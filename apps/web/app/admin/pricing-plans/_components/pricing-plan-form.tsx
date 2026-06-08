@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation"
 import { type ComponentProps, use, useMemo } from "react"
 import { toast } from "sonner"
 import { PricingPlanActions } from "~/app/admin/pricing-plans/_components/pricing-plan-actions"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { RelationSelector } from "~/components/admin/relation-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Form,
   FormControl,
@@ -169,7 +169,11 @@ export function PricingPlanForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Pricing Model</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={Object.fromEntries(pricingModelOptions.map(opt => [opt.value, opt.label]))}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select model" />

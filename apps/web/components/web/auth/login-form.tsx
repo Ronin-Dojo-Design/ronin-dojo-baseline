@@ -52,7 +52,7 @@ export const LoginForm = ({ ...props }: ComponentProps<"form">) => {
           )}
         />
 
-        <Button suffix={<InboxIcon />} isPending={isPending}>
+        <Button type="submit" suffix={<InboxIcon />} isPending={isPending}>
           {t("forms.sign_in.magic_link_button")}
         </Button>
       </Stack>

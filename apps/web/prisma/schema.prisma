@@ -84,6 +84,8 @@ model User {
   lineageTreeAccessGranted   LineageTreeAccess[]         @relation("LineageTreeAccessGrantedBy")
   lineageClaimRequests       LineageClaimRequest[]       @relation("LineageClaimClaimant")
   reviewedLineageClaims      LineageClaimRequest[]       @relation("LineageClaimReviewer")
+  profileClaimRequests       ProfileClaimRequest[]       @relation("ProfileClaimClaimant")
+  reviewedProfileClaims      ProfileClaimRequest[]       @relation("ProfileClaimReviewer")
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
@@ -989,8 +991,9 @@ model DirectoryProfile {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @unique
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String                @unique
+  claimRequests ProfileClaimRequest[]
 }
 
 // ---------------------------------------------------------------------------
@@ -1068,6 +1071,9 @@ model Organization {
 
   // @added   SESSION_0318 (2026-05-31) — host venue for promotion ceremonies (PromotionEvent.hostOrganizationId)
   hostedPromotionEvents PromotionEvent[] @relation("PromotionEventHostOrg")
+
+  // @added   SESSION_0354 (2026-06-06) — generic member/org claim requests (owner-less orgs)
+  claimRequests ProfileClaimRequest[]
 
   @@unique([brand, slug])
   @@index([brand])
@@ -2624,6 +2630,60 @@ model LineageClaimEvidence {
 
   @@index([claimRequestId])
   @@index([mediaId])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Profile claims (generic member/org claim, SESSION_0354)
+// ---------------------------------------------------------------------------
+//
+// Mirrors the LineageClaimRequest admin-review flow for the two profile
+// surfaces that can legitimately be "unclaimed": owner-less Organizations and
+// legacy placeholder person profiles (a DirectoryProfile whose User has no
+// login account). Reuses LineageClaimStatus. The subject is polymorphic —
+// exactly one of directoryProfile/organization is set, matching subjectType
+// (enforced in the claim action, not the DB). Approval grants ownership/admin
+// of the subject to the claimant.
+
+enum ProfileClaimSubjectType {
+  PERSON
+  ORGANIZATION
+}
+
+enum ProfileClaimRelationship {
+  SELF
+  STAFF
+  OWNER
+  REPRESENTATIVE
+  FAMILY
+  OTHER
+}
+
+model ProfileClaimRequest {
+  id           String                   @id @default(cuid())
+  status       LineageClaimStatus       @default(PENDING)
+  subjectType  ProfileClaimSubjectType
+  relationship ProfileClaimRelationship
+  brand        Brand
+  claimantNote String?
+  reviewerNote String?
+  reviewedAt   DateTime?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  directoryProfile   DirectoryProfile? @relation(fields: [directoryProfileId], references: [id], onDelete: Cascade)
+  directoryProfileId String?
+  organization       Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId     String?
+
+  claimant       User  @relation("ProfileClaimClaimant", fields: [claimantUserId], references: [id], onDelete: Cascade)
+  claimantUserId String
+  reviewedBy     User? @relation("ProfileClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedById   String?
+
+  @@index([brand, status])
+  @@index([directoryProfileId, status])
+  @@index([organizationId, status])
+  @@index([claimantUserId, status])
 }
 
 // ---------------------------------------------------------------------------

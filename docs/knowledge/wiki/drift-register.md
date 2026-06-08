@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: claude-session-0298
+updated: 2026-06-08
+last_agent: codex-session-0349
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -219,6 +219,10 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - [x] Full sweep: zero residual `radix-ui`/`cmdk`/`cva`/`asChild` imports across `apps/web/`.
 - [x] tsc pass, biome pass, 244 tests pass, build pass, wiki-lint 0 errors.
 
+#### Follow-up (SESSION_0333) — migration scanned imports, not Menu.Item semantics
+
+The D-016 residual sweep checked for radix *imports* but missed a *semantic* difference: Radix `Menu.Item` fires `onSelect`; Base UI `Menu.Item` fires **`onClick`** and has no `onSelect` (it resolves to the `<div>` text-selection event — typechecks, never fires). SESSION_0333 found the lineage on-card actions menu was silently dead from this (fixed), and the same dead `onSelect`-without-`onClick` pattern in ~6 admin action menus (`components/admin/tournaments/registration-actions.tsx`, `app/admin/leads|tools|tags|categories/_components/*-actions.tsx`). **Status:** closed — SESSION_0334 swept all 11 instances across 6 files (the file list undercounted: `app/admin/users/_components/user-actions.tsx` had it too) to `onClick`-only, and added a `bun test` regression guard (`apps/web/components/common/dropdown-menu.guard.test.ts`) that fails CI if any `DropdownMenuItem` reintroduces `onSelect`. Confirmed at Base UI source that `Menu.Item` activates on `onClick` for pointer + keyboard (it synthesizes a click via `useButton`), so `onClick`-only is sufficient. Tracked-resolved in [`wiring-ledger.md`](wiring-ledger.md) (WL-P1-3 ✅).
+
 ### D-017 — `updateOrganization` auth diverges from org-settings access model
 
 - **Source A:** `apps/web/server/web/school/actions.ts` — `updateOrganization` gates on a Membership with role code `OWNER` (a role-assignment).
@@ -226,3 +230,58 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Decision needed:** Consolidate `updateOrganization` onto `assertOrgAdminAccess` and retire the OWNER-role check, so the dashboard school-form and the settings surface share one auth model. An `ownerId` owner without an `OWNER` role-assignment currently passes the settings gate but would fail `updateOrganization`.
 - **Status:** closed
 - **Opened:** SESSION_0298 (2026-05-29). **Closed:** SESSION_0300 (2026-05-29). `updateOrganization` now uses `assertOrgAdminAccess` — same auth model as all org settings surfaces. The OWNER role-assignment check is retired.
+
+### D-018 — CUTOVER "test card on Baseline" assumed test-mode prod; prod is live-mode
+
+- **Source A:** `CUTOVER_CHECKLIST.md` §"Baseline staging-prod proxy procedure" step 4 — "run the same lineage membership tier shape on Baseline with a test-mode Stripe card".
+- **Source B:** `.env.production.local` Stripe key prefix `sk_live` (Baseline prod is live-mode); MB-013 / SESSION_0171 corroborate live-key intent.
+- **Decision needed:** A test card cannot run against live-mode prod (rejected; a real card = real money). Prove the real signed-webhook path off prod (Stripe CLI local test-mode rehearsal — done SESSION_0345 — or a Preview deploy); the deployed prod domain gets only a money-free webhook-destination/secret verification + a launch-day real-charge-and-refund smoke decision.
+- **Status:** resolved
+- **Resolved in:** SESSION_0345 — CUTOVER proxy step 4 corrected; rehearsal procedure documented in `stripe-setup-runbook.md`; bug caught in the same rehearsal tracked as `SESSION_0345_FINDING_01`.
+
+### D-019 — Tier ladder still documented BASIC and code lacked LEGEND lineage policy
+
+- **Source A:** `docs/architecture/decisions/0012-tier-auto-grant.md` — qualifying tier table still listed `BASIC`
+  level 1 and `LEGEND` level 4.
+- **Source B:** SESSION_0349 operator direction — `basic` should be retired; `legend` is the all-features,
+  free-for-life tier used across brands for lifetime cohorts.
+- **Decision needed:** Retire `BASIC` from active tier docs and recognize `LEGEND` in lineage policy code without
+  expanding checkout/webhook/seed migration in this trust-badge session.
+- **Status:** resolved
+- **Resolved in:** SESSION_0349 — ADR 0012 tier-auto-grant table removed `BASIC`; lineage comp/policy helpers recognize
+  `LINEAGE_LEGEND`; broad checkout/webhook/seed migration deferred to a follow-up.
+
+### D-020 — Overlapping enum vocabularies (visibility / lifecycle-status / tier)
+
+- **Source A:** `apps/web/prisma/schema.prisma` enums — three visibility vocabularies coexist:
+  `DirectoryVisibility { HIDDEN, MEMBERS_ONLY, PUBLIC }`, `LineageVisibility { PUBLIC, UNLISTED, RESTRICTED, PRIVATE }`,
+  and `Organization` (no visibility enum — brand-scoped + `isPublished`/listing tier only).
+- **Source B:** ~6 lifecycle enums share the `ACTIVE / EXPIRED / CANCELLED`(+variant) shape —
+  `MembershipStatus`, `SubscriptionStatus`, `EntitlementStatus`, `CertificationStatus`, `ContractStatus`,
+  `EnrollmentStatus` — and two tier vocabularies coexist: `ToolTier { Free, Standard, Premium }` (PascalCase, Tool
+  substrate) vs the profile/lineage tier string union `free | premium | elite | legend` (code-only, lowercase).
+- **Decision needed:** none forced. The visibility enums are semantically distinct (member-gating vs web-style
+  unlisted/restricted), the lifecycle enums are domain-distinct (a membership ≠ a subscription ≠ an entitlement), and the
+  tier vocabularies sit on different substrates — so consolidation is a deliberate cross-domain migration, not a quick win.
+  Recorded here as the consolidation backlog; `DirectoryFacetResult` (SESSION_0350) deliberately added **no** enum
+  (presentation-only TS union `"person" | "organization" | "lineageTree"`).
+- **Status:** documented (deferred)
+- **Logged in:** SESSION_0350 — enum inventory taken during the faceted `/directory` grill; operator chose document-only.
+  Revisit if/when a session has a concrete reason to unify one vocabulary (most likely the tier dualism, building on the
+  SESSION_0349 `legend` work).
+
+### D-021 — oRPC: governing docs contradict; the deciding ADR was never written
+
+- **Source A:** `docs/architecture/uplift/epic-2026-05-19.md` — locks *"oRPC stance: ADR_0019 + lineage canvas pilot (3 sessions)"* → do a pilot.
+- **Source B:** `docs/knowledge/wiki/dirstarter-gap-audit.md` line 124 — *"No migration to oRPC planned. Deliberate long-term choice."* → don't. And `dirstarter-baseline-index.md` §13k — *"ADR-level at L10; ADR required before implementation"* → undecided.
+- **Decision needed:** the deciding ADR was never written ("ADR_0019" was reused for membership-lifecycle), and the pilot lanes (L10–L14) were displaced by the Base UI migration (L6) ballooning to 8 phases. oRPC sits undecided + unbuilt (`@orpc/*` + `@tanstack/react-query` absent; no `/api/rpc`), while misremembered as "done." Toolchain is already modern (Next 16 / React 19), so no bump blocks it.
+- **Status:** resolved
+- **Resolved in:** SESSION_0356 — **ADR 0024** (`0024-orpc-vs-next-safe-action.md`, status `proposed`): hybrid + scoped lineage-canvas pilot; next-safe-action stays default; no mass migration. Awaiting operator ratification.
+
+### D-022 — `LineageProfileDetailRenderPolicy` is unused by the lineage profile drawer
+
+- **Source A:** `apps/web/lib/entitlements/lineage-tier-policy.ts` — `LineageProfileDetailRenderPolicy` (FREE = `bio`/`rankHistory`/`organizations`/etc. `false`) is defined and **unit-tested** (`lineage-tier-policy.test.ts`).
+- **Source B:** `apps/web/components/web/lineage/lineage-profile-drawer.tsx` — consumes **no** detail policy (only `isAdmin`); the drawer shows the full public profile to any viewer. The detail policy is consumed **only** by the directory (`server/web/directory/profile-projection.ts`, `directory/queries.ts`, `search-profiles.ts`).
+- **Decision needed:** none — operator ruled (SESSION_0356) **funnel-first**: the drawer's full public view for everyone is intended (discovery→claim), and it is **not** a privacy leak (the server payload allowlist is the real boundary — guarded by `queries.visibility.test.ts`). The detail policy is therefore intentionally directory-only.
+- **Status:** documented (accepted)
+- **Logged in:** SESSION_0356 — surfaced while verifying the drawer-gate removal (FINDING_01). The operator's "tier gates the drawer's contents" assumption was false *for the drawer*; intent confirmed as full-public-view. Cleanup option (delete the now-directory-only detail policy or rename it `Directory…`) left as a non-urgent backlog item.

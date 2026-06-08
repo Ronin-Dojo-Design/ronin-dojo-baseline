@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   reactStrictMode: false,
   allowedDevOrigins: ["bbl.local", "baseline.local", "wekaf.local"],
+  async redirects() {
+    return [
+      {
+        source: "/members",
+        destination: "/directory",
+        permanent: false,
+      },
+      {
+        source: "/members/:slug",
+        destination: "/directory/:slug",
+        permanent: false,
+      },
+    ]
+  },
 
   cacheLife: {
     infinite: {

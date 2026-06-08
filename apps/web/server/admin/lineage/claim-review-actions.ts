@@ -1,10 +1,12 @@
 "use server"
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
+import { getLineageCompEntitlementKeys } from "~/lib/entitlements/lineage-comp"
 import { adminActionClient } from "~/lib/safe-actions"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
+import { grantComp } from "~/server/entitlements/comp-grants"
 import type { db as appDb } from "~/services/db"
 
 /**
@@ -25,6 +27,7 @@ export type ReviewLineageClaimResult = {
   status: LineageClaimStatus
   nodeId: string
   accessGrantId: string | null
+  compGrantIds: string[]
   ownershipTransferred: boolean
   placeholderArchivedUserId: string | null
   placeholderArchivedAt: Date | null
@@ -42,7 +45,7 @@ export const applyLineageClaimReview = async ({
   input: ReviewLineageClaimInput
 }): Promise<ReviewLineageClaimResult> => {
   return db.$transaction(
-    async tx => {
+    async (tx: any): Promise<ReviewLineageClaimResult> => {
       const claim = await tx.lineageClaimRequest.findFirst({
         where: {
           id: input.claimId,
@@ -88,6 +91,7 @@ export const applyLineageClaimReview = async ({
       }
 
       let accessGrantId: string | null = null
+      let compGrantIds: string[] = []
       let ownershipTransferred = false
       let placeholderArchivedUserId: string | null = null
       let placeholderArchivedAt: Date | null = null
@@ -192,6 +196,20 @@ export const applyLineageClaimReview = async ({
 
           accessGrantId = grant.id
         }
+
+        if (input.comp) {
+          const compResult = await grantComp({
+            db: tx,
+            brand,
+            grantorUserId: reviewerUserId,
+            granteeUserId: claim.claimantUserId,
+            entitlementKeys: getLineageCompEntitlementKeys(input.comp.tier),
+            term: input.comp.termDays ? { days: input.comp.termDays } : null,
+            reason: `lineage-claim-${claim.id}`,
+            now: reviewTimestamp,
+          })
+          compGrantIds = compResult.grants.map(grant => grant.id)
+        }
       }
 
       const updated = await tx.lineageClaimRequest.update({
@@ -218,6 +236,7 @@ export const applyLineageClaimReview = async ({
             status: updated.status,
             reviewerUserId,
             accessGrantId,
+            compGrantIds,
             ownershipTransferred,
             placeholderArchivedUserId,
             placeholderArchivedAt: placeholderArchivedAt?.toISOString() ?? null,
@@ -230,6 +249,7 @@ export const applyLineageClaimReview = async ({
         status: updated.status,
         nodeId: claim.nodeId,
         accessGrantId,
+        compGrantIds,
         ownershipTransferred,
         placeholderArchivedUserId,
         placeholderArchivedAt,

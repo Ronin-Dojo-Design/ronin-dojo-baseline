@@ -114,7 +114,15 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
           render={({ field }) => (
             <FormItem>
               <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                items={{
+                  user: "User",
+                  tournament_director: "Tournament Director",
+                  admin: "Admin",
+                }}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />

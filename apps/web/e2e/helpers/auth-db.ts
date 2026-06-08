@@ -20,6 +20,16 @@ type AuthUserOptions = {
   role?: string
 }
 
+type RegistrationUser = {
+  userId: string
+  email: string
+  name: string
+  emailVerified: boolean
+  passportDisplayName: string | null
+  directorySlug: string | null
+  sessionCount: number
+}
+
 const decodePayload = <T>() => {
   const encoded = process.argv[3]
   if (!encoded) return undefined as T | undefined
@@ -75,6 +85,53 @@ async function cleanupUser(userId: string) {
   await prisma.user.deleteMany({ where: { id: userId } })
 }
 
+async function getMagicLinkToken(email: string) {
+  const verification = await prisma.verification.findFirst({
+    where: {
+      value: { contains: `"email":"${email}"` },
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return verification?.identifier ?? null
+}
+
+async function readRegisteredUserByEmail(email: string): Promise<RegistrationUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      passport: true,
+      directoryProfile: true,
+      sessions: { select: { id: true } },
+    },
+  })
+
+  if (!user) return null
+
+  return {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    emailVerified: user.emailVerified,
+    passportDisplayName: user.passport?.displayName ?? null,
+    directorySlug: user.directoryProfile?.slug ?? null,
+    sessionCount: user.sessions.length,
+  }
+}
+
+async function cleanupUserByEmail(email: string) {
+  const user = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+
+  await prisma.verification.deleteMany({
+    where: { value: { contains: `"email":"${email}"` } },
+  })
+
+  if (user) {
+    await cleanupUser(user.id)
+  }
+}
+
 const command = process.argv[2]
 
 if (command === "create-user") {
@@ -91,6 +148,21 @@ if (command === "create-user") {
   if (!payload?.userId) throw new Error("Missing userId")
 
   await cleanupUser(payload.userId)
+} else if (command === "get-magic-link-token") {
+  const payload = decodePayload<{ email: string }>()
+  if (!payload?.email) throw new Error("Missing email")
+
+  process.stdout.write(JSON.stringify(await getMagicLinkToken(payload.email)))
+} else if (command === "read-registered-user-by-email") {
+  const payload = decodePayload<{ email: string }>()
+  if (!payload?.email) throw new Error("Missing email")
+
+  process.stdout.write(JSON.stringify(await readRegisteredUserByEmail(payload.email)))
+} else if (command === "cleanup-user-by-email") {
+  const payload = decodePayload<{ email: string }>()
+  if (!payload?.email) throw new Error("Missing email")
+
+  await cleanupUserByEmail(payload.email)
 } else {
   throw new Error(`Unknown auth-db command: ${command ?? "<missing>"}`)
 }

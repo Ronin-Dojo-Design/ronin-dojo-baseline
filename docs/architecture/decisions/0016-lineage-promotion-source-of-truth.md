@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-17
 updated: 2026-05-30
-last_agent: claude-session-0311
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/lineage/lineage-prisma-schema-patch-proposal.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
@@ -46,18 +46,18 @@ Multiple promotions between the same promoter and student are allowed. For that 
 
 | Layer | Source | Relevance |
 | --- | --- | --- |
-| Prisma/database | `https://dirstarter.com/docs/database/prisma` | Confirms Prisma schema and migration workflow as the baseline database path. |
+| Prisma/database | `<https://dirstarter.com/docs/database/prisma`> | Confirms Prisma schema and migration workflow as the baseline database path. |
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - Rank history has one durable source of truth.
 - Tree layout can change without rewriting promotion history.
 - `PROMOTED_BY` traversal can represent repeated promotions by the same person.
 - Claim and editor workflows can audit changes against concrete promotion facts.
 
-**Negative**
+### Negative
 
 - Server read models must reconcile `RankAward`, `PROMOTED_BY`, and `LineageTreeMember`.
 - Prisma cannot express every integrity rule needed for lineage groups, so SESSION_0178 migration includes custom SQL indexes.
@@ -90,13 +90,21 @@ unchanged: `RankAward` remains the canonical per-person promotion fact. `Promoti
 Additive schema delta (SESSION_0318 migration; purely additive — `CREATE TABLE` + nullable
 `ADD COLUMN` + indexes/FKs, no drops, no NOT NULL backfill):
 
-- New `PromotionEvent { id, title, eventDate, location?, description?, hostOrganizationId? →
-  Organization (SET NULL), createdAt, updatedAt }`, indexed on `eventDate` and `hostOrganizationId`.
+- New `PromotionEvent { id, title, eventDate, location?, description?, hostOrganizationId?, createdAt, updatedAt }`
+
+  with `hostOrganizationId` pointing to `Organization` (`SET NULL`), indexed on `eventDate` and
+  `hostOrganizationId`.
+
 - `RankAward.promotionEventId String?` → `PromotionEvent` (`SET NULL`, indexed). Nullable; an award
+
   belongs to at most one event.
+
 - `MediaAttachment.promotionEventId String?` → `PromotionEvent` (indexed), following the existing
+
   polymorphic per-owner FK pattern (`rankAwardId`, `eventId`, …), giving the event a shared gallery.
+
 - `LineageVisualGroup.promotionEventId String?` → `PromotionEvent` (`SET NULL`, indexed). A per-tree
+
   cohort group (e.g. the SESSION_0316 "Dirty Dozen" box) may point at the global event it
   represents — **many cohort boxes → one event** (multiple brand trees; multiple parents within a
   tree). The group and the event become one truth instead of a fragile date-match.
@@ -104,16 +112,21 @@ Additive schema delta (SESSION_0318 migration; purely additive — `CREATE TABLE
 Decisions locked in the SESSION_0318 grill that constrain this model:
 
 - **No verification signal on the event.** `PromotionEvent` does not auto-verify and does not propose
+
   verification status. Verification stays exactly where this ADR puts it — role-gated on
   `RankAward` / `LineageRelationship.verificationStatus`, set by the promoting instructor / admin /
   school-owner / instructor / user with a granted lineage capability. Event media and attendance are
   **not** an authority over rank truth.
+
 - **No attestor / attendee model in v1.** The earlier `promotion-event-model.md` draft proposed
+
   `attestedById` to "drive verification"; with verification decoupled (above), that field has no
   consumer. The promoter is already on `RankAward.awardedById` and the photo uploader on
   `Media.uploadedById`. A `PromotionEventAttendee` join table may be added additively later only when
   a real feature needs it.
+
 - **Discipline-agnostic + dual org axis retained.** An event groups awards across any discipline;
+
   each award keeps its own rank/discipline. `PromotionEvent.hostOrganizationId` (venue) is distinct
   from each `RankAward.organizationId` (awarding school of record, per the SESSION_0311 amendment).
 

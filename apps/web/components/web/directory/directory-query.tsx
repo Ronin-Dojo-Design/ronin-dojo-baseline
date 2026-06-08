@@ -1,42 +1,53 @@
 import type { SearchParams } from "nuqs"
 import type { Brand } from "~/.generated/prisma/client"
-import { DirectoryList } from "~/components/web/directory/directory-list"
+import { DirectoryFacetResults } from "~/components/web/directory/directory-facet-results"
+import { DirectoryFacetTabs } from "~/components/web/directory/directory-facet-tabs"
 import {
   DirectoryListing,
   type DirectoryListingProps,
 } from "~/components/web/directory/directory-listing"
-import { getDirectoryProfiles } from "~/server/web/directory/queries"
+import { getDirectoryFacets, normalizeDirectoryFacetTab } from "~/server/web/directory/facets"
+import { getDirectoryFilterOptions } from "~/server/web/directory/filter-options"
 import { directoryFilterParamsCache } from "~/server/web/directory/schema"
 
 type DirectoryQueryProps = Omit<DirectoryListingProps, "children"> & {
   searchParams: Promise<SearchParams>
   brand: Brand
   viewerUserId?: string | null
+  viewerRole?: string | null
 }
 
 const DirectoryQuery = async ({
   searchParams,
   brand,
   viewerUserId,
+  viewerRole,
   ...props
 }: DirectoryQueryProps) => {
   const params = directoryFilterParamsCache.parse(await searchParams)
+  const tab = normalizeDirectoryFacetTab(params.type)
 
-  const profiles = await getDirectoryProfiles({
+  const facets = await getDirectoryFacets({
     brand,
+    tab,
     viewerUserId,
-    filters: {
-      organizationId: params.org || undefined,
-      disciplineId: params.discipline || undefined,
-      rankId: params.rank || undefined,
-      locationCity: params.city || undefined,
-      locationRegion: params.region || undefined,
+    viewerRole,
+    params: {
+      q: params.q || undefined,
+      discipline: params.discipline || undefined,
+      org: params.org || undefined,
+      city: params.city || undefined,
+      region: params.region || undefined,
+      page: params.page,
+      perPage: params.perPage,
     },
   })
+  const filterOptions = await getDirectoryFilterOptions(brand)
 
   return (
-    <DirectoryListing {...props}>
-      <DirectoryList profiles={profiles} />
+    <DirectoryListing {...props} filterOptions={filterOptions}>
+      <DirectoryFacetTabs activeTab={tab} />
+      <DirectoryFacetResults facets={facets} />
     </DirectoryListing>
   )
 }

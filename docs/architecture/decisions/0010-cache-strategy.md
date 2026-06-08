@@ -12,7 +12,7 @@
 
 ## Context
 
-Dirstarter uses `"use cache"` + `cacheTag` + `cacheLife` on all read queries (e.g. `searchTools`, `findRelatedTools`). All Dirstarter data is public — no auth filtering, no per-user visibility rules. Dirstarter's docs (https://dirstarter.com/docs) contain **no caching guide** — caching is an undocumented convention visible only in source code.
+Dirstarter uses `"use cache"` + `cacheTag` + `cacheLife` on all read queries (e.g. `searchTools`, `findRelatedTools`). All Dirstarter data is public — no auth filtering, no per-user visibility rules. Dirstarter's docs (<https://dirstarter.com/docs>) contain **no caching guide** — caching is an undocumented convention visible only in source code.
 
 Key Dirstarter patterns discovered from source + docs research:
 
@@ -36,10 +36,11 @@ Ronin Dojo has **auth-scoped queries** where results depend on the viewer:
 ### How `"use cache"` generates cache keys (Next.js 16)
 
 Cache keys are built from:
+
 1. **Build ID** — unique per build
-2. **Function ID** — secure hash of function location + signature
-3. **Serialized arguments** — all function parameters
-4. **Closure-captured variables** — variables from outer scopes automatically included
+1. **Function ID** — secure hash of function location + signature
+1. **Serialized arguments** — all function parameters
+1. **Closure-captured variables** — variables from outer scopes automatically included
 
 **Critical insight:** If a cached function takes `viewerUserId` as a parameter, each distinct `viewerUserId` value produces a **separate cache entry**. This is the intended pattern for per-user caching.
 
@@ -58,7 +59,7 @@ Next.js 16 also offers `"use cache: private"` for cases where you can't refactor
 ### Three-tier caching strategy
 
 | Tier | Pattern | When to use | Example |
-|------|---------|-------------|---------|
+| --- | --- | --- | --- |
 | **T1 — Public data** | `"use cache"` + `cacheTag` + `cacheLife("hours")` | Data identical for all viewers within a brand. No auth filtering. | `getOrganizationsByBrand(brand)`, `getSystemRoles()`, `getDisciplines()`, seed data lookups |
 | **T2 — Auth-variant data** | `"use cache"` + `cacheTag` + `cacheLife("minutes")` with `viewerUserId` (or `"anon"`) as an argument | Same query, different results per auth state. Viewer identity is part of the cache key. | `getDirectoryProfiles({ brand, filters, viewerUserId })` — anon sees PUBLIC, authed sees PUBLIC + MEMBERS_ONLY |
 | **T3 — Per-user private data** | `React.cache()` only (no `"use cache"`) | Data owned by and visible only to one user. Deduplication within a single request, no cross-request caching. | `getPassportByUserId(userId)`, `getUserMemberships(userId)`, `getMyRegistrations(userId)` |
@@ -67,11 +68,11 @@ Next.js 16 also offers `"use cache: private"` for cases where you can't refactor
 
 1. **Read session outside cache boundary.** Pages/layouts call `auth()` or `getSession()`, extract `userId`, pass it as a serialized argument to cached query functions.
 
-2. **Normalize the viewer key.** Auth-variant queries accept `viewerUserId: string | null`. Pass `null` (or `"anon"`) for unauthenticated requests — this ensures anon results cache separately from user-specific results.
+1. **Normalize the viewer key.** Auth-variant queries accept `viewerUserId: string | null`. Pass `null` (or `"anon"`) for unauthenticated requests — this ensures anon results cache separately from user-specific results.
 
-3. **Tag by entity domain.** Use `cacheTag("organizations")`, `cacheTag("directory")`, `cacheTag("courses")`, etc. On mutation (server action), call `revalidateTag("organizations")` to bust the relevant cache.
+1. **Tag by entity domain.** Use `cacheTag("organizations")`, `cacheTag("directory")`, `cacheTag("courses")`, etc. On mutation (server action), call `revalidateTag("organizations")` to bust the relevant cache.
 
-4. **Per-field privacy is post-cache filtering.** For T2 queries like directory profiles, the `select` payload fetches all flag-controlled fields; the privacy stripping (`showEmail ? email : null`) happens **after** the cache returns. This means we cache the full data and filter in the calling function. Alternative: cache per-visibility-combination — rejected as combinatorial explosion.
+1. **Per-field privacy is post-cache filtering.** For T2 queries like directory profiles, the `select` payload fetches all flag-controlled fields; the privacy stripping (`showEmail ? email : null`) happens **after** the cache returns. This means we cache the full data and filter in the calling function. Alternative: cache per-visibility-combination — rejected as combinatorial explosion.
 
    **Wait — this is wrong.** If we cache the full data including email/phone, and the cache returns it before filtering, another user could see it if they share the same cache key. But they **can't** share the same key because `viewerUserId` is part of the key. However, the cached data for `viewerUserId="user-abc"` contains the raw email/phone of other users before per-field filtering. If the cache is ever leaked or accessed incorrectly, it's a data exposure risk.
 
@@ -81,12 +82,12 @@ Next.js 16 also offers `"use cache: private"` for cases where you can't refactor
 
    **Final approach:** The cached function filters `where: { visibility: { in: allowedVisibility } }` based on the viewer state. Per-field stripping happens in the return mapping inside the cached function. Result: cached output is already safe.
 
-5. **Cache life profiles:**
+1. **Cache life profiles:**
    - T1 (public): `cacheLife("hours")` — seed data changes rarely
    - T2 (auth-variant): `cacheLife("minutes")` — directory profiles change moderately
    - T3 (private): No `"use cache"` — just `React.cache()` for request deduplication
 
-6. **Don't cache mutations.** Server actions that write data (create org, join org, update profile) never use `"use cache"`. They call `updateTag()` (Next.js 16 successor to `revalidateTag`) after the mutation. Our `safe-actions.ts` already has a `revalidate({ tags })` helper that calls `updateTag()` — use it in action handlers.
+1. **Don't cache mutations.** Server actions that write data (create org, join org, update profile) never use `"use cache"`. They call `updateTag()` (Next.js 16 successor to `revalidateTag`) after the mutation. Our `safe-actions.ts` already has a `revalidate({ tags })` helper that calls `updateTag()` — use it in action handlers.
 
 ### Example: Directory query with T2 caching
 
@@ -146,7 +147,7 @@ export default async function DirectoryPage() {
 ## Queries classified
 
 | Query | Tier | Cache key includes | Tag |
-|-------|------|-------------------|-----|
+| --- | --- | --- | --- |
 | `getOrganizationsByBrand(brand)` | T1 | `brand` | `organizations` |
 | `getOrganizationById(id)` | T1 | `id` | `organizations` |
 | `getOrganizationBySlug(brand, slug)` | T1 | `brand`, `slug` | `organizations` |

@@ -1,4 +1,20 @@
-# ADR 0004 — Multi-brand encoded as `brandId` column
+---
+title: "ADR 0004 — Multi-brand encoded as brand column"
+slug: adr-0004-multi-brand-as-column
+type: decision
+status: accepted
+created: 2026-04-25
+updated: 2026-06-06
+last_agent: codex-session-0351
+pairs_with:
+  - docs/architecture/decisions/0006-multi-domain-hosting.md
+  - docs/architecture/decisions/0008-brand-switcher.md
+  - docs/architecture/decisions/0022-brand-chrome-resolution.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
+# ADR 0004 — Multi-brand encoded as `brand` column
 
 **Status:** Accepted
 **Date:** 2026-04-25
@@ -9,7 +25,7 @@ The legacy monorepo at [Ronin-Dojo-Design/ronin-dojo-monorepo](https://github.co
 
 ## Decision
 
-Encode brand as a **`brandId` column** on every brand-scoped Prisma model. One schema, one app, one deploy. Brands differ in theming and content, not in code paths or API surfaces.
+Encode brand as a **`brand` column** on every brand-scoped Prisma model. One schema, one app, one deploy. Brands differ in theming and content, not in code paths or API surfaces.
 
 ```prisma
 enum Brand {
@@ -33,13 +49,13 @@ Promote `Brand` from enum to a table when brand-level metadata (logo, primary co
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - One query path serves all brands; impossible to diverge.
 - Cross-brand reporting / migration / analytics is trivial (one DB).
 - Multi-tenant boundaries enforced declaratively via `lib/authz.ts` + a Prisma client extension that requires a `brandId` filter on authenticated queries.
 
-**Negative**
+### Negative
 
 - Cross-brand data leakage is a critical bug class — must be hard-prevented (Prisma extension, integration tests with seed data per brand).
 - If a brand demands radically different behavior, a column flag won't suffice; that's when the brand becomes a tenant table with feature flags.
@@ -47,10 +63,11 @@ Promote `Brand` from enum to a table when brand-level metadata (logo, primary co
 ## Authorization implications
 
 Every API route handler must:
+
 1. Resolve the user's session via Better-Auth.
-2. Determine the user's `brandId` (from their primary `Membership` or active brand context).
-3. Pass that `brandId` to Prisma queries either explicitly or via the client extension.
-4. Reject cross-brand requests via `lib/authz.ts:isInSameBrand(user, target)`.
+1. Determine the user's `brand` (from their primary `Membership` or active brand context).
+1. Pass that `brand` to Prisma queries either explicitly or via the client extension.
+1. Reject cross-brand requests via `lib/authz.ts:isInSameBrand(user, target)`.
 
 ## Cookie scoping (for future)
 

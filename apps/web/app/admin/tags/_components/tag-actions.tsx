@@ -81,7 +81,7 @@ export const TagActions = ({ tag, className, ...props }: TagActionsProps) => {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onSelect={handleDuplicate}>
+          <DropdownMenuItem onClick={handleDuplicate}>
             <CopyIcon />
             Duplicate
           </DropdownMenuItem>

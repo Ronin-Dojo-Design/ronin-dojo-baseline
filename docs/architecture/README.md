@@ -4,8 +4,8 @@ slug: architecture-readme
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-04-30
-last_agent: codex-session-0030
+updated: 2026-06-06
+last_agent: codex-session-0351
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0029.md
@@ -16,6 +16,7 @@ backlinks:
 
 - [plan-vs-current.md](plan-vs-current.md) — **start here** — behavioral roadmap; ChatGPT plan's spec vs current schema; phased build order
 - [data-model.md](data-model.md) — Prisma schema rationale; Brand → Organization → Discipline → Membership → Course → RankAward → Gamification → Tournament
+- [repo-alignment-report.md](repo-alignment-report.md) — on-demand / weekly repo truth sweep across schema, ADRs, admin surfaces, generated docs, monitoring, and ledgers
 - [auth.md](auth.md) — Better-Auth flow for web + mobile; authz helpers; brand context; cross-brand isolation
 - [programs-curriculum-certification-spec.md](programs-curriculum-certification-spec.md) — Program/Course/Certification learning path contract
 - [monetization-entitlements-spec.md](monetization-entitlements-spec.md) — Product/PricingPlan/Entitlement commercial access contract

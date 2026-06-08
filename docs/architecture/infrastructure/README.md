@@ -4,8 +4,8 @@ slug: infrastructure
 type: index
 status: active
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/runbooks/deployment.md
   - docs/architecture/decisions/0006-multi-domain-hosting.md
@@ -21,7 +21,7 @@ This folder contains the source-of-truth docs for domain management, hosting pro
 ## Contents
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | [domain-hosting-registry.md](domain-hosting-registry.md) | Master registry of all domains, registrars, hosting providers, and current state |
 | [dns-verification-spec.md](dns-verification-spec.md) | DNS records needed for Vercel, Resend, Google OAuth, and Stripe per domain |
 | [email-delivery-spec.md](email-delivery-spec.md) | Resend setup, domain verification, sender addresses per brand |

@@ -5,7 +5,7 @@ type: file
 status: signed-off
 created: 2026-04-28
 updated: 2026-04-28
-last_agent: copilot-session-0022
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/s1-schema-design.md
   - docs/architecture/SCHEMA_NEEDS_MANIFEST.md
@@ -18,7 +18,7 @@ backlinks:
 
 Produced during SESSION_0020 Petey deep dive. Covers every new model, enum, and field change needed to make the platform production-ready for all brands by 2026-05-18.
 
-**Decisions locked during grill rounds 1–3:**
+## Decisions locked during grill rounds 1–3
 
 - All 10 operational gaps are launch blockers
 - Every feature must be configurable per-org (SaaS platform, not single-school app)
@@ -33,17 +33,18 @@ Produced during SESSION_0020 Petey deep dive. Covers every new model, enum, and 
 ## Table of contents
 
 1. [New enums](#1-new-enums)
-2. [New models](#2-new-models)
-3. [Modifications to existing models](#3-modifications-to-existing-models)
-4. [Enum modifications](#4-enum-modifications)
-5. [Model relationship map](#5-model-relationship-map)
-6. [Model count summary](#6-model-count-summary)
+1. [New models](#2-new-models)
+1. [Modifications to existing models](#3-modifications-to-existing-models)
+1. [Enum modifications](#4-enum-modifications)
+1. [Model relationship map](#5-model-relationship-map)
+1. [Model count summary](#6-model-count-summary)
 
 ---
 
 ## 1. New enums
 
 ### ScheduleStatus
+
 ```prisma
 enum ScheduleStatus {
   ACTIVE
@@ -53,6 +54,7 @@ enum ScheduleStatus {
 ```
 
 ### DayOfWeek
+
 ```prisma
 enum DayOfWeek {
   MON
@@ -66,6 +68,7 @@ enum DayOfWeek {
 ```
 
 ### ClassSessionStatus
+
 ```prisma
 enum ClassSessionStatus {
   SCHEDULED
@@ -76,6 +79,7 @@ enum ClassSessionStatus {
 ```
 
 ### AttendanceStatus
+
 ```prisma
 enum AttendanceStatus {
   PRESENT
@@ -86,6 +90,7 @@ enum AttendanceStatus {
 ```
 
 ### CheckInMethod
+
 ```prisma
 enum CheckInMethod {
   QR_SCAN
@@ -96,6 +101,7 @@ enum CheckInMethod {
 ```
 
 ### ProgramStatus
+
 ```prisma
 enum ProgramStatus {
   DRAFT
@@ -105,6 +111,7 @@ enum ProgramStatus {
 ```
 
 ### EnrollmentStatus
+
 ```prisma
 enum EnrollmentStatus {
   ACTIVE
@@ -116,6 +123,7 @@ enum EnrollmentStatus {
 ```
 
 ### BeltTestStatus
+
 ```prisma
 enum BeltTestStatus {
   DRAFT
@@ -127,6 +135,7 @@ enum BeltTestStatus {
 ```
 
 ### BeltTestResult
+
 ```prisma
 enum BeltTestResult {
   PASS
@@ -136,6 +145,7 @@ enum BeltTestResult {
 ```
 
 ### InvoiceStatus
+
 ```prisma
 enum InvoiceStatus {
   DRAFT
@@ -149,6 +159,7 @@ enum InvoiceStatus {
 ```
 
 ### PaymentMethodType
+
 ```prisma
 enum PaymentMethodType {
   CARD
@@ -162,6 +173,7 @@ enum PaymentMethodType {
 ```
 
 ### PricingModel
+
 ```prisma
 enum PricingModel {
   MONTHLY
@@ -176,6 +188,7 @@ enum PricingModel {
 ```
 
 ### ContractStatus
+
 ```prisma
 enum ContractStatus {
   ACTIVE
@@ -186,6 +199,7 @@ enum ContractStatus {
 ```
 
 ### StripeConnectMode
+
 ```prisma
 enum StripeConnectMode {
   EXPRESS
@@ -194,6 +208,7 @@ enum StripeConnectMode {
 ```
 
 ### NotificationChannel
+
 ```prisma
 enum NotificationChannel {
   EMAIL
@@ -203,6 +218,7 @@ enum NotificationChannel {
 ```
 
 ### NotificationCategory
+
 ```prisma
 enum NotificationCategory {
   CLASS_REMINDER
@@ -216,6 +232,7 @@ enum NotificationCategory {
 ```
 
 ### FamilyRole
+
 ```prisma
 enum FamilyRole {
   GUARDIAN
@@ -225,6 +242,7 @@ enum FamilyRole {
 ```
 
 ### OrgRelationType
+
 ```prisma
 enum OrgRelationType {
   AFFILIATION
@@ -1034,7 +1052,7 @@ enum LineageRelationType {
 
 ## 5. Model relationship map
 
-```
+```text
 Organization
   ├── Program (1:N)
   │     ├── ClassSchedule (1:N)
@@ -1077,7 +1095,7 @@ User
 ## 6. Model count summary
 
 | Category | New models | New enums |
-|---|---|---|
+| --- | --- | --- |
 | Programs & Scheduling | 7 (Program, ProgramCourse, ProgramEnrollment, ClassSchedule, ClassSession, ClassInstructorAssignment, CheckIn, Attendance) | 6 |
 | Belt Testing | 3 (BeltTestEvent, BeltTestRegistration, BeltTestPrerequisiteConfig) | 2 |
 | Family | 2 (FamilyGroup, FamilyMember) | 1 |
@@ -1475,7 +1493,7 @@ model Discipline {
 ## 8. Grand total (pass 1 + pass 2)
 
 | | Pass 1 | Pass 2 | Combined |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | New models | 24 | 9 | **33** |
 | New enums | 17 | 8 | **25** |
 | Existing models modified | 7 | 5 | **~10 unique** |
@@ -1484,10 +1502,10 @@ model Discipline {
 
 ---
 
-## 9. Final-pass checklist — anything else missing?
+## 9. Final-pass checklist — anything else missing
 
 | Area | Status | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Class scheduling & attendance | ✅ COVERED | Program → ClassSchedule → ClassSession → CheckIn → Attendance |
 | Belt testing & exam events | ✅ COVERED | BeltTestEvent + Registration + PrerequisiteConfig |
 | Family / guardian | ✅ COVERED | FamilyGroup + FamilyMember |
@@ -1513,7 +1531,7 @@ model Discipline {
 | Content engine | ✅ EXISTED | No changes needed |
 | Waivers | ✅ EXISTED | No changes needed |
 
-**Nothing identified as missing. Schema spec is comprehensive for production launch.**
+### Nothing identified as missing. Schema spec is comprehensive for production launch
 
 ---
 
@@ -1782,7 +1800,7 @@ model Tournament {
 ## 10. Grand total (pass 1 + pass 2 + pass 3)
 
 | | Pass 1 | Pass 2 | Pass 3 | Combined |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | New models | 24 | 9 | 5 | **38** |
 | New enums | 17 | 8 | 4 | **29** |
 | **Total platform models** | | | | **~74** (36 existing + 38 new) |
@@ -1790,7 +1808,7 @@ model Tournament {
 ### 10.7 Final coverage check (all 3 passes)
 
 | Area | Status | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Lead pipeline / CRM | ✅ NOW COVERED | Lead + LeadFollowUp + conversion tracking |
 | Tournament rules engine | ✅ NOW COVERED | RuleSet with structured scoring config |
 | Weigh-in tracking | ✅ NOW COVERED | WeighInRecord per registration |
@@ -1810,7 +1828,7 @@ model Tournament {
 - [x] Pass 4 decisions D1–D8 signed off (SESSION_0022)
 - [x] Ready for Cody to implement migration in 4 waves
 
-**Signed off SESSION_0022 (2026-04-28). This is the implementation spec for the schema migration.**
+### Signed off SESSION_0022 (2026-04-28). This is the implementation spec for the schema migration
 
 ---
 

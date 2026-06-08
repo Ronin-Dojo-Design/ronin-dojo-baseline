@@ -109,7 +109,17 @@ export function buildBeltProgressions(awards: readonly RankAward[]): BeltProgres
         rankSystem: {
           id: system.id,
           name: system.name,
-          discipline: system.discipline ?? null,
+          // Pick discipline fields explicitly rather than passing the object
+          // through — keeps this a strict allowlist projection (defense-in-depth
+          // beyond the payload allowlist; SESSION_0334 privacy test).
+          discipline: system.discipline
+            ? {
+                id: system.discipline.id,
+                name: system.discipline.name,
+                slug: system.discipline.slug,
+                code: system.discipline.code ?? null,
+              }
+            : null,
         },
         rankById: new Map(),
         earnedAwards: new Map(),

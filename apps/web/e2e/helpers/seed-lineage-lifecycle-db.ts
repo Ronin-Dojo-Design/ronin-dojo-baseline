@@ -16,6 +16,7 @@ const prisma = new PrismaClient({ adapter })
 
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
 const TAG_PREFIX = "session-0251-lineage-e2e"
+const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM"
 
 type Visibility = "PUBLIC" | "UNLISTED" | "RESTRICTED" | "PRIVATE"
 
@@ -74,9 +75,39 @@ async function sweepStaleLifecycleRows() {
   })
   await prisma.discipline.deleteMany({ where: { slug: { contains: TAG_PREFIX } } })
   await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.userEntitlement.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.directoryProfile.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.passport.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: userIds } } })
+}
+
+async function grantLineagePremiumEntitlement({
+  userId,
+  sourceId,
+}: {
+  userId: string
+  sourceId: string
+}) {
+  const entitlement = await prisma.entitlement.upsert({
+    where: { brand_key: { brand: TEST_BRAND, key: LINEAGE_PREMIUM_ENTITLEMENT_KEY } },
+    update: {},
+    create: {
+      brand: TEST_BRAND,
+      key: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      name: "Lineage Premium",
+      description: "Premium lineage-tree access entitlement for E2E fixtures.",
+    },
+  })
+
+  return prisma.userEntitlement.create({
+    data: {
+      userId,
+      entitlementId: entitlement.id,
+      sourceType: "MANUAL_GRANT",
+      sourceId,
+      status: "ACTIVE",
+    },
+  })
 }
 
 async function createUser({
@@ -379,6 +410,11 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
     },
   })
 
+  const claimantPremiumEntitlement = await grantLineagePremiumEntitlement({
+    userId: claimant.user.id,
+    sourceId: `${TAG_PREFIX}:claimant:${runId}`,
+  })
+
   return {
     treeId: tree.id,
     treeSlug,
@@ -389,6 +425,7 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
     claimTargetName: publicEntry.displayName,
     placeholderUserId: publicEntry.user.id,
     claimantUserId: claimant.user.id,
+    claimantPremiumEntitlementId: claimantPremiumEntitlement.id,
     adminUserId: admin.user.id,
     treeEditorUserId: treeEditor.user.id,
     hiddenNames: {
@@ -606,6 +643,7 @@ async function cleanupLineageLifecycleFixture(fixture: LineageLifecycleFixture) 
   await prisma.rankSystem.deleteMany({ where: { id: fixture.rankSystemId } })
   await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
   await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
+  await prisma.userEntitlement.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.directoryProfile.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })

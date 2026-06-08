@@ -5,7 +5,7 @@ type: decision
 status: accepted
 created: 2026-04-27
 updated: 2026-04-27
-last_agent: copilot-session-0016
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0002-expo-for-mobile.md
 backlinks:
@@ -32,7 +32,7 @@ The decision was deferred until Better-Auth's mobile support matured and our aut
 
 ## Decision
 
-**Option A — Better-Auth mobile SDK.**
+### Option A — Better-Auth mobile SDK
 
 The mobile app at `apps/mobile/` will use `createAuthClient` from Better-Auth's React Native package, pointing at the same `NEXT_PUBLIC_SITE_URL/api/auth` base URL that the web app uses.
 
@@ -40,13 +40,13 @@ The mobile app at `apps/mobile/` will use `createAuthClient` from Better-Auth's 
 
 1. **One auth system, not two.** Dirstarter's `lib/auth.ts` already configures `betterAuth()` with plugins (magicLink, oneTimeToken, admin). The mobile client consumes the same server instance — no parallel token lifecycle to maintain.
 
-2. **Dirstarter's proven pattern extends naturally.** Web uses `createAuthClient` in `lib/auth-client.ts` with `baseURL` pointing at the app. Mobile does the same with a React Native transport. No new server endpoints, no new middleware.
+1. **Dirstarter's proven pattern extends naturally.** Web uses `createAuthClient` in `lib/auth-client.ts` with `baseURL` pointing at the app. Mobile does the same with a React Native transport. No new server endpoints, no new middleware.
 
-3. **Solo dev complexity budget.** JWT bridge requires: custom token signing, refresh rotation logic, revocation lists, separate session validation middleware. That's 4 new subsystems for a post-MVP mobile app that doesn't exist yet. Better-Auth SDK requires: one `createAuthClient` call with the right base URL.
+1. **Solo dev complexity budget.** JWT bridge requires: custom token signing, refresh rotation logic, revocation lists, separate session validation middleware. That's 4 new subsystems for a post-MVP mobile app that doesn't exist yet. Better-Auth SDK requires: one `createAuthClient` call with the right base URL.
 
-4. **Better-Auth's React Native support is production-ready.** The library provides `better-auth/react` which works in React Native via `expo-secure-store` for token persistence.
+1. **Better-Auth's React Native support is production-ready.** The library provides `better-auth/react` which works in React Native via `expo-secure-store` for token persistence.
 
-5. **ADR 0002 already preferred this path.** JWT bridge was explicitly the fallback. The fallback condition ("Better-Auth's mobile UX is thin") no longer applies.
+1. **ADR 0002 already preferred this path.** JWT bridge was explicitly the fallback. The fallback condition ("Better-Auth's mobile UX is thin") no longer applies.
 
 ## Implementation Sketch (TASK_06)
 
@@ -71,14 +71,14 @@ The mobile auth client mirrors `dirstarter_template/lib/auth-client.ts` exactly 
 
 ## Consequences
 
-**Positive:**
+### Positive
 
 - Zero new server-side code for mobile auth
 - Session model is identical web/mobile — simplifies authorization logic
 - Magic link login works on mobile (deep link → app → session established)
 - Future plugins (social auth, passkeys) added once, work everywhere
 
-**Negative:**
+### Negative
 
 - Mobile app requires network access to the web app's auth endpoints (no offline-first auth)
 - Deep link configuration required for magic link callback on iOS/Android

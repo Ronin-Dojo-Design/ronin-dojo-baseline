@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-05-30
-last_agent: claude-session-0310
+updated: 2026-06-07
+last_agent: claude-session-0355
 ---
 
 # Wiki Change Log
@@ -251,3 +251,46 @@ Use this file only as historical context for early wiki adoption.
 - Locked: route `/events/[slug]` (additive `PromotionEvent.slug`); gallery proved with **real Black Belt Legacy photos** pulled from `ronin-dojo-monorepo` (`dist-bbl/brand/blackbeltlegacy/images/`) into `apps/web/public/seed/events/` (downscaled, ~2 MB, 8 images) + empty state; split S0319 seed-gen+OKC+read page / S0320 org timeline+`/events` index / S0321 begin editor+upload; run via `scripts/auto-session.sh 3` (push + PR-per-session, no auto-merge, halt on failed gate).
 - Generalized `scripts/auto-session.sh`'s prompt to read whatever epic plan the SESSION "Next session" block names (was hardcoded to `petey-plan-0305.md`).
 - No runtime code or schema changed in this planning commit; the numbered sessions (0319–0321) own the build.
+
+## 2026-06-05 — SESSION_0347
+
+- Updated `wiring-ledger.md` with WL-P1-6 for the unaudited generic admin entitlement grant/revoke path and marked it fixed by routing through audited admin entitlement helpers.
+- Updated `sop-data-and-wiring-flows.md` with the comp/gift entitlement flow: trusted triggers, server-derived tier keys, audit-before-mutation, and lineage tier-policy read model.
+- Added the SESSION_0347 row to the wiki index and refreshed the wiring-ledger index summary.
+
+## 2026-06-06 — SESSION_0351
+
+- Added `enter-the-dojo-schema-intake.md` to translate legacy WordPress/Pods doctrine into the current Prisma/Next/ContentAtom language and route bigger schema ideas to the wiring ledger.
+- Added `repo-alignment-report.md` for weekly/on-demand architecture/admin/schema/docs alignment sweeps.
+- Expanded `repo-code-glossary.md` with repo/project/session/schema/monitoring terms and updated the wiki index for SESSION_0351.
+- Added WL-P2-6 through WL-P2-10 for tournament content shell, org/staff chart, pulse automation, brand-switcher proof, and fallow cleanup follow-ups.
+
+## 2026-06-06 — SESSION_0352
+
+- Added the shared `/directory` discipline filter on `Discipline.slug` and moved the People facet onto paginated `searchDirectoryProfiles`.
+- Added `profile-projection.ts` and a focused projection test to preserve DirectoryProfile privacy, lineage trust badges, and listing-tier behavior across directory People cards.
+- Updated the custom component inventory and glossary for `DirectoryFilters`, slug/cross-facet/pagination/projection terms, and recorded the fallow cleanup of the dead unpaginated People list query.
+
+## 2026-06-06 — SESSION_0353
+
+- Added `/directory` location (Region→City selects) + org/school searchable-combobox filters with per-facet visibility, on the shared brand-scoped projection; extracted the testable `buildDirectoryProfileWhere`.
+- Promoted `ComboboxSelector` admin→common (added `size`/`clearLabel` + accessible clear button) and applied Desi's parity + site-wide `motion-reduce` fixes.
+- Fixed Bug A (Base UI Select rendered raw id/slug on preset) via `items` on the discipline + lineage selected-rank Selects; cataloged the systemic ~17-consumer sweep as WL-P1-7.
+- Triaged WL-P2-10 deps (keep `tailwind-merge`/`@react-email/preview-server`; `@ai-sdk/google`/`github-slugger` removable, deferred for triple-lockfile reconciliation) and classified two prod lineage reports as non-code (drawer tier-gate; 12-vs-17 visibility).
+
+## 2026-06-06 — SESSION_0354
+
+- Resolved WL-P1-7 systemically: new `DataSelect` wrapper (`components/common/data-select.tsx`) + render test; dogfooded in the new claim form; converted `school-filters`/`technique-filters`; the other ~30 id/enum Select consumers got the inline `items` fix; `tool-filters` documented as a ReactNode-label exception.
+- Built a generic directory claim system mirroring the lineage flow: `ProfileClaimRequest` model + additive migration, submit action (dedup guard), `/admin/claims` review queue (org approval grants `ownerId`; person approval flagged for manual merge).
+- Added the `ProfileHero` + `ProfileClaimTeaser` public "mock profile" on `/directory/[slug]` for placeholder persons, and an owner live-preview in `profile-form`/`school-form`; fixed `organizationHref` null/unknown→`/organizations` link-through 404.
+- Resolved WL-P2-10: removed `@ai-sdk/google` + `github-slugger` and regenerated all 3 lockfiles; `pnpm install --frozen-lockfile` verified green.
+- Updated the custom component inventory + glossary (`DataSelect`, `ProfileHero`, `ProfileClaimRequest`, claimable, claim teaser); wrote `docs/petey-plan-0355.md` as the feature spec.
+
+## 2026-06-07 — SESSION_0355
+
+- Extended `DataSelect` with an optional per-option `content?: ReactNode` dropdown row (`dataSelectRowContent`) keeping `label` string-only for the trigger/typeahead/a11y; render test added; `tool-filters` moved back onto `DataSelect` (ReactNode exception removed).
+- Added `BeltSwatch` (data-driven SVG `fill`, no inline style) driven by `Rank.colorHex`; first consumer = the admin rank-award `DataSelect` rows (`colorHex` added to that query).
+- Completed the claim funnel discoverability: `OrgClaimCta` (owner-less org/school, sign-in-gated per SOP §5) + `ListingRegisterCta` ("Add your school" / "Join the directory") + a dedup hint on the create-org form (interim of the Dirstarter search-first pattern).
+- Browser-smoked the claimant-side flows (register CTAs + org claim CTA both auth states); admin-side smoke + person teaser env-blocked (non-admin dev user, no placeholder seed) — flagged.
+- Staged `docs/petey-plan-0356-profile-redesign.md` (one Person-presentation contract + BBL shell + unified register/claim/invite funnel) and `docs/petey-plan-0357-bbl-galaxy.md`; stamped `petey-plan-0337` dormant.
+- Logged 2 findings: the lineage profile-drawer tier/role gate must open for everyone (FINDING_01); the org/directory/profile domain-hub discovery gap (FINDING_02).

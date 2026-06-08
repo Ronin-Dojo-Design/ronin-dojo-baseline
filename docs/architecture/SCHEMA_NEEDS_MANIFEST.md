@@ -5,7 +5,7 @@ type: file
 status: deprecated
 created: 2026-04-25
 updated: 2026-04-28
-last_agent: copilot-session-0020-preflight
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/s2-schema-additions.md
 backlinks:
@@ -114,8 +114,8 @@ Tournament & Competition Schema Requirements:
   - Karate: NASKA, NBL, Sensei Jay Farrell and his documentation on USA Karate (kata divisions, kumite rules)
   - Boxing: USA Boxing (look at USABoxing.com)
   - Judo: USA Judo (look at USAjudo.com)
-  - Taekwondo: USA Taekwondo (look at USA taekwondo website 
-  - Okinawan Kobudo kata and one steps and complexes Tadishi Yamashita 
+  - Taekwondo: USA Taekwondo (look at USA taekwondo website
+  - Okinawan Kobudo kata and one steps and complexes Tadishi Yamashita
 - Schema must accommodate varied rules, divisions, weight categories, scoring systems, and bracket types
 - Customization required per tournament/organization
 
@@ -127,7 +127,7 @@ Data Model & Schema Considerations (high-level list of needed entities):
 - Clients (intake data, needs/wants)
 - Onboarding wizard state and mapped site fields
 - Users/Members (roles, ranks, disciplines)
-- Dirstarter.com/docs again to see how to build best backend for ranks, disciplines, roles, weight classes, division types, rule sets, instructor lineage, coaching certification courses, instructional courses, how to courses, curriculum courses, tournament courses, referees/judges courses, volunteer courses, time keeper/score keeper courses, tournament records, fight records (one fighter might have different record across MMA, Boxing, Muay Thai, Karate, BJJ, Eskrima stick fighting, etc) all the things we would need for in ONE reusable backend for any front end needs in the Ronin Dojo ecosystem 
+- Dirstarter.com/docs again to see how to build best backend for ranks, disciplines, roles, weight classes, division types, rule sets, instructor lineage, coaching certification courses, instructional courses, how to courses, curriculum courses, tournament courses, referees/judges courses, volunteer courses, time keeper/score keeper courses, tournament records, fight records (one fighter might have different record across MMA, Boxing, Muay Thai, Karate, BJJ, Eskrima stick fighting, etc) all the things we would need for in ONE reusable backend for any front end needs in the Ronin Dojo ecosystem
 - Tournaments/Leagues
   - Divisions
   - Brackets

@@ -1,7 +1,7 @@
 "use server"
 
 import type { Brand } from "~/.generated/prisma/client"
-import { type AuthzUser, isAdmin } from "~/lib/authz"
+import type { AuthzUser } from "~/lib/authz"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { generateUniqueSlug } from "~/lib/slug"
@@ -71,7 +71,9 @@ const authorizablePromotionEventSelect = {
 
 const uniqueIds = (ids: string[]) => Array.from(new Set(ids))
 
-const snapshotEvent = (event: PromotionEventSnapshotSource | null): PromotionEventSnapshot | undefined => {
+const snapshotEvent = (
+  event: PromotionEventSnapshotSource | null,
+): PromotionEventSnapshot | undefined => {
   if (!event) return undefined
 
   return {

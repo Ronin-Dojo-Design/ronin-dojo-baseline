@@ -27,7 +27,7 @@ import {
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -36,6 +36,10 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
+import {
   buildChildGroups,
   buildDescendantCounts,
   type CanvasMember,
@@ -43,6 +47,13 @@ import {
   nodeDisplayName,
   sortMembers,
 } from "~/lib/lineage/canvas-model"
+import {
+  buildConnectorEdges,
+  buildSelectedPathTrace,
+  type ConnectorEdge,
+  connectorGrowDelay,
+  tracePerStepDelay,
+} from "~/lib/lineage/connector-geometry"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import { cx } from "~/lib/utils"
 import { updateLineageMemberPlacement } from "~/server/web/lineage/editor-actions"
@@ -55,6 +66,7 @@ import type {
 import { LineageCompactChildList } from "./lineage-compact-child-list"
 import { LineageGroupHeaderForm } from "./lineage-group-header-form"
 import { LineageHonorStrip } from "./lineage-honor-strip"
+import { LineageMobileList } from "./lineage-mobile-list"
 import { LineageNodeCard } from "./lineage-node-card"
 import { LineageSearchBar } from "./lineage-search-bar"
 
@@ -125,15 +137,19 @@ type LineageTreeCanvasProps = {
   canManageGroups?: boolean
 
   /**
-   * Initial layout. Viewers can switch between tree/board in the toolbar;
-   * this only seeds the first render.
+   * Optional explicit initial layout. When omitted, the canvas defaults from
+   * the viewport: board below md, tree at/above md. Viewers can switch between
+   * tree/board in the toolbar; an explicit toggle wins for the session.
    */
   defaultLayout?: LineageLayout
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 const MIN_SCALE = 0.5
 const MAX_SCALE = 1.35
 const SCALE_STEP = 0.1
+const RESPONSIVE_LAYOUT_QUERY = "(min-width: 768px)"
+const MOBILE_LIST_QUERY = "(max-width: 639.98px)"
 
 // Phase 2 entrance stagger (motion-system tokens — see docs/runbooks/design/motion-system.md).
 // Per-tier head start compounds with per-sibling 60ms (stagger-base), clamped so a deep/wide tree
@@ -151,59 +167,121 @@ function entranceDelay(generation: number, siblingIndex: number) {
   )
 }
 
-// Phase 2 animated path trace — connector + ring highlight rises from the tapped node to the root
-// one ancestor edge at a time. The per-connector transition is `base` 200ms (Tailwind
-// `transition-colors duration-200`). Total delay budget is 1.0s of step delays + 0.2s for the
-// final connector's transition → ≤1.2s end-to-end, matching the spec cap. Per-step delay scales
-// inversely with depth and is floored so even deep trees keep a perceivable cascade.
-const TRACE_TOTAL_BUDGET = 1.0
-const TRACE_MIN_STEP = 0.05
-const TRACE_MAX_STEP = 0.2
-
-function tracePerStepDelay(maxDistance: number) {
-  if (maxDistance <= 0) return 0
-  return Math.max(TRACE_MIN_STEP, Math.min(TRACE_MAX_STEP, TRACE_TOTAL_BUDGET / maxDistance))
-}
-
-function traceStepDelay(step: number, perStepDelay: number) {
-  if (step <= 0 || perStepDelay <= 0) return 0
-  return (step - 1) * perStepDelay
-}
-
 // Phase 2 connector grow-in (motion-system, `--ease-snappy`). On initial render each connector
 // segment scales from 0 → 1 along its axis with a generation-tier stagger; all three pieces of one
 // edge (parent-below `h-6 w-px`, sibling `h-px` bar, child-above `h-4 w-px`) share the same
 // per-edge delay so the edge fills cohesively. The cap keeps deep trees inside a 1.0s envelope on
 // top of the 0.25s per-connector animation. Reduced-motion users get no animation at all.
 const CONNECTOR_GROW_DURATION = 0.25
-const CONNECTOR_GROW_STEP = 0.1
-const CONNECTOR_GROW_DELAY_CAP = 1.0
 
-function connectorGrowDelay(generation: number) {
-  if (generation <= 0) return 0
-  return Math.min(generation * CONNECTOR_GROW_STEP, CONNECTOR_GROW_DELAY_CAP)
-}
+// Phase 3e SVG 90° connectors. The connector band between a parent card and its children row is a
+// fixed-height strip (replacing the old `h-6` drop + `h-4` child stub = 24+16px). An absolutely
+// positioned, pointer-events-none <svg> draws one 90°-bend <path> per child: down from the parent's
+// bottom-centre to a horizontal bus, across to the child's centre, then down to the child's top. The
+// parent-drop x is the children-row centre — a layout invariant, since the parent card is centred
+// over its children by the column's `items-center`. Drawing in SVG (vs. the prior flow divs) gives
+// clean right-angle bends per the Balkan OrgChart idiom while keeping grow-in + path-trace parity.
+const CONNECTOR_BAND_PX = 40
+const CONNECTOR_BUS_PX = CONNECTOR_BAND_PX / 2
 
-function connectorGrowStyleY(
-  growDelay: number,
-  reduceMotion: boolean,
-): { animation: string; transformOrigin: string } | undefined {
-  if (reduceMotion) return undefined
-  return {
-    animation: `connector-grow-y ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
-    transformOrigin: "top",
-  }
-}
+// useLayoutEffect warns under SSR; the canvas is a client component but Next still renders its HTML
+// on the server. Fall back to useEffect on the server so measurement stays pre-paint in the browser
+// without the dev-only warning.
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
-function connectorGrowStyleX(
-  growDelay: number,
-  reduceMotion: boolean,
-): { animation: string; transformOrigin: string } | undefined {
-  if (reduceMotion) return undefined
-  return {
-    animation: `connector-grow-x ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelay}s both`,
-    transformOrigin: "center",
-  }
+// Measured SVG connector overlay for one parent → children band. Rendered as the first child of the
+// children-row container (position: relative) and offset up into the gap above it. Re-measures
+// child-column centres on mount, container resize (zoom/font), and structural change (collapse /
+// reorder).
+function LineageConnectorLayer({
+  edges,
+  growDelaySec,
+  reduceMotion,
+}: {
+  edges: ConnectorEdge[]
+  growDelaySec: number
+  reduceMotion: boolean
+}) {
+  const svgRef = useRef<SVGSVGElement | null>(null)
+  const [layout, setLayout] = useState<{ centerX: number; targets: number[] } | null>(null)
+  // Re-measure when the set/order of child columns changes even if the container width does not
+  // (e.g. drag-reorder), since ResizeObserver only fires on box-size changes.
+  const remeasureKey = edges.map(edge => edge.id).join("|")
+
+  // Measure off the svg's own parent (the children-row container). Reading this component's own ref
+  // in its own layout effect is reliable; a *parent* ref passed down would still be null here,
+  // because React attaches a parent's ref only after its children's layout effects run (bottom-up
+  // commit). `:scope >` limits the match to this level's direct child columns — a bare
+  // `[data-lineage-conn-col]` query is recursive and would also grab every nested descendant column.
+  useIsomorphicLayoutEffect(() => {
+    const container = svgRef.current?.parentElement
+    if (!container) return
+
+    const measure = () => {
+      const columns = container.querySelectorAll<HTMLElement>(":scope > [data-lineage-conn-col]")
+      if (columns.length === 0) {
+        setLayout(null)
+        return
+      }
+      const centerX = container.clientWidth / 2
+      const targets = Array.from(columns, col => col.offsetLeft + col.offsetWidth / 2)
+      setLayout({ centerX, targets })
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [remeasureKey])
+
+  // The svg always renders (so its ref — and thus the container — is available in the layout effect
+  // above); the paths appear once measured.
+  return (
+    <svg
+      ref={svgRef}
+      aria-hidden="true"
+      width="100%"
+      height={CONNECTOR_BAND_PX}
+      className="pointer-events-none absolute left-0 overflow-visible"
+      style={{ top: -CONNECTOR_BAND_PX }}
+    >
+      {layout?.targets.map((targetX, index) => {
+        const edge = edges[index]
+        if (!edge) return null
+        // 90° bend: parent-centre drop → horizontal bus → child-centre drop. A single centred child
+        // collapses to a straight vertical line (the bus segment has zero length).
+        const d = `M ${layout.centerX} 0 L ${layout.centerX} ${CONNECTOR_BUS_PX} L ${targetX} ${CONNECTOR_BUS_PX} L ${targetX} ${CONNECTOR_BAND_PX}`
+        return (
+          <path
+            key={edge.id}
+            d={d}
+            fill="none"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            // Normalised so one keyframe (connector-draw) draws any length; reduced-motion = full.
+            pathLength={1}
+            // Static stroke colour + transition live in Tailwind (same idiom as the old div
+            // connectors: `bg-primary/60` / `transition-colors`); `transition-colors` covers stroke.
+            className={cx(
+              "transition-colors duration-200",
+              edge.highlighted ? "stroke-primary/60" : "stroke-border",
+            )}
+            // Inline holds only the irreducibly per-edge runtime values: the path-trace cascade
+            // delay (a float derived from tree depth) and the grow-in animation timing. These have
+            // no static-class equivalent.
+            style={{
+              transitionDelay: edge.traceDelaySec > 0 ? `${edge.traceDelaySec}s` : undefined,
+              strokeDasharray: reduceMotion ? undefined : 1,
+              animation: reduceMotion
+                ? undefined
+                : `connector-draw ${CONNECTOR_GROW_DURATION}s var(--ease-snappy) ${growDelaySec}s both`,
+            }}
+          />
+        )
+      })}
+    </svg>
+  )
 }
 
 function clampScale(value: number) {
@@ -381,47 +459,6 @@ function isDropTargetData(value: unknown): value is DropTargetData {
   return Boolean(value && typeof value === "object" && "targetType" in value)
 }
 
-function buildSelectedPathTrace({
-  members,
-  selectedNodeId,
-}: {
-  members: CanvasMember[]
-  selectedNodeId: string | null | undefined
-}): {
-  pathMemberIds: Set<string>
-  pathDistanceById: Map<string, number>
-  maxDistance: number
-} {
-  const pathMemberIds = new Set<string>()
-  const pathDistanceById = new Map<string, number>()
-
-  if (!selectedNodeId) {
-    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
-  }
-
-  const selectedMember = members.find(member => member.nodeId === selectedNodeId)
-  if (!selectedMember) {
-    return { pathMemberIds, pathDistanceById, maxDistance: 0 }
-  }
-
-  const parentById = new Map(members.map(member => [member.id, member.primaryVisualParentMemberId]))
-  const visited = new Set<string>()
-  let cursor: string | null = selectedMember.id
-  let distance = 0
-  let maxDistance = 0
-
-  while (cursor && !visited.has(cursor)) {
-    pathMemberIds.add(cursor)
-    pathDistanceById.set(cursor, distance)
-    visited.add(cursor)
-    maxDistance = distance
-    cursor = parentById.get(cursor) ?? null
-    distance += 1
-  }
-
-  return { pathMemberIds, pathDistanceById, maxDistance }
-}
-
 function formatPromotionDate(value: Date | string | null) {
   if (!value) return null
   const date = typeof value === "string" ? new Date(value) : value
@@ -498,6 +535,7 @@ function LineageBranch({
   hasSelection,
   onSelect,
   onChangePromoter,
+  renderPolicy,
   visited,
   generation,
   siblingIndex,
@@ -519,6 +557,7 @@ function LineageBranch({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy: LineageListingRenderPolicy
   visited: Set<string>
   generation: number
   siblingIndex: number
@@ -569,7 +608,6 @@ function LineageBranch({
   const isSelected = member.id === selectedMemberId
   const isInSelectedPath = selectedPathMemberIds.has(member.id)
   const isDimmed = hasSelection && !isInSelectedPath
-  const connectorClassName = isInSelectedPath ? "bg-primary/60" : "bg-border"
   // dnd-kit marks the draggable wrapper `role="button"`, but this wrapper now
   // contains the card's own ⋯ actions menu + profile buttons (Phase 3c). A button
   // role there nests interactive buttons and shadowed the "Change promoter..."
@@ -588,20 +626,26 @@ function LineageBranch({
   const delay = entranceDelay(generation, siblingIndex)
 
   // Animated path trace (motion-system, ≤1.2s end-to-end). Distance is measured from the tapped
-  // node; tapped = 0, parent = 1, etc. The connector below this member is the upper half of the
-  // edge from its highlighted child up to this member, so its step index equals `distance`. The
-  // ring on this member appears as that edge completes — `ringDelay = distance * perStepDelay`
-  // so it lights as the next ancestor edge begins (the tapped node's ring is instant at delay 0).
+  // node; tapped = 0, parent = 1, etc. The ring on this member appears as the edge below it
+  // completes — `ringDelay = distance * perStepDelay` so it lights as the next ancestor edge begins
+  // (the tapped node's ring is instant at delay 0).
   const traceDistance = isInSelectedPath ? (pathDistanceById.get(member.id) ?? 0) : 0
   const ringDelay = isInSelectedPath ? traceDistance * perStepDelay : 0
-  const connectorDelay = isInSelectedPath ? traceStepDelay(traceDistance, perStepDelay) : 0
 
-  // Connector grow-in on initial render. The `h-6 w-px` below this member and the `h-px` sibling
-  // bar are the upper pieces of the edges from this member down to its child groups; both share
-  // the parent's generation tier as the delay step.
+  // Connector grow-in on initial render shares this member's generation tier as the delay step.
   const connectorGrowDelaySec = connectorGrowDelay(generation)
-  const connectorGrowY = connectorGrowStyleY(connectorGrowDelaySec, reduceMotion)
-  const connectorGrowX = connectorGrowStyleX(connectorGrowDelaySec, reduceMotion)
+
+  // Phase 3e: one SVG path per child edge. An edge is on the selected path only when this member
+  // AND that child are both on it; its trace-cascade delay mirrors the old per-edge stub delay
+  // (`traceStepDelay(thisMemberDistance, perStepDelay)`), so the highlight still rises one ancestor
+  // edge at a time from the tapped node to the root.
+  const connectorEdges: ConnectorEdge[] = buildConnectorEdges({
+    childGroups,
+    isInSelectedPath,
+    selectedPathMemberIds,
+    traceDistance,
+    perStepDelay,
+  })
 
   // Phase 2 hover lift refinement — belt-color tint feeds a hover-only `--belt-tint` CSS variable
   // so the inner draggable's hover box-shadow casts a glow in the practitioner's belt color. The
@@ -663,62 +707,47 @@ function LineageBranch({
               onChangePromoter={
                 onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
               }
+              renderPolicy={renderPolicy}
             />
           </div>
         </div>
       </motion.div>
 
       {childGroups.length > 0 && (
-        <>
-          <div
-            className={cx("h-6 w-px transition-colors duration-200", connectorClassName)}
-            style={{
-              ...connectorGrowY,
-              ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
-            }}
+        <div className="relative mt-10 flex items-start justify-center gap-4 md:gap-8">
+          <LineageConnectorLayer
+            edges={connectorEdges}
+            growDelaySec={connectorGrowDelaySec}
+            reduceMotion={reduceMotion}
           />
 
-          <div className="relative flex items-start justify-center gap-4 md:gap-8">
-            {childGroups.length > 1 && (
-              <div
-                className={cx(
-                  "absolute top-0 right-8 left-8 h-px transition-colors duration-200",
-                  isInSelectedPath ? "bg-primary/30" : "bg-border",
-                )}
-                style={{
-                  ...connectorGrowX,
-                  ...(connectorDelay > 0 ? { transitionDelay: `${connectorDelay}s` } : null),
-                }}
-              />
-            )}
-
-            {childGroups.map(group => (
-              <LineageChildGroupColumn
-                key={group.id}
-                group={group}
-                parentMemberId={member.id}
-                childrenByParentId={childrenByParentId}
-                visualGroupById={visualGroupById}
-                defaultRootMemberId={defaultRootMemberId}
-                rootId={rootId}
-                treeId={treeId}
-                editMode={editMode}
-                canEditPlacement={canEditPlacement}
-                canManageGroups={canManageGroups}
-                selectedMemberId={selectedMemberId}
-                selectedPathMemberIds={selectedPathMemberIds}
-                pathDistanceById={pathDistanceById}
-                perStepDelay={perStepDelay}
-                hasSelection={hasSelection}
-                onSelect={onSelect}
-                onChangePromoter={onChangePromoter}
-                visited={nextVisited}
-                generation={generation + 1}
-                reduceMotion={reduceMotion}
-              />
-            ))}
-          </div>
-        </>
+          {childGroups.map(group => (
+            <LineageChildGroupColumn
+              key={group.id}
+              group={group}
+              parentMemberId={member.id}
+              childrenByParentId={childrenByParentId}
+              visualGroupById={visualGroupById}
+              defaultRootMemberId={defaultRootMemberId}
+              rootId={rootId}
+              treeId={treeId}
+              editMode={editMode}
+              canEditPlacement={canEditPlacement}
+              canManageGroups={canManageGroups}
+              selectedMemberId={selectedMemberId}
+              selectedPathMemberIds={selectedPathMemberIds}
+              pathDistanceById={pathDistanceById}
+              perStepDelay={perStepDelay}
+              hasSelection={hasSelection}
+              onSelect={onSelect}
+              onChangePromoter={onChangePromoter}
+              renderPolicy={renderPolicy}
+              visited={nextVisited}
+              generation={generation + 1}
+              reduceMotion={reduceMotion}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -742,6 +771,7 @@ function LineageChildGroupColumn({
   hasSelection,
   onSelect,
   onChangePromoter,
+  renderPolicy,
   visited,
   generation,
   reduceMotion,
@@ -763,6 +793,7 @@ function LineageChildGroupColumn({
   hasSelection: boolean
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy: LineageListingRenderPolicy
   visited: Set<string>
   generation: number
   reduceMotion: boolean
@@ -779,31 +810,10 @@ function LineageChildGroupColumn({
     } satisfies DropTargetData,
   })
 
-  // The `h-4 w-px` above each child group is the lower half of the edge whose upper half is the
-  // `h-6 w-px` below the parent. Both belong to the same animated step; the step index equals the
-  // parent's distance from the tapped node, so delay = `(parentDistance - 1) * perStepDelay`.
-  const parentDistance = groupIsHighlighted ? pathDistanceById.get(parentMemberId) : undefined
-  const groupConnectorDelay =
-    parentDistance !== undefined ? traceStepDelay(parentDistance, perStepDelay) : 0
-
-  // Connector grow-in on initial render. The `h-4 w-px` above each child group is the lower piece
-  // of the edge whose upper piece is the `h-6 w-px` below the parent — same generation tier.
-  const groupConnectorGrowDelaySec = connectorGrowDelay(generation - 1)
-  const groupConnectorGrowY = connectorGrowStyleY(groupConnectorGrowDelaySec, reduceMotion)
-
+  // Phase 3e: the per-child connector (formerly an `h-4 w-px` stub) is now drawn by the parent's
+  // SVG LineageConnectorLayer; the column root is tagged so that layer can measure its centre.
   return (
-    <div ref={setNodeRef} className="flex min-w-fit flex-col items-center">
-      <div
-        className={cx(
-          "h-4 w-px transition-colors duration-200",
-          groupIsHighlighted ? "bg-primary/60" : "bg-border",
-        )}
-        style={{
-          ...groupConnectorGrowY,
-          ...(groupConnectorDelay > 0 ? { transitionDelay: `${groupConnectorDelay}s` } : null),
-        }}
-      />
-
+    <div ref={setNodeRef} data-lineage-conn-col className="flex min-w-fit flex-col items-center">
       <GroupHeader
         group={group.group}
         isHighlighted={groupIsHighlighted}
@@ -847,6 +857,7 @@ function LineageChildGroupColumn({
               hasSelection={hasSelection}
               onSelect={onSelect}
               onChangePromoter={onChangePromoter}
+              renderPolicy={renderPolicy}
               visited={visited}
               generation={generation}
               siblingIndex={index}
@@ -879,6 +890,7 @@ function LineageBoardCard({
   onSelect,
   onChangePromoter,
   canChangePromoter,
+  renderPolicy,
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -891,6 +903,7 @@ function LineageBoardCard({
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
   canChangePromoter: boolean
+  renderPolicy: LineageListingRenderPolicy
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
   const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
@@ -909,9 +922,12 @@ function LineageBoardCard({
         onSelect={onSelect}
         canChangePromoter={canChangePromoter}
         onChangePromoter={onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined}
+        renderPolicy={renderPolicy}
       />
 
-      {bio && <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>}
+      {renderPolicy.features.bioPreview && bio && (
+        <Note className="mt-2 line-clamp-3 text-xs">{bio}</Note>
+      )}
 
       {hasChildren && (
         <div className="mt-3 border-border/60 border-t pt-3">
@@ -927,6 +943,7 @@ function LineageBoardCard({
             onSelect={onSelect}
             canChangePromoter={canChangePromoter}
             onChangePromoter={onChangePromoter}
+            renderPolicy={renderPolicy}
           />
         </div>
       )}
@@ -948,24 +965,65 @@ export function LineageTreeCanvas({
   editMode = false,
   canEditPlacement = false,
   canManageGroups = false,
-  defaultLayout = "tree",
+  defaultLayout,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageTreeCanvasProps) {
   const router = useRouter()
   const reduceMotion = useReducedMotion()
-  const [layout, setLayout] = useState<LineageLayout>(defaultLayout)
+  const [layout, setLayout] = useState<LineageLayout>(defaultLayout ?? "tree")
   const [scale, setScale] = useState(1)
   const [autoFitPass, setAutoFitPass] = useState(0)
   const [isPinching, setIsPinching] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
+  const [isMobileListViewport, setIsMobileListViewport] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scaleRef = useRef(scale)
   const autoFittedRef = useRef(false)
   const autoPannedRef = useRef(false)
+  const layoutTouchedRef = useRef(false)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+
+  // Seed the default layout from the viewport until the viewer explicitly picks
+  // a mode. This uses a layout effect so the mobile board default applies before
+  // the tree auto-fit effect can seed zoom from a layout we are about to replace.
+  useIsomorphicLayoutEffect(() => {
+    if (defaultLayout || typeof window === "undefined" || !window.matchMedia) return
+
+    const mediaQuery = window.matchMedia(RESPONSIVE_LAYOUT_QUERY)
+    const applyResponsiveDefault = (matches: boolean) => {
+      if (layoutTouchedRef.current) return
+      setLayout(matches ? "tree" : "board")
+    }
+
+    applyResponsiveDefault(mediaQuery.matches)
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      applyResponsiveDefault(event.matches)
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [defaultLayout])
+
+  useIsomorphicLayoutEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return
+
+    const mediaQuery = window.matchMedia(MOBILE_LIST_QUERY)
+    const updateMobileListViewport = (matches: boolean) => setIsMobileListViewport(matches)
+
+    updateMobileListViewport(mediaQuery.matches)
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      updateMobileListViewport(event.matches)
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [])
 
   // Mirror scale into a ref so the pinch listener can read it without re-binding.
   useEffect(() => {
@@ -984,7 +1042,7 @@ export function LineageTreeCanvas({
   // CSS transforms don't affect layout, so contentRef.scrollWidth is the
   // unscaled natural tree width.
   useEffect(() => {
-    if (layout !== "tree") return
+    if (layout !== "tree" || isMobileListViewport) return
 
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
@@ -1010,7 +1068,7 @@ export function LineageTreeCanvas({
       cancelAnimationFrame(raf)
       observer.disconnect()
     }
-  }, [layout])
+  }, [layout, isMobileListViewport])
 
   // Two-finger pinch-to-zoom (touch only). Disabled in edit mode so it never
   // fights the @dnd-kit drag editor or drag-scroll. Single-finger touch falls
@@ -1109,7 +1167,9 @@ export function LineageTreeCanvas({
   // viewports where the wide Dirty Dozen branch can otherwise put the root
   // card off-screen at scrollLeft=0.
   useEffect(() => {
-    if (layout !== "tree" || autoFitPass === 0 || autoPannedRef.current) return
+    if (layout !== "tree" || isMobileListViewport || autoFitPass === 0 || autoPannedRef.current) {
+      return
+    }
 
     const scrollEl = scrollRef.current
     const contentEl = contentRef.current
@@ -1133,7 +1193,7 @@ export function LineageTreeCanvas({
     })
 
     return () => cancelAnimationFrame(raf)
-  }, [layout, autoFitPass, rootMembers])
+  }, [layout, isMobileListViewport, autoFitPass, rootMembers])
 
   const {
     pathMemberIds: selectedPathMemberIds,
@@ -1190,7 +1250,14 @@ export function LineageTreeCanvas({
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="rounded-2xl border bg-card/40 p-3 shadow-sm md:p-4">
+      {/* `w-full min-w-0 max-w-full`: this card is a flex item in a `flex-col items-start`
+          page-layout ancestor, so without an explicit width it shrink-wraps to the tree's
+          intrinsic content width (~3.6kpx on a wide lineage) instead of the viewport. That
+          blowout defeats the canvas's own `overflow-x-auto` (it never scrolls) and the app
+          shell's `overflow-clip` then clips the right half — taking the right-justified
+          Tree/Board + zoom controls off-screen. Bounding the card here re-engages the canvas
+          horizontal scroll and keeps the toolbar within the viewport. (SESSION_0337) */}
+      <div className="w-full min-w-0 max-w-full rounded-2xl border bg-card/40 p-3 shadow-sm md:p-4">
         <Stack
           size="sm"
           wrap
@@ -1234,37 +1301,43 @@ export function LineageTreeCanvas({
           </Stack>
 
           <Stack size="sm" wrap>
-            <Stack size="xs">
-              <Button
-                type="button"
-                variant={layout === "tree" ? "primary" : "secondary"}
-                size="sm"
-                aria-label="Tree layout"
-                aria-pressed={layout === "tree"}
-                prefix={<NetworkIcon />}
-                onClick={() => {
-                  autoFittedRef.current = false
-                  autoPannedRef.current = false
-                  setLayout("tree")
-                }}
-              >
-                Tree
-              </Button>
+            {!isMobileListViewport && (
+              <Stack size="xs">
+                <Button
+                  type="button"
+                  variant={layout === "tree" ? "primary" : "secondary"}
+                  size="sm"
+                  aria-label="Tree layout"
+                  aria-pressed={layout === "tree"}
+                  prefix={<NetworkIcon />}
+                  onClick={() => {
+                    layoutTouchedRef.current = true
+                    autoFittedRef.current = false
+                    autoPannedRef.current = false
+                    setLayout("tree")
+                  }}
+                >
+                  Tree
+                </Button>
 
-              <Button
-                type="button"
-                variant={layout === "board" ? "primary" : "secondary"}
-                size="sm"
-                aria-label="Board layout"
-                aria-pressed={layout === "board"}
-                prefix={<ListTreeIcon />}
-                onClick={() => setLayout("board")}
-              >
-                Board
-              </Button>
-            </Stack>
+                <Button
+                  type="button"
+                  variant={layout === "board" ? "primary" : "secondary"}
+                  size="sm"
+                  aria-label="Board layout"
+                  aria-pressed={layout === "board"}
+                  prefix={<ListTreeIcon />}
+                  onClick={() => {
+                    layoutTouchedRef.current = true
+                    setLayout("board")
+                  }}
+                >
+                  Board
+                </Button>
+              </Stack>
+            )}
 
-            {layout === "tree" && (
+            {layout === "tree" && !isMobileListViewport && (
               <Stack size="xs">
                 <Button
                   type="button"
@@ -1313,6 +1386,7 @@ export function LineageTreeCanvas({
           members={normalizedMembers}
           selectedMemberId={selectedMemberId}
           onSelect={onSelect}
+          renderPolicy={renderPolicy}
         />
 
         <div
@@ -1331,33 +1405,46 @@ export function LineageTreeCanvas({
           <div
             ref={contentRef}
             className={cx(
-              "relative p-8",
-              layout === "tree" && "min-w-max",
+              "relative",
+              isMobileListViewport ? "p-3" : "p-8",
+              layout === "tree" && !isMobileListViewport && "min-w-max",
               layout === "tree" &&
+                !isMobileListViewport &&
                 !isPinching &&
                 !reduceMotion &&
                 "transition-transform duration-300 ease-out",
             )}
             style={
-              layout === "tree"
+              layout === "tree" && !isMobileListViewport
                 ? { transform: `scale(${scale})`, transformOrigin: "top left" }
                 : undefined
             }
           >
             <Stack size="xs" direction="column" className="mb-8 items-center text-center">
-              {layout === "tree" && (
+              {layout === "tree" && !isMobileListViewport && (
                 <Badge variant="outline" size="sm" prefix={<Maximize2Icon />}>
                   {isTouch ? "Pinch to explore" : "Scroll to explore"}
                 </Badge>
               )}
               <H6 className="text-muted-foreground">
-                {layout === "board"
+                {isMobileListViewport || layout === "board"
                   ? "Tap any practitioner to open their profile"
                   : "Click a practitioner to trace their path to the root"}
               </H6>
             </Stack>
 
-            {layout === "board" ? (
+            {isMobileListViewport ? (
+              <LineageMobileList
+                members={normalizedMembers}
+                rootMembers={rootMembers}
+                selectedMemberId={selectedMemberId}
+                selectedPathMemberIds={selectedPathMemberIds}
+                onSelect={onSelect}
+                canChangePromoter={editMode && canEditPlacement}
+                onChangePromoter={onChangePromoter}
+                renderPolicy={renderPolicy}
+              />
+            ) : layout === "board" ? (
               <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl md:max-w-4xl">
                 {rootMembers.map(rootMember => (
                   <LineageBoardCard
@@ -1373,6 +1460,7 @@ export function LineageTreeCanvas({
                     onSelect={onSelect}
                     onChangePromoter={onChangePromoter}
                     canChangePromoter={editMode && canEditPlacement}
+                    renderPolicy={renderPolicy}
                   />
                 ))}
               </Stack>
@@ -1397,6 +1485,7 @@ export function LineageTreeCanvas({
                     hasSelection={hasSelection}
                     onSelect={onSelect}
                     onChangePromoter={onChangePromoter}
+                    renderPolicy={renderPolicy}
                     visited={new Set()}
                     generation={0}
                     siblingIndex={index}

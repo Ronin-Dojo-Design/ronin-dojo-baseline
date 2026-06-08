@@ -6,6 +6,7 @@
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
+import type { Prisma } from "~/.generated/prisma/client"
 
 const sessionUserState = { id: "" }
 const requestBrand = "BASELINE_MARTIAL_ARTS"
@@ -60,7 +61,11 @@ mock.module("~/services/stripe", () => ({
   },
 }))
 
-import { createProgramEnrollmentCheckout } from "~/server/web/billing/actions"
+import {
+  createLineageMembershipCheckout,
+  createProgramEnrollmentCheckout,
+} from "~/server/web/billing/actions"
+import { LINEAGE_MEMBERSHIP_SURFACE } from "~/server/web/billing/lineage-membership"
 import { db } from "~/services/db"
 
 const TS = Date.now()
@@ -85,6 +90,15 @@ type FixtureState = {
   crossBrandPriceId: string
   duplicatePriceId: string
   validPlanId: string
+  lineagePlanId: string
+  lineageSubscriptionPlanId: string
+  lineageProgramPlanId: string
+  lineageInactivePlanId: string
+  lineageNoEntitlementPlanId: string
+  lineageUnmarkedPlanId: string
+  crossBrandLineagePlanId: string
+  lineagePriceId: string
+  lineageSubscriptionPriceId: string
 }
 
 let fx: FixtureState
@@ -146,16 +160,18 @@ const createPlan = async ({
   isActive = true,
   intervalMonths = null,
   pricingModel = "DROP_IN",
+  metadata,
 }: {
   brand?: typeof requestBrand | typeof otherBrand
   organizationId: string
-  programId: string
+  programId: string | null
   priceId: string
   entitlementId?: string
   name: string
   isActive?: boolean
   intervalMonths?: number | null
-  pricingModel?: "DROP_IN" | "MONTHLY"
+  pricingModel?: "CUSTOM" | "DROP_IN" | "MONTHLY"
+  metadata?: Prisma.InputJsonValue
 }) => {
   const plan = await db.pricingPlan.create({
     data: {
@@ -169,6 +185,7 @@ const createPlan = async ({
       stripeProductId: `prod_${tag(name)}`,
       stripePriceId: priceId,
       isActive,
+      metadata,
     },
   })
 
@@ -215,6 +232,11 @@ beforeAll(async () => {
   })
   const entitlement = await createEntitlement(requestBrand, "access")
   const subscriptionEntitlement = await createEntitlement(requestBrand, "subscription-access")
+  const lineageEntitlement = await createEntitlement(requestBrand, "lineage-access")
+  const lineageSubscriptionEntitlement = await createEntitlement(
+    requestBrand,
+    "lineage-subscription-access",
+  )
   const crossBrandEntitlement = await createEntitlement(otherBrand, "cross-access")
 
   const validPriceId = `price_test_checkout_valid_${TS}`
@@ -225,6 +247,19 @@ beforeAll(async () => {
   const noEntitlementPriceId = `price_test_checkout_no_entitlement_${TS}`
   const crossBrandPriceId = `price_test_checkout_cross_brand_${TS}`
   const duplicatePriceId = `price_test_checkout_duplicate_${TS}`
+  const lineagePriceId = `price_test_checkout_lineage_${TS}`
+  const lineageSubscriptionPriceId = `price_test_checkout_lineage_subscription_${TS}`
+  const lineageProgramPriceId = `price_test_checkout_lineage_program_${TS}`
+  const lineageInactivePriceId = `price_test_checkout_lineage_inactive_${TS}`
+  const lineageNoEntitlementPriceId = `price_test_checkout_lineage_no_entitlement_${TS}`
+  const lineageUnmarkedPriceId = `price_test_checkout_lineage_unmarked_${TS}`
+  const crossBrandLineagePriceId = `price_test_checkout_lineage_cross_brand_${TS}`
+  const lineageMetadata = {
+    surface: LINEAGE_MEMBERSHIP_SURFACE,
+    summary: "E2E lineage membership",
+    features: ["Profile claim support", "Legacy access"],
+    ctaLabel: "Join Legacy",
+  }
 
   const validPlan = await createPlan({
     organizationId: org.id,
@@ -292,6 +327,71 @@ beforeAll(async () => {
     entitlementId: entitlement.id,
     name: "duplicate-plan-b",
   })
+  const lineagePlan = await createPlan({
+    organizationId: org.id,
+    programId: null,
+    priceId: lineagePriceId,
+    entitlementId: lineageEntitlement.id,
+    name: "lineage-plan",
+    pricingModel: "CUSTOM",
+    metadata: lineageMetadata,
+  })
+  const lineageSubscriptionPlan = await createPlan({
+    organizationId: org.id,
+    programId: null,
+    priceId: lineageSubscriptionPriceId,
+    entitlementId: lineageSubscriptionEntitlement.id,
+    name: "lineage-subscription-plan",
+    intervalMonths: 1,
+    pricingModel: "MONTHLY",
+    metadata: lineageMetadata,
+  })
+  const lineageProgramPlan = await createPlan({
+    organizationId: org.id,
+    programId: program.id,
+    priceId: lineageProgramPriceId,
+    entitlementId: lineageEntitlement.id,
+    name: "lineage-program-plan",
+    pricingModel: "CUSTOM",
+    metadata: lineageMetadata,
+  })
+  const lineageInactivePlan = await createPlan({
+    organizationId: org.id,
+    programId: null,
+    priceId: lineageInactivePriceId,
+    entitlementId: lineageEntitlement.id,
+    name: "lineage-inactive-plan",
+    pricingModel: "CUSTOM",
+    isActive: false,
+    metadata: lineageMetadata,
+  })
+  const lineageNoEntitlementPlan = await createPlan({
+    organizationId: org.id,
+    programId: null,
+    priceId: lineageNoEntitlementPriceId,
+    name: "lineage-no-entitlement-plan",
+    pricingModel: "CUSTOM",
+    metadata: lineageMetadata,
+  })
+  const lineageUnmarkedPlan = await createPlan({
+    organizationId: org.id,
+    programId: null,
+    priceId: lineageUnmarkedPriceId,
+    entitlementId: lineageEntitlement.id,
+    name: "lineage-unmarked-plan",
+    pricingModel: "CUSTOM",
+    metadata: { surface: "listing_upgrade" },
+  })
+  const crossBrandLineagePlan = await createPlan({
+    brand: otherBrand,
+    organizationId: crossBrandOrg.id,
+    programId: null,
+    priceId: crossBrandLineagePriceId,
+    entitlementId: crossBrandEntitlement.id,
+    name: "cross-brand-lineage-plan",
+    pricingModel: "CUSTOM",
+    metadata: lineageMetadata,
+  })
 
   fx = {
     userId: user.id,
@@ -300,7 +400,13 @@ beforeAll(async () => {
     otherProgramId: otherProgram.id,
     inactiveProgramId: inactiveProgram.id,
     crossBrandProgramId: crossBrandProgram.id,
-    entitlementIds: [entitlement.id, subscriptionEntitlement.id, crossBrandEntitlement.id],
+    entitlementIds: [
+      entitlement.id,
+      subscriptionEntitlement.id,
+      lineageEntitlement.id,
+      lineageSubscriptionEntitlement.id,
+      crossBrandEntitlement.id,
+    ],
     planIds: [
       validPlan.id,
       subscriptionPlan.id,
@@ -311,6 +417,13 @@ beforeAll(async () => {
       crossBrandPlan.id,
       duplicatePlanA.id,
       duplicatePlanB.id,
+      lineagePlan.id,
+      lineageSubscriptionPlan.id,
+      lineageProgramPlan.id,
+      lineageInactivePlan.id,
+      lineageNoEntitlementPlan.id,
+      lineageUnmarkedPlan.id,
+      crossBrandLineagePlan.id,
     ],
     validPriceId,
     subscriptionPriceId,
@@ -321,6 +434,15 @@ beforeAll(async () => {
     crossBrandPriceId,
     duplicatePriceId,
     validPlanId: validPlan.id,
+    lineagePlanId: lineagePlan.id,
+    lineageSubscriptionPlanId: lineageSubscriptionPlan.id,
+    lineageProgramPlanId: lineageProgramPlan.id,
+    lineageInactivePlanId: lineageInactivePlan.id,
+    lineageNoEntitlementPlanId: lineageNoEntitlementPlan.id,
+    lineageUnmarkedPlanId: lineageUnmarkedPlan.id,
+    crossBrandLineagePlanId: crossBrandLineagePlan.id,
+    lineagePriceId,
+    lineageSubscriptionPriceId,
   }
 })
 
@@ -388,6 +510,9 @@ describe("createProgramEnrollmentCheckout", () => {
     expect(checkoutArgs.line_items).toEqual([{ price: fx.validPriceId, quantity: 1 }])
     expect(checkoutArgs.customer).toBe("cus_test_checkout_0097_existing")
     expect(checkoutArgs.customer_creation).toBeUndefined()
+    // SESSION_0345: reusing an existing customer with automatic_tax + tax_id_collection
+    // requires customer_update or Stripe rejects the session (returning-customer bug).
+    expect(checkoutArgs.customer_update).toEqual({ name: "auto", address: "auto" })
     expect(checkoutArgs.discounts).toEqual([{ coupon: "coupon_test_0097" }])
     expect(checkoutArgs.metadata).toEqual({
       type: "program_enrollment",
@@ -423,6 +548,8 @@ describe("createProgramEnrollmentCheckout", () => {
     expect(checkoutArgs.line_items).toEqual([{ price: fx.validPriceId, quantity: 1 }])
     expect(checkoutArgs.customer).toBeUndefined()
     expect(checkoutArgs.customer_creation).toBe("always")
+    // No existing customer → no customer_update (would error against a fresh customer).
+    expect(checkoutArgs.customer_update).toBeUndefined()
     expect(checkoutArgs.metadata.userId).toBe(fx.userId)
     expect(checkoutArgs.metadata.programId).toBe(fx.programId)
     expect(checkoutArgs.success_url).toContain(`/programs/${fx.programId}/enroll/success`)
@@ -465,6 +592,86 @@ describe("createProgramEnrollmentCheckout", () => {
     for (const input of cases) {
       const result = await createProgramEnrollmentCheckout(input)
       expect(result?.serverError).toBe("Selected program plan is not available.")
+    }
+
+    expect(checkoutSessionCreateMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("createLineageMembershipCheckout", () => {
+  it("creates Checkout with a DB-derived lineage membership plan and current-brand customer", async () => {
+    await db.stripeCustomer.create({
+      data: {
+        userId: fx.userId,
+        brand: requestBrand,
+        stripeCustomerId: "cus_test_checkout_0097_lineage_existing",
+      },
+    })
+
+    const result = await createLineageMembershipCheckout({
+      pricingPlanId: fx.lineagePlanId,
+      coupon: "coupon_test_lineage_0097",
+    })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(checkoutSessionCreateMock).toHaveBeenCalledTimes(1)
+
+    const checkoutArgs = checkoutSessionCreateMock.mock.calls[0]?.[0] as any
+    expect(checkoutArgs.mode).toBe("payment")
+    expect(checkoutArgs.line_items).toEqual([{ price: fx.lineagePriceId, quantity: 1 }])
+    expect(checkoutArgs.customer).toBe("cus_test_checkout_0097_lineage_existing")
+    expect(checkoutArgs.customer_creation).toBeUndefined()
+    // SESSION_0345 returning-customer fix also covers the lineage membership action.
+    expect(checkoutArgs.customer_update).toEqual({ name: "auto", address: "auto" })
+    expect(checkoutArgs.discounts).toEqual([{ coupon: "coupon_test_lineage_0097" }])
+    expect(checkoutArgs.metadata).toEqual({
+      type: LINEAGE_MEMBERSHIP_SURFACE,
+      userId: fx.userId,
+      pricingPlanId: fx.lineagePlanId,
+      organizationId: fx.orgIds[0],
+      brand: requestBrand,
+    })
+    expect(checkoutArgs.success_url).toContain("/lineage/join/success")
+    expect(checkoutArgs.cancel_url).toContain("/lineage/join?cancelled=true")
+    expect(redirectState.url).toBe("https://checkout.stripe.test/session_0097")
+  })
+
+  it("creates subscription Checkout from lineage membership recurrence fields", async () => {
+    const result = await createLineageMembershipCheckout({
+      pricingPlanId: fx.lineageSubscriptionPlanId,
+    })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(checkoutSessionCreateMock).toHaveBeenCalledTimes(1)
+
+    const checkoutArgs = checkoutSessionCreateMock.mock.calls[0]?.[0] as any
+    expect(checkoutArgs.mode).toBe("subscription")
+    expect(checkoutArgs.line_items).toEqual([{ price: fx.lineageSubscriptionPriceId, quantity: 1 }])
+    expect(checkoutArgs.metadata).toBeUndefined()
+    expect(checkoutArgs.subscription_data.metadata).toMatchObject({
+      type: LINEAGE_MEMBERSHIP_SURFACE,
+      userId: fx.userId,
+      pricingPlanId: fx.lineageSubscriptionPlanId,
+      brand: requestBrand,
+    })
+    expect(checkoutArgs.customer_creation).toBeUndefined()
+    expect(checkoutArgs.invoice_creation).toBeUndefined()
+    expect(checkoutArgs.allow_promotion_codes).toBe(true)
+  })
+
+  it("rejects cross-brand, program-scoped, inactive, no-entitlement, unmarked, and unmapped plans", async () => {
+    const cases = [
+      fx.crossBrandLineagePlanId,
+      fx.lineageProgramPlanId,
+      fx.lineageInactivePlanId,
+      fx.lineageNoEntitlementPlanId,
+      fx.lineageUnmarkedPlanId,
+      `plan_test_checkout_unmapped_${TS}`,
+    ]
+
+    for (const pricingPlanId of cases) {
+      const result = await createLineageMembershipCheckout({ pricingPlanId })
+      expect(result?.serverError).toBe("Selected lineage membership plan is not available.")
     }
 
     expect(checkoutSessionCreateMock).not.toHaveBeenCalled()

@@ -1,6 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  ELITE_LINEAGE_LISTING_RENDER_POLICY,
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
@@ -39,11 +44,11 @@ type LineageTreeBoardProps = {
   defaultRootMemberId?: string | null
 
   /**
-   * Initial canvas layout (tree | board). The discipline page passes "board"
-   * because the vertical board layout has no horizontal overflow (the tree
-   * layout's transform-scale fit never produced a usable horizontal scrollbar).
+   * Optional explicit canvas layout (tree | board). When omitted, the canvas
+   * chooses a responsive default: board below md, tree at/above md.
    */
   defaultLayout?: LineageLayout
+  renderPolicy?: LineageListingRenderPolicy
 
   /**
    * Legacy fallback source for discipline detail page.
@@ -91,6 +96,7 @@ export function LineageTreeBoard({
   isTreeClaimable,
   capability,
   publicHref,
+  renderPolicy,
 }: LineageTreeBoardProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -103,6 +109,11 @@ export function LineageTreeBoard({
    * Path highlighting is driven by `selectedNodeId` (set immediately);
    * the drawer is driven by `drawerOpen` (set after the delay).
    */
+  const effectiveRenderPolicy =
+    capability?.canEditTree || capability?.canManageGroups
+      ? ELITE_LINEAGE_LISTING_RENDER_POLICY
+      : (renderPolicy ?? FREE_LINEAGE_LISTING_RENDER_POLICY)
+
   const handleNodeSelect = useCallback((nodeId: string) => {
     // Clear any pending drawer open
     if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
@@ -111,7 +122,9 @@ export function LineageTreeBoard({
     setSelectedNodeId(nodeId)
     setDrawerTab("info")
 
-    // Open the drawer after a delay so the path lights up first
+    // Open the drawer after a delay so the path lights up first.
+    // The drawer opens for everyone; tier gates its *contents*
+    // (LineageProfileDetailRenderPolicy), not whether it opens.
     drawerTimerRef.current = setTimeout(() => {
       setDrawerOpen(true)
     }, 400)
@@ -197,6 +210,7 @@ export function LineageTreeBoard({
         editMode={editMode}
         canEditPlacement={capability?.canEditTree ?? false}
         canManageGroups={capability?.canManageGroups ?? false}
+        renderPolicy={effectiveRenderPolicy}
       />
 
       <LineageProfileDrawer

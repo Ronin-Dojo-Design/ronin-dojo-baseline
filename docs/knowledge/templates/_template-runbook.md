@@ -5,7 +5,6 @@ type: runbook
 status: draft
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
-author: ""
 last_agent: ""
 pairs_with: []
 parent: ""

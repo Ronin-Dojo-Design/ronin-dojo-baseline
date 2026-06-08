@@ -1,3 +1,19 @@
+---
+title: "ADR 0001 — Dirstarter over WPGraphQL and JWT"
+slug: adr-0001-dirstarter-vs-wpgraphql
+type: decision
+status: accepted
+created: 2026-04-25
+updated: 2026-06-06
+last_agent: codex-session-0351
+pairs_with:
+  - docs/architecture/program-plan.md
+  - docs/architecture/decisions/0003-no-wordpress.md
+  - docs/knowledge/wiki/concepts/enter-the-dojo-schema-intake.md
+backlinks:
+  - docs/knowledge/wiki/index.md
+---
+
 # ADR 0001 — Dirstarter (Next.js + Prisma) chosen over WPGraphQL + JWT
 
 **Status:** Accepted
@@ -13,14 +29,14 @@ Adopt **Dirstarter (Next.js 15 + Prisma + Postgres + Better-Auth)** as the apex 
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - Schema is the spec: `prisma/schema.prisma` drives generated types, migrations, and queries. PHP/JS shape drift is impossible.
 - Authorization lives in `lib/authz.ts` pure helpers, unit-testable in isolation.
 - One Postgres DB serves web (Prisma) + mobile (typed API client over `app/api/v1/*`).
 - Already-paid Dirstarter ships auth, payments, email, S3, Redis, MDX, admin scaffolding — eliminates the "less custom work" argument WordPress used to win.
 
-**Negative**
+### Negative
 
 - Lose WPGraphQL/Faust ecosystem and Pods admin UI.
 - Lose built-in real-time / offline-sync (would need Pusher / Ably / Liveblocks bolt-on for live tournament features).

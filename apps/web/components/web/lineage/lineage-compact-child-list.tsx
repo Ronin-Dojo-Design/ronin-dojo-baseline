@@ -5,12 +5,21 @@ import type { CSSProperties } from "react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import {
+  FREE_LINEAGE_LISTING_RENDER_POLICY,
+  type LineageListingRenderPolicy,
+} from "~/lib/entitlements/lineage-tier-policy"
+import {
   buildChildGroups,
   type CanvasMember,
+  type ChildGroup,
+  memberAvatarSrc,
+  memberBeltColor,
   memberInitials,
+  memberRankLabel,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -43,6 +52,9 @@ const MAX_DEPTH = 24
 // depth ≥ 1 = deeper tiers (collapsed unless on the selected path or opened).
 const AUTO_COLLAPSE_DEPTH = 1
 
+// Wide sibling sets get the shared rail; smaller groups stay as the compact vertical list.
+const CHILD_RAIL_THRESHOLD = 4
+
 type CompactSharedProps = {
   childrenByParentId: Map<string | null, CanvasMember[]>
   descendantCountById: Map<string, number>
@@ -52,6 +64,7 @@ type CompactSharedProps = {
   onSelect: (nodeId: string) => void
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
+  renderPolicy?: LineageListingRenderPolicy
 }
 
 type LineageCompactChildListProps = CompactSharedProps & {
@@ -77,34 +90,74 @@ export function LineageCompactChildList({
       direction="column"
       className={cx("w-full", depth > 0 && "ml-3 border-border/60 border-l pl-3")}
     >
-      {groups.map(group => (
-        <Stack key={group.id} size="xs" direction="column" className="w-full">
-          {group.group?.showPublicLabel &&
-            (group.group.promotionEvent?.slug ? (
-              <Link
-                href={`/events/${group.group.promotionEvent.slug}`}
-                className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide hover:text-foreground"
-              >
-                {group.group.label}
-              </Link>
-            ) : (
-              <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
-                {group.group.label}
-              </span>
-            ))}
+      {groups.map(group => {
+        const useRail = group.members.length >= CHILD_RAIL_THRESHOLD
 
-          {group.members.map(member => (
-            <LineageCompactChildRow
-              key={member.id}
-              member={member}
-              depth={depth}
-              visited={visited}
-              {...shared}
-            />
-          ))}
-        </Stack>
-      ))}
+        return (
+          <Stack key={group.id} size="xs" direction="column" className="w-full">
+            <LineageCompactGroupLabel group={group} />
+
+            {useRail ? (
+              <div data-lineage-board-child-rail className="w-full min-w-0">
+                <Carousel
+                  ariaLabel={childGroupRailLabel(group, depth)}
+                  controls="desktop"
+                  edgeFades
+                  options={{ align: "start" }}
+                >
+                  {group.members.map(member => (
+                    <CarouselSlide key={member.id} width={280}>
+                      <LineageCompactChildRow
+                        member={member}
+                        depth={depth}
+                        visited={visited}
+                        {...shared}
+                      />
+                    </CarouselSlide>
+                  ))}
+                </Carousel>
+              </div>
+            ) : (
+              group.members.map(member => (
+                <LineageCompactChildRow
+                  key={member.id}
+                  member={member}
+                  depth={depth}
+                  visited={visited}
+                  {...shared}
+                />
+              ))
+            )}
+          </Stack>
+        )
+      })}
     </Stack>
+  )
+}
+
+function childGroupRailLabel(group: ChildGroup, depth: number) {
+  if (group.group?.showPublicLabel) return `${group.group.label} students`
+  return `Generation ${depth + 1} students`
+}
+
+function LineageCompactGroupLabel({ group }: { group: ChildGroup }) {
+  if (!group.group?.showPublicLabel) return null
+
+  if (group.group.promotionEvent?.slug) {
+    return (
+      <Link
+        href={`/events/${group.group.promotionEvent.slug}`}
+        className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide hover:text-foreground"
+      >
+        {group.group.label}
+      </Link>
+    )
+  }
+
+  return (
+    <span className="px-1 font-medium text-[0.65rem] text-muted-foreground uppercase tracking-wide">
+      {group.group.label}
+    </span>
   )
 }
 
@@ -112,6 +165,7 @@ function LineageCompactChildRow({
   member,
   depth,
   visited,
+  renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
   ...shared
 }: CompactSharedProps & {
   member: CanvasMember
@@ -135,9 +189,9 @@ function LineageCompactChildRow({
   const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
   const displayName = nodeDisplayName(member.node)
-  const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
-  const rankLabel = member.selectedRank?.name ?? null
-  const beltColor = member.selectedRank?.colorHex ?? null
+  const avatarSrc = memberAvatarSrc(member.node)
+  const rankLabel = memberRankLabel(member.node, member.selectedRank)
+  const beltColor = memberBeltColor(member.node, member.selectedRank)
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 
   return (
@@ -180,15 +234,17 @@ function LineageCompactChildRow({
           aria-label={`Open lineage profile for ${displayName}`}
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 text-left transition-colors hover:bg-muted/60"
         >
-          <Avatar className="size-8 shrink-0">
-            {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-            <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
-          </Avatar>
+          {renderPolicy.features.avatar && (
+            <Avatar className="size-8 shrink-0">
+              {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+              <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
+            </Avatar>
+          )}
 
           <Stack size="xs" direction="column" className="min-w-0 flex-1">
-            <span className="truncate font-medium text-sm">{displayName}</span>
+            <span className="max-w-full truncate font-medium text-sm">{displayName}</span>
             {rankLabel && (
-              <Stack size="xs" className="items-center">
+              <Stack size="xs" className="min-w-0 items-center">
                 {beltColor && (
                   <span
                     className="size-2 shrink-0 rounded-full ring-1 ring-border/50"
@@ -196,7 +252,9 @@ function LineageCompactChildRow({
                     aria-hidden
                   />
                 )}
-                <span className="truncate text-muted-foreground text-xs">{rankLabel}</span>
+                <span className="max-w-full truncate text-muted-foreground text-xs">
+                  {rankLabel}
+                </span>
               </Stack>
             )}
           </Stack>
@@ -213,14 +271,18 @@ function LineageCompactChildRow({
           </Badge>
         )}
 
-        <LineageMemberActionsMenu
-          displayName={displayName}
-          onViewProfile={() => shared.onSelect(member.nodeId)}
-          canChangePromoter={shared.canChangePromoter}
-          onChangePromoter={
-            shared.onChangePromoter ? () => shared.onChangePromoter?.(member.nodeId) : undefined
-          }
-        />
+        {/* Row tap opens the drawer for everyone; the actions menu only earns its
+            place for the editor-exclusive "Change promoter" action. */}
+        {shared.canChangePromoter && (
+          <LineageMemberActionsMenu
+            displayName={displayName}
+            onViewProfile={() => shared.onSelect(member.nodeId)}
+            canChangePromoter={shared.canChangePromoter}
+            onChangePromoter={
+              shared.onChangePromoter ? () => shared.onChangePromoter?.(member.nodeId) : undefined
+            }
+          />
+        )}
       </div>
 
       {expanded && (
@@ -229,6 +291,7 @@ function LineageCompactChildRow({
           depth={depth + 1}
           visited={new Set(visited).add(member.id)}
           {...shared}
+          renderPolicy={renderPolicy}
         />
       )}
     </div>

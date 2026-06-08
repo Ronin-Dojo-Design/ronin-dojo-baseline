@@ -4,8 +4,8 @@ slug: dns-verification-spec
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-14
-last_agent: codex-session-0163
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/infrastructure/domain-hosting-registry.md
   - docs/architecture/infrastructure/email-delivery-spec.md
@@ -40,14 +40,14 @@ See the operator flows in [Vercel Domain Setup Runbook](../../runbooks/deploy/ve
 Each domain pointed to Vercel needs either:
 
 | Record Type | Name | Value | TTL | Notes |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | A | `@` | Dashboard value, currently `216.198.79.1` for Baseline | 300 | Vercel anycast IP; trust the project Domains page |
 | CNAME | `www` | `cname.vercel-dns.com` | 300 | www redirect |
 
 Or (if registrar supports CNAME flattening at apex):
 
 | Record Type | Name | Value | TTL |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | CNAME | `@` | `cname.vercel-dns.com` | 300 |
 
 > **Note:** Bluehost supports A records at apex. Use the A record approach.
@@ -57,11 +57,11 @@ Or (if registrar supports CNAME flattening at apex):
 Resend requires domain verification before sending. Per verified domain, copy the exact records shown in Resend for that domain. The verified Baseline pattern is:
 
 | Record Type | Name | Value | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | TXT | `resend._domainkey` | Full `p=...` value from Resend | DKIM signing; copy the full per-domain key |
-| MX | `send` | `feedback-smtp.<region>.amazonses.com` | Outbound sending feedback path |
+| MX | `send` | `feedback-smtp.&lt;region&gt;.amazonses.com` | Outbound sending feedback path |
 | TXT | `send` | `v=spf1 include:amazonses.com ~all` | SPF for Resend/SES sending |
-| MX | `@` | `inbound-smtp.<region>.amazonaws.com` | Optional inbound mail handling; add only when Resend receiving is enabled/requested |
+| MX | `@` | `inbound-smtp.&lt;region&gt;.amazonaws.com` | Optional inbound mail handling; add only when Resend receiving is enabled/requested |
 | TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:dmarc@{domain}` | DMARC policy |
 
 Legacy ownership-token TXT rows and legacy return-path CNAME rows are not part of the verified Baseline active setup. Remove them if they are still present in Bluehost unless the current Resend dashboard for that domain explicitly requests them.
@@ -70,7 +70,7 @@ Legacy ownership-token TXT rows and legacy return-path CNAME rows are not part o
 
 Google OAuth uses redirect URIs, not DNS records. Configure in Google Cloud Console:
 
-```
+```text
 Authorized redirect URI per domain:
   https://baselinemartialarts.com/api/auth/callback/google
   https://ronindojodesign.com/api/auth/callback/google
@@ -86,7 +86,7 @@ Stripe uses API keys and webhook endpoints, not DNS. Webhook endpoint configured
 
 ### `baselinemartialarts.com` (Phase 1 — first)
 
-```
+```text
 ┌──────────┬──────────────────────────┬────────────────────────────────────────┬────────┐
 │ Type     │ Name                     │ Value                                  │ Status │
 ├──────────┼──────────────────────────┼────────────────────────────────────────┼────────┤
@@ -102,7 +102,7 @@ Stripe uses API keys and webhook endpoints, not DNS. Webhook endpoint configured
 
 ### `ronindojodesign.com` (Phase 2)
 
-```
+```text
 ┌──────────┬──────────────────────────┬────────────────────────────────────────┬────────┐
 │ Type     │ Name                     │ Value                                  │ Status │
 ├──────────┼──────────────────────────┼────────────────────────────────────────┼────────┤
@@ -123,9 +123,10 @@ Same pattern. `usastickfighting.com` gets a redirect (301) to `wekafusa.com` —
 ### `blackbeltlegacy.com` (Phase 4)
 
 Currently pointed at Flywheel nameservers. DNS migration requires:
+
 1. Move nameservers back to Bluehost (preferred per ADR 0015; Vercel DNS only if ADR 0015 changes)
-2. Add Vercel + Resend records
-3. Cancel Flywheel hosting
+1. Add Vercel + Resend records
+1. Cancel Flywheel hosting
 
 ## Verification Commands
 
@@ -157,7 +158,7 @@ dig +short _dmarc.baselinemartialarts.com TXT
 
 ## Data Flow: DNS Resolution → App
 
-```
+```text
 ┌──────────┐     ┌──────────────┐     ┌─────────┐     ┌──────────────┐
 │  Browser │────▶│ DNS Resolver  │────▶│ Vercel  │────▶│ Next.js App  │
 │          │     │              │     │ Edge    │     │              │

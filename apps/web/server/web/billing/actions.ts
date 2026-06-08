@@ -6,6 +6,10 @@ import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import {
+  isLineageMembershipPlanMetadata,
+  LINEAGE_MEMBERSHIP_SURFACE,
+} from "~/server/web/billing/lineage-membership"
+import {
   findStripeCustomerForCheckout,
   STRIPE_CUSTOMER_ACCOUNT_SCOPE,
 } from "~/server/web/billing/stripe-customers"
@@ -21,9 +25,14 @@ const createProgramEnrollmentCheckoutSchema = z.object({
   coupon: z.string().min(1).optional(),
 })
 
+const createLineageMembershipCheckoutSchema = z.object({
+  pricingPlanId: z.string().min(1, "Membership plan is required"),
+  coupon: z.string().min(1).optional(),
+})
+
 const SUBSCRIPTION_PRICING_MODELS = new Set(["MONTHLY", "ANNUAL"])
 
-const resolveProgramPlanCheckoutMode = ({
+const resolvePlanCheckoutMode = ({
   intervalMonths,
   pricingModel,
 }: {
@@ -120,7 +129,7 @@ export const createProgramEnrollmentCheckout = userActionClient
       userId: user.id,
       brand,
     })
-    const mode = resolveProgramPlanCheckoutMode(pricingPlan)
+    const mode = resolvePlanCheckoutMode(pricingPlan)
     const metadata = {
       type: "program_enrollment",
       userId: user.id,
@@ -137,6 +146,10 @@ export const createProgramEnrollmentCheckout = userActionClient
       tax_id_collection: { enabled: true },
       customer: existingCustomer?.stripeCustomerId,
       customer_creation: mode === "payment" && !existingCustomer ? "always" : undefined,
+      // Reusing an existing Stripe customer with automatic_tax + tax_id_collection
+      // requires customer_update; otherwise Stripe rejects the session for any
+      // returning customer (SESSION_0345 live-mode rehearsal finding).
+      customer_update: existingCustomer ? { name: "auto", address: "auto" } : undefined,
       invoice_creation: mode === "payment" ? { enabled: true } : undefined,
       metadata: mode === "payment" ? metadata : undefined,
       subscription_data: mode === "subscription" ? { metadata } : undefined,
@@ -148,6 +161,79 @@ export const createProgramEnrollmentCheckout = userActionClient
 
     if (!checkout.url) {
       throw new Error("Unable to create a Stripe Checkout Session for this program.")
+    }
+
+    redirect(checkout.url)
+  })
+
+export const createLineageMembershipCheckout = userActionClient
+  .inputSchema(createLineageMembershipCheckoutSchema)
+  .action(async ({ parsedInput: { pricingPlanId, coupon }, ctx: { user, db } }) => {
+    const brand = await getRequestBrand()
+
+    const pricingPlan = await db.pricingPlan.findUnique({
+      where: { id: pricingPlanId },
+      select: {
+        id: true,
+        brand: true,
+        pricingModel: true,
+        intervalMonths: true,
+        organizationId: true,
+        programId: true,
+        stripePriceId: true,
+        isActive: true,
+        metadata: true,
+        entitlementGrants: { select: { id: true } },
+      },
+    })
+
+    if (
+      !pricingPlan ||
+      pricingPlan.brand !== brand ||
+      !pricingPlan.isActive ||
+      pricingPlan.programId !== null ||
+      !pricingPlan.stripePriceId ||
+      pricingPlan.entitlementGrants.length === 0 ||
+      !isLineageMembershipPlanMetadata(pricingPlan.metadata)
+    ) {
+      throw new Error("Selected lineage membership plan is not available.")
+    }
+
+    const existingCustomer = await findStripeCustomerForCheckout({
+      userId: user.id,
+      brand,
+    })
+    const mode = resolvePlanCheckoutMode(pricingPlan)
+    const metadata = {
+      type: LINEAGE_MEMBERSHIP_SURFACE,
+      userId: user.id,
+      pricingPlanId: pricingPlan.id,
+      organizationId: pricingPlan.organizationId,
+      brand,
+    }
+
+    const checkout = await stripe.checkout.sessions.create({
+      mode,
+      line_items: [{ price: pricingPlan.stripePriceId, quantity: 1 }],
+      automatic_tax: { enabled: true },
+      tax_id_collection: { enabled: true },
+      customer: existingCustomer?.stripeCustomerId,
+      customer_creation: mode === "payment" && !existingCustomer ? "always" : undefined,
+      // Reusing an existing Stripe customer with automatic_tax + tax_id_collection
+      // requires customer_update; otherwise Stripe rejects the session for any
+      // returning customer (SESSION_0345 live-mode rehearsal finding).
+      customer_update: existingCustomer ? { name: "auto", address: "auto" } : undefined,
+      invoice_creation: mode === "payment" ? { enabled: true } : undefined,
+      metadata: mode === "payment" ? metadata : undefined,
+      subscription_data: mode === "subscription" ? { metadata } : undefined,
+      allow_promotion_codes: coupon ? undefined : true,
+      discounts: coupon ? [{ coupon }] : undefined,
+      success_url: `${siteConfig.url}/lineage/join/success?sessionId={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteConfig.url}/lineage/join?cancelled=true`,
+    })
+
+    if (!checkout.url) {
+      throw new Error("Unable to create a Stripe Checkout Session for this membership.")
     }
 
     redirect(checkout.url)

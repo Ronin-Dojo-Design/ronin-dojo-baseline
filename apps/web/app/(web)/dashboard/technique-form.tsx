@@ -220,7 +220,11 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Discipline</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    items={Object.fromEntries(disciplines.map(d => [d.id, d.name]))}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select discipline" />
@@ -246,7 +250,13 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                 render={({ field }) => (
                   <FormItem className="flex-1 min-w-40">
                     <FormLabel>Category</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(
+                        categoryOptions.map(v => [v, v.replace(/_/g, " ")]),
+                      )}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -270,7 +280,13 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                 render={({ field }) => (
                   <FormItem className="flex-1 min-w-40">
                     <FormLabel>Position</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(
+                        positionOptions.map(v => [v, v.replace(/_/g, " ")]),
+                      )}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select position" />

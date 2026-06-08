@@ -73,7 +73,7 @@ export default async function () {
         <p>
           –{" "}
           <ExternalLink href={linksConfig.author} doFollow>
-            Piotr Kulpinski
+            Brian Scott
           </ExternalLink>
         </p>
       </Prose>

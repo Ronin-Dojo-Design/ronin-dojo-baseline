@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-02
+updated: 2026-06-08
 author: Brian + Copilot
-last_agent: claude-session-0332
+last_agent: claude-session-0355
 ---
 
 # LLM Wiki Index
@@ -30,6 +30,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
+| [Repo Code Glossary](repo-code-glossary.md) | reference | active — SESSION_0351 expanded repo/project/session/schema/monitoring terms; SESSION_0352 added slug, cross-facet filter, pagination, projection, and pen-test terms |
+| [ENTER_THE_DOJO Schema Intake](concepts/enter-the-dojo-schema-intake.md) | concept | active — legacy WordPress/Pods doctrine translated to current Prisma/server-action/query-payload language |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
 | [Baseline Docs Adoption Checklist](baseline-docs-adoption-checklist.md) | protocol | active |
 | [Dirstarter Baseline Index](../../architecture/dirstarter-baseline-index.md) | architecture | active — **primary L1 reference** |
@@ -58,6 +60,11 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Simple Playwright Component Port Pipeline](component-porting/plawywright-component-conversion-method/simple-pipeline.md) | concept | active |
 | [Lineage Family Tree Port Spec](component-porting/specs/lineage-family-tree-port-spec.md) | spec | active |
 | [Lineage Profile Drawer Port Spec](component-porting/specs/lineage-profile-drawer-port-spec.md) | spec | active |
+| [Lineage Responsive Switch Port Spec](component-porting/specs/lineage-responsive-switch-port-spec.md) | spec | proven — SESSION_0338 Slice 1 responsive mode switch |
+| [Lineage Mobile List Port Spec](component-porting/specs/lineage-mobile-list-port-spec.md) | spec | proven — SESSION_0339 Slice 2 mobile flatten-and-indent list |
+| [Lineage Carousel Rail Port Spec](component-porting/specs/lineage-carousel-rail-port-spec.md) | spec | proven — SESSION_0340 Slice 3 Embla carousel rail extension |
+| [Lineage Generation Rail Port Spec](component-porting/specs/lineage-generation-rail-port-spec.md) | spec | proven — SESSION_0341 Slice 4 connector-free generation rails |
+| [Lineage Adaptive Connector Port Spec](component-porting/specs/lineage-adaptive-connector-port-spec.md) | spec | draft — petey-plan-0337 Slice 5 (spike) |
 | [Graphify Token Efficiency Pipeline](content-engine/graphify-token-efficiency-pipeline.md) | concept | active |
 | [Topic Index](topic-index.md) | index | active |
 | [Tournament Operations](concepts/tournament-ops.md) | concept | active |
@@ -75,6 +82,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Martial Arts Stories](../../product/baseline-martial-arts/STORIES.md) | stories | active |
 | [Black Belt Legacy PRD](../../product/black-belt-legacy/PRD.md) | prd | active |
 | [Black Belt Legacy Stories](../../product/black-belt-legacy/STORIES.md) | stories | active |
+| [Black Belt Legacy Gap Matrix](../../product/black-belt-legacy/GAP_MATRIX.md) | report | active — SESSION_0349 records shared trust badges across directory/detail/lineage surfaces, `legend` policy support, and `/directory` faceting as the next follow-up |
+| [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
+| [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan |
 
 ## Architecture
 
@@ -89,6 +99,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Program Plan](../../architecture/program-plan.md) | file | active |
 | [Plan vs Current](../../architecture/plan-vs-current.md) | file | active |
 | [Data Model](../../architecture/data-model.md) | concept | active |
+| [Repo Alignment Report](../../architecture/repo-alignment-report.md) | report | active — on-demand/weekly schema, docs, admin navigator, monitoring, and ledger alignment sweep |
 | [Auth](../../architecture/auth.md) | file | active |
 | [Legacy Conversion](../../architecture/legacy-conversion.md) | file | active |
 | [Feature Data Prerequisites](../../architecture/feature-data-prerequisites.md) | file | active |
@@ -141,6 +152,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0018 ContentAtom Canonical Relations](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
 | [ADR 0019 Membership Lifecycle Ownership](../../architecture/decisions/0019-membership-lifecycle-ownership.md) | decision | accepted |
 | [ADR 0020 Registration Recipient userId XOR Guest](../../architecture/decisions/0020-registration-recipient-userid-or-guest.md) | decision | accepted |
+| [ADR 0023 Generic Profile Claim (member/org)](../../architecture/decisions/0023-generic-profile-claim.md) | decision | accepted |
 
 ## Sessions
 
@@ -187,7 +199,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0037](../../sprints/_archive/SESSION_0037.md) | session | closed-quick |
 | [SESSION_0038](../../sprints/_archive/SESSION_0038.md) | session | closed-full |
 | [SESSION_0038.5](../../sprints/_archive/SESSION_0038_5.md) | session | closed-full |
-| [SESSION_0039](../../sprints/_archive/SESSION_0039.md) | session | in-progress |
+| [SESSION_0039](../../sprints/_archive/SESSION_0039.md) | session | closed-full |
 | [SESSION_0071](../../sprints/_archive/SESSION_0071.md) | session | closed-quick |
 | [SESSION_0072](../../sprints/_archive/SESSION_0072.md) | session | closed-full |
 | [SESSION_0098](../../sprints/_archive/SESSION_0098.md) | session | closed-full |
@@ -215,7 +227,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0120](../../sprints/_archive/SESSION_0120.md) | session | closed-full |
 | [SESSION_0121](../../sprints/_archive/SESSION_0121.md) | session | closed-quick |
 | [SESSION_0122](../../sprints/_archive/SESSION_0122.md) | session | closed-quick |
-| [SESSION_0123](../../sprints/_archive/SESSION_0123.md) | session | in-progress |
+| [SESSION_0123](../../sprints/_archive/SESSION_0123.md) | session | closed-quick |
 | [SESSION_0124](../../sprints/_archive/SESSION_0124.md) | session | closed-quick |
 | [SESSION_0125](../../sprints/_archive/SESSION_0125.md) | session | closed-quick |
 | [SESSION_0126](../../sprints/_archive/SESSION_0126.md) | session | closed-quick |
@@ -425,6 +437,32 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0330](../../sprints/SESSION_0330.md) | session--implement | closed — lineage Phase 3d hardening: `Drawer` primitive now honors `prefers-reduced-motion` (`motion-reduce:animate-none`); `LineageProfileDrawer` desktop persistent panel positions inside the viewport via a `containerClassName` override of the inherited `md:pt-[12.5vh]`/`md:[@media(min-height:1000px)]:pt-[25vh]` offsets |
 | [SESSION_0331](../../sprints/SESSION_0331.md) | session--implement | closed — lineage Phase 3f smaller half: new `LineageSearchBar` (composes `Input`/`Button`/`Badge`/`Stack`) renders between the canvas toolbar and the honor strip; case-insensitive name match drives the existing `onSelect` + path-highlight + scroll-into-view flow, with Prev/Next cursor and Esc-to-clear; works identically in `tree` and `board` layouts (PDF export deferred) |
 | [SESSION_0332](../../sprints/SESSION_0332.md) | session--implement | closed — Trophy.so rank-progression proof (petey-plan-0305 Phase 4 Slice 2): no-new-schema Points/Levels belt ladder + Achievements Unlocked rail derived from existing `Rank` + `RankAward` + seeded `GamificationEventType.BELT_PROMOTION.defaultPoints`; new `LineageRankProgressionPanel` + `lib/lineage/rank-progression.ts` (with focused tests) renders inside `LineageRankHistoryTab`; widened `lineageNodeProfilePayload.user.rankAwards.rank.rankSystem.ranks` select (name/shortName/colorHex) — no migration |
+| [SESSION_0333](../../sprints/SESSION_0333.md) | session--implement | closed — orchestrated `auto-session.sh 3` (lineage Phase 3c/3d/3f + Trophy #56–#59), reviewed/grilled, **repaired #56's dead on-card menu** (dnd `role=group` reachability + Base UI `onClick` vs no-op `onSelect` + descoped fragile auto-open modal to drawer-on-Rank-History + webkit hydration test hardening), security-audited the stack (no new violations), merged all four to `main`; surfaced a systemic dead-`onSelect` bug across ~6 admin action menus (drift D-016 follow-up) |
+| [SESSION_0334](../../sprints/SESSION_0334.md) | session--implement | closed — swept 11 dead `DropdownMenuItem onSelect`→`onClick` across 6 admin/lineage files (incl. `user-actions` beyond the WL-P1-3 list) + a `bun test` guard (WL-P1-3 resolved); added 2 lineage privacy tests (public search can't surface non-PUBLIC; rank-progression adversarial-PII allowlist proof, which hardened a `discipline` passthrough — WL-P1-4 resolved); `awardedAt` stays public-by-default; pruned stale `auto/session-0307..0310`; wired ntfy.sh Docker-cache + disk-pressure + CI/auto-session monitors + a ntfy/Pushover/Telegram runbook; drift D-016 closed |
+| [SESSION_0335](../../sprints/SESSION_0335.md) | session--implement | closed — doc-system ergonomics + CI + deploy cadence: realigned wiki-lint **R4** to its own spec (working-tree-diff vs `updated` + `stable:` opt-out — killed the chronic 4 false positives); finding-router (closing.md §6.7) + canonical frontmatter table (`+domain/+stable`, deprecate `author`/`use_count`); enhanced `lineage-hub` (code entry points + guard map) + `repo-truth-index` domain-hub pointer; new **verification-and-testing** runbook + guard registry; **raised CI to best practice** — new `ci.yml` runs Biome/typecheck/unit (the gates that ran nowhere), least-privilege perms, fixed 8 latent `biome ci` errors; **decoupled prod deploys from pushes** via Vercel `ignoreCommand` |
+| [SESSION_0336](../../sprints/SESSION_0336.md) | session--implement | closed — lineage epic **Phase 3e**: replaced the flow-laid `div` tree connectors with a measured SVG **90°-bend** overlay (`LineageConnectorLayer`) at full animation parity — `connector-draw` grow-in + the `traceStepDelay` path-trace cascade (runtime-verified: deep-leaf select lights 4 edges at 0/0.2/0.4/0.6s) + reduced-motion; `pointer-events-none` keeps dnd/scroll; removed dead `connector-grow-y/x` keyframes. Confirmed first `ci.yml` run green before coding. Verification smoke caught & fixed a parent-ref timing bug (FINDING_01). Operator-raised lineage **responsiveness/overflow/carousel** design review staged as next session (pushes 3f-PDF + Phase 4 leaderboard back) |
+| [SESSION_0337](../../sprints/SESSION_0337.md) | session--open | closed — Desi-led lineage design review: measured both reported bugs to root cause (Q2 overflow = `Stack` `items-start` shrink-to-content defeating `truncate`, span over-ran column by 166px; Q1 toolbar = card flex-`min-width:auto` blowout to 3672px → shell `overflow-clip` clips right half incl. controls). **Slice 0** fixed both (`max-w-full` on truncating spans across node-card/honor-strip/compact-list; `w-full min-w-0 max-w-full` on canvas card) — measured 0/70 spans overflow + toolbar reachable + tree scrollable. Authored `petey-plan-0337` (6-slice adapt-not-port epic) + PORTMAP-0002..0006 + 5 port-specs; reuse Embla carousel (no duplicate); connector×rail coexistence = adaptive bus+stubs (spike) |
+| [SESSION_0338](../../sprints/SESSION_0338.md) | session--implement | closed — petey-plan-0337 Slice 1 responsive mode switch: `LineageTreeCanvas` defaults to board below 768px and tree at/above 768px, removes the discipline page's forced board default, and preserves explicit Tree/Board toggles across resize without resetting the auto-fit zoom seed; PORTMAP-0002 proven with measured Playwright at 390/768/1280 |
+| [SESSION_0339](../../sprints/SESSION_0339.md) | session--implement | closed — petey-plan-0337 Slice 2 mobile lineage list: pure cycle-safe `flattenLineage`, `< sm` `LineageMobileList` branch, capped 0/16/32/48px indentation, no SVG/zoom branch at 390px, and row selection opens the existing profile drawer/path context; PORTMAP-0003 proven |
+| [SESSION_0340](../../sprints/SESSION_0340.md) | session--open | closed — petey-plan-0337 Slice 3 carousel rail extension: existing Embla `Carousel` gained optional dense-rail affordances (`emptyState`, labelled region, edge fades, desktop controls, slide width variants, ResizeObserver `reInit`) with all four consumers preserved; PORTMAP-0004 proven by Playwright dense-rail geometry and clean route smoke |
+| [SESSION_0341](../../sprints/SESSION_0341.md) | session--open | closed — petey-plan-0337 Slice 4 generation rails in connector-free zones: honor strip and wide board child groups now compose the shared Carousel rail; Playwright proof green at 390/768/1280; PORTMAP-0005 proven; test-fail-fix ledger created for repo-wide test clusters |
+| [SESSION_0342](../../sprints/SESSION_0342.md) | session--open | closed — test-suite stability gate: `test` script pinned to `--parallel=1` (deterministic 418 pass / 0 fail / ~67s, proven 4×); two-headed root cause (mock-leak vs Postgres over-subscription); TFF-001..005 resolved; SOP §2 + dev-env reconciled; ledger↔SOP cross-links wired; BBL-launch-framed e2e test-gap advisory + Fallow note; stale all-brands launch doc given a BBL-first banner |
+| [SESSION_0343](../../sprints/SESSION_0343.md) | session--open | closed — BBL launch-readiness frame: cutover checklist staged, DNS source of truth resolved (Bluehost authority + Flywheel/Fastly WP origin), registration e2e gap #1 green, Better Auth magic-link identity-shell bug fixed, lineage `canvas-model`/`connector-geometry` unit wedge landed, Slice 5 sequenced behind launch gates |
+| [SESSION_0344](../../sprints/SESSION_0344.md) | session--open | closed — BBL lineage membership checkout gate: `/lineage/join` paid tier section + success/cancel shells, trusted `PricingPlan`→`EntitlementGrant` checkout action, explicit local `E2E_STRIPE_MOCK=1` harness, Playwright+Bun webhook proof for purchase grant, subscription grant, and subscription revoke; no `Membership.status` or `ProgramEnrollment` mutation |
+| [SESSION_0345](../../sprints/SESSION_0345.md) | session--open | closed — BBL checkout gate proven on the REAL Stripe network: Stripe CLI test-mode rehearsal (real hosted Checkout + signature-verified webhook) → one-time grant, subscription grant, subscription-deletion revoke; **caught + fixed a launch-blocking returning-customer checkout bug** (`customer_update`) in both checkout actions + regression test; prod is live-mode (drift D-018, CUTOVER corrected); gift/comp+tier-gating epic staged |
+| [SESSION_0346](../../sprints/SESSION_0346.md) | session--open | closed — audited admin comp-grant spine landed (`grantComp`/`revokeComp`, `LINEAGE_PREMIUM`/`LINEAGE_ELITE`, admin actions), claim approval and invite acceptance now materialize server-derived comp grants, and deterministic multi-rank/multi-student fixture proves mixed tiers/idempotency/edge cases without a schema migration |
+| [SESSION_0347](../../sprints/SESSION_0347.md) | session--open | closed — BBL tier-gating read model + QR lane: generic admin entitlement grants/revokes now audit before mutation, lineage tree cards resolve free/premium/elite render policy from active entitlement keys, and invite/claim/profile QR sharing uses server-built URLs with no client-trusted tier state |
+| [SESSION_0348](../../sprints/SESSION_0348.md) | session--open | closed — BBL profile/detail tier-gating consumption: `/directory` canonical browse/detail, `/members` compatibility redirects, free owner preview vs premium/elite full profile, and focused no-leak tests |
+| [SESSION_0349](../../sprints/SESSION_0349.md) | session--open | closed — BBL trust badges and discovery polish: shared trust-status adapter over existing lineage/claim fields, directory/detail/lineage badge surfaces, limited `legend` tier policy support, and faceted `/directory` follow-up planning |
+| [SESSION_0350](../../sprints/SESSION_0350.md) | session--implement | closed — first faceted `/directory` browse slice (people / schools-orgs / lineage trees) via a presentation-only `DirectoryFacetResult` adapter + shared `FacetResultCard` + result-type segmented control reusing the `search*` family; working people search; deleted orphaned `members/*` + dead directory components; `fallow` bow-out trial |
+| [SESSION_0351](../../sprints/SESSION_0351.md) | session--open | closed — quick schema/repo cleanup alignment: legacy `ENTER_THE_DOJO.md` schema intake, admin Repo Docs navigator + Graphify links, repo alignment report, archive status cleanup, DavidAnson markdownlint tooling, pulse/glossary expansion, and fallow follow-up ledger |
+| [SESSION_0352](../../sprints/SESSION_0352.md) | session--implement | closed — `/directory` discipline filter standardized on `Discipline.slug`, shared `DirectoryFilters` Select added, People facet moved to paginated `searchDirectoryProfiles` with shared trust/tier/privacy projection, and fallow removed the dead unpaginated list query |
+| [SESSION_0353](../../sprints/SESSION_0353.md) | session--implement | closed — `/directory` location (Region→City) + org/school combobox filters with per-facet visibility on the shared brand-scoped projection; `ComboboxSelector` promoted admin→common (size parity + accessible clear); Base UI Select `items` label fix (Bug A: rank/discipline showed cuids/slugs) on discipline + lineage selected-rank; pure cross-brand/leak where-builder test; Desi motion-reduce + parity fixes; WL-P2-10 dep triage + WL-P1-7 systemic Select; prod lineage drawer (tier-gated) + 12-vs-17 (visibility) classified non-code |
+| [SESSION_0354](../../sprints/SESSION_0354.md) | session--implement | closed — WL-P1-7 systemic Select label fix via new `DataSelect` wrapper (+ filters converted, ~30 consumers `items`-fixed, `tool-filters` ReactNode exception); generic directory claim system (`ProfileClaimRequest` model + migration, `/admin/claims` review queue, public `ProfileClaimTeaser` + `ProfileHero`, owner live-preview); `organizationHref` link-through 404 fix; WL-P2-10 deps removed + 3 lockfiles regenerated (frozen-lockfile verified) |
+| [SESSION_0355](../../sprints/SESSION_0355.md) | session--open | closed — rich `DataSelect` labels (`content?: ReactNode` row + render test; `BeltSwatch` belt swatches on the rank select; `tool-filters` back on `DataSelect`); owner-less-org `OrgClaimCta` + `ListingRegisterCta` register discoverability + create-org dedup hint; claimant-side browser smoke; profile-redesign assessment (`petey-plan-0356`) + Galaxy staging (`petey-plan-0357`); 0337 stamped dormant; findings: drawer tier-gate + domain-hub discovery gap |
+| [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
+| [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
+| [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
@@ -432,6 +470,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [petey-plan-0291](../../sprints/petey-plan-0291.md) | petey-plan | closed |
 | [petey-plan-0305](../../petey-plan-0305.md) | petey-plan | active — lineage tree enhancement epic (4 phases) |
 | [petey-plan-0319](../../petey-plan-0319.md) | petey-plan | active — PromotionEvent display surfaces epic (S0319 seed-gen+OKC+`/events/[slug]`; S0320 org timeline+`/events` index; S0321 begin editor+upload) |
+| [petey-plan-0337](../../petey-plan-0337-lineage-responsive-carousel.md) | petey-plan | active — lineage responsiveness + carousel epic (adapt-not-port): S0 bugfixes done; S1 responsive switch proven; S2 mobile list proven; S3 carousel-rail next (extend Embla), S4 generation rails, S5 adaptive connector (spike) |
 
 ## Protocols
 
@@ -474,11 +513,14 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Neon Prisma Advisory-Lock Recovery](../../runbooks/database/neon-advisory-lock-recovery.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sops/sop-data-and-wiring-flows.md) | runbook | active |
+| [Lineage Data + Wiring Flows](../../runbooks/sops/lineage-data-wiring-flow.md) | runbook | active — SESSION_0350 lineage genealogy + trust + faceted `/directory` flow map (peer to SOP Data and Wiring Flows) |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sops/sop-e2e-user-lifecycle.md) | runbook | active |
 | [SOP — Agent Workflows and Rituals](../../runbooks/sops/sop-agent-workflows-and-rituals.md) | runbook | active |
 | [Dev Environment](../../runbooks/dev-environment/dev-environment.md) | runbook | active |
 | [React to Next Component Porting Runbook](../../runbooks/porting/react-to-next-component-porting-runbook.md) | runbook | active |
 | [Graphify Repo Memory Runbook](../../runbooks/dev-environment/graphify-repo-memory.md) | runbook | active |
+| [Claude Mobile Runbook](../../runbooks/dev-environment/claude-mobile-runbook.md) | runbook | active — SESSION_0350 drive a Claude session from the phone (SSH+tmux/Tailscale or cloud); canonical transport + cloud-container prereqs |
+| [Codex Mobile Runbook](../../runbooks/dev-environment/codex-mobile-runbook.md) | runbook | active — SESSION_0350 Codex peer (Codex Cloud / `codex` CLI) + operator setup checklist |
 | [Stripe Setup Runbook](../../runbooks/integrations/stripe-setup-runbook.md) | runbook | active |
 | [AWS S3 Operator Runbook](../../runbooks/integrations/aws-s3-operator-runbook.md) | runbook | active |
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/integrations/adr-0014-stripe-product-policy-research.md) | runbook | active |
@@ -491,6 +533,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Listings Runbook](../../runbooks/domain-features/baseline-listings-runbook.md) | runbook | active |
 | [Lineage Listing Runbook](../../runbooks/domain-features/lineage-listing-runbook.md) | runbook | active |
 | [Lineage Domain Hub](../../runbooks/domain-features/lineage-hub.md) | runbook | active — lineage doc index |
+| [Directory / Organization / Profile Domain Hub](../../runbooks/domain-features/directory-org-profile-hub.md) | runbook | active — discovery / profile / register-vs-claim index |
 | [MCP Usage Runbook](../../runbooks/dev-environment/mcp-usage-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deploy/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) | runbook | active |
@@ -498,7 +541,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
-| [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips (SESSION_0304) |
+| [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
+| [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
 ## Code files (annotated)
 
@@ -554,6 +598,13 @@ See [`dirstarter-baseline-index.md` §2e](../../architecture/dirstarter-baseline
 | ScheduleInstructorList | `components/web/schedules/schedule-instructor-list.tsx` | S2 |
 | DirectoryFilters/List/Listing/Query | `components/web/directory/directory-*.tsx` | S2 |
 | LineageQuery/List/Listing/Search/Card | `components/web/lineage/lineage-*.tsx` | SESSION_0248 |
+| LineageTrustBadge/LineageClaimBadge | `components/web/lineage/lineage-trust-badge.tsx` | SESSION_0349 |
+| FacetResultCard + DirectoryFacetResult + getDirectoryFacets | `components/web/directory/facet-result-card.tsx`, `lib/directory/facet-result.ts`, `server/web/directory/facets.ts` | SESSION_0350 |
+| DirectoryFilters + profile projection | `components/web/directory/directory-filters.tsx`, `server/web/directory/profile-projection.ts` | SESSION_0352 |
+| ComboboxSelector (promoted) + directory location/org filters + `buildDirectoryProfileWhere` | `components/common/combobox-selector.tsx`, `components/web/directory/directory-filters.tsx`, `server/web/directory/{filter-options,profile-where}.ts` | SESSION_0353 |
+| `DataSelect` (id/slug-aware Select) + generic profile-claim system (`ProfileHero`, `ProfileClaimTeaser`, `/admin/claims`) | `components/common/data-select.tsx`, `components/web/profile/profile-hero.tsx`, `components/web/claims/*`, `server/{web,admin}/claims/*`, `app/admin/claims/*` | SESSION_0354 |
+| `DataSelect` rich rows (`content?: ReactNode`) + `BeltSwatch` + `OrgClaimCta` + `ListingRegisterCta` | `components/common/{data-select,belt-swatch}.tsx`, `components/web/claims/org-claim-cta.tsx`, `components/web/directory/listing-register-cta.tsx` | SESSION_0355 |
+| QrShareButton/QrSharePanel | `components/common/qr-share-button.tsx` | SESSION_0347 |
 | ContentPostMediaCarousel | `components/web/content-posts/content-post-media-carousel.tsx` | SESSION_0224 |
 | PassportEditor | `app/(web)/me/passport-editor.tsx` | S2 |
 

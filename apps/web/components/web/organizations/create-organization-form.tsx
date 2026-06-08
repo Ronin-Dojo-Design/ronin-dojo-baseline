@@ -17,6 +17,8 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { Input } from "~/components/common/input"
+import { Link } from "~/components/common/link"
+import { Note } from "~/components/common/note"
 import {
   Select,
   SelectContent,
@@ -97,6 +99,16 @@ export const CreateOrganizationForm = ({
           {/* Hidden brand field */}
           <input type="hidden" {...form.register("brand")} />
 
+          {/* Dedup hint — interim of the Dirstarter search-first submit pattern
+              (unified claim-or-create funnel staged in the profile/onboarding epic). */}
+          <Note>
+            Already on the directory?{" "}
+            <Link href="/organizations" className="underline">
+              Search to claim your existing organization
+            </Link>{" "}
+            instead of creating a duplicate.
+          </Note>
+
           <FormField
             control={form.control}
             name="name"
@@ -136,7 +148,11 @@ export const CreateOrganizationForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Organization Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={{ DOJO: "Dojo", SCHOOL: "School", CLUB: "Club", LEAGUE: "League" }}
+                >
                   <FormControl>
                     <SelectTrigger size="lg">
                       <SelectValue placeholder="Select type" />
@@ -300,7 +316,6 @@ export const CreateOrganizationForm = ({
                         name="disciplineIds"
                         render={({ field }) => (
                           <FormItem>
-                            {/* biome-ignore lint/a11y/noLabelWithoutControl: FormControl wraps the Checkbox inside this label */}
                             <label className="flex items-center gap-2 text-sm cursor-pointer">
                               <FormControl>
                                 <Checkbox

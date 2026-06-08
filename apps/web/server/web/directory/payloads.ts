@@ -8,15 +8,28 @@ import type { Prisma } from "~/.generated/prisma/client"
 // returned. The privacy stripping happens in the query function, not here.
 // ---------------------------------------------------------------------------
 
+const directoryLineageTrustPayload = {
+  id: true,
+  isVerified: true,
+  verificationStatus: true,
+  visibility: true,
+  claimRequests: {
+    where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
+    select: { status: true },
+  },
+} satisfies Prisma.LineageNodeSelect
+
 export const directoryUserPayload = {
   id: true,
   name: true,
   image: true,
   email: true,
+  isPlaceholder: true,
   // Promoted Passport avatar is preferred over User.image at the projection
   // layer (SESSION_0325). Only avatarUrl is selected — it is deliberately
   // public (SESSION_0324); no other Passport field is widened into the list.
   passport: { select: { avatarUrl: true } },
+  lineageNode: { select: directoryLineageTrustPayload },
 } satisfies Prisma.UserSelect
 
 export const directoryMembershipPayload = {
@@ -26,6 +39,7 @@ export const directoryMembershipPayload = {
 } satisfies Prisma.MembershipSelect
 
 export const directoryRankAwardPayload = {
+  id: true,
   rank: {
     select: {
       id: true,
@@ -39,6 +53,7 @@ export const directoryRankAwardPayload = {
 
 export const directoryProfileListPayload = {
   id: true,
+  slug: true,
   visibility: true,
   locationCity: true,
   locationRegion: true,
@@ -54,6 +69,7 @@ export const directoryProfileListPayload = {
       rankAwards: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
+        take: 1,
       },
     },
   },
@@ -61,6 +77,36 @@ export const directoryProfileListPayload = {
 
 export type DirectoryProfileList = Prisma.DirectoryProfileGetPayload<{
   select: typeof directoryProfileListPayload
+}>
+
+// ---------------------------------------------------------------------------
+// Public preview payload — enough for free profile listing/detail preview.
+// Full profile fields are selected only after the owner/listing tier is known.
+// ---------------------------------------------------------------------------
+
+export const directoryProfilePreviewPayload = {
+  id: true,
+  slug: true,
+  visibility: true,
+  showRanks: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      isPlaceholder: true,
+      passport: { select: { avatarUrl: true } },
+      lineageNode: { select: directoryLineageTrustPayload },
+      rankAwards: {
+        select: directoryRankAwardPayload,
+        orderBy: { rank: { sortOrder: "desc" as const } },
+      },
+    },
+  },
+} satisfies Prisma.DirectoryProfileSelect
+
+export type DirectoryProfilePreview = Prisma.DirectoryProfileGetPayload<{
+  select: typeof directoryProfilePreviewPayload
 }>
 
 // ---------------------------------------------------------------------------
@@ -86,6 +132,7 @@ export const directoryProfileDetailPayload = {
       name: true,
       image: true,
       email: true,
+      isPlaceholder: true,
       passport: {
         select: {
           avatarUrl: true,
@@ -93,6 +140,7 @@ export const directoryProfileDetailPayload = {
           socialLinks: true,
         },
       },
+      lineageNode: { select: directoryLineageTrustPayload },
       memberships: {
         select: {
           ...directoryMembershipPayload,
@@ -118,22 +166,6 @@ export type DirectoryProfileDetail = Prisma.DirectoryProfileGetPayload<{
   select: typeof directoryProfileDetailPayload
 }>
 
-// ---------------------------------------------------------------------------
-// Filter options payloads
-// ---------------------------------------------------------------------------
-
-export const filterOrganizationPayload = {
-  id: true,
-  name: true,
-} satisfies Prisma.OrganizationSelect
-
-export const filterDisciplinePayload = {
-  id: true,
-  name: true,
-} satisfies Prisma.DisciplineSelect
-
-export const filterRankPayload = {
-  id: true,
-  name: true,
-  sortOrder: true,
-} satisfies Prisma.RankSelect
+// Filter-options payloads (id/name/sortOrder selects) were removed in
+// SESSION_0350 with their only consumer `getDirectoryFilterOptions`; the
+// cross-facet filter follow-up will reintroduce a slug-aware options query.

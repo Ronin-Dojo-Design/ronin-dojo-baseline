@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 import { type ComponentProps, use } from "react"
 import { toast } from "sonner"
 import { LeadSource } from "~/.generated/prisma/browser"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Button } from "~/components/common/button"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Form,
   FormControl,
@@ -170,7 +170,13 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Source</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  items={Object.fromEntries(
+                    Object.values(LeadSource).map(s => [s, s.replace(/_/g, " ")]),
+                  )}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select source..." />

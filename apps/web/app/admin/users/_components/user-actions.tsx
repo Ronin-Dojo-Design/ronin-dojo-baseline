@@ -104,7 +104,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
           {user.role !== "admin" &&
             (user.banned ? (
               <DropdownMenuItem
-                onSelect={() => {
+                onClick={() => {
                   toast.promise(
                     async () => {
                       await admin.unbanUser({ userId: user.id })
@@ -118,7 +118,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
-                onSelect={() => {
+                onClick={() => {
                   toast.promise(
                     async () => {
                       await admin.banUser({ userId: user.id })
@@ -133,7 +133,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
             ))}
 
           <DropdownMenuItem
-            onSelect={() => {
+            onClick={() => {
               toast.promise(admin.revokeUserSessions({ userId: user.id }), {
                 loading: "Revoking sessions...",
                 success: "Sessions successfully revoked",

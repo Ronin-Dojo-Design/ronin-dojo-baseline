@@ -216,7 +216,13 @@ function ScoreMatchDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Result</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(MatchResult).map(r => [r, r.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select result type" />

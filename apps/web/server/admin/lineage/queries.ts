@@ -179,6 +179,7 @@ export const findLineageTreeDetail = async (treeId: string) => {
                           name: true,
                           shortName: true,
                           sortOrder: true,
+                          colorHex: true,
                           rankSystem: {
                             select: {
                               name: true,

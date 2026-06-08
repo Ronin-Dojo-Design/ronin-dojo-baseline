@@ -4,8 +4,8 @@ slug: dirstarter-upstream-sync-2026-05-14
 type: architecture
 status: active
 created: 2026-05-14
-updated: 2026-05-14
-last_agent: codex-session-0165
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/dirstarter-baseline-index.md
   - docs/runbooks/baseline-listings-runbook.md
@@ -29,7 +29,7 @@ Capture the current Dirstarter upstream state before Ronin ports anything from i
 | Field | Value |
 | --- | --- |
 | Local checkout | `/Users/brianscott/Local Sites/DirStarter /dirstarter_template` |
-| Remote | `https://github.com/dirstarter/dirstarter.git` |
+| Remote | `<https://github.com/dirstarter/dirstarter.git`> |
 | Previous local upstream base | `c42e8bb` |
 | Current upstream head | `7e724b6` (`feat: add Rejected and Deleted tool statuses`) |
 | Clean upstream branch | `upstream/dirstarter-main-20260514` tracks `origin/main` |
@@ -88,12 +88,12 @@ The correct move is lane-based porting. Each lane should have a source diff, Ron
 ## Recommended porting lanes
 
 1. **Upstream baseline map lane.** Refresh `dirstarter-baseline-index.md` from the clean upstream branch and mark old sections that are no longer current.
-2. **Env/deploy lane.** Compare upstream `.env.example`, `env.ts`, `services/db.ts`, `vercel.json`, sitemap/RSS changes, and Ronin's Vercel production setup. Do not change production env vars until the runbooks are updated.
-3. **Low-risk UI primitive lane.** Evaluate `Field`, `ButtonGroup`, data-table helpers, `data-required` labels, and select small Ronin surfaces for porting.
-4. **Vendor SDK lane.** Review Stripe and Resend SDK/API changes against Ronin membership, checkout, webhook, and email flows.
-5. **API architecture lane.** Decide whether oRPC is a future Ronin direction. This requires an ADR because it affects action clients, brand scoping, audit logging, tests, and UI mutation patterns.
-6. **Content/SEO lane.** Review native sitemap/RSS and database blog migration after production user-journey smoke.
-7. **Schema/content lane.** Review bookmarks, posts, tool statuses/tiers, CUID2, and tier priority only when a Ronin product feature needs them.
+1. **Env/deploy lane.** Compare upstream `.env.example`, `env.ts`, `services/db.ts`, `vercel.json`, sitemap/RSS changes, and Ronin's Vercel production setup. Do not change production env vars until the runbooks are updated.
+1. **Low-risk UI primitive lane.** Evaluate `Field`, `ButtonGroup`, data-table helpers, `data-required` labels, and select small Ronin surfaces for porting.
+1. **Vendor SDK lane.** Review Stripe and Resend SDK/API changes against Ronin membership, checkout, webhook, and email flows.
+1. **API architecture lane.** Decide whether oRPC is a future Ronin direction. This requires an ADR because it affects action clients, brand scoping, audit logging, tests, and UI mutation patterns.
+1. **Content/SEO lane.** Review native sitemap/RSS and database blog migration after production user-journey smoke.
+1. **Schema/content lane.** Review bookmarks, posts, tool statuses/tiers, CUID2, and tier priority only when a Ronin product feature needs them.
 
 ## SESSION_0165 port-planning addendum
 

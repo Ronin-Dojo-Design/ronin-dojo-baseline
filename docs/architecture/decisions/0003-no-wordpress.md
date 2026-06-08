@@ -15,14 +15,14 @@ Blog/marketing content ~~lives as **MDX in `apps/web/content/blog/`**, rendered 
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - One stack, one auth, one deploy, one security perimeter.
 - No PHP runtime, no Wordfence, no SMTP plugin, no plugin-update treadmill.
 - Articles version-controlled and reviewable as PRs.
 - Bluehost DNS just points the apex A/CNAME at Vercel — domain registrar is unchanged.
 
-**Negative**
+### Negative
 
 - No WP article editor for non-technical writers (acceptable: solo build, no co-authors today).
 - Lose the WP plugin ecosystem (Yoast, RankMath, etc.) — replaced by Next.js metadata APIs and structured-data helpers in Dirstarter.

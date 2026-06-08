@@ -147,7 +147,13 @@ export function TournamentForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={Object.fromEntries(
+                      Object.values(Brand).map(b => [b, b.replace(/_/g, " ")]),
+                    )}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
@@ -198,7 +204,11 @@ export function TournamentForm({
                 <FormItem>
                   <FormLabel>Host Organization</FormLabel>
                   {organizations && organizations.length > 0 ? (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      items={Object.fromEntries(organizations.map(org => [org.id, org.name]))}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select host organization" />

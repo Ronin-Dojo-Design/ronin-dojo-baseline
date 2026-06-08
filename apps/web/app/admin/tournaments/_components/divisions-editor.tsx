@@ -30,10 +30,10 @@ import { useAction } from "next-safe-action/hooks"
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { DivisionFormat, DivisionGender } from "~/.generated/prisma/browser"
-import { ComboboxSelector } from "~/components/admin/combobox-selector"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardHeader } from "~/components/common/card"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
   Dialog,
   DialogContent,
@@ -496,6 +496,12 @@ export function DivisionsEditor({
               <Select
                 value={selectedSeedingMethod}
                 onValueChange={v => setSelectedSeedingMethod(v as SeedingMethod)}
+                items={{
+                  REGISTRATION_ORDER: "Registration Order",
+                  TOURNAMENT_RANKING: "Tournament Ranking (W/L record)",
+                  MARTIAL_ARTS_RANK: "Martial Arts Rank",
+                  MANUAL: "Manual (custom seeding)",
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -627,6 +633,9 @@ export function DivisionsEditor({
                 <Select
                   value={divForm.format}
                   onValueChange={v => setDivForm(f => ({ ...f, format: v as string }))}
+                  items={Object.fromEntries(
+                    Object.values(DivisionFormat).map(f => [f, f.replace(/_/g, " ")]),
+                  )}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -646,6 +655,9 @@ export function DivisionsEditor({
                 <Select
                   value={divForm.gender}
                   onValueChange={v => setDivForm(f => ({ ...f, gender: v as string }))}
+                  items={Object.fromEntries(
+                    Object.values(DivisionGender).map(g => [g, g.replace(/_/g, " ")]),
+                  )}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -730,6 +742,9 @@ export function DivisionsEditor({
                 <Select
                   value={divForm.roleRequiredId}
                   onValueChange={v => setDivForm(f => ({ ...f, roleRequiredId: v as string }))}
+                  items={Object.fromEntries(
+                    tournamentRoles.map(r => [r.id, `${r.name} (${r.code})`]),
+                  )}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -751,6 +766,7 @@ export function DivisionsEditor({
                 <Select
                   value={divForm.ruleSetId}
                   onValueChange={v => setDivForm(f => ({ ...f, ruleSetId: v as string }))}
+                  items={Object.fromEntries(ruleSets.map(rs => [rs.id, rs.name]))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="None" />

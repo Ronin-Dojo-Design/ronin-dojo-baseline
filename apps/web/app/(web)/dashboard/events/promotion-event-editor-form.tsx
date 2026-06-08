@@ -149,7 +149,19 @@ export function PromotionEventEditorForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Host organization</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={{
+                        [noHostValue]: "No host organization",
+                        ...Object.fromEntries(
+                          hostOrganizations.map(organization => [
+                            organization.id,
+                            organization.name,
+                          ]),
+                        ),
+                      }}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="No host organization" />
@@ -231,7 +243,9 @@ export function PromotionEventEditorForm({
                             />
                             <span className="grid gap-1">
                               <span className="font-medium">{award.label}</span>
-                              <span className="text-xs text-secondary-foreground">{award.detail}</span>
+                              <span className="text-xs text-secondary-foreground">
+                                {award.detail}
+                              </span>
                             </span>
                           </label>
                         )

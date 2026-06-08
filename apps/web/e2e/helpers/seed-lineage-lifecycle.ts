@@ -10,6 +10,7 @@ export interface LineageLifecycleFixture {
   claimTargetName: string
   placeholderUserId: string
   claimantUserId: string
+  claimantPremiumEntitlementId: string
   adminUserId: string
   treeEditorUserId: string
   hiddenNames: {

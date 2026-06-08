@@ -126,7 +126,13 @@ export const ScheduleInstructorList = ({
 
       {remainingInstructors.length > 0 && (
         <Stack size="sm" className="flex-wrap">
-          <Select value={pendingUserId} onValueChange={v => setPendingUserId(v as string)}>
+          <Select
+            value={pendingUserId}
+            onValueChange={v => setPendingUserId(v as string)}
+            items={Object.fromEntries(
+              remainingInstructors.map(i => [i.id, i.name ?? i.email ?? i.id]),
+            )}
+          >
             <SelectTrigger size="md" className="min-w-[16rem]">
               <SelectValue placeholder="Assign an instructor" />
             </SelectTrigger>

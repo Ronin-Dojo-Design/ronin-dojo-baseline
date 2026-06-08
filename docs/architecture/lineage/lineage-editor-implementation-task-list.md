@@ -5,7 +5,7 @@ type: plan
 status: active
 created: 2026-05-17
 updated: 2026-05-17
-last_agent: codex-session-0177
+last_agent: codex-session-0351
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/knowledge/wiki/index.md
@@ -109,11 +109,11 @@ Done means:
 ## Recommended Build Order After SESSION_0177
 
 1. Schema migration and backfill proof.
-2. Server read models and pure adapter tests.
-3. React canvas public viewer behind current lineage surface.
-4. Standalone public route.
-5. Dashboard editor read route and ACL guard.
-6. Visual group editing.
-7. Promotion modal and audited relationship changes.
-8. Claim workflow and evidence review.
-9. D3 removal after parity.
+1. Server read models and pure adapter tests.
+1. React canvas public viewer behind current lineage surface.
+1. Standalone public route.
+1. Dashboard editor read route and ACL guard.
+1. Visual group editing.
+1. Promotion modal and audited relationship changes.
+1. Claim workflow and evidence review.
+1. D3 removal after parity.

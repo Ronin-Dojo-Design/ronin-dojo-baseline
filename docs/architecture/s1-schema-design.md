@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-04-25
 updated: 2026-04-29
-last_agent: codex-session-0025
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/plan-vs-current.md
   - docs/architecture/program-plan.md
@@ -30,26 +30,26 @@ Design doc for sign-off before migration. No code changes until Brian approves.
 One migration that:
 
 1. Renames `Profile` → `Passport` (expanded fields)
-2. Adds `DirectoryProfile`
-3. Renames `School` → `Organization` (adds `type` enum)
-4. Renames `Style` → `Discipline`
-5. Replaces `SchoolStyle` → `OrganizationDiscipline`
-6. Adds `RankSystem` + renames `Belt` → `Rank` (expanded fields)
-7. Adds `MembershipStatus` enum, reshapes `Membership` with `disciplineId` + `status`
-8. Replaces single-role enum with `Role` table + `MembershipRoleAssignment` join table (Q3 resolved: table, not enum)
-9. Renames `Progress` → `RankAward` (clearer intent)
-10. Reshapes `Tournament` (status enum, venue fields, org-hosted instead of school-hosted)
-11. Adds `TournamentDiscipline`, `Division`, reshapes `TournamentRegistration` → `Registration`, adds `RegistrationEntry` with snapshot fields
-12. Renames `Course.schoolId` → `organizationId`, `Course.styleId` → `disciplineId`, adds `rankId` FK (Q6)
-13. Adds `Style` model for substyles (Shotokan, Goju-Ryu, etc.) with approval workflow (Gap 4)
-14. Adds `TournamentRole` table for tournament-specific roles (Q5 resolved: table, not enum)
-15. Adds `SubscriptionTier` table + `UserBrandSubscription` model (Q7 resolved: Option C)
-16. Adds `LineageNode` + `LineageRelationship` models (Q8 resolved: add now)
-17. Adds `GamificationEvent` FKs to `RankAward`, `Course`, `Organization`, `Discipline` + `GamificationEventType` table (Gap 1)
-18. Adds `CourseEnrollment` + `CurriculumItemCompletion` models for student progress tracking (Gap 2)
-19. Adds `Waiver` + `WaiverSignature` models for tournament/org consent records (Gap 3)
-20. Adds `TournamentStaffAssignment` for judge/ref/director assignments (Gap 5)
-21. Adds `Certification` model for safety/coach certification records (Gap 6)
+1. Adds `DirectoryProfile`
+1. Renames `School` → `Organization` (adds `type` enum)
+1. Renames `Style` → `Discipline`
+1. Replaces `SchoolStyle` → `OrganizationDiscipline`
+1. Adds `RankSystem` + renames `Belt` → `Rank` (expanded fields)
+1. Adds `MembershipStatus` enum, reshapes `Membership` with `disciplineId` + `status`
+1. Replaces single-role enum with `Role` table + `MembershipRoleAssignment` join table (Q3 resolved: table, not enum)
+1. Renames `Progress` → `RankAward` (clearer intent)
+1. Reshapes `Tournament` (status enum, venue fields, org-hosted instead of school-hosted)
+1. Adds `TournamentDiscipline`, `Division`, reshapes `TournamentRegistration` → `Registration`, adds `RegistrationEntry` with snapshot fields
+1. Renames `Course.schoolId` → `organizationId`, `Course.styleId` → `disciplineId`, adds `rankId` FK (Q6)
+1. Adds `Style` model for substyles (Shotokan, Goju-Ryu, etc.) with approval workflow (Gap 4)
+1. Adds `TournamentRole` table for tournament-specific roles (Q5 resolved: table, not enum)
+1. Adds `SubscriptionTier` table + `UserBrandSubscription` model (Q7 resolved: Option C)
+1. Adds `LineageNode` + `LineageRelationship` models (Q8 resolved: add now)
+1. Adds `GamificationEvent` FKs to `RankAward`, `Course`, `Organization`, `Discipline` + `GamificationEventType` table (Gap 1)
+1. Adds `CourseEnrollment` + `CurriculumItemCompletion` models for student progress tracking (Gap 2)
+1. Adds `Waiver` + `WaiverSignature` models for tournament/org consent records (Gap 3)
+1. Adds `TournamentStaffAssignment` for judge/ref/director assignments (Gap 5)
+1. Adds `Certification` model for safety/coach certification records (Gap 6)
 
 Seeds all 7 Baseline Martial Arts disciplines + rank systems in S1 (Q4 resolved: include now).
 
@@ -449,7 +449,7 @@ model Rank {
 
 **Design note — BJJ stripes:** Each stripe level is a separate `Rank` row (sort_order 1–15). This matches how the legacy data already models it (`LEVEL_1` through `LEVEL_15`). Stripes are a display concern, not a schema concern — the `name` field carries "White Belt - 2 Stripes" and `shortName` carries "W2". No separate `stripes` column needed.
 
-**Seed data preview (from TuffBuffs legacy):**
+### Seed data preview (from TuffBuffs legacy)
 
 | RankSystem | Kind | Discipline | # Ranks |
 | --- | --- | --- | --- |
@@ -502,7 +502,7 @@ model Membership {
 }
 ```
 
-**Changes from current:**
+### Changes from current
 
 - Removed single `role` field → replaced by `MembershipRoleAssignment` M:N (references `Role` table per Q3)
 - Added `disciplineId` — membership is now per (user × org × discipline)
@@ -1263,9 +1263,9 @@ model Certification {
 Since no real data exists yet, this is a **destructive reset** — not an incremental migration:
 
 1. Rewrite `schema.prisma` with the new model definitions
-2. `prisma migrate dev --name s1-schema-rev` (creates fresh migration)
-3. Update `lib/authz.ts` — rename all `School` → `Organization`, `Style` → `Discipline` references
-4. Update `middleware.ts` — any references to old model names
-5. Verify: `prisma generate` + `tsc --noEmit`
+1. `prisma migrate dev --name s1-schema-rev` (creates fresh migration)
+1. Update `lib/authz.ts` — rename all `School` → `Organization`, `Style` → `Discipline` references
+1. Update `middleware.ts` — any references to old model names
+1. Verify: `prisma generate` + `tsc --noEmit`
 
 This will be SESSION_0003's work.

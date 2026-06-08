@@ -7,22 +7,37 @@
 
 import { after } from "next/server"
 import * as z from "zod"
-import { getRequestBrand } from "~/lib/brand-context"
+import type { Brand } from "~/.generated/prisma/client"
+import {
+  getLineageCompEntitlementKeys,
+  parseLineageCompMeta,
+} from "~/lib/entitlements/lineage-comp"
 import { notifyMemberOfMembershipWelcome } from "~/lib/notifications"
 import { userActionClient } from "~/lib/safe-actions"
+import { grantComp } from "~/server/entitlements/comp-grants"
 
 const claimInviteSchema = z.object({
   code: z.string().min(1),
   disciplineId: z.string().min(1, "Discipline is required"),
 })
 
+type ClaimInviteResult = {
+  membership: {
+    id: string
+    userId: string
+    brand: Brand
+  }
+  brand: Brand
+  organizationName: string
+  disciplineName: string
+  compGrantIds: string[]
+}
+
 export const claimInvite = userActionClient
   .inputSchema(claimInviteSchema)
   .action(async ({ parsedInput: { code, disciplineId }, ctx: { db, user } }) => {
-    const brand = await getRequestBrand()
-
     // Find and validate invite in a transaction
-    const result = await db.$transaction(async tx => {
+    const result = await db.$transaction(async (tx: any): Promise<ClaimInviteResult> => {
       const invite = await tx.invite.findUnique({
         where: { code },
         include: { organization: { select: { id: true, name: true } } },
@@ -71,7 +86,7 @@ export const claimInvite = userActionClient
       // Create membership
       const membership = await tx.membership.create({
         data: {
-          brand,
+          brand: invite.brand,
           userId: user.id,
           organizationId: invite.organizationId,
           disciplineId,
@@ -83,10 +98,31 @@ export const claimInvite = userActionClient
         },
       })
 
+      const comp = parseLineageCompMeta(invite.meta)
+      const compGrantIds = comp
+        ? (
+            await grantComp({
+              db: tx,
+              brand: invite.brand,
+              grantorUserId: invite.createdById,
+              granteeUserId: user.id,
+              entitlementKeys: getLineageCompEntitlementKeys(comp.tier),
+              term: comp.termDays ? { days: comp.termDays } : null,
+              reason: `invite-${invite.id}`,
+            })
+          ).grants.map(grant => grant.id)
+        : []
+
       return {
-        membership,
+        membership: {
+          id: membership.id,
+          userId: membership.userId,
+          brand: membership.brand,
+        },
+        brand: invite.brand,
         organizationName: invite.organization.name,
         disciplineName: membership.discipline.name,
+        compGrantIds,
       }
     })
 
@@ -97,7 +133,7 @@ export const claimInvite = userActionClient
       after(async () => {
         try {
           await notifyMemberOfMembershipWelcome({
-            brand,
+            brand: result.brand,
             to: user.email,
             firstName: user.name?.split(" ")[0] ?? null,
             organizationName: result.organizationName,

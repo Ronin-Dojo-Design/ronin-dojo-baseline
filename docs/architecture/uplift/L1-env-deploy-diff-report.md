@@ -4,8 +4,8 @@ slug: l1-env-deploy-diff-report
 type: architecture
 status: active
 created: 2026-05-19
-updated: 2026-05-19
-last_agent: codex-session-0204
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/uplift/lane-ledger.md
@@ -34,8 +34,8 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 | Upstream files read | `.env.example`, `env.ts`, `services/{ai,db,plausible,redis,resend,s3,stripe}.ts`, `next.config.ts`, `vercel.json`; no `middleware.ts` present. |
 | Ronin files read | `apps/web/.env.example`, `apps/web/env.ts`, `apps/web/prisma.config.ts`, `apps/web/services/{db,plausible,printful,redis,resend,s3,stripe}.ts`, `apps/web/lib/{ai,auth,email,media,public-media-url}.ts`, `apps/web/next.config.ts`, `apps/web/vercel.json`, root `vercel.json`. |
 | Local runbooks | `docs/runbooks/vercel-domain-setup-runbook.md`, `docs/runbooks/resend-setup-runbook.md`, `docs/runbooks/neon-advisory-lock-recovery.md`. |
-| Live Dirstarter docs checked | `https://dirstarter.com/docs/environment-setup`, `https://dirstarter.com/docs/deployment`, `https://dirstarter.com/docs/authentication`, `https://dirstarter.com/docs/integrations/email`, `https://dirstarter.com/docs/integrations/storage`, `https://dirstarter.com/docs/integrations/payments`, `https://dirstarter.com/docs/integrations/rate-limiting`, `https://dirstarter.com/docs/integrations/analytics`, `https://dirstarter.com/docs/automation`. |
-| Live Vercel docs checked | `https://vercel.com/docs/environment-variables/system-environment-variables`, `https://vercel.com/docs/environment-variables/manage-across-environments`. |
+| Live Dirstarter docs checked | `<https://dirstarter.com/docs/environment-setup`>, `<https://dirstarter.com/docs/deployment`>, `<https://dirstarter.com/docs/authentication`>, `<https://dirstarter.com/docs/integrations/email`>, `<https://dirstarter.com/docs/integrations/storage`>, `<https://dirstarter.com/docs/integrations/payments`>, `<https://dirstarter.com/docs/integrations/rate-limiting`>, `<https://dirstarter.com/docs/integrations/analytics`>, `<https://dirstarter.com/docs/automation`>. |
+| Live Vercel docs checked | `<https://vercel.com/docs/environment-variables/system-environment-variables`>, `<https://vercel.com/docs/environment-variables/manage-across-environments`>. |
 
 ## Decision Keywords
 
@@ -50,7 +50,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Core / Site / Cron
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Required client var in `.env.example` and `env.ts`. | Required client var; feeds `siteConfig.url`, brand defaults, auth callbacks, and public links. | keep | Bad value breaks auth callbacks, Plausible domain derivation, emails, and public URLs. |
 | `NEXT_PUBLIC_SITE_EMAIL` | Required client var. | Required client var; used by `siteConfig.email`. | keep | Bad value changes sender/reply contact surfaces. |
 | `CRON_SECRET` | Optional server var for `/api/cron/publish`. | Optional server var for `/api/cron/publish-tools`. | keep | Removing or rotating without Vercel cron update can block scheduled publishing. |
@@ -61,7 +61,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Database
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `DATABASE_URL` | Required; runtime DB URL. | Required; runtime DB URL and local Prisma fallback. | keep | Wrong endpoint can break app runtime or point production at the wrong database. |
 | `DATABASE_PUBLIC_URL` | Optional; upstream `services/db.ts` uses it during `PHASE_PRODUCTION_BUILD`. | Absent from env schema/example and code. Ronin instead added `DIRECT_URL` for Prisma CLI migrations. | rescope | Blindly adding it may mask the Neon pooler/direct split fixed in SESSION_0201. |
 | `DIRECT_URL` | Absent upstream. | Used by `apps/web/prisma.config.ts` on Vercel Preview/Production for Prisma CLI migration commands; not in `apps/web/env.ts`. | keep | Removing regresses the Neon advisory-lock structural fix. |
@@ -70,7 +70,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Auth
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `BETTER_AUTH_SECRET` | Required. | Required. | keep | Rotation without coordinated cookie/session handling invalidates sessions. |
 | `BETTER_AUTH_URL` | Required; same as public site URL. | Required; used by Better Auth and dev-login route tests. | keep | Wrong URL breaks auth callbacks and magic-link flows. |
 | `AUTH_GOOGLE_ID` | Required in upstream schema; docs only list Google social login. | Optional; Google provider is enabled only when both Google vars exist. | keep | Making it required can break production if OAuth is intentionally disabled. |
@@ -82,7 +82,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Email
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `RESEND_API_KEY` | Required in env schema and docs. | Optional in Ronin schema; `services/resend.ts` creates a nullable/fallback client shape. | keep | Making required can break local/dev and non-email preview paths. |
 | `RESEND_SENDER_EMAIL` | Required in upstream schema; docs use it as the default sender address. | Optional; used by `lib/email.ts` as the sender email. | keep | Renaming without email code/runbook updates breaks magic-link and transactional sends. |
 | `RESEND_AUDIENCE_ID` | Removed from upstream env shape; new upstream contact helper accepts `CreateContactOptions`. | Optional Ronin var; `services/resend.ts` requires it for legacy contact creation. | remove | Removing before contact-shape code is updated breaks newsletter/contact creation. |
@@ -91,7 +91,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Storage
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `S3_BUCKET` | Required in upstream schema/example. | Optional; required at runtime only for upload/delete helpers. | keep | Making required can break builds where storage is intentionally disabled. |
 | `S3_REGION` | Required upstream. | Optional; required by upload helpers when storage is used. | keep | Wrong region breaks S3/R2 addressing and image loading. |
 | `S3_ACCESS_KEY` | Required upstream. | Optional and only passed when paired with `S3_SECRET_ACCESS_KEY`. | keep | Making required can break public-read or non-upload environments. |
@@ -103,7 +103,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Payments
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `STRIPE_SECRET_KEY` | Required upstream; Stripe service uses API `2026-04-22.dahlia`. | Optional Ronin var; Stripe service uses API `2025-08-27.basil` and null fallback. | keep | Making required can break non-payment preview/local paths; API version belongs to L7. |
 | `STRIPE_WEBHOOK_SECRET` | Required upstream and documented for local/prod webhooks. | Optional Ronin var; checked by webhook route. | keep | Removing or rotating without Stripe dashboard update breaks webhook verification. |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Not present; live Dirstarter docs say the secret key is enough for its current flow. | Not present. | keep | Adding a publishable key implies client-side Stripe surfaces Ronin does not currently use. |
@@ -111,7 +111,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Caching
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `REDIS_URL` | Optional upstream var; `services/redis.ts` uses `ioredis` and falls back to memory when absent. | Absent; Ronin uses Upstash REST vars. | rescope | Adding without code migration does nothing; replacing REST vars can break existing rate-limit/cache callers. |
 | `REDIS_REST_URL` | Removed upstream. | Optional Ronin var used by `@upstash/redis` client. | rescope | Removing before a Redis client migration breaks current Redis integration. |
 | `REDIS_REST_TOKEN` | Removed upstream. | Optional Ronin var paired with `REDIS_REST_URL`. | rescope | Partial removal creates a disabled or misconfigured Redis client. |
@@ -119,7 +119,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Analytics
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `NEXT_PUBLIC_PLAUSIBLE_URL` | Required client var; used by `next-plausible` proxy and Plausible API service. | Optional client var; used by `next-plausible` provider, proxy config, and Plausible API service. | keep | Removing disables or misroutes Plausible tracking/API calls. |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Required upstream; live docs say provider reads it. | Absent; Ronin derives `domain` from `NEXT_PUBLIC_SITE_URL` through `siteConfig`, with multi-brand implications. | rescope | Adding a single domain can undermine multi-brand analytics behavior. |
 | `PLAUSIBLE_API_KEY` | Required upstream schema for admin analytics. | Optional Ronin var used by `services/plausible.ts`. | keep | Making required can break builds where analytics admin views are disabled. |
@@ -127,7 +127,7 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## AI / Automation
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `AI_GATEWAY_API_KEY` | Optional; live docs say AI gracefully disables when absent. | Optional; enables Ronin content automation. | keep | Making required blocks non-AI environments. |
 | `AI_CHAT_MODEL` | Default `openai/gpt-4o`. | Default `openai/gpt-4o`. | keep | Wrong model ID breaks content generation. |
 | `AI_COMPLETION_MODEL` | Default `openai/gpt-4o-mini`. | Default `openai/gpt-4o-mini`. | keep | Wrong model ID breaks completion routes. |
@@ -138,9 +138,9 @@ SESSION_0204 is doc-only. This report compares upstream Dirstarter `7e724b6` wit
 ## Vercel-only / Deploy
 
 | Var | Upstream 7e724b6 | Ronin today | Decision (L2) | Risk if changed |
-|-----|------------------|-------------|---------------|------------------|
+| --- | --- | --- | --- | --- |
 | `VERCEL_ENV` | Not declared upstream. | Declared in Ronin `env.ts`; used to treat `production` as prod in `isProd` and Prisma CLI routing. | keep | Removing regresses production detection and DIRECT_URL migration routing. |
-| `VERCEL_URL` | Not declared upstream. | Shared optional var transformed into an `https://` URL. | keep | Removing can break preview/deployment URL awareness. |
+| `VERCEL_URL` | Not declared upstream. | Shared optional var transformed into an `<https://`> URL. | keep | Removing can break preview/deployment URL awareness. |
 | `VERCEL_PROJECT_PRODUCTION_URL` | Vercel system var available when system env vars are exposed. | Not declared in Ronin schema. | rescope | Adding without usage is noise; useful later for production OG/link generation if L8 needs it. |
 | `VERCEL_BRANCH_URL` | Vercel system var available when system env vars are exposed. | Not declared in Ronin schema. | rescope | Could help preview URL generation, but premature adoption can confuse canonical URLs. |
 | `VERCEL_DEPLOYMENT_ID` | Vercel system var available when system env vars are exposed. | Not declared in Ronin schema. | keep | No current Ronin skew-protection behavior depends on it. |

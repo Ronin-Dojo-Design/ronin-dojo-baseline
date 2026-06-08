@@ -4,12 +4,16 @@ slug: graphify-component-port-map
 type: concept
 status: active
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-06-04
 author: Brian + ChatGPT
-last_agent: chatgpt-hostile-review-pack
+last_agent: codex-session-0341
 pairs_with:
-  - docs/runbooks/react-to-next-component-porting-runbook.md
+  - docs/runbooks/porting/react-to-next-component-porting-runbook.md
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
+  - docs/sprints/SESSION_0338.md
+  - docs/sprints/SESSION_0339.md
+  - docs/sprints/SESSION_0340.md
+  - docs/sprints/SESSION_0341.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -94,6 +98,92 @@ legacy component
 - target_component -> renders_in -> route
 - target_component -> depends_on -> query/action/schema
 ```
+
+## Active mapping records
+
+> Epic: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../petey-plan-0337-lineage-responsive-carousel.md).
+> Governing rule: **adapt, never port-verbatim**; reuse existing primitives; `Rank.colorHex` only.
+
+### PORTMAP-0002 — Lineage responsive mode switch
+
+**Status:** proven
+**Legacy path:** `blackbeltlegacy/components/lineage/MobileLineageList.jsx` (header) + parent route switch (~640px)
+**Legacy purpose:** decide desktop-tree vs mobile-list by viewport.
+**Target path:** `apps/web/components/web/lineage/lineage-tree-canvas.tsx` (initial `layout` state)
+**Target route/page:** `/lineage/[treeSlug]`, `/disciplines/[slug]`
+**Dirstarter primitive fit:** n/a (viewport hook + existing `layout` state)
+**Existing Ronin component fit:** the canvas already has `tree`/`board` layouts — add a breakpoint default.
+**Port strategy:** adapt (behavior only)
+**Server/client boundary:** client
+**Data dependency:** none (pure viewport)
+**Proof required:** measured card ≤ viewport at 390/768/1280; board default < md; user toggle persists. Proven in SESSION_0338.
+**Notes:** Slice 1 landed in SESSION_0338. `LineageTreeCanvas` now defaults to board below 768px and tree at/above 768px until the viewer explicitly toggles; the manual toggle then persists across resize for the session.
+
+### PORTMAP-0003 — Lineage mobile list (flatten + indent)
+
+**Status:** proven
+**Legacy path:** `blackbeltlegacy/components/lineage/MobileLineageList.jsx`
+**Legacy purpose:** vertical flatten-with-depth list for < 640px (indent `min(depth*16,48)px`, div L-connectors).
+**Target path:** `apps/web/components/web/lineage/lineage-mobile-list.tsx` + `apps/web/lib/lineage/flatten-lineage.ts`
+**Target route/page:** `/lineage/[treeSlug]` (< sm render)
+**Dirstarter primitive fit:** `Stack`, `Avatar`, `Badge`, `Button`
+**Existing Ronin component fit:** reuses the compact row/action-menu/drawer selection contract; not BBL's card.
+**Port strategy:** adapt (re-derive the flatten algorithm; new TS, unit-tested)
+**Server/client boundary:** client
+**Data dependency:** existing canvas member payload
+**Proof required:** 390px renders single indented column ≤ 3 levels, every row → drawer, no overflow. Proven in SESSION_0339.
+**Notes:** Slice 2 landed in SESSION_0339. `LineageTreeCanvas` now renders `LineageMobileList` below 640px, suppressing the tree SVG connector/zoom branch while keeping search, honor strip, selected-path state, and the drawer flow. `flattenLineage` is pure/cycle-safe and unit-tested. Belt colour from `Rank.colorHex`.
+
+### PORTMAP-0004 — Carousel rail (Embla extension)
+
+**Status:** proven
+**Legacy path:** `blackbeltlegacy/components/shared/CarouselRail.jsx`
+**Legacy purpose:** reusable horizontal snap-rail (chevron-when-scrollable, measured scroll-step, empty state, aria).
+**Target path:** `apps/web/components/common/carousel.tsx` (extend — do NOT add a second carousel)
+**Target route/page:** lineage rails (Slice 4) + any future rail consumer
+**Dirstarter primitive fit:** the existing Embla `Carousel`/`CarouselSlide` IS the equivalent.
+**Existing Ronin component fit:** extend it (sizing variants, empty slot, ResizeObserver, a11y).
+**Port strategy:** wrap/extend (back-compatible API)
+**Server/client boundary:** client
+**Data dependency:** none (presentational)
+**Proof required:** dense rail snaps + chevrons toggle at ends + empty state + aria; existing consumers unregressed. Proven in SESSION_0340.
+**Notes:** Slice 3 landed in SESSION_0340. The existing Embla primitive now supports optional `emptyState`, `ariaLabel`, `role`, `edgeFades`, `controls`, slide width variants, and ResizeObserver-driven `reInit` while preserving current `className` basis overrides. Playwright proof at 390 / 768 / 1280 used a dynamic dense-rail fixture on `/disciplines/bjj`: no page overflow, mobile controls hidden, md+ controls visible, right-only start state, left-only end state, labelled region, and a clean seeded-route smoke with no console/page errors.
+
+### PORTMAP-0005 — Generation rail (connector-free zones)
+
+**Status:** proven
+**Legacy path:** `blackbeltlegacy/components/lineage/{StudentsCarousel,SchoolCarousel}.jsx`
+**Legacy purpose:** lineage-specific rails (belt-grouped buckets, school rails).
+**Target path:** `lineage-honor-strip.tsx`, `lineage-compact-child-list.tsx`
+**Target route/page:** `/lineage/[treeSlug]` (honor strip + board child-lists)
+**Dirstarter primitive fit:** the Slice-3 extended `Carousel`
+**Existing Ronin component fit:** swap honor-strip raw `overflow-x-auto` for the rail; rail wide board groups.
+**Port strategy:** adapt
+**Server/client boundary:** client
+**Data dependency:** existing canvas members; `Rank.colorHex` for buckets
+**Proof required:** honor strip + wide board groups snap with reachable chevrons + aria; no connector touched. Proven in SESSION_0341.
+**Notes:** Slice 4 landed in SESSION_0341. `LineageHonorStrip` now composes the shared Carousel rail; wide
+board child groups in `LineageCompactChildList` rail at the configured threshold while narrow groups remain
+vertical. Playwright at 1280 / 768 / 390 showed no page overflow; 1280 and 768 each exposed 2 labelled board
+rails with visible controls and 0 board connector SVG paths; 390 kept the mobile lineage list branch and
+hidden mobile carousel controls. No `LineageConnectorLayer`, tree-generation SVG overlay, schema/server path,
+or autoplay/marquee behavior changed.
+
+### PORTMAP-0006 — Adaptive connector + rails inside wide tree generations (SPIKE)
+
+**Status:** blocked (spike-gated — needs S3/S4 + a perf spike first)
+**Legacy path:** none (net-new adaptation of our SESSION_0336 `LineageConnectorLayer`)
+**Legacy purpose:** n/a — this is the coexistence design, not a BBL port.
+**Target path:** `lineage-tree-canvas.tsx` (`LineageBranch` + `LineageConnectorLayer`), `app/styles.css`
+**Target route/page:** `/lineage/[treeSlug]` tree mode, wide generations
+**Dirstarter primitive fit:** n/a (custom SVG overlay)
+**Existing Ronin component fit:** extends `LineageConnectorLayer` (measured overlay).
+**Port strategy:** adapt (degrade fan → bus + visible-child stubs, rAF re-measure on scroll)
+**Server/client boundary:** client
+**Data dependency:** DOM measurement only
+**Proof required:** railed generation shows adaptive bus + scroll-tracking stubs; path-trace still cascades;
+reduced-motion static; narrow generations unchanged; overlay stays `pointer-events-none`.
+**Notes:** Slice 5. Highest risk. Fallback = connector-free-when-railed if the spike is janky.
 
 ## Relationships
 

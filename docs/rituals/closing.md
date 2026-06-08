@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-05-29
-last_agent: claude-session-0304
+updated: 2026-06-06
+last_agent: claude-session-0350
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -67,9 +67,9 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - `Review log` — the `TASK_REVIEW_LOG` entry for this session
 - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
 - `ADR / ubiquitous-language check` — any architectural decision or domain term created, updated, or explicitly marked not needed
-- `Status: closed`
+- Frontmatter `status: closed`
 
-**Atomicity rule (FS-0015 / SESSION_0074_TASK_09):** The YAML frontmatter `status:` field and the body `### Status` line must be updated together in the same edit pass. Never change one without the other. A session file with `status: in-progress` in YAML but `closed-quick` in the body (or vice versa) is a data integrity violation.
+**Single source of truth (SESSION_0342):** status lives only in the YAML frontmatter `status:` field (`in-progress` → `closed`). The body `## Status` section is a pointer, not a second copy — there is nothing to keep in sync. This supersedes the old FS-0015 atomicity rule, which existed only because the value was duplicated in the body.
 
 **SESSION-file gate:** Before setting `closed` status, verify the current SESSION file has at least one entry in its `## Task log` table. The cross-session `project-log.md` was retired at SESSION_0228. Use an exact-file check:
 
@@ -146,7 +146,7 @@ If the session changed tracked files and Graphify is installed locally, refresh 
 > **Run order (SESSION_0304 / FS-0025):** In **full close**, run `graphify update` **before the close commit**, not after. `.graphify/` is git-ignored and Graphify indexes the **working tree** (not the commit), so the tree is already final after step 2's doc edits — running it first means the node/edge/community count can be written into the SESSION file and captured by the single close commit. Running it *after* the commit is what historically forced the second `fill close evidence` push (FS-0025). In **quick close**, run it after git hygiene as before.
 
 ```bash
-GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
+GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .
 ```
 
 Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file (it will not force a second commit when run in the order above). See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
@@ -197,6 +197,14 @@ For sessions that warrant extra proof, add this block to the SESSION file:
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
 
+### 6b. Repo code glossary (optional, on-demand)
+
+Not a gate and not run every session. Add to [`repo-code-glossary.md`](../knowledge/wiki/repo-code-glossary.md)
+when the **operator asks** ("add X to the glossary") or when this session used a technical term a
+non-technical reader would stumble on (e.g., `CI`, `SHA`, `enum`, `adapter`). Keep each entry to 1–2
+plain-English lines + one concrete example (a repo file or a commit SHA from the session). Skip silently
+when nothing new came up.
+
 ### 6.5. Review & Recommend (stage the next session)
 
 Run the [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md). This is the hard pass that checks plan sanity, Dirstarter alignment, security, data integrity, verification honesty, and WORKFLOW 5.0 compliance. If the session touched a Dirstarter baseline layer, check live `https://dirstarter.com/docs` pages and cite the sources in `TASK_REVIEW_LOG`.
@@ -224,9 +232,22 @@ Baseline layers that require Dirstarter proof in the ADR:
 
 If the session introduced or changed a domain term, update [Ubiquitous Language](../architecture/ubiquitous-language.md). If no ADR or glossary update is needed, record that explicitly in the SESSION file.
 
-### 6.7. Wiring ledger sweep
+### 6.7. Finding router — where each finding type goes
 
-If the session **surfaced** new wiring debt (incomplete handlers, storage gaps, FS-0001 handroll slips, dead plumbing for unfinished features) or **resolved** existing debt, update the canonical running ledger at [`docs/knowledge/wiki/wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) — append rows with stable `WL-P{0,1,2}-N` IDs, or flip resolved rows to a ✅/fixed status. This is the repo's single cross-session P0/P1/P2 list; do **not** duplicate a severity list into the SESSION file (it rots — see `wiki/log.md`). The SESSION file's `### Findings (severity ≥ medium)` block stays session-scoped and should backlink the ledger. Skip if the session surfaced/resolved no wiring debt.
+A session surfaces different kinds of findings; each has **one** canonical home so the record doesn't fragment. Route by type:
+
+| Finding type | Goes to | ID prefix |
+| --- | --- | --- |
+| Incomplete/dead wiring, storage gaps, FS-0001 handroll slips, dead plumbing | [`wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) | `WL-P{0,1,2}-N` |
+| Architectural divergence / two-sources-of-truth / spec-vs-impl drift | [`drift-register.md`](../knowledge/wiki/drift-register.md) | `D-NNN` |
+| SOP/protocol violation + its corrective action | [`failed-steps-log.md`](../protocols/failed-steps-log.md) | `FS-NNNN` |
+| Unclean close / crash / interrupted ritual | [`incidents.md`](../knowledge/wiki/incidents.md) | dated entry |
+| "Smoke pending" / manually-verified boundary the session shifted | [`manual-boundary-registry.md`](../knowledge/wiki/manual-boundary-registry.md) | registry row |
+| Architectural decision made/changed/rejected | new/updated ADR in [`architecture/decisions/`](../architecture/decisions/) | `ADR NNNN` |
+
+The SESSION file's `### Findings (severity ≥ medium)` block stays **session-scoped** and should backlink the canonical ledger row — never duplicate a cross-session severity list into the SESSION file (it rots; see `wiki/log.md`).
+
+**Wiring-ledger sweep:** if the session surfaced or resolved wiring debt, append rows with stable `WL-P{0,1,2}-N` IDs (or flip resolved rows to ✅/fixed). Skip if no wiring debt changed.
 
 ### 7. Memory sweep
 
@@ -287,7 +308,7 @@ Use when a previous session's bow-out was skipped — context loss, compaction, 
 
 1. **Read the unclosed SESSION file.** Identify what was done by reading `git log`, `git diff`, and any partial `What landed` entries.
 2. **Backfill the SESSION file.** Fill in `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session`.
-3. **Set status:** `Status: closed` and add `**Close notes:** unclean recovery — {reason}` below the Status line.
+3. **Set status:** frontmatter `status: closed` and add a `**Close notes:** unclean recovery — {reason}` line in the body.
 4. ~~**Add reason tag:**~~ *(merged into step 3 above)*
 5. **Log the incident.** Append an entry to [`docs/knowledge/wiki/incidents.md`](../knowledge/wiki/incidents.md) with date, session number, reason, and recovery actions.
 6. **JETTY 3.0 sweep.** Run step 3 from quick close on any files touched in the unclosed session.

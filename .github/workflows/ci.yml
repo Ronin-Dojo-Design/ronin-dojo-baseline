@@ -1,0 +1,149 @@
+name: CI
+
+# SESSION_0335: closes the gap found writing the verification runbook — Biome,
+# typecheck, and unit tests (incl. the invariant guards) previously ran on no
+# automated gate (only Playwright e2e + Vercel's build typecheck existed). This
+# workflow runs the three fast quality gates on every PR/push to main.
+
+on:
+  pull_request:
+    branches: [main]
+    # Quality gates don't depend on docs/agent-context; skip docs-only commits
+    # to match playwright.yml and save runner minutes.
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.claude/**'
+      - '.github/copilot-instructions.md'
+      - '.github/prompts/**'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.claude/**'
+      - '.github/copilot-instructions.md'
+      - '.github/prompts/**'
+  workflow_dispatch:
+
+# Least privilege: these jobs only read the repo (GitHub Actions security
+# best practice — default token perms are broader than needed).
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# `apps/web` runs `prisma generate` in postinstall, and the Prisma config resolves
+# DATABASE_URL even though `generate` never connects — so `pnpm install` needs the
+# var present in every job. A dummy URL satisfies generation; the `unit` job
+# overrides it with the real Postgres service URL. SKIP_ENV_VALIDATION lets
+# next-typegen load next.config without live runtime env.
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/placeholder
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/placeholder
+  SKIP_ENV_VALIDATION: '1'
+
+jobs:
+  biome:
+    name: Biome (lint + format)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # `biome ci` (not `check`): no --write, prints GitHub annotations on failures.
+      - name: Biome CI
+        run: bun biome ci .
+        working-directory: apps/web
+
+  typecheck:
+    name: Typecheck (tsc)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # Generated Prisma client types are required for tsc to resolve `~/.generated/prisma`.
+      - name: Generate Prisma client
+        run: bunx prisma generate
+        working-directory: apps/web
+      - name: Typecheck
+        run: bun run typecheck
+        working-directory: apps/web
+
+  unit:
+    name: Unit tests (bun test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # DB-dependent unit tests need a real Postgres (mirrors playwright.yml).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ronindojo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ronindojo_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ronindojo_test
+      BETTER_AUTH_SECRET: ci-only-secret-not-for-production-32b
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SITE_EMAIL: ci@ronindojo.test
+      CRON_SECRET: ci-cron-secret
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: bunx prisma generate
+        working-directory: apps/web
+      - name: Apply Prisma migrations
+        run: bunx prisma migrate deploy
+        working-directory: apps/web
+      # Some DB-backed unit tests require seeded reference data (disciplines,
+      # ranks, brands) and assert "run seed first" otherwise.
+      - name: Seed database
+        run: bun run db:seed
+        working-directory: apps/web
+      # `bun run test` (not `bun test`) so the package.json script's
+      # `--path-ignore-patterns='e2e/**'` applies — bare `bun test` would try to
+      # run the Playwright e2e specs and error on `test.describe` outside the runner.
+      - name: Unit tests
+        run: bun run test
+        working-directory: apps/web

@@ -4,8 +4,8 @@ slug: domain-hosting-registry
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-05-09
-last_agent: copilot-session-0114
+updated: 2026-06-06
+last_agent: codex-session-0351
 pairs_with:
   - docs/architecture/decisions/0006-multi-domain-hosting.md
   - docs/architecture/decisions/0015-domain-hosting-infrastructure.md
@@ -26,7 +26,7 @@ Master registry of all Ronin Dojo brand domains, their registrars, hosting provi
 ## Domain Inventory
 
 | Domain | Brand | Registrar | Current Hosting | Target Hosting | Status | Notes |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | `baselinemartialarts.com` | BASELINE_MARTIAL_ARTS | Bluehost | Bluehost | Vercel (custom domain) | 🟡 migration planned | First brand to go live on new stack |
 | `tuffbuffs.com` | BASELINE_MARTIAL_ARTS | Bluehost | Bluehost | Vercel (alias or redirect) | 🔴 legacy | Legacy WordPress; redirects to BMA post-launch |
 | `ronindojodesign.com` | RONIN_DOJO_DESIGN | Bluehost | Bluehost | Vercel (custom domain) | 🔴 legacy | Admin/umbrella brand; second priority |
@@ -38,7 +38,7 @@ Master registry of all Ronin Dojo brand domains, their registrars, hosting provi
 
 ### Bluehost (current — all domains except BBL hosting)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │ BLUEHOST SHARED HOSTING                                 │
 ├─────────────────────────────────────────────────────────┤
@@ -65,7 +65,7 @@ Master registry of all Ronin Dojo brand domains, their registrars, hosting provi
 
 ### Flywheel (BBL only)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │ FLYWHEEL MANAGED WORDPRESS                              │
 ├─────────────────────────────────────────────────────────┤
@@ -82,7 +82,7 @@ Master registry of all Ronin Dojo brand domains, their registrars, hosting provi
 
 ### Vercel (target — new stack)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │ VERCEL                                                  │
 ├─────────────────────────────────────────────────────────┤
@@ -104,7 +104,7 @@ Master registry of all Ronin Dojo brand domains, their registrars, hosting provi
 
 ## Brand Build Order & Domain Migration Sequence
 
-```
+```text
 Phase 1: baselinemartialarts.com → Vercel custom domain
          tuffbuffs.com → redirect to baselinemartialarts.com
          (Bluehost DNS: update A/CNAME to Vercel)
@@ -123,7 +123,7 @@ Phase 4: blackbeltlegacy.com → Vercel custom domain
 
 ## Migration Checklist Template (per domain)
 
-```
+```text
 [ ] Vercel: add custom domain in project settings
 [ ] Vercel: note required DNS records (A / CNAME)
 [ ] Bluehost: update DNS records in cPanel Zone Editor

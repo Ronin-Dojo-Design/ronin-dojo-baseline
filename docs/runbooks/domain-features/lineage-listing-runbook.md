@@ -4,8 +4,8 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-05-16
-last_agent: claude-session-0179
+updated: 2026-06-06
+last_agent: codex-session-0349
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -15,6 +15,9 @@ pairs_with:
   - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0344.md
+  - docs/sprints/SESSION_0348.md
+  - docs/sprints/SESSION_0349.md
 tags:
   - lineage
   - listings
@@ -40,7 +43,10 @@ This runbook exists so that:
 - The lineage tree v1 schema (landed in `SESSION_0178`) becomes a revenue surface alongside courses, programs, and school listings — not in place of them.
 - Future agents do not confuse `Tool` / `Listing` / `LineageNode` / `LineageTree` / `LineageClaimRequest` substrates.
 
-> This runbook is strategy + flow + monetization. It does **not** ship code. Implementation lands in later sessions on top of the existing `Tool` submission paths (`/submit`, `createStripeCheckout`, admin review) and the `LineageClaimRequest` model added in SESSION_0178.
+> This runbook is strategy + flow + monetization. SESSION_0344 shipped the first local paid lineage
+> membership proof on top of `PricingPlan`/`EntitlementGrant`/`UserEntitlement`; broader listing placement
+> and admin review behavior still lands in later sessions on top of the existing listing and
+> `LineageClaimRequest` surfaces.
 
 ---
 
@@ -53,11 +59,11 @@ Internal substrate (genealogy):  LineageNode + LineageRelationship + LineageTree
                                  + LineageTreeMember + LineageVisualGroup
                                  + LineageClaimRequest + LineageClaimEvidence
                                  + LineageTreeAccess
-Internal substrate (monetization): Tool / Listing tier mechanics
-                                   + createStripeCheckout
+Internal substrate (monetization): PricingPlan + EntitlementGrant + UserEntitlement
+                                   + Stripe Checkout Sessions
                                    + Stripe webhook
+                                   + Tool / Listing tier mechanics where public placement is needed
                                    + admin review queue
-                                   + entitlement/subscription wiring
 Public language:                  Lineage Listing / Lineage Tree Listing /
                                   Verified Lineage / Featured Lineage
 Do not rename LineageNode.        Do not rename Tool.
@@ -69,6 +75,78 @@ Why:
 - Dirstarter already provides submission UX, claim UX, admin review UX, Stripe Checkout Sessions, webhook tier upgrades, and ad/featured placement plumbing.
 - The lineage v1 schema (SESSION_0178) already provides `LineageClaimRequest` + `LineageClaimEvidence` + `LineageTreeAccess` first-class. Those are the natural peers of Tool's claim/admin/access surface.
 - Brian explicitly retains `Tool` as a "what the site is built on" portfolio surface; we are not deleting or renaming it.
+
+### SESSION_0344 first paid slice
+
+The first implemented lineage membership proof keeps `/lineage/join` as the BBL entry page. The intake/claim
+form remains separate from paid access, and a paid lineage membership section on that same page starts a
+DB-derived Checkout Session for active `PricingPlan` rows marked with:
+
+```json
+{ "surface": "lineage_membership" }
+```
+
+Webhook fulfillment grants or revokes `UserEntitlement` through `EntitlementGrant`. It does not create
+`ProgramEnrollment` and does not mutate `Membership.status` (see ADR 0019).
+
+### SESSION_0348 public profile consumption
+
+The public directory/profile read sites now consume an entitlement-derived render policy instead of reading
+payment state, Stripe IDs, or `Membership.status` directly. The policy axis is the profile owner/listing
+tier:
+
+- free owner/listing: canonical `/directory/[slug]` stays reachable but renders only a preview
+  (avatar/initials, name, and rank summary);
+- premium/elite owner/listing: `/directory/[slug]` publishes full profile detail fields allowed by
+  DirectoryProfile privacy flags;
+- owner/admin preview can render the full profile without changing what anonymous visitors receive;
+- `/members` and `/members/[slug]` are compatibility redirects to `/directory` so there is only one
+  public people/profile surface.
+
+This keeps ADR 0011/0019 intact: active `UserEntitlement` rows decide paid feature access, and membership
+lifecycle rows are not repurposed into commerce.
+
+### SESSION_0349 trust badges and legend tier alignment
+
+Public trust badges are presentation over existing lineage and claim fields, not a new schema/status system:
+
+- `LineageNode.verificationStatus` drives `Disputed`, `Verified`, and default pending/unverified states;
+- legacy `LineageNode.isVerified` remains a compatibility fallback for `Verified`;
+- `User.isPlaceholder` drives the launch `Imported` badge when no stronger status exists;
+- `LineageClaimRequest.status` drives `Claimed` and `Claim pending` labels without selecting public claim evidence,
+  claimant notes, reviewer notes, or reviewer identity;
+- `LineageTreeMember.isClaimable` / tree claimability can drive the secondary `Claimable` badge where the surface has
+  that context.
+
+`RankAward` still has no verification/dispute enum. Rank-specific disputed promotion facts remain `BBL-RANK-004` and
+need a later schema decision.
+
+Tier code now recognizes `free`, `premium`, `elite`, and `legend`; `basic` is retired from the product tier ladder.
+`legend` is the all-features, free-for-life cohort tier. SESSION_0349 added limited policy/helper support only; broad
+checkout, webhook, and seed-data migration is a follow-up.
+
+### SESSION_0350 faceted `/directory` browse slice
+
+`/directory` became the single faceted public discovery surface across three result groups, reusing each entity's
+existing privacy-aware read model rather than building a new search substrate:
+
+- A result-type **segmented control** (`?type=` → `people` (default) / `organizations` / `trees`) switches the active
+  facet; the shared `FiltersProvider`/`Filters` (nuqs) search box and the reused `Pagination` are unchanged primitives.
+- A presentation-only `DirectoryFacetResult` adapter (`lib/directory/facet-result.ts`) + shared `FacetResultCard`
+  normalize each row to title / href / subtitle / trust badges / tags. **No schema or enum was added** — the discriminator
+  is a TS union (`"person" | "organization" | "lineageTree"`).
+- Dispatch (`server/web/directory/facets.ts`): people → `getDirectoryProfiles` (trust + tier gating, now with a working
+  `q` filter), organizations/schools → `searchOrganizations`, trees → `searchPublishedLineageTrees`.
+- **Card link routing:** schools/dojos/clubs → `/schools/[slug]`; LEAGUE/federations/affiliations → `/organizations/[slug]`.
+  `/organizations` is intentionally retained (affiliations / governing bodies like WEKAF), not redirected.
+- **Trust signals:** people reuse the SESSION_0349 badges. Lineage-tree cards expose only `isClaimable → Claimable`
+  (the published-tree summary deliberately excludes node/member verification, so a true Verified/Disputed *tree* badge
+  needs aggregated member verification — deferred).
+- **Cleanup:** the orphaned `components/web/members/*` browse UI (dead behind the `/members → /directory` redirect) was
+  deleted, along with the dead `directory-list.tsx` + FS-0001 `directory-filters.tsx`. The paginated
+  `searchDirectoryProfiles` is retained as the seed for the people-pagination convergence follow-up.
+- **Deferred (next increment):** cross-facet discipline/rank/school/location filter dropdowns (standardize the
+  `discipline` param on slug), people-list pagination (converge onto the `search*` family), and org-logo avatars.
 
 ### Pairing with `baseline-listings-runbook.md`
 
@@ -108,14 +186,16 @@ Tool stays exactly where it is: showcase, portfolio, and substrate.
 
 ### Where the monetization columns live
 
-Two implementation options exist; pick at the SESSION that ships the first paid lineage tier (out of scope for this runbook):
+The first paid access slice uses `PricingPlan` metadata plus entitlement grants. Broader lineage listing
+placement still has two implementation options; pick at the SESSION that ships public paid placement:
 
 | Option | Shape | Pros | Cons |
 | --- | --- | --- | --- |
 | A. Native | Add `tier`, `tierExpiresAt`, `featuredUntil`, `verifiedAt`, `stripeSubscriptionId`, `claimStatus` to `LineageNode` and `LineageTree` directly. | One source of truth per node/tree. Cheaper join cost. Matches existing `LineageClaimRequest` peer pattern. | Adds Stripe coupling into the lineage model. |
 | B. Bridge | Add an optional `LineageListing` row (or reuse `Tool` with `listingType: LINEAGE_NODE \| LINEAGE_TREE`) that links to the lineage row by id. | Keeps lineage schema pure. Reuses Tool tier/ads infra unchanged. | Extra join. Bridge desync risk. |
 
-Petey decision deferred: until a paid lineage tier ships, treat both as valid. This runbook describes the *behavior*; the schema choice is recorded in the SESSION that lands it + an ADR if the choice is non-obvious.
+Petey decision deferred for paid placement. The SESSION that lands public placement records the schema choice
+and adds an ADR if the choice is non-obvious.
 
 ---
 
@@ -331,9 +411,9 @@ Do not make `LINEAGE_NODE` the only paid surface. `LINEAGE_TREE` ownership is th
 
 | Tier | Intended use | Features |
 | --- | --- | --- |
-| Free | basic public visibility | Name, latest rank, public chain (depth 1), claim button |
+| Free | basic public visibility | Name, avatar/initials fallback, latest rank, public chain (depth 1), claim/upgrade button; no full public profile fields |
 | Verified | trust badge + claimable identity | "Verified" badge, claimed-by-user, profile drawer Info tab editable |
-| Premium | full lineage page | Hero image, full chain depth, multi-discipline rank history, lead form, drawer "Rank History" + "Lineage" tabs editable |
+| Premium | full lineage page/profile | Hero image, full chain depth, multi-discipline rank history, lead form, full `/directory/[slug]` public profile, drawer "Rank History" + "Lineage" tabs editable |
 | Featured | sponsored lineage placement | Pinned on `/lineage/<discipline>` index, homepage rotation, brand-page hero rotation |
 | Tree Owner | own + edit a full LineageTree | `TREE_ADMIN` access, member add/move, visual group rename, public-label toggles, claim approval rights for that tree |
 

@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-05-26
 updated: 2026-05-26
-last_agent: claude-session-0261
+last_agent: codex-session-0351
 pairs_with:
   - docs/sprints/SESSION_0260.md
   - docs/sprints/SESSION_0261.md
@@ -37,7 +37,7 @@ This ADR codifies the boundary the schema delta draws.
 
 ## Decision
 
-**A `Registration` row's recipient is either a Better-Auth `User` (via `userId`) XOR a guest pair (`guestEmail` + `guestName`). Uniqueness within a tournament is enforced on `recipientKey`, populated at write time by a single canonical helper.**
+### A `Registration` row's recipient is either a Better-Auth `User` (via `userId`) XOR a guest pair (`guestEmail` + `guestName`). Uniqueness within a tournament is enforced on `recipientKey`, populated at write time by a single canonical helper
 
 - `userId String?` — references `User.id`, set when the recipient is a registered Better-Auth user.
 - `guestEmail String?`, `guestName String?` — set when the recipient is a guest. Both nullable individually, but conceptually a pair: a guest registration has both populated, a user registration has both null.

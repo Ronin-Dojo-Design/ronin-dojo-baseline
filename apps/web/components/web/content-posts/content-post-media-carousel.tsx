@@ -99,8 +99,12 @@ export function ContentPostMediaCarousel({
   }
 
   return (
-    <div>
-      <Carousel className="overflow-hidden rounded-lg bg-muted" options={{ align: "start" }}>
+    <div className="w-full min-w-0">
+      <Carousel
+        ariaLabel={`${title} media carousel`}
+        className="overflow-hidden rounded-lg bg-muted"
+        options={{ align: "start" }}
+      >
         {items.map(item => (
           <CarouselSlide key={item.id} className="flex-[0_0_100%]">
             <div className="relative aspect-video w-full overflow-hidden">{renderMedia(item)}</div>

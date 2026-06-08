@@ -93,12 +93,7 @@ export const createRegistrationCheckout = userActionClient
     try {
       capacityResult = await runCapacityTransaction()
     } catch (err: unknown) {
-      if (
-        err &&
-        typeof err === "object" &&
-        "code" in err &&
-        (err as { code: string }).code === "P2034"
-      ) {
+      if (isSerializableTransactionConflict(err)) {
         throw new Error(
           "Registration conflict — another registration was processed at the same time. Please try again.",
         )
@@ -175,6 +170,19 @@ export const createRegistrationCheckout = userActionClient
         },
         { isolationLevel: "Serializable" },
       )
+    }
+
+    function isSerializableTransactionConflict(err: unknown) {
+      if (!err || typeof err !== "object") return false
+      if ("code" in err && (err as { code: string }).code === "P2034") return true
+
+      if (err instanceof Error) {
+        return /TransactionWriteConflict|write conflict|could not serialize access/i.test(
+          `${err.name} ${err.message}`,
+        )
+      }
+
+      return false
     }
 
     if (capacityResult.type === "free") {

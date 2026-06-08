@@ -4,6 +4,7 @@ import type { SearchParams } from "nuqs"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H5 } from "~/components/common/heading"
 import { DirectoryQuery } from "~/components/web/directory/directory-query"
+import { ListingRegisterCta } from "~/components/web/directory/listing-register-cta"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
@@ -16,10 +17,9 @@ import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 
 const PAGE_URL = "/directory"
 const PAGE_TITLE = "Directory"
-const PAGE_DESCRIPTION = "Find practitioners, instructors, and schools in the community."
+const PAGE_DESCRIPTION = "Find practitioners and lineage profiles in the community."
 
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
-  { href: "/members", label: "Members", description: "Browse the member directory" },
   { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
   {
     href: "/organizations",
@@ -56,12 +56,22 @@ export default async function DirectoryPage({ searchParams }: Props) {
         <IntroDescription>{PAGE_DESCRIPTION}</IntroDescription>
       </Intro>
 
+      {!session?.user && (
+        <ListingRegisterCta
+          title="Train martial arts?"
+          description="Join the directory to claim your profile, track your rank, and connect with schools."
+          href="/auth/login?next=/me"
+          cta="Join the directory"
+        />
+      )}
+
       <Section>
         <Section.Content>
           <DirectoryQuery
             searchParams={searchParams}
             brand={brand}
             viewerUserId={session?.user?.id}
+            viewerRole={session?.user?.role}
           />
         </Section.Content>
       </Section>

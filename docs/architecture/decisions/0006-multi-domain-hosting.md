@@ -5,7 +5,7 @@
 
 ## Context
 
-Each brand on the new stack has its own marketing identity and ideally its own apex domain (e.g., `ronindojodesign.com`, `baselinemartialarts.com`, `<bbl-domain>`, `wekafusa.com` — final domain names TBD per brand). All brands share one Postgres DB and one Next.js codebase. Need a routing strategy that keeps brands on their own domains without forking the codebase.
+Each brand on the new stack has its own marketing identity and ideally its own apex domain (e.g., `ronindojodesign.com`, `baselinemartialarts.com`, `&lt;bbl-domain&gt;`, `wekafusa.com` — final domain names TBD per brand). All brands share one Postgres DB and one Next.js codebase. Need a routing strategy that keeps brands on their own domains without forking the codebase.
 
 ## Decision
 
@@ -33,14 +33,14 @@ export function middleware(req: NextRequest) {
 
 ## Consequences
 
-**Positive**
+### Positive
 
 - One deploy, four domains. CI ships every brand at once.
 - Each brand keeps its own marketing URL — no `/baseline` path prefixes.
 - Brand resolution happens once, at the edge — server components and API routes downstream just read it.
 - Cross-brand admin tooling (Ronin Dojo Design) can serve a different UI from the same code via `if (brand === 'RONIN_DOJO_DESIGN')` branches in layout components.
 
-**Negative**
+### Negative
 
 - Per-brand SEO, sitemaps, robots.txt must be brand-aware (handled in `app/robots.ts` and `app/sitemap.ts` by reading the host).
 - Vercel Preview deployments need a default brand (typically `RONIN_DOJO_DESIGN`) since previews use `*.vercel.app` URLs.

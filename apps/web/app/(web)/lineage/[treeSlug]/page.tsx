@@ -3,14 +3,17 @@ import { notFound } from "next/navigation"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
+import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
+import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import {
   createGraph,
   generateBreadcrumbs,
@@ -18,6 +21,7 @@ import {
   generateSchemaReference,
   generateStructuredDataEntity,
 } from "~/lib/structured-data"
+import { getLineageListingRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 import {
   findPublishedLineageTreeSummaryBySlug,
   getLineageProfilesByIds,
@@ -70,13 +74,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LineageTreePage({ params }: Props) {
   const { treeSlug } = await params
   const brand = await getRequestBrand()
-  const result = await getLineageTreeBySlug({ brand, slug: treeSlug })
+  const session = await getServerSession()
+  const [result, renderPolicy] = await Promise.all([
+    getLineageTreeBySlug({ brand, slug: treeSlug }),
+    getLineageListingRenderPolicyForUser({ brand, userId: session?.user?.id ?? null }),
+  ])
 
   if (!result) {
     notFound()
   }
 
   const treeUrl = `/lineage/${treeSlug}`
+  const origin = await getRequestOrigin()
+  const absoluteTreeUrl = buildAbsoluteUrl(treeUrl, origin)
   const treeReference = generateSchemaReference(
     "CreativeWork",
     treeUrl,
@@ -142,7 +152,15 @@ export default async function LineageTreePage({ params }: Props) {
       <Breadcrumbs items={breadcrumbItems} />
 
       <Intro>
-        <IntroTitle>{result.tree.name}</IntroTitle>
+        <Stack size="sm" wrap className="items-start justify-between">
+          <IntroTitle>{result.tree.name}</IntroTitle>
+          <QrShareButton
+            url={absoluteTreeUrl}
+            title="Lineage QR Code"
+            description="Scan to open this public lineage page."
+            fileName={`lineage-${treeSlug}`}
+          />
+        </Stack>
         {result.tree.description && <IntroDescription>{result.tree.description}</IntroDescription>}
       </Intro>
 
@@ -168,6 +186,7 @@ export default async function LineageTreePage({ params }: Props) {
             profilesById={profilesById}
             treeSlug={treeSlug}
             isTreeClaimable={result.tree.isClaimable}
+            renderPolicy={renderPolicy}
           />
         </Section.Content>
       </Section>

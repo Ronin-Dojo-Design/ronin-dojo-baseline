@@ -4,17 +4,21 @@ slug: product-launch-all-brands
 type: file
 status: active
 created: 2026-04-28
-updated: 2026-04-29
+updated: 2026-06-04
 author: Brian + Petey
-last_agent: codex-session-0025
+last_agent: codex-session-0351
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0019.md
   - docs/sprints/SESSION_0020.md
+  - docs/sprints/SESSION_0342.md
+  - docs/sprints/SESSION_0343.md
   - docs/architecture/program-plan.md
 pairs_with:
   - docs/architecture/program-plan.md
-  - docs/architecture/SCHEMA_NEEDS_MANIFEST.md
+  - docs/runbooks/deploy/bbl-production-runbook.md
+  - docs/product/black-belt-legacy/GAP_MATRIX.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
   - docs/protocols/WORKFLOW_5.0.md
 tags:
   - launch
@@ -24,6 +28,39 @@ tags:
 ---
 
 # 2026-05-18 Production Launch — All Brands
+
+> ## ⚠️ CURRENT STATUS (2026-06-04) — superseded by a BBL-first cutover
+>
+> **The "all brands live May 18" plan below was NOT executed as written and is historical.** May 18 has
+> passed; brand work since then has focused on the lineage surface (responsive + carousel slices,
+> SESSION_0331–0341). This banner is the live framing; the sections below are preserved for history.
+>
+> **Current primary focus: launch `blackbeltlegacy.com` (BBL).** Cut over from the legacy WordPress site to
+> the BBL brand on the existing Vercel app. Target is **ASAP — soft aim this weekend (Fri/Sat/Sun), no hard
+> date — explicitly "not rushed or sloppy."** Safe + secure over fast.
+>
+> **Staging-prod strategy:** `baselinemartialarts.com` is the live "test-production" surface for BBL
+> behavior (phone checks + a few invited live users exercising registration). Local UI + Playwright remain
+> the dev-side gate. BBL itself goes live only when the readiness layers below are green.
+>
+> **Three readiness layers (each has a canonical doc — do not re-derive):**
+>
+> | Layer | Canonical doc | State (2026-06-04) |
+> | --- | --- | --- |
+> | Deploy / DNS cutover | [`bbl-production-runbook.md`](../../runbooks/deploy/bbl-production-runbook.md) + [`CUTOVER_CHECKLIST.md`](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | DNS source of truth **resolved in SESSION_0343**: Bluehost DNS authority, Flywheel/Fastly WP origin, record repoint at Bluehost; no DNS mutation yet. |
+> | Feature readiness | [`GAP_MATRIX.md`](../../product/black-belt-legacy/GAP_MATRIX.md) + PRD/STORIES | 6 built / 17 partial / 6 not-started / 3 infra-only (of 32 stories). |
+> | Test / verification readiness | [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md) + e2e gap list | Unit gate **green** (SESSION_0342). Registration e2e gap #1 is built and green (SESSION_0343); e2e gaps #2–#5 remain. |
+>
+> **Launch-critical e2e gaps (gate a safe BBL cutover):**
+>
+> 1. Registration / sign-up flow (member front door) — **built and green in SESSION_0343**.
+> 2. Stripe checkout / purchase (test mode) → success/cancel pages — money path.
+> 3. Member join → tier → entitlement lifecycle (user-facing, not just admin).
+> 4. Authenticated claim flow (GAP_MATRIX #1).
+> 5. Role-scoped editor access enforcement (BRANCH_EDITOR / NODE_EDITOR — security-adjacent).
+>
+> **Current sequencer:** SESSION_0343 created the BBL cutover checklist and confirmed Slice 5
+> (PORTMAP-0006) is behind the highest launch gates. Next build target is checkout + entitlement e2e proof.
 
 ## Scope change from program-plan.md
 
@@ -131,7 +168,7 @@ The following entities were referenced in the schema needs manifest but did NOT 
 
 ## What exists today (S1–S5 complete + S2 design)
 
-**Live in schema (36 models):**
+### Live in schema (36 models)
 
 - User + Passport + DirectoryProfile (S2)
 - Organization CRUD + membership + join flow (S3)
@@ -140,7 +177,7 @@ The following entities were referenced in the schema needs manifest but did NOT 
 - Tournament + TournamentDiscipline + Division + Registration + RegistrationEntry (schema only, no UI)
 - Courses + CurriculumItem + Gamification + Subscriptions + Lineage + Waivers + Certifications + Content Engine
 
-**Designed, migration pending (38 models):**
+### Designed, migration pending (38 models)
 
 - Programs, scheduling, attendance, check-in, belt testing, family, billing, contracts, notifications, org settings (Pass 1 — 24 models)
 - Invitations, generic events, brackets, matches, fight records, audit log (Pass 2 — 9 models)
@@ -209,16 +246,16 @@ Schema migration in 3 waves (see WORKFLOW_5.0.md for session calendar):
 All items completed during SESSION_0020 Petey deep dive:
 
 1. ✅ **Schema needs pass** — reconciled against current schema; produced [s2-schema-additions.md](../s2-schema-additions.md) with 38 new models, 29 new enums across 3 passes
-2. ✅ **Per-brand feature matrix** — Option A-plus defines differentiated depth per brand (see above)
-3. ✅ **Launch strategy decision** — Option A-plus selected (all brands live May 18, differentiated depth)
-4. ✅ **Sprint replan** — replaced S6–S12 with WORKFLOW 5.0 session calendar (SESSION_0021–0040)
-5. ✅ **Parallel workstream plan** — 5 worktrees defined in WORKFLOW 5.0 (core-platform, school-ops, tournaments, brand-launch, qa-hardening)
-6. ⏸ **Cache strategy finalization** — ADR 0010 still `proposed`; scheduled for SESSION_0022
+1. ✅ **Per-brand feature matrix** — Option A-plus defines differentiated depth per brand (see above)
+1. ✅ **Launch strategy decision** — Option A-plus selected (all brands live May 18, differentiated depth)
+1. ✅ **Sprint replan** — replaced S6–S12 with WORKFLOW 5.0 session calendar (SESSION_0021–0040)
+1. ✅ **Parallel workstream plan** — 5 worktrees defined in WORKFLOW 5.0 (core-platform, school-ops, tournaments, brand-launch, qa-hardening)
+1. ⏸ **Cache strategy finalization** — ADR 0010 still `proposed`; scheduled for SESSION_0022
 
 ## Open questions for Brian ✅ RESOLVED
 
 1. ✅ **Hard deadline.** May 18 is a hard launch date, not a target.
-2. ✅ **Option A-plus.** All brands live May 18 with differentiated depth. Not staggered, not deferred.
-3. ✅ **Single operator + AI agents.** No additional developers. 6 AI personas (Petey, Cody, Doug, Desi, Brandon, Giddy).
-4. ✅ **Complete spec.** s2-schema-additions.md (3 passes) + ChatGPT deep research brief = complete spec. SCHEMA_NEEDS_MANIFEST.md is deprecated.
-5. ✅ **P4 white-label.** Assisted onboarding is launch scope. Self-serve wizard is post-launch.
+1. ✅ **Option A-plus.** All brands live May 18 with differentiated depth. Not staggered, not deferred.
+1. ✅ **Single operator + AI agents.** No additional developers. 6 AI personas (Petey, Cody, Doug, Desi, Brandon, Giddy).
+1. ✅ **Complete spec.** s2-schema-additions.md (3 passes) + ChatGPT deep research brief = complete spec. SCHEMA_NEEDS_MANIFEST.md is deprecated.
+1. ✅ **P4 white-label.** Assisted onboarding is launch scope. Self-serve wizard is post-launch.
