@@ -78,7 +78,7 @@ const node = {
 } as LineageNodeRow
 
 describe("LineageNodeCard tier policy", () => {
-  it("renders free listings with name, rank, and public trust/claim badges (avatar, school, drawer gated)", () => {
+  it("renders free listings with name, rank, and public trust/claim badges (avatar + school gated; drawer opens for everyone)", () => {
     const html = renderToStaticMarkup(
       <LineageNodeCard
         node={node}
@@ -94,10 +94,13 @@ describe("LineageNodeCard tier policy", () => {
     // SESSION_0349: free lineage cards DO show public trust/claim badges...
     expect(html).toContain("Verified")
     expect(html).toContain("Claimable")
-    // ...while avatar, school, and the drawer-open action stay tier-gated.
+    // ...while avatar + school stay tier-gated (drawer *contents* gate).
     expect(html).not.toContain("https://images.test/passport.jpg")
     expect(html).not.toContain("Hidden School")
-    expect(html).not.toContain("Open lineage profile")
-    expect(html).toContain("Highlight lineage path")
+    // SESSION_0356: the drawer now opens for EVERYONE — tier gates the drawer's
+    // contents (LineageProfileDetailRenderPolicy), not whether it opens. So a free
+    // card's open affordance reads "Open lineage profile", not "Highlight ... path".
+    expect(html).toContain("Open lineage profile")
+    expect(html).not.toContain("Highlight lineage path")
   })
 })

@@ -4,7 +4,7 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-06-06
+updated: 2026-06-08
 last_agent: claude-session-0350
 pairs_with:
   - docs/knowledge/wiki/index.md
@@ -31,6 +31,7 @@ from package scripts alone. Start with these files, then record any drift you fi
 | BBL production | [bbl-production-runbook](deploy/bbl-production-runbook.md) | BBL-specific production gates and open DNS source-of-truth decision. |
 | White-label hosts | [white-label-site-runbook](deploy/white-label-site-runbook.md) | Host → brand behavior and local smoke expectations. |
 | Lineage work | [lineage-hub](domain-features/lineage-hub.md) | Source of lineage dual model, routes, specs, component inventory, and ADR links. |
+| Directory / org / profile / claim | [directory-org-profile-hub](domain-features/directory-org-profile-hub.md) | Discovery → profile → register vs claim funnels; routes, read-models, components, the claim ADR. |
 
 If a package script and a runbook disagree, treat that as documentation drift: verify the command,
 update the runbook, and note it in the active SESSION before continuing.
@@ -75,6 +76,7 @@ update the runbook, and note it in the active SESSION before continuing.
 ## Domain Features
 
 - [lineage-hub](domain-features/lineage-hub.md) — **start here for lineage** — single index of all lineage docs (data model, specs, editor, claim, listing, epic, components).
+- [directory-org-profile-hub](domain-features/directory-org-profile-hub.md) — **start here for directory / org / school / profile / claim** — discovery surface, register vs claim funnels, route inventory, read-models, ADR 0023.
 - [invites](domain-features/invites.md) — invite → claim → membership flow.
 - [course-curriculum-runbook](domain-features/course-curriculum-runbook.md) — courses & curriculum.
 - [baseline-listings-runbook](domain-features/baseline-listings-runbook.md) — Baseline directory listings.

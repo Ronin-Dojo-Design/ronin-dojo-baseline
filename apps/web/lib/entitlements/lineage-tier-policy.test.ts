@@ -17,7 +17,6 @@ describe("lineage listing render policy", () => {
 
     expect(policy.tier).toBe("free")
     expect(policy.canRenderFullCard).toBe(false)
-    expect(policy.canOpenProfileDrawer).toBe(false)
     expect(policy.features.avatar).toBe(false)
     expect(policy.features.verificationBadge).toBe(true)
     expect(policy.features.claimBadge).toBe(true)
@@ -30,7 +29,6 @@ describe("lineage listing render policy", () => {
 
     expect(policy.tier).toBe("premium")
     expect(policy.canRenderFullCard).toBe(true)
-    expect(policy.canOpenProfileDrawer).toBe(true)
     expect(policy.features.school).toBe(true)
   })
 
@@ -62,7 +60,6 @@ describe("lineage listing render policy", () => {
 
     expect(policy.tier).toBe("legend")
     expect(policy.canRenderFullCard).toBe(true)
-    expect(policy.canOpenProfileDrawer).toBe(true)
   })
 
   it("expands legend comp grants to all lineage listing feature entitlements", () => {

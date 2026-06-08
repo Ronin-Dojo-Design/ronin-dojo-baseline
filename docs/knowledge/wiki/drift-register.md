@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-06
+updated: 2026-06-08
 last_agent: codex-session-0349
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
@@ -269,3 +269,19 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Logged in:** SESSION_0350 — enum inventory taken during the faceted `/directory` grill; operator chose document-only.
   Revisit if/when a session has a concrete reason to unify one vocabulary (most likely the tier dualism, building on the
   SESSION_0349 `legend` work).
+
+### D-021 — oRPC: governing docs contradict; the deciding ADR was never written
+
+- **Source A:** `docs/architecture/uplift/epic-2026-05-19.md` — locks *"oRPC stance: ADR_0019 + lineage canvas pilot (3 sessions)"* → do a pilot.
+- **Source B:** `docs/knowledge/wiki/dirstarter-gap-audit.md` line 124 — *"No migration to oRPC planned. Deliberate long-term choice."* → don't. And `dirstarter-baseline-index.md` §13k — *"ADR-level at L10; ADR required before implementation"* → undecided.
+- **Decision needed:** the deciding ADR was never written ("ADR_0019" was reused for membership-lifecycle), and the pilot lanes (L10–L14) were displaced by the Base UI migration (L6) ballooning to 8 phases. oRPC sits undecided + unbuilt (`@orpc/*` + `@tanstack/react-query` absent; no `/api/rpc`), while misremembered as "done." Toolchain is already modern (Next 16 / React 19), so no bump blocks it.
+- **Status:** resolved
+- **Resolved in:** SESSION_0356 — **ADR 0024** (`0024-orpc-vs-next-safe-action.md`, status `proposed`): hybrid + scoped lineage-canvas pilot; next-safe-action stays default; no mass migration. Awaiting operator ratification.
+
+### D-022 — `LineageProfileDetailRenderPolicy` is unused by the lineage profile drawer
+
+- **Source A:** `apps/web/lib/entitlements/lineage-tier-policy.ts` — `LineageProfileDetailRenderPolicy` (FREE = `bio`/`rankHistory`/`organizations`/etc. `false`) is defined and **unit-tested** (`lineage-tier-policy.test.ts`).
+- **Source B:** `apps/web/components/web/lineage/lineage-profile-drawer.tsx` — consumes **no** detail policy (only `isAdmin`); the drawer shows the full public profile to any viewer. The detail policy is consumed **only** by the directory (`server/web/directory/profile-projection.ts`, `directory/queries.ts`, `search-profiles.ts`).
+- **Decision needed:** none — operator ruled (SESSION_0356) **funnel-first**: the drawer's full public view for everyone is intended (discovery→claim), and it is **not** a privacy leak (the server payload allowlist is the real boundary — guarded by `queries.visibility.test.ts`). The detail policy is therefore intentionally directory-only.
+- **Status:** documented (accepted)
+- **Logged in:** SESSION_0356 — surfaced while verifying the drawer-gate removal (FINDING_01). The operator's "tier gates the drawer's contents" assumption was false *for the drawer*; intent confirmed as full-public-view. Cleanup option (delete the now-directory-only detail policy or rename it `Directory…`) left as a non-urgent backlog item.

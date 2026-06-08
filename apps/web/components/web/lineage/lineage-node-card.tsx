@@ -12,6 +12,15 @@ import {
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
 import {
+  memberAvatarSrc,
+  memberBeltColor,
+  memberInitials,
+  memberRankLabel,
+  memberSchoolLabel,
+  nodeDisplayName,
+  type SelectedRank,
+} from "~/lib/lineage/canvas-model"
+import {
   pickLineageClaimStatus,
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
@@ -30,15 +39,6 @@ import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
  * Author: Cody / SESSION_0175 TASK_03.
  */
 
-type SelectedRank = {
-  id: string
-  name: string
-  shortName: string | null
-  colorHex?: string | null
-  sortOrder?: number | null
-  disciplineName?: string | null
-}
-
 type LineageNodeCardProps = {
   node: LineageNodeRow
   isRoot?: boolean
@@ -49,14 +49,6 @@ type LineageNodeCardProps = {
   canChangePromoter?: boolean
   onChangePromoter?: () => void
   renderPolicy?: LineageListingRenderPolicy
-}
-
-function initials(name: string | null | undefined): string {
-  if (!name) return "?"
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
-  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
 }
 
 export function LineageNodeCard({
@@ -70,8 +62,8 @@ export function LineageNodeCard({
   onChangePromoter,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageNodeCardProps) {
-  const displayName = node.user.passport?.displayName ?? node.user.name ?? "Unnamed"
-  const avatarSrc = node.user.passport?.avatarUrl ?? node.user.image
+  const displayName = nodeDisplayName(node)
+  const avatarSrc = memberAvatarSrc(node)
   const canRenderFullCard = renderPolicy.canRenderFullCard
   const claimStatus = pickLineageClaimStatus(node.claimRequests)
   const trustStatus = resolveLineageTrustStatus({
@@ -82,23 +74,16 @@ export function LineageNodeCard({
   })
   const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })
 
-  // Prefer the tree-member's selectedRankAward over the user's latest overall rank
-  const latestRankAward = node.user.rankAwards?.[0]
-  const rankLabel = selectedRank
-    ? `${selectedRank.name}${selectedRank.disciplineName ? ` · ${selectedRank.disciplineName}` : ""}`
-    : latestRankAward?.rank
-      ? `${latestRankAward.rank.name}${
-          latestRankAward.rank.rankSystem?.discipline?.name
-            ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
-            : ""
-        }`
-      : null
-
-  const latestMembership = node.user.memberships?.[0]
-  const schoolLabel = latestMembership?.organization?.name ?? null
-  const beltColor = selectedRank?.colorHex ?? latestRankAward?.rank.colorHex ?? null
+  // Shown rank/belt/school come from the shared member view-model (selected rank
+  // award wins, else latest overall award) — see lib/lineage/canvas-model.ts.
+  const rankLabel = memberRankLabel(node, selectedRank)
+  const schoolLabel = memberSchoolLabel(node)
+  const beltColor = memberBeltColor(node, selectedRank)
   const cardStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
-  const showActionsMenu = showActions && (canRenderFullCard || canChangePromoter)
+  // The card body opens the drawer for everyone, so the actions menu only earns
+  // its place for the editor-exclusive "Change promoter" action — consistent with
+  // the mobile + compact list rows (otherwise it is a redundant one-item menu).
+  const showActionsMenu = showActions && canChangePromoter
 
   return (
     <Card
@@ -132,11 +117,7 @@ export function LineageNodeCard({
       <button
         type="button"
         onClick={() => onSelect(node.id)}
-        aria-label={
-          canRenderFullCard
-            ? `Open lineage profile for ${displayName}`
-            : `Highlight lineage path for ${displayName}`
-        }
+        aria-label={`Open lineage profile for ${displayName}`}
         className={cx(
           "flex w-full cursor-pointer flex-col p-3 text-left md:p-4",
           canRenderFullCard ? "min-h-40 md:min-h-44" : "min-h-28",
@@ -147,7 +128,7 @@ export function LineageNodeCard({
             {renderPolicy.features.avatar && (
               <Avatar className="size-10 md:size-12">
                 {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-                <AvatarFallback>{initials(displayName)}</AvatarFallback>
+                <AvatarFallback>{memberInitials(displayName)}</AvatarFallback>
               </Avatar>
             )}
             <Stack

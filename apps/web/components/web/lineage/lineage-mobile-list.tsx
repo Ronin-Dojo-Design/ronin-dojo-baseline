@@ -10,7 +10,15 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
-import { type CanvasMember, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
+import {
+  type CanvasMember,
+  memberAvatarSrc,
+  memberBeltColor,
+  memberInitials,
+  memberRankLabel,
+  memberSchoolLabel,
+  nodeDisplayName,
+} from "~/lib/lineage/canvas-model"
 import { flattenLineage } from "~/lib/lineage/flatten-lineage"
 import { cx } from "~/lib/utils"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
@@ -24,31 +32,6 @@ type LineageMobileListProps = {
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
   renderPolicy?: LineageListingRenderPolicy
-}
-
-function memberRankLabel(member: CanvasMember) {
-  if (member.selectedRank) {
-    return `${member.selectedRank.name}${
-      member.selectedRank.disciplineName ? ` · ${member.selectedRank.disciplineName}` : ""
-    }`
-  }
-
-  const latestRankAward = member.node.user.rankAwards?.[0]
-  if (!latestRankAward?.rank) return null
-
-  return `${latestRankAward.rank.name}${
-    latestRankAward.rank.rankSystem?.discipline?.name
-      ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
-      : ""
-  }`
-}
-
-function memberBeltColor(member: CanvasMember) {
-  return member.selectedRank?.colorHex ?? member.node.user.rankAwards?.[0]?.rank.colorHex ?? null
-}
-
-function memberSchoolLabel(member: CanvasMember) {
-  return member.node.user.memberships?.[0]?.organization?.name ?? null
 }
 
 export function LineageMobileList({
@@ -87,10 +70,10 @@ export function LineageMobileList({
       <ol className="w-full min-w-0 space-y-2">
         {flattenedMembers.map(({ member, depth }) => {
           const displayName = nodeDisplayName(member.node)
-          const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
-          const rankLabel = memberRankLabel(member)
-          const schoolLabel = memberSchoolLabel(member)
-          const beltColor = memberBeltColor(member)
+          const avatarSrc = memberAvatarSrc(member.node)
+          const rankLabel = memberRankLabel(member.node, member.selectedRank)
+          const schoolLabel = memberSchoolLabel(member.node)
+          const beltColor = memberBeltColor(member.node, member.selectedRank)
           const indentPx = Math.min(depth * 16, 48)
           const isSelected = member.id === selectedMemberId
           const onPath = selectedPathMemberIds.has(member.id)
@@ -132,11 +115,7 @@ export function LineageMobileList({
                   variant="ghost"
                   size="sm"
                   onClick={() => onSelect(member.nodeId)}
-                  aria-label={
-                    renderPolicy.canOpenProfileDrawer
-                      ? `Open lineage profile for ${displayName}`
-                      : `Highlight lineage path for ${displayName}`
-                  }
+                  aria-label={`Open lineage profile for ${displayName}`}
                   aria-current={isSelected ? "true" : undefined}
                   className="min-h-14 min-w-0 flex-1 justify-start px-2 py-1.5 text-left hover:bg-muted/60"
                 >
@@ -185,10 +164,11 @@ export function LineageMobileList({
                         <span className="sr-only">Unverified</span>
                       </Badge>
                     ))}
-                  {renderPolicy.canOpenProfileDrawer && (
-                    <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
-                  )}
-                  {(renderPolicy.canOpenProfileDrawer || canChangePromoter) && (
+                  <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
+                  {/* Row tap opens the drawer for everyone, so the actions menu only
+                      earns its place when it carries the editor-exclusive "Change
+                      promoter" action — otherwise it is a redundant one-item menu. */}
+                  {canChangePromoter && (
                     <LineageMemberActionsMenu
                       displayName={displayName}
                       onViewProfile={() => onSelect(member.nodeId)}

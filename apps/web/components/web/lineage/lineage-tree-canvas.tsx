@@ -1427,11 +1427,9 @@ export function LineageTreeCanvas({
                 </Badge>
               )}
               <H6 className="text-muted-foreground">
-                {!renderPolicy.canOpenProfileDrawer
-                  ? "Select a practitioner to trace their path"
-                  : isMobileListViewport || layout === "board"
-                    ? "Tap any practitioner to open their profile"
-                    : "Click a practitioner to trace their path to the root"}
+                {isMobileListViewport || layout === "board"
+                  ? "Tap any practitioner to open their profile"
+                  : "Click a practitioner to trace their path to the root"}
               </H6>
             </Stack>
 

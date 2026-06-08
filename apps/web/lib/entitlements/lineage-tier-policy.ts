@@ -9,7 +9,6 @@ export type LineageListingTier = "free" | "premium" | "elite" | "legend"
 export type LineageListingRenderPolicy = {
   tier: LineageListingTier
   canRenderFullCard: boolean
-  canOpenProfileDrawer: boolean
   features: {
     avatar: boolean
     school: boolean
@@ -39,7 +38,6 @@ export type LineageProfileDetailRenderPolicy = {
 export const FREE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   tier: "free",
   canRenderFullCard: false,
-  canOpenProfileDrawer: false,
   features: {
     avatar: false,
     school: false,
@@ -53,7 +51,6 @@ export const FREE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
 export const PREMIUM_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   tier: "premium",
   canRenderFullCard: true,
-  canOpenProfileDrawer: true,
   features: {
     avatar: true,
     school: true,

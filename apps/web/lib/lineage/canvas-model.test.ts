@@ -4,7 +4,11 @@ import type { CanvasMember } from "~/lib/lineage/canvas-model"
 import {
   buildChildGroups,
   buildDescendantCounts,
+  memberAvatarSrc,
+  memberBeltColor,
   memberInitials,
+  memberRankLabel,
+  memberSchoolLabel,
   nodeDisplayName,
   sortMembers,
 } from "~/lib/lineage/canvas-model"
@@ -170,5 +174,71 @@ describe("memberInitials", () => {
     assert.equal(memberInitials("   "), "?")
     assert.equal(memberInitials("rigan"), "RI")
     assert.equal(memberInitials("Carlos Gracie Jr"), "CJ")
+  })
+})
+
+describe("member view-model derivations", () => {
+  function makeRichNode(): LineageNodeRow {
+    return {
+      id: "n1",
+      slug: "n1",
+      visibility: "PUBLIC",
+      isVerified: true,
+      verificationStatus: "VERIFIED",
+      bio: null,
+      userId: "u1",
+      user: {
+        id: "u1",
+        name: "Legal Name",
+        image: "https://img.test/account.jpg",
+        passport: { displayName: "Public Name", avatarUrl: "https://img.test/passport.jpg" },
+        directoryProfile: null,
+        rankAwards: [
+          {
+            rank: {
+              name: "Black Belt",
+              colorHex: "#111111",
+              rankSystem: { discipline: { name: "Brazilian Jiu-Jitsu" } },
+            },
+          },
+        ],
+        memberships: [{ organization: { name: "Gracie Barra" } }],
+      },
+    } as unknown as LineageNodeRow
+  }
+
+  test("memberAvatarSrc prefers passport avatar, falls back to account image, else null", () => {
+    const node = makeRichNode()
+    assert.equal(memberAvatarSrc(node), "https://img.test/passport.jpg")
+    node.user.passport = null
+    assert.equal(memberAvatarSrc(node), "https://img.test/account.jpg")
+    node.user.image = null
+    assert.equal(memberAvatarSrc(node), null)
+  })
+
+  test("memberBeltColor: selectedRank wins, else latest award, else null", () => {
+    const node = makeRichNode()
+    assert.equal(memberBeltColor(node, { colorHex: "#abcabc" } as never), "#abcabc")
+    assert.equal(memberBeltColor(node), "#111111")
+    node.user.rankAwards = []
+    assert.equal(memberBeltColor(node), null)
+  })
+
+  test("memberRankLabel: selectedRank wins, else latest award with discipline, else null", () => {
+    const node = makeRichNode()
+    assert.equal(
+      memberRankLabel(node, { name: "Coral Belt", disciplineName: "BJJ" } as never),
+      "Coral Belt · BJJ",
+    )
+    assert.equal(memberRankLabel(node), "Black Belt · Brazilian Jiu-Jitsu")
+    node.user.rankAwards = []
+    assert.equal(memberRankLabel(node), null)
+  })
+
+  test("memberSchoolLabel returns the latest membership organization name, else null", () => {
+    const node = makeRichNode()
+    assert.equal(memberSchoolLabel(node), "Gracie Barra")
+    node.user.memberships = []
+    assert.equal(memberSchoolLabel(node), null)
   })
 })

@@ -114,27 +114,21 @@ export function LineageTreeBoard({
       ? ELITE_LINEAGE_LISTING_RENDER_POLICY
       : (renderPolicy ?? FREE_LINEAGE_LISTING_RENDER_POLICY)
 
-  const handleNodeSelect = useCallback(
-    (nodeId: string) => {
-      // Clear any pending drawer open
-      if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    // Clear any pending drawer open
+    if (drawerTimerRef.current) clearTimeout(drawerTimerRef.current)
 
-      // Set the path highlight immediately
-      setSelectedNodeId(nodeId)
-      setDrawerTab("info")
+    // Set the path highlight immediately
+    setSelectedNodeId(nodeId)
+    setDrawerTab("info")
 
-      if (!effectiveRenderPolicy.canOpenProfileDrawer) {
-        setDrawerOpen(false)
-        return
-      }
-
-      // Open the drawer after a delay so the path lights up first
-      drawerTimerRef.current = setTimeout(() => {
-        setDrawerOpen(true)
-      }, 400)
-    },
-    [effectiveRenderPolicy.canOpenProfileDrawer],
-  )
+    // Open the drawer after a delay so the path lights up first.
+    // The drawer opens for everyone; tier gates its *contents*
+    // (LineageProfileDetailRenderPolicy), not whether it opens.
+    drawerTimerRef.current = setTimeout(() => {
+      setDrawerOpen(true)
+    }, 400)
+  }, [])
 
   /**
    * Phase 3c (descoped SESSION_0333): on-card / on-row "Change promoter..." path.
@@ -220,11 +214,11 @@ export function LineageTreeBoard({
       />
 
       <LineageProfileDrawer
-        open={effectiveRenderPolicy.canOpenProfileDrawer && drawerOpen}
+        open={drawerOpen}
         onOpenChange={open => {
           if (!open) handleDrawerClose()
         }}
-        profile={effectiveRenderPolicy.canOpenProfileDrawer ? selectedProfile : null}
+        profile={selectedProfile}
         promoterChangeContext={promoterChangeContext}
         selectedRankAward={selectedMember?.selectedRankAward ?? null}
         isClaimable={selectedMember?.isClaimable}

@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-07
+updated: 2026-06-08
 author: Brian + Copilot
 last_agent: claude-session-0355
 ---
@@ -533,6 +533,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Listings Runbook](../../runbooks/domain-features/baseline-listings-runbook.md) | runbook | active |
 | [Lineage Listing Runbook](../../runbooks/domain-features/lineage-listing-runbook.md) | runbook | active |
 | [Lineage Domain Hub](../../runbooks/domain-features/lineage-hub.md) | runbook | active — lineage doc index |
+| [Directory / Organization / Profile Domain Hub](../../runbooks/domain-features/directory-org-profile-hub.md) | runbook | active — discovery / profile / register-vs-claim index |
 | [MCP Usage Runbook](../../runbooks/dev-environment/mcp-usage-runbook.md) | runbook | active |
 | [Deployment](../../runbooks/deploy/deployment.md) | runbook | active |
 | [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) | runbook | active |

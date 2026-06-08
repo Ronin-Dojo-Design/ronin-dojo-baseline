@@ -10,7 +10,12 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
-import { type CanvasMember, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
+import {
+  type CanvasMember,
+  memberAvatarSrc,
+  memberInitials,
+  nodeDisplayName,
+} from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 
 const HONOR_STRIP_LIMIT = 6
@@ -75,7 +80,7 @@ export function LineageHonorStrip({
         <Carousel ariaLabel="Honor strip" controls="desktop" edgeFades options={{ align: "start" }}>
           {featuredMembers.map((member, index) => {
             const displayName = nodeDisplayName(member.node)
-            const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
+            const avatarSrc = memberAvatarSrc(member.node)
             const isSelected = member.id === selectedMemberId
             const beltColor = member.selectedRank?.colorHex ?? null
             const rankLabel = member.selectedRank?.name ?? null

@@ -16,7 +16,10 @@ import {
   buildChildGroups,
   type CanvasMember,
   type ChildGroup,
+  memberAvatarSrc,
+  memberBeltColor,
   memberInitials,
+  memberRankLabel,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -186,9 +189,9 @@ function LineageCompactChildRow({
   const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
   const displayName = nodeDisplayName(member.node)
-  const avatarSrc = member.node.user.passport?.avatarUrl ?? member.node.user.image
-  const rankLabel = member.selectedRank?.name ?? null
-  const beltColor = member.selectedRank?.colorHex ?? null
+  const avatarSrc = memberAvatarSrc(member.node)
+  const rankLabel = memberRankLabel(member.node, member.selectedRank)
+  const beltColor = memberBeltColor(member.node, member.selectedRank)
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 
   return (
@@ -228,11 +231,7 @@ function LineageCompactChildRow({
         <button
           type="button"
           onClick={() => shared.onSelect(member.nodeId)}
-          aria-label={
-            renderPolicy.canOpenProfileDrawer
-              ? `Open lineage profile for ${displayName}`
-              : `Highlight lineage path for ${displayName}`
-          }
+          aria-label={`Open lineage profile for ${displayName}`}
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 text-left transition-colors hover:bg-muted/60"
         >
           {renderPolicy.features.avatar && (
@@ -272,7 +271,9 @@ function LineageCompactChildRow({
           </Badge>
         )}
 
-        {(renderPolicy.canOpenProfileDrawer || shared.canChangePromoter) && (
+        {/* Row tap opens the drawer for everyone; the actions menu only earns its
+            place for the editor-exclusive "Change promoter" action. */}
+        {shared.canChangePromoter && (
           <LineageMemberActionsMenu
             displayName={displayName}
             onViewProfile={() => shared.onSelect(member.nodeId)}
