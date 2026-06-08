@@ -77,6 +77,7 @@ model User {
   passport                   Passport?
   directoryProfile           DirectoryProfile?
   memberships                Membership[]
+  affiliations               Affiliation[]
   rankAwards                 RankAward[]                 @relation("EarnedBy")
   awardedRankAwards          RankAward[]                 @relation("AwardedBy")
   ownedOrganizations         Organization[]              @relation("OrganizationOwner")
@@ -358,6 +359,9 @@ enum OrganizationType {
   LEAGUE
   SCHOOL
   CLUB
+  // @added SESSION_0357 — umbrella affiliation orgs people/schools belong to (e.g. CSW / Erik
+  // Paulson, Rigan Machado Affiliation). Display-only here; no payment/billing modeled.
+  AFFILIATION
 }
 
 enum MembershipStatus {
@@ -963,6 +967,14 @@ model Passport {
   avatarUrl                 String?
   bio                       String?
   socialLinks               Json?
+  // @added SESSION_0357 — Passport is the identity source of truth (passport-and-shells.md).
+  // coverPhoto/videoIntro are identity media moved off DirectoryProfile (the presentation *view*);
+  // placeOfBirth/startedTrainingAt come from the BBL Pods `bbl_member` model. Schools/rank are NOT
+  // here — school is a person↔org relationship (deferred) and rank derives from RankAward.
+  coverPhotoUrl             String?
+  videoIntroUrl             String?
+  placeOfBirth              String?
+  startedTrainingAt         DateTime? @db.Date
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
 
@@ -1024,6 +1036,7 @@ model Organization {
   ownerId               String?
   disciplines           OrganizationDiscipline[]
   memberships           Membership[]
+  affiliations          Affiliation[]
   courses               Course[]
   tournaments           Tournament[]
   waivers               Waiver[]
@@ -1256,6 +1269,39 @@ model Role {
 
   @@unique([code, brand])
   @@index([brand])
+}
+
+// @added SESSION_0357 — display-only person↔org affiliation (NO payment here). A person is
+// affiliated with one or more Organizations: their school(s)/dojo(s) and any umbrella AFFILIATION
+// org (e.g. CSW, Rigan Machado Affiliation). `organization` is the verified link; `schoolName` is
+// the free-text fallback for an unverified school (the "pick a verified school OR type one" capture
+// from the BBL registration form). A person has many. Distinct from Membership (paid Baseline
+// enrollment) and from RankAward.organization (the school that awarded a belt).
+enum AffiliationRole {
+  TRAINS_AT
+  TEACHES_AT
+  HEAD_INSTRUCTOR
+  OWNER
+  MEMBER
+}
+
+model Affiliation {
+  id         String          @id @default(cuid())
+  role       AffiliationRole @default(TRAINS_AT)
+  isCurrent  Boolean         @default(true)
+  schoolName String?
+  startedAt  DateTime?       @db.Date
+  endedAt    DateTime?       @db.Date
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationId String?
+
+  @@index([userId, isCurrent])
+  @@index([organizationId])
 }
 
 // ---------------------------------------------------------------------------
@@ -1935,14 +1981,32 @@ model BrandSettings {
 // Models — Rank awards
 // ---------------------------------------------------------------------------
 
+// @added SESSION_0357 (BBL-RANK-004) — RankAward is the single rank source (ADR 0016).
+// `source` distinguishes a STATED lineage rank (operator: "you don't earn it here, it's verified")
+// from an EARNED gamification award; `verificationStatus` is the stated→verified workflow driven by
+// an admin / RBAC editor (TREE_ADMIN / TREE_EDITOR / BRANCH_EDITOR). IMPORTED = legacy migration.
+enum RankAwardSource {
+  STATED
+  EARNED
+}
+
+enum RankAwardVerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  DISPUTED
+  IMPORTED
+}
+
 model RankAward {
-  id        String    @id @default(cuid())
-  awardedAt DateTime?
-  notes     String?
-  location  String?
-  mediaUrls Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                 String                      @id @default(cuid())
+  awardedAt          DateTime?
+  notes              String?
+  location           String?
+  mediaUrls          Json?
+  source             RankAwardSource             @default(STATED)
+  verificationStatus RankAwardVerificationStatus @default(UNVERIFIED)
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
 
   user           User          @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
   userId         String
@@ -2675,9 +2739,9 @@ model ProfileClaimRequest {
   organization       Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId     String?
 
-  claimant       User  @relation("ProfileClaimClaimant", fields: [claimantUserId], references: [id], onDelete: Cascade)
+  claimant       User    @relation("ProfileClaimClaimant", fields: [claimantUserId], references: [id], onDelete: Cascade)
   claimantUserId String
-  reviewedBy     User? @relation("ProfileClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedBy     User?   @relation("ProfileClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedById   String?
 
   @@index([brand, status])

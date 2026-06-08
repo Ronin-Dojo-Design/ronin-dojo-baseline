@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-08
-last_agent: codex-session-0349
+last_agent: claude-session-0357
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -285,3 +285,11 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Decision needed:** none — operator ruled (SESSION_0356) **funnel-first**: the drawer's full public view for everyone is intended (discovery→claim), and it is **not** a privacy leak (the server payload allowlist is the real boundary — guarded by `queries.visibility.test.ts`). The detail policy is therefore intentionally directory-only.
 - **Status:** documented (accepted)
 - **Logged in:** SESSION_0356 — surfaced while verifying the drawer-gate removal (FINDING_01). The operator's "tier gates the drawer's contents" assumption was false *for the drawer*; intent confirmed as full-public-view. Cleanup option (delete the now-directory-only detail policy or rename it `Directory…`) left as a non-urgent backlog item.
+
+### D-023 — Person identity fragmented across Membership / DirectoryProfile / LineageNode (vs documented Passport SoT)
+
+- **Source A (documented intent):** `docs/knowledge/wiki/concepts/passport-and-shells.md` — **Passport** is the global identity SoT; DirectoryProfile is a presentation *view*; rank/affiliation are contextual shells.
+- **Source B (impl drift):** the same person is read from different stores per surface — the black-belt-rail read `Membership.rank` (empty for BBL), `/directory` reads `DirectoryProfile` (empty for BBL placeholders), lineage reads `LineageNode`/`RankAward`. No store was canonical; the documented Passport+Shells model was never enforced, so surfaces render different/empty people.
+- **Decision:** consolidate onto Passport (operator-ratified SESSION_0357). `RankAward` = single rank source (+ `source`/`verificationStatus`); new `Affiliation` model = person↔org (display-only); school is NOT `Membership` for BBL.
+- **Status:** in progress — schema foundation landed (SESSION_0357 TASK_02); read-repoint (TASK_04) + add-person (TASK_03) + discoverability (TASK_05: link `passport-and-shells` at bow-in) carry forward.
+- **Logged in:** SESSION_0357. Sibling pattern: brand-color had the same two-layer shape (DB `BrandSettings` overrides `styles.css`) — resolved as intended (DB canonical + admin-editable), documented in `baseline-design-system.md`.

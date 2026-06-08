@@ -4,8 +4,8 @@ slug: baseline-design-system
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-05-29
-last_agent: claude-session-0303
+updated: 2026-06-08
+last_agent: claude-session-0357
 pairs_with:
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
   - docs/runbooks/design/ui-library-candidates.md
@@ -83,11 +83,18 @@ in public pages — that is the #1 drift this design review hunts for.
 Baseline = the default token set (no `data-brand` block). Other brands override `--color-primary` /
 `--color-accent` only:
 
-- `[data-brand="BBL"]` → primary `hsl(1 79% 51%)` (BBL red `#E52421`), accent `hsl(51 100% 50%)` (gold).
+- `[data-brand="BBL"]` → primary `hsl(1 79% 51%)` (BBL red `#E52421`); accent inherits the base neutral token — **no gold** (deep-black surfaces; gold was a wrong-tear-sheet import, corrected SESSION_0357).
 - `[data-brand="WEKAF"]` → primary `hsl(0 84% 50%)` (red).
 
 Both have `.dark` parity blocks. Adding a brand: (1) `Brand` enum in Prisma, (2) host map in
 `brand-context.ts`, (3) config in `config/site.ts`, (4) optional `[data-brand]` tokens here.
+
+> **Runtime override — brand color SoT is the DB, not this file (SESSION_0357).** These `styles.css`
+> blocks are the **fallback**. The live source of truth is the **`BrandSettings` DB table**, injected by
+> `app/layout.tsx` as a `<style>` that overrides `styles.css` (admin-editable per brand — first-party
+> included — by design, so white-label clients tune colors without a deploy). **If a color looks wrong on
+> a live page but `styles.css` looks right, check `BrandSettings` + `scripts/seed-brand-settings.ts` — the
+> DB wins.** (The BBL "gold accent" bug was a wrong seeded DB value, not a CSS bug.)
 
 ### Typography
 
@@ -122,7 +129,7 @@ Both have `.dark` parity blocks. Adding a brand: (1) `Brand` enum in Prisma, (2)
 | Brand | Primary | Secondary / Accent | Notes |
 | --- | --- | --- | --- |
 | **Tuff Buffs** (CU) | `cu-gold #CFB87C` | black `#000`, dark-gray `#434343` | Eventual Baseline visual reference. Helvetica Neue display. Pre-sprint token score 7.9→9.0. |
-| **Black Belt Legacy** | `bbl-red #E52421` | gold `#F9D977/#FFD700` | Poppins headings / Inter body. Deep-black surfaces, italic-uppercase hero. Maps to `[data-brand="BBL"]`. |
+| **Black Belt Legacy** | `bbl-red #E52421` | neutral/dark — deep-black surfaces (**no gold**) | Poppins headings / Inter body. Italic-uppercase hero. Maps to `[data-brand="BBL"]`. Gold `#FFD700` was a wrong-tear-sheet import (corrected SESSION_0357). |
 | **WEKAF USA** | `wekaf-red #BF0A30` | blue `#002868`, gold `#FCD116` | Filipino-flag palette, gradient surfaces. Maps to `[data-brand="WEKAF"]`. |
 
 Recurring lessons from the legacy tear sheets worth carrying into Baseline now:

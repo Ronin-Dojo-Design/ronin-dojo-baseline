@@ -15,7 +15,8 @@ const cardVariants = cva({
     },
 
     isHighlighted: {
-      true: "bg-yellow-500/10",
+      // Brand-aware highlight (red on BBL) — never a hardcoded yellow (SESSION_0357).
+      true: "bg-primary/10",
     },
   },
 
@@ -27,7 +28,7 @@ const cardVariants = cva({
     {
       hover: true,
       isHighlighted: true,
-      className: "hover:bg-yellow-500/15",
+      className: "hover:bg-primary/15",
     },
   ],
 

@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-07
-last_agent: claude-session-0355
+updated: 2026-06-08
+last_agent: claude-session-0357
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -146,6 +146,9 @@ commit) so the term is concrete, not abstract.
 - **Claimable** — a directory subject that can be claimed: an `Organization` with no `ownerId`, or a `DirectoryProfile` whose `User.isPlaceholder` is true (a legacy import with no login account).
 - **Claim teaser** — the public "mock profile" shown on `/directory/[slug]` for a claimable placeholder person instead of an empty profile/404: a `ProfileHero` preview + skeleton sections + a "Claim this profile" CTA, designed to entice the real owner to claim it.
 - **ProfileHero** — the shared presentation hero (`components/web/profile/profile-hero.tsx`) used by the claim teaser and the owner live-preview in the create/edit forms. Renders only display values passed in (no data fetch, no private fields).
+- **DTO (Data Transfer Object)** — the explicit shape of data allowed to *leave the server*, defined as a Prisma `select` "payload" (`server/web/.../payloads.ts`, `top-ranked-queries.ts`). WordPress/Pods analogy: choosing which fields a template may output. It is the privacy boundary (no email leaks), the performance boundary (fetch only what's shown), and the type contract (UI types derive from it). Rule: cross server→client through a DTO, never a raw `db.*` row in a component.
+- **View-model** — pure functions that turn a DTO into *display values*, in one place (`lib/lineage/canvas-model.ts`: `memberRankLabel`, `memberSchoolLabel`, `memberInitials`). WordPress/Pods analogy: a display helper that formats a raw field for output. Keeps "how we show X" from being re-spelled in every component.
+- **fd** — a fast `find` replacement (`brew install fd`; `fd PATTERN path`); respects `.gitignore`, simpler syntax. **Optional, not installed** — this repo's sanctioned discovery path is Graphify first, then `find`/`grep`. Convenience only.
 
 ## Cross-references
 

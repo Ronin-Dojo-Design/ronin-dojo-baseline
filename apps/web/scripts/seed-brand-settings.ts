@@ -15,7 +15,10 @@ const seeds = [
     brand: "BBL" as const,
     primaryColor: "1 79% 51%",
     primaryFgColor: "0 0% 98%",
-    accentColor: "51 100% 50%",
+    // No gold accent — inherit the neutral base token. BBL = red CTAs + deep-black surfaces;
+    // gold #FFD700 was a wrong-tear-sheet import mapped onto the global accent (SESSION_0357).
+    // Achievement gold, if needed, is a separate dedicated token, never `--color-accent`.
+    accentColor: null,
     accentFgColor: null,
   },
   {
