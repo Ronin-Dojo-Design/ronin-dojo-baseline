@@ -38,6 +38,13 @@ export const directoryMembershipPayload = {
   status: true,
 } satisfies Prisma.MembershipSelect
 
+// @added SESSION_0358 — Affiliation is the canonical person↔org axis (passport-and-shells.md);
+// the directory org facet reads this first, falling back to Membership during the transition.
+export const directoryAffiliationPayload = {
+  schoolName: true,
+  organization: { select: { id: true, name: true, slug: true } },
+} satisfies Prisma.AffiliationSelect
+
 export const directoryRankAwardPayload = {
   id: true,
   rank: {
@@ -65,6 +72,11 @@ export const directoryProfileListPayload = {
   user: {
     select: {
       ...directoryUserPayload,
+      affiliations: {
+        where: { isCurrent: true },
+        select: directoryAffiliationPayload,
+        orderBy: { updatedAt: "desc" as const },
+      },
       memberships: { select: directoryMembershipPayload },
       rankAwards: {
         select: directoryRankAwardPayload,

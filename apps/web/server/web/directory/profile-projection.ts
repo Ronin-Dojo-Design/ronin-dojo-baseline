@@ -44,6 +44,47 @@ export function rankSummaryForProfile<RankAward>(profile: {
   return profile.showRanks === false ? [] : profile.user.rankAwards.slice(0, 1)
 }
 
+type ProfileOrg = {
+  id: string
+  name: string
+  slug: string
+  discipline: { id: string; name: string } | null
+}
+
+/**
+ * The person↔org facet for the directory list. Reads the canonical **Affiliation** axis
+ * (current affiliations with a linked org) first, falling back to Baseline **Membership**
+ * orgs during the Passport-consolidation transition (D-023). Free-text-only affiliations
+ * (no linked org) are intentionally excluded from the org list — they surface as a school label.
+ *
+ * @added SESSION_0358 (TASK_03)
+ */
+export function projectProfileOrganizations(user: {
+  affiliations?: {
+    schoolName: string | null
+    organization: { id: string; name: string; slug: string } | null
+  }[]
+  memberships: {
+    organization: { id: string; name: string; slug: string }
+    discipline: { id: string; name: string } | null
+  }[]
+}): ProfileOrg[] {
+  const affiliationOrgs = (user.affiliations ?? []).flatMap(affiliation =>
+    affiliation.organization ? [{ ...affiliation.organization, discipline: null }] : [],
+  )
+
+  if (affiliationOrgs.length > 0) {
+    return affiliationOrgs
+  }
+
+  return user.memberships.map(membership => ({
+    id: membership.organization.id,
+    name: membership.organization.name,
+    slug: membership.organization.slug,
+    discipline: membership.discipline,
+  }))
+}
+
 export function trustSummaryForUser(user: UserTrustSource) {
   const claimStatus = pickLineageClaimStatus(user.lineageNode?.claimRequests)
 
@@ -97,12 +138,7 @@ export function projectDirectoryProfileListItem({
         : null,
     organizations:
       canRenderFullProfile && policy.features.organizations && profile.showOrgs
-        ? profile.user.memberships.map(m => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug,
-            discipline: m.discipline,
-          }))
+        ? projectProfileOrganizations(profile.user)
         : [],
     ranks:
       canRenderFullProfile && policy.features.rankHistory && profile.showRanks

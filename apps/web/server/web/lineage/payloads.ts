@@ -103,7 +103,21 @@ export const lineageNodeRowPayload = {
         orderBy: { awardedAt: "desc" as const },
         take: 1,
       },
-      // Latest active membership → school + discipline label.
+      // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
+      // Affiliation is display-only person↔org; `memberSchoolLabel` reads this first.
+      affiliations: {
+        where: { isCurrent: true },
+        select: {
+          id: true,
+          schoolName: true,
+          organization: {
+            select: { id: true, name: true, slug: true, city: true, state: true },
+          },
+        },
+        orderBy: { updatedAt: "desc" as const },
+        take: 1,
+      },
+      // Latest active membership → Baseline enrollment fallback for the school label.
       memberships: {
         where: { status: "ACTIVE" as const },
         select: {

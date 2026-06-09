@@ -33,6 +33,7 @@ function profileFixture(): DirectoryProfileList {
         visibility: "PUBLIC",
         claimRequests: [{ status: "APPROVED" }],
       },
+      affiliations: [],
       memberships: [
         {
           organization: { id: "org-1", name: "Baseline Boulder", slug: "baseline-boulder" },
@@ -100,6 +101,24 @@ describe("projectDirectoryProfileListItem", () => {
     expect(projected.email).toBe("secret@example.com")
     expect(projected.organizations).toHaveLength(1)
     expect(projected.ranks).toHaveLength(2)
+  })
+
+  it("prefers current Affiliation orgs over Membership for the org facet", () => {
+    const profile = profileFixture()
+    profile.user.affiliations = [
+      {
+        schoolName: null,
+        organization: { id: "aff-org-1", name: "Rigan Machado Affiliation", slug: "rigan-machado" },
+      },
+    ]
+
+    const projected = projectDirectoryProfileListItem({
+      profile,
+      policy: PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+    })
+
+    expect(projected.organizations).toHaveLength(1)
+    expect(projected.organizations[0]?.name).toBe("Rigan Machado Affiliation")
   })
 
   it("marks owner context without widening free listing-card fields", () => {

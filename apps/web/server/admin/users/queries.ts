@@ -1,6 +1,7 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import { getRequestBrand } from "~/lib/brand-context"
 import { db } from "~/services/db"
 import type { UsersTableSchema } from "./schema"
 
@@ -76,3 +77,76 @@ export const findUserList = async () => {
     orderBy: { name: "asc" },
   })
 }
+
+/**
+ * Option data for the `/admin/users/new` add-person form. Brand-scoped, no hardcoding:
+ * disciplines + the flat rank list (each carrying `disciplineId` so the client can show a
+ * discipline-scoped Rank cascade) + brand organizations for the Affiliation select.
+ *
+ * @added SESSION_0358 — Passport-centric add-person (TASK_01). Rank chain is Rank → RankSystem → Discipline.
+ */
+export const findAddPersonOptions = async () => {
+  const brand = await getRequestBrand()
+  const disciplineWhere: Prisma.DisciplineWhereInput = { OR: [{ isSystem: true }, { brand }] }
+
+  const [disciplines, ranks, organizations, trees, treeMembers] = await db.$transaction([
+    db.discipline.findMany({
+      where: disciplineWhere,
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    db.rank.findMany({
+      where: { rankSystem: { discipline: disciplineWhere } },
+      select: {
+        id: true,
+        name: true,
+        colorHex: true,
+        sortOrder: true,
+        rankSystem: { select: { disciplineId: true } },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+    db.organization.findMany({
+      where: { brand },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    db.lineageTree.findMany({
+      where: { brand },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    db.lineageTreeMember.findMany({
+      where: { tree: { brand } },
+      select: {
+        id: true,
+        treeId: true,
+        node: {
+          select: { user: { select: { name: true, passport: { select: { displayName: true } } } } },
+        },
+      },
+      orderBy: { visualSortOrder: "asc" },
+    }),
+  ])
+
+  return {
+    disciplines,
+    organizations,
+    trees,
+    ranks: ranks.map(rank => ({
+      id: rank.id,
+      name: rank.name,
+      colorHex: rank.colorHex,
+      sortOrder: rank.sortOrder,
+      disciplineId: rank.rankSystem.disciplineId,
+    })),
+    // Parent-select source; filtered by the chosen tree client-side.
+    treeMembers: treeMembers.map(member => ({
+      id: member.id,
+      treeId: member.treeId,
+      label: member.node.user.passport?.displayName || member.node.user.name,
+    })),
+  }
+}
+
+export type AddPersonOptions = Awaited<ReturnType<typeof findAddPersonOptions>>

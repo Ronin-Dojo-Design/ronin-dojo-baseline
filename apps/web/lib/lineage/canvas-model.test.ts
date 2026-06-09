@@ -202,6 +202,7 @@ describe("member view-model derivations", () => {
             },
           },
         ],
+        affiliations: [],
         memberships: [{ organization: { name: "Gracie Barra" } }],
       },
     } as unknown as LineageNodeRow
@@ -235,9 +236,20 @@ describe("member view-model derivations", () => {
     assert.equal(memberRankLabel(node), null)
   })
 
-  test("memberSchoolLabel returns the latest membership organization name, else null", () => {
+  test("memberSchoolLabel prefers current Affiliation (org, then free-text), else Membership, else null", () => {
     const node = makeRichNode()
+    // No affiliation → falls back to the active membership org.
     assert.equal(memberSchoolLabel(node), "Gracie Barra")
+    // Current affiliation with a linked org wins over membership.
+    node.user.affiliations = [
+      { organization: { name: "Rigan Machado Affiliation" }, schoolName: null },
+    ] as never
+    assert.equal(memberSchoolLabel(node), "Rigan Machado Affiliation")
+    // Free-text school (no linked org) is used when present.
+    node.user.affiliations = [{ organization: null, schoolName: "Backyard BJJ" }] as never
+    assert.equal(memberSchoolLabel(node), "Backyard BJJ")
+    // No affiliation and no membership → null.
+    node.user.affiliations = []
     node.user.memberships = []
     assert.equal(memberSchoolLabel(node), null)
   })

@@ -1,12 +1,13 @@
 "use client"
 
-import { UserPlusIcon } from "lucide-react"
+import { MailPlusIcon, UserPlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import type { User } from "~/.generated/prisma/browser"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
+import { Stack } from "~/components/common/stack"
 import { DataTable } from "~/components/data-table/data-table"
 import { DataTableHeader } from "~/components/data-table/data-table-header"
 import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
@@ -60,14 +61,25 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
         title="Users"
         total={usersTotal}
         callToAction={
-          <Button
-            variant="primary"
-            size="md"
-            prefix={<UserPlusIcon />}
-            render={<Link href="/admin/invites/new" />}
-          >
-            <div className="max-sm:sr-only">Invite user</div>
-          </Button>
+          <Stack size="sm">
+            <Button
+              variant="primary"
+              size="md"
+              prefix={<UserPlusIcon />}
+              render={<Link href="/admin/users/new" />}
+            >
+              <div className="max-sm:sr-only">Add person</div>
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="md"
+              prefix={<MailPlusIcon />}
+              render={<Link href="/admin/invites/new" />}
+            >
+              <div className="max-sm:sr-only">Invite user</div>
+            </Button>
+          </Stack>
         }
       >
         <DataTableToolbar table={table} filterFields={filterFields}>

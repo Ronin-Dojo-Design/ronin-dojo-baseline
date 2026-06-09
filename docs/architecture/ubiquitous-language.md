@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-06-09
+last_agent: claude-session-0358
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -177,6 +177,18 @@ It answers: which disciplines does this organization teach, support, sanction, o
 
 Former name: `SchoolStyle`.
 
+### Affiliation
+
+A **display-only** relationship between a person (User) and an Organization — "trains at", "teaches at",
+"head instructor", "owner", or "member" (`AffiliationRole`). Either links an `Organization` or records a
+free-text `schoolName`; `isCurrent` marks the active one. Added SESSION_0357.
+
+Affiliation is the **canonical person↔org axis** for a member's school/affiliation/league — distinct from
+`Membership` (Baseline enrollment) and from `RankAward.organization` (the awarding school). It carries **no
+payment/billing**; umbrella affiliations (e.g. a federation a school buys into) are `Organization`s typed
+`OrganizationType.AFFILIATION`. School-label and directory org-facet reads prefer Affiliation, falling back
+to Membership during the Passport-consolidation transition (D-023). See [ADR 0025](decisions/0025-passport-identity-source-of-truth.md).
+
 ## Ranks
 
 ### RankSystem
@@ -202,6 +214,13 @@ RankAward records who earned the rank, which Rank it was, who awarded it, when a
 Former name: `Progress`.
 
 Do not use `Progress` in new code.
+
+### RankAwardSource
+
+How a RankAward was established (SESSION_0357, BBL-RANK-004): `STATED` (asserted — e.g. admin-added or
+self-claimed) or `EARNED` (recorded through a promotion the platform witnessed). Pairs with
+**RankAwardVerificationStatus** (`UNVERIFIED` | `VERIFIED` | `DISPUTED` | `IMPORTED`). A person's **current
+rank is derived** — the highest *verified* award — never a stored Passport/Membership field.
 
 ### PromotionEvent
 

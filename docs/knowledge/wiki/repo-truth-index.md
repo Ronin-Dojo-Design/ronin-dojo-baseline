@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-03
-last_agent: claude-session-0335
+updated: 2026-06-09
+last_agent: claude-session-0358
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -155,6 +155,27 @@ Includes durable user/app state, membership state, registrations, publication st
 Useful for: UI reference, migration comparison, historical intent, legacy behavior lookup.
 
 **Rule:** Legacy docs are reference-only unless explicitly promoted into this repo.
+
+### 1b. Canonical entity source-of-truth
+
+Which store owns each person-facing domain entity. Reading the wrong store is the recurring drift
+(D-023): the same human exists in several stores, so surfaces render different/empty data. Resolve to
+the **SoT** column; the others are views or fallbacks. Ratified in [ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md);
+model narrative in [passport-and-shells](concepts/passport-and-shells.md).
+
+| Entity / fact | Source of truth | NOT the source (common mistake) |
+| --- | --- | --- |
+| Person identity (name, avatar, bio, DOB) | **`Passport`** (`displayName ?? user.name`, `avatarUrl ?? user.image`) | `DirectoryProfile` (a privacy *view*), `LineageNode` (graph projection) |
+| Rank / promotion (belt, who/when/where) | **`RankAward`** (+ `source` `STATED`/`EARNED`, `verificationStatus`) — ADR 0016 | `Membership.rankId` (deprecated → derived) |
+| Current rank | **Derived** — highest *verified* `RankAward` | a stored Passport/Membership field |
+| School / affiliation / league | **`Affiliation`** (display-only person↔org; linked `Organization` or free-text `schoolName`) | `Membership` (that is Baseline enrollment, not school) |
+| Baseline enrollment / roster | **`Membership`** (paying = separate entitlement, ADR 0019) | — |
+| Lineage tree placement | **`LineageTreeMember`** + `LineageRelationship` (`PROMOTED_BY` references the `RankAward`) | re-deriving from `RankAward` alone |
+| Brand colors | **`BrandSettings` DB row** (injected by `layout.tsx`, **overrides** `styles.css`) | `app/styles.css` (fallback only — editing it alone does nothing live) |
+
+**Add-person** (`/admin/users/new` → `createPerson`) writes the identity set in one transaction:
+placeholder `User` + `Passport` + stated `RankAward` + optional `Affiliation` + optional placement via
+`createLineageMember`. See [ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md).
 
 ### 2. Active vs reference
 

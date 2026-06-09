@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-05
-last_agent: codex-session-0347
+updated: 2026-06-09
+last_agent: claude-session-0358
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -212,30 +212,46 @@ flowchart TD
 
 ## 5. Identity shell flow
 
+> **Passport is the identity source of truth (SESSION_0357/0358, ADR 0016).**
+> `DirectoryProfile` is a *view* of identity, not a parallel store. Current rank is **derived
+> from `RankAward`** (`source` STATED|EARNED + `verificationStatus`), not read off `Membership`.
+> A person's school/org for display comes from **`Affiliation`** (linked org or free-text
+> `schoolName`), with Baseline **`Membership`** as a fallback during the consolidation transition.
+> `Membership` is Baseline enrollment/community state (paying is a separate `UserEntitlement`
+> layer — ADR 0019); it is **not** the BBL school source. See `passport-and-shells.md`.
+
 ```text
 User
  |
- +--> Passport (global identity)
+ +--> Passport (global identity — source of truth)
  |
- +--> DirectoryProfile (privacy + visibility)
+ +--> DirectoryProfile (a view: privacy + visibility)
  |
- +--> Membership(s)
+ +--> RankAward(s) (rank/promotion source; current rank derived)
+ |     +--> Rank
+ |     +--> source (STATED | EARNED)
+ |     +--> verificationStatus (UNVERIFIED | VERIFIED | DISPUTED | IMPORTED)
+ |
+ +--> Affiliation(s) (display-only person↔org: linked org OR free-text schoolName)
+ |
+ +--> Membership(s) (Baseline enrollment — community/admin state)
        |
        +--> Organization
        +--> Discipline
-       +--> Rank
        +--> Role assignments
        +--> Status
 ```
 
 ```mermaid
 flowchart TD
-    U[User] --> P[Passport\nglobal identity]
-    U --> DP[DirectoryProfile\nprivacy + visibility]
-    U --> M[Memberships]
+    U[User] --> P[Passport\nglobal identity — SoT]
+    U --> DP[DirectoryProfile\na view: privacy + visibility]
+    U --> RAW[RankAward\nrank source; current rank derived]
+    U --> AFF[Affiliation\ndisplay-only org / schoolName]
+    U --> M[Membership\nBaseline enrollment]
+    RAW --> R[Rank]
     M --> O[Organization]
     M --> D[Discipline]
-    M --> R[Rank]
     M --> RA[Role assignments]
     M --> S[Status]
 ```

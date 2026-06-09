@@ -88,11 +88,19 @@ export function memberRankLabel(
 }
 
 /**
- * Current-school label for the member (latest membership's organization). Null →
- * unaffiliated / not shown. Affiliation is a separate axis from promotion lineage.
+ * Current-school label for the member. Reads the canonical **Affiliation** axis first
+ * (linked org name, else free-text school), falling back to the latest Baseline Membership
+ * org during the Passport-consolidation transition (D-023). Null → unaffiliated / not shown.
+ * Affiliation is a separate display axis from promotion lineage (passport-and-shells.md).
  */
 export function memberSchoolLabel(node: LineageNodeRow): string | null {
-  return node.user.memberships?.[0]?.organization?.name ?? null
+  const affiliation = node.user.affiliations?.[0]
+  return (
+    affiliation?.organization?.name ??
+    affiliation?.schoolName ??
+    node.user.memberships?.[0]?.organization?.name ??
+    null
+  )
 }
 
 export function sortMembers(a: CanvasMember, b: CanvasMember): number {

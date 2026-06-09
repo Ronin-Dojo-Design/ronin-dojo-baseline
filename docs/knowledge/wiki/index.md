@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-08
+updated: 2026-06-09
 author: Brian + Copilot
-last_agent: claude-session-0357
+last_agent: claude-session-0358
 ---
 
 # LLM Wiki Index
@@ -462,6 +462,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0355](../../sprints/SESSION_0355.md) | session--open | closed — rich `DataSelect` labels (`content?: ReactNode` row + render test; `BeltSwatch` belt swatches on the rank select; `tool-filters` back on `DataSelect`); owner-less-org `OrgClaimCta` + `ListingRegisterCta` register discoverability + create-org dedup hint; claimant-side browser smoke; profile-redesign assessment (`petey-plan-0356`) + Galaxy staging (`petey-plan-0357`); 0337 stamped dormant; findings: drawer tier-gate + domain-hub discovery gap |
 | [SESSION_0356](../../sprints/SESSION_0356.md) | session--implement | closed — drawer-gate removal (`canOpenProfileDrawer` deleted; lineage drawer opens for everyone) + member view-model extraction to `canvas-model.ts`; combined directory/org/profile domain hub + bow-in step 3d; oRPC ADR 0024 (proposed) + drift D-021/D-022; surfaced BBL-focus + `memberSchoolLabel`-from-Membership wrong-source findings |
 | [SESSION_0357](../../sprints/SESSION_0357.md) | session--open | closed — Passport-centric identity consolidation. Black-belt-rail repointed to RankAward (canonical, ADR 0016) — empty "Top Ranked" now fills; BBL gold accent killed (the real source was the `BrandSettings` **DB** row, not CSS); additive migration — RankAward `source`/`verificationStatus` (BBL-RANK-004), Passport identity fields, new `Affiliation` model (person↔org, display-only), `OrganizationType.AFFILIATION`. Add-person / read-repoint / slug-consolidation / docs deferred to next session |
+| [SESSION_0358](../../sprints/SESSION_0358.md) | session--open | closed — admin **add-person** (`/admin/users/new`): one `createPerson` action → placeholder User + Passport + stated RankAward + Affiliation + optional lineage placement; new `createLineageMember` (first runtime LineageNode/TreeMember + `PROMOTED_BY` create) — browser-verified end-to-end. Reads repointed to Affiliation (`memberSchoolLabel` + directory org facet). **ADR 0025** (Passport SoT + Affiliation + brand-color SoT); repo-truth-index canonical-entity layer; `human-code-runbook.md`; sop-data-and-wiring-flows §5 corrected. Next: form/identity consolidation (first/last name + invite/claim/registration alignment) + richer placement controls |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
 | [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
