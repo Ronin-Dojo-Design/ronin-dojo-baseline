@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-09
-last_agent: claude-session-0358
+updated: 2026-06-10
+last_agent: claude-session-0359
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -31,6 +31,18 @@ Convention for the `last_agent` SESSION-file field is `<agent>-session-NNNN` whe
 Any of: "Bow in" / starting a fresh session / opening a new chat / picking up after a break.
 
 ## Steps
+
+### 0. BBL / launch work — read the SoT set FIRST (and nothing else first)
+
+> For any Black Belt Legacy or launch work, the **source-of-truth set is the only thing to open first**,
+> in this order — do **not** go hunting the wider wiki (that re-discovery loop is the problem this set fixes):
+>
+> 1. [`BBL-SOT-Spec.md`](../product/black-belt-legacy/BBL-SOT-Spec.md) — the build blueprint: phases 0–7, exact files, done-means, session roadmap.
+> 2. [`SOT-ADR.md`](../product/black-belt-legacy/SOT-ADR.md) — consolidated decisions D1–D7 (**supersedes** the scattered ADRs; those are historical).
+> 3. [`PRD.md`](../product/black-belt-legacy/PRD.md) · 4. [`STORIES.md`](../product/black-belt-legacy/STORIES.md) · 5. [`CUTOVER_CHECKLIST.md`](../product/black-belt-legacy/CUTOVER_CHECKLIST.md) · 6. [`GAP_MATRIX.md`](../product/black-belt-legacy/GAP_MATRIX.md) (**re-verify against the live app — known stale**).
+>
+> If any other doc contradicts the SoT set, **the SoT set + the live app win.** The steps below still run
+> (latest SESSION file, branch check, new SESSION file), but the SoT set is your task context.
 
 ### 1. Read the latest SESSION file
 

@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-09
-last_agent: claude-session-0358
+updated: 2026-06-10
+last_agent: claude-session-0359
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -19,6 +19,12 @@ backlinks:
 ---
 
 # SOP — Data Flows and Wiring Flows
+
+> **⚠ Substrate-change notice (SESSION_0359).** This documents the **current** (pre-SoT-Spec) substrate. The
+> target is [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md): Phases 1–3 replace the
+> action/permission layer (oRPC + `can()` + BBL resource-scoped grants), the routes (`/admin`+`/dashboard` →
+> `/app`), and root identity on **Passport** (nullable `userId`). Accurate for today's code — but **check the
+> SoT-Spec before building new work** here; this is rewritten as its phase lands.
 
 ## Purpose
 

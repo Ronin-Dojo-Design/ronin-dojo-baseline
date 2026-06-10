@@ -11,6 +11,17 @@ copied_at_sha   = c42e8bbc9a093daa8bb70faebfc552399134ee13
 copied_on       = 2026-04-25
 copied_from     = /Users/brianscott/Local Sites/DirStarter /dirstarter_template
 
+# === SESSION_0359 re-pin (2026-06-10) — BBL-SOT-Spec Phase 0 capture ===
+# The dirstarter_template reference clone was fast-forwarded 7e724b6 -> 76c8e1e
+# (current upstream `main`, 2026-06-03 "unified dashboard" release; 52 commits).
+# uplift_target_sha = 76c8e1e9a940e355373e8308ecd3ba7db6494751   (supersedes the stale 7e724b6)
+# copied_at_sha (above) is left UNCHANGED: it is the historical provenance of the
+# apps/web copy. Full SHA reconciliation to the target happens at the end of the
+# uplift (BBL-SOT-Spec Phase 5 / epic L15). See docs/product/black-belt-legacy/BBL-SOT-Spec.md.
+# Confirmed present at 76c8e1e: server/orpc/{procedure,permissions,roles}.ts,
+# lib/orpc-{server,client,query}.ts, server/router.ts, app/api/rpc/, app/api/v1/,
+# app/app/ (unified dashboard), flat server/<entity>/* (server/web|admin/* removed).
+
 # Partial upstream ports:
 # - SESSION_0205 / L2: env/deploy-safe subset from upstream 7e724b6 applied.
 #   copied_at_sha stays unchanged until SESSION_0218 / L15 full reconciliation.

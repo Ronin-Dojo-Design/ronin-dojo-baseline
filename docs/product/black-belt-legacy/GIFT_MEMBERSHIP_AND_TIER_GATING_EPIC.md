@@ -4,8 +4,8 @@ slug: bbl-gift-membership-and-tier-gating-epic
 type: spec
 status: draft
 created: 2026-06-04
-updated: 2026-06-04
-last_agent: claude-session-0345
+updated: 2026-06-10
+last_agent: claude-session-0359
 pairs_with:
   - docs/product/black-belt-legacy/GAP_MATRIX.md
   - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
@@ -26,6 +26,12 @@ tags:
 ---
 
 # BBL — Gift/Comp Membership, RBAC Granting, and Tier-Gated Tree Visibility (Epic Spec)
+
+> **⚠ Program alignment (SESSION_0359).** This epic is **not** superseded — it **folds into**
+> [`BBL-SOT-Spec.md`](BBL-SOT-Spec.md) Phases 4–6 (claim→comp + invite→comp tie-ins, tier-gating render model,
+> BBL.com import cohort). Build it on the **new substrate**: its RBAC matrix **is** the resource-scoped grant
+> extension (`SOT-ADR.md` **D4**); claim→comp rides the **person-rooted** claim (D1/D6). Confirm the RBAC matrix
+> + entitlement-keys-as-tier at its phase bow-in.
 
 > **Status: draft spec, staged at SESSION_0345 bow-out for a future session.** No code in this epic was
 > written in SESSION_0345 (which proved the paid checkout gate and fixed a returning-customer bug). This is

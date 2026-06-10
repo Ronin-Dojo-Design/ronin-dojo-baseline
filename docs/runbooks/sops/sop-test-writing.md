@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-06-05
-last_agent: codex-session-0347
+updated: 2026-06-10
+last_agent: claude-session-0359
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -18,6 +18,11 @@ backlinks:
 ---
 
 # SOP — Test Writing Patterns
+
+> **⚠ Substrate-change notice (SESSION_0359).** §3/§5/§5b document the **current** `next-safe-action` test
+> patterns + the `lib/test/safe-action-env.ts` harness. The [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md)
+> program migrates mutations to **oRPC** (Phase 1) — those patterns get an oRPC equivalent then. See **§15 Test
+> Gap Matrix** for exactly what gets rewritten vs. updated vs. kept (short answer: **not everything**).
 
 ## Purpose
 
@@ -861,6 +866,29 @@ Total remaining: 0 calls across 0 files. ✅ Campaign complete.
 - SESSION_0266 TASK_01 — established the deterministic-locator pattern on `bracket.spec.ts`.
 - SESSION_0267 TASK_01 — extended the pattern to `scoring.spec.ts` + `authenticated-lifecycle.spec.ts:50`, bumped 20s → 30s, codified this rule.
 - SESSION_0266 FINDING_02 → SESSION_0267 TASK_02 — firefox serial-suite cookie isolation pattern.
+
+---
+
+## 15. Test Gap Matrix — BBL-SOT-Spec substrate-change impact
+
+> **"Do all tests need redoing?" → No.** The program changes the *substrate* (oRPC + permissions in Phase 1,
+> person-rooted identity in Phase 3, `/app` routes in Phase 2), so tests split into **rewrite / update / keep**.
+> This is the test-gap ledger to drive against; update it (move buckets to ✅) as each phase lands.
+
+Current suite (SESSION_0359 survey): **88 unit `*.test.ts` files + 18 e2e specs.**
+
+| Bucket | ~Files | Impact | Phase | Action |
+| --- | --- | --- | --- | --- |
+| Pure logic / lib (`lib/lineage/*` ×8, `lib/*` ×4) | ~12 | none — presentation-agnostic pure functions (canvas-model, tree-layout, rank-progression, flatten, search) | —/3 | **Keep**; only person-data fixtures gain `passportId` |
+| **Action tests via `next-safe-action`** (`server/**/actions.test.ts`) + **wrapped `*.safe-action.test.ts`** (§5/§5b harness) | ~30+ | **HIGH** — the whole middleware chain, the §3 mock seams, and `lib/test/safe-action-env.ts` are replaced by oRPC procedures | **1** | **Rewrite** to the oRPC test pattern: mock session/context → call the procedure → assert `ORPCError` `UNAUTHORIZED`/`FORBIDDEN` + the `can()` permission gate |
+| Query / integration (`*.queries*.test.ts`, `*.integration.test.ts`) | ~15 | low | 1/3 | **Keep**; person-data queries swap `userId`→`passportId` in fixtures/asserts |
+| Payload / identity / read-model (directory + lineage payloads, `canvas-model` person fields) | ~8 | medium | 3 | **Update** for person-root (Passport SoT, nullable `userId`, satellites→`passportId`) |
+| Brand-isolation / concurrency / smoke (`*.brand-isolation`, `*.concurrency`, `*.smoke`, `scripts/smoke-*`) | ~12 | low | as schema lands | **Keep** (behavior-level); fixture tweaks only |
+| E2E Playwright (`e2e/**`) | 18 | medium | 2/3/4 | **Keep** behavior; rename `/admin`→`/app` routes (Phase 2); auth + claim specs go person-root (3/4); §14 locator rules still apply |
+
+**Net:** the one big rework is the **action → oRPC test rewrite (Phase 1)** — and §5/§5b of *this SOP* get
+superseded by an oRPC test pattern (documented in Phase 1). Everything else is **keep-with-fixture-updates**.
+Roughly: ~30 rewrite · ~23 update · ~45+ keep. **No "redo everything."**
 
 ---
 

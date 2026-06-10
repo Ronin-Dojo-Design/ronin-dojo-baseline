@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-03
-last_agent: claude-session-0335
+updated: 2026-06-10
+last_agent: claude-session-0359
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -18,6 +18,12 @@ backlinks:
 ---
 
 # Lineage Domain Hub
+
+> **⚠ Substrate-change notice (SESSION_0359).** This documents the **current** substrate. The target is
+> [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md): Phases 1–4 move lineage onto oRPC +
+> `can()` with **BBL resource-scoped grants** (per-tree/branch/node `LineageTreeAccess`, SOT-ADR **D4**), root
+> nodes on **Passport** (nullable `userId`), and make claim an RBAC-reviewed account-attach. Accurate for today's
+> code — but **check the SoT-Spec before building new lineage work** here; this is rewritten as its phase lands.
 
 Single entry point for all lineage knowledge. Lineage docs live across four locations
 (`architecture/lineage/`, `architecture/decisions/`, `knowledge/wiki/component-porting/specs/`,

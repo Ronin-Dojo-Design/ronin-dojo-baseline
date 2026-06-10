@@ -4,8 +4,8 @@ slug: human-code-runbook
 type: reference
 status: active
 created: 2026-06-09
-updated: 2026-06-09
-last_agent: claude-session-0358
+updated: 2026-06-10
+last_agent: claude-session-0359
 pairs_with:
   - docs/knowledge/wiki/concepts/passport-and-shells.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -92,6 +92,99 @@ a person becomes a **`LineageTreeMember`** of a brand's `LineageTree`, hung unde
 the promotion becomes a **`PROMOTED_BY` `LineageRelationship`** that references the `RankAward`. The admin
 **add-person** flow (`/admin/users/new`) creates the whole set in one step — see
 [ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md).
+
+## TypeScript — a learning guide for this codebase
+
+> For a reader new to TypeScript who will read (and write) code here. Not a generic tutorial — TS **as used in
+> this repo**. (Note: the identity *map* above is the current User-rooted shape; it shifts to **person-rooted**
+> in `BBL-SOT-Spec.md` Phase 3 — `SOT-ADR.md` D1. The TS concepts below don't change.)
+
+### 1. TypeScript in one breath
+
+TypeScript is JavaScript **plus a type layer the compiler checks before the code runs**. At runtime it is plain
+JS — **all the types are erased**. So types catch mistakes *while you write* (wrong field name, a missing
+argument, a value that might be `null`), but they do not exist when the app actually runs. A `.ts` file holds
+logic and types; a `.tsx` file adds JSX (React markup). "It type-checks" ≠ "it works" — it means "the shapes
+line up"; you still prove behavior with tests and the live app.
+
+### 2. The vocabulary you'll actually meet
+
+| You'll see | It means | Example in this repo |
+| --- | --- | --- |
+| `type X = { a: string }` | a named object **shape** | `type LineageProfile = { id: string; ... }` |
+| `a?: string` | **optional** — may be `undefined` | `displayName?: string` |
+| `string \| null` | **union** — "this OR that" | `image: string \| null` |
+| `"STATED" \| "EARNED"` | **string-literal union** — a fixed allowed set (enum-like) | `RankAwardSource` |
+| `as const` | freeze a value to its exact literal type | `["admin"] as const` (roles) |
+| `<T>` (generic) | a **type parameter** — "works for any T the caller plugs in" | `ensurePersonShells<T>`, RHF forms |
+| `T extends FieldValues` | a **constraint** — "T must be at least a FieldValues" | `form-media.tsx` |
+| `Pick<T,"a">` / `Omit<T,"a">` / `Partial<T>` | build a new type from another (subset / minus / all-optional) | `userSchema.pick({ id: true })` (Zod analog) |
+| `import type { X }` | import **only the type** (erased; no runtime import) | top of most server files |
+| `z.infer<typeof schema>` | derive a **static type from a Zod schema** | `type CreatePersonInput = z.infer<typeof createPersonSchema>` |
+| `Prisma` types (`User`, `Passport`) | **auto-generated** from `schema.prisma` | `import type { User } from "~/.generated/prisma/client"` |
+| `keyof` / `typeof` / `await` | "the keys of" / "the type of this value" / unwrap a `Promise<X>` to `X` | everywhere |
+
+You rarely **hand-write** types here — you **derive** them (from Prisma, from Zod, from libraries). That's the
+single most important habit: one source of truth, the type follows.
+
+### 3. The data's journey — "what goes where"
+
+The most useful mental model: data flows through typed stages, each living in **its own file**. Every arrow is a
+type boundary the compiler checks.
+
+```text
+prisma/schema.prisma          ── Prisma generates the DB types (User, Passport, RankAward …)
+        │
+server/<entity>/schema.ts     ── Zod input schema (RUNTIME validation) + `z.infer` → its static type
+        │
+server/<entity>/actions.ts    ── (today) the mutation: validate input → write DB        ┐ "WRITES"
+server/<entity>/router.ts     ── (oRPC, Phase 1) same job as a procedure + `can()` gate  ┘
+server/<entity>/queries.ts    ── the READS (fetch from DB)
+        │
+server/<entity>/payloads.ts   ── the DTO: the ALLOWLISTED shape sent to the client (public-safe projection)
+        │
+components/.../*.tsx          ── the UI consumes the payload (the "view-model") and renders it
+```
+
+So "what goes where": **validation** → `schema.ts`; **writes** → `actions.ts`/`router.ts`; **reads** →
+`queries.ts`; **the safe client shape** → `payloads.ts`; **rendering** → components. A **DTO** (payload) exists
+so the database row never leaks to the browser — you hand-pick the public fields. A **view-model** is just
+"the shape a component expects to render."
+
+### 4. Worked example — the generics in `form-media.tsx` (your open file)
+
+```ts
+type FormMediaProps<T extends FieldValues> = ... & {
+  form: UseFormReturn<T>
+  field: ControllerRenderProps<T, FieldPath<T>>
+}
+```
+
+- `<T extends FieldValues>` — "this component works for **any** form whose values are an object (`FieldValues`).
+  `T` is *that specific form's* value shape." `extends` here = a **constraint**, not inheritance.
+- `UseFormReturn<T>` — react-hook-form's typed form object, **specialized to your form `T`**, so
+  `form.setValue("name", …)` only accepts real fields of `T`.
+- `FieldPath<T>` — the **union of valid field names** of `T` (e.g. `"name" | "email"`). Typo a field → compile
+  error. This is the payoff: the types make wrong field names impossible.
+- `ControllerRenderProps<T, FieldPath<T>>` — the props RHF hands to one controlled field.
+- These types ship **inside** `react-hook-form` (it's authored in TS). The "no type declarations" error you saw
+  is **only** because the `dirstarter_template` copy has no `node_modules` installed — see "the big picture"
+  above; in `apps/web` (installed) it resolves.
+
+### 5. How to read a type error (don't panic)
+
+Read it **bottom-up**: the last `Type 'X' is not assignable to type 'Y'` line is usually the real mismatch; the
+lines above show the path to it. The three you'll hit most:
+
+- **`string | null` where `string` is wanted** → handle the null (`value ?? ""`, or an `if (value)` guard).
+- **wrong/abbreviated field name** → check the Zod schema or the Prisma model for the real name.
+- **`Promise<X>` where `X` is wanted** → you forgot `await`.
+
+### 6. Where types come from (no magic)
+
+Three sources feed almost everything: **(a) Prisma** generates entity types from `schema.prisma`;
+**(b) Zod** schemas give runtime validation **and** a static type via `z.infer` (one definition, both jobs);
+**(c) libraries** (react-hook-form, oRPC) ship their own. When in doubt, follow a value back to one of these three.
 
 ## See also
 
