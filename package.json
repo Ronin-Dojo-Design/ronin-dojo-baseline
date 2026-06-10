@@ -27,12 +27,15 @@
     "graphify:viz": "GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify export --format html --out apps/web/public/graphify.html",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
-    "test:e2e": "bun run --filter @ronin-dojo/web test:e2e"
+    "test:e2e": "bun run --filter @ronin-dojo/web test:e2e",
+    "audit:fallow": "fallow audit --changed-since HEAD",
+    "audit:fallow:all": "fallow audit"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "bun-types": "^1.3.14"
+    "bun-types": "^1.3.14",
+    "fallow": "^2.91.0"
   }
 }
