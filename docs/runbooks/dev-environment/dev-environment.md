@@ -45,12 +45,12 @@ section is cross-linked from
 # 1. Create the worktree off main
 git worktree add ../<worktree-name> -b <branch> main
 
-# 2. Enter the app dir
-cd ../<worktree-name>/apps/web
-
-# 3. Install deps
-
+# 2. Install deps from the worktree ROOT (Bun workspace — one root bun.lock)
+cd ../<worktree-name>
 bun install
+
+# 3. Enter the app dir for env + Prisma
+cd apps/web
 
 # 4. Copy env vars from the canonical main worktree
 cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env .env
@@ -212,7 +212,7 @@ All commands run from `apps/web/` unless noted otherwise.
 | Task | Command | Notes |
 | --- | --- | --- |
 | **Typecheck** | `bun run typecheck` | Runs `next typegen` then `tsc --noEmit`. Can take 2–4 min on full project. |
-| **Lint** | `bun run lint` | Biome check + auto-fix (`biome check --write .`), **scoped to `apps/web`** — this is the gate. ⚠️ Do NOT use the *repo-root* `bun run lint` (`pnpm -r lint`): it fails on `packages/api-client` (`sh: biome: command not found` PATH gap, accepted-risk) and is **not** a gate. Use changed-file Biome + typecheck. |
+| **Lint** | `bun run lint` | Biome check + auto-fix (`biome check --write .`), **scoped to `apps/web`** — this is the gate. ⚠️ Do NOT use the *repo-root* `bun run lint` (`bun run --filter '*' lint`): it fails on `packages/api-client` (`sh: biome: command not found` PATH gap, accepted-risk) and is **not** a gate. Use changed-file Biome + typecheck. |
 | **Format** | `bun run format` | Biome format + auto-fix. |
 | **Test (all)** | `bun run test` | = `bun test --parallel=1 --path-ignore-patterns='e2e/**'`. **Deterministic gate** (~67s). Do NOT drop `--parallel` (mock-leak ~63 fails) or raise the worker count (Postgres over-subscription → flake). See `sop-test-writing.md` §2 + `test-fail-fix-ledger.md`. |
 | **Test (file)** | `bun test ./path/to/file` | Single file or directory (isolation not needed). |
@@ -258,7 +258,7 @@ If the dev server won't start:
 1. Check for port conflicts: `lsof -i :3000`
 2. Kill stale processes: `kill -9 <PID>`
 3. Clear Next.js cache: `rm -rf apps/web/.next`
-4. Reinstall: `cd apps/web && bun install`
+4. Reinstall from repo root (Bun workspace — one root `bun.lock`): `bun install`
 
 ## Last verified
 

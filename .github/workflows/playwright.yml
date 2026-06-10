@@ -83,11 +83,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        # Version is inherited from `packageManager: "pnpm@9.0.0"` in
-        # root package.json; specifying `version:` here too triggers
-        # ERR_PNPM_BAD_PM_VERSION.
-        uses: pnpm/action-setup@v6
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -96,15 +95,9 @@ jobs:
           # package.json declares `engines.node: ">=20"` but the code
           # actually requires 22+. Pinning 22 (LTS Jod) for CI.
           node-version: '22'
-          cache: 'pnpm'
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.13
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Generate Prisma client
         run: bunx prisma generate

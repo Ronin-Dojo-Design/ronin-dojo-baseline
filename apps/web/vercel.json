@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter @ronin-dojo/web build",
+  "installCommand": "cd ../.. && bun install --frozen-lockfile",
+  "buildCommand": "cd ../.. && bun run --filter @ronin-dojo/web build",
   "crons": [
     {
       "path": "/api/cron/publish-tools",

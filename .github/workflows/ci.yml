@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 # `apps/web` runs `prisma generate` in postinstall, and the Prisma config resolves
-# DATABASE_URL even though `generate` never connects — so `pnpm install` needs the
+# DATABASE_URL even though `generate` never connects — so `bun install` needs the
 # var present in every job. A dummy URL satisfies generation; the `unit` job
 # overrides it with the real Postgres service URL. SKIP_ENV_VALIDATION lets
 # next-typegen load next.config without live runtime env.
@@ -52,16 +52,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
       # `biome ci` (not `check`): no --write, prints GitHub annotations on failures.
       - name: Biome CI
         run: bun biome ci .
@@ -73,16 +71,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
       # Generated Prisma client types are required for tsc to resolve `~/.generated/prisma`.
       - name: Generate Prisma client
         run: bunx prisma generate
@@ -120,16 +116,14 @@ jobs:
       CRON_SECRET: ci-cron-secret
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
       - name: Generate Prisma client
         run: bunx prisma generate
         working-directory: apps/web

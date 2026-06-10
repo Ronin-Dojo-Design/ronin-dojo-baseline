@@ -35,10 +35,14 @@
     "@mantine/hooks": "^8.3.10",
     "@next-safe-action/adapter-react-hook-form": "^2.0.0",
     "@number-flow/react": "^0.5.10",
+    "@orpc/client": "^1.14.3",
+    "@orpc/server": "^1.14.3",
+    "@orpc/tanstack-query": "^1.14.3",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@react-email/components": "^1.0.1",
     "@t3-oss/env-nextjs": "^0.13.8",
+    "@tanstack/react-query": "^5.100.14",
     "@tanstack/react-table": "^8.21.3",
     "@upstash/ratelimit": "^2.0.7",
     "@upstash/redis": "^1.35.7",
@@ -62,6 +66,7 @@
     "nuqs": "^2.8.5",
     "plur": "^6.0.0",
     "qrcode.react": "^4.2.0",
+    "rate-limiter-flexible": "^11.1.0",
     "react": "^19.2.2",
     "react-day-picker": "^9.12.0",
     "react-dom": "^19.2.2",
@@ -94,10 +99,9 @@
     "schema-dts": "^1.1.5",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": "22.x"
-  },
-  "packageManager": "bun@1.2.2"
+  }
 }
