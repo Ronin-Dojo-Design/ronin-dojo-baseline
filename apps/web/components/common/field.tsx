@@ -71,7 +71,7 @@ function Field({
   ...props
 }: ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: Field is a generic content wrapper; FieldSet is the semantic <fieldset> for form grouping.
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Field is a generic content wrapper; FieldSet is the semantic <fieldset> for form grouping.
     <div
       role="group"
       data-slot="field"

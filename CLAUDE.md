@@ -42,7 +42,7 @@ so it does not need re-pasting at bow-in.
   wiring→`wiring-ledger` (WL), drift→`drift-register` (D), SOP miss→`failed-steps-log` (FS),
   unclean close→`incidents`, smoke boundary→`manual-boundary-registry`, decision→ADR.
 - **Standing authorization: stage, commit (conventional message), and push to `main`
-  on completion** — trunk-based flow for this repo. Gates (typecheck / biome / tests /
+  on completion** — trunk-based flow for this repo. Gates (typecheck / oxlint / oxfmt / tests /
   wiki-lint) must pass first; never force-push; run the FS-0024 git guard.
   *(Remove this bullet if you'd rather confirm each push.)*
 - **Push cadence:** one push per session at close — don't push mid-session. Production

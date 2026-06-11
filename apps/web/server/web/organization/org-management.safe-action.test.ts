@@ -175,9 +175,8 @@ beforeEach(() => {
 
 describe("transitionOrgMembershipStatus", () => {
   it("rejects unauthenticated callers", async () => {
-    const { transitionOrgMembershipStatus } = await import(
-      "~/server/web/organization/membership-actions"
-    )
+    const { transitionOrgMembershipStatus } =
+      await import("~/server/web/organization/membership-actions")
     setTestSession(null)
 
     const result = await transitionOrgMembershipStatus({
@@ -190,9 +189,8 @@ describe("transitionOrgMembershipStatus", () => {
   })
 
   it("rejects cross-org access", async () => {
-    const { transitionOrgMembershipStatus } = await import(
-      "~/server/web/organization/membership-actions"
-    )
+    const { transitionOrgMembershipStatus } =
+      await import("~/server/web/organization/membership-actions")
     // otherUserId owns otherOrg, try to transition a membership in orgId
     setTestSession({ id: otherUserId, role: "user" })
 
@@ -206,9 +204,8 @@ describe("transitionOrgMembershipStatus", () => {
   })
 
   it("happy path: transitions PENDING → ACTIVE", async () => {
-    const { transitionOrgMembershipStatus } = await import(
-      "~/server/web/organization/membership-actions"
-    )
+    const { transitionOrgMembershipStatus } =
+      await import("~/server/web/organization/membership-actions")
 
     const result = await transitionOrgMembershipStatus({
       organizationId: orgId,

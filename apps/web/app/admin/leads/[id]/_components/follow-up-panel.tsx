@@ -82,7 +82,7 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
               </select>
             </div>
 
-            {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps custom Input form control */}
+            {/* oxlint-disable-next-line jsx-a11y/label-has-associated-control -- label wraps custom Input form control */}
             <label className="block">
               <span className="text-sm font-medium">Scheduled</span>
               <Input
@@ -94,7 +94,7 @@ export function FollowUpPanel({ lead }: FollowUpPanelProps) {
             </label>
           </div>
 
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps custom TextArea form control */}
+          {/* oxlint-disable-next-line jsx-a11y/label-has-associated-control -- label wraps custom TextArea form control */}
           <label className="block">
             <span className="text-sm font-medium">Notes</span>
             <TextArea

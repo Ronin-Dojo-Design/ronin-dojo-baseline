@@ -46,8 +46,8 @@ env:
   SKIP_ENV_VALIDATION: '1'
 
 jobs:
-  biome:
-    name: Biome (lint + format)
+  oxc:
+    name: Oxc (lint + format)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -60,9 +60,13 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: bun install --frozen-lockfile
-      # `biome ci` (not `check`): no --write, prints GitHub annotations on failures.
-      - name: Biome CI
-        run: bun biome ci .
+      # Dirstarter-aligned: oxlint = correctness/best-practices, oxfmt = formatting.
+      # `lint:check` (no --fix) + `format:check` (no --write) so CI is read-only.
+      - name: Oxlint
+        run: bun run lint:check
+        working-directory: apps/web
+      - name: Oxfmt check
+        run: bun run format:check
         working-directory: apps/web
 
   typecheck:

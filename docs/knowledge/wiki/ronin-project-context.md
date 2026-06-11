@@ -4,9 +4,9 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-05-20
+updated: 2026-06-11
 author: Brian + Giddy
-last_agent: codex-pr39-intake
+last_agent: claude-session-0360
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -17,6 +17,8 @@ pairs_with:
   - docs/knowledge/wiki/doc-pruning-register.md
   - docs/product/baseline-martial-arts/PRD.md
   - docs/product/black-belt-legacy/PRD.md
+  - docs/product/black-belt-legacy/BBL-SOT-Spec.md
+  - docs/runbooks/dev-environment/session-ops-cookbook.md
 tags:
   - context
   - canon
@@ -33,6 +35,14 @@ It is intentionally short. It should explain the rules a new agent must not miss
 ## What this project is
 
 Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter/Next.js foundation with one shared app, one shared schema, and brand behavior controlled through data, routing, and theme context.
+
+## Toolchain (canonical, SESSION_0360)
+
+- **Package manager:** Bun — one root `bun.lock`; Vercel + CI run `bun install --frozen-lockfile`. Stop the dev server before any install.
+- **Lint / format:** **Oxc** — `oxlint` + `oxfmt` (replaced Biome). Gates: `bun run lint:check` / `format:check`. Run the local bin, **never `bunx oxlint`/`bunx oxfmt`** (it hangs).
+- **Language / framework:** TypeScript 6, Next.js 16, React 19, Prisma 7 — versions aligned to the in-repo `dirstarter_template` upstream reference.
+- **Typecheck is separate from lint:** `next typegen && tsc --noEmit` (Oxc does not replace `tsc`).
+- Command recipes: [session-ops-cookbook](../../runbooks/dev-environment/session-ops-cookbook.md).
 
 ## The four brands
 
@@ -54,16 +64,18 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 - Sensitive mutations require audit logs.
 - Lineage truth changes must use explicit audited actions, not casual drag/drop.
 - Rank/certification records should remain compatible with later Black Belt Legacy verification.
+- **Passport is the identity source of truth** (ADR 0025); a person is one `Passport` — do not re-introduce parallel person stores (the 4-minter drift is being consolidated). SESSION_0357–0358.
+- **A BBL member's school comes from `Affiliation`** (registration / claim / invite / RBAC), **not `Membership`**.
 - Session files are operational handoff truth.
 - Wiki pages are repo memory, but not every wiki page is canonical product truth.
 - Do not bulk-load old imports unless the lane requires it.
 
 ## Current product priorities
 
-1. Baseline Martial Arts school-ops PRD + stories.
-2. Black Belt Legacy lineage v1.
-3. Docs pruning/consolidation.
-4. Four-brand story map.
+1. **Black Belt Legacy launch** — the `BBL-SOT-Spec` program (upstream-current substrate → person-rooted identity → claim → WP-parity → cutover). THE focus until cutover.
+2. Baseline Martial Arts school-ops PRD + stories.
+3. Four-brand story map.
+4. Docs pruning/consolidation.
 5. Agent workflow/dashboard integration later.
 
 ## Where truth lives
@@ -74,6 +86,7 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 | Architecture | `docs/architecture/` |
 | Decisions | `docs/architecture/decisions/` |
 | Schema | `apps/web/prisma/schema.prisma` |
+| Identity (person root) | `Passport` (+ `User` for auth) — [ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md) |
 | Protocols | `docs/protocols/` |
 | Rituals | `docs/rituals/` |
 | Repo memory | `docs/knowledge/wiki/` |
@@ -106,6 +119,7 @@ They should not carry every implementation note, full session history, raw resea
 
 ## Current Black Belt Legacy canon
 
+- `docs/product/black-belt-legacy/BBL-SOT-Spec.md` — **THE single program blueprint (SESSION_0359 pivot); read first.** `SOT-ADR.md` D1–D7 are the current decisions.
 - `docs/product/black-belt-legacy/PRD.md`
 - `docs/product/black-belt-legacy/STORIES.md`
 - `docs/architecture/lineage/lineage-tree-v1-requirements.md`

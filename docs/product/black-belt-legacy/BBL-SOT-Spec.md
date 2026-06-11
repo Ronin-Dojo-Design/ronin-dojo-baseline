@@ -4,7 +4,7 @@ slug: bbl-sot-spec
 type: spec
 status: active
 created: 2026-06-10
-updated: 2026-06-10
+updated: 2026-06-11
 last_agent: claude-session-0359
 author: Brian + Petey
 pairs_with:
@@ -15,6 +15,7 @@ pairs_with:
   - docs/product/black-belt-legacy/SOT-ADR.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/knowledge/wiki/ronin-project-context.md
 tags:
   - bbl
   - blackbeltlegacy
@@ -258,7 +259,7 @@ Visibility, not false precision. Detailed 3–5-task petey-plans are written at 
 
 ## 6. Verification & cutover gates
 
-- Per-phase: `bun run typecheck`, `bunx biome check`, `bun test`, `bun run wiki:lint` (docs), and **browser-proof on `bbl.local:3000`** (the operator's standing "prove it on the live DOM" rule — it caught real bugs SESSION_0357/0358 that green unit tests missed).
+- Per-phase: `bun run typecheck`, `bun run lint:check` + `bun run format:check` (oxlint/oxfmt), `bun test`, `bun run wiki:lint` (docs), and **browser-proof on `bbl.local:3000`** (the operator's standing "prove it on the live DOM" rule — it caught real bugs SESSION_0357/0358 that green unit tests missed).
 - Launch: `CUTOVER_CHECKLIST.md` is the authoritative cross-layer sequencer.
 
 ## 7. Open items / risks

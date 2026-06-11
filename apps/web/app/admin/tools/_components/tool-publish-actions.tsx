@@ -393,7 +393,7 @@ export const ToolPublishActions = ({
                           size="sm"
                           direction="column"
                           className="flex-1"
-                          // biome-ignore lint/a11y/noLabelWithoutControl: label has htmlFor targeting radio input
+                          // oxlint-disable-next-line jsx-a11y/label-has-associated-control -- label has htmlFor targeting radio input
                           render={<label htmlFor={option.status} />}
                         >
                           <H6>{option.title}</H6>

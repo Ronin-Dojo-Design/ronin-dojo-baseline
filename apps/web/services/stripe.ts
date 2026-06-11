@@ -53,7 +53,7 @@ export const stripe = env.STRIPE_SECRET_KEY
   ? isE2EStripeMockEnabled
     ? createE2EStripeMock()
     : new Stripe(env.STRIPE_SECRET_KEY, {
-        apiVersion: "2025-08-27.basil",
+        apiVersion: "2026-05-27.dahlia",
       })
   : isE2EStripeMockEnabled
     ? createE2EStripeMock()

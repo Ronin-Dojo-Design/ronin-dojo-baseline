@@ -214,8 +214,8 @@ export async function resolvePromotionEventAuthoringScope({
   for (const tree of lineageTrees) {
     const hasOrganizationAdminGrant = Boolean(
       tree.scopeType === "ORGANIZATION" &&
-        tree.organizationId &&
-        organizationAdminIds.has(tree.organizationId),
+      tree.organizationId &&
+      organizationAdminIds.has(tree.organizationId),
     )
 
     if (hasOrganizationAdminGrant) {

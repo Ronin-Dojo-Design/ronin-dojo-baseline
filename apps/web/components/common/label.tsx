@@ -15,7 +15,7 @@ type LabelProps = ComponentProps<"label"> & VariantProps<typeof labelVariants>
 
 function Label({ className, isRequired, htmlFor, ...props }: LabelProps) {
   return (
-    // biome-ignore lint/a11y/noLabelWithoutControl: Label is always associated via htmlFor or wrapping at call site
+    // oxlint-disable-next-line jsx-a11y/label-has-associated-control -- Label is always associated via htmlFor or wrapping at call site
     <label
       data-slot="label"
       htmlFor={htmlFor}

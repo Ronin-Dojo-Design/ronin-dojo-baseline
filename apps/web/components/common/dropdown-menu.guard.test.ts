@@ -36,7 +36,7 @@ function dropdownMenuItemTags(source: string): string[] {
   const opener = /<DropdownMenuItem(?=[\s/>])/g
   let match: RegExpExecArray | null
 
-  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex-exec loop.
+  // oxlint-disable-next-line no-cond-assign -- standard regex-exec loop.
   while ((match = opener.exec(source)) !== null) {
     let i = match.index + match[0].length
     let depth = 0

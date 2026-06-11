@@ -105,7 +105,7 @@ function SortableSeedRow({
   }
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: dnd-kit requires div wrapper for drag functionality
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- dnd-kit requires div wrapper for drag functionality
     <div
       ref={setNodeRef}
       style={style}

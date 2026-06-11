@@ -78,7 +78,7 @@ fi
 
 # `bun` is dual-use — `bun --version` is fine standalone. Block only when it targets
 # project scripts/tests/configs.
-if printf '%s' "$cmd" | grep -qE '(^|[[:space:]]|;|&&|\|\|)bun[[:space:]]+(run|test|biome|tsc|typecheck|install|add|--filter|--env-file|--cwd|x[[:space:]]|--eval)'; then
+if printf '%s' "$cmd" | grep -qE '(^|[[:space:]]|;|&&|\|\|)bun[[:space:]]+(run|test|tsc|typecheck|install|add|--filter|--env-file|--cwd|x[[:space:]]|--eval)'; then
   needs_prefix=1
 fi
 

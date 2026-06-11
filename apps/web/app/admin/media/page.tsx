@@ -55,7 +55,7 @@ export default withAdminPage(async ({ searchParams }) => {
                   className="aspect-square w-full object-cover"
                 />
               ) : item.type === "VIDEO" ? (
-                // biome-ignore lint/a11y/useMediaCaption: admin preview of user-uploaded media; no caption track available
+                // oxlint-disable-next-line jsx-a11y/media-has-caption -- admin preview of user-uploaded media; no caption track available
                 <video
                   src={item.url}
                   className="aspect-square w-full object-cover"

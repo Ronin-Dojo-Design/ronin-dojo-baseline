@@ -4,7 +4,7 @@ slug: vercel-deploy
 type: runbook
 status: active
 created: 2026-05-20
-updated: 2026-05-31
+updated: 2026-06-11
 last_agent: codex-session-0314
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
@@ -90,8 +90,8 @@ Do not add Prisma `directUrl` to `schema.prisma` for this repo's Prisma 7 setup.
 Before an env/deploy lane closes:
 
 ```bash
-pnpm --filter @ronin-dojo/web typecheck
-cd apps/web && bun biome check .
+bun run --filter @ronin-dojo/web typecheck
+cd apps/web && bun run lint:check && bun run format:check
 cd apps/web && bun test --isolate --path-ignore-patterns='e2e/**'
 bun scripts/check-vercel-env-parity.ts
 vercel ls

@@ -4,10 +4,11 @@ slug: mcp-usage-runbook
 type: runbook
 status: active
 created: 2026-05-14
-updated: 2026-05-14
-last_agent: codex-session-0166
+updated: 2026-06-11
+last_agent: claude-session-0360
 pairs_with:
   - docs/runbooks/dev-environment.md
+  - docs/runbooks/dev-environment/session-ops-cookbook.md
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/database.md
   - docs/runbooks/stripe-setup-runbook.md
@@ -51,6 +52,21 @@ CLI is for repeatable commands, scripts, CI, migrations, and runbook proof.
 ```
 
 Do not convert stable CLI steps into agent-only MCP steps. If a command needs to be repeated by a human, CI job, or future agent without context, keep it in CLI form.
+
+## Installed MCPs (status)
+
+What is actually wired on this machine (as of SESSION_0360, 2026-06-10):
+
+| MCP | Status | How | Notes |
+| --- | --- | --- | --- |
+| Playwright | ✅ connected | `npx -y @playwright/mcp@latest` (stdio) | browser QA. |
+| Stripe | ⚠️ added — needs OAuth | `claude mcp add --transport http stripe https://mcp.stripe.com --scope user` (user config `~/.claude.json`) | hosted server, **OAuth (no API key stored)**. Run `/mcp` to authenticate before first use. Test mode first; live = explicit confirmation. |
+| Vercel / Neon / Supabase / Chrome DevTools | ⬜ not installed | — | add per the order below when the relevant session needs them. |
+
+Companion CLIs in place: **Stripe CLI 1.42.11** (test-mode authed, account "Tuff Buffs"), Vercel CLI, GitHub
+CLI, Graphify. The **Claude CLI** (`~/.local/bin/claude`) is the MCP *host* — there is no "Claude MCP" server.
+For the exact install/verify commands run this session, see
+[session-ops-cookbook](session-ops-cookbook.md).
 
 ## Source truth checked
 
@@ -335,7 +351,7 @@ Guardrails:
 1. Add Vercel MCP before the next production smoke/debug session.
 2. Use Playwright MCP for local smoke interaction if available; keep Playwright CLI as the durable proof path.
 3. Add Chrome DevTools MCP when browser failures require console, network, trace, Lighthouse, or memory evidence.
-4. Use Stripe MCP for test-mode product/pricing/payment inspection.
+4. **Stripe MCP — INSTALLED (SESSION_0360):** hosted `https://mcp.stripe.com`, OAuth, user scope. Run `/mcp` to authenticate, then use for test-mode product/pricing/payment inspection. Pairs with the Stripe CLI `dahlia` verification recipe in [session-ops-cookbook](session-ops-cookbook.md).
 5. Choose Neon versus Supabase before adding a database MCP.
 6. If Neon is chosen, use Neon MCP against dev/staging branches only.
 7. If Supabase is chosen, write an ADR that covers Auth, RLS, Realtime, Storage, Edge Functions, and iOS SDK posture before enabling broad MCP access.

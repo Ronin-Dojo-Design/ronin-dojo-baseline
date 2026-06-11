@@ -138,13 +138,11 @@ export default withTournamentAdminPage(async ({ params }) => {
         tournament={tournament}
         availableDisciplines={disciplines}
         tournamentRoles={(await rolesPromise).map(r => ({ id: r.id, name: r.name, code: r.code }))}
-        ruleSets={
-          await db.ruleSet.findMany({
-            where: { OR: [{ brand }, { brand: null, isSystem: true }] },
-            select: { id: true, name: true },
-            orderBy: { name: "asc" },
-          })
-        }
+        ruleSets={await db.ruleSet.findMany({
+          where: { OR: [{ brand }, { brand: null, isSystem: true }] },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })}
       />
       <StaffPanel
         tournamentId={id}

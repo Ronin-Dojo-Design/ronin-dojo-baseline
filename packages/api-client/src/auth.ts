@@ -36,7 +36,7 @@ export type AuthClientConfig = {
  * with the instance via its runtime API — the branded wrapper is transparent
  * at runtime.
  */
-// biome-ignore lint/suspicious/noExplicitAny: Opaque wrapper avoids TS2742
+// oxlint-disable-next-line typescript/no-explicit-any -- Opaque wrapper avoids TS2742
 export type MobileAuthClient = ReturnType<typeof createAuthClient<any>>
 
 export function createMobileAuthClient(config: AuthClientConfig): MobileAuthClient {

@@ -223,8 +223,8 @@ export async function findEditableLineageTrees({
     const explicitRoles = explicitAccessByTree.get(tree.id) ?? []
     const hasOrganizationAdminGrant = Boolean(
       tree.scopeType === "ORGANIZATION" &&
-        tree.organizationId &&
-        organizationAdminIds.has(tree.organizationId),
+      tree.organizationId &&
+      organizationAdminIds.has(tree.organizationId),
     )
 
     return {
@@ -276,8 +276,8 @@ export async function getLineageEditorTree({
     isGlobalAdmin: isAdmin(user),
     hasOrganizationAdminGrant: Boolean(
       tree.scopeType === "ORGANIZATION" &&
-        tree.organizationId &&
-        organizationAdminIds.has(tree.organizationId),
+      tree.organizationId &&
+      organizationAdminIds.has(tree.organizationId),
     ),
     explicitRoles: explicitAccessByTree.get(tree.id) ?? [],
   })

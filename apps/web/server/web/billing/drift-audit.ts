@@ -169,9 +169,9 @@ export const runPaymentEntitlementDriftAudit = async ({
     ...(brand ? { brand } : {}),
     ...(scopePrefix ? { invoiceNumber: { startsWith: scopePrefix } } : {}),
   }
-  const programEnrollmentScope: Prisma.ProgramEnrollmentWhereInput = {
-    ...(scopePrefix ? { program: { name: { startsWith: scopePrefix } } } : {}),
-  }
+  const programEnrollmentScope: Prisma.ProgramEnrollmentWhereInput = scopePrefix
+    ? { program: { name: { startsWith: scopePrefix } } }
+    : {}
   const webhookScope: Prisma.StripeWebhookEventWhereInput = scopePrefix
     ? { id: { startsWith: scopePrefix } }
     : {}

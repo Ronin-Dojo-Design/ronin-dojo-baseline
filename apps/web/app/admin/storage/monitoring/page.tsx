@@ -161,7 +161,9 @@ export default withAdminPage(async () => {
             /GB-month, GET requests at {formatCurrency(S3_COST_MODEL.getPer1000Requests)}/1,000,
             PUT/LIST-class requests at{" "}
             {formatCurrency(S3_COST_MODEL.putCopyPostListPer1000Requests)}
-            /1,000, and direct S3 transfer after the first {S3_COST_MODEL.directTransferOutFreeGb}{" "}
+            /1,000, and direct S3 transfer after the first {
+              S3_COST_MODEL.directTransferOutFreeGb
+            }{" "}
             GB/month at {formatCurrency(S3_COST_MODEL.directTransferOutPerGbAfterFreeTier)}/GB.
           </p>
           <p>

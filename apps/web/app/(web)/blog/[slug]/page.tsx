@@ -117,18 +117,16 @@ export default async function (props: Props) {
           {blogConfig.toolsMentioned.enabled && !!post.tools.length && (
             <TableOfContents
               title={t("posts.tools_mentioned")}
-              headings={[
-                ...post.tools.map(({ slug, name, faviconUrl }) => ({
-                  id: slug,
-                  level: 1,
-                  text: (
-                    <Stack size="sm" wrap={false}>
-                      <Favicon src={faviconUrl} title={name} className="size-4" />
-                      <span className="truncate">{name}</span>
-                    </Stack>
-                  ),
-                })),
-              ]}
+              headings={post.tools.map(({ slug, name, faviconUrl }) => ({
+                id: slug,
+                level: 1,
+                text: (
+                  <Stack size="sm" wrap={false}>
+                    <Favicon src={faviconUrl} title={name} className="size-4" />
+                    <span className="truncate">{name}</span>
+                  </Stack>
+                ),
+              }))}
             />
           )}
         </Section.Sidebar>

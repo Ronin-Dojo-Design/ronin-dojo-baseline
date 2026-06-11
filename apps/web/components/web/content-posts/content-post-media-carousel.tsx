@@ -51,7 +51,7 @@ export function ContentPostMediaCarousel({
       return (
         // Captions are stored outside the current Media model; add tracks when
         // the content engine records caption asset URLs.
-        // biome-ignore lint/a11y/useMediaCaption: caption metadata is not available yet.
+        // oxlint-disable-next-line jsx-a11y/media-has-caption -- caption metadata is not available yet.
         <video
           controls
           preload="metadata"

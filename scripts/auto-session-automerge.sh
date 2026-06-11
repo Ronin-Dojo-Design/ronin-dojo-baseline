@@ -39,11 +39,12 @@ FIRST and treat its locked decisions as binding). Act as Petey: orchestrate Cody
 (build) and Doug (verify). SKIP any operator-only browser/device smoke. Implement only
 the next automatable code slice. Bow out per docs/rituals/closing.md as a FULL close:
 SESSION file, wiki sweep, `bun run wiki:lint` (MUST be 0 errors), `bun run typecheck`,
-and changed-file Biome (`bunx biome check` on touched files). DO NOT run the root
-`bun run lint` — known-broken accepted-risk gate (FS-0017/SESSION_0317) that fails
-spuriously. Run `graphify update` BEFORE the commit (FS-0025). COMMIT to the CURRENT
+and the read-only Oxc gates `(cd apps/web && bun run lint:check && bun run format:check)`.
+DO NOT run the root `bun run lint` or the `--fix`/write app scripts — those mutate files
+(the FS-0017 `biome` PATH gap is moot post-Oxc migration, SESSION_0360). Run `graphify
+update` BEFORE the commit (FS-0025). COMMIT to the CURRENT
 branch with a conventional message. DO NOT push, DO NOT open a PR — the wrapper handles
-that. Run the FS-0024 guard. If a REAL gate fails (typecheck, changed-file Biome,
+that. Run the FS-0024 guard. If a REAL gate fails (typecheck, oxlint/oxfmt check,
 wiki:lint, or focused tests), STOP and leave the tree UNCOMMITTED.
 PROMPT
 

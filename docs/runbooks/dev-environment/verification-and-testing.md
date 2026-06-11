@@ -4,12 +4,13 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-06-03
+updated: 2026-06-11
 last_agent: claude-session-0335
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
+  - docs/runbooks/dev-environment/session-ops-cookbook.md
 backlinks:
   - docs/runbooks/README.md
   - docs/knowledge/wiki/index.md
@@ -41,21 +42,21 @@ surface here is narrower than it looks.
 | Layer | Command (from `apps/web`) | Proves | Runs automatically in… |
 | --- | --- | --- | --- |
 | Typecheck | `bun run typecheck` (`next typegen && tsc --noEmit`) | Types compile | **GitHub Actions** (`ci.yml` → `typecheck`) + Vercel build |
-| Lint/format | `bun biome ci .` (`bun biome check --write .` to fix locally) | Style + a few correctness/a11y lints | **GitHub Actions** (`ci.yml` → `biome`) |
+| Lint/format | `bun run lint:check` + `bun run format:check` (drop `:check` to fix locally) | oxlint correctness/best-practice + oxfmt formatting | **GitHub Actions** (`ci.yml` → `oxc`) |
 | Unit tests | `bun test` (ignores `e2e/**`) | Pure logic + the guards below | **GitHub Actions** (`ci.yml` → `unit`, Postgres 16 service) |
 | E2E | `bunx playwright test` | Real browser flows against a real DB | **GitHub Actions** (`playwright.yml`): chromium full + firefox/webkit lineage subset, 3 parallel jobs, Postgres 16 service |
 | Wiki lint | `bun run wiki:lint` (repo root) | Doc links/backlinks/frontmatter (see [wiki-lint](../../protocols/wiki-lint.md)) | Local only (close gate) |
 
 ### The CI map
 
-- **`ci.yml` (SESSION_0335)** runs the three fast gates — **Biome (`biome ci`), typecheck, and unit
-  tests** (`bun test` against a Postgres 16 service) — on every PR/push to `main`, skipping
-  docs-only commits. Least-privilege `permissions: contents: read`, concurrency-cancel, per-job timeouts.
+- **`ci.yml` (SESSION_0335; Oxc swap SESSION_0360)** runs the three fast gates — **Oxc (oxlint +
+  oxfmt), typecheck, and unit tests** (`bun test` against a Postgres 16 service) — on every PR/push to
+  `main`, skipping docs-only commits. Least-privilege `permissions: contents: read`, concurrency-cancel, per-job timeouts.
 - **`playwright.yml`** runs e2e (chromium full + firefox/webkit lineage subset, Postgres service). Its
   web server is `bun run dev` (not a build), so typecheck coverage comes from `ci.yml` + Vercel.
-- **Vercel** runs `pnpm --filter @ronin-dojo/web build` on deploy — a second `next build` typecheck.
+- **Vercel** runs `bun run --filter @ronin-dojo/web build` on deploy — a second `next build` typecheck.
 - **No git hooks.** There is no husky/lefthook/pre-commit; the gates run in CI, not at commit time. Run
-  `bun test` + `bun biome ci .` locally before a close so you don't discover a red gate after pushing.
+  `bun test` + `bun run lint:check` + `bun run format:check` locally before a close so you don't discover a red gate after pushing.
 
 > **Resolved (SESSION_0335):** `bun test` (incl. the guards below) and `biome` previously ran on no
 > automated gate — only e2e + Vercel's build typecheck existed, so SESSION_0334's "the guard is
@@ -96,7 +97,8 @@ enforcement.)
 
 ```bash
 bun run typecheck                 # next typegen + tsc --noEmit
-bun biome check .                 # add --write to fix
+bun run lint:check                # oxlint (drop :check to auto-fix)
+bun run format:check              # oxfmt --check (drop :check to write)
 bun test                          # all unit tests (expect DB-dependent failures locally)
 bun test lib/lineage              # scope to a dir/file
 bunx playwright test --project=chromium   # e2e (needs a DB + dev server)

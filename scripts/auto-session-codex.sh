@@ -83,11 +83,11 @@ unless the schema pre-flight explicitly proves they are insufficient.
 
 Then bow out per docs/rituals/closing.md as a FULL close: fill the SESSION file
 (set last_agent: codex-session-NNNN), sweep wiki index/log + component inventory, run
-`bun run wiki:lint` (it MUST report 0 errors), run `bun run typecheck`, and run
-changed-file Biome (`bunx biome check` on the files you touched). DO NOT run the root
-`bun run lint` — it is a known-broken accepted-risk gate (packages/api-client `biome:
-command not found` PATH gap, FS-0017/SESSION_0317) that fails spuriously; per CLAUDE.md
-the real gate is "changed-file Biome + typecheck". Then write the hostile close review
+`bun run wiki:lint` (it MUST report 0 errors), run `bun run typecheck`, and run the
+read-only Oxc gates `(cd apps/web && bun run lint:check && bun run format:check)`. DO NOT
+run the root `bun run lint` or the apps/web `lint`/`format` scripts — those use `--fix`/write
+and MUTATE files (the old FS-0017 `biome` PATH gap is moot post-Oxc migration, SESSION_0360);
+the real gate is "oxlint + oxfmt check + typecheck". Then write the hostile close review
 and run `graphify update` BEFORE the commit (FS-0025 single-push order).
 
 IMPORTANT OVERRIDE: COMMIT your close to the CURRENT branch with a conventional

@@ -4,13 +4,14 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-04
+updated: 2026-06-11
 last_agent: claude-session-0342
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
   - docs/runbooks/vercel-deploy.md
   - docs/runbooks/neon-advisory-lock-recovery.md
+  - docs/runbooks/dev-environment/session-ops-cookbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
@@ -212,8 +213,8 @@ All commands run from `apps/web/` unless noted otherwise.
 | Task | Command | Notes |
 | --- | --- | --- |
 | **Typecheck** | `bun run typecheck` | Runs `next typegen` then `tsc --noEmit`. Can take 2–4 min on full project. |
-| **Lint** | `bun run lint` | Biome check + auto-fix (`biome check --write .`), **scoped to `apps/web`** — this is the gate. ⚠️ Do NOT use the *repo-root* `bun run lint` (`bun run --filter '*' lint`): it fails on `packages/api-client` (`sh: biome: command not found` PATH gap, accepted-risk) and is **not** a gate. Use changed-file Biome + typecheck. |
-| **Format** | `bun run format` | Biome format + auto-fix. |
+| **Lint** | `bun run lint` (write) / `bun run lint:check` (CI) | **oxlint** (Dirstarter-aligned), **scoped to `apps/web`** — this is the gate. `lint` = `oxlint --fix .`, `lint:check` = `oxlint .` (read-only, used by CI). Warnings are advisory (exit 0); errors fail. |
+| **Format** | `bun run format` (write) / `bun run format:check` (CI) | **oxfmt** — `oxfmt .` / `oxfmt --check .`. Config `.oxfmtrc.json` (migrated from the old `biome.json`, same style). |
 | **Test (all)** | `bun run test` | = `bun test --parallel=1 --path-ignore-patterns='e2e/**'`. **Deterministic gate** (~67s). Do NOT drop `--parallel` (mock-leak ~63 fails) or raise the worker count (Postgres over-subscription → flake). See `sop-test-writing.md` §2 + `test-fail-fix-ledger.md`. |
 | **Test (file)** | `bun test ./path/to/file` | Single file or directory (isolation not needed). |
 | **Test (e2e)** | `bun run test:e2e` | Playwright — requires dev server running. |

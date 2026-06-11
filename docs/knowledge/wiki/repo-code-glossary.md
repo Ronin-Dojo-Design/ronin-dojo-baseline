@@ -4,7 +4,7 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-08
+updated: 2026-06-11
 last_agent: claude-session-0357
 pairs_with:
   - docs/rituals/closing.md
@@ -68,7 +68,7 @@ commit) so the term is concrete, not abstract.
 ## Code-quality tools
 
 - **typecheck** — runs the TypeScript checker to catch type mistakes *before* the code runs.
-- **lint / biome** — checks code style and formatting for consistency. **biome** is the specific tool.
+- **lint / format** — checks code correctness/style and formatting for consistency. The specific tools are the **Oxc** toolchain: **oxlint** (correctness/best-practices) + **oxfmt** (formatting). These replaced **Biome** in SESSION_0360.
 - **wiki-lint** — the same idea, but for the documentation (`docs/`).
 - **fallow** — a tool that finds **dead code** (code nothing uses anymore). Trialed this session via
   `npx fallow audit`; it caught two unused pieces that were then deleted.

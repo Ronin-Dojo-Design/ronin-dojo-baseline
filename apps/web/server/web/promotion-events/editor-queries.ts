@@ -283,9 +283,9 @@ export async function getPromotionEventEditorData({
 
   const canCreate = Boolean(
     scope.isGlobalAdmin ||
-      scope.organizationIds.size > 0 ||
-      scope.canAuthorHostlessEvents ||
-      rankAwards.length > 0,
+    scope.organizationIds.size > 0 ||
+    scope.canAuthorHostlessEvents ||
+    rankAwards.length > 0,
   )
 
   return {

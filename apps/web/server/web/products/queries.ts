@@ -1,5 +1,6 @@
 "use server"
 
+import type Stripe from "stripe"
 import { cacheLife, cacheTag } from "next/cache"
 import { stripe } from "~/services/stripe"
 
@@ -43,7 +44,7 @@ export const findStripePricesByProduct = async (productId: string) => {
   }
 }
 
-export const findStripeCoupon = async (code?: string) => {
+export const findStripeCoupon = async (code?: string): Promise<Stripe.Coupon | undefined> => {
   "use cache"
 
   cacheTag(`stripe-coupon-${code}`)
@@ -56,10 +57,13 @@ export const findStripeCoupon = async (code?: string) => {
       code,
       limit: 1,
       active: true,
-      expand: ["data.coupon.applies_to"],
+      expand: ["data.promotion.coupon.applies_to"],
     })
 
-    return promoCodes.data[0]?.coupon
+    // Stripe 22 (dahlia): coupon moved under `promotion`. It's expanded above, so
+    // narrow out the unexpanded id-string / null forms to keep the Coupon | undefined contract.
+    const coupon = promoCodes.data[0]?.promotion.coupon
+    return coupon && typeof coupon !== "string" ? coupon : undefined
   } catch (error) {
     console.error(`Failed to fetch coupon ${code}:`, error)
     // For coupons, we return undefined instead of throwing to allow graceful degradation

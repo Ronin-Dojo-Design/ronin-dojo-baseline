@@ -94,7 +94,9 @@ async function main() {
   })
 
   if (existingOrg) {
-    console.log(`   ⏭️  Skipped (exists): Organization "${existingOrg.name}" (id=${existingOrg.id})`)
+    console.log(
+      `   ⏭️  Skipped (exists): Organization "${existingOrg.name}" (id=${existingOrg.id})`,
+    )
   } else {
     const org = await db.organization.create({
       data: {

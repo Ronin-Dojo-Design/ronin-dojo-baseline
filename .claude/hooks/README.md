@@ -10,7 +10,7 @@ Origin: SESSION_0210 (2026-05-20). After three repeats of FS-0024 (Bash cwd drif
 |---|---|---|---|---|
 | Claude Code | `PreToolUse` | `Bash` | `ronin-cwd-guard.sh` | Block Bash calls referencing `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` or workspace paths unless prefixed with `cd /Users/brianscott/dev/ronin-dojo-app`. Honors `RONIN_GUARD_BYPASS=1` as escape hatch. Pairs with [FS-0024](../../docs/protocols/failed-steps-log.md). |
 | Claude Code | `PreToolUse` | `Write\|Edit\|NotebookEdit` | `dirstarter-readonly-guard.sh` | Block any write whose `file_path` is under `/Users/brianscott/Local Sites/DirStarter /dirstarter_template/`. Catches the OTHER half of FS-0024 — accidental writes into the purchased read-only template. |
-| Claude Code | `PostToolUse` | `Bash` | `biome-unsafe-nudge.sh` | After any `biome … --unsafe` invocation, emit a `systemMessage` reminding to follow up with `tsc --noEmit`. Pairs with [FS-0023 / biome JSX blindspot](../../docs/protocols/failed-steps-log.md). |
+| Claude Code | `PostToolUse` | `Bash` | `oxlint-fix-nudge.sh` | After any `oxlint … --fix` batch, emit a `systemMessage` reminding to follow up with `tsc --noEmit`. Pairs with [FS-0023 / auto-fixer JSX blindspot](../../docs/protocols/failed-steps-log.md). |
 | Claude Code | `PostToolUse` | `Write\|Edit` | `env-shape-check.sh` | When a `.env*` file is written/edited, shape-check each `KEY=VALUE` (Stripe `sk_…` prefix + length, `whsec_…`, Resend `re_…`, AWS `AKIA…`, `DATABASE_URL` URI shape, placeholder red flags). Emits `systemMessage` with anomalies; never blocks. |
 | Claude Code | `Stop` | _(any)_ | `bowout-vercel-check.sh` | If `main` got a commit in the last 30 min, probe `vercel ls` and emit a `systemMessage` if latest Production deploy isn't Ready. Pairs with bow-out Vercel-Ready discipline. |
 | Cross-LLM | shell init | _(any)_ | `../shell-guards/ronin-cwd-guard.sh` | Defines `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` as shell functions that refuse to run when `$PWD` is inside the dirstarter template. Works for Claude Code, GitHub Copilot CLI, OpenAI Codex CLI, Cursor agents — anything that uses the user's shell. |
@@ -68,7 +68,7 @@ Merge under the top-level object (preserve any existing `permissions`/`model`/et
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "/Users/brianscott/.claude/hooks/biome-unsafe-nudge.sh", "timeout": 5 }
+          { "type": "command", "command": "/Users/brianscott/.claude/hooks/oxlint-fix-nudge.sh", "timeout": 5 }
         ]
       },
       {

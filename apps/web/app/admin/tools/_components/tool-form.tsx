@@ -564,7 +564,7 @@ export function ToolForm({
                         direction="column"
                         size="sm"
                         className="flex-1"
-                        // biome-ignore lint/a11y/noLabelWithoutControl: label has htmlFor targeting radio input
+                        // oxlint-disable-next-line jsx-a11y/label-has-associated-control -- label has htmlFor targeting radio input
                         render={<label htmlFor={`tier-${option.tier}`} />}
                       >
                         <span className="font-medium">{tiersConfig[option.tier].label}</span>

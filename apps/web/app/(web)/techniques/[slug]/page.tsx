@@ -57,7 +57,7 @@ export default async function TechniqueDetailPage({ params }: PageProps) {
             {technique.mediaAttachments.map(({ id, media }) => (
               <div key={id} className="overflow-hidden rounded-lg">
                 {media.mimeType?.startsWith("video/") ? (
-                  // biome-ignore lint/a11y/useMediaCaption: user-uploaded technique video; no caption track available
+                  // oxlint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded technique video; no caption track available
                   <video
                     src={media.url}
                     controls
