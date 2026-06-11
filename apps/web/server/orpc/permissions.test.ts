@@ -60,10 +60,30 @@ describe("can — guest (unauthenticated)", () => {
     expect(can(weird, "claim.review")).toBe(false)
   })
 
-  it("falls back to guest for Ronin roles not yet mapped (tournament_director, 1b)", () => {
-    const director = asUser("tournament_director")
+  it("still denies an unmapped role string (deny-by-default)", () => {
+    const unmapped = asUser("some-future-role")
+    expect(can(unmapped, "health.read")).toBe(true)
+    expect(can(unmapped, "tournaments.manage")).toBe(false)
+    expect(can(unmapped, "claim.review")).toBe(false)
+  })
+})
+
+describe("can — tournament_director role (Ronin, Phase 1b)", () => {
+  const director = asUser("tournament_director")
+
+  it("inherits the public grants", () => {
     expect(can(director, "health.read")).toBe(true)
-    expect(can(director, "tournaments.manage")).toBe(false)
+  })
+
+  it("is granted tournament authority", () => {
+    expect(can(director, "tournaments.manage")).toBe(true)
+    expect(can(director, "tournaments.read")).toBe(true)
+  })
+
+  it("does not gain unrelated admin authority", () => {
+    expect(can(director, "users.delete")).toBe(false)
+    expect(can(director, "claim.review")).toBe(false)
+    expect(can(director, "lineage.edit")).toBe(false)
   })
 })
 
