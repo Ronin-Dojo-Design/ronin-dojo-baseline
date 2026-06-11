@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-11
+last_agent: claude-session-0361
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -101,13 +101,47 @@ refreshed into `dirstarter_template` at SESSION_0359.
   not because it's dangerous. Reconcile the two claim systems (`ProfileClaimRequest` vs `LineageClaimRequest`) in Phase 4.
 - **Reuse:** upstream `oneTimeToken()` + `claimsConfig` (OTP) is available for the claim flow.
 
-## D7 — Standing engineering calls
+## D7 — Standing engineering calls *(amended SESSION_0361 — see D8)*
 
-- **Migration:** clean big-bang + reseed (no real users but Brian + 17 seed rows); phased dual-write documented for post-launch only.
-- **IDs:** `cuid()` → `cuid2()` rides the upstream schema wave (Phase 5), not an orphan task.
+- **Migration:** clean big-bang + reseed (no real users expected before the post-Phase-3 flip
+  checkpoint — D8). **If the D8 early-flip trigger fires**, Phase 3 must instead mechanically carry
+  early real users (preserve `User`/`Passport` rows, repoint satellites by lookup). Phased dual-write
+  remains documented for post-launch scale only.
+- **IDs:** `cuid()` → `cuid2()` moves **into the Phase 3 schema wave** (one big-bang window before the
+  flip, D8), no longer parked in Phase 5 — doing it post-flip would mean an ID migration against live
+  signups.
 - **Lineage placement:** Move Node = **structured re-parent** (WP parity), not free x/y; free x/y / visual groups /
   relationship-type picker out of scope unless re-opened.
 - **Primitives:** brand-neutral (ADR 0022 retained); belt color = `Rank.colorHex` data; BBL is the only proven surface.
+
+## D8 — Cutover armed early; DNS flip checkpoint = immediately after Phase 3  *(SESSION_0361)*
+
+- **Finding:** the live WP `blackbeltlegacy.com` is a dead landing page — broken email capture, zero
+  functional features. The launch-parity bar is **zero**: Phase 6 WP-parity owner writes do **not**
+  gate launch (no WP capability exists to match). Meanwhile the new platform already exceeds the WP
+  site (directory, lineage tree + drawer, evidence-backed claim + RBAC review, join/checkout — all
+  CI-e2e-covered), and the same Vercel deployment has been live-prod for `baselinemartialarts.com`
+  for months, so a BBL domain flip adds no new risk class.
+- **Decision — decouple ARMING from FLIPPING:**
+  - **Arm early:** the cutover-lane work (public slide-in nav L+R, landing + email-capture polish,
+    L8 content/SEO essentials = OG + sitemap, Resend DKIM, the small 301 map, BBL prod-render verify)
+    rides earlier sessions — interleaved after Phase 1c or at a natural seam — so the flip itself is
+    a ~30-minute operator action whenever taken.
+  - **Flip checkpoint (default):** immediately after **Phase 3** lands — the site goes public on its
+    final person-rooted identity model, pure clean reseed intact, claims at full strength.
+  - **Early-flip trigger:** operator checks WP/Bluehost/Search-Console analytics once; if
+    `blackbeltlegacy.com` has real organic traffic today, flip early on the current verified feature
+    set, accepting the D7 early-user-carry migration in Phase 3.
+  - Claims are **open** at flip — safe because every claim is RBAC-reviewed (D6).
+- **Launch-gating subset (operator-ratified, SESSION_0361 grill):** Phases 1–5 (cuid2 moved into the
+  Phase 3 wave; `/api/v1` may trail the flip) + the nav/landing cutover lane + stripe@22 runtime
+  rehearsal + `CUTOVER_CHECKLIST` Layer 1. Phase 6 and drawer parity are post-launch.
+- **Sequencing:** SESSION_0362 = Phase 1a oRPC scaffold (as queued by SESSION_0360). The launch focus
+  rule stands: deferral is to this **named checkpoint**, not "later."
+- **Consequences:** D7 migration + cuid2 bullets amended above; BBL-SOT-Spec §2.2 ordering callout;
+  `GAP_MATRIX` BBL-PROFILE-002 staleness corrected (the authenticated claim e2e exists, runs in CI).
+- **Supersedes:** the strict Phase 0→7 cutover-last ordering in BBL-SOT-Spec §2.2 (SESSION_0359), and
+  this decision's own same-session "flip ASAP" draft.
 
 ---
 

@@ -5,7 +5,7 @@ type: spec
 status: active
 created: 2026-06-10
 updated: 2026-06-11
-last_agent: claude-session-0359
+last_agent: claude-session-0361
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -96,10 +96,24 @@ Phase 1  oRPC + permissions + Better-Auth plugins (the substrate)
 Phase 2  Unified /app/* dashboard restructure
 Phase 3  Identity re-root (Passport-rooted) + reseed
 Phase 4  BBL claim flow, RBAC-gated via can(user, permission)
-Phase 5  Remaining upstream lanes: vendor SDK (Stripe/Resend), content/SEO, public API, CUID2, toolchain, SHA bump
+Phase 5  Remaining upstream lanes: vendor SDK (Stripe/Resend), content/SEO, public API, toolchain, SHA bump
+         (CUID2 moved into the Phase 3 schema wave — SOT-ADR D8)
 Phase 6  WP-parity owner writes (Promote Rank / Move Node = structured re-parent) + drawer parity
 Phase 7  CUTOVER (per CUTOVER_CHECKLIST): DNS/Resend/redirects/prod smoke
 ```
+
+> **⚠ AMENDED SESSION_0361 (SOT-ADR D8): cutover is ARMED early, FLIPPED at a named checkpoint.**
+> The live WP site is a dead landing page (zero parity bar), so Phase 6 is **not** launch-gating and
+> the launch gate = Phases 1–5 + the nav/landing lane + stripe rehearsal. The cutover-lane work
+> (slide-in nav L+R, landing/email-capture polish, L8 essentials = OG + sitemap, DKIM, 301 map, prod
+> render verify) interleaves after Phase 1c or at a natural seam; the **DNS flip defaults to
+> immediately after Phase 3** (final identity model, pure reseed intact), with an early-flip trigger
+> if WP analytics show real organic traffic. cuid2 rides the Phase 3 schema wave, not Phase 5.
+> **SESSION_0362 = Phase 1a oRPC scaffold** (as queued by SESSION_0360). Legacy UX reference for the
+> slide-in navs + landing: **`blackbeltlegacy.local`** (Local WP site mounting the legacy React SPA —
+> NOT the monorepo source). Measured spec + landing section inventory: SESSION_0361 "Decisions
+> resolved" §4 + `docs/product/black-belt-legacy/_reference/` screenshots. Key correction: right
+> slide-in = account + primary nav; left slide-in = contextual filter/search panel.
 
 ### 2.3 Data layer — oRPC, full adoption (not the ADR 0024 hybrid)
 
@@ -107,8 +121,8 @@ Operator override of ADR 0024 (proposed hybrid/pilot): adopt upstream's oRPC + p
 
 ### 2.4 Other locked calls
 
-- **Migration strategy:** clean big-bang + reseed (no real users but Brian + 17 seed rows). The phased dual-write playbook is documented for the post-launch world (in `human-code-runbook.md`), not used now.
-- **cuid → cuid2:** part of the upstream schema wave (Phase 5 / upstream L3), not an orphan task.
+- **Migration strategy:** clean big-bang + reseed of seed rows, **carrying early real users mechanically** (post-D8 soft launch; preserve `User`/`Passport`, repoint satellites by lookup). The phased dual-write playbook is documented for the post-launch world (in `human-code-runbook.md`), not used now.
+- **cuid → cuid2:** rides the **Phase 3 schema wave** (SOT-ADR D8; was Phase 5), not an orphan task.
 - **Move Node = structured re-parent** (WP parity), **not** free x/y. Free x/y / visual groups / relationship-type picker are out of scope unless explicitly re-opened.
 - **Brand-neutral primitives** (ADR 0022) stay brand-neutral; BBL is the only surface we *prove*, but no BBL hardcoding in shared code. Belt color = `Rank.colorHex` data.
 

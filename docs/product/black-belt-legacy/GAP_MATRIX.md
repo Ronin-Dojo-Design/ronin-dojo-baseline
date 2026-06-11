@@ -4,8 +4,8 @@ slug: bbl-gap-matrix
 type: report
 status: active
 created: 2026-05-27
-updated: 2026-06-06
-last_agent: codex-session-0349
+updated: 2026-06-11
+last_agent: claude-session-0361
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -43,7 +43,7 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | BBL-PROFILE-001 | View martial artist profile | 🔶 Partial | SESSION_0348 made `/directory` the canonical public browse/profile slug. `/directory/[slug]` now owner-tier gates public profile detail: free listing owners publish avatar/initials + name + rank summary preview only; premium/elite/legend owners publish full profile fields; `/members` and `/members/[slug]` redirect to `/directory`. SESSION_0349 added trust badges across directory cards/detail and lineage cards/drawer. SESSION_0350 made `/directory` a faceted browse across people / schools-orgs / lineage trees (segmented control + shared `FacetResultCard`), keeping tier gating + trust badges. **Missing:** cross-facet filter dropdowns + people pagination (next increment). |
-| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. SESSION_0278 added `/lineage/join` intake that can create a `LineageClaimRequest` for a signed-in user selecting a claimable lineage node while also creating a lead and draft listing. **Missing:** End-to-end flow validation with authenticated browser session; evidence attachment UI unclear. |
+| BBL-PROFILE-002 | Claim profile | 🔶 Partial | `/lineage/[treeSlug]/claim` route + `claim-form.tsx` exist. Server: `claim-actions.ts`, `claim-schemas.ts`. SESSION_0273 added tree-level and member-level claimability policy toggles and claim-page guards. SESSION_0278 added `/lineage/join` intake that can create a `LineageClaimRequest` for a signed-in user selecting a claimable lineage node while also creating a lead and draft listing. SESSION_0361 re-verify: `e2e/lineage/authenticated-lifecycle.spec.ts` covers authenticated claim submit **with evidence** (label/URL/text) → admin approve → ownership transfer + NODE_EDITOR grant → claimant edit → public propagation, in CI (chromium full; firefox/webkit lineage subset). **Remaining:** admin add-person → claim seam (e2e fixture seeds placeholder via direct DB, not `createPerson`) — proven by BBL-SOT-Spec Phase 4 done-means; manual bbl.local walk at cutover. |
 | BBL-PROFILE-003 | Admin approve/deny claims | ✅ Built | `/admin/lineage/claims/[id]` route exists. Server: `claim-review-actions.ts` with safe-action tests. Admin can approve/deny with audit note. |
 | BBL-PROFILE-004 | Trust badges (verified/unverified/disputed) | ✅ Built | SESSION_0349 added a shared trust-status resolver/component across directory cards, `/directory/[slug]`, lineage node cards, and the lineage profile drawer. It uses existing fields: `LineageNode.verificationStatus` (`PENDING` / `VERIFIED` / `DISPUTED`), legacy `isVerified`, `User.isPlaceholder` for imported records, and `LineageClaimRequest.status` for claimed/pending labels. No schema migration was needed. |
 | BBL-PROFILE-005 | Owner edits public bio/photo/links | 🔶 Partial | `node-profile-actions.ts` + `node-profile-schemas.ts` exist with tests. **Missing:** Public-facing edit UI for profile owners (separate from lineage editor). |
