@@ -4,8 +4,8 @@ slug: bbl-cutover-checklist
 type: report
 status: active
 created: 2026-06-04
-updated: 2026-06-04
-last_agent: claude-session-0345
+updated: 2026-06-11
+last_agent: claude-session-0363
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -48,7 +48,7 @@ The cross-layer sequencer for a safe `blackbeltlegacy.com` cutover. Spans the th
 | 4 | Attach `blackbeltlegacy.com` to bbl Vercel project. | pending |
 | 5 | Apply DNS at Bluehost: apex A → Vercel; `www` CNAME → `cname.vercel-dns.com` (copy Baseline's shape). | pending |
 | 6 | Verify DNS + SSL + 200. **Rollback** = revert apex A to `151.101.66.159`. | pending |
-| 7 | Resend: add `blackbeltlegacy.com` + its own DKIM (BBL-only — Baseline cannot proxy). | pending |
+| 7 | Resend: add `blackbeltlegacy.com` + its own DKIM (BBL-only — Baseline cannot proxy). | ✅ **RESOLVED (2026-06-11, pre-flip per SOT-ADR D8 arm lane)** — DKIM (`resend._domainkey`), SPF + return-path MX (`send`, prio 10), DMARC all added at **Bluehost** (DNS authority; Flywheel untouched) and **Verified** in Resend. End-to-end proof: API test send from `test@blackbeltlegacy.com` delivered to operator inboxes (Gmail + `admin@`). Sending enabled; **Receiving deliberately OFF** (inbound `admin@blackbeltlegacy.com` stays on the existing cPanel mailbox — do not enable without re-pointing root MX consciously). |
 | 8 | Smoke prod surfaces + a magic-link email. | pending |
 
 ## Layer 2 — Features (GAP_MATRIX)
