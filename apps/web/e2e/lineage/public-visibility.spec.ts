@@ -14,20 +14,19 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-async function expectFreeTierPathControl(page: Page, displayName: string) {
-  const pathButton = page.getByRole("button", {
-    name: new RegExp(`Highlight lineage path for ${escapeRegExp(displayName)}`),
+// SESSION_0362 update: SESSION_0356 removed the drawer tier-gate (`canOpenProfileDrawer`
+// deleted) — the profile drawer opens for EVERYONE, including anonymous viewers (operator
+// decision D-022: funnel-first full public view with claim CTA). The old free-tier
+// "Highlight lineage path" fallback control no longer exists; anonymous public members now
+// expose "Open lineage profile" and the drawer must open.
+async function expectPublicProfileDrawerOpens(page: Page, displayName: string) {
+  const profileButton = page.getByRole("button", {
+    name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
   })
 
-  await expect(pathButton).toBeVisible({ timeout: 30_000 })
-  await expect(
-    page.getByRole("button", {
-      name: new RegExp(`Open lineage profile for ${escapeRegExp(displayName)}`),
-    }),
-  ).toHaveCount(0)
-
-  await pathButton.click()
-  await expect(page.getByRole("dialog", { name: displayName })).toHaveCount(0)
+  await expect(profileButton.first()).toBeVisible({ timeout: 30_000 })
+  await profileButton.first().click()
+  await expect(page.getByRole("dialog", { name: displayName })).toBeVisible({ timeout: 15_000 })
 }
 
 async function expectNoHiddenText(pageContent: string, hiddenText: string[]) {
@@ -95,7 +94,7 @@ test.describe("Lineage public visibility E2E", () => {
     ])
   })
 
-  test("anonymous detail renders free-tier public members without profile drawer", async ({
+  test("anonymous detail renders public members and opens the profile drawer without hidden leakage", async ({
     page,
   }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
@@ -117,8 +116,10 @@ test.describe("Lineage public visibility E2E", () => {
     }
     await expectNoHiddenText(await page.content(), hiddenText)
 
-    await expectFreeTierPathControl(page, fixture.publicName)
+    await expectPublicProfileDrawerOpens(page, fixture.publicName)
 
+    // Privacy boundary holds WITH the drawer open — hidden members/groups stay
+    // out of the DOM even in the drawer payload.
     for (const hiddenValue of hiddenText) {
       await expect(body).not.toContainText(hiddenValue)
     }

@@ -135,6 +135,7 @@ None — operator ratified scope in SESSION_0361.
 | --- | --- | --- |
 | SESSION_0362_TASK_01 | landed | 12 files ported (brand-aware); typecheck/oxlint/oxfmt green; 12/12 permissions tests pass. |
 | SESSION_0362_TASK_02 | landed | `/api/rpc/ping` ok; `health/brand` → `BBL` (bbl.local) vs `BASELINE_MARTIAL_ARTS` (baseline.local) — brand middleware proven per-request. |
+| SESSION_0362_TASK_03 | landed | **Post-close fix-forward (operator-directed):** Playwright E2E had been red on `main` since ≥2026-06-08 — `public-visibility.spec.ts` still asserted the pre-SESSION_0356 drawer tier-gate ("Highlight lineage path" control, drawer must NOT open), a UI deleted by the 0356 gate removal (D-022). Rewrote the helper/test to the ratified behavior: anonymous viewer opens the profile drawer, privacy boundary asserted WITH the drawer open (stronger leak check). 3/3 pass locally on chromium; unit suite separately verified post-uplift: **525 pass / 0 fail** (first full run since TS6/stripe-22 majors). |
 
 ## What landed
 
