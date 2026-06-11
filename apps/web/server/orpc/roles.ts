@@ -1,3 +1,4 @@
+import type { LineageTreeAccessRole } from "~/.generated/prisma/client"
 import type { SessionUser } from "~/server/orpc/context"
 
 /**
@@ -23,15 +24,16 @@ export type Permission = string
 export type Grant = string
 
 /**
- * Built-in roles.
+ * Built-in flat roles — the upstream global role surface plus the Ronin
+ * `tournament_director` (mirroring `lib/safe-actions.ts`).
  *
- * Phase 1a ships the upstream flat set. Phase 1b maps the Ronin role
- * surface (`tournament_director` from `lib/safe-actions.ts`, PRD RBAC
- * TREE_ADMIN/BRANCH_EDITOR/NODE_EDITOR via D4 resource grants) — until
- * then unknown role strings resolve to `guest`, which is safe because
- * only the health smoke procedures run through oRPC.
+ * These are GLOBAL roles with no per-resource scope. BBL's per-resource
+ * authority (TREE_ADMIN / BRANCH_EDITOR / NODE_EDITOR of a specific tree,
+ * branch, or node) is layered on top via `LINEAGE_RESOURCE_GRANTS` +
+ * `server/orpc/resource-permissions.ts`, per SOT-ADR D4. Unknown role
+ * strings resolve to `guest` (deny-by-default).
  */
-export type Role = "admin" | "user" | "guest"
+export type Role = "admin" | "user" | "guest" | "tournament_director"
 
 // Permissions available to everyone, signed in or not. Phase 1a: only the
 // health smoke. Entity grants land with their routers (1b/1c migration).
@@ -41,6 +43,12 @@ const PUBLIC_GRANTS = ["health.read"] as const
 // flat (no inheritance), so the public grants are spread in explicitly.
 const USER_GRANTS = [...PUBLIC_GRANTS] as const
 
+// Ronin `tournament_director` (from `lib/safe-actions.ts`'s
+// `tournamentAdminActionClient`): a signed-in user plus tournament authority.
+// Kept deliberately small — a single `tournaments.*` wildcard stands in until
+// the tournament entity router migrates and declares its concrete permissions.
+const TOURNAMENT_DIRECTOR_GRANTS = [...USER_GRANTS, "tournaments.*"] as const
+
 export const ROLES: Record<Role, ReadonlyArray<Grant>> = {
   // `*` grants every permission, including admin-only ones.
   admin: ["*"],
@@ -48,6 +56,39 @@ export const ROLES: Record<Role, ReadonlyArray<Grant>> = {
   user: USER_GRANTS,
 
   guest: PUBLIC_GRANTS,
+
+  tournament_director: TOURNAMENT_DIRECTOR_GRANTS,
+}
+
+/**
+ * Per-resource grant matrix for the `LineageTreeAccess` roles (SOT-ADR D4).
+ *
+ * Unlike `ROLES`, these grants only apply WITHIN the scope of the access row
+ * that carries them — a whole tree (`TREE_ADMIN`/`TREE_EDITOR`), a branch
+ * rooted at a member (`BRANCH_EDITOR`), or a single node (`NODE_EDITOR`).
+ * They use the same wildcard matching as flat grants (`matchesPattern`).
+ *
+ * Grounded in how `LineageTreeAccess` is already consumed by
+ * `server/web/lineage/editor-actions.ts` (placement/promotion edits, visual
+ * groups) and gated by SOT-ADR D6 for claim review:
+ *
+ * - `TREE_ADMIN`    — full lineage authority on the tree, including visual
+ *   groups (`lineage.*`) and claim review.
+ * - `TREE_EDITOR`   — edit members/relationships tree-wide, but NOT admin-only
+ *   visual groups; may review claims.
+ * - `BRANCH_EDITOR` — edit members within its branch only; may review claims
+ *   for nodes in that branch. (Cannot edit visual groups.)
+ * - `NODE_EDITOR`   — edit only its own node (no re-parenting — mirrors
+ *   `NODE_EDITOR_CANNOT_REPARENT`); may review claims for that node.
+ *
+ * `claim.review` is expressible at every level (D4/D6); the resolver in
+ * `resource-permissions.ts` enforces the scope match.
+ */
+export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArray<Grant>> = {
+  TREE_ADMIN: ["lineage.*", "claim.review"],
+  TREE_EDITOR: ["lineage.member.*", "lineage.relationship.*", "claim.review"],
+  BRANCH_EDITOR: ["lineage.member.edit", "lineage.relationship.edit", "claim.review"],
+  NODE_EDITOR: ["lineage.node.edit", "claim.review"],
 }
 
 /**
