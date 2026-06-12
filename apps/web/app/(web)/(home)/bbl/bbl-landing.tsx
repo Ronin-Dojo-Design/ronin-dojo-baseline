@@ -75,6 +75,11 @@ const BELT_BADGE_CLASSES: Record<string, string> = {
   coral: "bg-gradient-to-r from-red-600 via-white to-red-600 text-black border-red-600",
 }
 
+const BBL_SECTION_CLASSES =
+  "relative w-full rounded-[2rem] border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-sm md:p-8"
+const BBL_FLOAT_CLASSES =
+  "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none"
+
 const SectionHeading = ({
   eyebrow,
   title,
@@ -121,15 +126,25 @@ const CheckRow = ({ title, children }: { title?: string; children: ReactNode }) 
 )
 
 const BblHero = () => (
-  <section className="grid gap-10 lg:grid-cols-2 lg:items-center w-full">
-    <div className="space-y-6">
-      <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
+  <section className="relative grid w-full overflow-hidden rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-background via-card to-primary/10 px-5 py-10 shadow-sm md:px-10 md:py-14 lg:grid-cols-2 lg:items-center lg:gap-12">
+    <div
+      className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl"
+      aria-hidden="true"
+    />
+    <div
+      className="absolute -bottom-28 -left-24 size-72 rounded-full bg-red-950/20 blur-3xl"
+      aria-hidden="true"
+    />
+    <div className="relative z-10 space-y-7">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
         {heroContent.eyebrow}
       </p>
-      <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-pretty">
+      <h1 className="max-w-2xl text-5xl font-semibold tracking-tight text-pretty sm:text-6xl lg:text-7xl">
         {heroContent.titleLead} <span className="text-primary">{heroContent.titleAccent}</span>
       </h1>
-      <Prose className="text-lg text-muted-foreground max-w-xl">{heroContent.description}</Prose>
+      <Prose className="max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
+        {heroContent.description}
+      </Prose>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.register} />}>
           Register Now
@@ -140,7 +155,13 @@ const BblHero = () => (
       </div>
     </div>
 
-    <Card hover={false} className="p-0! overflow-hidden max-w-sm w-full mx-auto lg:ml-auto">
+    <Card
+      hover={false}
+      className={cx(
+        "relative z-10 p-0! overflow-hidden max-w-sm w-full mx-auto border-primary/20 lg:ml-auto",
+        BBL_FLOAT_CLASSES,
+      )}
+    >
       <div className="relative aspect-[4/3] bg-muted">
         <img
           src={heroContent.card.image}
@@ -154,7 +175,7 @@ const BblHero = () => (
           {heroContent.card.badge}
         </Badge>
       </div>
-      <div className="p-5 space-y-3">
+      <div className="space-y-3 p-5 bg-gradient-to-br from-card to-primary/5">
         <div className="flex items-start gap-3">
           <img
             src={heroContent.card.logo}
@@ -260,7 +281,7 @@ const BblDirtyDozen = () => (
 )
 
 const BblHeritage = () => (
-  <section className="grid gap-8 md:grid-cols-2 md:items-center w-full">
+  <section className={cx(BBL_SECTION_CLASSES, "grid gap-8 md:grid-cols-2 md:items-center")}>
     <Card hover={false} className="p-0! overflow-hidden relative">
       <img
         src={BBL_IMAGES.bobAndRigan}
