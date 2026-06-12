@@ -7,6 +7,7 @@ import { TooltipProvider } from "~/components/common/tooltip"
 import { metadataConfig } from "~/config/metadata"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { BrandProvider } from "~/contexts/brand-context"
+import { QueryProvider } from "~/contexts/query-context"
 import { SearchProvider } from "~/contexts/search-context"
 import { getRequestBrand } from "~/lib/brand-context"
 import { fontSans } from "~/lib/fonts"
@@ -77,19 +78,21 @@ export default async function ({ children }: LayoutProps<"/">) {
       <head>{brandStyle}</head>
       <body className="min-h-dvh flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
-          <NuqsAdapter>
-            <TooltipProvider delay={250}>
-              <SearchProvider>
-                <BrandProvider brand={brand}>
-                  <ThemeProvider attribute="class" disableTransitionOnChange>
-                    {children}
-                    <Toaster />
-                    <Search />
-                  </ThemeProvider>
-                </BrandProvider>
-              </SearchProvider>
-            </TooltipProvider>
-          </NuqsAdapter>
+          <QueryProvider>
+            <NuqsAdapter>
+              <TooltipProvider delay={250}>
+                <SearchProvider>
+                  <BrandProvider brand={brand}>
+                    <ThemeProvider attribute="class" disableTransitionOnChange>
+                      {children}
+                      <Toaster />
+                      <Search />
+                    </ThemeProvider>
+                  </BrandProvider>
+                </SearchProvider>
+              </TooltipProvider>
+            </NuqsAdapter>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

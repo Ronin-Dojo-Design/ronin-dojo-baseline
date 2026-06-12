@@ -43,8 +43,11 @@ describe("can — admin role", () => {
 })
 
 describe("can — guest (unauthenticated)", () => {
-  it("allows the public actions a guest is granted (Phase 1a: health smoke only)", () => {
+  it("allows the public actions a guest is granted (health smoke + public lineage read)", () => {
     expect(can(guest, "health.read")).toBe(true)
+    // Phase 1c (SESSION_0364): the public `/lineage/[treeSlug]` read migrated
+    // to oRPC; its `lineage.read` permission is a public grant.
+    expect(can(guest, "lineage.read")).toBe(true)
   })
 
   it("denies everything not granted (deny-by-default)", () => {

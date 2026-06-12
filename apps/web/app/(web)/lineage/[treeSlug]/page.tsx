@@ -12,6 +12,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { rsc } from "~/lib/orpc-server"
 import { getPageMetadata } from "~/lib/pages"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import {
@@ -25,7 +26,6 @@ import { getLineageListingRenderPolicyForUser } from "~/server/web/entitlements/
 import {
   findPublishedLineageTreeSummaryBySlug,
   getLineageProfilesByIds,
-  getLineageTreeBySlug,
 } from "~/server/web/lineage/queries"
 
 /**
@@ -75,8 +75,15 @@ export default async function LineageTreePage({ params }: Props) {
   const { treeSlug } = await params
   const brand = await getRequestBrand()
   const session = await getServerSession()
+  // Phase 1c (SESSION_0364): the primary tree read now travels through oRPC
+  // (`lineage.bySlug`) instead of a direct query import. The handler calls the
+  // same `getLineageTreeBySlug` with `context.brand`, so the brand scope and
+  // public-payload shape are byte-identical — only the transport changed. The
+  // sibling render-policy query stays a direct call (Phase 1c migrates the
+  // primary read only).
+  const api = await rsc()
   const [result, renderPolicy] = await Promise.all([
-    getLineageTreeBySlug({ brand, slug: treeSlug }),
+    api.lineage.bySlug({ slug: treeSlug }),
     getLineageListingRenderPolicyForUser({ brand, userId: session?.user?.id ?? null }),
   ])
 

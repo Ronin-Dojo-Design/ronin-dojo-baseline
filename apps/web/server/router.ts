@@ -1,3 +1,4 @@
+import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
 
 const ping = publicProcedure.handler(() => {
@@ -14,16 +15,18 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
 })
 
 /**
- * Root oRPC router served at `/api/rpc`. Phase 1a carries only the health
- * smoke; entity routers join here as surfaces migrate off next-safe-action
- * (Phase 1c onward), mirroring upstream's flat `server/<entity>/router.ts`
- * aggregation.
+ * Root oRPC router served at `/api/rpc`. Phase 1a carried only the health
+ * smoke; entity routers join here as surfaces migrate off next-safe-action,
+ * mirroring upstream's flat `server/<entity>/router.ts` aggregation. Phase 1c
+ * (SESSION_0364) adds the first migrated read surface: `lineage` (the public
+ * tree-by-slug read).
  */
 export const appRouter = {
   ping,
   health: {
     brand,
   },
+  lineage,
 }
 
 export type AppRouter = typeof appRouter
