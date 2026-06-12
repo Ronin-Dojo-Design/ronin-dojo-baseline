@@ -70,7 +70,7 @@ export function PersonForm({ className, title, optionsPromise, ...props }: Perso
     actionProps: {
       onSuccess: () => {
         toast.success("Person added")
-        router.push("/admin/users")
+        router.push("/app/users")
       },
 
       onError: ({ error }) => {
@@ -337,7 +337,7 @@ export function PersonForm({ className, title, optionsPromise, ...props }: Perso
         </div>
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" render={<Link href="/admin/users" />}>
+          <Button size="md" variant="secondary" render={<Link href="/app/users" />}>
             Cancel
           </Button>
 

@@ -66,7 +66,7 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
               variant="primary"
               size="md"
               prefix={<UserPlusIcon />}
-              render={<Link href="/admin/users/new" />}
+              render={<Link href="/app/users/new" />}
             >
               <div className="max-sm:sr-only">Add person</div>
             </Button>

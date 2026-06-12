@@ -94,6 +94,53 @@ export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArra
 }
 
 /**
+ * Per-area permission strings for the unified `/app` workspace (SOT-ADR D5,
+ * SESSION_0365 grill option b): every dashboard area's layout is gated by
+ * `requirePermission(APP_AREA_PERMISSIONS.<area>)`, and the sidebar shows an
+ * item iff `can(user, permission)` (lineage additionally admits active
+ * `LineageTreeAccess` grantees — see `lib/auth-guard.ts requireLineageAccess`).
+ *
+ * Registered once here and REUSED by each entity's oRPC router as it migrates
+ * (Phases 4–5) — the layout gate and the procedure gate share one string.
+ * `admin: ["*"]` passes all of them today; `tournament_director` passes
+ * `tournaments.manage` via its `tournaments.*` wildcard. This is the
+ * operator-ratified day-one tightening: non-admin roles reach only their areas.
+ */
+export const APP_AREA_PERMISSIONS = {
+  billing: "billing.manage",
+  categories: "categories.manage",
+  certificates: "certificates.manage",
+  claims: "claims.manage",
+  content: "content.manage",
+  courses: "courses.manage",
+  email: "email.manage",
+  entitlements: "entitlements.manage",
+  invites: "invites.manage",
+  leads: "leads.manage",
+  lineage: "lineage.manage",
+  media: "media.manage",
+  memberships: "memberships.manage",
+  merch: "merch.manage",
+  organizations: "organizations.manage",
+  pricingPlans: "pricing-plans.manage",
+  privacy: "privacy.manage",
+  programs: "programs.manage",
+  repoDocs: "repo-docs.manage",
+  reports: "reports.manage",
+  roles: "roles.manage",
+  schedule: "schedule.manage",
+  skillLevels: "skill-levels.manage",
+  storage: "storage.manage",
+  subscriptionTiers: "subscription-tiers.manage",
+  subscriptions: "subscriptions.manage",
+  tags: "tags.manage",
+  techniques: "techniques.manage",
+  tools: "tools.manage",
+  tournaments: "tournaments.manage",
+  users: "users.manage",
+} as const satisfies Record<string, Permission>
+
+/**
  * Resolve the effective role for a session user. Returns `"guest"` for
  * anonymous callers or users with an unknown role string.
  */

@@ -59,7 +59,7 @@ export const getColumns = (): ColumnDef<User>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
         <DataTableLink
-          href={`/admin/users/${row.original.id}`}
+          href={`/app/users/${row.original.id}`}
           title={row.original.name || row.original.email}
         />
       ),
