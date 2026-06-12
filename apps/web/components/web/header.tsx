@@ -1,6 +1,5 @@
 "use client"
 
-import { useHotkeys } from "@mantine/hooks"
 import {
   BookOpenIcon,
   BuildingIcon,
@@ -16,9 +15,8 @@ import {
   SwordsIcon,
   UsersIcon,
 } from "lucide-react"
-import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { type ComponentProps, useEffect, useState } from "react"
+import { type ComponentProps, useState } from "react"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -28,6 +26,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { NavSheet } from "~/components/web/nav/nav-sheet"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { Container } from "~/components/web/ui/container"
 import { Hamburger } from "~/components/web/ui/hamburger"
@@ -38,16 +37,10 @@ import { useSearch } from "~/contexts/search-context"
 import { cx } from "~/lib/utils"
 
 const Header = ({ className, ...props }: ComponentProps<"div">) => {
-  const pathname = usePathname()
   const search = useSearch()
   const t = useTranslations()
+  // Escape + route-change closing live in NavSheet (Base UI Dialog handles Escape).
   const [isNavOpen, setNavOpen] = useState(false)
-
-  // Close the mobile navigation when the user presses the "Escape" key
-  useHotkeys([["Escape", () => setNavOpen(false)]])
-
-  // Close the mobile navigation when the user navigates to a new page
-  useEffect(() => setNavOpen(false), [pathname])
 
   return (
     <header
@@ -61,7 +54,9 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
             <button
               type="button"
               onClick={() => setNavOpen(!isNavOpen)}
-              className="block -m-1 -ml-1.5 lg:hidden"
+              aria-label={t("navigation.open_menu")}
+              data-state={isNavOpen ? "open" : "close"}
+              className="group/menu block -m-1 -ml-1.5"
             >
               <Hamburger className="size-7" />
             </button>
@@ -152,28 +147,7 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           </Stack>
         </div>
 
-        <nav
-          className={cx(
-            "absolute top-full inset-x-0 h-[calc(100dvh-var(--header-top)-var(--header-height))] -mt-px py-4 px-6 grid grid-cols-2 place-items-start place-content-start gap-x-4 gap-y-6 bg-background/90 backdrop-blur-lg transition-opacity lg:hidden",
-            isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-          )}
-        >
-          <NavLink href="/programs">{t("navigation.programs")}</NavLink>
-          <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
-          <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
-          <NavLink href="/schools">{t("navigation.schools")}</NavLink>
-          <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
-          <NavLink href="/courses">{t("navigation.courses")}</NavLink>
-          <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
-          <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
-          <NavLink href="/lineage/join">Join Legacy</NavLink>
-          <NavLink href="/directory">{t("navigation.directory")}</NavLink>
-          <NavLink href="/members">{t("navigation.members")}</NavLink>
-          <NavLink href="/gear">{t("navigation.gear")}</NavLink>
-          <NavLink href="/merch">{t("navigation.merch")}</NavLink>
-          <NavLink href="/blog">{t("navigation.blog")}</NavLink>
-          <NavLink href="/about">{t("navigation.about")}</NavLink>
-        </nav>
+        <NavSheet open={isNavOpen} onOpenChange={setNavOpen} />
       </Container>
     </header>
   )
