@@ -1,0 +1,15 @@
+filters:
+  and:
+    - file.inFolder("03_Curriculum")
+views:
+  - type: table
+    name: Curriculum
+    groupBy:
+      property: status
+      direction: ASC
+    order:
+      - module
+      - status
+      - file.name
+  - type: table
+    name: View
