@@ -8,16 +8,21 @@ import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { Container } from "~/components/web/ui/container"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { Tile, TileCaption, TileDivider } from "~/components/web/ui/tile"
+import { brandHasFeature } from "~/config/brand-features"
+import { getRequestBrand } from "~/lib/brand-context"
 import { cx } from "~/lib/utils"
 import { findCategories } from "~/server/web/categories/queries"
 
 export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrapper>) => {
   const t = await getTranslations("components.bottom")
 
-  const categories = await findCategories({
-    orderBy: { tools: { _count: "desc" } },
-    take: 12,
-  })
+  // Categories are the listings taxonomy — brands without listings skip the rail.
+  const categories = brandHasFeature(await getRequestBrand(), "listings")
+    ? await findCategories({
+        orderBy: { tools: { _count: "desc" } },
+        take: 12,
+      })
+    : []
 
   return (
     <Container>

@@ -1,5 +1,6 @@
 import { getSessionCookie } from "better-auth/cookies"
 import { type NextRequest, NextResponse } from "next/server"
+import { brandHasFeature, FEATURE_ROUTE_PREFIXES } from "~/config/brand-features"
 import { resolveBrand } from "~/lib/brand-context"
 
 /**
@@ -49,6 +50,17 @@ export default async function (req: NextRequest) {
   const brand = resolveBrand(req.headers.get("host"))
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set("x-brand", brand)
+
+  // Brand feature gate (SESSION_0368): routes for features a brand doesn't ship
+  // render the 404 page. `/_gated` matches no route, so Next serves not-found
+  // with a 404 status; the forwarded headers keep the page brand-themed.
+  for (const [route, feature] of FEATURE_ROUTE_PREFIXES) {
+    if (matchesRoute(pathname, route) && !brandHasFeature(brand, feature)) {
+      return NextResponse.rewrite(new URL("/_gated", req.url), {
+        request: { headers: requestHeaders },
+      })
+    }
+  }
 
   const res = NextResponse.next({
     request: { headers: requestHeaders },

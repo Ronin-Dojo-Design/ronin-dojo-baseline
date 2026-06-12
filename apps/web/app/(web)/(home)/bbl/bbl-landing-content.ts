@@ -388,6 +388,8 @@ export type PromoContent = {
   secondaryCta: { label: string; href: string }
   benefitsHeading: string
   benefits: string[]
+  /** Feature gated off at launch (SESSION_0368) — render a Coming Soon badge, no dead links. */
+  comingSoon?: boolean
 }
 
 export const promos: PromoContent[] = [
@@ -427,9 +429,10 @@ export const promos: PromoContent[] = [
     description:
       "Premium members unlock the full technique library — belt-level filters, saved favorites, and curated lesson paths built by verified instructors.",
     image: BBL_IMAGES.heroClinch,
-    primaryCta: { label: "Browse Technique Library", href: BBL_ROUTES.techniques },
-    secondaryCta: { label: "Register Now", href: BBL_ROUTES.register },
+    primaryCta: { label: "Register Now", href: BBL_ROUTES.register },
+    secondaryCta: { label: "More Info", href: BBL_ROUTES.moreInfo },
     benefitsHeading: "Premium Benefits",
+    comingSoon: true,
     benefits: [
       "Full access to belt-specific technique collections and drills.",
       "Save favorites, track progress, and build your own study list.",

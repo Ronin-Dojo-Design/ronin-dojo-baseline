@@ -14,8 +14,10 @@ import { CTAForm } from "~/components/web/cta-form"
 import { ExternalLink } from "~/components/web/external-link"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { NavLink, navLinkVariants } from "~/components/web/ui/nav-link"
+import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
 import { linksConfig } from "~/config/links"
 import { siteConfig } from "~/config/site"
+import { useBrand } from "~/contexts/brand-context"
 import { cx } from "~/lib/utils"
 
 type FooterProps = ComponentProps<"div"> & {
@@ -24,6 +26,10 @@ type FooterProps = ComponentProps<"div"> & {
 
 export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) => {
   const t = useTranslations()
+  const { brand } = useBrand()
+  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
+  // Minimal chrome: no Browse column — primary nav lives in the slide-in.
+  const minimal = brandHasMinimalChrome(brand)
 
   return (
     <footer className="flex flex-col gap-y-8 mt-auto pt-fluid-md border-t border-foreground/10">
@@ -41,7 +47,12 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
             </H5>
 
             <Note className="-mt-2 px-0.5 first:mt-0">
-              {t("components.footer.cta_description", { count: formatNumber(5000, "standard") })}
+              {t(
+                minimal
+                  ? "components.footer.cta_description_minimal"
+                  : "components.footer.cta_description",
+                { count: formatNumber(5000, "standard") },
+              )}
             </Note>
 
             <CTAForm />
@@ -91,31 +102,45 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
           </Stack>
         </Stack>
 
-        <Stack direction="column" className="text-sm md:col-span-3 md:col-start-8">
-          <H6 render={props => <strong {...props}>{props.children}</strong>}>
-            {t("navigation.browse")}:
-          </H6>
+        {!minimal && (
+          <Stack direction="column" className="text-sm md:col-span-3 md:col-start-8">
+            <H6 render={props => <strong {...props}>{props.children}</strong>}>
+              {t("navigation.browse")}:
+            </H6>
 
-          <NavLink href="/programs">{t("navigation.programs")}</NavLink>
-          <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
-          <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
-          <NavLink href="/schools">{t("navigation.schools")}</NavLink>
-          <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
-          <NavLink href="/courses">{t("navigation.courses")}</NavLink>
-          <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
-          <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>
-          <NavLink href="/directory">{t("navigation.directory")}</NavLink>
-          <NavLink href="/members">{t("navigation.members")}</NavLink>
-          <NavLink href="/gear">{t("navigation.gear")}</NavLink>
-          <NavLink href="/merch">{t("navigation.merch")}</NavLink>
-        </Stack>
+            {has("programs") && <NavLink href="/programs">{t("navigation.programs")}</NavLink>}
+            {has("tournaments") && (
+              <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+            )}
+            {has("disciplines") && (
+              <NavLink href="/disciplines">{t("navigation.disciplines")}</NavLink>
+            )}
+            {has("schools") && <NavLink href="/schools">{t("navigation.schools")}</NavLink>}
+            {has("organizations") && (
+              <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
+            )}
+            {has("courses") && <NavLink href="/courses">{t("navigation.courses")}</NavLink>}
+            {has("techniques") && (
+              <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
+            )}
+            {has("lineage") && <NavLink href="/lineage">{t("navigation.lineage")}</NavLink>}
+            {has("directory") && <NavLink href="/directory">{t("navigation.directory")}</NavLink>}
+            {has("members") && <NavLink href="/members">{t("navigation.members")}</NavLink>}
+            {has("gear") && <NavLink href="/gear">{t("navigation.gear")}</NavLink>}
+            {has("merch") && <NavLink href="/merch">{t("navigation.merch")}</NavLink>}
+          </Stack>
+        )}
 
-        <Stack direction="column" className="text-sm md:col-span-3">
+        <Stack
+          direction="column"
+          className={cx("text-sm md:col-span-3", minimal && "md:col-start-8")}
+        >
           <H6 render={props => <strong {...props}>{props.children}</strong>}>
             {t("navigation.quick_links")}:
           </H6>
 
-          <NavLink href="/blog">{t("navigation.blog")}</NavLink>
+          {has("posts") && <NavLink href="/posts">{t("navigation.posts")}</NavLink>}
+          {has("blog") && <NavLink href="/blog">{t("navigation.blog")}</NavLink>}
           <NavLink href="/about">{t("navigation.about")}</NavLink>
           <NavLink href="/privacy">{t("navigation.privacy")}</NavLink>
           <NavLink href="/terms">{t("navigation.terms")}</NavLink>
