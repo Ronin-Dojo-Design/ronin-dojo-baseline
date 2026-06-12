@@ -611,7 +611,6 @@ type MarqueeRow = {
   key: string
   label: string
   href: string
-  direction?: "left" | "right"
   members: Array<{ name: string; rank: string; image?: string; date?: string }>
 }
 
@@ -627,7 +626,12 @@ const formatRankName = (rank: string) => {
 }
 
 const formatDate = (date: Date) =>
-  date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+  date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  })
 
 type MarqueeMemberView = { name: string; rank: string; image?: string; date?: string }
 
@@ -678,48 +682,51 @@ const getPromotionMarqueeRows = async (): Promise<MarqueeRow[]> => {
     }),
   ])
 
-  const rows: MarqueeRow[] = events
-    .filter(event => event.rankAwards.length > 0)
-    .map(event => ({
-      key: event.id,
-      label: [event.title, formatDate(event.eventDate), event.location].filter(Boolean).join(" · "),
-      href: event.slug ? `/events/${event.slug}` : BBL_ROUTES.lineage,
-      members: event.rankAwards.flatMap(toMember),
-    }))
+  const rows: MarqueeRow[] = []
+  const [latestEvent, ...olderEvents] = events.filter(event => event.rankAwards.length > 0)
 
-  if (individualAwards.length > 0) {
+  if (latestEvent) {
     rows.push({
-      key: "individual-promotions",
-      label: "Individual Ceremonies · Recently Promoted",
-      href: BBL_ROUTES.lineage,
-      members: individualAwards.flatMap(award =>
-        toMember(award).map(member => ({
-          ...member,
-          date: award.awardedAt ? formatDate(award.awardedAt) : undefined,
-        })),
-      ),
+      key: latestEvent.id,
+      label: [latestEvent.title, formatDate(latestEvent.eventDate), latestEvent.location]
+        .filter(Boolean)
+        .join(" · "),
+      href: latestEvent.slug ? `/events/${latestEvent.slug}` : BBL_ROUTES.lineage,
+      members: latestEvent.rankAwards.flatMap(toMember),
     })
   }
 
-  return rows.map((row, index) => ({
-    ...row,
-    direction: index % 2 === 1 ? ("right" as const) : ("left" as const),
-  }))
+  // Older ceremonies + individual promotions share one row; every card carries its date.
+  const olderMembers = [
+    ...olderEvents.flatMap(event =>
+      event.rankAwards.flatMap(award =>
+        toMember(award).map(member => ({ ...member, date: formatDate(event.eventDate) })),
+      ),
+    ),
+    ...individualAwards.flatMap(award =>
+      toMember(award).map(member => ({
+        ...member,
+        date: award.awardedAt ? formatDate(award.awardedAt) : undefined,
+      })),
+    ),
+  ]
+
+  if (olderMembers.length > 0) {
+    rows.push({
+      key: "recent-promotions",
+      label: "More Recent Promotions",
+      href: BBL_ROUTES.lineage,
+      members: olderMembers,
+    })
+  }
+
+  return rows
 }
 
 const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
   <section className="w-full space-y-8">
-    {/* Auto-scroll keyframes (legacy BlackBeltLegacyLanding carousel pattern) */}
-    <style>{`
-      @keyframes bbl-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-      @keyframes bbl-marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
-      .bbl-marquee-track { animation: bbl-marquee var(--bbl-marquee-duration, 45s) linear infinite; }
-      .bbl-marquee-track[data-direction="right"] { animation-name: bbl-marquee-reverse; }
-      .bbl-marquee-track:hover { animation-play-state: paused; }
-      @media (prefers-reduced-motion: reduce) { .bbl-marquee-track { animation: none; } }
-    `}</style>
     <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
-    <div className="space-y-6">
+    <div className="space-y-8">
       {rows.map(row => (
         <div key={row.key} className="space-y-3">
           <Link
@@ -728,27 +735,13 @@ const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
           >
             {row.label}
           </Link>
-          <div className="relative overflow-hidden motion-reduce:overflow-x-auto">
-            <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-background to-transparent"
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-background to-transparent"
-              aria-hidden="true"
-            />
-            <div
-              className="bbl-marquee-track flex w-max gap-5"
-              data-direction={row.direction}
-              style={
-                { "--bbl-marquee-duration": `${row.members.length * 7}s` } as React.CSSProperties
-              }
-            >
-              {[...row.members, ...row.members].map((member, index) => (
-                <MarqueeCard key={`${member.name}-${index}`} {...member} />
-              ))}
-            </div>
-          </div>
+          <Carousel ariaLabel={row.label} edgeFades controls="desktop">
+            {row.members.map(member => (
+              <CarouselSlide key={member.name} className="basis-[230px]">
+                <MarqueeCard {...member} />
+              </CarouselSlide>
+            ))}
+          </Carousel>
         </div>
       ))}
     </div>
