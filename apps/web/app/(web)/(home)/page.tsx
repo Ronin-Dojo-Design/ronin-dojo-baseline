@@ -1,4 +1,3 @@
-import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Brand } from "~/.generated/prisma/client"
 import { BblLanding } from "~/app/(web)/(home)/bbl/bbl-landing"
@@ -13,11 +12,10 @@ import { getPageData } from "~/lib/pages"
 
 // Get page data
 const getData = cache(async () => {
-  const t = await getTranslations()
   const brand = await getRequestBrand()
   const brandConfig = getBrandSiteConfig(brand)
-  const title = `${brandConfig.name} - ${t("brand.tagline")}`
-  const description = t("brand.description")
+  const title = `${brandConfig.name} - ${brandConfig.tagline}`
+  const description = brandConfig.description
 
   return await getPageData(siteConfig.url, title, description)
 })

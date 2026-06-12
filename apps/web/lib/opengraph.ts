@@ -16,9 +16,12 @@ export type OpenGraphParams = Partial<inferParserType<typeof openGraphSearchPara
  * @param faviconUrl - The URL of the favicon.
  * @returns The URL for the OpenGraph image.
  */
-export const getOpenGraphImageUrl = (params: Record<string, string | null | undefined>) => {
+export const getOpenGraphImageUrl = (
+  params: Record<string, string | null | undefined>,
+  origin = siteConfig.url,
+) => {
   const serialize = createSerializer(openGraphSearchParams)
   const searchParams = serialize(params)
 
-  return `${siteConfig.url}/api/og${searchParams}`
+  return `${origin}/api/og${searchParams}`
 }

@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-06-07
-last_agent: claude-session-0355
+updated: 2026-06-12
+last_agent: codex-session-0372
 ---
 
 # Wiki Change Log
@@ -300,3 +300,9 @@ Use this file only as historical context for early wiki adoption.
 - Updated BBL landing/register funnel: Register CTAs route to `/lineage/join`, landing visual rhythm/token polish improved, Join Legacy form expanded into a premium lineage-ready registration intake, and backend lead/claim metadata captures the added context.
 - Added route regression coverage for BBL Register → Join Legacy.
 - Browser screenshot proof remains pending in a configured local environment because this container's Next/Turbopack dev render failed on Google font internals before app code.
+
+## 2026-06-12 — SESSION_0372 BBL SEO hygiene
+
+- Added request-aware native robots and sitemap metadata routes for the BBL lineage-first launch surface.
+- Scoped BBL sitemap output to D9 allowed routes and disallowed gated routes in robots.
+- Updated page metadata helpers so OG/Twitter URLs use the active request origin instead of static `NEXT_PUBLIC_SITE_URL`.

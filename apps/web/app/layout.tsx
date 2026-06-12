@@ -5,13 +5,14 @@ import { Search } from "~/components/common/search"
 import { Toaster } from "~/components/common/toaster"
 import { TooltipProvider } from "~/components/common/tooltip"
 import { metadataConfig } from "~/config/metadata"
-import { getBrandSiteConfig, siteConfig } from "~/config/site"
+import { getBrandSiteConfig } from "~/config/site"
 import { BrandProvider } from "~/contexts/brand-context"
 import { QueryProvider } from "~/contexts/query-context"
 import { SearchProvider } from "~/contexts/search-context"
 import { getRequestBrand } from "~/lib/brand-context"
 import { fontSans } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
+import { getRequestOrigin } from "~/lib/request-url"
 import { findBrandSettings } from "~/server/admin/brand-settings/queries"
 import "./styles.css"
 import { NextIntlClientProvider } from "next-intl"
@@ -19,6 +20,7 @@ import { getLocale, getMessages, getTimeZone } from "next-intl/server"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const brand = await getRequestBrand()
+  const origin = await getRequestOrigin()
   const brandConfig = getBrandSiteConfig(brand)
   const brandSettings = await findBrandSettings(brand)
 
@@ -27,7 +29,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   const ogImageUrl = brandSettings?.ogImageUrl ?? resolvePublicMediaUrl(brandConfig.ogImageSrc)
 
   return {
-    metadataBase: new URL(siteConfig.url),
+    metadataBase: new URL(origin),
     title: {
       template: `%s – ${brandConfig.name}`,
       default: `${brandConfig.tagline} – ${brandConfig.name}`,

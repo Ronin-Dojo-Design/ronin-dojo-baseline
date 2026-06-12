@@ -3,6 +3,7 @@ import type { Thing } from "schema-dts"
 import { getMetadataConfig } from "~/config/metadata"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getOpenGraphImageUrl, type OpenGraphParams } from "~/lib/opengraph"
+import { getRequestOrigin } from "~/lib/request-url"
 import {
   createGraph,
   generateBreadcrumbs,
@@ -54,15 +55,28 @@ type GetPageMetadataProps = {
  */
 export const getPageMetadata = async ({ url, ogImage, metadata }: GetPageMetadataProps) => {
   const brand = await getRequestBrand()
+  const origin = await getRequestOrigin()
   const defaultMetadata = Object.assign({}, getMetadataConfig(brand), metadata)
-  const { title, description, alternates, openGraph, ...rest } = defaultMetadata
-  const ogImageUrl = getOpenGraphImageUrl(ogImage ?? { title: String(title), description })
+  const { title, description, alternates, openGraph, twitter, ...rest } = defaultMetadata
+  const ogTitle = String(title)
+  const ogDescription = typeof description === "string" ? description : undefined
+  const ogImageUrl = getOpenGraphImageUrl(
+    ogImage ?? { title: ogTitle, description: ogDescription },
+    origin,
+  )
 
   return {
     title,
     description,
     alternates: { ...alternates, canonical: url },
-    openGraph: { ...openGraph, url, images: [{ url: ogImageUrl }] },
+    openGraph: {
+      ...openGraph,
+      title: ogTitle,
+      description: ogDescription,
+      url,
+      images: [{ url: ogImageUrl }],
+    },
+    twitter: { ...twitter, title: ogTitle, description: ogDescription, images: [ogImageUrl] },
     ...rest,
   }
 }
