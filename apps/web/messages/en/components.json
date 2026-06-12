@@ -14,7 +14,8 @@
   },
   "footer": {
     "cta_title": "Stay in the loop",
-    "cta_description": "Join {count}+ martial artists and get updates on programs, tournaments, and events."
+    "cta_description": "Join {count}+ martial artists and get updates on programs, tournaments, and events.",
+    "cta_description_minimal": "Join {count}+ martial artists preserving their lineage — get updates as the network grows."
   },
   "count_badge": {
     "new_tools": "{count} new {count, plural, =0 {programs} =1 {program} other {programs}} added",

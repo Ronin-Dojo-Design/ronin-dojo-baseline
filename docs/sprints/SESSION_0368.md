@@ -132,6 +132,7 @@ None — grill resolved all forks.
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0368_TASK_01 | landed | Allowlist + proxy gate + sweeps live. Curl matrix: 7 gated routes + random tool slug → 404 on bbl.local; 7 kept routes → 200; Baseline tournaments/programs/gear → 200 + SSR still renders gated-feature links. Live-DOM: header/sheet/footer show only allowlist (+ /posts added to sheet/footer — was never linked); Coming Soon badge on techniques promo; 0 console errors. One build break found+fixed: value-import of the Brand enum in a client-imported module pulled Prisma runtime into the browser (500s everywhere) → type-only import + literal key. |
+| SESSION_0368_TASK_02 | landed | Minimal chrome (operator follow-up): `brandHasMinimalChrome()` — BBL header = logo+hamburger+Join+Sign-In only (0 nav elements on live DOM, matches SESSION_0361 legacy spec); footer Browse column removed, Quick Links repositioned; newsletter copy → lineage variant (`cta_description_minimal`, off-brand "programs, tournaments" leak caught via footer screenshot); /programs re-confirmed 404. Baseline full chrome + original copy verified server-side. 6/6 config tests. |
 
 ## What landed
 

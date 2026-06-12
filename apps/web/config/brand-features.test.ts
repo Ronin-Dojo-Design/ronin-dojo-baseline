@@ -5,6 +5,7 @@ import {
   BRAND_FEATURES,
   type BrandFeature,
   brandHasFeature,
+  brandHasMinimalChrome,
   FEATURE_ROUTE_PREFIXES,
 } from "~/config/brand-features"
 
@@ -50,6 +51,15 @@ describe("brandHasFeature", () => {
       expect(brandHasFeature(Brand.RONIN_DOJO_DESIGN, feature)).toBe(true)
       expect(brandHasFeature(Brand.WEKAF, feature)).toBe(true)
     }
+  })
+})
+
+describe("brandHasMinimalChrome", () => {
+  it("BBL renders minimal chrome; other brands keep full chrome", () => {
+    expect(brandHasMinimalChrome(Brand.BBL)).toBe(true)
+    expect(brandHasMinimalChrome(Brand.BASELINE_MARTIAL_ARTS)).toBe(false)
+    expect(brandHasMinimalChrome(Brand.RONIN_DOJO_DESIGN)).toBe(false)
+    expect(brandHasMinimalChrome(Brand.WEKAF)).toBe(false)
   })
 })
 

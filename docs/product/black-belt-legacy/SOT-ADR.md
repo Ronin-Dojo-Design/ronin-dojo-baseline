@@ -156,6 +156,11 @@ refreshed into `dirstarter_template` at SESSION_0359.
   central route gate in `proxy.ts` (rewrite → 404) + `brandHasFeature()` consumed by
   header/NavSheet/footer/dashboard-tabs/landing. **Nothing deleted** — re-enabling a feature is
   one line in one PR. No schema change (Phase-3 freeze respected).
+- **Minimal chrome (operator, same session):** BBL header/footer carry essentials only, per the
+  SESSION_0361 measured legacy spec — header = logo + hamburger + Join CTA + account (no inline
+  desktop nav; primary nav lives in the right slide-in); footer = newsletter (lineage-flavored
+  copy variant) + Quick Links + icons (no Browse column). `brandHasMinimalChrome()` in the same
+  config; other brands keep full chrome.
 - **Flip timing:** the D8 "flip after Phase 3" default is superseded — **operator ratified the
   early flip** (ASAP after the pre-flip gate: this gating slice → stripe@22 test-mode rehearsal →
   OG/meta + robots/sitemap hygiene → minimal 301 map → prod render verify). Consequence accepted:

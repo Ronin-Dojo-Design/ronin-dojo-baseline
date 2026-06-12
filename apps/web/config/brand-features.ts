@@ -66,6 +66,17 @@ export const brandHasFeature = (brand: Brand, feature: BrandFeature): boolean =>
   (FEATURES_BY_BRAND[brand] ?? ALL_FEATURES).has(feature)
 
 /**
+ * Minimal-chrome brands render essentials-only header/footer (SESSION_0361
+ * measured legacy spec: logo left, Join CTA + hamburger right; primary nav
+ * lives in the slide-in): no inline desktop nav, no footer Browse column.
+ */
+const MINIMAL_CHROME: Partial<Record<Brand, boolean>> = {
+  BBL: true,
+}
+
+export const brandHasMinimalChrome = (brand: Brand): boolean => MINIMAL_CHROME[brand] ?? false
+
+/**
  * Public route prefix → gating feature, consumed by the proxy.ts gate.
  * The root listings detail route (`/[slug]`) cannot be expressed as a prefix —
  * it is gated in-page (`app/(web)/[slug]/page.tsx`).
