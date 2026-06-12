@@ -58,7 +58,7 @@ export function TournamentRoleForm({
       actionProps: {
         onSuccess: ({ data }) => {
           toast.success(`Tournament role successfully ${role ? "updated" : "created"}`)
-          router.push(`/admin/tournaments/roles/${data?.id}`)
+          router.push(`/app/tournaments/roles/${data?.id}`)
         },
 
         onError: ({ error }) => {
@@ -160,7 +160,7 @@ export function TournamentRoleForm({
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" render={<Link href="/admin/tournaments/roles" />}>
+          <Button size="md" variant="secondary" render={<Link href="/app/tournaments/roles" />}>
             Cancel
           </Button>
 

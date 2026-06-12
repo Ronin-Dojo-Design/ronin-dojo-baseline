@@ -29,7 +29,7 @@ export const TournamentRoleActions = ({
   const pathname = usePathname()
   const router = useRouter()
 
-  const rolePath = `/admin/tournaments/roles/${role.id}`
+  const rolePath = `/app/tournaments/roles/${role.id}`
   const isRolePage = pathname === rolePath
 
   return (
@@ -74,7 +74,7 @@ export const TournamentRoleActions = ({
       ) : (
         <TournamentRolesDeleteDialog
           roles={[role]}
-          onExecute={() => router.push("/admin/tournaments/roles")}
+          onExecute={() => router.push("/app/tournaments/roles")}
         >
           <Button
             variant="secondary"

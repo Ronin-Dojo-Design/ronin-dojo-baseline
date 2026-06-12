@@ -68,7 +68,7 @@ export function RuleSetForm({
     actionProps: {
       onSuccess: ({ data }) => {
         toast.success(`Rule set successfully ${ruleSet ? "updated" : "created"}`)
-        router.push(`/admin/tournaments/rule-sets/${data?.id}`)
+        router.push(`/app/tournaments/rule-sets/${data?.id}`)
       },
 
       onError: ({ error }) => {
@@ -233,11 +233,7 @@ export function RuleSetForm({
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button
-            size="md"
-            variant="secondary"
-            render={<Link href="/admin/tournaments/rule-sets" />}
-          >
+          <Button size="md" variant="secondary" render={<Link href="/app/tournaments/rule-sets" />}>
             Cancel
           </Button>
 

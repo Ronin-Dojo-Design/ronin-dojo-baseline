@@ -24,7 +24,7 @@ export const TournamentActions = ({ tournament, className, ...props }: Tournamen
   const pathname = usePathname()
   const router = useRouter()
 
-  const tournamentPath = `/admin/tournaments/${tournament.id}`
+  const tournamentPath = `/app/tournaments/${tournament.id}`
   const isTournamentPage = pathname === tournamentPath
 
   return (
@@ -58,7 +58,7 @@ export const TournamentActions = ({ tournament, className, ...props }: Tournamen
 
       <TournamentsDeleteDialog
         tournaments={[tournament]}
-        onExecute={() => router.push("/admin/tournaments")}
+        onExecute={() => router.push("/app/tournaments")}
       >
         <Button
           variant="secondary"

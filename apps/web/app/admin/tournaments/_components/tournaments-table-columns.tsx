@@ -38,10 +38,7 @@ export function getColumns(): ColumnDef<TournamentRow>[] {
       accessorKey: "name",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
-        <Link
-          href={`/admin/tournaments/${row.original.id}`}
-          className="font-medium hover:underline"
-        >
+        <Link href={`/app/tournaments/${row.original.id}`} className="font-medium hover:underline">
           {row.getValue("name")}
         </Link>
       ),

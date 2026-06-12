@@ -52,7 +52,7 @@ export const getColumns = (): ColumnDef<TournamentRoleWithCount>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
         <DataTableLink
-          href={`/admin/tournaments/roles/${row.original.id}`}
+          href={`/app/tournaments/roles/${row.original.id}`}
           title={row.original.name}
         />
       ),

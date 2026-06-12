@@ -66,7 +66,7 @@ export const getColumns = (): ColumnDef<RuleSetRow>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => (
         <DataTableLink
-          href={`/admin/tournaments/rule-sets/${row.original.id}`}
+          href={`/app/tournaments/rule-sets/${row.original.id}`}
           title={row.original.name}
         />
       ),

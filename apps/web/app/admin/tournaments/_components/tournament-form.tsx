@@ -73,7 +73,7 @@ export function TournamentForm({
       onSuccess: ({ data }) => {
         if (data) {
           toast.success(tournament ? "Tournament updated" : "Tournament created")
-          router.push(`/admin/tournaments/${data.id}`)
+          router.push(`/app/tournaments/${data.id}`)
         }
       },
       onError: ({ error }) => {

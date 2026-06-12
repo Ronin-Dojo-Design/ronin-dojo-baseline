@@ -76,7 +76,7 @@ export const getColumns = (): ColumnDef<MembershipRow>[] => {
       size: 180,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
       cell: ({ row }) => (
-        <Link href={`/admin/memberships/${row.original.id}`} className="block">
+        <Link href={`/app/memberships/${row.original.id}`} className="block">
           <div className="font-medium">{row.original.user.name ?? "—"}</div>
           <Note className="text-xs">{row.original.user.email}</Note>
         </Link>

@@ -64,7 +64,7 @@ export function TournamentRolesTable({ rolesPromise }: TournamentRolesTableProps
             variant="primary"
             size="md"
             prefix={<PlusIcon />}
-            render={<Link href="/admin/tournaments/roles/new" />}
+            render={<Link href="/app/tournaments/roles/new" />}
           >
             <div className="max-sm:sr-only">New role</div>
           </Button>

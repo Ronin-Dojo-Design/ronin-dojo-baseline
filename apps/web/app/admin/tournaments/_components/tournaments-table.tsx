@@ -61,7 +61,7 @@ export function TournamentsTable({ tournamentsPromise }: TournamentsTableProps) 
             variant="primary"
             size="md"
             prefix={<PlusIcon />}
-            render={<Link href="/admin/tournaments/new" />}
+            render={<Link href="/app/tournaments/new" />}
           >
             <div className="max-sm:sr-only">New tournament</div>
           </Button>
