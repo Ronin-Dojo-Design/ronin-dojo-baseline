@@ -555,9 +555,24 @@ const BblRedBeltCelebration = () => (
   </section>
 )
 
-const MarqueeCard = ({ name, rank, image }: { name: string; rank: string; image?: string }) => (
+const MarqueeCard = ({
+  name,
+  rank,
+  image,
+  date,
+}: {
+  name: string
+  rank: string
+  image?: string
+  date?: string
+}) => (
   <div className="w-[230px] shrink-0 rounded-xl border bg-card overflow-hidden">
-    <div className="aspect-[5/4] bg-muted">
+    <div className="relative aspect-[5/4] bg-muted">
+      {date && (
+        <Badge variant="outline" className="absolute top-2 right-2 z-10 bg-background/80">
+          {date}
+        </Badge>
+      )}
       {image ? (
         <img
           src={image}
@@ -596,50 +611,100 @@ type MarqueeRow = {
   key: string
   label: string
   href: string
-  direction: "left" | "right"
-  members: Array<{ name: string; rank: string; image?: string }>
+  direction?: "left" | "right"
+  members: Array<{ name: string; rank: string; image?: string; date?: string }>
+}
+
+/** "Coral Belt (Red/Black) - 7th Degree" -> "7th Degree Coral Belt" (display only; tree stays SoT). */
+const formatRankName = (rank: string) => {
+  const gm = rank.includes("Grand Master")
+  const cleaned = rank
+    .replace(/\s*\(Grand Master\)\s*/, "")
+    .replace(/\s*\(Red\/(?:Black|White)\)\s*/, " ")
+  const match = cleaned.match(/^(.+?Belt)\s*-\s*(\d+(?:st|nd|rd|th) Degree)$/)
+  const base = match ? `${match[2]} ${match[1].trim()}` : rank
+  return gm ? `${base} — Grand Master` : base
+}
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+
+type MarqueeMemberView = { name: string; rank: string; image?: string; date?: string }
+
+const toMember = (award: {
+  user: { name: string; image: string | null; passport: { avatarUrl: string | null } | null } | null
+  rank: { name: string }
+}): MarqueeMemberView[] => {
+  if (!award.user?.name) return []
+  return [
+    {
+      name: award.user.name,
+      rank: formatRankName(award.rank.name),
+      image: award.user.passport?.avatarUrl ?? award.user.image ?? MARQUEE_PHOTOS[award.user.name],
+    },
+  ]
 }
 
 /** Rosters come from the lineage tree (PromotionEvent -> RankAward, ADR 0016). */
 const getPromotionMarqueeRows = async (): Promise<MarqueeRow[]> => {
-  const events = await db.promotionEvent.findMany({
-    orderBy: { eventDate: "desc" },
-    take: 2,
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      eventDate: true,
-      rankAwards: {
-        select: {
-          user: {
-            select: { name: true, image: true, passport: { select: { avatarUrl: true } } },
-          },
-          rank: { select: { name: true } },
-        },
-      },
-    },
-  })
+  const memberSelect = {
+    user: { select: { name: true, image: true, passport: { select: { avatarUrl: true } } } },
+    rank: { select: { name: true } },
+  } as const
 
-  return events
+  const [events, individualAwards] = await Promise.all([
+    db.promotionEvent.findMany({
+      orderBy: { eventDate: "desc" },
+      take: 2,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        eventDate: true,
+        location: true,
+        rankAwards: { select: memberSelect },
+      },
+    }),
+    // Recent top-rank promotions awarded outside a recorded ceremony (e.g. Meyer, Will).
+    db.rankAward.findMany({
+      where: {
+        promotionEventId: null,
+        awardedAt: { gte: new Date("2024-01-01") },
+        OR: [{ rank: { name: { contains: "Coral" } } }, { rank: { name: { contains: "Red" } } }],
+      },
+      orderBy: { awardedAt: "desc" },
+      take: 8,
+      select: { ...memberSelect, awardedAt: true },
+    }),
+  ])
+
+  const rows: MarqueeRow[] = events
     .filter(event => event.rankAwards.length > 0)
-    .map((event, index) => ({
+    .map(event => ({
       key: event.id,
-      label: `${event.title} — ${event.eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
+      label: [event.title, formatDate(event.eventDate), event.location].filter(Boolean).join(" · "),
       href: event.slug ? `/events/${event.slug}` : BBL_ROUTES.lineage,
-      direction: index % 2 === 1 ? ("right" as const) : ("left" as const),
-      members: event.rankAwards.flatMap(award => {
-        if (!award.user?.name) return []
-        return [
-          {
-            name: award.user.name,
-            rank: award.rank.name,
-            image:
-              award.user.passport?.avatarUrl ?? award.user.image ?? MARQUEE_PHOTOS[award.user.name],
-          },
-        ]
-      }),
+      members: event.rankAwards.flatMap(toMember),
     }))
+
+  if (individualAwards.length > 0) {
+    rows.push({
+      key: "individual-promotions",
+      label: "Individual Ceremonies · Recently Promoted",
+      href: BBL_ROUTES.lineage,
+      members: individualAwards.flatMap(award =>
+        toMember(award).map(member => ({
+          ...member,
+          date: award.awardedAt ? formatDate(award.awardedAt) : undefined,
+        })),
+      ),
+    })
+  }
+
+  return rows.map((row, index) => ({
+    ...row,
+    direction: index % 2 === 1 ? ("right" as const) : ("left" as const),
+  }))
 }
 
 const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
@@ -648,6 +713,10 @@ const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
     <style>{`
       @keyframes bbl-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
       @keyframes bbl-marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+      .bbl-marquee-track { animation: bbl-marquee var(--bbl-marquee-duration, 45s) linear infinite; }
+      .bbl-marquee-track[data-direction="right"] { animation-name: bbl-marquee-reverse; }
+      .bbl-marquee-track:hover { animation-play-state: paused; }
+      @media (prefers-reduced-motion: reduce) { .bbl-marquee-track { animation: none; } }
     `}</style>
     <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
     <div className="space-y-6">
@@ -669,10 +738,11 @@ const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
               aria-hidden="true"
             />
             <div
-              className="flex w-max gap-5 hover:[animation-play-state:paused] motion-reduce:animate-none!"
-              style={{
-                animation: `${row.direction === "right" ? "bbl-marquee-reverse" : "bbl-marquee"} 45s linear infinite`,
-              }}
+              className="bbl-marquee-track flex w-max gap-5"
+              data-direction={row.direction}
+              style={
+                { "--bbl-marquee-duration": `${row.members.length * 7}s` } as React.CSSProperties
+              }
             >
               {[...row.members, ...row.members].map((member, index) => (
                 <MarqueeCard key={`${member.name}-${index}`} {...member} />
