@@ -2,7 +2,7 @@
 title: "SESSION 0365 — Phase 2a: unified /app shell + per-area permission gates (D5)"
 slug: session-0365
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-12
 updated: 2026-06-12
 last_agent: claude-session-0365
@@ -181,48 +181,92 @@ None — grill resolved (b), waves, local. (2b/2c scope staged for next sessions
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0365_TASK_01 | pending | Guards + permission registry. |
-| SESSION_0365_TASK_02 | pending | Shell + /app layout + overview. |
-| SESSION_0365_TASK_03 | pending | First wave: lineage/users/claims. |
-| SESSION_0365_TASK_04 | pending | PR + CI + browser proof. |
+| SESSION_0365_TASK_01 | landed | `lib/auth-guard.ts` (requireUser/requirePermission + `requireLineageAccess`/`hasAnyLineageGrant` — TREE_ADMIN-grant parity with the legacy gate, corrected mid-build from any-grant); `APP_AREA_PERMISSIONS` registry (31 area strings) in `roles.ts`. |
+| SESSION_0365_TASK_02 | landed | `components/app/{nav,sidebar,shell}` ported (sidebar `can()`-gated + lineage grant-visibility; Kbd API adapted; AIProvider omitted); `app/app/{layout,page}` (overview reuses admin metric components behind `metrics.read`). |
+| SESSION_0365_TASK_03 | landed | 9 pages copied to `app/app/{lineage,users,claims}` — HOCs removed (area layouts gate), routes + shared-component hrefs swept to `/app/<area>`; `_components` shared at admin paths until 2c. Greedy-sed import damage (server/admin + app/admin specifiers) caught by typecheck and reverted. |
+| SESSION_0365_TASK_04 | landed | PR #63 → all checks green (incl. Playwright ×3 proving old `/admin` intact) → squash-merged `7ee27ce`. Authenticated browser walk via dev-login: `/app` dashboard + sidebar, `/app/lineage` (5 trees, Review-claims href → `/app/lineage/claims`), `/app/users` table — all render in the new shell; anon routes 307 → login. Console errors triaged pre-existing (Resend send-only key, Plausible key, pg deprecation). |
 
 ## What landed
 
-<!-- Filled at bow-out. -->
+- **Unified `/app` workspace live (Phase 2a)** — upstream shell + guards ported from `76c8e1e`,
+  per-area permission model (grill option b) in force, first wave (lineage/users/claims) moved.
+  Both shells coexist; old `/admin`/`/dashboard` untouched until 2c.
+- See Task log for the full breakdown; PR #63 body carries the same evidence.
 
 ## Decisions resolved
 
-<!-- Filled at bow-out. -->
+- **Option (b) per-area gates** (grill, operator-ratified) — recorded in BBL-SOT-Spec Phase 2.
+- **Lineage gate = TREE_ADMIN-grant parity** (not any-grant): legacy `hasLineageAdminAccess`/
+  `withLineageAdminPage` admit TREE_ADMIN only; broaden only alongside the Phase-4/6 scoped surfaces.
+- **`_components` stay shared at admin paths until 2c** — zero duplication; 2c moves them with the
+  old-shell deletion.
+- **Href sweep is one-way forward** — shared components now link `/app/<area>`; old pages inherit
+  the new links (both routes live until 2c).
+- **AIProvider omitted** from the `/app` layout (upstream AI dashboard isn't a Ronin lane).
 
 ## Files touched
 
-| File | Change |
-| --- | --- |
-| (filled at bow-out) | |
+26 files via PR #63 (squash `7ee27ce`): `lib/auth-guard.ts`, `components/app/{nav,sidebar,shell}.tsx`,
+`app/app/{layout,page}.tsx` + 9 moved pages + 3 area layouts, `server/orpc/roles.ts`
+(`APP_AREA_PERMISSIONS`), 10 shared `_components` href-swept, `BBL-SOT-Spec.md` Phase-2 capture +
+(b)-model, this session file.
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
-| (filled at bow-out) | |
+| `bun run typecheck` | EXIT 0 (after sed-damage revert; typecheck caught both rounds) |
+| `bun run lint:check` / `format:check` | EXIT 0 / 1262 files clean |
+| `bun test server/orpc/` | 36 pass / 0 fail |
+| PR #63 CI | typecheck/oxc/unit/Playwright ×3/Vercel preview — all green |
+| Anon smoke | `/app{,/lineage,/users,/claims,/users/new}` → 307 `/auth/login` |
+| Authenticated walk (dev-login) | `/app` overview + metrics; `/app/lineage` 5 trees + swept hrefs; `/app/users` table — all in new shell |
 
 ## Open decisions / blockers
 
-<!-- Filled at bow-out. -->
+- **2b**: remaining ~35 admin areas + 6 member `(web)/dashboard` pages, in waves (wave-1 transform
+  is the template; watch for the greedy-sed classes — anchor patterns or sweep hrefs only).
+- **2c**: blanket 308 redirect (`next.config.ts`), delete old shells, `server/<entity>` flatten,
+  e2e route swaps (/admin → /app).
+- Standing: Better-Auth plugins (local), Resend-test-bounce chip, stripe@22 rehearsal.
 
 ## Next session
 
 ### Goal
 
-(2b: remaining area waves — filled at bow-out)
+Phase 2b: move the remaining admin areas + member dashboard pages under `/app` in waves using the
+wave-1 transform (copy pages → strip HOC → area layout with `APP_AREA_PERMISSIONS` gate → href
+sweep anchored to avoid import specifiers), keeping old routes intact until 2c.
 
 ### First task
 
-(filled at bow-out)
+Pick the next wave (suggest: tournaments + memberships + organizations — exercises the
+tournament_director gate) and apply the wave-1 transform; gates + anon smoke per wave. Unblocked.
 
 ## Review log
 
-<!-- Filled at bow-out. -->
+### SESSION_0365_REVIEW_01 — Phase 2a (local, PR #63)
+
+- **Reviewed tasks:** TASK_01–04
+- **Dirstarter docs check:** live changelog (unified-dashboard) fetched this session; upstream
+  GitHub HEAD re-verified = `76c8e1e` (pin current).
+- **Verdict:** Shell + guards line-faithful with documented deltas; the (b) permission model is in
+  force with the lineage-gate parity correction caught DURING build (legacy gate is TREE_ADMIN-only,
+  not any-grant — read-the-code beat my own earlier summary). Both greedy-sed incidents were caught
+  by typecheck before commit. Full proof chain: CI green incl. old-route Playwright + authenticated
+  new-shell walk.
+- **Score:** 8.5/10 (sed sloppiness cost two fix rounds; everything else clean)
+- **Follow-up:** 2b waves, 2c cutover of routes.
+
+## Hostile close review
+
+- **Giddy:** pass — additive routes; old surfaces untouched; gates tightened never loosened; no
+  schema/payload changes.
+- **Doug:** pass — anon + authenticated walks both proven; old-route e2e green in CI; per-area gate
+  behavior for non-admin roles not yet browser-proven (no such test user locally) — falls out in 2b
+  when tournament areas move.
+- **Desi:** pass (shell is the upstream design; Ronin nav icons consistent with admin sidebar).
+- **Kaizen aggregate:** 8.5/10.
 
 ## Hostile close review
 
@@ -230,14 +274,34 @@ None — grill resolved (b), waves, local. (2b/2c scope staged for next sessions
 
 ## ADR / ubiquitous-language check
 
-<!-- Filled at bow-out. -->
+- ADR update not required — implements SOT-ADR D5 with the (b) guard model recorded in
+  BBL-SOT-Spec Phase 2 (operator-ratified in-chat grill; reversible string registry, below ADR bar).
+- Ubiquitous language unchanged.
 
 ## Reflections
 
-<!-- Filled at bow-out. -->
+- **Unanchored seds on route strings WILL eat import specifiers** (`/admin/users` lives inside
+  `~/server/admin/users/...` and `~/app/admin/users/...`). Two fix rounds. Next wave: sweep only
+  string literals in href/redirect positions, or anchor patterns (`"(/admin/` etc.), and let
+  typecheck arbitrate immediately after.
+- **The grill flipped the right way.** Operator context (no users, flip-focused) reversed my (a)
+  recommendation honestly — and option (b) turned out to also be the structural fix for the
+  shell-looseness. Constraints first, recommendation second.
+- **Read-the-code corrected the grill itself:** my Q1 framing said any-grantee saw the whole shell;
+  the code says TREE_ADMIN-only. The fix landed before the gate shipped, but it's a reminder that
+  even the grill's premises need source verification.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
-| (filled at bow-out) | |
+| JETTY/frontmatter sweep | Session doc current; BBL-SOT-Spec already stamped this session. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0365 row added at close. |
+| Wiki lint | Result in close chat. |
+| Kaizen reflection | 3 entries. |
+| Hostile close review | REVIEW_01 above; Giddy/Doug/Desi pass. |
+| Review & Recommend | 2b staged with first task. |
+| Memory sweep | No new standing fact (sed lesson lives in Reflections; program memory current). |
+| Next session unblock check | Unblocked. |
+| Git hygiene | PR #63 → squash `7ee27ce`; close docs commit on main at bow-out. |
+| Graphify update | Before close commit — count in chat. |
