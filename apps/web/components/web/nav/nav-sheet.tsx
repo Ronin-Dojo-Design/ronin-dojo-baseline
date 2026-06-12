@@ -11,6 +11,7 @@ import {
   LayoutDashboardIcon,
   LogOutIcon,
   MedalIcon,
+  NewspaperIcon,
   SchoolIcon,
   ShieldHalfIcon,
   ShieldIcon,
@@ -36,12 +37,36 @@ import {
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
+import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
+import { useBrand } from "~/contexts/brand-context"
 import { useSession } from "~/lib/auth-client"
 
 type NavSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
+
+const PRIMARY_NAV_ITEMS = [
+  { href: "/lineage", key: "lineage", icon: GitBranchIcon, feature: "lineage" },
+  { href: "/directory", key: "directory", icon: ContactRoundIcon, feature: "directory" },
+  { href: "/members", key: "members", icon: UsersIcon, feature: "members" },
+  { href: "/schools", key: "schools", icon: SchoolIcon, feature: "schools" },
+  { href: "/organizations", key: "organizations", icon: BuildingIcon, feature: "organizations" },
+  { href: "/disciplines", key: "disciplines", icon: ShieldIcon, feature: "disciplines" },
+  { href: "/techniques", key: "techniques", icon: SwordsIcon, feature: "techniques" },
+  { href: "/programs", key: "programs", icon: MedalIcon, feature: "programs" },
+  { href: "/tournaments", key: "tournaments", icon: TrophyIcon, feature: "tournaments" },
+  { href: "/courses", key: "courses", icon: GraduationCapIcon, feature: "courses" },
+  { href: "/gear", key: "gear", icon: ShoppingBagIcon, feature: "gear" },
+  { href: "/merch", key: "merch", icon: StoreIcon, feature: "merch" },
+  { href: "/posts", key: "posts", icon: NewspaperIcon, feature: "posts" },
+  { href: "/blog", key: "blog", icon: BookOpenIcon, feature: "blog" },
+] satisfies Array<{
+  href: string
+  key: string
+  icon: typeof GitBranchIcon
+  feature: BrandFeature
+}>
 
 /**
  * Right slide-in navigation panel (account + primary nav), available at all
@@ -52,6 +77,8 @@ export const NavSheet = ({ open, onOpenChange }: NavSheetProps) => {
   const { data: session } = useSession()
   const pathname = usePathname()
   const t = useTranslations()
+  const { brand } = useBrand()
+  const navItems = PRIMARY_NAV_ITEMS.filter(item => brandHasFeature(brand, item.feature))
 
   // Close when the user navigates to a new page
   useEffect(() => onOpenChange(false), [pathname, onOpenChange])
@@ -105,45 +132,14 @@ export const NavSheet = ({ open, onOpenChange }: NavSheetProps) => {
         )}
 
         <nav className="flex flex-col gap-3 border-t pt-4">
-          <NavLink href="/lineage" prefix={<GitBranchIcon />}>
-            {t("navigation.lineage")}
-          </NavLink>
-          <NavLink href="/directory" prefix={<ContactRoundIcon />}>
-            {t("navigation.directory")}
-          </NavLink>
-          <NavLink href="/members" prefix={<UsersIcon />}>
-            {t("navigation.members")}
-          </NavLink>
-          <NavLink href="/schools" prefix={<SchoolIcon />}>
-            {t("navigation.schools")}
-          </NavLink>
-          <NavLink href="/organizations" prefix={<BuildingIcon />}>
-            {t("navigation.organizations")}
-          </NavLink>
-          <NavLink href="/disciplines" prefix={<ShieldIcon />}>
-            {t("navigation.disciplines")}
-          </NavLink>
-          <NavLink href="/techniques" prefix={<SwordsIcon />}>
-            {t("navigation.techniques")}
-          </NavLink>
-          <NavLink href="/programs" prefix={<MedalIcon />}>
-            {t("navigation.programs")}
-          </NavLink>
-          <NavLink href="/tournaments" prefix={<TrophyIcon />}>
-            {t("navigation.tournaments")}
-          </NavLink>
-          <NavLink href="/courses" prefix={<GraduationCapIcon />}>
-            {t("navigation.courses")}
-          </NavLink>
-          <NavLink href="/gear" prefix={<ShoppingBagIcon />}>
-            {t("navigation.gear")}
-          </NavLink>
-          <NavLink href="/merch" prefix={<StoreIcon />}>
-            {t("navigation.merch")}
-          </NavLink>
-          <NavLink href="/blog" prefix={<BookOpenIcon />}>
-            {t("navigation.blog")}
-          </NavLink>
+          {navItems.map(item => {
+            const Icon = item.icon
+            return (
+              <NavLink key={item.href} href={item.href} prefix={<Icon />}>
+                {t(`navigation.${item.key}`)}
+              </NavLink>
+            )
+          })}
           <NavLink href="/about" prefix={<InfoIcon />}>
             {t("navigation.about")}
           </NavLink>

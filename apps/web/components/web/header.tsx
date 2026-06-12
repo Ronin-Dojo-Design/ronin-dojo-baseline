@@ -28,6 +28,8 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { NavSheet } from "~/components/web/nav/nav-sheet"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
+import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
+import { useBrand } from "~/contexts/brand-context"
 import { Container } from "~/components/web/ui/container"
 import { Hamburger } from "~/components/web/ui/hamburger"
 import { Logo } from "~/components/web/ui/logo"
@@ -39,6 +41,8 @@ import { cx } from "~/lib/utils"
 const Header = ({ className, ...props }: ComponentProps<"div">) => {
   const search = useSearch()
   const t = useTranslations()
+  const { brand } = useBrand()
+  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
   // Escape + route-change closing live in NavSheet (Base UI Dialog handles Escape).
   const [isNavOpen, setNavOpen] = useState(false)
 
@@ -65,8 +69,10 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           </Stack>
 
           <nav className="flex flex-wrap gap-x-4 gap-y-0.5 flex-1 max-lg:hidden">
-            <NavLink href="/programs">{t("navigation.programs")}</NavLink>
-            <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+            {has("programs") && <NavLink href="/programs">{t("navigation.programs")}</NavLink>}
+            {has("tournaments") && (
+              <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
+            )}
 
             <DropdownMenu>
               <NavLink
@@ -78,45 +84,69 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               </NavLink>
 
               <DropdownMenuContent align="start">
-                <DropdownMenuItem render={<NavLink href="/disciplines" prefix={<ShieldIcon />} />}>
-                  {t("navigation.disciplines")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/schools" prefix={<SchoolIcon />} />}>
-                  {t("navigation.schools")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}
-                >
-                  {t("navigation.organizations")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<NavLink href="/courses" prefix={<GraduationCapIcon />} />}
-                >
-                  {t("navigation.courses")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}>
-                  {t("navigation.techniques")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}>
-                  {t("navigation.lineage")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}
-                >
-                  {t("navigation.directory")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/members" prefix={<UsersIcon />} />}>
-                  {t("navigation.members")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}>
-                  {t("navigation.gear")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/merch" prefix={<StoreIcon />} />}>
-                  {t("navigation.merch")}
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<NavLink href="/blog" prefix={<BookOpenIcon />} />}>
-                  {t("navigation.blog")}
-                </DropdownMenuItem>
+                {has("disciplines") && (
+                  <DropdownMenuItem
+                    render={<NavLink href="/disciplines" prefix={<ShieldIcon />} />}
+                  >
+                    {t("navigation.disciplines")}
+                  </DropdownMenuItem>
+                )}
+                {has("schools") && (
+                  <DropdownMenuItem render={<NavLink href="/schools" prefix={<SchoolIcon />} />}>
+                    {t("navigation.schools")}
+                  </DropdownMenuItem>
+                )}
+                {has("organizations") && (
+                  <DropdownMenuItem
+                    render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}
+                  >
+                    {t("navigation.organizations")}
+                  </DropdownMenuItem>
+                )}
+                {has("courses") && (
+                  <DropdownMenuItem
+                    render={<NavLink href="/courses" prefix={<GraduationCapIcon />} />}
+                  >
+                    {t("navigation.courses")}
+                  </DropdownMenuItem>
+                )}
+                {has("techniques") && (
+                  <DropdownMenuItem render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}>
+                    {t("navigation.techniques")}
+                  </DropdownMenuItem>
+                )}
+                {has("lineage") && (
+                  <DropdownMenuItem render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}>
+                    {t("navigation.lineage")}
+                  </DropdownMenuItem>
+                )}
+                {has("directory") && (
+                  <DropdownMenuItem
+                    render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}
+                  >
+                    {t("navigation.directory")}
+                  </DropdownMenuItem>
+                )}
+                {has("members") && (
+                  <DropdownMenuItem render={<NavLink href="/members" prefix={<UsersIcon />} />}>
+                    {t("navigation.members")}
+                  </DropdownMenuItem>
+                )}
+                {has("gear") && (
+                  <DropdownMenuItem render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}>
+                    {t("navigation.gear")}
+                  </DropdownMenuItem>
+                )}
+                {has("merch") && (
+                  <DropdownMenuItem render={<NavLink href="/merch" prefix={<StoreIcon />} />}>
+                    {t("navigation.merch")}
+                  </DropdownMenuItem>
+                )}
+                {has("blog") && (
+                  <DropdownMenuItem render={<NavLink href="/blog" prefix={<BookOpenIcon />} />}>
+                    {t("navigation.blog")}
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -124,9 +154,11 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           </nav>
 
           <Stack size="sm" wrap={false} className="justify-end max-lg:grow">
-            <Button size="sm" variant="ghost" className="p-1 text-base" onClick={search.open}>
-              <SearchIcon />
-            </Button>
+            {has("listings") && (
+              <Button size="sm" variant="ghost" className="p-1 text-base" onClick={search.open}>
+                <SearchIcon />
+              </Button>
+            )}
 
             <Button
               size="sm"
@@ -135,13 +167,17 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               render={<ThemeSwitcher />}
             />
 
-            <Button size="sm" variant="secondary" render={<Link href="/programs" />}>
-              {t("navigation.programs")}
-            </Button>
+            {has("programs") && (
+              <Button size="sm" variant="secondary" render={<Link href="/programs" />}>
+                {t("navigation.programs")}
+              </Button>
+            )}
 
-            <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
-              Join Legacy
-            </Button>
+            {has("lineage") && (
+              <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
+                Join Legacy
+              </Button>
+            )}
 
             <UserMenu />
           </Stack>

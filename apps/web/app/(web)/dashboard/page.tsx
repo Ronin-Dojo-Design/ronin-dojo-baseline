@@ -18,6 +18,7 @@ import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
 import { getBrandSiteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
@@ -49,6 +50,8 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function ({ searchParams }: PageProps<"/dashboard">) {
   const { breadcrumbs, metadata } = await getData()
+  const brand = await getRequestBrand()
+  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
 
   return (
     <>
@@ -87,24 +90,32 @@ export default async function ({ searchParams }: PageProps<"/dashboard">) {
                       </Suspense>
                     ),
                   },
-                  {
-                    id: "techniques",
-                    label: "Techniques",
-                    content: (
-                      <Suspense fallback={<DataTableSkeleton />}>
-                        <DashboardTechniquesTab />
-                      </Suspense>
-                    ),
-                  },
-                  {
-                    id: "listings",
-                    label: "Listings",
-                    content: (
-                      <Suspense fallback={<DataTableSkeleton />}>
-                        <DashboardToolListing searchParams={searchParams} />
-                      </Suspense>
-                    ),
-                  },
+                  ...(has("techniques")
+                    ? [
+                        {
+                          id: "techniques",
+                          label: "Techniques",
+                          content: (
+                            <Suspense fallback={<DataTableSkeleton />}>
+                              <DashboardTechniquesTab />
+                            </Suspense>
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(has("listings")
+                    ? [
+                        {
+                          id: "listings",
+                          label: "Listings",
+                          content: (
+                            <Suspense fallback={<DataTableSkeleton />}>
+                              <DashboardToolListing searchParams={searchParams} />
+                            </Suspense>
+                          ),
+                        },
+                      ]
+                    : []),
                   {
                     id: "lineage",
                     label: "Lineage",
@@ -137,10 +148,10 @@ export default async function ({ searchParams }: PageProps<"/dashboard">) {
               <CardDescription className="line-clamp-none">
                 <Stack direction="column" size="xs" className="items-start">
                   <Link href="/me">My Passport</Link>
-                  <Link href="/dashboard/techniques/new">Add technique</Link>
+                  {has("techniques") && <Link href="/dashboard/techniques/new">Add technique</Link>}
                   <Link href="/directory">Public directory</Link>
-                  <Link href="/programs">Programs</Link>
-                  <Link href="/tournaments">Tournaments</Link>
+                  {has("programs") && <Link href="/programs">Programs</Link>}
+                  {has("tournaments") && <Link href="/tournaments">Tournaments</Link>}
                   <Link href="/schools">Schools</Link>
                 </Stack>
               </CardDescription>

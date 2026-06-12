@@ -530,9 +530,12 @@ const BblPromos = () => (
           />
           <div className="relative grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
             <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
-                {promo.eyebrow}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
+                  {promo.eyebrow}
+                </p>
+                {promo.comingSoon && <Badge variant="outline">Coming Soon</Badge>}
+              </div>
               <H2>{promo.title}</H2>
               <p className="text-muted-foreground max-w-xl">{promo.description}</p>
               <div className="flex flex-col sm:flex-row gap-3">

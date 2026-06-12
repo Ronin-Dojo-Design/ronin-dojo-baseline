@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-11
-last_agent: claude-session-0361
+updated: 2026-06-12
+last_agent: claude-session-0368
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -142,6 +142,26 @@ refreshed into `dirstarter_template` at SESSION_0359.
   `GAP_MATRIX` BBL-PROFILE-002 staleness corrected (the authenticated claim e2e exists, runs in CI).
 - **Supersedes:** the strict Phase 0→7 cutover-last ordering in BBL-SOT-Spec §2.2 (SESSION_0359), and
   this decision's own same-session "flip ASAP" draft.
+
+## D9 — BBL launches lineage-first (brand feature gate); flip moved to ASAP  *(SESSION_0368)*
+
+- **Decision (operator grill, SESSION_0368):** BBL ships **lineage + its funnels only** at cutover:
+  lineage (+ `/lineage/join` checkout + entitlements untouched), directory, members, schools,
+  organizations, events (promotion provenance), certificates, **posts + blog** (operator-fed
+  content). Gated off (HTTP 404): tournaments, courses, programs, disciplines (browse page),
+  techniques, gear, merch, advertise, submit, and the Dirstarter listings system
+  (`/categories`, `/tags`, root `/[slug]`, the categories rail, the global listings search).
+- **Mechanism:** static per-brand allowlist `config/brand-features.ts` (brands without an entry
+  get ALL features — Baseline/RDD unchanged; brand-neutral, WEKAF can get its own list) + one
+  central route gate in `proxy.ts` (rewrite → 404) + `brandHasFeature()` consumed by
+  header/NavSheet/footer/dashboard-tabs/landing. **Nothing deleted** — re-enabling a feature is
+  one line in one PR. No schema change (Phase-3 freeze respected).
+- **Flip timing:** the D8 "flip after Phase 3" default is superseded — **operator ratified the
+  early flip** (ASAP after the pre-flip gate: this gating slice → stripe@22 test-mode rehearsal →
+  OG/meta + robots/sitemap hygiene → minimal 301 map → prod render verify). Consequence accepted:
+  **Phase 3 runs the D7 user-carry migration** (preserve `User`/`Passport`, repoint satellites by
+  lookup), not the pure reseed. Claims stay open at flip (D6 — always RBAC-reviewed).
+- **Post-flip:** 2b/2c waves, Phases 3–5, techniques/posts-feed re-light as their lanes mature.
 
 ---
 
