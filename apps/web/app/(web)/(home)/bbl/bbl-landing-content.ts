@@ -385,36 +385,20 @@ export const redBeltCelebration = {
   image: BBL_IMAGES.heroClinch,
 }
 
-export type MarqueeMember = { name: string; rank: string; image?: string }
-
-/** Two-row auto-scrolling promotion marquee. Rosters are editable here. */
+/** Marquee section copy; rosters are pulled from PromotionEvent at render (tree = SoT). */
 export const promotionMarquee = {
   eyebrow: "The Legends Return",
   title: "Recent Promotions",
-  rows: [
-    {
-      label: "OKC Promotion — Coral Belt Cycle",
-      direction: "left" as const,
-      members: [
-        { name: "Bob Bass", rank: "7th Degree Coral Belt", image: `${IMG}/bob-bass-classic.jpg` },
-        { name: "Rick Williams", rank: "7th Degree Coral Belt", image: `${IMG}/rick-williams.jpg` },
-        { name: "David Meyer", rank: "7th Degree Coral Belt", image: `${IMG}/david-meyer.jpg` },
-        { name: "John Will", rank: "7th Degree Coral Belt", image: `${IMG}/john-will.jpg` },
-        { name: "Chris Haueter", rank: "6th Degree Black Belt", image: `${IMG}/chris-haueter.jpg` },
-        { name: "Rick Minter", rank: "Black Belt" },
-        { name: "Casey Olsen", rank: "Black Belt" },
-      ] satisfies MarqueeMember[],
-    },
-    {
-      label: "April 10, 2026 — CSW Training Center",
-      direction: "right" as const,
-      members: [
-        { name: "Rigan Machado", rank: "9th Degree Red Belt", image: `${IMG}/rigan-machado.jpg` },
-        { name: "Erik Paulson", rank: "7th Degree Coral Belt" },
-        { name: "Rorion Gracie", rank: "9th Degree Red Belt — Presenting" },
-      ] satisfies MarqueeMember[],
-    },
-  ],
+}
+
+/** Photo overrides by display name for tree-driven cards without passport avatars. */
+export const MARQUEE_PHOTOS: Record<string, string> = {
+  "Bob Bass": `${IMG}/bob-bass-classic.jpg`,
+  "Rick Williams": `${IMG}/rick-williams.jpg`,
+  "David Meyer": `${IMG}/david-meyer.jpg`,
+  "John Will": `${IMG}/john-will.jpg`,
+  "Chris Haueter": `${IMG}/chris-haueter.jpg`,
+  "Rigan Machado": `${IMG}/rigan-machado.jpg`,
 }
 
 export const treeSection = {

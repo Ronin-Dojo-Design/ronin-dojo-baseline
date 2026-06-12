@@ -15,6 +15,7 @@ import { H2, H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
+import { db } from "~/services/db"
 import {
   BBL_IMAGES,
   BBL_ROUTES,
@@ -31,6 +32,7 @@ import {
   heroContent,
   newMemberFeatures,
   promos,
+  MARQUEE_PHOTOS,
   promotionMarquee,
   schoolOwnerFeatures,
   testimonials,
@@ -590,7 +592,57 @@ const MarqueeCard = ({ name, rank, image }: { name: string; rank: string; image?
   </div>
 )
 
-const BblPromotionMarquee = () => (
+type MarqueeRow = {
+  key: string
+  label: string
+  href: string
+  direction: "left" | "right"
+  members: Array<{ name: string; rank: string; image?: string }>
+}
+
+/** Rosters come from the lineage tree (PromotionEvent -> RankAward, ADR 0016). */
+const getPromotionMarqueeRows = async (): Promise<MarqueeRow[]> => {
+  const events = await db.promotionEvent.findMany({
+    orderBy: { eventDate: "desc" },
+    take: 2,
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      eventDate: true,
+      rankAwards: {
+        select: {
+          user: {
+            select: { name: true, image: true, passport: { select: { avatarUrl: true } } },
+          },
+          rank: { select: { name: true } },
+        },
+      },
+    },
+  })
+
+  return events
+    .filter(event => event.rankAwards.length > 0)
+    .map((event, index) => ({
+      key: event.id,
+      label: `${event.title} — ${event.eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
+      href: event.slug ? `/events/${event.slug}` : BBL_ROUTES.lineage,
+      direction: index % 2 === 1 ? ("right" as const) : ("left" as const),
+      members: event.rankAwards.flatMap(award => {
+        if (!award.user?.name) return []
+        return [
+          {
+            name: award.user.name,
+            rank: award.rank.name,
+            image:
+              award.user.passport?.avatarUrl ?? award.user.image ?? MARQUEE_PHOTOS[award.user.name],
+          },
+        ]
+      }),
+    }))
+}
+
+const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
   <section className="w-full space-y-8">
     {/* Auto-scroll keyframes (legacy BlackBeltLegacyLanding carousel pattern) */}
     <style>{`
@@ -599,11 +651,14 @@ const BblPromotionMarquee = () => (
     `}</style>
     <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
     <div className="space-y-6">
-      {promotionMarquee.rows.map(row => (
-        <div key={row.label} className="space-y-3">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      {rows.map(row => (
+        <div key={row.key} className="space-y-3">
+          <Link
+            href={row.href}
+            className="block text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
+          >
             {row.label}
-          </p>
+          </Link>
           <div className="relative overflow-hidden motion-reduce:overflow-x-auto">
             <div
               className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-background to-transparent"
@@ -700,40 +755,44 @@ const BblPromos = () => (
   </>
 )
 
-const SECTIONS = [
-  BblHero,
-  BblVideo,
-  BblDirtyDozen,
-  BblHeritage,
-  BblValueProps,
-  BblFeatures,
-  BblTimeline,
-  BblRedBeltCelebration,
-  BblPromotionMarquee,
-  BblTestimonials,
-  BblFaq,
-  BblFinalCta,
-  BblCelebration,
-  BblTreeTeaser,
-  BblPromos,
-]
+export const BblLanding = async () => {
+  const marqueeRows = await getPromotionMarqueeRows()
 
-export const BblLanding = () => (
-  <div
-    className={cx(
-      headingFont.variable,
-      bodyFont.variable,
-      "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
-      // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
-      "[font-family:var(--font-bbl-body)]",
-      "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:tracking-[0.02em]",
-      "[&_:is(h3,h4)]:[font-family:var(--font-bbl-heading)]!",
-    )}
-  >
-    {SECTIONS.map((Section, index) => (
-      <BblReveal key={Section.name} delay={index === 0 ? 0 : 0.08}>
-        <Section />
-      </BblReveal>
-    ))}
-  </div>
-)
+  const sections = [
+    <BblHero key="hero" />,
+    <BblVideo key="video" />,
+    <BblDirtyDozen key="dirty-dozen" />,
+    <BblHeritage key="heritage" />,
+    <BblValueProps key="value-props" />,
+    <BblFeatures key="features" />,
+    <BblTimeline key="timeline" />,
+    <BblRedBeltCelebration key="red-belt" />,
+    ...(marqueeRows.length > 0 ? [<BblPromotionMarquee key="marquee" rows={marqueeRows} />] : []),
+    <BblTestimonials key="testimonials" />,
+    <BblFaq key="faq" />,
+    <BblFinalCta key="final-cta" />,
+    <BblCelebration key="celebration" />,
+    <BblTreeTeaser key="tree" />,
+    <BblPromos key="promos" />,
+  ]
+
+  return (
+    <div
+      className={cx(
+        headingFont.variable,
+        bodyFont.variable,
+        "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
+        // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
+        "[font-family:var(--font-bbl-body)]",
+        "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:tracking-[0.02em]",
+        "[&_:is(h3,h4)]:[font-family:var(--font-bbl-heading)]!",
+      )}
+    >
+      {sections.map((node, index) => (
+        <BblReveal key={node.key} delay={index === 0 ? 0 : 0.08}>
+          {node}
+        </BblReveal>
+      ))}
+    </div>
+  )
+}
