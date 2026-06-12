@@ -510,7 +510,7 @@ const BblCelebration = () => (
           as he joins the Dirty Dozen's <span className="font-semibold">Bob Bass</span> and{" "}
           <span className="font-semibold">John Will</span> in promotion by{" "}
           <span className="text-primary font-semibold">Professor Rigan Machado</span> to the rank of{" "}
-          <span className="text-primary font-bold">8th Degree Coral Belt</span>
+          <span className="text-primary font-bold">7th Degree Coral Belt</span>
         </p>
         <RegisterButtons />
       </div>

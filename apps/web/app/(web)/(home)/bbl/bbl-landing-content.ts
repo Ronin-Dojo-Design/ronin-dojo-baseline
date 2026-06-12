@@ -73,7 +73,7 @@ export type DirtyDozenMember = {
 export const dirtyDozen: DirtyDozenMember[] = [
   {
     name: "Bob Bass",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 1,
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
@@ -81,7 +81,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Rick Williams",
-    rank: "Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 9,
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
@@ -89,7 +89,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "David Meyer",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 10,
     school: "David Meyer BJJ",
     location: "Los Angeles, CA",
@@ -97,7 +97,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Chris Haueter",
-    rank: "Black Belt",
+    rank: "6th Degree Black Belt",
     dirtyDozenRank: 11,
     school: "Combat Base",
     location: "Los Angeles, CA",
@@ -105,7 +105,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "John Will",
-    rank: "6th Degree Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 12,
     school: "John Will Martial Arts",
     location: "Australia",
@@ -113,7 +113,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Renato Magno",
-    rank: "Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: null,
     school: "Street Sports",
     location: "Santa Monica, CA",
@@ -256,8 +256,8 @@ export type TimelineEntry = {
 export const timeline: TimelineEntry[] = [
   {
     name: "Carlos Gracie Sr",
-    rank: "Founder of Gracie Jiu Jitsu",
-    belt: "founder",
+    rank: "10th Degree Red Belt — Grand Master",
+    belt: "red",
     copy: "Built the framework that empowered the Gracie family to share Brazilian Jiu Jitsu worldwide.",
     image: `${IMG}/carlos-gracie-sr.jpg`,
   },
@@ -277,7 +277,7 @@ export const timeline: TimelineEntry[] = [
   },
   {
     name: "Bob Bass",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     belt: "coral",
     copy: "Historic Pan Am wins over Márcio Feitosa and first American promoted to coral belt by Rigan Machado in 2024.",
     image: `${IMG}/bob-bass.jpg`,
@@ -343,7 +343,7 @@ export const faqs = [
   {
     question: "Who is Rigan Machado?",
     answer:
-      "Rigan Machado is an 8th Degree Coral Belt, Pan American Champion, and ADCC veteran. He leads the Black Belt Legacy network with decades of teaching experience.",
+      "Rigan Machado is a 9th Degree Red Belt, Pan American Champion, and ADCC veteran. He leads the Black Belt Legacy network with decades of teaching experience.",
   },
   {
     question: "How do I find a school in my lineage?",
