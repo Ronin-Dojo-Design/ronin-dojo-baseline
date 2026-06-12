@@ -385,6 +385,38 @@ export const redBeltCelebration = {
   image: BBL_IMAGES.heroClinch,
 }
 
+export type MarqueeMember = { name: string; rank: string; image?: string }
+
+/** Two-row auto-scrolling promotion marquee. Rosters are editable here. */
+export const promotionMarquee = {
+  eyebrow: "The Legends Return",
+  title: "Recent Promotions",
+  rows: [
+    {
+      label: "OKC Promotion — Coral Belt Cycle",
+      direction: "left" as const,
+      members: [
+        { name: "Bob Bass", rank: "7th Degree Coral Belt", image: `${IMG}/bob-bass-classic.jpg` },
+        { name: "Rick Williams", rank: "7th Degree Coral Belt", image: `${IMG}/rick-williams.jpg` },
+        { name: "David Meyer", rank: "7th Degree Coral Belt", image: `${IMG}/david-meyer.jpg` },
+        { name: "John Will", rank: "7th Degree Coral Belt", image: `${IMG}/john-will.jpg` },
+        { name: "Chris Haueter", rank: "6th Degree Black Belt", image: `${IMG}/chris-haueter.jpg` },
+        { name: "Rick Minter", rank: "Black Belt" },
+        { name: "Casey Olsen", rank: "Black Belt" },
+      ] satisfies MarqueeMember[],
+    },
+    {
+      label: "April 10, 2026 — CSW Training Center",
+      direction: "right" as const,
+      members: [
+        { name: "Rigan Machado", rank: "9th Degree Red Belt", image: `${IMG}/rigan-machado.jpg` },
+        { name: "Erik Paulson", rank: "7th Degree Coral Belt" },
+        { name: "Rorion Gracie", rank: "9th Degree Red Belt — Presenting" },
+      ] satisfies MarqueeMember[],
+    },
+  ],
+}
+
 export const treeSection = {
   eyebrow: "Explore the Lineage",
   title: "The Rigan Machado Family Tree",

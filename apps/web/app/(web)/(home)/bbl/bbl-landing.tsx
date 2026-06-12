@@ -31,6 +31,7 @@ import {
   heroContent,
   newMemberFeatures,
   promos,
+  promotionMarquee,
   schoolOwnerFeatures,
   testimonials,
   testimonialsSection,
@@ -552,6 +553,83 @@ const BblRedBeltCelebration = () => (
   </section>
 )
 
+const MarqueeCard = ({ name, rank, image }: { name: string; rank: string; image?: string }) => (
+  <div className="w-[230px] shrink-0 rounded-xl border bg-card overflow-hidden">
+    <div className="aspect-[5/4] bg-muted">
+      {image ? (
+        <img
+          src={image}
+          alt={name}
+          className="h-full w-full object-cover object-top"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-muted-foreground">
+          {name
+            .split(" ")
+            .map(part => part[0])
+            .join("")}
+        </div>
+      )}
+    </div>
+    <div className="p-3 space-y-1">
+      <p className="font-semibold leading-snug">{name}</p>
+      <Badge
+        className={cx(
+          "border",
+          rank.includes("Coral")
+            ? BELT_BADGE_CLASSES.coral
+            : rank.includes("Red")
+              ? BELT_BADGE_CLASSES.red
+              : "bg-muted",
+        )}
+      >
+        {rank}
+      </Badge>
+    </div>
+  </div>
+)
+
+const BblPromotionMarquee = () => (
+  <section className="w-full space-y-8">
+    {/* Auto-scroll keyframes (legacy BlackBeltLegacyLanding carousel pattern) */}
+    <style>{`
+      @keyframes bbl-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+      @keyframes bbl-marquee-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+    `}</style>
+    <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
+    <div className="space-y-6">
+      {promotionMarquee.rows.map(row => (
+        <div key={row.label} className="space-y-3">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            {row.label}
+          </p>
+          <div className="relative overflow-hidden motion-reduce:overflow-x-auto">
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-background to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-background to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              className="flex w-max gap-5 hover:[animation-play-state:paused] motion-reduce:animate-none!"
+              style={{
+                animation: `${row.direction === "right" ? "bbl-marquee-reverse" : "bbl-marquee"} 45s linear infinite`,
+              }}
+            >
+              {[...row.members, ...row.members].map((member, index) => (
+                <MarqueeCard key={`${member.name}-${index}`} {...member} />
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+)
+
 const BblTreeTeaser = () => (
   <section className="w-full space-y-6 text-center">
     <SectionHeading
@@ -631,6 +709,7 @@ const SECTIONS = [
   BblFeatures,
   BblTimeline,
   BblRedBeltCelebration,
+  BblPromotionMarquee,
   BblTestimonials,
   BblFaq,
   BblFinalCta,
