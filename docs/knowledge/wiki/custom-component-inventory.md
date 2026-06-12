@@ -4,7 +4,7 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-07
+updated: 2026-06-12
 last_agent: claude-session-0355
 pairs_with:
   - docs/sprints/SESSION_0355.md
@@ -342,6 +342,9 @@ Mirrors the lineage claim flow (request → admin review queue → approve) for 
 | Admin claims queue + review | `apps/web/app/admin/claims/page.tsx`, `[id]/page.tsx`, `[id]/_components/profile-claim-review-actions.tsx` | route pages + `claimId` | SESSION_0354: `withAdminPage`-guarded list + detail; review action approves/denies/needs-info. Approve grants org `ownerId`; person approval is flagged for a manual placeholder→account merge. |
 | `OrgClaimCta` | `apps/web/components/web/claims/org-claim-cta.tsx` | `organizationId`, `organizationName`, `returnPath`, `isSignedIn`, `noun?` | SESSION_0355: "Claim this organization" CTA rendered on `/organizations/[slug]` + `/schools/[slug]` when `ownerId == null`. Reuses `ProfileClaimForm` (subjectType ORGANIZATION). Sign-in-gated per lineage-claim SOP §5 — logged-out viewers get a "Sign in to claim" link to `/auth/login?next={returnPath}`; the submit action still enforces auth/owner-less/brand/dedup server-side. |
 | `ListingRegisterCta` | `apps/web/components/web/directory/listing-register-cta.tsx` | `title`, `description`, `href`, `cta` | SESSION_0355: inviting register/join callout surfacing the existing self-serve flows on the listing pages — "Add your school" (`/schools` → `/organizations/new`) and "Join the directory" (`/directory`, logged-out → signup). The discoverability half of the funnel (register = create new; claim = take over existing). The unified Dirstarter search-first funnel is staged in `petey-plan-0356`. |
+| `Sheet` (+ `SheetTrigger`/`Content`/`Header`/`Footer`/`Title`/`Description`/`Close`) | `apps/web/components/common/sheet.tsx` | `Dialog.Root` props; `SheetContent`: `side?: "left"\|"right"` (default right) | SESSION_0366 (D8 cutover-arm nav lane): side-anchored full-height overlay panel on Base UI Dialog — the side-panel sibling of `drawer.tsx` (bottom-sheet). Same idiom: `data-slot` attributes, tw-animate slide classes, snappy 300ms entrance via `--ease-snappy`, **mandatory `motion-reduce:animate-none`**, safe-area inset padding. Use a Sheet for nav/filter panels, a Drawer for transient content. Default `w-80 max-w-[85vw]`; override width via className. |
+| `NavSheet` | `apps/web/components/web/nav/nav-sheet.tsx` | `open`, `onOpenChange` (controlled by `Header`) | SESSION_0366: right slide-in (280px per SESSION_0361 §Q4 measured spec) — account header (guest: Guest + sign-in tagline + Create Account/Sign In stacked; authed: avatar/name/email + Dashboard + Admin-panel links + red Sign Out via `UserLogout`), icon primary nav from `navigation.*` i18n keys (brand-neutral), footer = ThemeSwitcher + Join Legacy CTA. Closes itself on pathname change; Escape/backdrop/focus-trap come from Base UI. Header hamburger triggers it at ALL viewport widths (the old full-screen mobile overlay nav is deleted; desktop inline nav retained). |
+| `DirectoryFilterSheet` | `apps/web/components/web/directory/directory-filter-sheet.tsx` | `options: DirectoryFilterOptions` | SESSION_0366: left slide-in (320px) contextual filter panel for `/directory` — hosts the existing `DirectoryFilters` inside the same `FiltersProvider` nuqs state (panel and listing stay in sync; no new filter semantics). Trigger button shows an active-filter dot when `!isDefault`; footer Reset calls `updateFilters(null)`. Must render inside `FiltersProvider` (it consumes `useFilters`). |
 
 ---
 
