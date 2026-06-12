@@ -2,7 +2,7 @@
 title: "SESSION 0368 — BBL brand feature gate (lineage-first launch, SOT-ADR D9)"
 slug: session-0368
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-12
 updated: 2026-06-12
 last_agent: claude-session-0368
@@ -136,7 +136,10 @@ None — grill resolved all forks.
 
 ## What landed
 
-<!-- bow-out -->
+- **BBL is lineage-first** — PR #67 all checks green ×2 runs (incl. Playwright ×3 + CodeRabbit)
+  → squash-merged `59ca8b7`. Feature allowlist + proxy 404 gate + full surface sweep +
+  essentials-only chrome (TASK_02), nothing deleted, one-line re-enable. SOT-ADR **D9** records
+  scope/mechanism/behavior/early-flip ratification + minimal chrome.
 
 ## Decisions resolved
 
@@ -189,11 +192,30 @@ membership checkout; capture evidence in the session file.
 
 ## Review log
 
-<!-- bow-out -->
+### SESSION_0368_REVIEW_01 — Feature gate + minimal chrome (PR #67)
+
+- **Reviewed tasks:** TASK_01, TASK_02
+- **Dirstarter docs check:** not applicable (repo-internal seams; gate layered on the MB-002
+  canonical brand path, no second resolution map)
+- **Verdict:** One config file drives everything (routes, nav, chrome, copy variant); behavior
+  proven by status-code matrix + live-DOM link assertions on BOTH brands, not by absence of
+  errors. The Prisma-runtime-in-browser break was caught by the proof walk (500s), diagnosed
+  from the dev-server import trace, and fixed at the import-semantics level with a guard
+  comment. The footer screenshot caught an off-brand copy leak the gating couldn't
+  ("programs, tournaments" in the newsletter blurb) — visual proof earns its keep again.
+- **Score:** 9/10
+- **Follow-up:** none in-slice; pre-flip gate continues (stripe rehearsal next).
 
 ## Hostile close review
 
-<!-- bow-out -->
+- **Giddy:** pass — nothing deleted; no schema; entitlements/Stripe untouched; gates additive
+  per-brand; other brands proven byte-equivalent in behavior (SSR link checks + curl matrix).
+- **Doug:** pass — curl matrix ×2 brands, live-DOM assertions, 0 console errors, 6/6 unit tests,
+  CI green twice. Residual: CI e2e runs Baseline-only so the BBL gate has no CI e2e — accepted
+  (gate is 6 lines of middleware + pure config; covered by unit tests + local walks).
+- **Desi:** pass — minimal header matches the SESSION_0361 measured legacy spec; footer keeps
+  the email-capture funnel; Coming Soon badge keeps the roadmap story without dead links.
+- **Kaizen aggregate:** 9/10 — grill → D9 → shipped + proven in one session.
 
 ## ADR / ubiquitous-language check
 
@@ -203,19 +225,31 @@ membership checkout; capture evidence in the session file.
 
 ## Reflections
 
-<!-- bow-out -->
+- **Generated-enum value imports are browser-fatal in client-shared modules.** `import { Brand }`
+  vs `import type { Brand }` was the difference between a working site and 500s everywhere —
+  the generated Prisma client rides along with any value import. The guard comment now lives in
+  the config header; the pattern to internalize: any module imported by BOTH middleware and
+  client components must be value-import-free of generated code.
+- **Status-code matrices beat eyeballing for gating work.** A 15-line curl loop proved the entire
+  gate (gated/kept × two brands) faster and more convincingly than any browser walk — and it
+  caught the 500 regression instantly. The browser walk then earned its keep differently: the
+  footer screenshot exposed an off-brand copy leak no status code could see.
+- **The grill paid for itself in scope precision.** "Strip non-lineage features" could have meant
+  deleting routes, a DB flag system, or a fork. Five targeted questions landed on: static
+  allowlist, 404s, posts/blog stay (operator has content), early flip with the user-carry
+  consequence ratified explicitly — and D9 now makes the whole thing auditable.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
-| JETTY/frontmatter sweep | <at bow-out> |
-| Backlinks/index sweep | <at bow-out> |
-| Wiki lint | <at bow-out> |
-| Kaizen reflection | <at bow-out> |
-| Hostile close review | <at bow-out> |
-| Review & Recommend | <at bow-out> |
-| Memory sweep | <at bow-out> |
-| Next session unblock check | <at bow-out> |
-| Git hygiene | <at bow-out> |
-| Graphify update | <at bow-out> |
+| JETTY/frontmatter sweep | status closed; last_agent claude-session-0368; SOT-ADR stamped. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0368 row added at close. |
+| Wiki lint | Result in close chat. |
+| Kaizen reflection | 3 entries above. |
+| Hostile close review | REVIEW_01; Giddy/Doug/Desi pass, 9/10. |
+| Review & Recommend | Next = stripe@22 rehearsal (D9 pre-flip order), first task staged. |
+| Memory sweep | Program memory updated (D9, gating live, pre-flip gate, early flip). |
+| Next session unblock check | Unblocked — runbook exists (`stripe-setup-runbook.md`). |
+| Git hygiene | PR #67 → squash `59ca8b7`; close docs commit on main. |
+| Graphify update | Stats in close chat. |
