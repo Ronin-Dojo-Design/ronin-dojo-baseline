@@ -47,14 +47,16 @@ export const requirePermission = async (permission: Permission): Promise<Session
 
 /**
  * Ronin delta (SOT-ADR D4/D5, SESSION_0365 grill option b): gate for the lineage
- * areas of `/app`. Admits a user who either holds `permission` via flat roles
- * (admin `"*"`) OR has ANY active `LineageTreeAccess` grant — a TREE_ADMIN /
- * TREE_EDITOR / BRANCH_EDITOR / NODE_EDITOR steward must reach the lineage
- * management surfaces without a global role. Which trees/branches/nodes they may
- * actually touch inside those surfaces is enforced per-action (and, as entity
- * routers migrate, per-procedure via `canForResource`) — this guard only scopes
- * the SHELL: grantees get the lineage area, not the whole dashboard (fixes the
- * legacy `/admin` looseness where any grantee saw every area).
+ * management areas of `/app`. Admits a user who either holds `permission` via
+ * flat roles (admin `"*"`) OR has an active **TREE_ADMIN** `LineageTreeAccess`
+ * grant — exact parity with the legacy `/admin` gate (`hasLineageAdminAccess` /
+ * `withLineageAdminPage`, both TREE_ADMIN-only). Unlike the legacy shell,
+ * grantees get ONLY the lineage area, not the whole dashboard.
+ *
+ * Branch/node-scoped editor roles (BRANCH_EDITOR / NODE_EDITOR / TREE_EDITOR)
+ * do NOT enter the management area today (same as legacy); they gain their own
+ * scoped surfaces via `canForResource` as Phases 4/6 land — broaden the grant
+ * filter here only alongside those surfaces.
  */
 export const requireLineageAccess = async (
   permission: Permission = "lineage.manage",
@@ -66,7 +68,7 @@ export const requireLineageAccess = async (
   }
 
   const grant = await db.lineageTreeAccess.findFirst({
-    where: { userId: user.id, revokedAt: null },
+    where: { userId: user.id, role: "TREE_ADMIN", revokedAt: null },
     select: { id: true },
   })
 
@@ -78,13 +80,13 @@ export const requireLineageAccess = async (
 }
 
 /**
- * Non-redirecting variant for nav/sidebar visibility: does this user have any
- * active lineage grant? Pairs with `can()` so the sidebar can show the lineage
- * section to grantees the same way `requireLineageAccess` admits them.
+ * Non-redirecting variant for nav/sidebar visibility: does this user have an
+ * active TREE_ADMIN lineage grant? Pairs with `can()` so the sidebar shows the
+ * lineage section to exactly the users `requireLineageAccess` admits.
  */
 export const hasAnyLineageGrant = async (userId: string): Promise<boolean> => {
   const grant = await db.lineageTreeAccess.findFirst({
-    where: { userId, revokedAt: null },
+    where: { userId, role: "TREE_ADMIN", revokedAt: null },
     select: { id: true },
   })
 

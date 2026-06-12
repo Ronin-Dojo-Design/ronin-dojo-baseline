@@ -57,8 +57,8 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
         />
 
         <DropdownMenuContent align="end" sideOffset={8}>
-          {pathname !== `/admin/users/${user.id}` && (
-            <DropdownMenuItem render={<Link href={`/admin/users/${user.id}`} />}>
+          {pathname !== `/app/users/${user.id}` && (
+            <DropdownMenuItem render={<Link href={`/app/users/${user.id}`} />}>
               Edit
             </DropdownMenuItem>
           )}
@@ -146,7 +146,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
       </DropdownMenu>
 
       {user.role !== "admin" && (
-        <UsersDeleteDialog users={[user]} onExecute={() => router.push("/admin/users")}>
+        <UsersDeleteDialog users={[user]} onExecute={() => router.push("/app/users")}>
           <Button
             variant="secondary"
             size="sm"

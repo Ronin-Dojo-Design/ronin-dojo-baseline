@@ -154,7 +154,7 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" render={<Link href="/admin/users" />}>
+          <Button size="md" variant="secondary" render={<Link href="/app/users" />}>
             Cancel
           </Button>
 
