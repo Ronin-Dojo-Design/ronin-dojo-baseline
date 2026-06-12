@@ -2,7 +2,7 @@
 title: "SESSION 0363 — Phase 1b: D4 resource-grant seam + Ronin role mapping (cloud run)"
 slug: session-0363
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-11
 updated: 2026-06-11
 last_agent: claude-session-0363
@@ -256,11 +256,29 @@ auth flow in-browser. Then begin the Phase 4 claim-review wiring against
 
 ## Review log
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+### SESSION_0363_REVIEW_01 — D4 seam (cloud run → PR #61 → merged)
+
+- **Reviewed tasks:** SESSION_0363_TASK_01, _02, _03 (deferred)
+- **Reviewer:** operator-side claude session (same chat that dispatched the run); diff reviewed
+  before merge — flat `can()` untouched, deny-by-default on unknown roles, `revokedAt` honored in
+  both layers, NODE_EDITOR matches node OR member id, claim-review matrix matches D6 verbatim.
+- **Merged:** PR #61 → `edb74b2` (squash). CI on the PR: typecheck/oxc/unit (incl. DB-backed suite
+  on CI Postgres)/Playwright ×3/Vercel preview — all green.
+- **Verdict:** first unattended cloud implementation run for this repo; line-faithful to the brief,
+  and it caught `TREE_EDITOR` (4th `LineageTreeAccessRole` the spec prose omitted) by reading the
+  schema instead of guessing. Draft-PR-by-default behaved exactly as designed.
+- **Score:** 9.0/10
+- **Follow-up:** Better-Auth plugins (local), Phase-4 `canForResource` consumer + branch-ancestor helper.
 
 ## Hostile close review
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+- **Giddy:** pass — additive seam, no schema/auth/payload surface changed; resource grants can only
+  add authority, never remove; clients can't influence grants.
+- **Doug:** pass with recorded gap — `canForResource`'s DB path is exercised by CI's suite but has
+  no dedicated integration test until the Phase-4 consumer lands (recorded in Open decisions).
+- **Desi:** not applicable (no UI).
+- **Kaizen aggregate:** 9/10 — the cloud-dispatch pattern (tight brief + draft-on-doubt + CI as
+  authoritative gate) produced mergeable work on the first attempt.
 
 ## ADR / ubiquitous-language check
 
@@ -273,10 +291,27 @@ auth flow in-browser. Then begin the Phase 4 claim-review wiring against
 
 ## Reflections
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+- **The unattended-cloud pattern works when the brief carries the context.** A fully self-contained
+  prompt (exact files to read, hard constraints, draft-on-doubt escape hatch, CI as the authoritative
+  gate) produced a mergeable PR cold. The brief is the bottleneck, not the model.
+- **Read-the-schema beat the spec prose:** D4 named three resource roles; the schema has four. The
+  agent modelled `TREE_EDITOR` from `LineageTreeAccess` reality instead of following the doc — the
+  correct priority order (live code > doc), unprompted.
+- **Cloud runs share the account usage pool.** The follow-up 0364 run was killed silently by the
+  operator's session limit (no branch, no PR, no error surface). Lesson: fire cloud dispatches with
+  usage headroom, and watch with a deadline so silence ≠ progress.
 
 ## Full close evidence
 
-<!-- Bow-out stub (cloud run) — full closing ritual runs on the operator's
-     machine: wiki index/log row, wiki lint, Graphify update, memory sweep,
-     git hygiene to main. This branch lands via PR review, not a main push. -->
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION doc frontmatter current (`last_agent` cloud session; close stamped by operator-side session). |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0363 row added at this close. |
+| Wiki lint | `bun run wiki:lint` — result in close chat. |
+| Kaizen reflection | Reflections present: yes (3 entries). |
+| Hostile close review | SESSION_0363_REVIEW_01; Giddy/Doug pass (1 recorded gap). |
+| Review & Recommend | Next session block written by the cloud run; superseded in part by SESSION_0364 (already executed). |
+| Memory sweep | `bbl-sot-spec-program` memory already current (D4/D8); no new standing fact. |
+| Next session unblock check | Unblocked (0364 already ran; Better-Auth plugins queued local). |
+| Git hygiene | Landed via PR #61 review → squash `edb74b2`; close-ritual docs commit via main push at this close. |
+| Graphify update | Run before this close commit — count in close chat. |

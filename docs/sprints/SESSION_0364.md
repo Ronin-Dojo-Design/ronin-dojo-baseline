@@ -2,7 +2,7 @@
 title: "SESSION 0364 — Phase 1c: oRPC pilot read migration (public lineage tree) (cloud run)"
 slug: session-0364
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-12
 updated: 2026-06-12
 last_agent: claude-session-0364
@@ -223,7 +223,11 @@ None — operator ratified scope via the task spec.
   viewer path, deciding how to thread `viewer` (likely from `context.user`).
 - **TanStack consumer migration** deferred — provider is mounted but no client
   component consumes `~/lib/orpc-query` yet.
-- **Manual `bbl.local` proof** of the page deferred to the operator's machine.
+- ~~**Manual `bbl.local` proof** of the page deferred to the operator's machine.~~ **DONE at close
+  (2026-06-12 operator-side session):** `/lineage/rigan-machado-bjj-lineage` on `bbl.local:3000`
+  renders fully through the oRPC transport — title/H1, **"17 members"** (the PUBLIC visibility
+  filter count — payload allowlist intact), 3 public groups, honor strip, claim CTA, drawer
+  buttons. Playwright-MCP verified on the live DOM.
 
 ## Next session
 
@@ -241,11 +245,32 @@ viewer-scoped lineage path) and repeat the 1c migration shape.
 
 ## Review log
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+### SESSION_0364_REVIEW_01 — Phase 1c pilot (cloud run → PR #62 → merged)
+
+- **Reviewed tasks:** SESSION_0364_TASK_01 (pilot read), TASK_02 (provider stretch — landed)
+- **Reviewer:** operator-side claude session; diff reviewed pre-merge — thin pass-through handler
+  (`slug`-only input, brand from context), payload functions untouched, page swap surgical
+  (`null → notFound()` unchanged), provider additive/outermost with existing order preserved.
+- **Merged:** PR #62 → `94e119d` (squash). CI: typecheck/oxc/unit/Playwright ×3 (the lineage suite
+  IS the page-identity proof) — all green. Prod deploy for `94e119d` **Ready** (buildCommand
+  `db:generate` fix holding).
+- **Post-merge browser proof:** `bbl.local:3000/lineage/rigan-machado-bjj-lineage` via the oRPC
+  transport — 17 members / 3 groups / claim CTA / drawer controls all render; D3 allowlist intact.
+- **Note:** the first run of this trigger was silently killed by the account usage limit (no branch,
+  no PR); the re-fired run completed in ~35 min.
+- **Score:** 9.0/10
+- **Follow-up:** next read surface(s) per the 1c shape; viewer-scoped lineage read; first TanStack
+  consumer.
 
 ## Hostile close review
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+- **Giddy:** pass — D3 hard gate held (brand server-side only, payload source-of-truth unchanged);
+  no schema/auth changes; old query exports retained for other callers.
+- **Doug:** pass — proof chain complete: CI Playwright ×3 + post-merge live-DOM walk on bbl.local;
+  the "17 members" count is the visibility-filter regression signal and it held.
+- **Desi:** not applicable (transport-only change; rendering identical by design and by proof).
+- **Kaizen aggregate:** 9/10 — the 1c migration shape (thin pass-through + existing-payload reuse +
+  e2e-as-proof) is now the template for every remaining read surface.
 
 ## ADR / ubiquitous-language check
 
@@ -258,10 +283,27 @@ viewer-scoped lineage path) and repeat the 1c migration shape.
 
 ## Reflections
 
-<!-- Bow-out stub (cloud run) — filled during full close on operator machine. -->
+- **The 1c shape is the migration template:** thin pass-through procedure + existing payload
+  functions + brand-from-context + e2e-as-proof. Every remaining read surface should copy it —
+  the risk surface is the diff in the page, not the router.
+- **"17 members" is the cheapest regression oracle in the repo.** One number on the public page
+  encodes the entire visibility-filter/payload-allowlist behavior; it survived the transport swap
+  and should be checked after every lineage-read migration.
+- **Silent cloud-run death is real:** the first firing of this trigger was killed by the account
+  usage limit and left zero trace (no branch, no PR, no error). The deadline-bounded watcher is
+  what distinguished "still running" from "dead" — keep using it for every dispatch.
 
 ## Full close evidence
 
-<!-- Bow-out stub (cloud run) — full closing ritual runs on the operator's
-     machine: wiki index/log row, wiki lint, Graphify update, memory sweep,
-     git hygiene. This branch lands via PR review, not a main push. -->
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION doc frontmatter current; close stamped by operator-side session. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0364 row added at this close. |
+| Wiki lint | `bun run wiki:lint` — result in close chat. |
+| Kaizen reflection | Reflections present: yes (3 entries). |
+| Hostile close review | SESSION_0364_REVIEW_01; Giddy/Doug pass; browser proof on live DOM. |
+| Review & Recommend | Next-session block written by the cloud run; first task (bbl.local proof) already executed at this close. |
+| Memory sweep | No new standing fact beyond what `bbl-sot-spec-program` carries; cloud-run usage-limit lesson recorded in 0363/0364 Reflections. |
+| Next session unblock check | Unblocked — next read surface or Better-Auth plugins (local), operator's pick. |
+| Git hygiene | Landed via PR #62 review → squash `94e119d`; prod deploy Ready; close-ritual docs commit via main push at this close. |
+| Graphify update | Run before this close commit — count in close chat. |
