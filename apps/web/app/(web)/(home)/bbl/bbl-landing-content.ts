@@ -43,7 +43,7 @@ export const heroContent = {
     "Connect with verified instructors, document your journey, and preserve your martial arts lineage for the next generation.",
   card: {
     image: BBL_IMAGES.riganMachado,
-    badge: "8th Degree Coral Belt",
+    badge: "9th Degree Red Belt",
     logo: BBL_IMAGES.riganAcademy,
     name: "Rigan Machado",
     role: "Head of Machado Lineage",
@@ -58,7 +58,7 @@ export const videoContent = {
   description: "Learn why lineage matters and what makes the Black Belt Legacy network special.",
   embedUrl: "https://www.youtube.com/embed/EGGPLxKtYZ8",
   embedTitle: "Rigan Machado explains Black Belt Legacy",
-  caption: "8th Degree Coral Belt · Pan American Champion · ADCC Veteran",
+  caption: "9th Degree Red Belt · Pan American Champion · ADCC Veteran",
 }
 
 export type DirtyDozenMember = {
@@ -270,8 +270,8 @@ export const timeline: TimelineEntry[] = [
   },
   {
     name: "Rigan Machado",
-    rank: "8th Degree Coral Belt",
-    belt: "coral",
+    rank: "9th Degree Red Belt",
+    belt: "red",
     copy: "Pan American Champion, ADCC veteran, and coach to notable students. Leads the lineage celebrated as Black Belt Legacy.",
     image: `${IMG}/rigan-machado.jpg`,
   },
@@ -369,6 +369,20 @@ export const celebrationContent = {
   titleAccent: "Dave Meyer",
   titleTail: "on Joining the Legends",
   image: BBL_IMAGES.celebration,
+}
+
+export const redBeltCelebration = {
+  opener: "April 10, 2026 — a lineage event.",
+  titleLead: "Professor",
+  titleAccent: "Rigan Machado",
+  titleTail: "Receives the Red Belt",
+  bodyLead: "Promoted to",
+  bodyRank: "9th Degree Red Belt",
+  bodyMid: "by",
+  bodyBy: "Rorion Gracie",
+  bodyTail:
+    "at Erik Paulson's CSW Training Center — the architects of American Jiu Jitsu honoring the man who carried the lineage forward. The same ceremony recognized Erik Paulson with the coral belt.",
+  image: BBL_IMAGES.heroClinch,
 }
 
 export const treeSection = {

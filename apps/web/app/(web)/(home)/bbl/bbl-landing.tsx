@@ -1,4 +1,5 @@
 import { BarChart3Icon, CheckIcon, SwordsIcon, TrophyIcon } from "lucide-react"
+import { Inter, Poppins } from "next/font/google"
 import type { ComponentProps, ReactNode } from "react"
 import {
   Accordion,
@@ -18,6 +19,7 @@ import {
   BBL_IMAGES,
   BBL_ROUTES,
   celebrationContent,
+  redBeltCelebration,
   dirtyDozen,
   dirtyDozenSection,
   faqs,
@@ -39,6 +41,17 @@ import {
   valuePropsSection,
   videoContent,
 } from "./bbl-landing-content"
+import { BblReveal } from "./bbl-reveal"
+
+// Legacy BBL type system (BlackBeltLegacyLanding.jsx): Poppins headings
+// (italic extrabold uppercase) + Inter body. Scoped to this landing via vars.
+const headingFont = Poppins({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
+  variable: "--font-bbl-heading",
+})
+const bodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-body" })
 
 /**
  * Black Belt Legacy landing page — content/IA from the legacy
@@ -63,20 +76,22 @@ const SectionHeading = ({
   eyebrow,
   title,
   description,
+  align = "center",
   className,
 }: {
   eyebrow: string
   title: string
   description?: string
+  align?: "center" | "left"
   className?: string
 }) => (
-  <div className={cx("space-y-3 text-center", className)}>
-    <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
-      {eyebrow}
-    </p>
+  <div className={cx("space-y-3", align === "center" && "text-center", className)}>
+    <p className="text-xs uppercase tracking-[0.24em] text-primary font-semibold">{eyebrow}</p>
     <H2>{title}</H2>
     {description && (
-      <Prose className="max-w-3xl mx-auto text-muted-foreground">{description}</Prose>
+      <Prose className={cx("max-w-3xl text-muted-foreground", align === "center" && "mx-auto")}>
+        {description}
+      </Prose>
     )}
   </div>
 )
@@ -262,7 +277,7 @@ const BblHeritage = () => (
       <SectionHeading
         eyebrow={heritageContent.eyebrow}
         title={heritageContent.title}
-        className="text-left [&>*]:text-left"
+        align="left"
       />
       <Prose className="text-muted-foreground">{heritageContent.lead}</Prose>
       <Prose className="text-muted-foreground text-sm">{heritageContent.body}</Prose>
@@ -503,6 +518,40 @@ const BblCelebration = () => (
   </section>
 )
 
+const BblRedBeltCelebration = () => (
+  <section className="w-full">
+    <Card hover={false} className="relative p-0! overflow-hidden">
+      <img
+        src={redBeltCelebration.image}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/75 via-red-950/60 to-black/85"
+        aria-hidden="true"
+      />
+      <div className="relative z-10 space-y-7 px-6 py-16 text-center text-white md:py-24">
+        <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
+        <p className="italic text-white/90">{redBeltCelebration.opener}</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
+          {redBeltCelebration.titleLead}{" "}
+          <span className="text-primary">{redBeltCelebration.titleAccent}</span>{" "}
+          {redBeltCelebration.titleTail}
+        </h2>
+        <p className="text-white/90 max-w-3xl mx-auto leading-relaxed">
+          {redBeltCelebration.bodyLead}{" "}
+          <span className="text-primary font-bold">{redBeltCelebration.bodyRank}</span>{" "}
+          {redBeltCelebration.bodyMid}{" "}
+          <span className="font-semibold">{redBeltCelebration.bodyBy}</span>{" "}
+          {redBeltCelebration.bodyTail}
+        </p>
+        <RegisterButtons />
+      </div>
+    </Card>
+  </section>
+)
+
 const BblTreeTeaser = () => (
   <section className="w-full space-y-6 text-center">
     <SectionHeading
@@ -573,20 +622,39 @@ const BblPromos = () => (
   </>
 )
 
+const SECTIONS = [
+  BblHero,
+  BblVideo,
+  BblDirtyDozen,
+  BblHeritage,
+  BblValueProps,
+  BblFeatures,
+  BblTimeline,
+  BblRedBeltCelebration,
+  BblTestimonials,
+  BblFaq,
+  BblFinalCta,
+  BblCelebration,
+  BblTreeTeaser,
+  BblPromos,
+]
+
 export const BblLanding = () => (
-  <div className="flex flex-col gap-y-16 md:gap-y-20 w-full pb-8">
-    <BblHero />
-    <BblVideo />
-    <BblDirtyDozen />
-    <BblHeritage />
-    <BblValueProps />
-    <BblFeatures />
-    <BblTimeline />
-    <BblTestimonials />
-    <BblFaq />
-    <BblFinalCta />
-    <BblCelebration />
-    <BblTreeTeaser />
-    <BblPromos />
+  <div
+    className={cx(
+      headingFont.variable,
+      bodyFont.variable,
+      "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
+      // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
+      "[font-family:var(--font-bbl-body)]",
+      "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)] [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold [&_:is(h1,h2)]:tracking-[0.02em]",
+      "[&_h3]:[font-family:var(--font-bbl-heading)]",
+    )}
+  >
+    {SECTIONS.map((Section, index) => (
+      <BblReveal key={Section.name} delay={index === 0 ? 0 : 0.08}>
+        <Section />
+      </BblReveal>
+    ))}
   </div>
 )
