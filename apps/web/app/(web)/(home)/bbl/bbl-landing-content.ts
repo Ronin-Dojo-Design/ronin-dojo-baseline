@@ -43,7 +43,7 @@ export const heroContent = {
     "Connect with verified instructors, document your journey, and preserve your martial arts lineage for the next generation.",
   card: {
     image: BBL_IMAGES.riganMachado,
-    badge: "8th Degree Coral Belt",
+    badge: "9th Degree Red Belt",
     logo: BBL_IMAGES.riganAcademy,
     name: "Rigan Machado",
     role: "Head of Machado Lineage",
@@ -58,7 +58,7 @@ export const videoContent = {
   description: "Learn why lineage matters and what makes the Black Belt Legacy network special.",
   embedUrl: "https://www.youtube.com/embed/EGGPLxKtYZ8",
   embedTitle: "Rigan Machado explains Black Belt Legacy",
-  caption: "8th Degree Coral Belt · Pan American Champion · ADCC Veteran",
+  caption: "9th Degree Red Belt · Pan American Champion · ADCC Veteran",
 }
 
 export type DirtyDozenMember = {
@@ -73,7 +73,7 @@ export type DirtyDozenMember = {
 export const dirtyDozen: DirtyDozenMember[] = [
   {
     name: "Bob Bass",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 1,
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
@@ -81,7 +81,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Rick Williams",
-    rank: "Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 9,
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
@@ -89,7 +89,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "David Meyer",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 10,
     school: "David Meyer BJJ",
     location: "Los Angeles, CA",
@@ -97,7 +97,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Chris Haueter",
-    rank: "Black Belt",
+    rank: "6th Degree Black Belt",
     dirtyDozenRank: 11,
     school: "Combat Base",
     location: "Los Angeles, CA",
@@ -105,7 +105,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "John Will",
-    rank: "6th Degree Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: 12,
     school: "John Will Martial Arts",
     location: "Australia",
@@ -113,7 +113,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
   },
   {
     name: "Renato Magno",
-    rank: "Black Belt",
+    rank: "7th Degree Coral Belt",
     dirtyDozenRank: null,
     school: "Street Sports",
     location: "Santa Monica, CA",
@@ -256,8 +256,8 @@ export type TimelineEntry = {
 export const timeline: TimelineEntry[] = [
   {
     name: "Carlos Gracie Sr",
-    rank: "Founder of Gracie Jiu Jitsu",
-    belt: "founder",
+    rank: "10th Degree Red Belt — Grand Master",
+    belt: "red",
     copy: "Built the framework that empowered the Gracie family to share Brazilian Jiu Jitsu worldwide.",
     image: `${IMG}/carlos-gracie-sr.jpg`,
   },
@@ -270,14 +270,14 @@ export const timeline: TimelineEntry[] = [
   },
   {
     name: "Rigan Machado",
-    rank: "8th Degree Coral Belt",
-    belt: "coral",
+    rank: "9th Degree Red Belt",
+    belt: "red",
     copy: "Pan American Champion, ADCC veteran, and coach to notable students. Leads the lineage celebrated as Black Belt Legacy.",
     image: `${IMG}/rigan-machado.jpg`,
   },
   {
     name: "Bob Bass",
-    rank: "8th Degree Coral Belt",
+    rank: "7th Degree Coral Belt",
     belt: "coral",
     copy: "Historic Pan Am wins over Márcio Feitosa and first American promoted to coral belt by Rigan Machado in 2024.",
     image: `${IMG}/bob-bass.jpg`,
@@ -343,7 +343,7 @@ export const faqs = [
   {
     question: "Who is Rigan Machado?",
     answer:
-      "Rigan Machado is an 8th Degree Coral Belt, Pan American Champion, and ADCC veteran. He leads the Black Belt Legacy network with decades of teaching experience.",
+      "Rigan Machado is a 9th Degree Red Belt, Pan American Champion, and ADCC veteran. He leads the Black Belt Legacy network with decades of teaching experience.",
   },
   {
     question: "How do I find a school in my lineage?",
@@ -369,6 +369,36 @@ export const celebrationContent = {
   titleAccent: "Dave Meyer",
   titleTail: "on Joining the Legends",
   image: BBL_IMAGES.celebration,
+}
+
+export const redBeltCelebration = {
+  opener: "April 10, 2026 — a lineage event.",
+  titleLead: "Professor",
+  titleAccent: "Rigan Machado",
+  titleTail: "Receives the Red Belt",
+  bodyLead: "Promoted to",
+  bodyRank: "9th Degree Red Belt",
+  bodyMid: "by",
+  bodyBy: "Rorion Gracie",
+  bodyTail:
+    "at Erik Paulson's CSW Training Center — the architects of American Jiu Jitsu honoring the man who carried the lineage forward. The same ceremony recognized Erik Paulson with the coral belt.",
+  image: BBL_IMAGES.heroClinch,
+}
+
+/** Marquee section copy; rosters are pulled from PromotionEvent at render (tree = SoT). */
+export const promotionMarquee = {
+  eyebrow: "The Legends Return",
+  title: "Recent Promotions",
+}
+
+/** Photo overrides by display name for tree-driven cards without passport avatars. */
+export const MARQUEE_PHOTOS: Record<string, string> = {
+  "Bob Bass": `${IMG}/bob-bass-classic.jpg`,
+  "Rick Williams": `${IMG}/rick-williams.jpg`,
+  "David Meyer": `${IMG}/david-meyer.jpg`,
+  "John Will": `${IMG}/john-will.jpg`,
+  "Chris Haueter": `${IMG}/chris-haueter.jpg`,
+  "Rigan Machado": `${IMG}/rigan-machado.jpg`,
 }
 
 export const treeSection = {

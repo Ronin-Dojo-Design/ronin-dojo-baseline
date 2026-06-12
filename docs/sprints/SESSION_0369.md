@@ -1,21 +1,23 @@
 ---
-title: "SESSION 0369 — BBL landing polish + registration form"
+title: "SESSION 0369 — stripe@22 live test-mode rehearsal (BBL brand, pre-flip gate)"
 slug: session-0369
-type: session--implement
+type: session--review
 status: closed
 created: 2026-06-12
 updated: 2026-06-12
-last_agent: codex-session-0369
+last_agent: claude-session-0369
 sprint: S6
 pairs_with:
+
   - docs/sprints/SESSION_0368.md
-  - docs/product/black-belt-legacy/BBL-SOT-Spec.md
-  - docs/product/black-belt-legacy/SOT-ADR.md
+  - docs/runbooks/integrations/stripe-setup-runbook.md
+  - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
 backlinks:
+
   - docs/knowledge/wiki/index.md
 ---
 
-# SESSION 0369 — BBL landing polish + registration form
+# SESSION 0369 — stripe@22 live test-mode rehearsal (BBL brand, pre-flip gate)
 
 ## Date
 
@@ -23,11 +25,14 @@ backlinks:
 
 ## Operator
 
-Brian + codex-session-0369
+Brian + claude-session-0369
 
 ## Goal
 
-Improve `bbl.local` landing spacing/typography/rhythm/design tokens toward BlackBeltLegacy parity, sweep broken links, and wire Register CTAs to a premium registration form collecting lineage-ready information.
+First item of the SOT-ADR D9 pre-flip gate: re-prove the **real signed-webhook → entitlement
+path** on `stripe@^22.1.1` (already in package.json — this is the runtime proof), with a
+**BBL-branded** fixture driven from `bbl.local/lineage/join`, per the
+`stripe-setup-runbook.md` "Stripe CLI live test-mode rehearsal" procedure (SESSION_0345).
 
 ## Status
 
@@ -37,158 +42,175 @@ Single source of truth is the frontmatter `status:` field.
 
 ### Previous session
 
-- Latest session read: `docs/sprints/SESSION_0368.md` (BBL brand feature gate closed).
-- Carryover: BBL is lineage-first with static feature gates; this session must preserve allowlisted launch scope and route behavior.
+- Latest session read: `docs/sprints/SESSION_0368.md` (closed — feature gate + minimal chrome).
+- Carryover: D9 pre-flip order — this rehearsal is item 1.
 
 ### Branch and worktree
 
-- Branch: `work`
-- Worktree: `/workspace/ronin-dojo-baseline` (requested `/Users/brianscott/dev/ronin-dojo-app` is not mounted in this container).
-- Status at bow-in: clean except this new session file after creation.
-- Current HEAD at bow-in: `1879dc5`.
-
-### Graphify check
-
-- Graph status: rebuilt because `graphify` was not on PATH and `npx @nodesify/graphify stats` initially reported 0 nodes. Rebuild result: 7,527 nodes / 19,785 edges; subsequent stats: 9,535 nodes / 19,785 edges / 1,778 files tracked.
-- Queries used: `registration lineage lineage-listings-runbook`; `BBL landing register form BlackBeltLegacyLanding BBLRegisterForm lineage join`; `autonomous auto codex session setup`; `graphify explain "Black Belt Legacy"`.
-- Files selected from graph: `apps/web/app/(web)/lineage/join/page.tsx`, `apps/web/components/web/lineage/join-legacy-form.tsx`, `apps/web/server/web/lineage/join-legacy-actions.ts`, `apps/web/emails/bbl-join-legacy-confirmation.tsx`, BBL landing/header/footer surfaces.
-- Verification note: `lineage-listings-runbook` node was not found; Graphify did identify `docs/runbooks/dev-environment/autonomous-sessions.md` and `scripts/auto-session-codex.sh`. Recommendation: keep this task inline with subagents, not autonomous 3-session run, because visual parity + form data + route wiring are tightly coupled.
+- Branch: `main` (rehearsal session; only docs + a reusable tooling script land)
+- Worktree: `/Users/brianscott/dev/ronin-dojo-app`
+- Status at bow-in: clean
+- Current HEAD at bow-in: `1879dc5`
 
 ### Dirstarter alignment
 
 | Field | Answer |
 | --- | --- |
-| Dirstarter baseline touched | Marketing landing route, web form/action path, email confirmation, route links |
-| Extension or replacement | Extension: brand-specific BBL landing polish and registration data collection on existing lineage join seam |
-| Why justified | BBL launch SoT requires lineage-first public experience and claim/registration funnel |
-| Risk if bypassed | Premium landing CTAs dead-end or collect insufficient information for lineage onboarding |
+| Dirstarter baseline touched | None (verification session; payments pipeline exercised, not modified) |
+| Extension or replacement | Not applicable |
+| Why justified | D9 pre-flip gate; D-018 (prod is live-mode) forces the off-prod rehearsal |
+| Risk if bypassed | First real BBL checkout after the flip would be the first runtime test of stripe@22 |
+
+### FAILED_STEPS / drift check
+
+- D-018 acknowledged (live-mode prod) — rehearsal ran fully off prod (`sk_test`, local DB).
+- FS-0002 acknowledged — dev server restarted via the canonical command (twice: rehearsal env,
+  then clean restore).
 
 ## Petey plan
 
 ### Goal
 
-BBL landing feels premium and launch-ready, all Register CTAs land on a functional lineage registration form, and link/form behavior is verified.
+Runbook §rehearsal executed end-to-end on stripe@22 with a BBL fixture; every assertion green;
+fixture cleaned by id; evidence + runbook/checklist updates landed.
 
 ### Tasks
 
-#### SESSION_0369_TASK_01 — BBL landing polish + CTA wiring
+#### SESSION_0369_TASK_01 — Rehearsal execution + evidence
 
-- **Agent:** Cody + Desi
-- **What:** Improve spacing/typography/rhythm/design tokens and premium micro-interactions on the BBL landing; wire Register CTAs to the registration route.
-- **Done means:** landing renders without broken internal CTAs; tokens are centralized enough for follow-up reuse; visual proof captured if runnable.
+- **Agent:** Cody/Doug (inline) + operator (hosted-checkout card entry)
+- **What:** Env verification → real test-mode Stripe objects → disposable BBL fixture
+  (new reusable bridge `apps/web/scripts/stripe-rehearsal-seed.ts`) → dev server with
+  `DEV_LOGIN_USER_ID` → `stripe listen` forwarder → subscription checkout → grant assert →
+  CLI cancel → revoke assert → one-time checkout (returning customer) → purchase assert →
+  cleanup by id + deactivate test objects → docs.
+- **Done means:** all runbook §6 assertions green; cleanup verified; runbook + checklist updated.
 - **Depends on:** nothing
-
-#### SESSION_0369_TASK_02 — Registration form parity + backend
-
-- **Agent:** Cody
-- **What:** Bring `/lineage/join` form closer to BBLRegisterForm feature/visual parity while collecting lineage-ready data and preserving backend submission/email path.
-- **Done means:** form validates required fields, submits to existing action, persists all newly collected information in available model fields or a safe schema addition if required.
-- **Depends on:** TASK_01 route decision
-
-#### SESSION_0369_TASK_03 — Link sweep + verification
-
-- **Agent:** Doug
-- **What:** Check BBL landing/register links and run type/lint/test/build-appropriate gates.
-- **Done means:** verification commands recorded with pass/fail/warning and blockers documented.
-- **Depends on:** TASK_01, TASK_02
-
-### Parallelism
-
-- Explorer subagents run in parallel for legacy parity discovery and current route/backend seam discovery.
-- Implementation stays inline to avoid overlapping edits in landing/form/action files.
 
 ### Open decisions
 
-- None blocking. Schema changes are greenlit by operator if needed, but prefer existing `RegistrationEntry`/lineage join storage when sufficient.
-
-### Risks
-
-- Legacy monorepo may not be mounted in this container; use available local references and current live code if source files are unavailable.
-- Local dev server/database may limit end-to-end submission proof.
+None.
 
 ### Scope guard
 
-- Do not expand beyond BBL landing/register funnel and broken link sweep. No push; operator will push to main after review.
+- No app-code changes (the billing pipeline is being *proven*, not modified).
+- No prod URLs, no live keys, no schema.
 
 ## Task log
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0369_TASK_01 | landed | BBL landing register route now targets `/lineage/join`; landing rhythm/tokens got stronger primary-tint sections, larger hero typography, ambient glows, upgraded hover/translate card motion, and wider section spacing. |
-| SESSION_0369_TASK_02 | landed | `/lineage/join` rebuilt as a premium step-grouped registration intake; captures role, school/academy, location, evidence URL, existing lineage claim intent, rank/instructor/tree/bio details; backend stores the added fields in lead notes/meta and attaches evidence URL to signed-in lineage claims. |
-| SESSION_0369_TASK_03 | landed | Source-level BBL link sweep verified route constants point to existing route files; added regression test locking Register/Join to `/lineage/join`; typecheck/lint/tests run. Browser screenshot blocked by local Next/Turbopack Google font resolution before app code. |
+| SESSION_0369_TASK_01 | landed | Full rehearsal green on stripe@22 — see Verification. One new tool: `scripts/stripe-rehearsal-seed.ts` (seed/read-state/cleanup against REAL price ids). Operator completed both hosted checkouts (card entry sealed from automation, re-confirmed; second was Stripe Link one-click). |
 
 ## What landed
 
-- BBL landing Register CTAs now route to the real Join Legacy intake at `/lineage/join` instead of `/auth/login`.
-- BBL landing visual polish improved spacing/rhythm and premium feel with semantic primary-token gradients, larger hero type, soft ambient glows, rounded section shells, and hover/translate micro-interactions.
-- Join Legacy became a BBL registration-style intake with path cards, step headers, role, current school/academy, location, evidence URL, existing claim selector, rank/promotion, instructor, tree-connection, and bio/achievement fields.
-- Backend intake now accepts the new registration fields, stores them in `Lead.meta` and steward-facing notes, and attaches reference/evidence URL to signed-in `LineageClaimRequest` evidence.
-- Added a non-DB regression test so the BBL landing Register route cannot drift back to auth login.
-
-## Files touched
-
-- `apps/web/app/(web)/(home)/bbl/bbl-landing-content.ts` — route mapping changed so `register` and `join` both target `/lineage/join`.
-- `apps/web/app/(web)/(home)/bbl/bbl-landing-content.test.ts` — new regression test for the BBL Register route.
-- `apps/web/app/(web)/(home)/bbl/bbl-landing.tsx` — visual spacing/token/micro-interaction polish for hero, media/card sections, CTA sections, and overall section rhythm.
-- `apps/web/app/(web)/lineage/join/join-legacy-form.tsx` — premium multi-step BBL registration intake UI and expanded lineage-ready fields.
-- `apps/web/server/web/lead/public-actions.ts` — server schema and persistence for role/school/location/evidence URL fields, plus claim evidence URL wiring.
-- `docs/sprints/SESSION_0369.md` — session record.
-- `docs/knowledge/wiki/index.md` — session index entry.
-- `docs/knowledge/wiki/log.md` — wiki/session log entry.
+- **stripe@22 runtime proof (D9 pre-flip item 1) — GREEN.** Real signed webhooks on a BBL-branded
+  lineage-membership fixture: subscription grant → cancel → revoke; one-time purchase grant +
+  success-page render; returning-customer fix (SESSION_0345_FINDING_01) holds.
+- Reusable rehearsal bridge `apps/web/scripts/stripe-rehearsal-seed.ts`.
+- Runbook §"SESSION_0369 re-proof" + CUTOVER_CHECKLIST rank-2/step-4 updated.
 
 ## Decisions resolved
 
-- No schema addition was needed for this slice. Existing `Lead.notes`/`Lead.meta` plus optional `LineageClaimRequest.evidence` safely capture the additional registration context without prematurely minting Passport/DirectoryProfile facts.
-- `RegistrationEntry` was not used because Graphify/current schema review showed it is tournament-registration-specific, not BBL lineage onboarding.
-- Kept this inline with Petey orchestration instead of an autonomous 3-session run because visual parity, route wiring, and form/backend semantics were tightly coupled.
+- Rehearsal brand = BBL (the flip surface), driven from `bbl.local/lineage/join` — both
+  rehearsal plans rendered through the real brand-scoped plan query.
+- Launch-day note recorded: verify the **prod** Stripe account's public business name/branding
+  (test account renders "Tuff Buffs" on hosted checkout).
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `apps/web/scripts/stripe-rehearsal-seed.ts` | NEW — reusable real-price-id fixture bridge (seed / read-state / cleanup) |
+| `docs/runbooks/integrations/stripe-setup-runbook.md` | §SESSION_0369 re-proof + operational notes |
+| `docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md` | rank-2 + step-4 marked re-proven |
+| `apps/web/.env` (uncommitted) | `STRIPE_WEBHOOK_SECRET` re-synced to current CLI listener secret (runbook step 1) |
+
+## Verification
+
+| Assertion (runbook §6) | Result |
+| --- | --- |
+| `STRIPE_SECRET_KEY` = `sk_test_…`; webhook secret hash == listener hash | ✅ (synced, strict-trim compare MATCH) |
+| Real test-mode objects | ✅ `prod_UgwqbelaAbEyE2` + one-time `price_…uhL5Oobp` (9900) + monthly `price_…2asIZMth` (2900) |
+| BBL plans render on `bbl.local/lineage/join` | ✅ "Join Legacy (rehearsal)" + "Start Monthly (rehearsal)" |
+| Subscription checkout → signed webhook | ✅ `checkout.session.completed` + `invoice.paid` forwarded **[200]**, both `PROCESSED` |
+| Subscription grant | ✅ `UserEntitlement` ACTIVE, sourceType SUBSCRIPTION, source `sub_1ThZ6D…` |
+| `stripe subscriptions cancel` → revoke | ✅ `customer.subscription.deleted` [200] → grant `REVOKED` (active 0 / revoked 1) |
+| Returning-customer second checkout | ✅ session created without `customer_update` rejection (FINDING_01 fix holds); Stripe Link one-click completed it |
+| One-time purchase grant | ✅ PURCHASE ACTIVE, source = `cs_test_…`, `paidInvoiceCount` 1; success page rendered |
+| ADR 0019 boundary | ✅ `membershipCount` 0, `programEnrollmentCount` 0 throughout |
+| Webhook ledger | ✅ 5/5 events `PROCESSED` (2× checkout.completed, 2× invoice.paid, 1× subscription.deleted) |
+| Cleanup | ✅ DB rows deleted by id (user/shells/org/entitlements/plans/grants/invoices/webhook rows/StripeCustomer); product + both prices deactivated (`"active": false` ×3); forwarder stopped; clean dev server restored |
 
 ## Open decisions / blockers
 
-- Local browser screenshot/render proof is blocked in this container by Next/Turbopack failing to resolve Google font internals (`@vercel/turbopack-next/internal/font/google/font`) before app code. Re-test visually in Brian's normal dev environment.
-- DB-backed lineage claim tests require a reachable Postgres; dummy `DATABASE_URL` is enough for typecheck/generation but not DB tests.
-- Future product decision: if BBL registration should create Passport/DirectoryProfile drafts immediately, design that as a separate reviewed identity slice. This session intentionally kept registration as intake + claim evidence.
-
-## Review log
-
-- **Doug verification:** source-level BBL route sweep passed; route constants now map to existing route files (`/lineage/join`, `/about`, `/lineage`, `/directory`, `/posts`, `/schools`, `/organizations/new`, `/techniques`).
-- **Desi review:** visual polish uses semantic tokens and current primitives rather than arbitrary legacy hex classes; motion is CSS-only and motion-reduce safe.
-- **Cody review:** backend form schema mirrors client schema; added evidence URL to both lead metadata and lineage claim evidence.
-
-## Hostile close review
-
-- **Giddy verdict:** Pass with environment caveat. No schema churn, no deleted features, no bypass of SOT-ADR D9 feature gates, no raw-source edits.
-- **Doug verdict:** Pass with proof caveat. Typecheck and BBL route tests pass. Local render proof blocked by Turbopack/font environment; this must be visually checked before production flip.
-- **Dirstarter check:** This extends existing marketing/form/action seams and keeps Dirstarter listing checkout behavior intact for Premium/Elite paths.
-- **Score cap:** 8/10 until visual screenshot is captured in a fully configured dev environment.
-
-## ADR / ubiquitous-language check
-
-- No new ADR needed: this is implementation within SOT-ADR D9 and existing identity/claim decisions.
-- Ubiquitous language preserved: Passport/DirectoryProfile are not minted implicitly; Membership/RegistrationEntry were not overloaded.
-
-## Findings (severity ≥ medium)
-
-- None added to cross-session ledgers. Environment-only limitations are recorded in this SESSION file.
-
-## Reflections
-
-- Graphify was useful after rebuild for identifying the correct `/lineage/join` seam and autonomous-session runbook. Exact legacy monorepo source files were not mounted; current repo docs/import notes served as the parity source.
-- The highest-value guard was the new route regression test: it prevents the main landing CTA from drifting back to `/auth/login`.
+- D9 pre-flip remainder: **OG/meta + robots/sitemap hygiene** → minimal 301 map → prod render
+  verify → FLIP.
+- Launch-day: prod Stripe account branding check; money-free webhook-destination verification on
+  the prod domain; deliberate real-charge-and-refund smoke decision (per checklist step 4).
+- `.env` note: `DEV_LOGIN_USER_ID` was used transiently; clean server restored without it.
 
 ## Next session
 
 ### Goal
 
-Capture real browser proof on `bbl.local` in the fully configured local environment, then continue the cutover-arm sequence (Stripe@22 rehearsal or OG/meta/sitemap hygiene per SESSION_0368).
-
-### Inputs to read
-
-- `docs/sprints/SESSION_0369.md`
-- `docs/product/black-belt-legacy/BBL-SOT-Spec.md`
-- `docs/product/black-belt-legacy/SOT-ADR.md`
-- `docs/sprints/SESSION_0368.md`
+D9 pre-flip item 2: BBL OG image + metadata basics; robots/sitemap must not advertise gated
+routes (the static `public/sitemap*.xml` predates the D9 gate).
 
 ### First task
 
-Start the normal `apps/web` dev server in Brian's configured environment, visit `http://bbl.local:3000/` and `/lineage/join`, capture screenshots, click every landing CTA, and confirm Register lands on `/lineage/join` with no console errors.
+Audit `public/robots.txt` + `public/sitemap*.xml` + OG/metadata config for BBL against the D9
+allowlist; ship the minimal hygiene fix (gated routes out, BBL og-image present). Unblocked.
+
+## Review log
+
+### SESSION_0369_REVIEW_01 — Rehearsal
+
+- **Reviewed tasks:** TASK_01
+- **Dirstarter docs check:** not applicable (verification)
+- **Verdict:** The full runbook assertion matrix executed without a single pipeline defect —
+  stripe@22 is runtime-proven on the exact surface BBL will sell. Procedure friction found and
+  documented (interactive `subscriptions cancel` prompt; listener-secret drift since 0345;
+  Link one-click on returning customers). Cleanup verified to zero.
+- **Score:** 9.5/10
+- **Follow-up:** none — gate closed.
+
+## Hostile close review
+
+- **Giddy:** pass — zero app-code changes; no prod contact; secrets handled by hash comparison;
+  fixture cleaned by id; .env change is the runbook-prescribed local state.
+- **Doug:** pass — every assertion is a positive check against DB state or signed-forwarder
+  output; nothing inferred from silence.
+- **Desi:** not applicable (no UI changes).
+- **Kaizen aggregate:** 9.5/10.
+
+## ADR / ubiquitous-language check
+
+- ADR update not required — proves D9/D-018 posture; ADR 0019 boundary re-confirmed by assertion.
+- Ubiquitous language unchanged.
+
+## Reflections
+
+- **The monitor-on-forwarder pattern made the operator handoff seamless:** card entry is the one
+  human step; tailing `stripe listen` with an event filter meant the agent resumed assertions
+  within seconds of payment, both times, with no polling.
+- **Listener secrets rot between rehearsals.** The 0345-era `STRIPE_WEBHOOK_SECRET` no longer
+  matched the CLI listener — now a named runbook step with a hash-compare one-liner.
+- **Interactive CLI confirmations fail silently behind greps.** `stripe subscriptions cancel`
+  prompted for `yes` and got EOF; the first "cancel" did nothing and only the unchanged DB state
+  revealed it. Raw-output-first on unfamiliar CLI commands, then filter.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | This file + runbook + checklist stamped session-0369. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0369 row added at close. |
+| Wiki lint | Result in close chat. |
+| Kaizen reflection | 3 entries above. |
+| Hostile close review | REVIEW_01; pass, 9.5/10. |
+| Review & Recommend | Next = OG/sitemap hygiene (D9 item 2), first task staged. |
+| Memory sweep | Program memory: rehearsal gate CLOSED; pre-flip remainder updated. |
+| Next session unblock check | Unblocked. |
+| Git hygiene | Single close commit on main (docs + tooling script). |
+| Graphify update | Stats in close chat. |

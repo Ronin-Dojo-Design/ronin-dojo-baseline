@@ -1,4 +1,5 @@
 import { BarChart3Icon, CheckIcon, SwordsIcon, TrophyIcon } from "lucide-react"
+import { Inter, Poppins } from "next/font/google"
 import type { ComponentProps, ReactNode } from "react"
 import {
   Accordion,
@@ -14,10 +15,12 @@ import { H2, H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
+import { db } from "~/services/db"
 import {
   BBL_IMAGES,
   BBL_ROUTES,
   celebrationContent,
+  redBeltCelebration,
   dirtyDozen,
   dirtyDozenSection,
   faqs,
@@ -29,6 +32,8 @@ import {
   heroContent,
   newMemberFeatures,
   promos,
+  MARQUEE_PHOTOS,
+  promotionMarquee,
   schoolOwnerFeatures,
   testimonials,
   testimonialsSection,
@@ -39,6 +44,17 @@ import {
   valuePropsSection,
   videoContent,
 } from "./bbl-landing-content"
+import { BblReveal } from "./bbl-reveal"
+
+// Legacy BBL type system (BlackBeltLegacyLanding.jsx): Poppins headings
+// (italic extrabold uppercase) + Inter body. Scoped to this landing via vars.
+const headingFont = Poppins({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
+  variable: "--font-bbl-heading",
+})
+const bodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-body" })
 
 /**
  * Black Belt Legacy landing page — content/IA from the legacy
@@ -68,18 +84,22 @@ const SectionHeading = ({
   eyebrow,
   title,
   description,
+  align = "center",
   className,
 }: {
   eyebrow: string
   title: string
   description?: string
+  align?: "center" | "left"
   className?: string
 }) => (
-  <div className={cx("space-y-4 text-center", className)}>
-    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{eyebrow}</p>
+  <div className={cx("w-full space-y-3", align === "center" && "text-center", className)}>
+    <p className="text-xs uppercase tracking-[0.24em] text-primary font-semibold">{eyebrow}</p>
     <H2>{title}</H2>
     {description && (
-      <Prose className="max-w-3xl mx-auto text-muted-foreground">{description}</Prose>
+      <Prose className={cx("max-w-3xl text-muted-foreground", align === "center" && "mx-auto")}>
+        {description}
+      </Prose>
     )}
   </div>
 )
@@ -180,7 +200,7 @@ const BblVideo = () => (
       title={videoContent.title}
       description={videoContent.description}
     />
-    <Card hover={false} className={cx("p-0! overflow-hidden border-primary/15", BBL_FLOAT_CLASSES)}>
+    <Card hover={false} className="p-0! overflow-hidden">
       <div className="aspect-video w-full">
         <iframe
           title={videoContent.embedTitle}
@@ -196,7 +216,7 @@ const BblVideo = () => (
 )
 
 const BblDirtyDozen = () => (
-  <section className="w-full space-y-10">
+  <section className="w-full space-y-8">
     <div className="space-y-4 text-center">
       <Badge variant="outline" className="mx-auto">
         <span className="inline-block size-2 rounded-full bg-primary" aria-hidden="true" />
@@ -250,7 +270,7 @@ const BblDirtyDozen = () => (
       ))}
     </Carousel>
 
-    <div className="text-center space-y-3">
+    <div className="w-full text-center space-y-3">
       <H3>{dirtyDozenSection.footerTitle}</H3>
       <p className="text-muted-foreground max-w-2xl mx-auto">{dirtyDozenSection.footerCopy}</p>
       <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.join} />}>
@@ -262,10 +282,7 @@ const BblDirtyDozen = () => (
 
 const BblHeritage = () => (
   <section className={cx(BBL_SECTION_CLASSES, "grid gap-8 md:grid-cols-2 md:items-center")}>
-    <Card
-      hover={false}
-      className={cx("p-0! overflow-hidden relative border-primary/15", BBL_FLOAT_CLASSES)}
-    >
+    <Card hover={false} className="p-0! overflow-hidden relative">
       <img
         src={BBL_IMAGES.bobAndRigan}
         alt="Bob Bass and Rigan Machado"
@@ -284,7 +301,7 @@ const BblHeritage = () => (
       <SectionHeading
         eyebrow={heritageContent.eyebrow}
         title={heritageContent.title}
-        className="text-left [&>*]:text-left"
+        align="left"
       />
       <Prose className="text-muted-foreground">{heritageContent.lead}</Prose>
       <Prose className="text-muted-foreground text-sm">{heritageContent.body}</Prose>
@@ -448,8 +465,8 @@ const BblTestimonials = () => (
       ))}
     </div>
 
-    <Card hover={false} className={cx("p-0! overflow-hidden border-primary/15", BBL_FLOAT_CLASSES)}>
-      <div className="aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
+    <Card hover={false} className="p-0! overflow-hidden">
+      <div className="w-full aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
         <img
           src={BBL_IMAGES.communityGroup}
           alt="Black Belt Legacy community group photo"
@@ -457,7 +474,7 @@ const BblTestimonials = () => (
           loading="lazy"
         />
       </div>
-      <div className="p-6 text-center space-y-1">
+      <div className="w-full p-6 text-center space-y-1">
         <p className="font-semibold">{testimonialsSection.groupPhotoTitle}</p>
         <p className="text-sm text-muted-foreground">{testimonialsSection.groupPhotoCopy}</p>
       </div>
@@ -483,7 +500,7 @@ const BblFinalCta = () => (
   <section className="w-full">
     <Card
       hover={false}
-      className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-red-950/10 p-8 text-center shadow-sm md:p-12 space-y-6"
+      className="items-center p-8 md:p-12 text-center space-y-5 bg-gradient-to-br from-card to-muted"
     >
       <H2>{finalCta.title}</H2>
       <p className="text-muted-foreground max-w-2xl mx-auto">{finalCta.description}</p>
@@ -505,7 +522,7 @@ const BblCelebration = () => (
         className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80"
         aria-hidden="true"
       />
-      <div className="relative z-10 space-y-7 px-6 py-16 text-center text-white md:py-24">
+      <div className="relative z-10 w-full px-6 py-14 md:py-20 text-center space-y-6 text-white">
         <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
         <p className="italic text-white/90">{celebrationContent.opener}</p>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
@@ -517,11 +534,238 @@ const BblCelebration = () => (
           as he joins the Dirty Dozen's <span className="font-semibold">Bob Bass</span> and{" "}
           <span className="font-semibold">John Will</span> in promotion by{" "}
           <span className="text-primary font-semibold">Professor Rigan Machado</span> to the rank of{" "}
-          <span className="text-primary font-bold">8th Degree Coral Belt</span>
+          <span className="text-primary font-bold">7th Degree Coral Belt</span>
         </p>
         <RegisterButtons />
       </div>
     </Card>
+  </section>
+)
+
+const BblRedBeltCelebration = () => (
+  <section className="w-full">
+    <Card hover={false} className="relative p-0! overflow-hidden">
+      <img
+        src={redBeltCelebration.image}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/75 via-red-950/60 to-black/85"
+        aria-hidden="true"
+      />
+      <div className="relative z-10 w-full space-y-7 px-6 py-16 text-center text-white md:py-24">
+        <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
+        <p className="italic text-white/90">{redBeltCelebration.opener}</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
+          {redBeltCelebration.titleLead}{" "}
+          <span className="text-primary">{redBeltCelebration.titleAccent}</span>{" "}
+          {redBeltCelebration.titleTail}
+        </h2>
+        <p className="text-white/90 max-w-3xl mx-auto leading-relaxed">
+          {redBeltCelebration.bodyLead}{" "}
+          <span className="text-primary font-bold">{redBeltCelebration.bodyRank}</span>{" "}
+          {redBeltCelebration.bodyMid}{" "}
+          <span className="font-semibold">{redBeltCelebration.bodyBy}</span>{" "}
+          {redBeltCelebration.bodyTail}
+        </p>
+        <RegisterButtons />
+      </div>
+    </Card>
+  </section>
+)
+
+const MarqueeCard = ({
+  name,
+  rank,
+  image,
+  date,
+}: {
+  name: string
+  rank: string
+  image?: string
+  date?: string
+}) => (
+  <div className="w-[230px] shrink-0 rounded-xl border bg-card overflow-hidden">
+    <div className="relative aspect-[5/4] bg-muted">
+      {date && (
+        <Badge variant="outline" className="absolute top-2 right-2 z-10 bg-background/80">
+          {date}
+        </Badge>
+      )}
+      {image ? (
+        <img
+          src={image}
+          alt={name}
+          className="h-full w-full object-cover object-top"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-muted-foreground">
+          {name
+            .split(" ")
+            .map(part => part[0])
+            .join("")}
+        </div>
+      )}
+    </div>
+    <div className="p-3 space-y-1">
+      <p className="font-semibold leading-snug">{name}</p>
+      <Badge
+        className={cx(
+          "border",
+          rank.includes("Coral")
+            ? BELT_BADGE_CLASSES.coral
+            : rank.includes("Red")
+              ? BELT_BADGE_CLASSES.red
+              : "bg-muted",
+        )}
+      >
+        {rank}
+      </Badge>
+    </div>
+  </div>
+)
+
+type MarqueeRow = {
+  key: string
+  label: string
+  href: string
+  members: Array<{ name: string; rank: string; image?: string; date?: string }>
+}
+
+/** "Coral Belt (Red/Black) - 7th Degree" -> "7th Degree Coral Belt" (display only; tree stays SoT). */
+const formatRankName = (rank: string) => {
+  const gm = rank.includes("Grand Master")
+  const cleaned = rank
+    .replace(/\s*\(Grand Master\)\s*/, "")
+    .replace(/\s*\(Red\/(?:Black|White)\)\s*/, " ")
+  const match = cleaned.match(/^(.+?Belt)\s*-\s*(\d+(?:st|nd|rd|th) Degree)$/)
+  const base = match ? `${match[2]} ${match[1].trim()}` : rank
+  return gm ? `${base} — Grand Master` : base
+}
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  })
+
+type MarqueeMemberView = { name: string; rank: string; image?: string; date?: string }
+
+const toMember = (award: {
+  user: { name: string; image: string | null; passport: { avatarUrl: string | null } | null } | null
+  rank: { name: string }
+}): MarqueeMemberView[] => {
+  if (!award.user?.name) return []
+  return [
+    {
+      name: award.user.name,
+      rank: formatRankName(award.rank.name),
+      image: award.user.passport?.avatarUrl ?? award.user.image ?? MARQUEE_PHOTOS[award.user.name],
+    },
+  ]
+}
+
+/** Rosters come from the lineage tree (PromotionEvent -> RankAward, ADR 0016). */
+const getPromotionMarqueeRows = async (): Promise<MarqueeRow[]> => {
+  const memberSelect = {
+    user: { select: { name: true, image: true, passport: { select: { avatarUrl: true } } } },
+    rank: { select: { name: true } },
+  } as const
+
+  const [events, individualAwards] = await Promise.all([
+    db.promotionEvent.findMany({
+      orderBy: { eventDate: "desc" },
+      take: 2,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        eventDate: true,
+        location: true,
+        rankAwards: { select: memberSelect },
+      },
+    }),
+    // Recent top-rank promotions awarded outside a recorded ceremony (e.g. Meyer, Will).
+    db.rankAward.findMany({
+      where: {
+        promotionEventId: null,
+        awardedAt: { gte: new Date("2024-01-01") },
+        OR: [{ rank: { name: { contains: "Coral" } } }, { rank: { name: { contains: "Red" } } }],
+      },
+      orderBy: { awardedAt: "desc" },
+      take: 8,
+      select: { ...memberSelect, awardedAt: true },
+    }),
+  ])
+
+  const rows: MarqueeRow[] = []
+  const [latestEvent, ...olderEvents] = events.filter(event => event.rankAwards.length > 0)
+
+  if (latestEvent) {
+    rows.push({
+      key: latestEvent.id,
+      label: [latestEvent.title, formatDate(latestEvent.eventDate), latestEvent.location]
+        .filter(Boolean)
+        .join(" · "),
+      href: latestEvent.slug ? `/events/${latestEvent.slug}` : BBL_ROUTES.lineage,
+      members: latestEvent.rankAwards.flatMap(toMember),
+    })
+  }
+
+  // Older ceremonies + individual promotions share one row; every card carries its date.
+  const olderMembers = [
+    ...olderEvents.flatMap(event =>
+      event.rankAwards.flatMap(award =>
+        toMember(award).map(member => ({ ...member, date: formatDate(event.eventDate) })),
+      ),
+    ),
+    ...individualAwards.flatMap(award =>
+      toMember(award).map(member => ({
+        ...member,
+        date: award.awardedAt ? formatDate(award.awardedAt) : undefined,
+      })),
+    ),
+  ]
+
+  if (olderMembers.length > 0) {
+    rows.push({
+      key: "recent-promotions",
+      label: "More Recent Promotions",
+      href: BBL_ROUTES.lineage,
+      members: olderMembers,
+    })
+  }
+
+  return rows
+}
+
+const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
+  <section className="w-full space-y-8">
+    <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
+    <div className="space-y-8">
+      {rows.map(row => (
+        <div key={row.key} className="space-y-3">
+          <Link
+            href={row.href}
+            className="block text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
+          >
+            {row.label}
+          </Link>
+          <Carousel ariaLabel={row.label} edgeFades controls="desktop">
+            {row.members.map(member => (
+              <CarouselSlide key={member.name} className="basis-[230px]">
+                <MarqueeCard {...member} />
+              </CarouselSlide>
+            ))}
+          </Carousel>
+        </div>
+      ))}
+    </div>
   </section>
 )
 
@@ -550,7 +794,7 @@ const BblPromos = () => (
             loading="lazy"
             aria-hidden="true"
           />
-          <div className="relative grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
+          <div className="relative w-full grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
@@ -595,20 +839,44 @@ const BblPromos = () => (
   </>
 )
 
-export const BblLanding = () => (
-  <div className="flex w-full flex-col gap-y-20 pb-10 md:gap-y-28">
-    <BblHero />
-    <BblVideo />
-    <BblDirtyDozen />
-    <BblHeritage />
-    <BblValueProps />
-    <BblFeatures />
-    <BblTimeline />
-    <BblTestimonials />
-    <BblFaq />
-    <BblFinalCta />
-    <BblCelebration />
-    <BblTreeTeaser />
-    <BblPromos />
-  </div>
-)
+export const BblLanding = async () => {
+  const marqueeRows = await getPromotionMarqueeRows()
+
+  const sections = [
+    <BblHero key="hero" />,
+    <BblVideo key="video" />,
+    <BblDirtyDozen key="dirty-dozen" />,
+    <BblHeritage key="heritage" />,
+    <BblValueProps key="value-props" />,
+    <BblFeatures key="features" />,
+    <BblTimeline key="timeline" />,
+    <BblRedBeltCelebration key="red-belt" />,
+    ...(marqueeRows.length > 0 ? [<BblPromotionMarquee key="marquee" rows={marqueeRows} />] : []),
+    <BblTestimonials key="testimonials" />,
+    <BblFaq key="faq" />,
+    <BblFinalCta key="final-cta" />,
+    <BblCelebration key="celebration" />,
+    <BblTreeTeaser key="tree" />,
+    <BblPromos key="promos" />,
+  ]
+
+  return (
+    <div
+      className={cx(
+        headingFont.variable,
+        bodyFont.variable,
+        "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
+        // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
+        "[font-family:var(--font-bbl-body)]",
+        "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:tracking-[0.02em]",
+        "[&_:is(h3,h4)]:[font-family:var(--font-bbl-heading)]!",
+      )}
+    >
+      {sections.map((node, index) => (
+        <BblReveal key={node.key} delay={index === 0 ? 0 : 0.08}>
+          {node}
+        </BblReveal>
+      ))}
+    </div>
+  )
+}
