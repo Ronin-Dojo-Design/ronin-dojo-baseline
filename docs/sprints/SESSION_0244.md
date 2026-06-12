@@ -343,7 +343,7 @@ Then continue down the Phase 1 list (ADR 0010, database-post-format.md, wiki hyg
 
 - [SESSION_0243](SESSION_0243.md) — paired prior session
 - [Dirstarter docs inventory](../knowledge/wiki/dirstarter-docs-inventory.md) — alignment URL table
-- [TuffBuffs landing wireframe spec (monorepo)](../../../../dev/ronin-dojo-monorepo/dashboard/docs/wireframes/tuffbuffs-landing-wireframe-spec.md) — page-structure inheritance source
+- TuffBuffs landing wireframe spec (external monorepo path: `dashboard/docs/wireframes/tuffbuffs-landing-wireframe-spec.md`) — page-structure inheritance source
 - [Opening ritual](../rituals/opening.md), [Closing ritual](../rituals/closing.md)
 | SESSION_0244_TASK_04 | blocked-on | TASK_03 |
 | SESSION_0244_TASK_05 | pending | Dispatch after TASK_03 approval. |

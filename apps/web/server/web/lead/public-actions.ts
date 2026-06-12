@@ -30,8 +30,12 @@ const legacyInterestSchema = z.object({
   email: z.string().trim().email(),
   phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
   currentRank: z.string().trim().max(200).optional().or(z.literal("")),
+  role: z.enum(["STUDENT", "BLACK_BELT", "INSTRUCTOR", "SCHOOL_OWNER", "OTHER"]).default("STUDENT"),
+  schoolName: z.string().trim().max(160).optional().or(z.literal("")),
+  location: z.string().trim().max(160).optional().or(z.literal("")),
   trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
   represent: z.string().trim().max(500).optional().or(z.literal("")),
+  evidenceUrl: z.string().trim().url().optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   profileUrl: z.string().trim().url().optional().or(z.literal("")),
   membershipPath: z.enum(["FREE", "PREMIUM", "ELITE"]).default("FREE"),
@@ -143,21 +147,43 @@ export const createJoinLegacyInterest = publicActionClient
     const lastName = normalizeOptional(parsedInput.lastName)
     const fullName = [firstName, lastName].filter(Boolean).join(" ")
     const rankSummary = normalizeOptional(parsedInput.currentRank)
+    const role = parsedInput.role
+    const schoolName = normalizeOptional(parsedInput.schoolName)
+    const location = normalizeOptional(parsedInput.location)
     const trainedUnder = normalizeOptional(parsedInput.trainedUnder)
     const represent = normalizeOptional(parsedInput.represent)
+    const evidenceUrl = normalizeOptional(parsedInput.evidenceUrl)
     const bio = normalizeOptional(parsedInput.bio)
     const profileUrl = normalizeOptional(parsedInput.profileUrl)
     const membershipPath = parsedInput.membershipPath as BblJoinLegacyMembershipPath
     const claimSelected = Boolean(parsedInput.treeId && parsedInput.nodeId)
 
     const notes = [
+      `Role: ${role.replaceAll("_", " ").toLowerCase()}`,
       rankSummary ? `Rank/history: ${rankSummary}` : null,
+      schoolName ? `Current school/academy: ${schoolName}` : null,
+      location ? `Location: ${location}` : null,
       trainedUnder ? `Trained under: ${trainedUnder}` : null,
       represent ? `Wants to represent/connect to: ${represent}` : null,
+      evidenceUrl ? `Evidence/reference URL: ${evidenceUrl}` : null,
       bio ? `Bio/history: ${bio}` : null,
     ]
       .filter(Boolean)
       .join("\n\n")
+    const claimEvidence = [
+      {
+        label: "Join the Legacy intake",
+        text: notes || `Submitted by ${fullName} (${parsedInput.email}).`,
+      },
+      ...(evidenceUrl
+        ? [
+            {
+              label: "Public evidence/reference",
+              url: evidenceUrl,
+            },
+          ]
+        : []),
+    ]
 
     const lead = await db.lead.create({
       data: {
@@ -175,8 +201,12 @@ export const createJoinLegacyInterest = publicActionClient
           source: "join-the-legacy",
           membershipPath,
           currentRank: rankSummary ?? null,
+          role,
+          schoolName: schoolName ?? null,
+          location: location ?? null,
           trainedUnder: trainedUnder ?? null,
           represent: represent ?? null,
+          evidenceUrl: evidenceUrl ?? null,
           profileUrl: profileUrl ?? null,
           claimIntent: claimSelected,
         } satisfies Prisma.InputJsonObject,
@@ -245,12 +275,7 @@ export const createJoinLegacyInterest = publicActionClient
             claimantUserId: session.user.id,
             claimantNote: notes || "Submitted through Join the Legacy.",
             evidence: {
-              create: [
-                {
-                  label: "Join the Legacy intake",
-                  text: notes || `Submitted by ${fullName} (${parsedInput.email}).`,
-                },
-              ],
+              create: claimEvidence,
             },
           },
         })

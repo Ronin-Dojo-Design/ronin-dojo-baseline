@@ -294,3 +294,9 @@ Use this file only as historical context for early wiki adoption.
 - Browser-smoked the claimant-side flows (register CTAs + org claim CTA both auth states); admin-side smoke + person teaser env-blocked (non-admin dev user, no placeholder seed) — flagged.
 - Staged `docs/petey-plan-0356-profile-redesign.md` (one Person-presentation contract + BBL shell + unified register/claim/invite funnel) and `docs/petey-plan-0357-bbl-galaxy.md`; stamped `petey-plan-0337` dormant.
 - Logged 2 findings: the lineage profile-drawer tier/role gate must open for everyone (FINDING_01); the org/directory/profile domain-hub discovery gap (FINDING_02).
+
+## 2026-06-12 — SESSION_0369 BBL landing/register polish
+
+- Updated BBL landing/register funnel: Register CTAs route to `/lineage/join`, landing visual rhythm/token polish improved, Join Legacy form expanded into a premium lineage-ready registration intake, and backend lead/claim metadata captures the added context.
+- Added route regression coverage for BBL Register → Join Legacy.
+- Browser screenshot proof remains pending in a configured local environment because this container's Next/Turbopack dev render failed on Google font internals before app code.

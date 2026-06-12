@@ -59,6 +59,11 @@ const BELT_BADGE_CLASSES: Record<string, string> = {
   coral: "bg-gradient-to-r from-red-600 via-white to-red-600 text-black border-red-600",
 }
 
+const BBL_SECTION_CLASSES =
+  "relative w-full rounded-[2rem] border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-sm md:p-8"
+const BBL_FLOAT_CLASSES =
+  "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none"
+
 const SectionHeading = ({
   eyebrow,
   title,
@@ -70,10 +75,8 @@ const SectionHeading = ({
   description?: string
   className?: string
 }) => (
-  <div className={cx("space-y-3 text-center", className)}>
-    <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
-      {eyebrow}
-    </p>
+  <div className={cx("space-y-4 text-center", className)}>
+    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{eyebrow}</p>
     <H2>{title}</H2>
     {description && (
       <Prose className="max-w-3xl mx-auto text-muted-foreground">{description}</Prose>
@@ -103,15 +106,25 @@ const CheckRow = ({ title, children }: { title?: string; children: ReactNode }) 
 )
 
 const BblHero = () => (
-  <section className="grid gap-10 lg:grid-cols-2 lg:items-center w-full">
-    <div className="space-y-6">
-      <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
+  <section className="relative grid w-full overflow-hidden rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-background via-card to-primary/10 px-5 py-10 shadow-sm md:px-10 md:py-14 lg:grid-cols-2 lg:items-center lg:gap-12">
+    <div
+      className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl"
+      aria-hidden="true"
+    />
+    <div
+      className="absolute -bottom-28 -left-24 size-72 rounded-full bg-red-950/20 blur-3xl"
+      aria-hidden="true"
+    />
+    <div className="relative z-10 space-y-7">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
         {heroContent.eyebrow}
       </p>
-      <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-pretty">
+      <h1 className="max-w-2xl text-5xl font-semibold tracking-tight text-pretty sm:text-6xl lg:text-7xl">
         {heroContent.titleLead} <span className="text-primary">{heroContent.titleAccent}</span>
       </h1>
-      <Prose className="text-lg text-muted-foreground max-w-xl">{heroContent.description}</Prose>
+      <Prose className="max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
+        {heroContent.description}
+      </Prose>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.register} />}>
           Register Now
@@ -122,7 +135,13 @@ const BblHero = () => (
       </div>
     </div>
 
-    <Card hover={false} className="p-0! overflow-hidden max-w-sm w-full mx-auto lg:ml-auto">
+    <Card
+      hover={false}
+      className={cx(
+        "relative z-10 p-0! overflow-hidden max-w-sm w-full mx-auto border-primary/20 lg:ml-auto",
+        BBL_FLOAT_CLASSES,
+      )}
+    >
       <div className="relative aspect-[4/3] bg-muted">
         <img
           src={heroContent.card.image}
@@ -136,7 +155,7 @@ const BblHero = () => (
           {heroContent.card.badge}
         </Badge>
       </div>
-      <div className="p-5 space-y-3">
+      <div className="space-y-3 p-5 bg-gradient-to-br from-card to-primary/5">
         <div className="flex items-start gap-3">
           <img
             src={heroContent.card.logo}
@@ -161,7 +180,7 @@ const BblVideo = () => (
       title={videoContent.title}
       description={videoContent.description}
     />
-    <Card hover={false} className="p-0! overflow-hidden">
+    <Card hover={false} className={cx("p-0! overflow-hidden border-primary/15", BBL_FLOAT_CLASSES)}>
       <div className="aspect-video w-full">
         <iframe
           title={videoContent.embedTitle}
@@ -177,7 +196,7 @@ const BblVideo = () => (
 )
 
 const BblDirtyDozen = () => (
-  <section className="w-full space-y-8">
+  <section className="w-full space-y-10">
     <div className="space-y-4 text-center">
       <Badge variant="outline" className="mx-auto">
         <span className="inline-block size-2 rounded-full bg-primary" aria-hidden="true" />
@@ -242,8 +261,11 @@ const BblDirtyDozen = () => (
 )
 
 const BblHeritage = () => (
-  <section className="grid gap-8 md:grid-cols-2 md:items-center w-full">
-    <Card hover={false} className="p-0! overflow-hidden relative">
+  <section className={cx(BBL_SECTION_CLASSES, "grid gap-8 md:grid-cols-2 md:items-center")}>
+    <Card
+      hover={false}
+      className={cx("p-0! overflow-hidden relative border-primary/15", BBL_FLOAT_CLASSES)}
+    >
       <img
         src={BBL_IMAGES.bobAndRigan}
         alt="Bob Bass and Rigan Machado"
@@ -426,7 +448,7 @@ const BblTestimonials = () => (
       ))}
     </div>
 
-    <Card hover={false} className="p-0! overflow-hidden">
+    <Card hover={false} className={cx("p-0! overflow-hidden border-primary/15", BBL_FLOAT_CLASSES)}>
       <div className="aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
         <img
           src={BBL_IMAGES.communityGroup}
@@ -461,7 +483,7 @@ const BblFinalCta = () => (
   <section className="w-full">
     <Card
       hover={false}
-      className="p-8 md:p-12 text-center space-y-5 bg-gradient-to-br from-card to-muted"
+      className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-red-950/10 p-8 text-center shadow-sm md:p-12 space-y-6"
     >
       <H2>{finalCta.title}</H2>
       <p className="text-muted-foreground max-w-2xl mx-auto">{finalCta.description}</p>
@@ -483,7 +505,7 @@ const BblCelebration = () => (
         className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80"
         aria-hidden="true"
       />
-      <div className="relative z-10 px-6 py-14 md:py-20 text-center space-y-6 text-white">
+      <div className="relative z-10 space-y-7 px-6 py-16 text-center text-white md:py-24">
         <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
         <p className="italic text-white/90">{celebrationContent.opener}</p>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
@@ -574,7 +596,7 @@ const BblPromos = () => (
 )
 
 export const BblLanding = () => (
-  <div className="flex flex-col gap-y-16 md:gap-y-20 w-full pb-8">
+  <div className="flex w-full flex-col gap-y-20 pb-10 md:gap-y-28">
     <BblHero />
     <BblVideo />
     <BblDirtyDozen />

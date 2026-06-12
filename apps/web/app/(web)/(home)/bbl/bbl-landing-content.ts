@@ -4,13 +4,13 @@
  * (content/IA only — UI rebuilt on current primitives, SESSION_0367).
  *
  * Routes are mapped to the current platform:
- * legacy register modal → /auth/login · profile/tree links → /lineage ·
+ * legacy register modal → /lineage/join · profile/tree links → /lineage ·
  * posts → /posts · schools → /schools · school register → /organizations/new ·
  * techniques → /techniques. Email-capture "More Info" → /about.
  */
 
 export const BBL_ROUTES = {
-  register: "/auth/login",
+  register: "/lineage/join",
   moreInfo: "/about",
   join: "/lineage/join",
   lineage: "/lineage",
