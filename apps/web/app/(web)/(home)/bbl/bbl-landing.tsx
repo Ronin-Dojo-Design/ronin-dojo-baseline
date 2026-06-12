@@ -85,7 +85,7 @@ const SectionHeading = ({
   align?: "center" | "left"
   className?: string
 }) => (
-  <div className={cx("space-y-3", align === "center" && "text-center", className)}>
+  <div className={cx("w-full space-y-3", align === "center" && "text-center", className)}>
     <p className="text-xs uppercase tracking-[0.24em] text-primary font-semibold">{eyebrow}</p>
     <H2>{title}</H2>
     {description && (
@@ -246,7 +246,7 @@ const BblDirtyDozen = () => (
       ))}
     </Carousel>
 
-    <div className="text-center space-y-3">
+    <div className="w-full text-center space-y-3">
       <H3>{dirtyDozenSection.footerTitle}</H3>
       <p className="text-muted-foreground max-w-2xl mx-auto">{dirtyDozenSection.footerCopy}</p>
       <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.join} />}>
@@ -442,7 +442,7 @@ const BblTestimonials = () => (
     </div>
 
     <Card hover={false} className="p-0! overflow-hidden">
-      <div className="aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
+      <div className="w-full aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
         <img
           src={BBL_IMAGES.communityGroup}
           alt="Black Belt Legacy community group photo"
@@ -450,7 +450,7 @@ const BblTestimonials = () => (
           loading="lazy"
         />
       </div>
-      <div className="p-6 text-center space-y-1">
+      <div className="w-full p-6 text-center space-y-1">
         <p className="font-semibold">{testimonialsSection.groupPhotoTitle}</p>
         <p className="text-sm text-muted-foreground">{testimonialsSection.groupPhotoCopy}</p>
       </div>
@@ -476,7 +476,7 @@ const BblFinalCta = () => (
   <section className="w-full">
     <Card
       hover={false}
-      className="p-8 md:p-12 text-center space-y-5 bg-gradient-to-br from-card to-muted"
+      className="items-center p-8 md:p-12 text-center space-y-5 bg-gradient-to-br from-card to-muted"
     >
       <H2>{finalCta.title}</H2>
       <p className="text-muted-foreground max-w-2xl mx-auto">{finalCta.description}</p>
@@ -498,7 +498,7 @@ const BblCelebration = () => (
         className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80"
         aria-hidden="true"
       />
-      <div className="relative z-10 px-6 py-14 md:py-20 text-center space-y-6 text-white">
+      <div className="relative z-10 w-full px-6 py-14 md:py-20 text-center space-y-6 text-white">
         <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
         <p className="italic text-white/90">{celebrationContent.opener}</p>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
@@ -531,7 +531,7 @@ const BblRedBeltCelebration = () => (
         className="absolute inset-0 bg-gradient-to-b from-black/75 via-red-950/60 to-black/85"
         aria-hidden="true"
       />
-      <div className="relative z-10 space-y-7 px-6 py-16 text-center text-white md:py-24">
+      <div className="relative z-10 w-full space-y-7 px-6 py-16 text-center text-white md:py-24">
         <img src={BBL_IMAGES.logoWhite} alt="Black Belt Legacy" className="h-14 md:h-20 mx-auto" />
         <p className="italic text-white/90">{redBeltCelebration.opener}</p>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-balance">
@@ -577,7 +577,7 @@ const BblPromos = () => (
             loading="lazy"
             aria-hidden="true"
           />
-          <div className="relative grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
+          <div className="relative w-full grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">
@@ -647,8 +647,8 @@ export const BblLanding = () => (
       "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
       // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
       "[font-family:var(--font-bbl-body)]",
-      "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)] [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold [&_:is(h1,h2)]:tracking-[0.02em]",
-      "[&_h3]:[font-family:var(--font-bbl-heading)]",
+      "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:tracking-[0.02em]",
+      "[&_:is(h3,h4)]:[font-family:var(--font-bbl-heading)]!",
     )}
   >
     {SECTIONS.map((Section, index) => (
