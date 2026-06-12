@@ -5,3 +5,27 @@ test("homepage loads", async ({ page }) => {
   await expect(page).toHaveTitle(/.+/)
   await expect(page.locator("body")).toBeVisible()
 })
+
+test("right slide-in nav opens, navigates, and closes", async ({ page }) => {
+  await page.goto("/")
+  await page.getByRole("button", { name: "Open menu" }).click()
+
+  const sheet = page.locator('[data-slot="sheet-content"][data-side="right"]')
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByRole("link", { name: "Lineage", exact: true })).toBeVisible()
+  await expect(sheet.getByRole("link", { name: "Sign In" })).toBeVisible()
+
+  await page.keyboard.press("Escape")
+  await expect(sheet).not.toBeVisible()
+})
+
+test("directory filter sheet opens from the left", async ({ page }) => {
+  await page.goto("/directory")
+  await page.getByRole("button", { name: "Filters" }).click()
+
+  const sheet = page.locator('[data-slot="sheet-content"][data-side="left"]')
+  await expect(sheet).toBeVisible()
+
+  await page.keyboard.press("Escape")
+  await expect(sheet).not.toBeVisible()
+})
