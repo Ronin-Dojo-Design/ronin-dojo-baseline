@@ -78,7 +78,7 @@ export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
         const displayName = r.user?.name ?? r.guestName ?? "—"
         return (
           <Link
-            href={`/admin/tournaments/${r.tournamentId}/registrations/${r.id}`}
+            href={`/app/tournaments/${r.tournamentId}/registrations/${r.id}`}
             className="font-medium text-primary hover:underline"
           >
             {displayName}

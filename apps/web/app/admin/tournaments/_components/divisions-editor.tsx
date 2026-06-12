@@ -232,7 +232,7 @@ export function DivisionsEditor({
         toast.success(
           `Bracket generated: ${data.competitorCount} competitors, ${data.totalRounds} rounds${data.byeCount > 0 ? `, ${data.byeCount} byes` : ""}`,
         )
-        router.push(`/admin/tournaments/${tournament.id}/brackets/${data.bracketId}`)
+        router.push(`/app/tournaments/${tournament.id}/brackets/${data.bracketId}`)
       }
     },
     onError: ({ error }) => {
@@ -445,7 +445,7 @@ export function DivisionsEditor({
                               prefix={<EyeIcon className="size-4" />}
                               onClick={() =>
                                 router.push(
-                                  `/admin/tournaments/${tournament.id}/brackets/${division.brackets![0].id}`,
+                                  `/app/tournaments/${tournament.id}/brackets/${division.brackets![0].id}`,
                                 )
                               }
                               disabled={isPending}

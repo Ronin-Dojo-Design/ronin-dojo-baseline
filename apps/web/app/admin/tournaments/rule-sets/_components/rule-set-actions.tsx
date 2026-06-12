@@ -25,7 +25,7 @@ export const RuleSetActions = ({ ruleSet, className, ...props }: RuleSetActionsP
   const pathname = usePathname()
   const router = useRouter()
 
-  const ruleSetPath = `/admin/tournaments/rule-sets/${ruleSet.id}`
+  const ruleSetPath = `/app/tournaments/rule-sets/${ruleSet.id}`
   const isRuleSetPage = pathname === ruleSetPath
 
   return (
@@ -70,7 +70,7 @@ export const RuleSetActions = ({ ruleSet, className, ...props }: RuleSetActionsP
       ) : (
         <RuleSetsDeleteDialog
           ruleSets={[ruleSet]}
-          onExecute={() => router.push("/admin/tournaments/rule-sets")}
+          onExecute={() => router.push("/app/tournaments/rule-sets")}
         >
           <Button
             variant="secondary"

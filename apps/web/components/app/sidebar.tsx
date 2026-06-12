@@ -2,11 +2,14 @@
 
 import { useMediaQuery } from "@mantine/hooks"
 import {
+  BuildingIcon,
   DockIcon,
   ExternalLinkIcon,
   GitBranchIcon,
+  IdCardIcon,
   LogOutIcon,
   ShieldCheckIcon,
+  TrophyIcon,
   UsersIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -97,8 +100,9 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
 
   // Single ordered nav config. `undefined` entries are group separators; items
   // carry an optional `permission` and are hidden when the user lacks it.
-  // Phase 2a (SESSION_0365): only the first-wave areas appear here — entries
-  // grow per wave as `/admin` areas move under `/app` (BBL-SOT-Spec Phase 2).
+  // Phase 2b waves (BBL-SOT-Spec Phase 2): entries grow per wave as `/admin`
+  // areas move under `/app` — wave 1 (SESSION_0365): lineage/users/claims;
+  // wave 2 (SESSION_0366): tournaments/memberships/organizations.
   const items: Array<NavItem | undefined> = [
     {
       title: "Dashboard",
@@ -125,6 +129,24 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       href: "/app/claims",
       prefix: <ShieldCheckIcon />,
       permission: APP_AREA_PERMISSIONS.claims,
+    },
+    {
+      title: "Tournaments",
+      href: "/app/tournaments",
+      prefix: <TrophyIcon />,
+      permission: APP_AREA_PERMISSIONS.tournaments,
+    },
+    {
+      title: "Memberships",
+      href: "/app/memberships",
+      prefix: <IdCardIcon />,
+      permission: APP_AREA_PERMISSIONS.memberships,
+    },
+    {
+      title: "Organizations",
+      href: "/app/organizations",
+      prefix: <BuildingIcon />,
+      permission: APP_AREA_PERMISSIONS.organizations,
     },
 
     undefined,

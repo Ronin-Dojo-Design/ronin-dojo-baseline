@@ -62,7 +62,7 @@ export function RuleSetsTable({ ruleSetsPromise }: RuleSetsTableProps) {
             variant="primary"
             size="md"
             prefix={<PlusIcon />}
-            render={<Link href="/admin/tournaments/rule-sets/new" />}
+            render={<Link href="/app/tournaments/rule-sets/new" />}
           >
             <div className="max-sm:sr-only">New rule set</div>
           </Button>
