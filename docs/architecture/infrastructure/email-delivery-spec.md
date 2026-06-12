@@ -4,8 +4,8 @@ slug: email-delivery-spec
 type: spec
 status: active
 created: 2026-05-09
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-06-12
+last_agent: codex-session-0370
 pairs_with:
   - docs/architecture/infrastructure/dns-verification-spec.md
   - docs/architecture/infrastructure/domain-hosting-registry.md
@@ -66,7 +66,7 @@ Transactional email configuration for all Ronin Dojo brands via [Resend](https:/
 | Brand | Sending domain | From address | Verified? |
 | --- | --- | --- | --- |
 | BASELINE_MARTIAL_ARTS | `baselinemartialarts.com` | `welcome@baselinemartialarts.com` | ✅ verified |
-| BBL | `blackbeltlegacy.com` | `welcome@blackbeltlegacy.com` | ⬜ configure/verify |
+| BBL | `blackbeltlegacy.com` | `welcome@blackbeltlegacy.com` | ✅ verified for sending; receiving stays external |
 | RONIN_DOJO_DESIGN | `ronindojodesign.com` | `welcome@ronindojodesign.com` | ⬜ todo |
 | WEKAF | `wekafusa.com` | `welcome@wekafusa.com` | ⬜ todo |
 
@@ -113,7 +113,15 @@ const BRAND_SENDER: Record<Brand, string> = {
 
 **Phase 1 (now):** Single Resend API key, `baselinemartialarts.com` verified, Baseline sends from `welcome@baselinemartialarts.com`.
 
-**Phase 2 (SESSION_0278 start):** Verify `blackbeltlegacy.com` in Resend and set `RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com`. The app now resolves sender by brand in `apps/web/lib/email.ts`; single API key can send from any verified domain.
+**Phase 2 (SESSION_0278 start, completed before SESSION_0370):** `blackbeltlegacy.com` is
+verified in Resend for sending and `RESEND_SENDER_EMAIL_BBL=welcome@blackbeltlegacy.com` is the
+intended production sender. The app resolves sender by brand in `apps/web/lib/email.ts`; one API
+key can send from any verified domain.
+
+**Receiving boundary:** BBL inbound replies are not stored in the app yet. The root mailbox stays
+with the existing mailbox provider/cPanel path unless a future inbound-email slice intentionally
+adds Resend Receiving and webhook storage. Keep the Resend outbound return-path MX on `send`, not
+as a root-domain receiving cutover.
 
 ## Environment Variables
 

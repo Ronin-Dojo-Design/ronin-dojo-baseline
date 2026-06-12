@@ -4,8 +4,8 @@ slug: sop-email-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-05-28
-last_agent: codex-session-0278
+updated: 2026-06-12
+last_agent: codex-session-0370
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/runbooks/resend-setup-runbook.md
@@ -24,7 +24,11 @@ tags:
 
 ## Summary
 
-Ronin Dojo sends transactional email through Resend. Today the app can **send** transactional email, preview React Email templates locally, and show an admin-facing email operations page at `/admin/email`. It does **not** yet store inbound email replies as app data, so reading delivery events and responding to replies still spans Resend plus the operator mailbox.
+Ronin Dojo sends transactional email through Resend. Today the app can **send** transactional email,
+preview React Email templates locally, show an admin-facing email operations page at `/admin/email`,
+and run controlled Black Belt Legacy template test sends from the verified BBL sender. It does
+**not** yet store inbound email replies as app data, so reading delivery events and responding to
+replies still spans Resend plus the operator mailbox.
 
 ## Key Ideas
 
@@ -35,6 +39,8 @@ Ronin Dojo sends transactional email through Resend. Today the app can **send** 
 - Delivered email activity is read in **Resend Dashboard → Emails**.
 - Replies are read/responded to from the external mailbox for the active brand sender because inbound webhooks/thread storage are not implemented yet.
 - `/admin/email` is an operator dashboard surface that explains the current read/reply paths without pretending the app is a full inbox.
+- `/admin/email` also carries the BBL email catalog, a live-test invite composer, and recent Join
+  Legacy captures so the first live invite/claim run can be operated from the current app.
 - Baseline and Black Belt Legacy use separate senders: `welcome@baselinemartialarts.com` and `welcome@blackbeltlegacy.com`. BBL requires `blackbeltlegacy.com` domain verification in Resend before production sends.
 
 ## Current operator answer
@@ -61,6 +67,8 @@ A: Read delivery status in Resend. Read recipient replies in the external mailbo
        ├─ Brand sender setup: Baseline + Black Belt Legacy sender rows
        ├─ Read delivered emails: Resend Dashboard → Emails
        ├─ Respond to replies: active brand sender mailbox
+       ├─ BBL email catalog + live-test composer
+       ├─ Recent Join Legacy captures
        └─ Where email lives today table
 ```
 
@@ -153,6 +161,7 @@ Examples:
 - Merch order confirmation through the Stripe/webhook flow.
 - DSR submission/status lifecycle email.
 - Black Belt Legacy Join the Legacy intake at `/lineage/join`.
+- Black Belt Legacy live-test invite from `/admin/email`.
 - Lead/submission notification where applicable.
 
 ### 4. Read delivery evidence

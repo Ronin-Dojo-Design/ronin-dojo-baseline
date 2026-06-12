@@ -42,7 +42,7 @@ export const EmailAdminBblJoinLegacy = ({
       {trainedUnder && <Text>Trained under: {trainedUnder}</Text>}
       {represent && <Text>Wants to represent or connect to: {represent}</Text>}
       <Text>Lineage claim created: {claimCreated ? "yes" : "not yet"}</Text>
-      {checkoutUrl && <Text>Premium listing path: {checkoutUrl}</Text>}
+      {checkoutUrl && <Text>Lineage membership follow-up: {checkoutUrl}</Text>}
 
       <EmailButton href={adminLeadUrl}>Review lead</EmailButton>
     </EmailWrapper>
@@ -58,7 +58,7 @@ EmailAdminBblJoinLegacy.PreviewProps = {
   trainedUnder: "Rigan Machado",
   represent: "Rigan Machado lineage",
   adminLeadUrl: "https://blackbeltlegacy.com/admin/leads/example",
-  checkoutUrl: "https://blackbeltlegacy.com/submit/alex-legacy-profile",
+  checkoutUrl: "https://blackbeltlegacy.com/lineage/join?submitted=true#lineage-membership",
   claimCreated: true,
 } satisfies EmailProps
 

@@ -69,12 +69,13 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 type JoinLegacyPageProps = {
-  searchParams?: Promise<{ cancelled?: string }>
+  searchParams?: Promise<{ cancelled?: string; submitted?: string }>
 }
 
 export default async function JoinLegacyPage({ searchParams }: JoinLegacyPageProps) {
   const params = await searchParams
   const isCancelled = params?.cancelled === "true"
+  const isSubmitted = params?.submitted === "true"
   const { metadata, claimableTree, membershipPlans } = await getData()
 
   return (
@@ -95,6 +96,18 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
         </Card>
       )}
 
+      {isSubmitted && (
+        <Card hover={false} className="p-4" data-testid="join-legacy-submitted">
+          <Stack direction="column" size="xs">
+            <Badge variant="success">Intake saved</Badge>
+            <Note className="text-sm">
+              Your lineage information was received. Free profiles wait for steward review; Premium
+              and Elite paths continue through the lineage membership checkout below.
+            </Note>
+          </Stack>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card className="p-5">
           <JoinLegacyForm claimableTree={claimableTree} />
@@ -105,7 +118,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
             <Stack direction="column" size="xs">
               <strong>What this creates</strong>
               <Note className="text-sm">
-                A lead record, a draft directory listing, and, when you are signed in and select a
+                A private lead record for steward review and, when you are signed in and select a
                 lineage node, a profile claim request.
               </Note>
             </Stack>
@@ -118,7 +131,9 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
               </Note>
             </Stack>
           </Card>
-          <LineageMembershipCheckout plans={membershipPlans} />
+          <div id="lineage-membership" className="scroll-mt-24">
+            <LineageMembershipCheckout plans={membershipPlans} />
+          </div>
         </Stack>
       </div>
     </Wrapper>

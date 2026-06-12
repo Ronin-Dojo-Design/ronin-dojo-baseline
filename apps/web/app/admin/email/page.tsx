@@ -1,5 +1,7 @@
 import { ExternalLinkIcon, MailIcon, ReplyIcon } from "lucide-react"
 import { Brand } from "~/.generated/prisma/client"
+import { BblEmailCaptureList } from "~/app/admin/email/_components/bbl-email-capture-list"
+import { BblEmailCatalogPanel } from "~/app/admin/email/_components/bbl-email-catalog-panel"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -16,6 +18,8 @@ import {
   getConfiguredBrandSenderEmail,
   isBrandSenderConfigured,
 } from "~/lib/email"
+import { getBblEmailTemplatePreviews } from "~/server/admin/email/catalog"
+import { findRecentBblJoinLegacyCaptures } from "~/server/admin/email/queries"
 
 const brandSenders = [
   {
@@ -63,11 +67,15 @@ const emailSurfaces = [
   },
 ] as const
 
-export default withAdminPage(() => {
+export default withAdminPage(async () => {
   const senderConfigured = Boolean(
     env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
   )
   const bblSenderConfigured = isBrandSenderConfigured(Brand.BBL)
+  const [bblEmailTemplates, bblCaptures] = await Promise.all([
+    getBblEmailTemplatePreviews(),
+    findRecentBblJoinLegacyCaptures(),
+  ])
 
   return (
     <Wrapper size="lg" gap="md">
@@ -173,6 +181,14 @@ export default withAdminPage(() => {
           </div>
         </Stack>
       </Card>
+
+      <BblEmailCatalogPanel
+        templates={bblEmailTemplates}
+        senderEmail={getBrandSenderEmail(Brand.BBL)}
+        isSenderConfigured={bblSenderConfigured}
+      />
+
+      <BblEmailCaptureList captures={bblCaptures} />
 
       <Card className="p-4">
         <Stack direction="column" className="gap-3">

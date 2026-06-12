@@ -13,8 +13,8 @@ type EmailProps = EmailWrapperProps & {
 
 const membershipLabel: Record<EmailProps["membershipPath"], string> = {
   FREE: "free legacy profile",
-  PREMIUM: "premium legacy profile",
-  ELITE: "elite legacy profile",
+  PREMIUM: "premium lineage membership",
+  ELITE: "elite lineage membership",
 }
 
 export const EmailBblJoinLegacyConfirmation = ({
@@ -51,7 +51,7 @@ export const EmailBblJoinLegacyConfirmation = ({
       </Text>
 
       {checkoutUrl && membershipPath !== "FREE" && (
-        <EmailButton href={checkoutUrl}>Review premium listing options</EmailButton>
+        <EmailButton href={checkoutUrl}>Review lineage membership options</EmailButton>
       )}
     </EmailWrapper>
   )
@@ -61,7 +61,7 @@ EmailBblJoinLegacyConfirmation.PreviewProps = {
   to: "member@example.com",
   firstName: "Alex",
   membershipPath: "PREMIUM",
-  checkoutUrl: "https://blackbeltlegacy.com/submit/alex-legacy-profile",
+  checkoutUrl: "https://blackbeltlegacy.com/lineage/join?submitted=true#lineage-membership",
   claimCreated: false,
 } satisfies EmailProps
 

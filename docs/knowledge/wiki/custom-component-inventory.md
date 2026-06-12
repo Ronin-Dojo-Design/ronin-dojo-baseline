@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-12
-last_agent: claude-session-0355
+last_agent: codex-session-0370
 pairs_with:
+  - docs/sprints/SESSION_0370.md
   - docs/sprints/SESSION_0355.md
   - docs/sprints/SESSION_0352.md
   - docs/sprints/SESSION_0349.md
@@ -288,6 +289,14 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | `MetricChart`, `MetricHeader`, `MetricValue` | `admin/metrics/*.tsx` | Admin metric tiles + charts. |
 | `Chart` | `admin/chart.tsx` | Shared chart wrapper. |
 | `DeleteDialog` | `admin/dialogs/delete-dialog.tsx` | Generic destructive-action confirm dialog. |
+
+### BBL email ops admin — `app/admin/email/_components/`
+
+| Component | File | Purpose |
+| --- | --- | --- |
+| `BblEmailCatalogPanel` | `apps/web/app/admin/email/_components/bbl-email-catalog-panel.tsx` | SESSION_0370: BBL template browser + preview + live-test send form for the verified Resend sender. Composes existing admin primitives and calls the admin-gated `sendBblEmailCatalogTest` safe action; defaults the test URL to `/lineage/join` and keeps Premium/Elite copy on lineage membership, not gated listings checkout. |
+| `BblEmailCaptureList` | `apps/web/app/admin/email/_components/bbl-email-capture-list.tsx` | SESSION_0370: recent BBL Join Legacy capture list for operator follow-up. Reads `Lead.meta.source = "join-the-legacy"` through `findRecentBblJoinLegacyCaptures` and links to `/admin/leads/[id]`; display-only, no review mutation. |
+| BBL email catalog server helpers | `apps/web/server/admin/email/catalog.tsx`, `apps/web/server/admin/email/actions.ts`, `apps/web/server/admin/email/queries.ts` | SESSION_0370: React Email-backed BBL template registry, admin test-send action, and recent-capture query. Uses existing `sendEmail` brand sender resolution; does not introduce Resend inbound receiving or root-domain MX changes. |
 
 ### Media library admin — `app/admin/media/_components/`
 

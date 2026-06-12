@@ -21,6 +21,7 @@ import {
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
+import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import {
   Select,
   SelectContent,
@@ -33,6 +34,14 @@ import { TextArea } from "~/components/common/textarea"
 import { createJoinLegacyInterest } from "~/server/web/lead/public-actions"
 import { cx } from "~/lib/utils"
 
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .url("Use a valid http or https URL")
+  .refine(value => ["http:", "https:"].includes(new URL(value).protocol), {
+    message: "Use a valid http or https URL",
+  })
+
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(120),
   lastName: z.string().trim().max(120).optional().or(z.literal("")),
@@ -44,9 +53,9 @@ const formSchema = z.object({
   location: z.string().trim().max(160).optional().or(z.literal("")),
   trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
   represent: z.string().trim().max(500).optional().or(z.literal("")),
-  evidenceUrl: z.string().trim().url("Use a valid URL").optional().or(z.literal("")),
+  evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
-  profileUrl: z.string().trim().url("Use a valid URL").optional().or(z.literal("")),
+  profileUrl: httpUrlSchema.optional().or(z.literal("")),
   membershipPath: z.enum(["FREE", "PREMIUM", "ELITE"]),
   treeId: z.string().optional(),
   nodeId: z.string().optional(),
@@ -76,15 +85,15 @@ const pathCards: Array<{
   },
   {
     value: "PREMIUM",
-    title: "Premium listing",
+    title: "Premium lineage membership",
     eyebrow: "Most popular",
-    description: "Add a richer public listing and checkout after the same intake is saved.",
+    description: "Save the same review intake, then choose a paid lineage membership tier.",
   },
   {
     value: "ELITE",
-    title: "Elite legacy listing",
+    title: "Elite lineage support",
     eyebrow: "Schools & leaders",
-    description: "Best for instructors, academies, and multi-generation legacy profiles.",
+    description: "For instructors, academies, and multi-generation legacy stewardship.",
   },
 ]
 
@@ -185,7 +194,7 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
             </div>
             <div className="rounded-2xl border bg-background/70 p-4 text-sm shadow-sm">
               <ul className="space-y-2.5">
-                {["Lead intake saved", "Draft listing created", "Claim intent captured"].map(
+                {["Lead intake saved", "Lineage review queued", "Claim intent captured"].map(
                   item => (
                     <li key={item} className="flex items-center gap-2">
                       <CheckCircle2Icon className="size-4 text-primary" aria-hidden="true" />
@@ -212,28 +221,38 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="grid gap-3 md:grid-cols-3">
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={value => field.onChange(value as FormValues["membershipPath"])}
+                    aria-label="Join Legacy membership path"
+                    className="grid gap-3 md:grid-cols-3"
+                  >
                     {pathCards.map(path => (
-                      <button
+                      <label
                         key={path.value}
-                        type="button"
-                        onClick={() => field.onChange(path.value)}
                         className={cx(
-                          "group rounded-2xl border bg-background/70 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md active:scale-[0.99] motion-reduce:transform-none",
+                          "group flex cursor-pointer items-start gap-3 rounded-2xl border bg-background/70 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md has-[[data-slot=radio-group-item]:focus-visible]:ring-[3px] has-[[data-slot=radio-group-item]:focus-visible]:ring-ring/50 active:scale-[0.99] motion-reduce:transform-none",
                           selectedPath === path.value &&
                             "border-primary bg-primary/10 shadow-[0_0_0_1px_hsl(var(--primary)/0.25)]",
                         )}
                       >
-                        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                          {path.eyebrow}
+                        <RadioGroupItem
+                          value={path.value}
+                          aria-label={path.title}
+                          className="mt-1 shrink-0"
+                        />
+                        <span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                            {path.eyebrow}
+                          </span>
+                          <span className="mt-2 block font-semibold">{path.title}</span>
+                          <span className="mt-1 block text-sm text-muted-foreground">
+                            {path.description}
+                          </span>
                         </span>
-                        <span className="mt-2 block font-semibold">{path.title}</span>
-                        <span className="mt-1 block text-sm text-muted-foreground">
-                          {path.description}
-                        </span>
-                      </button>
+                      </label>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -512,7 +531,7 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
           <Stack className="items-center justify-between gap-4" wrap>
             <Note className="max-w-2xl text-sm">
               Your submission stays private until reviewed. Premium and Elite selections create the
-              same intake record, then route you to paid directory listing checkout.
+              same intake record, then return you to the lineage membership checkout on this page.
             </Note>
             <Button type="submit" variant="primary" size="lg" isPending={isExecuting}>
               Submit registration

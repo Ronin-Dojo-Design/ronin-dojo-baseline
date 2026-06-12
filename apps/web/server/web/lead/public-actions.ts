@@ -24,6 +24,14 @@ const publicLeadSchema = z.object({
   phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
 })
 
+const httpUrlSchema = z
+  .string()
+  .trim()
+  .url("Use a valid http or https URL")
+  .refine(value => ["http:", "https:"].includes(new URL(value).protocol), {
+    message: "Use a valid http or https URL",
+  })
+
 const legacyInterestSchema = z.object({
   firstName: z.string().trim().min(1).max(120),
   lastName: z.string().trim().max(120).optional().or(z.literal("")),
@@ -35,9 +43,9 @@ const legacyInterestSchema = z.object({
   location: z.string().trim().max(160).optional().or(z.literal("")),
   trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
   represent: z.string().trim().max(500).optional().or(z.literal("")),
-  evidenceUrl: z.string().trim().url().optional().or(z.literal("")),
+  evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
-  profileUrl: z.string().trim().url().optional().or(z.literal("")),
+  profileUrl: httpUrlSchema.optional().or(z.literal("")),
   membershipPath: z.enum(["FREE", "PREMIUM", "ELITE"]).default("FREE"),
   treeId: z.string().optional(),
   nodeId: z.string().optional(),
@@ -297,7 +305,9 @@ export const createJoinLegacyInterest = publicActionClient
     })
 
     const checkoutUrl =
-      membershipPath === "FREE" ? `/submit/${tool.slug}/success` : `/submit/${tool.slug}`
+      membershipPath === "FREE"
+        ? "/lineage/join?submitted=true"
+        : "/lineage/join?submitted=true#lineage-membership"
     const absoluteCheckoutUrl = new URL(
       checkoutUrl,
       requestOrigin ?? "https://baselinemartialarts.com",
