@@ -4,8 +4,8 @@ slug: stripe-setup-runbook
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-06-04
-last_agent: claude-session-0345
+updated: 2026-06-12
+last_agent: claude-session-0369
 pairs_with:
   - docs/sprints/SESSION_0098.md
   - docs/sprints/SESSION_0344.md
@@ -217,6 +217,25 @@ card cannot run against it — see drift D-018). Steps proven in SESSION_0345 fo
    customer; `automatic_tax` + `tax_id_collection` then require `customer_update: { name: "auto", address:
    "auto" }` or Stripe rejects the session. Fixed in `server/web/billing/actions.ts`.
 8. Clean up by id (plan/user/entitlement/customer/invoice/webhook rows) and deactivate the test product.
+
+### SESSION_0369 re-proof (stripe@22, BBL brand)
+
+Re-run end-to-end on `stripe@^22.1.1` with a **BBL-branded** fixture driven from `bbl.local:3000/lineage/join`
+(pre-flip gate, SOT-ADR D9). All assertions green: subscription grant ACTIVE → CLI cancel →
+`customer.subscription.deleted` → REVOKED; one-time PURCHASE grant ACTIVE + success page render; 5/5 events
+`[200]` signature-verified + `PROCESSED`; `membershipCount`/`programEnrollmentCount` stayed 0 (ADR 0019);
+returning-customer session creation succeeded (the FINDING_01 fix holds). Operational notes:
+
+- **Reusable fixture bridge:** `apps/web/scripts/stripe-rehearsal-seed.ts` (`seed` / `read-state` /
+  `cleanup`, base64 payloads) — seeds user(+shells)/org/entitlements/plans bound to REAL test-mode price ids,
+  asserts state, cleans by id. Pair with `DEV_LOGIN_USER_ID=<seeded user>` on the dev server.
+- Hosted-checkout card fields remain sealed from automation (re-confirmed) — the operator completes the
+  `cs_test_…` page manually; on a returning customer **Stripe Link one-click** may complete it instantly.
+- `stripe subscriptions cancel` prompts interactively — pipe `echo yes |` in non-interactive shells.
+- The CLI listener secret rotates per machine/login: re-sync `.env` `STRIPE_WEBHOOK_SECRET` from
+  `stripe listen --print-secret` before each rehearsal (compare hashes).
+- Test-account branding (page title) showed "Tuff Buffs" — verify the **prod** Stripe account's public
+  business name/branding before the BBL flip (launch-day checklist item).
 
 ## Dashboard Setup for Staging or Production
 

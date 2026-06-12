@@ -4,8 +4,8 @@ slug: bbl-cutover-checklist
 type: report
 status: active
 created: 2026-06-04
-updated: 2026-06-11
-last_agent: claude-session-0363
+updated: 2026-06-12
+last_agent: claude-session-0369
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -65,7 +65,7 @@ Unit gate green + deterministic (`--parallel=1`, SESSION_0342). Launch-critical 
 | Rank | e2e gap | Why | Baseline proxy? |
 | --- | --- | --- | --- |
 | 1 | **Registration / sign-up** | Member front door; every journey depends on it. | ✅ yes — exercise on Baseline |
-| 2 | **Stripe checkout (local test-mode harness)** → success/cancel | Money path. | ✅ local proof green in SESSION_0344; Baseline proxy rehearsal still required before cutover |
+| 2 | **Stripe checkout (local test-mode harness)** → success/cancel | Money path. | ✅ local proof green in SESSION_0344; ✅ **real signed-webhook rehearsal re-proven on stripe@22, BBL brand, SESSION_0369** (grant + revoke + returning-customer + success page) |
 | 3 | Member join → tier → entitlement lifecycle | User-facing entitlement gating. | ✅ local proof green in SESSION_0344; same webhook (ADR 0012) |
 | 4 | Authenticated claim flow | GAP_MATRIX #1; BBL-PROFILE-002. | partial — claim is BBL-data, journey provable on Baseline |
 | 5 | Role-scoped editor access (BRANCH/NODE_EDITOR) | Security-adjacent; BBL-EDITOR-003/004. | ✅ yes — same RBAC |
@@ -97,10 +97,12 @@ Vercel deployment, auth stack, brand-scoped DB, Stripe webhook, and Resend integ
 4. **Real-network checkout proof (SESSION_0345 correction).** `baselinemartialarts.com` prod runs a **live**
    Stripe key, so a test card cannot run against it (live key rejects test cards; a real card = real money).
    Prove the real, signature-verified webhook -> entitlement path **off prod** instead, two equivalent ways:
-   - **Stripe CLI local test-mode rehearsal (done, SESSION_0345):** `sk_test` + `stripe listen --forward-to
-     localhost:3000/api/stripe/webhooks` -> real Stripe-hosted Checkout (test card `4242…`) -> real signed
+   - **Stripe CLI local test-mode rehearsal (done SESSION_0345; re-proven on stripe@22 + BBL brand
+     SESSION_0369):** `sk_test` + `stripe listen --forward-to localhost:3000/api/stripe/webhooks` -> real
+     Stripe-hosted Checkout (test card `4242…`) -> real signed
      `checkout.session.completed`/`invoice.paid`/`customer.subscription.deleted` -> `UserEntitlement`
-     grant/revoke. See `stripe-setup-runbook.md` "Stripe CLI live test-mode rehearsal".
+     grant/revoke. Reusable fixture bridge: `apps/web/scripts/stripe-rehearsal-seed.ts`.
+     See `stripe-setup-runbook.md` "Stripe CLI live test-mode rehearsal".
    - **Or a Vercel Preview deploy wired to test-mode Stripe** for a deployed-URL variant.
    The **deployed prod domain** gets only a **money-free** verification: confirm the live webhook destination
    and `STRIPE_WEBHOOK_SECRET` are wired (Stripe Dashboard delivery log), then a deliberate **launch-day
