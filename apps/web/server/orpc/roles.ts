@@ -35,9 +35,11 @@ export type Grant = string
  */
 export type Role = "admin" | "user" | "guest" | "tournament_director"
 
-// Permissions available to everyone, signed in or not. Phase 1a: only the
-// health smoke. Entity grants land with their routers (1b/1c migration).
-const PUBLIC_GRANTS = ["health.read"] as const
+// Permissions available to everyone, signed in or not. Phase 1a seeded the
+// health smoke; Phase 1c (SESSION_0364) adds `lineage.read` — the public
+// `/lineage/[treeSlug]` tree page is anonymous-reachable, so its migrated
+// oRPC read is a public grant. Further entity grants land with their routers.
+const PUBLIC_GRANTS = ["health.read", "lineage.read"] as const
 
 // Permissions for any signed-in user, on top of the public ones. Roles are
 // flat (no inheritance), so the public grants are spread in explicitly.
