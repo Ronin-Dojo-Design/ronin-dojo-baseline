@@ -195,11 +195,28 @@ Where a file list is upstream-derived and not yet captured, it says **[pin in ca
 ### Phase 2 — Unified `/app/*` dashboard
 
 - **Goal:** Adopt upstream's single permission-gated `/app/*` workspace; `/admin/*` + `/dashboard/*` redirect.
-- **Files:** `apps/web/app/app/*` (**[pin in capture]** route tree), `requireUser()`/`requirePermission()` layout guards, redirects from `/admin/*` + `/dashboard/*`. **This is where add-person / claim / profile surfaces will live — so it precedes the identity re-root to avoid moving them twice.**
-- **Build:** port the `/app` shell + permission-gated nav; move existing admin/dashboard surfaces under `/app`; wire redirects.
-- **Done means:** `/app` renders, permission-gated; old routes 301 to `/app/*`; no surface lost; browser-proof.
+- **Files (CAPTURED SESSION_0365 — pin debt paid):** upstream `app/app/*` = 70 files (layout =
+  `requireUser()` + `Shell` (+ AIProvider — stub for Ronin); overview page + stats/metrics
+  `_components`; 9 entity areas); `lib/auth-guard.ts` (`requireUser`/`requirePermission`);
+  `components/app/*` = 17 shell files (shell/sidebar/nav/chart/metrics/tiptap/ai/dialogs);
+  redirects = `next.config.ts` `redirects()` → `/admin/:path*` + `/dashboard/:path*` → `/app/:path*`
+  `permanent: true` (308). Live changelog re-verified + upstream GitHub HEAD re-checked still
+  `76c8e1e` (2026-06-12). **This is where add-person / claim / profile surfaces will live — so it
+  precedes the identity re-root to avoid moving them twice.**
+- **Guard model (operator-ratified SESSION_0365 grill — option b):** per-area
+  `requirePermission("<entity>.manage")` from day one (strings registered once in `roles.ts`,
+  reused by entity routers in Phases 4–5); lineage areas gated permission-OR-active-`LineageTreeAccess`
+  via a `requireLineageAccess()` built on the D4 seam; sidebar nav rendered per `can()`. This
+  structurally fixes the legacy looseness (any lineage grantee could enter the whole `/admin` shell)
+  and deliberately tightens `tournament_director` to tournaments + user-level items. Safe because
+  there are NO real users pre-flip (operator + beta testers only).
+- **Build (waves, local — template is local-only):** **2a** guards + shell + `/app` layout/overview +
+  first wave (lineage/users/claims) · **2b** remaining ~35 areas + member `(web)/dashboard` pages ·
+  **2c** blanket 308 redirect + delete old shells + flat `server/<entity>/*`. Old `/admin` keeps
+  working untouched until 2c.
+- **Done means:** `/app` renders, permission-gated; old routes 308 to `/app/*`; no surface lost; browser-proof.
 - **Deliverables:** unified dashboard + redirect map; D-024 (drift) closed.
-- **Depends on:** Phase 1.
+- **Depends on:** Phase 1 (complete — 1a `051c314`, 1b `edb74b2`, 1c `94e119d`).
 
 ---
 
