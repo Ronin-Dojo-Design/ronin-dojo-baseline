@@ -1,10 +1,6 @@
 import type { MetadataRoute } from "next"
 import type { Brand } from "~/.generated/prisma/client"
-import {
-  brandHasFeature,
-  type BrandFeature,
-  FEATURE_ROUTE_PREFIXES,
-} from "~/config/brand-features"
+import { brandHasFeature, type BrandFeature, FEATURE_ROUTE_PREFIXES } from "~/config/brand-features"
 
 type StaticRoute = {
   path: string

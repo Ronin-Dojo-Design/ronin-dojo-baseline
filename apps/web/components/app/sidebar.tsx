@@ -2,12 +2,16 @@
 
 import { useMediaQuery } from "@mantine/hooks"
 import {
+  AwardIcon,
   CalendarIcon,
   BuildingIcon,
   DockIcon,
   ExternalLinkIcon,
+  FileTextIcon,
   GitBranchIcon,
   IdCardIcon,
+  ImageIcon,
+  LayersIcon,
   LogOutIcon,
   ShieldCheckIcon,
   SwordsIcon,
@@ -175,6 +179,30 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       href: "/app/organizations",
       prefix: <BuildingIcon />,
       permission: APP_AREA_PERMISSIONS.organizations,
+    },
+    {
+      title: "Certificates",
+      href: "/app/certificates",
+      prefix: <AwardIcon />,
+      permission: APP_AREA_PERMISSIONS.certificates,
+    },
+    {
+      title: "Posts",
+      href: "/app/posts",
+      prefix: <FileTextIcon />,
+      permission: APP_AREA_PERMISSIONS.posts,
+    },
+    {
+      title: "Content",
+      href: "/app/content",
+      prefix: <LayersIcon />,
+      permission: APP_AREA_PERMISSIONS.content,
+    },
+    {
+      title: "Media",
+      href: "/app/media",
+      prefix: <ImageIcon />,
+      permission: APP_AREA_PERMISSIONS.media,
     },
 
     undefined,

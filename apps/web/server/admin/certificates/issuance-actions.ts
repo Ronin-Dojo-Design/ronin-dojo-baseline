@@ -54,7 +54,7 @@ export const issueCertificate = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/certificates"],
+        paths: ["/app/certificates"],
         tags: ["certificates", `certificate-${certificateTemplateId}`],
       })
     })

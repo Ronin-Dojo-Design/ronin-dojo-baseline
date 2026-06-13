@@ -19,7 +19,8 @@ type DashboardTabsProps = {
 export function DashboardTabs({ tabs, defaultTab }: DashboardTabsProps) {
   const searchParams = useSearchParams()
   const requestedTab = searchParams.get("tab")
-  const urlTab = requestedTab && tabs.some(tab => tab.id === requestedTab) ? requestedTab : undefined
+  const urlTab =
+    requestedTab && tabs.some(tab => tab.id === requestedTab) ? requestedTab : undefined
   const [activeTab, setActiveTab] = useState(urlTab ?? defaultTab ?? tabs[0]?.id ?? "")
 
   const activeContent = tabs.find(t => t.id === activeTab)?.content

@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-06-12
-last_agent: codex-session-0372
+updated: 2026-06-13
+last_agent: claude-session-0374
 ---
 
 # Wiki Change Log
@@ -312,3 +312,9 @@ Use this file only as historical context for early wiki adoption.
 - Added SOT-ADR D10: DNS flip waits for Phases 1–6 local functionality on `bbl.local`; Stripe rehearsal remains complete and Phase 3 uses user-carry semantics.
 - Closed the dashboard root/events/techniques/lineage editor route seam into `/app`: migrated admin/dashboard redirects, `/app/profile`, `/app/events/*`, `/app/techniques/*`, and `/app/lineage/[treeId]/edit`.
 - Preserved unmigrated admin areas in place and recorded the remaining Phase 3 identity/server-flattening work for the next session.
+
+## 2026-06-13 — SESSION_0374 Full unified /app wave 1 + Phase 3 preflight map
+
+- Locked the route lane to Option A (migrate every admin area to `/app` regardless of the D9 brand gate; the gate stays a public-route 404 concern only).
+- Migrated `certificates`, `posts`, `content`, `media` from `/admin` to the `/app` permission-gated shell: `requirePermission` layout guards, history-preserving `git mv`, unwrapped `withAdminPage`, registered `posts.manage`, `/admin/*`→`/app/*` 308 redirects + tests, sidebar entries, and `revalidatePath` repointed to `/app/*`.
+- Added `PHASE3_USER_CARRY_PREFLIGHT.md` (40 `userId` models classified: 1 root-nullable, 3 REPOINT, 1 DUAL, 34 CARRY, 1 DECISION-NEEDED=FightRecord) and `APP_AND_SERVER_MIGRATION_MAP.md` (uniform recipe, ordered remaining 23-area waves, deferred `server/<entity>` flatten codemod plan). No schema edits; server flatten = map-only.

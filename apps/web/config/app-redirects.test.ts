@@ -35,6 +35,18 @@ describe("migrated admin app redirects", () => {
         destination: "/app/organizations/:path*",
         permanent: true,
       },
+      { source: "/admin/certificates", destination: "/app/certificates", permanent: true },
+      {
+        source: "/admin/certificates/:path*",
+        destination: "/app/certificates/:path*",
+        permanent: true,
+      },
+      { source: "/admin/posts", destination: "/app/posts", permanent: true },
+      { source: "/admin/posts/:path*", destination: "/app/posts/:path*", permanent: true },
+      { source: "/admin/content", destination: "/app/content", permanent: true },
+      { source: "/admin/content/:path*", destination: "/app/content/:path*", permanent: true },
+      { source: "/admin/media", destination: "/app/media", permanent: true },
+      { source: "/admin/media/:path*", destination: "/app/media/:path*", permanent: true },
     ])
   })
 
@@ -42,9 +54,8 @@ describe("migrated admin app redirects", () => {
     const sources = buildMigratedAdminAppRedirects().map(route => route.source)
 
     expect(sources).not.toContain("/admin/:path*")
-    expect(sources).not.toContain("/admin/certificates/:path*")
     expect(sources).not.toContain("/admin/pricing-plans/:path*")
-    expect(sources).not.toContain("/admin/content/:path*")
+    expect(sources).not.toContain("/admin/leads/:path*")
   })
 
   it("redirects only dashboard routes with exact app editor parity", () => {
@@ -111,7 +122,9 @@ describe("migrated admin app redirects", () => {
       "/app/lineage/tree_123/edit",
     )
     expect(resolveMigratedAppRedirect("/dashboard/unknown/stale")).toBe("/app/profile")
-    expect(resolveMigratedAppRedirect("/admin/certificates")).toBe(null)
+    expect(resolveMigratedAppRedirect("/admin/certificates")).toBe("/app/certificates")
+    expect(resolveMigratedAppRedirect("/admin/certificates/new")).toBe("/app/certificates/new")
+    expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe(null)
   })
 
   it("resolves exact app index routes to addressable profile tabs", () => {

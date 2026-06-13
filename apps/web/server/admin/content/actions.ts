@@ -65,7 +65,7 @@ export const upsertContentAtom = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/content"],
+        paths: ["/app/content"],
         tags: ["content-atoms", `content-atom-${atom.id}`],
       })
     })
@@ -84,7 +84,7 @@ export const deleteContentAtoms = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/content"],
+      paths: ["/app/content"],
       tags: ["content-atoms"],
     })
 
@@ -112,7 +112,7 @@ export const upsertContentVariant = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/content", `/admin/content/${input.atomId}`],
+        paths: ["/app/content", `/app/content/${input.atomId}`],
         tags: ["content-atoms", `content-atom-${input.atomId}`],
       })
     })
@@ -130,7 +130,7 @@ export const deleteContentVariant = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/content"],
+      paths: ["/app/content"],
       tags: ["content-atoms"],
     })
 
@@ -211,7 +211,7 @@ export const attachMediaToAtom = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/content", `/admin/content/${atomId}`],
+        paths: ["/app/content", `/app/content/${atomId}`],
         tags: ["content-atoms", `content-atom-${atomId}`],
       })
     })
@@ -279,7 +279,7 @@ export const reorderContentAtomMediaAttachments = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/content", `/admin/content/${atomId}`],
+        paths: ["/app/content", `/app/content/${atomId}`],
         tags: ["content-atoms", `content-atom-${atomId}`],
       })
     })
@@ -295,7 +295,7 @@ export const removeMediaAttachment = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/content"],
+      paths: ["/app/content"],
       tags: ["content-atoms"],
     })
 

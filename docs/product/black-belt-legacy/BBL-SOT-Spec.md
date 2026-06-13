@@ -5,7 +5,7 @@ type: spec
 status: active
 created: 2026-06-10
 updated: 2026-06-13
-last_agent: codex-session-0373
+last_agent: claude-session-0374
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -222,6 +222,14 @@ Where a file list is upstream-derived and not yet captured, it says **[pin in ca
 - **Done means:** `/app` renders, permission-gated; old routes 308 to `/app/*`; no surface lost; browser-proof.
 - **Deliverables:** unified dashboard + redirect map; D-024 (drift) closed.
 - **Depends on:** Phase 1 (complete — 1a `051c314`, 1b `edb74b2`, 1c `94e119d`).
+
+> **AMENDED SESSION_0374:** scope locked to **Option A — full unified `/app`, every admin area,
+> regardless of the D9 brand gate** (the gate stays a public-route 404 concern only). Wave 1 landed:
+> `certificates`/`posts`/`content`/`media` migrated onto `requirePermission` layout guards with
+> `/admin/*`→`/app/*` 308 redirects + `revalidatePath` repointing. The uniform recipe, the ordered
+> remaining 23-area waves, and the deferred `server/<entity>` flatten codemod plan now live in
+> [`APP_AND_SERVER_MIGRATION_MAP.md`](APP_AND_SERVER_MIGRATION_MAP.md). The Phase 3 identity re-root is
+> mapped in [`PHASE3_USER_CARRY_PREFLIGHT.md`](PHASE3_USER_CARRY_PREFLIGHT.md) (no schema edits yet).
 
 ---
 

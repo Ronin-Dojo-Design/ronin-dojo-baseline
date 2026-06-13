@@ -39,7 +39,7 @@ export const upsertPost = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/posts"],
+        paths: ["/app/posts"],
         tags: ["posts", `post-${post.slug}`],
       })
     })
@@ -55,7 +55,7 @@ export const deletePosts = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/posts"],
+      paths: ["/app/posts"],
       tags: ["posts"],
     })
   })

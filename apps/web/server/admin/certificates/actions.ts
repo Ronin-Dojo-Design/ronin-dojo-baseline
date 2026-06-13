@@ -24,7 +24,7 @@ export const upsertCertificateTemplate = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/certificates"],
+        paths: ["/app/certificates"],
         tags: ["certificates", `certificate-${template.id}`],
       })
     })
@@ -40,7 +40,7 @@ export const deleteCertificateTemplates = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/certificates"],
+      paths: ["/app/certificates"],
       tags: ["certificates"],
     })
 

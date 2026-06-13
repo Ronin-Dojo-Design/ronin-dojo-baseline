@@ -54,7 +54,7 @@ export const createMedia = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/media"],
+        paths: ["/app/media"],
         tags: ["media"],
       })
     })
@@ -105,7 +105,7 @@ export const uploadMediaToLibrary = adminActionClient
 
       after(async () => {
         revalidate({
-          paths: ["/admin/media"],
+          paths: ["/app/media"],
           tags: ["media"],
         })
       })
@@ -136,7 +136,7 @@ export const deleteMedia = adminActionClient
     )
 
     revalidate({
-      paths: ["/admin/media"],
+      paths: ["/app/media"],
       tags: ["media"],
     })
 
@@ -178,7 +178,7 @@ export const attachMedia = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/media"],
+        paths: ["/app/media"],
         tags: ["media"],
       })
     })
@@ -198,7 +198,7 @@ export const detachMedia = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/media"],
+        paths: ["/app/media"],
         tags: ["media"],
       })
     })

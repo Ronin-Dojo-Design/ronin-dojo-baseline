@@ -12,6 +12,14 @@ const MIGRATED_ADMIN_APP_ROUTES = [
   { source: "/admin/memberships/:path*", destination: "/app/memberships/:path*" },
   { source: "/admin/organizations", destination: "/app/organizations" },
   { source: "/admin/organizations/:path*", destination: "/app/organizations/:path*" },
+  { source: "/admin/certificates", destination: "/app/certificates" },
+  { source: "/admin/certificates/:path*", destination: "/app/certificates/:path*" },
+  { source: "/admin/posts", destination: "/app/posts" },
+  { source: "/admin/posts/:path*", destination: "/app/posts/:path*" },
+  { source: "/admin/content", destination: "/app/content" },
+  { source: "/admin/content/:path*", destination: "/app/content/:path*" },
+  { source: "/admin/media", destination: "/app/media" },
+  { source: "/admin/media/:path*", destination: "/app/media/:path*" },
 ] as const
 
 const MIGRATED_DASHBOARD_APP_ROUTES = [

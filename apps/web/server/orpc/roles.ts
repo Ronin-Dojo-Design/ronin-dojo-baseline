@@ -122,6 +122,7 @@ export const APP_AREA_PERMISSIONS = {
   memberships: "memberships.manage",
   merch: "merch.manage",
   organizations: "organizations.manage",
+  posts: "posts.manage",
   pricingPlans: "pricing-plans.manage",
   privacy: "privacy.manage",
   programs: "programs.manage",

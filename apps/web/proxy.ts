@@ -30,7 +30,8 @@ export default async function (req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const sessionCookie = getSessionCookie(req)
 
-  const migratedAppRedirect = resolveMigratedAppRedirect(pathname) ?? resolveAppTabRedirect(pathname)
+  const migratedAppRedirect =
+    resolveMigratedAppRedirect(pathname) ?? resolveAppTabRedirect(pathname)
   if (migratedAppRedirect) {
     const destination = new URL(migratedAppRedirect, req.url)
     for (const [key, value] of req.nextUrl.searchParams) {
