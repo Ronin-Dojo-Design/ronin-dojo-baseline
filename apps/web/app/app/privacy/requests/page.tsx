@@ -6,7 +6,6 @@
  * @wired server/admin/privacy/queries.ts
  */
 import { formatDate } from "@dirstack/utils"
-import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Badge } from "~/components/common/badge"
 import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
@@ -20,7 +19,7 @@ const STATUS_VARIANT: Record<string, "primary" | "success" | "warning" | "danger
   REJECTED: "danger",
 }
 
-export default withAdminPage(async () => {
+export default async function AppPrivacyRequestsPage() {
   const requests = await findDataSubjectRequests()
 
   return (
@@ -55,7 +54,7 @@ export default withAdminPage(async () => {
                   </td>
                   <td className="py-2 pr-4 max-w-50 truncate">{req.reason ?? "—"}</td>
                   <td className="py-2">
-                    <Link href={`/admin/privacy/requests/${req.id}`} className="text-xs">
+                    <Link href={`/app/privacy/requests/${req.id}`} className="text-xs">
                       View →
                     </Link>
                   </td>
@@ -67,4 +66,4 @@ export default withAdminPage(async () => {
       )}
     </Wrapper>
   )
-})
+}

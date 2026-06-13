@@ -13,7 +13,7 @@ export const updateReport = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/reports"],
+      paths: ["/app/reports"],
     })
 
     return report
@@ -27,7 +27,7 @@ export const deleteReports = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/reports"],
+      paths: ["/app/reports"],
     })
 
     return true

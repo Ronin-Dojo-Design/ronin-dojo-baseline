@@ -1,5 +1,4 @@
 import { PaletteIcon } from "lucide-react"
-import { withAdminPage } from "~/components/admin/auth-hoc"
 import { H2 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
 import { findAllBrandSettings } from "~/server/admin/brand-settings/queries"
@@ -14,7 +13,7 @@ const brandLabels: Record<string, string> = {
 
 const allBrands = ["BASELINE_MARTIAL_ARTS", "RONIN_DOJO_DESIGN", "BBL", "WEKAF"] as const
 
-export default withAdminPage(async () => {
+export default async function AppBrandSettingsPage() {
   const existingSettings = await findAllBrandSettings()
   const settingsMap = new Map(existingSettings.map(s => [s.brand, s]))
 
@@ -43,4 +42,4 @@ export default withAdminPage(async () => {
       </div>
     </Wrapper>
   )
-})
+}

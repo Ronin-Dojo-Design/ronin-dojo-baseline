@@ -56,7 +56,7 @@ export function BblEmailCaptureList({ captures }: BblEmailCaptureListProps) {
                   <Button
                     size="xs"
                     variant="secondary"
-                    render={<Link href={`/admin/leads/${capture.id}`} />}
+                    render={<Link href={`/app/leads/${capture.id}`} />}
                   >
                     Open lead
                   </Button>

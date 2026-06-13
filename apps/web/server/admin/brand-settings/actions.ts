@@ -46,7 +46,7 @@ export const upsertBrandSettings = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/brand-settings", "/"],
+        paths: ["/app/brand-settings", "/"],
         tags: ["brand-settings"],
       })
     })

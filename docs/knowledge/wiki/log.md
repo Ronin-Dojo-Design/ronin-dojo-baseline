@@ -330,3 +330,9 @@ Use this file only as historical context for early wiki adoption.
 - Migrated `roles`, `entitlements`, `invites`, and `leads` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
 - Added Wave 2 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
 - Restored authenticated local proof: dev-login resolves to an admin user, curl returned 200 for all four `/app` areas on `bbl.local`, and Playwright rendered `/app/roles` with the Wave 2 sidebar entries.
+
+## 2026-06-13 — SESSION_0377 BBL /app migration wave 3
+
+- Migrated `email`, `brand-settings`, `privacy/requests`, and `reports` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
+- Added Wave 3 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
+- Kept `privacy` rooted at `/app/privacy/requests` because the legacy surface is a DSR requests workflow, not a standalone privacy dashboard.

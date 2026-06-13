@@ -3,7 +3,7 @@
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Report, Tool } from "~/.generated/prisma/browser"
-import { ReportActions } from "~/app/admin/reports/_components/report-actions"
+import { ReportActions } from "~/app/app/reports/_components/report-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
@@ -48,7 +48,7 @@ export const getColumns = (): ColumnDef<Report>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
       cell: ({ row }) => (
         <DataTableLink
-          href={`/admin/reports/${row.original.id}`}
+          href={`/app/reports/${row.original.id}`}
           title={`#${row.original.id.slice(-6).toUpperCase()}`}
         />
       ),

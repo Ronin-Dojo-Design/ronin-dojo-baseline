@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
-import { ReportActions } from "~/app/admin/reports/_components/report-actions"
+import { ReportActions } from "~/app/app/reports/_components/report-actions"
 import { Button } from "~/components/common/button"
 import {
   Form,
@@ -140,7 +140,7 @@ export function ReportForm({ children, className, title, report, ...props }: Rep
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" render={<Link href="/admin/reports" />}>
+          <Button size="md" variant="secondary" render={<Link href="/app/reports" />}>
             Cancel
           </Button>
 

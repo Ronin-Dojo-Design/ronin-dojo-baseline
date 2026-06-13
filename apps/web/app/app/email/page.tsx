@@ -1,8 +1,7 @@
 import { ExternalLinkIcon, MailIcon, ReplyIcon } from "lucide-react"
 import { Brand } from "~/.generated/prisma/client"
-import { BblEmailCaptureList } from "~/app/admin/email/_components/bbl-email-capture-list"
-import { BblEmailCatalogPanel } from "~/app/admin/email/_components/bbl-email-catalog-panel"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { BblEmailCaptureList } from "~/app/app/email/_components/bbl-email-capture-list"
+import { BblEmailCatalogPanel } from "~/app/app/email/_components/bbl-email-catalog-panel"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -67,7 +66,7 @@ const emailSurfaces = [
   },
 ] as const
 
-export default withAdminPage(async () => {
+export default async function AppEmailPage() {
   const senderConfigured = Boolean(
     env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
   )
@@ -219,4 +218,4 @@ export default withAdminPage(async () => {
       </Card>
     </Wrapper>
   )
-})
+}
