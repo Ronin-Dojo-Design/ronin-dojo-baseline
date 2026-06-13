@@ -108,6 +108,7 @@ export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArra
  */
 export const APP_AREA_PERMISSIONS = {
   billing: "billing.manage",
+  brandSettings: "brand-settings.manage",
   categories: "categories.manage",
   certificates: "certificates.manage",
   claims: "claims.manage",

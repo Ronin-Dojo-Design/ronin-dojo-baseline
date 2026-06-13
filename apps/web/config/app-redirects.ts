@@ -28,6 +28,15 @@ const MIGRATED_ADMIN_APP_ROUTES = [
   { source: "/admin/invites/:path*", destination: "/app/invites/:path*" },
   { source: "/admin/leads", destination: "/app/leads" },
   { source: "/admin/leads/:path*", destination: "/app/leads/:path*" },
+  { source: "/admin/email", destination: "/app/email" },
+  { source: "/admin/email/:path*", destination: "/app/email/:path*" },
+  { source: "/admin/brand-settings", destination: "/app/brand-settings" },
+  { source: "/admin/brand-settings/:path*", destination: "/app/brand-settings/:path*" },
+  { source: "/admin/privacy", destination: "/app/privacy/requests" },
+  { source: "/admin/privacy/requests", destination: "/app/privacy/requests" },
+  { source: "/admin/privacy/requests/:path*", destination: "/app/privacy/requests/:path*" },
+  { source: "/admin/reports", destination: "/app/reports" },
+  { source: "/admin/reports/:path*", destination: "/app/reports/:path*" },
 ] as const
 
 const MIGRATED_DASHBOARD_APP_ROUTES = [

@@ -4,7 +4,7 @@ import { EllipsisIcon, TrashIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import type { Report } from "~/.generated/prisma/browser"
-import { ReportsDeleteDialog } from "~/app/admin/reports/_components/reports-delete-dialog"
+import { ReportsDeleteDialog } from "~/app/app/reports/_components/reports-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -41,15 +41,15 @@ export const ReportActions = ({ report, className, ...props }: ReportActionsProp
         />
 
         <DropdownMenuContent align="end" sideOffset={8}>
-          {pathname !== `/admin/reports/${report.id}` && (
-            <DropdownMenuItem render={<Link href={`/admin/reports/${report.id}`} />}>
+          {pathname !== `/app/reports/${report.id}` && (
+            <DropdownMenuItem render={<Link href={`/app/reports/${report.id}`} />}>
               Edit
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ReportsDeleteDialog reports={[report]} onExecute={() => router.push("/admin/reports")}>
+      <ReportsDeleteDialog reports={[report]} onExecute={() => router.push("/app/reports")}>
         <Button
           variant="secondary"
           size="sm"

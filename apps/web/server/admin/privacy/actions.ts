@@ -82,7 +82,7 @@ export const transitionDataSubjectRequestStatus = adminActionClient
         }
 
         revalidate({
-          paths: ["/admin/privacy/requests", `/admin/privacy/requests/${id}`],
+          paths: ["/app/privacy/requests", `/app/privacy/requests/${id}`],
         })
 
         const recipient = request.user?.email

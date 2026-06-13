@@ -6,8 +6,7 @@
  */
 import { formatDate } from "@dirstack/utils"
 import { notFound } from "next/navigation"
-import { DsrStatusActions } from "~/app/admin/privacy/requests/[id]/_components/dsr-status-actions"
-import { withAdminPage } from "~/components/admin/auth-hoc"
+import { DsrStatusActions } from "~/app/app/privacy/requests/[id]/_components/dsr-status-actions"
 import { Badge } from "~/components/common/badge"
 import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
@@ -22,7 +21,11 @@ const STATUS_VARIANT: Record<string, "primary" | "success" | "warning" | "danger
   REJECTED: "danger",
 }
 
-export default withAdminPage(async ({ params }: { params: Promise<{ id: string }> }) => {
+export default async function AppPrivacyRequestDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const { id } = await params
   const request = await findDataSubjectRequestById(id)
 
@@ -32,7 +35,7 @@ export default withAdminPage(async ({ params }: { params: Promise<{ id: string }
 
   return (
     <Wrapper size="md" gap="sm">
-      <Link href="/admin/privacy/requests" className="text-xs text-muted-foreground">
+      <Link href="/app/privacy/requests" className="text-xs text-muted-foreground">
         ← Back to requests
       </Link>
 
@@ -87,4 +90,4 @@ export default withAdminPage(async ({ params }: { params: Promise<{ id: string }
       )}
     </Wrapper>
   )
-})
+}

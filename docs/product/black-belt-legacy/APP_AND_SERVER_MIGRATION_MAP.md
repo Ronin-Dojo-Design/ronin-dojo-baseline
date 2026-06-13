@@ -60,6 +60,7 @@ Every legacy `/admin/<area>` uses the `components/admin/auth-hoc` `withAdminPage
 
 Wave 1 (SESSION_0374, landed): **certificates, posts, content, media.**
 Wave 2 (SESSION_0376, landed): **roles, entitlements, invites, leads.**
+Wave 3 (SESSION_0377, landed): **email, brand-settings, privacy, reports.**
 
 Order the rest by value to `bbl.local` functionality + coupling to Phase 3/4. BBL-enabled (E) areas
 first; BBL-404 (G) areas migrate for unified-shell completeness but aren't launch-gating.
@@ -67,8 +68,8 @@ first; BBL-404 (G) areas migrate for unified-shell completeness but aren't launc
 | Wave | Areas | Why this order |
 | --- | --- | --- |
 | **2** | roles (E), entitlements (E), invites (E), leads (E) | ✅ Landed SESSION_0376 — claim/RBAC + funnel surfaces moved to `/app` with guards, redirects, sidebar, and `revalidatePath` repoints. |
-| **3** | email (E), brand-settings (E), privacy (E), reports | Next safe wave — operator ops + GDPR/infra the operator drives day-to-day. |
-| **4** | programs, courses, age-groups, skill-levels, schedule (all G) | School-ops cluster — share `server/admin/programs` query surface; batch together. |
+| **3** | email (E), brand-settings (E), privacy (E), reports | ✅ Landed SESSION_0377 — operator ops, brand settings, DSR requests, and reports moved to `/app` with guards, redirects, sidebar entries, and `revalidatePath` repoints. |
+| **4** | programs, courses, age-groups, skill-levels, schedule (all G) | Next safe wave — school-ops cluster; share `server/admin/programs` query surface; batch together. |
 | **5** | merch, categories, tags, pricing-plans, subscription-tiers, subscriptions, billing (G) | Commerce/listings cluster. |
 | **6** | tools (G), storage, repo-docs | Dirstarter-core + infra/dev; lowest user value. |
 | **7** | Review checkpoint (no migration) | Desi UI/UX consistency review of the migrated `/app` surface + a `/code-review` pass on the cumulative diff; write findings to the SESSION file for follow-up. |
