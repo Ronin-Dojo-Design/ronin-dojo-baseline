@@ -115,7 +115,11 @@ for ((i = 1; i <= N; i++)); do
 
   echo ""
   echo "════════ codex auto-merge session ${i}/${N} → ${branch} ════════"
-  if git rev-parse --verify --quiet "$branch" >/dev/null; then
+  set +e
+  git rev-parse --verify --quiet "$branch" >/dev/null
+  branch_exists=$?
+  set -e
+  if [[ "$branch_exists" -eq 0 ]]; then
     echo "✗ local branch ${branch} already exists; inspect/delete it before rerunning" >&2
     exit 1
   fi
