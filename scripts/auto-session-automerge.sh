@@ -46,6 +46,16 @@ update` BEFORE the commit (FS-0025). COMMIT to the CURRENT
 branch with a conventional message. DO NOT push, DO NOT open a PR — the wrapper handles
 that. Run the FS-0024 guard. If a REAL gate fails (typecheck, oxlint/oxfmt check,
 wiki:lint, or focused tests), STOP and leave the tree UNCOMMITTED.
+
+AUTONOMOUS SCOPE GUARD: do mechanical, reviewable slices only. DO NOT begin Prisma
+schema/migration work (`apps/web/prisma/`), the `server/<entity>` flatten, or any
+identity re-root in an autonomous session — those need a human grill + browser proof.
+If the next slice requires them, STOP: write the SESSION file noting it is human-gated,
+leave a "Next session" pointer, and do NOT commit code edits. When following the
+`/app` migration recipe in APP_AND_SERVER_MIGRATION_MAP.md, scope every `sed` to the
+moved dir + route-string sites — `s|/admin/<area>|/app/<area>|` also corrupts
+`server/admin/<area>` import paths (SESSION_0374). At bow-out, set the next session's
+pointer to the FOLLOWING wave in that map.
 PROMPT
 
 for ((i = 1; i <= N; i++)); do
@@ -58,6 +68,7 @@ for ((i = 1; i <= N; i++)); do
   git switch -c "$branch" main
 
   claude -p "$SESSION_PROMPT" \
+    --model "${AUTO_SESSION_MODEL:-claude-opus-4-8}" \
     --permission-mode acceptEdits \
     --allowedTools "Edit,Write,Read,Glob,Grep,TodoWrite,Agent"
 

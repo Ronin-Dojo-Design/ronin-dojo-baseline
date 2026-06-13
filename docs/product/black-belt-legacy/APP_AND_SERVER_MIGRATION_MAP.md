@@ -70,6 +70,13 @@ first; BBL-404 (G) areas migrate for unified-shell completeness but aren't launc
 | **4** | programs, courses, age-groups, skill-levels, schedule (all G) | School-ops cluster — share `server/admin/programs` query surface; batch together. |
 | **5** | merch, categories, tags, pricing-plans, subscription-tiers, subscriptions, billing (G) | Commerce/listings cluster. |
 | **6** | tools (G), storage, repo-docs | Dirstarter-core + infra/dev; lowest user value. |
+| **7** | Review checkpoint (no migration) | Desi UI/UX consistency review of the migrated `/app` surface + a `/code-review` pass on the cumulative diff; write findings to the SESSION file for follow-up. |
+
+> **Autonomous-run boundary (SESSION_0374):** waves 2–7 are mechanical/review and safe for the
+> unattended `auto-session-automerge.sh` driver (Opus, auto-merge, phone-pinged). The driver's
+> `apps/web/prisma/` brake + the prompt's autonomous scope guard **stop the loop before** the
+> `server/<entity>` flatten and the Phase 3 identity re-root — both need a human grill + browser
+> proof and must NOT auto-deploy to the shared prod DB. Resume those interactively.
 
 After all areas land: **2c** = delete the legacy `/admin` shell (`app/admin/layout.tsx`,
 `components/admin/*` nav, `withAdminPage`), add the blanket `/admin/:path*` → `/app/:path*` safety
