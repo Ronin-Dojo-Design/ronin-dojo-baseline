@@ -30,7 +30,7 @@ export const upsertCourse = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/courses"],
+        paths: ["/app/courses"],
         tags: ["courses", `course-${course.slug}`],
       })
     })
@@ -46,7 +46,7 @@ export const deleteCourses = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/courses"],
+      paths: ["/app/courses"],
       tags: ["courses"],
     })
 

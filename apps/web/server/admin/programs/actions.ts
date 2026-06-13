@@ -49,7 +49,7 @@ export const upsertProgram = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/programs"],
+        paths: ["/app/programs"],
         tags: ["programs", `program-${program.slug}`],
       })
     })
@@ -65,7 +65,7 @@ export const deletePrograms = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/programs"],
+      paths: ["/app/programs"],
       tags: ["programs"],
     })
 
@@ -92,7 +92,7 @@ export const addProgramCourse = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/programs"],
+      paths: ["/app/programs"],
       tags: ["programs", `program-${program.slug}`],
     })
 
@@ -118,7 +118,7 @@ export const removeProgramCourses = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/programs"],
+      paths: ["/app/programs"],
       tags: ["programs", `program-${program.slug}`],
     })
 
@@ -145,7 +145,7 @@ export const addProgramWaiver = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/programs"],
+      paths: ["/app/programs"],
       tags: ["programs", `program-${program.slug}`],
     })
 
@@ -171,7 +171,7 @@ export const removeProgramWaivers = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/programs"],
+      paths: ["/app/programs"],
       tags: ["programs", `program-${program.slug}`],
     })
 

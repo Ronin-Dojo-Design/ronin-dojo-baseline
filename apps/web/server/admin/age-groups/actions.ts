@@ -22,7 +22,7 @@ export const upsertAgeGroup = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/age-groups"],
+        paths: ["/app/age-groups"],
         tags: ["age-groups", `age-group-${ageGroup.id}`],
       })
     })
@@ -38,7 +38,7 @@ export const deleteAgeGroups = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/age-groups"],
+      paths: ["/app/age-groups"],
       tags: ["age-groups"],
     })
 

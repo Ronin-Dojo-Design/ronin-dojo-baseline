@@ -22,7 +22,7 @@ export const upsertSkillLevel = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/skill-levels"],
+        paths: ["/app/skill-levels"],
         tags: ["skill-levels", `skill-level-${skillLevel.id}`],
       })
     })
@@ -38,7 +38,7 @@ export const deleteSkillLevels = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/skill-levels"],
+      paths: ["/app/skill-levels"],
       tags: ["skill-levels"],
     })
 

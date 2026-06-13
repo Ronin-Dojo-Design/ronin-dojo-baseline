@@ -37,6 +37,16 @@ const MIGRATED_ADMIN_APP_ROUTES = [
   { source: "/admin/privacy/requests/:path*", destination: "/app/privacy/requests/:path*" },
   { source: "/admin/reports", destination: "/app/reports" },
   { source: "/admin/reports/:path*", destination: "/app/reports/:path*" },
+  { source: "/admin/programs", destination: "/app/programs" },
+  { source: "/admin/programs/:path*", destination: "/app/programs/:path*" },
+  { source: "/admin/courses", destination: "/app/courses" },
+  { source: "/admin/courses/:path*", destination: "/app/courses/:path*" },
+  { source: "/admin/age-groups", destination: "/app/age-groups" },
+  { source: "/admin/age-groups/:path*", destination: "/app/age-groups/:path*" },
+  { source: "/admin/skill-levels", destination: "/app/skill-levels" },
+  { source: "/admin/skill-levels/:path*", destination: "/app/skill-levels/:path*" },
+  { source: "/admin/schedule", destination: "/app/schedule" },
+  { source: "/admin/schedule/:path*", destination: "/app/schedule/:path*" },
 ] as const
 
 const MIGRATED_DASHBOARD_APP_ROUTES = [

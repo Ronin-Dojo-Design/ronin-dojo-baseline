@@ -107,6 +107,7 @@ export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArra
  * operator-ratified day-one tightening: non-admin roles reach only their areas.
  */
 export const APP_AREA_PERMISSIONS = {
+  ageGroups: "age-groups.manage",
   billing: "billing.manage",
   brandSettings: "brand-settings.manage",
   categories: "categories.manage",
