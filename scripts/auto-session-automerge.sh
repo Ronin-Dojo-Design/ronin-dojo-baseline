@@ -67,8 +67,14 @@ for ((i = 1; i <= N; i++)); do
   git branch -D "$branch" >/dev/null 2>&1 || true
   git switch -c "$branch" main
 
+  # --setting-sources loads .claude/settings.local.json so the headless agent's
+  # Bash gate commands (bun/git/gh/graphify) are allowlisted — without it the
+  # nested `claude -p` couldn't run them and the session aborted in ~15s
+  # (SESSION_0374 diagnosis; CLI v2.1.170). If it still stalls on permissions,
+  # add --dangerously-skip-permissions (codex-runner parity; FS-0024 still guards).
   claude -p "$SESSION_PROMPT" \
     --model "${AUTO_SESSION_MODEL:-opus}" \
+    --setting-sources user,project,local \
     --permission-mode acceptEdits \
     --allowedTools "Edit,Write,Read,Glob,Grep,TodoWrite,Agent"
 

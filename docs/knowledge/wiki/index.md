@@ -486,6 +486,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
 | [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
+| [petey-plan-0379](../../petey-plan-0379.md) | petey-plan | active — **Lineage Tree org-chart-grade enhancement** (extends 0305). 6 display-only slices: 2D tidy-tree layout engine → multi-parent slinks/clinks → expand/collapse + load-on-demand → partner/assistant → filter+highlight → polish. Benchmarked vs BALKAN OrgChart (build-our-own; no paid dep). Spec: lineage-tree-runbook.md |
+| [lineage-tree-runbook](../../runbooks/domain-features/lineage-tree-runbook.md) | runbook | active — **BALKAN OrgChart deep-dive + our build plan.** Build-our-own verdict, 18-feature gap matrix, current-state ground truth, data-model impact, prioritized build. Drives petey-plan-0379. |
 | [petey-plan-0083](../../sprints/_archive/petey-plan-0083.md) | petey-plan | active |
 | [petey-plan-0229](../../sprints/petey-plan-0229.md) | petey-plan | active |
 | [petey-plan-0285](../../sprints/petey-plan-0285.md) | petey-plan | active |
