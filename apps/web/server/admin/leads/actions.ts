@@ -62,7 +62,7 @@ export const upsertLead = adminActionClient
       })
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads", `lead-${lead.id}`],
       })
     })
@@ -102,7 +102,7 @@ export const deleteLeads = adminActionClient
       }
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads"],
       })
     })
@@ -136,7 +136,7 @@ export const markLeadLost = adminActionClient
       })
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads", `lead-${id}`],
       })
     })
@@ -166,7 +166,7 @@ export const markLeadNurture = adminActionClient
       })
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads", `lead-${id}`],
       })
     })
@@ -218,7 +218,7 @@ export const createFollowUp = adminActionClient
       }
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads", `lead-${parsedInput.leadId}`],
       })
     })
@@ -254,7 +254,7 @@ export const completeFollowUp = adminActionClient
       }
 
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads", `lead-${followUp.leadId}`],
       })
     })

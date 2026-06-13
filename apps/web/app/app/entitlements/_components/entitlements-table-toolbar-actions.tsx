@@ -1,0 +1,27 @@
+"use client"
+
+import type { Table } from "@tanstack/react-table"
+import { TrashIcon } from "lucide-react"
+import { EntitlementsDeleteDialog } from "~/app/app/entitlements/_components/entitlements-delete-dialog"
+import type { EntitlementRow } from "~/app/app/entitlements/_components/entitlements-table-columns"
+import { Button } from "~/components/common/button"
+
+interface EntitlementsTableToolbarActionsProps {
+  table: Table<EntitlementRow>
+}
+
+export function EntitlementsTableToolbarActions({ table }: EntitlementsTableToolbarActionsProps) {
+  const { rows } = table.getFilteredSelectedRowModel()
+
+  if (!rows.length) {
+    return null
+  }
+
+  return (
+    <EntitlementsDeleteDialog entitlements={rows.map(row => row.original)}>
+      <Button variant="secondary" size="md" prefix={<TrashIcon />}>
+        Delete ({rows.length})
+      </Button>
+    </EntitlementsDeleteDialog>
+  )
+}

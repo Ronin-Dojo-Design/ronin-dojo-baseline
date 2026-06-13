@@ -7,6 +7,7 @@ import { Card } from "~/components/common/card"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { type AdminLineageTreeMember, findLineageTreeDetail } from "~/server/admin/lineage/queries"
 
 function displayName(member: AdminLineageTreeMember) {
@@ -57,6 +58,8 @@ function claimBadge(member: AdminLineageTreeMember) {
 }
 
 export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
+  await requireLineageManagementAccess()
+
   const { treeId } = await params
   const tree = await findLineageTreeDetail(treeId)
 
@@ -99,7 +102,7 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
           <Button
             variant="secondary"
             size="sm"
-            render={<Link href={`/dashboard/lineage/${tree.id}`} />}
+            render={<Link href={`/app/lineage/${tree.id}/edit`} />}
           >
             Open editor
           </Button>

@@ -22,7 +22,7 @@ export const upsertRole = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/roles"],
+        paths: ["/app/roles"],
         tags: ["roles", `role-${role.id}`],
       })
     })
@@ -38,7 +38,7 @@ export const deleteRoles = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/roles"],
+      paths: ["/app/roles"],
       tags: ["roles"],
     })
 

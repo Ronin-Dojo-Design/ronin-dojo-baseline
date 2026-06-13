@@ -5,6 +5,7 @@ import { Heading } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
+import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { findClaimById } from "~/server/admin/lineage/claim-queries"
 import { ClaimStatusActions } from "~/app/admin/lineage/claims/[id]/_components/claim-status-actions"
 
@@ -15,6 +16,8 @@ import { ClaimStatusActions } from "~/app/admin/lineage/claims/[id]/_components/
  */
 
 export default async ({ params }: PageProps<"/app/lineage/claims/[id]">) => {
+  await requireLineageManagementAccess()
+
   const { id } = await params
   const claim = await findClaimById(id)
 

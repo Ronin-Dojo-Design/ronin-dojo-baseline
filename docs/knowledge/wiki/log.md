@@ -324,3 +324,9 @@ Use this file only as historical context for early wiki adoption.
 - Added `scripts/auto-session-codex-automerge.sh`, a local Codex auto-merge driver defaulting to the first three safe remaining BBL `/app` waves and stopping before Prisma, server flattening, or Phase 3 identity work.
 - Added `codex-cloud-bbl-waves-2-4.md` as a Codex Cloud fallback prompt while documenting local as preferred for Graphify, `bbl.local`, `gh`, and ntfy proof.
 - Updated autonomous/Codex runbooks and the runbook hub with the local launch command: `caffeinate -i scripts/auto-session-codex-automerge.sh`.
+
+## 2026-06-13 — SESSION_0376 BBL /app migration wave 2
+
+- Migrated `roles`, `entitlements`, `invites`, and `leads` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
+- Added Wave 2 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
+- Restored authenticated local proof: dev-login resolves to an admin user, curl returned 200 for all four `/app` areas on `bbl.local`, and Playwright rendered `/app/roles` with the Wave 2 sidebar entries.

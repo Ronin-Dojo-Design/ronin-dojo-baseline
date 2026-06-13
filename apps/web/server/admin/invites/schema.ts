@@ -1,7 +1,7 @@
 /**
  * @added   SESSION_0147 (2026-05-12)
  * @why     Zod schema + nuqs table params for invite admin CRUD
- * @wired   app/admin/invites/ (list, new, detail pages), server/admin/invites/queries.ts
+ * @wired   app/app/invites/ (list, new, detail pages), server/admin/invites/queries.ts
  */
 import {
   createSearchParamsCache,
