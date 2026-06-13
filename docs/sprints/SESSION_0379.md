@@ -2,7 +2,7 @@
 title: "SESSION 0379 — Lineage tidy-tree layout engine + v2 canvas (0379-1)"
 slug: session-0379
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-06-13
 updated: 2026-06-13
 last_agent: claude-session-0379
@@ -233,29 +233,108 @@ Pivot from the tidy-tree-engine plan (all in runbook §0/§0a):
 
 | File | Change |
 | --- | --- |
+| `docs/runbooks/domain-features/lineage-tree-runbook.md` | §0 verdict rewritten (donatso fork); §0a integration spec (COMPLETE); §0b candidate comparison + 3 options; appended verbatim `Brian-ChatGPT-Session`; frontmatter restamped. |
+| `docs/petey-plan-0379.md` | Rewritten to the fork+extend slice sequence (vendor → adapter → island → overlay → privacy → polish). |
+| `docs/architecture/source/raw/Brian-Chat-GPT-Session.md` | New raw source — candidate-B (ChatGPT/Balkan) verbatim. |
+| `docs/sprints/SESSION_0379.md` | Session ledger + full close. |
+| `docs/knowledge/wiki/index.md`, `docs/knowledge/wiki/log.md` | SESSION_0379 row + log entry. |
+| operator memory (`~/.claude/.../memory/`) | Lineage-pivot pointer + fresh-chat/read-sources working preference. |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `bun run wiki:lint` | ✅ 0 errors, 1 warning (R8 blank-line-before-list inside the operator-mandated verbatim ChatGPT block, runbook:313 — left intact to preserve verbatim). |
+| Code gates (typecheck/lint/test) | n/a — planning session, **no code touched**. |
+| `git commit` candidate-A baseline | `49469ba`; final close commit hash reported at bow-out (see git log). |
+| `graphify update` | count reported in Full close evidence (run before the close commit). |
 
 ## Open decisions / blockers
+
+- **Lineage View A engine path is OPEN** — three options recorded (runbook §0b); `donatso/family-chart`
+  fork (A) is the front-runner. Decision **deferred to a fresh chat** (context past ~120K tokens — avoid
+  the "dumb zone"; fresh eyes review two committed candidates).
+- Candidate-B (`raw/Brian-Chat-GPT-Session.md`) captured as reference. License note for the fresh agent:
+  lifting MIT donatso is clearly permitted; lifting/adapting proprietary Balkan community source has a
+  different license profile — operator decided to treat all sources as lift-and-adapt (it becomes our code).
 
 ## Next session
 
 ### Goal
 
+**Fresh chat, fresh eyes.** Decide the lineage View A path among the three options in runbook §0b
+(A = fork `donatso/family-chart`, front-runner; B = lift+adapt Balkan patterns; hybrid two-view), then
+begin the chosen build (petey-plan-0379 slice 0379-1).
+
 ### First task
+
+Bow in. Read **runbook §0 + §0a + §0b**, the rewritten **`petey-plan-0379`**, and candidate-B
+**`docs/architecture/source/raw/Brian-Chat-GPT-Session.md`**. Confirm the path (A leans front-runner;
+cherry-pick B's two-step visual DTO + trust vocabulary + native-cohort framing regardless of engine).
+Then start 0379-1 (vendor the fork + IoC review). Not blocked on user — a decision-then-build session.
 
 ## Review log
 
+### SESSION_0379_REVIEW_01 — Lineage path planning pivot
+
+- **Reviewed tasks:** SESSION_0379_TASK_04 (TASK_01–03 superseded).
+- **Dirstarter docs check:** not applicable — no Dirstarter L1 baseline code touched (docs/planning only).
+- **Verdict:** Clean planning pivot. The original "build a tidy-tree engine" premise was caught as stale
+  (dead `bucketByDepth`, canvas already recursive) before any code; the path was re-grounded in real
+  source repos the operator provided (donatso/family-chart, MIT/TS/D3), and a parallel ChatGPT/Balkan
+  approach was captured verbatim for comparison. The engine decision was responsibly **deferred to a
+  fresh session**. Candidate-A committed; candidate-B captured.
+- **Score:** 9/10 (−1: I briefly contradicted runbook §0 mid-grill by recommending Balkan's data binding;
+  operator caught it — reinforced reading referenced docs thoroughly before recommending).
+- **Follow-up:** fresh session locks the path + creates the engine ADR; cherry-pick B's visual DTO / trust
+  vocabulary / cohort framing.
+
 ## Hostile close review
+
+- **Giddy:** Pass. No schema, code, Prisma, DNS, Vercel-prod, or Stripe changes — docs/planning only.
+  Privacy invariant explicitly preserved (View A consumes the existing materialized payload; non-PUBLIC
+  dropped). Scope stayed in the lineage planning lane.
+- **Doug:** Pass. `wiki:lint` = 0 errors (1 cosmetic warning in operator-mandated verbatim content,
+  honestly recorded). No code → no test/verification claims made; nothing reported as "verified" that
+  wasn't. Candidate-A committed (`49469ba`); candidate-B captured verbatim in two locations as instructed.
+- **Desi:** Pass (light). No UI shipped; candidate card/visual designs are documented, not rendered — belt
+  color stays `Rank.colorHex` data in both candidate specs.
+- **Kaizen aggregate:** 9/10 — strong source-grounded planning; one mid-session doc-contradiction caught.
 
 ## ADR / ubiquitous-language check
 
+- ADR **deferred**: the lineage View A engine-base decision is intentionally open (3 options, A
+  front-runner) pending the fresh session. Create the ADR ("Lineage View A engine = fork
+  donatso/family-chart" or whichever path locks) once decided. Mapping (single-primary + secondary-overlay),
+  two-view model, and privacy posture are recorded in runbook §0/§0a (ADR-worthy when the engine locks).
+- Ubiquitous language: no new canonical domain terms introduced. Candidate terms ("View A / View B",
+  "focal explorer", "secondary-overlay") are descriptive; promote to glossary if they become standing.
+
 ## Reflections
+
+- **Ground before you build.** The session opened to build a tidy-tree engine; reading the real code
+  showed `bucketByDepth` was dead and the canvas already did recursive layout — the plan's premise was
+  stale. The whole pivot flowed from reading the actual source first.
+- **When the operator hands you a source, read it fully and don't contradict it.** I recommended adopting
+  Balkan's `id`/`pid` data binding while runbook §0 explicitly said "implement on our own model" — the
+  operator caught it sharply. Referenced docs are binding context, not optional.
+- **Candidate repos beat abstractions.** The path converged once the operator surfaced concrete repos
+  (Balkan demos → ooanishoo → FamLine → donatso); donatso (MIT/TS/D3, genealogy-native, HTML cards) was
+  self-evidently best once read. "Don't guess, read the code" was the operator's repeated, correct push.
+- **Respect the context "dumb zone."** Deferring the final path decision to a fresh chat past ~120K tokens
+  is good practice — a fresh agent reviews two committed candidates cleanly rather than inheriting drift.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
+| JETTY/frontmatter sweep | Runbook `last_agent` `claude-session-0374`→`claude-session-0379`; petey-plan-0379 + raw + SESSION stamped `claude-session-0379`; dates 2026-06-13. |
+| Backlinks/index sweep | `wiki/index.md` SESSION_0379 row added; `log.md` entry appended; runbook ↔ petey-plan-0379 ↔ raw cross-referenced in `pairs_with`. |
+| Wiki lint | `bun run wiki:lint` → ✅ 0 errors, 1 warning (R8 blank-line-before-list inside verbatim ChatGPT block, runbook:313 — operator-mandated verbatim, not introduced structural debt). |
+| Kaizen reflection | Reflections section present. |
+| Hostile close review | SESSION_0379_REVIEW_01 + Giddy/Doug/Desi present. |
+| Review & Recommend | Next session goal written (fresh-chat path decision; A front-runner). |
+| Memory sweep | Project pointer (lineage pivot → read runbook §0b) + feedback memory (fresh-chat for big decisions; read provided sources thoroughly). |
+| Next session unblock check | Unblocked — decision-then-build session; inputs all committed in-repo. |
+| Git hygiene | On `main`; docs-only; candidate-A `49469ba`; final close = single `git add -A` commit + push, hash in bow-out chat (FS-0025 — no second evidence commit). |
+| Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` run before the close commit; count in bow-out chat. |

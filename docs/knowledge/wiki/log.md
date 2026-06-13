@@ -342,3 +342,9 @@ Use this file only as historical context for early wiki adoption.
 - Migrated `programs`, `courses`, `age-groups`, `skill-levels`, and `schedule` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
 - Added Wave 4 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
 - Authenticated `bbl.local` curl proof returned 200 for all five `/app` areas; browser auth was blocked by localhost redirect/cookie context, so curl is the render evidence.
+
+## 2026-06-13 — SESSION_0379 Lineage path planning pivot
+
+- Pivoted the lineage-tree epic: instead of hand-building a 2D tidy-tree engine, chose to fork the MIT/TS/D3 library `donatso/family-chart` and build a focal-centric genealogy explorer (View A) alongside the existing org-chart canvas (View B), which is kept. Discovery found the old plan's premise stale (`bucketByDepth` dead, canvas already recursive).
+- Locked the integration design in `lineage-tree-runbook` §0 (verdict) + §0a (spec) + §0b (candidate comparison); rewrote `petey-plan-0379` to the fork+extend slice sequence.
+- Captured a parallel ChatGPT/Balkan "visual-parity spike" approach verbatim as candidate-B in `docs/architecture/source/raw/Brian-Chat-GPT-Session.md` (and appended to the runbook). Engine path (3 options, donatso front-runner) deferred to a fresh chat session for fresh eyes. No code this session.
