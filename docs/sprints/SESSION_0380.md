@@ -2,7 +2,7 @@
 title: "SESSION 0380 — Lineage View A engine path: lock + build 0379-1"
 slug: session-0380
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-06-13
 updated: 2026-06-13
 last_agent: claude-session-0380
