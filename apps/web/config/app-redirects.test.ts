@@ -84,6 +84,24 @@ describe("migrated admin app redirects", () => {
       },
       { source: "/admin/reports", destination: "/app/reports", permanent: true },
       { source: "/admin/reports/:path*", destination: "/app/reports/:path*", permanent: true },
+      { source: "/admin/programs", destination: "/app/programs", permanent: true },
+      { source: "/admin/programs/:path*", destination: "/app/programs/:path*", permanent: true },
+      { source: "/admin/courses", destination: "/app/courses", permanent: true },
+      { source: "/admin/courses/:path*", destination: "/app/courses/:path*", permanent: true },
+      { source: "/admin/age-groups", destination: "/app/age-groups", permanent: true },
+      {
+        source: "/admin/age-groups/:path*",
+        destination: "/app/age-groups/:path*",
+        permanent: true,
+      },
+      { source: "/admin/skill-levels", destination: "/app/skill-levels", permanent: true },
+      {
+        source: "/admin/skill-levels/:path*",
+        destination: "/app/skill-levels/:path*",
+        permanent: true,
+      },
+      { source: "/admin/schedule", destination: "/app/schedule", permanent: true },
+      { source: "/admin/schedule/:path*", destination: "/app/schedule/:path*", permanent: true },
     ])
   })
 
@@ -92,7 +110,7 @@ describe("migrated admin app redirects", () => {
 
     expect(sources).not.toContain("/admin/:path*")
     expect(sources).not.toContain("/admin/pricing-plans/:path*")
-    expect(sources).not.toContain("/admin/programs/:path*")
+    expect(sources).not.toContain("/admin/tools/:path*")
   })
 
   it("redirects only dashboard routes with exact app editor parity", () => {
@@ -173,6 +191,17 @@ describe("migrated admin app redirects", () => {
       "/app/privacy/requests/dsr_123",
     )
     expect(resolveMigratedAppRedirect("/admin/reports/report_123")).toBe("/app/reports/report_123")
+    expect(resolveMigratedAppRedirect("/admin/programs")).toBe("/app/programs")
+    expect(resolveMigratedAppRedirect("/admin/programs/program_123")).toBe(
+      "/app/programs/program_123",
+    )
+    expect(resolveMigratedAppRedirect("/admin/courses/course_123")).toBe("/app/courses/course_123")
+    expect(resolveMigratedAppRedirect("/admin/age-groups/new")).toBe("/app/age-groups/new")
+    expect(resolveMigratedAppRedirect("/admin/skill-levels/level_123")).toBe(
+      "/app/skill-levels/level_123",
+    )
+    expect(resolveMigratedAppRedirect("/admin/schedule")).toBe("/app/schedule")
+    expect(resolveMigratedAppRedirect("/admin/schedule/month")).toBe("/app/schedule/month")
     expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe(null)
   })
 

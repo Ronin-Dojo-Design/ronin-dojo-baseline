@@ -336,3 +336,9 @@ Use this file only as historical context for early wiki adoption.
 - Migrated `email`, `brand-settings`, `privacy/requests`, and `reports` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
 - Added Wave 3 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
 - Kept `privacy` rooted at `/app/privacy/requests` because the legacy surface is a DSR requests workflow, not a standalone privacy dashboard.
+
+## 2026-06-13 — SESSION_0378 BBL /app migration wave 4
+
+- Migrated `programs`, `courses`, `age-groups`, `skill-levels`, and `schedule` from `/admin` into the unified `/app` shell with per-area `requirePermission(APP_AREA_PERMISSIONS.<area>)` layout guards.
+- Added Wave 4 `/admin/*` -> `/app/*` redirects and tests, app sidebar entries, scoped route-string updates, and `revalidatePath` repoints while leaving `server/admin/<area>` modules unflattened.
+- Authenticated `bbl.local` curl proof returned 200 for all five `/app` areas; browser auth was blocked by localhost redirect/cookie context, so curl is the render evidence.
