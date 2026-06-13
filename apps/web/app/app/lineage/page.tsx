@@ -7,6 +7,7 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
+import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { findLineageTrees } from "~/server/admin/lineage/queries"
 import { lineageTreesTableParamsCache } from "~/server/admin/lineage/schema"
 
@@ -140,6 +141,8 @@ async function LineageContent({
 }
 
 export default async ({ searchParams }: PageProps<"/app/lineage">) => {
+  await requireLineageManagementAccess()
+
   return (
     <Suspense fallback={<DataTableSkeleton title="Lineage" />}>
       <LineageContent searchParams={searchParams} />

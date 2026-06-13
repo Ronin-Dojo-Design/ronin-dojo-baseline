@@ -111,7 +111,7 @@ test.describe("Lineage editor drag/reorder E2E", () => {
 
     await createAuthenticatedSession(page, fixture.treeEditorUserId)
 
-    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+    await page.goto(`/app/lineage/${fixture.treeId}/edit`)
     await openEditMode(page, fixture.treeName)
 
     // --- Step 1: reorder within siblingGroupA (drag sibling B onto sibling C).

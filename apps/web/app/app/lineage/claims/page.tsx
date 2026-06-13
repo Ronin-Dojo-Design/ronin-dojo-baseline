@@ -4,6 +4,7 @@ import { Heading } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
+import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { findPendingClaims } from "~/server/admin/lineage/claim-queries"
 
 /**
@@ -53,6 +54,8 @@ async function ClaimsContent() {
 }
 
 export default async () => {
+  await requireLineageManagementAccess()
+
   return (
     <Wrapper>
       <Stack direction="column" className="gap-6">

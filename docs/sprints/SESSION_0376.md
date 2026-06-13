@@ -248,6 +248,7 @@ None. Wave 2 is explicitly allowed by the autonomous scope guard.
 | Dev-login + authenticated `curl /app/{roles,entitlements,invites,leads}` on `bbl.local` | ✅ dev-login 307 issued session; all four `/app` indexes returned 200 with `data-brand="BBL"`. |
 | Browser visual smoke | ✅ Playwright dev-login then `/app/roles`: page title `Dashboard – Black Belt Legacy`; Roles table rendered; Wave 2 sidebar entries visible. Screenshot inspected, not committed. |
 | Runtime warning check | ⚠️ `/app/entitlements` logs `[Table] Column with id 'name' does not exist` while returning 200. The moved columns define `accessorKey: "name"`; record as inherited/non-blocking table warning. |
+| PR #69 Playwright recovery | ✅ Follow-up patch moved stale lineage E2E navigation from `/dashboard/lineage/:treeId` and `/admin/lineage/claims/:id` to the migrated `/app` routes; split the `/app/lineage` guard so scoped LineageTreeAccess editors can deep-link to `/app/lineage/:treeId/edit` while broad management pages keep tree-level access. Focused Chromium proof: `bunx playwright test --project=chromium --workers=1 e2e/lineage/authenticated-lifecycle.spec.ts e2e/lineage/editor-drag-reorder.spec.ts` → 6 passed. |
 | `git diff -U0 \| bunx fallow audit --changed-since HEAD --diff-stdin` | ⚠️ exit 1 false positive for mechanical moves: inherited moved table/form/sidebar complexity, duplicates, and unused dependency warnings counted as changed because `git mv` changes every line. No new hand-written algorithmic code in those findings. |
 | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` + `graphify stats` | ✅ final stats: 11,845 nodes / 18,930 edges / 1,716 communities / 1,906 files tracked. |
 | FS-0024 git guard | ✅ cwd `/Users/brianscott/dev/ronin-dojo-app`; remote `Ronin-Dojo-Design/ronin-dojo-baseline`; branch `auto/codex-session-0376`. |
@@ -257,6 +258,9 @@ None. Wave 2 is explicitly allowed by the autonomous scope guard.
 - Non-blocking inherited warning: `/app/entitlements` emits a TanStack table column-id warning on
   render even though the page returns 200 and `accessorKey: "name"` exists. Not caused by the route
   move; good follow-up for the eventual migrated-surface review checkpoint.
+- PR #69 initially inherited a red Playwright gate from `main`: lineage E2E still targeted removed
+  `/dashboard/lineage/:treeId` and legacy `/admin/lineage/claims/:id` paths. The branch now carries
+  the migrated-path test fix and scoped `/app/lineage` guard split; fresh CI must be watched.
 - D-024 remains open until all admin areas migrate and the legacy `/admin` shell is deleted.
 
 ## Next session
@@ -314,5 +318,5 @@ Start with `email` as the pattern proof: `git mv apps/web/app/admin/email apps/w
 | Review & Recommend | Next session goal + first task written for Wave 3. |
 | Memory sweep | No ADR/glossary update needed; persistent Wave 2 status recorded in `APP_AND_SERVER_MIGRATION_MAP.md`. |
 | Next session unblock check | Wave 3 is inside the autonomous allowed scope; no blocker. |
-| Git hygiene | FS-0024 guard passed; one conventional commit created on `auto/codex-session-0376`; no push/PR by instruction. |
+| Git hygiene | FS-0024 guard passed; conventional commits created on `auto/codex-session-0376`; PR #69 opened by the Codex automerge wrapper. |
 | Graphify update | ✅ `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`; final `graphify stats` recorded. |

@@ -104,7 +104,7 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
   }) => {
     await createAuthenticatedSession(page, fixture.treeEditorUserId)
 
-    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+    await page.goto(`/app/lineage/${fixture.treeId}/edit`)
 
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
@@ -148,7 +148,7 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     // View Profile. Editor mode must be on for the item to show.
     await createAuthenticatedSession(page, fixture.treeEditorUserId)
 
-    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+    await page.goto(`/app/lineage/${fixture.treeId}/edit`)
 
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
@@ -275,7 +275,7 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await page.context().clearCookies()
     await createAuthenticatedSession(page, fixture.adminUserId)
 
-    await page.goto("/admin/lineage/claims")
+    await page.goto("/app/lineage/claims")
     await expect(page.getByRole("heading", { name: "Lineage Claims", level: 1 })).toBeVisible({
       timeout: 30_000,
     })
@@ -289,7 +289,7 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     })
     await expect(claimLink).toBeVisible()
     await Promise.all([
-      page.waitForURL(`**/admin/lineage/claims/${claimId}`, { timeout: 20_000 }),
+      page.waitForURL(`**/app/lineage/claims/${claimId}`, { timeout: 20_000 }),
       claimLink.click(),
     ])
 
@@ -319,7 +319,7 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     await expect(page.getByText(fixture.treeName)).toBeVisible()
     await expect(page.getByText("node editor")).toBeVisible()
 
-    await page.goto(`/dashboard/lineage/${fixture.treeId}`)
+    await page.goto(`/app/lineage/${fixture.treeId}/edit`)
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
     })

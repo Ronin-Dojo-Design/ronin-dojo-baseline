@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import type { LineageTreeAccessRole } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import type { SessionUser } from "~/server/orpc/context"
 import { can } from "~/server/orpc/permissions"
@@ -46,18 +47,25 @@ export const requirePermission = async (permission: Permission): Promise<Session
 }
 
 /**
- * Ronin delta (SOT-ADR D4/D5, SESSION_0365 grill option b): gate for the lineage
- * management areas of `/app`. Admits a user who either holds `permission` via
- * flat roles (admin `"*"`) OR has an active **TREE_ADMIN** `LineageTreeAccess`
- * grant — exact parity with the legacy `/admin` gate (`hasLineageAdminAccess` /
- * `withLineageAdminPage`, both TREE_ADMIN-only). Unlike the legacy shell,
- * grantees get ONLY the lineage area, not the whole dashboard.
+ * Ronin delta (SOT-ADR D4/D5, SESSION_0365 grill option b): coarse gate for the
+ * lineage route area of `/app`. Admits a user who either holds `permission` via
+ * flat roles (admin `"*"`) OR has an active `LineageTreeAccess` editor grant.
+ * Unlike the legacy shell, grantees get ONLY the lineage area, not the whole
+ * dashboard.
  *
- * Branch/node-scoped editor roles (BRANCH_EDITOR / NODE_EDITOR / TREE_EDITOR)
- * do NOT enter the management area today (same as legacy); they gain their own
- * scoped surfaces via `canForResource` as Phases 4/6 land — broaden the grant
- * filter here only alongside those surfaces.
+ * Broad management pages add `requireLineageManagementAccess()` so branch/node
+ * grantees can still deep-link to scoped editor pages without seeing whole-tree
+ * admin lists.
  */
+const LINEAGE_APP_AREA_ROLES: LineageTreeAccessRole[] = [
+  "TREE_ADMIN",
+  "TREE_EDITOR",
+  "BRANCH_EDITOR",
+  "NODE_EDITOR",
+]
+
+const LINEAGE_MANAGEMENT_AREA_ROLES: LineageTreeAccessRole[] = ["TREE_ADMIN", "TREE_EDITOR"]
+
 export const requireLineageAccess = async (
   permission: Permission = "lineage.manage",
 ): Promise<SessionUser> => {
@@ -68,7 +76,28 @@ export const requireLineageAccess = async (
   }
 
   const grant = await db.lineageTreeAccess.findFirst({
-    where: { userId: user.id, role: "TREE_ADMIN", revokedAt: null },
+    where: { userId: user.id, role: { in: LINEAGE_APP_AREA_ROLES }, revokedAt: null },
+    select: { id: true },
+  })
+
+  if (!grant) {
+    redirect("/app")
+  }
+
+  return user
+}
+
+export const requireLineageManagementAccess = async (
+  permission: Permission = "lineage.manage",
+): Promise<SessionUser> => {
+  const user = await requireUser()
+
+  if (can(user, permission)) {
+    return user
+  }
+
+  const grant = await db.lineageTreeAccess.findFirst({
+    where: { userId: user.id, role: { in: LINEAGE_MANAGEMENT_AREA_ROLES }, revokedAt: null },
     select: { id: true },
   })
 
@@ -81,12 +110,12 @@ export const requireLineageAccess = async (
 
 /**
  * Non-redirecting variant for nav/sidebar visibility: does this user have an
- * active TREE_ADMIN lineage grant? Pairs with `can()` so the sidebar shows the
- * lineage section to exactly the users `requireLineageAccess` admits.
+ * active tree-level lineage grant? Pairs with `can()` so the sidebar shows the
+ * broad lineage section only to users who can reach the management index.
  */
 export const hasAnyLineageGrant = async (userId: string): Promise<boolean> => {
   const grant = await db.lineageTreeAccess.findFirst({
-    where: { userId, role: "TREE_ADMIN", revokedAt: null },
+    where: { userId, role: { in: LINEAGE_MANAGEMENT_AREA_ROLES }, revokedAt: null },
     select: { id: true },
   })
 
