@@ -14,7 +14,7 @@ export const DashboardToolListing = async ({ searchParams }: DashboardToolListin
   const session = await getServerSession()
 
   if (!session?.user) {
-    throw redirect("/auth/login?next=/dashboard")
+    throw redirect("/auth/login?next=/app/profile")
   }
 
   const toolsQuery = await findTools(params, {

@@ -60,10 +60,6 @@ const updateTechniqueSchema = createTechniqueSchema.partial().extend({
   id: z.string(),
 })
 
-const deleteTechniqueSchema = z.object({
-  id: z.string(),
-})
-
 export const createTechnique = userActionClient
   .inputSchema(createTechniqueSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
@@ -93,7 +89,7 @@ export const createTechnique = userActionClient
       },
     })
 
-    revalidate({ tags: ["techniques"], paths: ["/dashboard", "/techniques"] })
+    revalidate({ tags: ["techniques"], paths: ["/app/profile", "/app/techniques", "/techniques"] })
     return technique
   })
 
@@ -126,34 +122,7 @@ export const updateTechnique = userActionClient
 
     revalidate({
       tags: ["techniques", `technique-${updated.slug}`],
-      paths: ["/dashboard", "/techniques"],
+      paths: ["/app/profile", "/app/techniques", "/techniques"],
     })
     return updated
-  })
-
-export const deleteTechnique = userActionClient
-  .inputSchema(deleteTechniqueSchema)
-  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const { id } = parsedInput
-
-    const technique = await db.technique.findUniqueOrThrow({
-      where: { id },
-      include: { organization: { select: { id: true } } },
-    })
-
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: user.id,
-        organizationId: technique.organization.id,
-        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      },
-    })
-    if (!membership) {
-      throw new Error("You are not authorized to delete this technique")
-    }
-
-    await db.technique.delete({ where: { id } })
-
-    revalidate({ tags: ["techniques"], paths: ["/dashboard", "/techniques"] })
-    return { success: true }
   })

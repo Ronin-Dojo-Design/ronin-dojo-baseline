@@ -138,11 +138,11 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
   })
 
   const { execute: executeCreate, isPending: isCreating } = useAction(createTechnique, {
-    onSuccess: () => router.push("/dashboard"),
+    onSuccess: () => router.push("/app/profile"),
   })
 
   const { execute: executeUpdate, isPending: isUpdating } = useAction(updateTechnique, {
-    onSuccess: () => router.push("/dashboard"),
+    onSuccess: () => router.push("/app/profile"),
   })
 
   const isPending = isCreating || isUpdating

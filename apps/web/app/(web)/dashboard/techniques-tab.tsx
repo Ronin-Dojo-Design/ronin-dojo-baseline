@@ -8,7 +8,7 @@ export async function DashboardTechniquesTab() {
   const session = await getServerSession()
 
   if (!session?.user) {
-    throw redirect("/auth/login?next=/dashboard")
+    throw redirect("/auth/login?next=/app/profile")
   }
 
   const brand = await getRequestBrand()

@@ -306,3 +306,9 @@ Use this file only as historical context for early wiki adoption.
 - Added request-aware native robots and sitemap metadata routes for the BBL lineage-first launch surface.
 - Scoped BBL sitemap output to D9 allowed routes and disallowed gated routes in robots.
 - Updated page metadata helpers so OG/Twitter URLs use the active request origin instead of static `NEXT_PUBLIC_SITE_URL`.
+
+## 2026-06-12 — SESSION_0373 BBL local-first app route closeout
+
+- Added SOT-ADR D10: DNS flip waits for Phases 1–6 local functionality on `bbl.local`; Stripe rehearsal remains complete and Phase 3 uses user-carry semantics.
+- Closed the dashboard root/events/techniques/lineage editor route seam into `/app`: migrated admin/dashboard redirects, `/app/profile`, `/app/events/*`, `/app/techniques/*`, and `/app/lineage/[treeId]/edit`.
+- Preserved unmigrated admin areas in place and recorded the remaining Phase 3 identity/server-flattening work for the next session.

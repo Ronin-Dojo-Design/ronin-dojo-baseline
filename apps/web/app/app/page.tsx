@@ -26,8 +26,8 @@ export default async function (_props: PageProps<"/app">) {
     { label: "Tools", href: "/admin/tools", query: db.tool.count() },
     { label: "Categories", href: "/admin/categories", query: db.category.count() },
     { label: "Users", href: "/app/users", query: db.user.count() },
-    { label: "Age Groups", href: "/admin/age-groups", query: db.ageGroup.count() },
-    { label: "Skill Levels", href: "/admin/skill-levels", query: db.skillLevel.count() },
+    { label: "Tournaments", href: "/app/tournaments", query: db.tournament.count() },
+    { label: "Memberships", href: "/app/memberships", query: db.membership.count() },
   ]
 
   return (

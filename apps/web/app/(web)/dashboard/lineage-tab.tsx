@@ -15,7 +15,7 @@ export async function DashboardLineageTab() {
   const session = await getServerSession()
 
   if (!session?.user) {
-    redirect("/auth/login?next=/dashboard")
+    redirect("/auth/login?next=/app/profile")
   }
 
   const brand = await getRequestBrand()
@@ -76,7 +76,7 @@ export async function DashboardLineageTab() {
               size="sm"
               variant="secondary"
               prefix={<EyeIcon />}
-              render={<Link href={`/dashboard/lineage/${tree.id}`} />}
+              render={<Link href={`/app/lineage/${tree.id}/edit`} />}
             >
               Open preview
             </Button>

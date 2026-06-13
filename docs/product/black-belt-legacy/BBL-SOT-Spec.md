@@ -4,8 +4,8 @@ slug: bbl-sot-spec
 type: spec
 status: active
 created: 2026-06-10
-updated: 2026-06-11
-last_agent: claude-session-0361
+updated: 2026-06-13
+last_agent: codex-session-0373
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -114,6 +114,11 @@ Phase 7  CUTOVER (per CUTOVER_CHECKLIST): DNS/Resend/redirects/prod smoke
 > NOT the monorepo source). Measured spec + landing section inventory: SESSION_0361 "Decisions
 > resolved" §4 + `docs/product/black-belt-legacy/_reference/` screenshots. Key correction: right
 > slide-in = account + primary nav; left slide-in = contextual filter/search panel.
+
+> **AMENDED SESSION_0373 (SOT-ADR D10): DNS flip waits for local Phases 1–6 functionality.**
+> D9's ASAP flip timing is superseded by the operator's `bbl.local` gate: finish the unified `/app`
+> dashboard/admin surface, remaining Phase 2b/2c work, and Phase 3–6 local functionality before DNS.
+> Stripe rehearsal stays complete from SESSION_0369; Phase 3 uses D7/D9 user-carry semantics.
 
 ### 2.3 Data layer — oRPC, full adoption (not the ADR 0024 hybrid)
 

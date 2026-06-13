@@ -1,5 +1,6 @@
 import { getSessionCookie } from "better-auth/cookies"
 import { type NextRequest, NextResponse } from "next/server"
+import { resolveAppTabRedirect, resolveMigratedAppRedirect } from "~/config/app-redirects"
 import { brandHasFeature, FEATURE_ROUTE_PREFIXES } from "~/config/brand-features"
 import { resolveBrand } from "~/lib/brand-context"
 
@@ -28,6 +29,15 @@ export const matchesRoute = (pathname: string, route: string) =>
 export default async function (req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const sessionCookie = getSessionCookie(req)
+
+  const migratedAppRedirect = resolveMigratedAppRedirect(pathname) ?? resolveAppTabRedirect(pathname)
+  if (migratedAppRedirect) {
+    const destination = new URL(migratedAppRedirect, req.url)
+    for (const [key, value] of req.nextUrl.searchParams) {
+      destination.searchParams.append(key, value)
+    }
+    return NextResponse.redirect(destination, 308)
+  }
 
   // If the user is logged in and tries to access the auth page, redirect to the home page
   if (sessionCookie && matchesRoute(pathname, "/auth")) {

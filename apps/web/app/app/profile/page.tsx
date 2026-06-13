@@ -31,7 +31,7 @@ const getData = cache(async () => {
   const brand = await getRequestBrand()
   const brandConfig = getBrandSiteConfig(brand)
   const t = await getTranslations()
-  const url = "/dashboard"
+  const url = "/app/profile"
   const title = t(`${namespace}.title`)
   const description = t(`${namespace}.description`, { siteName: brandConfig.name })
 
@@ -48,7 +48,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   return await getPageMetadata({ url, metadata })
 }
 
-export default async function ({ searchParams }: PageProps<"/dashboard">) {
+export default async function ({ searchParams }: PageProps<"/app/profile">) {
   const { breadcrumbs, metadata } = await getData()
   const brand = await getRequestBrand()
   const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
@@ -148,7 +148,7 @@ export default async function ({ searchParams }: PageProps<"/dashboard">) {
               <CardDescription className="line-clamp-none">
                 <Stack direction="column" size="xs" className="items-start">
                   <Link href="/me">My Passport</Link>
-                  {has("techniques") && <Link href="/dashboard/techniques/new">Add technique</Link>}
+                  {has("techniques") && <Link href="/app/techniques/new">Add technique</Link>}
                   <Link href="/directory">Public directory</Link>
                   {has("programs") && <Link href="/programs">Programs</Link>}
                   {has("tournaments") && <Link href="/tournaments">Tournaments</Link>}

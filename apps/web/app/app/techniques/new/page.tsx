@@ -9,7 +9,7 @@ import { db } from "~/services/db"
 
 export async function generateMetadata(): Promise<Metadata> {
   return await getPageMetadata({
-    url: "/dashboard/techniques/new",
+    url: "/app/techniques/new",
     metadata: {
       title: "New Technique",
       description: "Create a technique in the dashboard.",
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function NewTechniquePage() {
   const session = await getServerSession()
-  if (!session?.user) redirect("/auth/login?next=/dashboard/techniques/new")
+  if (!session?.user) redirect("/auth/login?next=/app/techniques/new")
 
   const brand = await getRequestBrand()
 
@@ -45,9 +45,9 @@ export default async function NewTechniquePage() {
     <>
       <Breadcrumbs
         items={[
-          { url: "/dashboard", title: "Dashboard" },
-          { url: "/dashboard", title: "Techniques" },
-          { url: "/dashboard/techniques/new", title: "New Technique" },
+          { url: "/app/profile", title: "Dashboard" },
+          { url: "/app/profile", title: "Techniques" },
+          { url: "/app/techniques/new", title: "New Technique" },
         ]}
       />
 

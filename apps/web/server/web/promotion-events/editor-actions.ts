@@ -314,9 +314,9 @@ export const upsertPromotionEvent = userActionClient
 
     revalidate({
       paths: [
-        "/dashboard",
-        "/dashboard/events",
-        `/dashboard/events/${result.id}`,
+        "/app/profile",
+        "/app/events",
+        `/app/events/${result.id}`,
         "/events",
         ...(result.slug ? [`/events/${result.slug}`] : []),
       ],

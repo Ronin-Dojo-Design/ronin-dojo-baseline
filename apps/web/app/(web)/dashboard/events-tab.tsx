@@ -18,7 +18,7 @@ export async function DashboardEventsTab() {
   const session = await getServerSession()
 
   if (!session?.user) {
-    redirect("/auth/login?next=/dashboard")
+    redirect("/auth/login?next=/app/profile")
   }
 
   const brand = await getRequestBrand()
@@ -38,7 +38,7 @@ export async function DashboardEventsTab() {
             size="sm"
             variant="secondary"
             prefix={<CalendarPlusIcon />}
-            render={<Link href="/dashboard/events/new" />}
+            render={<Link href="/app/events/new" />}
           >
             New ceremony
           </Button>
@@ -53,7 +53,7 @@ export async function DashboardEventsTab() {
         size="sm"
         variant="secondary"
         prefix={<CalendarPlusIcon />}
-        render={<Link href="/dashboard/events/new" />}
+        render={<Link href="/app/events/new" />}
       >
         New ceremony
       </Button>
@@ -89,7 +89,7 @@ export async function DashboardEventsTab() {
                 size="sm"
                 variant="secondary"
                 prefix={<PencilIcon />}
-                render={<Link href={`/dashboard/events/${event.id}`} />}
+                render={<Link href={`/app/events/${event.id}`} />}
               >
                 Edit
               </Button>

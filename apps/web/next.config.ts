@@ -1,6 +1,10 @@
 import type { NextConfig } from "next"
 import createNextIntlPlugin from "next-intl/plugin"
 import { withPlausibleProxy } from "next-plausible"
+import {
+  buildMigratedAdminAppRedirects,
+  buildMigratedDashboardAppRedirects,
+} from "./config/app-redirects"
 
 const withNextIntl = createNextIntlPlugin("./lib/i18n.ts")
 const withPlausible = withPlausibleProxy({ customDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_URL })
@@ -11,6 +15,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["bbl.local", "baseline.local", "wekaf.local"],
   async redirects() {
     return [
+      ...buildMigratedAdminAppRedirects(),
+      ...buildMigratedDashboardAppRedirects(),
       {
         source: "/members",
         destination: "/directory",

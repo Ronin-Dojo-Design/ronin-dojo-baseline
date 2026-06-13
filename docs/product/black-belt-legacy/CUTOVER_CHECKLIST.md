@@ -4,8 +4,8 @@ slug: bbl-cutover-checklist
 type: report
 status: active
 created: 2026-06-04
-updated: 2026-06-12
-last_agent: claude-session-0369
+updated: 2026-06-13
+last_agent: codex-session-0373
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -32,7 +32,9 @@ The cross-layer sequencer for a safe `blackbeltlegacy.com` cutover. Spans the th
 [`GAP_MATRIX.md`](GAP_MATRIX.md); test status in
 [`test-fail-fix-ledger.md`](../../knowledge/wiki/test-fail-fix-ledger.md). This doc only **sequences** them.
 
-> Target: ASAP, soft aim this weekend, **not rushed or sloppy** — safe + secure over fast.
+> Target (SESSION_0373 / SOT-ADR D10): DNS flip waits until Phases 1–6 are functional on `bbl.local`.
+> The cutover lane stays armed, but local `/app` dashboard/admin parity and Phase 3 user-carry readiness
+> now gate the live-domain move.
 > `baselinemartialarts.com` is the live staging-prod proxy (same Vercel deployment, brand-scoped DB,
 > shared Stripe/Resend — ADR 0004/0006/0012). A journey proven on Baseline is proven on the code+infra BBL
 > will use.

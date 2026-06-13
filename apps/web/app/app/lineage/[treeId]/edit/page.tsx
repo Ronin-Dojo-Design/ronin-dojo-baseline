@@ -24,7 +24,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { treeId } = await params
   const session = await getServerSession()
-  const url = `/dashboard/lineage/${treeId}`
+  const url = `/app/lineage/${treeId}/edit`
 
   if (!session?.user) {
     return await getPageMetadata({
@@ -59,12 +59,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 }
 
-export default async function DashboardLineageEditorPage({ params }: Props) {
+export default async function AppLineageEditorPage({ params }: Props) {
   const { treeId } = await params
   const session = await getServerSession()
 
   if (!session?.user) {
-    redirect(`/auth/login?next=/dashboard/lineage/${treeId}`)
+    redirect(`/auth/login?next=/app/lineage/${treeId}/edit`)
   }
 
   const brand = await getRequestBrand()
@@ -81,8 +81,9 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
     <>
       <Breadcrumbs
         items={[
-          { url: "/dashboard", title: "Dashboard" },
-          { url: `/dashboard/lineage/${treeId}`, title: result.tree.name },
+          { url: "/app", title: "Dashboard" },
+          { url: "/app/lineage", title: "Lineage" },
+          { url: `/app/lineage/${treeId}/edit`, title: result.tree.name },
         ]}
       />
 
@@ -160,9 +161,9 @@ export default async function DashboardLineageEditorPage({ params }: Props) {
                 size="sm"
                 variant="secondary"
                 prefix={<GitBranchIcon />}
-                render={<Link href="/dashboard" />}
+                render={<Link href={`/app/lineage/${treeId}`} />}
               >
-                Back to dashboard
+                Back to tree review
               </Button>
               {result.tree.isPublished && (
                 <Button

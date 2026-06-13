@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-12
+updated: 2026-06-13
 author: Brian + Copilot
-last_agent: codex-session-0372
+last_agent: codex-session-0373
 ---
 
 # LLM Wiki Index
@@ -477,6 +477,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0370](../../sprints/SESSION_0370.md) | session--implement | closed — **PR #68 cleanup + BBL live-test email ops.** Join Legacy path cards now use real radio-group semantics; D9 copy no longer promises gated paid directory listings or draft listing creation; successful intake stays on `/lineage/join` and Premium/Elite anchors to lineage membership. `/admin/email` gained a BBL template catalog, live-test invite composer, and recent Join Legacy capture list using existing Resend sender resolution. Email docs now record BBL sending verified while inbound receiving remains external/root-domain Resend inbound MX is not enabled. |
 | [SESSION_0371](../../sprints/SESSION_0371.md) | session--implement | closed — **BBL landing polish + registration form.** Register CTAs now target `/lineage/join`; landing got premium token/rhythm polish; Join Legacy became a step-grouped lineage-ready registration intake with role/school/location/evidence fields; backend stores added context in lead notes/meta and claim evidence; route regression test added. Browser proof pending configured local environment due Turbopack/font issue in container. Next: visual screenshot + CTA click proof, then continue cutover-arm sequence. | (re-homed from PR #68's 0369 at merge; review items tracked on the PR)
 | [SESSION_0372](../../sprints/SESSION_0372.md) | session--implement | closed — **BBL SEO hygiene.** Dev server started for manual `bbl.local` proof; request-aware native robots/sitemap routes added; BBL sitemap emits D9 allowed launch routes only; robots disallows gated routes; OG/Twitter URLs now use request origin; BBL home metadata pulls brand site config. Next: minimal 301 map + production render proof before DNS flip. |
+| [SESSION_0373](../../sprints/SESSION_0373.md) | session--implement | closed — **BBL local-first `/app` 2c route closeout + D10 sequencing.** DNS flip moved behind Phases 1–6 local functionality; migrated `/admin` areas with `/app` equivalents redirect before auth; `(web)/dashboard` page routes removed; `/app/profile`, `/app/events/*`, `/app/techniques/*`, and `/app/lineage/[treeId]/edit` own the dashboard root/editor surfaces; exact `/app/events` and `/app/techniques` redirect to profile tabs. Stripe rehearsal remains complete; Phase 3 uses user-carry semantics. |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
 | [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |

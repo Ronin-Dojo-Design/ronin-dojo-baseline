@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
 
   return await getPageMetadata({
-    url: `/dashboard/techniques/${id}`,
+    url: `/app/techniques/${id}`,
     metadata: {
       title: "Edit Technique",
       description: "Manage a technique in the dashboard.",
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EditTechniquePage({ params }: Props) {
   const { id } = await params
   const session = await getServerSession()
-  if (!session?.user) redirect(`/auth/login?next=/dashboard/techniques/${id}`)
+  if (!session?.user) redirect(`/auth/login?next=/app/techniques/${id}`)
 
   const technique = await db.technique.findUnique({
     where: { id },
@@ -85,9 +85,9 @@ export default async function EditTechniquePage({ params }: Props) {
     <>
       <Breadcrumbs
         items={[
-          { url: "/dashboard", title: "Dashboard" },
-          { url: "/dashboard", title: "Techniques" },
-          { url: `/dashboard/techniques/${id}`, title: technique.name },
+          { url: "/app/profile", title: "Dashboard" },
+          { url: "/app/profile", title: "Techniques" },
+          { url: `/app/techniques/${id}`, title: technique.name },
         ]}
       />
 

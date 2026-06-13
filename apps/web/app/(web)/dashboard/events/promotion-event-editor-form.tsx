@@ -78,7 +78,7 @@ export function PromotionEventEditorForm({
   const { execute, isPending } = useAction(upsertPromotionEvent, {
     onSuccess: ({ data }) => {
       if (data?.id) {
-        router.push(`/dashboard/events/${data.id}`)
+        router.push(`/app/events/${data.id}`)
         router.refresh()
       }
     },

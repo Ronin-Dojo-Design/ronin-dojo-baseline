@@ -19,7 +19,7 @@ export function BillingPortalButton() {
       size="sm"
       prefix={<CreditCardIcon />}
       isPending={isPending}
-      onClick={() => execute({ returnUrl: "/dashboard" })}
+      onClick={() => execute({ returnUrl: "/app/profile" })}
     >
       Manage billing
     </Button>

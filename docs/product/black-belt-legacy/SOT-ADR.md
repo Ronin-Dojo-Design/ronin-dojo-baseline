@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-12
-last_agent: claude-session-0368
+updated: 2026-06-13
+last_agent: codex-session-0373
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -167,6 +167,19 @@ refreshed into `dirstarter_template` at SESSION_0359.
   **Phase 3 runs the D7 user-carry migration** (preserve `User`/`Passport`, repoint satellites by
   lookup), not the pure reseed. Claims stay open at flip (D6 — always RBAC-reviewed).
 - **Post-flip:** 2b/2c waves, Phases 3–5, techniques/posts-feed re-light as their lanes mature.
+
+## D10 — DNS flip waits for local Phases 1–6 functionality *(SESSION_0373)*
+
+- **Decision (operator override, SESSION_0373):** D9's "ASAP after pre-flip gate" timing is superseded
+  for the active launch queue. `blackbeltlegacy.com` DNS cutover waits until Phases 1–6 are functional
+  from a `bbl.local` standpoint, including the unified `/app` dashboard/admin surface and the Baseline
+  surfaces that must flip into `/app` for Dirstarter upstream parity.
+- **Carry-forward:** Stripe rehearsal remains complete from SESSION_0369. No DNS, Vercel production-domain,
+  or live-domain mutation belongs to the Phase 2c closeout slice.
+- **Phase 3 migration rule:** because early real users can exist before the final identity re-root, Phase 3
+  uses D7/D9 user-carry semantics: preserve `User`/`Passport` rows and repoint satellites by lookup.
+- **Cutover lane:** minimal 301 map and production render verification remain armed work, but they are not
+  the immediate next gate until the local functionality pass is complete.
 
 ---
 

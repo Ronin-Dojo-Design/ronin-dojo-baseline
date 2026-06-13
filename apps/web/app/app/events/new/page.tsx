@@ -9,9 +9,9 @@ import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
-import { PromotionEventEditorForm } from "../promotion-event-editor-form"
+import { PromotionEventEditorForm } from "~/app/(web)/dashboard/events/promotion-event-editor-form"
 
-const url = "/dashboard/events/new"
+const url = "/app/events/new"
 
 export async function generateMetadata(): Promise<Metadata> {
   return await getPageMetadata({
@@ -41,7 +41,7 @@ export default async function NewPromotionEventPage() {
     <>
       <Breadcrumbs
         items={[
-          { url: "/dashboard", title: "Dashboard" },
+          { url: "/app/profile", title: "Dashboard" },
           { url, title: "New Promotion Event" },
         ]}
       />

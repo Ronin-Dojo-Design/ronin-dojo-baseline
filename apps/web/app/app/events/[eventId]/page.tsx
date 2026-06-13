@@ -14,7 +14,7 @@ import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
-import { PromotionEventEditorForm } from "../promotion-event-editor-form"
+import { PromotionEventEditorForm } from "~/app/(web)/dashboard/events/promotion-event-editor-form"
 
 type Props = {
   params: Promise<{ eventId: string }>
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { eventId } = await params
 
   return await getPageMetadata({
-    url: `/dashboard/events/${eventId}`,
+    url: `/app/events/${eventId}`,
     metadata: {
       title: "Edit Promotion Event",
       robots: { index: false, follow: false },
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditPromotionEventPage({ params }: Props) {
   const { eventId } = await params
-  const url = `/dashboard/events/${eventId}`
+  const url = `/app/events/${eventId}`
   const session = await getServerSession()
 
   if (!session?.user) {
@@ -59,7 +59,7 @@ export default async function EditPromotionEventPage({ params }: Props) {
     <>
       <Breadcrumbs
         items={[
-          { url: "/dashboard", title: "Dashboard" },
+          { url: "/app/profile", title: "Dashboard" },
           { url, title: data.event.title },
         ]}
       />
@@ -96,7 +96,7 @@ export default async function EditPromotionEventPage({ params }: Props) {
                   Open gallery
                 </Button>
               )}
-              <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
+              <Button variant="ghost" size="sm" render={<Link href="/app/profile" />}>
                 Back to dashboard
               </Button>
             </Stack>

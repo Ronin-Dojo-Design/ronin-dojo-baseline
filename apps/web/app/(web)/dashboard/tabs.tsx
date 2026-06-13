@@ -1,6 +1,7 @@
 "use client"
 
 import { type ReactNode, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
 
@@ -16,7 +17,10 @@ type DashboardTabsProps = {
 }
 
 export function DashboardTabs({ tabs, defaultTab }: DashboardTabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? "")
+  const searchParams = useSearchParams()
+  const requestedTab = searchParams.get("tab")
+  const urlTab = requestedTab && tabs.some(tab => tab.id === requestedTab) ? requestedTab : undefined
+  const [activeTab, setActiveTab] = useState(urlTab ?? defaultTab ?? tabs[0]?.id ?? "")
 
   const activeContent = tabs.find(t => t.id === activeTab)?.content
 

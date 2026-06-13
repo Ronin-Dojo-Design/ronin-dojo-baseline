@@ -43,7 +43,7 @@ export function TechniquesTable({ techniques }: TechniquesTableProps) {
     <Stack size="lg" direction="column">
       <Stack size="sm" direction="row" className="items-center justify-between">
         <H4>Techniques ({techniques.length})</H4>
-        <Button size="sm" variant="primary" render={<Link href="/dashboard/techniques/new" />}>
+        <Button size="sm" variant="primary" render={<Link href="/app/techniques/new" />}>
           Add Technique
         </Button>
       </Stack>

@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@mantine/hooks"
 import {
+  CalendarIcon,
   BuildingIcon,
   DockIcon,
   ExternalLinkIcon,
@@ -9,7 +10,9 @@ import {
   IdCardIcon,
   LogOutIcon,
   ShieldCheckIcon,
+  SwordsIcon,
   TrophyIcon,
+  UserIcon,
   UsersIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -17,6 +20,8 @@ import { toast } from "sonner"
 import { Nav, type NavLink } from "~/components/app/nav"
 import { Kbd } from "~/components/common/kbd"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
+import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
+import { useBrand } from "~/contexts/brand-context"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
 import { cx } from "~/lib/utils"
@@ -31,6 +36,7 @@ import { APP_AREA_PERMISSIONS, type Permission } from "~/server/orpc/roles"
 type NavItem = NavLink & {
   permission?: Permission
   lineage?: boolean
+  feature?: BrandFeature
 }
 
 /**
@@ -42,10 +48,13 @@ const buildVisibleLinks = (
   items: Array<NavItem | undefined>,
   user: SessionUser | null,
   hasLineageGrant: boolean,
+  brand: Parameters<typeof brandHasFeature>[0],
 ) => {
   const links = items
     .filter(item => {
-      if (!item || !item.permission) return true
+      if (!item) return true
+      if (item.feature && !brandHasFeature(brand, item.feature)) return false
+      if (!item.permission) return true
       if (can(user, item.permission)) return true
       return item.lineage === true && hasLineageGrant
     })
@@ -58,9 +67,10 @@ const buildVisibleLinks = (
         return result
       }
 
-      const { permission, lineage, ...link } = item
+      const { permission, lineage, feature, ...link } = item
       void permission
       void lineage
+      void feature
       result.push(link)
       return result
     }, [])
@@ -82,6 +92,7 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
   const search = useSearch()
+  const { brand } = useBrand()
 
   const handleOpenSite = () => {
     window.open("/", "_self")
@@ -109,6 +120,11 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       href: "/app",
       prefix: <LogoSymbol />,
     },
+    {
+      title: "Profile",
+      href: "/app/profile",
+      prefix: <UserIcon />,
+    },
 
     undefined,
     {
@@ -117,6 +133,18 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       prefix: <GitBranchIcon />,
       permission: APP_AREA_PERMISSIONS.lineage,
       lineage: true,
+    },
+    {
+      title: "Events",
+      href: "/app/events",
+      prefix: <CalendarIcon />,
+      feature: "events",
+    },
+    {
+      title: "Techniques",
+      href: "/app/techniques",
+      prefix: <SwordsIcon />,
+      feature: "techniques",
     },
     {
       title: "Users",
@@ -175,7 +203,7 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     <Nav
       isCollapsed={!!isMobile}
       className={cx("sticky top-0 h-dvh z-40 border-r", isMobile ? "w-12" : "w-48")}
-      links={buildVisibleLinks(items, user, hasLineageGrant)}
+      links={buildVisibleLinks(items, user, hasLineageGrant, brand)}
     />
   )
 }
