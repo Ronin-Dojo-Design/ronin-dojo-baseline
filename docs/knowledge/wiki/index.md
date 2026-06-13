@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-13
 author: Brian + Copilot
-last_agent: claude-session-0374
+last_agent: codex-session-0375
 ---
 
 # LLM Wiki Index
@@ -479,6 +479,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0372](../../sprints/SESSION_0372.md) | session--implement | closed — **BBL SEO hygiene.** Dev server started for manual `bbl.local` proof; request-aware native robots/sitemap routes added; BBL sitemap emits D9 allowed launch routes only; robots disallows gated routes; OG/Twitter URLs now use request origin; BBL home metadata pulls brand site config. Next: minimal 301 map + production render proof before DNS flip. |
 | [SESSION_0373](../../sprints/SESSION_0373.md) | session--implement | closed — **BBL local-first `/app` 2c route closeout + D10 sequencing.** DNS flip moved behind Phases 1–6 local functionality; migrated `/admin` areas with `/app` equivalents redirect before auth; `(web)/dashboard` page routes removed; `/app/profile`, `/app/events/*`, `/app/techniques/*`, and `/app/lineage/[treeId]/edit` own the dashboard root/editor surfaces; exact `/app/events` and `/app/techniques` redirect to profile tabs. Stripe rehearsal remains complete; Phase 3 uses user-carry semantics. |
 | [SESSION_0374](../../sprints/SESSION_0374.md) | session--implement | closed — **Full unified `/app` wave 1 + Phase 3 preflight map.** Scope locked to Option A (migrate every admin area to `/app`, brand gate is public-route only). Wave 1 migrated `certificates`/`posts`/`content`/`media` onto `requirePermission` layout guards (history-preserving `git mv`, unwrapped `withAdminPage`, `posts.manage` registered, `/admin/*`→`/app/*` 308 redirects + revalidatePath fixes, sidebar). Docs: [PHASE3_USER_CARRY_PREFLIGHT](../../product/black-belt-legacy/PHASE3_USER_CARRY_PREFLIGHT.md) (40 models classified) + [APP_AND_SERVER_MIGRATION_MAP](../../product/black-belt-legacy/APP_AND_SERVER_MIGRATION_MAP.md) (remaining 23-area waves + deferred server flatten). Server flatten = map-only; no schema edits. |
+| [SESSION_0375](../../sprints/SESSION_0375.md) | session--implement | closed — **Codex automerge handoff for BBL `/app` waves 2-4.** Added `scripts/auto-session-codex-automerge.sh` as the local Codex auto-merge peer, defaulting to exactly 3 sessions and braking before Prisma/server-flatten/Phase 3 identity work; documented local as preferred for Graphify + `bbl.local` proof, with a Codex Cloud fallback prompt in `codex-cloud-bbl-waves-2-4.md`. |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
 | [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
@@ -540,6 +541,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Graphify Repo Memory Runbook](../../runbooks/dev-environment/graphify-repo-memory.md) | runbook | active |
 | [Claude Mobile Runbook](../../runbooks/dev-environment/claude-mobile-runbook.md) | runbook | active — SESSION_0350 drive a Claude session from the phone (SSH+tmux/Tailscale or cloud); canonical transport + cloud-container prereqs |
 | [Codex Mobile Runbook](../../runbooks/dev-environment/codex-mobile-runbook.md) | runbook | active — SESSION_0350 Codex peer (Codex Cloud / `codex` CLI) + operator setup checklist |
+| [Codex Cloud BBL Waves 2-4 Handoff](../../runbooks/dev-environment/codex-cloud-bbl-waves-2-4.md) | runbook | active — Codex Cloud fallback prompt for BBL `/app` waves 2-4; local Codex automerge remains preferred for Graphify and `bbl.local` proof |
 | [Stripe Setup Runbook](../../runbooks/integrations/stripe-setup-runbook.md) | runbook | active |
 | [AWS S3 Operator Runbook](../../runbooks/integrations/aws-s3-operator-runbook.md) | runbook | active |
 | [ADR 0014 Stripe Product Policy Research](../../runbooks/integrations/adr-0014-stripe-product-policy-research.md) | runbook | active |

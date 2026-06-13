@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-06-11
-last_agent: claude-session-0350
+updated: 2026-06-13
+last_agent: codex-session-0375
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -62,6 +62,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [autonomous-sessions](dev-environment/autonomous-sessions.md) — drive N cold bow-in→bow-out sessions as stacked PRs (`scripts/auto-session.sh`).
 - [claude-mobile-runbook](dev-environment/claude-mobile-runbook.md) — drive a Claude session from the phone (dispatch/cowork): SSH+tmux over Tailscale (canonical transport + cloud-container prereqs) or Claude cloud/app.
 - [codex-mobile-runbook](dev-environment/codex-mobile-runbook.md) — Codex peer: SSH+tmux or Codex Cloud (ChatGPT app), `scripts/auto-session-codex.sh`, operator setup checklist.
+- [codex-cloud-bbl-waves-2-4](dev-environment/codex-cloud-bbl-waves-2-4.md) — Codex Cloud fallback prompt for BBL `/app` waves 2-4; local Codex automerge is preferred for Graphify and `bbl.local` proof.
 - [ntfy-pushover-telegram](dev-environment/ntfy-pushover-telegram.md) — push-notification transports (ntfy/Pushover/Telegram) + the repo's Docker-cache / disk-pressure / CI monitors (`scripts/monitor`, `scripts/notify`).
 - [verification-and-testing](dev-environment/verification-and-testing.md) — **what runs where, and what gates** — verification layers, CI map, why DB tests fail locally, guard registry.
 

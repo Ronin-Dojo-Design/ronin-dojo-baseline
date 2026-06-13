@@ -4,13 +4,14 @@ slug: autonomous-sessions
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-06-02
-last_agent: codex-session-0328
+updated: 2026-06-13
+last_agent: codex-session-0375
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/petey-plan-0305.md
   - docs/sprints/SESSION_0328.md
+  - docs/runbooks/dev-environment/codex-cloud-bbl-waves-2-4.md
 backlinks:
   - docs/runbooks/README.md
 ---
@@ -70,6 +71,34 @@ Codex does not currently have the same per-command allowlist shape as Claude, so
 script uses `--dangerously-bypass-approvals-and-sandbox` for unattended local runs. The
 repo-level FS-0024 shell guard still blocks the read-only `dirstarter_template` path, and
 the stacked PRs remain the human review gate before anything reaches `main`.
+
+### Codex auto-merge variant — BBL waves 2-4
+
+[`scripts/auto-session-codex-automerge.sh`](../../../scripts/auto-session-codex-automerge.sh) is
+the Codex local auto-merge peer for the first three safe BBL `/app` migration waves after
+SESSION_0374:
+
+```bash
+scripts/auto-session-codex-automerge.sh
+CODEX_MODEL=gpt-5-codex scripts/auto-session-codex-automerge.sh
+```
+
+It defaults to `N=3`, runs each cold Codex session from fresh `main`, opens a PR, waits for CI,
+auto-merges green PRs, pulls main, and continues. It refuses `N>3` unless
+`CODEX_AUTO_SESSION_ALLOW_MORE=1` is set.
+
+Safety brakes:
+
+- leaves Prisma changes open for human review instead of auto-merging;
+- leaves server-flatten-like `server/web|server/admin` moves/deletes open for human review;
+- stops on dirty tree, no-op, multi-commit session, or CI red after one rerun;
+- prompt forbids Prisma, `server/<entity>` flattening, Phase 3 identity re-root, DNS, Vercel
+  production-domain, and Stripe rehearsal work.
+
+For these BBL waves, **local is preferred over Codex Cloud** because local has Graphify, `bbl.local`
+smoke capability, `gh`, ntfy, and the repo's full close ritual. Codex Cloud remains useful as a
+fallback; use [Codex Cloud Handoff — BBL `/app` Waves 2-4](codex-cloud-bbl-waves-2-4.md) and expect
+Graphify/browser proof to be deferred.
 
 #### SESSION_0328 preflight — `petey-plan-0305` Claude/Codex run
 
@@ -161,6 +190,15 @@ topic in the gitignored `.claude/notify.env` (`NTFY_TOPIC=...`) and subscribe to
 app. Pings fire from the bash driver directly, so they work even if no Claude chat session is
 open. (Inside an active Claude session, the `PushNotification` tool also pushes to a paired phone
 via Remote Control, but only when you've been idle >60s.)
+
+For Codex local auto-merge on the current BBL `/app` migration lane, use:
+
+```bash
+caffeinate -i scripts/auto-session-codex-automerge.sh
+```
+
+`caffeinate -i` is not needed for Codex Cloud, but it is still recommended for a local unattended run
+because it prevents idle sleep while the laptop is open.
 
 **Stacked-PR lesson (SESSION_0306):** when running the manual `auto-session.sh` in PR-stacked
 mode, merge the PRs **one at a time promptly** and do **not** push unrelated commits to shared

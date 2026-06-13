@@ -4,8 +4,8 @@ slug: codex-mobile-runbook
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-06
-last_agent: claude-session-0350
+updated: 2026-06-13
+last_agent: codex-session-0375
 pairs_with:
   - docs/runbooks/dev-environment/claude-mobile-runbook.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
@@ -59,6 +59,9 @@ codex                                   # interactive codex CLI; approve from th
 # DISPATCH (cold sessions → PRs):
 caffeinate -i scripts/auto-session-codex.sh 3
 CODEX_MODEL=gpt-5-codex caffeinate -i scripts/auto-session-codex.sh 3
+
+# BBL waves 2-4 auto-merge batch:
+caffeinate -i scripts/auto-session-codex-automerge.sh
 ```
 
 This is the **recommended** path: full parity with `graphify`, Postgres.app, `next dev`, and the
@@ -90,12 +93,17 @@ Full detail in [autonomous-sessions](autonomous-sessions.md):
 | --- | --- |
 | `scripts/auto-session-codex.sh N` | N cold **Codex** (`codex exec`) sessions, each a stacked PR. Uses `--dangerously-bypass-approvals-and-sandbox` for unattended local runs; the FS-0024 guard + the PR review gate remain the safety net. |
 | `CODEX_MODEL=gpt-5-codex …` | Pin the Codex model for the run. |
-| `scripts/auto-session-automerge.sh N` | Auto-merge variant (currently the Claude driver; mirror for Codex if needed). Pings the phone on any human-decision gate. |
+| `scripts/auto-session-codex-automerge.sh` | Local Codex auto-merge driver for the first 3 safe BBL `/app` migration waves after SESSION_0374. Defaults to `N=3`; stops before Prisma/server-flatten/Phase 3 identity work. |
+| `scripts/auto-session-automerge.sh N` | Claude auto-merge variant. Pings the phone on any human-decision gate. |
 | `scripts/notify.sh` → ntfy.sh | Phone push from the driver itself; set `NTFY_TOPIC` in `.claude/notify.env`. |
 
 Codex parity note: Codex does not yet have Claude's per-command allowlist shape, so the codex driver
 relies on the bypass flag + the FS-0024 shell guard + stacked-PR human review (see autonomous-sessions
 "Codex variant").
+
+For the BBL waves 2-4 automerge lane, prefer local SSH/tmux over Codex Cloud because local runs can
+use Graphify, `bbl.local` smoke checks, `gh`, and ntfy. Codex Cloud fallback instructions live in
+[Codex Cloud Handoff — BBL /app Waves 2-4](codex-cloud-bbl-waves-2-4.md).
 
 ---
 

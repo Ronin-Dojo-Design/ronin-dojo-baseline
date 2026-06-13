@@ -318,3 +318,9 @@ Use this file only as historical context for early wiki adoption.
 - Locked the route lane to Option A (migrate every admin area to `/app` regardless of the D9 brand gate; the gate stays a public-route 404 concern only).
 - Migrated `certificates`, `posts`, `content`, `media` from `/admin` to the `/app` permission-gated shell: `requirePermission` layout guards, history-preserving `git mv`, unwrapped `withAdminPage`, registered `posts.manage`, `/admin/*`→`/app/*` 308 redirects + tests, sidebar entries, and `revalidatePath` repointed to `/app/*`.
 - Added `PHASE3_USER_CARRY_PREFLIGHT.md` (40 `userId` models classified: 1 root-nullable, 3 REPOINT, 1 DUAL, 34 CARRY, 1 DECISION-NEEDED=FightRecord) and `APP_AND_SERVER_MIGRATION_MAP.md` (uniform recipe, ordered remaining 23-area waves, deferred `server/<entity>` flatten codemod plan). No schema edits; server flatten = map-only.
+
+## 2026-06-13 — SESSION_0375 Codex automerge handoff for BBL app waves
+
+- Added `scripts/auto-session-codex-automerge.sh`, a local Codex auto-merge driver defaulting to the first three safe remaining BBL `/app` waves and stopping before Prisma, server flattening, or Phase 3 identity work.
+- Added `codex-cloud-bbl-waves-2-4.md` as a Codex Cloud fallback prompt while documenting local as preferred for Graphify, `bbl.local`, `gh`, and ntfy proof.
+- Updated autonomous/Codex runbooks and the runbook hub with the local launch command: `caffeinate -i scripts/auto-session-codex-automerge.sh`.
