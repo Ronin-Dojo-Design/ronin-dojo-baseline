@@ -68,7 +68,7 @@ for ((i = 1; i <= N; i++)); do
   git switch -c "$branch" main
 
   claude -p "$SESSION_PROMPT" \
-    --model "${AUTO_SESSION_MODEL:-claude-opus-4-8}" \
+    --model "${AUTO_SESSION_MODEL:-opus}" \
     --permission-mode acceptEdits \
     --allowedTools "Edit,Write,Read,Glob,Grep,TodoWrite,Agent"
 
