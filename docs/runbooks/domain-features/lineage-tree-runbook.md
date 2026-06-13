@@ -62,8 +62,10 @@ single-parent.** Everything below is about closing that.
 
 ## 2. Balkan feature → our state → gap → build (the matrix)
 
-Legend: ✅ have · 🟡 partial · ❌ missing. "Verified" = read from the Balkan doc this session;
-"ref" = standard feature summarized from general knowledge (fetch the doc when building it).
+Legend: ✅ have · 🟡 partial · ❌ missing. **All ~28 Balkan Docs pages were fetched + verified
+this session** (the "ref" tags below are now doc-confirmed — see §2b for the extracted API detail).
+Only the React `MultipleTemplates` page is broken on Balkan's side (used the `OrgChartJS` variant);
+`OrgScribe` is an AI authoring notation, not relevant.
 
 | # | Balkan feature | What it gives (verified unless noted) | Our state | Build approach |
 | --- | --- | --- | --- | --- |
@@ -85,6 +87,51 @@ Legend: ✅ have · 🟡 partial · ❌ missing. "Verified" = read from the Balk
 | 16 | **Export PNG / PDF** (`Docs/ExportingPNG`, ref) | export the chart | ❌ (Phase 3f queued) | Already on the petey-plan-0305 roadmap (3f). SVG → canvas → PNG; print CSS → PDF. |
 | 17 | **Create programmatically / State / Importing** (`Docs/CreateProgrammatically`,`State`,`Importing`, ref) | build/restore chart from data; CSV/XML import | ✅ server-driven | We're already fully data-driven from Prisma; an **importer** (CSV → placeholder nodes) is the useful slice for onboarding a lineage. |
 | 18 | **CSS customization / Scale & padding** (`Docs/CSSCustomization`,`ScaleAndPadding`, ref) | theme + spacing knobs | 🟡 brand tokens | Expose spacing/scale as layout options; keep belt colors data-driven (never hardcode). |
+
+## 2b. Extracted API detail (all doc-verified this session)
+
+The concrete knobs/methods to replicate per feature — so a build session doesn't re-fetch:
+
+- **Layout / spacing** (`Layout`,`ScaleAndPadding`): spacing knobs `levelSeparation`,
+  `siblingSeparation`, `subtreeSeparation`, `mixedHierarchyNodesSeparation`. `scaleInitial` fit-modes:
+  `boundaryIfOutside` (default), `boundary`, `height`, `width`, or numeric. Our 2D engine should expose
+  these as options.
+- **TreeListLayout**: a compact, scrollable **list** rendering of the hierarchy (`layout: treeList` +
+  `treeListItem` template via `subTreeConfig`) — a strong fit for our mobile/board list mode.
+- **Search** (`Search`): `search(term)` → results; `center(id)` to fly-to; `searchFields` +
+  `searchFieldsWeight`. We already have privacy-safe `search.ts`; add `center` + result list.
+- **Highlight** (`HighlightNodes`): `highlightOnHover: "parents" | "children" | "sameLevel"` +
+  `highlightNode(id, mode)`; uses CSS classes (`boc-hover`). Maps to our selected-path trace — extend
+  to ancestor/descendant/sibling dim modes.
+- **Expand/Collapse** (`ExpandCollapse`): `collapse:{level}`, `expand:{nodes:[…]}`, methods
+  `expand()/collapse()/expandCollapse()`, event `onExpandCollapseButtonClick`. We have
+  `isCollapsedDefault` + `buildDescendantCounts`; wire interactive toggles.
+- **Undo/Redo** (`UndoRedo`): command history in `sessionStorage` (`undoRedoStorageName`); `undo()`,
+  `redo()`, `undoRedoUI.onChange({undoStepsCount,redoStepsCount})`, persist via `onUpdated`. Our
+  audit-log already records transitions — build the in-editor stack on top.
+- **Edit form** (`Edit`): `editUI.show()`; auto-generates inputs from fields
+  (`generateElementsFromFields`), types text/date/checkbox/select/multiselect + validators;
+  `editForm:{readOnly}`. We have our own node-profile form — keep it; borrow the details/readOnly split.
+- **Export** (`ExportingPNG`): `exportToPNG/PDF/SVG/PowerPoint`, `pngPreviewUI.show()`,
+  `onExportStart/onExportEnd` (inject styles, headers/footers with `{current-page}`), base64 image
+  flag. For sensitive data, self-host the export server. (Aligns with petey-plan-0305 3f.)
+- **Import** (`Importing`): `importCSV() / importXML() / importJSON()`. The CSV path = batch
+  placeholder-Passport create — coordinate with Phase 3 identity.
+- **Tags + Multiple templates** (`Tags`,`OrgChartJS/Docs/MultipleTemplates`): a node's `tags:[…]`
+  selects a per-tag **template + CSS + menu + sublevels**. This is how we get distinct cards for
+  placeholder / claimed / deceased / root — generalize our `LineageVisualGroup` into this.
+- **Performance** (`Performance`): **only visible nodes are rendered** (virtualization); demoed at
+  100k+ nodes with a minimap. Our canvas should virtualize off-screen nodes once load-on-demand lands.
+- **Navigation** (`Navigation`): pan (always on), `scroll.smooth/speed`, **minimap** (colors/opacity/
+  position/draggable), `moveNodesToVisibleArea(ids)`, `center(id)`. Minimap is high-value for big trees.
+- **State** (`State`): persist expanded/scale/position to localStorage / IndexedDB / **URL params**;
+  `stateToUrl()` → **shareable lineage-view links** (open a tree focused on a person). Nice product win.
+- **Programmatic CRUD** (`CreateProgrammatically`,`APICall`): `add/update/remove` (+ `draw()`) or
+  `addNode/updateNode/removeNode` (auto-draw). We're already Prisma-driven; this is the client mirror.
+- **CSS hooks** (`CSSCustomization`): node `[data-n-id]`, link `[data-l-id]`, control selectors
+  (`[data-ctrl-ec-id]`); keep belt color data-driven, never hardcoded.
+- **Menus** (`Menus`): node context-menu (right-click), in-node button menu, top toolbar (export/
+  layout/zoom). Map to our RBAC-gated node actions.
 
 ## 3. What to actually build (prioritized)
 
@@ -124,9 +171,13 @@ connectors → 3f export → Phase 4 trophy). The 2D layout engine + slinks/clin
 continuation of the "Org Chart Board" direction. The executable breakdown lives in
 [petey-plan-0379](../../petey-plan-0379.md).
 
-## 6. Balkan doc index (re-fetch when building a feature)
+## 6. Balkan doc index (all fetched + verified SESSION_0374)
 
-All under `https://balkan.app/OrgChartReact/Docs/`: GettingStarted, Layout, TreeListLayout, SubTrees,
+Every page below was read this session and its API folded into §2/§2b (exceptions: the React
+`MultipleTemplates` page is broken — used `OrgChartJS/Docs/MultipleTemplates`; `OrgScribe` is an AI
+authoring notation, not relevant; the full `OrgChartJS/API/interfaces/OrgChart.options` reference was
+not dumped — open it directly when wiring a specific option). All under
+`https://balkan.app/OrgChartReact/Docs/`: GettingStarted, Layout, TreeListLayout, SubTrees,
 ScaleAndPadding, Edit, Assistant, Partner, Clinks, Slinks, CreatingCustomTemplate, MultipleTemplates,
 CSSCustomization, Search, Filter, HighlightNodes, ExpandCollapse, DragAndDrop, UndoRedo, Navigation,
 Menus, Importing, Tags, State, Performance, CreateProgrammatically, LoadOnDemand, ExportingPNG,

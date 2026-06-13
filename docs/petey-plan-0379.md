@@ -82,12 +82,16 @@ first** (feature matrix + gap analysis) and [`lineage-hub.md`](runbooks/domain-f
 - **Done means:** filtering hides/dims non-matches (privacy-safe set only); search centers + highlights; browser-proof.
 - **Depends on:** 0379-1.
 
-### 0379-6 — Polish wave (subtree orientation · multiple templates · undo/redo · export)
+### 0379-6 — Polish wave (subtree orientation · templates · undo/redo · export · minimap · shareable URL)
 
-- **Goal:** per-branch orientation, per-node-type card templates (placeholder/claimed/root), editor
-  undo/redo, PNG/PDF export (aligns with petey-plan-0305 3f).
-- **Files:** layout options, `lineage-node-card.tsx` template variants, editor command stack, export util.
-- **Done means:** each sub-feature browser-proven; export produces a usable PNG/PDF.
+- **Goal:** per-branch orientation, tag-driven per-node-type card templates (placeholder/claimed/
+  deceased/root), editor undo/redo (sessionStorage stack over our audited mutations), PNG/PDF export
+  (petey-plan-0305 3f), a **minimap** for big trees, and **shareable focus URLs** (`stateToUrl`-style —
+  open a tree centered on a person). Last two surfaced from the full Balkan fetch (runbook §2b).
+- **Files:** layout options, `lineage-node-card.tsx` template variants, editor command stack, export
+  util, a minimap overlay, URL-state (search-params) read/write in the viewer route.
+- **Done means:** each sub-feature browser-proven; export produces a usable PNG/PDF; a shared URL
+  reopens the same focused view.
 - **Depends on:** 0379-1..5.
 
 ## How to run this
