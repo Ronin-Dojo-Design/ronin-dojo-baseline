@@ -5,10 +5,12 @@ type: petey-plan
 status: active
 created: 2026-06-13
 updated: 2026-06-13
-last_agent: claude-session-0379
+last_agent: claude-session-0380
 pairs_with:
   - docs/runbooks/domain-features/lineage-tree-runbook.md
   - docs/runbooks/domain-features/lineage-hub.md
+  - docs/architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md
+  - docs/sprints/SESSION_0380.md
   - docs/petey-plan-0305.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -24,17 +26,22 @@ backlinks:
 > [`lineage-tree-runbook.md`](runbooks/domain-features/lineage-tree-runbook.md) **§0 + §0a — read those
 > first.** This file is just the slice sequence.
 >
-> ⚠ **Candidate-A baseline (SESSION_0379):** committed for comparison against a parallel ChatGPT-authored
-> approach. The final path may cherry-pick between the two — confirm before building 0379-1.
+> ✅ **PATH LOCKED (SESSION_0380, [ADR 0026](architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md)).**
+> A fresh-chat grill confirmed candidate-A and refined it: **one shared engine-agnostic DTO, two layout
+> engines** — donatso (focal View A) + the existing canvas (overview View B, **untouched**; copy →
+> `lineage-tree-canvas-v2.tsx` only when View B work begins). Candidate-B contributes its **design** (the
+> two-step DTO + role/trust/cohort vocabulary), **not** code or any Balkan package. Collapsing to one
+> engine is a later evidence-based gate. Grounding corrections folded into the slices below.
 
 ## Locked decisions (do not re-grill — see runbook §0/§0a for rationale)
 
 1. **Base = fork `donatso/family-chart`** (MIT, TypeScript, `d3@7`). Vendor the source into a
    workspace-local module we own (`apps/web/lib/lineage/family-chart/` or a `packages/` module); IoC +
    read review before commit. Not an npm dependency; we edit internals freely.
-2. **Two coexisting views.** **View B** = the existing org-chart `LineageTreeCanvas` (whole-tree
-   overview) — **kept, not rewired**. **View A** = the new family-chart focal explorer. B→A: click a
-   person in B → open A focused on them.
+2. **Two coexisting views, two layout engines, one DTO.** **View B** = the existing org-chart
+   `LineageTreeCanvas` (whole-tree overview) — **kept, untouched**. When View B additions later begin,
+   build them on a **copy** (`lineage-tree-canvas-v2.tsx`); never edit the original (zero-risk fallback).
+   **View A** = the new donatso focal explorer. B→A: click a person in B → open A focused on them.
 3. **View A is focal-centric.** `main_id` = tree root by default; every node re-centers; depth-limited;
    shareable `?focus=` URLs. (FamilyTreeApp is the visual/UX north star.)
 4. **Mapping: single-primary-line + secondary-overlay.** `rels.parents = [primaryVisualParentMemberId]`,
@@ -44,6 +51,20 @@ backlinks:
 5. **Privacy unchanged + sacred.** Non-PUBLIC dropped by the materializer, never reach View A. Do not
    use family-chart `is_private` to surface hidden members. Belt color stays `Rank.colorHex`.
 6. **No schema changes.** Pure read-model + client display. Adapter is client-side + pure.
+7. **Shared two-step DTO (cherry-picked from candidate-B).** A pure adapter derives an engine-agnostic
+   `LineageVisualNode[] + LineageSecondaryLink[]` **once** from the materialized payload; donatso projects
+   it → `Datum[]`; the v2 canvas reads it for its new surfaces. **Reuse `lib/lineage/trust-status.ts`
+   (`resolveLineageTrustStatus`)** — do not invent a trust enum (it already exists, richer than B's).
+8. **No Balkan package, no license.** Candidate-B is original code; we adopt its *design*, render via
+   engines we own.
+9. **One-engine = later gate (not now).** The 0379-1 smoke (whole tree in donatso, `main_id`=root) + how
+   View A feels decide whether View B later migrates onto donatso. The shared DTO keeps that cheap.
+
+> ⚠ **Grounding correction (SESSION_0380, verified in code):** the multi-parent secondary edges are
+> **already materialized** in the public payload (`payloads.ts` `relationshipsTo`/`relationshipsFrom`;
+> `queries.ts` `edgeMap`). The secondary-overlay (slink/clink, slice 0379-4) therefore has a client-side
+> data source **today** — its server scope is "expose already-fetched edges to the adapter," not "add them
+> to the payload" (runbook §4 assumed the latter).
 
 ## Slices (each ≈ one session)
 
@@ -57,15 +78,22 @@ backlinks:
   provenance recorded; IoC review clean.
 - **Depends on:** nothing.
 
-### 0379-2 — `toFamilyChartData` adapter (primary edges)
+### 0379-2 — Shared two-step DTO + donatso projection
 
-- **Goal:** pure client adapter mapping the materialized public payload → family-chart `Datum[]`
-  (primary edges only): `rels.parents=[primary promoter]`, `rels.children=[promotees]`,
-  `data={colorHex, avatar, displayName, rankLabel, slug, claimable, verified}`, `gender` unset.
-- **Files:** `apps/web/lib/lineage/to-family-chart-data.ts` + `.test.ts` (pure, unit-tested).
-- **Done means:** adapter unit tests green; bjj payload maps to a valid `Datum[]`; privacy = consumes
-  the same materialized payload as View B (no non-PUBLIC).
-- **Depends on:** 0379-1.
+- **Goal:** the engine-agnostic visual model (candidate-B's two-step DTO), then the donatso projection.
+  - **Step 1 (neutral):** `apps/web/lib/lineage/to-lineage-visual.ts` → `{ nodes: LineageVisualNode[],
+    secondaryLinks: LineageSecondaryLink[] }` from the materialized payload (incl. the already-present
+    `relationshipsTo`/`relationshipsFrom` edges). Carries role, **trust via `resolveLineageTrustStatus`
+    (reuse — do not reinvent)**, group, primary/partner/assistant parent, secondary links.
+  - **Step 2 (engine projection):** `apps/web/lib/lineage/to-family-chart-data.ts` → family-chart
+    `Datum[]`: `rels.parents=[primaryVisualParentMemberId]`, `rels.children=[promotees]`,
+    `single_parent_empty_card=false`, `data={colorHex, avatar, displayName, rankLabel, slug, claimable,
+    verified}`, `gender` unset.
+- **Files:** the two libs above + `.test.ts` each (pure, unit-tested).
+- **Done means:** both unit-tested green; bjj payload → valid neutral DTO → valid `Datum[]`; privacy =
+  consumes the same materialized payload as View B (no non-PUBLIC). The neutral DTO is engine-agnostic
+  (no family-chart types leak into step 1) so View B can later read it too.
+- **Depends on:** 0379-1 (step 2 only; step 1 is independent and could land earlier).
 
 ### 0379-3 — View A island + bjj render + B→A link
 
@@ -78,15 +106,26 @@ backlinks:
   drawer opens; B→A link works; browser-proof on `bbl.local:3000`.
 - **Depends on:** 0379-2.
 
-### 0379-4 — Secondary-overlay (slink/clink)
+### 0379-4 — Secondary-overlay (slink/clink) — View A
 
 - **Goal:** render cross-belt/secondary promoters as a belt-labelled, dashed, subordinate overlay by
   extending the fork's `layout/create-links.ts` + `renderers/view-links.ts`; drawn only when both
   endpoints are in the current focal view; out-of-view secondaries listed in the drawer. Legend + toggle.
-- **Files:** forked `create-links`/`view-links`; adapter carries secondary edges; drawer rank-history.
+- **Files:** forked `create-links`/`view-links`; the neutral DTO's `secondaryLinks` (already sourced from
+  the payload's `relationshipsTo`/`relationshipsFrom` — **no new server work**); drawer rank-history.
 - **Done means:** a node promoted by two professors shows the primary edge + a distinct secondary link
   in-view (drawer otherwise); privacy tests still green; browser-proof.
-- **Depends on:** 0379-3.
+- **Depends on:** 0379-2 (DTO `secondaryLinks`), 0379-3.
+
+### 0379-B1 — View B (overview) engine extensions [separate track, after View A proves out]
+
+- **Goal:** on a **copy** `lineage-tree-canvas-v2.tsx` (original untouched), add what View B lacks vs the
+  candidate-B design: **partner/assistant placement** + the **slink/clink secondary overlay** (reading
+  the same neutral DTO `secondaryLinks`). Grouped cohorts already exist (`LineageVisualGroup`).
+- **Done means:** v2 canvas renders partner/assistant + secondary overlay from the shared DTO; the
+  original canvas + its dnd editor/privacy guards are untouched; browser-proof.
+- **Depends on:** 0379-2 (shared DTO). Gated behind the one-engine evaluation (decision 9) — only build
+  View B's own engine if the gate keeps two engines.
 
 ### 0379-5 — Privacy + edge-case + mobile verification
 
@@ -114,13 +153,15 @@ backlinks:
 ## Scope guard
 
 - No schema migration. No DNS/Vercel-prod/Stripe changes.
-- Do not rewire View B (the existing canvas) — View A is additive.
+- **Never edit `lineage-tree-canvas.tsx`** — View A is additive; View B changes go on the v2 copy only.
 - Do not regress privacy/RBAC invariants (runbook §0a; hub §"Privacy invariants").
 - Belt color = `Rank.colorHex` data; no hardcoded brand colors.
-- IoC + read review the vendored fork before it commits (operator supply-chain caution).
+- IoC + LICENSE.txt + read review the vendored fork before it commits (operator supply-chain caution).
+- No Balkan npm package; the neutral DTO must not leak family-chart types (engine-agnostic).
 
 ## Cross-references
 
+- [ADR 0026 — Lineage View A engine (donatso fork; one DTO, two engines)](architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md) — the ratified decision.
 - [Lineage Tree Runbook](runbooks/domain-features/lineage-tree-runbook.md) — §0 verdict + §0a integration spec (the authoritative design).
 - [Lineage Domain Hub](runbooks/domain-features/lineage-hub.md) — data model, file map, privacy invariants.
 - [Petey Plan 0305](petey-plan-0305.md) — the lineage epic this continues.

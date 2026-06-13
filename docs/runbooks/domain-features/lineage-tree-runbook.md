@@ -5,12 +5,13 @@ type: runbook
 status: active
 created: 2026-06-13
 updated: 2026-06-13
-last_agent: claude-session-0379
+last_agent: claude-session-0380
 domain: lineage
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/petey-plan-0305.md
   - docs/petey-plan-0379.md
+  - docs/architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md
   - docs/architecture/source/raw/Brian-Chat-GPT-Session.md
 backlinks:
   - docs/runbooks/README.md
@@ -96,8 +97,13 @@ first for the data model; this doc is the **feature gap analysis + build plan**.
 > kept as a **feature/UX reference only** — we chose `donatso/family-chart`, not Balkan. §3/§4 below are
 > **historical** (the superseded "build our own" plan); defer to §0a + petey-plan-0379.
 >
-> ⚠ **Candidate-A baseline:** this design is committed for comparison against a parallel ChatGPT-authored
-> approach; the final path may cherry-pick between the two.
+> ✅ **PATH LOCKED (SESSION_0380, [ADR 0026](../../architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md)).**
+> The fresh-chat grill confirmed candidate-A and refined it: **one shared engine-agnostic DTO, two layout
+> engines** — donatso (focal View A) + the existing canvas (overview View B, untouched; copy →
+> `lineage-tree-canvas-v2.tsx` only when View B work begins). Candidate-B contributes its **design**, not
+> code or any Balkan package. Two grounding corrections (verified in code): the secondary multi-parent
+> edges are **already materialized** in the public payload (`relationshipsTo`/`relationshipsFrom`), and the
+> trust vocabulary **already exists** (`lib/lineage/trust-status.ts` — reuse, don't reinvent).
 
 ## 0a. View A integration spec (accruing — SESSION_0379)
 
@@ -141,9 +147,14 @@ Build-ready mechanics for the new family-chart-fork focal explorer, recorded as 
 
 **§0a status: integration spec COMPLETE (SESSION_0379).** All forks resolved; build-ready.
 
-## 0b. Candidate comparison + next-session decision (SESSION_0379)
+## 0b. Candidate comparison + decision (SESSION_0379 → RESOLVED SESSION_0380)
 
-Two paths were worked up this session; the decision is **deferred to a fresh chat** (see below). **All
+> ✅ **RESOLVED (SESSION_0380, ADR 0026):** Option 1 (**A — donatso fork**) chosen as the View A engine,
+> refined to "one shared DTO, two engines" (donatso focal A + existing canvas overview B, untouched).
+> Cherry-picks (a) two-step neutral DTO and (b) trust vocabulary **all adopted** — and (b) was found to
+> already exist in `trust-status.ts`. The comparison below is kept as the decision trail.
+
+Two paths were worked up this session; the decision was **deferred to a fresh chat** (resolved above). **All
 sources are lift-and-adapt — we own the resulting code; no license purchase, no runtime dependency on
 any vendor package.** "Balkan-labeled" code is just a pattern/code source we adapt into our own.
 
