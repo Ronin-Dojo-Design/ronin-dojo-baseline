@@ -1,7 +1,7 @@
 /**
  * @added   SESSION_0147 (2026-05-12)
  * @why     Admin queries for invite listing, detail, and code lookup
- * @wired   app/admin/invites/ (list, detail pages), server/invites/queries.ts (shared code lookup)
+ * @wired   app/app/invites/ (list, detail pages), server/invites/queries.ts (shared code lookup)
  */
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"

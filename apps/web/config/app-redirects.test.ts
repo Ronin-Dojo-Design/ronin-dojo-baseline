@@ -47,6 +47,18 @@ describe("migrated admin app redirects", () => {
       { source: "/admin/content/:path*", destination: "/app/content/:path*", permanent: true },
       { source: "/admin/media", destination: "/app/media", permanent: true },
       { source: "/admin/media/:path*", destination: "/app/media/:path*", permanent: true },
+      { source: "/admin/roles", destination: "/app/roles", permanent: true },
+      { source: "/admin/roles/:path*", destination: "/app/roles/:path*", permanent: true },
+      { source: "/admin/entitlements", destination: "/app/entitlements", permanent: true },
+      {
+        source: "/admin/entitlements/:path*",
+        destination: "/app/entitlements/:path*",
+        permanent: true,
+      },
+      { source: "/admin/invites", destination: "/app/invites", permanent: true },
+      { source: "/admin/invites/:path*", destination: "/app/invites/:path*", permanent: true },
+      { source: "/admin/leads", destination: "/app/leads", permanent: true },
+      { source: "/admin/leads/:path*", destination: "/app/leads/:path*", permanent: true },
     ])
   })
 
@@ -55,7 +67,7 @@ describe("migrated admin app redirects", () => {
 
     expect(sources).not.toContain("/admin/:path*")
     expect(sources).not.toContain("/admin/pricing-plans/:path*")
-    expect(sources).not.toContain("/admin/leads/:path*")
+    expect(sources).not.toContain("/admin/email/:path*")
   })
 
   it("redirects only dashboard routes with exact app editor parity", () => {
@@ -124,6 +136,11 @@ describe("migrated admin app redirects", () => {
     expect(resolveMigratedAppRedirect("/dashboard/unknown/stale")).toBe("/app/profile")
     expect(resolveMigratedAppRedirect("/admin/certificates")).toBe("/app/certificates")
     expect(resolveMigratedAppRedirect("/admin/certificates/new")).toBe("/app/certificates/new")
+    expect(resolveMigratedAppRedirect("/admin/roles")).toBe("/app/roles")
+    expect(resolveMigratedAppRedirect("/admin/roles/new")).toBe("/app/roles/new")
+    expect(resolveMigratedAppRedirect("/admin/entitlements/abc")).toBe("/app/entitlements/abc")
+    expect(resolveMigratedAppRedirect("/admin/invites/new")).toBe("/app/invites/new")
+    expect(resolveMigratedAppRedirect("/admin/leads/lead_123")).toBe("/app/leads/lead_123")
     expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe(null)
   })
 

@@ -1,7 +1,7 @@
 /**
  * @added   SESSION_0147 (2026-05-12)
  * @why     Admin CRUD actions for invite management (create, revoke, delete)
- * @wired   app/admin/invites/ (list, new, detail pages)
+ * @wired   app/app/invites/ (list, new, detail pages)
  */
 "use server"
 
@@ -47,7 +47,7 @@ export const createInvite = adminActionClient
 
       after(async () => {
         revalidate({
-          paths: ["/admin/invites"],
+          paths: ["/app/invites"],
           tags: ["invites", `invite-${invite.id}`],
         })
 
@@ -83,7 +83,7 @@ export const revokeInvite = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/invites"],
+        paths: ["/app/invites"],
         tags: ["invites", `invite-${invite.id}`],
       })
     })
@@ -99,7 +99,7 @@ export const deleteInvites = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/invites"],
+      paths: ["/app/invites"],
       tags: ["invites"],
     })
 

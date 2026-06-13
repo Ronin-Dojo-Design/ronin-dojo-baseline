@@ -5,7 +5,7 @@ type: spec
 status: active
 created: 2026-06-12
 updated: 2026-06-13
-last_agent: claude-session-0374
+last_agent: codex-session-0376
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -59,14 +59,15 @@ Every legacy `/admin/<area>` uses the `components/admin/auth-hoc` `withAdminPage
 ## 2. Remaining `/app` waves (23 areas after SESSION_0374 wave 1)
 
 Wave 1 (SESSION_0374, landed): **certificates, posts, content, media.**
+Wave 2 (SESSION_0376, landed): **roles, entitlements, invites, leads.**
 
 Order the rest by value to `bbl.local` functionality + coupling to Phase 3/4. BBL-enabled (E) areas
 first; BBL-404 (G) areas migrate for unified-shell completeness but aren't launch-gating.
 
 | Wave | Areas | Why this order |
 | --- | --- | --- |
-| **2** | roles (E), entitlements (E), invites (E), leads (E) | Claim/RBAC + funnel surfaces — directly feed the Phase 3/4 identity + claim work; migrate before that lane lands. |
-| **3** | email (E), brand-settings (E), privacy (E), reports | Operator ops + GDPR/infra the operator drives day-to-day. |
+| **2** | roles (E), entitlements (E), invites (E), leads (E) | ✅ Landed SESSION_0376 — claim/RBAC + funnel surfaces moved to `/app` with guards, redirects, sidebar, and `revalidatePath` repoints. |
+| **3** | email (E), brand-settings (E), privacy (E), reports | Next safe wave — operator ops + GDPR/infra the operator drives day-to-day. |
 | **4** | programs, courses, age-groups, skill-levels, schedule (all G) | School-ops cluster — share `server/admin/programs` query surface; batch together. |
 | **5** | merch, categories, tags, pricing-plans, subscription-tiers, subscriptions, billing (G) | Commerce/listings cluster. |
 | **6** | tools (G), storage, repo-docs | Dirstarter-core + infra/dev; lowest user value. |

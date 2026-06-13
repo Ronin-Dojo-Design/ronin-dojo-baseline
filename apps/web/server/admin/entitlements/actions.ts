@@ -39,7 +39,7 @@ export const upsertEntitlement = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/entitlements"],
+        paths: ["/app/entitlements"],
         tags: ["entitlements", `entitlement-${entitlement.id}`],
       })
     })
@@ -57,7 +57,7 @@ export const deleteEntitlements = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/entitlements"],
+      paths: ["/app/entitlements"],
       tags: ["entitlements"],
     })
   })
