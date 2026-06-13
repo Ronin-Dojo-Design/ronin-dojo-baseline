@@ -27,20 +27,118 @@ Single reference for evolving our lineage tree toward org-chart-grade capability
 **BALKAN OrgChart (React)** as the feature/UX benchmark. Read [`lineage-hub.md`](lineage-hub.md)
 first for the data model; this doc is the **feature gap analysis + build plan**.
 
-## 0. Verdict: build our own (don't ship Balkan)
+## 0. Verdict (SESSION_0379): fork MIT `donatso/family-chart`; Balkan FamilyTreeApp = visual north star
 
-- **License (verified `Docs/GettingStarted`):** two tiers — a feature-limited **Community Edition**
-  and a **Commercial** license (paid) for the full feature set. Several capabilities are CE-locked.
-  Operator decision: **do not pay.** So Balkan is a **reference, not a dependency.**
-- **Why building our own is the right call anyway:** our lineage is NOT a generic org chart — it's a
-  **dual-model genealogy** (provenance vs display, see hub) with belt-color semantics, RBAC-scoped
-  editing, privacy materialization, and claim/verification. Balkan's data binding (`id`/`pid`) can't
-  express our `RankAward`-rooted multi-parent provenance. We mine Balkan's **layout math + display
-  vocabulary + interaction patterns** (their docs include code) and implement on our own model.
-- **What we keep from today:** `LineageTreeCanvas` (pinch-zoom, dnd-kit reparent, `motion` stagger),
-  `LineageNodeCard` (belt color from `Rank.colorHex`), `LineageProfileDrawer`, the pure libs
-  (`canvas-model.ts`, `connector-geometry.ts`, `tree-layout.ts`, `search.ts`, `rank-progression.ts`),
-  and the privacy/RBAC guards. **No regressions to the guarded invariants** (hub §"Privacy invariants").
+> **Supersedes two earlier same-session verdicts** (kept as the decision trail): (1) the original
+> "build our own tidy-tree engine," then (2) "adopt Balkan OrgChartReact community + extend." Final
+> operator decision SESSION_0379, after reviewing four candidate bases: **fork the MIT-licensed
+> TypeScript/D3 library [`donatso/family-chart`](https://github.com/donatso/family-chart) into our repo
+> and extend it ourselves.** It is a *genealogy* engine — the right shape for lineage (not an org chart).
+> We own the data, the card content, privacy/RBAC, and belt-color; the fork hands us the layout engine,
+> HTML cards, focal-person ancestry+progeny, privacy, and edit/history. **Balkan FamilyTreeApp** is the
+> visual/UX north star (look + the build / invite-collaborate / claim / focus-a-member / share feel).
+
+- **Approach: fork + own the work (SESSION_0379, RESOLVED).** Vendor the MIT `donatso/family-chart`
+  `src/` into a workspace-local module we own (e.g. `apps/web/lib/lineage/family-chart/` or a
+  `packages/family-chart`), keeping the upstream `LICENSE` + the forked commit SHA recorded. We edit
+  internals freely (the secondary-overlay needs `layout/create-links.ts` + `renderers/view-links.ts`
+  changes — not just composition). Dependency: **plain `d3@7`** (not lean submodules — room for more
+  features later). **Gate:** read-only source review + IoC sweep of the vendored files before commit
+  (operator supply-chain caution). Not an npm dependency; not redistributing a built bundle.
+- **Engine base — DECIDED: `donatso/family-chart` (MIT, TypeScript, D3 v7).** Candidate review:
+  - **`donatso/family-chart` ✅ CHOSEN** — MIT (`Copyright (c) 2026 donatso`), TS, one dep (`d3`). Real
+    layout engine `src/layout/calculate-tree.ts`: `calculateTree(data, { main_id, node_separation:250,
+    level_separation:150, ancestry_depth, progeny_depth, is_horizontal, … }) → { data:TreeData(x,y,depth),
+    dim }`. **Genealogy data model fits multi-promoter lineage:** `Datum.rels = { parents:string[],
+    spouses:string[], children:string[] }` — `parents` is an **array → N promoters** (beats FamilyTreeJS's
+    fixed `mid`/`fid`); `data:{ gender, [k]:any }` carries our display fields. **HTML card renderer**
+    (`renderers/card-html.ts`) → rich belt cards, no SVG-only ceiling. Built-in: focal `main_id`
+    ancestry↑+progeny↓, **privacy** (`is_private`/`private_cards_config`), edit, add/remove-relative,
+    **history (undo/redo)**, autocomplete, duplicate-person handling.
+  - Balkan **OrgChartReact** — proprietary community lib; org-chart not genealogy; SVG-only nodes. Rejected as base (kept as a feature/UX reference; demos at `/tmp/OrgChartReact-Demos`).
+  - Balkan **FamilyTreeJS** — genealogy, but vanilla-JS, proprietary, only 2 native parents. Rejected.
+  - `ooanishoo/family-tree`, `rayaanr/FamLine` — **unlicensed** (all-rights-reserved), tutorial-scale,
+    naive recursive-CSS layout (no auto-layout engine). Rejected as base; pattern footnotes only.
+- **Integration:** the d3 lib renders into a DOM container → wrap in a React client island (`useRef` +
+  effect; the old d3-org-chart wrapper pattern). Adapter: materialized public payload (`LineageTreeMember`
+  + `RankAward` + `LineageRelationship`) → `Datum[]` — `rels.parents` = all promoters, `rels.children` =
+  promotees, `rels.spouses` = co-promoters/partners; `data` = belt color (`Rank.colorHex`), rank, avatar,
+  school, claim/verification — **allowlisted public fields only** (privacy materializer unchanged).
+  Node-click → our `LineageProfileDrawer`. `main_id` = focal practitioner → shareable focus URLs.
+- **Two coexisting views (operator decision SESSION_0379):**
+  - **View B — whole-tree org chart = the EXISTING `LineageTreeCanvas` (kept, NOT rewired).** Remains the
+    full-lineage overview ("the entire Rigan Machado tree"). No forced changes; this is the (B) option.
+  - **View A — focal genealogy explorer = NEW, built on the `donatso/family-chart` fork.** Additive;
+    `main_id` defaults to the tree root, every node re-centers, depth-limited, shareable focus URLs
+    (`/lineage/[slug]?focus=[person]`). This is where the FamilyTreeApp "explore from a person" feel lives.
+  - **They link:** View B (overview) → click a person → opens View A focused on them. (Back-link TBD.)
+- **What View A reuses:** `LineageNodeCard` *content* + belt color from `Rank.colorHex`,
+  `LineageProfileDrawer`, `search.ts`, `rank-progression.ts`, the materialized public payload +
+  **privacy/RBAC guards** (never regress hub §"Privacy invariants"). View A is additive, so the
+  "v2 alongside" posture holds — now for a product reason (two complementary views), not just safety.
+
+> **MAPPING — RESOLVED (SESSION_0379, operator-agreed): single-primary-line + secondary-overlay.**
+> - `rels.parents` = the **single primary promoter** (`primaryVisualParentMemberId`) → one clean lineage
+>   line up. Set `single_parent_empty_card = false` (no phantom co-parent card — promoters aren't couples).
+> - `rels.children` = students this person promoted (direct map).
+> - **Secondary / cross-belt promoters** (`LineageRelationship` provenance beyond the primary) are NOT
+>   `rels.parents`; they render as a **secondary-link overlay we add to the fork** (slink/clink idiom
+>   ported onto `create-links`/`view-links`) + appear in the drawer's rank history. Tree stays readable;
+>   provenance preserved.
+> - `rels.spouses` = reserved for true co-equals (co-founders / co-promoters); unused in v1.
+> - `main_id` = focal practitioner; ancestry↑ = "who promoted me", progeny↓ = "whom I promoted";
+>   `main_id` drives shareable focus URLs.
+
+> **Re-grounding (SESSION_0379, DONE):** the authoritative design is now **§0 (verdict) + §0a
+> (integration spec)** here, plus the rewritten [`petey-plan-0379`](../../petey-plan-0379.md) slice
+> sequence. §1 stays valid as **View B's** current ground truth. §2/§2b (the Balkan OrgChart matrix) are
+> kept as a **feature/UX reference only** — we chose `donatso/family-chart`, not Balkan. §3/§4 below are
+> **historical** (the superseded "build our own" plan); defer to §0a + petey-plan-0379.
+>
+> ⚠ **Candidate-A baseline:** this design is committed for comparison against a parallel ChatGPT-authored
+> approach; the final path may cherry-pick between the two.
+
+## 0a. View A integration spec (accruing — SESSION_0379)
+
+Build-ready mechanics for the new family-chart-fork focal explorer, recorded as the grill resolves them.
+
+- **Card content (RESOLVED):** family-chart cards are **HTML divs** positioned by d3. Render our belt
+  card via **`cardInnerHtmlCreator: (d) => htmlString`** — belt band `div` colored inline from
+  `data.colorHex` (`Rank.colorHex`), avatar `<img>` via `cardImageField` (`data.avatar`) with initials
+  fallback, name + rank label + verified/claimable badge. **HTML-string template, not React-in-card**
+  (per-card React roots inside d3-managed/transitioning DOM are fragile). React is reserved for the drawer.
+- **Drawer (RESOLVED):** keep `LineageProfileDrawer` (React), rendered once *outside* the d3 container,
+  opened from a card interaction (state lifted to the React wrapper). Claim / rank-history live here.
+- **Path highlight (RESOLVED — free reuse):** family-chart's built-in `setOnHoverPathToMain`
+  (`f3-path-to-main` class) replaces our `connector-geometry` selected-path trace.
+- **Expand hidden relatives (RESOLVED — built-in):** the mini-tree icon (`mini_tree`/`all_rels_displayed`)
+  is the focal load-on-demand affordance.
+- **Click semantics (RESOLVED — A):** click a card = **re-center** on that person (`updateMainId`,
+  focal); a "View profile" control (button on the card / tapping the already-focal center card) opens
+  `LineageProfileDrawer`. Mini-tree icon expands hidden relatives. Explore is the primary gesture.
+- **Privacy (RESOLVED — A):** keep the materializer's **drop** behavior — non-PUBLIC members never
+  reach View A; it consumes the *same* materialized public payload as View B. `single_parent_empty_card
+  = false` (lineage lines through a dropped member break, no phantom card). Do **not** use family-chart
+  `is_private`/`private_cards_config` to surface hidden members — that would regress
+  `queries.visibility.test.ts` and loosen the privacy policy. Privacy guarantee unchanged.
+- **Adapter (RESOLVED — A):** a **client-side pure** `toFamilyChartData(payload) → { data: Datum[],
+  secondaryLinks }` in `lib/lineage/` (unit-tested, like `canvas-model.ts`). Server keeps emitting the
+  **existing materialized payload, shared with View B** — no new oRPC contract, no d3-lib shape leaking
+  server-side. `rels.parents = [primaryVisualParentMemberId]`, `rels.children = [promotees]`,
+  `data = { colorHex (Rank.colorHex), avatar, displayName, rankLabel, slug, claimable, verified }`,
+  `gender` → unset (`card-genderless`; belt color is the signal, not gender).
+- **Secondary-overlay (RESOLVED — rec):** secondary/cross-belt promoters (`LineageRelationship`
+  PROMOTED_BY beyond primary) render via an extended `create-links`/`view-links`: belt-colored,
+  **labelled** (belt awarded), **dashed/curved**, visually subordinate to the primary edge. Drawn
+  **only when both endpoints are in the current focal view**; out-of-view secondary promoters surface
+  in the drawer's rank history instead. Default-on, **toggleable**, with a legend.
+- **Routing/mount (RESOLVED — rec):** View A is a `"use client"`, **dynamically-imported** family-chart
+  island on the **existing route via a view toggle + focus param**: `/lineage/[treeSlug]?view=explore&
+  focus=[person]` (shares the page's data fetch + structured-data/SEO). `main_id` ← `?focus=` else tree
+  root; re-center updates `?focus=` (shallow routing) for shareable focus URLs. **B→A link** = View B
+  card click sets `?view=explore&focus=`. d3 is client-only → SSR skeleton fallback; cleanup on unmount.
+
+**§0a status: integration spec COMPLETE (SESSION_0379).** All forks resolved; build-ready.
 
 ## 1. Our current capability (ground truth, 2026-06-13)
 
