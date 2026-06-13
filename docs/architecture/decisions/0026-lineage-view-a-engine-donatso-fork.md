@@ -41,7 +41,10 @@ choice to a fresh chat to avoid the long-context "dumb zone":
 - **Candidate-B** — a ChatGPT/operator-authored visual-parity spike using **Balkan-style** naming
   (`pid`/`ppid`/`stpid`/`slinks`/`clinks`/`tags`). **Clarified in SESSION_0380: candidate-B is original
   work, not Balkan code, and involves no Balkan license or runtime package** — Balkan's vocabulary was
-  borrowed only as a design language.
+  borrowed only as a design language. It was authored **with the repo connector attached** (ChatGPT viewed
+  the real repo), so its **DTO design (types + projection) is repo-grounded** and is **lift-and-adapted**
+  here — with the discipline that repo-grounded ≠ perfectly current (verify each field against the live
+  payload on adapt; e.g. its 4-state trust enum is superseded by the richer in-repo `trust-status.ts`).
 
 SESSION_0380 (this ADR) is that fresh chat. After a grill that re-verified the claims against the real
 code, the path was locked.

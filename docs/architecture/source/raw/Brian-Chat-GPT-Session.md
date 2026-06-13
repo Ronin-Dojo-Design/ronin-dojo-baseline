@@ -17,6 +17,15 @@ backlinks:
 
 _Verbatim ChatGPT session pasted by Brian during SESSION_0379, captured as **candidate-B** for the lineage-tree path comparison — a Balkan `balkan-orgchart-js-community` visual-parity spike. This is source material, not accepted spec/schema/file layout. The canonical design is the runbook §0/§0a + `petey-plan-0379` (candidate-A, donatso fork). Some repo claims in the text below (package manager, session history, package names) are ChatGPT's and are **unverified** by this repo._
 
+> **Provenance (SESSION_0380):** this session was authored with the **repo connector attached** — ChatGPT
+> viewed the actual repo while writing — so the **DTO design (File 1 types + File 3 projection) is
+> repo-grounded**, and the locked plan ([ADR 0026](../../decisions/0026-lineage-view-a-engine-donatso-fork.md))
+> **lift-and-adapts** it. Caveat: repo-grounded ≠ perfectly current — verify each field against the live
+> materialized payload on adapt (e.g. candidate-B's 4-state `LineageTrustStatus` is **superseded** by the
+> richer in-repo `lib/lineage/trust-status.ts`). The Balkan-renderer half (File 4 `OrgChart` config + SVG
+> templates, File 2 demo data, File 5 demo route) is **dropped** — donatso (View A) + the existing canvas
+> (View B) render instead.
+
 ---
 
 I’ll treat this as a buildable visual-parity spike, borrowing Balkan TSX behaviors without making it the final engine. The prototype will keep Ronin lineage truth separate while modeling partners, assistants, and grouped student subtrees.
