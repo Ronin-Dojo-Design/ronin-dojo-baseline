@@ -43,12 +43,13 @@ import {
   type PromoterChangeContext,
   PromoterChangeModal,
 } from "~/components/web/lineage/promoter-change-modal"
+import { StudentsCarousel } from "~/components/web/lineage/students-carousel"
 import {
   pickLineageClaimStatus,
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
 } from "~/lib/lineage/trust-status"
-import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
+import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 
 /**
  * Bottom-sheet Drawer for lineage profiles.
@@ -104,6 +105,10 @@ type LineageProfileDrawerProps = {
    */
   activeTab?: LineageProfileDrawerTab
   onTabChange?: (tab: LineageProfileDrawerTab) => void
+  /** Focal member's students (visual children in this tree) for the drawer carousel. */
+  students?: LineageTreeMemberRow[]
+  /** Swap the drawer to a tapped student — recursive drill-down. */
+  onSelectStudent?: (memberId: string) => void
 }
 
 function useDesktopProfilePanel() {
@@ -182,6 +187,8 @@ export function LineageProfileDrawer({
   isAdmin,
   activeTab,
   onTabChange,
+  students,
+  onSelectStudent,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -216,10 +223,173 @@ export function LineageProfileDrawer({
             isAdmin={isAdmin}
             activeTab={activeTab}
             onTabChange={onTabChange}
+            students={students}
+            onSelectStudent={onSelectStudent}
           />
         )}
       </DrawerContent>
     </Drawer>
+  )
+}
+
+/**
+ * Derive every display value the drawer needs from the profile + selected award.
+ * Pure data shaping — extracted from DrawerBody so the body stays orchestration.
+ */
+function deriveDrawerProfileView(
+  profile: LineageNodeProfile,
+  selectedRankAward: SelectedRankAward,
+) {
+  const currentAward = profile.user.rankAwards[0] ?? null
+  const currentRank = currentAward?.rank ?? null
+  const discipline = currentRank?.rankSystem?.discipline ?? null
+  const selectedProfileAward = selectedRankAward?.id
+    ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
+    : null
+  const panelAward = selectedProfileAward ?? currentAward
+  const panelRank = panelAward?.rank ?? selectedRankAward?.rank ?? currentRank
+  const claimStatus = pickLineageClaimStatus(profile.claimRequests)
+
+  return {
+    displayName: profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed",
+    avatarSrc: profile.user.passport?.avatarUrl ?? profile.user.image,
+    currentAward,
+    currentRank,
+    discipline,
+    latestMembership: profile.user.memberships[0] ?? null,
+    instructorRelationship: profile.relationshipsTo[0] ?? null,
+    panelAward,
+    panelRank,
+    panelRankColor: panelRank?.colorHex ?? null,
+    panelRankProgress: rankProgressPercent(panelRank),
+    headerRankName: panelRank?.name ?? null,
+    headerDisciplineName: panelRank?.rankSystem?.discipline?.name ?? discipline?.name ?? null,
+    claimStatus,
+    trustStatus: resolveLineageTrustStatus({
+      verificationStatus: profile.verificationStatus,
+      isVerified: profile.isVerified,
+      isPlaceholder: profile.user.isPlaceholder,
+      claimStatus,
+    }),
+  }
+}
+
+type DrawerProfileView = ReturnType<typeof deriveDrawerProfileView>
+
+/**
+ * The drawer's identity header — avatar, name, rank, trust/claim badges, the
+ * rank-progress bar, and admin actions. Extracted from DrawerBody (it carried
+ * the bulk of the body's conditional JSX); owns only its promoter-modal state.
+ */
+function DrawerIdentityHeader({
+  view,
+  isClaimable,
+  promoterChangeContext,
+  isAdmin,
+  treeSlug,
+  nodeId,
+}: {
+  view: DrawerProfileView
+  isClaimable?: boolean
+  promoterChangeContext: PromoterChangeContext | null
+  isAdmin?: boolean
+  treeSlug?: string
+  nodeId?: string | null
+}) {
+  const [promoterModalOpen, setPromoterModalOpen] = useState(false)
+  const {
+    displayName,
+    avatarSrc,
+    panelAward,
+    panelRankColor,
+    panelRankProgress,
+    headerRankName,
+    headerDisciplineName,
+    trustStatus,
+  } = view
+  const claimBadgeStatus = resolveLineageClaimBadgeStatus({
+    isClaimable,
+    claimStatus: view.claimStatus,
+  })
+  const panelHeaderStyle = panelRankColor
+    ? ({
+        "--rank-color": panelRankColor,
+        "--rank-progress": `${panelRankProgress}%`,
+      } as CSSProperties)
+    : undefined
+
+  return (
+    <DrawerHeader
+      className="relative min-w-0 overflow-hidden border-b p-6 pt-7"
+      style={panelHeaderStyle}
+    >
+      {panelRankColor && (
+        <div className="absolute inset-x-0 top-0 h-1 bg-muted">
+          <span
+            aria-hidden
+            className="block h-full rounded-r-full bg-(--rank-color)"
+            style={{ width: "var(--rank-progress)" }}
+          />
+        </div>
+      )}
+
+      <Stack size="md" className="items-start justify-between min-w-0">
+        <Stack size="md" className="min-w-0">
+          <div className="relative shrink-0">
+            {panelRankColor && (
+              <span
+                aria-hidden
+                className="absolute -inset-1 rounded-xl opacity-20"
+                style={{ backgroundColor: panelRankColor }}
+              />
+            )}
+            <Avatar className="relative size-16">
+              {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+              <AvatarFallback>{initials(displayName)}</AvatarFallback>
+            </Avatar>
+          </div>
+          <Stack size="xs" direction="column" className="min-w-0 flex-1">
+            <DrawerTitle>{displayName}</DrawerTitle>
+            {headerRankName && (
+              <Note className="truncate">
+                {headerRankName}
+                {headerDisciplineName && <> · {headerDisciplineName}</>}
+              </Note>
+            )}
+            <Stack size="xs" wrap>
+              <LineageTrustBadge status={trustStatus} />
+              {claimBadgeStatus && <LineageClaimBadge status={claimBadgeStatus} />}
+              {panelAward?.organization?.name && (
+                <Badge variant="outline" size="sm">
+                  {panelAward.organization.name}
+                </Badge>
+              )}
+            </Stack>
+          </Stack>
+        </Stack>
+
+        {(promoterChangeContext || isAdmin) && (
+          <>
+            <LineageDrawerActions
+              onChangePromoter={
+                promoterChangeContext ? () => setPromoterModalOpen(true) : undefined
+              }
+              editHref={treeSlug && nodeId ? `/lineage/${treeSlug}/edit/${nodeId}` : undefined}
+              isAdmin={isAdmin}
+            />
+            {promoterChangeContext && (
+              <PromoterChangeModal
+                context={promoterChangeContext}
+                memberName={displayName}
+                open={promoterModalOpen}
+                onOpenChange={setPromoterModalOpen}
+                trigger={null}
+              />
+            )}
+          </>
+        )}
+      </Stack>
+    </DrawerHeader>
   )
 }
 
@@ -234,6 +404,8 @@ function DrawerBody({
   isAdmin,
   activeTab,
   onTabChange,
+  students,
+  onSelectStudent,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
@@ -245,115 +417,22 @@ function DrawerBody({
   isAdmin?: boolean
   activeTab?: LineageProfileDrawerTab
   onTabChange?: (tab: LineageProfileDrawerTab) => void
+  students?: LineageTreeMemberRow[]
+  onSelectStudent?: (memberId: string) => void
 }) {
-  const displayName = profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed"
-  const avatarSrc = profile.user.passport?.avatarUrl ?? profile.user.image
-  const currentAward = profile.user.rankAwards[0] ?? null
-  const currentRank = currentAward?.rank ?? null
-  const discipline = currentRank?.rankSystem?.discipline ?? null
-  const latestMembership = profile.user.memberships[0] ?? null
-  const instructorRelationship = profile.relationshipsTo[0] ?? null
-  const [promoterModalOpen, setPromoterModalOpen] = useState(false)
-  const selectedProfileAward = selectedRankAward?.id
-    ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
-    : null
-  const panelAward = selectedProfileAward ?? currentAward
-  const panelRank = panelAward?.rank ?? selectedRankAward?.rank ?? currentRank
-  const panelRankColor = panelRank?.colorHex ?? null
-  const panelRankProgress = rankProgressPercent(panelRank)
-  const panelHeaderStyle = panelRankColor
-    ? ({
-        "--rank-color": panelRankColor,
-        "--rank-progress": `${panelRankProgress}%`,
-      } as CSSProperties)
-    : undefined
-
-  // For the header subtitle, prefer selected rank name if set
-  const headerRankName = panelRank?.name ?? null
-  const headerDisciplineName = panelRank?.rankSystem?.discipline?.name ?? discipline?.name ?? null
-  const claimStatus = pickLineageClaimStatus(profile.claimRequests)
-  const trustStatus = resolveLineageTrustStatus({
-    verificationStatus: profile.verificationStatus,
-    isVerified: profile.isVerified,
-    isPlaceholder: profile.user.isPlaceholder,
-    claimStatus,
-  })
-  const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })
+  const view = deriveDrawerProfileView(profile, selectedRankAward)
+  const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
 
   return (
     <>
-      {/* Identity */}
-      <DrawerHeader
-        className="relative min-w-0 overflow-hidden border-b p-6 pt-7"
-        style={panelHeaderStyle}
-      >
-        {panelRankColor && (
-          <div className="absolute inset-x-0 top-0 h-1 bg-muted">
-            <span
-              aria-hidden
-              className="block h-full rounded-r-full bg-(--rank-color)"
-              style={{ width: "var(--rank-progress)" }}
-            />
-          </div>
-        )}
-
-        <Stack size="md" className="items-start justify-between min-w-0">
-          <Stack size="md" className="min-w-0">
-            <div className="relative shrink-0">
-              {panelRankColor && (
-                <span
-                  aria-hidden
-                  className="absolute -inset-1 rounded-xl opacity-20"
-                  style={{ backgroundColor: panelRankColor }}
-                />
-              )}
-              <Avatar className="relative size-16">
-                {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-                <AvatarFallback>{initials(displayName)}</AvatarFallback>
-              </Avatar>
-            </div>
-            <Stack size="xs" direction="column" className="min-w-0 flex-1">
-              <DrawerTitle>{displayName}</DrawerTitle>
-              {headerRankName && (
-                <Note className="truncate">
-                  {headerRankName}
-                  {headerDisciplineName && <> · {headerDisciplineName}</>}
-                </Note>
-              )}
-              <Stack size="xs" wrap>
-                <LineageTrustBadge status={trustStatus} />
-                {claimBadgeStatus && <LineageClaimBadge status={claimBadgeStatus} />}
-                {panelAward?.organization?.name && (
-                  <Badge variant="outline" size="sm">
-                    {panelAward.organization.name}
-                  </Badge>
-                )}
-              </Stack>
-            </Stack>
-          </Stack>
-
-          {(promoterChangeContext || isAdmin) && (
-            <>
-              <LineageDrawerActions
-                onChangePromoter={
-                  promoterChangeContext ? () => setPromoterModalOpen(true) : undefined
-                }
-                editHref={treeSlug && nodeId ? `/lineage/${treeSlug}/edit/${nodeId}` : undefined}
-                isAdmin={isAdmin}
-              />
-              {promoterChangeContext && (
-                <PromoterChangeModal
-                  context={promoterChangeContext}
-                  memberName={displayName}
-                  open={promoterModalOpen}
-                  onOpenChange={setPromoterModalOpen}
-                  trigger={null}
-                />
-              )}
-            </>
-          )}
-        </Stack>
-      </DrawerHeader>
+      <DrawerIdentityHeader
+        view={view}
+        isClaimable={isClaimable}
+        promoterChangeContext={promoterChangeContext}
+        isAdmin={isAdmin}
+        treeSlug={treeSlug}
+        nodeId={nodeId}
+      />
 
       {/* Tabs */}
       <Tabs
@@ -375,6 +454,8 @@ function DrawerBody({
             discipline={discipline}
             latestMembership={latestMembership}
             instructorRelationship={instructorRelationship}
+            students={students}
+            onSelectStudent={onSelectStudent}
           />
         </TabsContent>
 
@@ -483,6 +564,8 @@ function InfoTab({
   discipline,
   latestMembership,
   instructorRelationship,
+  students,
+  onSelectStudent,
 }: {
   profile: LineageNodeProfile
   currentRank: NonNullable<LineageNodeProfile["user"]["rankAwards"][number]>["rank"] | null
@@ -494,6 +577,8 @@ function InfoTab({
     | null
   latestMembership: LineageNodeProfile["user"]["memberships"][number] | null
   instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
+  students?: LineageTreeMemberRow[]
+  onSelectStudent?: (memberId: string) => void
 }) {
   const awardedBy = currentAward?.awardedBy ?? null
   const promotedOn = formatDate(currentAward?.awardedAt ?? null)
@@ -602,6 +687,13 @@ function InfoTab({
           <Note>No active membership.</Note>
         )}
       </section>
+
+      {students && students.length > 0 && onSelectStudent && (
+        <>
+          <Separator />
+          <StudentsCarousel students={students} onSelectStudent={onSelectStudent} />
+        </>
+      )}
     </Stack>
   )
 }
@@ -669,13 +761,6 @@ function LineageTab({ relationships }: { relationships: LineageNodeProfile["rela
           </section>
         </>
       )}
-
-      <Separator />
-
-      <section aria-label="Students">
-        <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Students</H6>
-        <Note>Student relationships are not loaded in this drawer yet.</Note>
-      </section>
     </Stack>
   )
 }

@@ -236,9 +236,23 @@ export function LineageViewAIsland({
   const drawerMember = drawerMemberId ? (memberMap.get(drawerMemberId) ?? null) : null
   const drawerProfile = drawerMember ? (profilesById[drawerMember.nodeId] ?? null) : null
 
+  // The drawer member's students = their visual children in this tree (drawer carousel).
+  const drawerStudents = useMemo(
+    () =>
+      drawerMember ? members.filter(m => m.primaryVisualParentMemberId === drawerMember.id) : [],
+    [members, drawerMember],
+  )
+
   function openDrawer(memberId: string) {
     setDrawerMemberId(memberId)
     setDrawerOpen(true)
+  }
+
+  // Tap a student avatar in the drawer carousel → swap the drawer to them
+  // (recursive drill-down). Guard against a student with no loaded profile.
+  function selectStudent(memberId: string) {
+    const member = memberMap.get(memberId)
+    if (member && profilesById[member.nodeId]) setDrawerMemberId(memberId)
   }
 
   function copyFocusLink(memberId: string) {
@@ -552,6 +566,8 @@ export function LineageViewAIsland({
         treeSlug={treeSlug}
         nodeId={drawerMember?.nodeId}
         isAdmin={canManage}
+        students={drawerStudents}
+        onSelectStudent={selectStudent}
       />
     </div>
   )
