@@ -5,6 +5,7 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
+import { LineageFamilyChartSmoke } from "~/components/web/lineage/lineage-family-chart-smoke"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -197,6 +198,17 @@ export default async function LineageTreePage({ params }: Props) {
           />
         </Section.Content>
       </Section>
+
+      {process.env.NODE_ENV === "development" && (
+        <Section>
+          <Section.Content>
+            <LineageFamilyChartSmoke
+              members={result.members}
+              defaultRootMemberId={result.defaultRootMemberId}
+            />
+          </Section.Content>
+        </Section>
+      )}
     </>
   )
 }

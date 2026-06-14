@@ -4,8 +4,8 @@ slug: petey-plan-0379
 type: petey-plan
 status: active
 created: 2026-06-13
-updated: 2026-06-13
-last_agent: claude-session-0380
+updated: 2026-06-14
+last_agent: claude-session-0381
 pairs_with:
   - docs/runbooks/domain-features/lineage-tree-runbook.md
   - docs/runbooks/domain-features/lineage-hub.md
@@ -87,8 +87,14 @@ backlinks:
     (reuse — do not reinvent)**, group, primary/partner/assistant parent, secondary links.
   - **Step 2 (engine projection):** `apps/web/lib/lineage/to-family-chart-data.ts` → family-chart
     `Datum[]`: `rels.parents=[primaryVisualParentMemberId]`, `rels.children=[promotees]`,
-    `single_parent_empty_card=false`, `data={colorHex, avatar, displayName, rankLabel, slug, claimable,
-    verified}`, `gender` unset.
+    `single_parent_empty_card=false`, `gender` unset, and `data`:
+    - `colorHex`, `avatar`, `displayName`, `rankLabel`, `slug`, `claimable`
+    - **`trustStatus: LineageTrustStatus`** (full 6-value enum from `resolveLineageTrustStatus` — NOT a
+      `verified: boolean` collapse; Desi review: `disputed`/`claim-pending` states must reach the card
+      for users to see warning/caution signals)
+    - **`isFocal: boolean`** — `true` when `datum.id === main_id` (Desi review: required for focal ring +
+      "you are here" affordance; must be passed through so the card templater can apply the ring without
+      re-querying the store)
 - **Files:** the two libs above + `.test.ts` each (pure, unit-tested).
 - **Done means:** both unit-tested green; bjj payload → valid neutral DTO → valid `Datum[]`; privacy =
   consumes the same materialized payload as View B (no non-PUBLIC). The neutral DTO is engine-agnostic
@@ -101,9 +107,26 @@ backlinks:
   HTML belt cards via `cardInnerHtmlCreator` (band from `Rank.colorHex`, avatar, name/rank/badges);
   click = re-center (+ `?focus=` shallow sync); "View profile" → existing `LineageProfileDrawer`;
   reuse path-to-main hover + mini-tree expand. Add the View B → View A link.
+- **Card HTML templater — design spec (Desi review, SESSION_0381):**
+  - **Inline styles ONLY.** No CSS class names except engine-managed (`f3-card`, `f3-path-to-main` etc.).
+    No separate `family-chart.css` for card classes (YAGNI; engine manages its own CSS; inline avoids
+    specificity conflicts and hydration issues in d3-managed DOM).
+  - **Belt band:** `position:absolute; top:0; left:0; right:0; height:4px` (not 1px — invisible at zoom);
+    `background-color: ${data.colorHex ?? '#e2e8f0'}` (neutral gray for null/unranked, not omitted).
+  - **Avatar initials fallback:** implement as a positioned `<div>` behind `<img>` (visible when
+    `data.avatar` is falsy); call `memberInitials()` from `apps/web/lib/lineage/canvas-model.ts`; do
+    NOT use `onerror` JS injection in the HTML string (unsafe in d3 DOM).
+  - **Trust badge:** render full `LineageTrustStatus` states from DTO `trustStatus` — not a boolean.
+    Color map (inline bg-color + text): `verified`→green; `disputed`→red; `claim-pending`→yellow;
+    `claimable`→indigo; `imported`/`unverified`→neutral. Derive hex values from design token CSS output.
+  - **Focal ring:** `box-shadow: 0 0 0 2px ${data.colorHex ?? '#64748b'}` on outer card `<div>` when
+    `data.isFocal === true`. No size change (keeps engine node-separation math stable).
+  - **Typography:** name at `14px / font-weight:600`; rank at `11px / color: rgba(…)` — absolute px,
+    not Tailwind utilities (Tailwind cannot run inside d3 HTML strings).
 - **Files:** new island component + route wiring (shared fetch w/ existing viewer), card HTML templater.
 - **Done means:** bjj lineage renders in View A from engine coordinates; re-center + focus URL work;
-  drawer opens; B→A link works; browser-proof on `bbl.local:3000`.
+  drawer opens; B→A link works; belt cards render correctly (band, avatar, trust badge, focal ring);
+  browser-proof on `bbl.local:3000`.
 - **Depends on:** 0379-2.
 
 ### 0379-4 — Secondary-overlay (slink/clink) — View A

@@ -4,8 +4,8 @@ slug: lineage-tree-runbook
 type: runbook
 status: active
 created: 2026-06-13
-updated: 2026-06-13
-last_agent: claude-session-0380
+updated: 2026-06-14
+last_agent: claude-session-0381
 domain: lineage
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
@@ -354,6 +354,7 @@ Do not replace canonical lineage truth.
 Do not add free x/y editing.
 Do not let Balkan's org/family semantics become the database model.
 Use it to prove:
+
   - partners / co-promoters
   - assistants
   - grouped student cohorts under instructors
