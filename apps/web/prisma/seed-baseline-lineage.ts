@@ -226,7 +226,7 @@ const NODE_SEEDS: LineageNodeSeed[] = [
   {
     userKey: "tim-wolchek",
     slug: "mr-tim-wolchek",
-    bio: "American Freestyle Karate instructor at Wolchek Academy, CO. Brian Scott's Karate instructor.",
+    bio: "American Freestyle Karate instructor at Wolchek Academy, CO. Brian Scott's Karate instructor and secondary BJJ training partner/instructor.",
   },
 ]
 
@@ -325,6 +325,15 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     fromKey: "rigan-machado",
     toKey: "jerry-smith",
     description: "Jerry Smith — under Rigan Machado. Now Coral Belt.",
+    isVerified: true,
+  },
+
+  // Rorion Gracie → Rigan Machado: secondary instructor relationship (Red Belt promotion, 2026)
+  {
+    fromKey: "rorion-gracie",
+    toKey: "rigan-machado",
+    description:
+      "Rorion Gracie promoted Rigan Machado to 9th Degree Red Belt on April 10, 2026 at the CSW World Conference. Secondary instructor relationship — primary BJJ lineage is via Carlos Gracie Jr.",
     isVerified: true,
   },
 
@@ -1504,6 +1513,7 @@ async function main() {
       disciplineCode: "bjj",
       memberKeys: [
         "carlos-gracie-sr",
+        "rorion-gracie", // SESSION_0385: secondary instructor of rigan (Red Belt promotion 2026)
         "carlos-gracie-jr",
         "rigan-machado",
         "bob-bass",
@@ -1519,9 +1529,11 @@ async function main() {
         "bill-hosken",
         "jerry-smith",
         "brian-truelson",
+        "tim-wolchek", // SESSION_0385: Brian's secondary BJJ instructor (also Karate)
         "OWNER",
       ],
       parentMap: {
+        "rorion-gracie": "carlos-gracie-sr", // sibling branch to carlos-jr
         "carlos-gracie-jr": "carlos-gracie-sr",
         "rigan-machado": "carlos-gracie-jr",
         "bob-bass": "rigan-machado",
@@ -1538,6 +1550,7 @@ async function main() {
         "jerry-smith": "rigan-machado",
         "brian-truelson": "bill-hosken",
         OWNER: "bob-bass",
+        // tim-wolchek: intentionally omitted — null parent (independent root-level instructor)
       },
       selectedRankAwards: {
         "carlos-gracie-sr": { disciplineCode: "bjj", rankShortName: "R10" },
@@ -1557,12 +1570,16 @@ async function main() {
         "jerry-smith": { disciplineCode: "bjj", rankShortName: "CB7" },
         "brian-truelson": { disciplineCode: "bjj", rankShortName: "BK1" },
         OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
+        // rorion-gracie: no BJJ RankAward seeded — renders with neutral colorHex
+        // tim-wolchek: no BJJ rank — renders with neutral colorHex
       },
       // SESSION_0316: Carlos Sr & Jr are historical roots — not claimable.
       // Everyone else (Rigan, the Dozen, Truelson, OWNER) is claimable.
+      // SESSION_0385: rorion-gracie and tim-wolchek added as claimable real persons.
       isClaimable: {
         "carlos-gracie-sr": false,
         "carlos-gracie-jr": false,
+        "rorion-gracie": true,
         "rigan-machado": true,
         "bob-bass": true,
         "rick-williams": true,
@@ -1577,6 +1594,7 @@ async function main() {
         "bill-hosken": true,
         "jerry-smith": true,
         "brian-truelson": true,
+        "tim-wolchek": true,
         OWNER: true,
       },
     },

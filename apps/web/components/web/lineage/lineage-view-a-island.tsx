@@ -33,7 +33,7 @@ type Props = {
 const TRUST_BADGE: Record<LineageTrustStatus, { bg: string; fg: string; label: string }> = {
   verified: { bg: "#dcfce7", fg: "#15803d", label: "Verified" },
   disputed: { bg: "#fee2e2", fg: "#b91c1c", label: "Disputed" },
-  "claim-pending": { bg: "#fef3c7", fg: "#92400e", label: "Pending" },
+  "claim-pending": { bg: "#fef3c7", fg: "#92400e", label: "Claim pending" },
   claimed: { bg: "#e0e7ff", fg: "#3730a3", label: "Claimed" },
   imported: { bg: "#f1f5f9", fg: "#64748b", label: "Imported" },
   unverified: { bg: "#f1f5f9", fg: "#64748b", label: "Unverified" },
@@ -112,7 +112,7 @@ function buildCardHtml(d: TreeDatum, isFocal: boolean): string {
           ${badgeHtml}
         </div>
       </div>
-      <div data-profile-trigger style="position:absolute; bottom:6px; right:8px; opacity:0.4; font-size:12px; color:#64748b; cursor:pointer; user-select:none; line-height:1;" title="View profile">↗</div>
+      <div data-profile-trigger style="position:absolute; bottom:2px; right:4px; min-width:28px; min-height:28px; display:flex; align-items:center; justify-content:center; padding:4px; opacity:0.4; font-size:12px; color:#64748b; cursor:pointer; user-select:none; line-height:1;" title="View profile">↗</div>
     </div>
   `
 }
@@ -244,12 +244,15 @@ export function LineageViewAIsland({
           className="f3"
           style={{
             width: "100%",
-            height: 640,
+            height: "min(640px, 75vh)",
+            minHeight: 420,
             position: "relative",
             border: "1px solid #e2e8f0",
             borderRadius: 8,
             overflow: "hidden",
             background: "#f8fafc",
+            // Prevent dark-card bleed from the library's --background-color CSS variable
+            ["--background-color" as string]: "#f8fafc",
           }}
         />
 
@@ -294,9 +297,11 @@ export function LineageViewAIsland({
                 border: "none",
                 cursor: "pointer",
                 fontSize: 11,
-                color: "#3b82f6",
-                padding: 0,
+                color: "#64748b",
+                padding: "4px 8px",
+                minHeight: 28,
                 lineHeight: 1,
+                textDecoration: "underline",
               }}
             >
               {showSecondaryLinks ? "Hide" : "Show"}

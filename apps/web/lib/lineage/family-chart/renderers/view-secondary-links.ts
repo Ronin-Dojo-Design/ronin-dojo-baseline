@@ -128,7 +128,7 @@ export function updateSecondaryLinks(
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
         .attr("fill", color)
-        .attr("font-size", "9")
+        .attr("font-size", "11")
         .attr("font-weight", "500")
         .attr("font-family", "inherit")
         .text(shortLabel)

@@ -5,7 +5,7 @@
   --background-color: rgb(33, 33, 33);
   --text-color: #fff;
 
-  font-family: 'Roboto', sans-serif;
+  font-family: inherit;
 }
 
 .f3 * {
@@ -521,7 +521,8 @@
 }
 
 .f3 div.card-main .card-inner {
-  outline: 4px solid rgba(220, 220, 220, 1);
+  /* SESSION_0385: neutralized — focal ring is applied via inline box-shadow (belt colorHex) */
+  outline: none !important;
 }
 
 .f3 div.card-inner.f3-path-to-main {

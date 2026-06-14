@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { ArrowLeftIcon } from "lucide-react"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
@@ -177,8 +178,9 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
                 variant="secondary"
                 size="sm"
                 render={<Link href={`/lineage/${treeSlug}`} />}
+                prefix={<ArrowLeftIcon size={14} />}
               >
-                ← Board view
+                Board view
               </Button>
             ) : (
               <Button
