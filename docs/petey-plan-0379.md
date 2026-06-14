@@ -5,7 +5,7 @@ type: petey-plan
 status: active
 created: 2026-06-13
 updated: 2026-06-14
-last_agent: claude-session-0381
+last_agent: claude-session-0382
 pairs_with:
   - docs/runbooks/domain-features/lineage-tree-runbook.md
   - docs/runbooks/domain-features/lineage-hub.md
@@ -107,22 +107,40 @@ backlinks:
   HTML belt cards via `cardInnerHtmlCreator` (band from `Rank.colorHex`, avatar, name/rank/badges);
   click = re-center (+ `?focus=` shallow sync); "View profile" → existing `LineageProfileDrawer`;
   reuse path-to-main hover + mini-tree expand. Add the View B → View A link.
-- **Card HTML templater — design spec (Desi review, SESSION_0381):**
+- **Card HTML templater — design spec (Desi review, SESSION_0381 + SESSION_0382):**
   - **Inline styles ONLY.** No CSS class names except engine-managed (`f3-card`, `f3-path-to-main` etc.).
     No separate `family-chart.css` for card classes (YAGNI; engine manages its own CSS; inline avoids
     specificity conflicts and hydration issues in d3-managed DOM).
   - **Belt band:** `position:absolute; top:0; left:0; right:0; height:4px` (not 1px — invisible at zoom);
     `background-color: ${data.colorHex ?? '#e2e8f0'}` (neutral gray for null/unranked, not omitted).
-  - **Avatar initials fallback:** implement as a positioned `<div>` behind `<img>` (visible when
-    `data.avatar` is falsy); call `memberInitials()` from `apps/web/lib/lineage/canvas-model.ts`; do
+  - **Corner rank chip (SESSION_0382 HIGH):** `position:absolute; top:10px; right:6px; background:
+    ${data.colorHex ?? '#64748b'}; color:#fff; font-size:10px; font-weight:500; padding:2px 6px;
+    border-radius:999px; max-width:68px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap`.
+    Renders `data.rankLabel`. Replaces the below-name rank text line (saves vertical space; rank-at-a-
+    glance from belt color + chip). Omit chip if `data.rankLabel` is null.
+  - **Card shadow (SESSION_0382 HIGH):** `box-shadow: 0 1px 4px rgba(0,0,0,0.10)` on the outer card
+    `<div>` (the donatso-rendered card wrapper). When `data.isFocal === true`, MERGE with focal ring:
+    `box-shadow: 0 0 0 2px ${data.colorHex ?? '#64748b'}, 0 1px 4px rgba(0,0,0,0.10)`.
+  - **Avatar size (SESSION_0382 HIGH):** 44×44px circle (`width:44px; height:44px; border-radius:50%;
+    object-fit:cover; flex-shrink:0`). Initials fallback `<div>`: same 44px dimensions, `background:
+    ${data.colorHex ?? '#94a3b8'}; color:#fff; font-size:16px; font-weight:700; display:flex;
+    align-items:center; justify-content:center`. Call `memberInitials()` from `canvas-model.ts`; do
     NOT use `onerror` JS injection in the HTML string (unsafe in d3 DOM).
+  - **Profile icon trigger (SESSION_0382 MEDIUM):** `position:absolute; bottom:6px; right:6px;
+    opacity:0.4; font-size:12px; color:#64748b; cursor:pointer` — a `↗` character (or equivalent SVG
+    icon) that calls the card's `onProfileClick` handler → opens `LineageProfileDrawer`. Simpler than a
+    `...` menu; follows the Balkan UX pattern without dropdown overhead.
   - **Trust badge:** render full `LineageTrustStatus` states from DTO `trustStatus` — not a boolean.
-    Color map (inline bg-color + text): `verified`→green; `disputed`→red; `claim-pending`→yellow;
-    `claimable`→indigo; `imported`/`unverified`→neutral. Derive hex values from design token CSS output.
-  - **Focal ring:** `box-shadow: 0 0 0 2px ${data.colorHex ?? '#64748b'}` on outer card `<div>` when
-    `data.isFocal === true`. No size change (keeps engine node-separation math stable).
-  - **Typography:** name at `14px / font-weight:600`; rank at `11px / color: rgba(…)` — absolute px,
-    not Tailwind utilities (Tailwind cannot run inside d3 HTML strings).
+    Color map (inline bg-color + text, hex literals for d3 DOM): `verified` → `#dcfce7`/`#15803d`;
+    `disputed` → `#fee2e2`/`#b91c1c`; `claim-pending` → `#fef3c7`/`#92400e`; `claimed` → `#e0e7ff`/
+    `#3730a3`; `claimable` → `#c7d2fe`/`#3730a3` (lighter indigo to distinguish from `claimed`);
+    `imported`/`unverified` → `#f1f5f9`/`#64748b` (neutral). Trust badge is on the same row as the
+    name (not a second line below), sharing the row with the avatar layout.
+  - **Focal ring (now merged with shadow above):** `box-shadow: 0 0 0 2px ${data.colorHex ?? '#64748b'},
+    0 1px 4px rgba(0,0,0,0.10)` when `data.isFocal === true`. No size change (keeps engine node-
+    separation math stable).
+  - **Typography:** name at `14px / font-weight:500`; no rank text line (rank → corner chip above) —
+    absolute px, not Tailwind utilities (Tailwind cannot run inside d3 HTML strings).
 - **Files:** new island component + route wiring (shared fetch w/ existing viewer), card HTML templater.
 - **Done means:** bjj lineage renders in View A from engine coordinates; re-center + focus URL work;
   drawer opens; B→A link works; belt cards render correctly (band, avatar, trust badge, focal ring);

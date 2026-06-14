@@ -350,6 +350,7 @@ The vendored code is safely isolated in `lib/lineage/family-chart/` and reaches 
 Two concrete process slips: (1) the `formatData` children-build discovery required a debug cycle (1 render attempt that showed only 1 card). A minimal data-flow unit test written before the visual smoke would have surfaced this immediately. Mitigation: for future engine integrations, write a data-shape unit test first, visual mount second. (2) Dev server 404 from stale `"use cache"` cost time diagnosing. Mitigation: add "clear `.next` on unexplained 404" to the dev server restart SOP. No other process misses this session — the sequential task gate (IoC before copy) held correctly.
 
 **3. Confidence at scale of 100 / 1,000 / 10,000 nodes?**
+
 - **100 nodes: 9/10** — proven (17-node smoke is representative; d3 at this scale is trivial).
 - **1,000 nodes: 7/10** — d3 SVG all-nodes layout is unproven at this size; likely slow but not broken. Depth controls (0379-6) are the planned remediation.
 - **10,000 nodes: 5/10** — d3 SVG rendering all nodes at once will freeze; virtualization or lazy-load is needed. 0379-6 explicitly plans depth controls + mini-tree load-on-demand as the gate.
