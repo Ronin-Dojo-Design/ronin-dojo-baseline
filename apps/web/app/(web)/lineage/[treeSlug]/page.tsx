@@ -5,8 +5,8 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
-import { LineageFamilyChartSmoke } from "~/components/web/lineage/lineage-family-chart-smoke"
 import { LineageTreeBoard } from "~/components/web/lineage/lineage-tree-board"
+import { LineageViewAIsland } from "~/components/web/lineage/lineage-view-a-island"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
@@ -42,6 +42,7 @@ import {
 
 interface Props {
   params: Promise<{ treeSlug: string }>
+  searchParams: Promise<{ view?: string; focus?: string }>
 }
 
 export const dynamic = "force-dynamic"
@@ -72,8 +73,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function LineageTreePage({ params }: Props) {
+export default async function LineageTreePage({ params, searchParams }: Props) {
   const { treeSlug } = await params
+  const { view, focus } = await searchParams
+  const isExploreView = view === "explore"
   const brand = await getRequestBrand()
   const session = await getServerSession()
   // Phase 1c (SESSION_0364): the primary tree read now travels through oRPC
@@ -162,12 +165,35 @@ export default async function LineageTreePage({ params }: Props) {
       <Intro>
         <Stack size="sm" wrap className="items-start justify-between">
           <IntroTitle>{result.tree.name}</IntroTitle>
-          <QrShareButton
-            url={absoluteTreeUrl}
-            title="Lineage QR Code"
-            description="Scan to open this public lineage page."
-            fileName={`lineage-${treeSlug}`}
-          />
+          <Stack size="sm" wrap>
+            <QrShareButton
+              url={absoluteTreeUrl}
+              title="Lineage QR Code"
+              description="Scan to open this public lineage page."
+              fileName={`lineage-${treeSlug}`}
+            />
+            {isExploreView ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                render={<Link href={`/lineage/${treeSlug}`} />}
+              >
+                ← Board view
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                render={
+                  <Link
+                    href={`/lineage/${treeSlug}?view=explore${result.defaultRootMemberId ? `&focus=${result.defaultRootMemberId}` : ""}`}
+                  />
+                }
+              >
+                Explore tree
+              </Button>
+            )}
+          </Stack>
         </Stack>
         {result.tree.description && <IntroDescription>{result.tree.description}</IntroDescription>}
       </Intro>
@@ -187,28 +213,28 @@ export default async function LineageTreePage({ params }: Props) {
 
       <Section>
         <Section.Content>
-          <LineageTreeBoard
-            members={result.members}
-            visualGroups={result.visualGroups}
-            defaultRootMemberId={result.defaultRootMemberId}
-            profilesById={profilesById}
-            treeSlug={treeSlug}
-            isTreeClaimable={result.tree.isClaimable}
-            renderPolicy={renderPolicy}
-          />
-        </Section.Content>
-      </Section>
-
-      {process.env.NODE_ENV === "development" && (
-        <Section>
-          <Section.Content>
-            <LineageFamilyChartSmoke
+          {isExploreView ? (
+            <LineageViewAIsland
               members={result.members}
               defaultRootMemberId={result.defaultRootMemberId}
+              profilesById={profilesById}
+              treeSlug={treeSlug}
+              isTreeClaimable={result.tree.isClaimable}
+              initialFocusId={focus ?? null}
             />
-          </Section.Content>
-        </Section>
-      )}
+          ) : (
+            <LineageTreeBoard
+              members={result.members}
+              visualGroups={result.visualGroups}
+              defaultRootMemberId={result.defaultRootMemberId}
+              profilesById={profilesById}
+              treeSlug={treeSlug}
+              isTreeClaimable={result.tree.isClaimable}
+              renderPolicy={renderPolicy}
+            />
+          )}
+        </Section.Content>
+      </Section>
     </>
   )
 }
