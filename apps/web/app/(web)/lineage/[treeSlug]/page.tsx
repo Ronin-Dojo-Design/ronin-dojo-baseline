@@ -12,6 +12,7 @@ import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { hasLineageAdminAccess } from "~/components/admin/auth-hoc"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { rsc } from "~/lib/orpc-server"
@@ -87,9 +88,12 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
   // sibling render-policy query stays a direct call (Phase 1c migrates the
   // primary read only).
   const api = await rsc()
-  const [result, renderPolicy] = await Promise.all([
+  const [result, renderPolicy, canManage] = await Promise.all([
     api.lineage.bySlug({ slug: treeSlug }),
     getLineageListingRenderPolicyForUser({ brand, userId: session?.user?.id ?? null }),
+    session?.user
+      ? hasLineageAdminAccess(session.user.id, session.user.role)
+      : Promise.resolve(false),
   ])
 
   if (!result) {
@@ -202,11 +206,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
 
       {result.tree.isClaimable && (
         <Stack size="sm" wrap>
-          <Button
-            variant="secondary"
-            size="sm"
-            render={<Link href={`/lineage/${treeSlug}/claim`} />}
-          >
+          <Button variant="secondary" size="sm" render={<Link href="/lineage/join" />}>
             Claim a profile
           </Button>
           <Note>Claimable profiles are marked on the tree.</Note>
@@ -224,6 +224,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
               treeSlug={treeSlug}
               isTreeClaimable={result.tree.isClaimable}
               initialFocusId={focus ?? null}
+              canManage={canManage}
             />
           ) : (
             <LineageTreeBoard

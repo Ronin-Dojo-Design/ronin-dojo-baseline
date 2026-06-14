@@ -434,6 +434,16 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
     awardedAt: "2012-01-01",
   },
   {
+    // @added SESSION_0386 — gives rorion's secondary slink (rorion → rigan) a belt
+    // color instead of neutral gray. 9th Degree Red Belt · son of Hélio Gracie.
+    userKey: "rorion-gracie",
+    rankShortName: "R9",
+    awardedByKey: null,
+    awardedAt: "2013-01-01",
+    notes:
+      "9th Degree Red Belt — son of Hélio Gracie. Approximate date; pre-PromotionEvent seed bridge.",
+  },
+  {
     userKey: "rigan-machado",
     rankShortName: "CB8",
     awardedByKey: "carlos-gracie-jr",
@@ -1570,7 +1580,8 @@ async function main() {
         "jerry-smith": { disciplineCode: "bjj", rankShortName: "CB7" },
         "brian-truelson": { disciplineCode: "bjj", rankShortName: "BK1" },
         OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
-        // rorion-gracie: no BJJ RankAward seeded — renders with neutral colorHex
+        // @added SESSION_0386 — colors rorion's secondary slink (R9 red belt).
+        "rorion-gracie": { disciplineCode: "bjj", rankShortName: "R9" },
         // tim-wolchek: no BJJ rank — renders with neutral colorHex
       },
       // SESSION_0316: Carlos Sr & Jr are historical roots — not claimable.

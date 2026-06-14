@@ -379,7 +379,7 @@ function DrawerBody({
         </TabsContent>
 
         <TabsContent value="lineage" className="flex-1 overflow-y-auto p-6 mt-0">
-          <LineageTab instructorRelationship={instructorRelationship} />
+          <LineageTab relationships={profile.relationshipsTo} />
         </TabsContent>
 
         <TabsContent value="rank-history" className="flex-1 overflow-y-auto p-6 mt-0">
@@ -390,7 +390,10 @@ function DrawerBody({
         </TabsContent>
       </Tabs>
 
-      {/* Claim CTA — shown when node is claimable and tree accepts claims */}
+      {/* Claim CTA — shown when node is claimable and tree accepts claims.
+          Routes to the public "Join the Legacy" funnel (account-optional) rather
+          than the login-gated /claim form — a non-user should not hit a login
+          wall (SESSION_0386). Carries the node so the join form can preselect it. */}
       {isClaimable && isTreeClaimable && treeSlug && (
         <div className="border-t p-4">
           <Button
@@ -398,7 +401,7 @@ function DrawerBody({
             size="md"
             className="w-full"
             prefix={<UserRoundPlusIcon />}
-            render={<Link href={`/lineage/${treeSlug}/claim`} />}
+            render={<Link href={`/lineage/join${nodeId ? `?node=${nodeId}` : ""}`} />}
           >
             Claim this profile
           </Button>
@@ -603,15 +606,20 @@ function InfoTab({
   )
 }
 
-function LineageTab({
-  instructorRelationship,
-}: {
-  instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
-}) {
-  const instructorName =
-    instructorRelationship?.fromNode.user.passport?.displayName ??
-    instructorRelationship?.fromNode.user.name ??
-    null
+function promoterName(
+  rel: LineageNodeProfile["relationshipsTo"][number] | null | undefined,
+): string | null {
+  return rel?.fromNode.user.passport?.displayName ?? rel?.fromNode.user.name ?? null
+}
+
+function LineageTab({ relationships }: { relationships: LineageNodeProfile["relationshipsTo"] }) {
+  // The first promoter is the primary lineage edge; any others are "also promoted
+  // by" — secondary promoters. On View A these render as dashed slinks when both
+  // cards are in the focal view; here they are always listed so an off-screen
+  // secondary promoter stays discoverable (SESSION_0386, slice 0379-6).
+  const primary = relationships[0] ?? null
+  const secondaries = relationships.slice(1)
+  const instructorName = promoterName(primary)
 
   return (
     <Stack direction="column" size="md" className="w-full">
@@ -621,7 +629,7 @@ function LineageTab({
           <Stack direction="column" size="xs">
             <span className="text-sm font-medium">{instructorName}</span>
             <Stack size="xs" wrap>
-              {instructorRelationship?.isVerified ? (
+              {primary?.isVerified ? (
                 <Badge variant="success" size="sm" prefix={<CheckIcon />}>
                   Verified relationship
                 </Badge>
@@ -631,14 +639,36 @@ function LineageTab({
                 </Badge>
               )}
             </Stack>
-            {instructorRelationship?.description && (
-              <Note className="text-xs">{instructorRelationship.description}</Note>
-            )}
+            {primary?.description && <Note className="text-xs">{primary.description}</Note>}
           </Stack>
         ) : (
           <Note>No instructor relationship on record.</Note>
         )}
       </section>
+
+      {secondaries.length > 0 && (
+        <>
+          <Separator />
+          <section aria-label="Also promoted by">
+            <H6 className="mb-1 text-muted-foreground uppercase tracking-wide">Also Promoted By</H6>
+            <Stack direction="column" size="xs">
+              {secondaries.map(rel => {
+                const name = promoterName(rel)
+                return (
+                  <Stack key={rel.id} size="sm" wrap className="items-center">
+                    <span className="text-sm font-medium">{name ?? "Unnamed"}</span>
+                    {!rel.isVerified && (
+                      <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
+                        Unverified
+                      </Badge>
+                    )}
+                  </Stack>
+                )
+              })}
+            </Stack>
+          </section>
+        </>
+      )}
 
       <Separator />
 

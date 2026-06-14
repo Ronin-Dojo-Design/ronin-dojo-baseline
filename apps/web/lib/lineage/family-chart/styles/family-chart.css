@@ -529,6 +529,16 @@
   outline: 4px solid rgba(255, 255, 255, 1);
 }
 
+/* SESSION_0386: ⋮ card actions trigger — hover/focus affordance.
+   Attribute selector (not a card layout class) so it stays within the
+   inline-styles-only card contract. */
+.f3 [data-card-menu]:hover,
+.f3 [data-card-menu]:focus-visible {
+  opacity: 1 !important;
+  background: #f1f5f9;
+  outline: none;
+}
+
 .f3 .link {
   transition: stroke-width 0.2s ease-in-out;
 }

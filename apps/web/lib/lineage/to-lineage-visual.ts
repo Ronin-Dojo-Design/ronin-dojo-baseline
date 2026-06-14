@@ -3,6 +3,7 @@ import {
   memberAvatarSrc,
   memberBeltColor,
   memberRankLabel,
+  memberSchoolLabel,
   nodeDisplayName,
   type SelectedRank,
 } from "~/lib/lineage/canvas-model"
@@ -21,6 +22,7 @@ export type LineageVisualNode = {
   avatar: string | null
   colorHex: string | null
   rankLabel: string | null
+  schoolLabel: string | null
   trustStatus: LineageTrustStatus
   isFocal: boolean
   claimable: boolean
@@ -82,6 +84,7 @@ export function toLineageVisual(
       avatar: memberAvatarSrc(node),
       colorHex: memberBeltColor(node, selectedRank),
       rankLabel: memberRankLabel(node, selectedRank),
+      schoolLabel: memberSchoolLabel(node),
       trustStatus,
       isFocal: member.id === mainMemberId,
       claimable,

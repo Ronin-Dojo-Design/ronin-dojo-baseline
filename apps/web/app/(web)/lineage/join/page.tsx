@@ -69,7 +69,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 type JoinLegacyPageProps = {
-  searchParams?: Promise<{ cancelled?: string; submitted?: string }>
+  searchParams?: Promise<{ cancelled?: string; submitted?: string; node?: string }>
 }
 
 export default async function JoinLegacyPage({ searchParams }: JoinLegacyPageProps) {
@@ -77,6 +77,13 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
   const isCancelled = params?.cancelled === "true"
   const isSubmitted = params?.submitted === "true"
   const { metadata, claimableTree, membershipPlans } = await getData()
+
+  // Preselect the claim node only when it's an actual claimable member of the
+  // resolved tree (e.g. arriving from a View A card "Claim this profile").
+  const initialNodeId =
+    params?.node && claimableTree?.members.some(member => member.nodeId === params.node)
+      ? params.node
+      : undefined
 
   return (
     <Wrapper size="lg" gap="lg">
@@ -110,7 +117,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Card className="p-5">
-          <JoinLegacyForm claimableTree={claimableTree} />
+          <JoinLegacyForm claimableTree={claimableTree} initialNodeId={initialNodeId} />
         </Card>
 
         <Stack direction="column" className="gap-4">

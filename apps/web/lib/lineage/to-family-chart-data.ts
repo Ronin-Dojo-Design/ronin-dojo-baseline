@@ -12,6 +12,7 @@ export function toFamilyChartData(nodes: LineageVisualNode[]): Datum[] {
         avatar: node.avatar,
         colorHex: node.colorHex,
         rankLabel: node.rankLabel,
+        schoolLabel: node.schoolLabel,
         trustStatus: node.trustStatus,
         isFocal: node.isFocal,
         claimable: node.claimable,

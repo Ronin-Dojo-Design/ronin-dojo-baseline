@@ -69,6 +69,8 @@ type JoinLegacyFormProps = {
     name: string
     members: Array<{ nodeId: string; displayName: string }>
   } | null
+  /** Node to preselect in the claim picker (from `?node=` — e.g. a View A card "Claim"). */
+  initialNodeId?: string
 }
 
 const pathCards: Array<{
@@ -128,7 +130,7 @@ const StepHeader = ({
   </div>
 )
 
-export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
+export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormProps) {
   const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -148,7 +150,7 @@ export function JoinLegacyForm({ claimableTree }: JoinLegacyFormProps) {
       profileUrl: "",
       membershipPath: "FREE",
       treeId: claimableTree?.id,
-      nodeId: "",
+      nodeId: initialNodeId ?? "",
     },
   })
 

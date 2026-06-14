@@ -16,6 +16,7 @@ function makeNode(
     avatar: null,
     colorHex: null,
     rankLabel: null,
+    schoolLabel: null,
     trustStatus: "unverified",
     isFocal: false,
     claimable: false,
@@ -37,6 +38,7 @@ describe("toFamilyChartData", () => {
       avatar: "https://example.com/a.jpg",
       colorHex: "#1a1a1a",
       rankLabel: "Black Belt · BJJ",
+      schoolLabel: "Gracie Barra",
       trustStatus: "verified",
       isFocal: true,
       claimable: false,
@@ -48,6 +50,7 @@ describe("toFamilyChartData", () => {
     assert.equal(datum!.data.avatar, "https://example.com/a.jpg")
     assert.equal(datum!.data.colorHex, "#1a1a1a")
     assert.equal(datum!.data.rankLabel, "Black Belt · BJJ")
+    assert.equal(datum!.data.schoolLabel, "Gracie Barra")
     assert.equal(datum!.data.trustStatus, "verified")
     assert.equal(datum!.data.isFocal, true)
     assert.equal(datum!.data.claimable, false)
