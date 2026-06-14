@@ -204,7 +204,7 @@ describe("toLineageVisual", () => {
 
   test("secondaryLinks includes genuine secondary relationship", () => {
     const root = makeMember({ id: "m1", nodeId: "node-1", colorHex: "#1a1a1a", rankName: "Black Belt" })
-    const secondary = makeMember({ id: "m2", nodeId: "node-2" })
+    const secondary = makeMember({ id: "m2", nodeId: "node-2", colorHex: "#6f4e37", rankName: "Brown Belt" })
     const student = makeMember({ id: "m3", nodeId: "node-3", parentId: "m1" })
     const { secondaryLinks } = toLineageVisual([root, secondary, student], {
       relationships: [
@@ -215,6 +215,18 @@ describe("toLineageVisual", () => {
     assert.equal(secondaryLinks.length, 1)
     assert.equal(secondaryLinks[0]!.fromMemberId, "m2")
     assert.equal(secondaryLinks[0]!.toMemberId, "m3")
+    assert.equal(secondaryLinks[0]!.colorHex, "#6f4e37")
+  })
+
+  test("secondaryLinks colorHex is null when from-member has no rank", () => {
+    const instructor = makeMember({ id: "m1", nodeId: "node-1" })
+    const primary = makeMember({ id: "m2", nodeId: "node-2" })
+    const student = makeMember({ id: "m3", nodeId: "node-3", parentId: "m2" })
+    const { secondaryLinks } = toLineageVisual([instructor, primary, student], {
+      relationships: [{ fromNodeId: "node-1", toNodeId: "node-3", type: "INSTRUCTOR_STUDENT" }],
+    })
+    assert.equal(secondaryLinks.length, 1)
+    assert.equal(secondaryLinks[0]!.colorHex, null)
   })
 
   test("secondaryLinks ignores relationships where endpoint is not in tree", () => {

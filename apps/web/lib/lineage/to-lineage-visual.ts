@@ -32,6 +32,7 @@ export type LineageSecondaryLink = {
   fromMemberId: string
   toMemberId: string
   rankLabel: string | null
+  colorHex: string | null
 }
 
 function adaptSelectedRank(
@@ -107,6 +108,7 @@ export function toLineageVisual(
       fromMemberId: fromMember.id,
       toMemberId: toMember.id,
       rankLabel: memberRankLabel(fromMember.node, fromSelectedRank),
+      colorHex: memberBeltColor(fromMember.node, fromSelectedRank),
     })
   }
 

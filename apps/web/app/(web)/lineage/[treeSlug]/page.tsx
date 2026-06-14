@@ -216,6 +216,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
           {isExploreView ? (
             <LineageViewAIsland
               members={result.members}
+              relationships={result.members.flatMap(m => m.node.relationshipsTo)}
               defaultRootMemberId={result.defaultRootMemberId}
               profilesById={profilesById}
               treeSlug={treeSlug}

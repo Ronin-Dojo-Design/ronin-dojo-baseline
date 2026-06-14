@@ -6,13 +6,22 @@ import { toFamilyChartData } from "~/lib/lineage/to-family-chart-data"
 import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
 import { memberInitials } from "~/lib/lineage/canvas-model"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
+import {
+  clearSecondaryLinks,
+  updateSecondaryLinks,
+} from "~/lib/lineage/family-chart/renderers/view-secondary-links"
 import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer"
-import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
+import type {
+  LineageNodeProfile,
+  LineageRelationshipRow,
+  LineageTreeMemberRow,
+} from "~/server/web/lineage/payloads"
 import type { TreeDatum } from "~/lib/lineage/family-chart/types/treeData"
 import "~/lib/lineage/family-chart/styles/family-chart.css"
 
 type Props = {
   members: LineageTreeMemberRow[]
+  relationships?: Pick<LineageRelationshipRow, "fromNodeId" | "toNodeId" | "type">[]
   defaultRootMemberId?: string | null
   profilesById: Record<string, LineageNodeProfile>
   treeSlug?: string
@@ -110,6 +119,7 @@ function buildCardHtml(d: TreeDatum, isFocal: boolean): string {
 
 export function LineageViewAIsland({
   members,
+  relationships = [],
   defaultRootMemberId,
   profilesById,
   treeSlug,
@@ -121,6 +131,10 @@ export function LineageViewAIsland({
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMemberId, setDrawerMemberId] = useState<string | null>(null)
+  const [showSecondaryLinks, setShowSecondaryLinks] = useState(true)
+  // Ref so the afterUpdate closure always reads the current toggle value without remounting
+  const showSecondaryLinksRef = useRef(true)
+  showSecondaryLinksRef.current = showSecondaryLinks
 
   // member ID → member row (for drawer profile lookup)
   const memberMap = useMemo(
@@ -138,13 +152,19 @@ export function LineageViewAIsland({
     setDrawerOpen(true)
   }
 
+  const { nodes, secondaryLinks } = useMemo(
+    () =>
+      toLineageVisual(members, {
+        mainMemberId: initialFocusId ?? defaultRootMemberId,
+        relationships,
+      }),
+    [members, initialFocusId, defaultRootMemberId, relationships],
+  )
+
   useEffect(() => {
     const cont = containerRef.current
     if (!cont) return
 
-    const { nodes } = toLineageVisual(members, {
-      mainMemberId: initialFocusId ?? defaultRootMemberId,
-    })
     const data = toFamilyChartData(nodes)
     if (data.length === 0) return
 
@@ -177,6 +197,18 @@ export function LineageViewAIsland({
 
     cardHtml.setOnHoverPathToMain()
 
+    // Secondary link overlay — re-drawn after every tree update.
+    // Reads showSecondaryLinksRef (not state) so toggling never remounts the chart.
+    chart.setAfterUpdate(() => {
+      const tree = chart.store.getTree()
+      if (!tree) return
+      if (showSecondaryLinksRef.current && secondaryLinks.length > 0) {
+        updateSecondaryLinks(chart.svg, tree.data, secondaryLinks, chart.transition_time)
+      } else {
+        clearSecondaryLinks(chart.svg)
+      }
+    })
+
     chart.setSingleParentEmptyCard(false)
     chart.updateMainId(focusId)
     chart.updateTree({ initial: true, tree_position: "fit" })
@@ -185,24 +217,93 @@ export function LineageViewAIsland({
       chartRef.current = null
       cont.innerHTML = ""
     }
-  }, [members, defaultRootMemberId, initialFocusId])
+  }, [nodes, defaultRootMemberId, initialFocusId, secondaryLinks])
+
+  // Toggle effect: apply show/hide instantly without remounting the chart
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    if (showSecondaryLinks && secondaryLinks.length > 0) {
+      const tree = chart.store.getTree()
+      if (tree) {
+        updateSecondaryLinks(chart.svg, tree.data, secondaryLinks, 200)
+      }
+    } else {
+      clearSecondaryLinks(chart.svg)
+    }
+  }, [showSecondaryLinks, secondaryLinks])
 
   return (
     <div>
       <div
-        ref={containerRef}
-        id="FamilyChartViewA"
-        className="f3"
-        style={{
-          width: "100%",
-          height: 640,
-          position: "relative",
-          border: "1px solid #e2e8f0",
-          borderRadius: 8,
-          overflow: "hidden",
-          background: "#f8fafc",
-        }}
-      />
+        style={{ position: "relative", width: "100%" }}
+      >
+        <div
+          ref={containerRef}
+          id="FamilyChartViewA"
+          className="f3"
+          style={{
+            width: "100%",
+            height: 640,
+            position: "relative",
+            border: "1px solid #e2e8f0",
+            borderRadius: 8,
+            overflow: "hidden",
+            background: "#f8fafc",
+          }}
+        />
+
+        {/* Secondary link legend — absolute overlay inside canvas, bottom-left */}
+        {secondaryLinks.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 12,
+              left: 12,
+              zIndex: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(248,250,252,0.92)",
+              border: "1px solid #e2e8f0",
+              borderRadius: 6,
+              padding: "4px 10px",
+              fontSize: 11,
+              color: "#64748b",
+              userSelect: "none",
+            }}
+          >
+            <svg width="24" height="10" style={{ flexShrink: 0 }}>
+              <line
+                x1="0"
+                y1="5"
+                x2="24"
+                y2="5"
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                strokeDasharray="4,3"
+                strokeOpacity="0.8"
+              />
+            </svg>
+            <span>Secondary promoter</span>
+            <button
+              type="button"
+              onClick={() => setShowSecondaryLinks(v => !v)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 11,
+                color: "#3b82f6",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              {showSecondaryLinks ? "Hide" : "Show"}
+            </button>
+          </div>
+        )}
+      </div>
 
       <LineageProfileDrawer
         open={drawerOpen}

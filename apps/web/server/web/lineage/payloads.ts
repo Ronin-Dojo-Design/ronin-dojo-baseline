@@ -134,6 +134,21 @@ export const lineageNodeRowPayload = {
       },
     },
   },
+  // Secondary promoter edges — PUBLIC INSTRUCTOR_STUDENT relationships where
+  // this node is the student. Used by the View A secondary-link overlay (0379-4).
+  // Fields inlined (not using lineageRelationshipPayload) to avoid a forward reference.
+  relationshipsTo: {
+    where: {
+      type: "INSTRUCTOR_STUDENT" as const,
+      fromNode: { visibility: "PUBLIC" as const },
+    },
+    select: {
+      id: true,
+      type: true,
+      fromNodeId: true,
+      toNodeId: true,
+    },
+  },
 } satisfies Prisma.LineageNodeSelect
 
 // ---------------------------------------------------------------------------
