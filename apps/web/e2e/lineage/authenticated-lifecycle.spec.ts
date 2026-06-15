@@ -258,7 +258,10 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     expect(state.claim?.claimantNote).toBe(`E2E claim note for ${fixture.searchToken}`)
     expect(state.claim?.evidence).toHaveLength(1)
     expect(state.claim?.evidence[0]?.label).toBe("E2E identity proof")
-    expect(state.nodeOwnerId).toBe(fixture.placeholderUserId)
+    // Phase 3c (SOT-ADR D1): the claimed node is an accountless Passport (placeholder); submitting a
+    // claim does NOT attach an account, so the node's Passport stays accountless (owner null) until
+    // an admin approves (which runs attachAccount → see the approval test below).
+    expect(state.nodeOwnerId).toBeNull()
     expect(state.accessGrant).toBeNull()
   })
 
