@@ -4,8 +4,8 @@ slug: local-dev-auth-storage
 type: runbook
 status: active
 created: 2026-05-11
-updated: 2026-05-11
-last_agent: copilot-session-0131
+updated: 2026-06-15
+last_agent: claude-session-0392
 pairs_with:
   - docs/runbooks/dev-environment.md
   - docs/runbooks/aws-s3-operator-runbook.md
@@ -20,6 +20,9 @@ tags:
   - minio
   - better-auth
   - troubleshooting
+  - oauth
+  - google
+  - multi-brand
 ---
 
 # Local Dev Auth + Storage Runbook
@@ -238,18 +241,25 @@ Symptom: User appears authenticated (get-session returns 200)
 
 **Seed user fix** (admin user created before sign-up hook):
 
-```sql
--- Run against ronindojo_dev
-INSERT INTO "Passport" ("id", "userId", "displayName", "createdAt", "updatedAt")
-VALUES (gen_random_uuid()::text, 'cmp1gwfcq0000owdskqo2vlqp', 'Admin User', NOW(), NOW())
-ON CONFLICT ("userId") DO NOTHING;
+> ⚠️ **Phase 3c (SESSION_0392) update:** identity satellites are now **Passport-rooted** — `DirectoryProfile`
+> (and `LineageNode`/`RankAward`/`Affiliation`/`FightRecord`) no longer have a `userId` column; they hang
+> off `passportId`. So the DirectoryProfile insert must reference the Passport, not the User. `Passport`
+> still has `userId` (the account link; nullable = accountless placeholder).
 
-INSERT INTO "DirectoryProfile" ("id", "userId", "slug", "createdAt", "updatedAt")
-VALUES (gen_random_uuid()::text, 'cmp1gwfcq0000owdskqo2vlqp', 'admin-user', NOW(), NOW())
-ON CONFLICT ("userId") DO NOTHING;
+```sql
+-- Run against ronindojo_dev. Phase 3c: DirectoryProfile is Passport-rooted (passportId, NOT userId).
+WITH p AS (
+  INSERT INTO "Passport" ("id", "userId", "displayName", "createdAt", "updatedAt")
+  VALUES (gen_random_uuid()::text, 'cmp1gwfcq0000owdskqo2vlqp', 'Admin User', NOW(), NOW())
+  ON CONFLICT ("userId") DO UPDATE SET "updatedAt" = NOW()
+  RETURNING "id"
+)
+INSERT INTO "DirectoryProfile" ("id", "passportId", "slug", "createdAt", "updatedAt")
+SELECT gen_random_uuid()::text, p."id", 'admin-user', NOW(), NOW() FROM p
+ON CONFLICT ("passportId") DO NOTHING;
 ```
 
-**Why this happens:** The sign-up hook in `lib/auth.ts` creates Passport + DirectoryProfile on new user creation. Seed users inserted directly into the User table bypass this hook.
+**Why this happens:** The sign-up hook in `lib/auth.ts` (`ensureIdentityShell`) creates Passport + DirectoryProfile on new user creation. Seed users inserted directly into the User table bypass this hook. (Easier than raw SQL: set `DEV_LOGIN_USER_ID` and hit `/api/auth/dev-login`, or run the relevant seed.)
 
 ### Problem: Dev-login returns 500
 
@@ -310,6 +320,46 @@ Symptom: "Invalid API key or site ID" error in server logs
 ```
 
 **Non-blocking.** `PLAUSIBLE_API_KEY` is empty in `.env`. Admin dashboard still renders; analytics widget shows fallback. Set a valid key when analytics are needed.
+
+### Problem: Google sign-in fails with "Invalid origin" on a brand `.local` host (e.g. `bbl.local`)
+
+```
+Symptom: On bbl.local:3000 (or baseline.local / ronindojo.local / wekaf.local), clicking
+         "Sign in with Google" returns "Invalid origin". Google works fine on localhost:3000.
+```
+
+**This is expected. Google OAuth does NOT work on the brand `.local` hosts — and cannot be made to.** There are two independent walls:
+
+1. **Better-Auth origin check (the error you see).** `lib/auth.ts` configures **no `trustedOrigins`**, so Better-Auth only trusts `BETTER_AUTH_URL` (= `http://localhost:3000`). A request from `http://bbl.local:3000` is a different origin → rejected before it ever reaches Google. This wall applies to **every** auth method (magic-link too), not just Google.
+2. **Google forbids `.local`.** Even past wall #1, Google's OAuth client only accepts `localhost` or a real public domain as **Authorized JavaScript origins** / **redirect URIs**. You cannot register `http://bbl.local:3000` or `…/api/auth/callback/google` in Google Cloud Console — Google rejects non-public TLDs. (`bbl.local` / `blackbeltlegacy.com` are **not** set up as Google origins, and `.local` never can be.)
+
+**Why you'd use a `.local` host at all:** brand is resolved from the request host (`lib/brand-context.ts` → `HOST_TO_BRAND`): `bbl.local` → `BBL`, `baseline.local` → `BASELINE_MARTIAL_ARTS`, `ronindojo.local` → `RONIN_DOJO_DESIGN`, `wekaf.local` → `WEKAF`. `localhost` gives the default (Baseline) brand. So to see **BBL-branded** UI you must use `bbl.local` (it's mapped to `127.0.0.1` in `/etc/hosts`). The local auth stack, however, is wired to `localhost:3000`.
+
+**What works where:**
+
+| Goal | Path |
+|---|---|
+| Verify Google OAuth itself | `localhost:3000` only (Baseline brand). |
+| View **public** BBL pages (lineage tree/drawer, directory) | Open `bbl.local:3000` directly — **public reads need no login.** Best path for browser-proofing read-model changes. |
+| Auth-gated BBL flows (claim approve, profile editor) on `bbl.local` | Google is out. Use **magic-link** — but first add the `.local` dev hosts to Better-Auth `trustedOrigins` (clears wall #1). Magic-link arrives by real email (Resend) → click it. |
+| Quick authenticated session (any brand on `localhost`) | `DEV_LOGIN_USER_ID` + open `localhost:3000/api/auth/dev-login` (note: redirects to `BETTER_AUTH_URL`/localhost and sets localhost-scoped cookies — it's wired for `localhost`, not `bbl.local`). |
+
+**To enable magic-link on `bbl.local`** (dev-only; never loosen prod), add `trustedOrigins` to `betterAuth({...})` in `lib/auth.ts`, gated on non-production:
+
+```ts
+trustedOrigins: [
+  ...(process.env.NODE_ENV !== "production"
+    ? [
+        "http://bbl.local:3000",
+        "http://baseline.local:3000",
+        "http://ronindojo.local:3000",
+        "http://wekaf.local:3000",
+      ]
+    : []),
+],
+```
+
+This does **not** help Google (still `.local`-blocked) — it only unblocks magic-link / dev sessions on the brand hosts. For a fully working multi-host local login you'd also need per-host `BETTER_AUTH_URL`/cookie scoping, which the current single-`localhost` setup does not do — so prefer **public-page proofing on `bbl.local` + auth flows on `localhost`** unless you specifically need an authenticated BBL-branded session.
 
 ---
 
