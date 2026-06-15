@@ -4,8 +4,8 @@ slug: phase3-user-carry-preflight
 type: design
 status: active
 created: 2026-06-12
-updated: 2026-06-13
-last_agent: doug-session-0374
+updated: 2026-06-15
+last_agent: claude-opus-4-8-session-0390
 author: Doug + Brian
 pairs_with:
   - docs/product/black-belt-legacy/SOT-ADR.md
@@ -343,3 +343,42 @@ Document the exact sub-order in the Phase-3 migration runbook.
    `placeholderArchivedUserId`) so UI/audit consumers can be updated in the same PR.
 5. **Certification (§4)** — confirm CARRY; an operator may treat instructor certification as
    directory-facing. *Doug recommends CARRY.*
+
+---
+
+## Section 9 — Phase 3 execution status (SESSION_0390 grill + 3a)
+
+**Operator decisions (SESSION_0390 grill) — these resolve §8:**
+
+1. **FightRecord → PROMOTED to a 5th satellite (REPOINT)** (overrides §4 Option A). Disposition is now
+   **4 REPOINT** (DirectoryProfile, LineageNode, Affiliation, FightRecord) **+ 1 DUAL** (RankAward).
+   In 3b: `@@unique([userId,disciplineId,type])`→`([passportId,…])`, `@@index([userId])`→passport.
+2. **Placeholder reap → HARD-DELETE** (§8 q2) after the §5 step-4 assertion passes. The §6 claim
+   transform therefore drops the placeholder-archive step (there is no synthetic User to archive).
+3. **cuid2 → stays in the Phase-3 wave** (§8 q3), executed in the 3b destructive window. Sub-order
+   confirmed: **regenerate cuid2 IDs first → backfill satellites against the new `Passport.id`**.
+4. **Claim contract** (§8 q4): add `passportAccountAttached: boolean`; drop `placeholderArchivedUserId`.
+5. **Certification** (§8 q5): **CARRY** confirmed.
+
+**3a landed (SESSION_0390, additive + reversible — no destructive ops):**
+
+- `server/identity/{person-schema,person-service,person-service.test}.ts` — `createPassport`
+  (accountless), `attachAccount` (with `CLAIMANT_HAS_PASSPORT` pre-check), `derivePersonName`. 11 tests.
+- Additive migration `20260614225425_phase3a_additive_passport_fks`: nullable `passportId` on all 5
+  satellites + `Passport.userId` → nullable. No drops, no constraint moves, no reseed.
+- `scripts/phase3-preflight-assert.ts` — the read-only pre-backfill gate (catalog-driven CARRY-FK
+  discovery). One boundary fix: `media-authorization.ts` null-guards the now-nullable `Passport.userId`.
+
+**⚠ Gate findings against the local seed DB (the gate FAILED — these are 3b prerequisites, NOT 3a defects):**
+
+- **148 Users but only 75 Passports → 73 Users have NO Passport.** ALL 29 LineageNodes + 19/23
+  RankAwards (earner) point at Passport-less Users. The §5-step-2 backfill assumes Passport↔User is
+  1:1 — it is NOT today. **3b MUST first mint a Passport for every satellite-bearing User that lacks
+  one**, *before* the satellite `passportId` backfill, or the NOT-NULL flip fails. (Authoritative run
+  is pre-3b against the migration-target DB; local is a logic+sanity smoke.)
+- **17 RankAwards have a placeholder `awardedById`** (placeholder-as-promoter). Under the §5-step-4
+  assertion this reads as a "placeholder acted as an account" hit. It is semantically legitimate for
+  imported lineage (a historical master promoted students) — so 3b must **reconcile this explicitly**:
+  either repoint `awardedById` placeholders to their (3b-minted) Passport via a promoter-as-passport
+  rule, or exempt promoter rows from the hard-delete blast. Do **not** cascade-delete these
+  placeholders. This is the single sharpest 3b design call surfaced by the gate.

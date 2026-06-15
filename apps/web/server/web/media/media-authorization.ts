@@ -130,6 +130,10 @@ export async function authorizeMediaTarget({
       })
       if (!passport) return false
       if (passport.userId === user.id) return true
+      // @changed SESSION_0390 (Phase 3a) — Passport.userId is now nullable (accountless placeholder,
+      // SOT-ADR D1). An accountless Passport has no owner account to delegate org-admin from, so only
+      // admins (handled above) manage its media. Revisit in the Phase 3c read-path sweep.
+      if (passport.userId === null) return false
       return isAdminOfPassportOwnerOrg(db, brand, user.id, passport.userId)
     }
 

@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-14
-last_agent: claude-sonnet-4-6-session-0388
+updated: 2026-06-15
+last_agent: claude-opus-4-8-session-0390
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -50,6 +50,26 @@ refreshed into `dirstarter_template` at SESSION_0359.
   path added in SESSION_0358.
 - **Consequence:** kills the 4 hand-rolled shell minters (`lib/auth.ts:49–55`, `server/admin/users/actions.ts:88`,
   `server/web/lead/actions.ts:375–391`, `server/web/lineage/node-profile-actions.ts:90`) → one door.
+
+### D1 amendment — 5 satellites + migration calls *(SESSION_0390 grill)*
+
+- **FightRecord is a 5th identity satellite (REPOINT).** Operator promoted it (overriding the
+  `PHASE3_USER_CARRY_PREFLIGHT` 4-satellite default + Doug's "defer/CARRY"): a per-person career W/L
+  tally is durable athletic identity a placeholder fighter should carry pre-claim. Disposition is now
+  **4 REPOINT** (`DirectoryProfile`, `LineageNode`, `Affiliation`, `FightRecord`) **+ 1 DUAL**
+  (`RankAward`: earner→passport, promoter `awardedById` stays User). `@@unique([userId,disciplineId,type])`
+  → `([passportId,…])` in Phase 3b.
+- **cuid → cuid2 stays in the Phase-3 wave** (operator), executed in the 3b destructive window (it is a
+  PK rewrite, not additive). Sub-order: **regenerate cuid2 IDs first → backfill satellites against the new
+  `Passport.id`** (preflight §7).
+- **Placeholder reap = hard-delete** (operator) after the §5 step-4 "placeholder never acted as an account"
+  assertion passes. The claim-flow §6 transform therefore drops the placeholder-archive step entirely.
+- **Claim result contract:** add `passportAccountAttached: boolean`; drop the now-meaningless
+  `placeholderArchivedUserId`.
+- **Phase 3a landed (SESSION_0390):** `server/identity/` service (`createPassport`/`attachAccount`/
+  `derivePersonName`) + **additive** migration (nullable `passportId` on the 5 satellites + nullable
+  `Passport.userId`; no drops/constraint-moves/reseed) + the read-only pre-backfill assertion gate
+  (`scripts/phase3-preflight-assert.ts`). The destructive backfill/drop/reseed is 3b.
 
 ## D2 — Foundation-first on upstream-current Dirstarter
 

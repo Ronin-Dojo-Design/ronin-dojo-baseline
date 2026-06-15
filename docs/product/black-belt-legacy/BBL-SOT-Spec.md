@@ -4,8 +4,8 @@ slug: bbl-sot-spec
 type: spec
 status: active
 created: 2026-06-10
-updated: 2026-06-13
-last_agent: claude-session-0374
+updated: 2026-06-15
+last_agent: claude-opus-4-8-session-0390
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -233,13 +233,18 @@ Where a file list is upstream-derived and not yet captured, it says **[pin in ca
 
 ---
 
-### Phase 3 — Identity re-root (Person-rooted) + reseed
+### Phase 3 — Identity re-root (Person-rooted), user-carry
+
+> **Migration strategy = USER-CARRY, not clean reseed** (SOT-ADR D11/D9: preserve `User`/`Passport`,
+> repoint satellites by lookup). The old §2.4 "clean big-bang + reseed" line is superseded — D11 flips
+> before Phase 3, so early real users may exist. Execution map: `PHASE3_USER_CARRY_PREFLIGHT.md`.
+> **5 satellites** (FightRecord promoted, SOT-ADR D1 amendment, SESSION_0390).
 
 - **Goal:** Make Passport the person root per §2.1; collapse the 4 minters into the identity service.
-- **Files:** `apps/web/prisma/schema.prisma` (`Passport.userId` nullable; `DirectoryProfile`/`LineageNode`/`RankAward`/`Affiliation` FK `userId` → `passportId`); **new** `apps/web/server/identity/{person-schema.ts, person-service.ts, person-service.test.ts}` (`createPassport`, `attachAccount`, `derivePersonName`); **edit** `lib/auth.ts` signup hook, `server/admin/users/actions.ts` (`createPerson`), `server/web/lead/actions.ts`, `server/web/lineage/node-profile-actions.ts` → call the service; every read/payload/query that joined via `userId` (lineage + directory payloads, visibility allowlists, the ~116 lineage/directory tests); `prisma/seed-*.ts` (reseed 17 onto the new shape); `scripts/backfill/` (clean reseed, not dual-write).
-- **Build:** clean big-bang migration + reseed; person-first service interface; delete synthetic-email path; first/last name capture on add-person; DirectoryProfile parity on every create path.
-- **Done means:** placeholder Passports exist with `userId=null`; the 17 render on tree + directory; add-person captures legal names + makes a DirectoryProfile; all 4 paths write identical shells; typecheck/biome/tests green; browser-proof on `bbl.local`.
-- **Deliverables:** re-rooted schema + identity service + reseed + green tests.
+- **Files:** `apps/web/prisma/schema.prisma` (`Passport.userId` nullable; `DirectoryProfile`/`LineageNode`/`RankAward`(earner)/`Affiliation`/`FightRecord` FK `userId` → `passportId`); **new** `apps/web/server/identity/{person-schema.ts, person-service.ts, person-service.test.ts}` (`createPassport`, `attachAccount`, `derivePersonName`); **edit** `lib/auth.ts` signup hook, `server/admin/users/actions.ts` (`createPerson`), `server/web/lead/actions.ts`, `server/web/lineage/node-profile-actions.ts` → call the service; every read/payload/query that joined via `userId` (lineage + directory payloads, visibility allowlists, the ~116 lineage/directory tests); `scripts/phase3-preflight-assert.ts` (pre-backfill gate) + the 3b backfill scripts (user-carry, not dual-write).
+- **Build (3a→3b→3c):** **3a** = identity service + **additive** nullable `passportId` columns + assertion gate (SESSION_0390, done). **3b** = mint Passports for satellite-bearing Users lacking one → user-carry backfill `passportId` by `Passport.userId` lookup → null out + hard-delete placeholder Users → cuid2 regen → drop old `userId` columns + move `@unique`/`@@index`. **3c** = repoint the 4 minters + claim flow at the service; read/test sweep; browser proof. Delete the synthetic-email path; first/last name capture on add-person; DirectoryProfile parity on every create path.
+- **Done means:** placeholder Passports exist with `userId=null`; the seed renders on tree + directory; add-person captures legal names + makes a DirectoryProfile; all 4 paths write identical shells; typecheck/oxlint/oxfmt/tests green; browser-proof on `bbl.local`.
+- **Deliverables:** re-rooted schema + identity service + user-carry backfill + green tests.
 - **Depends on:** Phase 1 (perm context for the service), Phase 2 (final routes).
 
 ---
