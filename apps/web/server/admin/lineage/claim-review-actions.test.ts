@@ -346,6 +346,36 @@ describe("applyLineageClaimReview", () => {
     })
   })
 
+  it("approves when the claimant already has a signup Passport — merges by superseding it", async () => {
+    // SESSION_0392: every real signed-up user has a Passport (signup identity shell). Claiming a
+    // placeholder must NOT fail with CLAIMANT_HAS_PASSPORT — the claimant's empty signup Passport is
+    // superseded by the claimed identity. This is the production scenario the e2e exercises.
+    const fx = await createClaimFixture({ name: "claimant-has-passport" })
+    const claimantSignupPassport = await db.passport.create({
+      data: { userId: fx.claimantUserId, displayName: "Claimant Signup Identity" },
+      select: { id: true },
+    })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: { claimId: fx.claimId, decision: "APPROVED", reviewerNote: "Merge approve." },
+    })
+
+    const [nodePassport, supersededPassport] = await Promise.all([
+      db.passport.findUnique({ where: { id: fx.nodePassportId } }),
+      db.passport.findUnique({ where: { id: claimantSignupPassport.id } }),
+    ])
+
+    expect(result.status).toBe("APPROVED")
+    expect(result.passportAccountAttached).toBe(true)
+    // The claimed (placeholder) Passport now belongs to the claimant account…
+    expect(nodePassport?.userId).toBe(fx.claimantUserId)
+    // …and the claimant's prior signup Passport was superseded (deleted) to free the unique account link.
+    expect(supersededPassport).toBeNull()
+  })
+
   it("approves a claim with a server-reviewed elite comp grant and does not mutate Membership", async () => {
     const fx = await createClaimFixture({ name: "approve-with-comp" })
     const org = await db.organization.create({

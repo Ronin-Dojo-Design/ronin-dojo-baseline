@@ -306,8 +306,10 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
 
     const approvedState = await readLineageLifecycleState(fixture)
     expect(approvedState.claim?.status).toBe("APPROVED")
+    // Phase 3c (SOT-ADR D1): approving attaches the claimant account to the claimed node's Passport
+    // (attachAccount) — the node's owner is now the claimant. There is no placeholder-User archival
+    // anymore (placeholders are accountless Passports); that assertion is retired.
     expect(approvedState.nodeOwnerId).toBe(fixture.claimantUserId)
-    expect(approvedState.placeholderArchivedAt).toBeTruthy()
     expect(approvedState.accessGrant?.role).toBe("NODE_EDITOR")
     expect(approvedState.accessGrant?.userId).toBe(fixture.claimantUserId)
 

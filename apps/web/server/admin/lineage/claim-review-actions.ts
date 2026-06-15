@@ -132,6 +132,20 @@ export const applyLineageClaimReview = async ({
         // D1: attach the claimant account to the node's Passport (the node never moves). One attach
         // lights up every satellite (profile + node + ranks + affiliations) at once.
         if (claim.node.passport.userId !== claim.claimantUserId) {
+          // Claim merge (SESSION_0392): every signed-up user has a Passport (signup's identity shell).
+          // Claiming means "I AM this imported person", so the claimant's own signup Passport is
+          // superseded by the richer claimed identity. The CLAIMANT_HAS_NODE guard above already
+          // ensured that Passport owns no lineage node; delete it (its empty signup directory profile
+          // cascades) so the account is free to bind to the claimed Passport. The claimant User and
+          // all account-side CARRY rows (memberships, entitlements, …) are untouched.
+          const claimantPassport = await tx.passport.findUnique({
+            where: { userId: claim.claimantUserId },
+            select: { id: true },
+          })
+          if (claimantPassport && claimantPassport.id !== claim.node.passportId) {
+            await tx.passport.delete({ where: { id: claimantPassport.id } })
+          }
+
           await attachAccount(
             { passportId: claim.node.passportId, userId: claim.claimantUserId },
             tx,
