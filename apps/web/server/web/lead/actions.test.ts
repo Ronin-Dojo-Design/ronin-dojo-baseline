@@ -442,7 +442,13 @@ describe("SESSION_0033 school-ops actions", () => {
         legalFirstName: "Existing",
       },
     })
-    await db.directoryProfile.create({ data: { userId: existing.id } })
+    await db.directoryProfile.create({
+      data: {
+        passport: {
+          connectOrCreate: { where: { userId: existing.id }, create: { userId: existing.id } },
+        },
+      },
+    })
 
     const lead = await createLead({
       organizationId: fx.organizationId,

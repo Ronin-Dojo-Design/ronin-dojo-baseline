@@ -69,7 +69,9 @@ beforeAll(async () => {
   const node = await db.lineageNode.create({
     data: {
       id: tag("node"),
-      userId: nodeOwner.id,
+      passport: {
+        connectOrCreate: { where: { userId: nodeOwner.id }, create: { userId: nodeOwner.id } },
+      },
       slug: tag("node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "PENDING",

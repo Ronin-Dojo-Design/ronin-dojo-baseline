@@ -95,8 +95,13 @@ beforeAll(async () => {
   const rankAward = await db.rankAward.create({
     data: {
       id: tag("rank-award"),
-      userId: approvedClaimant.id,
-      rankId: rank.id,
+      passport: {
+        connectOrCreate: {
+          where: { userId: approvedClaimant.id },
+          create: { userId: approvedClaimant.id },
+        },
+      },
+      rank: { connect: { id: rank.id } },
       awardedAt: new Date(Date.UTC(2020, 0, 1)),
     },
   })
@@ -104,7 +109,12 @@ beforeAll(async () => {
   const node = await db.lineageNode.create({
     data: {
       id: tag("node"),
-      userId: approvedClaimant.id,
+      passport: {
+        connectOrCreate: {
+          where: { userId: approvedClaimant.id },
+          create: { userId: approvedClaimant.id },
+        },
+      },
       slug: tag("node-slug"),
       bio: "Original lineage bio",
       visibility: "PUBLIC",

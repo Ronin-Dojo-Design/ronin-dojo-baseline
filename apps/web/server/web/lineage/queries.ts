@@ -54,32 +54,38 @@ import { db } from "~/services/db"
 const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
 
 const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
-  node.user?.directoryProfile?.showRanks !== false
+  node.passport?.directoryProfile?.showRanks !== false
 
 const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
-  if (shouldShowPublicRanks(node)) {
+  if (shouldShowPublicRanks(node) || !node.passport) {
     return node
   }
-  return { ...node, user: { ...node.user, rankAwards: [] } }
+  return { ...node, passport: { ...node.passport, rankAwardsEarned: [] } }
 }
 
 export const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
-  if (shouldShowPublicRanks(profile)) {
+  if (shouldShowPublicRanks(profile) || !profile.passport) {
     return profile
   }
-  // SESSION_0266_FINDING_01 — `user.memberships[].rank.{name,shortName}`
+  // SESSION_0266_FINDING_01 — `passport.user.memberships[].rank.{name,shortName}`
   // was an adjacent rank-leak path the SESSION_0264/0265 redactions
   // missed. Null out the embedded `Membership.rank` (nullable in schema)
   // for `showRanks=false` viewers alongside the existing `rankAwards` blank.
+  // (Phase 3c: ranks earned are now Passport-rooted; memberships stay account-side.)
   return {
     ...profile,
-    user: {
-      ...profile.user,
-      rankAwards: [],
-      memberships: profile.user.memberships.map(membership => ({
-        ...membership,
-        rank: null,
-      })),
+    passport: {
+      ...profile.passport,
+      rankAwardsEarned: [],
+      user: profile.passport.user
+        ? {
+            ...profile.passport.user,
+            memberships: profile.passport.user.memberships.map(membership => ({
+              ...membership,
+              rank: null,
+            })),
+          }
+        : null,
     },
   }
 }
@@ -134,7 +140,7 @@ export const getLineageRootForUser = async (userId: string): Promise<LineageNode
 
   const node = await db.lineageNode.findFirst({
     where: {
-      userId,
+      passport: { userId },
       visibility: { in: PUBLIC_VISIBILITY_SCOPE },
     },
     select: lineageNodeRowPayload,
@@ -173,7 +179,7 @@ export const getLineageTreeForUser = async (
 
   const root = await db.lineageNode.findFirst({
     where: {
-      userId,
+      passport: { userId },
       visibility: { in: PUBLIC_VISIBILITY_SCOPE },
     },
     select: lineageNodeRowPayload,
@@ -459,7 +465,7 @@ const getLineageTreeBySlugForViewer = cache(
     }
 
     const viewerNode = await db.lineageNode.findFirst({
-      where: { userId: viewerUserId },
+      where: { passport: { userId: viewerUserId } },
       select: { id: true },
     })
 

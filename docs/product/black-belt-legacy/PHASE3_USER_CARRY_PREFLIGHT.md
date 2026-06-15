@@ -5,7 +5,7 @@ type: design
 status: active
 created: 2026-06-12
 updated: 2026-06-15
-last_agent: codex-session-0391
+last_agent: claude-session-0392
 author: Doug + Brian
 pairs_with:
   - docs/product/black-belt-legacy/SOT-ADR.md
@@ -430,3 +430,21 @@ before the delete in the same guarded transaction.
 to the app database yet. Current Phase 3b leaves old `userId` columns nullable for compatibility because
 Phase 3c still needs to repoint read/write paths away from `LineageNode.user`, `RankAward.user`, and
 related satellite User relations before the physical drop can compile and render safely.
+
+## Section 11 — Phase 3c COMPLETE (SESSION_0392)
+
+**Phase 3c landed and is gate-green.** The whole person-rooted cutover shipped this session:
+
+- All read/write/claim paths repointed to Passport; `node.passport`/`profile.passport` is the identity
+  seam (account-side CARRY bits via `passport.user?`). Claim approve = `attachAccount` (result
+  `passportAccountAttached`; `placeholderArchived*` retired).
+- The satellite `user`/`userId` columns are **dropped**; `passportId` is canonical NOT NULL with
+  `onDelete: Cascade`. Placeholders are **accountless Passports**; `createLineageMember` takes
+  `memberPassportId`; admin add-person + seeds mint accountless Passports via `createPassport`.
+- The destructive drop ships as **one self-sufficient Prisma migration**
+  `20260615130000_phase3c_drop_satellite_user_columns` (in-SQL carry → DDL drop → FK re-root Cascade →
+  detach+delete placeholders), idempotent/no-op on empty tables. **This supersedes the staged
+  `scripts/phase3b-user-carry-data.ts` + `phase3b-drop-old-user-columns.sql`** (safe to retire).
+- Verified: typecheck 0, lint/format/wiki green, 600 tests pass/0 fail, `migrate diff` empty,
+  `migrate reset`+seed → 23 accountless claimable Passports. Live browser proof deferred (local
+  owner-seed blocker; integration tests cover the repointed DB paths).

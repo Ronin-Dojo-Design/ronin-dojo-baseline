@@ -7,6 +7,7 @@ import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
 import { grantComp } from "~/server/entitlements/comp-grants"
+import { attachAccount } from "~/server/identity/person-service"
 import type { db as appDb } from "~/services/db"
 
 /**
@@ -29,8 +30,10 @@ export type ReviewLineageClaimResult = {
   accessGrantId: string | null
   compGrantIds: string[]
   ownershipTransferred: boolean
-  placeholderArchivedUserId: string | null
-  placeholderArchivedAt: Date | null
+  // Phase 3c (SOT-ADR D1): approving a PERSON claim attaches the claimant account to the node's
+  // Passport (`Passport.userId`) rather than moving the node FK or archiving a synthetic placeholder
+  // User. `placeholderArchived*` are retired (the placeholder is now an accountless Passport).
+  passportAccountAttached: boolean
 }
 
 export const applyLineageClaimReview = async ({
@@ -59,14 +62,8 @@ export const applyLineageClaimReview = async ({
           claimantUserId: true,
           node: {
             select: {
-              userId: true,
-              user: {
-                select: {
-                  id: true,
-                  isPlaceholder: true,
-                  archivedAt: true,
-                },
-              },
+              passportId: true,
+              passport: { select: { userId: true } },
             },
           },
           _count: { select: { evidence: true } },
@@ -93,8 +90,7 @@ export const applyLineageClaimReview = async ({
       let accessGrantId: string | null = null
       let compGrantIds: string[] = []
       let ownershipTransferred = false
-      let placeholderArchivedUserId: string | null = null
-      let placeholderArchivedAt: Date | null = null
+      let passportAccountAttached = false
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
@@ -123,7 +119,7 @@ export const applyLineageClaimReview = async ({
 
         const claimantExistingNode = await tx.lineageNode.findFirst({
           where: {
-            userId: claim.claimantUserId,
+            passport: { userId: claim.claimantUserId },
             NOT: { id: claim.nodeId },
           },
           select: { id: true },
@@ -133,27 +129,15 @@ export const applyLineageClaimReview = async ({
           throw new Error(CLAIM_REVIEW_ERROR.CLAIMANT_HAS_NODE)
         }
 
-        if (claim.node.userId !== claim.claimantUserId) {
-          await tx.lineageNode.update({
-            where: { id: claim.nodeId },
-            data: { userId: claim.claimantUserId },
-          })
+        // D1: attach the claimant account to the node's Passport (the node never moves). One attach
+        // lights up every satellite (profile + node + ranks + affiliations) at once.
+        if (claim.node.passport.userId !== claim.claimantUserId) {
+          await attachAccount(
+            { passportId: claim.node.passportId, userId: claim.claimantUserId },
+            tx,
+          )
           ownershipTransferred = true
-
-          if (claim.node.user.isPlaceholder) {
-            placeholderArchivedUserId = claim.node.userId
-
-            if (claim.node.user.archivedAt) {
-              placeholderArchivedAt = claim.node.user.archivedAt
-            } else {
-              const archivedUser = await tx.user.update({
-                where: { id: claim.node.userId },
-                data: { archivedAt: reviewTimestamp },
-                select: { archivedAt: true },
-              })
-              placeholderArchivedAt = archivedUser.archivedAt
-            }
-          }
+          passportAccountAttached = true
         }
 
         const existingGrant = await tx.lineageTreeAccess.findFirst({
@@ -238,8 +222,7 @@ export const applyLineageClaimReview = async ({
             accessGrantId,
             compGrantIds,
             ownershipTransferred,
-            placeholderArchivedUserId,
-            placeholderArchivedAt: placeholderArchivedAt?.toISOString() ?? null,
+            passportAccountAttached,
           },
         },
       })
@@ -251,8 +234,7 @@ export const applyLineageClaimReview = async ({
         accessGrantId,
         compGrantIds,
         ownershipTransferred,
-        placeholderArchivedUserId,
-        placeholderArchivedAt,
+        passportAccountAttached,
       }
     },
     { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },

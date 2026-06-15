@@ -51,7 +51,7 @@ export default async function LineageClaimPage({ params }: Props) {
     .filter(m => m.isClaimable)
     .map(m => ({
       nodeId: m.nodeId,
-      displayName: m.node.user?.passport?.displayName ?? m.node.user?.name ?? "Unknown",
+      displayName: m.node.passport?.displayName ?? m.node.passport?.user?.name ?? "Unknown",
     }))
 
   if (members.length === 0) {

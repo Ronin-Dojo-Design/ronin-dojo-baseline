@@ -39,7 +39,7 @@ export async function getDirectoryFilterOptions(brand: Brand): Promise<Directory
   const profileLocations = await db.directoryProfile.findMany({
     where: {
       visibility: "PUBLIC",
-      user: { memberships: { some: { organization: { brand } } } },
+      passport: { user: { memberships: { some: { organization: { brand } } } } },
     },
     select: { locationRegion: true, locationCity: true },
     distinct: ["locationRegion", "locationCity"],

@@ -23,7 +23,7 @@ async function ClaimsContent() {
   return (
     <div className="divide-y rounded-lg border">
       {claims.map(claim => {
-        const nodeDisplayName = claim.node.user.passport?.displayName ?? "Unnamed lineage node"
+        const nodeDisplayName = claim.node.passport?.displayName ?? "Unnamed lineage node"
 
         return (
           <Link

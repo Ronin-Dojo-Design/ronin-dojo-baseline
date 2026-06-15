@@ -186,8 +186,10 @@ export default async function PromotionEventsIndexPage() {
                           <Stack size="xs" wrap>
                             {event.rankAwards.slice(0, 3).map(award => (
                               <Badge key={award.id} variant="outline" size="sm">
-                                {award.user.name ?? "Unnamed"} -{" "}
-                                {award.rank.shortName ?? award.rank.name}
+                                {award.passport.displayName ??
+                                  award.passport.user?.name ??
+                                  "Unnamed"}{" "}
+                                - {award.rank.shortName ?? award.rank.name}
                               </Badge>
                             ))}
                             {event.rankAwards.length > 3 && (

@@ -43,7 +43,7 @@ function formatDate(date: Date | null): string | null {
 }
 
 export function LineageRankProgressionPanel({ profile }: { profile: LineageNodeProfile }) {
-  const awards = profile.user.rankAwards
+  const awards = profile.passport?.rankAwardsEarned ?? []
   const progressions = buildBeltProgressions(awards)
   const achievements = buildAchievementsUnlocked(awards)
 

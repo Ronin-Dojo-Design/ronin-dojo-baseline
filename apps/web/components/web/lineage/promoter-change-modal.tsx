@@ -37,7 +37,7 @@ export type PromoterChangeContext = {
   treeId: string
   memberId: string
   currentRankAwardId: string | null
-  rankAwards: LineageNodeProfile["user"]["rankAwards"]
+  rankAwards: NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"]
   candidates: PromoterCandidate[]
 }
 

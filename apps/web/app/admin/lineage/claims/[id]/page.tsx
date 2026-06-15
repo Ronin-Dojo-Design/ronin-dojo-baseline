@@ -23,7 +23,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
     notFound()
   }
 
-  const nodeDisplayName = claim.node.user.passport?.displayName ?? "Unnamed lineage node"
+  const nodeDisplayName = claim.node.passport?.displayName ?? "Unnamed lineage node"
 
   return (
     <Wrapper>

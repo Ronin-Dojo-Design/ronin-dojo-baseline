@@ -59,12 +59,13 @@ function member({
       isVerified: true,
       verificationStatus: "VERIFIED",
       bio: "public bio",
-      userId: `user-${nodeId}`,
-      user: {
-        id: `user-${nodeId}`,
-        name: `Name ${nodeId}`,
-        image: null,
-        passport: { displayName },
+      passportId: `passport-${nodeId}`,
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is passport.user.
+      passport: {
+        id: `passport-${nodeId}`,
+        displayName,
+        avatarUrl: null,
+        user: { id: `user-${nodeId}`, name: `Name ${nodeId}`, image: null, memberships: [] },
         directoryProfile: {
           locationCity: null,
           locationRegion: null,
@@ -72,8 +73,8 @@ function member({
           visibility: "PUBLIC",
           showRanks: true,
         },
-        rankAwards: [],
-        memberships: [],
+        rankAwardsEarned: [],
+        affiliations: [],
       },
     },
   }

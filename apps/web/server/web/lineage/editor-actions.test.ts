@@ -102,7 +102,9 @@ beforeAll(async () => {
   const rootNode = await db.lineageNode.create({
     data: {
       id: tag("root-node"),
-      userId: rootUser.id,
+      passport: {
+        connectOrCreate: { where: { userId: rootUser.id }, create: { userId: rootUser.id } },
+      },
       slug: tag("root-node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "VERIFIED",
@@ -113,7 +115,9 @@ beforeAll(async () => {
   const childANode = await db.lineageNode.create({
     data: {
       id: tag("child-a-node"),
-      userId: childAUser.id,
+      passport: {
+        connectOrCreate: { where: { userId: childAUser.id }, create: { userId: childAUser.id } },
+      },
       slug: tag("child-a-node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "VERIFIED",
@@ -124,7 +128,9 @@ beforeAll(async () => {
   const childBNode = await db.lineageNode.create({
     data: {
       id: tag("child-b-node"),
-      userId: childBUser.id,
+      passport: {
+        connectOrCreate: { where: { userId: childBUser.id }, create: { userId: childBUser.id } },
+      },
       slug: tag("child-b-node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "VERIFIED",
@@ -135,7 +141,12 @@ beforeAll(async () => {
   const grandchildNode = await db.lineageNode.create({
     data: {
       id: tag("grandchild-node"),
-      userId: grandchildUser.id,
+      passport: {
+        connectOrCreate: {
+          where: { userId: grandchildUser.id },
+          create: { userId: grandchildUser.id },
+        },
+      },
       slug: tag("grandchild-node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "VERIFIED",
@@ -804,8 +815,13 @@ describe("lineage promoter relationship ranked-regression guard", () => {
     const rankAward = await db.rankAward.create({
       data: {
         id: regressionTag("rank-award"),
-        userId: studentUser.id,
-        rankId: rank.id,
+        passport: {
+          connectOrCreate: {
+            where: { userId: studentUser.id },
+            create: { userId: studentUser.id },
+          },
+        },
+        rank: { connect: { id: rank.id } },
         awardedAt: new Date(Date.UTC(2020, 0, 1)),
       },
       select: { id: true },
@@ -815,7 +831,12 @@ describe("lineage promoter relationship ranked-regression guard", () => {
       db.lineageNode.create({
         data: {
           id: regressionTag("student-node"),
-          userId: studentUser.id,
+          passport: {
+            connectOrCreate: {
+              where: { userId: studentUser.id },
+              create: { userId: studentUser.id },
+            },
+          },
           slug: regressionTag("student-node-slug"),
           visibility: "PUBLIC",
           verificationStatus: "PENDING",
@@ -825,7 +846,12 @@ describe("lineage promoter relationship ranked-regression guard", () => {
       db.lineageNode.create({
         data: {
           id: regressionTag("ranked-promoter-node"),
-          userId: rankedPromoterUser.id,
+          passport: {
+            connectOrCreate: {
+              where: { userId: rankedPromoterUser.id },
+              create: { userId: rankedPromoterUser.id },
+            },
+          },
           slug: regressionTag("ranked-promoter-node-slug"),
           visibility: "PUBLIC",
           verificationStatus: "PENDING",
@@ -835,7 +861,12 @@ describe("lineage promoter relationship ranked-regression guard", () => {
       db.lineageNode.create({
         data: {
           id: regressionTag("new-promoter-node"),
-          userId: newPromoterUser.id,
+          passport: {
+            connectOrCreate: {
+              where: { userId: newPromoterUser.id },
+              create: { userId: newPromoterUser.id },
+            },
+          },
           slug: regressionTag("new-promoter-node-slug"),
           visibility: "PUBLIC",
           verificationStatus: "PENDING",

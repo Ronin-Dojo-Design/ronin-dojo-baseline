@@ -32,15 +32,16 @@ function makeNode({
     isVerified: false,
     verificationStatus: "UNVERIFIED",
     bio: null,
-    userId: `user-${id}`,
-    user: {
-      id: `user-${id}`,
-      name,
-      image: null,
-      passport: displayName ? { displayName, avatarUrl: null } : null,
+    passportId: `passport-${id}`,
+    // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is `passport.user` (nullable).
+    passport: {
+      id: `passport-${id}`,
+      displayName,
+      avatarUrl: null,
+      user: name != null ? { id: `user-${id}`, name, image: null, memberships: [] } : null,
       directoryProfile: null,
-      rankAwards: [],
-      memberships: [],
+      rankAwardsEarned: [],
+      affiliations: [],
     },
   } as unknown as LineageNodeRow
 }
@@ -186,14 +187,20 @@ describe("member view-model derivations", () => {
       isVerified: true,
       verificationStatus: "VERIFIED",
       bio: null,
-      userId: "u1",
-      user: {
-        id: "u1",
-        name: "Legal Name",
-        image: "https://img.test/account.jpg",
-        passport: { displayName: "Public Name", avatarUrl: "https://img.test/passport.jpg" },
+      passportId: "p1",
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is `passport.user` (nullable).
+      passport: {
+        id: "p1",
+        displayName: "Public Name",
+        avatarUrl: "https://img.test/passport.jpg",
+        user: {
+          id: "u1",
+          name: "Legal Name",
+          image: "https://img.test/account.jpg",
+          memberships: [{ organization: { name: "Gracie Barra" } }],
+        },
         directoryProfile: null,
-        rankAwards: [
+        rankAwardsEarned: [
           {
             rank: {
               name: "Black Belt",
@@ -203,7 +210,6 @@ describe("member view-model derivations", () => {
           },
         ],
         affiliations: [],
-        memberships: [{ organization: { name: "Gracie Barra" } }],
       },
     } as unknown as LineageNodeRow
   }
@@ -211,9 +217,9 @@ describe("member view-model derivations", () => {
   test("memberAvatarSrc prefers passport avatar, falls back to account image, else null", () => {
     const node = makeRichNode()
     assert.equal(memberAvatarSrc(node), "https://img.test/passport.jpg")
-    node.user.passport = null
+    node.passport.avatarUrl = null
     assert.equal(memberAvatarSrc(node), "https://img.test/account.jpg")
-    node.user.image = null
+    node.passport.user!.image = null
     assert.equal(memberAvatarSrc(node), null)
   })
 
@@ -221,7 +227,7 @@ describe("member view-model derivations", () => {
     const node = makeRichNode()
     assert.equal(memberBeltColor(node, { colorHex: "#abcabc" } as never), "#abcabc")
     assert.equal(memberBeltColor(node), "#111111")
-    node.user.rankAwards = []
+    node.passport.rankAwardsEarned = []
     assert.equal(memberBeltColor(node), null)
   })
 
@@ -232,7 +238,7 @@ describe("member view-model derivations", () => {
       "Coral Belt · BJJ",
     )
     assert.equal(memberRankLabel(node), "Black Belt · Brazilian Jiu-Jitsu")
-    node.user.rankAwards = []
+    node.passport.rankAwardsEarned = []
     assert.equal(memberRankLabel(node), null)
   })
 
@@ -241,16 +247,16 @@ describe("member view-model derivations", () => {
     // No affiliation → falls back to the active membership org.
     assert.equal(memberSchoolLabel(node), "Gracie Barra")
     // Current affiliation with a linked org wins over membership.
-    node.user.affiliations = [
+    node.passport.affiliations = [
       { organization: { name: "Rigan Machado Affiliation" }, schoolName: null },
     ] as never
     assert.equal(memberSchoolLabel(node), "Rigan Machado Affiliation")
     // Free-text school (no linked org) is used when present.
-    node.user.affiliations = [{ organization: null, schoolName: "Backyard BJJ" }] as never
+    node.passport.affiliations = [{ organization: null, schoolName: "Backyard BJJ" }] as never
     assert.equal(memberSchoolLabel(node), "Backyard BJJ")
     // No affiliation and no membership → null.
-    node.user.affiliations = []
-    node.user.memberships = []
+    node.passport.affiliations = []
+    node.passport.user!.memberships = []
     assert.equal(memberSchoolLabel(node), null)
   })
 })

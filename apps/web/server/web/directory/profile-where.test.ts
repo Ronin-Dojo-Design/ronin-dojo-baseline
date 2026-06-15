@@ -6,9 +6,12 @@ const BRAND = "BASELINE_MARTIAL_ARTS"
 const OTHER_BRAND = "WEKAF"
 
 // Narrow the loose `Record<string, unknown>` clause for assertions.
+// Phase 3c (SOT-ADR D1): memberships are account-side, reached through passport.user.
 function membershipSome(where: Record<string, unknown>) {
-  const user = where.user as { memberships: { some: Record<string, unknown> } }
-  return user.memberships.some
+  const passport = where.passport as {
+    user: { memberships: { some: Record<string, unknown> } }
+  }
+  return passport.user.memberships.some
 }
 function organization(where: Record<string, unknown>) {
   return membershipSome(where).organization as { brand: string; slug?: string }
@@ -91,7 +94,8 @@ describe("buildDirectoryProfileWhere — filter narrowing", () => {
   it("builds a free-text OR across name + location without leaking private fields", () => {
     const where = buildDirectoryProfileWhere({ q: "smith" }, BRAND)
     expect(where.OR).toEqual([
-      { user: { name: { contains: "smith", mode: "insensitive" } } },
+      { passport: { displayName: { contains: "smith", mode: "insensitive" } } },
+      { passport: { user: { name: { contains: "smith", mode: "insensitive" } } } },
       { locationCity: { contains: "smith", mode: "insensitive" } },
       { locationRegion: { contains: "smith", mode: "insensitive" } },
     ])

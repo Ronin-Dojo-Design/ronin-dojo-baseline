@@ -34,14 +34,14 @@ export const submitProfileClaimRequest = userActionClient
       if (!org) throw new Error(PROFILE_CLAIM_ERROR.SUBJECT_NOT_FOUND)
       if (org.ownerId) throw new Error(PROFILE_CLAIM_ERROR.ORG_ALREADY_OWNED)
     } else {
-      // PERSON: a DirectoryProfile whose User is a legacy placeholder.
+      // PERSON: a DirectoryProfile whose Passport has no attached account (accountless = claimable).
       const profile = await db.directoryProfile.findFirst({
         where: { id: subjectId },
-        select: { id: true, user: { select: { isPlaceholder: true } } },
+        select: { id: true, passport: { select: { userId: true } } },
       })
 
       if (!profile) throw new Error(PROFILE_CLAIM_ERROR.SUBJECT_NOT_FOUND)
-      if (!profile.user.isPlaceholder) throw new Error(PROFILE_CLAIM_ERROR.PERSON_NOT_CLAIMABLE)
+      if (profile.passport.userId != null) throw new Error(PROFILE_CLAIM_ERROR.PERSON_NOT_CLAIMABLE)
     }
 
     // Duplicate guard: one open/approved claim per claimant per subject.

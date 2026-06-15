@@ -218,8 +218,10 @@ export const findDisciplineMembersByRank = async (disciplineId: string) => {
       status: MembershipStatus.ACTIVE,
       rankId: { not: null },
       user: {
-        directoryProfile: {
-          visibility: DirectoryVisibility.PUBLIC,
+        passport: {
+          directoryProfile: {
+            visibility: DirectoryVisibility.PUBLIC,
+          },
         },
       },
     },

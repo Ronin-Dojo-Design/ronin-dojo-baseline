@@ -114,9 +114,12 @@ export async function seedTournamentFixture(): Promise<TournamentFixture> {
     })
     userIds.push(user.id)
 
-    await prisma.passport.create({ data: { userId: user.id, displayName: user.name! } })
+    const passport = await prisma.passport.create({
+      data: { userId: user.id, displayName: user.name! },
+      select: { id: true },
+    })
     await prisma.directoryProfile.create({
-      data: { userId: user.id, slug: `e2e-fighter-${TS}-${i}` },
+      data: { passportId: passport.id, slug: `e2e-fighter-${TS}-${i}` },
     })
 
     const registration = await prisma.registration.create({
@@ -223,7 +226,7 @@ export async function cleanupTournamentFixture(fixture: TournamentFixture) {
   await prisma.registration.deleteMany({ where: { id: { in: fixture.registrationIds } } })
   for (const userId of fixture.userIds) {
     await prisma.session.deleteMany({ where: { userId } })
-    await prisma.directoryProfile.deleteMany({ where: { userId } })
+    await prisma.directoryProfile.deleteMany({ where: { passport: { userId } } })
     await prisma.passport.deleteMany({ where: { userId } })
   }
   await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })

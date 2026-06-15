@@ -73,16 +73,16 @@ function makeMember({
       isVerified,
       verificationStatus,
       bio: null,
-      userId: `user-${id}`,
+      passportId: `passport-${id}`,
       claimRequests,
-      user: {
-        id: `user-${id}`,
-        name,
-        image: null,
-        isPlaceholder,
-        passport: displayName || avatarUrl ? { displayName, avatarUrl } : null,
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; placeholder = accountless (user null).
+      passport: {
+        id: `passport-${id}`,
+        displayName,
+        avatarUrl,
+        user: isPlaceholder ? null : { id: `user-${id}`, name, image: null, memberships: [] },
         directoryProfile: null,
-        rankAwards: colorHex
+        rankAwardsEarned: colorHex
           ? [
               {
                 id: `ra-${id}`,
@@ -103,11 +103,11 @@ function makeMember({
                   },
                 },
                 awardedBy: null,
+                awardedByPassport: null,
               },
             ]
           : [],
         affiliations: [],
-        memberships: [],
       },
     },
   } as unknown as LineageTreeMemberRow

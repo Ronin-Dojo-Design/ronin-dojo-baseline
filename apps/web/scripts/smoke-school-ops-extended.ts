@@ -556,8 +556,7 @@ async function convertLeadLikeAction({
       where: { email: leadEmail },
       select: {
         id: true,
-        passport: { select: { id: true } },
-        directoryProfile: { select: { id: true } },
+        passport: { select: { id: true, directoryProfile: { select: { id: true } } } },
       },
     })
     const user =
@@ -566,18 +565,21 @@ async function convertLeadLikeAction({
         data: { email: leadEmail, name: "Smoke Lead", lastActiveBrandId: activeBrand },
         select: { id: true },
       }))
-    if (!existingUser?.passport) {
-      await tx.passport.create({
+    let passportId = existingUser?.passport?.id ?? null
+    if (!passportId) {
+      const passport = await tx.passport.create({
         data: {
           userId: user.id,
           displayName: "Smoke Lead",
           legalFirstName: "Smoke",
           legalLastName: "Lead",
         },
+        select: { id: true },
       })
+      passportId = passport.id
     }
-    if (!existingUser?.directoryProfile) {
-      await tx.directoryProfile.create({ data: { userId: user.id } })
+    if (!existingUser?.passport?.directoryProfile) {
+      await tx.directoryProfile.create({ data: { passportId } })
     }
 
     const membership = await tx.membership.upsert({

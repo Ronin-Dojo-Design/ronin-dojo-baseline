@@ -5,7 +5,7 @@ type: decision
 status: active
 created: 2026-06-10
 updated: 2026-06-15
-last_agent: codex-session-0391
+last_agent: claude-session-0392
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -93,6 +93,31 @@ refreshed into `dirstarter_template` at SESSION_0359.
   is the guarded step-6 SQL, but applying it before Phase 3c would break current read/write paths that
   still select satellite `user` relations. Phase 3c must repoint code to Passport/`awardedByPassport`
   before the drop SQL becomes executable on the app database.
+
+### D1 amendment — Phase 3c COMPLETE: person-rooted cutover landed *(SESSION_0392)*
+
+- **The satellite `user`/`userId` columns are DROPPED.** The 5 satellites (`DirectoryProfile`,
+  `LineageNode`, `Affiliation`, `RankAward` earner, `FightRecord`) are now `passportId`-canonical
+  (NOT NULL, `@unique`/`@@index`/`@@unique` moved over) with `onDelete: Cascade` (mirrors the old
+  User cascade — deleting a person removes their identity satellites). `User` keeps only account-side
+  relations + `awardedRankAwards` (the promoter actor).
+- **All read/write paths repointed.** Identity reads route through `node.passport` / `profile.passport`
+  (with `passport.user?` carrying account-side CARRY bits — memberships, techniqueProgress); promoter
+  display prefers `awardedByPassport` then `awardedBy`. The central read seam is
+  `server/web/lineage/payloads.ts` + `lib/lineage/canvas-model.ts` (+ directory payloads).
+- **Claim approve = `attachAccount(passportId, claimantUserId)`** (the node never moves). Result type
+  drops `placeholderArchivedUserId`/`placeholderArchivedAt`, adds `passportAccountAttached: boolean`.
+- **Placeholders are accountless Passports** (`passport.user == null` = claimable). Placeholder
+  creation (seeds, admin add-person, `createLineageMember(memberPassportId)`) mints via `createPassport`;
+  real-account paths use `ensurePassportForUser`.
+- **The drop ships as ONE self-sufficient Prisma migration** `20260615130000_phase3c_drop_satellite_user_columns`:
+  in-SQL data carry (mint Passports, copy promoters, backfill `passportId`, null placeholder `userId`,
+  detach + delete placeholders, assert) → DDL drop → FK re-root Cascade. Idempotent/no-op on empty
+  tables, so it is safe under both CI `migrate reset` and prod `migrate deploy` (supersedes the staged
+  `scripts/phase3b-*` script/SQL). cuid2 full-PK rewrite intentionally out of scope.
+- **Verified:** typecheck 0, lint/format/wiki green, **600 tests pass / 0 fail**, `migrate diff` empty,
+  `migrate reset`+seed → 23 accountless claimable Passports. Live browser proof deferred (local
+  owner-seed blocker; integration tests cover the repointed DB paths).
 
 ## D2 — Foundation-first on upstream-current Dirstarter
 

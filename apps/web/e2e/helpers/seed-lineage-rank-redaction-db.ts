@@ -54,13 +54,13 @@ async function sweepStaleRows() {
   await prisma.lineageVisualGroup.deleteMany({ where: { treeId: { in: treeIds } } })
   await prisma.lineageTree.deleteMany({ where: { id: { in: treeIds } } })
   await prisma.lineageNode.deleteMany({ where: { id: { in: nodeIds } } })
-  await prisma.rankAward.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.rankAward.deleteMany({ where: { passport: { userId: { in: userIds } } } })
   await prisma.rank.deleteMany({ where: { name: { contains: TAG_PREFIX } } })
   await prisma.rankSystem.deleteMany({ where: { name: { contains: TAG_PREFIX } } })
   await prisma.discipline.deleteMany({ where: { slug: { contains: TAG_PREFIX } } })
   await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.userEntitlement.deleteMany({ where: { userId: { in: userIds } } })
-  await prisma.directoryProfile.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.directoryProfile.deleteMany({ where: { passport: { userId: { in: userIds } } } })
   await prisma.passport.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: userIds } } })
 }
@@ -78,18 +78,19 @@ async function createUser({ runId, label }: { runId: string; label: string }) {
     },
   })
 
-  await prisma.passport.create({
+  const passport = await prisma.passport.create({
     data: { userId: user.id, displayName },
+    select: { id: true },
   })
   await prisma.directoryProfile.create({
     data: {
-      userId: user.id,
+      passportId: passport.id,
       slug,
       visibility: "PUBLIC",
     },
   })
 
-  return { user, displayName, slug }
+  return { user, passport, displayName, slug }
 }
 
 async function grantLineagePremiumEntitlement({
@@ -142,12 +143,13 @@ async function createUserNode({
     },
   })
 
-  await prisma.passport.create({
+  const passport = await prisma.passport.create({
     data: { userId: user.id, displayName },
+    select: { id: true },
   })
   await prisma.directoryProfile.create({
     data: {
-      userId: user.id,
+      passportId: passport.id,
       slug,
       visibility: "PUBLIC",
       showRanks,
@@ -156,7 +158,7 @@ async function createUserNode({
 
   const node = await prisma.lineageNode.create({
     data: {
-      userId: user.id,
+      passportId: passport.id,
       slug: `${slug}-node`,
       visibility: "PUBLIC",
       isVerified: true,
@@ -164,7 +166,7 @@ async function createUserNode({
     },
   })
 
-  return { user, node, displayName, slug }
+  return { user, passport, node, displayName, slug }
 }
 
 async function seedFixture(): Promise<LineageRankRedactionFixture> {
@@ -242,7 +244,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
 
   const rankAwardA = await prisma.rankAward.create({
     data: {
-      userId: memberAEntry.user.id,
+      passportId: memberAEntry.passport.id,
       rankId: rankA.id,
       awardedAt: new Date(Date.UTC(2020, 0, 1)),
     },
@@ -250,7 +252,7 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
 
   const rankAwardB = await prisma.rankAward.create({
     data: {
-      userId: memberBEntry.user.id,
+      passportId: memberBEntry.passport.id,
       rankId: rankB.id,
       awardedAt: new Date(Date.UTC(2021, 0, 1)),
     },
@@ -363,7 +365,9 @@ async function cleanupFixture(fixture: LineageRankRedactionFixture) {
   await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
   await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.userEntitlement.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.directoryProfile.deleteMany({ where: { userId: { in: fixture.userIds } } })
+  await prisma.directoryProfile.deleteMany({
+    where: { passport: { userId: { in: fixture.userIds } } },
+  })
   await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })
 }

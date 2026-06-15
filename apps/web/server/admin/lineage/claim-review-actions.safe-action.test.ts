@@ -35,6 +35,7 @@ const tag = (name: string) => `${PREFIX}-${name}`
 type Fixture = {
   treeId: string
   nodeId: string
+  nodePassportId: string
   memberId: string
   claimId: string
   claimantUserId: string
@@ -64,10 +65,15 @@ beforeAll(async () => {
   const placeholder = await createUser("placeholder", { isPlaceholder: true })
   const claimant = await createUser("claimant")
 
+  // Phase 3c (SOT-ADR D1): placeholder node = accountless Passport; approving attaches the claimant.
+  const nodePassport = await db.passport.create({
+    data: { displayName: tag("node") },
+    select: { id: true },
+  })
   const node = await db.lineageNode.create({
     data: {
       id: tag("node"),
-      userId: placeholder.id,
+      passportId: nodePassport.id,
       slug: tag("node"),
       visibility: "PUBLIC",
       verificationStatus: "PENDING",
@@ -111,6 +117,7 @@ beforeAll(async () => {
   fx = {
     treeId: tree.id,
     nodeId: node.id,
+    nodePassportId: nodePassport.id,
     memberId: member.id,
     claimId: claim.id,
     claimantUserId: claimant.id,
@@ -212,15 +219,11 @@ describe("reviewLineageClaim (safe-action wrapper)", () => {
     expect(result?.validationErrors).toBeUndefined()
     expect(result?.data?.status).toBe("APPROVED")
     expect(result?.data?.ownershipTransferred).toBe(true)
-    expect(result?.data?.placeholderArchivedUserId).toBe(fx.placeholderUserId)
-    expect(result?.data?.placeholderArchivedAt).toBeTruthy()
+    expect(result?.data?.passportAccountAttached).toBe(true)
 
-    const [node, placeholderUser] = await Promise.all([
-      db.lineageNode.findUnique({ where: { id: fx.nodeId } }),
-      db.user.findUnique({ where: { id: fx.placeholderUserId } }),
-    ])
+    const nodePassport = await db.passport.findUnique({ where: { id: fx.nodePassportId } })
 
-    expect(node?.userId).toBe(fx.claimantUserId)
-    expect(placeholderUser?.archivedAt).not.toBeNull()
+    // D1: the claimant account is now attached to the node's Passport (the node never moved).
+    expect(nodePassport?.userId).toBe(fx.claimantUserId)
   })
 })

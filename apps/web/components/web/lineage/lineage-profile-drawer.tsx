@@ -232,6 +232,14 @@ export function LineageProfileDrawer({
   )
 }
 
+// Phase 3c: identity is Passport-rooted. Earned rank awards hang off
+// `passport.rankAwardsEarned`; the attached account (memberships, CARRY) off
+// `passport.user`. Both `passport` and `passport.user` are nullable (accountless
+// placeholder), so callers narrow before indexing.
+type DrawerPassport = NonNullable<LineageNodeProfile["passport"]>
+type DrawerRankAward = DrawerPassport["rankAwardsEarned"][number]
+type DrawerAccount = DrawerPassport["user"]
+
 /**
  * Derive every display value the drawer needs from the profile + selected award.
  * Pure data shaping — extracted from DrawerBody so the body stays orchestration.
@@ -240,23 +248,24 @@ function deriveDrawerProfileView(
   profile: LineageNodeProfile,
   selectedRankAward: SelectedRankAward,
 ) {
-  const currentAward = profile.user.rankAwards[0] ?? null
+  const rankAwards = profile.passport?.rankAwardsEarned ?? []
+  const currentAward = rankAwards[0] ?? null
   const currentRank = currentAward?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
   const selectedProfileAward = selectedRankAward?.id
-    ? (profile.user.rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
+    ? (rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
     : null
   const panelAward = selectedProfileAward ?? currentAward
   const panelRank = panelAward?.rank ?? selectedRankAward?.rank ?? currentRank
   const claimStatus = pickLineageClaimStatus(profile.claimRequests)
 
   return {
-    displayName: profile.user.passport?.displayName ?? profile.user.name ?? "Unnamed",
-    avatarSrc: profile.user.passport?.avatarUrl ?? profile.user.image,
+    displayName: profile.passport?.displayName ?? profile.passport?.user?.name ?? "Unnamed",
+    avatarSrc: profile.passport?.avatarUrl ?? profile.passport?.user?.image ?? null,
     currentAward,
     currentRank,
     discipline,
-    latestMembership: profile.user.memberships[0] ?? null,
+    latestMembership: profile.passport?.user?.memberships[0] ?? null,
     instructorRelationship: profile.relationshipsTo[0] ?? null,
     panelAward,
     panelRank,
@@ -268,7 +277,7 @@ function deriveDrawerProfileView(
     trustStatus: resolveLineageTrustStatus({
       verificationStatus: profile.verificationStatus,
       isVerified: profile.isVerified,
-      isPlaceholder: profile.user.isPlaceholder,
+      isPlaceholder: profile.passport?.user == null,
       claimStatus,
     }),
   }
@@ -568,23 +577,26 @@ function InfoTab({
   onSelectStudent,
 }: {
   profile: LineageNodeProfile
-  currentRank: NonNullable<LineageNodeProfile["user"]["rankAwards"][number]>["rank"] | null
-  currentAward: LineageNodeProfile["user"]["rankAwards"][number] | null
-  discipline:
-    | NonNullable<
-        NonNullable<LineageNodeProfile["user"]["rankAwards"][number]>["rank"]
-      >["rankSystem"]["discipline"]
-    | null
-  latestMembership: LineageNodeProfile["user"]["memberships"][number] | null
+  currentRank: NonNullable<DrawerRankAward>["rank"] | null
+  currentAward: DrawerRankAward | null
+  discipline: NonNullable<DrawerRankAward["rank"]>["rankSystem"]["discipline"] | null
+  latestMembership: NonNullable<DrawerAccount>["memberships"][number] | null
   instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
   students?: LineageTreeMemberRow[]
   onSelectStudent?: (memberId: string) => void
 }) {
-  const awardedBy = currentAward?.awardedBy ?? null
+  // Promoter identity prefers the historical Passport promoter (SESSION_0391),
+  // falling back to the real-account actor that performed the award.
+  const awardedBy = currentAward?.awardedByPassport
+    ? {
+        name: currentAward.awardedByPassport.displayName,
+        image: currentAward.awardedByPassport.avatarUrl,
+      }
+    : (currentAward?.awardedBy ?? null)
   const promotedOn = formatDate(currentAward?.awardedAt ?? null)
   const instructorName =
-    instructorRelationship?.fromNode.user.passport?.displayName ??
-    instructorRelationship?.fromNode.user.name ??
+    instructorRelationship?.fromNode.passport?.displayName ??
+    instructorRelationship?.fromNode.passport?.user?.name ??
     null
 
   return (
@@ -701,7 +713,7 @@ function InfoTab({
 function promoterName(
   rel: LineageNodeProfile["relationshipsTo"][number] | null | undefined,
 ): string | null {
-  return rel?.fromNode.user.passport?.displayName ?? rel?.fromNode.user.name ?? null
+  return rel?.fromNode.passport?.displayName ?? rel?.fromNode.passport?.user?.name ?? null
 }
 
 function LineageTab({ relationships }: { relationships: LineageNodeProfile["relationshipsTo"] }) {

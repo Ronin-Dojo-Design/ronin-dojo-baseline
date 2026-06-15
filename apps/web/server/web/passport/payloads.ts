@@ -43,7 +43,7 @@ export const directoryProfileOnePayload = {
   videoIntroUrl: true,
   createdAt: true,
   updatedAt: true,
-  userId: true,
+  passportId: true,
 } satisfies Prisma.DirectoryProfileSelect
 
 export type DirectoryProfileOne = Prisma.DirectoryProfileGetPayload<{

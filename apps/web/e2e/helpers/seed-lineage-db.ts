@@ -42,16 +42,17 @@ async function createUserNode({
     },
   })
 
-  await prisma.passport.create({
+  const passport = await prisma.passport.create({
     data: { userId: user.id, displayName },
+    select: { id: true },
   })
   await prisma.directoryProfile.create({
-    data: { userId: user.id, slug },
+    data: { passportId: passport.id, slug },
   })
 
   const node = await prisma.lineageNode.create({
     data: {
-      userId: user.id,
+      passportId: passport.id,
       slug: `${slug}-node`,
       visibility,
       isVerified: true,
@@ -221,7 +222,9 @@ async function cleanupLineageVisibilityFixture(fixture: LineageVisibilityFixture
   await prisma.lineageTree.deleteMany({ where: { id: fixture.treeId } })
   await prisma.lineageNode.deleteMany({ where: { id: { in: fixture.nodeIds } } })
   await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.directoryProfile.deleteMany({ where: { userId: { in: fixture.userIds } } })
+  await prisma.directoryProfile.deleteMany({
+    where: { passport: { userId: { in: fixture.userIds } } },
+  })
   await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })
 }

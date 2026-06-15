@@ -174,7 +174,7 @@ export const updateLineageTreeMemberSelectedRank = userActionClient
         id: true,
         nodeId: true,
         rankAwardId: true,
-        node: { select: { userId: true } },
+        node: { select: { passportId: true } },
       },
     })
 
@@ -186,7 +186,7 @@ export const updateLineageTreeMemberSelectedRank = userActionClient
       const rankAward = await db.rankAward.findFirst({
         where: {
           id: parsedInput.rankAwardId,
-          userId: member.node.userId,
+          passportId: member.node.passportId,
         },
         select: { id: true },
       })

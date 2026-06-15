@@ -137,8 +137,13 @@ beforeAll(async () => {
   const rankAward = await db.rankAward.create({
     data: {
       id: tag("rank-award"),
-      userId: approvedClaimant.id,
-      rankId: rank.id,
+      passport: {
+        connectOrCreate: {
+          where: { userId: approvedClaimant.id },
+          create: { userId: approvedClaimant.id },
+        },
+      },
+      rank: { connect: { id: rank.id } },
       awardedAt: new Date(Date.UTC(2020, 0, 1)),
     },
   })
@@ -146,7 +151,12 @@ beforeAll(async () => {
   const node = await db.lineageNode.create({
     data: {
       id: tag("node"),
-      userId: approvedClaimant.id,
+      passport: {
+        connectOrCreate: {
+          where: { userId: approvedClaimant.id },
+          create: { userId: approvedClaimant.id },
+        },
+      },
       slug: tag("node-slug"),
       bio: "Original lineage bio",
       visibility: "PUBLIC",
@@ -157,7 +167,9 @@ beforeAll(async () => {
   const orphanNode = await db.lineageNode.create({
     data: {
       id: tag("orphan-node"),
-      userId: orphanUser.id,
+      passport: {
+        connectOrCreate: { where: { userId: orphanUser.id }, create: { userId: orphanUser.id } },
+      },
       slug: tag("orphan-node-slug"),
       visibility: "PUBLIC",
       verificationStatus: "PENDING",
@@ -278,7 +290,7 @@ describe("lineage node profile editing — logic", () => {
 
     expect(editable?.tree.id).toBe(fx!.treeId)
     expect(editable?.node.id).toBe(fx!.nodeId)
-    expect(editable?.node.user.passport?.displayName).toBe("Original Display Name")
+    expect(editable?.node.passport?.displayName).toBe("Original Display Name")
     expect(editable?.member.id).toBe(fx!.memberId)
     expect(editable?.member.selectedRankAward?.awardedAt?.toISOString()).toBe(
       new Date(Date.UTC(2020, 0, 1)).toISOString(),

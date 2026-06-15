@@ -146,7 +146,9 @@ export function FightRecordPanel({ fightRecordsPromise, completedMatches }: Figh
             <TableBody>
               {fightRecords.map(fr => (
                 <TableRow key={fr.id}>
-                  <TableCell className="font-medium">{fr.user.name ?? fr.user.email}</TableCell>
+                  <TableCell className="font-medium">
+                    {fr.passport.displayName ?? fr.passport.user?.name ?? fr.passport.user?.email}
+                  </TableCell>
                   <TableCell>{fr.discipline.name}</TableCell>
                   <TableCell>
                     <Badge variant="success" size="sm">

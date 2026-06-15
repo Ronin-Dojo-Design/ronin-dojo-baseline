@@ -30,9 +30,11 @@ type Fixtures = {
   rankId: string
   treeId: string
   parentUserId: string
+  parentPassportId: string
   parentNodeId: string
   parentMemberId: string
   childUserId: string
+  childPassportId: string
   childRankAwardId: string
 }
 
@@ -54,7 +56,13 @@ beforeAll(async () => {
   const parentUser = await db.user.create({
     data: { name: tag("parent"), email: email("parent"), isPlaceholder: true },
   })
-  const parentNode = await db.lineageNode.create({ data: { userId: parentUser.id } })
+  const parentPassport = await db.passport.create({
+    data: { userId: parentUser.id },
+    select: { id: true },
+  })
+  const parentNode = await db.lineageNode.create({
+    data: { passport: { connect: { id: parentPassport.id } } },
+  })
   const parentMember = await db.lineageTreeMember.create({
     data: { treeId: tree.id, nodeId: parentNode.id },
   })
@@ -62,10 +70,14 @@ beforeAll(async () => {
   const childUser = await db.user.create({
     data: { name: tag("child"), email: email("child"), isPlaceholder: true },
   })
+  const childPassport = await db.passport.create({
+    data: { userId: childUser.id },
+    select: { id: true },
+  })
   const childRankAward = await db.rankAward.create({
     data: {
-      userId: childUser.id,
-      rankId: rank.id,
+      passport: { connect: { id: childPassport.id } },
+      rank: { connect: { id: rank.id } },
       source: "STATED",
       verificationStatus: "UNVERIFIED",
     },
@@ -77,9 +89,11 @@ beforeAll(async () => {
     rankId: rank.id,
     treeId: tree.id,
     parentUserId: parentUser.id,
+    parentPassportId: parentPassport.id,
     parentNodeId: parentNode.id,
     parentMemberId: parentMember.id,
     childUserId: childUser.id,
+    childPassportId: childPassport.id,
     childRankAwardId: childRankAward.id,
   }
 })
@@ -107,7 +121,7 @@ describe("createLineageMember", () => {
       db,
       brand: TEST_BRAND,
       actorUserId: fx.parentUserId,
-      memberUserId: fx.childUserId,
+      memberPassportId: fx.childPassportId,
       treeId: fx.treeId,
       parentMemberId: fx.parentMemberId,
       rankAwardId: fx.childRankAwardId,
@@ -140,7 +154,7 @@ describe("createLineageMember", () => {
         db,
         brand: TEST_BRAND,
         actorUserId: fx.parentUserId,
-        memberUserId: fx.childUserId,
+        memberPassportId: fx.childPassportId,
         treeId: fx.treeId,
         parentMemberId: fx.parentMemberId,
         rankAwardId: fx.childRankAwardId,
@@ -154,7 +168,7 @@ describe("createLineageMember", () => {
         db,
         brand: TEST_BRAND,
         actorUserId: fx.parentUserId,
-        memberUserId: fx.parentUserId,
+        memberPassportId: fx.parentPassportId,
         treeId: "tree-does-not-exist",
       }),
     ).rejects.toThrow(CREATE_LINEAGE_MEMBER_ERROR.TREE_NOT_FOUND)
@@ -164,12 +178,16 @@ describe("createLineageMember", () => {
     const rootUser = await db.user.create({
       data: { name: tag("root"), email: email("root"), isPlaceholder: true },
     })
+    const rootPassport = await db.passport.create({
+      data: { userId: rootUser.id },
+      select: { id: true },
+    })
 
     const result = await createLineageMember({
       db,
       brand: TEST_BRAND,
       actorUserId: fx.parentUserId,
-      memberUserId: rootUser.id,
+      memberPassportId: rootPassport.id,
       treeId: fx.treeId,
     })
 

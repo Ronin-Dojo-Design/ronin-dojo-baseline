@@ -11,7 +11,7 @@ import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { type AdminLineageTreeMember, findLineageTreeDetail } from "~/server/admin/lineage/queries"
 
 function displayName(member: AdminLineageTreeMember) {
-  return member.node.user.passport?.displayName ?? member.node.user.name ?? "Unnamed profile"
+  return member.node.passport?.displayName ?? member.node.passport?.user?.name ?? "Unnamed profile"
 }
 
 function claimBadge(member: AdminLineageTreeMember) {
@@ -43,7 +43,7 @@ function claimBadge(member: AdminLineageTreeMember) {
       </Badge>
     )
   }
-  if (member.node.user.isPlaceholder) {
+  if (member.node.passport?.user == null) {
     return (
       <Badge variant="outline" size="sm">
         Unclaimed placeholder
@@ -156,7 +156,7 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
                 <Stack direction="column" size="xs" className="min-w-0">
                   <span className="truncate font-medium">{displayName(member)}</span>
                   <Stack size="xs" wrap>
-                    {member.node.user.isPlaceholder && (
+                    {member.node.passport?.user == null && (
                       <Badge variant="outline" size="sm">
                         Placeholder
                       </Badge>

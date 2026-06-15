@@ -19,18 +19,24 @@ const directoryLineageTrustPayload = {
   },
 } satisfies Prisma.LineageNodeSelect
 
-export const directoryUserPayload = {
+// @changed SESSION_0392 (Phase 3c) — DirectoryProfile is Passport-rooted (SOT-ADR D1). Identity
+// (displayName/avatarUrl) is on the Passport; the attached account (nullable `user`) carries the
+// account mirror (name/image/email) and account-side CARRY collections. A null `user` = placeholder.
+export const directoryPassportPayload = {
   id: true,
-  name: true,
-  image: true,
-  email: true,
-  isPlaceholder: true,
-  // Promoted Passport avatar is preferred over User.image at the projection
-  // layer (SESSION_0325). Only avatarUrl is selected — it is deliberately
-  // public (SESSION_0324); no other Passport field is widened into the list.
-  passport: { select: { avatarUrl: true } },
+  displayName: true,
+  // avatarUrl is deliberately public (SESSION_0324); preferred over the account image.
+  avatarUrl: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      email: true,
+    },
+  },
   lineageNode: { select: directoryLineageTrustPayload },
-} satisfies Prisma.UserSelect
+} satisfies Prisma.PassportSelect
 
 export const directoryMembershipPayload = {
   organization: { select: { id: true, name: true, slug: true } },
@@ -69,16 +75,24 @@ export const directoryProfileListPayload = {
   showPhone: true,
   showOrgs: true,
   showRanks: true,
-  user: {
+  passport: {
     select: {
-      ...directoryUserPayload,
+      ...directoryPassportPayload,
       affiliations: {
         where: { isCurrent: true },
         select: directoryAffiliationPayload,
         orderBy: { updatedAt: "desc" as const },
       },
-      memberships: { select: directoryMembershipPayload },
-      rankAwards: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          email: true,
+          memberships: { select: directoryMembershipPayload },
+        },
+      },
+      rankAwardsEarned: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
         take: 1,
@@ -101,15 +115,14 @@ export const directoryProfilePreviewPayload = {
   slug: true,
   visibility: true,
   showRanks: true,
-  user: {
+  passport: {
     select: {
       id: true,
-      name: true,
-      image: true,
-      isPlaceholder: true,
-      passport: { select: { avatarUrl: true } },
+      displayName: true,
+      avatarUrl: true,
+      user: { select: { id: true, name: true, image: true } },
       lineageNode: { select: directoryLineageTrustPayload },
-      rankAwards: {
+      rankAwardsEarned: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
       },
@@ -138,37 +151,38 @@ export const directoryProfileDetailPayload = {
   showRanks: true,
   coverPhotoUrl: true,
   videoIntroUrl: true,
-  user: {
+  passport: {
     select: {
       id: true,
-      name: true,
-      image: true,
-      email: true,
-      isPlaceholder: true,
-      passport: {
+      displayName: true,
+      avatarUrl: true,
+      bio: true,
+      socialLinks: true,
+      user: {
         select: {
-          avatarUrl: true,
-          bio: true,
-          socialLinks: true,
+          id: true,
+          name: true,
+          image: true,
+          email: true,
+          memberships: {
+            select: {
+              ...directoryMembershipPayload,
+              joinedAt: true,
+            },
+          },
+          techniqueProgress: {
+            select: {
+              id: true,
+              status: true,
+              verifiedById: true,
+            },
+          },
         },
       },
       lineageNode: { select: directoryLineageTrustPayload },
-      memberships: {
-        select: {
-          ...directoryMembershipPayload,
-          joinedAt: true,
-        },
-      },
-      rankAwards: {
+      rankAwardsEarned: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
-      },
-      techniqueProgress: {
-        select: {
-          id: true,
-          status: true,
-          verifiedById: true,
-        },
       },
     },
   },

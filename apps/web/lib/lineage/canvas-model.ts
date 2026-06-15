@@ -39,28 +39,28 @@ export type ChildGroup = {
 }
 
 export function nodeDisplayName(node: LineageNodeRow): string {
-  return node.user.passport?.displayName ?? node.user.name ?? node.slug ?? node.id
+  return node.passport?.displayName ?? node.passport?.user?.name ?? node.slug ?? node.id
 }
 
 /**
- * Public avatar source for a member — passport avatar first, then the account
- * image (the role-agnostic Passport-avatar rule, SESSION_0326). Null → render
- * the `memberInitials` fallback. Shared so every member surface resolves it
- * identically instead of re-inlining the `?? image` fallback.
+ * Public avatar source for a member — passport avatar first, then the attached
+ * account image (the role-agnostic Passport-avatar rule, SESSION_0326). Null →
+ * render the `memberInitials` fallback. Shared so every member surface resolves
+ * it identically instead of re-inlining the `?? image` fallback.
  */
 export function memberAvatarSrc(node: LineageNodeRow): string | null {
-  return node.user.passport?.avatarUrl ?? node.user.image ?? null
+  return node.passport?.avatarUrl ?? node.passport?.user?.image ?? null
 }
 
 /**
  * Belt color hex for the member's *shown* rank — the tree-member's selected
- * rank award wins, else the user's latest overall award. Null → no swatch.
+ * rank award wins, else the person's latest overall award. Null → no swatch.
  */
 export function memberBeltColor(
   node: LineageNodeRow,
   selectedRank?: SelectedRank | null,
 ): string | null {
-  return selectedRank?.colorHex ?? node.user.rankAwards?.[0]?.rank.colorHex ?? null
+  return selectedRank?.colorHex ?? node.passport?.rankAwardsEarned?.[0]?.rank.colorHex ?? null
 }
 
 /**
@@ -77,7 +77,7 @@ export function memberRankLabel(
     }`
   }
 
-  const latestRankAward = node.user.rankAwards?.[0]
+  const latestRankAward = node.passport?.rankAwardsEarned?.[0]
   if (!latestRankAward?.rank) return null
 
   return `${latestRankAward.rank.name}${
@@ -94,11 +94,11 @@ export function memberRankLabel(
  * Affiliation is a separate display axis from promotion lineage (passport-and-shells.md).
  */
 export function memberSchoolLabel(node: LineageNodeRow): string | null {
-  const affiliation = node.user.affiliations?.[0]
+  const affiliation = node.passport?.affiliations?.[0]
   return (
     affiliation?.organization?.name ??
     affiliation?.schoolName ??
-    node.user.memberships?.[0]?.organization?.name ??
+    node.passport?.user?.memberships?.[0]?.organization?.name ??
     null
   )
 }

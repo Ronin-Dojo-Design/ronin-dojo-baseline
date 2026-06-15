@@ -122,7 +122,9 @@ export const findAddPersonOptions = async () => {
         id: true,
         treeId: true,
         node: {
-          select: { user: { select: { name: true, passport: { select: { displayName: true } } } } },
+          select: {
+            passport: { select: { displayName: true, user: { select: { name: true } } } },
+          },
         },
       },
       orderBy: { visualSortOrder: "asc" },
@@ -144,7 +146,7 @@ export const findAddPersonOptions = async () => {
     treeMembers: treeMembers.map(member => ({
       id: member.id,
       treeId: member.treeId,
-      label: member.node.user.passport?.displayName || member.node.user.name,
+      label: member.node.passport?.displayName || member.node.passport?.user?.name || "Unnamed",
     })),
   }
 }

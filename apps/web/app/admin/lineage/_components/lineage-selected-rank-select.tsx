@@ -18,7 +18,9 @@ function formatDate(date: Date | null) {
   return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
 }
 
-function rankAwardLabel(award: AdminLineageTreeMember["node"]["user"]["rankAwards"][number]) {
+function rankAwardLabel(
+  award: NonNullable<AdminLineageTreeMember["node"]["passport"]>["rankAwardsEarned"][number],
+) {
   const disciplineName = award.rank.rankSystem.discipline?.name ?? award.rank.rankSystem.name
   const rankName = award.rank.shortName
     ? `${award.rank.name} (${award.rank.shortName})`
@@ -40,7 +42,7 @@ export function LineageSelectedRankSelect({
 }: LineageSelectedRankSelectProps) {
   const [value, setValue] = useState(member.rankAwardId ?? CLEAR_SELECTED_RANK)
   const action = useAction(updateLineageTreeMemberSelectedRank)
-  const rankAwards = member.node.user.rankAwards
+  const rankAwards = member.node.passport?.rankAwardsEarned ?? []
 
   if (rankAwards.length === 0) {
     return <Note className="text-xs">No rank awards on this profile yet.</Note>

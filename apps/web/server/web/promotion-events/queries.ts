@@ -42,11 +42,11 @@ const summarizeAward = (
   award: PromotionEventCard["rankAwards"][number] | PromotionTimelineAwardRow,
 ): PromotionTimelineAwardSummary => ({
   id: award.id,
-  personName: award.user.name ?? "Unnamed promotee",
+  personName: award.passport.displayName ?? award.passport.user?.name ?? "Unnamed promotee",
   rankName: award.rank.name,
   rankShortName: award.rank.shortName,
   awardedAt: award.awardedAt,
-  promoterName: award.awardedBy?.name ?? null,
+  promoterName: award.awardedByPassport?.displayName ?? award.awardedBy?.name ?? null,
   organizationName: award.organization?.name ?? null,
 })
 

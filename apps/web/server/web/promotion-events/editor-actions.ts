@@ -47,7 +47,7 @@ const authorizableRankAwardSelect = {
   awardedById: true,
   organizationId: true,
   promotionEventId: true,
-  user: {
+  passport: {
     select: {
       lineageNode: {
         select: { id: true },

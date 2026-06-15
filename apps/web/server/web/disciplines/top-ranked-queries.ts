@@ -10,14 +10,16 @@ import { db } from "~/services/db"
 
 // DTO — the strict shape the rail consumes; no raw Prisma rows reach the component.
 const topRankedAwardSelect = {
-  userId: true,
+  passportId: true,
   rank: { select: { name: true, colorHex: true, sortOrder: true } },
-  user: {
+  // Phase 3c (SOT-ADR D1): the earner is Passport-rooted; identity is on the Passport, with the
+  // attached account image as a fallback.
+  passport: {
     select: {
       id: true,
-      name: true,
-      image: true,
-      passport: { select: { displayName: true, avatarUrl: true } },
+      displayName: true,
+      avatarUrl: true,
+      user: { select: { id: true, name: true, image: true } },
     },
   },
 } satisfies Prisma.RankAwardSelect
@@ -54,10 +56,10 @@ export async function getTopRankedMembersForDiscipline({
   const awards = await db.rankAward.findMany({
     where: {
       rank: { rankSystem: { disciplineId } },
-      user: {
+      passport: {
         OR: [
           { lineageNode: { treeMembers: { some: { tree: { brand } } } } },
-          { memberships: { some: { organization: { brand } } } },
+          { user: { memberships: { some: { organization: { brand } } } } },
         ],
       },
     },
@@ -69,12 +71,12 @@ export async function getTopRankedMembersForDiscipline({
   const seen = new Set<string>()
   const members: TopRankedMember[] = []
   for (const award of awards) {
-    if (seen.has(award.userId)) continue
-    seen.add(award.userId)
+    if (seen.has(award.passportId)) continue
+    seen.add(award.passportId)
     members.push({
-      id: award.userId,
-      name: award.user.passport?.displayName ?? award.user.name,
-      image: award.user.passport?.avatarUrl ?? award.user.image ?? null,
+      id: award.passportId,
+      name: award.passport.displayName ?? award.passport.user?.name ?? "Unnamed",
+      image: award.passport.avatarUrl ?? award.passport.user?.image ?? null,
       rankName: award.rank.name,
       colorHex: award.rank.colorHex,
     })

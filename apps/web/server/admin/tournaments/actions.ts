@@ -5,6 +5,7 @@ import type { z } from "zod"
 import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
+import { ensurePassportForUser } from "~/server/identity/person-service"
 import { seedEntries } from "~/server/admin/tournaments/bracket-seeding"
 import {
   bulkRegistrationStatusUpdateSchema,
@@ -569,17 +570,22 @@ export const generateBracket = tournamentAdminActionClient
               select: {
                 id: true,
                 name: true,
-                rankAwards: {
-                  where: {
-                    rank: {
-                      rankSystem: {
-                        disciplineId: division.tournamentDiscipline.disciplineId,
+                // Phase 3c: earned ranks are Passport-rooted.
+                passport: {
+                  select: {
+                    rankAwardsEarned: {
+                      where: {
+                        rank: {
+                          rankSystem: {
+                            disciplineId: division.tournamentDiscipline.disciplineId,
+                          },
+                        },
                       },
+                      select: { rank: { select: { sortOrder: true } } },
+                      orderBy: { awardedAt: "desc" },
+                      take: 1,
                     },
                   },
-                  select: { rank: { select: { sortOrder: true } } },
-                  orderBy: { awardedAt: "desc" },
-                  take: 1,
                 },
               },
             },
@@ -651,15 +657,23 @@ export const generateBracket = tournamentAdminActionClient
         seedingMethod === "TOURNAMENT_RANKING"
           ? await tx.fightRecord.findMany({
               where: {
-                userId: { in: userIds },
+                // Phase 3c: FightRecord is Passport-rooted; map back to the account id for seeding.
+                passport: { userId: { in: userIds } },
                 disciplineId: division.tournamentDiscipline.disciplineId,
               },
-              select: { userId: true, wins: true, losses: true, draws: true },
+              select: {
+                passport: { select: { userId: true } },
+                wins: true,
+                losses: true,
+                draws: true,
+              },
             })
           : []
 
       const fightRecordMap = new Map(
-        fightRecords.map(fr => [fr.userId, fr.wins - fr.losses + fr.draws * 0.5]),
+        fightRecords.flatMap(fr =>
+          fr.passport.userId ? [[fr.passport.userId, fr.wins - fr.losses + fr.draws * 0.5]] : [],
+        ),
       )
 
       const manualSeedMap = new Map((manualSeeds ?? []).map(ms => [ms.entryId, ms.seed]))
@@ -671,7 +685,8 @@ export const generateBracket = tournamentAdminActionClient
           registrationOrder: i,
           tournamentRankingScore:
             seedUserId !== undefined ? (fightRecordMap.get(seedUserId) ?? null) : null,
-          martialArtsRankOrdinal: e.registration.user?.rankAwards?.[0]?.rank?.sortOrder ?? null,
+          martialArtsRankOrdinal:
+            e.registration.user?.passport?.rankAwardsEarned?.[0]?.rank?.sortOrder ?? null,
           manualSeed: manualSeedMap.get(e.id) ?? null,
         }
       })
@@ -1219,16 +1234,19 @@ export const publishFightRecord = tournamentAdminActionClient
       const isDraw = match.result === "DRAW"
       const isNoContest = match.result === "NO_CONTEST"
 
+      // Phase 3c: FightRecord is Passport-rooted; resolve/mint the competitor's Passport.
+      const passport = await ensurePassportForUser(userId, {}, db)
+
       await db.fightRecord.upsert({
         where: {
-          userId_disciplineId_type: {
-            userId,
+          passportId_disciplineId_type: {
+            passportId: passport.id,
             disciplineId,
             type: "TOURNAMENT",
           },
         },
         create: {
-          userId,
+          passportId: passport.id,
           disciplineId,
           type: "TOURNAMENT",
           wins: isWinner ? 1 : 0,

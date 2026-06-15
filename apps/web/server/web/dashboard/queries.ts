@@ -56,8 +56,9 @@ export const findUserPassport = cache(async (userId: string) => {
 })
 
 export const findUserDirectoryProfile = cache(async (userId: string) => {
-  return db.directoryProfile.findUnique({
-    where: { userId },
+  // Phase 3c: DirectoryProfile is Passport-rooted; resolve via the account's Passport.
+  return db.directoryProfile.findFirst({
+    where: { passport: { userId } },
   })
 })
 

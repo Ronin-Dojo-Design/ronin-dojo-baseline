@@ -410,11 +410,18 @@ export const findFightRecordsByTournament = async (tournamentId: string) => {
   if (userIds.length === 0) return []
 
   return db.fightRecord.findMany({
-    where: { userId: { in: userIds } },
+    where: { passport: { userId: { in: userIds } } },
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      // Phase 3c: FightRecord is Passport-rooted; identity + account reached via the Passport.
+      passport: {
+        select: {
+          id: true,
+          displayName: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
+      },
       discipline: { select: { id: true, name: true } },
     },
-    orderBy: [{ userId: "asc" }, { disciplineId: "asc" }],
+    orderBy: [{ passportId: "asc" }, { disciplineId: "asc" }],
   })
 }

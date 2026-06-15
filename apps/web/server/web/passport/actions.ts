@@ -22,8 +22,14 @@ export const updatePassport = userActionClient
 export const updateDirectoryProfile = userActionClient
   .inputSchema(updateDirectoryProfileSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const profile = await db.directoryProfile.update({
+    // Phase 3c: DirectoryProfile is Passport-rooted; resolve the account's Passport, then update by it.
+    const passport = await db.passport.findUnique({
       where: { userId: user.id },
+      select: { id: true },
+    })
+    if (!passport) throw new Error("PASSPORT_NOT_FOUND")
+    const profile = await db.directoryProfile.update({
+      where: { passportId: passport.id },
       data: parsedInput,
     })
 

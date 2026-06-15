@@ -8,7 +8,7 @@ import {
   totalProgressionPoints,
 } from "./rank-progression"
 
-type RankAward = LineageNodeProfile["user"]["rankAwards"][number]
+type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
 
 const BJJ_RANKS = [
   { id: "rank-white", sortOrder: 1, name: "White Belt", shortName: "White", colorHex: "#ffffff" },

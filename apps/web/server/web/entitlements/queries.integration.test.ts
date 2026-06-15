@@ -140,7 +140,7 @@ describe("canUploadMedia", () => {
     // Clean up users — must delete passport + directoryProfile first
     for (const userId of cleanup.userIds) {
       await db.passport.deleteMany({ where: { userId } })
-      await db.directoryProfile.deleteMany({ where: { userId } })
+      await db.directoryProfile.deleteMany({ where: { passport: { userId } } })
       await db.account.deleteMany({ where: { userId } })
       await db.session.deleteMany({ where: { userId } })
     }

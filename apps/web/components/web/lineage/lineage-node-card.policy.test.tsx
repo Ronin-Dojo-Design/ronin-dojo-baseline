@@ -12,14 +12,33 @@ const node = {
   isVerified: true,
   verificationStatus: "VERIFIED",
   bio: "Private biography should not render on a free card.",
-  userId: "user-session-0347",
-  user: {
-    id: "user-session-0347",
-    name: "Legal Name",
-    image: "https://images.test/user.jpg",
-    passport: {
-      displayName: "Public Name",
-      avatarUrl: "https://images.test/passport.jpg",
+  passportId: "passport-session-0347",
+  // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is `passport.user`.
+  passport: {
+    id: "passport-session-0347",
+    displayName: "Public Name",
+    avatarUrl: "https://images.test/passport.jpg",
+    user: {
+      id: "user-session-0347",
+      name: "Legal Name",
+      image: "https://images.test/user.jpg",
+      memberships: [
+        {
+          id: "membership-session-0347",
+          discipline: {
+            id: "discipline-session-0347",
+            name: "Brazilian Jiu-Jitsu",
+            slug: "bjj",
+          },
+          organization: {
+            id: "org-session-0347",
+            name: "Hidden School",
+            slug: "hidden-school",
+            city: "Denver",
+            state: "CO",
+          },
+        },
+      ],
     },
     directoryProfile: {
       locationCity: null,
@@ -28,7 +47,7 @@ const node = {
       visibility: "PUBLIC",
       showRanks: true,
     },
-    rankAwards: [
+    rankAwardsEarned: [
       {
         id: "rank-award-session-0347",
         awardedAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -55,23 +74,7 @@ const node = {
           name: "Promoter",
           image: null,
         },
-      },
-    ],
-    memberships: [
-      {
-        id: "membership-session-0347",
-        discipline: {
-          id: "discipline-session-0347",
-          name: "Brazilian Jiu-Jitsu",
-          slug: "bjj",
-        },
-        organization: {
-          id: "org-session-0347",
-          name: "Hidden School",
-          slug: "hidden-school",
-          city: "Denver",
-          state: "CO",
-        },
+        awardedByPassport: null,
       },
     ],
   },

@@ -74,11 +74,11 @@ model User {
   bookmarks Bookmark[]
 
   // Relations (Ronin Dojo)
+  // @changed SESSION_0392 (Phase 3c) — identity satellites (directoryProfile, lineageNode,
+  // affiliations, rankAwards earner, fightRecords) re-rooted onto Passport (SOT-ADR D1); their
+  // User back-relations were dropped. `awardedRankAwards` stays — the promoter is an account actor.
   passport                   Passport?
-  directoryProfile           DirectoryProfile?
   memberships                Membership[]
-  affiliations               Affiliation[]
-  rankAwards                 RankAward[]                 @relation("EarnedBy")
   awardedRankAwards          RankAward[]                 @relation("AwardedBy")
   ownedOrganizations         Organization[]              @relation("OrganizationOwner")
   lineageTreeAccessGrants    LineageTreeAccess[]         @relation("LineageTreeAccessUser")
@@ -90,7 +90,6 @@ model User {
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
-  lineageNode                LineageNode?
   courseEnrollments          CourseEnrollment[]
   waiverSignatures           WaiverSignature[]
   waiverSignaturesOnBehalf   WaiverSignature[]           @relation("SignedOnBehalf")
@@ -119,7 +118,6 @@ model User {
   createdInvites     Invite[]            @relation("InviteCreatedBy")
   inviteClaims       InviteClaim[]
   eventRegistrations EventRegistration[]
-  fightRecords       FightRecord[]
   auditLogs          AuditLog[]
 
   // Wave C relations
@@ -1014,12 +1012,11 @@ model DirectoryProfile {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String                @unique
-  // @added SESSION_0390 (Phase 3a) — Passport-rooted identity satellite (SOT-ADR D1). Additive;
-  // becomes the canonical FK (passportId @unique NOT NULL) when userId drops in Phase 3b.
-  passport      Passport?             @relation(fields: [passportId], references: [id])
-  passportId    String?               @unique
+  // @changed SESSION_0392 (Phase 3c) — Passport is the identity root (SOT-ADR D1); the old
+  // `user`/`userId` satellite FK was dropped. `passportId` is the canonical @unique NOT NULL link.
+  // onDelete: Cascade mirrors the old User cascade (deleting a person removes their satellites).
+  passport      Passport              @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId    String                @unique
   claimRequests ProfileClaimRequest[]
 }
 
@@ -1310,16 +1307,15 @@ model Affiliation {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String
-  // @added SESSION_0390 (Phase 3a) — Passport-rooted identity satellite (SOT-ADR D1). Additive,
-  // non-unique (a person has many affiliations); @@index([userId,isCurrent]) moves to passportId in 3b.
-  passport       Passport?     @relation(fields: [passportId], references: [id])
-  passportId     String?
+  // @changed SESSION_0392 (Phase 3c) — Passport is the identity root (SOT-ADR D1); the old
+  // `user`/`userId` satellite FK was dropped. `passportId` is the canonical link (non-unique;
+  // a person has many affiliations). onDelete: Cascade mirrors the old User cascade.
+  passport       Passport      @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId     String
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   organizationId String?
 
-  @@index([userId, isCurrent])
+  @@index([passportId, isCurrent])
   @@index([organizationId])
 }
 
@@ -2027,13 +2023,12 @@ model RankAward {
   createdAt          DateTime                    @default(now())
   updatedAt          DateTime                    @updatedAt
 
-  user                User          @relation("EarnedBy", fields: [userId], references: [id], onDelete: Cascade)
-  userId              String
-  // @added SESSION_0390 (Phase 3a) — Passport-rooted EARNER satellite (SOT-ADR D1; RankAward is DUAL).
-  // Additive; the earner FK becomes passportId and @@unique([userId,rankId])→([passportId,rankId]) in
-  // Phase 3b. The promoter link (awardedBy/awardedById) STAYS on User — it is an acting account.
-  passport            Passport?     @relation(fields: [passportId], references: [id])
-  passportId          String?
+  // @changed SESSION_0392 (Phase 3c) — Passport is the identity root for the EARNER (SOT-ADR D1;
+  // RankAward is DUAL). The old earner `user`/`userId` FK was dropped; `passportId` is canonical
+  // (onDelete: Cascade mirrors the old User cascade). The promoter link (awardedBy/awardedById)
+  // STAYS on User — it is an acting account.
+  passport            Passport      @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId          String
   rank                Rank          @relation(fields: [rankId], references: [id], onDelete: Restrict)
   rankId              String
   awardedBy           User?         @relation("AwardedBy", fields: [awardedById], references: [id])
@@ -2065,8 +2060,8 @@ model RankAward {
   // @why     Wire MediaAttachment back-relation (D4)
   mediaAttachments     MediaAttachment[]
 
-  @@unique([userId, rankId])
-  @@index([userId, awardedAt])
+  @@unique([passportId, rankId])
+  @@index([passportId, awardedAt])
   @@index([rankId])
   @@index([awardedById])
   @@index([awardedByPassportId])
@@ -2521,13 +2516,12 @@ model LineageNode {
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
 
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String    @unique
-  // @added SESSION_0390 (Phase 3a) — Passport-rooted identity satellite (SOT-ADR D1). Additive;
-  // becomes passportId @unique NOT NULL when userId drops in Phase 3b. This is the model the claim
-  // flow rewrites: claim will set Passport.userId rather than moving this node's FK (preflight §6).
-  passport   Passport? @relation(fields: [passportId], references: [id])
-  passportId String?   @unique
+  // @changed SESSION_0392 (Phase 3c) — Passport is the identity root (SOT-ADR D1); the old
+  // `user`/`userId` satellite FK was dropped. `passportId` is the canonical @unique NOT NULL link
+  // (onDelete: Cascade mirrors the old User cascade). The claim flow attaches an account to this
+  // node's Passport (Passport.userId), never moving the node.
+  passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId String   @unique
 
   relationshipsFrom LineageRelationship[] @relation("LineageFrom")
   relationshipsTo   LineageRelationship[] @relation("LineageTo")
@@ -3159,18 +3153,16 @@ model FightRecord {
   noContests Int             @default(0)
   updatedAt  DateTime        @updatedAt
 
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
-  // @added SESSION_0390 (Phase 3a) — FightRecord PROMOTED to a 5th identity satellite (operator,
-  // SESSION_0390 grill — overrides the preflight 4-satellite default). Additive; @@unique +
-  // @@index([userId]) move to passportId in Phase 3b. See the SOT-ADR D1 amendment.
-  passport     Passport?  @relation(fields: [passportId], references: [id])
-  passportId   String?
+  // @changed SESSION_0392 (Phase 3c) — Passport is the identity root (SOT-ADR D1); the old
+  // `user`/`userId` satellite FK was dropped. `passportId` is the canonical link (onDelete: Cascade
+  // mirrors the old User cascade). See SOT-ADR D1.
+  passport     Passport   @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId   String
   discipline   Discipline @relation(fields: [disciplineId], references: [id])
   disciplineId String
 
-  @@unique([userId, disciplineId, type])
-  @@index([userId])
+  @@unique([passportId, disciplineId, type])
+  @@index([passportId])
 }
 
 model AuditLog {

@@ -13,7 +13,7 @@ import { LineageRankProgressionPanel } from "~/components/web/lineage/lineage-ra
 import { cx } from "~/lib/utils"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
-type RankAward = LineageNodeProfile["user"]["rankAwards"][number]
+type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
 
 function initials(name: string | null | undefined): string {
   if (!name) return "?"
@@ -64,7 +64,7 @@ export function LineageRankHistoryTab({
   profile: LineageNodeProfile
   selectedRankAwardId?: string | null
 }) {
-  const awards = profile.user.rankAwards
+  const awards = profile.passport?.rankAwardsEarned ?? []
 
   if (awards.length === 0) {
     return (
@@ -114,6 +114,11 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
   const rankStyle = award.rank.colorHex
     ? ({ "--rank-color": award.rank.colorHex } as CSSProperties)
     : undefined
+  // Promoter identity prefers the historical Passport promoter (SESSION_0391),
+  // falling back to the real-account actor.
+  const awardedBy = award.awardedByPassport
+    ? { name: award.awardedByPassport.displayName, image: award.awardedByPassport.avatarUrl }
+    : award.awardedBy
 
   return (
     <article
@@ -164,15 +169,15 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
           )}
         </Stack>
 
-        {award.awardedBy ? (
+        {awardedBy ? (
           <Stack size="sm">
             <Avatar className="size-7">
-              {award.awardedBy.image && (
-                <AvatarImage src={award.awardedBy.image} alt={award.awardedBy.name ?? "Awarder"} />
+              {awardedBy.image && (
+                <AvatarImage src={awardedBy.image} alt={awardedBy.name ?? "Awarder"} />
               )}
-              <AvatarFallback>{initials(award.awardedBy.name)}</AvatarFallback>
+              <AvatarFallback>{initials(awardedBy.name)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm">{award.awardedBy.name ?? "Unnamed awarder"}</span>
+            <span className="text-sm">{awardedBy.name ?? "Unnamed awarder"}</span>
           </Stack>
         ) : (
           <Note className="text-xs">Awarding instructor not resolved.</Note>

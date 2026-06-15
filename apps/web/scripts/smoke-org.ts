@@ -31,14 +31,20 @@ async function main() {
   const owner = await db.user.create({
     data: { name: "Org Owner", email: `smoke-owner-${TS}@test.local` },
   })
-  await db.passport.create({ data: { userId: owner.id, displayName: "Owner" } })
-  await db.directoryProfile.create({ data: { userId: owner.id } })
+  const ownerPassport = await db.passport.create({
+    data: { userId: owner.id, displayName: "Owner" },
+    select: { id: true },
+  })
+  await db.directoryProfile.create({ data: { passportId: ownerPassport.id } })
 
   const joiner = await db.user.create({
     data: { name: "Org Joiner", email: `smoke-joiner-${TS}@test.local` },
   })
-  await db.passport.create({ data: { userId: joiner.id, displayName: "Joiner" } })
-  await db.directoryProfile.create({ data: { userId: joiner.id } })
+  const joinerPassport = await db.passport.create({
+    data: { userId: joiner.id, displayName: "Joiner" },
+    select: { id: true },
+  })
+  await db.directoryProfile.create({ data: { passportId: joinerPassport.id } })
   console.log(`   Owner: ${owner.id}, Joiner: ${joiner.id}`)
 
   // ── Step 2: Create a Discipline ──────────────────────────────────────────
@@ -127,7 +133,7 @@ async function main() {
   await db.organization.delete({ where: { id: org.id } })
   await db.discipline.delete({ where: { id: discipline.id } })
   for (const u of [owner, joiner]) {
-    await db.directoryProfile.delete({ where: { userId: u.id } })
+    await db.directoryProfile.deleteMany({ where: { passport: { userId: u.id } } })
     await db.passport.delete({ where: { userId: u.id } })
     await db.user.delete({ where: { id: u.id } })
   }

@@ -1,12 +1,12 @@
 "use server"
 
-import { getRandomString, slugify } from "@dirstack/utils"
 import { after } from "next/server"
 import { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import { removeS3Directories } from "~/lib/media"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
 import { createPersonSchema, userSchema } from "~/server/admin/users/schema"
+import { createPassport } from "~/server/identity/person-service"
 import { createLineageMember } from "~/server/web/lineage/create-lineage-member"
 import type { db as appDb } from "~/services/db"
 
@@ -60,7 +60,6 @@ export const createPerson = adminActionClient
     const {
       name,
       displayName,
-      email,
       rankId,
       organizationId,
       schoolName,
@@ -69,29 +68,19 @@ export const createPerson = adminActionClient
       parentMemberId,
     } = parsedInput
 
-    // Better Auth `User.email` is @unique + non-null; a placeholder has no real address, so mint a
-    // deterministically-unique synthetic one (mirrors the seed's placeholder-email pattern).
-    const trimmedEmail = email?.trim()
-    const placeholderEmail =
-      trimmedEmail && trimmedEmail.length > 0
-        ? trimmedEmail
-        : `${slugify(name) || "person"}.${getRandomString(8).toLowerCase()}@placeholder.invalid`
-
     const trimmedSchool = schoolName?.trim()
 
     const created = await db.$transaction(async tx => {
-      const person = await tx.user.create({
-        data: { name, email: placeholderEmail, isPlaceholder: true },
-        select: { id: true },
-      })
-
-      await tx.passport.create({
-        data: { userId: person.id, displayName: displayName?.trim() || name },
-      })
+      // Phase 3c (SOT-ADR D1): a placeholder person is an ACCOUNTLESS Passport (no synthetic User /
+      // @placeholder.invalid email). It is claimable precisely because it has no attached account.
+      const passport = await createPassport(
+        { displayName: displayName?.trim() || name },
+        tx as AppDb,
+      )
 
       const award = await tx.rankAward.create({
         data: {
-          userId: person.id,
+          passportId: passport.id,
           rankId,
           source: RankAwardSource.STATED,
           verificationStatus: RankAwardVerificationStatus.UNVERIFIED,
@@ -103,7 +92,7 @@ export const createPerson = adminActionClient
       if (organizationId || trimmedSchool) {
         await tx.affiliation.create({
           data: {
-            userId: person.id,
+            passportId: passport.id,
             role: affiliationRole,
             isCurrent: true,
             ...(organizationId ? { organizationId } : {}),
@@ -119,7 +108,7 @@ export const createPerson = adminActionClient
             db: tx as AppDb,
             brand,
             actorUserId: user.id,
-            memberUserId: person.id,
+            memberPassportId: passport.id,
             treeId,
             parentMemberId: parentMemberId || null,
             rankAwardId: award.id,
@@ -130,8 +119,8 @@ export const createPerson = adminActionClient
         data: {
           brand,
           action: "user.person.created",
-          entityType: "User",
-          entityId: person.id,
+          entityType: "Passport",
+          entityId: passport.id,
           userId: user.id,
           after: {
             name,
@@ -146,7 +135,11 @@ export const createPerson = adminActionClient
         },
       })
 
-      return { id: person.id, rankAwardId: award.id, lineageMemberId: placement?.memberId ?? null }
+      return {
+        id: passport.id,
+        rankAwardId: award.id,
+        lineageMemberId: placement?.memberId ?? null,
+      }
     })
 
     revalidate({ paths: ["/admin/users"] })

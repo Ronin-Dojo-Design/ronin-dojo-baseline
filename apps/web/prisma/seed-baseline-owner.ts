@@ -122,23 +122,26 @@ async function main() {
       email: "tuffbuffs@colorado.edu",
     },
   }
-  const existingPassport = await db.passport.findUnique({ where: { userId: ownerId } })
-  if (!existingPassport) {
-    await db.passport.create({ data: { userId: ownerId, ...passportData } })
-    console.log("   ✅ Created Passport")
-  } else {
-    await db.passport.update({ where: { userId: ownerId }, data: passportData })
-    console.log("   ✅ Updated Passport (bio + social links)")
-  }
+  // Phase 3c (SOT-ADR D1): identity satellites are Passport-rooted. Owner is a real account → its
+  // Passport carries `userId`; satellites hang off `passportId`.
+  const ownerPassport = await db.passport.upsert({
+    where: { userId: ownerId },
+    update: passportData,
+    create: { userId: ownerId, ...passportData },
+    select: { id: true },
+  })
+  console.log("   ✅ Upserted Passport")
 
   // -----------------------------------------------------------------------
   // 3. DirectoryProfile
   // -----------------------------------------------------------------------
-  const existingDir = await db.directoryProfile.findUnique({ where: { userId: ownerId } })
+  const existingDir = await db.directoryProfile.findUnique({
+    where: { passportId: ownerPassport.id },
+  })
   if (!existingDir) {
     await db.directoryProfile.create({
       data: {
-        userId: ownerId,
+        passportId: ownerPassport.id,
         slug: "brian-scott",
         visibility: "PUBLIC",
         locationCity: "Boulder",
@@ -275,10 +278,12 @@ async function main() {
       console.log(`   ⚠️  Rank not found for ${label}`)
       return
     }
-    const existing = await db.rankAward.findFirst({ where: { userId: ownerId, rankId: rank.id } })
+    const existing = await db.rankAward.findFirst({
+      where: { passportId: ownerPassport.id, rankId: rank.id },
+    })
     if (!existing) {
       await db.rankAward.create({
-        data: { userId: ownerId, rankId: rank.id, awardedAt: now, notes, location },
+        data: { passportId: ownerPassport.id, rankId: rank.id, awardedAt: now, notes, location },
       })
       console.log(`   ✅ RankAward: ${label}`)
     } else {

@@ -15,8 +15,8 @@ export type CreateLineageMemberInput = {
   brand: Brand
   /** The admin performing the action (for the audit trail). */
   actorUserId: string
-  /** The person being placed (their User id). */
-  memberUserId: string
+  /** The person being placed (their Passport id — SOT-ADR D1; placeholders are accountless Passports). */
+  memberPassportId: string
   treeId: string
   /** Optional visual + promotion parent (an existing member of the tree). */
   parentMemberId?: string | null
@@ -51,7 +51,7 @@ export const createLineageMember = async ({
   db,
   brand,
   actorUserId,
-  memberUserId,
+  memberPassportId,
   treeId,
   parentMemberId,
   rankAwardId,
@@ -77,11 +77,12 @@ export const createLineageMember = async ({
     }
   }
 
-  // 3. One LineageNode per user (userId is unique) — upsert so re-placing reuses the same node.
+  // 3. One LineageNode per person (passportId is unique, SOT-ADR D1) — upsert so re-placing reuses
+  //    the same node.
   const node = await db.lineageNode.upsert({
-    where: { userId: memberUserId },
+    where: { passportId: memberPassportId },
     update: {},
-    create: { userId: memberUserId },
+    create: { passportId: memberPassportId },
     select: { id: true },
   })
 

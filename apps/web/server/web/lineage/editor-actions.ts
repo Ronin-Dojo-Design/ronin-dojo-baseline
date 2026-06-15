@@ -437,7 +437,7 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         const rankAward = await tx.rankAward.findFirst({
           where: {
             id: rankAwardId,
-            user: { lineageNode: { id: member.nodeId } },
+            passport: { lineageNode: { id: member.nodeId } },
           },
           select: { id: true },
         })

@@ -57,7 +57,7 @@ export const applyLineageNodeProfileUpdate = async ({
           node: {
             select: {
               id: true,
-              userId: true,
+              passportId: true,
             },
           },
         },
@@ -87,14 +87,10 @@ export const applyLineageNodeProfileUpdate = async ({
   }
 
   await db.$transaction(async tx => {
-    await tx.passport.upsert({
-      where: { userId: member.node.userId },
-      update: {
-        displayName: input.displayName,
-        avatarUrl: input.avatarUrl,
-      },
-      create: {
-        userId: member.node.userId,
+    // Phase 3c: the node is Passport-rooted; update its Passport identity directly by id.
+    await tx.passport.update({
+      where: { id: member.node.passportId },
+      data: {
         displayName: input.displayName,
         avatarUrl: input.avatarUrl,
       },

@@ -67,12 +67,12 @@ async function sweepStaleRows() {
   await prisma.lineageVisualGroup.deleteMany({ where: { treeId: { in: treeIds } } })
   await prisma.lineageTree.deleteMany({ where: { id: { in: treeIds } } })
   await prisma.lineageNode.deleteMany({ where: { id: { in: nodeIds } } })
-  await prisma.rankAward.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.rankAward.deleteMany({ where: { passport: { userId: { in: userIds } } } })
   await prisma.rank.deleteMany({ where: { name: { contains: TAG_PREFIX } } })
   await prisma.rankSystem.deleteMany({ where: { name: { contains: TAG_PREFIX } } })
   await prisma.discipline.deleteMany({ where: { slug: { contains: TAG_PREFIX } } })
   await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
-  await prisma.directoryProfile.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.directoryProfile.deleteMany({ where: { passport: { userId: { in: userIds } } } })
   await prisma.passport.deleteMany({ where: { userId: { in: userIds } } })
   await prisma.user.deleteMany({ where: { id: { in: userIds } } })
 }
@@ -111,17 +111,18 @@ async function createUserNode({
     },
   })
 
-  await prisma.passport.create({
+  const passport = await prisma.passport.create({
     data: { userId: user.id, displayName },
+    select: { id: true },
   })
   await prisma.directoryProfile.create({
-    data: { userId: user.id, slug, visibility: "PUBLIC", showRanks: true },
+    data: { passportId: passport.id, slug, visibility: "PUBLIC", showRanks: true },
   })
 
   const node = await prisma.lineageNode.create({
     data: {
       id: `${TAG_PREFIX}-${runId}-${slugify(label)}-node`,
-      userId: user.id,
+      passportId: passport.id,
       slug: `${slug}-node`,
       visibility: "PUBLIC",
       isVerified: true,
@@ -129,7 +130,7 @@ async function createUserNode({
     },
   })
 
-  return { user, node, displayName }
+  return { user, node, passport, displayName }
 }
 
 async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
@@ -218,7 +219,7 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
     const rankAward = await prisma.rankAward.create({
       data: {
         id: `${TAG_PREFIX}-${runId}-${slugify(instructorLabel)}-rank-award`,
-        userId: instructor.user.id,
+        passportId: instructor.passport.id,
         rankId: blackBeltRank.id,
         awardedAt: new Date(Date.UTC(2010, 0, 1)),
       },
@@ -270,7 +271,7 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
         const rankAward = await prisma.rankAward.create({
           data: {
             id: `${TAG_PREFIX}-${runId}-${slugify(label)}-rank-award`,
-            userId: student.user.id,
+            passportId: student.passport.id,
             rankId: rank.id,
             awardedById: instructor.user.id,
             awardedAt: new Date(Date.UTC(2020 + rankIndex, studentIndex - 1, 1)),
@@ -376,7 +377,7 @@ async function readLineageCompFixtureState(
       id: true,
       primaryVisualParent: {
         select: {
-          node: { select: { userId: true } },
+          node: { select: { passport: { select: { userId: true } } } },
         },
       },
       selectedRankAward: {
@@ -401,7 +402,9 @@ async function readLineageCompFixtureState(
   const studentCountByInstructorAndRank: LineageCompSeedState["studentCountByInstructorAndRank"] =
     {}
   for (const member of members) {
-    const instructorUserId = member.primaryVisualParent?.node.userId
+    // Phase 3c: nodes are Passport-rooted; group by the instructor's account id (passport.userId)
+    // so callers can still index by the instructor User id.
+    const instructorUserId = member.primaryVisualParent?.node.passport?.userId
     const rankName = member.selectedRankAward?.rank.name
     if (!instructorUserId || !rankName) continue
 
@@ -442,7 +445,9 @@ async function cleanupLineageCompFixture(fixture: LineageCompSeedFixture) {
     where: { userId: { in: [...fixture.instructorUserIds, ...fixture.studentUserIds] } },
   })
   await prisma.directoryProfile.deleteMany({
-    where: { userId: { in: [...fixture.instructorUserIds, ...fixture.studentUserIds] } },
+    where: {
+      passport: { userId: { in: [...fixture.instructorUserIds, ...fixture.studentUserIds] } },
+    },
   })
   await prisma.passport.deleteMany({
     where: { userId: { in: [...fixture.instructorUserIds, ...fixture.studentUserIds] } },

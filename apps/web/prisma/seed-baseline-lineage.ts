@@ -584,48 +584,41 @@ type Counts = {
   rankAwardsFound: number
 }
 
+// Phase 3c (SOT-ADR D1): a lineage placeholder person is an ACCOUNTLESS Passport (no synthetic User
+// / @placeholder.invalid email). It is claimable precisely because no account is attached. Idempotency
+// keys on the accountless Passport's displayName (seed names are unique).
 async function ensureUser(
   pu: PlaceholderUser,
   counts: Counts,
 ): Promise<{ id: string; created: boolean }> {
-  const existing = await db.user.findFirst({
-    where: { email: pu.email },
-    select: { id: true, isPlaceholder: true },
+  const existing = await db.passport.findFirst({
+    where: { displayName: pu.name, userId: null },
+    select: { id: true },
   })
   if (existing) {
-    if (!existing.isPlaceholder) {
-      await db.user.update({
-        where: { id: existing.id },
-        data: { isPlaceholder: true },
-      })
-    }
     counts.usersFound++
-    console.log(`   User ${pu.key}: already exists (id=${existing.id})`)
+    console.log(`   Passport ${pu.key}: already exists (id=${existing.id})`)
     return { id: existing.id, created: false }
   }
-  const created = await db.user.create({
+  const created = await db.passport.create({
     data: {
-      name: pu.name,
-      email: pu.email,
-      emailVerified: false,
-      image: pu.image ?? null,
-      role: "user",
-      isPlaceholder: true,
+      displayName: pu.name,
+      avatarUrl: pu.image ?? null,
     },
     select: { id: true },
   })
   counts.usersCreated++
-  console.log(`   ✅ Created User: ${pu.key} (id=${created.id})`)
+  console.log(`   ✅ Created accountless Passport: ${pu.key} (id=${created.id})`)
   return { id: created.id, created: true }
 }
 
 async function ensureLineageNode(
-  userId: string,
+  passportId: string,
   seed: LineageNodeSeed,
   counts: Counts,
 ): Promise<{ id: string; created: boolean }> {
   const existing = await db.lineageNode.findFirst({
-    where: { userId },
+    where: { passportId },
     select: { id: true, slug: true, bio: true, isVerified: true, verificationStatus: true },
   })
   if (existing) {
@@ -657,7 +650,7 @@ async function ensureLineageNode(
   }
   const created = await db.lineageNode.create({
     data: {
-      userId,
+      passportId,
       slug: seed.slug,
       bio: seed.bio,
       visibility: "PUBLIC",
@@ -718,9 +711,10 @@ async function ensureLineageRelationship(
  * its selectedRankAward at it. FS-0006: never createMany on a nullable-unique.
  */
 async function ensureRankAward(
-  userId: string,
+  passportId: string,
   rankShortName: string,
-  awardedById: string | null,
+  // Phase 3c: seeded promoters are historical lineage identity → Passport-side (awardedByPassportId).
+  awardedByPassportId: string | null,
   awardedAt: string,
   notes: string | undefined,
   location: string | undefined,
@@ -739,28 +733,28 @@ async function ensureRankAward(
   }
 
   const existing = await db.rankAward.findFirst({
-    where: { userId, rankId: rank.id },
+    where: { passportId, rankId: rank.id },
     select: { id: true },
   })
   if (existing) {
     await db.rankAward.update({
       where: { id: existing.id },
       data: {
-        awardedById: awardedById ?? undefined,
+        awardedByPassportId: awardedByPassportId ?? undefined,
         awardedAt: new Date(awardedAt),
         notes: notes ?? RANK_AWARD_NOTE,
         location,
       },
     })
     counts.rankAwardsFound++
-    console.log(`   RankAward ${rankShortName} for ${userId.slice(0, 6)}: exists, refreshed`)
+    console.log(`   RankAward ${rankShortName} for ${passportId.slice(0, 6)}: exists, refreshed`)
     return existing.id
   }
   const created = await db.rankAward.create({
     data: {
-      userId,
+      passportId,
       rankId: rank.id,
-      awardedById: awardedById ?? undefined,
+      awardedByPassportId: awardedByPassportId ?? undefined,
       awardedAt: new Date(awardedAt),
       notes: notes ?? RANK_AWARD_NOTE,
       location,
@@ -769,7 +763,7 @@ async function ensureRankAward(
   })
   counts.rankAwardsCreated++
   console.log(
-    `   ✅ Created RankAward ${rankShortName} for ${userId.slice(0, 6)} (id=${created.id})`,
+    `   ✅ Created RankAward ${rankShortName} for ${passportId.slice(0, 6)} (id=${created.id})`,
   )
   return created.id
 }
@@ -1359,10 +1353,16 @@ async function main() {
   console.log(`   Found owner: ${owner.email} (name=${owner.name}, id=${owner.id})`)
 
   // ---------------------------------------------------------------------
-  // 1. Brian's own LineageNode.
+  // 1. Brian's own LineageNode. Owner is a real account → Passport with userId set (SOT-ADR D1).
   // ---------------------------------------------------------------------
+  const ownerPassport = await db.passport.upsert({
+    where: { userId: owner.id },
+    update: {},
+    create: { userId: owner.id, displayName: "Brian Scott" },
+    select: { id: true },
+  })
   const brianNode = await ensureLineageNode(
-    owner.id,
+    ownerPassport.id,
     {
       userKey: "OWNER",
       slug: "brian-scott",
@@ -1374,19 +1374,21 @@ async function main() {
   // ---------------------------------------------------------------------
   // 2. Placeholder users + their LineageNodes.
   // ---------------------------------------------------------------------
-  const userIdByKey = new Map<string, string>()
-  userIdByKey.set("OWNER", owner.id)
+  // Map holds Passport ids (SOT-ADR D1): OWNER = the real account's Passport; everyone else an
+  // accountless (claimable) Passport.
+  const passportIdByKey = new Map<string, string>()
+  passportIdByKey.set("OWNER", ownerPassport.id)
 
   for (const pu of PLACEHOLDER_USERS) {
     const u = await ensureUser(pu, counts)
-    userIdByKey.set(pu.key, u.id)
+    passportIdByKey.set(pu.key, u.id)
   }
 
   const nodeIdByKey = new Map<string, string>()
   nodeIdByKey.set("OWNER", brianNode.id)
 
   for (const ns of NODE_SEEDS) {
-    const userId = userIdByKey.get(ns.userKey)
+    const userId = passportIdByKey.get(ns.userKey)
     if (!userId) {
       throw new Error(`No User for node seed key=${ns.userKey}`)
     }
@@ -1418,7 +1420,7 @@ async function main() {
   // award to BK6 instead of deleting — preserves LineageTreeMember/relationship FKs.
   // No-op on a fresh DB (no stale coral award) or after the first corrected run.
   {
-    const haueterId = userIdByKey.get("chris-haueter")
+    const haueterId = passportIdByKey.get("chris-haueter")
     const bk6 = await db.rank.findFirst({
       where: { shortName: "BK6", rankSystem: { discipline: { code: "bjj" } } },
       select: { id: true },
@@ -1426,14 +1428,14 @@ async function main() {
     if (haueterId && bk6) {
       const staleCoral = await db.rankAward.findFirst({
         where: {
-          userId: haueterId,
+          passportId: haueterId,
           rank: { shortName: { in: ["CB7", "CB8"] }, rankSystem: { discipline: { code: "bjj" } } },
         },
         select: { id: true },
       })
       if (staleCoral) {
         const existingBk6 = await db.rankAward.findFirst({
-          where: { userId: haueterId, rankId: bk6.id },
+          where: { passportId: haueterId, rankId: bk6.id },
           select: { id: true },
         })
         if (existingBk6) {
@@ -1448,12 +1450,12 @@ async function main() {
 
   const rankAwardIdBySeedKey = new Map<string, string>()
   for (const ra of BJJ_RANK_AWARD_SEEDS) {
-    const userId = userIdByKey.get(ra.userKey)
+    const userId = passportIdByKey.get(ra.userKey)
     if (!userId) {
       console.log(`   ⚠️  No User for RankAward seed key=${ra.userKey} — skipping`)
       continue
     }
-    const awardedById = ra.awardedByKey ? (userIdByKey.get(ra.awardedByKey) ?? null) : null
+    const awardedById = ra.awardedByKey ? (passportIdByKey.get(ra.awardedByKey) ?? null) : null
     if (ra.awardedByKey && !awardedById) {
       console.log(`   ⚠️  Awarding promoter ${ra.awardedByKey} not found for ${ra.userKey}`)
     }
@@ -1694,15 +1696,15 @@ async function main() {
           continue
         }
 
-        // SESSION_0316: look the selected RankAward up by the MEMBER's own
-        // userId (was hardcoded to owner.id, which only worked for OWNER).
-        const memberUserId = userIdByKey.get(key)
+        // SESSION_0316/0392: look the selected RankAward up by the MEMBER's own
+        // Passport (was hardcoded to owner.id, which only worked for OWNER).
+        const memberPassportId = passportIdByKey.get(key)
         const selectedRankSeed = ts.selectedRankAwards?.[key]
         const selectedRankAward =
-          selectedRankSeed && memberUserId
+          selectedRankSeed && memberPassportId
             ? await db.rankAward.findFirst({
                 where: {
-                  userId: memberUserId,
+                  passportId: memberPassportId,
                   rank: {
                     shortName: selectedRankSeed.rankShortName,
                     rankSystem: { discipline: { code: selectedRankSeed.disciplineCode } },

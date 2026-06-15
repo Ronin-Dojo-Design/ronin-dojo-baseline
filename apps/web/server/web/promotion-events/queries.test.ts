@@ -38,7 +38,14 @@ const awardSummaryRow = {
   id: "award-1",
   awardedAt: eventDate,
   location: "Combat Submission Wrestling Headquarters",
-  user: { id: "user-1", name: "Erik Paulson", image: null, lineageNode: { slug: "erik-paulson" } },
+  // Phase 3c (SOT-ADR D1): the promotee (earner) is Passport-rooted.
+  passport: {
+    id: "passport-1",
+    displayName: "Erik Paulson",
+    avatarUrl: null,
+    user: { id: "user-1", name: "Erik Paulson", image: null },
+    lineageNode: { slug: "erik-paulson" },
+  },
   rank: {
     id: "rank-1",
     name: "7th Degree Coral Belt",
@@ -51,7 +58,8 @@ const awardSummaryRow = {
       discipline: { id: "discipline-1", name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "bjj" },
     },
   },
-  awardedBy: { id: "user-2", name: "Rigan Machado", image: null, lineageNode: null },
+  awardedBy: { id: "user-2", name: "Rigan Machado", image: null },
+  awardedByPassport: null,
   organization: { id: "org-1", name: "CSW", slug: "csw", brand: "BBL", city: null, state: null },
 }
 

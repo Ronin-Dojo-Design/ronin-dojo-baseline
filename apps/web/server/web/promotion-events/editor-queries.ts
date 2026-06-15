@@ -18,10 +18,11 @@ const editableRankAwardPayload = {
   awardedById: true,
   organizationId: true,
   promotionEventId: true,
-  user: {
+  passport: {
     select: {
-      name: true,
+      displayName: true,
       lineageNode: { select: { id: true } },
+      user: { select: { name: true } },
     },
   },
   rank: {
@@ -32,6 +33,9 @@ const editableRankAwardPayload = {
   },
   awardedBy: {
     select: { name: true },
+  },
+  awardedByPassport: {
+    select: { displayName: true },
   },
   organization: {
     select: { name: true, brand: true },
@@ -107,7 +111,7 @@ const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const formatAwardLabel = (
   award: Prisma.RankAwardGetPayload<{ select: typeof editableRankAwardPayload }>,
 ) => {
-  const person = award.user.name ?? "Unnamed promotee"
+  const person = award.passport.displayName ?? award.passport.user?.name ?? "Unnamed promotee"
   const rank = award.rank.shortName ?? award.rank.name
   return `${person} — ${rank}`
 }

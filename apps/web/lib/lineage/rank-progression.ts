@@ -22,7 +22,7 @@ import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 export const BELT_PROMOTION_POINTS = 100
 
-type RankAward = LineageNodeProfile["user"]["rankAwards"][number]
+type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
 
 export type ProgressionLevel = {
   rank: {

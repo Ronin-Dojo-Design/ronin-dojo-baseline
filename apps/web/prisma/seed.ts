@@ -1503,12 +1503,14 @@ async function main() {
       },
     })
 
-    await db.passport.create({
+    // Phase 3c (SOT-ADR D1): satellites are Passport-rooted; real accounts get a Passport with userId.
+    const passport = await db.passport.create({
       data: { userId: user.id, ...tu.passport },
+      select: { id: true },
     })
 
     await db.directoryProfile.create({
-      data: { userId: user.id, ...tu.directory },
+      data: { passportId: passport.id, ...tu.directory },
     })
 
     const membership = await db.membership.create({
@@ -1532,7 +1534,7 @@ async function main() {
       if (awardRank) {
         await db.rankAward.create({
           data: {
-            userId: user.id,
+            passportId: passport.id,
             rankId: awardRank.id,
             awardedAt: now,
           },
@@ -1598,7 +1600,7 @@ async function main() {
       lastActiveBrandId: "BASELINE_MARTIAL_ARTS",
     },
   })
-  await db.passport.create({
+  const mtMikePassport = await db.passport.create({
     data: {
       userId: mtMike.id,
       displayName: "Muay Thai Mike",
@@ -1606,10 +1608,11 @@ async function main() {
       legalLastName: "Nak Muay",
       bio: "Muay Thai enthusiast and pad holder.",
     },
+    select: { id: true },
   })
   await db.directoryProfile.create({
     data: {
-      userId: mtMike.id,
+      passportId: mtMikePassport.id,
       slug: "muay-thai-mike",
       visibility: "PUBLIC",
       locationCity: "Boulder",
@@ -1634,7 +1637,7 @@ async function main() {
   })
   if (muayThaiPrajioud) {
     await db.rankAward.create({
-      data: { userId: mtMike.id, rankId: muayThaiPrajioud.id, awardedAt: now },
+      data: { passportId: mtMikePassport.id, rankId: muayThaiPrajioud.id, awardedAt: now },
     })
   }
   console.log("Created Muay Thai Mike (PUBLIC, ACTIVE, ranked)")

@@ -1,15 +1,32 @@
 import type { Prisma } from "~/.generated/prisma/client"
 
-const promotionEventPersonPayload = {
+// Phase 3c (SOT-ADR D1): the promotee (earner) is Passport-rooted. Identity is on the Passport;
+// the attached account (nullable `user`) is the link to a lineage node slug + account avatar fallback.
+const promotionEventPassportPayload = {
   id: true,
-  name: true,
-  image: true,
-  // Promotee avatar prefers the promoted Passport avatar (SESSION_0326); awarder renders name-only.
-  passport: { select: { avatarUrl: true } },
+  displayName: true,
+  avatarUrl: true,
   lineageNode: {
     select: { slug: true },
   },
+  user: {
+    select: { id: true, name: true, image: true },
+  },
+} satisfies Prisma.PassportSelect
+
+// The promoter actor is still a real account (`awardedBy`); historical/imported promoters carry
+// identity on `awardedByPassport`.
+const promotionEventPromoterAccountPayload = {
+  id: true,
+  name: true,
+  image: true,
 } satisfies Prisma.UserSelect
+
+const promotionEventPromoterPassportPayload = {
+  id: true,
+  displayName: true,
+  avatarUrl: true,
+} satisfies Prisma.PassportSelect
 
 const promotionEventOrganizationPayload = {
   id: true,
@@ -24,8 +41,8 @@ const promotionEventRankAwardPayload = {
   id: true,
   awardedAt: true,
   location: true,
-  user: {
-    select: promotionEventPersonPayload,
+  passport: {
+    select: promotionEventPassportPayload,
   },
   rank: {
     select: {
@@ -46,7 +63,10 @@ const promotionEventRankAwardPayload = {
     },
   },
   awardedBy: {
-    select: promotionEventPersonPayload,
+    select: promotionEventPromoterAccountPayload,
+  },
+  awardedByPassport: {
+    select: promotionEventPromoterPassportPayload,
   },
   organization: {
     select: promotionEventOrganizationPayload,

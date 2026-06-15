@@ -19,13 +19,17 @@ const prisma = new PrismaClient({ adapter })
 async function backfillProfileSlugs() {
   const profiles = await prisma.directoryProfile.findMany({
     where: { slug: null },
-    select: { id: true, user: { select: { name: true } } },
+    select: {
+      id: true,
+      passport: { select: { displayName: true, user: { select: { name: true } } } },
+    },
   })
 
   console.log(`[DirectoryProfile] Found ${profiles.length} rows with null slug`)
 
   for (const profile of profiles) {
-    const slug = await generateUniqueProfileSlug(profile.user.name ?? "user", async candidate => {
+    const name = profile.passport.displayName ?? profile.passport.user?.name ?? "user"
+    const slug = await generateUniqueProfileSlug(name, async candidate => {
       const existing = await prisma.directoryProfile.findUnique({
         where: { slug: candidate },
         select: { id: true },

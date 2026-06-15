@@ -41,6 +41,7 @@ const tag = (name: string) => `${PREFIX}-${name}`
 type ClaimFixture = {
   treeId: string
   nodeId: string
+  nodePassportId: string
   memberId: string
   claimId: string
   claimantUserId: string
@@ -105,7 +106,12 @@ const createClaimFixture = async ({
     await db.lineageNode.create({
       data: {
         id: tag(`${name}-claimant-existing-node`),
-        userId: claimant.id,
+        passport: {
+          connectOrCreate: {
+            where: { userId: claimant.id },
+            create: { userId: claimant.id },
+          },
+        },
         slug: tag(`${name}-claimant-existing-node`),
         visibility: "PUBLIC",
         verificationStatus: "PENDING",
@@ -113,10 +119,18 @@ const createClaimFixture = async ({
     })
   }
 
+  // Phase 3c (SOT-ADR D1): the claimed node is Passport-rooted. A placeholder owner = an accountless
+  // Passport (claimable); otherwise the Passport links the prior account. Approving the claim attaches
+  // the claimant account to THIS passport (the node never moves).
+  const nodePassport = await db.passport.create({
+    data: placeholderOwner ? { displayName: name } : { userId: placeholder.id, displayName: name },
+    select: { id: true },
+  })
+
   const node = await db.lineageNode.create({
     data: {
       id: tag(`${name}-node`),
-      userId: placeholder.id,
+      passportId: nodePassport.id,
       slug: tag(`${name}-node`),
       visibility: "PUBLIC",
       verificationStatus: "PENDING",
@@ -157,6 +171,7 @@ const createClaimFixture = async ({
   return {
     treeId: tree.id,
     nodeId: node.id,
+    nodePassportId: nodePassport.id,
     memberId: member.id,
     claimId: claim.id,
     claimantUserId: claimant.id,
@@ -229,9 +244,10 @@ describe("applyLineageClaimReview", () => {
     expect(result.ownershipTransferred).toBe(true)
     expect(result.accessGrantId).toBeTruthy()
 
-    const [claim, node, grant, audit, placeholderOwner, claimant] = await Promise.all([
+    const [claim, nodePassport, grant, audit, placeholderOwner, claimant] = await Promise.all([
       db.lineageClaimRequest.findUnique({ where: { id: fx.claimId } }),
-      db.lineageNode.findUnique({ where: { id: fx.nodeId } }),
+      // Phase 3c (SOT-ADR D1): approving attaches the claimant account to the node's Passport.
+      db.passport.findUnique({ where: { id: fx.nodePassportId } }),
       db.lineageTreeAccess.findFirst({
         where: {
           treeId: fx.treeId,
@@ -257,15 +273,10 @@ describe("applyLineageClaimReview", () => {
     expect(claim?.status).toBe("APPROVED")
     expect(claim?.reviewedById).toBe(adminUserId)
     expect(claim?.reviewerNote).toBe("Verified identity.")
-    expect(node?.userId).toBe(fx.claimantUserId)
+    expect(nodePassport?.userId).toBe(fx.claimantUserId)
     expect(grant?.id).toBe(result.accessGrantId)
-    expect(result.placeholderArchivedUserId).toBe(fx.placeholderUserId)
-    expect(result.placeholderArchivedAt).toBeInstanceOf(Date)
+    expect(result.passportAccountAttached).toBe(true)
     expect(placeholderOwner?.isPlaceholder).toBe(true)
-    expect(placeholderOwner?.archivedAt).toBeInstanceOf(Date)
-    expect(placeholderOwner?.archivedAt?.toISOString()).toBe(
-      result.placeholderArchivedAt?.toISOString(),
-    )
     expect(claimant?.archivedAt).toBeNull()
     expect(audit?.userId).toBe(adminUserId)
     expect(audit?.after).toMatchObject({
@@ -277,11 +288,10 @@ describe("applyLineageClaimReview", () => {
       reviewerUserId: adminUserId,
       accessGrantId: grant?.id,
       ownershipTransferred: true,
-      placeholderArchivedUserId: fx.placeholderUserId,
-      placeholderArchivedAt: result.placeholderArchivedAt?.toISOString(),
+      passportAccountAttached: true,
       evidenceCount: 0,
     })
-    expect(auditAfter?.placeholderArchivedAt).toBe(result.placeholderArchivedAt?.toISOString())
+    expect(auditAfter?.passportAccountAttached).toBe(true)
   })
 
   it("keeps non-approved decisions as status-only review outcomes with audit", async () => {
@@ -298,9 +308,9 @@ describe("applyLineageClaimReview", () => {
       },
     })
 
-    const [claim, node, grants, audit, placeholderOwner] = await Promise.all([
+    const [claim, nodePassport, grants, audit, placeholderOwner] = await Promise.all([
       db.lineageClaimRequest.findUnique({ where: { id: fx.claimId } }),
-      db.lineageNode.findUnique({ where: { id: fx.nodeId } }),
+      db.passport.findUnique({ where: { id: fx.nodePassportId } }),
       db.lineageTreeAccess.findMany({ where: { treeId: fx.treeId } }),
       db.auditLog.findFirst({
         where: {
@@ -315,10 +325,10 @@ describe("applyLineageClaimReview", () => {
     expect(result.status).toBe("NEEDS_INFO")
     expect(result.accessGrantId).toBeNull()
     expect(result.ownershipTransferred).toBe(false)
-    expect(result.placeholderArchivedUserId).toBeNull()
-    expect(result.placeholderArchivedAt).toBeNull()
+    expect(result.passportAccountAttached).toBe(false)
     expect(claim?.status).toBe("NEEDS_INFO")
-    expect(node?.userId).toBe(fx.placeholderUserId)
+    // Node Passport unchanged — still accountless (no account attached on a non-approval).
+    expect(nodePassport?.userId).toBeNull()
     expect(grants).toHaveLength(0)
     expect(placeholderOwner?.isPlaceholder).toBe(true)
     expect(placeholderOwner?.archivedAt).toBeNull()
@@ -331,8 +341,7 @@ describe("applyLineageClaimReview", () => {
       reviewerUserId: adminUserId,
       accessGrantId: null,
       ownershipTransferred: false,
-      placeholderArchivedUserId: null,
-      placeholderArchivedAt: null,
+      passportAccountAttached: false,
       evidenceCount: 0,
     })
   })
@@ -454,14 +463,12 @@ describe("applyLineageClaimReview", () => {
 
     expect(result.status).toBe("APPROVED")
     expect(result.ownershipTransferred).toBe(true)
-    expect(result.placeholderArchivedUserId).toBeNull()
-    expect(result.placeholderArchivedAt).toBeNull()
+    expect(result.passportAccountAttached).toBe(true)
     expect(priorOwner?.isPlaceholder).toBe(false)
     expect(priorOwner?.archivedAt).toBeNull()
     expect(audit?.after).toMatchObject({
       status: "APPROVED",
-      placeholderArchivedUserId: null,
-      placeholderArchivedAt: null,
+      passportAccountAttached: true,
     })
   })
 

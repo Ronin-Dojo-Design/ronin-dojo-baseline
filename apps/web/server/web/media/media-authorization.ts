@@ -150,7 +150,7 @@ export async function authorizeMediaTarget({
                 awardedById: true,
                 organizationId: true,
                 promotionEventId: true,
-                user: { select: { lineageNode: { select: { id: true } } } },
+                passport: { select: { lineageNode: { select: { id: true } } } },
               },
             },
           },

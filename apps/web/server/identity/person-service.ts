@@ -86,6 +86,42 @@ export async function createPassport(input: CreatePassportInput, client: Identit
 }
 
 /**
+ * Resolve the Passport id for an account, minting one (linked to the account) if none exists yet.
+ *
+ * Phase 3c bridge (SOT-ADR D1): the identity satellites are Passport-rooted, but several write paths
+ * still start from a `User` id (sign-up profile creation, admin add-person, lead import). This finds
+ * that account's Passport, creating an account-linked Passport on first use so the caller can set the
+ * satellite `passportId`. Accountless placeholders use `createPassport` directly instead.
+ */
+export async function ensurePassportForUser(
+  userId: string,
+  input: Omit<CreatePassportInput, never> = {},
+  client: IdentityClient = db,
+): Promise<{ id: string }> {
+  const existing = await client.passport.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  if (existing) return existing
+
+  const data = createPassportSchema.parse(input)
+  return client.passport.create({
+    data: {
+      userId,
+      displayName: derivePersonName(data),
+      legalFirstName: data.legalFirstName ?? null,
+      legalLastName: data.legalLastName ?? null,
+      dob: data.dob ?? null,
+      phoneE164: data.phoneE164 ?? null,
+      avatarUrl: data.avatarUrl ?? null,
+      bio: data.bio ?? null,
+      placeOfBirth: data.placeOfBirth ?? null,
+    },
+    select: { id: true },
+  })
+}
+
+/**
  * Attach a Better-Auth account to an existing Passport (D1 claim primitive). Pre-checks the
  * `Passport.userId @unique` constraint so the caller gets `CLAIMANT_HAS_PASSPORT` rather than a raw
  * DB unique violation. Idempotent: re-attaching the same account to the same Passport is a no-op-ish

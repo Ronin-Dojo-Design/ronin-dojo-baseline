@@ -161,15 +161,20 @@ export const findLineageTreeDetail = async (treeId: string) => {
               slug: true,
               verificationStatus: true,
               isVerified: true,
-              user: {
+              // Phase 3c (SOT-ADR D1): identity is Passport-rooted. The attached account (nullable
+              // `user`) carries account fields; null `user` = accountless placeholder.
+              passport: {
                 select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  isPlaceholder: true,
-                  archivedAt: true,
-                  passport: { select: { displayName: true } },
-                  rankAwards: {
+                  displayName: true,
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      archivedAt: true,
+                    },
+                  },
+                  rankAwardsEarned: {
                     orderBy: [{ awardedAt: "desc" }, { createdAt: "desc" }],
                     select: {
                       id: true,

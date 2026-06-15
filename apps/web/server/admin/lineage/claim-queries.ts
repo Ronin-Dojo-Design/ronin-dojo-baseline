@@ -27,7 +27,7 @@ export async function findPendingClaims() {
       node: {
         select: {
           id: true,
-          user: { select: { passport: { select: { displayName: true } } } },
+          passport: { select: { displayName: true } },
         },
       },
       claimant: { select: { id: true, name: true, email: true } },
@@ -57,7 +57,7 @@ export async function findClaimById(id: string) {
       node: {
         select: {
           id: true,
-          user: { select: { passport: { select: { displayName: true } } } },
+          passport: { select: { displayName: true } },
         },
       },
       claimant: { select: { id: true, name: true, email: true } },

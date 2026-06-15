@@ -34,16 +34,21 @@ async function listDirectoryAvatars(brand: Brand, viewerUserId: string | null) {
   const profiles = await db.directoryProfile.findMany({
     where: {
       visibility: { in: allowedVisibility },
-      user: { memberships: { some: { organization: { brand } } } },
+      passport: { user: { memberships: { some: { organization: { brand } } } } },
     },
     select: {
       ...directoryProfileListPayload,
-      user: {
+      passport: {
         select: {
-          ...directoryProfileListPayload.user.select,
-          memberships: {
-            where: { organization: { brand } },
-            select: directoryProfileListPayload.user.select.memberships.select,
+          ...directoryProfileListPayload.passport.select,
+          user: {
+            select: {
+              ...directoryProfileListPayload.passport.select.user.select,
+              memberships: {
+                where: { organization: { brand } },
+                select: directoryProfileListPayload.passport.select.user.select.memberships.select,
+              },
+            },
           },
         },
       },
@@ -51,8 +56,8 @@ async function listDirectoryAvatars(brand: Brand, viewerUserId: string | null) {
   })
 
   return profiles.map(profile => ({
-    userId: profile.user.id,
-    image: profile.user.passport?.avatarUrl ?? profile.user.image,
+    userId: profile.passport.user?.id ?? null,
+    image: profile.passport.avatarUrl ?? profile.passport.user?.image ?? null,
   }))
 }
 
@@ -95,8 +100,12 @@ beforeAll(async () => {
       email: `${tag("with")}@test.local`,
       emailVerified: true,
       image: USER_IMAGE_WITH,
-      passport: { create: { avatarUrl: PASSPORT_AVATAR } },
-      directoryProfile: { create: { visibility: "PUBLIC" } },
+      passport: {
+        create: {
+          avatarUrl: PASSPORT_AVATAR,
+          directoryProfile: { create: { visibility: "PUBLIC" } },
+        },
+      },
     },
   })
   withAvatarUserId = withAvatar.id
@@ -108,8 +117,7 @@ beforeAll(async () => {
       email: `${tag("fallback")}@test.local`,
       emailVerified: true,
       image: USER_IMAGE_FALLBACK,
-      passport: { create: {} },
-      directoryProfile: { create: { visibility: "PUBLIC" } },
+      passport: { create: { directoryProfile: { create: { visibility: "PUBLIC" } } } },
     },
   })
   fallbackUserId = fallback.id
@@ -121,8 +129,12 @@ beforeAll(async () => {
       email: `${tag("hidden")}@test.local`,
       emailVerified: true,
       image: USER_IMAGE_HIDDEN,
-      passport: { create: { avatarUrl: `https://example.com/hidden-avatar-${TS}.jpg` } },
-      directoryProfile: { create: { visibility: "HIDDEN" } },
+      passport: {
+        create: {
+          avatarUrl: `https://example.com/hidden-avatar-${TS}.jpg`,
+          directoryProfile: { create: { visibility: "HIDDEN" } },
+        },
+      },
     },
   })
   hiddenUserId = hidden.id
@@ -144,7 +156,7 @@ afterAll(async () => {
   // Phase 1 — delete this run's fixtures by ID (fast, no false positives).
   const userIds = [withAvatarUserId, fallbackUserId, hiddenUserId]
   await db.membership.deleteMany({ where: { userId: { in: userIds } } })
-  await db.directoryProfile.deleteMany({ where: { userId: { in: userIds } } })
+  await db.directoryProfile.deleteMany({ where: { passport: { userId: { in: userIds } } } })
   await db.passport.deleteMany({ where: { userId: { in: userIds } } })
   await db.user.deleteMany({ where: { id: { in: userIds } } })
 
@@ -156,7 +168,7 @@ afterAll(async () => {
   if (zombies.length > 0) {
     const zombieIds = zombies.map(z => z.id)
     await db.membership.deleteMany({ where: { userId: { in: zombieIds } } })
-    await db.directoryProfile.deleteMany({ where: { userId: { in: zombieIds } } })
+    await db.directoryProfile.deleteMany({ where: { passport: { userId: { in: zombieIds } } } })
     await db.passport.deleteMany({ where: { userId: { in: zombieIds } } })
     await db.user.deleteMany({ where: { id: { in: zombieIds } } })
   }

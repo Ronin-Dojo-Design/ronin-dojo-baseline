@@ -68,9 +68,9 @@ export function LineageNodeProfileForm({ profile }: Props) {
     defaultValues: {
       treeId: profile.tree.id,
       nodeId: profile.node.id,
-      displayName: str(profile.node.user.passport?.displayName),
+      displayName: str(profile.node.passport.displayName),
       bio: str(profile.node.bio),
-      avatarUrl: str(profile.node.user.passport?.avatarUrl),
+      avatarUrl: str(profile.node.passport.avatarUrl),
       promotionDate: canEditPromotionDate ? toDate(initialPromotionDate) : null,
     },
   })

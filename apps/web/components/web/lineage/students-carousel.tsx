@@ -29,7 +29,8 @@ function groupByBelt(students: LineageTreeMemberRow[]): BeltGroup[] {
   const byKey = new Map<string, BeltGroup>()
 
   for (const student of students) {
-    const rank = student.selectedRankAward?.rank ?? student.node.user.rankAwards?.[0]?.rank ?? null
+    const rank =
+      student.selectedRankAward?.rank ?? student.node.passport?.rankAwardsEarned?.[0]?.rank ?? null
     const key = rank?.name ?? "__unranked__"
 
     const group = byKey.get(key) ?? {

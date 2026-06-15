@@ -38,14 +38,18 @@ export function buildDirectoryProfileWhere(
     ? ["PUBLIC", "MEMBERS_ONLY"]
     : ["PUBLIC"]
 
+  // Phase 3c: DirectoryProfile is Passport-rooted; memberships are account-side, reached
+  // through passport.user (SOT-ADR D1).
   const where: Record<string, unknown> = {
     visibility: { in: allowedVisibility },
-    user: {
-      memberships: {
-        some: {
-          // brand is always server-derived; org slug only narrows within it.
-          organization: { brand, ...(org ? { slug: org } : {}) },
-          ...(discipline ? { discipline: { slug: discipline } } : {}),
+    passport: {
+      user: {
+        memberships: {
+          some: {
+            // brand is always server-derived; org slug only narrows within it.
+            organization: { brand, ...(org ? { slug: org } : {}) },
+            ...(discipline ? { discipline: { slug: discipline } } : {}),
+          },
         },
       },
     },
@@ -59,7 +63,8 @@ export function buildDirectoryProfileWhere(
   }
   if (q) {
     where.OR = [
-      { user: { name: { contains: q, mode: "insensitive" } } },
+      { passport: { displayName: { contains: q, mode: "insensitive" } } },
+      { passport: { user: { name: { contains: q, mode: "insensitive" } } } },
       { locationCity: { contains: q, mode: "insensitive" } },
       { locationRegion: { contains: q, mode: "insensitive" } },
     ]

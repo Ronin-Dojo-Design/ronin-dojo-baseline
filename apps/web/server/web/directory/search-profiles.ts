@@ -42,17 +42,26 @@ export const searchDirectoryProfiles = async (
       where: where as any,
       select: {
         ...directoryProfileListPayload,
-        user: {
+        // Phase 3c: memberships (account-side) are brand-filtered under passport.user.
+        passport: {
           select: {
-            ...directoryProfileListPayload.user.select,
-            memberships: {
-              where: { organization: { brand } },
-              select: directoryProfileListPayload.user.select.memberships.select,
+            ...directoryProfileListPayload.passport.select,
+            user: {
+              select: {
+                ...directoryProfileListPayload.passport.select.user.select,
+                memberships: {
+                  where: { organization: { brand } },
+                  select:
+                    directoryProfileListPayload.passport.select.user.select.memberships.select,
+                },
+              },
             },
           },
         },
       },
-      orderBy: sortBy ? { user: { [sortBy]: sortOrder } } : { user: { name: "asc" } },
+      orderBy: sortBy
+        ? { passport: { user: { [sortBy]: sortOrder } } }
+        : { passport: { displayName: "asc" } },
       take,
       skip,
     }),
@@ -62,14 +71,15 @@ export const searchDirectoryProfiles = async (
   console.log(`Directory search: ${Math.round(performance.now() - start)}ms`)
 
   const policies = await getLineageProfileDetailRenderPoliciesForUsers({
-    userIds: profiles.map(profile => profile.user.id),
+    userIds: profiles.flatMap(profile => (profile.passport.user ? [profile.passport.user.id] : [])),
     brand,
   })
 
   const members = profiles.map(profile =>
     projectDirectoryProfileListItem({
       profile,
-      policy: policies.get(profile.user.id) ?? FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+      policy:
+        policies.get(profile.passport.user?.id ?? "") ?? FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
       viewerUserId,
       viewerRole,
     }),

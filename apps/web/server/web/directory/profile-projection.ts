@@ -30,18 +30,20 @@ export function canRenderFullProfileForViewer({
   viewerRole,
 }: {
   policy: LineageProfileDetailRenderPolicy
-  profileUserId: string
+  profileUserId: string | null
 } & ProfileViewer) {
-  return policy.canRenderFullProfile || viewerRole === "admin" || viewerUserId === profileUserId
+  return (
+    policy.canRenderFullProfile ||
+    viewerRole === "admin" ||
+    (profileUserId != null && viewerUserId === profileUserId)
+  )
 }
 
 export function rankSummaryForProfile<RankAward>(profile: {
   showRanks?: boolean
-  user: {
-    rankAwards: RankAward[]
-  }
+  rankAwards: RankAward[]
 }): RankAward[] {
-  return profile.showRanks === false ? [] : profile.user.rankAwards.slice(0, 1)
+  return profile.showRanks === false ? [] : profile.rankAwards.slice(0, 1)
 }
 
 type ProfileOrg = {
@@ -110,9 +112,11 @@ export function projectDirectoryProfileListItem({
   profile: DirectoryProfileList
   policy?: LineageProfileDetailRenderPolicy
 } & ProfileViewer) {
+  // Phase 3c: identity is Passport-rooted; `passport.user` is the attached account (null = placeholder).
+  const account = profile.passport.user
   const canRenderFullProfile = canRenderFullProfileForViewer({
     policy,
-    profileUserId: profile.user.id,
+    profileUserId: account?.id ?? null,
     viewerUserId,
     viewerRole,
   })
@@ -120,13 +124,16 @@ export function projectDirectoryProfileListItem({
   return {
     id: profile.id,
     slug: profile.slug ?? profile.id,
-    userId: profile.user.id,
-    name: profile.user.name,
+    userId: account?.id ?? null,
+    name: profile.passport.displayName ?? account?.name ?? null,
     profileTier: policy.tier,
     canRenderFullProfile,
-    ...trustSummaryForUser(profile.user),
-    // Prefer the promoted Passport avatar, fall back to User.image.
-    image: profile.user.passport?.avatarUrl ?? profile.user.image,
+    ...trustSummaryForUser({
+      isPlaceholder: account == null,
+      lineageNode: profile.passport.lineageNode,
+    }),
+    // Prefer the promoted Passport avatar, fall back to the account image.
+    image: profile.passport.avatarUrl ?? account?.image ?? null,
     locationCity: canRenderFullProfile && policy.features.location ? profile.locationCity : null,
     locationRegion:
       canRenderFullProfile && policy.features.location ? profile.locationRegion : null,
@@ -134,15 +141,21 @@ export function projectDirectoryProfileListItem({
       canRenderFullProfile && policy.features.location ? profile.locationCountry : null,
     email:
       canRenderFullProfile && policy.features.email && profile.showEmail
-        ? profile.user.email
+        ? (account?.email ?? null)
         : null,
     organizations:
       canRenderFullProfile && policy.features.organizations && profile.showOrgs
-        ? projectProfileOrganizations(profile.user)
+        ? projectProfileOrganizations({
+            affiliations: profile.passport.affiliations,
+            memberships: account?.memberships ?? [],
+          })
         : [],
     ranks:
       canRenderFullProfile && policy.features.rankHistory && profile.showRanks
-        ? profile.user.rankAwards
-        : rankSummaryForProfile(profile),
+        ? profile.passport.rankAwardsEarned
+        : rankSummaryForProfile({
+            showRanks: profile.showRanks,
+            rankAwards: profile.passport.rankAwardsEarned,
+          }),
   }
 }

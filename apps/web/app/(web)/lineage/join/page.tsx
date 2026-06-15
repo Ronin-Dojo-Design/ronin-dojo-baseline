@@ -37,7 +37,11 @@ const getData = cache(async () => {
           orderBy: { visualSortOrder: "asc" },
           select: {
             nodeId: true,
-            node: { select: { user: { select: { name: true } } } },
+            node: {
+              select: {
+                passport: { select: { displayName: true, user: { select: { name: true } } } },
+              },
+            },
           },
         },
       },
@@ -55,7 +59,8 @@ const getData = cache(async () => {
           name: claimableTree.name,
           members: claimableTree.members.map(member => ({
             nodeId: member.nodeId,
-            displayName: member.node.user.name,
+            displayName:
+              member.node.passport?.displayName ?? member.node.passport?.user?.name ?? "Unnamed",
           })),
         }
       : null,

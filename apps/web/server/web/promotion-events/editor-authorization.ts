@@ -26,7 +26,7 @@ export type AuthorizableRankAward = {
   awardedById: string | null
   organizationId: string | null
   promotionEventId?: string | null
-  user: {
+  passport: {
     lineageNode: {
       id: string
     } | null
@@ -281,7 +281,7 @@ export function canAuthorRankAward({
   if (award.awardedById === userId) return true
   if (award.organizationId && scope.organizationIds.has(award.organizationId)) return true
 
-  const nodeId = award.user.lineageNode?.id
+  const nodeId = award.passport.lineageNode?.id
   if (!nodeId) return false
 
   return scope.fullTreeNodeIds.has(nodeId) || scope.scopedNodeIds.has(nodeId)
@@ -340,7 +340,7 @@ export function buildAuthorizedRankAwardWhere({
   }
 
   if (nodeIds.length > 0) {
-    or.push({ user: { lineageNode: { is: { id: { in: nodeIds } } } } })
+    or.push({ passport: { lineageNode: { is: { id: { in: nodeIds } } } } })
   }
 
   if (extraIds.length > 0) {

@@ -26,26 +26,40 @@ const lineageUserDirectoryProfilePayload = {
 } satisfies Prisma.DirectoryProfileSelect
 
 // ---------------------------------------------------------------------------
-// User snippet used everywhere a LineageNode carries its user identity.
+// Passport identity snippet — used everywhere a LineageNode carries its person
+// identity. Phase 3c (SOT-ADR D1): identity is Passport-rooted. The optional
+// `user` is the *attached account* (a null `user` = accountless placeholder,
+// replacing the old `User.isPlaceholder` flag); `name`/`image` are the account
+// mirror used as a fallback behind Passport's own `displayName`/`avatarUrl`.
 // ---------------------------------------------------------------------------
 
-const lineageUserPayload = {
+const lineagePassportPayload = {
   id: true,
-  name: true,
-  image: true,
-  isPlaceholder: true,
-  passport: {
+  displayName: true,
+  avatarUrl: true,
+  user: {
     select: {
-      displayName: true,
-      // Lineage cards prefer the promoted Passport avatar over User.image
-      // (SESSION_0325), mirroring the existing displayName preference.
-      avatarUrl: true,
+      id: true,
+      name: true,
+      image: true,
     },
   },
   directoryProfile: {
     select: lineageUserDirectoryProfilePayload,
   },
-} satisfies Prisma.UserSelect
+} satisfies Prisma.PassportSelect
+
+// Promoter identity snippet for a RankAward — prefers the historical Passport
+// promoter (`awardedByPassport`, SESSION_0391), with the real-account actor
+// (`awardedBy`) carried for accounts that performed the award.
+const rankAwardPromoterPayload = {
+  awardedByPassport: {
+    select: { id: true, displayName: true, avatarUrl: true },
+  },
+  awardedBy: {
+    select: { id: true, name: true, image: true },
+  },
+} satisfies Prisma.RankAwardSelect
 
 // ---------------------------------------------------------------------------
 // Row payload — used for tree nodes (tree section in TASK_03).
@@ -62,18 +76,42 @@ export const lineageNodeRowPayload = {
   isVerified: true,
   verificationStatus: true,
   bio: true,
-  userId: true,
+  passportId: true,
   claimRequests: {
     where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
     select: { status: true },
   },
-  user: {
+  passport: {
     select: {
-      ...lineageUserPayload,
+      ...lineagePassportPayload,
+      // Attached account (nullable) — null = accountless placeholder. Memberships
+      // are account-side (CARRY) so they hang off the account, not the Passport.
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          // Latest active membership → Baseline enrollment fallback for the school label.
+          memberships: {
+            where: { status: "ACTIVE" as const },
+            select: {
+              id: true,
+              discipline: {
+                select: { id: true, name: true, slug: true },
+              },
+              organization: {
+                select: { id: true, name: true, slug: true, city: true, state: true },
+              },
+            },
+            orderBy: { joinedAt: "desc" as const },
+            take: 1,
+          },
+        },
+      },
       // Single most-recent RankAward across any rank-system so the tree card
       // can show "Black Belt — BJJ" without a separate query. Drawer payload
       // joins more.
-      rankAwards: {
+      rankAwardsEarned: {
         select: {
           id: true,
           awardedAt: true,
@@ -96,9 +134,7 @@ export const lineageNodeRowPayload = {
               },
             },
           },
-          awardedBy: {
-            select: { id: true, name: true, image: true },
-          },
+          ...rankAwardPromoterPayload,
         },
         orderBy: { awardedAt: "desc" as const },
         take: 1,
@@ -115,21 +151,6 @@ export const lineageNodeRowPayload = {
           },
         },
         orderBy: { updatedAt: "desc" as const },
-        take: 1,
-      },
-      // Latest active membership → Baseline enrollment fallback for the school label.
-      memberships: {
-        where: { status: "ACTIVE" as const },
-        select: {
-          id: true,
-          discipline: {
-            select: { id: true, name: true, slug: true },
-          },
-          organization: {
-            select: { id: true, name: true, slug: true, city: true, state: true },
-          },
-        },
-        orderBy: { joinedAt: "desc" as const },
         take: 1,
       },
     },
@@ -183,17 +204,50 @@ export const lineageNodeProfilePayload = {
   isVerified: true,
   verificationStatus: true,
   bio: true,
-  userId: true,
+  passportId: true,
   claimRequests: {
     where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
     select: { status: true },
   },
   createdAt: true,
   updatedAt: true,
-  user: {
+  passport: {
     select: {
-      ...lineageUserPayload,
-      rankAwards: {
+      ...lineagePassportPayload,
+      // Attached account (nullable) — memberships are account-side (CARRY).
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          memberships: {
+            where: { status: "ACTIVE" as const },
+            select: {
+              id: true,
+              joinedAt: true,
+              discipline: {
+                select: { id: true, name: true, slug: true, code: true },
+              },
+              organization: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  type: true,
+                  city: true,
+                  state: true,
+                  country: true,
+                },
+              },
+              rank: {
+                select: { id: true, name: true, shortName: true },
+              },
+            },
+            orderBy: { joinedAt: "desc" as const },
+          },
+        },
+      },
+      rankAwardsEarned: {
         select: {
           id: true,
           awardedAt: true,
@@ -229,9 +283,7 @@ export const lineageNodeProfilePayload = {
               },
             },
           },
-          awardedBy: {
-            select: { id: true, name: true, image: true },
-          },
+          ...rankAwardPromoterPayload,
           organization: {
             select: { id: true, name: true, slug: true, city: true, state: true },
           },
@@ -241,31 +293,6 @@ export const lineageNodeProfilePayload = {
           },
         },
         orderBy: [{ awardedAt: "desc" as const }],
-      },
-      memberships: {
-        where: { status: "ACTIVE" as const },
-        select: {
-          id: true,
-          joinedAt: true,
-          discipline: {
-            select: { id: true, name: true, slug: true, code: true },
-          },
-          organization: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              type: true,
-              city: true,
-              state: true,
-              country: true,
-            },
-          },
-          rank: {
-            select: { id: true, name: true, shortName: true },
-          },
-        },
-        orderBy: { joinedAt: "desc" as const },
       },
     },
   },
@@ -283,7 +310,7 @@ export const lineageNodeProfilePayload = {
           slug: true,
           isVerified: true,
           visibility: true,
-          user: { select: lineageUserPayload },
+          passport: { select: lineagePassportPayload },
         },
       },
     },

@@ -65,28 +65,31 @@ async function createProfileFixture(name: "free" | "premium") {
       email: `${tag(name)}@test.local`,
       emailVerified: true,
       image: `https://example.com/${tag(name)}-user.jpg`,
+      // Phase 3c (SOT-ADR D1): DirectoryProfile + RankAward are Passport-rooted.
       passport: {
         create: {
           avatarUrl: `https://example.com/${tag(name)}-avatar.jpg`,
           bio: `${tag(name)} public bio`,
           socialLinks: { website: `https://example.com/${tag(name)}` },
-        },
-      },
-      directoryProfile: {
-        create: {
-          slug: tag(`${name}-profile`),
-          visibility: "PUBLIC",
-          locationCity: "Denver",
-          locationRegion: "CO",
-          locationCountry: "US",
-          showEmail: true,
-          showOrgs: true,
-          showRanks: true,
+          directoryProfile: {
+            create: {
+              slug: tag(`${name}-profile`),
+              visibility: "PUBLIC",
+              locationCity: "Denver",
+              locationRegion: "CO",
+              locationCountry: "US",
+              showEmail: true,
+              showOrgs: true,
+              showRanks: true,
+            },
+          },
         },
       },
     },
+    select: { id: true, passport: { select: { id: true } } },
   })
   createdUserIds.push(user.id)
+  const passportId = user.passport!.id
 
   await db.membership.create({
     data: {
@@ -101,7 +104,7 @@ async function createProfileFixture(name: "free" | "premium") {
 
   await db.rankAward.create({
     data: {
-      userId: user.id,
+      passportId,
       rankId,
       awardedAt: new Date("2026-02-01T00:00:00.000Z"),
       organizationId,
@@ -164,7 +167,7 @@ beforeAll(async () => {
   freeUserId = freeUser.id
   const freeLineageNode = await db.lineageNode.create({
     data: {
-      userId: freeUser.id,
+      passportId: freeUser.passport!.id,
       slug: tag("free-node"),
       verificationStatus: "DISPUTED",
       isVerified: true,
@@ -191,9 +194,9 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.userEntitlement.deleteMany({ where: { id: { in: createdUserEntitlementIds } } })
   await db.lineageNode.deleteMany({ where: { id: { in: createdLineageNodeIds } } })
-  await db.rankAward.deleteMany({ where: { userId: { in: createdUserIds } } })
+  await db.rankAward.deleteMany({ where: { passport: { userId: { in: createdUserIds } } } })
   await db.membership.deleteMany({ where: { userId: { in: createdUserIds } } })
-  await db.directoryProfile.deleteMany({ where: { userId: { in: createdUserIds } } })
+  await db.directoryProfile.deleteMany({ where: { passport: { userId: { in: createdUserIds } } } })
   await db.passport.deleteMany({ where: { userId: { in: createdUserIds } } })
   await db.session.deleteMany({ where: { userId: { in: createdUserIds } } })
   await db.account.deleteMany({ where: { userId: { in: createdUserIds } } })

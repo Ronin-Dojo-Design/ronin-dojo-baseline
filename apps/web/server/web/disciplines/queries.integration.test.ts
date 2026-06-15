@@ -26,8 +26,10 @@ async function queryMembersByRank(disciplineId: string) {
       status: MembershipStatus.ACTIVE,
       rankId: { not: null },
       user: {
-        directoryProfile: {
-          visibility: DirectoryVisibility.PUBLIC,
+        passport: {
+          directoryProfile: {
+            visibility: DirectoryVisibility.PUBLIC,
+          },
         },
       },
     },
@@ -87,8 +89,12 @@ beforeAll(async () => {
       name: `privacy-test-public-${TS}`,
       email: `privacy-public-${TS}@test.local`,
       emailVerified: true,
-      passport: { create: { displayName: `Public User ${TS}` } },
-      directoryProfile: { create: { visibility: "PUBLIC" } },
+      passport: {
+        create: {
+          displayName: `Public User ${TS}`,
+          directoryProfile: { create: { visibility: "PUBLIC" } },
+        },
+      },
     },
   })
   publicUserId = publicUser.id
@@ -98,8 +104,12 @@ beforeAll(async () => {
       name: `privacy-test-private-${TS}`,
       email: `privacy-private-${TS}@test.local`,
       emailVerified: true,
-      passport: { create: { displayName: `Private User ${TS}` } },
-      directoryProfile: { create: { visibility: "HIDDEN" } },
+      passport: {
+        create: {
+          displayName: `Private User ${TS}`,
+          directoryProfile: { create: { visibility: "HIDDEN" } },
+        },
+      },
     },
   })
   privateUserId = privateUser.id
@@ -109,8 +119,12 @@ beforeAll(async () => {
       name: `privacy-test-membersonly-${TS}`,
       email: `privacy-membersonly-${TS}@test.local`,
       emailVerified: true,
-      passport: { create: { displayName: `MembersOnly User ${TS}` } },
-      directoryProfile: { create: { visibility: "MEMBERS_ONLY" } },
+      passport: {
+        create: {
+          displayName: `MembersOnly User ${TS}`,
+          directoryProfile: { create: { visibility: "MEMBERS_ONLY" } },
+        },
+      },
     },
   })
   membersOnlyUserId = membersOnlyUser.id
@@ -159,7 +173,7 @@ afterAll(async () => {
     where: { id: { in: [publicMembershipId, privateMembershipId, membersOnlyMembershipId] } },
   })
   await db.directoryProfile.deleteMany({
-    where: { userId: { in: [publicUserId, privateUserId, membersOnlyUserId] } },
+    where: { passport: { userId: { in: [publicUserId, privateUserId, membersOnlyUserId] } } },
   })
   await db.passport.deleteMany({
     where: { userId: { in: [publicUserId, privateUserId, membersOnlyUserId] } },

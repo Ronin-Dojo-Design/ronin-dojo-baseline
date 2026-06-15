@@ -36,7 +36,7 @@ const makeAward = (overrides: Partial<any> = {}) => ({
   awardedById: "promoter-1",
   organizationId: "other-org",
   promotionEventId: null,
-  user: { lineageNode: { id: "node-1" } },
+  passport: { lineageNode: { id: "node-1" } },
   ...overrides,
 })
 

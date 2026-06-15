@@ -356,8 +356,9 @@ export const convertLead = userActionClient
           where: { email: leadEmail },
           select: {
             id: true,
-            passport: { select: { id: true } },
-            directoryProfile: { select: { id: true } },
+            // Phase 3c (SOT-ADR D1): identity satellites are Passport-rooted; reach the directory
+            // profile through the account's Passport.
+            passport: { select: { id: true, directoryProfile: { select: { id: true } } } },
           },
         })
         const convertedUser =
@@ -371,8 +372,9 @@ export const convertLead = userActionClient
             select: { id: true },
           }))
 
-        if (!existingUser?.passport) {
-          await tx.passport.create({
+        let passportId = existingUser?.passport?.id ?? null
+        if (!passportId) {
+          const passport = await tx.passport.create({
             data: {
               userId: convertedUser.id,
               displayName,
@@ -380,16 +382,18 @@ export const convertLead = userActionClient
               legalLastName: lead.lastName ?? null,
               phoneE164: lead.phoneE164 ?? null,
             },
+            select: { id: true },
           })
+          passportId = passport.id
         }
 
-        if (!existingUser?.directoryProfile) {
+        if (!existingUser?.passport?.directoryProfile) {
           const slug = await generateUniqueProfileSlug(
             displayName,
             async s => (await tx.directoryProfile.count({ where: { slug: s } })) > 0,
           )
           await tx.directoryProfile.create({
-            data: { userId: convertedUser.id, slug },
+            data: { passportId, slug },
           })
         }
 

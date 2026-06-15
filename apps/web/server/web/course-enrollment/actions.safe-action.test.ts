@@ -167,7 +167,7 @@ afterAll(async () => {
   const userIds = [fx.ownerId, fx.studentId, fx.entitlementUserId, fx.noAccessUserId]
   for (const uid of userIds) {
     await db.passport.deleteMany({ where: { userId: uid } })
-    await db.directoryProfile.deleteMany({ where: { userId: uid } })
+    await db.directoryProfile.deleteMany({ where: { passport: { userId: uid } } })
     await db.account.deleteMany({ where: { userId: uid } })
     await db.session.deleteMany({ where: { userId: uid } })
   }

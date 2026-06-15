@@ -59,7 +59,7 @@ type LineageTreeBoardProps = {
 }
 
 function displayNameForMember(member: LineageTreeMemberRow): string {
-  return member.node.user.passport?.displayName ?? member.node.user.name ?? "Unnamed"
+  return member.node.passport?.displayName ?? member.node.passport?.user?.name ?? "Unnamed"
 }
 
 function descendantMemberIds(members: LineageTreeMemberRow[], rootMemberId: string): Set<string> {
@@ -172,7 +172,7 @@ export function LineageTreeBoard({
           treeId,
           memberId: selectedMember.id,
           currentRankAwardId: selectedMember.selectedRankAward?.id ?? null,
-          rankAwards: selectedProfile.user.rankAwards,
+          rankAwards: selectedProfile.passport?.rankAwardsEarned ?? [],
           candidates: members
             .filter(
               member =>

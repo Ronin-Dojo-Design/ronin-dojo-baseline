@@ -45,21 +45,24 @@ async function ensureIdentityShell(userId: string, displayName: string | null) {
     async s => (await db.directoryProfile.count({ where: { slug: s } })) > 0,
   )
 
-  await db.$transaction([
-    db.passport.create({
+  // Phase 3c (SOT-ADR D1): DirectoryProfile is Passport-rooted, so the Passport must exist first
+  // to supply `passportId`. Create both in one transaction with the Passport id threaded through.
+  await db.$transaction(async tx => {
+    const passport = await tx.passport.create({
       data: {
         userId,
         displayName,
       },
-    }),
-    db.directoryProfile.create({
+      select: { id: true },
+    })
+    await tx.directoryProfile.create({
       data: {
-        userId,
+        passportId: passport.id,
         slug,
         // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
       },
-    }),
-  ])
+    })
+  })
 }
 
 const getAuthContextHeaders = (ctx?: AuthEndpointContext) => ctx?.headers ?? ctx?.request?.headers

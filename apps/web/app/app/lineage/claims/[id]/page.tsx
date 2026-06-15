@@ -25,7 +25,7 @@ export default async ({ params }: PageProps<"/app/lineage/claims/[id]">) => {
     notFound()
   }
 
-  const nodeDisplayName = claim.node.user.passport?.displayName ?? "Unnamed lineage node"
+  const nodeDisplayName = claim.node.passport?.displayName ?? "Unnamed lineage node"
 
   return (
     <Wrapper>

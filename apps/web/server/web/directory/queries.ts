@@ -42,8 +42,10 @@ export const findProfileBySlug = async ({
     where: {
       slug,
       visibility: { in: allowedVisibility },
-      user: {
-        memberships: { some: { organization: { brand } } },
+      passport: {
+        user: {
+          memberships: { some: { organization: { brand } } },
+        },
       },
     },
     select: directoryProfilePreviewPayload,
@@ -51,13 +53,15 @@ export const findProfileBySlug = async ({
 
   if (!preview) return null
 
+  // Phase 3c: identity is Passport-rooted; `passport.user` is the attached account (null = placeholder).
+  const previewAccount = preview.passport.user
   const policy = await getLineageProfileDetailRenderPolicyForUser({
-    userId: preview.user.id,
+    userId: previewAccount?.id ?? "",
     brand,
   })
   const canRenderFullProfile = canRenderFullProfileForViewer({
     policy,
-    profileUserId: preview.user.id,
+    profileUserId: previewAccount?.id ?? null,
     viewerUserId,
     viewerRole,
   })
@@ -70,23 +74,29 @@ export const findProfileBySlug = async ({
       canRenderFullProfile: false,
       // A legacy placeholder profile (no real login account) is "claimable":
       // the detail page renders the claim teaser instead of an empty profile.
-      isClaimablePlaceholder: preview.user.isPlaceholder,
-      isOwnProfile: viewerUserId === preview.user.id,
-      ...trustSummaryForUser(preview.user),
+      isClaimablePlaceholder: previewAccount == null,
+      isOwnProfile: previewAccount != null && viewerUserId === previewAccount.id,
+      ...trustSummaryForUser({
+        isPlaceholder: previewAccount == null,
+        lineageNode: preview.passport.lineageNode,
+      }),
       coverPhotoUrl: null,
       videoIntroUrl: null,
       locationCity: null,
       locationRegion: null,
       locationCountry: null,
       user: {
-        id: preview.user.id,
-        name: preview.user.name,
-        image: preview.user.passport?.avatarUrl ?? preview.user.image,
+        id: previewAccount?.id ?? null,
+        name: preview.passport.displayName ?? previewAccount?.name ?? null,
+        image: preview.passport.avatarUrl ?? previewAccount?.image ?? null,
         bio: null,
         socialLinks: null,
         email: null,
         organizations: [],
-        ranks: rankSummaryForProfile(preview),
+        ranks: rankSummaryForProfile({
+          showRanks: preview.showRanks,
+          rankAwards: preview.passport.rankAwardsEarned,
+        }),
         techniqueProgress: [],
       },
     }
@@ -99,41 +109,47 @@ export const findProfileBySlug = async ({
 
   if (!profile) return null
 
+  const account = profile.passport.user
+
   // Apply per-field privacy flags
   return {
     id: profile.id,
     slug: profile.slug,
     profileTier: policy.tier,
     canRenderFullProfile: true,
-    isClaimablePlaceholder: preview.user.isPlaceholder,
-    isOwnProfile: viewerUserId === profile.user.id,
-    ...trustSummaryForUser(profile.user),
+    isClaimablePlaceholder: account == null,
+    isOwnProfile: account != null && viewerUserId === account.id,
+    ...trustSummaryForUser({
+      isPlaceholder: account == null,
+      lineageNode: profile.passport.lineageNode,
+    }),
     coverPhotoUrl: profile.coverPhotoUrl,
     videoIntroUrl: profile.videoIntroUrl,
     locationCity: profile.locationCity,
     locationRegion: profile.locationRegion,
     locationCountry: profile.locationCountry,
     user: {
-      id: profile.user.id,
-      name: profile.user.name,
-      // Prefer the promoted Passport avatar, fall back to User.image.
-      image: profile.user.passport?.avatarUrl ?? profile.user.image,
-      bio: profile.user.passport?.bio ?? null,
-      socialLinks: profile.user.passport?.socialLinks ?? null,
-      email: profile.showEmail ? profile.user.email : null,
-      organizations: profile.showOrgs
-        ? profile.user.memberships
-            .filter(m => m.organization)
-            .map(m => ({
-              id: m.organization.id,
-              name: m.organization.name,
-              slug: m.organization.slug,
-              discipline: m.discipline,
-              joinedAt: m.joinedAt,
-            }))
-        : [],
-      ranks: profile.showRanks ? profile.user.rankAwards : [],
-      techniqueProgress: profile.user.techniqueProgress,
+      id: account?.id ?? null,
+      name: profile.passport.displayName ?? account?.name ?? null,
+      // Prefer the promoted Passport avatar, fall back to the account image.
+      image: profile.passport.avatarUrl ?? account?.image ?? null,
+      bio: profile.passport.bio ?? null,
+      socialLinks: profile.passport.socialLinks ?? null,
+      email: profile.showEmail ? (account?.email ?? null) : null,
+      organizations:
+        profile.showOrgs && account
+          ? account.memberships
+              .filter(m => m.organization)
+              .map(m => ({
+                id: m.organization.id,
+                name: m.organization.name,
+                slug: m.organization.slug,
+                discipline: m.discipline,
+                joinedAt: m.joinedAt,
+              }))
+          : [],
+      ranks: profile.showRanks ? profile.passport.rankAwardsEarned : [],
+      techniqueProgress: account?.techniqueProgress ?? [],
     },
   }
 }

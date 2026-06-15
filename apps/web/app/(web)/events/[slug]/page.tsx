@@ -157,27 +157,26 @@ export default async function PromotionEventPage({ params }: Props) {
                     const rankStyle = rankColor
                       ? ({ "--rank-color": rankColor } as CSSProperties)
                       : undefined
-                    const promoteeName = award.user.name ?? "Unnamed promotee"
+                    // Phase 3c: the promotee (earner) is Passport-rooted.
+                    const promoteeName =
+                      award.passport.displayName ?? award.passport.user?.name ?? "Unnamed promotee"
+                    const promoteeAvatar =
+                      award.passport.avatarUrl ?? award.passport.user?.image ?? undefined
 
                     return (
                       <Card key={award.id} hover={false} className="p-4" style={rankStyle}>
                         <Stack size="md" className="w-full items-start">
                           <Avatar className="size-11">
-                            {(award.user.passport?.avatarUrl ?? award.user.image) && (
-                              <AvatarImage
-                                src={
-                                  award.user.passport?.avatarUrl ?? award.user.image ?? undefined
-                                }
-                                alt={award.user.name ?? "Promotee"}
-                              />
+                            {promoteeAvatar && (
+                              <AvatarImage src={promoteeAvatar} alt={promoteeName} />
                             )}
-                            <AvatarFallback>{initials(award.user.name)}</AvatarFallback>
+                            <AvatarFallback>{initials(promoteeName)}</AvatarFallback>
                           </Avatar>
 
                           <Stack direction="column" size="xs" className="min-w-0 flex-1">
                             <Stack size="sm" wrap>
                               <H5>
-                                {award.user.lineageNode?.slug ? (
+                                {award.passport.lineageNode?.slug ? (
                                   <Link href={`/lineage?q=${encodeURIComponent(promoteeName)}`}>
                                     {promoteeName}
                                   </Link>

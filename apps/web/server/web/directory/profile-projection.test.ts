@@ -19,13 +19,24 @@ function profileFixture(): DirectoryProfileList {
     showPhone: true,
     showOrgs: true,
     showRanks: true,
-    user: {
-      id: "user-1",
-      name: "Brian Scott",
-      image: "https://example.com/user.jpg",
-      email: "secret@example.com",
-      isPlaceholder: false,
-      passport: { avatarUrl: "https://example.com/passport.jpg" },
+    // Phase 3c (SOT-ADR D1): DirectoryProfile is Passport-rooted; account is `passport.user`.
+    passport: {
+      id: "passport-1",
+      displayName: "Brian Scott",
+      avatarUrl: "https://example.com/passport.jpg",
+      user: {
+        id: "user-1",
+        name: "Brian Scott",
+        image: "https://example.com/user.jpg",
+        email: "secret@example.com",
+        memberships: [
+          {
+            organization: { id: "org-1", name: "Baseline Boulder", slug: "baseline-boulder" },
+            discipline: { id: "discipline-1", name: "BJJ" },
+            status: "ACTIVE",
+          },
+        ],
+      },
       lineageNode: {
         id: "node-1",
         isVerified: true,
@@ -34,14 +45,7 @@ function profileFixture(): DirectoryProfileList {
         claimRequests: [{ status: "APPROVED" }],
       },
       affiliations: [],
-      memberships: [
-        {
-          organization: { id: "org-1", name: "Baseline Boulder", slug: "baseline-boulder" },
-          discipline: { id: "discipline-1", name: "BJJ" },
-          status: "ACTIVE",
-        },
-      ],
-      rankAwards: [
+      rankAwardsEarned: [
         {
           id: "rank-award-1",
           rank: {
@@ -105,7 +109,7 @@ describe("projectDirectoryProfileListItem", () => {
 
   it("prefers current Affiliation orgs over Membership for the org facet", () => {
     const profile = profileFixture()
-    profile.user.affiliations = [
+    profile.passport.affiliations = [
       {
         schoolName: null,
         organization: { id: "aff-org-1", name: "Rigan Machado Affiliation", slug: "rigan-machado" },

@@ -66,10 +66,13 @@ async function seed(payload: SeedPayload): Promise<RehearsalFixture> {
       role: "user",
     },
   })
-  await Promise.all([
-    prisma.passport.create({ data: { userId: user.id, displayName: payload.name } }),
-    prisma.directoryProfile.create({ data: { userId: user.id, slug: tag(suffix, "user") } }),
-  ])
+  const userPassport = await prisma.passport.create({
+    data: { userId: user.id, displayName: payload.name },
+    select: { id: true },
+  })
+  await prisma.directoryProfile.create({
+    data: { passportId: userPassport.id, slug: tag(suffix, "user") },
+  })
 
   const organization = await prisma.organization.create({
     data: {
@@ -225,7 +228,7 @@ async function cleanup(fixture: RehearsalFixture) {
   await prisma.entitlement.deleteMany({ where: { id: { in: fixture.entitlementIds } } })
   await prisma.membership.deleteMany({ where: { organizationId: fixture.organizationId } })
   await prisma.organization.deleteMany({ where: { id: fixture.organizationId } })
-  await prisma.directoryProfile.deleteMany({ where: { userId: fixture.userId } })
+  await prisma.directoryProfile.deleteMany({ where: { passport: { userId: fixture.userId } } })
   await prisma.passport.deleteMany({ where: { userId: fixture.userId } })
   await prisma.session.deleteMany({ where: { userId: fixture.userId } })
   await prisma.account.deleteMany({ where: { userId: fixture.userId } })

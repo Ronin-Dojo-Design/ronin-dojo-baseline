@@ -86,13 +86,17 @@ beforeAll(async () => {
   })
 
   const nodeA = await db.lineageNode.create({
-    data: { userId: userA.id, slug: tag("node-a"), visibility: "PUBLIC" },
+    data: { passport: { create: { userId: userA.id } }, slug: tag("node-a"), visibility: "PUBLIC" },
   })
   const nodeB = await db.lineageNode.create({
-    data: { userId: userB.id, slug: tag("node-b"), visibility: "PUBLIC" },
+    data: { passport: { create: { userId: userB.id } }, slug: tag("node-b"), visibility: "PUBLIC" },
   })
   const nodeC = await db.lineageNode.create({
-    data: { userId: userC.id, slug: tag("node-c"), visibility: "RESTRICTED" },
+    data: {
+      passport: { create: { userId: userC.id } },
+      slug: tag("node-c"),
+      visibility: "RESTRICTED",
+    },
   })
 
   // userD — UNLISTED node for viewer-scope testing (SESSION_0181 TASK_02).
@@ -100,7 +104,11 @@ beforeAll(async () => {
     data: { name: tag("user-d"), email: `${tag("user-d")}@test.local` },
   })
   const nodeD = await db.lineageNode.create({
-    data: { userId: userD.id, slug: tag("node-d"), visibility: "UNLISTED" },
+    data: {
+      passport: { create: { userId: userD.id } },
+      slug: tag("node-d"),
+      visibility: "UNLISTED",
+    },
   })
 
   const discipline = await db.discipline.create({

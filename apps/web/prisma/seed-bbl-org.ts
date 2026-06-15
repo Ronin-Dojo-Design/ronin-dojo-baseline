@@ -52,28 +52,26 @@ async function main() {
     console.log(`  ⏭️  BBL Organization already exists: ${org.id}`)
   }
 
-  // 2. Placeholder user for claimable lineage node
-  const placeholderEmail = "bbl-claimable@placeholder.lineage"
-  let placeholderUser = await db.user.findFirst({ where: { email: placeholderEmail } })
-  if (!placeholderUser) {
-    placeholderUser = await db.user.create({
-      data: {
-        name: "BBL Claimable Profile",
-        email: placeholderEmail,
-        emailVerified: false,
-      },
+  // 2. Accountless Passport for the claimable lineage person (SOT-ADR D1: claimable = no account).
+  const placeholderDisplayName = "BBL Claimable Profile"
+  let placeholderPassport = await db.passport.findFirst({
+    where: { displayName: placeholderDisplayName, userId: null },
+  })
+  if (!placeholderPassport) {
+    placeholderPassport = await db.passport.create({
+      data: { displayName: placeholderDisplayName },
     })
-    console.log(`  ✅ Created placeholder user: ${placeholderUser.id}`)
+    console.log(`  ✅ Created accountless Passport: ${placeholderPassport.id}`)
   } else {
-    console.log(`  ⏭️  Placeholder user already exists: ${placeholderUser.id}`)
+    console.log(`  ⏭️  Placeholder Passport already exists: ${placeholderPassport.id}`)
   }
 
   // 3. LineageNode for the placeholder
-  let node = await db.lineageNode.findFirst({ where: { userId: placeholderUser.id } })
+  let node = await db.lineageNode.findFirst({ where: { passportId: placeholderPassport.id } })
   if (!node) {
     node = await db.lineageNode.create({
       data: {
-        userId: placeholderUser.id,
+        passportId: placeholderPassport.id,
         slug: "bbl-claimable-profile",
         bio: "Placeholder lineage profile for BBL smoke testing.",
       },

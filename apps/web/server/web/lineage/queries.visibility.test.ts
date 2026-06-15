@@ -69,12 +69,13 @@ function member({
       isVerified: true,
       verificationStatus: "VERIFIED",
       bio: "public bio",
-      userId: `user-${nodeId}`,
-      user: {
-        id: `user-${nodeId}`,
-        name: `User ${nodeId}`,
-        image: null,
-        passport: { displayName: `Display ${nodeId}` },
+      passportId: `passport-${nodeId}`,
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is passport.user.
+      passport: {
+        id: `passport-${nodeId}`,
+        displayName: `Display ${nodeId}`,
+        avatarUrl: null,
+        user: { id: `user-${nodeId}`, name: `User ${nodeId}`, image: null, memberships: [] },
         directoryProfile: {
           locationCity: null,
           locationRegion: null,
@@ -82,8 +83,8 @@ function member({
           visibility: "PUBLIC",
           showRanks,
         },
-        rankAwards,
-        memberships: [],
+        rankAwardsEarned: rankAwards,
+        affiliations: [],
       },
     },
   }
@@ -234,7 +235,7 @@ describe("lineage tree visibility materialization", () => {
 
     const result = materializeLineageTreeResult(hiddenRankTree as never)
 
-    expect(result.members[0]?.node.user.rankAwards).toEqual([])
+    expect(result.members[0]?.node.passport?.rankAwardsEarned).toEqual([])
     expect(result.members[0]?.selectedRankAward).toBeNull()
   })
 
@@ -304,14 +305,14 @@ describe("lineage tree visibility materialization", () => {
       isVerified: true,
       verificationStatus: "VERIFIED",
       bio: null,
-      userId: "user-hidden",
+      passportId: "passport-hidden",
       createdAt: new Date("2020-01-01"),
       updatedAt: new Date("2020-01-01"),
-      user: {
-        id: "user-hidden",
-        name: "Hidden User",
-        image: null,
-        passport: { displayName: "Hidden" },
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account (memberships) is passport.user.
+      passport: {
+        id: "passport-hidden",
+        displayName: "Hidden",
+        avatarUrl: null,
         directoryProfile: {
           locationCity: null,
           locationRegion: null,
@@ -319,36 +320,42 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC",
           showRanks: false,
         },
-        rankAwards: [{ id: "ra-1", awardedAt: new Date(), rank: { name: "Hidden BB" } }],
-        memberships: [
-          {
-            id: "m-1",
-            joinedAt: new Date(),
-            discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
-            organization: {
-              id: "o-1",
-              name: "Org",
-              slug: "org",
-              type: "SCHOOL",
-              city: null,
-              state: null,
-              country: null,
+        rankAwardsEarned: [{ id: "ra-1", awardedAt: new Date(), rank: { name: "Hidden BB" } }],
+        affiliations: [],
+        user: {
+          id: "user-hidden",
+          name: "Hidden User",
+          image: null,
+          memberships: [
+            {
+              id: "m-1",
+              joinedAt: new Date(),
+              discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+              organization: {
+                id: "o-1",
+                name: "Org",
+                slug: "org",
+                type: "SCHOOL",
+                city: null,
+                state: null,
+                country: null,
+              },
+              rank: { id: "r-1", name: "Hidden Membership Rank", shortName: "HMR" },
             },
-            rank: { id: "r-1", name: "Hidden Membership Rank", shortName: "HMR" },
-          },
-        ],
+          ],
+        },
       },
       relationshipsTo: [],
     }
 
     const result = redactLineageNodeProfileRanks(profile as never)
 
-    expect(result.user.rankAwards).toEqual([])
-    expect(result.user.memberships).toHaveLength(1)
-    expect(result.user.memberships[0]?.rank).toBeNull()
+    expect(result.passport?.rankAwardsEarned).toEqual([])
+    expect(result.passport?.user?.memberships).toHaveLength(1)
+    expect(result.passport?.user?.memberships[0]?.rank).toBeNull()
     // Discipline + organization metadata pass through (shared container fields).
-    expect(result.user.memberships[0]?.discipline?.name).toBe("BJJ")
-    expect(result.user.memberships[0]?.organization?.name).toBe("Org")
+    expect(result.passport?.user?.memberships[0]?.discipline?.name).toBe("BJJ")
+    expect(result.passport?.user?.memberships[0]?.organization?.name).toBe("Org")
   })
 
   it("preserves memberships[].rank when showRanks=true", () => {
@@ -359,14 +366,14 @@ describe("lineage tree visibility materialization", () => {
       isVerified: true,
       verificationStatus: "VERIFIED",
       bio: null,
-      userId: "user-shown",
+      passportId: "passport-shown",
       createdAt: new Date("2020-01-01"),
       updatedAt: new Date("2020-01-01"),
-      user: {
-        id: "user-shown",
-        name: "Shown User",
-        image: null,
-        passport: { displayName: "Shown" },
+      // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account (memberships) is passport.user.
+      passport: {
+        id: "passport-shown",
+        displayName: "Shown",
+        avatarUrl: null,
         directoryProfile: {
           locationCity: null,
           locationRegion: null,
@@ -374,31 +381,37 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC",
           showRanks: true,
         },
-        rankAwards: [{ id: "ra-2", awardedAt: new Date(), rank: { name: "Visible BB" } }],
-        memberships: [
-          {
-            id: "m-2",
-            joinedAt: new Date(),
-            discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
-            organization: {
-              id: "o-1",
-              name: "Org",
-              slug: "org",
-              type: "SCHOOL",
-              city: null,
-              state: null,
-              country: null,
+        rankAwardsEarned: [{ id: "ra-2", awardedAt: new Date(), rank: { name: "Visible BB" } }],
+        affiliations: [],
+        user: {
+          id: "user-shown",
+          name: "Shown User",
+          image: null,
+          memberships: [
+            {
+              id: "m-2",
+              joinedAt: new Date(),
+              discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+              organization: {
+                id: "o-1",
+                name: "Org",
+                slug: "org",
+                type: "SCHOOL",
+                city: null,
+                state: null,
+                country: null,
+              },
+              rank: { id: "r-2", name: "Shown Membership Rank", shortName: "SMR" },
             },
-            rank: { id: "r-2", name: "Shown Membership Rank", shortName: "SMR" },
-          },
-        ],
+          ],
+        },
       },
       relationshipsTo: [],
     }
 
     const result = redactLineageNodeProfileRanks(profile as never)
 
-    expect(result.user.rankAwards).toHaveLength(1)
-    expect(result.user.memberships[0]?.rank).toMatchObject({ shortName: "SMR" })
+    expect(result.passport?.rankAwardsEarned).toHaveLength(1)
+    expect(result.passport?.user?.memberships[0]?.rank).toMatchObject({ shortName: "SMR" })
   })
 })

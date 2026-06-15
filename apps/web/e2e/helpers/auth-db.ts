@@ -61,10 +61,11 @@ async function createUser(options: AuthUserOptions = {}) {
     data: { name, email, emailVerified: true, role: options.role ?? "user" },
   })
 
-  await prisma.$transaction([
-    prisma.passport.create({ data: { userId: user.id, displayName: name } }),
-    prisma.directoryProfile.create({ data: { userId: user.id, slug } }),
-  ])
+  const passport = await prisma.passport.create({
+    data: { userId: user.id, displayName: name },
+    select: { id: true },
+  })
+  await prisma.directoryProfile.create({ data: { passportId: passport.id, slug } })
 
   const session = await createSession(user.id)
 
@@ -80,7 +81,7 @@ async function cleanupUser(userId: string) {
   await prisma.registration.deleteMany({ where: { userId } })
   await prisma.weighInRecord.deleteMany({ where: { userId } })
   await prisma.session.deleteMany({ where: { userId } })
-  await prisma.directoryProfile.deleteMany({ where: { userId } })
+  await prisma.directoryProfile.deleteMany({ where: { passport: { userId } } })
   await prisma.passport.deleteMany({ where: { userId } })
   await prisma.user.deleteMany({ where: { id: userId } })
 }
@@ -101,8 +102,8 @@ async function readRegisteredUserByEmail(email: string): Promise<RegistrationUse
   const user = await prisma.user.findUnique({
     where: { email },
     include: {
-      passport: true,
-      directoryProfile: true,
+      // Phase 3c: DirectoryProfile is Passport-rooted; reach it through the account's Passport.
+      passport: { include: { directoryProfile: true } },
       sessions: { select: { id: true } },
     },
   })
@@ -115,7 +116,7 @@ async function readRegisteredUserByEmail(email: string): Promise<RegistrationUse
     name: user.name,
     emailVerified: user.emailVerified,
     passportDisplayName: user.passport?.displayName ?? null,
-    directorySlug: user.directoryProfile?.slug ?? null,
+    directorySlug: user.passport?.directoryProfile?.slug ?? null,
     sessionCount: user.sessions.length,
   }
 }

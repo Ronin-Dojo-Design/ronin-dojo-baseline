@@ -67,7 +67,7 @@ export function toLineageVisual(
     const trustStatus = resolveLineageTrustStatus({
       verificationStatus: node.verificationStatus,
       isVerified: node.isVerified,
-      isPlaceholder: node.user.isPlaceholder,
+      isPlaceholder: node.passport?.user == null,
       claimStatus,
     })
     const claimable =

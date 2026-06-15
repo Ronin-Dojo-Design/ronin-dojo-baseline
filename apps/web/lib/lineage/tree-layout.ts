@@ -36,7 +36,7 @@ export type LineageRow = {
  * deterministic when `user.name` is null.
  */
 function nodeDisplayName(node: LineageNodeRow): string {
-  return node.user.passport?.displayName ?? node.user.name ?? node.slug ?? node.id
+  return node.passport?.displayName ?? node.passport?.user?.name ?? node.slug ?? node.id
 }
 
 /**

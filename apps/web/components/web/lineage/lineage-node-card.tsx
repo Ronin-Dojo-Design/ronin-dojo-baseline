@@ -69,7 +69,7 @@ export function LineageNodeCard({
   const trustStatus = resolveLineageTrustStatus({
     verificationStatus: node.verificationStatus,
     isVerified: node.isVerified,
-    isPlaceholder: node.user.isPlaceholder,
+    isPlaceholder: node.passport?.user == null,
     claimStatus,
   })
   const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })

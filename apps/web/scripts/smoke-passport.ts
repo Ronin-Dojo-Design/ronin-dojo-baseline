@@ -33,20 +33,22 @@ async function main() {
   })
   console.log(`   User created: ${user.id}`)
 
-  // Simulate the auth hook transaction
-  const [passport, dirProfile] = await db.$transaction([
-    db.passport.create({
+  // Simulate the auth hook transaction (Phase 3c: DirectoryProfile is Passport-rooted).
+  const { passport, dirProfile } = await db.$transaction(async tx => {
+    const passport = await tx.passport.create({
       data: {
         userId: user.id,
         displayName: "Smoke Display",
       },
-    }),
-    db.directoryProfile.create({
+      select: { id: true },
+    })
+    const dirProfile = await tx.directoryProfile.create({
       data: {
-        userId: user.id,
+        passportId: passport.id,
       },
-    }),
-  ])
+    })
+    return { passport, dirProfile }
+  })
   console.log(`   Passport created: ${passport.id}`)
   console.log(`   DirectoryProfile created: ${dirProfile.id}`)
 
@@ -80,7 +82,7 @@ async function main() {
 
   // ── Step 5: Read DirectoryProfile defaults ───────────────────────────────
   console.log("\n5️⃣  Verifying DirectoryProfile defaults…")
-  const dp = await db.directoryProfile.findUnique({ where: { userId: user.id } })
+  const dp = await db.directoryProfile.findFirst({ where: { passport: { userId: user.id } } })
   if (!dp) throw new Error("FAIL: DirectoryProfile not found")
   if (dp.visibility !== "MEMBERS_ONLY") {
     throw new Error(`FAIL: default visibility wrong — got "${dp.visibility}"`)
@@ -94,7 +96,7 @@ async function main() {
 
   // ── Cleanup ──────────────────────────────────────────────────────────────
   console.log("\n🧹 Cleaning up test data…")
-  await db.directoryProfile.delete({ where: { userId: user.id } })
+  await db.directoryProfile.deleteMany({ where: { passport: { userId: user.id } } })
   await db.passport.delete({ where: { userId: user.id } })
   await db.user.delete({ where: { id: user.id } })
   console.log("   Cleaned up.")

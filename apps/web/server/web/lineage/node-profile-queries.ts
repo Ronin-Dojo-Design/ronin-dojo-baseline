@@ -16,11 +16,9 @@ export type EditableLineageNodeProfile = {
   node: {
     id: string
     bio: string | null
-    user: {
-      passport: {
-        displayName: string | null
-        avatarUrl: string | null
-      } | null
+    passport: {
+      displayName: string | null
+      avatarUrl: string | null
     }
   }
   member: {
@@ -96,14 +94,10 @@ export const getEditableLineageNodeProfile = async ({
             select: {
               id: true,
               bio: true,
-              user: {
+              passport: {
                 select: {
-                  passport: {
-                    select: {
-                      displayName: true,
-                      avatarUrl: true,
-                    },
-                  },
+                  displayName: true,
+                  avatarUrl: true,
                 },
               },
             },
