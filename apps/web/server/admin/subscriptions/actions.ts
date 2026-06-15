@@ -34,7 +34,7 @@ export const upsertSubscription = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/subscriptions"],
+        paths: ["/app/subscriptions"],
         tags: ["subscriptions", `subscription-${subscription.id}`],
       })
     })
@@ -52,7 +52,7 @@ export const deleteSubscriptions = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/subscriptions"],
+      paths: ["/app/subscriptions"],
       tags: ["subscriptions"],
     })
   })

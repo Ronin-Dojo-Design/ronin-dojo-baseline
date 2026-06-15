@@ -99,7 +99,7 @@ export const upsertTool = adminActionClient
       }
 
       revalidate({
-        paths: ["/admin/tools"],
+        paths: ["/app/tools"],
         tags: ["tools", `tool-${tool.slug}`, "schedule"],
       })
     })
@@ -143,7 +143,7 @@ export const duplicateTool = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/tools"],
+      paths: ["/app/tools"],
       tags: ["tools"],
     })
 
@@ -206,7 +206,7 @@ export const deleteTools = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/tools"],
+      paths: ["/app/tools"],
       tags: ["tools", ...softDeletes.map(tool => `tool-${tool.slug}`)],
     })
 

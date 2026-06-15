@@ -29,7 +29,7 @@ export const upsertCategory = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/categories"],
+        paths: ["/app/categories"],
         tags: ["categories", `category-${category.slug}`],
       })
     })
@@ -62,7 +62,7 @@ export const duplicateCategory = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/categories"],
+      paths: ["/app/categories"],
       tags: ["categories"],
     })
 
@@ -77,7 +77,7 @@ export const deleteCategories = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/categories"],
+      paths: ["/app/categories"],
       tags: ["categories"],
     })
 

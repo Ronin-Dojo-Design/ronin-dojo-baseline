@@ -35,7 +35,7 @@ export const upsertSubscriptionTier = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/subscription-tiers"],
+        paths: ["/app/subscription-tiers"],
         tags: ["subscription-tiers", `subscription-tier-${tier.id}`],
       })
     })
@@ -53,7 +53,7 @@ export const deleteSubscriptionTiers = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/subscription-tiers"],
+      paths: ["/app/subscription-tiers"],
       tags: ["subscription-tiers"],
     })
   })

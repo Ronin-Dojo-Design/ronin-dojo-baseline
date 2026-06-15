@@ -82,7 +82,7 @@ export const upsertPricingPlan = adminActionClient
 
       after(async () => {
         revalidate({
-          paths: ["/admin/pricing-plans"],
+          paths: ["/app/pricing-plans"],
           tags: ["pricing-plans", `pricing-plan-${pricingPlan.id}`],
         })
       })
@@ -101,7 +101,7 @@ export const deletePricingPlans = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/pricing-plans"],
+      paths: ["/app/pricing-plans"],
       tags: ["pricing-plans"],
     })
   })

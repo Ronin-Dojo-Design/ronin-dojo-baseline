@@ -288,6 +288,66 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       prefix: <CalendarIcon />,
       permission: APP_AREA_PERMISSIONS.schedule,
     },
+    {
+      title: "Billing",
+      href: "/app/billing",
+      prefix: <IdCardIcon />,
+      permission: APP_AREA_PERMISSIONS.billing,
+    },
+    {
+      title: "Categories",
+      href: "/app/categories",
+      prefix: <LayersIcon />,
+      permission: APP_AREA_PERMISSIONS.categories,
+    },
+    {
+      title: "Tags",
+      href: "/app/tags",
+      prefix: <LayersIcon />,
+      permission: APP_AREA_PERMISSIONS.tags,
+    },
+    {
+      title: "Pricing Plans",
+      href: "/app/pricing-plans",
+      prefix: <IdCardIcon />,
+      permission: APP_AREA_PERMISSIONS.pricingPlans,
+    },
+    {
+      title: "Subscription Tiers",
+      href: "/app/subscription-tiers",
+      prefix: <IdCardIcon />,
+      permission: APP_AREA_PERMISSIONS.subscriptionTiers,
+    },
+    {
+      title: "Subscriptions",
+      href: "/app/subscriptions",
+      prefix: <IdCardIcon />,
+      permission: APP_AREA_PERMISSIONS.subscriptions,
+    },
+    {
+      title: "Merch",
+      href: "/app/merch",
+      prefix: <ClipboardListIcon />,
+      permission: APP_AREA_PERMISSIONS.merch,
+    },
+    {
+      title: "Tools",
+      href: "/app/tools",
+      prefix: <ClipboardListIcon />,
+      permission: APP_AREA_PERMISSIONS.tools,
+    },
+    {
+      title: "Storage",
+      href: "/app/storage",
+      prefix: <DockIcon />,
+      permission: APP_AREA_PERMISSIONS.storage,
+    },
+    {
+      title: "Repo Docs",
+      href: "/app/repo-docs",
+      prefix: <BookOpenIcon />,
+      permission: APP_AREA_PERMISSIONS.repoDocs,
+    },
 
     undefined,
     {

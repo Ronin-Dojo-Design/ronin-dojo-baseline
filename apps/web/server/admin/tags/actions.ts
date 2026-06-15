@@ -29,7 +29,7 @@ export const upsertTag = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/tags"],
+        paths: ["/app/tags"],
         tags: ["tags", `tag-${tag.slug}`],
       })
     })
@@ -60,7 +60,7 @@ export const duplicateTag = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/tags"],
+      paths: ["/app/tags"],
       tags: ["tags"],
     })
 
@@ -75,7 +75,7 @@ export const deleteTags = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/tags"],
+      paths: ["/app/tags"],
       tags: ["tags"],
     })
 

@@ -102,6 +102,26 @@ describe("migrated admin app redirects", () => {
       },
       { source: "/admin/schedule", destination: "/app/schedule", permanent: true },
       { source: "/admin/schedule/:path*", destination: "/app/schedule/:path*", permanent: true },
+      { source: "/admin/billing", destination: "/app/billing", permanent: true },
+      { source: "/admin/billing/:path*", destination: "/app/billing/:path*", permanent: true },
+      { source: "/admin/categories", destination: "/app/categories", permanent: true },
+      { source: "/admin/categories/:path*", destination: "/app/categories/:path*", permanent: true },
+      { source: "/admin/tags", destination: "/app/tags", permanent: true },
+      { source: "/admin/tags/:path*", destination: "/app/tags/:path*", permanent: true },
+      { source: "/admin/pricing-plans", destination: "/app/pricing-plans", permanent: true },
+      { source: "/admin/pricing-plans/:path*", destination: "/app/pricing-plans/:path*", permanent: true },
+      { source: "/admin/subscription-tiers", destination: "/app/subscription-tiers", permanent: true },
+      { source: "/admin/subscription-tiers/:path*", destination: "/app/subscription-tiers/:path*", permanent: true },
+      { source: "/admin/subscriptions", destination: "/app/subscriptions", permanent: true },
+      { source: "/admin/subscriptions/:path*", destination: "/app/subscriptions/:path*", permanent: true },
+      { source: "/admin/merch", destination: "/app/merch", permanent: true },
+      { source: "/admin/merch/:path*", destination: "/app/merch/:path*", permanent: true },
+      { source: "/admin/tools", destination: "/app/tools", permanent: true },
+      { source: "/admin/tools/:path*", destination: "/app/tools/:path*", permanent: true },
+      { source: "/admin/storage", destination: "/app/storage", permanent: true },
+      { source: "/admin/storage/:path*", destination: "/app/storage/:path*", permanent: true },
+      { source: "/admin/repo-docs", destination: "/app/repo-docs", permanent: true },
+      { source: "/admin/repo-docs/:path*", destination: "/app/repo-docs/:path*", permanent: true },
     ])
   })
 
@@ -109,8 +129,6 @@ describe("migrated admin app redirects", () => {
     const sources = buildMigratedAdminAppRedirects().map(route => route.source)
 
     expect(sources).not.toContain("/admin/:path*")
-    expect(sources).not.toContain("/admin/pricing-plans/:path*")
-    expect(sources).not.toContain("/admin/tools/:path*")
   })
 
   it("redirects only dashboard routes with exact app editor parity", () => {
@@ -202,7 +220,8 @@ describe("migrated admin app redirects", () => {
     )
     expect(resolveMigratedAppRedirect("/admin/schedule")).toBe("/app/schedule")
     expect(resolveMigratedAppRedirect("/admin/schedule/month")).toBe("/app/schedule/month")
-    expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe(null)
+    expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe("/app/pricing-plans")
+    expect(resolveMigratedAppRedirect("/admin/tools/tool_123")).toBe("/app/tools/tool_123")
   })
 
   it("resolves exact app index routes to addressable profile tabs", () => {
