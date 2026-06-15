@@ -5,10 +5,15 @@ import { Card } from "~/components/common/card"
 import { AdBadge, AdLink } from "~/components/web/ads/ad-base"
 import { Container } from "~/components/web/ui/container"
 import { Favicon } from "~/components/web/ui/favicon"
+import { brandHasFeature } from "~/config/brand-features"
+import { getRequestBrand } from "~/lib/brand-context"
 import { cx } from "~/lib/utils"
 import { findAdWithFallback } from "~/server/web/ads/actions"
 
 export const AdBanner = async ({ className, ...props }: ComponentProps<typeof Card>) => {
+  const brand = await getRequestBrand()
+  if (!brandHasFeature(brand, "advertise")) return null
+
   const type = "Banner"
   const t = await getTranslations("components.ads")
   const { data: ad } = await findAdWithFallback({ type })

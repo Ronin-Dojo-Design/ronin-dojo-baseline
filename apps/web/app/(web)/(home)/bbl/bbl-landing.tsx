@@ -76,7 +76,7 @@ const BELT_BADGE_CLASSES: Record<string, string> = {
 }
 
 const BBL_SECTION_CLASSES =
-  "relative w-full rounded-[2rem] border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-sm md:p-8"
+  "relative w-full rounded-xl md:rounded-[2rem] border border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-sm md:p-8"
 const BBL_FLOAT_CLASSES =
   "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:transform-none"
 
@@ -126,7 +126,7 @@ const CheckRow = ({ title, children }: { title?: string; children: ReactNode }) 
 )
 
 const BblHero = () => (
-  <section className="relative grid w-full overflow-hidden rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-background via-card to-primary/10 px-5 py-10 shadow-sm md:px-10 md:py-14 lg:grid-cols-2 lg:items-center lg:gap-12">
+  <section className="relative grid w-full overflow-hidden rounded-2xl md:rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-background via-card to-primary/10 px-5 py-10 shadow-sm md:px-10 md:py-14 lg:grid-cols-2 lg:items-center lg:gap-12">
     <div
       className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl"
       aria-hidden="true"
@@ -139,7 +139,7 @@ const BblHero = () => (
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
         {heroContent.eyebrow}
       </p>
-      <h1 className="max-w-2xl text-5xl font-semibold tracking-tight text-pretty sm:text-6xl lg:text-7xl">
+      <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-pretty sm:text-5xl lg:text-7xl">
         {heroContent.titleLead} <span className="text-primary">{heroContent.titleAccent}</span>
       </h1>
       <Prose className="max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
@@ -158,7 +158,7 @@ const BblHero = () => (
     <Card
       hover={false}
       className={cx(
-        "relative z-10 p-0! overflow-hidden max-w-sm w-full mx-auto border-primary/20 lg:ml-auto",
+        "relative z-10 p-0! overflow-hidden max-w-xs sm:max-w-sm w-full mx-auto border-primary/20 mt-6 lg:mt-0 lg:ml-auto",
         BBL_FLOAT_CLASSES,
       )}
     >
@@ -865,7 +865,7 @@ export const BblLanding = async () => {
       className={cx(
         headingFont.variable,
         bodyFont.variable,
-        "flex w-full flex-col gap-y-20 pb-10 md:gap-y-28",
+        "flex w-full flex-col gap-y-12 pb-10 md:gap-y-20 lg:gap-y-28",
         // Legacy type treatment: Poppins italic extrabold uppercase headings, Inter body.
         "[font-family:var(--font-bbl-body)]",
         "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:tracking-[0.02em]",
