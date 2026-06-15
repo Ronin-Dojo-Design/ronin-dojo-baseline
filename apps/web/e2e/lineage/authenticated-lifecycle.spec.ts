@@ -339,7 +339,10 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
       { timeout: 30_000 },
     )
     const displayNameInput = page.getByLabel("Display name")
-    await expect(displayNameInput).toHaveValue(/E2E Claimant/, { timeout: 30_000 })
+    // Phase 3c (SOT-ADR D1, claim = adopt identity): after approval the claimant's account is bound to
+    // the CLAIMED person's Passport, so the editor pre-fills the claimed identity ("E2E Claim Target"),
+    // not the claimant's signup name. The claimant then renames it below.
+    await expect(displayNameInput).toHaveValue(/E2E Claim Target/, { timeout: 30_000 })
     await replaceTextInputValue(displayNameInput, updatedDisplayName)
     await page.getByLabel("Promotion date").fill(updatedPromotionDate)
     await expect(page.getByLabel("Promotion date")).toHaveValue(updatedPromotionDate)

@@ -457,5 +457,29 @@ to collapse the repeated `passport?.displayName ?? passport?.user?.name ?? …` 
 | Review & Recommend | Next session goal + first task written. |
 | Memory sweep | Passport-consolidation memory updated with Phase 3c completion. |
 | Next session unblock check | Next task concrete (owner seed → browser proof + DRY). |
-| Git hygiene | Branch `main`; FS-0024 guard run; single push at close. |
+| Git hygiene | Branch `main`; FS-0024 guard run; commits `283863a` (feat) + e2e/claim-merge follow-through. |
 | Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` run before git hygiene; stats recorded at push. |
+
+## Post-close follow-through addendum
+
+CI was green on first push (`283863a`); **Playwright E2E** surfaced issues the unit suite couldn't
+(it exercises the live claim flow). Fixed in follow-up commits, same SESSION_0392 close:
+
+- `82ede92` — the e2e lifecycle seed helper's `state` reader still selected the dropped
+  `LineageNode.userId`. Prisma `select` does **not** excess-check unknown keys, so it passed
+  typecheck but failed at runtime — a hole to remember when verifying schema drops.
+- `bf11230` — the lifecycle spec asserted the old `node.userId == placeholderUserId` ownership;
+  an accountless placeholder's owner is `null` until claim approval.
+- `4e6ea9a` — **real product fix + claim-merge decision (operator: option 1).** Every signed-up user
+  already has a Passport (signup identity shell), so `attachAccount`'s `CLAIMANT_HAS_PASSPORT` guard
+  made claim approval impossible for real users. Approve now supersedes the claimant's empty signup
+  Passport (deletes it; its auto directory profile cascades) before attaching the account to the
+  claimed Passport. Operator asked for a fallow pass first — confirmed the claim/identity code is
+  healthy/low-complexity (only dead-code: unused `ClaimantHasPassportError.code`; dupes are
+  pre-existing admin-vs-/app page mirrors), so option 1 was a small, safe addition. Added a unit test
+  for the claimant-has-Passport merge path (601 tests pass/0 fail).
+
+**Follow-ups carried forward:** live browser proof (local owner-seed blocker); DRY the
+`passport?.displayName ?? passport?.user?.name ?? …` chains into a `passportDisplayName` helper (fallow
+advisory); remove the now-unused `ClaimantHasPassportError.code`; retire the superseded
+`scripts/phase3b-*` script/SQL.
