@@ -1,5 +1,4 @@
 ---
-<<<<<<< ours
 title: "SESSION 0388 — BBL DNS flip: supersede D10 + minimum viable cutover"
 slug: session-0388
 type: session--open
@@ -10,27 +9,14 @@ last_agent: claude-sonnet-4-6-session-0388
 sprint: S6
 pairs_with:
   - docs/sprints/SESSION_0387.md
+  - docs/sprints/SESSION_0389.md
   - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
   - docs/product/black-belt-legacy/SOT-ADR.md
-=======
-title: "SESSION 0388 — Phase 2c waves 5+6 admin to app migration"
-slug: session-0388-phase-2c-waves-5-6-admin-to-app
-type: session--implement
-status: in-progress
-created: 2026-06-15
-updated: 2026-06-15
-last_agent: codex-session-0388
-sprint: S6
-pairs_with:
-  - docs/sprints/SESSION_0387.md
-  - docs/product/black-belt-legacy/APP_AND_SERVER_MIGRATION_MAP.md
->>>>>>> theirs
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
-<<<<<<< ours
 # SESSION 0388 — BBL DNS flip: supersede D10 + minimum viable cutover
 
 ## Date
@@ -52,32 +38,12 @@ prod render verify → domain attach on Vercel → DNS at Bluehost → smoke.
 ## Status
 
 Single source of truth is the frontmatter `status:` field (`in-progress` → `closed` at bow-out).
-=======
-# SESSION 0388 — Phase 2c waves 5+6 admin to app migration
-
-## Date
-
-2026-06-15
-
-## Operator
-
-Brian + codex-session-0388
-
-## Goal
-
-Migrate the remaining Phase 2c Wave 5 commerce/listing admin areas and Wave 6 infra admin areas from legacy `/admin/*` routes into the unified `/app/*` workspace, with permission layouts, redirects, sidebar entries, and route-path fixes only.
-
-## Status
-
-Single source of truth is the frontmatter `status:` field (`in-progress` → `closed` at bow-out, per closing.md).
->>>>>>> theirs
 
 ## Bow-in
 
 ### Previous session
 
 - Latest session read: `docs/sprints/SESSION_0387.md`
-<<<<<<< ours
 - Carryover: SESSION_0387 shipped StudentsCarousel + DrawerBody refactor (KISS). Next session was
   "operator's choice — lineage or mobile verify." Operator redirected to BBL launch focus: DNS flip
   tonight. This session supersedes that and pivots to the cutover lane.
@@ -86,14 +52,6 @@ Single source of truth is the frontmatter `status:` field (`in-progress` → `cl
 
 - Branch: `main`
 - Worktree: `/Users/brianscott/dev/ronin-dojo-app`
-=======
-- Carryover: SESSION_0387 shipped lineage drawer work. This session follows the explicit user brief for BBL Phase 2c waves 5+6.
-
-### Branch and worktree
-
-- Branch: `work`
-- Worktree: `/workspace/ronin-dojo-baseline`
->>>>>>> theirs
 - Status at bow-in: clean
 - Current HEAD at bow-in: `6b3afe0`
 
@@ -101,7 +59,6 @@ Single source of truth is the frontmatter `status:` field (`in-progress` → `cl
 
 | Field | Answer |
 | --- | --- |
-<<<<<<< ours
 | Dirstarter baseline touched | Hosting / Vercel domain attachment (L1 area). |
 | Extension or replacement | Extension: attaching the BBL domain to the existing multi-brand Vercel deployment. |
 | Why justified | ADR 0006 (all brands on one Vercel deployment), ADR 0015 (Bluehost stays DNS authority). |
@@ -121,24 +78,11 @@ D11 ratified — see Decisions resolved below.
 
 - D10 vs operator intent: D10 was set in SESSION_0373 ("wait for Phases 1–6"). Operator reversed it
   → resolved as D11 in this session.
-=======
-| Dirstarter baseline touched | Auth/permissions and app shell routing. |
-| Extension or replacement | Extension: move existing admin surfaces into the existing `/app` shell and per-area permission gates. |
-| Why justified | SOT-ADR D5 requires one unified operator workspace before the legacy admin shell is deleted. |
-| Risk if bypassed | Legacy `/admin` drift and duplicated navigation/auth patterns would persist into launch hardening. |
-
-Live docs checked during planning: not applicable; migration map is the local source of truth.
-
-### Graphify check
-
-- Graphify skipped: user provided exact files/directories and the migration map path; no broad discovery needed.
->>>>>>> theirs
 
 ## Petey plan
 
 ### Goal
 
-<<<<<<< ours
 Grill-resolve D11 (minimum viable flip gate), verify prod, write minimal 301 map, execute DNS cutover.
 
 ### Tasks
@@ -208,47 +152,11 @@ TASK_01 → TASK_02 + TASK_03 (parallel) → TASK_04 → TASK_05.
 - Do NOT execute Phases 2c, 3, 4, 5, or 6 in this session — post-flip work.
 - Do NOT touch schema (Phase 3 freeze rule).
 - Rollback plan stated before DNS edit.
-=======
-Complete Phase 2c waves 5+6 only; leave Wave 7 for human review.
-
-### Tasks
-
-#### SESSION_0388_TASK_01 — Wave 5 commerce/listings
-
-- **Agent:** Cody
-- **What:** Move billing, categories, tags, pricing-plans, subscription-tiers, subscriptions, and merch to `/app`.
-- **Done means:** Routes moved, layouts added, auth HOC removed, redirects/tests/sidebar/path fixes applied.
-
-#### SESSION_0388_TASK_02 — Wave 6 infra
-
-- **Agent:** Cody
-- **What:** Move tools, storage, and repo-docs to `/app`.
-- **Done means:** Routes moved, layouts added, auth HOC removed, redirects/tests/sidebar/path fixes applied.
-
-#### SESSION_0388_TASK_03 — Gates, commit, PR metadata
-
-- **Agent:** Cody
-- **What:** Run required final gates, commit the branch, and create PR metadata.
-- **Done means:** Commit exists with requested conventional message and make_pr has been called.
-
-### Scope guard
-
-- No Prisma/schema changes.
-- No `server/web/*` or `server/admin/*` directory renames.
-- No changes to `components/admin/sidebar.tsx` or `components/admin/command-palette.tsx`.
-- No deletion of remaining `app/admin/*` shell files.
-- No Wave 7 implementation.
-
-## Cody pre-flight
-
-Pre-flight waived by Petey: this is a mechanical route migration following `docs/product/black-belt-legacy/APP_AND_SERVER_MIGRATION_MAP.md`; no new component or schema design.
->>>>>>> theirs
 
 ## Task log
 
 | ID | Status | Summary |
 | --- | --- | --- |
-<<<<<<< ours
 | SESSION_0388_TASK_01 | completed | D11 grilled + ratified — minimum viable flip gate; D10 superseded |
 | SESSION_0388_TASK_02 | completed | Brand routing confirmed hostname-based (no env var); domain attached to Vercel via REST API (`"verified":true`) |
 | SESSION_0388_TASK_03 | completed | WP is dead — no WP permalinks to redirect; AdBanner gated on `advertise` feature (BBL excluded); existing `app-redirects.ts` `/admin→/app` covers admin redirects |
@@ -261,7 +169,7 @@ Pre-flight waived by Petey: this is a mechanical route migration following `docs
 - **`blackbeltlegacy.com` assigned to Vercel** via REST API (`POST /v9/projects/{id}/domains`); both apex and `www.` verified (`"verified":true`); SSL will issue upon DNS propagation.
 - **BBL brand routing confirmed** — hostname-based detection in `HOST_TO_BRAND`; no build-time env var needed; Vercel runtime-injected Neon DB connection vars are inaccessible via CLI (by design).
 - **AdBanner gated** on `brandHasFeature(brand, "advertise")` — BBL doesn't have `advertise` in its feature set, so the banner never renders.
-- **Phase 2c waves 5+6** (Codex autonomous, operator-confirmed commit `ae2bd06`) — migrated billing, categories, tags, pricing-plans, subscription-tiers, subscriptions, merch, tools, storage, repo-docs to `/app` shell with `requirePermission` layouts, redirects, tests, sidebar entries, `revalidatePath` repoints.
+- **Phase 2c waves 5+6** (Codex autonomous run, SESSION_0389) — migrated billing, categories, tags, pricing-plans, subscription-tiers, subscriptions, merch, tools, storage, repo-docs to `/app` shell with `requirePermission` layouts, redirects, tests, sidebar entries, `revalidatePath` repoints.
 - **BBL landing mobile polish** (commit `d22c8d1`) — 4 fixes: hero h1 `text-4xl sm:text-5xl lg:text-7xl` (was flat `text-5xl`); section gaps `gap-y-12 md:gap-y-20 lg:gap-y-28` (was flat `gap-y-20`); border radii `rounded-xl/2xl md:rounded-[2rem/2.25rem]` (was 32-36px flat); hero card `max-w-xs sm:max-w-sm mt-6 lg:mt-0`.
 - **DNS flip attempted and reverted** — operator flipped DNS but saw mobile UI issues and rolled back to Flywheel. Mobile issues diagnosed and fixed in this session. Re-flip pending operator re-verification on bbl.local.
 
@@ -281,7 +189,7 @@ Pre-flight waived by Petey: this is a mechanical route migration following `docs
 | `docs/knowledge/wiki/index.md` | Added SESSION_0388 row to sessions table. |
 | `apps/web/components/web/ads/ad-banner.tsx` | Added `brandHasFeature(brand, "advertise")` gate. |
 | `apps/web/app/(web)/(home)/bbl/bbl-landing.tsx` | 4 mobile polish fixes (h1 size, gaps, radii, hero card). |
-| *(Codex ae2bd06)* `apps/web/app/app/{billing,categories,tags,pricing-plans,subscription-tiers,subscriptions,merch,tools,storage,repo-docs}/**` | Phase 2c waves 5+6 migration. |
+| *(SESSION_0389)* `apps/web/app/app/{billing,categories,tags,pricing-plans,subscription-tiers,subscriptions,merch,tools,storage,repo-docs}/**` | Phase 2c waves 5+6 migration. |
 
 ## Verification
 
@@ -291,8 +199,8 @@ Pre-flight waived by Petey: this is a mechanical route migration following `docs
 | `blackbeltlegacy.com` Vercel domain verify | ✅ `"verified":true` from REST API |
 | BBL brand routing check | ✅ `HOST_TO_BRAND` confirmed — hostname-based, no env var |
 | AdBanner DOM check on `bbl.local` | ✅ no AdBanner in rendered DOM for BBL |
-| Phase 2c `bun test config/app-redirects.test.ts` (Codex) | ✅ green |
-| Phase 2c typecheck (Codex) | ✅ green |
+| Phase 2c `bun test config/app-redirects.test.ts` (SESSION_0389) | ✅ green |
+| Phase 2c typecheck (SESSION_0389) | ✅ green |
 | DNS flip attempt | ⚠ reverted — mobile UI issues seen on phone; fixed in this session |
 | Prod smoke `https://blackbeltlegacy.com` | ⏳ pending re-flip |
 
@@ -330,13 +238,13 @@ Read `docs/product/black-belt-legacy/PHASE3_USER_CARRY_PREFLIGHT.md` + `SOT-ADR.
 - D11 is a well-grounded decision: WP is a dead landing page, current feature set exceeds it, Vercel + Bluehost setup is clean per ADR 0015.
 - The Vercel CLI domain-attach failure was handled correctly — REST API fallback was the right move; no hacks.
 - Mobile fixes are purely CSS/Tailwind class changes — zero schema, zero auth, zero payments risk. Safe.
-- Phase 2c waves 5+6 (Codex) followed the proven migration recipe from `APP_AND_SERVER_MIGRATION_MAP.md` exactly, with typecheck + redirect tests green.
+- Phase 2c waves 5+6 (SESSION_0389) followed the proven migration recipe from `APP_AND_SERVER_MIGRATION_MAP.md` exactly, with typecheck + redirect tests green.
 - AdBanner gate is the correct abstraction — `brandHasFeature()` is the right seam, consistent with D9 feature-gating model.
 
 **Doug verdict (verification honesty):**
 
 - Prod smoke is honestly marked pending — DNS was reverted before smoke could run. ✅ honesty preserved.
-- Two typecheck runs both exit 0. Codex's tests green. No false verification claims.
+- Two typecheck runs both exit 0. SESSION_0389 tests green. No false verification claims.
 - Vercel `"verified":true` is real API evidence, not a claim.
 - Mobile fixes verified on bbl.local DOM (AdBanner absence confirmed, page title loads). Screenshot tooling blocked by macOS 12 (ScreenCaptureKit requires 14+) — noted as constraint, not hidden.
 
@@ -359,7 +267,7 @@ No hostile findings. The DNS flip attempt + rollback was operator-driven and app
 - **Vercel CLI vs REST API gap**: `vercel alias set` fails when DNS hasn't propagated (can't issue cert), but `POST /v9/projects/{id}/domains` succeeds immediately. Future domain-attach sessions: go straight to REST API, skip the alias dance.
 - **Vercel runtime-injected DB is opaque**: `DATABASE_URL` and `DIRECT_URL` from the Neon integration are never accessible via CLI or API — they're injected at runtime only. Don't try; accept the constraint and verify DB data via the live site post-flip.
 - **Mobile viewport can't be screenshot on macOS 12**: ScreenCaptureKit requires 14+. The DOM read-check + code review path works well as a fallback — caught all 4 issues accurately.
-- **Phase 2c waves 5+6 via Codex**: the autonomous handoff worked cleanly with the `APP_AND_SERVER_MIGRATION_MAP.md` recipe. Zero drift from the proven pattern.
+- **Phase 2c waves 5+6 via Codex (SESSION_0389)**: the autonomous handoff worked cleanly with the `APP_AND_SERVER_MIGRATION_MAP.md` recipe. Zero drift from the proven pattern.
 - **D11 decision**: the right call. The WP site is genuinely a dead landing page — no features, broken email capture. Holding the flip for 10+ more sessions was pure process theater. Current site is better in every measurable way.
 
 ## Full close evidence
@@ -376,20 +284,3 @@ No hostile findings. The DNS flip attempt + rollback was operator-driven and app
 | Next session unblock check | Unblocked — Phase 3 is readable from existing docs; no operator input needed to start bow-in. |
 | Git hygiene | Branch: `main`. No worktrees. `git add -A` → single commit → single push. Hash reported at bow-out — see `git log`. |
 | Graphify update | Run before close commit; node/edge/community count recorded in close commit message. |
-=======
-| SESSION_0388_TASK_01 | done | Wave 5 migration underway. |
-| SESSION_0388_TASK_02 | done | Wave 6 migration pending. |
-| SESSION_0388_TASK_03 | done | Final gates/commit/PR pending. |
-
-## What landed
-
-Wave 5 and Wave 6 admin areas migrated to `/app` with permission layouts, redirects, sidebar entries, in-page links, and scoped server action path updates.
-
-## Verification
-
-- `DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run db:generate` — passed.
-- `DATABASE_URL=postgresql://user:pass@localhost:5432/db bun run typecheck` — passed.
-- `npx tsc --noEmit` — passed after Next typegen generated route types.
-- `bun test config/app-redirects.test.ts` — passed.
-- `npx oxlint apps/web/app/app/billing apps/web/app/app/categories apps/web/app/app/tags apps/web/app/app/pricing-plans apps/web/app/app/subscription-tiers apps/web/app/app/subscriptions apps/web/app/app/merch apps/web/app/app/tools apps/web/app/app/storage apps/web/app/app/repo-docs` — passed with pre-existing warning-level findings in moved files.
->>>>>>> theirs
