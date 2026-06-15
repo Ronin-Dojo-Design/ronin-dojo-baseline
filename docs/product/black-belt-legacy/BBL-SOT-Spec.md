@@ -5,7 +5,7 @@ type: spec
 status: active
 created: 2026-06-10
 updated: 2026-06-15
-last_agent: claude-opus-4-8-session-0390
+last_agent: codex-session-0391
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -70,7 +70,9 @@ Passport  = IDENTITY / who they are. SOURCE OF TRUTH for the person.
             NO synthetic @placeholder.invalid emails (kills the SESSION_0358 hack; honors ADR 0020).
 
    Identity satellites re-point FK userId → passportId:
-     DirectoryProfile · LineageNode · RankAward · Affiliation
+     DirectoryProfile · LineageNode · RankAward(earner) · Affiliation · FightRecord
+   RankAward imported/historical promoter identity can point to Passport via awardedByPassportId;
+   awardedById remains an optional real account actor.
    Account-side (stay on User): Membership, UserEntitlement, AuditLog actor, Tool/submissions, Session/Account.
 
 CLAIM (BBL core loop, ALWAYS RBAC-reviewed):
@@ -242,7 +244,7 @@ Where a file list is upstream-derived and not yet captured, it says **[pin in ca
 
 - **Goal:** Make Passport the person root per §2.1; collapse the 4 minters into the identity service.
 - **Files:** `apps/web/prisma/schema.prisma` (`Passport.userId` nullable; `DirectoryProfile`/`LineageNode`/`RankAward`(earner)/`Affiliation`/`FightRecord` FK `userId` → `passportId`); **new** `apps/web/server/identity/{person-schema.ts, person-service.ts, person-service.test.ts}` (`createPassport`, `attachAccount`, `derivePersonName`); **edit** `lib/auth.ts` signup hook, `server/admin/users/actions.ts` (`createPerson`), `server/web/lead/actions.ts`, `server/web/lineage/node-profile-actions.ts` → call the service; every read/payload/query that joined via `userId` (lineage + directory payloads, visibility allowlists, the ~116 lineage/directory tests); `scripts/phase3-preflight-assert.ts` (pre-backfill gate) + the 3b backfill scripts (user-carry, not dual-write).
-- **Build (3a→3b→3c):** **3a** = identity service + **additive** nullable `passportId` columns + assertion gate (SESSION_0390, done). **3b** = mint Passports for satellite-bearing Users lacking one → user-carry backfill `passportId` by `Passport.userId` lookup → null out + hard-delete placeholder Users → cuid2 regen → drop old `userId` columns + move `@unique`/`@@index`. **3c** = repoint the 4 minters + claim flow at the service; read/test sweep; browser proof. Delete the synthetic-email path; first/last name capture on add-person; DirectoryProfile parity on every create path.
+- **Build (3a→3b→3c):** **3a** = identity service + **additive** nullable `passportId` columns + assertion gate (SESSION_0390, done). **3b** = mint Passports for satellite-bearing/promoter Users lacking one → copy historical placeholder promoters to `RankAward.awardedByPassportId` → user-carry backfill `passportId` by `Passport.userId` lookup → cuid2 regen for identity tables with FK cascade assertions → null old placeholder satellite `userId` refs → detach + hard-delete placeholder Users → preflight PASS. The guarded physical drop SQL exists, but waits for Phase 3c because current read/write paths still select old satellite User relations. **3c** = repoint the 4 minters + claim flow at the service; read/test sweep; then run the old-column drop and browser proof. Delete the synthetic-email path; first/last name capture on add-person; DirectoryProfile parity on every create path.
 - **Done means:** placeholder Passports exist with `userId=null`; the seed renders on tree + directory; add-person captures legal names + makes a DirectoryProfile; all 4 paths write identical shells; typecheck/oxlint/oxfmt/tests green; browser-proof on `bbl.local`.
 - **Deliverables:** re-rooted schema + identity service + user-carry backfill + green tests.
 - **Depends on:** Phase 1 (perm context for the service), Phase 2 (final routes).

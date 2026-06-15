@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-15
+last_agent: codex-session-0391
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md

@@ -23,6 +23,7 @@
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../.generated/prisma/client"
+import { PHASE3_IDENTITY_SATELLITE_USER_FKS } from "./phase3-identity-satellites"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const db = new PrismaClient({ adapter })
@@ -32,14 +33,6 @@ const db = new PrismaClient({ adapter })
  * `passportId` in 3b). The earner half of RankAward and the promoted FightRecord (SESSION_0390) are
  * included; the RankAward promoter (`awardedById`) is a CARRY actor and is deliberately NOT here.
  */
-const SATELLITE_USER_FKS: ReadonlyArray<{ table: string; column: string }> = [
-  { table: "DirectoryProfile", column: "userId" },
-  { table: "LineageNode", column: "userId" },
-  { table: "Affiliation", column: "userId" },
-  { table: "RankAward", column: "userId" },
-  { table: "FightRecord", column: "userId" },
-]
-
 function n(rows: Array<{ n: bigint }>): number {
   return Number(rows[0]?.n ?? 0n)
 }
@@ -77,7 +70,7 @@ async function main(): Promise<void> {
 
   // ---- (B) Orphan check per identity satellite -------------------------------------------------
   console.log("\n(B) Satellite orphan check (userId with no matching Passport):")
-  for (const { table, column } of SATELLITE_USER_FKS) {
+  for (const { table, column } of PHASE3_IDENTITY_SATELLITE_USER_FKS) {
     const orphans = n(
       await db.$queryRawUnsafe(
         `SELECT COUNT(*)::bigint AS n FROM "${table}" s
@@ -109,7 +102,7 @@ async function main(): Promise<void> {
      ORDER BY tc.table_name, kcu.column_name`,
   )
   const exempt = new Set<string>([
-    ...SATELLITE_USER_FKS.map(f => `${f.table}.${f.column}`),
+    ...PHASE3_IDENTITY_SATELLITE_USER_FKS.map(f => `${f.table}.${f.column}`),
     "Passport.userId",
   ])
   const carryFks = userFks.filter(f => !exempt.has(`${f.table_name}.${f.column_name}`))

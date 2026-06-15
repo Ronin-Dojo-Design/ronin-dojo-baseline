@@ -5,7 +5,7 @@ type: decision
 status: active
 created: 2026-06-10
 updated: 2026-06-15
-last_agent: claude-opus-4-8-session-0390
+last_agent: codex-session-0391
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -70,6 +70,23 @@ refreshed into `dirstarter_template` at SESSION_0359.
   `derivePersonName`) + **additive** migration (nullable `passportId` on the 5 satellites + nullable
   `Passport.userId`; no drops/constraint-moves/reseed) + the read-only pre-backfill assertion gate
   (`scripts/phase3-preflight-assert.ts`). The destructive backfill/drop/reseed is 3b.
+
+### D1 amendment — RankAward promoter identity split + 3b rehearsal *(SESSION_0391)*
+
+- **Historical promoter identity is Passport-side.** `RankAward.awardedById` remains the nullable
+  account/actor link for a real logged-in promoter. Imported lineage promoters that were synthetic
+  placeholder Users are copied to `RankAward.awardedByPassportId` before placeholder User deletion.
+  Public lineage/rank provenance should prefer the Passport promoter identity once Phase 3c repoints
+  read paths.
+- **3b data sequence is now proven locally:** mint missing Passports for every satellite-bearing or
+  promoter User; copy placeholder promoters to `awardedByPassportId`; backfill satellite `passportId`;
+  rewrite identity-table IDs to cuid2; null old placeholder satellite `userId` columns; detach and
+  hard-delete placeholder Users; re-run the preflight gate. The rehearsal preserved BBL people as
+  accountless Passports and Brian Scott admin as an account-bearing User.
+- **Physical `userId` column drops are staged, not applied yet.** `phase3b-drop-old-user-columns.sql`
+  is the guarded step-6 SQL, but applying it before Phase 3c would break current read/write paths that
+  still select satellite `user` relations. Phase 3c must repoint code to Passport/`awardedByPassport`
+  before the drop SQL becomes executable on the app database.
 
 ## D2 — Foundation-first on upstream-current Dirstarter
 

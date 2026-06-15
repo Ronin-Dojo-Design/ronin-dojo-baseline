@@ -5,7 +5,7 @@ type: design
 status: active
 created: 2026-06-12
 updated: 2026-06-15
-last_agent: claude-opus-4-8-session-0390
+last_agent: codex-session-0391
 author: Doug + Brian
 pairs_with:
   - docs/product/black-belt-legacy/SOT-ADR.md
@@ -35,8 +35,10 @@ time (the cuid2 wave rides the same window and will churn the file).
 
 `Passport` = identity SoT. `Passport.userId` becomes **nullable** (an accountless Passport = the
 placeholder, replacing synthetic `User{ isPlaceholder: true }` rows). The **4 canonical identity
-satellites** — `DirectoryProfile`, `LineageNode`, `RankAward`, `Affiliation` — repoint their FK
-`userId` → `passportId`. `User` (Better-Auth account) stays the **actor/account** for everything
+satellites** — `DirectoryProfile`, `LineageNode`, `RankAward`(earner), `Affiliation`, and
+`FightRecord` — repoint their FK `userId` → `passportId`. Historical imported `RankAward` promoters
+can also carry a Passport identity via `awardedByPassportId`; `awardedById` stays the optional
+real-account actor link. `User` (Better-Auth account) stays the **actor/account** for everything
 account-side. `MediaAttachment.passportId` (line 3313) already exists and is the proof-of-shape
 precedent: it is the only model that points at Passport today.
 
@@ -58,7 +60,7 @@ on `User` (account/actor) · **DUAL** = one identity link repoints + a separate 
 | **Passport** | 957 (`userId` 982) | identity row's own account link, `@unique` | **ROOT (make nullable)** | The root itself. `userId String @unique` → `userId String? @unique`. Accountless = placeholder. |
 | **DirectoryProfile** | 990 (`userId` 1007) | the person's public profile, `@unique` | **REPOINT** | D1-named satellite. A placeholder person has a directory profile; it is WHO-they-are. `@unique` moves to `passportId`. |
 | **LineageNode** | 2483 (`userId` 2495) | the person's lineage node, `@unique` | **REPOINT** | D1-named satellite. The canonical placeholder/claim surface today. `@unique` moves to `passportId`. |
-| **RankAward** | 2000 (`userId` 2012; `awardedById` 2016) | belt earner (`EarnedBy`) + promoter (`AwardedBy`) | **DUAL** | D1-named satellite. `userId`(earner)→`passportId` (a placeholder earns belts). `awardedById` **CARRIES** on `User?` — the promoter is an acting account. `@@unique([userId,rankId])`→`([passportId,rankId])`. |
+| **RankAward** | 2000 (`userId` 2012; `awardedById` 2016) | belt earner (`EarnedBy`) + promoter (`AwardedBy`) | **DUAL+PROMOTER PASSPORT** | D1-named satellite. `userId`(earner)→`passportId` (a placeholder earns belts). `awardedById` **CARRIES** on `User?` for real account actors; imported/historical placeholder promoters move to `awardedByPassportId`. `@@unique([userId,rankId])`→`([passportId,rankId])`. |
 | **Affiliation** | 1288 (`userId` 1299) | person↔school relationship | **REPOINT** | D1-named satellite (the BBL school axis, SESSION_0357/0358). A placeholder trains at a school. `@@index([userId,isCurrent])`→passport. |
 | Session | 156 (`userId` 168) | active login session | **CARRY** | Better-Auth account internal. No placeholder ever has a session. |
 | Account | 174 (`userId` 190) | OAuth/credential provider link | **CARRY** | Better-Auth account internal. Auth-side only. |
@@ -85,7 +87,7 @@ on `User` (account/actor) · **DUAL** = one identity link repoints + a separate 
 | Certification | 2804 (`userId` 2816; `issuedById` 2821) | cert holder + issuer | **CARRY** (see §3/§4) | See §3 — credential held by an account; org-issued, account-scoped. Borderline; argued CARRY. |
 | InviteClaim | 2992 (`userId` 2998) | who claimed an invite | **CARRY** | Account action in the invite flow. |
 | EventRegistration | 3042 (`userId` 3054) | who registered for an event | **CARRY** | Account action. |
-| FightRecord | 3118 (`userId` 3127) | a person's career W/L record | **DECISION-NEEDED** | See §3/§4 — strongest 5th-satellite candidate (athletic identity), but no placeholder-creation path today. |
+| FightRecord | 3118 (`userId` 3127) | a person's career W/L record | **REPOINT** | Operator promoted it in SESSION_0390: durable athletic identity carries with a placeholder person. `@@unique([userId,disciplineId,type])`→passport. |
 | AuditLog | 3136 (`userId` 3149) | actor of an audited action | **CARRY** | Definitionally the acting account. Never a placeholder. |
 | WeighInRecord | 3233 (`userId` 3244) | who weighed in | **CARRY** | Operational event tied to a registration. |
 | TechniqueProgress | 3425 (`userId` 3433) | account's per-technique progress | **CARRY** | Account learning activity. |
@@ -98,9 +100,10 @@ on `User` (account/actor) · **DUAL** = one identity link repoints + a separate 
 | DataSubjectRequest | 3770 (`userId` 3772/3781) | GDPR submitter | **CARRY** | Legal actor = the account. |
 | Post | 3728 (`authorId` 3747, *not* `userId`) | content author | **CARRY** | See §3 — authorship is an authoring-account act, not directory identity. |
 
-**Counts:** REPOINT = **3** (DirectoryProfile, LineageNode, Affiliation) · DUAL = **1** (RankAward:
-earner→passport, promoter carries) · ROOT-nullable = **1** (Passport) · CARRY = **34** ·
-DECISION-NEEDED = **1** (FightRecord). The 4 D1 satellites = the 3 REPOINTs + the RankAward DUAL.
+**Counts:** REPOINT = **4** (DirectoryProfile, LineageNode, Affiliation, FightRecord) · DUAL =
+**1** (RankAward: earner→passport, real promoter actor carries, historical promoter identity can point
+to Passport) · ROOT-nullable = **1** (Passport) · CARRY = **34**. The 5 identity satellites = the 4
+REPOINTs + the RankAward DUAL.
 
 ---
 
@@ -118,9 +121,13 @@ on `User` move to `Passport`. **Do not** drop `User`-side back-relations for mod
   `@@index([passportId, isCurrent])`. Non-unique (a person has many affiliations).
 - **RankAward** (2000) — **DUAL, the one that is not a clean swap:**
   - earner: `user User @relation("EarnedBy", fields:[userId])` → `passport Passport @relation("EarnedBy", fields:[passportId])`.
-  - promoter: `awardedBy User? @relation("AwardedBy", fields:[awardedById])` — **unchanged, stays User**.
+  - promoter account actor: `awardedBy User? @relation("AwardedBy", fields:[awardedById])` — stays
+    nullable User for real accounts that performed an award action.
+  - promoter identity: `awardedByPassportId` stores imported/historical promoter person identity when
+    the old `awardedById` was only a synthetic placeholder User. Copy by `Passport.userId` lookup, then
+    null placeholder `awardedById` before deleting placeholder Users.
   - `@@unique([userId, rankId])` → `@@unique([passportId, rankId])`; `@@index([userId, awardedAt])` →
-    passport; `@@index([awardedById])` stays (still a User FK).
+    passport; `@@index([awardedById])` stays (still a User FK); add `@@index([awardedByPassportId])`.
 
 `MediaAttachment.passportId` (3313) already exists — no change; it is the existing precedent and the
 Passport-side back-relation is already wired (`mediaAttachments` on Passport, line ~986).
@@ -207,23 +214,36 @@ dropping the old `userId` columns — see §6 ordering):
 
 1. **Add nullable columns:** add `passportId` to each REPOINT/DUAL satellite (nullable initially) and
    make `Passport.userId` nullable. Keep old `userId` columns in place for the backfill.
-2. **Backfill satellite `passportId` by lookup** for *all* rows (real and placeholder):
+2. **Mint missing Passports first** for every `DirectoryProfile`/`LineageNode`/`Affiliation`/
+   `RankAward` earner/`FightRecord` User and every historical `RankAward.awardedById` promoter User
+   that lacks one. The backfill assumes a Passport exists for each source User.
+3. **Reconcile historical promoters:** copy `RankAward.awardedByPassportId` from
+   `Passport.userId = RankAward.awardedById` and null `awardedById` when the promoter User is synthetic
+   placeholder-only. Real account promoter actors may keep `awardedById`.
+4. **Backfill satellite `passportId` by lookup** for *all* rows (real and placeholder):
    `satellite.passportId = (SELECT id FROM Passport WHERE Passport.userId = satellite.userId)`.
    Because Passport↔User is 1:1 today (`userId @unique`), this is deterministic. Do it for
-   DirectoryProfile, LineageNode, Affiliation, RankAward(earner only).
-3. **Detach placeholder Passports:** for every Passport whose `user.isPlaceholder = true`, set
+   DirectoryProfile, LineageNode, Affiliation, RankAward(earner only), and FightRecord.
+5. **Regenerate identity-table IDs to cuid2** inside the destructive window. If backfill has already
+   populated `passportId`, rely on FK `ON UPDATE CASCADE` and assert row counts before/after. If IDs are
+   regenerated first, backfill reads the post-regeneration `Passport.id`.
+6. **Null old placeholder satellite `userId` FKs before deleting placeholder Users.** Keeping the old
+   columns non-null while deleting placeholder Users will trigger `ON DELETE CASCADE` on historical
+   identity rows. Drop NOT NULL on the old columns or drop the old columns, then null placeholder
+   references. This is mandatory when hard-delete precedes the final physical column drop.
+7. **Detach placeholder Passports:** for every Passport whose `user.isPlaceholder = true`, set
    `Passport.userId = null`. The Passport survives; the satellites now point at it via `passportId`.
-4. **Reap the synthetic placeholder User rows:** the `isPlaceholder: true` Users now own **no**
+8. **Reap the synthetic placeholder User rows:** the `isPlaceholder: true` Users now own **no**
    identity satellites (all repointed) and should own **no** CARRY rows (a placeholder should never
    have had a Membership, Invoice, Session, Account, AuditLog, etc.). **Preflight assertion** (run and
    FAIL the migration if non-empty): list any `isPlaceholder` User referenced by any CARRY-side FK.
    Expected result: none. If found, it is a data defect (a placeholder was used as an actor) — stop and
    reconcile manually, do not cascade-delete. After the assertion passes, the placeholder Users can be
    hard-deleted (or left `archivedAt` if the operator prefers a reversible window — see §7).
-5. **Drop old `userId` columns** from the 4 satellites; flip the new `passportId` columns to NOT NULL
+9. **Drop old `userId` columns** from the 5 satellites; flip the new `passportId` columns to NOT NULL
    where the old column was NOT NULL (DirectoryProfile, LineageNode, Affiliation, RankAward.userId were
    all NOT NULL) and re-add the moved `@unique`/`@@index` on `passportId`.
-6. **Real (account-bearing) users are untouched** beyond their satellites' FK swap: their Passport keeps
+10. **Real (account-bearing) users are untouched** beyond their satellites' FK swap: their Passport keeps
    `userId` set, their CARRY rows never move. This is the "user-carry" guarantee (D7/D9/D10) — no wipe,
    no reseed, no synthetic-email regeneration.
 
@@ -286,17 +306,25 @@ two review actions in Phase 3 — just point both at the same primitive.
 
 **FK / step ordering (single migration, transactional where possible):**
 
-1. Schema: add nullable `passportId` to the 4 satellites; make `Passport.userId` nullable. (Additive —
-   safe, no data move yet.)
-2. Backfill `passportId` on all satellite rows by `Passport.userId` lookup (§5 step 2). Order does not
+1. Schema: add nullable `passportId` to the 5 satellites; make `Passport.userId` nullable; add nullable
+   `RankAward.awardedByPassportId`. (Additive — safe, no destructive move yet.)
+2. Mint missing Passports for every satellite-bearing or historical-promoter User that lacks one.
+3. Copy historical placeholder promoters to `RankAward.awardedByPassportId`; null placeholder
+   `RankAward.awardedById` so synthetic Users are no longer actors.
+4. Backfill `passportId` on all satellite rows by `Passport.userId` lookup (§5 step 4). Order does not
    matter between satellites; all read from the still-present `Passport.userId`.
-3. Null out placeholder `Passport.userId` (§5 step 3).
-4. **Assertion gate** (§5 step 4): fail if any `isPlaceholder` User is referenced by a CARRY FK.
-5. Reap/archive placeholder Users.
-6. Flip satellite `passportId` to NOT NULL; drop old satellite `userId` columns; move
+5. Regenerate identity-table IDs to cuid2; if done after backfill, assert FK `ON UPDATE CASCADE`
+   preserved all satellite counts and non-null `passportId`s.
+6. Drop NOT NULL/null old placeholder satellite `userId` references (or drop the old columns) before
+   placeholder User hard-delete to prevent cascade loss.
+7. Null out placeholder `Passport.userId` (§5 step 7).
+8. **Assertion gate** (§5 step 8): fail if any `isPlaceholder` User is referenced by a remaining CARRY FK.
+9. Reap placeholder Users by hard-delete.
+10. Re-run the preflight gate; it must PASS before physical column drop.
+11. Flip satellite `passportId` to NOT NULL; drop old satellite `userId` columns; move
    `@unique`/`@@index` to `passportId`; move `RankAward @@unique([userId,rankId])` →
    `([passportId,rankId])`.
-7. Repoint claim-review write paths (§6) in the **same** PR as the schema change — the old
+12. Repoint claim-review write paths (§6) in the **same** PR as the schema change — the old
    `lineageNode.update({ data:{ userId } })` will not compile once the column is gone.
 
 **Uniqueness constraints that move (must move atomically with the column):**
@@ -308,11 +336,11 @@ two review actions in Phase 3 — just point both at the same primitive.
   so many accountless placeholders coexist — correct).
 
 **The cuid → cuid2 wave rides this window (D7/D8).** Doing the ID-type migration *and* the FK repoint in
-one big-bang pre-flip window avoids an ID migration against live signups later. Risk: the two churns
-touch overlapping `@id`/FK columns — sequence them so cuid2 ID regeneration (which rewrites PK values)
-completes **before or atomically with** the `passportId` backfill, or the backfill must read the *new*
-Passport IDs. Safest: regenerate IDs first, then backfill satellites against the post-cuid2 `Passport.id`.
-Document the exact sub-order in the Phase-3 migration runbook.
+one big-bang window avoids an ID migration against live signups later. SESSION_0391 proved the
+backfill-then-regenerate order is viable when FK `ON UPDATE CASCADE` is intact: populate
+`passportId`, rewrite identity-table primary keys to cuid2, then assert all satellite counts and
+passport FKs survived. Do not rewrite `User.id` in this wave; operational code and real account rows
+remain user-carry.
 
 **Risks:**
 
@@ -355,8 +383,10 @@ Document the exact sub-order in the Phase-3 migration runbook.
    In 3b: `@@unique([userId,disciplineId,type])`→`([passportId,…])`, `@@index([userId])`→passport.
 2. **Placeholder reap → HARD-DELETE** (§8 q2) after the §5 step-4 assertion passes. The §6 claim
    transform therefore drops the placeholder-archive step (there is no synthetic User to archive).
-3. **cuid2 → stays in the Phase-3 wave** (§8 q3), executed in the 3b destructive window. Sub-order
-   confirmed: **regenerate cuid2 IDs first → backfill satellites against the new `Passport.id`**.
+3. **cuid2 → stays in the Phase-3 wave** (§8 q3), executed in the 3b destructive window. SESSION_0391
+   proved the safe data-script order as **backfill satellites first → regenerate identity-table IDs
+   with FK cascade assertions**; the original "IDs first" plan remains acceptable only if the later
+   backfill reads the post-regeneration `Passport.id`.
 4. **Claim contract** (§8 q4): add `passportAccountAttached: boolean`; drop `placeholderArchivedUserId`.
 5. **Certification** (§8 q5): **CARRY** confirmed.
 
@@ -382,3 +412,34 @@ Document the exact sub-order in the Phase-3 migration runbook.
   either repoint `awardedById` placeholders to their (3b-minted) Passport via a promoter-as-passport
   rule, or exempt promoter rows from the hard-delete blast. Do **not** cascade-delete these
   placeholders. This is the single sharpest 3b design call surfaced by the gate.
+
+## Section 10 — Phase 3b rehearsal status (SESSION_0391)
+
+**Decision landed:** historical placeholder promoters are not real account actors. `RankAward` now has
+nullable `awardedByPassportId` for imported promoter identity; `awardedById` remains nullable User for
+real account actors only. The 3b data script copies placeholder promoters to Passport identity, then
+nulls those placeholder `awardedById` values before deleting synthetic Users.
+
+**Local migration-target rehearsal (after reset + seed + BBL lineage seed):**
+
+- Before script: `users=32`, `placeholderUsers=23`, `passports=6`.
+- Gate failed as expected: 24 `LineageNode.userId` rows and 18 `RankAward.userId` rows had no Passport;
+  17 `RankAward.awardedById` rows pointed at placeholder Users.
+- Script actions: minted 24 missing Passports; copied 17 historical promoters to
+  `awardedByPassportId`; nulled 17 placeholder `awardedById` actor links; backfilled
+  `DirectoryProfile=6`, `LineageNode=25`, `RankAward=23`; rewrote identity-table IDs to cuid2 for
+  `Passport=30`, `DirectoryProfile=6`, `LineageNode=25`, `RankAward=23`; nulled old placeholder
+  satellite `userId` references for `LineageNode=23`, `RankAward=18`; deleted 23 placeholder Users.
+- After script: `users=9`, `placeholderUsers=0`, `passports=30`, `accountlessPassports=23`; Brian Scott
+  admin/account-bearing User remains; BBL historical people survive as accountless Passports.
+- `scripts/phase3-preflight-assert.ts` PASSed after the data script.
+
+**Important safety finding:** deleting placeholder Users while the old satellite `userId` FKs are still
+non-null can cascade-delete the very identity rows being preserved. The script must null/drop old
+placeholder satellite `userId` references before hard-delete, or the final column-drop SQL must happen
+before the delete in the same guarded transaction.
+
+**Step-6 status:** `scripts/phase3b-drop-old-user-columns.sql` is staged as guarded SQL, but not applied
+to the app database yet. Current Phase 3b leaves old `userId` columns nullable for compatibility because
+Phase 3c still needs to repoint read/write paths away from `LineageNode.user`, `RankAward.user`, and
+related satellite User relations before the physical drop can compile and render safely.
