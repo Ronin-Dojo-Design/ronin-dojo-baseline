@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-13
-last_agent: codex-session-0373
+updated: 2026-06-14
+last_agent: claude-sonnet-4-6-session-0388
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -180,6 +180,27 @@ refreshed into `dirstarter_template` at SESSION_0359.
   uses D7/D9 user-carry semantics: preserve `User`/`Passport` rows and repoint satellites by lookup.
 - **Cutover lane:** minimal 301 map and production render verification remain armed work, but they are not
   the immediate next gate until the local functionality pass is complete.
+
+## D11 — DNS flip on minimum viable gate; Phases 3–6 are post-flip  *(SESSION_0388)*
+
+- **Finding:** D10 (SESSION_0373) gated the DNS flip on full Phases 1–6 local functionality — a bar
+  ~10–15 sessions away. Meanwhile `blackbeltlegacy.com` is a dead WP landing page (broken email
+  capture, zero functional features), and the new platform already exceeds it: lineage tree + drawer,
+  directory, evidence-backed claim + RBAC review, join/checkout, DKIM verified, Phase 2c waves 1–6
+  complete (`/app` unified dashboard). The flip adds no new risk class — the same Vercel deployment
+  has been live for `baselinemartialarts.com` for months.
+- **Decision (operator grill, SESSION_0388):** supersede D10. Minimum viable flip gate:
+  - Phase 1 complete ✅
+  - Phase 2a–2c (all `/app` waves, including waves 5+6 commerce/infra) complete ✅
+  - Domain attached to Vercel project ✅ (`blackbeltlegacy.com` + `www.`, `"verified":true`)
+  - DKIM verified ✅
+  - Mobile landing polished ✅ (hero h1 scaling, section gaps, border radii, hero card)
+  - AdBanner suppressed for BBL ✅ (`brandHasFeature(brand, "advertise")` gate)
+  - Rollback documented (revert apex A to `151.101.66.159` at Bluehost, instant)
+- **Post-flip:** Phases 3–6 execute with D7/D9 user-carry semantics (preserve `User`/`Passport`,
+  repoint satellites by lookup — no pure reseed). BrandSettings (colors/favicon/OG) set in prod
+  admin post-flip. S3/R2 media env vars wired post-flip.
+- **Supersedes:** D10 (SESSION_0373 flip-wait gate).
 
 ---
 
