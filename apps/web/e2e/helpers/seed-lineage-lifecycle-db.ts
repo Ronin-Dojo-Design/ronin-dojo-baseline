@@ -537,7 +537,7 @@ async function readLineageLifecycleState(
     }),
     prisma.lineageNode.findUnique({
       where: { id: fixture.claimTargetNodeId },
-      select: { userId: true, bio: true },
+      select: { passport: { select: { userId: true } }, bio: true },
     }),
     prisma.user.findUnique({
       where: { id: fixture.placeholderUserId },
@@ -605,7 +605,7 @@ async function readLineageLifecycleState(
           evidence: claim.evidence,
         }
       : null,
-    nodeOwnerId: node?.userId ?? null,
+    nodeOwnerId: node?.passport?.userId ?? null,
     placeholderArchivedAt: placeholderUser?.archivedAt?.toISOString() ?? null,
     accessGrant: grant,
     passportDisplayName: passport?.displayName ?? null,
