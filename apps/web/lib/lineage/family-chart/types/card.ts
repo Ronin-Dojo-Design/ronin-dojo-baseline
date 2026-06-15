@@ -10,5 +10,5 @@ export interface CardDim {
   height_auto?: boolean
 }
 
-export { CardHtml } from '../core/cards/card-html'
-export { CardSvg } from '../core/cards/card-svg'
+export { CardHtml } from "../core/cards/card-html"
+export { CardSvg } from "../core/cards/card-svg"

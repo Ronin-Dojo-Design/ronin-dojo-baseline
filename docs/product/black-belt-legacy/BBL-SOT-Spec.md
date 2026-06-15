@@ -129,7 +129,10 @@ Operator override of ADR 0024 (proposed hybrid/pilot): adopt upstream's oRPC + p
 ### 2.4 Other locked calls
 
 - **Migration strategy:** clean big-bang + reseed of seed rows, **carrying early real users mechanically** (post-D8 soft launch; preserve `User`/`Passport`, repoint satellites by lookup). The phased dual-write playbook is documented for the post-launch world (in `human-code-runbook.md`), not used now.
-- **cuid → cuid2:** rides the **Phase 3 schema wave** (SOT-ADR D8; was Phase 5), not an orphan task.
+- **cuid → cuid2:** rides the **Phase 3 schema wave** (SOT-ADR D8; was Phase 5), not an
+  orphan task. SESSION_0391 expands this to all single-column string primary keys, guarded by FK
+  `ON UPDATE CASCADE` catalog assertions, and requires action validators to accept cuid2 instead of
+  relying on Zod's legacy `.cuid()` predicate.
 - **Move Node = structured re-parent** (WP parity), **not** free x/y. Free x/y / visual groups / relationship-type picker are out of scope unless explicitly re-opened.
 - **Brand-neutral primitives** (ADR 0022) stay brand-neutral; BBL is the only surface we *prove*, but no BBL hardcoding in shared code. Belt color = `Rank.colorHex` data.
 

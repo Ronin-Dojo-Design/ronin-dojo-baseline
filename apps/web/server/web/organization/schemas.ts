@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 const Brand = z.enum(["RONIN_DOJO_DESIGN", "BASELINE_MARTIAL_ARTS", "BBL", "WEKAF"])
 const OrganizationType = z.enum(["DOJO", "LEAGUE", "SCHOOL", "CLUB"])
@@ -23,31 +24,31 @@ export const createOrganizationSchema = z.object({
   phoneE164: z.string().max(32).optional(),
   email: z.string().email().max(200).optional().or(z.literal("")),
   /** IDs of disciplines this org teaches — creates OrganizationDiscipline join rows */
-  disciplineIds: z.array(z.string().cuid()).optional(),
+  disciplineIds: z.array(databaseIdSchema).optional(),
 })
 
 export const joinOrganizationSchema = z.object({
-  organizationId: z.string().cuid(),
-  disciplineId: z.string().cuid(),
+  organizationId: databaseIdSchema,
+  disciplineId: databaseIdSchema,
   brand: Brand,
 })
 
 export const joinByInviteCodeSchema = z.object({
   inviteCode: z.string().min(1),
-  disciplineId: z.string().cuid(),
+  disciplineId: databaseIdSchema,
 })
 
 export const updateMembershipStatusSchema = z.object({
-  membershipId: z.string().cuid(),
+  membershipId: databaseIdSchema,
   status: z.enum(["ACTIVE", "SUSPENDED", "EXPIRED"]),
 })
 
 export const assignRoleSchema = z.object({
-  membershipId: z.string().cuid(),
-  roleId: z.string().cuid(),
+  membershipId: databaseIdSchema,
+  roleId: databaseIdSchema,
 })
 
 export const removeRoleSchema = z.object({
-  membershipId: z.string().cuid(),
-  roleId: z.string().cuid(),
+  membershipId: databaseIdSchema,
+  roleId: databaseIdSchema,
 })

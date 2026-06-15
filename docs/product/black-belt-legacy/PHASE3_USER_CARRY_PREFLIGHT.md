@@ -34,7 +34,7 @@ time (the cuid2 wave rides the same window and will churn the file).
 ## D1 in one line
 
 `Passport` = identity SoT. `Passport.userId` becomes **nullable** (an accountless Passport = the
-placeholder, replacing synthetic `User{ isPlaceholder: true }` rows). The **4 canonical identity
+placeholder, replacing synthetic `User{ isPlaceholder: true }` rows). The **5 identity
 satellites** — `DirectoryProfile`, `LineageNode`, `RankAward`(earner), `Affiliation`, and
 `FightRecord` — repoint their FK `userId` → `passportId`. Historical imported `RankAward` promoters
 can also carry a Passport identity via `awardedByPassportId`; `awardedById` stays the optional
@@ -107,7 +107,7 @@ REPOINTs + the RankAward DUAL.
 
 ---
 
-## Section 2 — The 4 canonical satellites: exact column moves
+## Section 2 — The identity satellites: exact column moves
 
 For each, the FK and every constraint/index that names `userId` moves to `passportId`. Back-relations
 on `User` move to `Passport`. **Do not** drop `User`-side back-relations for models that also keep a
@@ -137,15 +137,11 @@ Passport-side back-relation is already wired (`mediaAttachments` on Passport, li
 ## Section 3 — Ambiguous-model adjudications (firm calls)
 
 Default bias: **D1 names exactly 4 satellites.** Adding a 5th requires (a) the row is durable
-person-identity, AND (b) placeholders must be able to own it, AND (c) a creation path exists that
-would orphan it from a placeholder today. Each below is argued against that bar.
+person-identity, AND (b) placeholders must be able to own it. Each below is argued against that bar.
 
-- **FightRecord** (3118) → **DECISION-NEEDED, recommend CARRY for Phase 3.** This is the *strongest*
-  identity candidate: `@@unique([userId, disciplineId, type])` is a per-person career W/L tally —
-  pure athletic identity, exactly the kind of thing a placeholder fighter profile should carry. It
-  fails bar (c) only: there is **no placeholder FightRecord-creation path today**, so nothing orphans
-  if we defer. Recommend **CARRY now, flag as the first post-Phase-3 satellite-promotion candidate**
-  (see §4). Do not silently REPOINT — it would be the lone unmandated schema-shape change in the wave.
+- **FightRecord** (3118) → **REPOINT (resolved SESSION_0390).** `@@unique([userId, disciplineId,
+  type])` is a per-person career W/L tally — durable athletic identity a placeholder fighter should
+  carry pre-claim. Phase 3b moves the unique/index shape to `passportId`.
 
 - **Certification** (2804) → **CARRY.** A credential *held by an account*, scoped to an
   `organization` (required FK) and issued by `issuedById` (a User). It is WHAT-an-org-granted-an-account,
@@ -185,18 +181,10 @@ would orphan it from a placeholder today. Each below is argued against that bar.
 
 ---
 
-## Section 4 — Models requiring an operator decision (from §1)
+## Section 4 — Operator decisions resolved
 
-- **FightRecord (3118) — REPOINT vs CARRY.**
-  - *Option A — CARRY now (recommended).* Zero schema-shape change beyond the 4 mandated satellites;
-    revisit as an explicit post-Phase-3 satellite promotion once a placeholder-fighter creation path
-    exists. Lowest blast radius for the launch-gating wave.
-  - *Option B — REPOINT now (promote to 5th satellite).* Honors that career W/L is durable athletic
-    identity and lets a placeholder pro fighter carry a record pre-claim. Cost: a schema change D1 does
-    not mandate, plus `@@unique([userId,disciplineId,type])`→passport, inside the launch-critical
-    window.
-  - **Doug's recommendation: A.** Defer. It is the only model where the identity argument is genuinely
-    strong, so it earns the explicit callout — but bar (c) is unmet and D1's 4-satellite discipline wins.
+- **FightRecord (3118) — REPOINT.** Operator promoted it in SESSION_0390; it is the 5th identity
+  satellite and participates in the Phase 3b `passportId` backfill and old `userId` drop.
 
 - **Certification (2804) — confirm CARRY.** Adjudicated CARRY in §3, but flagged here because an
   operator who treats "black belt instructor certification" as directory-facing identity could argue
@@ -224,9 +212,10 @@ dropping the old `userId` columns — see §6 ordering):
    `satellite.passportId = (SELECT id FROM Passport WHERE Passport.userId = satellite.userId)`.
    Because Passport↔User is 1:1 today (`userId @unique`), this is deterministic. Do it for
    DirectoryProfile, LineageNode, Affiliation, RankAward(earner only), and FightRecord.
-5. **Regenerate identity-table IDs to cuid2** inside the destructive window. If backfill has already
-   populated `passportId`, rely on FK `ON UPDATE CASCADE` and assert row counts before/after. If IDs are
-   regenerated first, backfill reads the post-regeneration `Passport.id`.
+5. **Regenerate all single-column string primary keys to cuid2** inside the destructive window. The
+   Phase 3b script discovers eligible PKs from Postgres catalog metadata, asserts every inbound FK has
+   `ON UPDATE CASCADE`, writes a temporary old→new mapping table, updates IDs table-by-table, and is
+   idempotent on rerun. Prisma schema defaults are `@default(cuid(2))` for new rows.
 6. **Null old placeholder satellite `userId` FKs before deleting placeholder Users.** Keeping the old
    columns non-null while deleting placeholder Users will trigger `ON DELETE CASCADE` on historical
    identity rows. Drop NOT NULL on the old columns or drop the old columns, then null placeholder
@@ -313,8 +302,8 @@ two review actions in Phase 3 — just point both at the same primitive.
    `RankAward.awardedById` so synthetic Users are no longer actors.
 4. Backfill `passportId` on all satellite rows by `Passport.userId` lookup (§5 step 4). Order does not
    matter between satellites; all read from the still-present `Passport.userId`.
-5. Regenerate identity-table IDs to cuid2; if done after backfill, assert FK `ON UPDATE CASCADE`
-   preserved all satellite counts and non-null `passportId`s.
+5. Regenerate all single-column string primary keys to cuid2; assert FK `ON UPDATE CASCADE`
+   preserved all row counts and non-null `passportId`s.
 6. Drop NOT NULL/null old placeholder satellite `userId` references (or drop the old columns) before
    placeholder User hard-delete to prevent cascade loss.
 7. Null out placeholder `Passport.userId` (§5 step 7).
@@ -338,7 +327,7 @@ two review actions in Phase 3 — just point both at the same primitive.
 **The cuid → cuid2 wave rides this window (D7/D8).** Doing the ID-type migration *and* the FK repoint in
 one big-bang window avoids an ID migration against live signups later. SESSION_0391 proved the
 backfill-then-regenerate order is viable when FK `ON UPDATE CASCADE` is intact: populate
-`passportId`, rewrite identity-table primary keys to cuid2, then assert all satellite counts and
+`passportId`, rewrite all discovered single-column string primary keys to cuid2, then assert all satellite counts and
 passport FKs survived. Do not rewrite `User.id` in this wave; operational code and real account rows
 remain user-carry.
 
@@ -359,14 +348,12 @@ remain user-carry.
 
 ## Section 8 — Open questions for the operator
 
-1. **FightRecord (§4) — defer (CARRY) or promote to a 5th satellite (REPOINT) now?** This is the single
-   sharpest call: it is the one model with a genuinely strong identity argument, but D1 names only 4 and
-   no placeholder-fighter path orphans it today. *Doug recommends defer.*
+1. **FightRecord (§4) — resolved:** promoted to a 5th satellite (REPOINT) in SESSION_0390.
 2. **Placeholder User reaping — hard-delete vs `archivedAt` window?** Hard-delete is clean; an
    `archivedAt` window is reversible if the §5 step-4 assertion missed something. Pick one before the
    migration writes.
-3. **cuid2 sub-ordering** — confirm "regenerate IDs first, then backfill satellites against new
-   Passport.id" (vs backfill-then-regenerate). Needs to be pinned in the migration runbook.
+3. **cuid2 scope/order — resolved:** SESSION_0391 uses backfill first, then full string-PK rewrite
+   guarded by `ON UPDATE CASCADE` catalog assertions and idempotent rerun.
 4. **Claim result contract** — agree the new field names (`passportAccountAttached`, drop
    `placeholderArchivedUserId`) so UI/audit consumers can be updated in the same PR.
 5. **Certification (§4)** — confirm CARRY; an operator may treat instructor certification as
@@ -384,9 +371,9 @@ remain user-carry.
 2. **Placeholder reap → HARD-DELETE** (§8 q2) after the §5 step-4 assertion passes. The §6 claim
    transform therefore drops the placeholder-archive step (there is no synthetic User to archive).
 3. **cuid2 → stays in the Phase-3 wave** (§8 q3), executed in the 3b destructive window. SESSION_0391
-   proved the safe data-script order as **backfill satellites first → regenerate identity-table IDs
-   with FK cascade assertions**; the original "IDs first" plan remains acceptable only if the later
-   backfill reads the post-regeneration `Passport.id`.
+   proved the safe data-script order as **backfill satellites first → regenerate all discovered
+   single-column string primary keys with FK cascade assertions**; the original "IDs first" plan
+   remains acceptable only if the later backfill reads the post-regeneration `Passport.id`.
 4. **Claim contract** (§8 q4): add `passportAccountAttached: boolean`; drop `placeholderArchivedUserId`.
 5. **Certification** (§8 q5): **CARRY** confirmed.
 

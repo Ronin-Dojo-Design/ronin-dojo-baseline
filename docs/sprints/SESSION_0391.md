@@ -257,8 +257,8 @@ Explorer sub-agent may review the placeholder-promoter design while Cody complet
 | --- | --- | --- |
 | SESSION_0391_TASK_01 | complete | Re-ran Phase 3 preflight gate; confirmed local migration-target fail state before 3b (`LineageNode`/`RankAward` Passport orphans and placeholder promoters). |
 | SESSION_0391_TASK_02 | complete | Resolved placeholder promoters by adding `RankAward.awardedByPassportId` for historical promoter identity; `awardedById` remains real account actor only. |
-| SESSION_0391_TASK_03 | partial | Wrote and rehearsed the destructive 3b data migration through preflight PASS. Guarded drop SQL is staged but intentionally not applied until Phase 3c read/write paths are repointed. |
-| SESSION_0391_TASK_04 | complete | Prisma validation/generation, migration deploy, data rehearsal, preflight PASS, typecheck, oxfmt/oxlint on touched files, targeted tests, and fallow new-only gate passed. Browser proof deferred because current code still reads old nullable `userId` relations. |
+| SESSION_0391_TASK_03 | complete | Wrote and rehearsed the destructive 3b data migration through preflight PASS, including full single-column string-PK cuid2 rewrite. Guarded drop SQL is staged but intentionally not applied until Phase 3c read/write paths are repointed. |
+| SESSION_0391_TASK_04 | complete | Prisma validation/generation, migration deploy, data rehearsal, preflight PASS, full typecheck, full oxfmt check, full oxlint check, full test suite, and fallow new-only gate passed. Browser proof deferred because current code still reads old nullable `userId` relations. |
 | SESSION_0391_TASK_05 | complete | Full close record prepared; Graphify refreshed before git hygiene; commit/push/CI follow-through recorded at bow-out. |
 
 ## What landed
@@ -277,6 +277,19 @@ Explorer sub-agent may review the placeholder-promoter design while Cody complet
   happen first.
 - Rehearsed the 3b data script on a reset local migration-target seed. It preserved BBL people as
   accountless Passports and preserved Brian Scott admin as an account-bearing User.
+- Expanded the operator-requested cuid2 work from identity-table-only to a full single-column string
+  primary-key rewrite. The 3b script discovers string PKs from Postgres catalog metadata, asserts all
+  inbound FKs use `ON UPDATE CASCADE`, maps every non-cuid2 PK to `createId()`, and reruns
+  idempotently with zero rewrites.
+- Switched every Prisma `@default(cuid())` to `@default(cuid(2))`; Prisma diff is empty because this
+  changes client-side default generation, not database SQL.
+- Added a shared `databaseIdSchema` that accepts legacy cuid and cuid2 IDs, then replaced old
+  server-action `z.string().cuid()` validators that blocked cuid2 IDs.
+- Updated Baseline seed scripts to resolve Brian/admin dynamically by legacy id, `User.name`, or
+  Passport identity fields instead of depending on the old hard-coded User primary key after the full
+  rewrite.
+- Ran full-repo `oxfmt` to fix the main CI `Oxfmt check` failure. Most formatting churn is isolated
+  to the vendored `lib/lineage/family-chart` subtree.
 - Updated the BBL SoT/preflight docs with the promoter Passport decision, safe hard-delete ordering,
   and the Phase 3c boundary for old-column drops.
 
@@ -284,11 +297,12 @@ Explorer sub-agent may review the placeholder-promoter design while Cody complet
 
 - Brian Scott admin is the only real account that must remain account-bearing today; the imported BBL
   people are real people but not real auth accounts, so they must survive as accountless Passports.
+- The operator clarified that all other local/proof users are test users and can remain for now; they
+  are not launch blockers and should not appear on Black Belt Legacy production surfaces.
 - `RankAward.awardedById` means account actor only. Imported/historical promoter identity lives on
   `RankAward.awardedByPassportId`.
-- Do not rewrite `User.id` in this Phase 3b data script. The script rewrites identity-table IDs
-  (`Passport`, `DirectoryProfile`, `LineageNode`, `Affiliation`, `RankAward`, `FightRecord`) and leaves
-  Better-Auth/account-side operational references intact.
+- Rewrite all single-column string primary keys to cuid2 now, before real users arrive. This includes
+  `User.id`; FK safety comes from a catalog assertion that every inbound reference cascades on update.
 - Do not apply the old-column drop SQL until Phase 3c has repointed read/write paths away from old
   satellite `user`/`userId` relations. Applying it now would make the app fail before the code sweep.
 
@@ -299,11 +313,15 @@ Explorer sub-agent may review the placeholder-promoter design while Cody complet
 | `apps/web/package.json` | Added `phase3b:user-carry` script and `@paralleldrive/cuid2`. |
 | `bun.lock` | Lockfile update for `@paralleldrive/cuid2`. |
 | `apps/web/prisma/schema.prisma` | Added `RankAward.awardedByPassportId` and Passport back-relation. |
+| `apps/web/lib/validation/id.ts` | New shared legacy-cuid + cuid2 database ID validator. |
 | `apps/web/prisma/migrations/20260615120000_phase3b_rank_award_promoter_passport/migration.sql` | Added nullable promoter Passport FK/index. |
 | `apps/web/scripts/phase3-identity-satellites.ts` | New shared identity-satellite FK definition. |
 | `apps/web/scripts/phase3-preflight-assert.ts` | Uses shared identity-satellite metadata. |
-| `apps/web/scripts/phase3b-user-carry-data.ts` | New asserted Phase 3b destructive data migration script. |
+| `apps/web/scripts/phase3b-user-carry-data.ts` | New asserted Phase 3b destructive data migration script with catalog-driven full string-PK cuid2 rewrite. |
 | `apps/web/scripts/phase3b-drop-old-user-columns.sql` | New guarded SQL for the deferred physical `userId` column drop and constraint moves. |
+| `apps/web/prisma/seed-baseline-owner.ts`, `seed-baseline-launch.ts`, `seed-baseline-listings.ts` | Resolve Brian/admin dynamically after `User.id` rewrite. |
+| `apps/web/server/**/schemas.ts` | Replaced old `z.string().cuid()` action validators with `databaseIdSchema`. |
+| `apps/web/lib/lineage/family-chart/**` | Full-repo oxfmt churn required to make CI format check pass. |
 | `docs/product/black-belt-legacy/SOT-ADR.md` | Documented promoter Passport split and Phase 3b boundary. |
 | `docs/product/black-belt-legacy/PHASE3_USER_CARRY_PREFLIGHT.md` | Updated ordering, promoter reconciliation, rehearsal results, and drop deferral. |
 | `docs/product/black-belt-legacy/BBL-SOT-Spec.md` | Updated Phase 3 build sequence and satellite/promoter shape. |
@@ -322,14 +340,19 @@ Explorer sub-agent may review the placeholder-promoter design while Cody complet
 | `bun run db:migrate deploy` | PASS; applied `20260615120000_phase3b_rank_award_promoter_passport`. |
 | `bun run db:generate` | PASS. |
 | `bunx prisma validate` | PASS. |
-| `PHASE3B_ALLOW_DESTRUCTIVE=1 bun run scripts/phase3b-user-carry-data.ts` | PASS after fixing cascade-loss ordering. Final state: `users=9`, `placeholderUsers=0`, `passports=30`, `accountlessPassports=23`. |
+| `PHASE3B_ALLOW_DESTRUCTIVE=1 bun run scripts/phase3b-user-carry-data.ts` | PASS after fixing cascade-loss ordering. Initial full-PK run rewrote non-cuid2 PKs across `User`, taxonomy/catalog, lineage, course, media, membership, role, subscription, tag, tool, and tournament-role tables. Final state after follow-up run: `users=10`, `placeholderUsers=0`, `passports=30`, `accountlessPassports=23`. |
+| `PHASE3B_ALLOW_DESTRUCTIVE=1 bun run scripts/phase3b-user-carry-data.ts` (idempotence rerun) | PASS; all discovered string-PK rewrite counts were zero and preflight still passed. |
 | `bun run typecheck` | PASS. |
 | `bunx oxlint scripts/phase3b-user-carry-data.ts scripts/phase3-preflight-assert.ts scripts/phase3-identity-satellites.ts` | PASS. |
 | `bunx oxfmt --check scripts/phase3b-user-carry-data.ts scripts/phase3-preflight-assert.ts scripts/phase3-identity-satellites.ts prisma/schema.prisma package.json` | PASS. |
 | `bun test server/identity/ lib/lineage/rank-progression.test.ts lib/lineage/rank-progression.privacy.test.ts server/web/lineage/queries.visibility.test.ts` | PASS: 31 tests. |
 | `npx fallow audit --changed-since HEAD --gate new-only --max-crap 30 --format compact` | PASS: no issues in 14 changed files; inherited issues excluded. |
 | `bun run lint:check scripts/...` | PASS exit 0, but package script runs full `oxlint .`; warnings are pre-existing. |
-| `bun run format:check ...` | Full-repo check failed on pre-existing vendor/family-chart formatting because package script ignores file args and runs `oxfmt --check .`; touched-file oxfmt check passed. |
+| `bun run format:check` | PASS after full-repo oxfmt sweep. |
+| `bun run lint:check` | PASS exit 0 with existing warnings, mostly family-chart unused/dead-code advisory items. |
+| `bun run test` | PASS: 600 tests, 0 fail, 1856 assertions, 103 files. |
+| `bunx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --script` | PASS: empty migration. |
+| `npx fallow audit --changed-since HEAD --gate new-only --max-crap 30 --format compact` (post-format full diff) | PASS exit 0; advisory output reported inherited family-chart/seed findings in 85 changed files and excluded 205 inherited findings from the gate. |
 | Browser proof | Deferred honestly: after 3b rehearsal old placeholder satellite `userId` columns are nullable/null, while current app code still selects old `user` relations. Phase 3c must repoint reads before meaningful browser proof. |
 
 ## Open decisions / blockers
@@ -388,6 +411,9 @@ Run Graphify for `LineageNode.user`, `RankAward.user`, `DirectoryProfile.user`, 
   null or drop old placeholder satellite `userId` references first.
 - Deferring the old-column drop is the right boundary. Forcing it into 3b would convert a data success
   into an app-runtime break before Phase 3c has repointed reads.
+- The full cuid2 rewrite exposed a second seam: application validators cannot use Zod's legacy
+  `.cuid()` once Prisma defaults move to `cuid(2)`. Keep ID validation in one compatibility helper
+  during the migration window.
 
 ## Full close evidence
 
@@ -395,11 +421,18 @@ Run Graphify for `LineageNode.user`, `RankAward.user`, `DirectoryProfile.user`, 
 | --- | --- |
 | JETTY/frontmatter sweep | Touched docs stamped to 2026-06-15 where required; `last_agent` updated on SoT/preflight/opening/index/session docs touched this session. |
 | Backlinks/index sweep | `docs/knowledge/wiki/index.md` now includes SESSION_0391; no new wiki pages created. |
-| Wiki lint | `bun run wiki:lint` PASS: 0 errors, 0 warnings. |
+| Wiki lint | `bun run wiki:lint` from repo root PASS: 669 markdown files, no lint violations. |
 | Kaizen reflection | Reflections section present. |
 | Hostile close review | Review log + hostile close review present; residual Phase 3c blocker explicit. |
 | Review & Recommend | Next session goal and first task written. |
 | Memory sweep | No operator memory update needed beyond SOT-ADR/preflight/session records. |
 | Next session unblock check | Blocked only on executing Phase 3c code repoint; first task is concrete and discoverable with Graphify. |
 | Git hygiene | Branch `main`; worktree list checked; fallow temp detached worktrees observed outside repo; status reviewed before staging; single push planned, hash reported at bow-out / see git log. |
-| Graphify update | Ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`; `graphify stats` after update: 12884 nodes, 24703 edges, 1799 communities, 2071 files tracked. |
+| Graphify update | Ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`; `graphify stats` after final update: 12888 nodes, 24463 edges, 1772 communities, 2072 files tracked. |
+
+## Post-close follow-through addendum
+
+After the first push (`c8a3b06`), main CI failed at `Oxfmt check`. The follow-through work in this
+same session fixed that by running full-repo formatting, then completing the operator-requested full
+cuid2 rewrite and validator compatibility sweep. This addendum is part of the same SESSION_0391 close,
+before the final push to `main`.

@@ -39,8 +39,7 @@ const db = new PrismaClient({ adapter })
 const BRAND = "BASELINE_MARTIAL_ARTS" as const
 const ORG_SLUG = "baseline-martial-arts"
 const ORG_NAME = "Baseline Martial Arts"
-// Operator-confirmed ownerId — Brian's admin user (SESSION_0172 Open decisions §2).
-const OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
+const LEGACY_OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
 
 const SYSTEM_ROLES = [
   {
@@ -81,8 +80,28 @@ const SYSTEM_ROLES = [
   },
 ] as const
 
+async function resolveBrianOwnerId(): Promise<string | null> {
+  const rows = await db.$queryRawUnsafe<Array<{ id: string }>>(
+    `SELECT u."id"
+     FROM "User" u
+     LEFT JOIN "Passport" p ON p."userId" = u."id"
+     WHERE u."id" = $1
+        OR u."name" = 'Brian Scott'
+        OR p."displayName" = 'Brian Scott'
+        OR (p."legalFirstName" = 'Brian' AND p."legalLastName" = 'Scott')
+     ORDER BY
+       CASE WHEN u."role" = 'admin' THEN 0 ELSE 1 END,
+       CASE WHEN u."id" = $1 THEN 0 ELSE 1 END,
+       u."createdAt" ASC
+     LIMIT 1`,
+    LEGACY_OWNER_ID,
+  )
+  return rows[0]?.id ?? null
+}
+
 async function main() {
   console.log(`\n🌱 seed-baseline-launch.ts — brand=${BRAND}\n`)
+  const ownerId = await resolveBrianOwnerId()
 
   // ---------------------------------------------------------------------------
   // Organization — exactly one row, idempotent on (brand, slug).
@@ -97,13 +116,17 @@ async function main() {
     console.log(
       `   ⏭️  Skipped (exists): Organization "${existingOrg.name}" (id=${existingOrg.id})`,
     )
+    if (ownerId) {
+      await db.organization.update({ where: { id: existingOrg.id }, data: { ownerId } })
+      console.log(`   ✅ Ensured Organization ownerId → ${ownerId}`)
+    }
   } else {
     const org = await db.organization.create({
       data: {
         brand: BRAND,
         name: ORG_NAME,
         slug: ORG_SLUG,
-        ownerId: OWNER_ID,
+        ownerId,
       },
       select: { id: true, name: true, slug: true },
     })

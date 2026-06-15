@@ -9,12 +9,12 @@ interface TreeDatumComponent extends TreeDatum {
 }
 
 export default function cardComponentSetup(cont: HTMLElement) {
-  const getSvgView = () => cont.querySelector('svg .view') as HTMLElement
-  const getHtmlSvg = () => cont.querySelector('#htmlSvg') as HTMLElement
-  const getHtmlView = () => cont.querySelector('#htmlSvg .cards_view') as HTMLElement
+  const getSvgView = () => cont.querySelector("svg .view") as HTMLElement
+  const getHtmlSvg = () => cont.querySelector("#htmlSvg") as HTMLElement
+  const getHtmlView = () => cont.querySelector("#htmlSvg .cards_view") as HTMLElement
 
-  createSvg(cont, {onZoom: onZoomSetup(getSvgView, getHtmlView)})
-  d3.select(getHtmlSvg()).append("div").attr("class", "cards_view_fake").style('display', 'none')  // important for handling data
+  createSvg(cont, { onZoom: onZoomSetup(getSvgView, getHtmlView) })
+  d3.select(getHtmlSvg()).append("div").attr("class", "cards_view_fake").style("display", "none") // important for handling data
 
   return setupReactiveTreeData(getHtmlSvg)
 }
@@ -30,26 +30,34 @@ function setupReactiveTreeData(getHtmlSvg: () => HTMLElement) {
   }
 
   function assignUniqueIdToTreeData(div: HTMLElement, tree_data: TreeDatum[]) {
-    const card = d3.select(div).selectAll("div.card_cont_2fake").data(tree_data as TreeDatumComponent[], d => (d as TreeDatum).data.id)  // how this doesn't break if there is multiple cards with the same id?
+    const card = d3
+      .select(div)
+      .selectAll("div.card_cont_2fake")
+      .data(tree_data as TreeDatumComponent[], d => (d as TreeDatum).data.id) // how this doesn't break if there is multiple cards with the same id?
     const card_exit = card.exit()
-    const card_enter = card.enter().append("div").attr("class", "card_cont_2fake").style('display', 'none').attr("data-id", () => Math.random())
+    const card_enter = card
+      .enter()
+      .append("div")
+      .attr("class", "card_cont_2fake")
+      .style("display", "none")
+      .attr("data-id", () => Math.random())
     const card_update = card_enter.merge(card as any)
-  
+
     card_exit.each(cardExit)
     card_enter.each(cardEnter)
     card_update.each(cardUpdate)
-  
+
     function cardEnter(this: HTMLElement, d: TreeDatumComponent) {
       d.unique_id = d3.select(this).attr("data-id")
     }
-  
+
     function cardUpdate(this: HTMLElement, d: TreeDatumComponent) {
       d.unique_id = d3.select(this).attr("data-id")
     }
-  
+
     function cardExit(this: BaseType, d: TreeDatumComponent | unknown) {
       if (!d) return
-      (d as TreeDatumComponent).unique_id = d3.select(this).attr("data-id")
+      ;(d as TreeDatumComponent).unique_id = d3.select(this).attr("data-id")
       d3.select(this).remove()
     }
   }
@@ -67,10 +75,9 @@ export function getCardsViewFake(getHtmlSvg: () => HTMLElement) {
   return d3.select(getHtmlSvg()).select("div.cards_view_fake").node() as HTMLElement
 }
 
-
 /** @deprecated This export will be removed in a future version. Use setupReactiveTreeData instead. */
 export function setupHtmlSvg(getHtmlSvg: () => HTMLElement) {
-  d3.select(getHtmlSvg()).append("div").attr("class", "cards_view_fake").style('display', 'none')  // important for handling data
+  d3.select(getHtmlSvg()).append("div").attr("class", "cards_view_fake").style("display", "none") // important for handling data
 }
 
 /** @deprecated This export will be removed in a future version. Use setupReactiveTreeData instead. */

@@ -26,20 +26,24 @@ export interface HistoryWithControls extends History {
   controls: HistoryControls
 }
 
-export function createHistory(store: Store, getStoreDataCopy: () => Data, onUpdate: () => void): History {
+export function createHistory(
+  store: Store,
+  getStoreDataCopy: () => Data,
+  onUpdate: () => void,
+): History {
   let history: HistoryData[] = []
   let history_index = -1
-  
+
   return {
     changed,
     back,
     forward,
     canForward,
-    canBack
+    canBack,
   }
 
   function changed() {
-    if (history_index < history.length - 1) history = history.slice(0, history_index+1)
+    if (history_index < history.length - 1) history = history.slice(0, history_index + 1)
     const clean_data = getStoreDataCopy() as HistoryData
     clean_data.main_id = store.getMainId()
     history.push(clean_data)
@@ -78,14 +82,20 @@ export function createHistory(store: Store, getStoreDataCopy: () => Data, onUpda
 export function createHistoryControls(cont: HTMLElement, history: History): HistoryControls {
   const history_controls = d3.select(cont).append("div").attr("class", "f3-history-controls")
   cont.insertBefore(history_controls.node()!, cont.firstChild)
-  const back_btn = history_controls.append("button").attr("class", "f3-back-button").on("click", () => {
-    history.back()
-    updateButtons()
-  })
-  const forward_btn = history_controls.append("button").attr("class", "f3-forward-button").on("click", () => {
-    history.forward()
-    updateButtons()
-  })
+  const back_btn = history_controls
+    .append("button")
+    .attr("class", "f3-back-button")
+    .on("click", () => {
+      history.back()
+      updateButtons()
+    })
+  const forward_btn = history_controls
+    .append("button")
+    .attr("class", "f3-forward-button")
+    .on("click", () => {
+      history.forward()
+      updateButtons()
+    })
 
   back_btn.html(icons.historyBackSvgIcon())
   forward_btn.html(icons.historyForwardSvgIcon())
@@ -94,7 +104,7 @@ export function createHistoryControls(cont: HTMLElement, history: History): Hist
     back_btn: back_btn.node()!,
     forward_btn: forward_btn.node()!,
     updateButtons,
-    destroy
+    destroy,
   }
 
   function updateButtons() {
@@ -108,6 +118,6 @@ export function createHistoryControls(cont: HTMLElement, history: History): Hist
   }
 
   function destroy() {
-    d3.select(cont).select('.f3-history-controls').remove()
+    d3.select(cont).select(".f3-history-controls").remove()
   }
 }

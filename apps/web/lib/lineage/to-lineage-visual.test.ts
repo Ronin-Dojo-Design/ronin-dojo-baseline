@@ -15,7 +15,9 @@ function makeMember({
   verificationStatus = "UNVERIFIED" as const,
   isPlaceholder = false,
   isClaimable = false,
-  claimRequests = [] as Array<{ status: "APPROVED" | "PENDING" | "NEEDS_INFO" | "REJECTED" | "WITHDRAWN" }>,
+  claimRequests = [] as Array<{
+    status: "APPROVED" | "PENDING" | "NEEDS_INFO" | "REJECTED" | "WITHDRAWN"
+  }>,
   colorHex = null as string | null,
   rankName = "Black Belt",
   disciplineName = null as string | null,
@@ -31,7 +33,9 @@ function makeMember({
   verificationStatus?: "VERIFIED" | "DISPUTED" | "UNVERIFIED" | "UNDER_REVIEW"
   isPlaceholder?: boolean
   isClaimable?: boolean
-  claimRequests?: Array<{ status: "APPROVED" | "PENDING" | "NEEDS_INFO" | "REJECTED" | "WITHDRAWN" }>
+  claimRequests?: Array<{
+    status: "APPROVED" | "PENDING" | "NEEDS_INFO" | "REJECTED" | "WITHDRAWN"
+  }>
   colorHex?: string | null
   rankName?: string
   disciplineName?: string | null
@@ -133,7 +137,12 @@ describe("toLineageVisual", () => {
   })
 
   test("maps colorHex and rankLabel from selectedRankAward", () => {
-    const m = makeMember({ id: "m1", colorHex: "#1a1a1a", rankName: "Black Belt", disciplineName: "BJJ" })
+    const m = makeMember({
+      id: "m1",
+      colorHex: "#1a1a1a",
+      rankName: "Black Belt",
+      disciplineName: "BJJ",
+    })
     const { nodes } = toLineageVisual([m])
     const n = nodes[0]!
     assert.equal(n.colorHex, "#1a1a1a")
@@ -203,8 +212,18 @@ describe("toLineageVisual", () => {
   })
 
   test("secondaryLinks includes genuine secondary relationship", () => {
-    const root = makeMember({ id: "m1", nodeId: "node-1", colorHex: "#1a1a1a", rankName: "Black Belt" })
-    const secondary = makeMember({ id: "m2", nodeId: "node-2", colorHex: "#6f4e37", rankName: "Brown Belt" })
+    const root = makeMember({
+      id: "m1",
+      nodeId: "node-1",
+      colorHex: "#1a1a1a",
+      rankName: "Black Belt",
+    })
+    const secondary = makeMember({
+      id: "m2",
+      nodeId: "node-2",
+      colorHex: "#6f4e37",
+      rankName: "Brown Belt",
+    })
     const student = makeMember({ id: "m3", nodeId: "node-3", parentId: "m1" })
     const { secondaryLinks } = toLineageVisual([root, secondary, student], {
       relationships: [
@@ -232,7 +251,9 @@ describe("toLineageVisual", () => {
   test("secondaryLinks ignores relationships where endpoint is not in tree", () => {
     const a = makeMember({ id: "m1", nodeId: "node-1" })
     const { secondaryLinks } = toLineageVisual([a], {
-      relationships: [{ fromNodeId: "node-1", toNodeId: "node-MISSING", type: "INSTRUCTOR_STUDENT" }],
+      relationships: [
+        { fromNodeId: "node-1", toNodeId: "node-MISSING", type: "INSTRUCTOR_STUDENT" },
+      ],
     })
     assert.equal(secondaryLinks.length, 0)
   })

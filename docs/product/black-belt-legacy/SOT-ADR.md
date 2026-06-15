@@ -80,9 +80,15 @@ refreshed into `dirstarter_template` at SESSION_0359.
   read paths.
 - **3b data sequence is now proven locally:** mint missing Passports for every satellite-bearing or
   promoter User; copy placeholder promoters to `awardedByPassportId`; backfill satellite `passportId`;
-  rewrite identity-table IDs to cuid2; null old placeholder satellite `userId` columns; detach and
-  hard-delete placeholder Users; re-run the preflight gate. The rehearsal preserved BBL people as
-  accountless Passports and Brian Scott admin as an account-bearing User.
+  rewrite every discovered single-column string primary key to cuid2 behind an `ON UPDATE CASCADE`
+  catalog assertion; null old placeholder satellite `userId` columns; detach and hard-delete
+  placeholder Users; re-run the preflight gate. The rehearsal preserved BBL people as accountless
+  Passports and preserved account-bearing Users. Seed scripts that need Brian/admin ownership now
+  resolve by identity (`User.name`, Passport display/legal name, or legacy id fallback) instead of
+  depending on the pre-rewrite `User.id`.
+- **Application validators must be cuid2-compatible.** Any action schema that validates database IDs
+  must use the shared legacy-cuid + cuid2 helper during the transition, not Zod's legacy
+  `z.string().cuid()` predicate.
 - **Physical `userId` column drops are staged, not applied yet.** `phase3b-drop-old-user-columns.sql`
   is the guarded step-6 SQL, but applying it before Phase 3c would break current read/write paths that
   still select satellite `user` relations. Phase 3c must repoint code to Passport/`awardedByPassport`

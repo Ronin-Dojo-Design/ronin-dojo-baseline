@@ -30,14 +30,32 @@ const adapter = new PrismaPg({
 })
 const db = new PrismaClient({ adapter })
 
-// Brian's prod admin user (confirmed in SESSION_0172).
-const OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
+const LEGACY_OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
 
 const LISTING_CONTENT = `This listing gives visitors a quick way to understand what the resource offers, who it serves, and why it belongs in the directory. Use it as starter content for local development, then replace it with verified copy before publication.
 
 For martial arts directory workflows, each listing should make the relationship clear: school, league, event, training resource, equipment supplier, software platform, or certification body. The most useful entries connect a visitor to a real next step without overstating affiliations or credentials.
 
 Automated content generation can enrich this text later with screenshots, favicons, and structured descriptions. Human review remains required before launch for brand accuracy, lineage claims, sanctioning claims, and payment-related listing benefits.`
+
+async function resolveBrianOwnerId(): Promise<string | null> {
+  const rows = await db.$queryRawUnsafe<Array<{ id: string }>>(
+    `SELECT u."id"
+     FROM "User" u
+     LEFT JOIN "Passport" p ON p."userId" = u."id"
+     WHERE u."id" = $1
+        OR u."name" = 'Brian Scott'
+        OR p."displayName" = 'Brian Scott'
+        OR (p."legalFirstName" = 'Brian' AND p."legalLastName" = 'Scott')
+     ORDER BY
+       CASE WHEN u."role" = 'admin' THEN 0 ELSE 1 END,
+       CASE WHEN u."id" = $1 THEN 0 ELSE 1 END,
+       u."createdAt" ASC
+     LIMIT 1`,
+    LEGACY_OWNER_ID,
+  )
+  return rows[0]?.id ?? null
+}
 
 // ---------------------------------------------------------------------------
 // Data
@@ -181,7 +199,7 @@ type ToolDef = {
   screenshotUrl?: string
   categories: string[]
   tags: string[]
-  hasOwner: boolean // true = connect to OWNER_ID
+  hasOwner: boolean // true = connect to ownerId
 }
 
 const now = new Date()
@@ -535,6 +553,12 @@ const TOOLS: ToolDef[] = [
 
 async function main() {
   console.log("\n🌱 seed-baseline-listings.ts — Categories, Tags, Tools\n")
+  const ownerId = await resolveBrianOwnerId()
+  if (!ownerId) {
+    console.log(
+      "   ⚠️  Brian Scott owner User not found; owner-linked tools will be created unowned",
+    )
+  }
 
   // -------------------------------------------------------------------------
   // Categories — 14 rows, upsert on slug
@@ -596,7 +620,7 @@ async function main() {
         status: status as "Published" | "Scheduled" | "Draft",
         content: LISTING_CONTENT,
         faviconUrl: `https://www.google.com/s2/favicons?sz=128&domain_url=${rest.websiteUrl}`,
-        ...(hasOwner ? { ownerId: OWNER_ID } : {}),
+        ...(hasOwner && ownerId ? { ownerId } : {}),
         categories: { connect: categories.map(slug => ({ slug })) },
         tags: { connect: tags.map(slug => ({ slug })) },
       },

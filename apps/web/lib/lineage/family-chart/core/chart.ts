@@ -27,13 +27,13 @@ export default function createChart(cont: HTMLElement | string, data: Data) {
 
 /**
  * Main Chart class - The primary class for creating and managing family tree visualizations.
- * 
+ *
  * This is the main entry point for the Family Chart library. Use this class to:
  * - Create and configure family tree visualizations
  * - Set up data, styling, and interaction options
  * - Control tree layout, orientation, and display settings
  * - Manage user interactions and updates
- * 
+ *
  * @example
  * ```typescript
  * const f3Chart = createChart('#FamilyChart', data)  // returns a Chart instance;
@@ -43,7 +43,7 @@ export class Chart {
   cont: HTMLElement
   store: Store
   svg: SVGElement
-  getCard: null | (() => (d:TreeDatum) => void)
+  getCard: null | (() => (d: TreeDatum) => void)
   is_card_html: boolean
 
   transition_time: number
@@ -54,24 +54,22 @@ export class Chart {
 
   editTreeInstance: EditTree | null
 
-
   constructor(cont: HTMLElement | string, data: Data) {
     this.getCard = null
     this.transition_time = 2000
     this.linkSpouseText = null
     this.personSearch = null
-  
+
     this.is_card_html = false
-  
+
     this.beforeUpdate = null
     this.afterUpdate = null
-    
 
     this.cont = setCont(cont)
-    const {svg} = htmlContSetup(this.cont)
+    const { svg } = htmlContSetup(this.cont)
     this.svg = svg
     createNavCont(this.cont)
-    const main_id = data && data.length > 0 ? data[0].id : ''
+    const main_id = data && data.length > 0 ? data[0].id : ""
     this.store = this.createStore(data, main_id)
     this.setOnUpdate()
 
@@ -80,7 +78,7 @@ export class Chart {
     return this
   }
 
-  private createStore(data: Data, main_id: Datum['id']) {
+  private createStore(data: Data, main_id: Datum["id"]) {
     return createStore({
       data,
       main_id,
@@ -94,10 +92,18 @@ export class Chart {
   private setOnUpdate() {
     this.store.setOnUpdate((props?: ViewProps) => {
       if (this.beforeUpdate) this.beforeUpdate(props)
-      props = Object.assign({transition_time: this.store.state.transition_time}, props || {})
-      if (this.is_card_html) props = Object.assign({}, props || {}, {cardHtml: true})
+      props = Object.assign({ transition_time: this.store.state.transition_time }, props || {})
+      if (this.is_card_html) props = Object.assign({}, props || {}, { cardHtml: true })
       view(this.store.getTree()!, this.svg, this.getCard!(), props || {})
-      if (this.linkSpouseText) linkSpouseText(this.svg, this.store.getTree()!, Object.assign({}, props || {}, {linkSpouseText: this.linkSpouseText, node_separation: this.store.state.node_separation!}))
+      if (this.linkSpouseText)
+        linkSpouseText(
+          this.svg,
+          this.store.getTree()!,
+          Object.assign({}, props || {}, {
+            linkSpouseText: this.linkSpouseText,
+            node_separation: this.store.state.node_separation!,
+          }),
+        )
       if (this.afterUpdate) this.afterUpdate(props)
     })
   }
@@ -113,7 +119,7 @@ export class Chart {
    * @param props.transition_time - The transition time.
    * @returns The CreateChart instance
    */
-  updateTree(props: ViewProps = {initial: false}) {
+  updateTree(props: ViewProps = { initial: false }) {
     this.store.updateTree(props)
     return this
   }
@@ -134,13 +140,13 @@ export class Chart {
    * @returns The CreateChart instance
    */
   setCardYSpacing(card_y_spacing: ST.LevelSeparation) {
-    if (typeof card_y_spacing !== 'number') {
-      console.error('card_y_spacing must be a number')
+    if (typeof card_y_spacing !== "number") {
+      console.error("card_y_spacing must be a number")
       return this
     }
 
     this.store.state.level_separation = card_y_spacing
-  
+
     return this
   }
 
@@ -150,12 +156,12 @@ export class Chart {
    * @returns The CreateChart instance
    */
   setCardXSpacing(card_x_spacing: ST.NodeSeparation) {
-    if (typeof card_x_spacing !== 'number') {
-      console.error('card_x_spacing must be a number')
+    if (typeof card_x_spacing !== "number") {
+      console.error("card_x_spacing must be a number")
       return this
     }
     this.store.state.node_separation = card_x_spacing
-  
+
     return this
   }
 
@@ -184,7 +190,7 @@ export class Chart {
    */
   setShowSiblingsOfMain(show_siblings_of_main: ST.ShowSiblingsOfMain) {
     this.store.state.show_siblings_of_main = show_siblings_of_main
-  
+
     return this
   }
 
@@ -197,7 +203,7 @@ export class Chart {
     this.store.state.modifyTreeHierarchy = modifyTreeHierarchy
     return this
   }
-  
+
   /**
    * Set the private cards config
    * @param private_cards_config - The private cards config.
@@ -207,10 +213,10 @@ export class Chart {
    */
   setPrivateCardsConfig(private_cards_config: ST.PrivateCardsConfig) {
     this.store.state.private_cards_config = private_cards_config
-  
+
     return this
   }
-  
+
   /**
    * Option to set text on spouse links
    * @param linkSpouseText - The function to set the text on the spouse links.
@@ -219,7 +225,7 @@ export class Chart {
    */
   setLinkSpouseText(linkSpouseText: LinkSpouseText) {
     this.linkSpouseText = linkSpouseText
-  
+
     return this
   }
 
@@ -229,10 +235,11 @@ export class Chart {
    * @param label - The label to display for the single parent empty card.
    * @returns The CreateChart instance
    */
-  setSingleParentEmptyCard(single_parent_empty_card: boolean, {label='Unknown'} = {}) {
+  setSingleParentEmptyCard(single_parent_empty_card: boolean, { label = "Unknown" } = {}) {
     this.store.state.single_parent_empty_card = single_parent_empty_card
     this.store.state.single_parent_empty_card_label = label
-    if (this.editTreeInstance && this.editTreeInstance.addRelativeInstance.is_active) this.editTreeInstance.addRelativeInstance.onCancel!()
+    if (this.editTreeInstance && this.editTreeInstance.addRelativeInstance.is_active)
+      this.editTreeInstance.addRelativeInstance.onCancel!()
     removeToAddFromData(this.store.getData() || [])
 
     return this
@@ -246,7 +253,7 @@ export class Chart {
   setCard(card: (cont: HTMLElement, store: Store) => CardHtml | CardSvg) {
     if (card === cardHtml) return this.setCardHtml()
     else if (card === cardSvg) return this.setCardSvg()
-    else throw new Error('Card must be an instance of cardHtml or cardSvg')
+    else throw new Error("Card must be an instance of cardHtml or cardSvg")
   }
 
   /**
@@ -254,29 +261,28 @@ export class Chart {
    * @returns The CardHtml instance
    */
   setCardHtml() {
-    const htmlSvg = this.cont!.querySelector('#htmlSvg') as HTMLElement
-    if (!htmlSvg) throw new Error('htmlSvg not found')
+    const htmlSvg = this.cont!.querySelector("#htmlSvg") as HTMLElement
+    if (!htmlSvg) throw new Error("htmlSvg not found")
     this.is_card_html = true
-    this.svg.querySelector('.cards_view')!.innerHTML = ''
-    htmlSvg.style.display = 'block'
-  
+    this.svg.querySelector(".cards_view")!.innerHTML = ""
+    htmlSvg.style.display = "block"
+
     const card = cardHtml(this.cont, this.store)
     this.getCard = () => card.getCard()
 
     return card
   }
 
-
   /**
    * Set the Card SVG function
    * @returns The CardSvg instance
    */
   setCardSvg() {
-    const htmlSvg = this.cont!.querySelector('#htmlSvg') as HTMLElement
-    if (!htmlSvg) throw new Error('htmlSvg not found')
+    const htmlSvg = this.cont!.querySelector("#htmlSvg") as HTMLElement
+    if (!htmlSvg) throw new Error("htmlSvg not found")
     this.is_card_html = false
-    this.svg.querySelector('.cards_view')!.innerHTML = ''
-    htmlSvg.style.display = 'none'
+    this.svg.querySelector(".cards_view")!.innerHTML = ""
+    htmlSvg.style.display = "none"
 
     const card = cardSvg(this.cont, this.store)
     this.getCard = () => card.getCard()
@@ -310,7 +316,7 @@ export class Chart {
   /**
    * Set the sort spouses function
    * @param sortSpousesFunction - The sort spouses function.
-   * - Example: 
+   * - Example:
    *   (d, data) => {
    *     const spouses = d.data.rels.spouses || []
    *     return spouses.sort((a, b) => {
@@ -356,7 +362,7 @@ export class Chart {
    * @param d_id - The id of the person to get the max depth of.
    * @returns The max depth of the person in the ancestry and progeny. {ancestry: number, progeny: number}
    */
-  getMaxDepth(d_id: Datum['id']): {ancestry: number, progeny: number} {
+  getMaxDepth(d_id: Datum["id"]): { ancestry: number; progeny: number } {
     return getMaxDepth(d_id, this.store.getData())
   }
 
@@ -367,7 +373,7 @@ export class Chart {
    * @param config.show_in_law - Whether to show in law relations.
    * @returns The kinships of the person.
    */
-  calculateKinships(d_id: Datum['id'], config: KinshipInfoConfig = {}) {
+  calculateKinships(d_id: Datum["id"], config: KinshipInfoConfig = {}) {
     return calculateKinships(d_id, this.store.getData(), config)
   }
 
@@ -377,8 +383,13 @@ export class Chart {
    * @param rel_id - The id of the person to get the kinships of.
    * @returns The kinships data stash.
    */
-  getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id']) {
-    return getKinshipsDataStash(main_id, rel_id, this.store.getData(), this.calculateKinships(main_id))
+  getKinshipsDataStash(main_id: Datum["id"], rel_id: Datum["id"]) {
+    return getKinshipsDataStash(
+      main_id,
+      rel_id,
+      this.store.getData(),
+      this.calculateKinships(main_id),
+    )
   }
 
   /**
@@ -397,7 +408,7 @@ export class Chart {
    * @returns The edit tree instance.
    */
   editTree() {
-    return this.editTreeInstance = editTree(this.cont, this.store)
+    return (this.editTreeInstance = editTree(this.cont, this.store))
   }
 
   /**
@@ -406,7 +417,7 @@ export class Chart {
    * @returns The CreateChart instance
    */
   updateMain(d: Datum) {
-    let d_id: Datum['id']
+    let d_id: Datum["id"]
     if (d.id) d_id = d.id
     else d_id = d.data.id
     this.store.updateMainId(d_id)
@@ -420,7 +431,7 @@ export class Chart {
    * @param id - New main person id.
    * @returns The CreateChart instance
    */
-  updateMainId(id: Datum['id']) {
+  updateMainId(id: Datum["id"]) {
     this.store.updateMainId(id)
 
     return this
@@ -466,26 +477,26 @@ export class Chart {
   setPersonDropdown(
     getLabel: Function,
     {
-      cont=this.cont!.querySelector('.f3-nav-cont') as HTMLElement,
+      cont = this.cont!.querySelector(".f3-nav-cont") as HTMLElement,
       onSelect,
-      placeholder='Search'
-    } : {
-      cont?: HTMLElement,
-      onSelect?: (d_id: Datum['id']) => void,
+      placeholder = "Search",
+    }: {
+      cont?: HTMLElement
+      onSelect?: (d_id: Datum["id"]) => void
       placeholder?: string
-    } = {}
+    } = {},
   ) {
     if (!onSelect) onSelect = onSelectDefault.bind(this)
-    this.personSearch = autocomplete(cont, onSelect, {placeholder})
+    this.personSearch = autocomplete(cont, onSelect, { placeholder })
 
     this.personSearch.setOptionsGetterPerson(this.store.getData, getLabel)
 
-    function onSelectDefault(this: Chart, d_id: Datum['id']) {
+    function onSelectDefault(this: Chart, d_id: Datum["id"]) {
       const datum = this.store.getDatum(d_id)
-      if (!datum) throw new Error('Datum not found')
+      if (!datum) throw new Error("Datum not found")
       if (this.editTreeInstance) this.editTreeInstance.open(datum)
       this.updateMainId(d_id)
-      this.updateTree({initial: false})
+      this.updateTree({ initial: false })
     }
     return this
   }
@@ -501,13 +512,12 @@ export class Chart {
   }
 }
 
-
 function setCont(cont: HTMLElement | string) {
   if (typeof cont === "string") cont = document.querySelector(cont) as HTMLElement
-  if (!cont) throw new Error('cont not found')
+  if (!cont) throw new Error("cont not found")
   return cont
 }
 
 function createNavCont(cont: HTMLElement) {
-  d3.select(cont).append('div').attr('class', 'f3-nav-cont')
+  d3.select(cont).append("div").attr("class", "f3-nav-cont")
 }

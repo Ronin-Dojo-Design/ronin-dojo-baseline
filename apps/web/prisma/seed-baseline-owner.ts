@@ -19,7 +19,7 @@ import { PrismaClient } from "~/.generated/prisma/client"
  *   bun run apps/web/prisma/seed-baseline-owner.ts
  *
  * @see docs/sprints/SESSION_0174.md
- * @see apps/web/prisma/seed-baseline-launch.ts (OWNER_ID source)
+ * @see apps/web/prisma/seed-baseline-launch.ts (ownerId source)
  */
 
 const adapter = new PrismaPg({
@@ -30,8 +30,40 @@ const db = new PrismaClient({ adapter })
 
 const BRAND = "BASELINE_MARTIAL_ARTS" as const
 const ORG_SLUGS = ["baseline-martial-arts", "baseline-academy"] as const
-// Production user ID from seed-baseline-launch.ts (SESSION_0172)
-const OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
+const LEGACY_OWNER_ID = "KBYccZGiVxmOhV2l1LpB2XjSgES3MI8T"
+
+async function resolveBrianUser() {
+  const rows = await db.$queryRawUnsafe<
+    Array<{
+      id: string
+      email: string
+      name: string
+      role: string
+      lastActiveBrandId: string | null
+    }>
+  >(
+    `SELECT u."id", u."email", u."name", u."role", u."lastActiveBrandId"
+     FROM "User" u
+     LEFT JOIN "Passport" p ON p."userId" = u."id"
+     WHERE u."id" = $1
+        OR u."name" = 'Brian Scott'
+        OR p."displayName" = 'Brian Scott'
+        OR (p."legalFirstName" = 'Brian' AND p."legalLastName" = 'Scott')
+     ORDER BY
+       CASE WHEN u."role" = 'admin' THEN 0 ELSE 1 END,
+       CASE WHEN u."id" = $1 THEN 0 ELSE 1 END,
+       u."createdAt" ASC
+     LIMIT 1`,
+    LEGACY_OWNER_ID,
+  )
+  const user = rows[0]
+  if (!user) {
+    throw new Error(
+      `Brian Scott User not found. Log in via magic link first to create your Better-Auth user record.`,
+    )
+  }
+  return user
+}
 
 async function main() {
   const now = new Date()
@@ -41,12 +73,8 @@ async function main() {
   // -----------------------------------------------------------------------
   // 0. Find the user + org
   // -----------------------------------------------------------------------
-  const user = await db.user.findUnique({ where: { id: OWNER_ID } })
-  if (!user) {
-    throw new Error(
-      `User not found: id=${OWNER_ID}. Log in via magic link first to create your Better-Auth user record.`,
-    )
-  }
+  const user = await resolveBrianUser()
+  const ownerId = user.id
   console.log(`   Found user: ${user.email} (name=${user.name}, role=${user.role})`)
 
   let org: { id: string } | null = null
@@ -67,7 +95,7 @@ async function main() {
   // 1. Ensure admin role
   // -----------------------------------------------------------------------
   if (user.role !== "admin") {
-    await db.user.update({ where: { id: OWNER_ID }, data: { role: "admin" } })
+    await db.user.update({ where: { id: ownerId }, data: { role: "admin" } })
     console.log(`   ✅ Upgraded user role: ${user.role} → admin`)
   } else {
     console.log("   User already admin")
@@ -75,7 +103,7 @@ async function main() {
 
   // Set lastActiveBrandId
   if (!user.lastActiveBrandId) {
-    await db.user.update({ where: { id: OWNER_ID }, data: { lastActiveBrandId: BRAND } })
+    await db.user.update({ where: { id: ownerId }, data: { lastActiveBrandId: BRAND } })
     console.log(`   ✅ Set lastActiveBrandId → ${BRAND}`)
   }
 
@@ -94,23 +122,23 @@ async function main() {
       email: "tuffbuffs@colorado.edu",
     },
   }
-  const existingPassport = await db.passport.findUnique({ where: { userId: OWNER_ID } })
+  const existingPassport = await db.passport.findUnique({ where: { userId: ownerId } })
   if (!existingPassport) {
-    await db.passport.create({ data: { userId: OWNER_ID, ...passportData } })
+    await db.passport.create({ data: { userId: ownerId, ...passportData } })
     console.log("   ✅ Created Passport")
   } else {
-    await db.passport.update({ where: { userId: OWNER_ID }, data: passportData })
+    await db.passport.update({ where: { userId: ownerId }, data: passportData })
     console.log("   ✅ Updated Passport (bio + social links)")
   }
 
   // -----------------------------------------------------------------------
   // 3. DirectoryProfile
   // -----------------------------------------------------------------------
-  const existingDir = await db.directoryProfile.findUnique({ where: { userId: OWNER_ID } })
+  const existingDir = await db.directoryProfile.findUnique({ where: { userId: ownerId } })
   if (!existingDir) {
     await db.directoryProfile.create({
       data: {
-        userId: OWNER_ID,
+        userId: ownerId,
         slug: "brian-scott",
         visibility: "PUBLIC",
         locationCity: "Boulder",
@@ -134,9 +162,9 @@ async function main() {
     where: { id: org.id },
     select: { ownerId: true },
   })
-  if (orgFull?.ownerId !== OWNER_ID) {
-    await db.organization.update({ where: { id: org.id }, data: { ownerId: OWNER_ID } })
-    console.log(`   ✅ Set org owner → ${OWNER_ID}`)
+  if (orgFull?.ownerId !== ownerId) {
+    await db.organization.update({ where: { id: org.id }, data: { ownerId: ownerId } })
+    console.log(`   ✅ Set org owner → ${ownerId}`)
   } else {
     console.log("   Org owner already set")
   }
@@ -166,7 +194,7 @@ async function main() {
     }
 
     const existing = await db.membership.findFirst({
-      where: { userId: OWNER_ID, organizationId: org.id, disciplineId: disc.id },
+      where: { userId: ownerId, organizationId: org.id, disciplineId: disc.id },
       select: { id: true },
     })
     if (existing) {
@@ -177,7 +205,7 @@ async function main() {
         data: {
           brand: BRAND,
           status: "ACTIVE",
-          userId: OWNER_ID,
+          userId: ownerId,
           organizationId: org.id,
           disciplineId: disc.id,
           joinedAt: now,
@@ -227,7 +255,7 @@ async function main() {
   })
   if (incorrectEskRank) {
     const bad = await db.rankAward.findFirst({
-      where: { userId: OWNER_ID, rankId: incorrectEskRank.id },
+      where: { userId: ownerId, rankId: incorrectEskRank.id },
     })
     if (bad) {
       await db.rankAward.delete({ where: { id: bad.id } })
@@ -247,10 +275,10 @@ async function main() {
       console.log(`   ⚠️  Rank not found for ${label}`)
       return
     }
-    const existing = await db.rankAward.findFirst({ where: { userId: OWNER_ID, rankId: rank.id } })
+    const existing = await db.rankAward.findFirst({ where: { userId: ownerId, rankId: rank.id } })
     if (!existing) {
       await db.rankAward.create({
-        data: { userId: OWNER_ID, rankId: rank.id, awardedAt: now, notes, location },
+        data: { userId: ownerId, rankId: rank.id, awardedAt: now, notes, location },
       })
       console.log(`   ✅ RankAward: ${label}`)
     } else {
@@ -326,11 +354,11 @@ async function main() {
   })
   if (bjjSafetyCourse) {
     let enrollment = await db.courseEnrollment.findFirst({
-      where: { userId: OWNER_ID, courseId: bjjSafetyCourse.id },
+      where: { userId: ownerId, courseId: bjjSafetyCourse.id },
     })
     if (!enrollment) {
       enrollment = await db.courseEnrollment.create({
-        data: { userId: OWNER_ID, courseId: bjjSafetyCourse.id },
+        data: { userId: ownerId, courseId: bjjSafetyCourse.id },
       })
       console.log("   ✅ Enrolled in BJJ Safety course")
     } else {
@@ -347,7 +375,7 @@ async function main() {
           data: {
             enrollmentId: enrollment.id,
             curriculumItemId: item.id,
-            verifiedById: OWNER_ID,
+            verifiedById: ownerId,
           },
         })
         completionsCreated++
@@ -366,17 +394,17 @@ async function main() {
 
     // 9. Certification — marks Brian as the instructor/author of BJJ Safety
     const existingCert = await db.certification.findFirst({
-      where: { userId: OWNER_ID, courseId: bjjSafetyCourse.id, type: "SAFETY" },
+      where: { userId: ownerId, courseId: bjjSafetyCourse.id, type: "SAFETY" },
     })
     if (!existingCert) {
       await db.certification.create({
         data: {
           type: "SAFETY",
           status: "ACTIVE",
-          userId: OWNER_ID,
+          userId: ownerId,
           organizationId: org.id,
           courseId: bjjSafetyCourse.id,
-          issuedById: OWNER_ID,
+          issuedById: ownerId,
           notes:
             "Course author and lead instructor. Program designed by Brian Scott for Baseline Martial Arts.",
         },

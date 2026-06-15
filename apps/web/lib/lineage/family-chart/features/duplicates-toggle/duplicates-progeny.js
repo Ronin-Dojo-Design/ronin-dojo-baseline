@@ -3,7 +3,7 @@ export function handleDuplicateSpouseToggle(tree) {
     if (!d.spouse) return
     const spouse = d.spouse
     if (d.duplicate && spouse.data._tgdp_sp) {
-      const parent_id = spouse.data.main ? 'main' : spouse.parent.data.id
+      const parent_id = spouse.data.main ? "main" : spouse.parent.data.id
       if (spouse.data._tgdp_sp[parent_id]?.hasOwnProperty(d.data.id)) {
         d._toggle = spouse.data._tgdp_sp[parent_id][d.data.id]
       }
@@ -11,7 +11,11 @@ export function handleDuplicateSpouseToggle(tree) {
   })
 }
 
-export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_close_others=true) {
+export function handleDuplicateHierarchyProgeny(
+  root,
+  data_stash,
+  on_toggle_one_close_others = true,
+) {
   const progeny_duplicates = []
   loopChildren(root)
   setToggleIds(progeny_duplicates)
@@ -28,14 +32,14 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
       }
       const duplicates = findDuplicates(d, p1, p2)
       if (duplicates.length > 0) {
-        const all_duplicates = [{d, p1, p2}, ...duplicates]
+        const all_duplicates = [{ d, p1, p2 }, ...duplicates]
         progeny_duplicates.push(all_duplicates)
         assignDuplicateValues(all_duplicates)
         handleToggleOff(all_duplicates)
       } else {
-        let parent_id = root === d ? 'main' : d.parent.data.id
-        stashTgdpSpouse(d, parent_id, p2);
-        (children_by_spouse[p2.id] || []).forEach(child => {
+        let parent_id = root === d ? "main" : d.parent.data.id
+        stashTgdpSpouse(d, parent_id, p2)
+        ;(children_by_spouse[p2.id] || []).forEach(child => {
           loopChildren(child)
         })
       }
@@ -43,9 +47,9 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
   }
 
   function assignDuplicateValues(all_duplicates) {
-    all_duplicates.forEach(({d, p1, p2}, i) => {
+    all_duplicates.forEach(({ d, p1, p2 }, i) => {
       if (!d.data._tgdp_sp) d.data._tgdp_sp = {}
-      let parent_id = root === d ? 'main' : d.parent.data.id
+      let parent_id = root === d ? "main" : d.parent.data.id
       unstashTgdpSpouse(d, parent_id, p2)
       if (!d.data._tgdp_sp[parent_id]) d.data._tgdp_sp[parent_id] = {}
       let val = 1
@@ -57,17 +61,17 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
     if (on_toggle_one_close_others) {
       if (all_duplicates.every(d => d.val < 0)) {
         const first_duplicate = all_duplicates.sort((a, b) => b.val - a.val)[0]
-        const {d, p1, p2} = first_duplicate
-        const parent_id = root === d ? 'main' : d.parent.data.id
+        const { d, p1, p2 } = first_duplicate
+        const parent_id = root === d ? "main" : d.parent.data.id
         d.data._tgdp_sp[parent_id][p2.id] = 1
       }
-  
+
       if (all_duplicates.filter(d => d.val > 0).length > 1) {
         const latest_duplicate = all_duplicates.sort((a, b) => b.val - a.val)[0]
         all_duplicates.forEach(dupl => {
           if (dupl === latest_duplicate) return
-          const {d, p1, p2} = dupl
-          const parent_id = root === d ? 'main' : d.parent.data.id
+          const { d, p1, p2 } = dupl
+          const parent_id = root === d ? "main" : d.parent.data.id
           d.data._tgdp_sp[parent_id][p2.id] = -1
         })
       }
@@ -75,8 +79,8 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
   }
 
   function handleToggleOff(all_duplicates) {
-    all_duplicates.forEach(({d, p1, p2}) => {
-      const parent_id = root === d ? 'main' : d.parent.data.id
+    all_duplicates.forEach(({ d, p1, p2 }) => {
+      const parent_id = root === d ? "main" : d.parent.data.id
       if (d.data._tgdp_sp[parent_id][p2.id] < 0) {
         const children_by_spouse = getChildrenBySpouse(d)
         if (children_by_spouse[p2.id]) {
@@ -88,7 +92,11 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
   }
 
   function stashTgdpSpouse(d, parent_id, p2) {
-    if (d.data._tgdp_sp && d.data._tgdp_sp[parent_id] && d.data._tgdp_sp[parent_id].hasOwnProperty(p2.id)) {
+    if (
+      d.data._tgdp_sp &&
+      d.data._tgdp_sp[parent_id] &&
+      d.data._tgdp_sp[parent_id].hasOwnProperty(p2.id)
+    ) {
       if (!d.data.__tgdp_sp) d.data.__tgdp_sp = {}
       if (!d.data.__tgdp_sp[parent_id]) d.data.__tgdp_sp[parent_id] = {}
       d.data.__tgdp_sp[parent_id][p2.id] = d.data._tgdp_sp[parent_id][p2.id]
@@ -97,7 +105,11 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
   }
 
   function unstashTgdpSpouse(d, parent_id, p2) {
-    if (d.data.__tgdp_sp && d.data.__tgdp_sp[parent_id] && d.data.__tgdp_sp[parent_id].hasOwnProperty(p2.id)) {
+    if (
+      d.data.__tgdp_sp &&
+      d.data.__tgdp_sp[parent_id] &&
+      d.data.__tgdp_sp[parent_id].hasOwnProperty(p2.id)
+    ) {
       d.data._tgdp_sp[parent_id][p2.id] = d.data.__tgdp_sp[parent_id][p2.id]
       delete d.data.__tgdp_sp[parent_id][p2.id]
     }
@@ -116,9 +128,9 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
         const children_by_spouse = getChildrenBySpouse(d)
         spouses.forEach(p2 => {
           if (checkIfDuplicate([partner1, partner2], [p1, p2])) {
-            duplicates.push({d, p1, p2})
+            duplicates.push({ d, p1, p2 })
           } else {
-            (children_by_spouse[p2.id] || []).forEach(child => {
+            ;(children_by_spouse[p2.id] || []).forEach(child => {
               checkChildren(child)
             })
           }
@@ -133,8 +145,8 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
 
   function getChildrenBySpouse(d) {
     const children_by_spouse = {}
-    const p1 = d;
-    (d.children || []).forEach(child => {
+    const p1 = d
+    ;(d.children || []).forEach(child => {
       const ch_rels = child.data.rels
       const p2_id = ch_rels.parents[0] === p1.data.id ? ch_rels.parents[1] : ch_rels.parents[0]
       if (!children_by_spouse[p2_id]) children_by_spouse[p2_id] = []
@@ -146,7 +158,7 @@ export function handleDuplicateHierarchyProgeny(root, data_stash, on_toggle_one_
   function setToggleIds(progeny_duplicates) {
     let toggle_id = 0
     progeny_duplicates.forEach(dupl_arr => {
-      toggle_id = toggle_id+1
+      toggle_id = toggle_id + 1
       dupl_arr.forEach(d => {
         if (!d.d._toggle_id_sp) d.d._toggle_id_sp = {}
         d.d._toggle_id_sp[d.p2.id] = toggle_id

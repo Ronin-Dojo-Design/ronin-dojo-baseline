@@ -1,11 +1,6 @@
 import * as d3 from "d3"
-import {cardChangeMain} from "./methods"
-import {
-  CardBody,
-  CardImage,
-  LinkBreakIconWrapper,
-  MiniTree,
-} from "./templates"
+import { cardChangeMain } from "./methods"
+import { CardBody, CardImage, LinkBreakIconWrapper, MiniTree } from "./templates"
 import { Store } from "../../types/store"
 import { TreeDatum } from "../../types/treeData"
 import { CardDim } from "./templates"
@@ -13,41 +8,64 @@ import { CardDim } from "./templates"
 const CardElements = {
   miniTree,
   cardBody,
-  cardImage
+  cardImage,
 }
 export default CardElements
 
-
-
-function miniTree(d: TreeDatum, props: {card_dim: CardDim, onMiniTreeClick?: (e: MouseEvent, d: TreeDatum) => void, store: Store}) {
+function miniTree(
+  d: TreeDatum,
+  props: {
+    card_dim: CardDim
+    onMiniTreeClick?: (e: MouseEvent, d: TreeDatum) => void
+    store: Store
+  },
+) {
   if (d.data.to_add) return
-  const card_dim = props.card_dim;
+  const card_dim = props.card_dim
   if (d.all_rels_displayed) return
-  const g = d3.create('svg:g').html(MiniTree({d,card_dim}).template)
+  const g = d3.create("svg:g").html(MiniTree({ d, card_dim }).template)
   g.on("click", function (e) {
-    e.stopPropagation();
+    e.stopPropagation()
     if (props.onMiniTreeClick) props.onMiniTreeClick.call(this, e, d)
-    else cardChangeMain(props.store, {d})
+    else cardChangeMain(props.store, { d })
   })
   return g.node()
 }
 
-function cardBody(d: TreeDatum, props: {card_dim: CardDim, onCardClick: (e: MouseEvent, d: TreeDatum) => void, store: Store, card_display: (data: TreeDatum['data']) => string}) {
-  const card_dim = props.card_dim;
-  const g = d3.create('svg:g').html(CardBody({d, card_dim, card_display: props.card_display}).template)
+function cardBody(
+  d: TreeDatum,
+  props: {
+    card_dim: CardDim
+    onCardClick: (e: MouseEvent, d: TreeDatum) => void
+    store: Store
+    card_display: (data: TreeDatum["data"]) => string
+  },
+) {
+  const card_dim = props.card_dim
+  const g = d3
+    .create("svg:g")
+    .html(CardBody({ d, card_dim, card_display: props.card_display }).template)
   g.on("click", function (e) {
-    e.stopPropagation();
+    e.stopPropagation()
     if (props.onCardClick) props.onCardClick.call(this, e, d)
-    else cardChangeMain(props.store, {d})
+    else cardChangeMain(props.store, { d })
   })
 
   return g.node()
 }
 
-function cardImage(d: TreeDatum, props: {card_dim: CardDim, store: Store}) {
+function cardImage(d: TreeDatum, props: { card_dim: CardDim; store: Store }) {
   if (d.data.to_add) return
-  const card_dim = props.card_dim;
-  const g = d3.create('svg:g').html(CardImage({d, image: d.data.data.avatar || null, card_dim, maleIcon: undefined, femaleIcon: undefined}).template)
+  const card_dim = props.card_dim
+  const g = d3.create("svg:g").html(
+    CardImage({
+      d,
+      image: d.data.data.avatar || null,
+      card_dim,
+      maleIcon: undefined,
+      femaleIcon: undefined,
+    }).template,
+  )
   return g.node()
 }
 

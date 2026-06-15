@@ -49,14 +49,15 @@ export function updateSecondaryLinks(
     .data(visibleLinks, d => `${d.fromMemberId}--${d.toMemberId}`)
 
   // Exit: fade out and remove
-  sel.exit().transition().duration(transitionTime || 400).style("opacity", 0).remove()
+  sel
+    .exit()
+    .transition()
+    .duration(transitionTime || 400)
+    .style("opacity", 0)
+    .remove()
 
   // Enter: create the group + path + invisible hit-area + text elements
-  const enter = sel
-    .enter()
-    .append("g")
-    .attr("class", "slink")
-    .style("opacity", 0)
+  const enter = sel.enter().append("g").attr("class", "slink").style("opacity", 0)
 
   enter.append("path").attr("class", "slink-path")
   // Fat transparent hit-area for reliable hover/touch on thin stroke
@@ -139,7 +140,10 @@ export function updateSecondaryLinks(
   })
 
   // Animate in with the same timing as primary links
-  merged.transition().duration(transitionTime || 800).style("opacity", 1)
+  merged
+    .transition()
+    .duration(transitionTime || 800)
+    .style("opacity", 1)
 }
 
 /**

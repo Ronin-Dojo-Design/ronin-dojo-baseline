@@ -1,13 +1,14 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 export const signWaiverSchema = z.object({
-  organizationId: z.string().cuid(),
-  waiverId: z.string().cuid(),
-  programId: z.string().cuid().optional(),
-  signedOnBehalfId: z.string().cuid().optional(),
+  organizationId: databaseIdSchema,
+  waiverId: databaseIdSchema,
+  programId: databaseIdSchema.optional(),
+  signedOnBehalfId: databaseIdSchema.optional(),
 })
 
 export const revokeWaiverSignatureSchema = z.object({
-  organizationId: z.string().cuid(),
-  signatureId: z.string().cuid(),
+  organizationId: databaseIdSchema,
+  signatureId: databaseIdSchema,
 })

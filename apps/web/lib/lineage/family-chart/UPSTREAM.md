@@ -15,6 +15,7 @@ freely (per ADR 0026 §1).
 ## IoC review result
 
 SESSION_0381_TASK_01 — CLEAN:
+
 - LICENSE.txt = MIT confirmed
 - No network calls (fetch/XHR/WebSocket)
 - No eval / new Function

@@ -1,14 +1,15 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 export const enrollmentProgramUserSchema = z.object({
-  programId: z.string().cuid(),
-  userId: z.string().cuid(),
+  programId: databaseIdSchema,
+  userId: databaseIdSchema,
 })
 
 export const withdrawEnrollmentSchema = z.object({
-  enrollmentId: z.string().cuid(),
+  enrollmentId: databaseIdSchema,
 })
 
 export const promoteFromWaitlistSchema = z.object({
-  programId: z.string().cuid(),
+  programId: databaseIdSchema,
 })

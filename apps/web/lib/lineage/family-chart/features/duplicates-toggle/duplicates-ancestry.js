@@ -1,10 +1,9 @@
-export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_others=true) {
+export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_others = true) {
   const ancestry_duplicates = []
 
   loopChildren(root)
 
   setToggleIds(ancestry_duplicates)
-
 
   function loopChildren(d) {
     if (d.children) {
@@ -28,7 +27,7 @@ export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_other
   function assignDuplicateValues(all_duplicates) {
     all_duplicates.forEach(d => {
       if (!d.data._tgdp) d.data._tgdp = {}
-      const parent_id = root === d ? 'main' : d.parent.data.id
+      const parent_id = root === d ? "main" : d.parent.data.id
       if (!d.data._tgdp[parent_id]) d.data._tgdp[parent_id] = -1
       d._toggle = d.data._tgdp[parent_id]
     })
@@ -36,17 +35,17 @@ export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_other
     if (on_toggle_one_close_others) {
       if (all_duplicates.every(d => d._toggle < 0)) {
         const first_duplicate = all_duplicates.sort((a, b) => b._toggle - a._toggle)[0]
-        const d= first_duplicate
-        const parent_id = root === d ? 'main' : d.parent.data.id
+        const d = first_duplicate
+        const parent_id = root === d ? "main" : d.parent.data.id
         d.data._tgdp[parent_id] = 1
       }
-  
+
       if (all_duplicates.filter(d => d._toggle > 0).length > 1) {
         const latest_duplicate = all_duplicates.sort((a, b) => b._toggle - a._toggle)[0]
         all_duplicates.forEach(dupl => {
           if (dupl === latest_duplicate) return
           const d = dupl
-          const parent_id = root === d ? 'main' : d.parent.data.id
+          const parent_id = root === d ? "main" : d.parent.data.id
           d.data._tgdp[parent_id] = -1
         })
       }
@@ -55,7 +54,7 @@ export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_other
 
   function handleToggleOff(all_duplicates) {
     all_duplicates.forEach(d => {
-      const parent_id = root === d ? 'main' : d.parent.data.id
+      const parent_id = root === d ? "main" : d.parent.data.id
       if (d.data._tgdp[parent_id] < 0) delete d.children
     })
   }
@@ -85,7 +84,7 @@ export function handleDuplicateHierarchyAncestry(root, on_toggle_one_close_other
   function setToggleIds(ancestry_duplicates) {
     let toggle_id = 0
     ancestry_duplicates.forEach(dupl_arr => {
-      toggle_id = toggle_id+1
+      toggle_id = toggle_id + 1
       dupl_arr.forEach(d => {
         d._toggle_id = toggle_id
       })

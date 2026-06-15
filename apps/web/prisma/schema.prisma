@@ -49,7 +49,7 @@ enum PostStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(cuid(2))
   name          String
   email         String    @unique
   emailVerified Boolean   @default(false)
@@ -154,7 +154,7 @@ model User {
 }
 
 model Session {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid(2))
   token          String   @unique
   expiresAt      DateTime
   ipAddress      String?
@@ -172,7 +172,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id @default(cuid())
+  id                    String    @id @default(cuid(2))
   accountId             String
   providerId            String
   accessToken           String?
@@ -194,7 +194,7 @@ model Account {
 }
 
 model Verification {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   identifier String
   value      String
   expiresAt  DateTime
@@ -203,7 +203,7 @@ model Verification {
 }
 
 model Ad {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   email       String
   name        String
   description String?
@@ -220,7 +220,7 @@ model Ad {
 }
 
 model Tool {
-  id             String     @id @default(cuid())
+  id             String     @id @default(cuid(2))
   name           String     @db.Citext
   slug           String     @unique
   websiteUrl     String
@@ -260,7 +260,7 @@ model Tool {
 }
 
 model Category {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   name        String   @db.Citext
   slug        String   @unique
   label       String?
@@ -276,7 +276,7 @@ model Category {
 }
 
 model Tag {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   name      String   @db.Citext
   slug      String   @unique
   updatedAt DateTime @updatedAt
@@ -291,7 +291,7 @@ model Tag {
 }
 
 model Report {
-  id        String     @id @default(cuid())
+  id        String     @id @default(cuid(2))
   type      ReportType @default(Other)
   message   String?
   email     String     @default("")
@@ -955,7 +955,7 @@ enum EntitlementStatus {
 // ---------------------------------------------------------------------------
 
 model Passport {
-  id                        String    @id @default(cuid())
+  id                        String    @id @default(cuid(2))
   displayName               String?
   legalFirstName            String?
   legalLastName             String?
@@ -999,7 +999,7 @@ model Passport {
 }
 
 model DirectoryProfile {
-  id              String              @id @default(cuid())
+  id              String              @id @default(cuid(2))
   slug            String?             @unique
   visibility      DirectoryVisibility @default(MEMBERS_ONLY)
   locationCity    String?
@@ -1028,7 +1028,7 @@ model DirectoryProfile {
 // ---------------------------------------------------------------------------
 
 model Organization {
-  id           String           @id @default(cuid())
+  id           String           @id @default(cuid(2))
   brand        Brand
   name         String
   slug         String
@@ -1043,7 +1043,7 @@ model Organization {
   websiteUrl   String?
   phoneE164    String?
   email        String?
-  inviteCode   String?          @unique @default(cuid())
+  inviteCode   String?          @unique @default(cuid(2))
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
@@ -1109,7 +1109,7 @@ model Organization {
 }
 
 model Discipline {
-  id                     String   @id @default(cuid())
+  id                     String   @id @default(cuid(2))
   name                   String
   slug                   String
   code                   String?
@@ -1165,7 +1165,7 @@ model OrganizationDiscipline {
 // ---------------------------------------------------------------------------
 
 model RankSystem {
-  id        String         @id @default(cuid())
+  id        String         @id @default(cuid(2))
   name      String
   kind      RankSystemKind @default(BELT)
   isSystem  Boolean        @default(false)
@@ -1185,7 +1185,7 @@ model RankSystem {
 }
 
 model Rank {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   sortOrder Int
   name      String
   shortName String?
@@ -1219,7 +1219,7 @@ model Rank {
 // ---------------------------------------------------------------------------
 
 model Membership {
-  id           String           @id @default(cuid())
+  id           String           @id @default(cuid(2))
   brand        Brand
   status       MembershipStatus @default(PENDING)
   memberNumber String?
@@ -1256,7 +1256,7 @@ model Membership {
 }
 
 model MembershipRoleAssignment {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   assignedAt DateTime @default(now())
 
   membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
@@ -1270,7 +1270,7 @@ model MembershipRoleAssignment {
 }
 
 model Role {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid(2))
   code         String
   name         String
   description  String?
@@ -1301,7 +1301,7 @@ enum AffiliationRole {
 }
 
 model Affiliation {
-  id         String          @id @default(cuid())
+  id         String          @id @default(cuid(2))
   role       AffiliationRole @default(TRAINS_AT)
   isCurrent  Boolean         @default(true)
   schoolName String?
@@ -1330,7 +1330,7 @@ model Affiliation {
 // @added   SESSION_0144 (2026-05-12)
 // @why     Admin-customizable age groups for program categorization
 model AgeGroup {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   brand     Brand?
   isSystem  Boolean  @default(false)
   name      String
@@ -1350,7 +1350,7 @@ model AgeGroup {
 // @added   SESSION_0144 (2026-05-12)
 // @why     Admin-customizable skill/experience levels for program categorization
 model SkillLevel {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   brand       Brand?
   isSystem    Boolean  @default(false)
   name        String
@@ -1367,7 +1367,7 @@ model SkillLevel {
 }
 
 model Program {
-  id            String        @id @default(cuid())
+  id            String        @id @default(cuid(2))
   brand         Brand
   name          String
   slug          String
@@ -1450,7 +1450,7 @@ model ProgramSkillLevel {
 }
 
 model ProgramEnrollment {
-  id               String           @id @default(cuid())
+  id               String           @id @default(cuid(2))
   status           EnrollmentStatus @default(ACTIVE)
   waitlistPosition Int?
   enrolledAt       DateTime         @default(now())
@@ -1469,7 +1469,7 @@ model ProgramEnrollment {
 }
 
 model ClassSchedule {
-  id            String         @id @default(cuid())
+  id            String         @id @default(cuid(2))
   brand         Brand
   name          String
   description   String?
@@ -1501,7 +1501,7 @@ model ClassSchedule {
 }
 
 model ClassInstructorAssignment {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid(2))
   isPrimary    Boolean  @default(false)
   displayTitle String?
   createdAt    DateTime @default(now())
@@ -1516,7 +1516,7 @@ model ClassInstructorAssignment {
 }
 
 model ClassSession {
-  id                     String             @id @default(cuid())
+  id                     String             @id @default(cuid(2))
   date                   DateTime           @db.Date
   startTime              String
   endTime                String
@@ -1538,7 +1538,7 @@ model ClassSession {
 }
 
 model CheckIn {
-  id                    String        @id @default(cuid())
+  id                    String        @id @default(cuid(2))
   method                CheckInMethod
   deviceId              String?
   ipAddress             String?
@@ -1555,7 +1555,7 @@ model CheckIn {
 }
 
 model Attendance {
-  id        String           @id @default(cuid())
+  id        String           @id @default(cuid(2))
   status    AttendanceStatus @default(PRESENT)
   notes     String?
   createdAt DateTime         @default(now())
@@ -1573,7 +1573,7 @@ model Attendance {
 }
 
 model BeltTestEvent {
-  id            String         @id @default(cuid())
+  id            String         @id @default(cuid(2))
   brand         Brand
   name          String
   status        BeltTestStatus @default(DRAFT)
@@ -1597,7 +1597,7 @@ model BeltTestEvent {
 }
 
 model BeltTestRegistration {
-  id               String          @id @default(cuid())
+  id               String          @id @default(cuid(2))
   result           BeltTestResult?
   feePaidCents     Int             @default(0)
   paymentStatus    PaymentStatus   @default(UNPAID)
@@ -1622,7 +1622,7 @@ model BeltTestRegistration {
 }
 
 model BeltTestPrerequisiteConfig {
-  id                        String   @id @default(cuid())
+  id                        String   @id @default(cuid(2))
   minTimeInRankDays         Int?
   minAttendanceCount        Int?
   requireCurriculumComplete Boolean  @default(false)
@@ -1642,7 +1642,7 @@ model BeltTestPrerequisiteConfig {
 }
 
 model FamilyGroup {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1653,7 +1653,7 @@ model FamilyGroup {
 }
 
 model FamilyMember {
-  id        String     @id @default(cuid())
+  id        String     @id @default(cuid(2))
   role      FamilyRole
   isPrimary Boolean    @default(false)
   createdAt DateTime   @default(now())
@@ -1668,7 +1668,7 @@ model FamilyMember {
 }
 
 model PricingPlan {
-  id              String       @id @default(cuid())
+  id              String       @id @default(cuid(2))
   brand           Brand
   name            String
   pricingModel    PricingModel
@@ -1703,7 +1703,7 @@ model PricingPlan {
 }
 
 model Invoice {
-  id                      String        @id @default(cuid())
+  id                      String        @id @default(cuid(2))
   brand                   Brand
   invoiceNumber           String?
   stripeInvoiceId         String?       @unique
@@ -1737,7 +1737,7 @@ model Invoice {
 }
 
 model InvoiceLineItem {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   description String
   amountCents Int
   quantity    Int      @default(1)
@@ -1752,7 +1752,7 @@ model InvoiceLineItem {
 }
 
 model Payment {
-  id                      String            @id @default(cuid())
+  id                      String            @id @default(cuid(2))
   amountCents             Int
   currency                String            @default("USD") @db.Char(3)
   method                  PaymentMethodType
@@ -1773,7 +1773,7 @@ model Payment {
 // @why     Map Stripe customer IDs to users per brand + account scope (platform vs connect)
 // @wired   server/web/payments/, app/api/webhooks/stripe/
 model StripeCustomer {
-  id               String   @id @default(cuid())
+  id               String   @id @default(cuid(2))
   brand            Brand
   stripeCustomerId String   @unique
   accountScope     String   @default("platform")
@@ -1804,7 +1804,7 @@ model StripeWebhookEvent {
 }
 
 model StripeAccount {
-  id                 String            @id @default(cuid())
+  id                 String            @id @default(cuid(2))
   mode               StripeConnectMode @default(EXPRESS)
   stripeAccountId    String            @unique
   chargesEnabled     Boolean           @default(false)
@@ -1823,7 +1823,7 @@ model StripeAccount {
 }
 
 model PayoutSplit {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid(2))
   recipientLabel String
   splitBps       Int
   isActive       Boolean  @default(true)
@@ -1840,7 +1840,7 @@ model PayoutSplit {
 }
 
 model PromoCode {
-  id            String    @id @default(cuid())
+  id            String    @id @default(cuid(2))
   brand         Brand
   code          String
   description   String?
@@ -1862,7 +1862,7 @@ model PromoCode {
 }
 
 model MembershipContract {
-  id                     String         @id @default(cuid())
+  id                     String         @id @default(cuid(2))
   status                 ContractStatus @default(ACTIVE)
   termMonths             Int?
   autoRenew              Boolean        @default(true)
@@ -1888,7 +1888,7 @@ model MembershipContract {
 }
 
 model NotificationPreference {
-  id        String               @id @default(cuid())
+  id        String               @id @default(cuid(2))
   category  NotificationCategory
   channel   NotificationChannel
   enabled   Boolean              @default(true)
@@ -1905,7 +1905,7 @@ model NotificationPreference {
 }
 
 model Announcement {
-  id        String                @id @default(cuid())
+  id        String                @id @default(cuid(2))
   brand     Brand
   title     String
   body      String
@@ -1925,7 +1925,7 @@ model Announcement {
 }
 
 model OrgRelationship {
-  id        String          @id @default(cuid())
+  id        String          @id @default(cuid(2))
   type      OrgRelationType
   isActive  Boolean         @default(true)
   agreedAt  DateTime?
@@ -1945,7 +1945,7 @@ model OrgRelationship {
 }
 
 model OrgSettings {
-  id                         String  @id @default(cuid())
+  id                         String  @id @default(cuid(2))
   defaultInstructorTitle     String?
   checkInWindowMinutes       Int     @default(30)
   allowLateCheckIn           Boolean @default(true)
@@ -1983,7 +1983,7 @@ model OrgSettings {
 // ---------------------------------------------------------------------------
 
 model BrandSettings {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid(2))
   brand          Brand    @unique
   primaryColor   String? // HSL values without hsl() wrapper, e.g. "1 79% 51%"
   primaryFgColor String?
@@ -2017,7 +2017,7 @@ enum RankAwardVerificationStatus {
 }
 
 model RankAward {
-  id                 String                      @id @default(cuid())
+  id                 String                      @id @default(cuid(2))
   awardedAt          DateTime?
   notes              String?
   location           String?
@@ -2085,7 +2085,7 @@ model RankAward {
 // No attestor/attendee model in v1 (promoter is RankAward.awardedById; uploader is Media.uploadedById).
 // Discipline-agnostic: one ceremony can group awards across BJJ / FMA-WEKAF / Muay Thai etc.
 model PromotionEvent {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   title       String
   // @added SESSION_0319 (2026-06-01) — stable public route key for `/events/[slug]`.
   // Nullable so the migration is additive; seed backfills canonical ceremony slugs.
@@ -2113,7 +2113,7 @@ model PromotionEvent {
 // ---------------------------------------------------------------------------
 
 model Course {
-  id                String            @id @default(cuid())
+  id                String            @id @default(cuid(2))
   brand             Brand
   title             String
   slug              String
@@ -2145,7 +2145,7 @@ model Course {
 }
 
 model CurriculumItem {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   order     Int
   title     String
   notes     String?
@@ -2163,7 +2163,7 @@ model CurriculumItem {
 }
 
 model CourseEnrollment {
-  id          String    @id @default(cuid())
+  id          String    @id @default(cuid(2))
   enrolledAt  DateTime  @default(now())
   completedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -2182,7 +2182,7 @@ model CourseEnrollment {
 }
 
 model CurriculumItemCompletion {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   completedAt DateTime @default(now())
   notes       String?
   createdAt   DateTime @default(now())
@@ -2205,7 +2205,7 @@ model CurriculumItemCompletion {
 // ---------------------------------------------------------------------------
 
 model Tournament {
-  id           String           @id @default(cuid())
+  id           String           @id @default(cuid(2))
   brand        Brand
   name         String
   slug         String
@@ -2235,7 +2235,7 @@ model Tournament {
 }
 
 model TournamentDiscipline {
-  id          String  @id @default(cuid())
+  id          String  @id @default(cuid(2))
   rulesetName String?
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
@@ -2252,7 +2252,7 @@ model TournamentDiscipline {
 }
 
 model Division {
-  id          String         @id @default(cuid())
+  id          String         @id @default(cuid(2))
   name        String
   format      DivisionFormat
   gender      DivisionGender @default(ANY)
@@ -2288,7 +2288,7 @@ model Division {
 }
 
 model Registration {
-  id            String             @id @default(cuid())
+  id            String             @id @default(cuid(2))
   status        RegistrationStatus @default(STARTED)
   paymentStatus PaymentStatus      @default(UNPAID)
   totalFeeCents Int                @default(0)
@@ -2319,7 +2319,7 @@ model Registration {
 }
 
 model RegistrationEntry {
-  id               String      @id @default(cuid())
+  id               String      @id @default(cuid(2))
   snapshotRankName String?
   snapshotOrgName  String?
   status           EntryStatus @default(ACTIVE)
@@ -2341,7 +2341,7 @@ model RegistrationEntry {
 }
 
 model TournamentRole {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   code        String
   name        String
   description String?
@@ -2359,7 +2359,7 @@ model TournamentRole {
 }
 
 model TournamentStaffAssignment {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2383,7 +2383,7 @@ model TournamentStaffAssignment {
 // ---------------------------------------------------------------------------
 
 model GamificationEventType {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid(2))
   code          String
   name          String
   description   String?
@@ -2399,7 +2399,7 @@ model GamificationEventType {
 }
 
 model GamificationEvent {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   brand     Brand
   points    Int      @default(0)
   meta      Json?
@@ -2439,7 +2439,7 @@ model GamificationEvent {
 // ---------------------------------------------------------------------------
 
 model Style {
-  id         String      @id @default(cuid())
+  id         String      @id @default(cuid(2))
   code       String
   name       String
   status     StyleStatus @default(APPROVED)
@@ -2471,7 +2471,7 @@ model Style {
 // ---------------------------------------------------------------------------
 
 model SubscriptionTier {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   code        String
   name        String
   description String?
@@ -2488,7 +2488,7 @@ model SubscriptionTier {
 }
 
 model UserBrandSubscription {
-  id        String             @id @default(cuid())
+  id        String             @id @default(cuid(2))
   brand     Brand
   status    SubscriptionStatus @default(ACTIVE)
   startsAt  DateTime           @default(now())
@@ -2511,7 +2511,7 @@ model UserBrandSubscription {
 // ---------------------------------------------------------------------------
 
 model LineageNode {
-  id                 String                    @id @default(cuid())
+  id                 String                    @id @default(cuid(2))
   visibility         LineageVisibility         @default(PUBLIC)
   isVerified         Boolean                   @default(false)
   verificationStatus LineageVerificationStatus @default(PENDING)
@@ -2538,7 +2538,7 @@ model LineageNode {
 }
 
 model LineageRelationship {
-  id                 String                    @id @default(cuid())
+  id                 String                    @id @default(cuid(2))
   type               LineageRelationType
   description        String?
   startedAt          DateTime?
@@ -2564,7 +2564,7 @@ model LineageRelationship {
 }
 
 model LineageTree {
-  id                  String               @id @default(cuid())
+  id                  String               @id @default(cuid(2))
   brand               Brand
   scopeType           LineageTreeScopeType @default(BRAND)
   slug                String
@@ -2600,7 +2600,7 @@ model LineageTree {
 }
 
 model LineageTreeMember {
-  id                      String   @id @default(cuid())
+  id                      String   @id @default(cuid(2))
   visualSortOrder         Int      @default(0)
   showPromotionDatePublic Boolean  @default(true)
   showRankPublic          Boolean  @default(true)
@@ -2635,7 +2635,7 @@ model LineageTreeMember {
 }
 
 model LineageVisualGroup {
-  id                 String                 @id @default(cuid())
+  id                 String                 @id @default(cuid(2))
   label              String
   groupType          LineageVisualGroupType @default(PROMOTION_DATE)
   promotionDate      DateTime?
@@ -2664,7 +2664,7 @@ model LineageVisualGroup {
 }
 
 model LineageTreeAccess {
-  id        String                @id @default(cuid())
+  id        String                @id @default(cuid(2))
   role      LineageTreeAccessRole
   createdAt DateTime              @default(now())
   revokedAt DateTime?
@@ -2690,7 +2690,7 @@ model LineageTreeAccess {
 }
 
 model LineageClaimRequest {
-  id           String             @id @default(cuid())
+  id           String             @id @default(cuid(2))
   status       LineageClaimStatus @default(PENDING)
   claimantNote String?
   reviewerNote String?
@@ -2716,7 +2716,7 @@ model LineageClaimRequest {
 }
 
 model LineageClaimEvidence {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   label     String?
   url       String?
   text      String?
@@ -2758,7 +2758,7 @@ enum ProfileClaimRelationship {
 }
 
 model ProfileClaimRequest {
-  id           String                   @id @default(cuid())
+  id           String                   @id @default(cuid(2))
   status       LineageClaimStatus       @default(PENDING)
   subjectType  ProfileClaimSubjectType
   relationship ProfileClaimRelationship
@@ -2790,7 +2790,7 @@ model ProfileClaimRequest {
 // ---------------------------------------------------------------------------
 
 model Waiver {
-  id         String     @id @default(cuid())
+  id         String     @id @default(cuid(2))
   type       WaiverType
   title      String
   content    String
@@ -2815,7 +2815,7 @@ model Waiver {
 }
 
 model WaiverSignature {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   signedAt  DateTime @default(now())
   ipAddress String?
   userAgent String?
@@ -2837,7 +2837,7 @@ model WaiverSignature {
 // ---------------------------------------------------------------------------
 
 model Certification {
-  id                String              @id @default(cuid())
+  id                String              @id @default(cuid(2))
   type              CertificationType
   status            CertificationStatus @default(ACTIVE)
   issuedAt          DateTime            @default(now())
@@ -2873,7 +2873,7 @@ model Certification {
 // ---------------------------------------------------------------------------
 
 model ContentAtom {
-  id                String             @id @default(cuid())
+  id                String             @id @default(cuid(2))
   canonicalId       String             @unique /// e.g. atom-2026-cross-training-001
   title             String
   slug              String
@@ -2923,7 +2923,7 @@ model ContentAtom {
 }
 
 model ContentVariant {
-  id           String               @id @default(cuid())
+  id           String               @id @default(cuid(2))
   brand        Brand
   channel      ContentChannel
   status       ContentVariantStatus @default(DRAFT)
@@ -2951,7 +2951,7 @@ model ContentVariant {
 }
 
 model ContentTask {
-  id          String            @id @default(cuid())
+  id          String            @id @default(cuid(2))
   type        ContentTaskType
   title       String
   status      ContentTaskStatus @default(TODO)
@@ -2976,7 +2976,7 @@ model ContentTask {
 }
 
 model ContentPublication {
-  id             String         @id @default(cuid())
+  id             String         @id @default(cuid(2))
   brand          Brand
   channel        ContentChannel
   platformPostId String? /// External platform's ID for the published content
@@ -3000,10 +3000,10 @@ model ContentPublication {
 // ---------------------------------------------------------------------------
 
 model Invite {
-  id          String       @id @default(cuid())
+  id          String       @id @default(cuid(2))
   brand       Brand
   type        InviteType
-  code        String       @unique @default(cuid())
+  code        String       @unique @default(cuid(2))
   status      InviteStatus @default(PENDING)
   maxUses     Int?
   currentUses Int          @default(0)
@@ -3025,7 +3025,7 @@ model Invite {
 }
 
 model InviteClaim {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   claimedAt DateTime @default(now())
 
   invite   Invite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
@@ -3038,7 +3038,7 @@ model InviteClaim {
 }
 
 model Event {
-  id             String      @id @default(cuid())
+  id             String      @id @default(cuid(2))
   brand          Brand
   type           EventType
   name           String
@@ -3075,7 +3075,7 @@ model Event {
 }
 
 model EventRegistration {
-  id            String                  @id @default(cuid())
+  id            String                  @id @default(cuid(2))
   status        EventRegistrationStatus @default(REGISTERED)
   feePaidCents  Int                     @default(0)
   paymentStatus PaymentStatus           @default(UNPAID)
@@ -3095,7 +3095,7 @@ model EventRegistration {
 }
 
 model Bracket {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   name      String
   sortOrder Int      @default(0)
   seedData  Json?
@@ -3111,7 +3111,7 @@ model Bracket {
 }
 
 model Match {
-  id            String       @id @default(cuid())
+  id            String       @id @default(cuid(2))
   roundNumber   Int
   matchNumber   Int
   status        MatchStatus  @default(SCHEDULED)
@@ -3136,7 +3136,7 @@ model Match {
 }
 
 model MatchCompetitor {
-  id   String @id @default(cuid())
+  id   String @id @default(cuid(2))
   seed Int?
   slot Int
 
@@ -3151,7 +3151,7 @@ model MatchCompetitor {
 }
 
 model FightRecord {
-  id         String          @id @default(cuid())
+  id         String          @id @default(cuid(2))
   type       FightRecordType @default(TOURNAMENT)
   wins       Int             @default(0)
   losses     Int             @default(0)
@@ -3174,7 +3174,7 @@ model FightRecord {
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   brand      Brand
   action     String
   entityType String
@@ -3200,7 +3200,7 @@ model AuditLog {
 // ---------------------------------------------------------------------------
 
 model Lead {
-  id                String     @id @default(cuid())
+  id                String     @id @default(cuid(2))
   brand             Brand
   status            LeadStatus @default(NEW)
   source            LeadSource @default(WEBSITE)
@@ -3230,7 +3230,7 @@ model Lead {
 }
 
 model LeadFollowUp {
-  id          String    @id @default(cuid())
+  id          String    @id @default(cuid(2))
   channel     String
   notes       String?
   scheduledAt DateTime?
@@ -3247,7 +3247,7 @@ model LeadFollowUp {
 }
 
 model RuleSet {
-  id               String        @id @default(cuid())
+  id               String        @id @default(cuid(2))
   name             String
   description      String?
   matchDurationSec Int?
@@ -3271,7 +3271,7 @@ model RuleSet {
 }
 
 model WeighInRecord {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   weightKg   Decimal  @db.Decimal(5, 2)
   recordedAt DateTime @default(now())
   recordedBy String?
@@ -3289,7 +3289,7 @@ model WeighInRecord {
 }
 
 model MatAssignment {
-  id        String              @id @default(cuid())
+  id        String              @id @default(cuid(2))
   matName   String
   status    MatAssignmentStatus @default(PENDING)
   startTime DateTime?
@@ -3310,7 +3310,7 @@ model MatAssignment {
 // ---------------------------------------------------------------------------
 
 model Media {
-  id           String    @id @default(cuid())
+  id           String    @id @default(cuid(2))
   brand        Brand
   type         MediaType
   url          String
@@ -3342,7 +3342,7 @@ model Media {
 }
 
 model MediaAttachment {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   purpose   String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -3387,7 +3387,7 @@ model MediaAttachment {
 }
 
 model Technique {
-  id                String             @id @default(cuid())
+  id                String             @id @default(cuid(2))
   brand             Brand
   name              String
   slug              String
@@ -3436,7 +3436,7 @@ model Technique {
 }
 
 model TechniquePrerequisite {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   description String?
   isStrict    Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -3463,7 +3463,7 @@ model TechniqueCurriculumLink {
 }
 
 model TechniqueProgress {
-  id            String                  @id @default(cuid())
+  id            String                  @id @default(cuid(2))
   status        TechniqueProgressStatus @default(NOT_STARTED)
   lastDrilledAt DateTime?
   notes         String?
@@ -3483,7 +3483,7 @@ model TechniqueProgress {
 }
 
 model CertificateTemplate {
-  id             String                    @id @default(cuid())
+  id             String                    @id @default(cuid(2))
   brand          Brand
   name           String
   type           CertificationType
@@ -3511,7 +3511,7 @@ model CertificateTemplate {
 }
 
 model CertificateOrder {
-  id                    String         @id @default(cuid())
+  id                    String         @id @default(cuid(2))
   amountCents           Int
   currency              String         @default("USD") @db.Char(3)
   paymentStatus         PaymentStatus  @default(UNPAID)
@@ -3545,7 +3545,7 @@ model CertificateOrder {
 }
 
 model CertificateIssuance {
-  id                 String    @id @default(cuid())
+  id                 String    @id @default(cuid(2))
   certificateNumber  String    @unique
   qrVerificationCode String    @unique
   pdfUrl             String?
@@ -3571,7 +3571,7 @@ model CertificateIssuance {
 }
 
 model Favorite {
-  id         String             @id @default(cuid())
+  id         String             @id @default(cuid(2))
   entityType FavoriteEntityType
   entityId   String
   notes      String?
@@ -3585,7 +3585,7 @@ model Favorite {
 }
 
 model StudentList {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   name        String
   description String?
   createdAt   DateTime @default(now())
@@ -3603,7 +3603,7 @@ model StudentList {
 }
 
 model StudentListMember {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -3621,7 +3621,7 @@ model StudentListMember {
 // ---------------------------------------------------------------------------
 
 model Entitlement {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   brand       Brand
   key         String
   name        String
@@ -3636,7 +3636,7 @@ model Entitlement {
 }
 
 model EntitlementGrant {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid(2))
   createdAt DateTime @default(now())
 
   pricingPlan   PricingPlan @relation(fields: [pricingPlanId], references: [id], onDelete: Cascade)
@@ -3648,7 +3648,7 @@ model EntitlementGrant {
 }
 
 model UserEntitlement {
-  id         String                @id @default(cuid())
+  id         String                @id @default(cuid(2))
   sourceType EntitlementSourceType
   sourceId   String?
   status     EntitlementStatus     @default(ACTIVE)
@@ -3675,7 +3675,7 @@ model UserEntitlement {
 // @why     Replace hardcoded gear collections with DB-managed discipline→product mappings
 // @wired   server/web/affiliate-products/queries.ts, app/(web)/gear/page.tsx, prisma/seed-gear-recommendations.ts
 model GearRecommendation {
-  id        String                 @id @default(cuid())
+  id        String                 @id @default(cuid(2))
   brand     Brand
   type      GearRecommendationType
   sortOrder Int                    @default(0)
@@ -3699,7 +3699,7 @@ model GearRecommendation {
 /// Created by the Stripe webhook merch_purchase handler.
 /// @see docs/architecture/printful-pod-spec.md
 model MerchOrder {
-  id    String @id @default(cuid())
+  id    String @id @default(cuid(2))
   brand Brand
 
   /// Stripe checkout session that created this order
@@ -3766,7 +3766,7 @@ model MerchOrder {
 }
 
 model Post {
-  id          String     @id @default(cuid())
+  id          String     @id @default(cuid(2))
   title       String     @db.Citext
   slug        String     @unique
   description String?
@@ -3808,7 +3808,7 @@ enum DataSubjectRequestStatus {
 /// Submissions go to this queue with status=PENDING; admin processes manually.
 /// See SESSION_0254 for the Plausible/GDPR mutual understanding that drove this.
 model DataSubjectRequest {
-  id          String                   @id @default(cuid())
+  id          String                   @id @default(cuid(2))
   userId      String
   type        DataSubjectRequestType
   status      DataSubjectRequestStatus @default(PENDING)

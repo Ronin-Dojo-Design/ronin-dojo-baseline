@@ -8,9 +8,8 @@ import {
   RelReferenceFieldCreator,
   SelectFieldCreator,
   RelReferenceField,
-  SelectField
+  SelectField,
 } from "../types/form"
-
 
 export function formCreatorSetup({
   datum,
@@ -36,7 +35,7 @@ export function formCreatorSetup({
     no_edit = true
     can_delete = false
   }
-  let form_creator: FormCreator;
+  let form_creator: FormCreator
   const base_form_creator: BaseFormCreator = {
     datum_id: datum.id,
     fields: [],
@@ -49,8 +48,8 @@ export function formCreatorSetup({
 
   // Existing datum form creator
   if (!datum._new_rel_data) {
-    if (!addRelative) throw new Error('addRelative is required')
-    if (!removeRelative) throw new Error('removeRelative is required')
+    if (!addRelative) throw new Error("addRelative is required")
+    if (!removeRelative) throw new Error("removeRelative is required")
     form_creator = {
       ...base_form_creator,
       onDelete: deletePersonWithPostSubmit,
@@ -71,52 +70,60 @@ export function formCreatorSetup({
       ...base_form_creator,
       title: datum._new_rel_data.label,
       new_rel: true,
-      editable: true
+      editable: true,
     }
   }
   if (datum._new_rel_data || datum.to_add || datum.unknown) {
-    if (link_existing_rel_config) form_creator.linkExistingRelative = createLinkExistingRelative(datum, store.getData(), link_existing_rel_config)
+    if (link_existing_rel_config)
+      form_creator.linkExistingRelative = createLinkExistingRelative(
+        datum,
+        store.getData(),
+        link_existing_rel_config,
+      )
   }
 
   if (no_edit) form_creator.editable = false
   else if (editFirst) form_creator.editable = true
 
   fields.forEach(field => {
-    if (field.type === 'rel_reference') addRelReferenceField(field)
-    else if (field.type === 'select') addSelectField(field)
-
-    else form_creator.fields.push({
-      id: field.id,
-      type: field.type,
-      label: field.label,
-      initial_value: datum.data[field.id],
-    })
+    if (field.type === "rel_reference") addRelReferenceField(field)
+    else if (field.type === "select") addSelectField(field)
+    else
+      form_creator.fields.push({
+        id: field.id,
+        type: field.type,
+        label: field.label,
+        initial_value: datum.data[field.id],
+      })
   })
 
   return form_creator
 
-  function getGenderField(): BaseFormCreator['gender_field'] {
+  function getGenderField(): BaseFormCreator["gender_field"] {
     return {
-      id: 'gender', 
-      type: 'switch',
-      label: 'Gender',
+      id: "gender",
+      type: "switch",
+      label: "Gender",
       initial_value: datum.data.gender,
       disabled: false,
-      options: [{value: 'M', label: 'Male'}, {value: 'F', label: 'Female'}]
+      options: [
+        { value: "M", label: "Male" },
+        { value: "F", label: "Female" },
+      ],
     }
   }
 
   function addRelReferenceField(field: RelReferenceFieldCreator) {
-    if (!field.getRelLabel) console.error('getRelLabel is not set')
+    if (!field.getRelLabel) console.error("getRelLabel is not set")
 
-    if (field.rel_type === 'spouse') {
-      (datum.rels.spouses || []).forEach(spouse_id => {
+    if (field.rel_type === "spouse") {
+      ;(datum.rels.spouses || []).forEach(spouse_id => {
         const spouse = store.getDatum(spouse_id)
-        if (!spouse) throw new Error('Spouse not found')
+        if (!spouse) throw new Error("Spouse not found")
         const marriage_date_id = `${field.id}__ref__${spouse_id}`
         const rel_reference_field: RelReferenceField = {
           id: marriage_date_id,
-          type: 'rel_reference',
+          type: "rel_reference",
           label: field.label,
           rel_id: spouse_id,
           rel_label: field.getRelLabel(spouse),
@@ -129,7 +136,8 @@ export function formCreatorSetup({
   }
 
   function addSelectField(field: SelectFieldCreator) {
-    if (!field.options && !field.optionCreator) return console.error('optionCreator or options is not set for field', field)
+    if (!field.options && !field.optionCreator)
+      return console.error("optionCreator or options is not set for field", field)
     const select_field: SelectField = {
       id: field.id,
       type: field.type,
@@ -141,18 +149,23 @@ export function formCreatorSetup({
     form_creator.fields.push(select_field)
   }
 
-  function createLinkExistingRelative(datum: Datum, data: Data, link_existing_rel_config: FormCreatorSetupProps['link_existing_rel_config']) {
-    if (!link_existing_rel_config) throw new Error('link_existing_rel_config is required')
+  function createLinkExistingRelative(
+    datum: Datum,
+    data: Data,
+    link_existing_rel_config: FormCreatorSetupProps["link_existing_rel_config"],
+  ) {
+    if (!link_existing_rel_config) throw new Error("link_existing_rel_config is required")
     const obj = {
       title: link_existing_rel_config.title,
       select_placeholder: link_existing_rel_config.select_placeholder,
       options: getLinkRelOptions(datum, data)
-        .map((d: Datum) => ({value: d.id, label: link_existing_rel_config.linkRelLabel(d)}))
-        .sort((a: {label: string}, b: {label: string}) => {
-          if (typeof a.label === 'string' && typeof b.label === 'string') return a.label.localeCompare(b.label)
+        .map((d: Datum) => ({ value: d.id, label: link_existing_rel_config.linkRelLabel(d) }))
+        .sort((a: { label: string }, b: { label: string }) => {
+          if (typeof a.label === "string" && typeof b.label === "string")
+            return a.label.localeCompare(b.label)
           else return a.label < b.label ? -1 : 1
         }),
-      onSelect: submitLinkExistingRelative
+      onSelect: submitLinkExistingRelative,
     }
     return obj
   }
@@ -174,15 +187,19 @@ export function formCreatorSetup({
 
   function submitLinkExistingRelative(e: Event) {
     const link_rel_id = (e.target as HTMLSelectElement).value
-    postSubmitHandler({link_rel_id: link_rel_id})
+    postSubmitHandler({ link_rel_id: link_rel_id })
   }
 
   function deletePersonWithPostSubmit() {
     if (onDelete) {
-      onDelete(datum, () => deletePerson!(), () => postSubmitHandler({delete: true}))
+      onDelete(
+        datum,
+        () => deletePerson!(),
+        () => postSubmitHandler({ delete: true }),
+      )
     } else {
       deletePerson!()
-      postSubmitHandler({delete: true})
+      postSubmitHandler({ delete: true })
     }
   }
 }

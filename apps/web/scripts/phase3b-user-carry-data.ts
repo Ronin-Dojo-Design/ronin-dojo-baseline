@@ -26,16 +26,15 @@ import { PHASE3_IDENTITY_SATELLITE_USER_FKS } from "./phase3-identity-satellites
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const db = new PrismaClient({ adapter })
 
-const IDENTITY_ID_TABLES = [
-  "Passport",
-  "DirectoryProfile",
-  "LineageNode",
-  "Affiliation",
-  "RankAward",
-  "FightRecord",
-] as const
+const DEFAULT_CUID2_PATTERN = "^[a-z][a-z0-9]{23}$"
+const FULL_REWRITE_TRANSACTION_TIMEOUT_MS = 600_000
 
 type Tx = Parameters<Parameters<typeof db.$transaction>[0]>[0]
+
+type StringPrimaryKey = {
+  table: string
+  column: string
+}
 
 function requireDestructiveFlag() {
   if (process.env.PHASE3B_ALLOW_DESTRUCTIVE !== "1") {
@@ -154,21 +153,114 @@ async function assertSatellitePassportIds(tx: Tx) {
   }
 }
 
-async function rewriteIdentityPrimaryKeys(tx: Tx): Promise<Record<string, number>> {
-  const counts: Record<string, number> = {}
+async function listSingleColumnStringPrimaryKeys(tx: Tx): Promise<StringPrimaryKey[]> {
+  return tx.$queryRawUnsafe<StringPrimaryKey[]>(
+    `WITH pk_columns AS (
+       SELECT
+         tc.table_name,
+         kcu.column_name,
+         COUNT(*) OVER (PARTITION BY tc.table_name, tc.constraint_name) AS pk_column_count
+       FROM information_schema.table_constraints tc
+       JOIN information_schema.key_column_usage kcu
+         ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+       WHERE tc.table_schema = 'public'
+         AND tc.constraint_type = 'PRIMARY KEY'
+         AND tc.table_name <> '_prisma_migrations'
+     )
+     SELECT pk.table_name AS table, pk.column_name AS column
+     FROM pk_columns pk
+     JOIN information_schema.columns c
+       ON c.table_schema = 'public'
+      AND c.table_name = pk.table_name
+      AND c.column_name = pk.column_name
+     WHERE pk.pk_column_count = 1
+       AND c.data_type IN ('text', 'character varying', 'character')
+     ORDER BY pk.table_name`,
+  )
+}
 
-  for (const table of IDENTITY_ID_TABLES) {
-    const rows = await tx.$queryRawUnsafe<Array<{ id: string }>>(
-      `SELECT "id" FROM "${table}" ORDER BY "id"`,
+async function assertStringPrimaryKeyReferencesCascade(tx: Tx, primaryKeys: StringPrimaryKey[]) {
+  await tx.$executeRawUnsafe(
+    `CREATE TEMP TABLE phase3b_string_primary_keys (
+       table_name text NOT NULL,
+       column_name text NOT NULL,
+       PRIMARY KEY (table_name, column_name)
+     ) ON COMMIT DROP`,
+  )
+  await tx.$executeRawUnsafe(
+    `INSERT INTO phase3b_string_primary_keys (table_name, column_name)
+     SELECT table_name, column_name
+     FROM jsonb_to_recordset($1::jsonb) AS x(table_name text, column_name text)`,
+    JSON.stringify(primaryKeys.map(pk => ({ table_name: pk.table, column_name: pk.column }))),
+  )
+
+  const failures = await tx.$queryRawUnsafe<Array<{ message: string }>>(
+    `SELECT
+       tc.table_name || '.' || kcu.column_name || ' -> ' ||
+       ccu.table_name || '.' || ccu.column_name || ' has ON UPDATE ' || rc.update_rule AS message
+     FROM information_schema.referential_constraints rc
+     JOIN information_schema.table_constraints tc
+       ON tc.constraint_name = rc.constraint_name
+      AND tc.constraint_schema = rc.constraint_schema
+     JOIN information_schema.key_column_usage kcu
+       ON kcu.constraint_name = tc.constraint_name
+      AND kcu.constraint_schema = tc.constraint_schema
+     JOIN information_schema.constraint_column_usage ccu
+       ON ccu.constraint_name = rc.unique_constraint_name
+      AND ccu.constraint_schema = rc.unique_constraint_schema
+     JOIN phase3b_string_primary_keys pk
+       ON pk.table_name = ccu.table_name
+      AND pk.column_name = ccu.column_name
+     WHERE tc.constraint_type = 'FOREIGN KEY'
+       AND rc.update_rule <> 'CASCADE'
+     ORDER BY tc.table_name, kcu.column_name`,
+  )
+
+  if (failures.length > 0) {
+    throw new Error(
+      `Cannot safely rewrite primary keys without ON UPDATE CASCADE: ${failures.map(f => f.message).join("; ")}`,
     )
-    for (const row of rows) {
+  }
+}
+
+async function rewriteStringPrimaryKeysToCuid2(tx: Tx): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {}
+  const primaryKeys = await listSingleColumnStringPrimaryKeys(tx)
+
+  await assertStringPrimaryKeyReferencesCascade(tx, primaryKeys)
+  await tx.$executeRawUnsafe(
+    `CREATE TEMP TABLE phase3b_cuid2_rewrite_map (
+       old_id text PRIMARY KEY,
+       new_id text NOT NULL UNIQUE
+     ) ON COMMIT DROP`,
+  )
+
+  for (const { table, column } of primaryKeys) {
+    const rows = await tx.$queryRawUnsafe<Array<{ id: string }>>(
+      `SELECT "${column}" AS id
+       FROM "${table}"
+       WHERE "${column}" !~ $1
+       ORDER BY "${column}"`,
+      DEFAULT_CUID2_PATTERN,
+    )
+    if (rows.length > 0) {
+      const rewriteMap = rows.map(row => ({ old_id: row.id, new_id: createId() }))
+      await tx.$executeRawUnsafe(`TRUNCATE phase3b_cuid2_rewrite_map`)
       await tx.$executeRawUnsafe(
-        `UPDATE "${table}" SET "id" = $1 WHERE "id" = $2`,
-        createId(),
-        row.id,
+        `INSERT INTO phase3b_cuid2_rewrite_map (old_id, new_id)
+         SELECT old_id, new_id
+         FROM jsonb_to_recordset($1::jsonb) AS x(old_id text, new_id text)`,
+        JSON.stringify(rewriteMap),
+      )
+      await tx.$executeRawUnsafe(
+        `UPDATE "${table}" target
+         SET "${column}" = rewrite.new_id
+         FROM phase3b_cuid2_rewrite_map rewrite
+         WHERE target."${column}" = rewrite.old_id`,
       )
     }
-    counts[table] = rows.length
+    counts[`${table}.${column}`] = rows.length
   }
 
   return counts
@@ -299,8 +391,8 @@ async function main() {
       console.log("satellite backfill:", backfilled)
       await assertSatellitePassportIds(tx)
 
-      const rewritten = await rewriteIdentityPrimaryKeys(tx)
-      console.log("cuid2 identity PK rewrite:", rewritten)
+      const rewritten = await rewriteStringPrimaryKeysToCuid2(tx)
+      console.log("cuid2 string PK rewrite:", rewritten)
 
       const deleted = await detachAndDeletePlaceholderUsers(tx)
       console.log(`hard-deleted placeholder Users: ${deleted}`)
@@ -308,7 +400,7 @@ async function main() {
       await assertBrianAdminSurvives(tx)
       await printBeforeAfter("after", tx)
     },
-    { timeout: 120_000 },
+    { timeout: FULL_REWRITE_TRANSACTION_TIMEOUT_MS },
   )
 }
 

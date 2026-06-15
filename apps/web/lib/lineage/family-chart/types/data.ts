@@ -1,15 +1,15 @@
 export interface Datum {
-  id: string;
+  id: string
   data: {
-    gender: 'M' | 'F';
-    [key: string]: any;
-  };
+    gender: "M" | "F"
+    [key: string]: any
+  }
   rels: {
-    parents: string[];
-    spouses: string[];
-    children: string[];
-  };
-  [key: string]: any;
+    parents: string[]
+    spouses: string[]
+    children: string[]
+  }
+  [key: string]: any
 }
 
-export type Data = Datum[];
+export type Data = Datum[]

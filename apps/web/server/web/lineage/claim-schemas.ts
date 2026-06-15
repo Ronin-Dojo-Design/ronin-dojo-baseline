@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 /**
  * Zod schemas for lineage claim actions.
@@ -17,8 +18,8 @@ const lineageClaimEvidenceItemSchema = z.object({
 })
 
 export const submitLineageClaimSchema = z.object({
-  treeId: z.string().cuid(),
-  nodeId: z.string().cuid(),
+  treeId: databaseIdSchema,
+  nodeId: databaseIdSchema,
   relationship: lineageClaimRelationship,
   claimantNote: z.string().max(2000).optional(),
   evidence: z.array(lineageClaimEvidenceItemSchema).max(10).optional(),

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 /**
  * Zod schemas for the generic member/org profile-claim flow (SESSION_0354).
@@ -25,7 +26,7 @@ const profileClaimRelationship = z.enum([
 export const submitProfileClaimSchema = z.object({
   subjectType: profileClaimSubjectType,
   /** DirectoryProfile id (PERSON) or Organization id (ORGANIZATION). */
-  subjectId: z.string().cuid(),
+  subjectId: databaseIdSchema,
   relationship: profileClaimRelationship,
   claimantNote: z.string().max(2000).optional(),
 })

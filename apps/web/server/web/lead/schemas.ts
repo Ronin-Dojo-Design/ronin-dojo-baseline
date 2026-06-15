@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { databaseIdSchema } from "~/lib/validation/id"
 
 const LeadSource = z.enum([
   "WEBSITE",
@@ -12,8 +13,8 @@ const LeadSource = z.enum([
 ])
 
 export const createLeadSchema = z.object({
-  organizationId: z.string().cuid(),
-  programId: z.string().cuid().optional(),
+  organizationId: databaseIdSchema,
+  programId: databaseIdSchema.optional(),
   source: LeadSource.default("WEBSITE"),
   firstName: z.string().trim().min(1).max(120),
   lastName: z.string().trim().max(120).optional(),
@@ -24,16 +25,16 @@ export const createLeadSchema = z.object({
 })
 
 export const bookTrialSchema = z.object({
-  leadId: z.string().cuid(),
+  leadId: databaseIdSchema,
   trialBookedAt: z.coerce.date().optional(),
 })
 
 export const completeTrialSchema = z.object({
-  leadId: z.string().cuid(),
+  leadId: databaseIdSchema,
 })
 
 export const convertLeadSchema = z.object({
-  leadId: z.string().cuid(),
-  disciplineId: z.string().cuid().optional(),
-  waiverIds: z.array(z.string().cuid()).default([]),
+  leadId: databaseIdSchema,
+  disciplineId: databaseIdSchema.optional(),
+  waiverIds: z.array(databaseIdSchema).default([]),
 })

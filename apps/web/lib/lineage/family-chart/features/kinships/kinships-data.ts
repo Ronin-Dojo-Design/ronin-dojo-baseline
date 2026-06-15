@@ -1,30 +1,39 @@
 import * as d3 from "d3"
 import { Datum, Data } from "../../types/data"
-import { Kinships, findSameAncestor } from "./calculate-kinships";
+import { Kinships, findSameAncestor } from "./calculate-kinships"
 
 export interface DatumKinship extends Datum {
   kinship?: string
 }
 
-export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], data_stash: Data, kinships: Kinships) {
-  let in_law_id: Datum['id'] | undefined;
+export function getKinshipsDataStash(
+  main_id: Datum["id"],
+  rel_id: Datum["id"],
+  data_stash: Data,
+  kinships: Kinships,
+) {
+  let in_law_id: Datum["id"] | undefined
   const kinship = kinships[rel_id].toLowerCase()
-  if (kinship.includes('in-law')) {
+  if (kinship.includes("in-law")) {
     in_law_id = rel_id
     const datum = data_stash.find(d => d.id === in_law_id)!
-    if (kinship.includes('sister') || kinship.includes('brother')) {
+    if (kinship.includes("sister") || kinship.includes("brother")) {
       rel_id = main_id
     } else {
-      rel_id = datum.rels.spouses?.find(d_id => kinships[d_id] && !kinships[d_id].includes('in-law'))!
+      rel_id = datum.rels.spouses?.find(
+        d_id => kinships[d_id] && !kinships[d_id].includes("in-law"),
+      )!
     }
   }
 
   const same_ancestors = findSameAncestor(main_id, rel_id, data_stash)
   if (!same_ancestors) return console.error(`${rel_id} not found in main_ancestry`)
 
-  const same_ancestor_id = same_ancestors.is_ancestor ? same_ancestors.found : same_ancestors.found[0]
+  const same_ancestor_id = same_ancestors.is_ancestor
+    ? same_ancestors.found
+    : same_ancestors.found[0]
   const same_ancestor = data_stash.find(d => d.id === same_ancestor_id)!
-  
+
   const root = d3.hierarchy<Datum>(same_ancestor, hierarchyGetterChildren)
   const same_ancestor_progeny = root.descendants().map(d => d.data.id)
   const main_ancestry = getCleanAncestry(main_id, same_ancestor_progeny)
@@ -39,19 +48,19 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
       rels: {
         parents: [],
         spouses: [],
-        children: []
-      }
+        children: [],
+      },
     }
     if (d.children && d.children.length > 0) datum.rels.children = d.children.map(c => c.data.id)
     return datum
   })
 
-  if (kinship_data_stash.length > 0 && !same_ancestors.is_ancestor && !same_ancestors.is_half_kin) addRootSpouse(kinship_data_stash)
+  if (kinship_data_stash.length > 0 && !same_ancestors.is_ancestor && !same_ancestors.is_half_kin)
+    addRootSpouse(kinship_data_stash)
   if (in_law_id) addInLawConnection(kinship_data_stash)
 
   return kinship_data_stash
 
-  
   function loopClean(tree_datum: d3.HierarchyNode<Datum>) {
     tree_datum.children = (tree_datum.children || []).filter(child => {
       if (main_ancestry.includes(child.data.id)) return true
@@ -63,16 +72,18 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
   }
 
   function hierarchyGetterChildren(d: Datum) {
-    const children = [...(d.rels.children || [])].map(id => data_stash.find(d => d.id === id)!).filter(d => d)
+    const children = [...(d.rels.children || [])]
+      .map(id => data_stash.find(d => d.id === id)!)
+      .filter(d => d)
     return children
   }
 
-  function getCleanAncestry(d_id: Datum['id'], same_ancestor_progeny: Datum['id'][]) {
+  function getCleanAncestry(d_id: Datum["id"], same_ancestor_progeny: Datum["id"][]) {
     const ancestry = [d_id]
     loopAdd(d_id)
     return ancestry
 
-    function loopAdd(d_id: Datum['id']) {
+    function loopAdd(d_id: Datum["id"]) {
       const d = data_stash.find(d => d.id === d_id)!
       const rels = d.rels
       rels.parents.forEach(p_id => {
@@ -87,7 +98,10 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
   function addRootSpouse(kinship_data_stash: DatumKinship[]) {
     const datum = kinship_data_stash[0]
     if (!same_ancestors) return console.error(`${rel_id} not found in main_ancestry`)
-    const spouse_id = same_ancestor_id === same_ancestors.found[0] ? same_ancestors.found[1] : same_ancestors.found[0]
+    const spouse_id =
+      same_ancestor_id === same_ancestors.found[0]
+        ? same_ancestors.found[1]
+        : same_ancestors.found[0]
     datum.rels.spouses = [spouse_id]
     const spouse = data_stash.find(d => d.id === spouse_id)!
     const spouse_datum = {
@@ -97,12 +111,12 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
       rels: {
         spouses: [datum.id],
         children: datum.rels.children,
-        parents: []
-      }
+        parents: [],
+      },
     }
-    kinship_data_stash.push(spouse_datum);
+    kinship_data_stash.push(spouse_datum)
 
-    (datum.rels.children || []).forEach(child_id => {
+    ;(datum.rels.children || []).forEach(child_id => {
       const child = data_stash.find(d => d.id === child_id)!
       const kinship_child = kinship_data_stash.find(d => d.id === child_id)!
       kinship_child.rels.parents = [...child.rels.parents]
@@ -110,7 +124,7 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
   }
 
   function addInLawConnection(kinship_data_stash: DatumKinship[]) {
-    if (kinship.includes('sister') || kinship.includes('brother')) {
+    if (kinship.includes("sister") || kinship.includes("brother")) {
       addInLawSibling(kinship_data_stash)
     } else {
       addInLawSpouse(kinship_data_stash)
@@ -130,10 +144,10 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
       rels: {
         spouses: [datum.id],
         children: [],
-        parents: []
-      }
+        parents: [],
+      },
     }
-    kinship_data_stash.push(spouse_datum);
+    kinship_data_stash.push(spouse_datum)
   }
 
   function addInLawSibling(kinship_data_stash: DatumKinship[]) {
@@ -147,13 +161,15 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
       rels: {
         spouses: [],
         children: [],
-        parents: []
-      }
+        parents: [],
+      },
     })
 
-    const siblings: Datum['id'][] = []
-    in_law_datum.rels.parents.forEach(p_id => (getD(p_id)!.rels.children || []).forEach(d_id => siblings.push(d_id)))
-    
+    const siblings: Datum["id"][] = []
+    in_law_datum.rels.parents.forEach(p_id =>
+      (getD(p_id)!.rels.children || []).forEach(d_id => siblings.push(d_id)),
+    )
+
     const spouse_id = getD(rel_id)!.rels.spouses?.find(d_id => siblings.includes(d_id))
     datum.rels.spouses = [spouse_id!]
     const spouse = getD(spouse_id!)!
@@ -164,14 +180,19 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
       rels: {
         spouses: [datum.id],
         children: [],
-        parents: []
-      }
+        parents: [],
+      },
     }
-    kinship_data_stash.push(spouse_datum);
+    kinship_data_stash.push(spouse_datum)
 
     in_law_datum.rels.parents.forEach(p_id => {
       const parent = getD(p_id)!
-      const kinship_label = parent.data.gender === 'M' ? 'Father-in-law' : parent.data.gender === 'F' ? 'Mother-in-law' : 'Parent-in-law'
+      const kinship_label =
+        parent.data.gender === "M"
+          ? "Father-in-law"
+          : parent.data.gender === "F"
+            ? "Mother-in-law"
+            : "Parent-in-law"
       const parent_datum: DatumKinship = {
         id: parent.id,
         data: JSON.parse(JSON.stringify(parent.data)),
@@ -179,16 +200,16 @@ export function getKinshipsDataStash(main_id: Datum['id'], rel_id: Datum['id'], 
         rels: {
           spouses: [],
           children: [spouse_id!, in_law_id!],
-          parents: []
-        }
+          parents: [],
+        },
       }
       const p2_id = in_law_datum.rels.parents.find(p_id => p_id !== p_id)
       if (p2_id) parent_datum.rels.parents.push(p2_id)
-      kinship_data_stash.unshift(parent_datum);
+      kinship_data_stash.unshift(parent_datum)
     })
   }
 
-  function getD(d_id: Datum['id']) {
+  function getD(d_id: Datum["id"]) {
     return data_stash.find(d => d.id === d_id)!
-  } 
+  }
 }

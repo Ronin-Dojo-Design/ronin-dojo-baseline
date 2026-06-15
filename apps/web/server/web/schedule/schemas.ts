@@ -1,10 +1,11 @@
 import { z } from "zod"
+import { databaseIdSchema, optionalDatabaseIdSchema } from "~/lib/validation/id"
 
 const ScheduleStatus = z.enum(["ACTIVE", "PAUSED", "ARCHIVED"])
 
 const DayOfWeek = z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"])
 
-const optionalCuid = z.union([z.literal(""), z.literal("none"), z.string().cuid()]).optional()
+const optionalCuid = optionalDatabaseIdSchema
 
 const HHMM_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -36,8 +37,8 @@ const timezoneSchema = z
 export const saveScheduleSchema = z
   .object({
     id: optionalCuid,
-    organizationId: z.string().cuid(),
-    programId: z.string().cuid(),
+    organizationId: databaseIdSchema,
+    programId: databaseIdSchema,
     disciplineId: optionalCuid,
     name: z.string().trim().min(1, "Name is required").max(200),
     description: z.string().trim().max(1000).optional(),
@@ -61,26 +62,26 @@ export const saveScheduleSchema = z
   )
 
 export const archiveScheduleSchema = z.object({
-  id: z.string().cuid(),
+  id: databaseIdSchema,
 })
 
 export const assignInstructorSchema = z.object({
-  classScheduleId: z.string().cuid(),
-  userId: z.string().cuid(),
+  classScheduleId: databaseIdSchema,
+  userId: databaseIdSchema,
   displayTitle: z.string().trim().max(200).optional(),
   isPrimary: z.boolean().default(false),
 })
 
 export const unassignInstructorSchema = z.object({
-  assignmentId: z.string().cuid(),
+  assignmentId: databaseIdSchema,
 })
 
 export const setPrimaryInstructorSchema = z.object({
-  assignmentId: z.string().cuid(),
+  assignmentId: databaseIdSchema,
 })
 
 export const materializeScheduleSchema = z.object({
-  id: z.string().cuid(),
+  id: databaseIdSchema,
   /** Optional override; defaults to today (UTC) -> +90d. */
   windowStart: z.coerce.date().optional(),
   windowEnd: z.coerce.date().optional(),
