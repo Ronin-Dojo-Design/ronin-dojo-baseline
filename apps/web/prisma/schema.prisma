@@ -269,6 +269,12 @@ model Category {
   // Implicit relation
   tools Tool[]
 
+  // @added SESSION_0396 — shared listing taxonomy across the directory entities (Tool→Listing parity).
+  techniques    Technique[]
+  organizations Organization[]
+  passports     Passport[]
+  posts         Post[]
+
   // Indexes
   @@index([slug])
 }
@@ -283,6 +289,12 @@ model Tag {
   // Relations
   tools        Tool[]
   contentAtoms ContentAtom[]
+
+  // @added SESSION_0396 — shared listing taxonomy across the directory entities (Tool→Listing parity).
+  techniques    Technique[]
+  organizations Organization[]
+  passports     Passport[]
+  posts         Post[]
 
   // Indexes
   @@index([name])
@@ -979,6 +991,11 @@ model Passport {
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String? @unique
 
+  // @added SESSION_0396 — shared listing taxonomy (Tool→Listing parity). Person-level
+  // categories/tags for /members/categories/[slug]; Passport stays the identity SoT (ADR 0025).
+  categories Category[]
+  tags       Tag[]
+
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4 resolved: all 8 FK columns now have Prisma relations)
   // @wired   server/admin/media/actions.ts (attachMedia/detachMedia), server/admin/media/queries.ts
@@ -1083,6 +1100,11 @@ model Organization {
   studentLists         StudentList[]
   certificateTemplates CertificateTemplate[]
   lineageTrees         LineageTree[]
+
+  // @added SESSION_0396 — shared listing taxonomy (Tool→Listing parity). Powers
+  // /schools/categories/[slug] + /schools/tags/[slug] via the existing Category/Tag admin.
+  categories Category[]
+  tags       Tag[]
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4)
   mediaAttachments     MediaAttachment[]
@@ -3421,6 +3443,12 @@ model Technique {
   progress           TechniqueProgress[]
   gamificationEvents GamificationEvent[]
 
+  // @added SESSION_0396 — shared listing taxonomy (Tool→Listing parity, ADR 0013 superseded).
+  // Relational Category/Tag (slug-based directory taxonomy) — distinct from the `category`
+  // TechniqueCategory enum above (positional). Powers /techniques/categories/[slug] + /tags/[slug].
+  categories Category[]
+  tags       Tag[]
+
   @@unique([brand, organizationId, slug])
   @@index([brand, disciplineId])
   @@index([position, category])
@@ -3777,6 +3805,10 @@ model Post {
   author   User   @relation(fields: [authorId], references: [id])
   authorId String
   tools    Tool[]
+
+  // @added SESSION_0396 — shared listing taxonomy (Tool→Listing parity).
+  categories Category[]
+  tags       Tag[]
 
   @@index([brand, slug])
   @@index([authorId])

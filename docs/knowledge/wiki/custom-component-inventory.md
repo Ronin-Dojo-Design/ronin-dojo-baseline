@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-16
-last_agent: claude-opus-4-8-session-0386
+last_agent: claude-session-0396
 pairs_with:
   - docs/sprints/SESSION_0386.md
   - docs/sprints/SESSION_0384.md
@@ -360,6 +360,20 @@ Mirrors the lineage claim flow (request → admin review queue → approve) for 
 | `Sheet` (+ `SheetTrigger`/`Content`/`Header`/`Footer`/`Title`/`Description`/`Close`) | `apps/web/components/common/sheet.tsx` | `Dialog.Root` props; `SheetContent`: `side?: "left"\|"right"` (default right) | SESSION_0366 (D8 cutover-arm nav lane): side-anchored full-height overlay panel on Base UI Dialog — the side-panel sibling of `drawer.tsx` (bottom-sheet). Same idiom: `data-slot` attributes, tw-animate slide classes, snappy 300ms entrance via `--ease-snappy`, **mandatory `motion-reduce:animate-none`**, safe-area inset padding. Use a Sheet for nav/filter panels, a Drawer for transient content. Default `w-80 max-w-[85vw]`; override width via className. |
 | `NavSheet` | `apps/web/components/web/nav/nav-sheet.tsx` | `open`, `onOpenChange` (controlled by `Header`) | SESSION_0366: right slide-in (280px per SESSION_0361 §Q4 measured spec) — account header (guest: Guest + sign-in tagline + Create Account/Sign In stacked; authed: avatar/name/email + Dashboard + Admin-panel links + red Sign Out via `UserLogout`), icon primary nav from `navigation.*` i18n keys (brand-neutral), footer = ThemeSwitcher + Join Legacy CTA. Closes itself on pathname change; Escape/backdrop/focus-trap come from Base UI. Header hamburger triggers it at ALL viewport widths (the old full-screen mobile overlay nav is deleted; desktop inline nav retained). |
 | `DirectoryFilterSheet` | `apps/web/components/web/directory/directory-filter-sheet.tsx` | `options: DirectoryFilterOptions` | SESSION_0366: left slide-in (320px) contextual filter panel for `/directory` — hosts the existing `DirectoryFilters` inside the same `FiltersProvider` nuqs state (panel and listing stay in sync; no new filter semantics). Trigger button shows an active-filter dot when `!isDefault`; footer Reset calls `updateFilters(null)`. Must render inside `FiltersProvider` (it consumes `useFilters`). |
+
+---
+
+## 9. Shared Listing template — `components/web/listing/`
+
+The **one card** every directory entity renders through ([ADR 0028](../../architecture/decisions/0028-shared-listing-card-and-taxonomy.md), Tool→Listing parity). Lifted from the L1 `ToolCard` markup with the tool-only values turned into slots; `tool-card.tsx` is now a thin adapter wiring `ToolMany` into it. Techniques, directory people/schools/lineage all compose it.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `ListingCard` | `apps/web/components/web/listing/listing-card.tsx` | `href`, `name`, `media?`, `headerBadges?`, `tagline?`, `categories?`, `statusBadges?`, `description?`, `viewLabel?` (="View"), `save?` | SESSION_0396: canonical listing card — `Card`>`CardHeader`(media + title + badges)>`Stack`(tagline + category badges + status)>hover-description>`CardFooter`(View button + save slot). Title uses `min-w-0 flex-1 truncate text-nowrap` — `text-nowrap` overrides the `H4` variant's `text-balance`, which otherwise defeats `truncate` on long names (both set `text-wrap-mode`). Hover-fade applies only when `description` is present (so description-less cards don't blank on hover). |
+| `ListingCardSkeleton` | `apps/web/components/web/listing/listing-card.tsx` | — | Loading skeleton (favicon-less); reused by `TechniqueCardSkeleton`. |
+| `ListingSaveButton` | `apps/web/components/web/listing/listing-save-button.tsx` | `label?`, `showLabel?` | SESSION_0396: generic sign-in-gated Save affordance for entities not yet wired to the tool-only `Bookmark` model — links to `/auth/login?next=`. Persisted saving awaits the Bookmark-model generalization (deferred, ADR 0028). |
+| `ToolCard` (adapter) | `apps/web/components/web/tools/tool-card.tsx` | `tool: ToolMany` | SESSION_0396: **now a thin adapter over `ListingCard`** — maps favicon / `/${slug}` href / verified + tier / status badges / tool bookmark into the slots. Tools render byte-identically and keep the "View Listing" label; the live Tool directory now renders through the shared card. |
+| `FacetResultCard` | `apps/web/components/web/directory/facet-result-card.tsx` | `result: DirectoryFacetResult` | SESSION_0396: rewired to render through `ListingCard` (avatar media, trust/claim header badges, tag badges, View + Save). Used by `/directory`, `/directory/profiles`, `/directory/schools`. |
 
 ---
 

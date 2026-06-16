@@ -21,7 +21,11 @@ backlinks:
 
 ## Status
 
-**Accepted** — 2026-05-04
+**Accepted** — 2026-05-04. **Partially superseded by [ADR 0028](0028-shared-listing-card-and-taxonomy.md)**
+(SESSION_0396): the "No shared generic abstraction" decision is reversed (one shared `ListingCard`; `ToolCard`
+is now a thin adapter over it), and the "Tool model as dead code until pre-prod cleanup" framing is corrected
+(Tool/Category/Tag are the retained reference engine + shared taxonomy). The structural-pattern repurposing
+below still holds.
 
 ## Context
 

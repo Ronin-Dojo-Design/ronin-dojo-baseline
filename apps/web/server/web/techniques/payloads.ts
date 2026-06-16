@@ -63,6 +63,8 @@ export const techniqueManyPayload = {
   requiresPartner: true,
   sortOrder: true,
   discipline: techniqueDisciplinePayload,
+  // @added SESSION_0396 — shared listing taxonomy badges (Tool→Listing parity).
+  categories: { select: { name: true, slug: true } },
 } satisfies Prisma.TechniqueSelect
 
 export type TechniqueOne = Prisma.TechniqueGetPayload<{ select: typeof techniqueOnePayload }>
