@@ -364,7 +364,8 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
       new Date(`${updatedPromotionDate}T00:00:00.000Z`).toISOString(),
     )
 
-    await page.goto(`/lineage/${fixture.treeSlug}`)
+    // SESSION_0393: explorer is the default view now; this asserts the board node-card.
+    await page.goto(`/lineage/${fixture.treeSlug}?view=board`)
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
     })

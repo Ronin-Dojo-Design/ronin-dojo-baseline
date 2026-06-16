@@ -64,7 +64,8 @@ test.describe("Lineage public rank-redaction E2E", () => {
 
     try {
       await createAuthenticatedSession(page, fixture.viewerUserId)
-      await page.goto(`/lineage/${fixture.treeSlug}`)
+      // SESSION_0393: explorer is the default view now; pin to the board surface this spec asserts.
+      await page.goto(`/lineage/${fixture.treeSlug}?view=board`)
 
       await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
         timeout: 30_000,
@@ -135,7 +136,8 @@ test.describe("Lineage public rank-redaction E2E", () => {
 
     try {
       await createAuthenticatedSession(page, fixture.viewerUserId)
-      await page.goto(`/lineage/${fixture.treeSlug}`)
+      // SESSION_0393: explorer is the default view now; pin to the board surface this spec asserts.
+      await page.goto(`/lineage/${fixture.treeSlug}?view=board`)
       await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
         timeout: 30_000,
       })

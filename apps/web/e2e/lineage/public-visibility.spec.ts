@@ -97,7 +97,10 @@ test.describe("Lineage public visibility E2E", () => {
   test("anonymous detail renders public members and opens the profile drawer without hidden leakage", async ({
     page,
   }) => {
-    await page.goto(`/lineage/${fixture.treeSlug}`)
+    // SESSION_0393: the cinematic explorer is now the default lineage view; this spec
+    // asserts the board/tree surface + its node-card buttons, so pin it to ?view=board.
+    // (Privacy is enforced server-side on the shared payload, so it holds in both views.)
+    await page.goto(`/lineage/${fixture.treeSlug}?view=board`)
 
     await expect(page.getByRole("heading", { name: fixture.treeName, level: 1 })).toBeVisible({
       timeout: 30_000,
