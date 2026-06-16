@@ -51,8 +51,6 @@ export function derivePersonName(input: {
 
 /** Raised when an account is already attached to a *different* Passport (the `userId @unique` guard). */
 export class ClaimantHasPassportError extends Error {
-  readonly code = "CLAIMANT_HAS_PASSPORT" as const
-
   constructor(
     readonly userId: string,
     readonly existingPassportId: string,

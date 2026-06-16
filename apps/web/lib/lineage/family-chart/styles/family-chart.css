@@ -910,3 +910,61 @@
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
+/* ===========================================================================
+   SESSION_0394 — Cinematic explorer brand polish
+   ===========================================================================*/
+
+/* Belt-graphic shimmer — a single brand specular sweep across the belt swatch.
+   Used by both the React <BeltSwatch variant="bar" shimmer /> (focus panel) and
+   the d3 card belt SVG (inline HTML). Self-disables under reduced motion so it
+   never animates against the operator's OS preference. */
+@keyframes bblBeltShimmer {
+  0% {
+    transform: translateX(-14px) skewX(-18deg);
+  }
+  60% {
+    transform: translateX(50px) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(50px) skewX(-18deg);
+  }
+}
+.belt-shimmer {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translateX(-14px) skewX(-18deg);
+  animation: bblBeltShimmer 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .belt-shimmer {
+    animation: none;
+    transform: translateX(20px) skewX(-18deg);
+    opacity: 0.22;
+  }
+}
+
+/* Selection-driven focus emphasis. The family-chart engine re-creates card HTML
+   on every updateTree, so this delivers a robust STATIC composition cue — the
+   focal practitioner stays dominant while siblings recede — plus a best-effort
+   ease for any card element that persists across an update. Disabled under
+   reduced motion (the engine already collapses transition_time to 0). */
+.f3 [data-bbl-card] {
+  transition:
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.38s ease,
+    filter 0.38s ease;
+}
+.f3 [data-bbl-recede] {
+  opacity: 0.62;
+  transform: scale(0.965);
+  filter: saturate(0.85);
+}
+.f3 [data-bbl-focal] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .f3 [data-bbl-card] {
+    transition: none;
+  }
+}

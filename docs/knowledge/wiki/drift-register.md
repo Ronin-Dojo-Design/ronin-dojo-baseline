@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-08
+updated: 2026-06-16
 last_agent: claude-session-0357
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
@@ -18,6 +18,14 @@ backlinks:
 Track contradictions, stale claims, and unresolved tensions between sources. Each entry stays open until resolved by a session or ADR.
 
 ## Entries
+
+### D-DRIFT-0394-1 — Cinematic explorer ignores promotion-date cohort grouping
+
+- **Source A:** `LineageVisualGroup` cohort model (`schema.prisma:2631`, `groupType: PROMOTION_DATE`) — the board view (`lineage-tree-board.tsx`) renders members grouped into promotion-date cohort bands under each parent.
+- **Source B:** the cinematic explorer (`lineage-view-a-island.tsx` via `to-family-chart-data.ts`) — the vendored family-chart engine has no cohort concept and `toFamilyChartData` drops `member.visualGroupId`, so all of a parent's descendants render in one flat row.
+- **Decision:** **B — build a custom cohort-timeline layout and retire family-chart for View A** (operator, SESSION_0394 close; no prototype). Recorded as `ADR 0027` (supersedes `ADR 0026`).
+- **Status:** decided — build pending
+- **Found in:** SESSION_0394 (operator browser review). **Build:** SESSION_0395.
 
 ### D-001 — Wiki log stale after SESSION_0007
 

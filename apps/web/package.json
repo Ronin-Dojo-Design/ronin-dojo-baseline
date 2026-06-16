@@ -19,7 +19,6 @@
     "db:push": "prisma db push --skip-generate",
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
-    "phase3b:user-carry": "PHASE3B_ALLOW_DESTRUCTIVE=1 bun run scripts/phase3b-user-carry-data.ts",
     "prebuild": "bun run db:migrate deploy",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "postinstall": "bun run db:generate",

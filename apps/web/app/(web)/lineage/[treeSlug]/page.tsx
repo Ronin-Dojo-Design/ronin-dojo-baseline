@@ -15,6 +15,8 @@ import { Section } from "~/components/web/ui/section"
 import { hasLineageAdminAccess } from "~/components/admin/auth-hoc"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
+import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
+import { cx } from "~/lib/utils"
 import { rsc } from "~/lib/orpc-server"
 import { getPageMetadata } from "~/lib/pages"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
@@ -218,16 +220,21 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
       <Section>
         <Section.Content>
           {isExploreView ? (
-            <LineageViewAIsland
-              members={result.members}
-              relationships={result.members.flatMap(m => m.node.relationshipsTo)}
-              defaultRootMemberId={result.defaultRootMemberId}
-              profilesById={profilesById}
-              treeSlug={treeSlug}
-              isTreeClaimable={result.tree.isClaimable}
-              initialFocusId={focus ?? null}
-              canManage={canManage}
-            />
+            // Brand type seam (SESSION_0394): the explorer inherits BBL Poppins
+            // (headings) + Inter (body) via these font vars; the d3 cards pick up
+            // the heading font through `family-chart.css`'s `font-family: inherit`.
+            <div className={cx(bblHeadingFont.variable, bblBodyFont.variable)}>
+              <LineageViewAIsland
+                members={result.members}
+                relationships={result.members.flatMap(m => m.node.relationshipsTo)}
+                defaultRootMemberId={result.defaultRootMemberId}
+                profilesById={profilesById}
+                treeSlug={treeSlug}
+                isTreeClaimable={result.tree.isClaimable}
+                initialFocusId={focus ?? null}
+                canManage={canManage}
+              />
+            </div>
           ) : (
             <LineageTreeBoard
               members={result.members}

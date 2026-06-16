@@ -1,5 +1,4 @@
 import { BarChart3Icon, CheckIcon, SwordsIcon, TrophyIcon } from "lucide-react"
-import { Inter, Poppins } from "next/font/google"
 import type { ComponentProps, ReactNode } from "react"
 import {
   Accordion,
@@ -45,16 +44,7 @@ import {
   videoContent,
 } from "./bbl-landing-content"
 import { BblReveal } from "./bbl-reveal"
-
-// Legacy BBL type system (BlackBeltLegacyLanding.jsx): Poppins headings
-// (italic extrabold uppercase) + Inter body. Scoped to this landing via vars.
-const headingFont = Poppins({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  style: ["normal", "italic"],
-  variable: "--font-bbl-heading",
-})
-const bodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-body" })
+import { bblBodyFont as bodyFont, bblHeadingFont as headingFont } from "~/lib/fonts"
 
 /**
  * Black Belt Legacy landing page — content/IA from the legacy

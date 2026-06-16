@@ -4,7 +4,7 @@ slug: phase3-user-carry-preflight
 type: design
 status: active
 created: 2026-06-12
-updated: 2026-06-15
+updated: 2026-06-16
 last_agent: claude-session-0392
 author: Doug + Brian
 pairs_with:
@@ -444,7 +444,8 @@ related satellite User relations before the physical drop can compile and render
 - The destructive drop ships as **one self-sufficient Prisma migration**
   `20260615130000_phase3c_drop_satellite_user_columns` (in-SQL carry → DDL drop → FK re-root Cascade →
   detach+delete placeholders), idempotent/no-op on empty tables. **This supersedes the staged
-  `scripts/phase3b-user-carry-data.ts` + `phase3b-drop-old-user-columns.sql`** (safe to retire).
+  `scripts/phase3b-user-carry-data.ts` + `phase3b-drop-old-user-columns.sql`** (retired SESSION_0394;
+  the `phase3b:user-carry` package script was removed alongside them).
 - Verified: typecheck 0, lint/format/wiki green, 600 tests pass/0 fail, `migrate diff` empty,
   `migrate reset`+seed → 23 accountless claimable Passports. Live browser proof deferred (local
   owner-seed blocker; integration tests cover the repointed DB paths).

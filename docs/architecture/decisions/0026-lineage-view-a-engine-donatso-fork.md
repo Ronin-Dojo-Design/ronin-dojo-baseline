@@ -2,10 +2,10 @@
 title: "ADR 0026 — Lineage View A engine: vendored donatso/family-chart fork; one DTO, two engines"
 slug: adr-0026-lineage-view-a-engine-donatso-fork
 type: decision
-status: accepted
+status: superseded
 created: 2026-06-13
-updated: 2026-06-13
-last_agent: claude-session-0380
+updated: 2026-06-16
+last_agent: claude-session-0394
 pairs_with:
   - docs/runbooks/domain-features/lineage-tree-runbook.md
   - docs/petey-plan-0379.md
@@ -22,7 +22,13 @@ backlinks:
 
 ## Status
 
-Accepted
+**Superseded by [ADR 0027](0027-lineage-view-a-custom-cohort-timeline.md) (SESSION_0394).** The shared
+engine-agnostic DTO survives; the *engine choice* does not. family-chart is a genealogy engine with no
+promotion-date **cohort** concept (it rendered a flat single row), it owns the card DOM as HTML strings, and
+it carried recurring connector/zoom/dnd friction. View A moves to a custom cohort-timeline layout. The text
+below is retained as historical context.
+
+~~Accepted~~
 
 ## Context
 

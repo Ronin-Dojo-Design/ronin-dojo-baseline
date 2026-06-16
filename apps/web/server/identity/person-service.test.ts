@@ -132,7 +132,6 @@ describe("attachAccount", () => {
     try {
       await attachAccount({ passportId: "passport_1", userId: "user_1" }, client)
     } catch (error) {
-      expect((error as ClaimantHasPassportError).code).toBe("CLAIMANT_HAS_PASSPORT")
       expect((error as ClaimantHasPassportError).existingPassportId).toBe("passport_other")
     }
   })
