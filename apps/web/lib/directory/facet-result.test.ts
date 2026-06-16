@@ -16,6 +16,7 @@ const FACET_RESULT_KEYS = [
   "id",
   "imageUrl",
   "initials",
+  "save",
   "subtitle",
   "tags",
   "title",
@@ -33,6 +34,7 @@ describe("mapPersonToFacet", () => {
   it("normalizes a person, keeps trust + top rank + paid tier, and links to /directory", () => {
     const result = mapPersonToFacet({
       id: "u1",
+      passportId: "p1",
       slug: "brian-scott",
       name: "Brian Scott",
       image: "https://cdn/avatar.png",
@@ -53,6 +55,7 @@ describe("mapPersonToFacet", () => {
     expect(result.claimStatus).toBe("claimable")
     expect(result.tags).toEqual(["BJJ Black Belt"])
     expect(result.badges).toEqual([{ label: "Elite", variant: "outline" }])
+    expect(result.save).toEqual({ subjectType: "PERSON", subjectId: "p1" })
     expectFacetShape(result)
     expect(JSON.stringify(result)).not.toContain("secret@example.com")
   })
@@ -60,6 +63,7 @@ describe("mapPersonToFacet", () => {
   it("falls back to Anonymous, drops the tier badge for free, and nulls empty location", () => {
     const result = mapPersonToFacet({
       id: "u2",
+      passportId: "p2",
       slug: "anon",
       name: null,
       image: null,
@@ -82,6 +86,7 @@ describe("mapPersonToFacet", () => {
 describe("mapOrganizationToFacet", () => {
   it("routes schools/dojos to /schools and shows type + disciplines, no trust", () => {
     const result = mapOrganizationToFacet({
+      id: "o1",
       slug: "gracie-barra-boulder",
       name: "Gracie Barra Boulder",
       city: "Boulder",
@@ -94,6 +99,7 @@ describe("mapOrganizationToFacet", () => {
     expect(result.href).toBe("/schools/gracie-barra-boulder")
     expect(result.badges).toEqual([{ label: "SCHOOL", variant: "outline" }])
     expect(result.tags).toEqual(["BJJ", "Judo"])
+    expect(result.save).toEqual({ subjectType: "ORGANIZATION", subjectId: "o1" })
     expect(result.trustStatus).toBeNull()
     expect(result.claimStatus).toBeNull()
     expectFacetShape(result)
@@ -110,6 +116,7 @@ describe("mapOrganizationToFacet", () => {
     expect(organizationHref("FEDERATION", "x")).toBe("/organizations/x")
 
     const result = mapOrganizationToFacet({
+      id: "o2",
       slug: "wekaf",
       name: "WEKAF",
       city: null,
@@ -138,6 +145,7 @@ describe("mapLineageTreeToFacet", () => {
     expect(result.tags).toEqual(["BJJ"])
     expect(result.trustStatus).toBeNull()
     expect(result.claimStatus).toBe("claimable")
+    expect(result.save).toEqual({ subjectType: "TREE", subjectId: "t1" })
     expectFacetShape(result)
   })
 

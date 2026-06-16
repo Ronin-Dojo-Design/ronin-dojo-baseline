@@ -6,6 +6,7 @@ import { DashboardLineageTab } from "~/app/(web)/dashboard/lineage-tab"
 import { DashboardToolListing } from "~/app/(web)/dashboard/listing"
 import { DashboardMembership } from "~/app/(web)/dashboard/membership"
 import { DashboardProfileTab } from "~/app/(web)/dashboard/profile-tab"
+import { DashboardSavedTab } from "~/app/(web)/dashboard/saved-tab"
 import { DashboardSchoolTab } from "~/app/(web)/dashboard/school-tab"
 import { DashboardTabs } from "~/app/(web)/dashboard/tabs"
 import { DashboardTechniquesTab } from "~/app/(web)/dashboard/techniques-tab"
@@ -131,6 +132,15 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
                     content: (
                       <Suspense fallback={<Skeleton className="h-64" />}>
                         <DashboardEventsTab />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    id: "saved",
+                    label: "Saved",
+                    content: (
+                      <Suspense fallback={<Skeleton className="h-64" />}>
+                        <DashboardSavedTab />
                       </Suspense>
                     ),
                   },

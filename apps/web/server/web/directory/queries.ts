@@ -69,6 +69,8 @@ export const findProfileBySlug = async ({
   if (!canRenderFullProfile) {
     return {
       id: preview.id,
+      // @added SESSION_0397 — Passport id (Save subject) on BOTH branches so it's unconditionally available.
+      passportId: preview.passport.id,
       slug: preview.slug,
       profileTier: policy.tier,
       canRenderFullProfile: false,
@@ -114,6 +116,8 @@ export const findProfileBySlug = async ({
   // Apply per-field privacy flags
   return {
     id: profile.id,
+    // @added SESSION_0397 — Passport id is the Save subject for a person (Passport = identity SoT).
+    passportId: profile.passport.id,
     slug: profile.slug,
     profileTier: policy.tier,
     canRenderFullProfile: true,

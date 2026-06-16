@@ -1,17 +1,19 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import type { EducationalOrganization, PostalAddress } from "schema-dts"
+import { Avatar, AvatarFallback } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { OrgClaimCta } from "~/components/web/claims/org-claim-cta"
+import { ListingDetail } from "~/components/web/listing/listing-detail"
+import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { PromotionTimeline } from "~/components/web/promotion-events/promotion-timeline"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
-import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { siteConfig } from "~/config/site"
 import { getServerSession } from "~/lib/auth"
@@ -99,6 +101,15 @@ export default async function SchoolDetailPage({ params }: Props) {
     .filter(cs => cs.status === "ACTIVE")
     .reduce((acc, cs) => acc + cs.daysOfWeek.length, 0)
 
+  const schoolInitials =
+    school.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(word => word[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase() || "?"
+
   // Structured data: WebPage CollectionPage + EducationalOrganization ----
 
   const educationalOrg: EducationalOrganization = {
@@ -134,18 +145,33 @@ export default async function SchoolDetailPage({ params }: Props) {
         ]}
       />
 
-      <Intro>
-        <IntroTitle>{school.name}</IntroTitle>
-        <IntroDescription>
+      <ListingDetail
+        media={
+          <Avatar className="size-12">
+            <AvatarFallback>{schoolInitials}</AvatarFallback>
+          </Avatar>
+        }
+        title={school.name}
+        badges={
           <Stack size="sm" className="flex-wrap">
-            <Badge variant="outline" size="lg">
-              {school.type.replace(/_/g, " ")}
-            </Badge>
+            <Badge variant="outline">{school.type.replace(/_/g, " ")}</Badge>
             {school.disciplines.map(od => (
-              <Badge key={od.discipline.id} size="lg">
+              <Badge key={od.discipline.id}>
                 <Link href={`/disciplines/${od.discipline.slug}`}>{od.discipline.name}</Link>
               </Badge>
             ))}
+          </Stack>
+        }
+        actions={
+          <ListingSaveButton
+            subjectType="ORGANIZATION"
+            subjectId={school.id}
+            size="md"
+            showLabel={false}
+          />
+        }
+        intro={
+          <Stack size="sm" className="flex-wrap">
             <span className="text-sm text-muted-foreground">
               {school._count.memberships} member{school._count.memberships !== 1 ? "s" : ""}
             </span>
@@ -153,22 +179,134 @@ export default async function SchoolDetailPage({ params }: Props) {
               <span className="text-sm text-muted-foreground">{formattedAddress}</span>
             )}
           </Stack>
-        </IntroDescription>
-      </Intro>
+        }
+        sidebar={
+          <>
+            <Card hover={false}>
+              <CardHeader>
+                <H4>Overview</H4>
+              </CardHeader>
+              <CardDescription>
+                <Stack direction="column" className="items-start">
+                  <span>
+                    <span className="text-muted-foreground">Instructors: </span>
+                    <span className="font-medium">{instructors.length}</span>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">Members: </span>
+                    <span className="font-medium">{school._count.memberships}</span>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">Programs: </span>
+                    <span className="font-medium">{school._count.programs}</span>
+                  </span>
+                  {classesPerWeek > 0 && (
+                    <span>
+                      <span className="text-muted-foreground">Classes / week: </span>
+                      <span className="font-medium">{classesPerWeek}</span>
+                    </span>
+                  )}
+                </Stack>
+              </CardDescription>
+            </Card>
 
-      {!school.ownerId && (
-        <OrgClaimCta
-          organizationId={school.id}
-          organizationName={school.name}
-          noun="school"
-          returnPath={`/schools/${school.slug}`}
-          isSignedIn={Boolean(session?.user)}
-        />
-      )}
+            {(school.websiteUrl || school.phoneE164 || school.email) && (
+              <Card hover={false}>
+                <CardHeader>
+                  <H4>Contact</H4>
+                </CardHeader>
+                <CardDescription>
+                  <Stack direction="column" className="items-start">
+                    {school.websiteUrl && (
+                      <Link href={school.websiteUrl} target="_blank" rel="noopener noreferrer">
+                        Website
+                      </Link>
+                    )}
+                    {school.phoneE164 && (
+                      <Link href={`tel:${school.phoneE164}`}>{school.phoneE164}</Link>
+                    )}
+                    {school.email && <Link href={`mailto:${school.email}`}>{school.email}</Link>}
+                  </Stack>
+                </CardDescription>
+              </Card>
+            )}
 
-      {/* Address + Disciplines content / Overview + Contact + Affiliation sidebar */}
-      <Section>
-        <Section.Content>
+            {school.parentRelationships.length > 0 && (
+              <Card hover={false}>
+                <CardHeader>
+                  <H4>Affiliations</H4>
+                </CardHeader>
+                <CardDescription>
+                  <Stack direction="column" className="items-start">
+                    {school.parentRelationships.map(pr => {
+                      const isSchoolType =
+                        pr.parentOrg.type === "DOJO" || pr.parentOrg.type === "SCHOOL"
+                      const href = isSchoolType
+                        ? `/schools/${pr.parentOrg.slug}`
+                        : `/organizations/${pr.parentOrg.slug}`
+                      return (
+                        <span key={pr.id} className="text-sm">
+                          Part of <Link href={href}>{pr.parentOrg.name}</Link>
+                        </span>
+                      )
+                    })}
+                  </Stack>
+                </CardDescription>
+              </Card>
+            )}
+          </>
+        }
+        related={
+          relatedSchools.length > 0 && (
+            <Section>
+              <Section.Content>
+                <H4>Related Schools</H4>
+                <Grid>
+                  {relatedSchools.map(rs => (
+                    <Card key={rs.id} isRevealed>
+                      <CardHeader>
+                        <H4
+                          render={props => <h3 {...props}>{props.children}</h3>}
+                          className="truncate"
+                        >
+                          <Link href={`/schools/${rs.slug}`}>
+                            <span className="absolute inset-0 z-10" />
+                            {rs.name}
+                          </Link>
+                        </H4>
+                      </CardHeader>
+                      <CardDescription>
+                        {rs.description ??
+                          `${rs.type.replace(/_/g, " ")} — ${rs._count.memberships} member${rs._count.memberships !== 1 ? "s" : ""}`}
+                      </CardDescription>
+                      <Stack size="sm" className="flex-wrap">
+                        <Badge variant="outline">{rs.type.replace(/_/g, " ")}</Badge>
+                        {(rs.city || rs.state) && (
+                          <Badge variant="soft">
+                            {[rs.city, rs.state].filter(Boolean).join(", ")}
+                          </Badge>
+                        )}
+                      </Stack>
+                    </Card>
+                  ))}
+                </Grid>
+              </Section.Content>
+            </Section>
+          )
+        }
+      >
+        {!school.ownerId && (
+          <OrgClaimCta
+            organizationId={school.id}
+            organizationName={school.name}
+            noun="school"
+            returnPath={`/schools/${school.slug}`}
+            isSignedIn={Boolean(session?.user)}
+          />
+        )}
+
+        {/* About / Address / Disciplines / PromotionTimeline */}
+        <div className="flex flex-col gap-8">
           {school.description && (
             <div className="space-y-2">
               <H4>About</H4>
@@ -210,88 +348,11 @@ export default async function SchoolDetailPage({ params }: Props) {
             entries={promotionTimeline}
             emptyMessage="No hosted promotion events or awarded ranks are linked to this school yet."
           />
-        </Section.Content>
+        </div>
 
-        <Section.Sidebar>
-          <Card hover={false}>
-            <CardHeader>
-              <H4>Overview</H4>
-            </CardHeader>
-            <CardDescription>
-              <Stack direction="column" className="items-start">
-                <span>
-                  <span className="text-muted-foreground">Instructors: </span>
-                  <span className="font-medium">{instructors.length}</span>
-                </span>
-                <span>
-                  <span className="text-muted-foreground">Members: </span>
-                  <span className="font-medium">{school._count.memberships}</span>
-                </span>
-                <span>
-                  <span className="text-muted-foreground">Programs: </span>
-                  <span className="font-medium">{school._count.programs}</span>
-                </span>
-                {classesPerWeek > 0 && (
-                  <span>
-                    <span className="text-muted-foreground">Classes / week: </span>
-                    <span className="font-medium">{classesPerWeek}</span>
-                  </span>
-                )}
-              </Stack>
-            </CardDescription>
-          </Card>
-
-          {(school.websiteUrl || school.phoneE164 || school.email) && (
-            <Card hover={false}>
-              <CardHeader>
-                <H4>Contact</H4>
-              </CardHeader>
-              <CardDescription>
-                <Stack direction="column" className="items-start">
-                  {school.websiteUrl && (
-                    <Link href={school.websiteUrl} target="_blank" rel="noopener noreferrer">
-                      Website
-                    </Link>
-                  )}
-                  {school.phoneE164 && (
-                    <Link href={`tel:${school.phoneE164}`}>{school.phoneE164}</Link>
-                  )}
-                  {school.email && <Link href={`mailto:${school.email}`}>{school.email}</Link>}
-                </Stack>
-              </CardDescription>
-            </Card>
-          )}
-
-          {school.parentRelationships.length > 0 && (
-            <Card hover={false}>
-              <CardHeader>
-                <H4>Affiliations</H4>
-              </CardHeader>
-              <CardDescription>
-                <Stack direction="column" className="items-start">
-                  {school.parentRelationships.map(pr => {
-                    const isSchoolType =
-                      pr.parentOrg.type === "DOJO" || pr.parentOrg.type === "SCHOOL"
-                    const href = isSchoolType
-                      ? `/schools/${pr.parentOrg.slug}`
-                      : `/organizations/${pr.parentOrg.slug}`
-                    return (
-                      <span key={pr.id} className="text-sm">
-                        Part of <Link href={href}>{pr.parentOrg.name}</Link>
-                      </span>
-                    )
-                  })}
-                </Stack>
-              </CardDescription>
-            </Card>
-          )}
-        </Section.Sidebar>
-      </Section>
-
-      {/* Instructors */}
-      {instructors.length > 0 && (
-        <Section>
-          <Section.Content>
+        {/* Instructors */}
+        {instructors.length > 0 && (
+          <div>
             <H4>Instructors ({instructors.length})</H4>
             <div className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3 mt-4">
               {instructors.map(m => (
@@ -323,14 +384,12 @@ export default async function SchoolDetailPage({ params }: Props) {
                 </Card>
               ))}
             </div>
-          </Section.Content>
-        </Section>
-      )}
+          </div>
+        )}
 
-      {/* Programs offered */}
-      {school.programs.length > 0 && (
-        <Section>
-          <Section.Content>
+        {/* Programs offered */}
+        {school.programs.length > 0 && (
+          <div>
             <H4>Programs offered ({school.programs.length})</H4>
             <div className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3 mt-4">
               {school.programs.map(p => (
@@ -360,42 +419,9 @@ export default async function SchoolDetailPage({ params }: Props) {
                 </Card>
               ))}
             </div>
-          </Section.Content>
-        </Section>
-      )}
-
-      {/* Related Schools */}
-      {relatedSchools.length > 0 && (
-        <Section>
-          <Section.Content>
-            <H4>Related Schools</H4>
-            <Grid>
-              {relatedSchools.map(rs => (
-                <Card key={rs.id} isRevealed>
-                  <CardHeader>
-                    <H4 render={props => <h3 {...props}>{props.children}</h3>} className="truncate">
-                      <Link href={`/schools/${rs.slug}`}>
-                        <span className="absolute inset-0 z-10" />
-                        {rs.name}
-                      </Link>
-                    </H4>
-                  </CardHeader>
-                  <CardDescription>
-                    {rs.description ??
-                      `${rs.type.replace(/_/g, " ")} — ${rs._count.memberships} member${rs._count.memberships !== 1 ? "s" : ""}`}
-                  </CardDescription>
-                  <Stack size="sm" className="flex-wrap">
-                    <Badge variant="outline">{rs.type.replace(/_/g, " ")}</Badge>
-                    {(rs.city || rs.state) && (
-                      <Badge variant="soft">{[rs.city, rs.state].filter(Boolean).join(", ")}</Badge>
-                    )}
-                  </Stack>
-                </Card>
-              ))}
-            </Grid>
-          </Section.Content>
-        </Section>
-      )}
+          </div>
+        )}
+      </ListingDetail>
 
       <StructuredData
         data={{

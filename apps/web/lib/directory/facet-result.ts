@@ -26,6 +26,17 @@ export type DirectoryFacetBadge = {
   variant: "primary" | "soft" | "outline"
 }
 
+/**
+ * Persisted-Save subject for a facet card (SESSION_0397). Narrow union of the three
+ * facet subject types — assignable to the wider `BookmarkSubjectType`. Person = Passport
+ * (the identity SoT), org = Organization, tree = LineageTree. Declared locally to keep
+ * this lib pure (no server→lib import).
+ */
+export type DirectoryFacetSave = {
+  subjectType: "PERSON" | "ORGANIZATION" | "TREE"
+  subjectId: string
+}
+
 export type DirectoryFacetResult = {
   /** Stable React key, namespaced by type so ids never collide across facets. */
   id: string
@@ -45,6 +56,8 @@ export type DirectoryFacetResult = {
   tags: string[]
   /** Outline badges: org type (orgs), paid tier (people). */
   badges: DirectoryFacetBadge[]
+  /** Persisted-Save subject (SESSION_0397): person→Passport, org→Organization, tree→LineageTree. */
+  save: DirectoryFacetSave
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +68,8 @@ export type DirectoryFacetResult = {
 
 export type PersonFacetSource = {
   id: string
+  /** Passport id — the Save subject for a person (Passport = identity SoT, SESSION_0397). */
+  passportId: string
   slug: string
   name: string | null
   image: string | null
@@ -67,6 +82,8 @@ export type PersonFacetSource = {
 }
 
 export type OrganizationFacetSource = {
+  /** Organization id — the Save subject for a school/org (SESSION_0397). */
+  id: string
   slug: string
   name: string
   city: string | null
@@ -134,6 +151,7 @@ export function mapPersonToFacet(person: PersonFacetSource): DirectoryFacetResul
       person.profileTier !== "free"
         ? [{ label: tierLabel(person.profileTier), variant: "outline" }]
         : [],
+    save: { subjectType: "PERSON", subjectId: person.passportId },
   }
 }
 
@@ -152,6 +170,7 @@ export function mapOrganizationToFacet(org: OrganizationFacetSource): DirectoryF
     claimStatus: null,
     tags: (org.disciplines ?? []).map(entry => entry.discipline.name),
     badges: org.type ? [{ label: org.type.replace(/_/g, " "), variant: "outline" }] : [],
+    save: { subjectType: "ORGANIZATION", subjectId: org.id },
   }
 }
 
@@ -172,5 +191,6 @@ export function mapLineageTreeToFacet(tree: LineageTreeFacetSource): DirectoryFa
     claimStatus: tree.isClaimable ? "claimable" : null,
     tags: tree.discipline ? [tree.discipline.name] : [],
     badges: [],
+    save: { subjectType: "TREE", subjectId: tree.id },
   }
 }

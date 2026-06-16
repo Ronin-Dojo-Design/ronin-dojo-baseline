@@ -1,53 +1,52 @@
 "use server"
 
 import { userActionClient } from "~/lib/safe-actions"
-import { bookmarkInputSchema, setBookmarkInputSchema } from "~/server/web/bookmarks/schema"
+import {
+  bookmarkSubjectInputSchema,
+  setBookmarkSubjectInputSchema,
+} from "~/server/web/bookmarks/schema"
+import {
+  bookmarkSubjectCreate,
+  bookmarkSubjectTag,
+  bookmarkSubjectWhere,
+  bookmarkSubjectWhereUnique,
+} from "~/server/web/bookmarks/subject"
 
-export const checkBookmark = userActionClient
-  .inputSchema(bookmarkInputSchema)
-  .action(async ({ parsedInput: { toolId }, ctx: { db, user } }) => {
+// =============================================================================
+// Polymorphic Save actions (SESSION_0397) — Save any listing subject: Tool / person (Passport) /
+// Organization / Technique / Post / LineageTree. The tool Save button (`ListingBookmarkButton`) is now
+// a thin adapter over `ListingSaveButton` (subjectType TOOL), so these two actions back every entity —
+// the old tool-only check/set/removeBookmark actions retired with that consolidation.
+// =============================================================================
+
+export const checkBookmarkSubject = userActionClient
+  .inputSchema(bookmarkSubjectInputSchema)
+  .action(async ({ parsedInput, ctx: { db, user } }) => {
     const bookmark = await db.bookmark.findUnique({
-      where: { userId_toolId: { userId: user.id, toolId } },
+      where: bookmarkSubjectWhereUnique(user.id, parsedInput),
       select: { id: true },
     })
 
     return { bookmarked: Boolean(bookmark) }
   })
 
-export const setBookmark = userActionClient
-  .inputSchema(setBookmarkInputSchema)
-  .action(async ({ parsedInput: { toolId, bookmarked }, ctx: { db, user, revalidate } }) => {
+export const setBookmarkSubject = userActionClient
+  .inputSchema(setBookmarkSubjectInputSchema)
+  .action(async ({ parsedInput: { bookmarked, ...subject }, ctx: { db, user, revalidate } }) => {
     if (bookmarked) {
       await db.bookmark.upsert({
-        where: { userId_toolId: { userId: user.id, toolId } },
+        where: bookmarkSubjectWhereUnique(user.id, subject),
         update: {},
-        create: { userId: user.id, toolId },
+        create: bookmarkSubjectCreate(user.id, subject),
       })
     } else {
-      await db.bookmark.deleteMany({
-        where: { userId: user.id, toolId },
-      })
+      await db.bookmark.deleteMany({ where: bookmarkSubjectWhere(user.id, subject) })
     }
 
     revalidate({
-      paths: ["/dashboard/bookmarks"],
-      tags: ["bookmarks", `bookmark-${toolId}`],
+      paths: ["/app/profile"],
+      tags: ["bookmarks", bookmarkSubjectTag(subject)],
     })
 
     return { bookmarked }
-  })
-
-export const removeBookmark = userActionClient
-  .inputSchema(bookmarkInputSchema)
-  .action(async ({ parsedInput: { toolId }, ctx: { db, user, revalidate } }) => {
-    await db.bookmark.deleteMany({
-      where: { userId: user.id, toolId },
-    })
-
-    revalidate({
-      paths: ["/dashboard/bookmarks"],
-      tags: ["bookmarks", `bookmark-${toolId}`],
-    })
-
-    return { removed: true }
   })

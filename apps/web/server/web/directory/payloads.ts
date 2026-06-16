@@ -66,6 +66,8 @@ export const directoryRankAwardPayload = {
 
 export const directoryProfileListPayload = {
   id: true,
+  // @added SESSION_0397 — Passport id for the polymorphic Bookmark subject (person = Passport SoT).
+  passportId: true,
   slug: true,
   visibility: true,
   locationCity: true,

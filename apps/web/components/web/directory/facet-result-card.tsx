@@ -45,7 +45,12 @@ export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
           </Stack>
         )
       }
-      save={<ListingSaveButton />}
+      save={
+        <ListingSaveButton
+          subjectType={result.save.subjectType}
+          subjectId={result.save.subjectId}
+        />
+      }
     />
   )
 }

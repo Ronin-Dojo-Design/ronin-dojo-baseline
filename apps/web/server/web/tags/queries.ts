@@ -58,29 +58,37 @@ export const searchTags = async (search: TagsFilterParams, where?: Prisma.TagWhe
   return { tags, total, page, perPage }
 }
 
-export const findTagSlugs = async ({ where, orderBy, ...args }: Prisma.TagFindManyArgs) => {
+// @changed SESSION_0397 — params narrowed to `{ where?, orderBy? }` (was the full `Prisma.Tag*Args`).
+// Spreading the deep FindManyArgs/FindFirstArgs forced TS to instantiate the recursive `TagInclude`
+// generics, which tipped over the instantiation-depth limit (TS2321) once the polymorphic Bookmark
+// FKs grew Tag's relation graph. Both call sites only ever pass `where`, so this is a real fix (no
+// `@ts-expect-error` needed) rather than chasing the heisenbug between the two queries.
+export const findTagSlugs = async ({
+  where,
+  orderBy,
+}: {
+  where?: Prisma.TagWhereInput
+  orderBy?: Prisma.TagOrderByWithRelationInput
+} = {}) => {
   "use cache"
 
   cacheTag("tags")
   cacheLife("infinite")
 
-  // @ts-expect-error — TS2321: Prisma excessive stack depth on TagInclude generics.
   return db.tag.findMany({
-    ...args,
     orderBy: orderBy ?? { name: "asc" },
     where: { tools: { some: { status: ToolStatus.Published } }, ...where },
     select: { slug: true, updatedAt: true },
   })
 }
 
-export const findTag = async ({ where, ...args }: Prisma.TagFindFirstArgs = {}) => {
+export const findTag = async ({ where }: { where?: Prisma.TagWhereInput } = {}) => {
   "use cache"
 
   cacheTag("tag", `tag-${where?.slug}`)
   cacheLife("infinite")
 
   return db.tag.findFirst({
-    ...args,
     where,
     select: tagOnePayload,
   })

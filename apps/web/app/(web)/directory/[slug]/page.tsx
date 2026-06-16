@@ -11,7 +11,9 @@ import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
 import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser"
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
-import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { ListingDetail } from "~/components/web/listing/listing-detail"
+import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
+import { IntroDescription } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
@@ -86,63 +88,73 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
   const origin = await getRequestOrigin()
   const profileUrl = buildAbsoluteUrl(`/directory/${slug}`, origin)
 
+  const locationLine = profile.locationCity
+    ? [profile.locationCity, profile.locationRegion, profile.locationCountry]
+        .filter(Boolean)
+        .join(", ")
+    : null
+
+  // Hero actions cluster: persisted Save (any rendered profile — the subject is the Passport, the
+  // identity SoT) + QrShare, which stays gated to a fully-rendered profile as before.
+  const heroActions = (
+    <Stack size="sm">
+      <ListingSaveButton
+        subjectType="PERSON"
+        subjectId={profile.passportId}
+        size="md"
+        showLabel={false}
+      />
+      {profile.canRenderFullProfile && (
+        <QrShareButton
+          url={profileUrl}
+          title="Profile QR Code"
+          description="Scan to open this public directory profile."
+          fileName={`directory-${slug}`}
+        />
+      )}
+    </Stack>
+  )
+
   return (
-    <>
-      <Intro>
-        <Stack size="sm" wrap className="items-start justify-between">
-          <Stack size="xs" direction="column">
-            <IntroTitle>{user.name ?? "Directory Profile"}</IntroTitle>
-            <Stack size="xs" wrap>
-              <LineageTrustBadge status={profile.trustStatus} />
-              {profile.claimBadgeStatus && <LineageClaimBadge status={profile.claimBadgeStatus} />}
-              <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
-                {profile.canRenderFullProfile ? "Full profile" : "Listing preview"}
-              </Badge>
-              {profile.profileTier !== "free" && (
-                <Badge variant="outline">{profileTierLabel(profile.profileTier)}</Badge>
-              )}
-            </Stack>
-          </Stack>
-          {profile.canRenderFullProfile && (
-            <QrShareButton
-              url={profileUrl}
-              title="Profile QR Code"
-              description="Scan to open this public directory profile."
-              fileName={`directory-${slug}`}
-            />
+    <ListingDetail
+      media={
+        <Avatar className="size-12">
+          {user.image && <AvatarImage src={user.image} alt={user.name ?? "Directory profile"} />}
+          <AvatarFallback>{profileInitial(user.name)}</AvatarFallback>
+        </Avatar>
+      }
+      title={user.name ?? "Directory Profile"}
+      badges={
+        <Stack size="xs" wrap>
+          <LineageTrustBadge status={profile.trustStatus} />
+          {profile.claimBadgeStatus && <LineageClaimBadge status={profile.claimBadgeStatus} />}
+          <Badge variant={profile.canRenderFullProfile ? "primary" : "soft"}>
+            {profile.canRenderFullProfile ? "Full profile" : "Listing preview"}
+          </Badge>
+          {profile.profileTier !== "free" && (
+            <Badge variant="outline">{profileTierLabel(profile.profileTier)}</Badge>
           )}
         </Stack>
-        {profile.locationCity && (
-          <IntroDescription>
-            {[profile.locationCity, profile.locationRegion, profile.locationCountry]
-              .filter(Boolean)
-              .join(", ")}
-          </IntroDescription>
-        )}
-      </Intro>
-
+      }
+      actions={heroActions}
+      intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
+    >
       <Section>
-        <div className="flex items-start gap-6">
-          <Avatar className="size-20">
-            {user.image && <AvatarImage src={user.image} alt={user.name ?? "Directory profile"} />}
-            <AvatarFallback>{profileInitial(user.name)}</AvatarFallback>
-          </Avatar>
-          <Stack size="sm">
-            {user.bio ? (
-              <Prose>
-                <p>{user.bio}</p>
-              </Prose>
-            ) : (
-              !profile.canRenderFullProfile && (
-                <Note>
-                  This profile is currently published as a free listing. Full bio, links, school
-                  details, and rank history unlock when the listing upgrades.
-                </Note>
-              )
-            )}
-            {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
-          </Stack>
-        </div>
+        <Stack size="sm">
+          {user.bio ? (
+            <Prose>
+              <p>{user.bio}</p>
+            </Prose>
+          ) : (
+            !profile.canRenderFullProfile && (
+              <Note>
+                This profile is currently published as a free listing. Full bio, links, school
+                details, and rank history unlock when the listing upgrades.
+              </Note>
+            )
+          )}
+          {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
+        </Stack>
       </Section>
 
       {user.ranks.length > 0 && (
@@ -211,6 +223,6 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
           </Stack>
         </Section>
       )}
-    </>
+    </ListingDetail>
   )
 }

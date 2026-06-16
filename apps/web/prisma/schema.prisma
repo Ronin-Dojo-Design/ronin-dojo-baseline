@@ -316,21 +316,61 @@ model Report {
   @@index([toolId])
 }
 
+// @added SESSION_0397 — polymorphic Save subject (Tool→Listing parity, ADR 0028 follow-up).
+// "Everything is a listing": a User can favorite a Tool, a person (Passport — the identity SoT
+// that feeds DirectoryProfile + lineage + board, ADR 0025), an Organization (school), a Technique,
+// a Post, or a whole LineageTree. Shape mirrors ProfileClaimRequest: a subjectType discriminator +
+// nullable FKs, exactly one set, matching subjectType (enforced in the bookmark action, not the DB).
+enum BookmarkSubjectType {
+  TOOL
+  PERSON
+  ORGANIZATION
+  TECHNIQUE
+  POST
+  TREE
+}
+
 model Bookmark {
-  id        String   @id @default(cuid(2))
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String              @id @default(cuid(2))
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  // @added SESSION_0397 — discriminator; existing rows backfilled to TOOL by the migration.
+  subjectType BookmarkSubjectType @default(TOOL)
 
   // Relations
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
-  tool   Tool   @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  toolId String
 
-  // Indexes
+  // Polymorphic subject — exactly one set, matching subjectType (enforced in the action).
+  // @changed SESSION_0397 — toolId relaxed to optional so non-tool subjects can be saved.
+  tool             Tool?         @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId           String?
+  passport         Passport?     @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId       String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId   String?
+  technique        Technique?    @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  techniqueId      String?
+  post             Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId           String?
+  lineageTree      LineageTree?  @relation(fields: [lineageTreeId], references: [id], onDelete: Cascade)
+  lineageTreeId    String?
+
+  // Indexes — one (userId, subject) unique per subject type, plus per-FK lookup indexes.
   @@unique([userId, toolId])
+  @@unique([userId, passportId])
+  @@unique([userId, organizationId])
+  @@unique([userId, techniqueId])
+  @@unique([userId, postId])
+  @@unique([userId, lineageTreeId])
   @@index([userId])
+  @@index([userId, subjectType])
   @@index([toolId])
+  @@index([passportId])
+  @@index([organizationId])
+  @@index([techniqueId])
+  @@index([postId])
+  @@index([lineageTreeId])
 }
 
 // =============================================================================
@@ -996,6 +1036,10 @@ model Passport {
   categories Category[]
   tags       Tag[]
 
+  // @added SESSION_0397 — polymorphic Bookmark (Save persistence). Person = Passport (the SoT
+  // that feeds DirectoryProfile + lineage + board); subjectType=PERSON keys here.
+  bookmarks Bookmark[]
+
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4 resolved: all 8 FK columns now have Prisma relations)
   // @wired   server/admin/media/actions.ts (attachMedia/detachMedia), server/admin/media/queries.ts
@@ -1105,6 +1149,9 @@ model Organization {
   // /schools/categories/[slug] + /schools/tags/[slug] via the existing Category/Tag admin.
   categories Category[]
   tags       Tag[]
+
+  // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=ORGANIZATION.
+  bookmarks Bookmark[]
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4)
   mediaAttachments     MediaAttachment[]
@@ -2607,6 +2654,9 @@ model LineageTree {
   accessGrants  LineageTreeAccess[]
   claimRequests LineageClaimRequest[]
 
+  // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=TREE.
+  bookmarks Bookmark[]
+
   @@unique([brand, slug])
   @@index([brand, scopeType])
   @@index([organizationId])
@@ -3449,6 +3499,9 @@ model Technique {
   categories Category[]
   tags       Tag[]
 
+  // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=TECHNIQUE.
+  bookmarks Bookmark[]
+
   @@unique([brand, organizationId, slug])
   @@index([brand, disciplineId])
   @@index([position, category])
@@ -3809,6 +3862,9 @@ model Post {
   // @added SESSION_0396 — shared listing taxonomy (Tool→Listing parity).
   categories Category[]
   tags       Tag[]
+
+  // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=POST.
+  bookmarks Bookmark[]
 
   @@index([brand, slug])
   @@index([authorId])

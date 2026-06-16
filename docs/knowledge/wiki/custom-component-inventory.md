@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-16
-last_agent: claude-session-0396
+last_agent: claude-session-0397
 pairs_with:
   - docs/sprints/SESSION_0386.md
   - docs/sprints/SESSION_0384.md
@@ -371,9 +371,13 @@ The **one card** every directory entity renders through ([ADR 0028](../../archit
 | --- | --- | --- | --- |
 | `ListingCard` | `apps/web/components/web/listing/listing-card.tsx` | `href`, `name`, `media?`, `headerBadges?`, `tagline?`, `categories?`, `statusBadges?`, `description?`, `viewLabel?` (="View"), `save?` | SESSION_0396: canonical listing card — `Card`>`CardHeader`(media + title + badges)>`Stack`(tagline + category badges + status)>hover-description>`CardFooter`(View button + save slot). Title uses `min-w-0 flex-1 truncate text-nowrap` — `text-nowrap` overrides the `H4` variant's `text-balance`, which otherwise defeats `truncate` on long names (both set `text-wrap-mode`). Hover-fade applies only when `description` is present (so description-less cards don't blank on hover). |
 | `ListingCardSkeleton` | `apps/web/components/web/listing/listing-card.tsx` | — | Loading skeleton (favicon-less); reused by `TechniqueCardSkeleton`. |
-| `ListingSaveButton` | `apps/web/components/web/listing/listing-save-button.tsx` | `label?`, `showLabel?` | SESSION_0396: generic sign-in-gated Save affordance for entities not yet wired to the tool-only `Bookmark` model — links to `/auth/login?next=`. Persisted saving awaits the Bookmark-model generalization (deferred, ADR 0028). |
+| `ListingSaveButton` | `apps/web/components/web/listing/listing-save-button.tsx` | `subjectType`, `subjectId`, `label?`, `showLabel?` | SESSION_0397: **the one persisted Save button** — keyed on the polymorphic `{subjectType,subjectId}` Bookmark (ADR 0029). Sign-in-gated when logged out (`/auth/login?next=`), optimistic heart-fill + toast when in. Backs tools/people/schools/techniques/posts/trees. (Pre-0397 it was a sign-in-only stub.) |
+| `ListingDetail` | `apps/web/components/web/listing/listing-detail.tsx` | `media?`, `title`, `badges?`, `actions?`, `intro?`, `children`, `taxonomy?`, `sidebar?`, `related?` | SESSION_0397 ([ADR 0029](../../architecture/decisions/0029-polymorphic-bookmark-and-listing-detail.md)): shared **detail-page** chrome lifted from the L1 tool-detail page — sticky hero (`Sticky`+`Backdrop`) + `Section.Content`/`Section.Sidebar` + related. Chrome only; bodies + the three claim systems stay per-entity slots. Used by `/directory/[slug]` + `/schools/[slug]`. |
 | `ToolCard` (adapter) | `apps/web/components/web/tools/tool-card.tsx` | `tool: ToolMany` | SESSION_0396: **now a thin adapter over `ListingCard`** — maps favicon / `/${slug}` href / verified + tier / status badges / tool bookmark into the slots. Tools render byte-identically and keep the "View Listing" label; the live Tool directory now renders through the shared card. |
-| `FacetResultCard` | `apps/web/components/web/directory/facet-result-card.tsx` | `result: DirectoryFacetResult` | SESSION_0396: rewired to render through `ListingCard` (avatar media, trust/claim header badges, tag badges, View + Save). Used by `/directory`, `/directory/profiles`, `/directory/schools`. |
+| `ListingBookmarkButton` (adapter) | `apps/web/components/web/listings/listing-bookmark-button.tsx` | `toolId`, `label?`, `showLabel?` | SESSION_0397: **collapsed to a thin adapter over `ListingSaveButton`** (subjectType TOOL), mirroring the ToolCard→adapter move. Tool Save renders + persists identically; the tool-only `check/set/removeBookmark` actions retired. |
+| `SchoolCard` (adapter) | `apps/web/components/web/schools/school-card.tsx` | `school: SchoolCardData` | SESSION_0397: **folded into a `ListingCard` adapter** (avatar+initials media, type→headerBadge, disciplines→categories, persisted ORGANIZATION Save). The bespoke hover-reveals-contact card retired (contact → detail page). `/schools` + `/directory/schools` now render the one card. |
+| `FacetResultCard` | `apps/web/components/web/directory/facet-result-card.tsx` | `result: DirectoryFacetResult` | SESSION_0396: rewired to render through `ListingCard` (avatar media, trust/claim header badges, tag badges, View + Save). SESSION_0397: the Save slot is now the persisted `ListingSaveButton` keyed on `result.save` (person→Passport / org / tree). Used by `/directory`, `/directory/profiles`, `/directory/schools`. |
+| `DashboardSavedTab` | `apps/web/app/(web)/dashboard/saved-tab.tsx` | — | SESSION_0397: the "Saved" tab on `/app/profile` — a mixed-entity `ListingCard` grid of the user's bookmarks via `getSavedListings` → `SavedListing` (`server/web/bookmarks/saved.ts`). The saved-view surface that never existed before (D-DRIFT-0397-2). |
 
 ---
 

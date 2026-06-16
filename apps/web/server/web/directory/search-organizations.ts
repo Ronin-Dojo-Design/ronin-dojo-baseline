@@ -63,6 +63,8 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
 
   // Map to school card data shape
   const mappedSchools = schools.map(org => ({
+    // @added SESSION_0397 — org id for the polymorphic Bookmark subject (school = Organization).
+    id: org.id,
     slug: org.slug,
     name: org.name,
     description: org.description,

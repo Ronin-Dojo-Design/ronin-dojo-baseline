@@ -123,6 +123,8 @@ export function projectDirectoryProfileListItem({
 
   return {
     id: profile.id,
+    // @added SESSION_0397 — Passport id is the bookmark subject for a person (Passport = identity SoT).
+    passportId: profile.passportId,
     slug: profile.slug ?? profile.id,
     userId: account?.id ?? null,
     name: profile.passport.displayName ?? account?.name ?? null,

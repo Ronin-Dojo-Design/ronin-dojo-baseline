@@ -1,123 +1,21 @@
 "use client"
 
-import { HeartIcon } from "lucide-react"
-import { usePathname } from "next/navigation"
-import { useAction } from "next-safe-action/hooks"
-import { type ComponentProps, useEffect, useState } from "react"
-import { toast } from "sonner"
-import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
-import { useSession } from "~/lib/auth-client"
-import { cx } from "~/lib/utils"
-import { checkBookmark, setBookmark } from "~/server/web/bookmarks/actions"
+import type { ComponentProps } from "react"
+import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 
-type ListingBookmarkButtonProps = Omit<ComponentProps<typeof Button>, "prefix"> & {
+/**
+ * ListingBookmarkButton — the tool Save button. SESSION_0397 folded it into a thin adapter over the
+ * generic `ListingSaveButton` (subjectType TOOL), mirroring how `ToolCard` became an adapter over
+ * `ListingCard` (ADR 0028). Renders byte-identical and persists through the same polymorphic Bookmark
+ * path, so the live tool directory is unchanged while the duplicate button + tool-only actions retire.
+ */
+type ListingBookmarkButtonProps = Omit<
+  ComponentProps<typeof ListingSaveButton>,
+  "subjectType" | "subjectId"
+> & {
   toolId: string
-  label?: string
-  showLabel?: boolean
 }
 
-export const ListingBookmarkButton = ({
-  toolId,
-  label = "Save",
-  showLabel = true,
-  className,
-  size = "sm",
-  variant = "secondary",
-  ...props
-}: ListingBookmarkButtonProps) => {
-  const pathname = usePathname()
-  const { data: session } = useSession()
-  const [bookmarked, setBookmarked] = useState(false)
-
-  const checkAction = useAction(checkBookmark, {
-    onSuccess: ({ data }) => {
-      if (data) {
-        setBookmarked(data.bookmarked)
-      }
-    },
-  })
-
-  const setAction = useAction(setBookmark, {
-    onSuccess: ({ data }) => {
-      if (data) {
-        setBookmarked(data.bookmarked)
-      }
-    },
-  })
-
-  const executeCheck = checkAction.execute
-
-  useEffect(() => {
-    if (session?.user) {
-      executeCheck({ toolId })
-    }
-  }, [executeCheck, session?.user, toolId])
-
-  if (!session?.user) {
-    const next = encodeURIComponent(pathname)
-
-    return (
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              size={size}
-              variant={variant}
-              prefix={<HeartIcon />}
-              className={className}
-              render={<Link href={`/auth/login?next=${next}`} />}
-              {...props}
-            >
-              <span className={cx(!showLabel && "sr-only")}>{label}</span>
-            </Button>
-          }
-        />
-        <TooltipContent>Sign in to save this listing</TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  const handleClick = () => {
-    const nextBookmarked = !bookmarked
-
-    toast.promise(
-      async () => {
-        const result = await setAction.executeAsync({ toolId, bookmarked: nextBookmarked })
-
-        if (result?.serverError) {
-          throw new Error(result.serverError)
-        }
-      },
-      {
-        loading: nextBookmarked ? "Saving listing..." : "Removing saved listing...",
-        success: nextBookmarked ? "Listing saved" : "Listing removed from saved items",
-        error: err => err.message,
-      },
-    )
-  }
-
-  const text = bookmarked ? "Saved" : label
-
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            size={size}
-            variant={variant}
-            prefix={<HeartIcon className={cx(bookmarked && "fill-current text-primary")} />}
-            className={className}
-            isPending={setAction.isPending || checkAction.isPending}
-            onClick={handleClick}
-            {...props}
-          >
-            <span className={cx(!showLabel && "sr-only")}>{text}</span>
-          </Button>
-        }
-      />
-      <TooltipContent>{bookmarked ? "Remove saved listing" : "Save this listing"}</TooltipContent>
-    </Tooltip>
-  )
+export const ListingBookmarkButton = ({ toolId, ...props }: ListingBookmarkButtonProps) => {
+  return <ListingSaveButton subjectType="TOOL" subjectId={toolId} {...props} />
 }

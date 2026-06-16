@@ -25,7 +25,7 @@ const TechniqueCard = ({ technique, ...props }: TechniqueCardProps) => {
           </Badge>
         )
       }
-      save={<ListingSaveButton />}
+      save={<ListingSaveButton subjectType="TECHNIQUE" subjectId={technique.id} />}
       {...props}
     />
   )

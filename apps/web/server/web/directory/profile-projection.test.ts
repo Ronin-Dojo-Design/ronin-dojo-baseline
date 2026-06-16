@@ -10,6 +10,7 @@ import { projectDirectoryProfileListItem } from "~/server/web/directory/profile-
 function profileFixture(): DirectoryProfileList {
   return {
     id: "profile-1",
+    passportId: "passport-1",
     slug: "brian-scott",
     visibility: "PUBLIC",
     locationCity: "Boulder",
