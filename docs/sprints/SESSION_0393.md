@@ -378,3 +378,22 @@ checklist, then execute. If a light polish session instead: knock out the Desi L
 | Next session unblock check | Unblocked — next task (re-read SoT, pick launch gate) is doable; DNS flip needs operator action at Bluehost (noted). |
 | Git hygiene | Branch `main`; FS-0024 guard run; single push — hash reported at bow-out / see git log. |
 | Graphify update | `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` run before the close commit: 12896 nodes, 24494 edges, 1761 communities, 2073 files tracked. |
+
+## Post-close follow-through addendum
+
+Close commit `8fd8611` pushed to `main`; CI/deploy followed to green:
+
+- **Deploy:** both app-code pushes produced **● Ready** Production deploys on Vercel (no new migration —
+  Phase 3c's already deployed in 0392).
+- **`202247c` — e2e fix (the default-view flip's real ripple).** Making the explorer the default meant
+  three Playwright specs that `goto` a bare `/lineage/<slug>` and assert **board** node-card buttons
+  (`Open lineage profile for …`) now landed on the explorer surface. Pinned those four navigations to
+  `?view=board` (`public-visibility`, `public-rank-redaction` ×2, `authenticated-lifecycle`) — the exact
+  surface they assert. Privacy/redaction is enforced server-side on the shared visibility-filtered
+  payload, so it holds in both views. **Playwright E2E green on `202247c`** after the fix. Lesson: a UI
+  **default** flip is a behavior change for every test that relied on the old implicit default — grep e2e
+  `goto` for the bare route before flipping a default.
+- **Flaky CI note (not mine):** the first push's CI unit-test job failed once on
+  `stripe webhook — paid-path capacity enforcement > parallel webhooks for the same capacity=1 division`
+  (`expect(responseB.status).toBe(200)` got 400) — a parallel-webhook race unrelated to this diff
+  (lineage UI + display helper + view default). It passed locally (601/0) and on the `202247c` CI re-run.
