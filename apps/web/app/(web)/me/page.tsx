@@ -11,8 +11,8 @@ import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { canUploadMedia } from "~/server/web/entitlements/queries"
+import { PassportEditor } from "~/components/web/passport/passport-editor"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
-import { PassportEditor } from "./passport-editor"
 
 export async function generateMetadata(): Promise<Metadata> {
   return await getPageMetadata({

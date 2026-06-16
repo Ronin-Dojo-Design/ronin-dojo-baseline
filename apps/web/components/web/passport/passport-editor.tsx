@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
+import { type UseFormReturn, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
@@ -24,10 +25,12 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
+import { ProfileHero } from "~/components/web/profile/profile-hero"
+import { initialsOf } from "~/lib/directory/facet-result"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
 import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
 import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
-import { SocialLinksEditor } from "./_components/social-links-editor"
+import { SocialLinksEditor } from "./social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
 const str = (v: string | null | undefined) => v ?? ""
@@ -39,12 +42,89 @@ type Props = {
   canUploadVideo: boolean
 }
 
+/**
+ * The ONE canonical Passport + DirectoryProfile editor (SESSION_0398, ADR 0025).
+ *
+ * Rendered by both owner-edit entry points — `/me` (MePage) and the `/app/profile`
+ * Profile tab (DashboardProfileTab). Passport is the identity SoT; DirectoryProfile
+ * is its presentation/privacy view. Both forms hoist to this parent so a single live
+ * `ProfileHero` can mirror name/avatar/location across both as the owner types.
+ */
 export function PassportEditor({ passport, directoryProfile, userId, canUploadVideo }: Props) {
+  const passportForm = useHookFormAction(updatePassport, zodResolver(updatePassportSchema), {
+    formProps: {
+      values: {
+        displayName: str(passport.displayName),
+        legalFirstName: str(passport.legalFirstName),
+        legalLastName: str(passport.legalLastName),
+        dob: passport.dob ? new Date(passport.dob) : undefined,
+        gender: passport.gender ?? undefined,
+        phoneE164: str(passport.phoneE164),
+        emergencyContactName: str(passport.emergencyContactName),
+        emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
+        avatarUrl: str(passport.avatarUrl),
+        bio: str(passport.bio),
+        socialLinks: Array.isArray(passport.socialLinks)
+          ? (passport.socialLinks as Array<{ platform: string; url: string }>)
+          : [],
+      },
+    },
+    actionProps: {
+      onSuccess: () => toast.success("Passport updated."),
+      onError: () => toast.error("Failed to update passport."),
+    },
+  })
+
+  const directoryForm = useHookFormAction(
+    updateDirectoryProfile,
+    zodResolver(updateDirectoryProfileSchema),
+    {
+      formProps: {
+        values: {
+          slug: str(directoryProfile.slug),
+          visibility: directoryProfile.visibility,
+          locationCity: str(directoryProfile.locationCity),
+          locationRegion: str(directoryProfile.locationRegion),
+          locationCountry: str(directoryProfile.locationCountry),
+          showEmail: directoryProfile.showEmail,
+          showPhone: directoryProfile.showPhone,
+          showOrgs: directoryProfile.showOrgs,
+          showRanks: directoryProfile.showRanks,
+          coverPhotoUrl: str(directoryProfile.coverPhotoUrl),
+          videoIntroUrl: str(directoryProfile.videoIntroUrl),
+        },
+      },
+      actionProps: {
+        onSuccess: () => toast.success("Directory profile updated."),
+        onError: () => toast.error("Failed to update directory profile."),
+      },
+    },
+  )
+
+  // Live preview — mirrors form state into the same hero the public profile and
+  // claim teaser use, so the owner sees their profile forming as they type.
+  const previewName = useWatch({ control: passportForm.form.control, name: "displayName" })
+  const previewAvatar = useWatch({ control: passportForm.form.control, name: "avatarUrl" })
+  const previewCity = useWatch({ control: directoryForm.form.control, name: "locationCity" })
+  const previewRegion = useWatch({ control: directoryForm.form.control, name: "locationRegion" })
+
   return (
     <div className="flex flex-col gap-10">
-      <PassportForm passport={passport} userId={userId} />
+      <ProfileHero
+        name={previewName || null}
+        avatarUrl={previewAvatar || null}
+        subtitle={[previewCity, previewRegion].filter(Boolean).join(", ") || null}
+        initials={initialsOf(previewName)}
+      />
+
+      <PassportForm
+        form={passportForm.form}
+        onSubmit={passportForm.handleSubmitWithAction}
+        userId={userId}
+      />
       <DirectoryProfileForm
-        directoryProfile={directoryProfile}
+        form={directoryForm.form}
+        onSubmit={directoryForm.handleSubmitWithAction}
         userId={userId}
         canUploadVideo={canUploadVideo}
       />
@@ -56,45 +136,21 @@ export function PassportEditor({ passport, directoryProfile, userId, canUploadVi
 // Passport form
 // ---------------------------------------------------------------------------
 
-function PassportForm({ passport, userId }: { passport: PassportOne; userId: string }) {
-  const { form, handleSubmitWithAction } = useHookFormAction(
-    updatePassport,
-    zodResolver(updatePassportSchema),
-    {
-      formProps: {
-        values: {
-          displayName: str(passport.displayName),
-          legalFirstName: str(passport.legalFirstName),
-          legalLastName: str(passport.legalLastName),
-          dob: passport.dob ? new Date(passport.dob) : undefined,
-          gender: passport.gender ?? undefined,
-          phoneE164: str(passport.phoneE164),
-          emergencyContactName: str(passport.emergencyContactName),
-          emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
-          avatarUrl: str(passport.avatarUrl),
-          bio: str(passport.bio),
-          socialLinks: Array.isArray(passport.socialLinks)
-            ? (passport.socialLinks as Array<{ platform: string; url: string }>)
-            : [],
-        },
-      },
-      actionProps: {
-        onSuccess: () => toast.success("Passport updated."),
-        onError: () => toast.error("Failed to update passport."),
-      },
-    },
-  )
-
+function PassportForm({
+  form,
+  onSubmit,
+  userId,
+}: {
+  form: UseFormReturn<any>
+  onSubmit: React.FormEventHandler<HTMLFormElement>
+  userId: string
+}) {
   return (
     <section>
       <H2>Identity</H2>
 
       <Form {...form}>
-        <form
-          onSubmit={handleSubmitWithAction}
-          className="mt-4 grid gap-4 @md:grid-cols-2"
-          noValidate
-        >
+        <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
           <FormField
             control={form.control}
             name="displayName"
@@ -306,50 +362,22 @@ function PassportForm({ passport, userId }: { passport: PassportOne; userId: str
 // ---------------------------------------------------------------------------
 
 function DirectoryProfileForm({
-  directoryProfile,
+  form,
+  onSubmit,
   userId,
   canUploadVideo,
 }: {
-  directoryProfile: DirectoryProfileOne
+  form: UseFormReturn<any>
+  onSubmit: React.FormEventHandler<HTMLFormElement>
   userId: string
   canUploadVideo: boolean
 }) {
-  const { form, handleSubmitWithAction } = useHookFormAction(
-    updateDirectoryProfile,
-    zodResolver(updateDirectoryProfileSchema),
-    {
-      formProps: {
-        values: {
-          slug: str(directoryProfile.slug),
-          visibility: directoryProfile.visibility,
-          locationCity: str(directoryProfile.locationCity),
-          locationRegion: str(directoryProfile.locationRegion),
-          locationCountry: str(directoryProfile.locationCountry),
-          showEmail: directoryProfile.showEmail,
-          showPhone: directoryProfile.showPhone,
-          showOrgs: directoryProfile.showOrgs,
-          showRanks: directoryProfile.showRanks,
-          coverPhotoUrl: str(directoryProfile.coverPhotoUrl),
-          videoIntroUrl: str(directoryProfile.videoIntroUrl),
-        },
-      },
-      actionProps: {
-        onSuccess: () => toast.success("Directory profile updated."),
-        onError: () => toast.error("Failed to update directory profile."),
-      },
-    },
-  )
-
   return (
     <section>
       <H2>Directory Profile</H2>
 
       <Form {...form}>
-        <form
-          onSubmit={handleSubmitWithAction}
-          className="mt-4 grid gap-4 @md:grid-cols-2"
-          noValidate
-        >
+        <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
           <FormField
             control={form.control}
             name="slug"

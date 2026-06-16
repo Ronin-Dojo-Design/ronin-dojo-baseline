@@ -5,8 +5,9 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-16
-last_agent: claude-session-0397
+last_agent: claude-session-0398
 pairs_with:
+  - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
   - docs/sprints/SESSION_0384.md
   - docs/sprints/SESSION_0383.md
@@ -378,6 +379,17 @@ The **one card** every directory entity renders through ([ADR 0028](../../archit
 | `SchoolCard` (adapter) | `apps/web/components/web/schools/school-card.tsx` | `school: SchoolCardData` | SESSION_0397: **folded into a `ListingCard` adapter** (avatar+initials media, type→headerBadge, disciplines→categories, persisted ORGANIZATION Save). The bespoke hover-reveals-contact card retired (contact → detail page). `/schools` + `/directory/schools` now render the one card. |
 | `FacetResultCard` | `apps/web/components/web/directory/facet-result-card.tsx` | `result: DirectoryFacetResult` | SESSION_0396: rewired to render through `ListingCard` (avatar media, trust/claim header badges, tag badges, View + Save). SESSION_0397: the Save slot is now the persisted `ListingSaveButton` keyed on `result.save` (person→Passport / org / tree). Used by `/directory`, `/directory/profiles`, `/directory/schools`. |
 | `DashboardSavedTab` | `apps/web/app/(web)/dashboard/saved-tab.tsx` | — | SESSION_0397: the "Saved" tab on `/app/profile` — a mixed-entity `ListingCard` grid of the user's bookmarks via `getSavedListings` → `SavedListing` (`server/web/bookmarks/saved.ts`). The saved-view surface that never existed before (D-DRIFT-0397-2). |
+
+---
+
+## 10. Shared identity editor — `components/web/passport/`
+
+The **one** owner-facing Passport + DirectoryProfile editor ([ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md): Passport is the identity SoT, DirectoryProfile its privacy *view*). SESSION_0398 collapsed two divergent editors — `/me`'s `PassportEditor` and `/app/profile`'s `ProfileForm` — into this single component; the parallel `ProfileForm` copy (which had drifted to only 4 passport fields) and the redundant `findUserPassport`/`findUserDirectoryProfile` dashboard query pair were retired. Same "one component, retire the copy" pattern as the §9 ListingCard fold.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `PassportEditor` | `apps/web/components/web/passport/passport-editor.tsx` | `passport: PassportOne`, `directoryProfile: DirectoryProfileOne`, `userId`, `canUploadVideo` | SESSION_0398: the canonical identity editor, rendered by **both** `/me` (MePage) and the `/app/profile` Profile tab (DashboardProfileTab) over the one query path (`server/web/passport/queries.ts`). Two hoisted `useHookFormAction` forms (Identity + Directory Profile) over the server schemas (`updatePassportSchema`/`updateDirectoryProfileSchema`) → the shared `updatePassport`/`updateDirectoryProfile` actions (which revalidate both `/me` + `/app/profile`). A live `ProfileHero` at the top mirrors name/avatar/location across both forms via `useWatch`. Full field set: display/legal name, dob, gender, phone, emergency contact, avatar (FormMedia upload), bio, social links; slug, visibility, location, show-toggles, cover (FormMedia), video (FormMedia, `canUploadVideo`-gated). Page-level extras stay on the pages (`/me`: Profile Completeness sidebar; dashboard: `MediaAttachmentManager` for Passport media). |
+| `SocialLinksEditor` | `apps/web/components/web/passport/social-links-editor.tsx` | `form: UseFormReturn<any>` | Field-array editor for `passport.socialLinks` (platform Select + URL). Moved here from `me/_components/` with the editor (SESSION_0398). |
 
 ---
 

@@ -49,19 +49,6 @@ export const findUserRegistrations = cache(async (userId: string, brand: Brand) 
   })
 })
 
-export const findUserPassport = cache(async (userId: string) => {
-  return db.passport.findUnique({
-    where: { userId },
-  })
-})
-
-export const findUserDirectoryProfile = cache(async (userId: string) => {
-  // Phase 3c: DirectoryProfile is Passport-rooted; resolve via the account's Passport.
-  return db.directoryProfile.findFirst({
-    where: { passport: { userId } },
-  })
-})
-
 export const findUserOrganization = cache(async (userId: string, brand: Brand) => {
   // Find organization where user is owner
   return db.organization.findFirst({

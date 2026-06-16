@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-09
-last_agent: claude-session-0358
+updated: 2026-06-16
+last_agent: claude-session-0398
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -176,6 +176,12 @@ model narrative in [passport-and-shells](concepts/passport-and-shells.md).
 **Add-person** (`/admin/users/new` → `createPerson`) writes the identity set in one transaction:
 placeholder `User` + `Passport` + stated `RankAward` + optional `Affiliation` + optional placement via
 `createLineageMember`. See [ADR 0025](../../architecture/decisions/0025-passport-identity-source-of-truth.md).
+
+**Owner self-edit** of Passport + DirectoryProfile is **one** component — `PassportEditor`
+(`components/web/passport/passport-editor.tsx`) over the one read path (`server/web/passport/queries.ts`:
+`getPassportByUserId` / `getDirectoryProfileByUserId`) and the shared `updatePassport`/`updateDirectoryProfile`
+actions. Both `/me` and the `/app/profile` Profile tab render it (SESSION_0398 collapsed the duplicate `ProfileForm`
+plus the redundant `findUserPassport`/`findUserDirectoryProfile` dashboard query pair). Don't add a parallel edit form.
 
 ### 2. Active vs reference
 

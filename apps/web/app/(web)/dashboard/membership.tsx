@@ -12,10 +12,10 @@ import { getRequestBrand } from "~/lib/brand-context"
 import {
   findUserEnrollments,
   findUserEntitlements,
-  findUserPassport,
   findUserRegistrations,
   findUserStripeCustomer,
 } from "~/server/web/dashboard/queries"
+import { getPassportByUserId } from "~/server/web/passport/queries"
 
 export const DashboardMembership = async () => {
   const session = await getServerSession()
@@ -30,7 +30,7 @@ export const DashboardMembership = async () => {
     findUserEnrollments(session.user.id, brand),
     findUserEntitlements(session.user.id, brand),
     findUserRegistrations(session.user.id, brand),
-    findUserPassport(session.user.id),
+    getPassportByUserId(session.user.id),
     findUserStripeCustomer(session.user.id, brand),
   ])
 

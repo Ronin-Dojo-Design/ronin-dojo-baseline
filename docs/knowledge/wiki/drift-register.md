@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-16
-last_agent: claude-session-0357
+last_agent: claude-session-0398
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -299,5 +299,5 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Source A (documented intent):** `docs/knowledge/wiki/concepts/passport-and-shells.md` — **Passport** is the global identity SoT; DirectoryProfile is a presentation *view*; rank/affiliation are contextual shells.
 - **Source B (impl drift):** the same person is read from different stores per surface — the black-belt-rail read `Membership.rank` (empty for BBL), `/directory` reads `DirectoryProfile` (empty for BBL placeholders), lineage reads `LineageNode`/`RankAward`. No store was canonical; the documented Passport+Shells model was never enforced, so surfaces render different/empty people.
 - **Decision:** consolidate onto Passport (operator-ratified SESSION_0357). `RankAward` = single rank source (+ `source`/`verificationStatus`); new `Affiliation` model = person↔org (display-only); school is NOT `Membership` for BBL.
-- **Status:** in progress — schema foundation landed (SESSION_0357 TASK_02); read-repoint (TASK_04) + add-person (TASK_03) + discoverability (TASK_05: link `passport-and-shells` at bow-in) carry forward.
+- **Status:** in progress — schema foundation landed (SESSION_0357 TASK_02); read-repoint (TASK_04) + add-person (TASK_03) + discoverability (TASK_05: link `passport-and-shells` at bow-in) carry forward. **Editor layer paid down (SESSION_0398):** the owner self-edit surface had drifted into two divergent editors over the same Passport+DirectoryProfile (`/me`'s `PassportEditor` + `/app/profile`'s `ProfileForm`) via two query-helper pairs; collapsed to one `PassportEditor` over the one `server/web/passport/queries` path — the duplicate `ProfileForm` + the `findUserPassport`/`findUserDirectoryProfile` dashboard pair retired.
 - **Logged in:** SESSION_0357. Sibling pattern: brand-color had the same two-layer shape (DB `BrandSettings` overrides `styles.css`) — resolved as intended (DB canonical + admin-editable), documented in `baseline-design-system.md`.
