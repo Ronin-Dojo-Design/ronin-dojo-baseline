@@ -78,7 +78,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LineageTreePage({ params, searchParams }: Props) {
   const { treeSlug } = await params
   const { view, focus } = await searchParams
-  const isExploreView = view === "explore"
+  // SESSION_0393: the cinematic focal explorer is the default public lineage view;
+  // the practical board/tree view is the labelled `?view=board` fallback.
+  const isExploreView = view !== "board"
   const brand = await getRequestBrand()
   const session = await getServerSession()
   // Phase 1c (SESSION_0364): the primary tree read now travels through oRPC
@@ -181,7 +183,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
               <Button
                 variant="secondary"
                 size="sm"
-                render={<Link href={`/lineage/${treeSlug}`} />}
+                render={<Link href={`/lineage/${treeSlug}?view=board`} />}
                 prefix={<ArrowLeftIcon size={14} />}
               >
                 Board view
@@ -196,7 +198,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
                   />
                 }
               >
-                Explore tree
+                Cinematic explorer
               </Button>
             )}
           </Stack>

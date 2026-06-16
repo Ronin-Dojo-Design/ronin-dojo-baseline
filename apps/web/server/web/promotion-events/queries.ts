@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import { db } from "~/services/db"
 import {
   type PromotionEventCard,
@@ -42,7 +43,7 @@ const summarizeAward = (
   award: PromotionEventCard["rankAwards"][number] | PromotionTimelineAwardRow,
 ): PromotionTimelineAwardSummary => ({
   id: award.id,
-  personName: award.passport.displayName ?? award.passport.user?.name ?? "Unnamed promotee",
+  personName: passportDisplayName(award.passport) ?? "Unnamed promotee",
   rankName: award.rank.name,
   rankShortName: award.rank.shortName,
   awardedAt: award.awardedAt,

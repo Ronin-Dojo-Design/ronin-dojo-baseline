@@ -1,5 +1,6 @@
 import type { Brand, Prisma } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import {
   buildAuthorizedRankAwardWhere,
   canAuthorPromotionEvent,
@@ -111,7 +112,7 @@ const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const formatAwardLabel = (
   award: Prisma.RankAwardGetPayload<{ select: typeof editableRankAwardPayload }>,
 ) => {
-  const person = award.passport.displayName ?? award.passport.user?.name ?? "Unnamed promotee"
+  const person = passportDisplayName(award.passport) ?? "Unnamed promotee"
   const rank = award.rank.shortName ?? award.rank.name
   return `${person} — ${rank}`
 }

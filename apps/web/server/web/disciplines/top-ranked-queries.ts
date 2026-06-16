@@ -6,6 +6,7 @@
 //          Membership is Baseline enrollment, not the rank source (passport-and-shells.md).
 // @wired   apps/web/app/(web)/disciplines/_components/black-belt-rail.tsx
 import type { Brand, Prisma } from "~/.generated/prisma/client"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import { db } from "~/services/db"
 
 // DTO — the strict shape the rail consumes; no raw Prisma rows reach the component.
@@ -75,7 +76,7 @@ export async function getTopRankedMembersForDiscipline({
     seen.add(award.passportId)
     members.push({
       id: award.passportId,
-      name: award.passport.displayName ?? award.passport.user?.name ?? "Unnamed",
+      name: passportDisplayName(award.passport) ?? "Unnamed",
       image: award.passport.avatarUrl ?? award.passport.user?.image ?? null,
       rankName: award.rank.name,
       colorHex: award.rank.colorHex,

@@ -21,6 +21,7 @@
  *   - apps/web/server/web/lineage/payloads.ts (LineageNodeRow, LineageRelationshipRow)
  */
 
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageNodeRow, LineageRelationshipRow } from "~/server/web/lineage/payloads"
 
 /** Maximum absolute depth emitted by `bucketByDepth`. */
@@ -36,7 +37,7 @@ export type LineageRow = {
  * deterministic when `user.name` is null.
  */
 function nodeDisplayName(node: LineageNodeRow): string {
-  return node.passport?.displayName ?? node.passport?.user?.name ?? node.slug ?? node.id
+  return passportDisplayName(node.passport) ?? node.slug ?? node.id
 }
 
 /**

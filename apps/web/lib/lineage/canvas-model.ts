@@ -1,3 +1,4 @@
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 
 /**
@@ -39,7 +40,7 @@ export type ChildGroup = {
 }
 
 export function nodeDisplayName(node: LineageNodeRow): string {
-  return node.passport?.displayName ?? node.passport?.user?.name ?? node.slug ?? node.id
+  return passportDisplayName(node.passport) ?? node.slug ?? node.id
 }
 
 /**

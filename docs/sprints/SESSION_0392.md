@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0392 — Phase 3c identity repoint to Passport + full userId drop"
 slug: session-0392
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-06-15
 updated: 2026-06-15
 last_agent: claude-session-0392

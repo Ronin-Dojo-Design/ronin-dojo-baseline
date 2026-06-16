@@ -49,6 +49,7 @@ import {
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
 } from "~/lib/lineage/trust-status"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 
 /**
@@ -260,7 +261,7 @@ function deriveDrawerProfileView(
   const claimStatus = pickLineageClaimStatus(profile.claimRequests)
 
   return {
-    displayName: profile.passport?.displayName ?? profile.passport?.user?.name ?? "Unnamed",
+    displayName: passportDisplayName(profile.passport) ?? "Unnamed",
     avatarSrc: profile.passport?.avatarUrl ?? profile.passport?.user?.image ?? null,
     currentAward,
     currentRank,
@@ -713,7 +714,7 @@ function InfoTab({
 function promoterName(
   rel: LineageNodeProfile["relationshipsTo"][number] | null | undefined,
 ): string | null {
-  return rel?.fromNode.passport?.displayName ?? rel?.fromNode.passport?.user?.name ?? null
+  return passportDisplayName(rel?.fromNode.passport) ?? null
 }
 
 function LineageTab({ relationships }: { relationships: LineageNodeProfile["relationshipsTo"] }) {

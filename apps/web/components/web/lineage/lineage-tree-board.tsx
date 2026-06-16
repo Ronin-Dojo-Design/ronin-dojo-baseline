@@ -6,6 +6,7 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
@@ -59,7 +60,7 @@ type LineageTreeBoardProps = {
 }
 
 function displayNameForMember(member: LineageTreeMemberRow): string {
-  return member.node.passport?.displayName ?? member.node.passport?.user?.name ?? "Unnamed"
+  return passportDisplayName(member.node.passport) ?? "Unnamed"
 }
 
 function descendantMemberIds(members: LineageTreeMemberRow[], rootMemberId: string): Set<string> {
