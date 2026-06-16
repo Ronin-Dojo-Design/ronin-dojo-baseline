@@ -221,12 +221,13 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
         <Section.Content>
           {isExploreView ? (
             // Brand type seam (SESSION_0394): the explorer inherits BBL Poppins
-            // (headings) + Inter (body) via these font vars; the d3 cards pick up
-            // the heading font through `family-chart.css`'s `font-family: inherit`.
+            // (headings) + Inter (body) via these font vars; the LineageCohortTimeline
+            // React cards apply the heading font directly (SESSION_0395, ADR 0027).
             <div className={cx(bblHeadingFont.variable, bblBodyFont.variable)}>
               <LineageViewAIsland
                 members={result.members}
                 relationships={result.members.flatMap(m => m.node.relationshipsTo)}
+                visualGroups={result.visualGroups}
                 defaultRootMemberId={result.defaultRootMemberId}
                 profilesById={profilesById}
                 treeSlug={treeSlug}

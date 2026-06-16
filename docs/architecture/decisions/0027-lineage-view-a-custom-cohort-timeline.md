@@ -21,7 +21,9 @@ backlinks:
 
 ## Status
 
-Accepted (SESSION_0394). Supersedes [ADR 0026](0026-lineage-view-a-engine-donatso-fork.md). **Build:** SESSION_0395.
+Accepted (SESSION_0394). Supersedes [ADR 0026](0026-lineage-view-a-engine-donatso-fork.md).
+**Built + amended SESSION_0395** (see "Amendment — SESSION_0395 build" below: the layout is a
+**timeline-tree of list-boxes + dated connectors**, not horizontal "cohort bands").
 
 ## Context
 
@@ -81,3 +83,40 @@ View B (`lineage-tree-canvas.tsx` overview) is unaffected.
   not model; the operator chose to stop fighting the engine.
 - **Cinematic styling onto the board layout** (make the board the explorer). Rejected earlier: loses the
   pan/zoom focal-recenter explorer identity the operator wants.
+
+## Amendment — SESSION_0395 build (layout refined + timeline reframe)
+
+The decision (retire family-chart for View A; keep the shared DTO; build a custom layout) stands and shipped.
+Two refinements emerged in the SESSION_0395 grill + build and supersede this ADR's original *shape* wording:
+
+1. **Layout is a timeline-tree of list-boxes + dated connectors, NOT horizontal "cohort bands."** Reconciling
+   two operator references (Balkan *Tree-List Layout* + the *Kajukenbo family tree* poster) into one model:
+   - A **node = a card** (cinematic header: avatar / Poppins name / belt-graphic) **+ a vertical list of that
+     person's children**. A listed child who *has their own students* (structural — someone points at them via
+     `primaryVisualParentMemberId`) sprouts **their own box**, joined by a measured-SVG **connector line**
+     (reusing `connector-geometry.ts`); a leaf child stays a compact row inside the parent card.
+   - **Deterministic top-down flow** (no force-directed physics, no new dependency); **native-scroll canvas**
+     (the WATERSHED 60B KISS conclusion), with focal `scrollIntoView` replacing family-chart's `tree_position`.
+   - Implemented as `components/web/lineage/lineage-cohort-timeline.tsx`; the island
+     (`lineage-view-a-island.tsx`) keeps the chrome + state and renders it.
+
+2. **The organizing axis is TIME — promotion provenance is the USP.** The lineage *proves* who promoted you,
+   by whom, and **when** (with the date as evidence). So:
+   - Promotion **date is first-class** on every card ("Promoted by {teacher} · {date}"), connectors carry the
+     **promotion year**, and children sort **chronologically** (reading down a branch = forward in time).
+   - The DTO (`to-lineage-visual.ts`) gained `promotionDate` (from the selected RankAward `awardedAt`) and
+     `visualGroupLabel` (resolved from `LineageVisualGroup`s).
+   - **Grouping became filtering** (operator: "stop fighting the cohort-lock"): no forced cohort sub-headings;
+     instead a **derived multi-select filter bar** with chips from existing data only (**no schema**) — cohort
+     **group** (e.g. the Dirty Dozen + ceremony cohorts), **belt**, **school**, and **promotion year**.
+     Rendered via a pluggable facet model so a future stored `LineageTag` many-to-many is a clean swap (the only
+     thing it buys is one person in two promotion cohorts at once — deferred to its own schema session).
+
+3. **family-chart retired (gated cut).** After a green browser-proof, the vendored `lib/lineage/family-chart/*`,
+   `to-family-chart-data.ts` (+ test), the dead `lineage-family-chart-smoke.tsx`, and `family-chart.css` were
+   deleted; the `.belt-shimmer` keyframes moved to `app/styles.css` so they survive. View B
+   (`lineage-tree-canvas.tsx`) is untouched.
+
+**Still deferred (unchanged):** tier-gating "who's on the tree" (needs schema/policy), blue school sub-tree
+nodes, recursion back-stack/breadcrumb polish, the secondary-link cross-line overlay (the legend shows the
+count; lines not drawn on the new layout yet), and `motion/react` selection choreography.

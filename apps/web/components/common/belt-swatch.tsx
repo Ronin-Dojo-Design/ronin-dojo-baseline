@@ -13,7 +13,7 @@ import { cx } from "~/lib/utils"
  * - `dot` (default) — a small belt-color dot for dense/listing surfaces.
  * - `bar` — a belt graphic (folded belt + knot) for the cinematic lineage explorer.
  *   Pass `shimmer` for a brand specular sweep; the sweep self-disables under
- *   `prefers-reduced-motion` (handled in `family-chart.css` `.belt-shimmer`).
+ *   `prefers-reduced-motion` (handled in `app/styles.css` `.belt-shimmer`).
  */
 export function BeltSwatch({
   colorHex,

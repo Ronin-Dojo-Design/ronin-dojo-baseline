@@ -1,4 +1,8 @@
-import type { LineageRelationshipRow, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
+import type {
+  LineageRelationshipRow,
+  LineageTreeMemberRow,
+  LineageVisualGroupRow,
+} from "~/server/web/lineage/payloads"
 import {
   memberAvatarSrc,
   memberBeltColor,
@@ -28,6 +32,17 @@ export type LineageVisualNode = {
   claimable: boolean
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
+  /**
+   * Promotion provenance (the lineage USP) — when this member was promoted to
+   * their shown rank. ISO date string from the selected RankAward, or null when
+   * the date is unknown. The timeline orders + dates the tree off this.
+   */
+  promotionDate: string | null
+  /**
+   * The cohort label from the member's `LineageVisualGroup` (e.g. "The Dirty
+   * Dozen …") when assigned — drives the derived filter chip. Null otherwise.
+   */
+  visualGroupLabel: string | null
 }
 
 export type LineageSecondaryLink = {
@@ -56,9 +71,11 @@ export function toLineageVisual(
   options: {
     mainMemberId?: string | null
     relationships?: Pick<LineageRelationshipRow, "fromNodeId" | "toNodeId" | "type">[]
+    visualGroups?: Pick<LineageVisualGroupRow, "id" | "label">[]
   } = {},
 ): { nodes: LineageVisualNode[]; secondaryLinks: LineageSecondaryLink[] } {
-  const { mainMemberId, relationships = [] } = options
+  const { mainMemberId, relationships = [], visualGroups = [] } = options
+  const groupLabelById = new Map(visualGroups.map(group => [group.id, group.label]))
 
   const nodes: LineageVisualNode[] = members.map(member => {
     const { node } = member
@@ -90,6 +107,12 @@ export function toLineageVisual(
       claimable,
       primaryVisualParentMemberId: member.primaryVisualParentMemberId,
       visualGroupId: member.visualGroupId,
+      promotionDate: member.selectedRankAward?.awardedAt
+        ? new Date(member.selectedRankAward.awardedAt).toISOString()
+        : null,
+      visualGroupLabel: member.visualGroupId
+        ? (groupLabelById.get(member.visualGroupId) ?? null)
+        : null,
     }
   })
 

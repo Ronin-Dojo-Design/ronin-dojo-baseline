@@ -4,6 +4,7 @@ import { Menu } from "@base-ui/react/menu"
 import { useReducedMotion } from "@mantine/hooks"
 import {
   CopyIcon,
+  FilterIcon,
   FocusIcon,
   NetworkIcon,
   PencilIcon,
@@ -14,32 +15,29 @@ import {
   UserRoundPlusIcon,
   UsersRoundIcon,
 } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
+import { LineageCohortTimeline } from "~/components/web/lineage/lineage-cohort-timeline"
 import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer"
+import { BBL, rgba } from "~/lib/lineage/belt-color"
 import { memberInitials } from "~/lib/lineage/canvas-model"
-import { createChart } from "~/lib/lineage/family-chart/index"
-import {
-  clearSecondaryLinks,
-  updateSecondaryLinks,
-} from "~/lib/lineage/family-chart/renderers/view-secondary-links"
-import "~/lib/lineage/family-chart/styles/family-chart.css"
-import type { TreeDatum } from "~/lib/lineage/family-chart/types/treeData"
-import { toFamilyChartData } from "~/lib/lineage/to-family-chart-data"
-import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
+import { toLineageVisual, type LineageVisualNode } from "~/lib/lineage/to-lineage-visual"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
 import type {
   LineageNodeProfile,
   LineageRelationshipRow,
   LineageTreeMemberRow,
+  LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
 import { cx, popoverAnimationClasses } from "~/lib/utils"
 
 type Props = {
   members: LineageTreeMemberRow[]
   relationships?: Pick<LineageRelationshipRow, "fromNodeId" | "toNodeId" | "type">[]
+  /** Cohort groups (e.g. the Dirty Dozen) — resolves the group filter chip label. */
+  visualGroups?: Pick<LineageVisualGroupRow, "id" | "label">[]
   defaultRootMemberId?: string | null
   profilesById: Record<string, LineageNodeProfile>
   treeSlug?: string
@@ -49,43 +47,16 @@ type Props = {
   canManage?: boolean
 }
 
-type CardRawData = {
-  displayName?: string
-  colorHex?: string | null
-  rankLabel?: string | null
-  schoolLabel?: string | null
-  avatar?: string | null
-  trustStatus?: LineageTrustStatus
-  claimable?: boolean
-}
-
-// Depth control: value === MAX_DEPTH means "All". The engine's trimTree takes a
-// numeric depth, so "All" is expressed as a depth larger than any real tree.
+// Depth control: value === MAX_DEPTH means "All" (a depth larger than any real tree).
 const MAX_DEPTH = 6
-const DEPTH_ALL = 50
-
-// Editorial canvas chrome — NOT brand identity. The dark stage is a fixed
-// editorial palette for the cinematic surface. Brand color is NOT hardcoded: the
-// red brand glow reads the BrandSettings `--primary` token via Tailwind
-// `bg-primary` overlays, and belt color always comes from `Rank.colorHex` data
-// (never a literal). `slate` is the neutral fallback for a null belt color (no
-// brand-red guessing). The museum-gold accent is confined to the secondary-link
-// legend only (SESSION_0394 Desi — brand parity: gold is not a brand accent).
-const BBL = {
-  gold: "#f3c86a",
-  slate: "#94a3b8",
-} as const
 
 // Solid "legacy/authoritative" chrome — replaces glassmorphism (no backdrop-blur).
-// A near-black opaque panel + hairline border + inset top highlight + real drop
-// shadow reads as carved/permanent, and is brand-neutral-free (SESSION_0394 Desi HIGH).
 const SOLID_PANEL =
   "border border-white/8 bg-[#0c0c0d] shadow-[0_20px_60px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.045)]"
 const SOLID_PILL =
   "border border-white/8 bg-[#101011] shadow-[0_12px_30px_-18px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.04)]"
 
-// Trust state is detail-level metadata — shown only on the focus panel / drawer,
-// not on every resting card (SESSION_0394 Desi — de-clutter). Label only.
+// Trust state is detail-level metadata — focus panel / drawer only.
 const TRUST_LABEL: Record<LineageTrustStatus, string> = {
   verified: "Verified",
   disputed: "Disputed",
@@ -95,124 +66,32 @@ const TRUST_LABEL: Record<LineageTrustStatus, string> = {
   unverified: "Unverified",
 }
 
-function escHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+type FilterDimension = "group" | "belt" | "school" | "year"
+
+type FilterFacet = {
+  dimension: FilterDimension
+  /** Stable value matched against the node (group label / rankLabel / schoolLabel / year). */
+  value: string
+  /** Display label. */
+  label: string
+  /** Belt swatch color for belt facets (null otherwise). */
+  colorHex: string | null
 }
 
-function hexToRgb(hex: string | null | undefined) {
-  if (!hex) return null
-  const normalized = hex.replace("#", "")
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null
-
-  const value = Number.parseInt(normalized, 16)
-  return {
-    r: (value >> 16) & 255,
-    g: (value >> 8) & 255,
-    b: value & 255,
+function nodeMatchesFacet(node: LineageVisualNode, facet: FilterFacet): boolean {
+  switch (facet.dimension) {
+    case "group":
+      return node.visualGroupLabel === facet.value
+    case "belt":
+      return node.rankLabel === facet.value
+    case "school":
+      return node.schoolLabel === facet.value
+    case "year":
+      return (
+        node.promotionDate != null &&
+        String(new Date(node.promotionDate).getUTCFullYear()) === facet.value
+      )
   }
-}
-
-function rgba(hex: string | null | undefined, alpha: number, fallback = BBL.slate) {
-  const rgb = hexToRgb(hex ?? fallback) ?? hexToRgb(fallback)!
-  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`
-}
-
-// WCAG relative luminance (sRGB). Used to clamp belt-glow bloom on bright belts
-// (white/yellow/coral) so they don't halo into an unreadable smear. (SESSION_0394 Desi LOW)
-function relativeLuminance(hex: string | null | undefined): number {
-  const rgb = hexToRgb(hex)
-  if (!rgb) return 0
-  const channel = (v: number) => {
-    const c = v / 255
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-  }
-  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b)
-}
-
-/**
- * Belt graphic for the d3 card (HTML string — d3 owns the card DOM, so this is
- * markup, not the <BeltSwatch> React component, but the visual is identical).
- * Belt color is data (`Rank.colorHex`); the shimmer sweep uses the global
- * `.belt-shimmer` rule (reduced-motion aware). The root SVG clips the sweep.
- */
-function buildBeltSvg(colorHex: string, width: number): string {
-  const height = (width * 12) / 40
-  return `<svg viewBox="0 0 40 12" width="${width}" height="${height.toFixed(1)}" style="display:block;overflow:hidden;" aria-hidden="true">
-    <rect x="0.5" y="3" width="39" height="6" rx="3" fill="${colorHex}"></rect>
-    <rect x="15.5" y="1.5" width="9" height="9" rx="1.6" fill="${colorHex}" stroke="rgba(0,0,0,0.28)" stroke-width="0.6"></rect>
-    <rect x="18.4" y="1.5" width="3.2" height="9" fill="rgba(0,0,0,0.2)"></rect>
-    <rect class="belt-shimmer" x="0" y="3" width="5" height="6" rx="2.5" fill="rgba(255,255,255,0.5)"></rect>
-  </svg>`
-}
-
-/**
- * HTML card renderer for the vendored family-chart engine.
- *
- * Inline CSS is required because d3 owns the card DOM. Keep the data public-safe;
- * do not inject private profile fields here. Belt color is data (`Rank.colorHex`),
- * with a neutral slate fallback — no brand-red literals. The card carries identity
- * (avatar -> name -> belt -> school); the rank label + trust state live on the
- * focus panel / drawer where there is room (SESSION_0394 Desi HIGH — de-clutter).
- */
-function buildCardHtml(d: TreeDatum, isFocal: boolean): string {
-  const raw = d.data.data as CardRawData
-
-  const displayName = raw.displayName ?? "Unknown"
-  const colorHex = raw.colorHex ?? BBL.slate
-  const schoolLabel = raw.schoolLabel ?? null
-  const avatar = raw.avatar ?? null
-  const claimable = raw.claimable ?? false
-  const initials = memberInitials(displayName)
-
-  const safeName = escHtml(displayName)
-  const safeSchool = schoolLabel ? escHtml(schoolLabel) : ""
-
-  // Clamp glow bloom by luminance so bright belts don't halo. (SESSION_0394 Desi LOW)
-  const bright = relativeLuminance(colorHex) > 0.6
-  const glow = rgba(colorHex, isFocal ? (bright ? 0.26 : 0.42) : bright ? 0.12 : 0.2)
-  const cardBorder = isFocal ? rgba(colorHex, 0.7) : "rgba(255,255,255,0.1)"
-  const cardShadow = isFocal
-    ? `0 0 0 1px ${cardBorder}, 0 22px 60px -24px ${glow}`
-    : `0 0 0 1px ${cardBorder}, 0 14px 34px -20px rgba(0,0,0,0.7)`
-
-  const avatarHtml = avatar
-    ? `<img src="${escHtml(avatar)}" alt="${safeName}" style="width:52px;height:52px;border-radius:999px;object-fit:cover;display:block;" />`
-    : `<div style="width:52px;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${rgba(colorHex, 0.9)},rgba(255,255,255,0.14));color:#fff;font-size:16px;font-weight:800;">${escHtml(initials)}</div>`
-
-  // Claimable cards keep one quiet corner marker (it drives a real action); other
-  // trust states are no longer shown on the resting card (moved to focus/drawer).
-  const claimDot = claimable
-    ? `<div title="Claimable" style="position:absolute;top:16px;right:52px;display:inline-flex;align-items:center;gap:4px;border-radius:999px;border:1px solid rgba(199,210,254,0.3);background:rgba(99,102,241,0.16);color:#dbeafe;padding:2px 7px;font-size:8.5px;line-height:1.2;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Claimable</div>`
-    : ""
-
-  const schoolHtml = schoolLabel
-    ? `<div style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,0.5);font-size:11px;line-height:1.3;font-weight:500;">${safeSchool}</div>`
-    : ""
-
-  const focalAttr = isFocal ? "data-bbl-focal" : "data-bbl-recede"
-
-  return `
-    <div data-bbl-card ${focalAttr} style="position:relative;width:${isFocal ? "256px" : "230px"};min-height:${isFocal ? "138px" : "126px"};overflow:hidden;border-radius:20px;background:radial-gradient(circle at 16% 8%, ${rgba(colorHex, 0.16)} 0, transparent 36%),linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.012) 42%, #060606);box-shadow:${cardShadow};transform:translateZ(0);">
-      <div style="position:absolute;top:14px;left:14px;width:56px;height:56px;border-radius:999px;padding:2px;background:linear-gradient(135deg, ${colorHex}, rgba(255,255,255,0.22));box-shadow:0 0 18px ${rgba(colorHex, bright ? 0.18 : 0.26)};">
-        <div style="width:52px;height:52px;border-radius:999px;background:#0a0a0a;overflow:hidden;">${avatarHtml}</div>
-      </div>
-
-      <div data-card-menu role="button" aria-haspopup="menu" tabindex="0" title="Actions" style="position:absolute;top:15px;right:14px;width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.62);cursor:pointer;user-select:none;font-size:17px;line-height:1;">⋮</div>
-      ${claimDot}
-
-      <div style="position:absolute;left:15px;right:15px;bottom:14px;display:flex;flex-direction:column;gap:7px;">
-        <div style="max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:${isFocal ? "17px" : "15px"};line-height:1.1;font-style:italic;font-weight:800;font-family:var(--font-bbl-heading),system-ui,sans-serif;">${safeName}</div>
-        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-          ${buildBeltSvg(colorHex, 36)}
-          ${schoolHtml}
-        </div>
-      </div>
-    </div>
-  `
 }
 
 function DepthStepper({
@@ -286,6 +165,7 @@ function PremiumPanel({ children, className }: { children: React.ReactNode; clas
 export function LineageViewAIsland({
   members,
   relationships = [],
+  visualGroups = [],
   defaultRootMemberId,
   profilesById,
   treeSlug,
@@ -293,34 +173,28 @@ export function LineageViewAIsland({
   initialFocusId,
   canManage = false,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<ReturnType<typeof createChart> | null>(null)
-  const reduceMotion = useReducedMotion()
-  const reduceMotionRef = useRef(reduceMotion)
-  reduceMotionRef.current = reduceMotion
+  const reduceMotion = useReducedMotion() ?? false
 
   const initialMemberId = initialFocusId ?? defaultRootMemberId ?? members[0]?.id ?? null
   const [focusMemberId, setFocusMemberId] = useState<string | null>(initialMemberId)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMemberId, setDrawerMemberId] = useState<string | null>(null)
-  const [showSecondaryLinks, setShowSecondaryLinks] = useState(true)
-  const showSecondaryLinksRef = useRef(true)
-  showSecondaryLinksRef.current = showSecondaryLinks
 
-  // "Click to recenter" hint auto-dismisses after the first focus interaction —
-  // training-wheels chrome that earns its keep then leaves. (SESSION_0394 Desi LOW)
+  // "Click to recenter" hint auto-dismisses after the first focus interaction.
   const [hasInteracted, setHasInteracted] = useState(false)
 
   const [ancestryDepth, setAncestryDepth] = useState(MAX_DEPTH)
   const [progenyDepth, setProgenyDepth] = useState(MAX_DEPTH)
-  const ancestryDepthRef = useRef(ancestryDepth)
-  const progenyDepthRef = useRef(progenyDepth)
-  const depthInitializedRef = useRef(false)
-  ancestryDepthRef.current = ancestryDepth
-  progenyDepthRef.current = progenyDepth
 
-  const [cardMenu, setCardMenu] = useState<{ memberId: string; anchorEl: HTMLElement } | null>(null)
+  const [cardMenu, setCardMenu] = useState<{
+    memberId: string
+    anchorEl: HTMLElement
+  } | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Derived multi-select filter — belt + school facets from existing DTO data
+  // (no schema). Empty set = no active filter (all shown). (SESSION_0395 grill Q7)
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
 
   const memberMap = useMemo(() => new Map(members.map(member => [member.id, member])), [members])
   const drawerMember = drawerMemberId ? (memberMap.get(drawerMemberId) ?? null) : null
@@ -339,8 +213,9 @@ export function LineageViewAIsland({
       toLineageVisual(members, {
         mainMemberId: initialMemberId,
         relationships,
+        visualGroups,
       }),
-    [members, initialMemberId, relationships],
+    [members, initialMemberId, relationships, visualGroups],
   )
 
   const nodeByMemberId = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes])
@@ -359,13 +234,89 @@ export function LineageViewAIsland({
 
   const claimableCount = useMemo(() => nodes.filter(node => node.claimable).length, [nodes])
 
+  // Derive filter facets from existing DTO data (no schema): cohort group (e.g.
+  // the Dirty Dozen), belt, school, and promotion year. Promotion year is the
+  // timeline axis made filterable. (SESSION_0395 grill Q7 + timeline reframe)
+  const facets = useMemo<FilterFacet[]>(() => {
+    const groups = new Map<string, FilterFacet>()
+    const belts = new Map<string, FilterFacet>()
+    const schools = new Map<string, FilterFacet>()
+    const years = new Map<string, FilterFacet>()
+    for (const node of nodes) {
+      if (node.visualGroupLabel && !groups.has(node.visualGroupLabel)) {
+        groups.set(node.visualGroupLabel, {
+          dimension: "group",
+          value: node.visualGroupLabel,
+          label: node.visualGroupLabel,
+          colorHex: null,
+        })
+      }
+      if (node.rankLabel && !belts.has(node.rankLabel)) {
+        belts.set(node.rankLabel, {
+          dimension: "belt",
+          value: node.rankLabel,
+          label: node.rankLabel,
+          colorHex: node.colorHex,
+        })
+      }
+      if (node.schoolLabel && !schools.has(node.schoolLabel)) {
+        schools.set(node.schoolLabel, {
+          dimension: "school",
+          value: node.schoolLabel,
+          label: node.schoolLabel,
+          colorHex: null,
+        })
+      }
+      if (node.promotionDate) {
+        const year = String(new Date(node.promotionDate).getUTCFullYear())
+        if (year !== "NaN" && !years.has(year)) {
+          years.set(year, { dimension: "year", value: year, label: year, colorHex: null })
+        }
+      }
+    }
+    return [
+      ...groups.values(),
+      ...belts.values(),
+      ...schools.values(),
+      ...[...years.values()].sort((a, b) => b.value.localeCompare(a.value)),
+    ]
+  }, [nodes])
+
+  const facetByKey = useMemo(
+    () => new Map(facets.map(facet => [`${facet.dimension}:${facet.value}`, facet])),
+    [facets],
+  )
+
+  const matchedMemberIds = useMemo<Set<string> | null>(() => {
+    if (activeFilters.size === 0) return null
+    const activeFacets = [...activeFilters]
+      .map(key => facetByKey.get(key))
+      .filter((facet): facet is FilterFacet => facet != null)
+    const matched = new Set<string>()
+    for (const node of nodes) {
+      // OR across selected chips (any active chip matches → node stays lit).
+      if (activeFacets.some(facet => nodeMatchesFacet(node, facet))) {
+        matched.add(node.id)
+      }
+    }
+    return matched
+  }, [activeFilters, facetByKey, nodes])
+
+  const toggleFilter = useCallback((key: string) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
+
   const openDrawer = useCallback((memberId: string) => {
     setDrawerMemberId(memberId)
     setDrawerOpen(true)
   }, [])
 
-  // Tap a student avatar in the drawer carousel → swap the drawer to them
-  // (recursive drill-down). Guard against a student with no loaded profile.
+  // Tap a student avatar in the drawer carousel → swap the drawer (recursive drill).
   const selectStudent = useCallback(
     (memberId: string) => {
       const member = memberMap.get(memberId)
@@ -376,29 +327,18 @@ export function LineageViewAIsland({
     [memberMap, profilesById],
   )
 
-  const updateFocusUrl = useCallback((memberId: string) => {
+  const focusMember = useCallback((memberId: string) => {
+    setFocusMemberId(memberId)
+    setHasInteracted(true)
     const sp = new URLSearchParams(window.location.search)
     sp.set("view", "explore")
     sp.set("focus", memberId)
     window.history.replaceState(null, "", `?${sp.toString()}`)
   }, [])
 
-  const focusMember = useCallback(
-    (memberId: string, options: { syncUrl?: boolean } = { syncUrl: true }) => {
-      const chart = chartRef.current
-      if (!chart) return
-
-      chart.store.updateMainId(memberId)
-      chart.store.updateTree({})
-      setFocusMemberId(memberId)
-      setHasInteracted(true)
-
-      if (options.syncUrl) {
-        updateFocusUrl(memberId)
-      }
-    },
-    [updateFocusUrl],
-  )
+  const openCardMenu = useCallback((memberId: string, anchorEl: HTMLElement) => {
+    setCardMenu({ memberId, anchorEl })
+  }, [])
 
   const copyFocusLink = useCallback((memberId: string) => {
     const sp = new URLSearchParams(window.location.search)
@@ -412,100 +352,10 @@ export function LineageViewAIsland({
     window.setTimeout(() => setCopied(false), 1400)
   }, [])
 
+  // Keep React focus in sync if the initial focus id resolves late (data load).
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const data = toFamilyChartData(nodes)
-    if (data.length === 0) return
-
-    const resolvedFocusId = initialFocusId ?? defaultRootMemberId ?? data[0]!.id
-    const chart = createChart(container, data)
-    chartRef.current = chart
-
-    // Reduced-motion honor: collapse both the engine's tree transition (store state)
-    // and the secondary-link redraw (chart.transition_time) to instant. (Desi 0393)
-    if (reduceMotionRef.current) {
-      chart.setTransitionTime(0)
-      chart.transition_time = 0
-    }
-
-    const cardHtml = chart.setCardHtml()
-
-    cardHtml.setCardInnerHtmlCreator((d: TreeDatum) => {
-      const isFocal = d.data.id === chart.store.getMainId()
-      return buildCardHtml(d, isFocal)
-    })
-
-    cardHtml.setOnCardClick((event: MouseEvent, d: TreeDatum) => {
-      const target = event.target as HTMLElement | null
-      // Preserve the ⋮ guard: a menu-trigger click opens the menu, never recenters.
-      const menuTrigger = target?.closest("[data-card-menu]") as HTMLElement | null
-
-      if (menuTrigger) {
-        setCardMenu({ memberId: d.data.id, anchorEl: menuTrigger })
-        return
-      }
-
-      focusMember(d.data.id)
-    })
-
-    cardHtml.setOnHoverPathToMain()
-
-    // Secondary link overlay — re-drawn after every tree update. Reads refs (not
-    // state) so toggling/depth never remounts the chart.
-    chart.setAfterUpdate(() => {
-      const tree = chart.store.getTree()
-      if (!tree) return
-
-      if (showSecondaryLinksRef.current && secondaryLinks.length > 0) {
-        updateSecondaryLinks(chart.svg, tree.data, secondaryLinks, chart.transition_time)
-      } else {
-        clearSecondaryLinks(chart.svg)
-      }
-    })
-
-    chart.setSingleParentEmptyCard(false)
-    chart.setAncestryDepth(
-      ancestryDepthRef.current >= MAX_DEPTH ? DEPTH_ALL : ancestryDepthRef.current,
-    )
-    chart.setProgenyDepth(
-      progenyDepthRef.current >= MAX_DEPTH ? DEPTH_ALL : progenyDepthRef.current,
-    )
-    chart.updateMainId(resolvedFocusId)
-    chart.updateTree({ initial: true, tree_position: "fit" })
-
-    setFocusMemberId(resolvedFocusId)
-    depthInitializedRef.current = true
-
-    return () => {
-      chartRef.current = null
-      depthInitializedRef.current = false
-      container.innerHTML = ""
-    }
-  }, [nodes, defaultRootMemberId, initialFocusId, secondaryLinks, focusMember])
-
-  useEffect(() => {
-    const chart = chartRef.current
-    if (!chart) return
-
-    const tree = chart.store.getTree()
-
-    if (showSecondaryLinks && secondaryLinks.length > 0 && tree) {
-      updateSecondaryLinks(chart.svg, tree.data, secondaryLinks, reduceMotion ? 0 : 200)
-    } else {
-      clearSecondaryLinks(chart.svg)
-    }
-  }, [showSecondaryLinks, secondaryLinks, reduceMotion])
-
-  useEffect(() => {
-    const chart = chartRef.current
-    if (!chart || !depthInitializedRef.current) return
-
-    chart.setAncestryDepth(ancestryDepth >= MAX_DEPTH ? DEPTH_ALL : ancestryDepth)
-    chart.setProgenyDepth(progenyDepth >= MAX_DEPTH ? DEPTH_ALL : progenyDepth)
-    chart.updateTree({ tree_position: "inherit" })
-  }, [ancestryDepth, progenyDepth])
+    if (!focusMemberId && initialMemberId) setFocusMemberId(initialMemberId)
+  }, [focusMemberId, initialMemberId])
 
   const focusTrustLabel = focusNode
     ? (TRUST_LABEL[focusNode.trustStatus] ?? focusNode.trustStatus)
@@ -514,42 +364,40 @@ export function LineageViewAIsland({
   return (
     <div className="relative w-full overflow-hidden rounded-[2rem] border border-white/8 bg-[#050505] text-white shadow-2xl shadow-black/60 [font-family:var(--font-bbl-body),system-ui,sans-serif]">
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        {/* One light source (brand `--primary`) + one vignette — no stacked blobs/grids. (Desi KISS) */}
         <div className="absolute left-1/2 top-[-14rem] h-[38rem] w-[38rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[140px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_28rem)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black to-transparent" />
       </div>
 
       <div className="relative z-10 p-4 sm:p-5 lg:p-6">
-        <div className="mb-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <PremiumPanel>
-            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.22em] text-white">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.22em] text-white">
                     <SparklesIcon className="size-3.5 text-primary" />
                     Black Belt Legacy Explorer
                   </span>
 
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#141415] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/60">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/8 bg-[#141415] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/60">
                     <RouteIcon className="size-3.5" />
                     Focal lineage view
                   </span>
                 </div>
 
-                {/* Marketing copy collapses on mobile so the canvas is above the fold. (Desi 0393) */}
                 <h2 className="mt-4 hidden text-balance text-3xl uppercase italic tracking-[0.01em] text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif] sm:block sm:text-4xl lg:text-5xl">
                   Explore the living lineage.
                 </h2>
 
                 <p className="mt-3 hidden max-w-3xl text-pretty text-sm/6 text-white/60 sm:block sm:text-base/7">
-                  Click any practitioner to recenter the tree, trace their path, inspect their
-                  profile, and share a direct focus link. Secondary promoter links stay visible
-                  without corrupting the clean primary lineage.
+                  Click any practitioner to recenter the tree and trace their lineage. Instructors
+                  with students of their own branch into their own box; everyone else lists under
+                  their teacher — tap them to open their profile and full student roster.
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 md:min-w-[25rem]">
+              <div className="grid w-full shrink-0 grid-cols-3 gap-2 md:w-auto md:max-w-[25rem]">
                 <MetricPill icon={<UsersRoundIcon />} label="Members" value={members.length} />
                 <MetricPill icon={<ShieldCheckIcon />} label="Verified" value={verifiedCount} />
                 <MetricPill icon={<NetworkIcon />} label="Roots" value={rootCount} />
@@ -557,8 +405,7 @@ export function LineageViewAIsland({
             </div>
           </PremiumPanel>
 
-          {/* Current-focus panel — hidden on mobile to keep the canvas above the fold. (Desi 0393) */}
-          <PremiumPanel className="hidden flex-col justify-between gap-4 lg:flex">
+          <PremiumPanel className="hidden flex-col justify-between gap-4 xl:flex">
             <div>
               <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-white/42">
                 Current focus
@@ -618,27 +465,72 @@ export function LineageViewAIsland({
           </PremiumPanel>
         </div>
 
+        {/* Derived filter bar — belt + school chips; dim non-matches (not hide). */}
+        {facets.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-white/40">
+              <FilterIcon className="size-3.5" />
+              Filter
+            </span>
+            {facets.map(facet => {
+              const key = `${facet.dimension}:${facet.value}`
+              const active = activeFilters.has(key)
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleFilter(key)}
+                  className={cx(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.68rem] font-semibold transition",
+                    active
+                      ? "border border-primary/40 bg-primary/15 text-white"
+                      : cx("text-white/55 hover:text-white", SOLID_PILL),
+                  )}
+                >
+                  {facet.dimension === "belt" && (
+                    <BeltSwatch variant="bar" colorHex={facet.colorHex} />
+                  )}
+                  <span className="max-w-[12rem] truncate">{facet.label}</span>
+                </button>
+              )
+            })}
+            {activeFilters.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setActiveFilters(new Set())}
+                className="text-[0.68rem] font-semibold text-white/45 underline-offset-2 transition hover:text-white hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-black/60 shadow-2xl shadow-black/50">
           <div
-            ref={containerRef}
-            id="FamilyChartViewA"
-            className="f3"
+            className="relative"
             style={
               {
                 width: "100%",
                 height: "clamp(560px, 78vh, 880px)",
                 minHeight: 560,
-                position: "relative",
-                overflow: "hidden",
-                // Dark editorial stage. The brand glow lives in the `bg-primary`
-                // overlay below — no hardcoded brand red here.
                 background: "#050505",
-                "--background-color": "#050505",
               } as CSSProperties
             }
-          />
+          >
+            <LineageCohortTimeline
+              nodes={nodes}
+              focusMemberId={focusMemberId}
+              ancestryDepth={ancestryDepth}
+              progenyDepth={progenyDepth}
+              matchedMemberIds={matchedMemberIds}
+              reduceMotion={reduceMotion}
+              onFocus={focusMember}
+              onOpenMenu={openCardMenu}
+              onOpenProfile={openDrawer}
+            />
+          </div>
 
-          {/* One brand-primary glow + one grid on the canvas (tracks BrandSettings). */}
           <div className="pointer-events-none absolute left-1/2 top-[-8rem] h-80 w-80 -translate-x-1/2 rounded-full bg-primary/18 blur-[120px]" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent" />
@@ -656,34 +548,15 @@ export function LineageViewAIsland({
                 Click to recenter
               </div>
             )}
-
-            {secondaryLinks.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowSecondaryLinks(value => !value)}
-                className={cx(
-                  "inline-flex items-center gap-2 rounded-full px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.18em] transition",
-                  showSecondaryLinks
-                    ? "border border-primary/30 bg-primary/15 text-white"
-                    : cx("text-white/56 hover:text-white", SOLID_PILL),
-                )}
-              >
-                <RouteIcon className="size-3.5" />
-                {showSecondaryLinks ? "Secondary links on" : "Secondary links off"}
-              </button>
-            )}
           </div>
 
           {/* Depth controls: bottom-right on mobile so they never crowd the
-              top-left recenter/secondary cluster; back to top-right on sm+.
-              (SESSION_0394 Desi — mobile top-overlay crowding) */}
+              top-left hint; back to top-right on sm+. */}
           <div className="absolute bottom-3 right-3 z-20 flex max-w-[calc(100%-1.5rem)] flex-row gap-2 sm:bottom-auto sm:right-4 sm:top-4 sm:flex-col">
             <DepthStepper label="Ancestry" value={ancestryDepth} onChange={setAncestryDepth} />
             <DepthStepper label="Progeny" value={progenyDepth} onChange={setProgenyDepth} />
           </div>
 
-          {/* Legend hides on mobile (canvas space is precious); the depth
-              controls take the mobile bottom row instead. */}
           <div className="absolute bottom-3 left-3 z-20 hidden max-w-[calc(100%-1.5rem)] flex-wrap gap-2 sm:bottom-4 sm:left-4 sm:flex">
             <div
               className={cx(
@@ -714,7 +587,8 @@ export function LineageViewAIsland({
                     strokeOpacity="0.9"
                   />
                 </svg>
-                Secondary promoter / cross-training
+                {secondaryLinks.length} cross-training link
+                {secondaryLinks.length === 1 ? "" : "s"}
               </div>
             )}
           </div>
@@ -728,8 +602,8 @@ export function LineageViewAIsland({
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-white/42">
           <span>
-            Best on desktop with trackpad/pan. Fully usable on mobile: tap cards, pinch/drag inside
-            the canvas, and use depth controls to simplify.
+            Best on desktop; fully usable on mobile — tap a card to recenter, scroll the canvas, and
+            use depth controls to simplify.
           </span>
 
           {claimableCount > 0 && (
