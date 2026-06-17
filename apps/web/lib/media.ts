@@ -25,6 +25,16 @@ export const resolvePublicMediaUrl = (path: string): string => {
   return `${cleanBase}/${cleanPath}`
 }
 
+// Brand-keyed static default avatars (plain string keys — NOT the Prisma `Brand` enum value
+// import, which would pull Prisma into client bundles). Served straight from `public/`.
+const BRAND_DEFAULT_AVATAR: Record<string, string> = { BBL: "/brand/bbl/default-black-belt.png" }
+
+/** Display avatar with brand-aware default fallback (static public asset; not media-base-prefixed). */
+export const resolveDisplayAvatar = (
+  avatarUrl: string | null | undefined,
+  brand?: string | null,
+): string | null => avatarUrl || (brand ? (BRAND_DEFAULT_AVATAR[brand] ?? null) : null)
+
 const requireEnv = (value: string | undefined, name: string) => {
   if (!value) {
     throw new Error(`${name} is required`)

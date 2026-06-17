@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-17
-last_agent: claude-session-0407
+last_agent: claude-session-0408
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -315,3 +315,22 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Source B:** `apps/web/scripts/import-bbl-lineage-profiles.ts:277` (`resolveProfileMedia`) builds the avatar URL from the **exact, case-preserved** basename (`Old-school-Bob.jpg`). R2 keys are case-sensitive.
 - **Impact:** uploading avatars via the media-pull script would 404 every imported avatar. SESSION_0407 worked around it with name-preserving `aws s3 cp`. The two SESSION_0403 scripts were meant to pair but disagree.
 - **Status:** open — fix the slugify path in `import-bbl-wp-media.ts` (or retire it for `aws s3 cp`). **Logged in:** SESSION_0407 (FINDING_01).
+
+### D-026 — Full-member importer's Affiliation step is not idempotent
+
+- **Source:** `apps/web/scripts/import-bbl-members-full.ts` (Affiliation create) — a post-run `--dry-run` still
+  reports "Affiliations: 4 would create" although those rows exist; every other step correctly reports 0 creates.
+- **Impact:** re-running the **real** import would insert duplicate `Affiliation` rows (no `findFirst` dedup on
+  `{passportId, organizationId}` before create). Harmless to reads, dirties data.
+- **Status:** open — add the dedup guard before create; **do not re-run the real import until fixed.**
+  **Logged in:** SESSION_0408 (FINDING_01).
+
+### D-027 — WP school-name matching too strict (punctuation / pod-id)
+
+- **Source:** `import-bbl-members-full.ts` maps a person's `school` to an Organization by exact name; 4/8
+  resolved. Misses: `"South Bay Jiu Jitsu"` (export) vs `"South Bay Jiu-Jitsu"` (canonical), `"Mat Fitness"`
+  (absent from the `bbl_school` export), `"231"` (a stray Pods post-id, not a name).
+- **Impact:** unmatched members keep a `schoolName` free-text fallback but no Organization-linked Affiliation,
+  so they don't appear under the school's org facet.
+- **Status:** open — normalize school names (strip punctuation/case) + ignore numeric pod-ids before the next
+  import pass. **Logged in:** SESSION_0408.

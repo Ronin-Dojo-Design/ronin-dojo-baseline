@@ -1,3 +1,4 @@
+import { resolveDisplayAvatar } from "~/lib/media"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
   directoryProfileDetailPayload,
@@ -90,7 +91,7 @@ export const findProfileBySlug = async ({
       user: {
         id: previewAccount?.id ?? null,
         name: preview.passport.displayName ?? previewAccount?.name ?? null,
-        image: preview.passport.avatarUrl ?? previewAccount?.image ?? null,
+        image: resolveDisplayAvatar(preview.passport.avatarUrl ?? previewAccount?.image, brand),
         bio: null,
         socialLinks: null,
         email: null,
@@ -135,8 +136,8 @@ export const findProfileBySlug = async ({
     user: {
       id: account?.id ?? null,
       name: profile.passport.displayName ?? account?.name ?? null,
-      // Prefer the promoted Passport avatar, fall back to the account image.
-      image: profile.passport.avatarUrl ?? account?.image ?? null,
+      // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
+      image: resolveDisplayAvatar(profile.passport.avatarUrl ?? account?.image, brand),
       bio: profile.passport.bio ?? null,
       socialLinks: profile.passport.socialLinks ?? null,
       email: profile.showEmail ? (account?.email ?? null) : null,

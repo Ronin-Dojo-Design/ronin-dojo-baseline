@@ -7,6 +7,7 @@ import {
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
 } from "~/lib/lineage/trust-status"
+import { resolveDisplayAvatar } from "~/lib/media"
 import type { DirectoryProfileList } from "~/server/web/directory/payloads"
 
 type ProfileViewer = {
@@ -106,11 +107,13 @@ export function trustSummaryForUser(user: UserTrustSource) {
 export function projectDirectoryProfileListItem({
   profile,
   policy = FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+  brand,
   viewerUserId,
   viewerRole,
 }: {
   profile: DirectoryProfileList
   policy?: LineageProfileDetailRenderPolicy
+  brand?: string | null
 } & ProfileViewer) {
   // Phase 3c: identity is Passport-rooted; `passport.user` is the attached account (null = placeholder).
   const account = profile.passport.user
@@ -134,8 +137,8 @@ export function projectDirectoryProfileListItem({
       isPlaceholder: account == null,
       lineageNode: profile.passport.lineageNode,
     }),
-    // Prefer the promoted Passport avatar, fall back to the account image.
-    image: profile.passport.avatarUrl ?? account?.image ?? null,
+    // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
+    image: resolveDisplayAvatar(profile.passport.avatarUrl ?? account?.image, brand),
     locationCity: canRenderFullProfile && policy.features.location ? profile.locationCity : null,
     locationRegion:
       canRenderFullProfile && policy.features.location ? profile.locationRegion : null,

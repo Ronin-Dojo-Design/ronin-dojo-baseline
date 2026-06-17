@@ -80,6 +80,7 @@ export const searchDirectoryProfiles = async (
       profile,
       policy:
         policies.get(profile.passport.user?.id ?? "") ?? FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+      brand,
       viewerUserId,
       viewerRole,
     }),
