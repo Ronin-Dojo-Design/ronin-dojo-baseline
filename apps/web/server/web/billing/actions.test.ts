@@ -6,18 +6,13 @@
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
-// Shared next/navigation + stripe mock — imported BEFORE the action so the action binds
-// the shared `redirect`/`stripe` (one mock across all billing test files; no cross-file
-// clobber). See the helper for the full rationale.
-import {
-  portalSessionCreateMock,
-  redirectState,
-  resetBillingActionMocks,
-  STRIPE_BILLING_PORTAL_URL,
-} from "~/lib/test/billing-action-mocks"
 
 const sessionUserState = { id: "" }
 const requestBrand = "BASELINE_MARTIAL_ARTS"
+const portalSessionCreateMock = mock(async () => ({
+  url: "https://billing.stripe.test/session_0096",
+}))
+const redirectState = { url: "" }
 
 mock.module("next/headers", () => ({
   headers: async () => ({
@@ -36,6 +31,12 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
 }))
 
+mock.module("next/navigation", () => ({
+  redirect: (url: string) => {
+    redirectState.url = url
+  },
+}))
+
 mock.module("~/lib/auth", () => ({
   getServerSession: async () => ({
     user: {
@@ -46,6 +47,16 @@ mock.module("~/lib/auth", () => ({
     session: { id: "session-0096-billing-actions-test-session" },
   }),
   auth: {},
+}))
+
+mock.module("~/services/stripe", () => ({
+  stripe: {
+    billingPortal: {
+      sessions: {
+        create: portalSessionCreateMock,
+      },
+    },
+  },
 }))
 
 import { createBillingPortalSession } from "~/server/web/billing/actions"
@@ -66,7 +77,8 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  resetBillingActionMocks()
+  portalSessionCreateMock.mockClear()
+  redirectState.url = ""
   await db.stripeCustomer.deleteMany({ where: { userId } })
 })
 
@@ -107,7 +119,7 @@ describe("createBillingPortalSession", () => {
     expect(portalSessionCreateMock.mock.calls[0]?.[0]?.return_url?.endsWith("/dashboard")).toBe(
       true,
     )
-    expect(redirectState.url).toBe(STRIPE_BILLING_PORTAL_URL)
+    expect(redirectState.url).toBe("https://billing.stripe.test/session_0096")
   })
 
   it("rejects portal creation when the user has no customer for the current brand", async () => {

@@ -14,16 +14,28 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
-// Shared next/navigation + stripe mock — imported BEFORE the action so the action
-// binds the shared `redirect`/`stripe` (one mock across all billing test files; no
-// cross-file clobber). See the helper for the full rationale.
-import {
-  portalSessionCreateMock,
-  redirectState,
-  resetBillingActionMocks,
-  STRIPE_BILLING_PORTAL_URL,
-} from "~/lib/test/billing-action-mocks"
+import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
+
+const portalSessionCreateMock = mock(async (_params: { customer: string; return_url: string }) => ({
+  url: "https://billing.stripe.test/session_0191",
+}))
+const redirectState = { url: "" }
+
+mock.module("next/navigation", () => ({
+  redirect: (url: string) => {
+    redirectState.url = url
+  },
+}))
+
+mock.module("~/services/stripe", () => ({
+  stripe: {
+    billingPortal: {
+      sessions: {
+        create: portalSessionCreateMock,
+      },
+    },
+  },
+}))
 
 import { siteConfig } from "~/config/site"
 import { createBillingPortalSession } from "~/server/web/billing/actions"
@@ -45,7 +57,8 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  resetBillingActionMocks()
+  portalSessionCreateMock.mockClear()
+  redirectState.url = ""
   setTestSession(null)
 
   if (userId) {
@@ -125,6 +138,6 @@ describe("createBillingPortalSession - safe-action wrapper", () => {
       customer: STRIPE_CUSTOMER_ID,
       return_url: `${siteConfig.url}/dashboard`,
     })
-    expect(redirectState.url).toBe(STRIPE_BILLING_PORTAL_URL)
+    expect(redirectState.url).toBe("https://billing.stripe.test/session_0191")
   })
 })
