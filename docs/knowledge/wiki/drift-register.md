@@ -322,8 +322,10 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   reports "Affiliations: 4 would create" although those rows exist; every other step correctly reports 0 creates.
 - **Impact:** re-running the **real** import would insert duplicate `Affiliation` rows (no `findFirst` dedup on
   `{passportId, organizationId}` before create). Harmless to reads, dirties data.
-- **Status:** open — add the dedup guard before create; **do not re-run the real import until fixed.**
-  **Logged in:** SESSION_0408 (FINDING_01).
+- **Status:** **RESOLVED SESSION_0409.** The real-run path already had the `findFirst({passportId, organizationId})`
+  guard (committed at 0408 close; the finding/impact line was stale). The actual defect was the **dry-run counter**
+  unconditionally counting matched schools as "would create" — fixed so a post-run dry-run reports accurate
+  new-only counts (proven against prod: a re-run dry-run shows 0 affiliation creates for existing rows).
 
 ### D-027 — WP school-name matching too strict (punctuation / pod-id)
 
@@ -332,5 +334,21 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   (absent from the `bbl_school` export), `"231"` (a stray Pods post-id, not a name).
 - **Impact:** unmatched members keep a `schoolName` free-text fallback but no Organization-linked Affiliation,
   so they don't appear under the school's org facet.
-- **Status:** open — normalize school names (strip punctuation/case) + ignore numeric pod-ids before the next
-  import pass. **Logged in:** SESSION_0408.
+- **Status:** **RESOLVED SESSION_0409.** Added `normSchool()` (strip punctuation/case, expand `&`) +
+  `matchSchoolForPerson()` (skips numeric Pods post-ids; warns only on real unresolved tokens). Verified against
+  prod: "South Bay Jiu Jitsu" now resolves to "South Bay Jiu-Jitsu" (2 South Bay affiliations realized for
+  Brian Scott + Bob Bass); "231" silenced; only "Mat Fitness" (genuinely no org) still warns.
+
+### D-028 — SESSION_0408 import captured only ~8 of 95 `bbl_member` Pods fields (full provenance missed)
+
+- **Source:** `reconcile.mjs` (SESSION_0408) consumed a thin WP export — name, rank-string, school, instructor,
+  bio, featured image, email. The **`bbl_member` Pods CPT has 95 fields**, including the entire per-belt
+  **promotion ladder** (`<belt>_promotion_date`, `who_promoted_you_to_<belt>`, `where_you_were_promoted_to_<belt>`,
+  `<belt>_pictures`) — the lineage-timeline USP — plus galleries, rank-with-degree, school roles, DOB, residence,
+  socials, current_rank. All confirmed populated for the core figures (live Pods CSV exports + `local.sql` postmeta).
+- **Impact:** prod members have rank-only RankAwards (no dates/promoters); the timeline can't show "Promoted by X ·
+  date · at Y". The directory is missing real provenance, galleries, and profile depth.
+- **Status:** **planned** — see [`BBL_PODS_FULL_IMPORT_SPEC.md`](../../product/black-belt-legacy/BBL_PODS_FULL_IMPORT_SPEC.md).
+  SESSION_0409 proved Phase 0 (the `reconcile-pods.mjs` extractor resolves real dated/attributed ladders from the
+  rich Pods CSVs). The promotion ladder maps onto the **existing** `RankAward` schema (no migration for the core
+  timeline); secondary fields (residence/galleries/sizes) need a small Phase 1 migration. **Logged in:** SESSION_0409.

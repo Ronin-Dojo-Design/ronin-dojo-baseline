@@ -144,6 +144,18 @@ function normName(s: string): string {
     .trim()
 }
 
+/** Normalize a school name for fuzzy matching (D-027): strip punctuation/case,
+ *  expand `&`, collapse whitespace — so "South Bay Jiu Jitsu" (export) matches
+ *  "South Bay Jiu-Jitsu" (canonical) and "The Sanctuary BJJ & Fitness" is stable. */
+function normSchool(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 /** Derive a slug base from a person's `slug` (preferred) or `name`. */
 function slugBase(p: ReconciledPerson): string {
   if (p.slug && p.slug.trim()) {
@@ -348,6 +360,29 @@ async function main() {
     orgsCreated++
   }
 
+  // Normalized school lookup (D-027) — match a person's free-text `school` to an
+  // Organization ignoring punctuation/case and stray numeric Pods post-ids.
+  const schoolNorm = new Map<string, { name: string; orgId: string }>()
+  for (const [name, orgId] of schoolToOrgId) {
+    schoolNorm.set(normSchool(name), { name, orgId })
+  }
+  function matchSchoolForPerson(school: string): { name: string; orgId: string } | null {
+    const tokens = (school || "")
+      .split("|")
+      .map(s => s.trim())
+      .filter(Boolean)
+    for (const tok of tokens) {
+      if (/^\d+$/.test(tok)) {
+        continue // stray Pods post-id (e.g. "231"), not a school name
+      }
+      const hit = schoolNorm.get(normSchool(tok))
+      if (hit) {
+        return hit
+      }
+    }
+    return null
+  }
+
   // ── Step 2 — LineageTree. ────────────────────────────────────────────────
   let treeId: string | null = null
   let treeAction: Action = "SKIP"
@@ -524,34 +559,35 @@ async function main() {
         }
       }
 
-      // 5. Affiliation — if school resolves. school may be pipe-delimited;
-      // take the first token that maps to a known org.
-      const schoolTokens = (p.school || "")
-        .split("|")
-        .map(s => s.trim())
-        .filter(Boolean)
-      const matchedSchool = schoolTokens.find(s => schoolToOrgId.has(s)) ?? null
-      if (matchedSchool) {
-        const organizationId = schoolToOrgId.get(matchedSchool)!
-        if (!isDryRun && organizationId !== "(new)") {
+      // 5. Affiliation — if school resolves (normalized match, D-027).
+      const affMatch = matchSchoolForPerson(p.school)
+      if (affMatch) {
+        const organizationId = affMatch.orgId
+        // D-026: count an affiliation as "would create" ONLY when it doesn't already
+        // exist (so a post-run dry-run reports 0, proving idempotency). The real-run
+        // path is the same guard — it just also writes. A "(new)" org sentinel only
+        // occurs in dry-run and implies no pre-existing affiliation.
+        if (organizationId === "(new)") {
+          affiliationsCreated++
+        } else {
           const existingAff = await db.affiliation.findFirst({
             where: { passportId, organizationId },
             select: { id: true },
           })
           if (!existingAff) {
             affiliationsCreated++
-            await db.affiliation.create({
-              data: {
-                passportId,
-                organizationId,
-                role: "TRAINS_AT",
-                isCurrent: true,
-                schoolName: matchedSchool,
-              },
-            })
+            if (!isDryRun) {
+              await db.affiliation.create({
+                data: {
+                  passportId,
+                  organizationId,
+                  role: "TRAINS_AT",
+                  isCurrent: true,
+                  schoolName: affMatch.name,
+                },
+              })
+            }
           }
-        } else if (isDryRun) {
-          affiliationsCreated++
         }
       }
 
@@ -593,11 +629,7 @@ async function main() {
       if (p.rankShort && rankResolved.get(p.rankShort)) {
         rankAwardsCreated++
       }
-      const schoolTokens = (p.school || "")
-        .split("|")
-        .map(s => s.trim())
-        .filter(Boolean)
-      if (schoolTokens.some(s => schoolToOrgId.has(s))) {
+      if (matchSchoolForPerson(p.school)) {
         affiliationsCreated++
       }
       membersCreated++
@@ -605,25 +637,28 @@ async function main() {
     }
 
     // Plan row.
-    const schoolTokens = (p.school || "")
+    const planSchoolTokens = (p.school || "")
       .split("|")
       .map(s => s.trim())
       .filter(Boolean)
-    const matchedSchool = schoolTokens.find(s => schoolToOrgId.has(s)) ?? null
+    const planMatch = matchSchoolForPerson(p.school)
     plans.push({
       name: p.name,
       passportAction,
       passportId,
       rankShort: p.rankShort,
       rankResolved: p.rankShort ? !!rankResolved.get(p.rankShort) : false,
-      school: schoolTokens[0] ?? null,
-      schoolResolved: matchedSchool !== null,
+      school: planSchoolTokens[0] ?? null,
+      schoolResolved: planMatch !== null,
       parentName: p.lineageParent,
       parentResolved: false, // filled in the edge pass below
     })
 
-    if (p.school && schoolTokens.length > 0 && !matchedSchool) {
-      warnings.push(`Unresolved school "${p.school}" for ${p.name} — not in reconciled.schools`)
+    // Warn only when a *real* (non-numeric) school token failed to resolve — a
+    // stray Pods post-id like "231" is intentionally ignored, not a miss (D-027).
+    const realTokens = planSchoolTokens.filter(t => !/^\d+$/.test(t))
+    if (realTokens.length > 0 && !planMatch) {
+      warnings.push(`Unresolved school "${p.school}" for ${p.name} — no normalized org match`)
     }
   }
 
