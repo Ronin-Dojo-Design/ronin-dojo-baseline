@@ -1,8 +1,15 @@
 import { getSessionCookie } from "better-auth/cookies"
 import { type NextRequest, NextResponse } from "next/server"
+import { Brand } from "~/.generated/prisma/client"
 import { resolveAppTabRedirect, resolveMigratedAppRedirect } from "~/config/app-redirects"
 import { brandHasFeature, FEATURE_ROUTE_PREFIXES } from "~/config/brand-features"
 import { resolveBrand } from "~/lib/brand-context"
+import {
+  BBL_PREVIEW_COOKIE,
+  BBL_PREVIEW_QUERY,
+  isBeforeBblLaunch,
+  isGatedBblPath,
+} from "~/lib/bbl-launch"
 
 /**
  * Map a request hostname to a Brand.
@@ -62,6 +69,23 @@ export default async function (req: NextRequest) {
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set("x-brand", brand)
 
+  // BBL pre-launch "coming soon" gate (fail-open: only active when
+  // NEXT_PUBLIC_BBL_LAUNCH_AT is a future instant). Public BBL routes render the
+  // countdown; operator/system surfaces (/app, /admin, /api, /auth, …) always pass
+  // through so work continues with the DNS flipped. `?preview` (persisted as the
+  // bbl_preview cookie) bypasses the gate. See docs/.../BBL_LAUNCH_GATE.md.
+  let persistPreviewCookie = false
+  if (brand === Brand.BBL && isBeforeBblLaunch()) {
+    const previewViaQuery = req.nextUrl.searchParams.has(BBL_PREVIEW_QUERY)
+    const previewViaCookie = req.cookies.get(BBL_PREVIEW_COOKIE)?.value === "1"
+    persistPreviewCookie = previewViaQuery
+    if (!previewViaQuery && !previewViaCookie && isGatedBblPath(pathname)) {
+      return NextResponse.rewrite(new URL("/coming-soon", req.url), {
+        request: { headers: requestHeaders },
+      })
+    }
+  }
+
   // Brand feature gate (SESSION_0368): routes for features a brand doesn't ship
   // render the 404 page. `/_gated` matches no route, so Next serves not-found
   // with a 404 status; the forwarded headers keep the page brand-themed.
@@ -83,6 +107,16 @@ export default async function (req: NextRequest) {
     path: "/",
     secure: process.env.NODE_ENV === "production",
   })
+
+  // Persist the BBL launch-gate bypass so subsequent navigations stay unblocked.
+  if (persistPreviewCookie) {
+    res.cookies.set(BBL_PREVIEW_COOKIE, "1", {
+      httpOnly: false,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    })
+  }
 
   return res
 }

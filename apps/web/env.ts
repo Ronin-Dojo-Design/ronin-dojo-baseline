@@ -65,6 +65,8 @@ export const env = createEnv({
     NEXT_PUBLIC_PLAUSIBLE_URL: z.url().optional(),
     NEXT_PUBLIC_PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     NEXT_PUBLIC_MEDIA_BASE_URL: z.url().optional(),
+    // BBL pre-launch "coming soon" gate target (ISO 8601). Unset ⇒ gate off.
+    NEXT_PUBLIC_BBL_LAUNCH_AT: z.string().datetime({ offset: true }).optional(),
   },
 
   /**
@@ -78,6 +80,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PLAUSIBLE_URL: process.env.NEXT_PUBLIC_PLAUSIBLE_URL,
     NEXT_PUBLIC_PLAUSIBLE_DOMAIN: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
+    NEXT_PUBLIC_BBL_LAUNCH_AT: process.env.NEXT_PUBLIC_BBL_LAUNCH_AT,
   },
 
   /**
