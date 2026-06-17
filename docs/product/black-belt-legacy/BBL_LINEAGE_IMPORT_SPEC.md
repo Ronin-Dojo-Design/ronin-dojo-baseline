@@ -67,18 +67,22 @@ is to make the cohort *identifiable* (the "Dirty Dozen" `LineageVisualGroup`) so
 
 Decide with the operator whether to build that auto-wire; it is out of scope for this import.
 
-## Avatars
+## Avatars / media
 
-Source avatars are BBL.com `/brand/...` asset paths (media migration is a separate cutover item). Set
-`BBL_ASSET_BASE_URL` (e.g. `https://blackbeltlegacy.com`) to rewrite them to absolute URLs; otherwise they are
-stored as-is.
+The WordPress profile images are synced to `s3://bbl-media/media/bbl/profiles/`. Each export image is matched
+**by filename** and resolved under that key via `NEXT_PUBLIC_MEDIA_BASE_URL` (the same media base
+`lib/media.ts` uses), e.g. `…/lineage/Old-school-Bob.jpg` → `${NEXT_PUBLIC_MEDIA_BASE_URL}/media/bbl/profiles/Old-school-Bob.jpg`.
+This sets `Passport.avatarUrl` (and `Passport.coverPhotoUrl` / `DirectoryProfile.coverPhotoUrl` when a cover is
+present — none in the current export). With no media base set, the relative `/media/bbl/profiles/<file>` key is
+stored. Absolute URLs in the export pass through untouched.
 
 ## Usage
 
 ```bash
 # from apps/web
 bun run scripts/import-bbl-lineage-profiles.ts --dry-run
-BBL_ASSET_BASE_URL=https://blackbeltlegacy.com bun run scripts/import-bbl-lineage-profiles.ts
+NEXT_PUBLIC_MEDIA_BASE_URL=https://bbl-media.s3.amazonaws.com \
+  bun run scripts/import-bbl-lineage-profiles.ts
 bun run scripts/import-bbl-lineage-profiles.ts --tree-slug bbl-dirty-dozen
 ```
 

@@ -38,14 +38,20 @@
  * makes the cohort identifiable so the reviewer (or a future cohort→comp
  * auto-wire) can grant it. See BBL_LINEAGE_IMPORT_SPEC.md.
  *
- * ── Avatars ────────────────────────────────────────────────────────────────
- * The source avatars are BBL.com `/brand/...` asset paths. Media migration is a
- * separate cutover item; set `BBL_ASSET_BASE_URL` to rewrite them to absolute
- * URLs, otherwise they are stored as-is.
+ * ── Avatars / media ────────────────────────────────────────────────────────
+ * The WordPress profile images are synced to `s3://bbl-media/media/bbl/profiles/`.
+ * Each export image is matched **by filename** and resolved under that key via
+ * the app's media base URL (the same `NEXT_PUBLIC_MEDIA_BASE_URL` that
+ * `lib/media.ts` uses), e.g.
+ *   /brand/blackbeltlegacy/images/lineage/Old-school-Bob.jpg
+ *     → ${NEXT_PUBLIC_MEDIA_BASE_URL}/media/bbl/profiles/Old-school-Bob.jpg
+ * Cover images are resolved the same way when present. With no media base set,
+ * the relative `/media/bbl/profiles/<file>` key is stored.
  *
  * Usage (from apps/web):
  *   bun run scripts/import-bbl-lineage-profiles.ts --dry-run
- *   BBL_ASSET_BASE_URL=https://blackbeltlegacy.com bun run scripts/import-bbl-lineage-profiles.ts
+ *   NEXT_PUBLIC_MEDIA_BASE_URL=https://bbl-media.s3.amazonaws.com \
+ *     bun run scripts/import-bbl-lineage-profiles.ts
  *   bun run scripts/import-bbl-lineage-profiles.ts --tree-slug bbl-dirty-dozen
  *
  * @see docs/sprints/SESSION_0403.md TASK_02
@@ -74,7 +80,11 @@ const treeSlugFlag = args.includes("--tree-slug")
 
 const TREE_NAME = "Black Belt Legacy — The Dirty Dozen"
 const DIRTY_DOZEN_LABEL = "The Dirty Dozen — BJJ's First American Black Belts"
-const ASSET_BASE_URL = process.env.BBL_ASSET_BASE_URL?.replace(/\/+$/, "") ?? null
+// WordPress profile images are synced to s3://bbl-media/media/bbl/profiles/.
+// Resolve each export image (matched by filename) under that key via the app's
+// media base URL — the same NEXT_PUBLIC_MEDIA_BASE_URL that lib/media.ts uses.
+const MEDIA_BASE_URL = process.env.NEXT_PUBLIC_MEDIA_BASE_URL?.replace(/\/+$/, "") ?? null
+const BBL_PROFILE_MEDIA_PREFIX = "media/bbl/profiles"
 
 interface BlackBeltProfile {
   /** Plain name — the dedupe key (matches seed-baseline-lineage's Passport key). */
@@ -82,6 +92,8 @@ interface BlackBeltProfile {
   /** URL-safe handle, used to derive the node + profile slug. */
   handle: string
   avatar: string
+  /** Optional cover/banner image filename; resolved like the avatar when present. */
+  cover?: string | null
   bio: string
   location: string
   website: string
@@ -249,17 +261,21 @@ function parseLocation(loc: string): ParsedLocation {
   return { locationRegion: parts[0], locationCountry: "US" }
 }
 
-function toAvatarUrl(path: string): string | null {
+function basename(path: string): string {
+  return path.split("/").pop() ?? path
+}
+
+// Map an export image path to its synced media URL, matched by filename.
+// Absolute URLs pass through; with no media base set, the relative key is stored.
+function resolveProfileMedia(path: string | null | undefined): string | null {
   if (!path) {
     return null
   }
   if (/^https?:\/\//.test(path)) {
     return path
   }
-  if (!ASSET_BASE_URL) {
-    return path
-  }
-  return `${ASSET_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`
+  const key = `${BBL_PROFILE_MEDIA_PREFIX}/${basename(path)}`
+  return MEDIA_BASE_URL ? `${MEDIA_BASE_URL}/${key}` : `/${key}`
 }
 
 function toSocialLinks(p: BlackBeltProfile): Array<{ platform: string; url: string }> {
@@ -301,7 +317,7 @@ async function main() {
     for (const p of BBL_DIRTY_DOZEN) {
       const loc = parseLocation(p.location)
       console.log(
-        `   • ${p.name} (#${p.dirtyDozenRank ?? "—"}) — avatar=${toAvatarUrl(p.avatar)} ` +
+        `   • ${p.name} (#${p.dirtyDozenRank ?? "—"}) — avatar=${resolveProfileMedia(p.avatar)} ` +
           `loc=${JSON.stringify(loc)} links=${toSocialLinks(p).length}`,
       )
     }
@@ -381,6 +397,7 @@ async function main() {
       select: {
         id: true,
         avatarUrl: true,
+        coverPhotoUrl: true,
         bio: true,
         socialLinks: true,
         startedTrainingAt: true,
@@ -397,7 +414,8 @@ async function main() {
           displayName: p.name,
           legalFirstName: first,
           legalLastName: last,
-          avatarUrl: toAvatarUrl(p.avatar),
+          avatarUrl: resolveProfileMedia(p.avatar),
+          coverPhotoUrl: resolveProfileMedia(p.cover),
           bio: p.bio,
           socialLinks: toSocialLinks(p),
           startedTrainingAt: startedTrainingAt(p.memberSince),
@@ -412,7 +430,10 @@ async function main() {
       // Non-destructive enrich: only fill empties.
       const update: Record<string, unknown> = {}
       if (!existing.avatarUrl) {
-        update.avatarUrl = toAvatarUrl(p.avatar)
+        update.avatarUrl = resolveProfileMedia(p.avatar)
+      }
+      if (!existing.coverPhotoUrl && resolveProfileMedia(p.cover)) {
+        update.coverPhotoUrl = resolveProfileMedia(p.cover)
       }
       if (!existing.bio) {
         update.bio = p.bio
@@ -457,6 +478,7 @@ async function main() {
           slug,
           visibility: "PUBLIC",
           showRanks: true,
+          coverPhotoUrl: resolveProfileMedia(p.cover),
           ...parseLocation(p.location),
         },
       })
