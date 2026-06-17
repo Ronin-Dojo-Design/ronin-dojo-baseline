@@ -12,11 +12,11 @@ enrichment importer's dry-run. It is NOT real data — the production
 
 The sample is shaped to cover every branch:
 
-| Person | Demonstrates |
-| --- | --- |
-| **Jane Doe** | profile fill (bio/dob/placeOfBirth/currentResidence/socialLinks), 5-belt ladder → 4 new RankAwards + 1 enriched (current rank already exists), galleries → MediaAttachment, distinct representing school → new MEMBER affiliation, an **off-roster** promoter (Rickson Gracie) flagged into `notes` |
-| **John Will** | long-form date parse (`March 3rd, 1957`), current-rank award enriched in place, empty galleries skipped |
-| **Ghost McMissing** | **unmatched** (no accountless Passport in the tree) → reported + skipped, never created |
+| Person              | Demonstrates                                                                                                                                                                                                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Jane Doe**        | profile fill (bio/dob/placeOfBirth/currentResidence/socialLinks), 5-belt ladder → 4 new RankAwards + 1 enriched (current rank already exists), galleries → MediaAttachment, distinct representing school → new MEMBER affiliation, an **off-roster** promoter (Rickson Gracie) flagged into `notes` |
+| **John Will**       | long-form date parse (`March 3rd, 1957`), current-rank award enriched in place, empty galleries skipped                                                                                                                                                                                             |
+| **Ghost McMissing** | **unmatched** (no accountless Passport in the tree) → reported + skipped, never created                                                                                                                                                                                                             |
 
 Dates exercise both formats the parser must handle: ISO `2009-07-08` and long-form
 `July 8th, 2009`.

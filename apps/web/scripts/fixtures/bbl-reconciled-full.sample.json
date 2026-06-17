@@ -18,11 +18,44 @@
         "https://media.blackbeltlegacy.com/gallery/jane-doe-2.jpg"
       ],
       "ladder": [
-        { "belt": "Blue Belt", "shortName": "BL0", "date": "July 8th, 2009", "promotedBy": "John Will", "promotedAt": "Machado Jiu-Jitsu", "pictures": ["https://media.blackbeltlegacy.com/belts/jane-blue.jpg"] },
-        { "belt": "Purple Belt", "shortName": "P0", "date": "2012-05-20", "promotedBy": "John Will", "promotedAt": "BJJ Australia", "pictures": [] },
-        { "belt": "Brown Belt", "shortName": "BR0", "date": "2015-09-10", "promotedBy": "John Will", "promotedAt": "BJJ Australia" },
-        { "belt": "Black Belt", "shortName": "BK0", "date": "2018-11-02", "promotedBy": "Rigan Machado", "promotedAt": "Machado Jiu-Jitsu", "pictures": ["https://media.blackbeltlegacy.com/belts/jane-black.jpg"] },
-        { "belt": "Black Belt - 1st Degree", "shortName": "BK1", "date": "2021-06-01", "promotedBy": "Rickson Gracie", "promotedAt": "South Bay Jiu-Jitsu" },
+        {
+          "belt": "Blue Belt",
+          "shortName": "BL0",
+          "date": "July 8th, 2009",
+          "promotedBy": "John Will",
+          "promotedAt": "Machado Jiu-Jitsu",
+          "pictures": ["https://media.blackbeltlegacy.com/belts/jane-blue.jpg"]
+        },
+        {
+          "belt": "Purple Belt",
+          "shortName": "P0",
+          "date": "2012-05-20",
+          "promotedBy": "John Will",
+          "promotedAt": "BJJ Australia",
+          "pictures": []
+        },
+        {
+          "belt": "Brown Belt",
+          "shortName": "BR0",
+          "date": "2015-09-10",
+          "promotedBy": "John Will",
+          "promotedAt": "BJJ Australia"
+        },
+        {
+          "belt": "Black Belt",
+          "shortName": "BK0",
+          "date": "2018-11-02",
+          "promotedBy": "Rigan Machado",
+          "promotedAt": "Machado Jiu-Jitsu",
+          "pictures": ["https://media.blackbeltlegacy.com/belts/jane-black.jpg"]
+        },
+        {
+          "belt": "Black Belt - 1st Degree",
+          "shortName": "BK1",
+          "date": "2021-06-01",
+          "promotedBy": "Rickson Gracie",
+          "promotedAt": "South Bay Jiu-Jitsu"
+        },
         { "belt": "White Belt", "shortName": "W0" }
       ]
     },
@@ -38,16 +71,20 @@
       "instagram": "https://instagram.com/johnwillbjj",
       "galleries": [],
       "ladder": [
-        { "belt": "Black Belt - 6th Degree", "shortName": "BK6", "date": "2019-01-15", "promotedBy": "Rigan Machado", "promotedAt": "Machado Jiu-Jitsu" }
+        {
+          "belt": "Black Belt - 6th Degree",
+          "shortName": "BK6",
+          "date": "2019-01-15",
+          "promotedBy": "Rigan Machado",
+          "promotedAt": "Machado Jiu-Jitsu"
+        }
       ]
     },
     {
       "name": "Ghost McMissing",
       "slug": "ghost-mcmissing",
       "bio": "Not in the seeded roster — should be reported UNMATCHED.",
-      "ladder": [
-        { "belt": "Blue Belt", "shortName": "BL0", "date": "2020-01-01" }
-      ]
+      "ladder": [{ "belt": "Blue Belt", "shortName": "BL0", "date": "2020-01-01" }]
     }
   ]
 }
