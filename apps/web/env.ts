@@ -53,6 +53,10 @@ export const env = createEnv({
     AI_CHAT_MODEL: z.string().default("openai/gpt-4o"),
     AI_COMPLETION_MODEL: z.string().default("openai/gpt-4o-mini"),
     JINA_API_KEY: z.string().optional(),
+    // Pre-launch holding page for Black Belt Legacy. When truthy ("1"/"true"),
+    // BBL public pages render the countdown instead of the app (other brands
+    // unaffected). Unset = normal app. Flip off + redeploy to go live.
+    BBL_COUNTDOWN: z.string().optional(),
   },
 
   /**
@@ -65,6 +69,9 @@ export const env = createEnv({
     NEXT_PUBLIC_PLAUSIBLE_URL: z.url().optional(),
     NEXT_PUBLIC_PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     NEXT_PUBLIC_MEDIA_BASE_URL: z.url().optional(),
+    // ISO timestamp the BBL countdown ticks toward (display only). Optional —
+    // without it the holding page shows "Launching soon" with no clock.
+    NEXT_PUBLIC_BBL_LAUNCH_AT: z.string().optional(),
   },
 
   /**
@@ -78,6 +85,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PLAUSIBLE_URL: process.env.NEXT_PUBLIC_PLAUSIBLE_URL,
     NEXT_PUBLIC_PLAUSIBLE_DOMAIN: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
+    NEXT_PUBLIC_BBL_LAUNCH_AT: process.env.NEXT_PUBLIC_BBL_LAUNCH_AT,
   },
 
   /**
