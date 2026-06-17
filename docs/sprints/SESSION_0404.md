@@ -43,6 +43,32 @@ separate two-repo cloud session (Track A), with the per-lane SESSION records (`S
 
 Single source of truth is the frontmatter `status:` field.
 
+## Update — merge batch executed (operator go-ahead)
+
+The operator authorised landing the **whole** batch to `main` now ("get everything to main") — safe because DNS
+is unflipped and the countdown gate (`BBL_COUNTDOWN=1`) keeps prod BBL on the timer regardless of what's merged;
+the missing webhook only gates the *reveal*, not the merge. All 11 feature PRs were merged into `main` with
+`--no-ff` in the planned order (#75 → #76 → #87 → #84 → #79 → #78 → #83 → #80 → #81 → #82 → #77).
+
+**Two session-number collisions surfaced during the merge and were resolved by renumbering** (parallel branches
+each minted the next number off the same base):
+
+- The explorer-mobile branch's `SESSION_0401` (mobile UX) collided with `main`'s `SESSION_0401` (the fields-fold
+  from PR #74). Kept the fields-fold as 0401; **renumbered the explorer record to `SESSION_0405`**.
+- The pricing-seed branch's `SESSION_0403` (pricing + profile import) collided with #77's `SESSION_0403`
+  (comp/email/join). Kept comp/email/join as the canonical 0403 (as this doc names it); **renumbered the
+  pricing/import record to `SESSION_0406`**.
+
+`env.ts` / `.env.example` conflicts were the only code conflicts — all additive unions (countdown + `STRIPE_*_BBL`
++ `S3_*_BBL` coexist). Lane records 0402/0403/0406 flipped `in-progress` → `closed`; index rows added for all.
+
+**Gates on the integrated tree:** `db:generate` OK, `tsc --noEmit` 0, `oxlint` clean, `oxfmt --check` clean,
+`wiki:lint` 0 (691 files), pure unit tests 14/0. The Stripe webhook route test fails **only** on `P1001`
+(no Postgres in the sandbox) — environmental, CI-gated, not a refactor regression.
+
+**Still pending (operator/CI):** close #85 (countdown already on `main`) + the deduped comp PR #86; CI on the
+`main` push; the cutover gating below (env vars → BBL Stripe rehearsal → imports → DNS flip → countdown off).
+
 ## What landed directly on `main` this session
 
 Per the operator's standing instruction ("only the countdown to `main` for now, not the feature PRs"), only two

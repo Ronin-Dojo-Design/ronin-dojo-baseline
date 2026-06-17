@@ -2,7 +2,7 @@
 title: "SESSION 0403 — BBL claim-comp + email + join-landing epic (Track B, baseline-only)"
 slug: session-0403
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-17
 updated: 2026-06-17
 last_agent: claude-session-0403

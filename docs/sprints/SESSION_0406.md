@@ -2,7 +2,7 @@
 title: "SESSION 0406 — BBL go-live data: lineage pricing seed + Dirty Dozen profile import"
 slug: session-0406
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-17
 updated: 2026-06-17
 last_agent: claude-session-0406
