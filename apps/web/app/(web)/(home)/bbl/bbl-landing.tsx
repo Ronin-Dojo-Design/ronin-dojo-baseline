@@ -647,15 +647,22 @@ const formatDate = (date: Date) =>
 type MarqueeMemberView = { name: string; rank: string; image?: string; date?: string }
 
 const toMember = (award: {
-  user: { name: string; image: string | null; passport: { avatarUrl: string | null } | null } | null
+  // @changed SESSION_0392 (Phase 3c) — RankAward earner is the Passport, not User. Name/photo
+  // prefer Passport identity, then fall back to the linked account (placeholders have no user).
+  passport: {
+    displayName: string | null
+    avatarUrl: string | null
+    user: { name: string | null; image: string | null } | null
+  } | null
   rank: { name: string }
 }): MarqueeMemberView[] => {
-  if (!award.user?.name) return []
+  const name = award.passport?.displayName ?? award.passport?.user?.name
+  if (!name) return []
   return [
     {
-      name: award.user.name,
+      name,
       rank: formatRankName(award.rank.name),
-      image: award.user.passport?.avatarUrl ?? award.user.image ?? MARQUEE_PHOTOS[award.user.name],
+      image: award.passport?.avatarUrl ?? award.passport?.user?.image ?? MARQUEE_PHOTOS[name],
     },
   ]
 }
@@ -663,7 +670,9 @@ const toMember = (award: {
 /** Rosters come from the lineage tree (PromotionEvent -> RankAward, ADR 0016). */
 const getPromotionMarqueeRows = async (): Promise<MarqueeRow[]> => {
   const memberSelect = {
-    user: { select: { name: true, image: true, passport: { select: { avatarUrl: true } } } },
+    passport: {
+      select: { displayName: true, avatarUrl: true, user: { select: { name: true, image: true } } },
+    },
     rank: { select: { name: true } },
   } as const
 
