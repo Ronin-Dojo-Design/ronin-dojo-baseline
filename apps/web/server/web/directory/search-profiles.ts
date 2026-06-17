@@ -24,7 +24,7 @@ export const searchDirectoryProfiles = async (
   cacheTag("directory-profiles")
   cacheLife("minutes")
 
-  const { q, discipline, org, city, region, sort, page, perPage } = search
+  const { q, discipline, org, rank, city, region, sort, page, perPage } = search
   const start = performance.now()
   const skip = (page - 1) * perPage
   const take = perPage
@@ -32,7 +32,7 @@ export const searchDirectoryProfiles = async (
 
   // Brand-pinned, privacy-aware where clause (extracted + unit-tested in profile-where.ts).
   const where = buildDirectoryProfileWhere(
-    { q, discipline, org, city, region },
+    { q, discipline, org, rank, city, region },
     brand,
     viewerUserId,
   )

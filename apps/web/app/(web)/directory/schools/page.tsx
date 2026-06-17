@@ -39,15 +39,9 @@ export default async function DirectorySchoolsPage({ searchParams }: Props) {
     tab: "organizations",
     viewerUserId: session?.user?.id,
     viewerRole: session?.user?.role,
-    params: {
-      q: params.q || undefined,
-      discipline: params.discipline || undefined,
-      orgType: params.type || undefined,
-      city: params.city || undefined,
-      region: params.region || undefined,
-      page: params.page,
-      perPage: params.perPage,
-    },
+    // `params` is already string-defaulted by the nuqs cache; on this page the `type` param is the
+    // org-type filter (the tab is fixed to "organizations"), so it is mapped onto `orgType`.
+    params: { ...params, orgType: params.type },
   })
 
   return (

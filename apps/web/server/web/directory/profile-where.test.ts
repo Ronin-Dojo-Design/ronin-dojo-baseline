@@ -16,6 +16,12 @@ function membershipSome(where: Record<string, unknown>) {
 function organization(where: Record<string, unknown>) {
   return membershipSome(where).organization as { brand: string; slug?: string }
 }
+function rankAwardsEarned(where: Record<string, unknown>) {
+  const passport = where.passport as {
+    rankAwardsEarned?: { some: { rankId: string } }
+  }
+  return passport.rankAwardsEarned
+}
 
 describe("buildDirectoryProfileWhere — brand scope", () => {
   it("always pins the server-derived brand inside the membership filter", () => {
@@ -72,6 +78,18 @@ describe("buildDirectoryProfileWhere — filter narrowing", () => {
     expect(organization(where).brand).toBe(BRAND)
   })
 
+  it("narrows on the Passport's earned rank id, keeping the brand pin", () => {
+    const where = buildDirectoryProfileWhere({ rank: "rank_bjj_black_1" }, BRAND)
+    expect(rankAwardsEarned(where)).toEqual({ some: { rankId: "rank_bjj_black_1" } })
+    // Rank narrows on the Passport directly; the membership brand pin is untouched.
+    expect(organization(where).brand).toBe(BRAND)
+  })
+
+  it("omits the rank clause when no rank is supplied", () => {
+    const where = buildDirectoryProfileWhere({ discipline: "bjj" }, BRAND)
+    expect(rankAwardsEarned(where)).toBeUndefined()
+  })
+
   it("applies case-insensitive contains for city and region", () => {
     const where = buildDirectoryProfileWhere({ city: "Boulder", region: "CO" }, BRAND)
     expect(where.locationCity).toEqual({ contains: "Boulder", mode: "insensitive" })
@@ -80,11 +98,12 @@ describe("buildDirectoryProfileWhere — filter narrowing", () => {
 
   it("omits empty/invalid filters but keeps the brand pin", () => {
     const where = buildDirectoryProfileWhere(
-      { discipline: "", org: "", city: "", region: "", q: "" },
+      { discipline: "", org: "", rank: "", city: "", region: "", q: "" },
       BRAND,
     )
     expect(organization(where).slug).toBeUndefined()
     expect(membershipSome(where).discipline).toBeUndefined()
+    expect(rankAwardsEarned(where)).toBeUndefined()
     expect(where.locationCity).toBeUndefined()
     expect(where.locationRegion).toBeUndefined()
     expect(where.OR).toBeUndefined()

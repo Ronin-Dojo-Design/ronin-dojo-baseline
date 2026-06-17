@@ -7,6 +7,7 @@ const memberFilterParams = {
   perPage: parseAsInteger.withDefault(24),
   discipline: parseAsString.withDefault(""),
   org: parseAsString.withDefault(""),
+  rank: parseAsString.withDefault(""),
   city: parseAsString.withDefault(""),
   region: parseAsString.withDefault(""),
 }
