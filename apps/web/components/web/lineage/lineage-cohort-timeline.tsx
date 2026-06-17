@@ -306,7 +306,7 @@ function LineageBoxCard({
       data-bbl-card
       data-dimmed={dimmed || undefined}
       {...(isFocal ? { "data-bbl-focal": "" } : { "data-bbl-recede": "" })}
-      className="relative w-72 overflow-hidden rounded-3xl text-white transition data-[dimmed]:opacity-30"
+      className="relative w-[min(18rem,calc(100vw_-_4.5rem))] overflow-hidden rounded-3xl text-white transition data-[dimmed]:opacity-30 sm:w-72"
       style={
         {
           background: `radial-gradient(circle at 16% 8%, ${rgba(colorHex, 0.16)} 0, transparent 36%),linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.012) 42%, #060606)`,
@@ -594,7 +594,7 @@ export function LineageCohortTimeline({
 
   return (
     <div ref={scrollRef} className="size-full overflow-auto" style={{ scrollbarWidth: "thin" }}>
-      <div className="flex min-h-full min-w-fit flex-col items-center px-10 py-12">
+      <div className="flex min-h-full min-w-fit flex-col items-center px-4 py-8 sm:px-10 sm:py-12">
         <AncestorSpine
           ancestors={ancestors}
           matchedMemberIds={matchedMemberIds}

@@ -3,27 +3,41 @@
 import { Menu } from "@base-ui/react/menu"
 import { useReducedMotion } from "@mantine/hooks"
 import {
+  ChevronDownIcon,
   CopyIcon,
-  FilterIcon,
   FocusIcon,
   NetworkIcon,
   PencilIcon,
   RouteIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   UserRoundIcon,
   UserRoundPlusIcon,
   UsersRoundIcon,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
 import { BeltSwatch } from "~/components/common/belt-swatch"
-import { DropdownMenuItem } from "~/components/common/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
+import { Stack } from "~/components/common/stack"
 import { LineageCohortTimeline } from "~/components/web/lineage/lineage-cohort-timeline"
 import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer"
 import { BBL, rgba } from "~/lib/lineage/belt-color"
 import { memberInitials } from "~/lib/lineage/canvas-model"
-import { toLineageVisual, type LineageVisualNode } from "~/lib/lineage/to-lineage-visual"
+import {
+  deriveFacets,
+  facetKey,
+  matchMemberIds,
+  type FilterDimension,
+  type FilterFacet,
+} from "~/lib/lineage/filter-facets"
+import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
 import type {
   LineageNodeProfile,
@@ -66,32 +80,87 @@ const TRUST_LABEL: Record<LineageTrustStatus, string> = {
   unverified: "Unverified",
 }
 
-type FilterDimension = "group" | "belt" | "school" | "year"
-
-type FilterFacet = {
-  dimension: FilterDimension
-  /** Stable value matched against the node (group label / rankLabel / schoolLabel / year). */
-  value: string
-  /** Display label. */
-  label: string
-  /** Belt swatch color for belt facets (null otherwise). */
-  colorHex: string | null
+// Filter dimensions render as one labeled dropdown each (Apple-clean bar,
+// SESSION_0401) — order + display labels for the bar.
+const DIMENSION_ORDER: FilterDimension[] = ["group", "belt", "school", "year"]
+const DIMENSION_LABEL: Record<FilterDimension, string> = {
+  group: "Group",
+  belt: "Belt",
+  school: "School",
+  year: "Year",
 }
 
-function nodeMatchesFacet(node: LineageVisualNode, facet: FilterFacet): boolean {
-  switch (facet.dimension) {
-    case "group":
-      return node.visualGroupLabel === facet.value
-    case "belt":
-      return node.rankLabel === facet.value
-    case "school":
-      return node.schoolLabel === facet.value
-    case "year":
-      return (
-        node.promotionDate != null &&
-        String(new Date(node.promotionDate).getUTCFullYear()) === facet.value
-      )
-  }
+/**
+ * One dimension's multi-select dropdown for the filter bar. Composes the L1
+ * `DropdownMenu` + `DropdownMenuCheckboxItem` primitives (checkbox items keep
+ * the menu open for multi-toggle) — never a hand-rolled menu (FS-0001). The
+ * trigger surfaces active state via a count badge so a closed filter still
+ * reads as "on".
+ */
+function FilterDropdown({
+  label,
+  facets,
+  activeFilters,
+  onToggle,
+  onClear,
+}: {
+  label: string
+  facets: FilterFacet[]
+  activeFilters: Set<string>
+  onToggle: (key: string) => void
+  onClear: () => void
+}) {
+  const activeCount = facets.reduce(
+    (count, facet) => (activeFilters.has(facetKey(facet)) ? count + 1 : count),
+    0,
+  )
+  const active = activeCount > 0
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cx(
+          "inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-white/70 transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-sm:flex-1 max-sm:basis-[calc(50%-0.25rem)]",
+          active ? "border border-primary/40 bg-primary/15 text-white" : SOLID_PILL,
+        )}
+      >
+        <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em]">{label}</span>
+        {active && (
+          <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-black text-white">
+            {activeCount}
+          </span>
+        )}
+        <ChevronDownIcon className="ml-auto size-3.5 opacity-60 sm:ml-0" />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="start" className="max-h-80 min-w-52 overflow-y-auto">
+        {facets.map(facet => {
+          const key = facetKey(facet)
+          return (
+            <DropdownMenuCheckboxItem
+              key={key}
+              checked={activeFilters.has(key)}
+              onCheckedChange={() => onToggle(key)}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                {facet.dimension === "belt" && (
+                  <BeltSwatch variant="bar" colorHex={facet.colorHex} />
+                )}
+                <span className="max-w-[12rem] truncate">{facet.label}</span>
+              </span>
+            </DropdownMenuCheckboxItem>
+          )
+        })}
+
+        {active && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onClear}>Clear {label.toLowerCase()}</DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 function DepthStepper({
@@ -155,6 +224,18 @@ function MetricPill({
       </div>
       <div className="mt-2 text-xl font-black tracking-[-0.04em] text-white">{value}</div>
     </div>
+  )
+}
+
+// Compact mobile metric — value + label inline, for the slim header strip.
+function MetricStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className="text-sm font-black tabular-nums text-white">{value}</span>
+      <span className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </span>
+    </span>
   )
 }
 
@@ -235,71 +316,28 @@ export function LineageViewAIsland({
   const claimableCount = useMemo(() => nodes.filter(node => node.claimable).length, [nodes])
 
   // Derive filter facets from existing DTO data (no schema): cohort group (e.g.
-  // the Dirty Dozen), belt, school, and promotion year. Promotion year is the
-  // timeline axis made filterable. (SESSION_0395 grill Q7 + timeline reframe)
-  const facets = useMemo<FilterFacet[]>(() => {
-    const groups = new Map<string, FilterFacet>()
-    const belts = new Map<string, FilterFacet>()
-    const schools = new Map<string, FilterFacet>()
-    const years = new Map<string, FilterFacet>()
-    for (const node of nodes) {
-      if (node.visualGroupLabel && !groups.has(node.visualGroupLabel)) {
-        groups.set(node.visualGroupLabel, {
-          dimension: "group",
-          value: node.visualGroupLabel,
-          label: node.visualGroupLabel,
-          colorHex: null,
-        })
-      }
-      if (node.rankLabel && !belts.has(node.rankLabel)) {
-        belts.set(node.rankLabel, {
-          dimension: "belt",
-          value: node.rankLabel,
-          label: node.rankLabel,
-          colorHex: node.colorHex,
-        })
-      }
-      if (node.schoolLabel && !schools.has(node.schoolLabel)) {
-        schools.set(node.schoolLabel, {
-          dimension: "school",
-          value: node.schoolLabel,
-          label: node.schoolLabel,
-          colorHex: null,
-        })
-      }
-      if (node.promotionDate) {
-        const year = String(new Date(node.promotionDate).getUTCFullYear())
-        if (year !== "NaN" && !years.has(year)) {
-          years.set(year, { dimension: "year", value: year, label: year, colorHex: null })
-        }
-      }
+  // the Dirty Dozen), belt, school, and promotion year — one labeled dropdown
+  // each. Matching is AND-across / OR-within (see `lib/lineage/filter-facets`).
+  const facets = useMemo(() => deriveFacets(nodes), [nodes])
+
+  const facetByKey = useMemo(() => new Map(facets.map(facet => [facetKey(facet), facet])), [facets])
+
+  // Group facets by dimension so the bar renders one dropdown per dimension.
+  const facetsByDimension = useMemo(() => {
+    const map = new Map<FilterDimension, FilterFacet[]>()
+    for (const facet of facets) {
+      const list = map.get(facet.dimension)
+      if (list) list.push(facet)
+      else map.set(facet.dimension, [facet])
     }
-    return [
-      ...groups.values(),
-      ...belts.values(),
-      ...schools.values(),
-      ...[...years.values()].sort((a, b) => b.value.localeCompare(a.value)),
-    ]
-  }, [nodes])
+    return map
+  }, [facets])
 
-  const facetByKey = useMemo(
-    () => new Map(facets.map(facet => [`${facet.dimension}:${facet.value}`, facet])),
-    [facets],
-  )
-
-  const matchedMemberIds = useMemo<Set<string> | null>(() => {
-    if (activeFilters.size === 0) return null
+  const matchedMemberIds = useMemo(() => {
     const activeFacets = [...activeFilters]
       .map(key => facetByKey.get(key))
       .filter((facet): facet is FilterFacet => facet != null)
-    const matched = new Set<string>()
-    for (const node of nodes) {
-      // OR across selected chips (any active chip matches → node stays lit).
-      if (activeFacets.some(facet => nodeMatchesFacet(node, facet))) {
-        matched.add(node.id)
-      }
-    }
-    return matched
+    return matchMemberIds(nodes, activeFacets)
   }, [activeFilters, facetByKey, nodes])
 
   const toggleFilter = useCallback((key: string) => {
@@ -307,6 +345,17 @@ export function LineageViewAIsland({
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
+      return next
+    })
+  }, [])
+
+  // Per-dimension clear — drop only this dimension's active keys.
+  const clearDimension = useCallback((dimension: FilterDimension) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev)
+      for (const key of next) {
+        if (key.startsWith(`${dimension}:`)) next.delete(key)
+      }
       return next
     })
   }, [])
@@ -370,21 +419,21 @@ export function LineageViewAIsland({
       </div>
 
       <div className="relative z-10 p-4 sm:p-5 lg:p-6">
-        <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <PremiumPanel>
-            <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
+        <div className="mb-3 grid gap-4 sm:mb-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <PremiumPanel className="max-sm:p-3">
+            <div className="flex flex-col gap-4 sm:gap-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.22em] text-white">
-                    <SparklesIcon className="size-3.5 text-primary" />
-                    Black Belt Legacy Explorer
-                  </span>
-
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/8 bg-[#141415] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/60">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/8 bg-[#141415] px-3 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-white/60 sm:text-[0.65rem]">
                     <RouteIcon className="size-3.5" />
                     Focal lineage view
                   </span>
                 </div>
+
+                {/* Slim mobile title (YouTube-app header); desktop keeps the full heading + lede. */}
+                <h2 className="mt-3 text-xl uppercase italic tracking-[0.01em] text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif] sm:hidden">
+                  Living lineage
+                </h2>
 
                 <h2 className="mt-4 hidden text-balance text-3xl uppercase italic tracking-[0.01em] text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif] sm:block sm:text-4xl lg:text-5xl">
                   Explore the living lineage.
@@ -397,7 +446,20 @@ export function LineageViewAIsland({
                 </p>
               </div>
 
-              <div className="grid w-full shrink-0 grid-cols-3 gap-2 md:w-auto md:max-w-[25rem]">
+              {/* Metrics — thin inline strip on mobile, MetricPill grid on sm+. */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
+                <MetricStat label="Members" value={members.length} />
+                <span aria-hidden className="text-white/20">
+                  ·
+                </span>
+                <MetricStat label="Verified" value={verifiedCount} />
+                <span aria-hidden className="text-white/20">
+                  ·
+                </span>
+                <MetricStat label="Roots" value={rootCount} />
+              </div>
+
+              <div className="hidden w-full shrink-0 grid-cols-3 gap-2 sm:grid md:w-auto md:max-w-[25rem]">
                 <MetricPill icon={<UsersRoundIcon />} label="Members" value={members.length} />
                 <MetricPill icon={<ShieldCheckIcon />} label="Verified" value={verifiedCount} />
                 <MetricPill icon={<NetworkIcon />} label="Roots" value={rootCount} />
@@ -465,45 +527,34 @@ export function LineageViewAIsland({
           </PremiumPanel>
         </div>
 
-        {/* Derived filter bar — belt + school chips; dim non-matches (not hide). */}
+        {/* Filter bar — one labeled dropdown per dimension; dim non-matches (not hide).
+            Matching is AND-across / OR-within (lib/lineage/filter-facets). */}
         {facets.length > 0 && (
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-white/40">
-              <FilterIcon className="size-3.5" />
-              Filter
-            </span>
-            {facets.map(facet => {
-              const key = `${facet.dimension}:${facet.value}`
-              const active = activeFilters.has(key)
+          <Stack direction="row" wrap size="sm" className="mb-3 max-sm:gap-2">
+            {DIMENSION_ORDER.map(dimension => {
+              const dimensionFacets = facetsByDimension.get(dimension)
+              if (!dimensionFacets || dimensionFacets.length === 0) return null
               return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleFilter(key)}
-                  className={cx(
-                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.68rem] font-semibold transition",
-                    active
-                      ? "border border-primary/40 bg-primary/15 text-white"
-                      : cx("text-white/55 hover:text-white", SOLID_PILL),
-                  )}
-                >
-                  {facet.dimension === "belt" && (
-                    <BeltSwatch variant="bar" colorHex={facet.colorHex} />
-                  )}
-                  <span className="max-w-[12rem] truncate">{facet.label}</span>
-                </button>
+                <FilterDropdown
+                  key={dimension}
+                  label={DIMENSION_LABEL[dimension]}
+                  facets={dimensionFacets}
+                  activeFilters={activeFilters}
+                  onToggle={toggleFilter}
+                  onClear={() => clearDimension(dimension)}
+                />
               )
             })}
             {activeFilters.size > 0 && (
               <button
                 type="button"
                 onClick={() => setActiveFilters(new Set())}
-                className="text-[0.68rem] font-semibold text-white/45 underline-offset-2 transition hover:text-white hover:underline"
+                className="text-[0.68rem] font-semibold text-white/45 underline-offset-2 transition hover:text-white hover:underline max-sm:ml-auto"
               >
-                Clear
+                Clear all
               </button>
             )}
-          </div>
+          </Stack>
         )}
 
         <div className="relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-black/60 shadow-2xl shadow-black/50">
@@ -545,7 +596,7 @@ export function LineageViewAIsland({
                 )}
               >
                 <FocusIcon className="size-3.5 text-primary" />
-                Click to recenter
+                Tap to recenter
               </div>
             )}
           </div>
@@ -594,14 +645,15 @@ export function LineageViewAIsland({
           </div>
 
           {copied && (
-            <div className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-white px-4 py-2 text-xs font-black text-black shadow-2xl">
+            // Lifted above the bottom-right depth steppers on mobile; centered on sm+.
+            <div className="absolute bottom-16 left-1/2 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-white px-4 py-2 text-xs font-black text-black shadow-2xl sm:bottom-4">
               Focus link copied
             </div>
           )}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-white/42">
-          <span>
+          <span className="hidden sm:inline">
             Best on desktop; fully usable on mobile — tap a card to recenter, scroll the canvas, and
             use depth controls to simplify.
           </span>
