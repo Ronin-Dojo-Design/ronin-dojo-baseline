@@ -1,0 +1,90 @@
+{
+  "people": [
+    {
+      "name": "Jane Doe",
+      "slug": "jane-doe",
+      "bio": "Black belt under John Will. Competes and coaches at South Bay Jiu-Jitsu.",
+      "dob": "1990-03-15",
+      "placeOfBirth": "Los Angeles, CA",
+      "residence": "San Diego, CA",
+      "currentRank": "Black Belt - 1st Degree",
+      "homeGym": "South Bay Jiu-Jitsu",
+      "currentSchool": "Machado Jiu-Jitsu",
+      "youtube": "https://youtube.com/@janedoebjj",
+      "facebook": "https://facebook.com/janedoebjj",
+      "instagram": "https://instagram.com/janedoebjj",
+      "galleries": [
+        "https://media.blackbeltlegacy.com/gallery/jane-doe-1.jpg",
+        "https://media.blackbeltlegacy.com/gallery/jane-doe-2.jpg"
+      ],
+      "ladder": [
+        {
+          "belt": "Blue Belt",
+          "shortName": "BL0",
+          "date": "July 8th, 2009",
+          "promotedBy": "John Will",
+          "promotedAt": "Machado Jiu-Jitsu",
+          "pictures": ["https://media.blackbeltlegacy.com/belts/jane-blue.jpg"]
+        },
+        {
+          "belt": "Purple Belt",
+          "shortName": "P0",
+          "date": "2012-05-20",
+          "promotedBy": "John Will",
+          "promotedAt": "BJJ Australia",
+          "pictures": []
+        },
+        {
+          "belt": "Brown Belt",
+          "shortName": "BR0",
+          "date": "2015-09-10",
+          "promotedBy": "John Will",
+          "promotedAt": "BJJ Australia"
+        },
+        {
+          "belt": "Black Belt",
+          "shortName": "BK0",
+          "date": "2018-11-02",
+          "promotedBy": "Rigan Machado",
+          "promotedAt": "Machado Jiu-Jitsu",
+          "pictures": ["https://media.blackbeltlegacy.com/belts/jane-black.jpg"]
+        },
+        {
+          "belt": "Black Belt - 1st Degree",
+          "shortName": "BK1",
+          "date": "2021-06-01",
+          "promotedBy": "Rickson Gracie",
+          "promotedAt": "South Bay Jiu-Jitsu"
+        },
+        { "belt": "White Belt", "shortName": "W0" }
+      ]
+    },
+    {
+      "name": "John Will",
+      "slug": "john-will",
+      "bio": "",
+      "dob": "March 3rd, 1957",
+      "placeOfBirth": "Melbourne, Australia",
+      "residence": "Melbourne, Australia",
+      "homeGym": "BJJ Australia",
+      "currentSchool": "BJJ Australia",
+      "instagram": "https://instagram.com/johnwillbjj",
+      "galleries": [],
+      "ladder": [
+        {
+          "belt": "Black Belt - 6th Degree",
+          "shortName": "BK6",
+          "date": "2019-01-15",
+          "promotedBy": "Rigan Machado",
+          "promotedAt": "Machado Jiu-Jitsu"
+        }
+      ]
+    },
+    {
+      "name": "Ghost McMissing",
+      "slug": "ghost-mcmissing",
+      "bio": "Not in the seeded roster — should be reported UNMATCHED.",
+      "ladder": [{ "belt": "Blue Belt", "shortName": "BL0", "date": "2020-01-01" }]
+    }
+  ]
+}

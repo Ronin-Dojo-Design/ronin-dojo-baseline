@@ -1024,6 +1024,10 @@ model Passport {
   coverPhotoUrl             String?
   videoIntroUrl             String?
   placeOfBirth              String?
+  // @added SESSION_0409 — BBL Pods full-fidelity import (BBL_PODS_FULL_IMPORT_SPEC.md). The Pods
+  // `current_place_of_residence` field had no home in the schema; placeOfBirth already exists, so
+  // this is the one genuine new profile column the re-import needs. Enriched non-destructively.
+  currentResidence          String?
   startedTrainingAt         DateTime? @db.Date
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
