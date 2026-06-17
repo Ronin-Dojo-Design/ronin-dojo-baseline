@@ -180,7 +180,10 @@ export const deleteTools = adminActionClient
 
     after(async () => {
       if (hardDeletes.length) {
-        await removeS3Directories(hardDeletes.map(({ slug }) => `tools/${slug}`))
+        await removeS3Directories(
+          hardDeletes.map(({ slug }) => `tools/${slug}`),
+          brand,
+        )
       }
 
       for (const tool of softDeletes) {
