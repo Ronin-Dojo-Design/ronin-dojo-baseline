@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0401 — Cinematic explorer mobile UX overhaul (badge removal · slim header · dropdown filter bar · canvas-overlay token pass)"
 slug: session-0401
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-06-17
 updated: 2026-06-17
 last_agent: claude-session-0401
@@ -263,8 +263,8 @@ set — not sub-agent fan-out) after the spec + engine land. TASK_06/07 gate at 
 | SESSION_0401_TASK_04 | landed | Badge + `SparklesIcon` removed; `sm:hidden` slim title ("Living lineage") + thin `MetricStat` strip; desktop heading/lede + `MetricPill` grid preserved; mobile panel padding `p-3`, header gap `mb-3`. |
 | SESSION_0401_TASK_05 | landed | Overlays: "Click"→"Tap to recenter", apologetic helper `hidden sm:inline`, copied toast lifted above mobile steppers. |
 | SESSION_0401_TASK_08 | landed | **Operator-directed scope add (width/viewport fix):** `lineage-cohort-timeline.tsx` focal/box card `w-72` → `w-[min(18rem,calc(100vw-4.5rem))] sm:w-72` and scroll padding `px-10 py-12` → `px-4 py-8 sm:…` so the focal card fits the mobile viewport width (was cut off on the right). |
-| SESSION_0401_TASK_06 | pending | Gates + draft PR. |
-| SESSION_0401_TASK_07 | pending | Bow-out. |
+| SESSION_0401_TASK_06 | landed | Gates green (test 11/0 · typecheck 0 · lint/format exit 0 · wiki:lint 0 · fallow exit 0). Draft PR #75 opened. |
+| SESSION_0401_TASK_07 | landed | Bow-out / closing ritual complete (hostile review, evidence, R&R, index backfill). |
 
 ## What landed
 
@@ -328,13 +328,30 @@ set — not sub-agent fan-out) after the spec + engine land. TASK_06/07 gate at 
 
 ### Goal
 
-<Filled at bow-out.>
+On the operator's device/browser: verify the mobile explorer overhaul against a live tree — the four filter
+dropdowns (AND-across/OR-within), the slim header + metric strip, badge gone, and **especially the width fix**
+(focal card fully visible, no right-edge clipping, on a real phone). Merge PR #75 once CI (Playwright
+`/lineage/[treeSlug]`) is green. Then optionally pick up a parked follow-up: persist active filters to the URL
+(`?filter=` nuqs), or escalate any single dimension dropdown to a bottom `Sheet` if its facet count is large.
 
 ### First task
 
-<Filled at bow-out.>
+Pull `claude/cinematic-explorer-mobile-y5kplx`, run the dev server, open a tree on a narrow viewport (≤390px),
+and confirm: focal card fits the viewport (no horizontal clip), the four dropdowns filter the canvas with
+AND-across/OR-within behaviour, and the badge is gone. Merge if CI is green.
 
 ## Review log
+
+### SESSION_0401_REVIEW_02 — Review & Recommend (Petey)
+
+- **Reviewed tasks:** SESSION_0401_TASK_01–08.
+- **What landed vs plan:** all planned tasks landed; one operator-directed scope add (TASK_08, the width fix)
+  was absorbed cleanly. The filter-semantics refinement (AND-across/OR-within) is the one deliberate behaviour
+  change and is unit-proven (11/0).
+- **Boundary registry / program plan:** no manual boundary shifted; this is a presentation + width lane on an
+  already-shipped surface. No program-plan deliverable changed.
+- **Next-target recommendation:** operator-device verification of the mobile overhaul (esp. the width fix) +
+  merge PR #75; then filter→URL persistence as the natural follow-up. Written into `Next session` above.
 
 ### SESSION_0401_REVIEW_01 — Desi design-direction pass (cinematic explorer mobile overhaul)
 
@@ -378,17 +395,57 @@ set — not sub-agent fan-out) after the spec + engine land. TASK_06/07 gate at 
 
 ## Hostile close review
 
-<!-- Filled at bow-out. -->
+- **Desi:** pass — the dropdown bar composes L1 primitives (no hand-roll, FS-0001 honoured), belts use
+  `BeltSwatch`/`Rank.colorHex` (no literal), gold untouched, brand type vars preserved; badge removal is clean;
+  slim-header + width fix are the right mobile moves. One primitive correction caught at preflight (DropdownMenu,
+  not Popover, for checkbox items) — applied.
+- **Doug:** pass — typecheck 0, filter-facets 11/0, lint/format/wiki exit 0, fallow exit 0; no secrets, lockfile
+  untouched, generated/node_modules gitignored. Behavioural (mobile render + DB-join-independent) deferred to CI
+  Playwright + operator device, which is the honest gate in a no-browser sandbox.
+- **Giddy:** pass — plan→tasks→PR traceable; scope expansion (width fix) documented as operator-directed with the
+  superseded scope-guard bullet struck through, not silently widened.
+- **Kaizen aggregate:** 9/10 — clean, well-scoped overhaul; the only residual is sandbox-deferred mobile render
+  proof (CI-covered). Half-point off for `deriveFacets` sitting 1 over the cognitive threshold (relocated logic,
+  below the severity gate; left as-is rather than over-refactoring).
+
+### Findings (severity ≥ medium)
+
+None.
 
 ## ADR / ubiquitous-language check
 
-- ADR update <required | not required at bow-out>.
-- Ubiquitous language update not required — no new domain terms (filter dimensions reuse existing labels).
+- ADR update **not required** — no architectural decision made/changed/rejected. Pure presentation + a width
+  fix; the filter-semantics refinement is a UI behaviour choice, not an architecture decision. ADR 0027 (custom
+  View-A engine) confirmed still valid and unaffected.
+- Ubiquitous language update **not required** — no new domain terms (filter dimensions reuse existing labels:
+  group/belt/school/year).
 
 ## Reflections
 
-<!-- Filled at bow-out. -->
+- **The operator's two clarifications reframed the task twice.** First "all dropdowns, not a carousel"; then
+  "it's a *width* issue, not height." My initial instinct on the second was to reach for canvas height +
+  `scrollIntoView` — wrong. Reading the screenshot literally (the focal card clipped on the right) pointed at a
+  fixed `w-72` card vs the mobile viewport. Lesson: when an operator says "can't be seen in the viewport," check
+  the fixed-width layout math before assuming scroll/height.
+- **Desi's "Popover + DropdownMenuCheckboxItem" wasn't buildable as written** — checkbox items need the base-ui
+  Menu context. Caught it at primitive spot-check (Cody preflight #2) before writing code, not after. The
+  preflight API spot-check earns its keep.
+- **Extracting the matcher to a pure helper turned an un-provable client behaviour change into an 11-case unit
+  test.** In a no-browser sandbox that's the difference between "trust me" and a green gate.
+- **Index drift:** sessions 0399 + 0400 were never added to `wiki/index.md`. Backfilled here. The FS-0019
+  "spot-check the last 5" gate is what caught it — worth keeping.
 
 ## Full close evidence
 
-<!-- Filled at bow-out. -->
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `wiki/index.md` + `custom-component-inventory.md` bumped `updated: 2026-06-17`, `last_agent: claude-session-0401`; SESSION_0401 frontmatter `status: closed`. No code-file wiki annotations needed changes. |
+| Backlinks/index sweep | `wiki/index.md` gained rows for 0399/0400 (backfill) + 0401; component inventory lineage note added. No new pairs_with needed (SESSION_0401 pairs_with SESSION_0400 + desi.md, both extant). |
+| Wiki lint | `bun run wiki:lint` → 0 violations (re-run post doc edits). |
+| Kaizen reflection | Reflections section present: yes. |
+| Hostile close review | SESSION_0401_REVIEW_01 (Desi) + SESSION_0401_REVIEW_02 (R&R) + Hostile close (Desi/Doug/Giddy) above. |
+| Review & Recommend | Next session goal written: yes. |
+| Memory sweep | None needed — no project-scoped constraint/preference change; all session-scoped (captured here). |
+| Next session unblock check | Unblocked — first task is operator-device verification + merge; doable without further input. |
+| Git hygiene | Branch `claude/cinematic-explorer-mobile-y5kplx`; code committed `574f10a` + pushed; close-docs commit hash reported at bow-out — see git log. Single additional push for docs. No force-push. |
+| Graphify update | Skipped — `graphify` not installed in this remote sandbox. |

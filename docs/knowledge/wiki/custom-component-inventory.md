@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-16
-last_agent: claude-session-0398
+updated: 2026-06-17
+last_agent: claude-session-0401
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -100,6 +100,18 @@ Conventions:
 > Premium/elite/legend policies render the existing full-card/drawer contract; dashboard/editor capability elevates to
 > the full policy so editor workflows are unchanged. SESSION_0349 added `LineageTrustBadge`/`LineageClaimBadge` as the
 > shared badge presentation.
+>
+> SESSION_0401 (cinematic explorer mobile UX overhaul): the `LineageViewAIsland` filter bar changed from a flat
+> wrapping pill row to **four labeled multi-select dropdowns** (Group / Belt / School / Year), each an island-local
+> `FilterDropdown` composing the L1 `DropdownMenu` + `DropdownMenuCheckboxItem` primitives (count-badge trigger, belt
+> swatch rows, per-dimension + global "Clear all"). The match engine moved to a **pure tested helper**
+> `lib/lineage/filter-facets.ts` (`deriveFacets`/`matchMemberIds`/`nodeMatchesFacet`/`facetKey`) with
+> **AND-across-dimension / OR-within-dimension** semantics (was OR-across-everything); dim-not-hide preserved. The
+> "Black Belt Legacy Explorer" eyebrow badge was removed; the mobile header slimmed to a compact title + thin
+> `MetricStat` strip (desktop heading/lede + `MetricPill` grid unchanged). Overlay copy "Click"→"Tap to recenter".
+> In `LineageCohortTimeline`, the focal/box card width changed from a fixed `w-72` to
+> `w-[min(18rem,calc(100vw-4.5rem))] sm:w-72` and scroll padding `px-10 py-12`→`px-4 py-8 sm:…` so the focal card fits
+> the mobile viewport (it was previously cut off the right edge). Canvas height unchanged.
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |
