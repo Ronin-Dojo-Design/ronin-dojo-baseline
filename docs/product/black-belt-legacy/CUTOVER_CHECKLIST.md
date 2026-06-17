@@ -4,8 +4,8 @@ slug: bbl-cutover-checklist
 type: report
 status: active
 created: 2026-06-04
-updated: 2026-06-13
-last_agent: codex-session-0373
+updated: 2026-06-17
+last_agent: claude-session-0402
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -36,8 +36,16 @@ The cross-layer sequencer for a safe `blackbeltlegacy.com` cutover. Spans the th
 > The cutover lane stays armed, but local `/app` dashboard/admin parity and Phase 3 user-carry readiness
 > now gate the live-domain move.
 > `baselinemartialarts.com` is the live staging-prod proxy (same Vercel deployment, brand-scoped DB,
-> shared Stripe/Resend — ADR 0004/0006/0012). A journey proven on Baseline is proven on the code+infra BBL
+> shared Resend — ADR 0004/0006/0012). A journey proven on Baseline is proven on the code+infra BBL
 > will use.
+>
+> **Stripe decision change (operator, 2026-06-17 — supersedes the "shared Stripe" assumption above and in
+> ADR 0012 for BBL only):** BBL now runs on its **own Stripe account** (separate secret + publishable +
+> webhook secret), not the shared platform account. Code support landed via a per-brand Stripe client
+> resolver (`getStripeClient(brand)` in `apps/web/services/stripe.ts`) + a dedicated BBL webhook endpoint
+> `POST /api/stripe/webhooks/bbl`. Email (Resend) stays shared (single API key, per-brand verified sender).
+> See ADR 0030. The Baseline proxy still proves the *code path*; the BBL *account* itself must be proven
+> with its own test-mode rehearsal before the flip (Layer-2 steps below, BBL-account variant).
 
 ## Layer 1 — Deploy / DNS
 

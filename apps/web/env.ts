@@ -43,6 +43,10 @@ export const env = createEnv({
     S3_PUBLIC_URL: z.string().optional(),
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    // Black Belt Legacy runs on its own Stripe account (separate keys + webhook
+    // secret). Optional so other brands / preview envs work without them.
+    STRIPE_SECRET_KEY_BBL: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET_BBL: z.string().optional(),
     PRINTFUL_API_KEY: z.string().optional(),
     PRINTFUL_WEBHOOK_SECRET: z.string().optional(),
     PRINTFUL_CONFIRM_ORDERS: z.enum(["true", "false"]).default("false"),

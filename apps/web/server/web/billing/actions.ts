@@ -13,7 +13,7 @@ import {
   findStripeCustomerForCheckout,
   STRIPE_CUSTOMER_ACCOUNT_SCOPE,
 } from "~/server/web/billing/stripe-customers"
-import { stripe } from "~/services/stripe"
+import { getStripeClient } from "~/services/stripe"
 
 const createBillingPortalSessionSchema = z.object({
   returnUrl: z.string().default("/dashboard"),
@@ -63,7 +63,7 @@ export const createBillingPortalSession = userActionClient
       throw new Error("No billing customer found for this brand.")
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripeClient(brand).billingPortal.sessions.create({
       customer: customer.stripeCustomerId,
       return_url: `${siteConfig.url}${returnUrl}`,
     })
@@ -139,7 +139,7 @@ export const createProgramEnrollmentCheckout = userActionClient
       brand,
     }
 
-    const checkout = await stripe.checkout.sessions.create({
+    const checkout = await getStripeClient(brand).checkout.sessions.create({
       mode,
       line_items: [{ price: pricingPlan.stripePriceId, quantity: 1 }],
       automatic_tax: { enabled: true },
@@ -212,7 +212,7 @@ export const createLineageMembershipCheckout = userActionClient
       brand,
     }
 
-    const checkout = await stripe.checkout.sessions.create({
+    const checkout = await getStripeClient(brand).checkout.sessions.create({
       mode,
       line_items: [{ price: pricingPlan.stripePriceId, quantity: 1 }],
       automatic_tax: { enabled: true },
