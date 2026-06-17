@@ -58,6 +58,11 @@ export const directoryRankAwardPayload = {
       id: true,
       name: true,
       sortOrder: true,
+      // @added SESSION_0410 — colorHex is the brand-neutral belt tint (ADR 0022) for the BJJ Passport
+      // credential card on the public profile + lineage drawer. Passport-rooted (this select hangs off
+      // `passport.rankAwardsEarned`), so it is claim/attach-invariant. (Discipline eyebrow intentionally
+      // not added here — the card's generic "Passport" label keeps the shared payload lean.)
+      colorHex: true,
       rankSystem: { select: { id: true, name: true } },
     },
   },
@@ -222,6 +227,7 @@ export const directoryProfileSelfPayload = {
       bio: true,
       socialLinks: true,
       placeOfBirth: true,
+      currentResidence: true,
       startedTrainingAt: true,
       user: { select: { id: true, name: true, image: true } },
       // The owner's lineage node (if any) — keyed for the owner-scoped timeline fetch.

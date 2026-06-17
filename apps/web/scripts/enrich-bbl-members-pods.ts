@@ -596,7 +596,10 @@ async function main() {
       const school = matchSchool(entry.promotedAt)
       const organizationId = school && school.orgId !== "(new)" ? school.orgId : null
       const pictures = (entry.pictures ?? []).map(u => u.trim()).filter(Boolean)
-      const location = entry.promotedAt?.trim() || null
+      // `location` is the free-text promotion place — set it ONLY when the school did not
+      // resolve to a linked Organization. Otherwise org.name === location and the rank-history
+      // timeline renders the school twice ("date · School · School").
+      const location = organizationId ? null : entry.promotedAt?.trim() || null
 
       // Promoter: in-roster → awardedByPassportId; off-roster → null + flagged in notes.
       let awardedByPassportId: string | null = null

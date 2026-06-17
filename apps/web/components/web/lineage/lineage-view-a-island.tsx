@@ -27,7 +27,10 @@ import {
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { LineageCohortTimeline } from "~/components/web/lineage/lineage-cohort-timeline"
-import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer"
+import {
+  LineageProfileDrawer,
+  type LineageProfileDrawerTab,
+} from "~/components/web/lineage/lineage-profile-drawer"
 import { BBL, rgba } from "~/lib/lineage/belt-color"
 import { memberInitials } from "~/lib/lineage/canvas-model"
 import {
@@ -260,6 +263,7 @@ export function LineageViewAIsland({
   const [focusMemberId, setFocusMemberId] = useState<string | null>(initialMemberId)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMemberId, setDrawerMemberId] = useState<string | null>(null)
+  const [drawerTab, setDrawerTab] = useState<LineageProfileDrawerTab>("info")
 
   // "Click to recenter" hint auto-dismisses after the first focus interaction.
   const [hasInteracted, setHasInteracted] = useState(false)
@@ -362,6 +366,7 @@ export function LineageViewAIsland({
 
   const openDrawer = useCallback((memberId: string) => {
     setDrawerMemberId(memberId)
+    setDrawerTab("info")
     setDrawerOpen(true)
   }, [])
 
@@ -737,6 +742,8 @@ export function LineageViewAIsland({
         treeSlug={treeSlug}
         nodeId={drawerMember?.nodeId}
         isAdmin={canManage}
+        activeTab={drawerTab}
+        onTabChange={setDrawerTab}
         students={drawerStudents}
         onSelectStudent={selectStudent}
       />

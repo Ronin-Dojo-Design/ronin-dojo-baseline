@@ -237,6 +237,8 @@ export const lineageNodeProfilePayload = {
                   city: true,
                   state: true,
                   country: true,
+                  // @added SESSION_0410 — null-safe school logo (data backfilled in the supervised lane).
+                  logoUrl: true,
                 },
               },
               rank: {

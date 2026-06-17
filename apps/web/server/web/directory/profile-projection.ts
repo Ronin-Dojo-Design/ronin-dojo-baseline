@@ -178,10 +178,16 @@ export function projectOwnProfile({
 
   const currentAffiliation = affiliations.find(a => a.isCurrent) ?? affiliations[0] ?? null
 
+  // "Based in" string: prefer the structured DirectoryProfile location (city/region/country the
+  // member set for the directory), falling back to the Passport's free-text `currentResidence`
+  // (the Pods-imported residence — added by the SESSION_0410 currentResidence migration). Without
+  // this fallback the imported residence never surfaced on /me.
   const locationLine =
     [profile.locationCity, profile.locationRegion, profile.locationCountry]
       .filter(Boolean)
-      .join(", ") || null
+      .join(", ") ||
+    passport.currentResidence ||
+    null
 
   return {
     passportId: profile.passportId,

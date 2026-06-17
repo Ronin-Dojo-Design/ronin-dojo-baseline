@@ -1105,6 +1105,9 @@ model Organization {
   websiteUrl   String?
   phoneE164    String?
   email        String?
+  // @added SESSION_0410 — per-school logo (brand-neutral; rendered null-safe → name fallback).
+  // Data backfill + admin upload + prod migrate are the supervised new-data lane, not the fleet.
+  logoUrl      String?
   inviteCode   String?          @unique @default(cuid(2))
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt

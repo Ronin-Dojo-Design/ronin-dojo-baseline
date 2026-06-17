@@ -13,6 +13,7 @@ import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import { ListingDetail } from "~/components/web/listing/listing-detail"
 import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
+import { BjjPassportCard } from "~/components/web/profile/bjj-passport-card"
 import { IntroDescription } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
@@ -94,6 +95,20 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
         .join(", ")
     : null
 
+  // BJJ Passport credential card (BBL_PARITY_SPEC Slice 1) — the signature shareable card, REUSED
+  // (not duplicated) from the public projection. Current belt = highest earned RankAward, read
+  // Passport-rooted (`passport.rankAwardsEarned`, exposed as `user.ranks`), so it is claim-invariant.
+  const topRank = user.ranks[0]?.rank ?? null
+  const passportRank = topRank ? { name: topRank.name, colorHex: topRank.colorHex } : null
+  const passportSidebar = (
+    <BjjPassportCard
+      name={user.name ?? "Member"}
+      rank={passportRank}
+      school={user.organizations[0]?.name ?? null}
+      avatarUrl={user.image}
+    />
+  )
+
   // Hero actions cluster: persisted Save (any rendered profile — the subject is the Passport, the
   // identity SoT) + QrShare, which stays gated to a fully-rendered profile as before.
   const heroActions = (
@@ -138,6 +153,7 @@ export default async function DirectoryProfilePage({ params }: PageProps) {
       }
       actions={heroActions}
       intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
+      sidebar={passportSidebar}
     >
       <Section>
         <Stack size="sm">
