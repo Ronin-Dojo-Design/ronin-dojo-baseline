@@ -11,6 +11,11 @@ export type DirectoryProfileWhereInput = {
   discipline?: string
   /** Organization (school) slug. Scoped inside the brand-pinned membership. */
   org?: string
+  /**
+   * Rank id (globally unique — `Rank` has no slug; it lives within a
+   * `RankSystem` → `Discipline`). Narrows to people who earned that rank.
+   */
+  rank?: string
   city?: string
   region?: string
 }
@@ -32,27 +37,33 @@ export function buildDirectoryProfileWhere(
   brand: Brand,
   viewerUserId?: string | null,
 ): Record<string, unknown> {
-  const { q, discipline, org, city, region } = search
+  const { q, discipline, org, rank, city, region } = search
 
   const allowedVisibility: DirectoryVisibility[] = viewerUserId
     ? ["PUBLIC", "MEMBERS_ONLY"]
     : ["PUBLIC"]
 
   // Phase 3c: DirectoryProfile is Passport-rooted; memberships are account-side, reached
-  // through passport.user (SOT-ADR D1).
-  const where: Record<string, unknown> = {
-    visibility: { in: allowedVisibility },
-    passport: {
-      user: {
-        memberships: {
-          some: {
-            // brand is always server-derived; org slug only narrows within it.
-            organization: { brand, ...(org ? { slug: org } : {}) },
-            ...(discipline ? { discipline: { slug: discipline } } : {}),
-          },
+  // through passport.user (SOT-ADR D1). RankAward earner is Passport-rooted directly, so a rank
+  // filter narrows on the Passport via `rankAwardsEarned`, alongside the account-side membership.
+  const passport: Record<string, unknown> = {
+    user: {
+      memberships: {
+        some: {
+          // brand is always server-derived; org slug only narrows within it.
+          organization: { brand, ...(org ? { slug: org } : {}) },
+          ...(discipline ? { discipline: { slug: discipline } } : {}),
         },
       },
     },
+    // rankId is globally unique, so it is brand-safe on its own; the UI scopes the
+    // available ranks by the chosen discipline for usability, not for security.
+    ...(rank ? { rankAwardsEarned: { some: { rankId: rank } } } : {}),
+  }
+
+  const where: Record<string, unknown> = {
+    visibility: { in: allowedVisibility },
+    passport,
   }
 
   if (city) {

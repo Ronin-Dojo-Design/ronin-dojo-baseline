@@ -5,19 +5,10 @@ import { useAction } from "next-safe-action/hooks"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/common/form"
-import { FormMedia } from "~/components/common/form-media"
-import { Input } from "~/components/common/input"
+import { AvatarField, DateField, TextAreaField, TextField } from "~/components/common/fields"
+import { Form } from "~/components/common/form"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { TextArea } from "~/components/common/textarea"
 import { updateLineageNodeProfile } from "~/server/web/lineage/node-profile-actions"
 import type { EditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import type { UpdateLineageNodeProfileInput } from "~/server/web/lineage/node-profile-schemas"
@@ -39,9 +30,36 @@ const toDate = (value: Date | string | null | undefined) => {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-const toDateInputValue = (value: Date | string | null | undefined) => {
-  const date = toDate(value)
-  return date ? date.toISOString().split("T")[0] : ""
+/** Initial form values — promotion date only when the member has a selected rank award. */
+function nodeFormDefaults(
+  profile: EditableLineageNodeProfile,
+  canEditPromotionDate: boolean,
+): FormValues {
+  return {
+    treeId: profile.tree.id,
+    nodeId: profile.node.id,
+    displayName: str(profile.node.passport.displayName),
+    bio: str(profile.node.bio),
+    avatarUrl: str(profile.node.passport.avatarUrl),
+    promotionDate: canEditPromotionDate
+      ? toDate(profile.member.selectedRankAward?.awardedAt ?? null)
+      : null,
+  }
+}
+
+/** Submit payload — promotion date is only carried when the member has a selected rank award. */
+function buildPayload(
+  values: FormValues,
+  canEditPromotionDate: boolean,
+): UpdateLineageNodeProfileInput {
+  return {
+    treeId: values.treeId,
+    nodeId: values.nodeId,
+    displayName: values.displayName,
+    bio: values.bio,
+    avatarUrl: values.avatarUrl,
+    ...(canEditPromotionDate ? { promotionDate: values.promotionDate ?? null } : {}),
+  }
 }
 
 type Props = {
@@ -50,9 +68,7 @@ type Props = {
 
 export function LineageNodeProfileForm({ profile }: Props) {
   const router = useRouter()
-  const selectedRankAward = profile.member.selectedRankAward
-  const canEditPromotionDate = Boolean(selectedRankAward)
-  const initialPromotionDate = selectedRankAward?.awardedAt ?? null
+  const canEditPromotionDate = Boolean(profile.member.selectedRankAward)
 
   const { execute, isExecuting } = useAction(updateLineageNodeProfile, {
     onSuccess: () => {
@@ -65,27 +81,11 @@ export function LineageNodeProfileForm({ profile }: Props) {
   })
 
   const form = useForm<FormValues>({
-    defaultValues: {
-      treeId: profile.tree.id,
-      nodeId: profile.node.id,
-      displayName: str(profile.node.passport.displayName),
-      bio: str(profile.node.bio),
-      avatarUrl: str(profile.node.passport.avatarUrl),
-      promotionDate: canEditPromotionDate ? toDate(initialPromotionDate) : null,
-    },
+    defaultValues: nodeFormDefaults(profile, canEditPromotionDate),
   })
 
   function onSubmit(values: FormValues) {
-    const payload = {
-      treeId: values.treeId,
-      nodeId: values.nodeId,
-      displayName: values.displayName,
-      bio: values.bio,
-      avatarUrl: values.avatarUrl,
-      ...(canEditPromotionDate ? { promotionDate: values.promotionDate ?? null } : {}),
-    } satisfies UpdateLineageNodeProfileInput
-
-    execute(payload)
+    execute(buildPayload(values, canEditPromotionDate))
   }
 
   return (
@@ -94,88 +94,37 @@ export function LineageNodeProfileForm({ profile }: Props) {
         <input type="hidden" {...form.register("treeId")} />
         <input type="hidden" {...form.register("nodeId")} />
 
-        <FormField
+        <TextField
           control={form.control}
           name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display name</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="How this person appears on the tree"
-                  {...field}
-                  value={str(field.value)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Display name"
+          placeholder="How this person appears on the tree"
         />
 
         {canEditPromotionDate ? (
-          <FormField
-            control={form.control}
-            name="promotionDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Promotion date</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    value={toDateInputValue(field.value)}
-                    onChange={event =>
-                      field.onChange(event.target.value ? new Date(event.target.value) : null)
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <DateField control={form.control} name="promotionDate" label="Promotion date" />
         ) : (
           <Note className="self-end">
             Promotion date is unavailable because this tree member has no selected rank award.
           </Note>
         )}
 
-        <FormField
+        <AvatarField
+          form={form}
           control={form.control}
           name="avatarUrl"
-          render={({ field }) => (
-            <FormMedia
-              form={form}
-              field={field}
-              path={`lineage/${profile.tree.id}/${profile.node.id}/avatar`}
-              className="sm:col-span-2"
-            >
-              {field.value && (
-                <img
-                  src={field.value}
-                  alt="Lineage avatar preview"
-                  className="size-20 rounded-full object-cover"
-                />
-              )}
-            </FormMedia>
-          )}
+          path={`lineage/${profile.tree.id}/${profile.node.id}/avatar`}
+          className="sm:col-span-2"
+          previewAlt="Lineage avatar preview"
         />
 
-        <FormField
+        <TextAreaField
           control={form.control}
           name="bio"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-2">
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <TextArea
-                  rows={5}
-                  placeholder="Short lineage-specific bio"
-                  {...field}
-                  value={str(field.value)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Bio"
+          rows={5}
+          placeholder="Short lineage-specific bio"
+          className="sm:col-span-2"
         />
 
         {canEditPromotionDate && (

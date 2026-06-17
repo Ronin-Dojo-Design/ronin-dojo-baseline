@@ -35,20 +35,14 @@ export default async function DirectoryProfilesPage({ searchParams }: Props) {
   const session = await getServerSession()
   const params = directoryFilterParamsCache.parse(await searchParams)
 
+  // `params` is already string-defaulted by the nuqs cache; passed straight through (this also
+  // wires the `rank` filter on the dedicated people page, which the old hand-built object omitted).
   const facets = await getDirectoryFacets({
     brand,
     tab: "people",
     viewerUserId: session?.user?.id,
     viewerRole: session?.user?.role,
-    params: {
-      q: params.q || undefined,
-      discipline: params.discipline || undefined,
-      org: params.org || undefined,
-      city: params.city || undefined,
-      region: params.region || undefined,
-      page: params.page,
-      perPage: params.perPage,
-    },
+    params,
   })
 
   return (

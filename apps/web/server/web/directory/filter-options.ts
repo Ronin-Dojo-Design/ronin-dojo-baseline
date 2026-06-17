@@ -3,9 +3,14 @@ import { db } from "~/services/db"
 
 export type DirectoryLocationOption = { region: string; city: string }
 
+/** `Rank` has no slug; `id` is the stable key. `disciplineSlug` narrows the dropdown. */
+export type DirectoryRankOption = { id: string; name: string; disciplineSlug: string }
+
 export type DirectoryFilterOptions = {
   disciplines: { slug: string; name: string }[]
   organizations: { slug: string; name: string }[]
+  /** Ranks (system + brand-specific), each tagged with its discipline slug for client narrowing. */
+  ranks: DirectoryRankOption[]
   /** Distinct, non-empty regions across PUBLIC profiles + brand organizations. */
   regions: string[]
   /** Distinct region/city pairs; City selects narrow by the chosen region client-side. */
@@ -36,6 +41,17 @@ export async function getDirectoryFilterOptions(brand: Brand): Promise<Directory
     select: { name: true, slug: true },
     orderBy: { name: "asc" },
   })
+  // Ranks mirror the discipline scope (system rows `isSystem: true` + brand-specific), each tagged
+  // with its discipline slug so the client narrows the rank dropdown to the chosen discipline.
+  const ranks = await db.rank.findMany({
+    where: { OR: [{ isSystem: true }, { brand }] },
+    select: {
+      id: true,
+      name: true,
+      rankSystem: { select: { discipline: { select: { slug: true } } } },
+    },
+    orderBy: [{ rankSystem: { discipline: { name: "asc" } } }, { sortOrder: "asc" }],
+  })
   const profileLocations = await db.directoryProfile.findMany({
     where: {
       visibility: "PUBLIC",
@@ -53,9 +69,10 @@ export async function getDirectoryFilterOptions(brand: Brand): Promise<Directory
   const pairs = new Map<string, DirectoryLocationOption>()
   const regions = new Set<string>()
 
+  const clean = (v: string | null | undefined) => (v ?? "").trim()
   const addLocation = (region: string | null | undefined, city: string | null | undefined) => {
-    const r = (region ?? "").trim()
-    const c = (city ?? "").trim()
+    const r = clean(region)
+    const c = clean(city)
     if (r) regions.add(r)
     if (c) pairs.set(`${r.toLowerCase()}::${c.toLowerCase()}`, { region: r, city: c })
   }
@@ -66,6 +83,11 @@ export async function getDirectoryFilterOptions(brand: Brand): Promise<Directory
   return {
     disciplines: disciplines.map(d => ({ slug: d.slug, name: d.name })),
     organizations: organizations.map(o => ({ slug: o.slug, name: o.name })),
+    ranks: ranks.map(r => ({
+      id: r.id,
+      name: r.name,
+      disciplineSlug: r.rankSystem.discipline.slug,
+    })),
     regions: [...regions].sort((a, b) => a.localeCompare(b)),
     cities: [...pairs.values()].sort(
       (a, b) => a.region.localeCompare(b.region) || a.city.localeCompare(b.city),

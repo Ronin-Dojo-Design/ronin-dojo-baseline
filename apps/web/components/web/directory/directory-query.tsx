@@ -24,24 +24,13 @@ const DirectoryQuery = async ({
   viewerRole,
   ...props
 }: DirectoryQueryProps) => {
+  // `params` is already string-defaulted by the nuqs cache (every key has a `.withDefault`), so it
+  // is passed straight to the facet dispatcher — no `"" → undefined` round-trip (the dispatcher no
+  // longer re-coerces back to "").
   const params = directoryFilterParamsCache.parse(await searchParams)
   const tab = normalizeDirectoryFacetTab(params.type)
 
-  const facets = await getDirectoryFacets({
-    brand,
-    tab,
-    viewerUserId,
-    viewerRole,
-    params: {
-      q: params.q || undefined,
-      discipline: params.discipline || undefined,
-      org: params.org || undefined,
-      city: params.city || undefined,
-      region: params.region || undefined,
-      page: params.page,
-      perPage: params.perPage,
-    },
-  })
+  const facets = await getDirectoryFacets({ brand, tab, params, viewerUserId, viewerRole })
   const filterOptions = await getDirectoryFilterOptions(brand)
 
   return (

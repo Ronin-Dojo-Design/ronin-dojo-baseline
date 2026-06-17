@@ -6,6 +6,7 @@ import { type UseFormReturn, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
+import { AvatarField, DateField, TextAreaField, TextField } from "~/components/common/fields"
 import {
   Form,
   FormControl,
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { TextArea } from "~/components/common/textarea"
 import { ProfileHero } from "~/components/web/profile/profile-hero"
 import { initialsOf } from "~/lib/directory/facet-result"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
@@ -34,6 +34,42 @@ import { SocialLinksEditor } from "./social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
 const str = (v: string | null | undefined) => v ?? ""
+
+/** Initial `react-hook-form` values for the Passport (identity) form. */
+function passportFormValues(passport: PassportOne) {
+  return {
+    displayName: str(passport.displayName),
+    legalFirstName: str(passport.legalFirstName),
+    legalLastName: str(passport.legalLastName),
+    dob: passport.dob ? new Date(passport.dob) : undefined,
+    gender: passport.gender ?? undefined,
+    phoneE164: str(passport.phoneE164),
+    emergencyContactName: str(passport.emergencyContactName),
+    emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
+    avatarUrl: str(passport.avatarUrl),
+    bio: str(passport.bio),
+    socialLinks: Array.isArray(passport.socialLinks)
+      ? (passport.socialLinks as Array<{ platform: string; url: string }>)
+      : [],
+  }
+}
+
+/** Initial `react-hook-form` values for the DirectoryProfile (presentation) form. */
+function directoryFormValues(directoryProfile: DirectoryProfileOne) {
+  return {
+    slug: str(directoryProfile.slug),
+    visibility: directoryProfile.visibility,
+    locationCity: str(directoryProfile.locationCity),
+    locationRegion: str(directoryProfile.locationRegion),
+    locationCountry: str(directoryProfile.locationCountry),
+    showEmail: directoryProfile.showEmail,
+    showPhone: directoryProfile.showPhone,
+    showOrgs: directoryProfile.showOrgs,
+    showRanks: directoryProfile.showRanks,
+    coverPhotoUrl: str(directoryProfile.coverPhotoUrl),
+    videoIntroUrl: str(directoryProfile.videoIntroUrl),
+  }
+}
 
 type Props = {
   passport: PassportOne
@@ -49,26 +85,15 @@ type Props = {
  * Profile tab (DashboardProfileTab). Passport is the identity SoT; DirectoryProfile
  * is its presentation/privacy view. Both forms hoist to this parent so a single live
  * `ProfileHero` can mirror name/avatar/location across both as the owner types.
+ *
+ * SESSION_0400 (D-023): the plain text/date/avatar fields render via the shared
+ * `components/common/fields` primitives so this editor and the lineage-node profile
+ * form share one field surface. The `Select`s (gender/visibility), the cover-photo
+ * + video media, the privacy checkboxes, and `SocialLinksEditor` stay inline.
  */
 export function PassportEditor({ passport, directoryProfile, userId, canUploadVideo }: Props) {
   const passportForm = useHookFormAction(updatePassport, zodResolver(updatePassportSchema), {
-    formProps: {
-      values: {
-        displayName: str(passport.displayName),
-        legalFirstName: str(passport.legalFirstName),
-        legalLastName: str(passport.legalLastName),
-        dob: passport.dob ? new Date(passport.dob) : undefined,
-        gender: passport.gender ?? undefined,
-        phoneE164: str(passport.phoneE164),
-        emergencyContactName: str(passport.emergencyContactName),
-        emergencyContactPhoneE164: str(passport.emergencyContactPhoneE164),
-        avatarUrl: str(passport.avatarUrl),
-        bio: str(passport.bio),
-        socialLinks: Array.isArray(passport.socialLinks)
-          ? (passport.socialLinks as Array<{ platform: string; url: string }>)
-          : [],
-      },
-    },
+    formProps: { values: passportFormValues(passport) },
     actionProps: {
       onSuccess: () => toast.success("Passport updated."),
       onError: () => toast.error("Failed to update passport."),
@@ -79,21 +104,7 @@ export function PassportEditor({ passport, directoryProfile, userId, canUploadVi
     updateDirectoryProfile,
     zodResolver(updateDirectoryProfileSchema),
     {
-      formProps: {
-        values: {
-          slug: str(directoryProfile.slug),
-          visibility: directoryProfile.visibility,
-          locationCity: str(directoryProfile.locationCity),
-          locationRegion: str(directoryProfile.locationRegion),
-          locationCountry: str(directoryProfile.locationCountry),
-          showEmail: directoryProfile.showEmail,
-          showPhone: directoryProfile.showPhone,
-          showOrgs: directoryProfile.showOrgs,
-          showRanks: directoryProfile.showRanks,
-          coverPhotoUrl: str(directoryProfile.coverPhotoUrl),
-          videoIntroUrl: str(directoryProfile.videoIntroUrl),
-        },
-      },
+      formProps: { values: directoryFormValues(directoryProfile) },
       actionProps: {
         onSuccess: () => toast.success("Directory profile updated."),
         onError: () => toast.error("Failed to update directory profile."),
@@ -151,76 +162,18 @@ function PassportForm({
 
       <Form {...form}>
         <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
-          <FormField
+          <TextField
             control={form.control}
             name="displayName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Display name</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="How you appear to others"
-                    {...field}
-                    value={str(field.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Display name"
+            placeholder="How you appear to others"
           />
 
-          <FormField
-            control={form.control}
-            name="legalFirstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First name</FormLabel>
-                <FormControl>
-                  <Input {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="legalFirstName" label="First name" />
 
-          <FormField
-            control={form.control}
-            name="legalLastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last name</FormLabel>
-                <FormControl>
-                  <Input {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="legalLastName" label="Last name" />
 
-          <FormField
-            control={form.control}
-            name="dob"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of birth</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    {...field}
-                    value={
-                      field.value instanceof Date
-                        ? field.value.toISOString().split("T")[0]
-                        : str(field.value as string)
-                    }
-                    onChange={e =>
-                      field.onChange(e.target.value ? new Date(e.target.value) : undefined)
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <DateField control={form.control} name="dob" label="Date of birth" clearTo="undefined" />
 
           <FormField
             control={form.control}
@@ -255,91 +208,43 @@ function PassportForm({
             )}
           />
 
-          <FormField
+          <TextField
             control={form.control}
             name="phoneE164"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input
-                    type="tel"
-                    placeholder="+1 555 123 4567"
-                    {...field}
-                    value={str(field.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Phone"
+            type="tel"
+            placeholder="+1 555 123 4567"
           />
 
-          <FormField
+          <TextField
             control={form.control}
             name="emergencyContactName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Emergency contact</FormLabel>
-                <FormControl>
-                  <Input placeholder="Name" {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Emergency contact"
+            placeholder="Name"
           />
 
-          <FormField
+          <TextField
             control={form.control}
             name="emergencyContactPhoneE164"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Emergency phone</FormLabel>
-                <FormControl>
-                  <Input type="tel" {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Emergency phone"
+            type="tel"
           />
 
-          <FormField
+          <AvatarField
+            form={form}
             control={form.control}
             name="avatarUrl"
-            render={({ field }) => (
-              <FormMedia
-                form={form}
-                field={field}
-                path={`passports/${userId}/avatar`}
-                className="@md:col-span-2"
-              >
-                {field.value && (
-                  <img
-                    src={field.value}
-                    alt="Avatar preview"
-                    className="size-20 rounded-full object-cover"
-                  />
-                )}
-              </FormMedia>
-            )}
+            path={`passports/${userId}/avatar`}
+            className="@md:col-span-2"
           />
 
-          <FormField
+          <TextAreaField
             control={form.control}
             name="bio"
-            render={({ field }) => (
-              <FormItem className="@md:col-span-2">
-                <FormLabel>Bio</FormLabel>
-                <FormControl>
-                  <TextArea
-                    rows={4}
-                    placeholder="Tell us about your martial arts journey…"
-                    {...field}
-                    value={str(field.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Bio"
+            rows={4}
+            placeholder="Tell us about your martial arts journey…"
+            className="@md:col-span-2"
           />
 
           <div className="@md:col-span-2">
@@ -378,18 +283,11 @@ function DirectoryProfileForm({
 
       <Form {...form}>
         <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
-          <FormField
+          <TextField
             control={form.control}
             name="slug"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Profile slug</FormLabel>
-                <FormControl>
-                  <Input placeholder="your-name" {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Profile slug"
+            placeholder="your-name"
           />
 
           <FormField
@@ -423,46 +321,16 @@ function DirectoryProfileForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="locationCity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="locationCity" label="City" />
 
-          <FormField
-            control={form.control}
-            name="locationRegion"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State / Region</FormLabel>
-                <FormControl>
-                  <Input {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <TextField control={form.control} name="locationRegion" label="State / Region" />
 
-          <FormField
+          <TextField
             control={form.control}
             name="locationCountry"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country (2-letter code)</FormLabel>
-                <FormControl>
-                  <Input maxLength={2} placeholder="US" {...field} value={str(field.value)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Country (2-letter code)"
+            placeholder="US"
+            maxLength={2}
           />
 
           <FormField

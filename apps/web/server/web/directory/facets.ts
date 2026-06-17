@@ -16,6 +16,11 @@ import { searchPublishedLineageTrees } from "~/server/web/lineage/queries"
  * Keeps each entity's existing privacy-aware query separate and only normalizes
  * the result rows into the shared `DirectoryFacetResult` card shape. People,
  * organizations, and trees now all reuse paginated `search*` read models.
+ *
+ * Params arrive already string-defaulted by `directoryFilterParamsCache` (every key has a
+ * `.withDefault("")` / numeric default), so this layer no longer re-coerces `?? ""` — it routes
+ * to one of three per-facet builders (SESSION_0400 simplification; removed the redundant
+ * `"" → undefined → ""` round-trip the page + this dispatcher used to do).
  */
 
 const DIRECTORY_FACET_TABS = ["people", "organizations", "trees"] as const
@@ -27,18 +32,20 @@ export function normalizeDirectoryFacetTab(value: string | null | undefined): Di
 }
 
 export type DirectoryFacetParams = {
-  q?: string
+  q: string
   /** Discipline slug — shared cross-facet filter (people via membership slug). */
-  discipline?: string
+  discipline: string
   /** Organization (school) slug — applies to People (membership) + Trees (tree org). */
-  org?: string
+  org: string
+  /** Rank id — applies to People only (earned RankAward). `Rank` has no slug. */
+  rank: string
   /** Location filters — apply to People (profile) + Organizations (org city/state). */
-  city?: string
-  region?: string
+  city: string
+  region: string
   /** Organization type filter (orgs facet) — UI deferred; not the tab `type`. */
   orgType?: string
-  page?: number
-  perPage?: number
+  page: number
+  perPage: number
 }
 
 export type DirectoryFacetPage = {
@@ -51,6 +58,17 @@ export type DirectoryFacetPage = {
 
 const DEFAULT_PER_PAGE = 24
 
+/** Pagination params are trusted from the URL, so clamp non-positive values to a sane fallback. */
+const positiveOr = (value: number, fallback: number) => (value > 0 ? value : fallback)
+
+type FacetViewer = { viewerUserId?: string | null; viewerRole?: string | null }
+type FacetBuilderArgs = {
+  brand: Brand
+  params: DirectoryFacetParams
+  page: number
+  perPage: number
+} & FacetViewer
+
 export async function getDirectoryFacets({
   brand,
   tab,
@@ -61,70 +79,93 @@ export async function getDirectoryFacets({
   brand: Brand
   tab: DirectoryFacetTab
   params: DirectoryFacetParams
-  viewerUserId?: string | null
-  viewerRole?: string | null
-}): Promise<DirectoryFacetPage> {
-  const page = params.page && params.page > 0 ? params.page : 1
-  const perPage = params.perPage && params.perPage > 0 ? params.perPage : DEFAULT_PER_PAGE
+} & FacetViewer): Promise<DirectoryFacetPage> {
+  const page = positiveOr(params.page, 1)
+  const perPage = positiveOr(params.perPage, DEFAULT_PER_PAGE)
+  const args: FacetBuilderArgs = { brand, params, page, perPage, viewerUserId, viewerRole }
 
-  if (tab === "organizations") {
-    // Orgs facet: discipline + location apply; org-slug does not (it would just be self-selection).
-    const { schools, total } = await searchOrganizations(
-      {
-        q: params.q ?? "",
-        type: params.orgType ?? "",
-        discipline: params.discipline ?? "",
-        city: params.city ?? "",
-        region: params.region ?? "",
-        sort: "",
-        page,
-        perPage,
-      },
-      brand,
-    )
+  if (tab === "organizations") return organizationsFacet(args)
+  if (tab === "trees") return treesFacet(args)
+  return peopleFacet(args)
+}
 
-    return { tab, results: schools.map(mapOrganizationToFacet), total, page, perPage }
-  }
-
-  if (tab === "trees") {
-    // Trees facet: discipline + org-slug apply; trees carry no location.
-    const { trees, total } = await searchPublishedLineageTrees({
-      brand,
-      search: {
-        q: params.q ?? "",
-        sort: "name.asc",
-        page,
-        perPage,
-        discipline: params.discipline ?? "",
-        organization: params.org ?? "",
-      },
-    })
-
-    return { tab, results: trees.map(mapLineageTreeToFacet), total, page, perPage }
-  }
-
-  // People facet: discipline + org-slug + location all apply.
-  const { members, total } = await searchDirectoryProfiles(
+// Orgs facet: discipline + location apply; org-slug does not (it would just be self-selection).
+async function organizationsFacet({
+  brand,
+  params,
+  page,
+  perPage,
+}: FacetBuilderArgs): Promise<DirectoryFacetPage> {
+  const { schools, total } = await searchOrganizations(
     {
-      q: params.q ?? "",
-      discipline: params.discipline ?? "",
-      org: params.org ?? "",
+      q: params.q,
+      type: params.orgType ?? "",
+      discipline: params.discipline,
+      city: params.city,
+      region: params.region,
       sort: "",
       page,
       perPage,
-      city: params.city ?? "",
-      region: params.region ?? "",
+    },
+    brand,
+  )
+
+  return {
+    tab: "organizations",
+    results: schools.map(mapOrganizationToFacet),
+    total,
+    page,
+    perPage,
+  }
+}
+
+// Trees facet: discipline + org-slug apply; trees carry no location.
+async function treesFacet({
+  brand,
+  params,
+  page,
+  perPage,
+}: FacetBuilderArgs): Promise<DirectoryFacetPage> {
+  const { trees, total } = await searchPublishedLineageTrees({
+    brand,
+    search: {
+      q: params.q,
+      sort: "name.asc",
+      page,
+      perPage,
+      discipline: params.discipline,
+      organization: params.org,
+    },
+  })
+
+  return { tab: "trees", results: trees.map(mapLineageTreeToFacet), total, page, perPage }
+}
+
+// People facet: discipline + org-slug + rank + location all apply.
+async function peopleFacet({
+  brand,
+  params,
+  page,
+  perPage,
+  viewerUserId,
+  viewerRole,
+}: FacetBuilderArgs): Promise<DirectoryFacetPage> {
+  const { members, total } = await searchDirectoryProfiles(
+    {
+      q: params.q,
+      discipline: params.discipline,
+      org: params.org,
+      rank: params.rank,
+      sort: "",
+      page,
+      perPage,
+      city: params.city,
+      region: params.region,
     },
     brand,
     viewerUserId,
     viewerRole,
   )
 
-  return {
-    tab: "people",
-    results: members.map(mapPersonToFacet),
-    total,
-    page,
-    perPage,
-  }
+  return { tab: "people", results: members.map(mapPersonToFacet), total, page, perPage }
 }
