@@ -5,7 +5,7 @@ type: report
 status: active
 created: 2026-05-27
 updated: 2026-06-17
-last_agent: claude-session-0361
+last_agent: claude-session-0401
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/STORIES.md
@@ -126,10 +126,10 @@ Story-by-story implementation status mapped against `STORIES.md`.
 | ID | Story | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | BBL-DISCOVER-001 | Search people | ✅ Done | SESSION_0350 made `/directory` a faceted browse: a result-type segmented control (People / Schools & Orgs / Lineage Trees) over a shared `DirectoryFacetResult` adapter + `FacetResultCard`, and the shared search box filters people. SESSION_0352/0353 added the cross-facet **discipline / org / location (region→city)** filter dropdowns. People converged onto the paginated `searchDirectoryProfiles` (legacy `getDirectoryProfiles` retired) with the reused `Pagination` control rendered by `DirectoryFacetResults`. **SESSION_0400** wired the final cross-facet filter — **rank** (People only, narrowed to the chosen discipline since a `Rank` has no slug and only has meaning within a discipline's rank system) end-to-end (filter-options → dropdown → `buildDirectoryProfileWhere` `rankAwardsEarned` clause → facets dispatch), with where-builder unit tests. |
-| BBL-DISCOVER-002 | Filter lineage trees | 🔶 Partial | `lineage-query.tsx` powers the `/lineage` index, and SESSION_0350 surfaced published trees as a `/directory` facet (discipline + owning-org + Claimable badge cards via `searchPublishedLineageTrees`, now also returning `isClaimable`); SESSION_0352/0353 wired the shared discipline + org filter dropdowns and pagination on the Trees facet too. **Missing:** style/kind faceted filter on trees (deferred increment). |
+| BBL-DISCOVER-002 | Filter lineage trees | ✅ Done | `lineage-query.tsx` powers the `/lineage` index, and SESSION_0350 surfaced published trees as a `/directory` facet (discipline + owning-org + Claimable badge cards via `searchPublishedLineageTrees`, now also returning `isClaimable`); SESSION_0352/0353 wired the shared discipline + org filter dropdowns and pagination on the Trees facet too. **SESSION_0401** wired the tree **kind** facet (the `scopeType` enum — Brand / Organization / Discipline / Style / Person / Custom) end-to-end (filter param → Trees-only `KindFilter` dropdown → extracted pure `buildPublishedLineageTreeWhere` `scopeType` clause → trees facet dispatch), with where-builder unit tests. The `style` relation facet (discipline-narrowed, like rank) is the next optional increment. |
 | BBL-DISCOVER-003 | Related profile suggestions | ❌ Not started | No related-profiles component or query. |
 
-**Epic 7 summary:** 1 ✅, 1 🔶, 1 ❌. The faceted `/directory` browse shell, the full cross-facet filter set (discipline / org / location / rank), people-search, and pagination convergence are done (SESSION_0350/0352/0353/0400); a tree style/kind facet and related-profile suggestions remain.
+**Epic 7 summary:** 2 ✅, 1 ❌. The faceted `/directory` browse shell, the full cross-facet filter set (discipline / org / location / rank / tree-kind), people-search, and pagination convergence are done (SESSION_0350/0352/0353/0400/0401); only related-profile suggestions remain (a tree `style`-relation facet is an optional further increment).
 
 ---
 
@@ -158,7 +158,7 @@ Baseline live proxy rehearsal remains before cutover.
    test-mode Stripe card and clean the shared production fixture rows afterward.
 2. **Authenticated claim-flow smoke** — Bob Bass is a claimable placeholder on `/lineage/rigan-machado-bjj-lineage/claim`; next proof should use an authenticated browser session and capture the submitted claim. Also smoke `/lineage/join` with a signed-in user to prove the lead + draft listing + `LineageClaimRequest` bridge.
 3. **Authenticated admin lineage smoke** — SESSION_0273 added `/admin/lineage` list/detail, sidebar/command-palette nav, and tree/member claimability toggles. Next proof should use an authenticated admin and, if available, a `TREE_ADMIN` grant.
-4. **~~Faceted `/directory` filters + pagination follow-up~~ (DONE — BBL-DISCOVER-001)** — the cross-facet discipline/org/location/rank filter dropdowns, the `searchDirectoryProfiles` pagination convergence (legacy `getDirectoryProfiles` retired), and the rendered `Pagination` all shipped across SESSION_0350/0352/0353/0400. Remaining directory increment is BBL-DISCOVER-002 (a tree style/kind facet) + BBL-DISCOVER-003 (related-profile suggestions).
+4. **~~Faceted `/directory` filters + pagination follow-up~~ (DONE — BBL-DISCOVER-001 + 002)** — the cross-facet discipline/org/location/rank filter dropdowns, the `searchDirectoryProfiles` pagination convergence (legacy `getDirectoryProfiles` retired), and the rendered `Pagination` all shipped across SESSION_0350/0352/0353/0400; the tree **kind** (scopeType) facet shipped SESSION_0401. Remaining directory increment is BBL-DISCOVER-003 (related-profile suggestions); an optional tree `style`-relation facet remains.
 5. **BBL-EDITOR-005** — ACL management UI. Unblocks branch/node editor scoping (BBL-EDITOR-003/004).
 6. **BBL-RANK-004** — Disputed rank-award status enum. Foundational for rank-specific trust features; SESSION_0349 intentionally did not add rank-award schema.
 7. **Legend tier migration follow-up** — Broaden checkout/webhook/seed handling for `LEGEND` after SESSION_0349 added limited code/policy support and removed stale `BASIC` ADR language.

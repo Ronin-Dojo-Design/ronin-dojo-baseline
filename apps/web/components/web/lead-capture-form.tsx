@@ -8,16 +8,9 @@ import { toast } from "sonner"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/common/form"
+import { TextField } from "~/components/common/fields"
+import { Form } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
-import { Input } from "~/components/common/input"
 import { createPublicLead } from "~/server/web/lead/public-actions"
 
 const captureSchema = z.object({
@@ -85,61 +78,33 @@ export function LeadCaptureForm({ organizationId, programId, onSuccess }: LeadCa
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
+          <TextField
             control={form.control}
             name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="First name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="First name *"
+            placeholder="First name"
           />
-
-          <FormField
+          <TextField
             control={form.control}
             name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Last name"
+            placeholder="Last name"
           />
         </div>
 
-        <FormField
+        <TextField
           control={form.control}
           name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email *</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="you@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Email *"
+          type="email"
+          placeholder="you@example.com"
         />
 
-        <FormField
+        <TextField
           control={form.control}
           name="phoneE164"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl>
-                <Input placeholder="+1 555 123 4567" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Phone"
+          placeholder="+1 555 123 4567"
         />
 
         <Button type="submit" variant="primary" className="w-full" isPending={isPending}>

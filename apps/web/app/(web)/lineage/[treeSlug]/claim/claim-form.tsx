@@ -6,6 +6,7 @@ import { useAction } from "next-safe-action/hooks"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
+import { TextAreaField } from "~/components/common/fields"
 import {
   Form,
   FormControl,
@@ -166,22 +167,12 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
         />
 
         {/* Note */}
-        <FormField
+        <TextAreaField
           control={form.control}
           name="claimantNote"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Note to reviewer (optional)</FormLabel>
-              <FormControl>
-                <TextArea
-                  placeholder="Any context that helps the reviewer verify your claim..."
-                  rows={4}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Note to reviewer (optional)"
+          rows={4}
+          placeholder="Any context that helps the reviewer verify your claim..."
         />
 
         {/* Evidence */}

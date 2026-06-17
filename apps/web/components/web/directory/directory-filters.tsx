@@ -18,6 +18,20 @@ type DirectoryFiltersProps = {
   options: DirectoryFilterOptions
 }
 
+/**
+ * Tree `kind` = the `LineageTree.scopeType` enum, with public-facing labels. Static (no DB options
+ * query needed, unlike rank), so the list lives client-side; the where-builder validates the value
+ * against the real enum server-side (`tree-where.ts`).
+ */
+const TREE_KIND_OPTIONS = [
+  { value: "BRAND", label: "Brand" },
+  { value: "ORGANIZATION", label: "Organization" },
+  { value: "DISCIPLINE", label: "Discipline" },
+  { value: "STYLE", label: "Style" },
+  { value: "PERSON", label: "Person" },
+  { value: "CUSTOM", label: "Custom" },
+] as const
+
 /** Mirror of `normalizeDirectoryFacetTab` kept client-side to avoid importing the server facets module. */
 function activeFacetTab(type: string): DirectoryFacetTab {
   return type === "organizations" || type === "trees" ? type : "people"
@@ -36,9 +50,9 @@ function useDirectoryFilters() {
  * Each filter is its own context-driven sub-component that renders only on the facets where it
  * applies (operator decision, SESSION_0353 grill): discipline on all; org/school on People +
  * Trees; rank on People only and only once a discipline is chosen (a `Rank` only has meaning
- * within a discipline's rank system); location (Region + City) on People + Organizations.
- * Clearing is handled by the global `Filters` reset; changing Region resets City and changing
- * Discipline resets Rank.
+ * within a discipline's rank system); kind (tree scopeType) on Trees only; location (Region +
+ * City) on People + Organizations. Clearing is handled by the global `Filters` reset; changing
+ * Region resets City and changing Discipline resets Rank.
  */
 export function DirectoryFilters({ options }: DirectoryFiltersProps) {
   return (
@@ -46,6 +60,7 @@ export function DirectoryFilters({ options }: DirectoryFiltersProps) {
       <DisciplineFilter options={options} />
       <OrgFilter options={options} />
       <RankFilter options={options} />
+      <KindFilter />
       <RegionFilter options={options} />
       <CityFilter options={options} />
     </Stack>
@@ -117,6 +132,27 @@ function RankFilter({ options }: DirectoryFiltersProps) {
         {rankOptions.map(({ id, name }) => (
           <SelectItem key={id} value={id}>
             {name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/** Tree kind (scopeType) — shows on the Trees facet only. */
+function KindFilter() {
+  const { filters, updateFilters, tab } = useDirectoryFilters()
+  if (tab !== "trees") return null
+
+  return (
+    <Select value={filters.kind} onValueChange={value => updateFilters({ kind: value as string })}>
+      <SelectTrigger size="lg" className="w-auto min-w-40 max-sm:flex-1">
+        <SelectValue placeholder="All kinds" />
+      </SelectTrigger>
+      <SelectContent align="end">
+        {TREE_KIND_OPTIONS.map(({ value, label }) => (
+          <SelectItem key={value} value={value}>
+            {label}
           </SelectItem>
         ))}
       </SelectContent>

@@ -15,6 +15,8 @@ export const directoryFilterParams = {
   org: parseAsString.withDefault(""),
   discipline: parseAsString.withDefault(""),
   rank: parseAsString.withDefault(""),
+  // Tree kind = `scopeType` enum value — Trees facet only (BBL-DISCOVER-002).
+  kind: parseAsString.withDefault(""),
   city: parseAsString.withDefault(""),
   region: parseAsString.withDefault(""),
 }

@@ -27,6 +27,8 @@ export const lineageFilterParams = {
   perPage: parseAsInteger.withDefault(LINEAGE_DEFAULT_PER_PAGE),
   discipline: parseAsString.withDefault(""),
   organization: parseAsString.withDefault(""),
+  // Tree kind = `scopeType` enum value (BBL-DISCOVER-002). "" → no kind narrowing.
+  kind: parseAsString.withDefault(""),
 }
 
 export const lineageFilterParamsCache = createSearchParamsCache(lineageFilterParams)
