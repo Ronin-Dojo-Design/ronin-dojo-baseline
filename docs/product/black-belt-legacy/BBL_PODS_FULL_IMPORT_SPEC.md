@@ -130,3 +130,21 @@ Extend `import-bbl-members-full.ts` (or a sibling `enrich-bbl-members-pods.ts`) 
 - 44 member avatars optimized → R2 (200 on r2.dev) + `avatarUrl` backfilled in prod (42 rows).
 - Importer drift **D-026** (dry-run affiliation idempotency) + **D-027** (school normalization) fixed
   + the 2 South Bay affiliations realized. The importer is now safe to re-run/extend.
+
+## Delivered — Phases 1–2 code (cloud, un-applied)
+
+Code written; **not** applied to prod, importer **not** run for real, `BBL_COUNTDOWN` **not** flipped.
+
+- **Phase 1 migration** — `apps/web/prisma/migrations/20260617183436_add_passport_current_residence/`
+  adds the one genuine gap, `Passport.currentResidence String?` (a single `ALTER TABLE … ADD COLUMN`).
+  `MediaAttachment.passportId` already attaches to a Passport (SESSION_0289 back-relation) — no change.
+  `AffiliationRole` is unchanged: home gym → `TRAINS_AT`, representing/current school → `MEMBER`, owned →
+  `OWNER`, and the per-belt promotion school is `RankAward.organizationId` — all map onto existing values,
+  so no new enum members. The promotion ladder needs no new fields (maps onto existing `RankAward`).
+  Generated locally; **left un-applied** to prod (never `migrate deploy` against prod Neon here).
+- **Phase 2 importer** — `apps/web/scripts/enrich-bbl-members-pods.ts` consumes
+  `/tmp/bbl-export/reconciled-full.json`: matches accountless Passports by `displayName` within
+  `bbl-lineage`, fills NULL profile fields, upserts per-belt `RankAward` rows (date/promoter/school/pics),
+  attaches galleries as `MediaAttachment`, and writes home/representing affiliations. Idempotent,
+  `--dry-run`, gated behind `BBL_COUNTDOWN`. A reproducible dry-run sample against a seeded local DB lives
+  in `apps/web/scripts/fixtures/` (sample input + captured output).
