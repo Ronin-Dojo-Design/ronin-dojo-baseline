@@ -21,21 +21,31 @@ const portalSessionCreateMock = mock(async (_params: { customer: string; return_
 }))
 const redirectState = { url: "" }
 
-mock.module("next/navigation", () => ({
-  redirect: (url: string) => {
-    redirectState.url = url
-  },
-}))
+// `next/navigation` + `~/services/stripe` are process-global bun mocks, and the
+// sibling billing test files (actions.test.ts, checkout-actions.test.ts) install
+// competing mocks for the SAME modules — the last file loaded wins the global
+// registry. Wrap this file's mocks in a reinstaller and re-run it in beforeEach so
+// each test always captures `redirect` into THIS file's state (fixes the cross-file
+// flake where `redirectState.url` stayed empty).
+function installRedirectAndStripeMocks() {
+  mock.module("next/navigation", () => ({
+    redirect: (url: string) => {
+      redirectState.url = url
+    },
+  }))
 
-mock.module("~/services/stripe", () => ({
-  stripe: {
-    billingPortal: {
-      sessions: {
-        create: portalSessionCreateMock,
+  mock.module("~/services/stripe", () => ({
+    stripe: {
+      billingPortal: {
+        sessions: {
+          create: portalSessionCreateMock,
+        },
       },
     },
-  },
-}))
+  }))
+}
+
+installRedirectAndStripeMocks()
 
 import { siteConfig } from "~/config/site"
 import { createBillingPortalSession } from "~/server/web/billing/actions"
@@ -57,6 +67,11 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
+  // Re-assert this file's module mocks — bun's global registry may have been
+  // clobbered by a sibling billing test file's mocks at load time.
+  installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+  installRedirectAndStripeMocks()
+
   portalSessionCreateMock.mockClear()
   redirectState.url = ""
   setTestSession(null)
