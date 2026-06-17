@@ -83,9 +83,46 @@ route it to the supervised lane** — do not migrate.
 ### 5. Verify
 
 - `npx tsc --noEmit` → 0 errors.
-- `npx fallow audit` → **no new findings** (inherited findings excluded; the sweep must not *add* CRAP).
-- Live-DOM check (Playwright/Chrome MCP) → component renders + a screenshot. Prove fixes on the live
-  DOM before coding (SESSION_0337 lesson).
+- `npx fallow audit` → **no new findings**. Decomposition relocates functions to new file paths, so the
+  audit's path-based diff flags moved code as "introduced" — read `introduced: 0` in the JSON + a held
+  maintainability number, **not** the raw above-threshold count.
+- **Live-DOM check** (Playwright/Chrome MCP) → the component renders + interacts; screenshot. Prove it on
+  the live DOM (SESSION_0337). **Restart the dev server first** (the stale-Prisma-client gotcha above).
+
+#### 5a. Bringing up a DB to verify against
+
+The live-DOM step needs Postgres + a seed. Locally that is Postgres.app; in a **Docker-capable**
+environment (e.g. a fresh cloud session), use the repo-root `docker-compose.yml`:
+
+```bash
+docker compose up -d postgres        # Postgres 16 on :5432, db ronindojo_dev (see docs/runbooks/database/database.md)
+export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema=public'
+cd apps/web
+bun run db:migrate deploy            # apply ALL migrations (incl. currentResidence + logoUrl)
+bun run db:seed                      # base data + rank systems
+SKIP_ENV_VALIDATION=1 bun prisma/seed-baseline-lineage.ts   # the lineage TREE + members — REQUIRED for any lineage surface
+RESEND_API_KEY= npx next dev --turbo # RESEND empty = no live emails (BBL sender-rep guard)
+docker compose down -v               # when done — stops AND wipes the volume
+```
+
+The Docker DB user/pass is `postgres`/`postgres` (not the host Postgres.app `brianscott`/none). MinIO (S3
+on :9000) is in the same compose — only needed when verifying media/uploads. **Caveat:** the
+`docker-compose.yml` was abandoned locally at the Postgres.app pivot ([database.md](database/database.md)),
+so it is **not recently tested** — the first sweep to use it is re-validating it; report any breakage so
+it gets fixed here.
+
+#### 5b. Fallback when no DB is reachable
+
+If the environment cannot run Docker/Postgres, do **not** fake live-DOM evidence. Substitute: `npx next
+build` compiles (SSR + type check) plus the tsc/fallow gates above, and state **"live-DOM deferred to PR
+review"** in the report. The reviewer runs the live-DOM pass when the PR lands.
+
+#### 5c. If the sweep writes or touches tests
+
+Follow [`docs/runbooks/sops/sop-test-writing.md`](sops/sop-test-writing.md): `bun:test`, **real Postgres**
+(never mock Prisma), the §3 mock seams (`next/headers` / `next/cache` / `~/lib/auth`), and colocated,
+timestamp-tagged fixtures with two-phase teardown. A presentation sweep rarely needs new tests — if you
+can't name what a test proves, it proves nothing.
 
 ## Worked example — the lineage profile drawer (SESSION_0410)
 
