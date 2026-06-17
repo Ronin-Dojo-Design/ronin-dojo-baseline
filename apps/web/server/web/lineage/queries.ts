@@ -20,6 +20,7 @@ import {
   type LineageFilterParams,
   normalizeLineageSearchParams,
 } from "~/server/web/lineage/schema"
+import { buildPublishedLineageTreeWhere } from "~/server/web/lineage/tree-where"
 import { db } from "~/services/db"
 
 /**
@@ -645,6 +646,7 @@ export const searchPublishedLineageTrees = async ({
     perPage: LINEAGE_DEFAULT_PER_PAGE,
     discipline: "",
     organization: "",
+    kind: "",
   },
 }: {
   brand: Brand
@@ -656,27 +658,20 @@ export const searchPublishedLineageTrees = async ({
   cacheLife("minutes")
 
   const normalized = normalizeLineageSearchParams(search)
-  const q = normalized.q
-  const discipline = normalized.discipline.trim()
-  const organization = normalized.organization.trim()
   const skip = (normalized.page - 1) * normalized.perPage
 
-  const where: Prisma.LineageTreeWhereInput = {
+  // Privacy/brand/publish scope + the kind (scopeType) facet live in the pure, unit-tested
+  // builder (SESSION_0401). `brand`, `isPublished`, and the PUBLIC visibility scope are pinned
+  // there; the URL-supplied filters can only narrow.
+  const where = buildPublishedLineageTreeWhere(
+    {
+      q: normalized.q,
+      discipline: normalized.discipline,
+      organization: normalized.organization,
+      kind: normalized.kind,
+    },
     brand,
-    isPublished: true,
-    visibility: { in: PUBLIC_VISIBILITY_SCOPE },
-    ...(discipline && { discipline: { slug: discipline } }),
-    ...(organization && { organization: { slug: organization } }),
-  }
-
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { description: { contains: q, mode: "insensitive" } },
-      { discipline: { name: { contains: q, mode: "insensitive" } } },
-      { organization: { name: { contains: q, mode: "insensitive" } } },
-    ]
-  }
+  )
 
   const trees = await db.lineageTree.findMany({
     where,
@@ -743,6 +738,7 @@ export const findPublishedLineageTrees = async ({
       perPage: take,
       discipline: "",
       organization: "",
+      kind: "",
     },
   })
   return trees

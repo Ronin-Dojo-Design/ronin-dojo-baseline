@@ -17,6 +17,7 @@ describe("lineageFilterParamsCache", () => {
       perPage: LINEAGE_DEFAULT_PER_PAGE,
       discipline: "",
       organization: "",
+      kind: "",
     })
   })
 
@@ -29,6 +30,7 @@ describe("lineageFilterParamsCache", () => {
         sort: "updatedAt.desc",
         discipline: "shotokan",
         organization: "honbu",
+        kind: "STYLE",
       }),
     ).toEqual({
       q: "karate",
@@ -37,6 +39,7 @@ describe("lineageFilterParamsCache", () => {
       perPage: 12,
       discipline: "shotokan",
       organization: "honbu",
+      kind: "STYLE",
     })
   })
 })

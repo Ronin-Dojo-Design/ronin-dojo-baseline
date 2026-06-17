@@ -485,6 +485,7 @@ describe("searchPublishedLineageTrees", () => {
     perPage: 24,
     discipline: "",
     organization: "",
+    kind: "",
   }
 
   it("returns only brand-matched published PUBLIC trees", async () => {

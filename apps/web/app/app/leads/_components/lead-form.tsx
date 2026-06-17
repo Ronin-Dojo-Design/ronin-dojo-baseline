@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { LeadSource } from "~/.generated/prisma/browser"
 import { Button } from "~/components/common/button"
 import { ComboboxSelector } from "~/components/common/combobox-selector"
+import { TextAreaField, TextField } from "~/components/common/fields"
 import {
   Form,
   FormControl,
@@ -17,7 +18,6 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
-import { Input } from "~/components/common/input"
 import {
   Select,
   SelectContent,
@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
-import { TextArea } from "~/components/common/textarea"
 import { upsertLead } from "~/server/admin/leads/actions"
 import type { findLeadById, findOrganizationList } from "~/server/admin/leads/queries"
 import { leadFormSchema } from "~/server/admin/leads/schema"
@@ -83,62 +82,33 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
         {...props}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
+          <TextField
             control={form.control}
             name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="First name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="First name *"
+            placeholder="First name"
           />
-
-          <FormField
+          <TextField
             control={form.control}
             name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Last name"
+            placeholder="Last name"
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
+          <TextField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="Email address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Email"
+            type="email"
+            placeholder="Email address"
           />
-
-          <FormField
+          <TextField
             control={form.control}
             name="phoneE164"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input placeholder="+1 555 123 4567" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Phone"
+            placeholder="+1 555 123 4567"
           />
         </div>
 
@@ -196,32 +166,19 @@ export function LeadForm({ title, lead, organizationsPromise, ...props }: LeadFo
           />
         </div>
 
-        <FormField
+        <TextField
           control={form.control}
           name="referredBy"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Referred by</FormLabel>
-              <FormControl>
-                <Input placeholder="Referral source" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Referred by"
+          placeholder="Referral source"
         />
 
-        <FormField
+        <TextAreaField
           control={form.control}
           name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <TextArea placeholder="Additional notes..." rows={4} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Notes"
+          placeholder="Additional notes..."
+          rows={4}
         />
 
         <div className="flex justify-end gap-3">

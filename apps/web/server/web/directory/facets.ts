@@ -39,6 +39,8 @@ export type DirectoryFacetParams = {
   org: string
   /** Rank id — applies to People only (earned RankAward). `Rank` has no slug. */
   rank: string
+  /** Tree kind = `scopeType` enum value — applies to Trees only (BBL-DISCOVER-002). */
+  kind: string
   /** Location filters — apply to People (profile) + Organizations (org city/state). */
   city: string
   region: string
@@ -119,7 +121,7 @@ async function organizationsFacet({
   }
 }
 
-// Trees facet: discipline + org-slug apply; trees carry no location.
+// Trees facet: discipline + org-slug + kind apply; trees carry no location.
 async function treesFacet({
   brand,
   params,
@@ -135,6 +137,7 @@ async function treesFacet({
       perPage,
       discipline: params.discipline,
       organization: params.org,
+      kind: params.kind,
     },
   })
 

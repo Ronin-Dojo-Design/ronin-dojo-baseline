@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
 import { DataSelect } from "~/components/common/data-select"
+import { TextAreaField } from "~/components/common/fields"
 import {
   Form,
   FormControl,
@@ -18,7 +19,6 @@ import {
 } from "~/components/common/form"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { TextArea } from "~/components/common/textarea"
 import { submitProfileClaimRequest } from "~/server/web/claims/claim-actions"
 
 /**
@@ -92,22 +92,12 @@ export function ProfileClaimForm({
             )}
           />
 
-          <FormField
+          <TextAreaField
             control={form.control}
             name="claimantNote"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Anything that helps us verify your claim (optional)</FormLabel>
-                <FormControl>
-                  <TextArea
-                    {...field}
-                    rows={3}
-                    placeholder="e.g. a link to your school site, your role, or how you're connected."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Anything that helps us verify your claim (optional)"
+            rows={3}
+            placeholder="e.g. a link to your school site, your role, or how you're connected."
           />
 
           <Button type="submit" disabled={isExecuting} className="self-start">
