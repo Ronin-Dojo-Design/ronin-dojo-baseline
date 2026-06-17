@@ -4,6 +4,7 @@ import { Card, CardDescription, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
@@ -11,6 +12,7 @@ import { getServerSession } from "~/lib/auth"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { canUploadMedia } from "~/server/web/entitlements/queries"
+import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { PassportEditor } from "~/components/web/passport/passport-editor"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
 
@@ -43,7 +45,14 @@ export default async function MePage() {
   }
 
   const brand = await getRequestBrand()
-  const canUpload = await canUploadMedia(session.user.id, brand)
+  const [canUpload, passportAttachments] = await Promise.all([
+    canUploadMedia(session.user.id, brand),
+    getDashboardMediaAttachments({
+      brand,
+      user: session.user,
+      target: { kind: "passport", id: passport.id },
+    }),
+  ])
 
   // Profile completeness — count filled passport fields (9 total)
   const passportFields = [
@@ -82,12 +91,22 @@ export default async function MePage() {
 
       <Section>
         <Section.Content>
-          <PassportEditor
-            passport={passport}
-            directoryProfile={directoryProfile}
-            userId={session.user.id}
-            canUploadVideo={canUpload}
-          />
+          <Stack direction="column" size="lg" className="w-full">
+            <PassportEditor
+              passport={passport}
+              directoryProfile={directoryProfile}
+              userId={session.user.id}
+              canUploadVideo={canUpload}
+            />
+
+            <MediaAttachmentManager
+              target={{ kind: "passport", id: passport.id }}
+              initialAttachments={passportAttachments ?? []}
+              avatarUrl={passport.avatarUrl}
+              title="Passport media"
+              description="Upload profile images or clips tied to this Passport. Private items stay dashboard-only."
+            />
+          </Stack>
         </Section.Content>
 
         <Section.Sidebar>
