@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-06-04
-last_agent: codex-session-0343
+updated: 2026-06-17
+last_agent: claude-session-tff006
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -57,7 +57,46 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
 
 ## Active Clusters
 
-None. TFF-001..005 are resolved — see below.
+### TFF-006 — billing portal/checkout cluster flakes in the full suite *under `--parallel=1`* (105-file scale)
+
+- **Status:** `open` (needs local repro — see below).
+- **Last observed:** 2026-06-17. PR #89 CI (`bun run test`, `--parallel=1`) — `1 fail / 620 pass`:
+  `createBillingPortalSession - safe-action wrapper > redirects to a Stripe Customer Portal session`.
+  The **sibling** cluster (`createProgramEnrollmentCheckout`, `createLineageMembershipCheckout` in
+  `checkout-actions.test.ts`, plus `createBillingPortalSession` in `actions.test.ts`) is the same family.
+- **Intermittent, not deterministic:** PR #90 CI ran the identical suite **green**; PR #89 and the (now
+  closed) PR #91 ran it **red**. Single-file runs pass:
+  `cd apps/web && bun test server/web/billing/actions.safe-action.test.ts`.
+- **What it is NOT:** *not* a cross-file `mock.module` clobber. Per
+  [`sop-test-writing.md`](../../runbooks/sops/sop-test-writing.md) **§2**, `--parallel=1` uses bun's
+  isolate path with **per-file module isolation**, so the three billing test files do **not** clobber each
+  other's `next/navigation`/`~/services/stripe` mocks. PR #91 tried two structural mock fixes on that wrong
+  premise; the second (a shared mock installed via import side-effect) **violated §3** ("install mocks via a
+  call *before* the action import"), bound the action to the *real* `redirect`/`stripe`, and turned 1
+  failure into 7. **#91 was reverted and closed — do not retry a mock-isolation fix.**
+- **Likely cause:** the **shared-`brand` `StripeCustomer` contention** SOP §2 already flags for
+  `createProgramEnrollmentCheckout` (it flaked ~1/3 under `--parallel=2`), now surfacing **even under
+  `--parallel=1`** as the suite grew 75 → 105 files. All billing tests use `brand = "BASELINE_MARTIAL_ARTS"`
+  and create/delete `StripeCustomer` rows; a cross-file ordering/leftover-state interaction is the prime
+  suspect. The TFF-001..005 `--parallel=1` fix (proven green at 75 files) no longer fully holds for this
+  cluster at 105 files.
+- **Repro (needs local Postgres — not available in the cloud sandbox):**
+
+  ```bash
+  cd apps/web && for i in 1 2 3 4 5; do bun run test 2>&1 | grep -E "fail\)|fail$"; done
+  ```
+
+  The CI summary does **not** print which assertion fails (`serverError` vs empty `redirectState.url`) —
+  the local run's full output is needed to pinpoint it before fixing.
+- **Fix direction (for the local session):** scope each billing test's `StripeCustomer` lookup/cleanup to
+  its own `{userId, brand}` (or give each billing test file a unique brand/customer) so suite ordering can't
+  leak state between them. Validate by reproducing red locally, applying the fix, then `bun run test` green
+  several times consecutively (mirroring SESSION_0342's 4× proof). The proper long-term lever SOP §2 names
+  is **per-worker DB isolation**.
+
+### TFF-001..005 — resolved
+
+See below.
 
 ## Resolved Clusters
 
