@@ -6,67 +6,47 @@
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
+// Shared next/navigation + stripe mock — imported BEFORE the action so the action binds
+// the shared `redirect`/`stripe` (one mock across all billing test files; no cross-file
+// clobber). See the helper for the full rationale.
+import {
+  portalSessionCreateMock,
+  redirectState,
+  resetBillingActionMocks,
+  STRIPE_BILLING_PORTAL_URL,
+} from "~/lib/test/billing-action-mocks"
 
 const sessionUserState = { id: "" }
 const requestBrand = "BASELINE_MARTIAL_ARTS"
-const portalSessionCreateMock = mock(async () => ({
-  url: "https://billing.stripe.test/session_0096",
+
+mock.module("next/headers", () => ({
+  headers: async () => ({
+    get: (key: string) => {
+      const k = key.toLowerCase()
+      if (k === "x-brand") return requestBrand
+      if (k === "host") return "baseline.local"
+      return null
+    },
+  }),
 }))
-const redirectState = { url: "" }
 
-// These are process-global bun mocks; sibling billing test files install competing
-// mocks for the SAME modules (next/navigation, ~/services/stripe, ~/lib/auth), so the
-// last file loaded wins the global registry. Wrap them in a reinstaller and re-run it
-// in beforeEach so each test always runs against THIS file's mocks (fixes the cross-file
-// flake where `redirect` was captured by a sibling's state instead of `redirectState`).
-function installModuleMocks() {
-  mock.module("next/headers", () => ({
-    headers: async () => ({
-      get: (key: string) => {
-        const k = key.toLowerCase()
-        if (k === "x-brand") return requestBrand
-        if (k === "host") return "baseline.local"
-        return null
-      },
-    }),
-  }))
+mock.module("next/cache", () => ({
+  revalidatePath: () => {},
+  updateTag: () => {},
+  revalidateTag: () => {},
+}))
 
-  mock.module("next/cache", () => ({
-    revalidatePath: () => {},
-    updateTag: () => {},
-    revalidateTag: () => {},
-  }))
-
-  mock.module("next/navigation", () => ({
-    redirect: (url: string) => {
-      redirectState.url = url
+mock.module("~/lib/auth", () => ({
+  getServerSession: async () => ({
+    user: {
+      id: sessionUserState.id,
+      role: "user",
+      lastActiveBrandId: null,
     },
-  }))
-
-  mock.module("~/lib/auth", () => ({
-    getServerSession: async () => ({
-      user: {
-        id: sessionUserState.id,
-        role: "user",
-        lastActiveBrandId: null,
-      },
-      session: { id: "session-0096-billing-actions-test-session" },
-    }),
-    auth: {},
-  }))
-
-  mock.module("~/services/stripe", () => ({
-    stripe: {
-      billingPortal: {
-        sessions: {
-          create: portalSessionCreateMock,
-        },
-      },
-    },
-  }))
-}
-
-installModuleMocks()
+    session: { id: "session-0096-billing-actions-test-session" },
+  }),
+  auth: {},
+}))
 
 import { createBillingPortalSession } from "~/server/web/billing/actions"
 import { db } from "~/services/db"
@@ -86,12 +66,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  // Re-assert this file's module mocks — the global registry may have been
-  // clobbered by a sibling billing test file's mocks at load time.
-  installModuleMocks()
-
-  portalSessionCreateMock.mockClear()
-  redirectState.url = ""
+  resetBillingActionMocks()
   await db.stripeCustomer.deleteMany({ where: { userId } })
 })
 
@@ -132,7 +107,7 @@ describe("createBillingPortalSession", () => {
     expect(portalSessionCreateMock.mock.calls[0]?.[0]?.return_url?.endsWith("/dashboard")).toBe(
       true,
     )
-    expect(redirectState.url).toBe("https://billing.stripe.test/session_0096")
+    expect(redirectState.url).toBe(STRIPE_BILLING_PORTAL_URL)
   })
 
   it("rejects portal creation when the user has no customer for the current brand", async () => {
