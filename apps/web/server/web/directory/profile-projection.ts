@@ -8,7 +8,7 @@ import {
   resolveLineageTrustStatus,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
-import type { DirectoryProfileList } from "~/server/web/directory/payloads"
+import type { DirectoryProfileList, DirectoryProfileSelf } from "~/server/web/directory/payloads"
 
 type ProfileViewer = {
   viewerUserId?: string | null
@@ -101,6 +101,103 @@ export function trustSummaryForUser(user: UserTrustSource) {
     claimBadgeStatus: resolveLineageClaimBadgeStatus({
       claimStatus,
     }),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Owner self-profile projection (`/me`) — SESSION_0410.
+//
+// The member-facing read model for the authenticated profile page. Unlike the
+// public projections above there is no tier/visibility gate: a member always
+// sees their own profile in full (the `canRenderFullProfileForViewer` "own
+// profile" rule, ADR 0025). Pure presentation shaping — no DB.
+// ---------------------------------------------------------------------------
+
+export type MyProfileAffiliation = {
+  id: string
+  /** Linked-org name when present, otherwise the free-text school label. */
+  name: string | null
+  /** Org slug for deep-linking to `/schools/[slug]`; null for free-text affiliations. */
+  slug: string | null
+  role: DirectoryProfileSelf["passport"]["affiliations"][number]["role"]
+  isCurrent: boolean
+}
+
+export type MyProfile = {
+  passportId: string
+  slug: string | null
+  name: string | null
+  /** Resolved avatar (Passport avatar → account image → brand default). */
+  avatarUrl: string | null
+  bio: string | null
+  socialLinks: Record<string, string> | null
+  visibility: DirectoryProfileSelf["visibility"]
+  /** Any location field set — used for the "Based in" identity bit. */
+  locationLine: string | null
+  placeOfBirth: string | null
+  startedTrainingAt: Date | null
+  /** Highest earned belt, projected for the BJJ Passport card. */
+  currentRank: { name: string; colorHex: string | null; disciplineLabel: string | null } | null
+  /** Current school for the card header (linked-org name → free-text label). */
+  schoolLabel: string | null
+  affiliations: MyProfileAffiliation[]
+  /** The owner's lineage node id — null when they have no lineage placement yet. */
+  lineageNodeId: string | null
+}
+
+export function projectOwnProfile({
+  profile,
+  brand,
+}: {
+  profile: DirectoryProfileSelf
+  brand?: string | null
+}): MyProfile {
+  const { passport } = profile
+  const account = passport.user
+
+  const topAward = passport.rankAwardsEarned[0] ?? null
+  const currentRank = topAward
+    ? {
+        name: topAward.rank.name,
+        colorHex: topAward.rank.colorHex,
+        // Discipline code reads as the credential eyebrow (e.g. "BJJ"); name is the fallback.
+        disciplineLabel:
+          topAward.rank.rankSystem.discipline?.code?.toUpperCase() ??
+          topAward.rank.rankSystem.discipline?.name ??
+          null,
+      }
+    : null
+
+  const affiliations: MyProfileAffiliation[] = passport.affiliations.map(affiliation => ({
+    id: affiliation.id,
+    name: affiliation.organization?.name ?? affiliation.schoolName,
+    slug: affiliation.organization?.slug ?? null,
+    role: affiliation.role,
+    isCurrent: affiliation.isCurrent,
+  }))
+
+  const currentAffiliation = affiliations.find(a => a.isCurrent) ?? affiliations[0] ?? null
+
+  const locationLine =
+    [profile.locationCity, profile.locationRegion, profile.locationCountry]
+      .filter(Boolean)
+      .join(", ") || null
+
+  return {
+    passportId: profile.passportId,
+    slug: profile.slug,
+    name: passport.displayName ?? account?.name ?? null,
+    avatarUrl: resolveDisplayAvatar(passport.avatarUrl ?? account?.image, brand),
+    bio: passport.bio ?? null,
+    socialLinks: (passport.socialLinks as Record<string, string> | null) ?? null,
+    visibility: profile.visibility,
+    locationLine,
+    placeOfBirth: passport.placeOfBirth ?? null,
+    startedTrainingAt: passport.startedTrainingAt ?? null,
+    currentRank,
+    schoolLabel: currentAffiliation?.name ?? null,
+    affiliations,
+    lineageNodeId: passport.lineageNode?.id ?? null,
   }
 }
 
