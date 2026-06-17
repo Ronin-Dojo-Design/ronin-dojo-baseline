@@ -286,9 +286,14 @@ inline; no worktrees needed.
 
 ## Open decisions / blockers
 
-- **Supervised new-data lane (next session):** prod `migrate deploy` for `currentResidence` + `logoUrl`; the Pods
-  full-fidelity enrichment importer run against prod (the `BBL_PODS_FULL_IMPORT_SPEC.md` lane); school-logo backfill
-  + admin upload; media galleries; the image-hero Poppins overlay (B). All gated, dry-run-first, behind the countdown.
+- **⚠ Prod schema deploys on THIS push (not deferred).** `apps/web` has a `prebuild` hook (`bun run db:migrate
+  deploy`) that runs during the Vercel build, so the close-push applies `currentResidence` + `logoUrl` to prod Neon
+  **before** the new code serves — required, because the deployed code selects `logoUrl` (deferring the migration
+  would 500 prod). Both are safe additive nullable columns, behind the countdown; BBL still shows the countdown, the
+  refactor/fixes go live on **Baseline**. What's actually deferred to the supervised lane is the **DATA**, not the schema.
+- **Supervised new-data lane (next session — DATA only):** the Pods full-fidelity enrichment importer run against
+  prod (the `BBL_PODS_FULL_IMPORT_SPEC.md` lane); school-logo backfill + admin upload; media galleries; the image-hero
+  Poppins overlay (B). All gated, dry-run-first, behind the countdown. (The schema columns are already in prod.)
 - **Poppins type-token (A) for the drawer** is specified (the portal-font gotcha + the consumer-threading fix are in
   the recipe) but **not yet applied** — it's a multi-site consumer thread (island + board → DrawerContent) best done
   as a focused sweep. Documented, not done.
@@ -304,10 +309,12 @@ lineage profile drawer as the worked example. In parallel, run the **single supe
 
 ### First task
 
-Apply the Poppins type-token (A) to the drawer per the recipe's portal-font gotcha (thread the brand font class from the
-island + board consumers to `DrawerContent`), then kick the first parallel sweep on the next-highest-traffic component.
-Separately (supervised, not the fleet): `prisma migrate deploy` the `currentResidence` + `logoUrl` columns to prod Neon,
-then the Pods full-fidelity enrichment dry-run against prod. **Do NOT flip `BBL_COUNTDOWN` / send claim emails.**
+First, confirm the close-push's prod deploy succeeded (Baseline live, BBL still countdown) and that `migrate deploy`
+applied `currentResidence` + `logoUrl` to prod Neon (the `prebuild` hook — should already be done). Then apply the
+Poppins type-token (A) to the drawer per the recipe's portal-font gotcha (thread the brand font class from the island +
+board consumers to `DrawerContent`), and kick the first parallel sweep on the next-highest-traffic component. Separately
+(supervised, not the fleet): the Pods full-fidelity enrichment dry-run against prod (schema is already there). **Do NOT
+flip `BBL_COUNTDOWN` / send claim emails.**
 
 ## Review log
 
