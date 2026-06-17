@@ -41,6 +41,14 @@ export const env = createEnv({
     S3_ACCESS_KEY: z.string().optional(),
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     S3_PUBLIC_URL: z.string().optional(),
+    // Black Belt Legacy media bucket (its own — Cloudflare R2). Optional so other
+    // brands / preview envs work without them; when set, BBL uploads/deletes route here.
+    S3_ENDPOINT_BBL: z.string().optional(),
+    S3_REGION_BBL: z.string().optional(),
+    S3_BUCKET_BBL: z.string().optional(),
+    S3_ACCESS_KEY_BBL: z.string().optional(),
+    S3_SECRET_ACCESS_KEY_BBL: z.string().optional(),
+    S3_PUBLIC_URL_BBL: z.string().optional(),
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
     // Black Belt Legacy runs on its own Stripe account (separate keys + webhook
