@@ -1,7 +1,12 @@
 "use server"
 
-import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
-import { getLineageCompEntitlementKeys } from "~/lib/entitlements/lineage-comp"
+import { Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
+import {
+  bblClaimCompTermDays,
+  getLineageCompEntitlementKeys,
+  LINEAGE_ELITE_ENTITLEMENT_KEY,
+} from "~/lib/entitlements/lineage-comp"
+import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import { adminActionClient } from "~/lib/safe-actions"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
@@ -196,6 +201,7 @@ export const applyLineageClaimReview = async ({
         }
 
         if (input.comp) {
+          // Manual admin comp override (any brand) — takes precedence over the BBL auto-grant.
           const compResult = await grantComp({
             db: tx,
             brand,
@@ -203,6 +209,30 @@ export const applyLineageClaimReview = async ({
             granteeUserId: claim.claimantUserId,
             entitlementKeys: getLineageCompEntitlementKeys(input.comp.tier),
             term: input.comp.termDays ? { days: input.comp.termDays } : null,
+            reason: `lineage-claim-${claim.id}`,
+            now: reviewTimestamp,
+          })
+          compGrantIds = compResult.grants.map(grant => grant.id)
+        } else if (brand === Brand.BBL) {
+          // BBL "comp gift" epic (SESSION_0403): claiming an imported placeholder
+          // Passport comps the Elite tier — Dirty Dozen cohort for life, everyone
+          // else for one year. Detected off the claimed node's visual-group cohort.
+          const cohortMember = await tx.lineageTreeMember.findUnique({
+            where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
+            select: { visualGroup: { select: { label: true } } },
+          })
+          const isDirtyDozen = cohortMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
+
+          const compResult = await grantComp({
+            db: tx,
+            brand,
+            grantorUserId: reviewerUserId,
+            granteeUserId: claim.claimantUserId,
+            entitlementKeys: getLineageCompEntitlementKeys(LINEAGE_ELITE_ENTITLEMENT_KEY),
+            term: (() => {
+              const days = bblClaimCompTermDays(isDirtyDozen)
+              return days ? { days } : null
+            })(),
             reason: `lineage-claim-${claim.id}`,
             now: reviewTimestamp,
           })

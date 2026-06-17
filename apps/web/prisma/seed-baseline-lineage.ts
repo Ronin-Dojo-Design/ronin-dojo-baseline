@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
+import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 
 /**
  * seed-baseline-lineage.ts
@@ -779,7 +780,7 @@ const DIRTY_DOZEN_KEYS = [
   "jerry-smith",
 ] as const
 
-const DIRTY_DOZEN_LABEL = "The Dirty Dozen — Rigan's First Black Belts (1992–96)"
+// DIRTY_DOZEN_LABEL moved to ~/lib/lineage/dirty-dozen (shared with comp-grant detection).
 
 /**
  * Ensure the Dirty Dozen cohort LineageVisualGroup on the rigan tree and
