@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-16
-last_agent: claude-session-0398
+updated: 2026-06-17
+last_agent: claude-session-0407
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -301,3 +301,17 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Decision:** consolidate onto Passport (operator-ratified SESSION_0357). `RankAward` = single rank source (+ `source`/`verificationStatus`); new `Affiliation` model = person↔org (display-only); school is NOT `Membership` for BBL.
 - **Status:** in progress — schema foundation landed (SESSION_0357 TASK_02); read-repoint (TASK_04) + add-person (TASK_03) + discoverability (TASK_05: link `passport-and-shells` at bow-in) carry forward. **Editor layer paid down (SESSION_0398):** the owner self-edit surface had drifted into two divergent editors over the same Passport+DirectoryProfile (`/me`'s `PassportEditor` + `/app/profile`'s `ProfileForm`) via two query-helper pairs; collapsed to one `PassportEditor` over the one `server/web/passport/queries` path — the duplicate `ProfileForm` + the `findUserPassport`/`findUserDirectoryProfile` dashboard pair retired.
 - **Logged in:** SESSION_0357. Sibling pattern: brand-color had the same two-layer shape (DB `BrandSettings` overrides `styles.css`) — resolved as intended (DB canonical + admin-editable), documented in `baseline-design-system.md`.
+
+### D-024 — Deploy toolchain is bun; deploy runbooks still say pnpm
+
+- **Source A (impl):** active `apps/web/vercel.json` uses `bun install --frozen-lockfile` + `bun run --filter @ronin-dojo/web …`; the lockfile contract is `bun.lock`.
+- **Source B (docs):** `docs/runbooks/deploy/vercel-deploy.md` + `vercel-domain-setup-runbook.md` describe a **pnpm** monorepo (`corepack pnpm@9.0.0 install --frozen-lockfile`, "commit `pnpm-lock.yaml` or the build silently fails"). Stale.
+- **Impact:** a session trusting the runbook would chase a pnpm lockfile that isn't the gate.
+- **Status:** open — update the two deploy runbooks to the bun toolchain. **Logged in:** SESSION_0407.
+
+### D-025 — Media-pull script slugifies keys; profile import resolves by exact basename
+
+- **Source A:** `apps/web/scripts/import-bbl-wp-media.ts:305` builds the S3 key via `slugify(basename)` → lowercased (`old-school-bob.jpg`).
+- **Source B:** `apps/web/scripts/import-bbl-lineage-profiles.ts:277` (`resolveProfileMedia`) builds the avatar URL from the **exact, case-preserved** basename (`Old-school-Bob.jpg`). R2 keys are case-sensitive.
+- **Impact:** uploading avatars via the media-pull script would 404 every imported avatar. SESSION_0407 worked around it with name-preserving `aws s3 cp`. The two SESSION_0403 scripts were meant to pair but disagree.
+- **Status:** open — fix the slugify path in `import-bbl-wp-media.ts` (or retire it for `aws s3 cp`). **Logged in:** SESSION_0407 (FINDING_01).
