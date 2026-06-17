@@ -1,17 +1,11 @@
 import type { Metadata } from "next"
 import { cache } from "react"
-import { Badge } from "~/components/common/badge"
-import { Card } from "~/components/common/card"
-import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
-import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import { db } from "~/services/db"
-import { JoinLegacyForm } from "./join-legacy-form"
-import { LineageMembershipCheckout } from "./lineage-membership-checkout"
+import { JoinLegacyLanding } from "./join-legacy-landing"
 
 const getData = cache(async () => {
   const brand = await getRequestBrand()
@@ -81,7 +75,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
   const params = await searchParams
   const isCancelled = params?.cancelled === "true"
   const isSubmitted = params?.submitted === "true"
-  const { metadata, claimableTree, membershipPlans } = await getData()
+  const { claimableTree, membershipPlans } = await getData()
 
   // Preselect the claim node only when it's an actual claimable member of the
   // resolved tree (e.g. arriving from a View A card "Claim this profile").
@@ -92,62 +86,13 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
 
   return (
     <Wrapper size="lg" gap="lg">
-      <Intro>
-        <IntroTitle>{metadata.title}</IntroTitle>
-        <IntroDescription>{metadata.description}</IntroDescription>
-      </Intro>
-
-      {isCancelled && (
-        <Card hover={false} className="p-4" data-testid="lineage-checkout-cancelled">
-          <Stack direction="column" size="xs">
-            <Badge variant="warning">Checkout cancelled</Badge>
-            <Note className="text-sm">
-              No lineage membership payment was completed. Your claim intake is still available.
-            </Note>
-          </Stack>
-        </Card>
-      )}
-
-      {isSubmitted && (
-        <Card hover={false} className="p-4" data-testid="join-legacy-submitted">
-          <Stack direction="column" size="xs">
-            <Badge variant="success">Intake saved</Badge>
-            <Note className="text-sm">
-              Your lineage information was received. Free profiles wait for steward review; Premium
-              and Elite paths continue through the lineage membership checkout below.
-            </Note>
-          </Stack>
-        </Card>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <Card className="p-5">
-          <JoinLegacyForm claimableTree={claimableTree} initialNodeId={initialNodeId} />
-        </Card>
-
-        <Stack direction="column" className="gap-4">
-          <Card className="p-4">
-            <Stack direction="column" size="xs">
-              <strong>What this creates</strong>
-              <Note className="text-sm">
-                A private lead record for steward review and, when you are signed in and select a
-                lineage node, a profile claim request.
-              </Note>
-            </Stack>
-          </Card>
-          <Card className="p-4">
-            <Stack direction="column" size="xs">
-              <strong>Premium path</strong>
-              <Note className="text-sm">
-                Free claim intake stays separate from paid lineage membership access.
-              </Note>
-            </Stack>
-          </Card>
-          <div id="lineage-membership" className="scroll-mt-24">
-            <LineageMembershipCheckout plans={membershipPlans} />
-          </div>
-        </Stack>
-      </div>
+      <JoinLegacyLanding
+        claimableTree={claimableTree}
+        initialNodeId={initialNodeId}
+        membershipPlans={membershipPlans}
+        isCancelled={isCancelled}
+        isSubmitted={isSubmitted}
+      />
     </Wrapper>
   )
 }
