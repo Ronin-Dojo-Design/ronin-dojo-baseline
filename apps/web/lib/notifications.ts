@@ -9,6 +9,7 @@ import {
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
@@ -490,6 +491,39 @@ export const notifyUserOfBblJoinLegacy = async (params: BblJoinLegacyNotificatio
       membershipPath: params.membershipPath,
       checkoutUrl: params.checkoutUrl,
       claimCreated: params.claimCreated,
+    }),
+  })
+}
+
+export type BblClaimYourProfileParams = {
+  brand: Brand
+  to: string
+  firstName?: string | null
+  profileName: string
+  claimUrl: string
+  compTier?: "ELITE"
+  isLifetime?: boolean
+}
+
+/**
+ * The "claim your profile" launch announcement to an existing member whose
+ * profile was imported as a placeholder Passport (SESSION_0403). Sent in bulk by
+ * the claim-announcement admin action; rate-limit-guarded per recipient.
+ */
+export const notifyMemberOfBblClaimYourProfile = async (params: BblClaimYourProfileParams) => {
+  if (await shouldSkipForRateLimit(`bbl-claim:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "Claim your Black Belt Legacy profile",
+    react: EmailBblClaimYourProfile({
+      to: params.to,
+      firstName: params.firstName,
+      profileName: params.profileName,
+      claimUrl: params.claimUrl,
+      compTier: params.compTier,
+      isLifetime: params.isLifetime,
     }),
   })
 }

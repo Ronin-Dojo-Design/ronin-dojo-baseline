@@ -1,10 +1,14 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
-import { EmailButton } from "~/emails/components/button"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailButton,
+  BblEmailHeading,
+  BblEmailWrapper,
+  type BblEmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
-type EmailProps = EmailWrapperProps & {
+type EmailProps = BblEmailWrapperProps & {
   firstName?: string | null
   membershipPath: "FREE" | "PREMIUM" | "ELITE"
   checkoutUrl?: string | null
@@ -25,8 +29,10 @@ export const EmailBblJoinLegacyConfirmation = ({
   ...props
 }: EmailProps) => {
   return (
-    <EmailWrapper {...props} preview="We received your Black Belt Legacy lineage information">
-      <Text>Hey {firstName?.trim() || "there"}!</Text>
+    <BblEmailWrapper {...props} preview="We received your Black Belt Legacy lineage information">
+      <BblEmailHeading>Welcome to the legacy</BblEmailHeading>
+
+      <Text className="mt-0">Hey {firstName?.trim() || "there"}!</Text>
 
       <Text>
         Thanks for joining Black Belt Legacy. We received your lineage information and created a{" "}
@@ -51,9 +57,9 @@ export const EmailBblJoinLegacyConfirmation = ({
       </Text>
 
       {checkoutUrl && membershipPath !== "FREE" && (
-        <EmailButton href={checkoutUrl}>Review lineage membership options</EmailButton>
+        <BblEmailButton href={checkoutUrl}>Review lineage membership options</BblEmailButton>
       )}
-    </EmailWrapper>
+    </BblEmailWrapper>
   )
 }
 
