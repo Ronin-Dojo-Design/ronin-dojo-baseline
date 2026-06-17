@@ -1,7 +1,11 @@
 "use server"
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
-import { getLineageCompEntitlementKeys } from "~/lib/entitlements/lineage-comp"
+import {
+  getLineageCompEntitlementKeys,
+  type LineageCompGrantSpec,
+  resolveLineageCohortComp,
+} from "~/lib/entitlements/lineage-comp"
 import { adminActionClient } from "~/lib/safe-actions"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
@@ -29,6 +33,9 @@ export type ReviewLineageClaimResult = {
   nodeId: string
   accessGrantId: string | null
   compGrantIds: string[]
+  // How the comp (if any) was determined: an explicit reviewer comp, an
+  // auto-derived cohort comp (e.g. the Dirty Dozen → lifetime ELITE), or none.
+  compSource: "reviewer" | "cohort" | null
   ownershipTransferred: boolean
   // Phase 3c (SOT-ADR D1): approving a PERSON claim attaches the claimant account to the node's
   // Passport (`Passport.userId`) rather than moving the node FK or archiving a synthetic placeholder
@@ -89,6 +96,7 @@ export const applyLineageClaimReview = async ({
 
       let accessGrantId: string | null = null
       let compGrantIds: string[] = []
+      let compSource: "reviewer" | "cohort" | null = null
       let ownershipTransferred = false
       let passportAccountAttached = false
       const reviewTimestamp = new Date()
@@ -195,18 +203,49 @@ export const applyLineageClaimReview = async ({
           accessGrantId = grant.id
         }
 
-        if (input.comp) {
+        // Comp on approval. An explicit reviewer comp wins; otherwise auto-derive
+        // from the claimed person's cohort membership — the imported "Dirty Dozen"
+        // visual group → lifetime LINEAGE_ELITE (SESSION_0403). The cohort path is
+        // resilient: if the brand's lineage entitlements aren't seeded yet it is
+        // skipped so the claim still approves (the comp can be applied later).
+        let compSpec: LineageCompGrantSpec | null = input.comp ?? null
+        let compReason = `lineage-claim-${claim.id}`
+
+        if (compSpec) {
+          compSource = "reviewer"
+        } else {
+          const cohortGroups = await tx.lineageVisualGroup.findMany({
+            where: { tree: { brand }, members: { some: { nodeId: claim.nodeId } } },
+            select: { label: true },
+          })
+          const cohortComp = resolveLineageCohortComp(
+            cohortGroups.map((group: { label: string }) => group.label),
+          )
+          if (cohortComp) {
+            const requiredKeys = getLineageCompEntitlementKeys(cohortComp.tier)
+            const seededCount = await tx.entitlement.count({
+              where: { brand, key: { in: [...requiredKeys] } },
+            })
+            if (seededCount >= requiredKeys.length) {
+              compSpec = cohortComp
+              compReason = `lineage-cohort-claim-${claim.id}`
+              compSource = "cohort"
+            }
+          }
+        }
+
+        if (compSpec) {
           const compResult = await grantComp({
             db: tx,
             brand,
             grantorUserId: reviewerUserId,
             granteeUserId: claim.claimantUserId,
-            entitlementKeys: getLineageCompEntitlementKeys(input.comp.tier),
-            term: input.comp.termDays ? { days: input.comp.termDays } : null,
-            reason: `lineage-claim-${claim.id}`,
+            entitlementKeys: getLineageCompEntitlementKeys(compSpec.tier),
+            term: compSpec.termDays ? { days: compSpec.termDays } : null,
+            reason: compReason,
             now: reviewTimestamp,
           })
-          compGrantIds = compResult.grants.map(grant => grant.id)
+          compGrantIds = compResult.grants.map((grant: { id: string }) => grant.id)
         }
       }
 
@@ -235,6 +274,7 @@ export const applyLineageClaimReview = async ({
             reviewerUserId,
             accessGrantId,
             compGrantIds,
+            compSource,
             ownershipTransferred,
             passportAccountAttached,
           },
@@ -247,6 +287,7 @@ export const applyLineageClaimReview = async ({
         nodeId: claim.nodeId,
         accessGrantId,
         compGrantIds,
+        compSource,
         ownershipTransferred,
         passportAccountAttached,
       }

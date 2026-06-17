@@ -464,6 +464,96 @@ describe("applyLineageClaimReview", () => {
     expect(unchangedMembership?.version).toBe(0)
   })
 
+  it("auto-comps a Dirty Dozen cohort claim lifetime ELITE without a reviewer comp", async () => {
+    const fx = await createClaimFixture({ name: "cohort-auto-comp" })
+    // Tag the claimed member into a "Dirty Dozen" visual group on its tree.
+    const group = await db.lineageVisualGroup.create({
+      data: {
+        id: tag("cohort-auto-comp-group"),
+        treeId: fx.treeId,
+        label: "The Dirty Dozen — BJJ's First American Black Belts",
+        groupType: "CUSTOM",
+        showPublicLabel: true,
+      },
+      select: { id: true },
+    })
+    await db.lineageTreeMember.update({
+      where: { id: fx.memberId },
+      data: { visualGroupId: group.id },
+    })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: { claimId: fx.claimId, decision: "APPROVED" },
+    })
+
+    const grants = await db.userEntitlement.findMany({
+      where: {
+        userId: fx.claimantUserId,
+        sourceType: "MANUAL_GRANT",
+        sourceId: `grant:${adminUserId}:lineage-cohort-claim-${fx.claimId}`,
+        status: "ACTIVE",
+      },
+      include: { entitlement: { select: { key: true } } },
+    })
+
+    expect(result.status).toBe("APPROVED")
+    expect(result.compSource).toBe("cohort")
+    expect(result.compGrantIds).toHaveLength(2)
+    expect(grants.map(grant => grant.entitlement.key).sort()).toEqual([
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+    ])
+    // Lifetime comp — no expiry.
+    for (const grant of grants) {
+      expect(grant.endsAt).toBeNull()
+    }
+  })
+
+  it("lets an explicit reviewer comp override the cohort auto-comp", async () => {
+    const fx = await createClaimFixture({ name: "cohort-reviewer-override" })
+    const group = await db.lineageVisualGroup.create({
+      data: {
+        id: tag("cohort-reviewer-override-group"),
+        treeId: fx.treeId,
+        label: "Dirty Dozen",
+        groupType: "CUSTOM",
+      },
+      select: { id: true },
+    })
+    await db.lineageTreeMember.update({
+      where: { id: fx.memberId },
+      data: { visualGroupId: group.id },
+    })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: {
+        claimId: fx.claimId,
+        decision: "APPROVED",
+        comp: { tier: LINEAGE_PREMIUM_ENTITLEMENT_KEY, termDays: 30 },
+      },
+    })
+
+    expect(result.compSource).toBe("reviewer")
+    const grants = await db.userEntitlement.findMany({
+      where: {
+        userId: fx.claimantUserId,
+        sourceType: "MANUAL_GRANT",
+        sourceId: `grant:${adminUserId}:lineage-claim-${fx.claimId}`,
+        status: "ACTIVE",
+      },
+      include: { entitlement: { select: { key: true } } },
+    })
+    // Reviewer chose PREMIUM / 30 days, not the cohort's lifetime ELITE.
+    expect(grants.map(grant => grant.entitlement.key)).toEqual([LINEAGE_PREMIUM_ENTITLEMENT_KEY])
+    expect(grants[0]?.endsAt).toBeInstanceOf(Date)
+  })
+
   it("does not archive a prior real user when ownership transfers from a non-placeholder owner", async () => {
     const fx = await createClaimFixture({
       name: "real-owner",
