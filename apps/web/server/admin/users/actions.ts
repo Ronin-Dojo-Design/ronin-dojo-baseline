@@ -29,14 +29,17 @@ export const updateUser = adminActionClient
 
 export const deleteUsers = adminActionClient
   .inputSchema(idsSchema)
-  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     await db.user.deleteMany({
       where: { id: { in: ids }, role: { not: "admin" } },
     })
 
     // Remove the user images from S3 asynchronously
     after(async () => {
-      await removeS3Directories(ids.map(id => `users/${id}`))
+      await removeS3Directories(
+        ids.map(id => `users/${id}`),
+        brand,
+      )
     })
 
     revalidate({

@@ -4,6 +4,7 @@ import type { Brand } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
 import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
 import { authorizeMediaTarget } from "~/server/web/media/media-authorization"
+import { getMediaConfig } from "~/services/s3"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
 import type {
   PromotePassportAvatarMediaInput,
@@ -61,7 +62,7 @@ export async function applyWebMediaUpload({
 
   const { file, target } = input
   const buffer = Buffer.from(await file.arrayBuffer())
-  const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`)
+  const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`, brand)
   const type = file.type.startsWith("video/") ? "VIDEO" : "IMAGE"
 
   return db.$transaction(async tx => {
@@ -156,8 +157,8 @@ export async function applyWebMediaRemoval({
   if (remaining === 0) {
     const { error } = await tryCatch(db.media.delete({ where: { id: attachment.mediaId } }))
     if (!error) {
-      const key = getS3KeyFromUrl(attachment.media.url)
-      if (key) await tryCatch(removeS3File(key))
+      const key = getS3KeyFromUrl(attachment.media.url, getMediaConfig(brand).bucket)
+      if (key) await tryCatch(removeS3File(key, brand))
     }
   }
 

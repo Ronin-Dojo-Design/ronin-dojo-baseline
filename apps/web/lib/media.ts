@@ -2,8 +2,9 @@ import { DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3"
 import { Upload } from "@aws-sdk/lib-storage"
 import { getDomain, tryCatch } from "@dirstack/utils"
 import { fileTypeFromBuffer } from "file-type"
+import type { Brand } from "~/.generated/prisma/client"
 import { env, isProd } from "~/env"
-import { s3Client } from "~/services/s3"
+import { getMediaConfig } from "~/services/s3"
 
 /**
  * Resolves a public media asset path to a full URL.
@@ -36,18 +37,19 @@ const requireEnv = (value: string | undefined, name: string) => {
  * Uploads a file to S3 and returns the S3 location.
  * @param file - The file to upload.
  * @param key - The S3 key to upload the file to (without extension)
+ * @param brand - Routes to the brand's bucket (BBL → its own R2 bucket); omit for platform.
  * @returns The S3 location of the uploaded file.
  */
-export const uploadToS3Storage = async (file: Buffer, key: string) => {
-  const bucket = requireEnv(env.S3_BUCKET, "S3_BUCKET")
+export const uploadToS3Storage = async (file: Buffer, key: string, brand?: Brand) => {
+  const { client, bucket: brandBucket, region, publicUrl } = getMediaConfig(brand)
+  const bucket = requireEnv(brandBucket, "S3_BUCKET")
   const endpoint =
-    env.S3_PUBLIC_URL ??
-    `https://${bucket}.s3.${requireEnv(env.S3_REGION, "S3_REGION")}.amazonaws.com`
+    publicUrl ?? `https://${bucket}.s3.${requireEnv(region, "S3_REGION")}.amazonaws.com`
   const fileType = await fileTypeFromBuffer(file)
   const s3Key = `${key}.${fileType?.ext ?? "png"}`
 
   const upload = new Upload({
-    client: s3Client,
+    client,
     params: {
       Bucket: bucket,
       Key: s3Key,
@@ -77,21 +79,23 @@ export const uploadToS3Storage = async (file: Buffer, key: string) => {
  * Removes a list of directories from S3.
  * @param directories - The directories to remove.
  */
-export const removeS3Directories = async (directories: string[]) => {
+export const removeS3Directories = async (directories: string[], brand?: Brand) => {
   for (const directory of directories) {
-    await removeS3Directory(directory)
+    await removeS3Directory(directory, brand)
   }
 }
 
 /**
  * Removes a directory from S3.
  * @param directory - The directory to remove.
+ * @param brand - Targets the brand's bucket (BBL → its own R2 bucket); omit for platform.
  */
-export const removeS3Directory = async (directory: string) => {
+export const removeS3Directory = async (directory: string, brand?: Brand) => {
   // Safety flag to prevent accidental deletion of S3 files
   if (!isProd) return
 
-  const bucket = requireEnv(env.S3_BUCKET, "S3_BUCKET")
+  const { client, bucket: brandBucket } = getMediaConfig(brand)
+  const bucket = requireEnv(brandBucket, "S3_BUCKET")
   const listCommand = new ListObjectsV2Command({
     Bucket: bucket,
     Prefix: `${directory}/`,
@@ -100,10 +104,10 @@ export const removeS3Directory = async (directory: string) => {
   let continuationToken: string | undefined
 
   do {
-    const listResponse = await s3Client.send(listCommand)
+    const listResponse = await client.send(listCommand)
     for (const object of listResponse.Contents || []) {
       if (object.Key) {
-        await removeS3File(object.Key)
+        await removeS3File(object.Key, brand)
       }
     }
     continuationToken = listResponse.NextContinuationToken
@@ -114,14 +118,16 @@ export const removeS3Directory = async (directory: string) => {
 /**
  * Removes a file from S3.
  * @param key - The S3 key of the file to remove.
+ * @param brand - Targets the brand's bucket (BBL → its own R2 bucket); omit for platform.
  */
-export const removeS3File = async (key: string) => {
+export const removeS3File = async (key: string, brand?: Brand) => {
+  const { client, bucket } = getMediaConfig(brand)
   const deleteCommand = new DeleteObjectCommand({
-    Bucket: requireEnv(env.S3_BUCKET, "S3_BUCKET"),
+    Bucket: requireEnv(bucket, "S3_BUCKET"),
     Key: key,
   })
 
-  return await s3Client.send(deleteCommand)
+  return await client.send(deleteCommand)
 }
 
 /**

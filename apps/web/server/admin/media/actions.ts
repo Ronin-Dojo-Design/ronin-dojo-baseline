@@ -6,6 +6,7 @@ import { z } from "zod/v4"
 import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
+import { getMediaConfig } from "~/services/s3"
 
 /**
  * The set of entity types that can receive a MediaAttachment. Each value
@@ -87,7 +88,7 @@ export const uploadMediaToLibrary = adminActionClient
   .action(
     async ({ parsedInput: { file, title, isPublic }, ctx: { db, revalidate, user, brand } }) => {
       const buffer = Buffer.from(await file.arrayBuffer())
-      const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`)
+      const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`, brand)
       const type = file.type.startsWith("video/") ? "VIDEO" : "IMAGE"
 
       const media = await db.media.create({
@@ -116,7 +117,7 @@ export const uploadMediaToLibrary = adminActionClient
 
 export const deleteMedia = adminActionClient
   .inputSchema(idsSchema)
-  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
+  .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
     const items = await db.media.findMany({
       where: { id: { in: ids } },
       select: { url: true },
@@ -130,8 +131,8 @@ export const deleteMedia = adminActionClient
     // failed object delete (e.g. already gone) must not fail the row deletion.
     await Promise.allSettled(
       items.map(({ url }) => {
-        const key = getS3KeyFromUrl(url)
-        return key ? removeS3File(key) : Promise.resolve()
+        const key = getS3KeyFromUrl(url, getMediaConfig(brand).bucket)
+        return key ? removeS3File(key, brand) : Promise.resolve()
       }),
     )
 
