@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { z } from "zod"
-import { siteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
+import { getBrandOrigin } from "~/lib/brand-origin"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   isLineageMembershipPlanMetadata,
@@ -65,7 +65,7 @@ export const createBillingPortalSession = userActionClient
 
     const session = await getStripeClient(brand).billingPortal.sessions.create({
       customer: customer.stripeCustomerId,
-      return_url: `${siteConfig.url}${returnUrl}`,
+      return_url: `${await getBrandOrigin()}${returnUrl}`,
     })
 
     if (!session.url) {
@@ -129,6 +129,7 @@ export const createProgramEnrollmentCheckout = userActionClient
       userId: user.id,
       brand,
     })
+    const origin = await getBrandOrigin()
     const mode = resolvePlanCheckoutMode(pricingPlan)
     const metadata = {
       type: "program_enrollment",
@@ -155,8 +156,8 @@ export const createProgramEnrollmentCheckout = userActionClient
       subscription_data: mode === "subscription" ? { metadata } : undefined,
       allow_promotion_codes: coupon ? undefined : true,
       discounts: coupon ? [{ coupon }] : undefined,
-      success_url: `${siteConfig.url}/programs/${pricingPlan.program.id}/enroll/success?sessionId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteConfig.url}/programs/${pricingPlan.program.id}/enroll?cancelled=true`,
+      success_url: `${origin}/programs/${pricingPlan.program.id}/enroll/success?sessionId={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/programs/${pricingPlan.program.id}/enroll?cancelled=true`,
     })
 
     if (!checkout.url) {
@@ -203,6 +204,7 @@ export const createLineageMembershipCheckout = userActionClient
       userId: user.id,
       brand,
     })
+    const origin = await getBrandOrigin()
     const mode = resolvePlanCheckoutMode(pricingPlan)
     const metadata = {
       type: LINEAGE_MEMBERSHIP_SURFACE,
@@ -228,8 +230,8 @@ export const createLineageMembershipCheckout = userActionClient
       subscription_data: mode === "subscription" ? { metadata } : undefined,
       allow_promotion_codes: coupon ? undefined : true,
       discounts: coupon ? [{ coupon }] : undefined,
-      success_url: `${siteConfig.url}/lineage/join/success?sessionId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteConfig.url}/lineage/join?cancelled=true`,
+      success_url: `${origin}/lineage/join/success?sessionId={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/lineage/join?cancelled=true`,
     })
 
     if (!checkout.url) {
