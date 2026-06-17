@@ -16,18 +16,20 @@
  *   from a remote WordPress site — copy/export the uploads folder locally first).
  *
  * Env it needs (from apps/web env; consumed transitively by `uploadToS3Storage` →
- * `services/s3.ts`). Set these before running:
- *   - S3_BUCKET            (required — guarded here)
- *   - S3_REGION            (required for the public URL when S3_PUBLIC_URL is unset)
- *   - S3_ENDPOINT          (S3 / MinIO endpoint)
- *   - S3_ACCESS_KEY        (access key id)
- *   - S3_SECRET_ACCESS_KEY (secret access key)
- *   - S3_PUBLIC_URL        (optional — public base URL; falls back to the bucket vhost URL)
- *   - DATABASE_URL         (Postgres — only needed when a --manifest is supplied)
+ * `services/s3.ts`). Set these before running. `--brand BBL` routes uploads to the
+ * BBL bucket (Cloudflare R2) and requires the `S3_*_BBL` variants instead:
+ *   - S3_BUCKET[_BBL]            (required — guarded here)
+ *   - S3_REGION[_BBL]            (required for the public URL when S3_PUBLIC_URL[_BBL] is unset)
+ *   - S3_ENDPOINT[_BBL]          (S3 / R2 / MinIO endpoint)
+ *   - S3_ACCESS_KEY[_BBL]        (access key id)
+ *   - S3_SECRET_ACCESS_KEY[_BBL] (secret access key)
+ *   - S3_PUBLIC_URL[_BBL]        (optional — public base URL; falls back to the bucket vhost URL)
+ *   - DATABASE_URL               (Postgres — only needed when a --manifest is supplied)
  *
  * CLI (run from apps/web; `SKIP_ENV_VALIDATION=1` so the standalone script skips the
  * app's full t3-env schema and reads the S3/DB vars straight from the environment):
  *   SKIP_ENV_VALIDATION=1 bun scripts/import-bbl-wp-media.ts --dir <folder> \
+ *     [--brand BBL] \
  *     [--manifest <path.json>] \
  *     [--prefix media/bbl/profiles] \
  *     [--match displayName|profileSlug|nodeSlug] \
@@ -56,7 +58,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { basename, extname, join } from "node:path"
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../.generated/prisma/client.js"
+import { Brand, PrismaClient } from "../.generated/prisma/client.js"
 import { uploadToS3Storage } from "../lib/media"
 
 const ACCEPTED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"])
@@ -76,6 +78,7 @@ type CliOptions = {
   manifest?: string
   prefix: string
   match?: MatchMode
+  brand?: Brand
   dryRun: boolean
   overwrite: boolean
 }
@@ -116,6 +119,14 @@ function parseArgs(argv: string[]): CliOptions {
       case "--prefix":
         opts.prefix = (argv[++i] ?? DEFAULT_PREFIX).replace(/\/+$/, "")
         break
+      case "--brand": {
+        const value = argv[++i]
+        if (!value || !(value in Brand)) {
+          throw new Error(`--brand must be one of: ${Object.keys(Brand).join(", ")}`)
+        }
+        opts.brand = value as Brand
+        break
+      }
       case "--match": {
         const value = argv[++i]
         if (value !== "displayName" && value !== "profileSlug" && value !== "nodeSlug") {
@@ -144,14 +155,19 @@ function parseArgs(argv: string[]): CliOptions {
   return opts
 }
 
-/** Verifies the S3 env is present; returns a list of missing var names. */
-function missingS3Env(): string[] {
+/**
+ * Verifies the S3 env for the target bucket is present; returns missing var
+ * names. `--brand BBL` routes uploads to the BBL bucket, so it requires the
+ * `S3_*_BBL` vars (Cloudflare R2); otherwise the platform `S3_*` vars.
+ */
+function missingS3Env(brand?: Brand): string[] {
+  const suffix = brand === Brand.BBL ? "_BBL" : ""
   const required = [
-    "S3_BUCKET",
-    "S3_REGION",
-    "S3_ENDPOINT",
-    "S3_ACCESS_KEY",
-    "S3_SECRET_ACCESS_KEY",
+    `S3_BUCKET${suffix}`,
+    `S3_REGION${suffix}`,
+    `S3_ENDPOINT${suffix}`,
+    `S3_ACCESS_KEY${suffix}`,
+    `S3_SECRET_ACCESS_KEY${suffix}`,
   ]
   return required.filter(name => !process.env[name])
 }
@@ -241,7 +257,7 @@ async function main() {
   const opts = parseArgs(process.argv.slice(2))
 
   // 1. Env guard — never attempt uploads without the S3 vars.
-  const missing = missingS3Env()
+  const missing = missingS3Env(opts.brand)
   if (missing.length > 0) {
     console.error(
       `[env] Missing required S3 env: ${missing.join(", ")}.\n` +
@@ -254,7 +270,7 @@ async function main() {
   const files = listImageFiles(opts.dir)
   console.log(
     `[source] ${files.length} image(s) in ${opts.dir} ` +
-      `(prefix=${opts.prefix}, match=${opts.match ?? "auto"}` +
+      `(brand=${opts.brand ?? "platform"}, prefix=${opts.prefix}, match=${opts.match ?? "auto"}` +
       `${opts.dryRun ? ", DRY-RUN" : ""}${opts.overwrite ? ", overwrite" : ""})`,
   )
   if (files.length === 0) {
@@ -294,7 +310,7 @@ async function main() {
           console.log(`[upload] would upload ${file} -> key ${key}`)
         } else {
           const buffer = readFileSync(join(opts.dir, file))
-          url = await uploadToS3Storage(buffer, key)
+          url = await uploadToS3Storage(buffer, key, opts.brand)
           uploaded++
           console.log(`[upload] ${file} -> ${url}`)
         }
