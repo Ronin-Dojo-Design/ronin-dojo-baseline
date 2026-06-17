@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { env } from "~/env"
+import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
 
 /**
  * Black Belt Legacy pre-launch holding page (SESSION_0403).
@@ -13,7 +14,7 @@ import { env } from "~/env"
  * Poppins-evoking heading). Self-contained — no header/footer/app chrome.
  */
 
-const LOGO = "/images/brands/black-belt-legacy/logo.png"
+const LOGO = "/brand/blackbeltlegacy/bbl-logo-white.png"
 
 type Remaining = { days: number; hours: number; minutes: number; seconds: number } | null
 
@@ -61,7 +62,9 @@ export function BblCountdown() {
   }, [hasTarget, target])
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-6 py-16 text-center text-white [font-family:var(--font-bbl-body),system-ui,sans-serif]">
+    <main
+      className={`${bblHeadingFont.variable} ${bblBodyFont.variable} relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#050505] px-6 py-16 text-center text-white [font-family:var(--font-bbl-body),system-ui,sans-serif]`}
+    >
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-[-14rem] h-[40rem] w-[40rem] -translate-x-1/2 rounded-full bg-red-600/20 blur-[160px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_30rem)]" />
@@ -75,7 +78,7 @@ export function BblCountdown() {
           Honor the Lineage. Build the Future.
         </span>
 
-        <h1 className="mt-5 text-balance text-4xl uppercase italic tracking-[0.01em] sm:text-6xl [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
+        <h1 className="mt-5 text-balance text-4xl font-extrabold uppercase italic tracking-[0.01em] sm:text-6xl [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
           A new home for the lineage is coming
         </h1>
 
