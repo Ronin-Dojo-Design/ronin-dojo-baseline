@@ -1,11 +1,15 @@
+import { cache } from "react"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { Brand, DirectoryVisibility } from "~/.generated/prisma/client"
 import {
   directoryProfileDetailPayload,
   directoryProfilePreviewPayload,
+  directoryProfileSelfPayload,
 } from "~/server/web/directory/payloads"
 import {
   canRenderFullProfileForViewer,
+  type MyProfile,
+  projectOwnProfile,
   rankSummaryForProfile,
   trustSummaryForUser,
 } from "~/server/web/directory/profile-projection"
@@ -16,6 +20,32 @@ type ProfileViewer = {
   viewerUserId?: string | null
   viewerRole?: string | null
 }
+
+/**
+ * The authenticated member's OWN directory profile, projected for `/me`.
+ *
+ * @added SESSION_0410 — the member-profile surface (BBL_PARITY_SPEC §2). Resolved by
+ * `passport.userId` (Passport is the identity SoT, ADR 0025), so it returns the full
+ * profile with no tier/visibility gate — a member always sees their own profile. The
+ * companion promotion *timeline* reads `getOwnLineageProfile` from the lineage model;
+ * this seam carries identity, bio, socials, affiliations, and the current-rank card data.
+ *
+ * Request-scoped `cache()` so the page and its metadata share one query.
+ */
+export const getOwnDirectoryProfile = cache(
+  async ({ userId, brand }: { userId: string; brand: Brand }): Promise<MyProfile | null> => {
+    const profile = await db.directoryProfile.findFirst({
+      where: { passport: { userId } },
+      select: directoryProfileSelfPayload,
+    })
+
+    if (!profile) {
+      return null
+    }
+
+    return projectOwnProfile({ profile, brand })
+  },
+)
 
 /**
  * Find a single directory profile by slug for the detail page.

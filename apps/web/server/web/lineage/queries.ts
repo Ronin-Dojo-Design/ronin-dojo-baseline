@@ -288,6 +288,25 @@ export const getLineageProfile = cache(
 )
 
 /**
+ * The authenticated member's OWN lineage profile, for the `/me` promotion timeline.
+ *
+ * @added SESSION_0410. Unlike `getLineageProfile` (PUBLIC-only, viewer-agnostic) this
+ * resolves the caller's own node by `passport.userId` with NO visibility filter and NO
+ * rank redaction — a member always sees their own promotion provenance (the directory
+ * `canRenderFullProfileForViewer` "own profile" rule, ADR 0025; `showRanks`/visibility
+ * are gates for *other* viewers). Returns null when the member has no lineage placement
+ * yet, and the page renders an empty state. Request-scoped `cache()`.
+ */
+export const getOwnLineageProfile = cache(
+  async (userId: string): Promise<LineageNodeProfile | null> => {
+    return db.lineageNode.findFirst({
+      where: { passport: { userId } },
+      select: lineageNodeProfilePayload,
+    })
+  },
+)
+
+/**
  * Fetch drawer profile payloads for a batch of visible nodes.
  *
  * The public route already materializes visible tree members before calling
