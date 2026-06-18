@@ -222,6 +222,117 @@ Surfaced by the **/posts feed** parity sweep:
   scoped to *zero* migrations, that step (and `db push`) is off-limits, so the real-data screenshot isn't
   reachable in-session. Fall back to §5b (`next build` compile/type + emitted-CSS grep) and defer the
   live-DOM pass to PR review — don't fake it.
+Surfaced by the **legal/content page sweep** (privacy / cookies / terms + the DSR request form):
+
+- **The portal-escape gotcha extends past Drawer/Dialog to `Select` (any Base UI popup).** The DSR
+  form's `Select` dropdown renders through `SelectPrimitive.Portal` into `document.body`, so its open
+  options escape the page's `BrandTypography` font scope and render in the app font — even though the
+  trigger, labels, and inputs *inside* the scope inherit the brand font correctly. Same fix shape as the
+  Drawer one: thread the brand font class to the portal content root (`SelectContent` already forwards
+  `className` to its `Popup`). For a content sweep where the dropdown is a tiny secondary surface, it's
+  defensible to leave it and log the gap — but **treat every portaled primitive (`Drawer`/`Dialog`/
+  `Popover`/`Select`/`Menu`/`Tooltip`) as outside the font scope by default** and decide per surface.
+- **Wrapping a page body in one scope collapses it to a single layout-`Wrapper` child — reproduce the
+  fluid gap inside the scope.** The `(web)` layout renders `{children}` inside a `Wrapper` whose
+  `gap-y-fluid-md` only spaces *direct* children. A page that returned a `<>…</>` fragment (Intro, Prose,
+  Note, …) had each as a direct child, so they were spaced by the Wrapper. Introducing a single wrapping
+  scope element makes the body ONE child (gap to the Footer is preserved, but the inter-section gap
+  vanishes). The scope must carry `flex flex-col gap-y-fluid-md` itself (a spacing token, not a magic
+  number) to keep the rhythm.
+- **Decomposing N structurally-similar pages multiplies fallow clone groups without adding real
+  duplication.** Splitting three legal pages each into `page.tsx` (route scaffold) + `policy-body.tsx`
+  (legal copy) turned the pre-existing 2 clone groups (proven at base by a whole-repo `fallow dupes`)
+  into 4 introduced groups: the route-scaffold clone (re-attributed because the member files changed)
+  plus structural JSX-rhythm clones between three *genuinely different* legal documents. This is the
+  step-5 relocation caveat at work — read `introduced` dead-code/complexity = 0 and a **held
+  `maintainability_avg`** (`fallow` health `vital_signs.maintainability_avg`, ~94 here), not the raw
+  duplication count. Do NOT abstract distinct legal prose to silence the detector; DO extract the genuine
+  shared *chrome* (here `PolicyLayout`), which is the duplication actually worth removing.
+- **§5a Docker fallback is itself untestable when the cloud session has no Docker daemon.** `docker info`
+  failing means §5b (`next build` compile + type + emitted-CSS grep, live-DOM deferred to PR review) is
+  the only path — don't burn time trying to bring up the compose stack first; check `docker info` once,
+  then go straight to §5b.
+
+### Decomposition-heavy sweeps (surfaced by the `lineage-tree-canvas` sweep — the 1502-line #1 monolith)
+
+- **Mutually-recursive sub-components must be colocated in ONE file — splitting them violates step 1.** A
+  recursive tree renders `Branch → ChildColumn → Branch`. Putting `Branch` and `ChildColumn` in separate files
+  makes each import the other, which fallow flags as a `circular-dependency` (dead-code, *introduced*) and risks
+  a bundler TDZ at module-eval. The "one component per file" rule yields here: a single mutually-recursive
+  rendering unit is ONE module. Keep both `export`/private functions in `branch.tsx`; export only the entry the
+  orchestrator renders (mark the inner one file-private, else it's an `unused-export`).
+- **Only `export` a relocated const if another file imports it.** Consts that were module-private in the monolith
+  (`MIN_SCALE`, the stagger coefficients) are used only by their own `clampScale`/`entranceDelay`. Exporting them
+  on the way out creates `unused-export` dead-code (*introduced*). Keep internal-only values file-private; export
+  just the surface the other modules consume.
+- **A high-complexity monolith will NOT read `introduced: 0` on the fallow complexity/dup axes — and that's
+  expected.** Unlike the drawer (whose extracted parts fell *below* threshold, so introduced was genuinely 0), a
+  #1-monolith's functions are individually above-threshold, and fallow has **no cross-file move detection**: it
+  attributes every relocated function to its new path as `complexity_introduced` / `duplication_introduced`. The
+  gate to actually enforce is **`dead_code_introduced: 0`** (genuinely new dead code — fixable, as above). For
+  complexity/dup, verify by *mapping*: every "introduced" finding must be a 1:1 verbatim relocation of a function
+  that existed in the original (no function's `cyclomatic` rose; the orchestrator's *fell* as logic moved to
+  hooks). Two of this sweep's three "introduced" clone groups were against **untouched** sibling files
+  (`lineage-cohort-timeline`, `lib/lineage/flatten-lineage`) — proof the clone pre-existed the move. Net-new
+  authored complexity/duplication = 0; maintainability held (1502-line hotspot → 14 files, largest ~370).
+- **Run `oxfmt` from `apps/web`, not the repo root.** oxfmt discovers `.oxfmtrc.json` from the CWD; run it from
+  the repo root and it prints "No config found, using defaults" and reformats with **semicolons + arrow-parens**
+  that fight the repo's `semi: false` / `arrowParens: avoid` style. Always `cd apps/web` first (or the package
+  `format` script) so the config applies.
+
+Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` seam, no new component):
+
+- **A zero-height sibling after the single-wrapper scope is safe — the gap-collapse caveat above still
+  holds.** `PolicyLayout` reproduces the Wrapper's `gap-y-fluid-md` *because* wrapping a body collapses
+  it to ONE Wrapper child. `/about` keeps a `StructuredData` JSON-LD `<script>` as a **second** Wrapper
+  child (sibling AFTER the layout), so there are two children again — but a `<script>` renders
+  zero-height, so the inter-child `gap-y-fluid-md` spaces nothing visible. No regression, and you do NOT
+  need to fold the sibling into the scope. (If the trailing sibling were *visible*, you would — it would
+  re-open the double-gap the scope exists to collapse.)
+- **`PolicyLayout` is title/description source-agnostic — i18n vs hardcoded const is a route concern.**
+  The legal pages pass hardcoded `PAGE_TITLE` consts; `/about` passes strings resolved from next-intl
+  (`pages.about`) + page metadata. The layout takes already-resolved `title`/`description` strings, so
+  the i18n wiring stays in the route's `getData` and the layout is reused unchanged. When a swept page
+  already sources metadata from i18n, **leave that wiring intact** — don't inline it to match the
+  legal-page shape.
+- **A token sweep RELOCATES stale copy; it does not rewrite it.** `/about`'s body was leftover dirstarter
+  boilerplate (developer-tools copy + a "Brian Scott" author block — not BBL/martial-arts voice). The
+  sweep moved it **verbatim** into the body module and **flagged it as content debt for the supervised
+  content lane**. Inventing brand copy inside a presentation sweep is out of scope (same boundary as
+  schema migrations) — surface it loudly in the report, don't fix it silently.
+
+Surfaced by the **/events** sweep (public list + promotion-event detail — decompose, no `PolicyLayout`):
+
+- **Content-rich card decomposition yields non-zero `complexity_introduced` — unlike the legal *prose*
+  sweep where it was 0.** A page body made of many optional-field cards (the award card branches on the
+  promotee `??` chain, the lineage-node ternary, and `discipline`/`colorHex`/`shortName`/`awardedBy`/
+  `organization`/`location` `&&`s) carries high **cyclomatic** complexity that is inherent to the
+  *content*, not the structure. Decomposing the monolithic `page.tsx` relocates that branch-heavy render
+  into the new section files (`AwardCard` cyc 19, `EventCard` cyc 14), so `fallow audit` attributes it as
+  `complexity_introduced > 0` — even though each new unit is **simpler** than the source monolith (and the
+  sweep dropped a branch by swapping the inline `rankStyle` ternary for `BeltSwatch`). Read it exactly like
+  the clone-relocation caveat: `dead_code_introduced: 0` + a held `maintainability_avg` (90 here) + low
+  `avg_cyclomatic`/`p90`/`critical_complexity_pct` (3.6 / 6 / 0%), **not** the raw above-threshold count or
+  the `fail` verdict. Do NOT fragment a coherent card further just to push each piece below threshold —
+  that's the "abstract distinct content to silence the detector" anti-pattern, and it only redistributes
+  the branches (extracting the provenance line leaves both halves above a low threshold).
+- **`next/dynamic` on a pure-RSC below-fold section is a structural marker, not a bundle win.** Every
+  events section is a Server Component (no `"use client"`, no client JS), so `next/dynamic`-splitting the
+  below-fold gallery (`CeremonyPhotos`) with SSR kept defers the *module* but there is no client chunk to
+  shrink — unlike bbl-landing, whose lazy targets are client carousels/embeds carrying real JS. Keep SSR
+  (no `ssr:false`), keep the split (it marks the boundary and is ready if the section later gains a
+  lightbox/client behaviour), and **don't add a `loading` boundary** — the SSR'd HTML paints, so the
+  fallback is never meaningfully seen. Report the win as structural, not a measured bundle reduction.
+- **A thin detail `page.tsx` that newly needs the brand resolves it on the wire — still no new-data lane.**
+  `/events/[slug]` didn't previously read the brand; feeding `BrandTypography` needs `getRequestBrand()`
+  (a header read — no schema, no payload column) added to the page and `Promise.all`-ed with the existing
+  slug fetch. That's in scope (presentation wiring of data already on the wire), not a supervised migration.
+Surfaced by the **`/organizations` + `/organizations/[slug]` sweep** (the public org list + the 411-line detail monolith — a *data-heavy* server route, unlike the static legal/about pages):
+
+- **A `Prose`-less structured page needs the `h1`-inclusive heading-scope class, not per-heading `bblHeadingFontClass`.** The legal/about cluster routes its headings through `PolicyLayout` (Intro `bblHeadingFontClass` + `Prose` `bblProseHeadingFontClass`). A page built from `Intro` + `Section` + `Card` (the org pages) instead scatters one `IntroTitle` (h1) plus *many* `H4`s across sections — tagging each by hand is noise. The reusable move: one **container** rule on the `BrandTypography` scope — `bblHeadingScopeClass` = `[&_:is(h1,h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!` — covers every descendant heading at once (the structured-page analogue of `bblProseHeadingFontClass`, just widened to include `h1`). Pass it as `BrandTypography`'s `className`. Lightning CSS **merges** it with the existing `h2,h3,h4` rule (shared declaration body), so it adds ~no CSS weight — verifiable in the §5b emitted stylesheet: `grep -roh 'is(h1,h2,h3,h4)…font-bbl-heading…!important' .next/static/chunks/*.css`.
+- **`next/dynamic` in a *server* orchestrator pays off via chunk-splitting, not branch unmount.** The drawer gotcha ("lazy only pays off when inactive branches unmount") is about tab/branch switching. For always-rendered *below-the-fold* server sections (the related-orgs grid, the members roster, the list cross-links) the payoff is a smaller initial client bundle — the chunk loads when reached — and SSR is preserved by simply **not** passing `ssr: false` (which is illegal in a Server Component anyway). Precedent: the BBL landing orchestrator. So "lazy-load below-fold" is valid for server modules too; just state the *reason* correctly. Bonus: lazy-loading the *section* that hosts a reused client island (the roster hosts `JoinOrganizationButton`/`MembershipActions`) defers that island's JS as a side effect — without forking the shared island (still "reuse, don't re-implement").
+- **A data-heavy server route decomposes around a view-model loader, not a presentation orchestrator that fetches.** Where the static pages let the orchestrator be pure presentation, the org detail route does real server work (member grouping, related-orgs + promotion-timeline fetches, structured-data assembly). Clean shape: a `*-data.ts` **server loader** returns a typed `…View` model; `page.tsx` collapses to `params → load → notFound() → <Orchestrator {...view}/>`; the orchestrator owns only composition + lazy boundaries (zero fetch, zero derivation). Keep the derivation helpers (`groupMembersByUser`, `formatOrgAddress`) **file-private** in the loader and `export` only the loader + the view-model type the section files import — exporting an in-file-only helper is `unused-export` introduced dead code (the lineage-canvas export rule, applied to a server loader).
+- **A route whose colors were already token-correct makes the sweep a *type-seam-only* pass — say so, don't invent color churn.** The org pages already used semantic tokens (`text-muted-foreground`, `text-secondary-foreground`, `Badge`/`Card` variants) with zero hex literals, and `organizations/[slug]/layout.tsx` was already the data-driven org-theme seam (`OrgSettings` → `[data-org]` CSS vars behind an HSL-safe regex guard — the recipe's own step-2 "org theme colors from data" ideal). So step 2's *color* work was a verified no-op here; the real brand work was the *type* seam (wrapping the body in `BrandTypography`). Leave an already-compliant `layout.tsx` untouched and report it as already-correct — the "a sweep relocates, it doesn't rewrite" discipline extends to "a sweep doesn't manufacture changes a surface doesn't need."
 
 ## Cross-references
 
