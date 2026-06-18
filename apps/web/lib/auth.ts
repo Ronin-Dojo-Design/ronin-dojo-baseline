@@ -159,7 +159,14 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url }, ctx) => {
+      sendMagicLink: async ({ email, url, metadata }, ctx) => {
+        // FIX #3 (SESSION_0412): the BBL claim-link minter calls `signInMagicLink` only to
+        // create the verification token — it sends its OWN branded "claim your profile" email
+        // (with the token-accept callbackURL), so suppress the generic login email here. Plain
+        // login keeps sending as before (metadata is undefined). This guards the global send
+        // seam WITHOUT touching the plugin's expiresIn/storeToken config.
+        if ((metadata as { skipEmail?: boolean } | undefined)?.skipEmail) return
+
         const brand = resolveAuthEmailBrand(ctx)
         const brandedUrl = resolveAuthEmailUrl(url, ctx)
         const to = email

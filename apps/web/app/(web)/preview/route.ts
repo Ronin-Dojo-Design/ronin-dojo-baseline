@@ -1,18 +1,23 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
+import { safeRelativePath } from "~/lib/safe-redirect"
 
 /**
  * Ungated-preview unlock for the BBL pre-launch holding page.
  *
  * A previewer (admin / stakeholder) opens `/preview?token=<BBL_PREVIEW_TOKEN>`;
- * a matching token sets the `bbl_preview` cookie and redirects home, so the
- * countdown gate in the `(web)` layout lets them through to the real site. A
- * wrong/absent token just redirects home (still gated). Route handlers are not
- * wrapped by the layout, so this runs regardless of the gate.
+ * a matching token sets the `bbl_preview` cookie so the countdown gate in the
+ * `(web)` layout lets them through to the real site. An optional `?next=<path>`
+ * lands them on a specific page (e.g. a claim link
+ * `/preview?token=…&next=/lineage/join?node=<id>`); `next` is validated as a
+ * safe same-origin relative path to prevent an open redirect, falling back to
+ * "/". A wrong/absent token just redirects (still gated, no cookie set). Route
+ * handlers are not wrapped by the layout, so this runs regardless of the gate.
  */
 export function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")
-  const response = NextResponse.redirect(new URL("/", request.url))
+  const next = safeRelativePath(request.nextUrl.searchParams.get("next"))
+  const response = NextResponse.redirect(new URL(next, request.url))
 
   if (token && token === getBblPreviewToken()) {
     response.cookies.set(BBL_PREVIEW_COOKIE, token, {

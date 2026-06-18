@@ -161,7 +161,18 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
       if (!data) return
       toast.success("Your legacy information was received.")
       if (data.claimRequiresSignIn) {
-        toast.info("Sign in to finish claiming the selected lineage profile.")
+        // The claim only persists once signed in. Hand off to the login route
+        // with a `next=` that returns the user to this page with their node
+        // preselected (the landing auto-opens the claim drawer for `?node=`).
+        // NOTE: the form re-renders empty on return — the user re-submits while
+        // signed in, which then creates the claim (no data is silently dropped,
+        // but it is a re-entry). The token-invite/magic-link path (#3) removes
+        // this round-trip entirely for emailed claims.
+        const nodeId = form.getValues("nodeId")
+        const returnTo = nodeId ? `/lineage/join?node=${nodeId}` : "/lineage/join"
+        toast.info("One more step — sign in to claim your profile.")
+        router.push(`/auth/login?next=${encodeURIComponent(returnTo)}`)
+        return
       }
       router.push(data.checkoutUrl)
     },
