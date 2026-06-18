@@ -1,5 +1,6 @@
 import { getReadTime } from "@dirstack/utils"
 import type { Metadata } from "next"
+import dynamic from "next/dynamic"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
@@ -8,7 +9,6 @@ import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
-import { ContentPostMediaCarousel } from "~/components/web/content-posts/content-post-media-carousel"
 import { Nav } from "~/components/web/nav"
 import { StructuredData } from "~/components/web/structured-data"
 import { TableOfContents } from "~/components/web/table-of-contents"
@@ -19,11 +19,25 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { Tag } from "~/components/web/ui/tag"
 import { getRequestBrand } from "~/lib/brand-context"
+import { brandFontVariables } from "~/lib/fonts"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateArticle } from "~/lib/structured-data"
+import { cx } from "~/lib/utils"
 import { findPublishedContentPostBySlug } from "~/server/web/content-posts/queries"
 
 export const dynamicParams = true
+
+// Lazy boundary (recipe step 3): the media carousel pulls in Embla. It is only
+// mounted when the post actually carries media (see `hasMedia` below), so
+// text-only posts never request the carousel chunk; media posts code-split it
+// behind a same-aspect skeleton to hold layout.
+const ContentPostMediaCarousel = dynamic(
+  () =>
+    import("~/components/web/content-posts/content-post-media-carousel").then(
+      m => m.ContentPostMediaCarousel,
+    ),
+  { loading: () => <div className="aspect-video w-full animate-pulse rounded-lg bg-muted" /> },
+)
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -65,7 +79,7 @@ const getData = cache(async ({ params }: Props) => {
     ],
   })
 
-  return { post, body, ...data }
+  return { post, body, brand, ...data }
 })
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
@@ -74,18 +88,25 @@ export const generateMetadata = async (props: Props): Promise<Metadata> => {
 }
 
 export default async function (props: Props) {
-  const { post, body, breadcrumbs, structuredData } = await getData(props)
+  const { post, body, brand, breadcrumbs, structuredData } = await getData(props)
   const t = await getTranslations()
   const format = await getFormatter()
 
   const displayTitle = post.publicTitle ?? post.atom.title
+  const carouselMedia = post.atom.mediaAttachments.map(({ media }) => media)
+  const hasMedia = carouselMedia.length > 0 || !!post.thumbnailUrl
 
+  // Brand type seam (recipe step 2): BBL inherits Poppins/Inter via these font
+  // vars; other brands keep the app font. `display: contents` preserves the
+  // page's section rhythm.
   return (
-    <>
+    <div className={cx("contents", brandFontVariables(brand))}>
       <Breadcrumbs items={breadcrumbs} />
 
       <Intro>
-        <IntroTitle>{displayTitle}</IntroTitle>
+        <IntroTitle className="[font-family:var(--font-bbl-heading,var(--font-display))]!">
+          {displayTitle}
+        </IntroTitle>
         {post.excerpt && <IntroDescription>{post.excerpt}</IntroDescription>}
 
         {post.atom.createdBy && (
@@ -124,11 +145,13 @@ export default async function (props: Props) {
 
       <Section>
         <Section.Content>
-          <ContentPostMediaCarousel
-            media={post.atom.mediaAttachments.map(({ media }) => media)}
-            title={displayTitle}
-            fallbackImageUrl={post.thumbnailUrl}
-          />
+          {hasMedia && (
+            <ContentPostMediaCarousel
+              media={carouselMedia}
+              title={displayTitle}
+              fallbackImageUrl={post.thumbnailUrl}
+            />
+          )}
 
           <Prose>
             <Markdown>{body}</Markdown>
@@ -161,6 +184,6 @@ export default async function (props: Props) {
       <Nav title={displayTitle} className="self-start" />
 
       <StructuredData data={structuredData} />
-    </>
+    </div>
   )
 }

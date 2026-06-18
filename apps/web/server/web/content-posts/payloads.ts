@@ -73,6 +73,7 @@ export const contentPostManyPayload = {
   publicSlug: true,
   excerpt: true,
   thumbnailUrl: true,
+  videoUrl: true,
   publishDate: true,
   createdAt: true,
   updatedAt: true,
@@ -85,6 +86,7 @@ export const contentPostManyPayload = {
       status: true,
       hook: true,
       createdBy: contentPostAuthorPayload,
+      discipline: { select: { id: true, name: true, slug: true } },
       tags: {
         select: { id: true, name: true, slug: true },
         orderBy: { name: "asc" },

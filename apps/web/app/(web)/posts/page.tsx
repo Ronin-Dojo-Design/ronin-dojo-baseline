@@ -8,8 +8,10 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getBrandSiteConfig } from "~/config/site"
 import { getRequestBrand } from "~/lib/brand-context"
+import { brandFontVariables } from "~/lib/fonts"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateBlog } from "~/lib/structured-data"
+import { cx } from "~/lib/utils"
 import {
   findPublishedContentPosts,
   findPublishedContentTags,
@@ -35,7 +37,7 @@ const getData = cache(async (tagSlug?: string) => {
     structuredData: [generateBlog(url, title, description, [] as any)],
   })
 
-  return { posts, tags, ...data }
+  return { posts, tags, brand, ...data }
 })
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -45,22 +47,27 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function ({ searchParams }: { searchParams: Promise<{ tag?: string }> }) {
   const { tag } = await searchParams
-  const { posts, tags, metadata, breadcrumbs, structuredData } = await getData(tag)
+  const { posts, tags, brand, metadata, breadcrumbs, structuredData } = await getData(tag)
 
+  // Brand type seam (recipe step 2): on BBL the feed inherits Poppins/Inter via
+  // these font vars; other brands keep the app font. `display: contents` keeps
+  // the page's section rhythm intact (no extra layout box).
   return (
-    <>
+    <div className={cx("contents", brandFontVariables(brand))}>
       <Breadcrumbs items={breadcrumbs} />
 
       <Intro>
-        <IntroTitle>{metadata.title}</IntroTitle>
+        <IntroTitle className="[font-family:var(--font-bbl-heading,var(--font-display))]!">
+          {metadata.title}
+        </IntroTitle>
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
 
       <ContentTagFilter tags={tags} activeTag={tag} />
 
-      <ContentPostList posts={posts} />
+      <ContentPostList posts={posts} isFiltered={!!tag} />
 
       <StructuredData data={structuredData} />
-    </>
+    </div>
   )
 }
