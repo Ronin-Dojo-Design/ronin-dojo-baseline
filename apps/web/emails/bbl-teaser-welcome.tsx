@@ -20,18 +20,18 @@ type EmailProps = BblEmailWrapperProps & {
  */
 export const EmailBblTeaserWelcome = ({ name, ...props }: EmailProps) => {
   return (
-    <BblEmailWrapper {...props} preview="You're on the Black Belt Legacy early-access list">
+    <BblEmailWrapper {...props} preview="You're on the Black Belt Legacy mailing list">
       <BblEmailHeading>You're on the list</BblEmailHeading>
 
       <Text className="mt-0">Hey {name?.trim() || "there"}!</Text>
 
       <Text>
-        Thanks for joining the Black Belt Legacy early-access list. We're building a new home for
-        the lineage — verified history, living profiles, and the legacy of Rigan Machado's family
-        tree, all in one place.
+        Thanks for joining the Black Belt Legacy mailing list. We're building a new home for the
+        lineage — verified history, living profiles, and the legacy of Rigan Machado's family tree,
+        all in one place.
       </Text>
 
-      <Text>We'll email you the moment early access opens. Until then, keep training.</Text>
+      <Text>We'll keep you posted on features, updates, and more. Until then, keep training.</Text>
     </BblEmailWrapper>
   )
 }

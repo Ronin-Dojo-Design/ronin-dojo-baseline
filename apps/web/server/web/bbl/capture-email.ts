@@ -44,7 +44,7 @@ export const captureBblEmail = publicActionClient
         await sendEmail({
           brand,
           to: email,
-          subject: "You're on the Black Belt Legacy early-access list",
+          subject: "You're on the Black Belt Legacy mailing list",
           react: EmailBblTeaserWelcome({ to: email, name: capture.name }),
         })
       } catch (error) {
