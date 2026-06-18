@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-passport-card-sweep
+last_agent: claude-component-launch-sweep-legal
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -195,6 +195,37 @@ Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
   Concretely confirm your token/classes compiled by grepping the emitted stylesheet (a verifiable stand-in for
   the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
   `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
+
+Surfaced by the **legal/content page sweep** (privacy / cookies / terms + the DSR request form):
+
+- **The portal-escape gotcha extends past Drawer/Dialog to `Select` (any Base UI popup).** The DSR
+  form's `Select` dropdown renders through `SelectPrimitive.Portal` into `document.body`, so its open
+  options escape the page's `BrandTypography` font scope and render in the app font — even though the
+  trigger, labels, and inputs *inside* the scope inherit the brand font correctly. Same fix shape as the
+  Drawer one: thread the brand font class to the portal content root (`SelectContent` already forwards
+  `className` to its `Popup`). For a content sweep where the dropdown is a tiny secondary surface, it's
+  defensible to leave it and log the gap — but **treat every portaled primitive (`Drawer`/`Dialog`/
+  `Popover`/`Select`/`Menu`/`Tooltip`) as outside the font scope by default** and decide per surface.
+- **Wrapping a page body in one scope collapses it to a single layout-`Wrapper` child — reproduce the
+  fluid gap inside the scope.** The `(web)` layout renders `{children}` inside a `Wrapper` whose
+  `gap-y-fluid-md` only spaces *direct* children. A page that returned a `<>…</>` fragment (Intro, Prose,
+  Note, …) had each as a direct child, so they were spaced by the Wrapper. Introducing a single wrapping
+  scope element makes the body ONE child (gap to the Footer is preserved, but the inter-section gap
+  vanishes). The scope must carry `flex flex-col gap-y-fluid-md` itself (a spacing token, not a magic
+  number) to keep the rhythm.
+- **Decomposing N structurally-similar pages multiplies fallow clone groups without adding real
+  duplication.** Splitting three legal pages each into `page.tsx` (route scaffold) + `policy-body.tsx`
+  (legal copy) turned the pre-existing 2 clone groups (proven at base by a whole-repo `fallow dupes`)
+  into 4 introduced groups: the route-scaffold clone (re-attributed because the member files changed)
+  plus structural JSX-rhythm clones between three *genuinely different* legal documents. This is the
+  step-5 relocation caveat at work — read `introduced` dead-code/complexity = 0 and a **held
+  `maintainability_avg`** (`fallow` health `vital_signs.maintainability_avg`, ~94 here), not the raw
+  duplication count. Do NOT abstract distinct legal prose to silence the detector; DO extract the genuine
+  shared *chrome* (here `PolicyLayout`), which is the duplication actually worth removing.
+- **§5a Docker fallback is itself untestable when the cloud session has no Docker daemon.** `docker info`
+  failing means §5b (`next build` compile + type + emitted-CSS grep, live-DOM deferred to PR review) is
+  the only path — don't burn time trying to bring up the compose stack first; check `docker info` once,
+  then go straight to §5b.
 
 ## Cross-references
 

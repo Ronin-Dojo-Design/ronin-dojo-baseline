@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-17
-last_agent: claude-session-0401
+updated: 2026-06-18
+last_agent: claude-component-launch-sweep-legal
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -278,6 +278,17 @@ SESSION_0202 added the user-dashboard editor preview surface:
 - **Deliberately excluded:** the schedule instructor list (`components/web/schedules/schedule-instructor-list.tsx`) is a management widget (assign/unassign/set-primary, exposes email) — re-inspected SESSION_0326, no public face — stays on `user.image`. The `Author` byline (`components/web/ui/author.tsx`, used by blog/posts/testimonials) is content-authorship, not a member-directory avatar. `user-menu.tsx` (self/session) and admin avatars (bracket-viewer, user-form) are out of scope. `dashboard/membership.tsx` already prefers `passport.avatarUrl` (self-view).
 - **Proof:** `server/web/directory/queries.avatar-projection.integration.test.ts` (prefer / fallback / HIDDEN-excluded); `server/web/courses/queries.integration.test.ts` (course-instructor prefer / fallback, SESSION_0326); SESSION_0326 authenticated Playwright visual smoke across directory/member/lineage/disciplines.
 - **Brand default-avatar fallback (SESSION_0408):** `resolveDisplayAvatar(avatarUrl, brand)` in `lib/media.ts` returns a brand default (`/brand/bbl/default-black-belt.png` — a committed `public/` static asset, NOT media-base-prefixed) when `avatarUrl` is null, wired into `findProfileBySlug` + `projectDirectoryProfileListItem` (brand threaded through `searchDirectoryProfiles`). **Brand-scoped** — only `BBL` has a default key (`BRAND_DEFAULT_AVATAR`, plain string-keyed — no `Brand` value-import); Baseline/RDD fall through to initials unchanged. The account-image fallback (`avatarUrl ?? user.image`) still applies first. The WP member-migration scripts `scripts/import-bbl-members-full.ts` (full claimable roster → `bbl-lineage`) + `scripts/set-bbl-default-avatars.ts` (wire the default onto null-avatar placeholders) populate + back this.
+
+---
+
+## 3j. Content / legal page chrome — `components/web/ui/`
+
+> SESSION_0411 (component-launch-sweep on `/privacy` + `/privacy/request`, extended to `/cookies` + `/terms`). Brand-aware typography chrome for the static content/legal surfaces. Same directory as the §3e listing primitives; server-renderable, no `"use client"`. The recipe is [`component-launch-sweep-recipe`](../../runbooks/component-launch-sweep-recipe.md).
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `BrandTypography` (+ exported `bblHeadingFontClass`, `bblProseHeadingFontClass`) | `apps/web/components/web/ui/brand-typography.tsx` | `brand: Brand`, plus `<div>` attrs (`className`, …) | SESSION_0411: brand-aware font scope for content/legal pages. **The consumer passes the resolved `brand`; the scope never hardcodes a single brand's font** (ADR 0022 / sweep step 2). Under `Brand.BBL` it applies the `bblHeadingFont`/`bblBodyFont` `.variable` classes (from `lib/fonts.ts`) so `--font-bbl-heading`/`--font-bbl-body` resolve inside the scope; other brands get no `.variable` and degrade to app fonts. Body font uses the **nested `var()` fallback idiom** (`var(--font-bbl-body,var(--font-sans))`) so an undefined brand var degrades to the app token instead of dropping the declaration. Headings opt in via the exported class constants: `bblHeadingFontClass` (single heading, e.g. `IntroTitle` — has the trailing `!` to beat the heading primitive's baked-in `font-display`) and `bblProseHeadingFontClass` (a `[&_:is(h2,h3,h4)]:…!` descendant rule for `Prose` section headings). **Layout note:** the `(web)` layout `Wrapper` applies `gap-y-fluid-md` to direct children; wrapping a page body in this scope collapses it to ONE Wrapper child, so the scope reproduces that rhythm internally (`flex flex-col gap-y-fluid-md`). |
+| `PolicyLayout` (+ exported type `PolicyPageProps`) | `apps/web/components/web/ui/policy-layout.tsx` | `brand`, `title`, `description`, `children` | SESSION_0411: shared chrome for the legal pages (`privacy`/`cookies`/`terms`) — `BrandTypography` scope + `Intro` (title via `bblHeadingFontClass`, description in body font) + `Prose` (body via `bblProseHeadingFontClass`). Consolidates the `BrandTypography`+`Intro`+`Prose` stack the three pages previously hand-rolled (removed the real, fixable chrome duplication; the residual fallow clones are structural JSX-rhythm matches between three *different* legal documents, not logic). Each page's route stays thin (resolve brand + metadata) and renders a `_components/<policy>-policy/` folder module (`index.tsx` orchestrator + `policy-body.tsx` legal copy) that binds its body into this layout. The `/privacy/request` DSR page uses `BrandTypography` directly (it has extra children — `Note` + `DsrForm` — beyond the `Intro`/`Prose` pair). **Known portal gap:** the DSR `Select` dropdown portals to `document.body`, escaping the scope — the open options render in the app font (the trigger/labels/inputs inside the scope inherit BBL correctly). |
 
 ---
 
