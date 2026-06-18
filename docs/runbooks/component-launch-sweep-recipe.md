@@ -196,6 +196,69 @@ Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
   the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
   `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
 
+Surfaced by the **directory** sweep (facet tabs / filters / filter sheet, the `directory-filters` decompose):
+
+- **A multi-brand, non-BBL-wrapped surface has no brand font to escape — do NOT force BBL `.variable`
+  onto its portals.** The portal-font gotcha (thread the brand class to portaled content) assumes the
+  *consumer* sits under a `bblHeadingFont.variable` wrapper. `/directory` does not: the `(web)` layout
+  applies no BBL font, so the only font in play is the app `--font-sans` defined on the root `<html>` —
+  which portals (Base UI `Dialog`/`Sheet`) inherit anyway. So the thread is a no-op here, and applying
+  `bblHeadingFont.variable` to the filter-sheet popup would *force* BBL Poppins onto TB/WEKAF — a brand
+  regression. Rule: the portal-font thread is for BBL-font-wrapped surfaces only; on a brand-neutral
+  surface leave the chrome on the app neutral tokens it already inherits. The BBL type seam still reaches
+  the directory **where it belongs** — via the *reused* `BjjPassportCard` on `/directory/[slug]`, which
+  carries the `var(--font-bbl-*, var(--font-…))` fallback idiom itself. (Net: a fully token-clean surface
+  can need *zero* font edits — confirm with a grep for hardcoded hex/`font-family`/arbitrary values rather
+  than assuming every sweep swaps tokens.)
+- **§5a's local-verify `migrate deploy` conflicts with a brief that says "Run ZERO migrations."** A sweep
+  that forbids all migrations cannot stand up the §5a DB (it needs `bun run db:migrate deploy` to create
+  tables; `next build`'s `prebuild` runs it too). Honor the brief literally and fall to §5b — but invoke
+  `npx next build` **directly** so the `prebuild` lifecycle migration is skipped. The build still proves
+  `✓ Compiled successfully` + `Finished TypeScript` before failing at *Collecting page data*; on an
+  empty-but-reachable DB the error is `TableDoesNotExist` (the table-level analog of §5b's `P1001`).
+  Recommend the recipe clarify that §5a's *local throwaway* `migrate deploy` is exempt from the
+  no-*prod*-migration boundary — until a task says so, treat "ZERO migrations" as absolute.
+- **Prove a `next/dynamic` split without a DB by grepping the emitted chunks** (the lazy-boundary analog of
+  the §5b CSS grep). `next build` code-splits the dynamic import into its own async chunk even when page-data
+  collection later fails. Confirm a string unique to the lazy branch (a filter's `"All kinds"` placeholder)
+  lands in a *different* `.next/static/chunks/*.js` than a string unique to the eager branch (the facet-tabs
+  `"Schools & Orgs"`), and that the heavy dep (`ComboboxSelector`) rode into the lazy chunk — that is the JS
+  deferral, demonstrated.
+- **Delete a magic-number that equals the primitive default; don't re-encode it.** The filter sheet's
+  `className="w-[320px]"` on `SheetContent` was exactly the Sheet primitive's own `w-80` (320px) default
+  (tailwind-merge just let the consumer's arbitrary value win). Dropping the override restores the primitive
+  size prop with **zero** visual change — the cleanest "spacing → primitive size prop" swap.
+- **An "under-300-line but multi-section" file is still a decompose target.** `directory-filters.tsx` was 215
+  lines but six context-driven filter sub-components + a shared hook + helpers — decomposing to a folder
+  module (thin `index.tsx` orchestrator + one file per filter + `use-directory-filters.ts`, barrel = only
+  export) is what *enabled* the lazy split (step 3 needs a module to split). Size is a heuristic; "one
+  responsibility per file" is the rule.
+Surfaced by the **/posts feed** parity sweep:
+
+- **Thread the brand-font seam through a `display:contents` wrapper, not a normal `<div>`.** When a
+  page's top-level children are independent sections laid out by a flex-gap parent (the `(web)` layout's
+  `Wrapper` applies `gap-y-fluid-md` to its direct children), wrapping them in an ordinary `<div>` to add
+  the `bblHeadingFont.variable` / `bblBodyFont.variable` classes makes that div the single flex child and
+  **collapses the inter-section gaps**. Use `cx("contents", brandFontVariables(brand))`: `display:contents`
+  removes the wrapper's box so the sections stay direct flex children (rhythm preserved), while the CSS
+  custom properties the `.variable` classes define still inherit to descendants (custom props inherit
+  through `display:contents`). This differs from the lineage page, which wraps a *self-contained island* in
+  a normal div — there's no parent-gap to preserve. Centralize the brand→class mapping in one helper
+  (`brandFontVariables` in `lib/fonts.ts`) so BBL gets the vars and other brands degrade to the app font.
+- **`fallow`'s touched-file re-attribution also fires on cross-page page-shell boilerplate, not just your
+  own moved code.** Editing a single route page (e.g. `posts/[slug]/page.tsx`) re-attributes the shared
+  `getData` / `getPageData` / breadcrumb / `Intro`+`Section` / import-list clones as `introduced: true`,
+  because those regions' line content shifted — even though the *same* pattern pre-exists identically in 6+
+  sibling route pages you never touched (`blog/[slug]`, `submit/[slug]`, `categories/[slug]`, `tags/[slug]`,
+  `programs/[id]/enroll`, `advertise/success`). A surgical diff (a few imports + a wrapper) is enough to
+  trip it. Don't chase these by deduping a 7-page Next.js page-shell (out of a single-component sweep's
+  scope) — confirm the introduced clone group spans untouched sibling routes, then read the *authored*
+  introduced counts (your new module's dup/complexity) + held maintainability instead.
+- **The recipe's §5a verify-DB step can collide with a "run zero migrations" task constraint.** Bringing up
+  a DB to live-DOM-verify needs `migrate deploy` to apply the existing schema; if the session is explicitly
+  scoped to *zero* migrations, that step (and `db push`) is off-limits, so the real-data screenshot isn't
+  reachable in-session. Fall back to §5b (`next build` compile/type + emitted-CSS grep) and defer the
+  live-DOM pass to PR review — don't fake it.
 Surfaced by the **legal/content page sweep** (privacy / cookies / terms + the DSR request form):
 
 - **The portal-escape gotcha extends past Drawer/Dialog to `Select` (any Base UI popup).** The DSR
@@ -312,6 +375,38 @@ Surfaced by the **/me member-profile sweep** (SESSION_0413 — reused `ListingDe
   rule as the decomposition-heavy sweeps: enforce `dead_code_introduced: 0`, verify complexity findings
   by mapping to relocations, and do **not** atomize a 5-line avatar slot into its own file just to chase
   the count under threshold.
+Surfaced by the **/events** sweep (public list + promotion-event detail — decompose, no `PolicyLayout`):
+
+- **Content-rich card decomposition yields non-zero `complexity_introduced` — unlike the legal *prose*
+  sweep where it was 0.** A page body made of many optional-field cards (the award card branches on the
+  promotee `??` chain, the lineage-node ternary, and `discipline`/`colorHex`/`shortName`/`awardedBy`/
+  `organization`/`location` `&&`s) carries high **cyclomatic** complexity that is inherent to the
+  *content*, not the structure. Decomposing the monolithic `page.tsx` relocates that branch-heavy render
+  into the new section files (`AwardCard` cyc 19, `EventCard` cyc 14), so `fallow audit` attributes it as
+  `complexity_introduced > 0` — even though each new unit is **simpler** than the source monolith (and the
+  sweep dropped a branch by swapping the inline `rankStyle` ternary for `BeltSwatch`). Read it exactly like
+  the clone-relocation caveat: `dead_code_introduced: 0` + a held `maintainability_avg` (90 here) + low
+  `avg_cyclomatic`/`p90`/`critical_complexity_pct` (3.6 / 6 / 0%), **not** the raw above-threshold count or
+  the `fail` verdict. Do NOT fragment a coherent card further just to push each piece below threshold —
+  that's the "abstract distinct content to silence the detector" anti-pattern, and it only redistributes
+  the branches (extracting the provenance line leaves both halves above a low threshold).
+- **`next/dynamic` on a pure-RSC below-fold section is a structural marker, not a bundle win.** Every
+  events section is a Server Component (no `"use client"`, no client JS), so `next/dynamic`-splitting the
+  below-fold gallery (`CeremonyPhotos`) with SSR kept defers the *module* but there is no client chunk to
+  shrink — unlike bbl-landing, whose lazy targets are client carousels/embeds carrying real JS. Keep SSR
+  (no `ssr:false`), keep the split (it marks the boundary and is ready if the section later gains a
+  lightbox/client behaviour), and **don't add a `loading` boundary** — the SSR'd HTML paints, so the
+  fallback is never meaningfully seen. Report the win as structural, not a measured bundle reduction.
+- **A thin detail `page.tsx` that newly needs the brand resolves it on the wire — still no new-data lane.**
+  `/events/[slug]` didn't previously read the brand; feeding `BrandTypography` needs `getRequestBrand()`
+  (a header read — no schema, no payload column) added to the page and `Promise.all`-ed with the existing
+  slug fetch. That's in scope (presentation wiring of data already on the wire), not a supervised migration.
+Surfaced by the **`/organizations` + `/organizations/[slug]` sweep** (the public org list + the 411-line detail monolith — a *data-heavy* server route, unlike the static legal/about pages):
+
+- **A `Prose`-less structured page needs the `h1`-inclusive heading-scope class, not per-heading `bblHeadingFontClass`.** The legal/about cluster routes its headings through `PolicyLayout` (Intro `bblHeadingFontClass` + `Prose` `bblProseHeadingFontClass`). A page built from `Intro` + `Section` + `Card` (the org pages) instead scatters one `IntroTitle` (h1) plus *many* `H4`s across sections — tagging each by hand is noise. The reusable move: one **container** rule on the `BrandTypography` scope — `bblHeadingScopeClass` = `[&_:is(h1,h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!` — covers every descendant heading at once (the structured-page analogue of `bblProseHeadingFontClass`, just widened to include `h1`). Pass it as `BrandTypography`'s `className`. Lightning CSS **merges** it with the existing `h2,h3,h4` rule (shared declaration body), so it adds ~no CSS weight — verifiable in the §5b emitted stylesheet: `grep -roh 'is(h1,h2,h3,h4)…font-bbl-heading…!important' .next/static/chunks/*.css`.
+- **`next/dynamic` in a *server* orchestrator pays off via chunk-splitting, not branch unmount.** The drawer gotcha ("lazy only pays off when inactive branches unmount") is about tab/branch switching. For always-rendered *below-the-fold* server sections (the related-orgs grid, the members roster, the list cross-links) the payoff is a smaller initial client bundle — the chunk loads when reached — and SSR is preserved by simply **not** passing `ssr: false` (which is illegal in a Server Component anyway). Precedent: the BBL landing orchestrator. So "lazy-load below-fold" is valid for server modules too; just state the *reason* correctly. Bonus: lazy-loading the *section* that hosts a reused client island (the roster hosts `JoinOrganizationButton`/`MembershipActions`) defers that island's JS as a side effect — without forking the shared island (still "reuse, don't re-implement").
+- **A data-heavy server route decomposes around a view-model loader, not a presentation orchestrator that fetches.** Where the static pages let the orchestrator be pure presentation, the org detail route does real server work (member grouping, related-orgs + promotion-timeline fetches, structured-data assembly). Clean shape: a `*-data.ts` **server loader** returns a typed `…View` model; `page.tsx` collapses to `params → load → notFound() → <Orchestrator {...view}/>`; the orchestrator owns only composition + lazy boundaries (zero fetch, zero derivation). Keep the derivation helpers (`groupMembersByUser`, `formatOrgAddress`) **file-private** in the loader and `export` only the loader + the view-model type the section files import — exporting an in-file-only helper is `unused-export` introduced dead code (the lineage-canvas export rule, applied to a server loader).
+- **A route whose colors were already token-correct makes the sweep a *type-seam-only* pass — say so, don't invent color churn.** The org pages already used semantic tokens (`text-muted-foreground`, `text-secondary-foreground`, `Badge`/`Card` variants) with zero hex literals, and `organizations/[slug]/layout.tsx` was already the data-driven org-theme seam (`OrgSettings` → `[data-org]` CSS vars behind an HSL-safe regex guard — the recipe's own step-2 "org theme colors from data" ideal). So step 2's *color* work was a verified no-op here; the real brand work was the *type* seam (wrapping the body in `BrandTypography`). Leave an already-compliant `layout.tsx` untouched and report it as already-correct — the "a sweep relocates, it doesn't rewrite" discipline extends to "a sweep doesn't manufacture changes a surface doesn't need."
 
 ## Cross-references
 

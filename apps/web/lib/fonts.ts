@@ -1,5 +1,7 @@
 import { Geist, Inter, Poppins } from "next/font/google"
 import type { FontWeight } from "satori"
+import { Brand } from "~/.generated/prisma/client"
+import { cx } from "~/lib/utils"
 
 export const fontSans = Geist({
   variable: "--font-sans",
@@ -26,6 +28,21 @@ export const bblHeadingFont = Poppins({
 })
 
 export const bblBodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-body" })
+
+/**
+ * The brand type seam (component-launch-sweep recipe step 2). Returns the
+ * `.variable` classes that DEFINE `--font-bbl-heading` / `--font-bbl-body` for
+ * the BBL brand, and `undefined` for every other brand (which keep the app
+ * `--font-display` / `--font-sans`). Apply to a wrapper so descendants that read
+ * `var(--font-bbl-heading, var(--font-display))` inherit Poppins on BBL and
+ * degrade to the app font elsewhere — the consumer provides the tokens, the
+ * shared component only consumes them (never re-couples to one brand).
+ *
+ * Pair with a `display: contents` wrapper so the vars cascade without adding a
+ * layout box (the page's section rhythm is unaffected).
+ */
+export const brandFontVariables = (brand: Brand): string | undefined =>
+  brand === Brand.BBL ? cx(bblHeadingFont.variable, bblBodyFont.variable) : undefined
 
 export const loadGoogleFont = async (font: string, weight: FontWeight) => {
   const url = `https://fonts.googleapis.com/css2?family=${font}:wght@${weight}`

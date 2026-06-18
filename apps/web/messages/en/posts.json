@@ -1,6 +1,10 @@
 {
   "count_posts": "{count, plural, =0 {posts} =1 {post} other {posts}}",
   "no_posts": "No posts found for the given filters.",
+  "empty_title": "No posts yet",
+  "view_all": "View all posts",
+  "grid_view": "Grid view",
+  "list_view": "List view",
   "read_time": "{count} min read",
   "written_by": "Written by",
   "tools_mentioned": "Mentioned in this post"
