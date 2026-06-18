@@ -4,8 +4,8 @@ slug: component-launch-sweep-recipe
 type: runbook
 status: active
 created: 2026-06-17
-updated: 2026-06-17
-last_agent: claude-session-0410
+updated: 2026-06-18
+last_agent: claude-passport-card-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -164,6 +164,37 @@ Running the recipe on a real component surfaces reusable traps. Each parallel se
   `Tabs value` is controlled (`value={activeTab}`) will NOT switch on click unless the *consumer* threads the
   `activeTab` state + `onTabChange` setter. One consumer can wire it (and tabs work) while another renders the
   same component without those props (and tabs are frozen) — that's a consumer gap, not a component bug.
+
+Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
+
+- **A multi-brand-hosted component needs the `var()`-fallback font idiom, not the comma-list one.** The
+  always-BBL-wrapped surfaces write `[font-family:var(--font-bbl-heading),system-ui,sans-serif]` — a
+  *font-family list*. If the component renders on pages that do **not** define `--font-bbl-heading` (e.g. the
+  passport card on the multi-brand `/me` + `/directory/[slug]`, which are not BBL-font-wrapped), that list does
+  **not** advance to `system-ui`: an undefined `var()` with no fallback is the *guaranteed-invalid value*, so the
+  whole `font-family` declaration is dropped and the element silently **inherits** instead. Use the nested
+  `var()` **fallback** form so an undefined brand var degrades to the app token explicitly:
+  `[font-family:var(--font-bbl-heading,var(--font-display))]` / `[…var(--font-bbl-body,var(--font-sans))]`.
+  Brand-correct (zero regression off-BBL — stays the app font), still inherits BBL when an ancestor defines the
+  var, and still "the consumer passes the tokens" (the card only *consumes* the var; it never applies the font
+  `.variable`). Tailwind v4 parses the nested-comma value fine (write it with **no spaces**).
+- **Overriding a heading primitive's baked-in font needs `!`.** `H4`/`Heading` ships `font-display`, and
+  `tailwind-merge` (via `cx`) does **not** dedupe the custom `font-display` against an arbitrary
+  `[font-family:…]` (its default font-family group only knows `font-sans/serif/mono`), so both survive and CSS
+  source-order decides. Append `!` (Tailwind important) to the arbitrary class to guarantee it wins — same idiom
+  as bbl-landing's `[&_:is(h3,h4)]:[font-family:…]!`. Verify in the built CSS: `…!important}.font-dis…`.
+- **Promote a *recurring* magic type-size to a neutral theme token, don't just inline it.** `text-[0.625rem]`
+  appeared in both the passport eyebrow and `Badge size=sm`; codify it once as `--text-2xs: 0.625rem` in the
+  `@theme` (Tailwind v4 auto-generates the `.text-2xs` utility — font-size only, matching the old arbitrary
+  value) and anchor it in the primitive (`Badge`) so the token isn't an orphan. Neutral type-scale steps (like
+  the existing `--text-5xl`) are **safe under the ADR 0022 freeze** — that freeze governs brand chrome/colors,
+  not the neutral scale.
+- **Build-only verify (§5b) still yields CSS evidence, and you can grep for it.** Without a DB, `next build`
+  fails at *Collecting page data* (`P1001 Can't reach database server`) on DB-backed pages — but
+  `✓ Compiled successfully` and `Finished TypeScript` run **first**, so SSR + type + CSS are already proven.
+  Concretely confirm your token/classes compiled by grepping the emitted stylesheet (a verifiable stand-in for
+  the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
+  `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
 
 ## Cross-references
 
