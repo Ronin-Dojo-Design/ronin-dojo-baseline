@@ -15,7 +15,15 @@ import { PhoneMockup } from "./phone-mockup"
  * The keyframes/animation live in a scoped <style> tag so the marquee needs no
  * Tailwind-config or global-CSS changes.
  */
-export function PhoneMarquee({ columns }: { columns: MarqueeColumn[] }) {
+export function PhoneMarquee({
+  columns,
+  logoUrl,
+  brandName,
+}: {
+  columns: MarqueeColumn[]
+  logoUrl: string | null
+  brandName: string
+}) {
   return (
     <div
       aria-hidden
@@ -38,6 +46,8 @@ export function PhoneMarquee({ columns }: { columns: MarqueeColumn[] }) {
                 key={`${columnIndex}-${imageIndex}`}
                 src={src}
                 priority={columnIndex === 0 && imageIndex === 0}
+                logoUrl={logoUrl}
+                brandName={brandName}
               />
             ))}
           </div>

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Card } from "~/components/common/card"
 import { BBL_IMAGES, testimonials, testimonialsSection } from "../bbl-landing-content"
 import { SectionHeading } from "./landing-chrome"
@@ -14,11 +15,13 @@ export const BblTestimonials = () => (
         <Card key={item.name} hover={false} className="space-y-4">
           <p className="italic text-pretty">“{item.quote}”</p>
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src={item.image}
               alt={item.name}
+              width={48}
+              height={48}
+              sizes="48px"
               className="size-12 rounded-full object-cover object-top border"
-              loading="lazy"
             />
             <div>
               <p className="text-sm font-semibold">{item.name}</p>
@@ -31,11 +34,13 @@ export const BblTestimonials = () => (
 
     <Card hover={false} className="p-0! overflow-hidden">
       <div className="w-full aspect-[3/1] overflow-hidden max-md:aspect-[21/9]">
-        <img
+        <Image
           src={BBL_IMAGES.communityGroup}
           alt="Black Belt Legacy community group photo"
-          className="w-full h-full object-cover"
-          loading="lazy"
+          width={1200}
+          height={400}
+          sizes="100vw"
+          className="h-full w-full object-cover"
         />
       </div>
       <div className="w-full p-6 text-center space-y-1">

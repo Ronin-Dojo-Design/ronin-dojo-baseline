@@ -12,12 +12,14 @@ import { BblFinalCta } from "./bbl-final-cta"
 import { BblHeritage } from "./bbl-heritage"
 import { BblHero } from "./bbl-hero"
 import { BblPromos } from "./bbl-promos"
+import { getStaticBblRankColors } from "./bbl-rank-colors"
 import { getPromotionMarqueeRows } from "./bbl-promotion-marquee-data"
 import { BblRedBeltCelebration } from "./bbl-red-belt-celebration"
 import { BblTestimonials } from "./bbl-testimonials"
 import { BblTimeline } from "./bbl-timeline"
 import { BblTreeTeaser } from "./bbl-tree-teaser"
 import { BblValueProps } from "./bbl-value-props"
+import { dirtyDozen, heritageContent, heroContent, timeline } from "../bbl-landing-content"
 
 /**
  * Black Belt Legacy landing page — the colocated folder module's public barrel
@@ -43,21 +45,29 @@ const BblPromotionMarquee = dynamic(() =>
 )
 
 export const BblLanding = async () => {
-  const [marqueeRows, brandSettings] = await Promise.all([
+  const staticRankLabels = [
+    heroContent.card.badge,
+    heritageContent.badge,
+    ...dirtyDozen.map(member => member.rank),
+    ...timeline.map(entry => entry.rank),
+  ]
+
+  const [marqueeRows, brandSettings, staticRankColors] = await Promise.all([
     getPromotionMarqueeRows(),
     findBrandSettings(Brand.BBL),
+    getStaticBblRankColors(staticRankLabels),
   ])
   const brandLogoUrl = brandSettings?.logoUrl ?? null
   const brandName = getBrandSiteConfig(Brand.BBL).name
 
   const sections = [
-    <BblHero key="hero" />,
+    <BblHero key="hero" rankColors={staticRankColors} />,
     <BblVideo key="video" />,
-    <BblDirtyDozen key="dirty-dozen" />,
-    <BblHeritage key="heritage" />,
+    <BblDirtyDozen key="dirty-dozen" rankColors={staticRankColors} />,
+    <BblHeritage key="heritage" rankColors={staticRankColors} />,
     <BblValueProps key="value-props" />,
     <BblFeatures key="features" />,
-    <BblTimeline key="timeline" />,
+    <BblTimeline key="timeline" rankColors={staticRankColors} />,
     <BblRedBeltCelebration key="red-belt" logoUrl={brandLogoUrl} brandName={brandName} />,
     ...(marqueeRows.length > 0 ? [<BblPromotionMarquee key="marquee" rows={marqueeRows} />] : []),
     <BblTestimonials key="testimonials" />,
