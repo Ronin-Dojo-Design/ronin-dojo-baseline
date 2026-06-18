@@ -1,4 +1,5 @@
 import { Badge } from "~/components/common/badge"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
@@ -9,9 +10,9 @@ type SchoolInstructorsProps = Pick<SchoolDetailView, "instructors" | "instructor
 /**
  * Instructors grid: one card per active instructor membership, showing their
  * instructor role title(s), discipline, and rank. The orchestrator guards on a
- * non-empty list, so this always has cards to render. The rank renders as a neutral
- * text `Badge` — a `BeltSwatch` upgrade needs `Rank.colorHex` on the wire (deferred
- * to the supervised lane; see the module README note in the PR).
+ * non-empty list, so this always has cards to render. The rank badge carries a
+ * data-driven `BeltSwatch` (`Rank.colorHex` on the wire) — never a hardcoded belt
+ * palette (ADR 0022).
  */
 export function SchoolInstructors({ instructors, instructorRoleCodes }: SchoolInstructorsProps) {
   return (
@@ -37,7 +38,11 @@ export function SchoolInstructors({ instructors, instructorRoleCodes }: SchoolIn
                     </Badge>
                   )}
                   {m.rank && (
-                    <Badge variant="outline" size="sm">
+                    <Badge
+                      variant="outline"
+                      size="sm"
+                      prefix={<BeltSwatch colorHex={m.rank.colorHex} />}
+                    >
                       {m.rank.name}
                     </Badge>
                   )}
