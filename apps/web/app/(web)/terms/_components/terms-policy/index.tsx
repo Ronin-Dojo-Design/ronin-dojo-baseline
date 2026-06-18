@@ -2,12 +2,12 @@ import { PolicyLayout, type PolicyPageProps } from "~/components/web/ui/policy-l
 import { PolicyBody } from "./policy-body"
 
 /**
- * Public orchestrator for the Privacy Policy surface. Thin by design: it binds the
+ * Public orchestrator for the Terms of Service surface. Thin by design: it binds the
  * (brand-agnostic) legal copy to the shared policy chrome. All section content lives
  * in `PolicyBody`; all brand-font logic lives in `PolicyLayout` / `BrandTypography`.
  * The folder barrel is the only export.
  */
-export const PrivacyPolicy = ({ brand, siteName, title, description }: PolicyPageProps) => {
+export const TermsPolicy = ({ brand, siteName, title, description }: PolicyPageProps) => {
   return (
     <PolicyLayout brand={brand} title={title} description={description}>
       <PolicyBody siteName={siteName} />
