@@ -38,6 +38,17 @@ export const bblHeadingFontClass = "[font-family:var(--font-bbl-heading,var(--fo
 export const bblProseHeadingFontClass =
   "[&_:is(h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!"
 
+/**
+ * Apply to a CONTAINER whose descendant headings (`h1`–`h4`) should use the BBL
+ * heading font — for structured surfaces (an `Intro` title plus `Section` / `Card`
+ * headings) that do NOT route through `Prose`. Same nested `var()` fallback + `!`
+ * idiom as `bblHeadingFontClass`, but scoped to every descendant heading at once
+ * instead of one element. Degrades to `--font-display` (the app heading token)
+ * off-BBL, so a non-BBL brand renders identically to before the scope was added.
+ */
+export const bblHeadingScopeClass =
+  "[&_:is(h1,h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!"
+
 type BrandTypographyProps = ComponentProps<"div"> & { brand: Brand }
 
 export const BrandTypography = ({ brand, className, ...props }: BrandTypographyProps) => {
