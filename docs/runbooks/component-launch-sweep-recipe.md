@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-posts-feed-parity-sweep
+last_agent: claude-me-profile-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -338,6 +338,43 @@ Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` sea
   content lane**. Inventing brand copy inside a presentation sweep is out of scope (same boundary as
   schema migrations) — surface it loudly in the report, don't fix it silently.
 
+Surfaced by the **/me member-profile sweep** (SESSION_0413 — reused `ListingDetail` / `BjjPassportCard` /
+`LineageRankHistoryTab` + `BrandTypography`, no new shared component):
+
+- **`next/dynamic` works from a SERVER-component orchestrator (SSR kept) — but only split sub-modules
+  that actually ship CLIENT JS.** The /me orchestrator is a server component; `dynamic(() =>
+  import(clientComponent))` with the default `ssr: true` splits the chunk off the initial bundle and
+  still server-renders (same shape as the `bbl-landing/index.tsx` server orchestrator). The genuine win
+  here is the below-fold `LineageRankHistoryTab` (a client component that pulls in
+  `LineageRankProgressionPanel`). The **gallery** is pure server markup (native lazy `<img>`, no client
+  JS), so `next/dynamic`-ing it buys nothing — there is no client chunk to defer, so it stays eager.
+  Extends the "lazy only pays off when inactive branches unmount" gotcha: also confirm the sub-module
+  ships client JS before splitting it (don't dynamic-wrap server-only markup for show).
+- **The shared `ListingDetail` owns the page H1 (its `H2`→`h1`, baked `font-display`) — a consumer
+  cannot brand-font the title without editing the frozen component.** Under BBL the section headings
+  (`bblHeadingFontClass`) and the `BjjPassportCard` credential (which already carries the BBL-named
+  identity) read in the BBL heading font, but the `ListingDetail` H1 stays the neutral display font
+  because the component exposes no `titleClassName` / heading-font slot. Under a shared-layer freeze this
+  is **flagged, not edited**: a future `titleClassName` (or a `bblHeadingFontClass` default) on
+  `ListingDetail` would let both `/me` and the parallel `/directory/[slug]` brand the H1 in one shared
+  change. Don't reach into the frozen component from the consumer to force it.
+- **Wrapping a `ListingDetail` body in `BrandTypography` is layout-safe; keep nav chrome outside the
+  scope.** `BrandTypography` is `flex flex-col gap-y-fluid-md`; `ListingDetail` returns a single
+  `<Section>` grid (+ optional `related`), so the scope holds one flex child and its internal gap is
+  inert — the Section's own `md:grid-cols-3` is untouched. Render neutral nav chrome (`Breadcrumbs`)
+  *outside* the scope; the `(web)` layout `Wrapper` gap (`fluid-md`) between it and the scope equals the
+  scope's internal gap, so the vertical rhythm is identical either way (the single-wrapper-collapse
+  caveat does not bite when only one visible body child sits inside the scope).
+- **Decomposing a multi-optional-field profile flags `complexity_introduced` on the orchestrator — read
+  the attribution, not the verdict.** This sweep's `fallow audit` returns `verdict: fail` purely on the
+  raw above-threshold count, but the attribution is the truth: `dead_code_introduced: 0`,
+  `duplication_introduced: 0`, `complexity_introduced: 2`, `maintainability_avg: 89.9` (held). Both
+  introduced complexity findings are 1:1 relocations — `AffiliationRow` is verbatim (5→5 cyclomatic) and
+  the orchestrator (7) absorbed the page render's optional-field conditionals (`name ??`, `avatarUrl &&`,
+  `locationLine &&`, `gallery && …`) while `page.tsx`'s own complexity *fell* to a thin data-fetch. Same
+  rule as the decomposition-heavy sweeps: enforce `dead_code_introduced: 0`, verify complexity findings
+  by mapping to relocations, and do **not** atomize a 5-line avatar slot into its own file just to chase
+  the count under threshold.
 Surfaced by the **/events** sweep (public list + promotion-event detail — decompose, no `PolicyLayout`):
 
 - **Content-rich card decomposition yields non-zero `complexity_introduced` — unlike the legal *prose*
