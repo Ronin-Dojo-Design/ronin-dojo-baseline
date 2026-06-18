@@ -28,9 +28,9 @@ const captureEmailSchema = z.object({
 export const captureBblEmail = publicActionClient
   .inputSchema(captureEmailSchema)
   .action(async ({ parsedInput, ctx: { db } }) => {
-    // Public, unauthenticated form — rate-limit by client IP (the `newsletter`
-    // limiter: 3/day, fail-open) before any DB write or email send.
-    if (await isRateLimited(await getIP(), "newsletter")) {
+    // Public, unauthenticated form — rate-limit by client IP (30/day, fail-open)
+    // before any DB write or email send.
+    if (await isRateLimited(await getIP(), "teaser_signup")) {
       throw new Error("You've reached the signup limit. Please try again later.")
     }
 
