@@ -196,6 +196,44 @@ Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
   the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
   `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
 
+Surfaced by the **directory** sweep (facet tabs / filters / filter sheet, the `directory-filters` decompose):
+
+- **A multi-brand, non-BBL-wrapped surface has no brand font to escape — do NOT force BBL `.variable`
+  onto its portals.** The portal-font gotcha (thread the brand class to portaled content) assumes the
+  *consumer* sits under a `bblHeadingFont.variable` wrapper. `/directory` does not: the `(web)` layout
+  applies no BBL font, so the only font in play is the app `--font-sans` defined on the root `<html>` —
+  which portals (Base UI `Dialog`/`Sheet`) inherit anyway. So the thread is a no-op here, and applying
+  `bblHeadingFont.variable` to the filter-sheet popup would *force* BBL Poppins onto TB/WEKAF — a brand
+  regression. Rule: the portal-font thread is for BBL-font-wrapped surfaces only; on a brand-neutral
+  surface leave the chrome on the app neutral tokens it already inherits. The BBL type seam still reaches
+  the directory **where it belongs** — via the *reused* `BjjPassportCard` on `/directory/[slug]`, which
+  carries the `var(--font-bbl-*, var(--font-…))` fallback idiom itself. (Net: a fully token-clean surface
+  can need *zero* font edits — confirm with a grep for hardcoded hex/`font-family`/arbitrary values rather
+  than assuming every sweep swaps tokens.)
+- **§5a's local-verify `migrate deploy` conflicts with a brief that says "Run ZERO migrations."** A sweep
+  that forbids all migrations cannot stand up the §5a DB (it needs `bun run db:migrate deploy` to create
+  tables; `next build`'s `prebuild` runs it too). Honor the brief literally and fall to §5b — but invoke
+  `npx next build` **directly** so the `prebuild` lifecycle migration is skipped. The build still proves
+  `✓ Compiled successfully` + `Finished TypeScript` before failing at *Collecting page data*; on an
+  empty-but-reachable DB the error is `TableDoesNotExist` (the table-level analog of §5b's `P1001`).
+  Recommend the recipe clarify that §5a's *local throwaway* `migrate deploy` is exempt from the
+  no-*prod*-migration boundary — until a task says so, treat "ZERO migrations" as absolute.
+- **Prove a `next/dynamic` split without a DB by grepping the emitted chunks** (the lazy-boundary analog of
+  the §5b CSS grep). `next build` code-splits the dynamic import into its own async chunk even when page-data
+  collection later fails. Confirm a string unique to the lazy branch (a filter's `"All kinds"` placeholder)
+  lands in a *different* `.next/static/chunks/*.js` than a string unique to the eager branch (the facet-tabs
+  `"Schools & Orgs"`), and that the heavy dep (`ComboboxSelector`) rode into the lazy chunk — that is the JS
+  deferral, demonstrated.
+- **Delete a magic-number that equals the primitive default; don't re-encode it.** The filter sheet's
+  `className="w-[320px]"` on `SheetContent` was exactly the Sheet primitive's own `w-80` (320px) default
+  (tailwind-merge just let the consumer's arbitrary value win). Dropping the override restores the primitive
+  size prop with **zero** visual change — the cleanest "spacing → primitive size prop" swap.
+- **An "under-300-line but multi-section" file is still a decompose target.** `directory-filters.tsx` was 215
+  lines but six context-driven filter sub-components + a shared hook + helpers — decomposing to a folder
+  module (thin `index.tsx` orchestrator + one file per filter + `use-directory-filters.ts`, barrel = only
+  export) is what *enabled* the lazy split (step 3 needs a module to split). Size is a heuristic; "one
+  responsibility per file" is the rule.
+
 ## Cross-references
 
 - [ADR 0022 — brand-neutral primitives](../architecture/decisions/0022-brand-chrome-resolution.md)
