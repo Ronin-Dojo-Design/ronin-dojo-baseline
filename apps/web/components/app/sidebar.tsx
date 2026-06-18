@@ -20,6 +20,7 @@ import {
   PaletteIcon,
   BarChart3Icon,
   ShieldCheckIcon,
+  SparklesIcon,
   SwordsIcon,
   TrophyIcon,
   UserIcon,
@@ -134,6 +135,11 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       title: "Profile",
       href: "/app/profile",
       prefix: <UserIcon />,
+    },
+    {
+      title: "Onboarding",
+      href: "/app?tour=1",
+      prefix: <SparklesIcon />,
     },
 
     undefined,
