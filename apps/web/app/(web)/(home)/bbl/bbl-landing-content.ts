@@ -24,7 +24,6 @@ export const BBL_ROUTES = {
 const IMG = "/brand/blackbeltlegacy"
 
 export const BBL_IMAGES = {
-  logoWhite: `${IMG}/bbl-logo-white.png`,
   heroTeaching: `${IMG}/hero-teaching.jpg`,
   heroNoGi: `${IMG}/hero-no-gi.jpg`,
   heroClinch: `${IMG}/hero-clinch.jpg`,
@@ -34,6 +33,25 @@ export const BBL_IMAGES = {
   communityGroup: `${IMG}/community-group.jpg`,
   celebration: `${IMG}/coral-belt-celebration.jpg`,
 } as const
+
+/**
+ * BBL belt-color palette as DATA — mirrors the BJJ rank system's `Rank.colorHex`
+ * in `prisma/seed.ts` (coral & red = #FF0000, black = #000000, white = #FFFFFF).
+ * Fed to `<BeltSwatch colorHex={…}>` so the landing's belt indicators are
+ * data-driven, never a hardcoded belt-color className map (ADR 0022). The
+ * promotion marquee reads the live `Rank.colorHex` off the tree; the static
+ * legacy sections (Dirty Dozen, lineage timeline, hero/heritage chips) derive it
+ * from the rank label here. Returns `null` for an unknown belt → `<BeltSwatch>`
+ * renders its neutral muted fallback.
+ */
+export const beltColorForRank = (rankName: string): string | null => {
+  const name = rankName.toLowerCase()
+  if (name.includes("coral")) return "#FF0000"
+  if (name.includes("red")) return "#FF0000"
+  if (name.includes("black")) return "#000000"
+  if (name.includes("white")) return "#FFFFFF"
+  return null
+}
 
 export const heroContent = {
   eyebrow: "The Official Lineage Network",
