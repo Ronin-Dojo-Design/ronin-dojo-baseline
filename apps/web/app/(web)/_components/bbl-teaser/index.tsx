@@ -22,25 +22,23 @@ import { PhoneMarquee } from "./phone-marquee"
  * export; the marquee / mockup / capture / countdown-strip parts are private.
  */
 
-// Deal the heroes into three columns, each offset so no two columns start on the
-// same photo, and given slightly different speeds + alternating directions.
-const COLUMNS: MarqueeColumn[] = [
-  { images: rotate(HERO_IMAGES, 0), durationSec: 38, direction: "up" },
-  { images: rotate(HERO_IMAGES, 3), durationSec: 46, direction: "down" },
-  { images: rotate(HERO_IMAGES, 6), durationSec: 42, direction: "up" },
-]
+// Distribute the 10 hero photos across the three columns — each photo used once,
+// no column repeats the whole set — so the marquee shows ~10 phones, not 60. The
+// columns get slightly different speeds + alternating directions for visual life.
+const pick = (indexes: number[]): string[] => indexes.map(index => HERO_IMAGES[index]!)
 
-function rotate(images: readonly string[], offset: number): string[] {
-  const length = images.length
-  return Array.from({ length }, (_, index) => images[(index + offset) % length])
-}
+const COLUMNS: MarqueeColumn[] = [
+  { images: pick([0, 3, 6, 9]), durationSec: 40, direction: "up" },
+  { images: pick([1, 4, 7]), durationSec: 48, direction: "down" },
+  { images: pick([2, 5, 8]), durationSec: 44, direction: "up" },
+]
 
 export function BblTeaserPage() {
   const launchAt = env.NEXT_PUBLIC_BBL_LAUNCH_AT
 
   return (
     <main
-      className={`${bblHeadingFont.variable} ${bblBodyFont.variable} relative min-h-dvh overflow-hidden bg-[#050505] text-white [font-family:var(--font-bbl-body),system-ui,sans-serif]`}
+      className={`${bblHeadingFont.variable} ${bblBodyFont.variable} relative min-h-dvh overflow-x-clip bg-[#050505] text-white [font-family:var(--font-bbl-body),system-ui,sans-serif]`}
     >
       {/* Phone marquee — full-bleed background band, right-weighted on desktop. */}
       <div
@@ -60,7 +58,7 @@ export function BblTeaserPage() {
       </div>
 
       {/* Hero content */}
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col justify-center px-6 py-16 sm:px-10">
+      <div className="relative z-10 mx-auto flex min-h-dvh max-w-6xl flex-col justify-center px-6 py-10 sm:px-10">
         <div className="max-w-xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -85,12 +83,12 @@ export function BblTeaserPage() {
           </p>
 
           {launchAt && (
-            <div className="mt-10">
+            <div className="mt-7">
               <CountdownStrip launchAt={launchAt} />
             </div>
           )}
 
-          <div className="mt-10">
+          <div className="mt-7">
             <EmailCapture />
           </div>
         </div>

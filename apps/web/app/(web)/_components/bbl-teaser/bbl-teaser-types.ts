@@ -12,16 +12,16 @@ const HERO_BASE = "/brand/blackbeltlegacy/images/hero"
 
 /** Hero photos shown inside the phone mockups (order is the visual deal-out order). */
 export const HERO_IMAGES: readonly string[] = [
-  `${HERO_BASE}/hero-belt-on-mat.jpg`,
-  `${HERO_BASE}/hero-black_belt_and_blue_belt_BBL.jpg`,
-  `${HERO_BASE}/hero-black_belt_teaching_class.jpg`,
-  `${HERO_BASE}/hero-judo-clinch.jpg`,
-  `${HERO_BASE}/hero-no-gi-x.jpg`,
-  `${HERO_BASE}/hero-bbl-technical-standup.jpg`,
-  `${HERO_BASE}/hero-black_belt_tying.jpg`,
-  `${HERO_BASE}/hero-instructor_tying_belt_on-student.jpg`,
-  `${HERO_BASE}/hero-judo-clinch-2.jpg`,
-  `${HERO_BASE}/hero-judo-clinch-3.jpg`,
+  `${HERO_BASE}/hero-belt-on-mat.webp`,
+  `${HERO_BASE}/hero-black_belt_and_blue_belt_BBL.webp`,
+  `${HERO_BASE}/hero-black_belt_teaching_class.webp`,
+  `${HERO_BASE}/hero-judo-clinch.webp`,
+  `${HERO_BASE}/hero-no-gi-x.webp`,
+  `${HERO_BASE}/hero-bbl-technical-standup.webp`,
+  `${HERO_BASE}/hero-black_belt_tying.webp`,
+  `${HERO_BASE}/hero-instructor_tying_belt_on-student.webp`,
+  `${HERO_BASE}/hero-judo-clinch-2.webp`,
+  `${HERO_BASE}/hero-judo-clinch-3.webp`,
 ]
 
 /** One auto-scrolling column of phone mockups. */

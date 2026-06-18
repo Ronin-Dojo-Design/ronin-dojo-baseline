@@ -6,8 +6,8 @@ import { PhoneMockup } from "./phone-mockup"
  * marquee. Crazy-simple: pure CSS `@keyframes translateY` over content that is
  * duplicated once, so the -50% loop point is visually identical to the start.
  *
- * - PAUSE ON HOVER via `:hover { animation-play-state: paused }`.
  * - Alternating direction + slightly different speed per column for visual life.
+ * - Fully decorative (`pointer-events-none`) so it never intercepts the CTA.
  * - `prefers-reduced-motion: reduce` disables the animation (static stack) — matches
  *   the repo's reduced-motion idiom with a plain CSS media query (no JS needed; this
  *   is a server component).
@@ -27,7 +27,7 @@ export function PhoneMarquee({ columns }: { columns: MarqueeColumn[] }) {
         <div key={columnIndex} className="overflow-hidden">
           {/* The track is the content duplicated once; the -50% loop is seamless. */}
           <div
-            className="bbl-marquee__track pointer-events-auto flex flex-col gap-3 sm:gap-4"
+            className="bbl-marquee__track flex flex-col gap-3 sm:gap-4"
             style={{
               animationDuration: `${column.durationSec}s`,
               animationDirection: column.direction === "down" ? "reverse" : "normal",
@@ -57,9 +57,6 @@ const MARQUEE_CSS = `
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   will-change: transform;
-}
-.bbl-marquee:hover .bbl-marquee__track {
-  animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
   .bbl-marquee__track {

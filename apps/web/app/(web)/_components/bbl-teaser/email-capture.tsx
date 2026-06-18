@@ -34,7 +34,7 @@ export function EmailCapture() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8">
+    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm sm:p-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={BBL_LOGO_WHITE}
@@ -50,17 +50,16 @@ export function EmailCapture() {
             You&apos;re on the list
           </h2>
           <p className="mt-2 text-sm/6 text-white/60">
-            Thanks for joining Black Belt Legacy. We&apos;ll email you the moment early access
-            opens.
+            Thanks! We&apos;ll keep you posted on features, updates, and more.
           </p>
         </div>
       ) : (
         <>
           <h2 className="mt-6 text-xl font-extrabold uppercase italic tracking-tight text-white [font-family:var(--font-bbl-heading,var(--font-display))]">
-            Join Black Belt Legacy
+            Join Our Mailing List
           </h2>
           <p className="mt-2 text-sm/6 text-white/55">
-            Be the first in. Get early access to the lineage network.
+            Get notified on features, updates, and more!
           </p>
 
           <form onSubmit={onSubmit} className="mt-5 space-y-3">
@@ -100,7 +99,7 @@ export function EmailCapture() {
               disabled={isPending}
               className="w-full rounded-lg bg-red-600 px-4 py-3.5 text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:opacity-50"
             >
-              {isPending ? "Joining…" : "Get Early Access"}
+              {isPending ? "Enabling…" : "Enable Notifications"}
             </button>
 
             {serverError && (

@@ -29,13 +29,12 @@ export function PhoneMockup({ src, priority = false }: { src: string; priority?:
           className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20"
         />
 
-        {/* Subtle BBL mark, lower-left */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={BBL_LOGO_WHITE}
-          alt=""
+        {/* Subtle BBL mark, lower-left — a CSS background (not an <img>) so the
+            marquee adds no extra image elements beyond the hero photos. */}
+        <div
           aria-hidden
-          className="absolute bottom-3 left-3 z-10 h-5 w-auto opacity-80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
+          className="absolute bottom-3 left-3 z-10 h-5 w-12 bg-contain bg-left bg-no-repeat opacity-80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
+          style={{ backgroundImage: `url(${BBL_LOGO_WHITE})` }}
         />
       </div>
     </div>
