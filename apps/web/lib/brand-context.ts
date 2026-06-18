@@ -33,6 +33,35 @@ export const HOST_TO_BRAND: Record<string, Brand> = {
 
 export const DEFAULT_BRAND: Brand = Brand.RONIN_DOJO_DESIGN
 
+/**
+ * Origins Better Auth must trust, derived from `HOST_TO_BRAND` so the allowlist
+ * can never drift from the host→brand map.
+ *
+ * ADR 0004/0006: this is a single multi-brand Vercel deployment serving every
+ * brand by host. Better Auth defaults to trusting only `BETTER_AUTH_URL`'s host,
+ * so auth requests from a non-default brand host (e.g. blackbeltlegacy.com) fail
+ * the origin check — "invalid origin" on the magic-link `callbackURL` validation
+ * and the Google OAuth redirect. Trusting every brand origin fixes both.
+ *
+ * - Production apex domains (`*.com`) → `https://<host>`.
+ * - Local dev convention (`*.local`) → `http://<host>:3000` (Next dev port),
+ *   bare `http://<host>`, plus the shared `http://localhost:3000` fallback.
+ * - `localhost` → `http://localhost:3000`.
+ */
+const trustedOriginsForHost = (host: string): string[] => {
+  if (host === "localhost") {
+    return ["http://localhost:3000"]
+  }
+  if (host.endsWith(".local")) {
+    return [`http://${host}:3000`, `http://${host}`, "http://localhost:3000"]
+  }
+  return [`https://${host}`]
+}
+
+export const BRAND_TRUSTED_ORIGINS: string[] = Array.from(
+  new Set(Object.keys(HOST_TO_BRAND).flatMap(trustedOriginsForHost)),
+)
+
 const BRANDS = new Set<string>(Object.values(Brand))
 
 const isBrand = (value: string | null | undefined): value is Brand => {
