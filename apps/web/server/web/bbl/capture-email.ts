@@ -2,9 +2,10 @@
 
 import { after } from "next/server"
 import { z } from "zod"
+import { Brand } from "~/.generated/prisma/client"
 import { EmailBblTeaserWelcome } from "~/emails/bbl-teaser-welcome"
-import { getRequestBrand } from "~/lib/brand-context"
 import { sendEmail } from "~/lib/email"
+import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { publicActionClient } from "~/lib/safe-actions"
 
 const captureEmailSchema = z.object({
@@ -27,7 +28,17 @@ const captureEmailSchema = z.object({
 export const captureBblEmail = publicActionClient
   .inputSchema(captureEmailSchema)
   .action(async ({ parsedInput, ctx: { db } }) => {
-    const brand = await getRequestBrand()
+    // Public, unauthenticated form — rate-limit by client IP (the `newsletter`
+    // limiter: 3/day, fail-open) before any DB write or email send.
+    if (await isRateLimited(await getIP(), "newsletter")) {
+      throw new Error("You've reached the signup limit. Please try again later.")
+    }
+
+    // This capture only ever runs on the BBL teaser, so the brand is always BBL.
+    // Don't derive it from the request: in a server action `getRequestBrand()`
+    // falls back to the default brand, which sent the confirmation from the wrong
+    // (Baseline) sender.
+    const brand = Brand.BBL
     const email = parsedInput.email.trim().toLowerCase()
     const name = parsedInput.name?.trim() || null
 

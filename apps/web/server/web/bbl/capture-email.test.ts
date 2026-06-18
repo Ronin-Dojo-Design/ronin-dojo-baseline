@@ -46,6 +46,13 @@ mock.module("~/lib/email", () => ({
   sendEmail: sendEmailMock,
 }))
 
+// Mock the rate limiter (no Redis in tests); `limited` is toggled per-test.
+const rateLimitState = { limited: false }
+mock.module("~/lib/rate-limiter", () => ({
+  isRateLimited: async () => rateLimitState.limited,
+  getIP: async () => "203.0.113.7",
+}))
+
 // --- real imports, after mocks ---
 import { captureBblEmail } from "~/server/web/bbl/capture-email"
 import { db } from "~/services/db"
@@ -60,6 +67,7 @@ const cleanup = async () => {
 
 beforeEach(async () => {
   sendEmailMock.mockClear()
+  rateLimitState.limited = false
   await cleanup()
 })
 
@@ -128,5 +136,17 @@ describe("captureBblEmail", () => {
 
     expect(result?.validationErrors).toBeDefined()
     expect(result?.data).toBeUndefined()
+  })
+
+  it("rejects when rate-limited — no row written, no email sent", async () => {
+    rateLimitState.limited = true
+    const email = `${tag("limited")}@test.local`
+
+    const result = await captureBblEmail({ email })
+
+    expect(result?.serverError).toBeDefined()
+    expect(result?.data).toBeUndefined()
+    expect(await db.bblEmailCapture.findUnique({ where: { email } })).toBeNull()
+    expect(sendEmailMock).not.toHaveBeenCalled()
   })
 })
