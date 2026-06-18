@@ -54,6 +54,21 @@
   --color-on-media: hsl(0 0% 100%);
   --color-media-scrim: hsl(0 0% 0%);
 
+  /* Chrome surface tokens — the app shell (header / left nav / right drawer).
+     Centralized so the three chrome surfaces never hardcode a surface color:
+     the SAME single-source pattern as --color-primary (one definition,
+     consumed everywhere via `bg-chrome` / `text-chrome-foreground` / etc.).
+     Defaults ALIAS the semantic tokens, so every brand WITHOUT a chrome
+     override renders its normal light/dark chrome and is visually unchanged.
+     A brand opts into a distinct chrome (BBL's deep-black surface) by
+     overriding these under its [data-brand] block — one edit, consistent
+     across header.tsx, sidebar.tsx, and nav-sheet.tsx. */
+  --color-chrome: var(--color-background);
+  --color-chrome-elevated: var(--color-accent);
+  --color-chrome-foreground: var(--color-foreground);
+  --color-chrome-muted: var(--color-muted-foreground);
+  --color-chrome-border: var(--color-border);
+
   --tracking-micro: -0.0125em;
 
   --font-sans: var(--font-sans);
@@ -194,6 +209,16 @@
   [data-brand="BBL"] {
     --color-primary: hsl(1 79% 51%);
     --color-primary-foreground: hsl(0 0% 98%);
+    /* BBL deep-black chrome — the legacy BBLHeader / DesktopNav / BBLSideDrawer
+       surfaces (neutral-950/900/800) expressed as brand tokens. Intentionally
+       the same in light AND dark mode: the BBL shell is always dark, so the
+       .dark block below does not need to restate these. The red accent stays
+       the --color-primary token above (never a hardcoded bbl-red). */
+    --color-chrome: hsl(0 0% 4%);
+    --color-chrome-elevated: hsl(0 0% 11%);
+    --color-chrome-foreground: hsl(0 0% 100%);
+    --color-chrome-muted: hsl(0 0% 64%);
+    --color-chrome-border: hsl(0 0% 16%);
   }
 
   [data-brand="BBL"].dark,
@@ -212,6 +237,32 @@
   .dark[data-brand="WEKAF"] {
     --color-primary: hsl(0 84% 50%);
     --color-primary-foreground: hsl(0 0% 98%);
+  }
+
+  /* Chrome region remap — entering a chrome surface (BBL header / left nav /
+     right drawer). Re-points the SEMANTIC palette at the chrome tokens for the
+     subtree, so the shared primitives (NavLink, Button, Avatar, Sheet) render
+     correctly on the dark BBL surface with NO per-component overrides — the
+     same trick the design system uses for `.dark`, scoped to the shell. The
+     --color-primary accent is deliberately left alone (stays brand red).
+     Applied ONLY on minimal-chrome brands, so non-BBL chrome is untouched. */
+  .chrome-surface {
+    background-color: var(--color-chrome);
+    color: var(--color-chrome-foreground);
+    --color-background: var(--color-chrome);
+    --color-card: var(--color-chrome-elevated);
+    --color-card-foreground: var(--color-chrome-foreground);
+    --color-popover: var(--color-chrome);
+    --color-popover-foreground: var(--color-chrome-foreground);
+    --color-foreground: var(--color-chrome-foreground);
+    --color-muted: var(--color-chrome-elevated);
+    --color-muted-foreground: var(--color-chrome-muted);
+    --color-secondary: var(--color-chrome-elevated);
+    --color-secondary-foreground: var(--color-chrome-foreground);
+    --color-accent: var(--color-chrome-elevated);
+    --color-accent-foreground: var(--color-chrome-foreground);
+    --color-border: var(--color-chrome-border);
+    --color-input: var(--color-chrome-border);
   }
 
   hr {

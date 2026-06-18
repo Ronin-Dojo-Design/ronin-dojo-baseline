@@ -37,9 +37,10 @@ import {
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
-import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
+import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
 import { useBrand } from "~/contexts/brand-context"
 import { useSession } from "~/lib/auth-client"
+import { cx } from "~/lib/utils"
 
 type NavSheetProps = {
   open: boolean
@@ -78,6 +79,10 @@ export const NavSheet = ({ open, onOpenChange }: NavSheetProps) => {
   const pathname = usePathname()
   const t = useTranslations()
   const { brand } = useBrand()
+  // BBL (minimal chrome) drawer rides the shared `.chrome-surface` remap so the
+  // NavLink / Button / Avatar primitives render on the brand-dark surface with no
+  // per-component overrides; other brands keep the default light/dark Sheet.
+  const minimal = brandHasMinimalChrome(brand)
   const navItems = PRIMARY_NAV_ITEMS.filter(item => brandHasFeature(brand, item.feature))
 
   // Close when the user navigates to a new page
@@ -87,7 +92,7 @@ export const NavSheet = ({ open, onOpenChange }: NavSheetProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[280px]">
+      <SheetContent side="right" className={cx("w-[280px]", minimal && "chrome-surface")}>
         <SheetTitle className="sr-only">{t("navigation.open_menu")}</SheetTitle>
 
         <SheetHeader>

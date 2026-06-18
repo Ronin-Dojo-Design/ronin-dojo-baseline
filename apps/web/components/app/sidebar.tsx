@@ -1,5 +1,6 @@
 "use client"
 
+import { getInitials } from "@dirstack/utils"
 import { useMediaQuery } from "@mantine/hooks"
 import {
   AwardIcon,
@@ -11,6 +12,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   GitBranchIcon,
+  HomeIcon,
   IdCardIcon,
   ImageIcon,
   LayersIcon,
@@ -18,6 +20,7 @@ import {
   MailIcon,
   MailPlusIcon,
   PaletteIcon,
+  PlusCircleIcon,
   BarChart3Icon,
   ShieldCheckIcon,
   SwordsIcon,
@@ -25,12 +28,15 @@ import {
   UserIcon,
   UsersIcon,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Nav, type NavLink } from "~/components/app/nav"
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
+import { Button } from "~/components/common/button"
 import { Kbd } from "~/components/common/kbd"
+import { Link } from "~/components/common/link"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
-import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
+import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
 import { useBrand } from "~/contexts/brand-context"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
@@ -371,11 +377,194 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     },
   ]
 
+  // Minimal-chrome brands (BBL): regular members get the simplified BBL member
+  // rail; privileged users (anyone with a gated area permission, or an active
+  // lineage grant) keep the full management nav so nothing is lost. Every other
+  // brand always renders the full nav.
+  const minimal = brandHasMinimalChrome(brand)
+  const isPrivileged = items.some(
+    item =>
+      item?.permission != null &&
+      (can(user, item.permission) || (item.lineage === true && hasLineageGrant)),
+  )
+
+  if (minimal && user && !isPrivileged) {
+    return (
+      <BblMemberRail
+        user={user}
+        hasLineageGrant={hasLineageGrant}
+        brand={brand}
+        isMobile={!!isMobile}
+        onVisitSite={handleOpenSite}
+        onSignOut={handleSignOut}
+      />
+    )
+  }
+
   return (
     <Nav
       isCollapsed={!!isMobile}
       className={cx("sticky top-0 h-dvh z-40 border-r", isMobile ? "w-12" : "w-48")}
       links={buildVisibleLinks(items, user, hasLineageGrant, brand)}
     />
+  )
+}
+
+// Shared row style for the rail's utility actions (Visit Site / Logout). Reads
+// the remapped chrome tokens (via `.chrome-surface` on the <nav>), so it is
+// legible on the BBL dark surface without hardcoded colors.
+const RAIL_UTILITY_ITEM =
+  "flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline [&_svg]:size-5"
+
+type BblMemberRailProps = {
+  user: SessionUser
+  hasLineageGrant: boolean
+  brand: Parameters<typeof brandHasFeature>[0]
+  isMobile: boolean
+  onVisitSite: () => void
+  onSignOut: () => void
+}
+
+/**
+ * Simplified BBL member rail (parity with the legacy `DesktopNav`): brand mark +
+ * wordmark block, a short icon+label nav with a primary active highlight, a
+ * primary Create CTA, and a bottom user mini-card. Desktop-labeled; on mobile it
+ * falls back to the collapsed icon Nav because the `/app` area has no separate
+ * mobile header/drawer. Surfaced via the shared `.chrome-surface` remap so the
+ * `--color-primary` accent stays brand-driven (red on BBL) and other brands —
+ * which never reach this branch — are unaffected.
+ */
+const BblMemberRail = ({
+  user,
+  hasLineageGrant,
+  brand,
+  isMobile,
+  onVisitSite,
+  onSignOut,
+}: BblMemberRailProps) => {
+  const pathname = usePathname()
+  const { name } = useBrand()
+
+  // Member-facing subset, gated by the SAME permissions as the full nav so the
+  // rail never renders a link the member would be 403'd from.
+  const memberItems: Array<NavItem | undefined> = [
+    { title: "Dashboard", href: "/app", prefix: <HomeIcon /> },
+    { title: "Profile", href: "/app/profile", prefix: <UserIcon /> },
+    {
+      title: "Lineage",
+      href: "/app/lineage",
+      prefix: <GitBranchIcon />,
+      permission: APP_AREA_PERMISSIONS.lineage,
+      lineage: true,
+    },
+    {
+      title: "Feed",
+      href: "/app/posts",
+      prefix: <FileTextIcon />,
+      permission: APP_AREA_PERMISSIONS.posts,
+    },
+  ]
+  const links = buildVisibleLinks(memberItems, user, hasLineageGrant, brand)
+  const canPost = can(user, APP_AREA_PERMISSIONS.posts)
+
+  if (isMobile) {
+    const mobileLinks: Array<NavLink | undefined> = [
+      ...links,
+      ...(canPost
+        ? [{ title: "Create", href: "/app/posts/new", prefix: <PlusCircleIcon /> } as NavLink]
+        : []),
+      undefined,
+      { title: "Visit Site", href: "#", onClick: onVisitSite, prefix: <ExternalLinkIcon /> },
+      { title: "Logout", href: "#", onClick: onSignOut, prefix: <LogOutIcon /> },
+    ]
+    return (
+      <Nav
+        isCollapsed
+        className="chrome-surface sticky top-0 z-40 h-dvh w-12 border-r"
+        links={mobileLinks}
+      />
+    )
+  }
+
+  const isActive = (href: string) =>
+    href === "/app" ? pathname === "/app" : pathname.startsWith(href)
+
+  return (
+    <nav className="chrome-surface sticky top-0 z-40 flex h-dvh w-64 flex-col border-r">
+      <div className="border-b p-6">
+        <Link
+          href="/app"
+          aria-label={name}
+          className="flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <LogoSymbol className="size-5" />
+          </span>
+          <span className="truncate font-semibold">{name}</span>
+        </Link>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-1">
+          {links.map(link =>
+            link ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cx(
+                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline [&_svg]:size-5",
+                  isActive(link.href)
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {link.prefix}
+                <span>{link.title}</span>
+              </Link>
+            ) : null,
+          )}
+        </div>
+
+        {canPost && (
+          <Button
+            variant="fancy"
+            size="lg"
+            className="mt-4 w-full"
+            prefix={<PlusCircleIcon />}
+            render={<Link href="/app/posts/new" />}
+          >
+            Create
+          </Button>
+        )}
+      </div>
+
+      <div className="border-t p-3">
+        <div className="mb-1 space-y-1">
+          <button type="button" onClick={onVisitSite} className={RAIL_UTILITY_ITEM}>
+            <ExternalLinkIcon />
+            <span>Visit Site</span>
+          </button>
+          <button type="button" onClick={onSignOut} className={RAIL_UTILITY_ITEM}>
+            <LogOutIcon />
+            <span>Logout</span>
+          </button>
+        </div>
+
+        <Link
+          href="/app/profile"
+          className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
+        >
+          <Avatar className="size-9">
+            <AvatarImage src={user.image ?? undefined} />
+            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium">{user.name}</div>
+            <div className="truncate text-xs text-muted-foreground">View profile</div>
+          </div>
+        </Link>
+      </div>
+    </nav>
   )
 }

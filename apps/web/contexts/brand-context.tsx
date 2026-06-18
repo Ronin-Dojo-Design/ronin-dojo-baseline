@@ -13,6 +13,14 @@ type BrandContextValue = {
   logoSrc: string
   faviconSrc: string
   ogImageSrc: string
+  /**
+   * DB-driven brand logo (`BrandSettings.logoUrl`), or null when the brand has
+   * not uploaded one. Prefer this over the static `logoSrc` for chrome surfaces
+   * (header / drawer) so an operator's uploaded mark — e.g. the BBL white logo —
+   * is honored without a hardcoded asset path. Falls back to `logoSrc` in the
+   * `<Logo>` primitive when null.
+   */
+  logoUrl: string | null
 }
 
 const BrandContext = createContext<BrandContextValue | null>(null)
@@ -42,7 +50,11 @@ export const useBrand = (): BrandContextValue => {
  * <BrandProvider brand={brand}>{children}</BrandProvider>
  * ```
  */
-export const BrandProvider = ({ brand, children }: PropsWithChildren<{ brand: Brand }>) => {
+export const BrandProvider = ({
+  brand,
+  logoUrl = null,
+  children,
+}: PropsWithChildren<{ brand: Brand; logoUrl?: string | null }>) => {
   const config = getBrandSiteConfig(brand)
   const value: BrandContextValue = {
     brand,
@@ -53,6 +65,7 @@ export const BrandProvider = ({ brand, children }: PropsWithChildren<{ brand: Br
     logoSrc: config.logoSrc,
     faviconSrc: config.faviconSrc,
     ogImageSrc: config.ogImageSrc,
+    logoUrl,
   }
 
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>

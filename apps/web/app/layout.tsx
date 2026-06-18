@@ -84,7 +84,7 @@ export default async function ({ children }: LayoutProps<"/">) {
             <NuqsAdapter>
               <TooltipProvider delay={250}>
                 <SearchProvider>
-                  <BrandProvider brand={brand}>
+                  <BrandProvider brand={brand} logoUrl={brandSettings?.logoUrl ?? null}>
                     <ThemeProvider attribute="class" disableTransitionOnChange>
                       {children}
                       <Toaster />
