@@ -70,9 +70,13 @@ export function useCohortTimeline({
   useEffect(() => {
     if (!focusMemberId) return
     const el = document.getElementById(`lineage-member-${focusMemberId}`)
+    // `block: "nearest"` (SESSION_0411): vertical scroll is now page-driven, so
+    // `block: "center"` would yank the whole page on every recenter. `nearest`
+    // nudges the page only as far as needed; `inline: "center"` still centers the
+    // focal within the horizontal scroll container.
     el?.scrollIntoView({
       behavior: reduceMotion ? "auto" : "smooth",
-      block: "center",
+      block: "nearest",
       inline: "center",
     })
   }, [focusMemberId, reduceMotion])
