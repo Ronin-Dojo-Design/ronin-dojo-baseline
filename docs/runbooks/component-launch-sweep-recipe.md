@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-lineage-tree-canvas-sweep
+last_agent: claude-organizations-detail-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -274,6 +274,13 @@ Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` sea
   sweep moved it **verbatim** into the body module and **flagged it as content debt for the supervised
   content lane**. Inventing brand copy inside a presentation sweep is out of scope (same boundary as
   schema migrations) — surface it loudly in the report, don't fix it silently.
+
+Surfaced by the **`/organizations` + `/organizations/[slug]` sweep** (the public org list + the 411-line detail monolith — a *data-heavy* server route, unlike the static legal/about pages):
+
+- **A `Prose`-less structured page needs the `h1`-inclusive heading-scope class, not per-heading `bblHeadingFontClass`.** The legal/about cluster routes its headings through `PolicyLayout` (Intro `bblHeadingFontClass` + `Prose` `bblProseHeadingFontClass`). A page built from `Intro` + `Section` + `Card` (the org pages) instead scatters one `IntroTitle` (h1) plus *many* `H4`s across sections — tagging each by hand is noise. The reusable move: one **container** rule on the `BrandTypography` scope — `bblHeadingScopeClass` = `[&_:is(h1,h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!` — covers every descendant heading at once (the structured-page analogue of `bblProseHeadingFontClass`, just widened to include `h1`). Pass it as `BrandTypography`'s `className`. Lightning CSS **merges** it with the existing `h2,h3,h4` rule (shared declaration body), so it adds ~no CSS weight — verifiable in the §5b emitted stylesheet: `grep -roh 'is(h1,h2,h3,h4)…font-bbl-heading…!important' .next/static/chunks/*.css`.
+- **`next/dynamic` in a *server* orchestrator pays off via chunk-splitting, not branch unmount.** The drawer gotcha ("lazy only pays off when inactive branches unmount") is about tab/branch switching. For always-rendered *below-the-fold* server sections (the related-orgs grid, the members roster, the list cross-links) the payoff is a smaller initial client bundle — the chunk loads when reached — and SSR is preserved by simply **not** passing `ssr: false` (which is illegal in a Server Component anyway). Precedent: the BBL landing orchestrator. So "lazy-load below-fold" is valid for server modules too; just state the *reason* correctly. Bonus: lazy-loading the *section* that hosts a reused client island (the roster hosts `JoinOrganizationButton`/`MembershipActions`) defers that island's JS as a side effect — without forking the shared island (still "reuse, don't re-implement").
+- **A data-heavy server route decomposes around a view-model loader, not a presentation orchestrator that fetches.** Where the static pages let the orchestrator be pure presentation, the org detail route does real server work (member grouping, related-orgs + promotion-timeline fetches, structured-data assembly). Clean shape: a `*-data.ts` **server loader** returns a typed `…View` model; `page.tsx` collapses to `params → load → notFound() → <Orchestrator {...view}/>`; the orchestrator owns only composition + lazy boundaries (zero fetch, zero derivation). Keep the derivation helpers (`groupMembersByUser`, `formatOrgAddress`) **file-private** in the loader and `export` only the loader + the view-model type the section files import — exporting an in-file-only helper is `unused-export` introduced dead code (the lineage-canvas export rule, applied to a server loader).
+- **A route whose colors were already token-correct makes the sweep a *type-seam-only* pass — say so, don't invent color churn.** The org pages already used semantic tokens (`text-muted-foreground`, `text-secondary-foreground`, `Badge`/`Card` variants) with zero hex literals, and `organizations/[slug]/layout.tsx` was already the data-driven org-theme seam (`OrgSettings` → `[data-org]` CSS vars behind an HSL-safe regex guard — the recipe's own step-2 "org theme colors from data" ideal). So step 2's *color* work was a verified no-op here; the real brand work was the *type* seam (wrapping the body in `BrandTypography`). Leave an already-compliant `layout.tsx` untouched and report it as already-correct — the "a sweep relocates, it doesn't rewrite" discipline extends to "a sweep doesn't manufacture changes a surface doesn't need."
 
 ## Cross-references
 
