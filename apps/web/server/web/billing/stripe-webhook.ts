@@ -1,11 +1,13 @@
 import { revalidateTag } from "next/cache"
 import { after } from "next/server"
 import type Stripe from "stripe"
-import { type Brand, ToolTier } from "~/.generated/prisma/client"
+import { Brand, ToolTier } from "~/.generated/prisma/client"
 import {
   notifyAdminOfPremiumTool,
   notifyCustomerOfMerchOrder,
   notifySubmitterOfPremiumTool,
+  notifyUserOfLifecycleEvent,
+  type LifecycleTier,
   notifyUserOfTournamentRegistration,
 } from "~/lib/notifications"
 import { upsertStripeCustomerMapping } from "~/server/web/billing/stripe-customers"
@@ -13,6 +15,69 @@ import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
 import { db } from "~/services/db"
 
 const SUBSCRIPTION_PAYMENT_GRACE_DAYS = 7
+
+const formatMoney = (cents: number | null | undefined, currency = "USD") =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency }).format((cents ?? 0) / 100)
+
+const tierFromPlanName = (name?: string | null): LifecycleTier | null => {
+  const value = name?.toLowerCase() ?? ""
+  if (value.includes("legend")) return "legend"
+  if (value.includes("elite")) return "elite"
+  if (value.includes("premium")) return "premium"
+  if (value.includes("free")) return "free"
+  return null
+}
+
+const scheduleLifecycleEmail = ({
+  userId,
+  brand,
+  kind,
+  subject,
+  heading,
+  intro,
+  tier,
+  details,
+  ctaLabel = "Open Black Belt Legacy",
+  ctaUrl = "https://blackbeltlegacy.com/me",
+  rateLimitKey,
+  secondaryNote,
+}: {
+  userId: string
+  brand: Brand
+  kind: Parameters<typeof notifyUserOfLifecycleEvent>[0]["kind"]
+  subject: string
+  heading: string
+  intro: string
+  tier?: LifecycleTier | null
+  details?: Array<{ label: string; value: string }>
+  ctaLabel?: string
+  ctaUrl?: string
+  rateLimitKey: string
+  secondaryNote?: string
+}) => {
+  after(async () => {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    })
+    if (!user?.email) return
+    await notifyUserOfLifecycleEvent({
+      brand,
+      kind,
+      to: user.email,
+      firstName: user.name?.split(" ")[0] ?? null,
+      subject,
+      heading,
+      intro,
+      tier,
+      details,
+      ctaLabel,
+      ctaUrl,
+      rateLimitKey,
+      secondaryNote,
+    })
+  })
+}
 
 const isPrismaWriteConflict = (error: unknown) => {
   const maybeError = error as {
@@ -1205,6 +1270,27 @@ export const processStripeWebhook = async (
             const { metadata } = stripeSubscription
             await syncSubscriptionEntitlements(stripeSubscription)
 
+            const primaryPlan = mappedItems[0]?.plan
+            const userId = stripeSubscription.metadata?.userId ?? session.metadata?.userId
+            if (primaryPlan && userId) {
+              const tier = tierFromPlanName(primaryPlan.name)
+              scheduleLifecycleEmail({
+                userId,
+                brand: primaryPlan.brand,
+                kind: "new-member-welcome",
+                subject: `Welcome to Black Belt Legacy ${primaryPlan.name}`,
+                heading: `Your ${primaryPlan.name} membership is active`,
+                intro:
+                  "Thanks for joining Black Belt Legacy. Your paid membership is now active and your brand-aware lineage profile benefits are ready.",
+                tier,
+                details: [
+                  { label: "Tier", value: primaryPlan.name },
+                  { label: "Subscription", value: subscriptionId },
+                ],
+                rateLimitKey: `checkout:${session.id}`,
+              })
+            }
+
             // Handle tool featured listing
             if (metadata?.tool) {
               const tool = await db.tool.update({
@@ -1230,12 +1316,57 @@ export const processStripeWebhook = async (
       }
 
       case "customer.subscription.updated": {
-        await syncSubscriptionEntitlements(event.data.object)
+        const subscription = event.data.object
+        await syncSubscriptionEntitlements(subscription)
+        const subscriptionWithItems = subscription as Stripe.Subscription & {
+          items?: {
+            data?: Array<{ price?: { id?: string | null } | null; quantity?: number | null }>
+          }
+        }
+        const mappedItems = await resolvePricingPlanPriceIds(
+          subscriptionWithItems.items?.data
+            ?.map(item => ({ priceId: item.price?.id, quantity: item.quantity ?? null }))
+            .filter((item): item is { priceId: string; quantity: number | null } =>
+              Boolean(item.priceId),
+            ) ?? [],
+        )
+        const primaryPlan = mappedItems[0]?.plan
+        const userId = await resolveSubscriptionUser({
+          subscriptionId: subscription.id,
+          customerId: getStripeId(subscription.customer),
+          metadataUserId: subscription.metadata?.userId,
+        })
+        if (primaryPlan && userId) {
+          const tier = tierFromPlanName(primaryPlan.name)
+          const kind =
+            tier === "elite"
+              ? "upgrade-elite"
+              : tier === "premium"
+                ? "upgrade-premium"
+                : "downgrade-confirmation"
+          scheduleLifecycleEmail({
+            userId,
+            brand: primaryPlan.brand,
+            kind,
+            subject: `Your Black Belt Legacy membership changed to ${primaryPlan.name}`,
+            heading: `Membership updated: ${primaryPlan.name}`,
+            intro:
+              "Your Stripe subscription changed and your Black Belt Legacy access has been synced to match the current tier.",
+            tier,
+            details: [{ label: "Current tier", value: primaryPlan.name }],
+            rateLimitKey: `subscription-updated:${subscription.id}:${event.id}`,
+          })
+        }
         break
       }
 
       case "customer.subscription.deleted": {
         const { id: subscriptionId, metadata } = event.data.object
+
+        const sourceEntitlementBeforeRevoke = await db.userEntitlement.findFirst({
+          where: { sourceType: "SUBSCRIPTION", sourceId: subscriptionId },
+          select: { userId: true, entitlement: { select: { key: true } } },
+        })
 
         // Revoke entitlements sourced from this subscription
         await revokeEntitlementsFromSubscription(subscriptionId)
@@ -1243,6 +1374,21 @@ export const processStripeWebhook = async (
           where: { sourceType: "SUBSCRIPTION", sourceId: subscriptionId },
           select: { userId: true },
         })
+        if (sourceEntitlementBeforeRevoke) {
+          scheduleLifecycleEmail({
+            userId: sourceEntitlementBeforeRevoke.userId,
+            brand: Brand.BBL,
+            kind: "subscription-ended",
+            subject: "Your Black Belt Legacy subscription has ended",
+            heading: "Your membership has ended",
+            intro:
+              "Your subscription ended and paid-tier access has been revoked. You can return any time to restore your full lineage profile benefits.",
+            tier: "free",
+            details: [{ label: "Access", value: "Free claim + verification badge only" }],
+            rateLimitKey: `subscription-ended:${subscriptionId}`,
+          })
+        }
+
         if (sourceEntitlement) {
           await suspendProgramEnrollmentsForEntitlementSource({
             userId: sourceEntitlement.userId,
@@ -1268,12 +1414,68 @@ export const processStripeWebhook = async (
         const subscriptionId = getInvoiceSubscriptionId(event.data.object)
         if (subscriptionId) {
           await applySubscriptionPaymentGrace(subscriptionId)
+          const userId = await resolveSubscriptionUser({
+            subscriptionId,
+            customerId: getStripeId(event.data.object.customer),
+            metadataUserId: event.data.object.metadata?.userId,
+          })
+          if (userId) {
+            scheduleLifecycleEmail({
+              userId,
+              brand: Brand.BBL,
+              kind: "payment-failed",
+              subject: "Action needed: Black Belt Legacy payment failed",
+              heading: "Please update your payment method",
+              intro: `Stripe reported a failed payment. Your membership is in a ${SUBSCRIPTION_PAYMENT_GRACE_DAYS}-day grace period while you update your card.`,
+              details: [
+                { label: "Grace period", value: `${SUBSCRIPTION_PAYMENT_GRACE_DAYS} days` },
+              ],
+              ctaLabel: "Update card",
+              rateLimitKey: `payment-failed:${event.data.object.id}`,
+            })
+          }
         }
         break
       }
 
       case "invoice.paid": {
-        await createLedgerFromPaidInvoice(event.data.object)
+        const invoice = event.data.object
+        await createLedgerFromPaidInvoice(invoice)
+        const subscriptionId = getInvoiceSubscriptionId(invoice)
+        if (subscriptionId) {
+          const priceItems = getInvoiceLinePriceItems(invoice)
+          const mappedItems = await resolvePricingPlanPriceIds(priceItems)
+          const primaryPlan = mappedItems[0]?.plan
+          const userId = await resolveSubscriptionUser({
+            subscriptionId,
+            customerId: getStripeId(invoice.customer),
+            metadataUserId: invoice.metadata?.userId,
+          })
+          if (primaryPlan && userId) {
+            scheduleLifecycleEmail({
+              userId,
+              brand: primaryPlan.brand,
+              kind: "payment-receipt",
+              subject: `Receipt for ${primaryPlan.name}`,
+              heading: "Payment received",
+              intro:
+                "Thanks — your Black Belt Legacy payment has been received and your membership access is active.",
+              tier: tierFromPlanName(primaryPlan.name),
+              details: [
+                { label: "Invoice", value: invoice.number ?? invoice.id },
+                {
+                  label: "Amount",
+                  value: formatMoney(
+                    invoice.amount_paid ?? invoice.total,
+                    (invoice.currency ?? primaryPlan.currency).toUpperCase(),
+                  ),
+                },
+                { label: "Plan", value: primaryPlan.name },
+              ],
+              rateLimitKey: `invoice-paid:${invoice.id}`,
+            })
+          }
+        }
         break
       }
 
@@ -1287,7 +1489,32 @@ export const processStripeWebhook = async (
             charge.amount_refunded >= charge.amount)
 
         if (paymentIntentId && isFullRefund) {
+          const payment = await db.payment.findFirst({
+            where: { stripePaymentIntentId: paymentIntentId },
+            include: { invoice: { include: { lineItems: { include: { pricingPlan: true } } } } },
+          })
           await revokeAccessForPaymentIntent({ paymentIntentId, markRefunded: true })
+          const plan = payment?.invoice.lineItems[0]?.pricingPlan
+          if (payment && plan) {
+            scheduleLifecycleEmail({
+              userId: payment.invoice.userId,
+              brand: payment.invoice.brand,
+              kind: "refund-confirmation",
+              subject: "Your Black Belt Legacy refund was processed",
+              heading: "Refund processed",
+              intro:
+                "Your refund has been recorded. Paid-tier access connected to that payment has been revoked.",
+              tier: tierFromPlanName(plan.name),
+              details: [
+                { label: "Refunded plan", value: plan.name },
+                {
+                  label: "Amount",
+                  value: formatMoney(charge.amount_refunded, charge.currency.toUpperCase()),
+                },
+              ],
+              rateLimitKey: `refund:${charge.id}`,
+            })
+          }
         }
         break
       }
@@ -1302,7 +1529,25 @@ export const processStripeWebhook = async (
           (typeof dispute.charge === "object" ? (dispute.charge?.payment_intent ?? null) : null)
 
         if (paymentIntentId) {
+          const payment = await db.payment.findFirst({
+            where: { stripePaymentIntentId: paymentIntentId },
+            include: { invoice: true },
+          })
           await revokeAccessForPaymentIntent({ paymentIntentId, markRefunded: false })
+          await notifyUserOfLifecycleEvent({
+            brand: payment?.invoice.brand ?? Brand.BBL,
+            kind: "admin-dispute-alert",
+            to: "ops@blackbeltlegacy.com",
+            subject: "Stripe dispute created",
+            heading: "Stripe dispute created",
+            intro:
+              "Stripe opened a dispute/chargeback. Access tied to the payment intent has been revoked while the dispute is investigated.",
+            details: [
+              { label: "Dispute", value: dispute.id },
+              { label: "Payment intent", value: paymentIntentId },
+            ],
+            rateLimitKey: `dispute:${dispute.id}`,
+          })
         }
         break
       }

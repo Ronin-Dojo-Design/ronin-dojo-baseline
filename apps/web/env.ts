@@ -35,6 +35,7 @@ export const env = createEnv({
     RESEND_SENDER_EMAIL_RONIN_DOJO_DESIGN: z.string().email().optional(),
     RESEND_SENDER_EMAIL_WEKAF: z.string().email().optional(),
     RESEND_AUDIENCE_ID: z.string().optional(),
+    EMAIL_LIFECYCLE_DRYRUN: z.enum(["0", "1", "false", "true"]).default("1"),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().optional(),
     S3_BUCKET: z.string().optional(),

@@ -200,3 +200,22 @@ Examples:
 - Should the first in-app inbox attach to `/admin/leads/[id]` as CRM correspondence, or should it be a global `/admin/inbox` for all support/report/DSR/merch replies?
 - Should inbound replies be captured through Resend inbound/webhooks, mailbox API polling, or a support-desk integration?
 - What retention policy should apply to stored inbound emails if they contain personal data?
+
+## Lifecycle email dry-run contract (SESSION_0411)
+
+All Stripe/lifecycle membership emails use the same outbound boundary but are additionally gated at
+`apps/web/lib/notifications.ts` by `EMAIL_LIFECYCLE_DRYRUN`.
+
+- Default: `EMAIL_LIFECYCLE_DRYRUN=1` (also the schema default) logs the rendered lifecycle intent to
+  the server console and returns before `sendEmail`, so no Resend call can occur.
+- Live sends require an explicit `EMAIL_LIFECYCLE_DRYRUN=0`/`false` plus the normal Resend sender
+  configuration. Do not flip this during launch rehearsal or local testing.
+- Stripe webhook handlers must call lifecycle mail through `notifyUserOfLifecycleEvent` inside
+  `after(...)`; they must not call `sendEmail` inline.
+- Current wired events: new paid subscription welcome, subscription tier changed
+  (Premium/Elite upgrade or downgrade confirmation), subscription ended, invoice paid receipt/renewal
+  confirmation, payment failed/dunning, full refund confirmation path via entitlement revocation, and
+  dispute/admin alert stub through the lifecycle helper.
+- Scheduled lifecycle surfaces (renewal reminder, comp expiry, win-back, trial ending) should call the
+  same helper from their job entrypoints; do not register live crons until the dry-run previews are
+  approved.
