@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-passport-card-sweep
+last_agent: claude-posts-feed-parity-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -195,6 +195,33 @@ Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
   Concretely confirm your token/classes compiled by grepping the emitted stylesheet (a verifiable stand-in for
   the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
   `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
+
+Surfaced by the **/posts feed** parity sweep:
+
+- **Thread the brand-font seam through a `display:contents` wrapper, not a normal `<div>`.** When a
+  page's top-level children are independent sections laid out by a flex-gap parent (the `(web)` layout's
+  `Wrapper` applies `gap-y-fluid-md` to its direct children), wrapping them in an ordinary `<div>` to add
+  the `bblHeadingFont.variable` / `bblBodyFont.variable` classes makes that div the single flex child and
+  **collapses the inter-section gaps**. Use `cx("contents", brandFontVariables(brand))`: `display:contents`
+  removes the wrapper's box so the sections stay direct flex children (rhythm preserved), while the CSS
+  custom properties the `.variable` classes define still inherit to descendants (custom props inherit
+  through `display:contents`). This differs from the lineage page, which wraps a *self-contained island* in
+  a normal div — there's no parent-gap to preserve. Centralize the brand→class mapping in one helper
+  (`brandFontVariables` in `lib/fonts.ts`) so BBL gets the vars and other brands degrade to the app font.
+- **`fallow`'s touched-file re-attribution also fires on cross-page page-shell boilerplate, not just your
+  own moved code.** Editing a single route page (e.g. `posts/[slug]/page.tsx`) re-attributes the shared
+  `getData` / `getPageData` / breadcrumb / `Intro`+`Section` / import-list clones as `introduced: true`,
+  because those regions' line content shifted — even though the *same* pattern pre-exists identically in 6+
+  sibling route pages you never touched (`blog/[slug]`, `submit/[slug]`, `categories/[slug]`, `tags/[slug]`,
+  `programs/[id]/enroll`, `advertise/success`). A surgical diff (a few imports + a wrapper) is enough to
+  trip it. Don't chase these by deduping a 7-page Next.js page-shell (out of a single-component sweep's
+  scope) — confirm the introduced clone group spans untouched sibling routes, then read the *authored*
+  introduced counts (your new module's dup/complexity) + held maintainability instead.
+- **The recipe's §5a verify-DB step can collide with a "run zero migrations" task constraint.** Bringing up
+  a DB to live-DOM-verify needs `migrate deploy` to apply the existing schema; if the session is explicitly
+  scoped to *zero* migrations, that step (and `db push`) is off-limits, so the real-data screenshot isn't
+  reachable in-session. Fall back to §5b (`next build` compile/type + emitted-CSS grep) and defer the
+  live-DOM pass to PR review — don't fake it.
 
 ## Cross-references
 
