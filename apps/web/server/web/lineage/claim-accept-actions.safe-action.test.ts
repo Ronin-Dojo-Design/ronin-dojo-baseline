@@ -26,10 +26,8 @@ import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
 } from "~/lib/entitlements/lineage-comp"
-import {
-  acceptLineageClaimByToken,
-  CLAIM_ACCEPT_ERROR,
-} from "~/server/web/lineage/claim-accept-actions"
+import { acceptLineageClaimByToken } from "~/server/web/lineage/claim-accept-actions"
+import { CLAIM_ACCEPT_ERROR } from "~/server/web/lineage/claim-accept-errors"
 import { db } from "~/services/db"
 
 const TEST_BRAND = "BBL" as const

@@ -5,6 +5,7 @@ import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { databaseIdSchema } from "~/lib/validation/id"
 import { finalizeLineageNodeClaim } from "~/server/admin/lineage/claim-finalize"
+import { CLAIM_ACCEPT_ERROR } from "./claim-accept-errors"
 
 /**
  * BBL one-click token-bound claim accept (SESSION_0412 FIX #3).
@@ -35,12 +36,6 @@ const CLAIM_ACCEPT_RESULT = {
 } as const
 
 type ClaimAcceptOutcome = (typeof CLAIM_ACCEPT_RESULT)[keyof typeof CLAIM_ACCEPT_RESULT]
-
-export const CLAIM_ACCEPT_ERROR = {
-  NODE_NOT_CLAIMABLE: "This profile is not available to claim.",
-  ALREADY_OWNED_BY_OTHER: "This profile has already been claimed by someone else.",
-  CLAIMANT_HAS_NODE: "Your account already owns a different lineage profile.",
-} as const
 
 const acceptLineageClaimSchema = z.object({
   nodeId: databaseIdSchema,
