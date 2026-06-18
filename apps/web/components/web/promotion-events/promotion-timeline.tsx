@@ -11,6 +11,7 @@ import { EmptyList } from "~/components/common/empty-list"
 import { H4, H5 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { bblHeadingFontClass } from "~/components/web/ui/brand-typography"
 import type { PromotionTimelineEntry } from "~/server/web/promotion-events/queries"
 
 type PromotionTimelineProps = {
@@ -46,7 +47,7 @@ export function PromotionTimeline({
   return (
     <div className="space-y-3">
       <Stack className="w-full justify-between">
-        <H4>{title}</H4>
+        <H4 className={bblHeadingFontClass}>{title}</H4>
         {entries.length > 0 && (
           <Badge variant="soft" size="sm" prefix={<TrophyIcon />}>
             {entries.length}
