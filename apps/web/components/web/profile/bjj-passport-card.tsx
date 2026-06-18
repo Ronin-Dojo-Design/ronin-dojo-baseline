@@ -26,6 +26,14 @@ import { cx } from "~/lib/utils"
  * hardcoded belt palette. The gradient/glow falls back to the brand `primary`
  * token (red on BBL, theme-driven elsewhere) when a rank has no color.
  *
+ * Type seam (brand-token sweep, recipe step 2): the credential INHERITS the BBL
+ * type tokens — the name renders `--font-bbl-heading` (Poppins), body text
+ * `--font-bbl-body` (Inter) — each degrading to the app `--font-display` /
+ * `--font-sans` when no BBL-font ancestor defines them. The card consumes the
+ * vars but never applies the font `.variable` itself: the brand-aware *consumer*
+ * provides the tokens, so the card stays brand-neutral (recipe gotcha). Sizes
+ * stay on the scale — micro-labels use the `--text-2xs` token, not a raw px.
+ *
  * Composition note: kept as small, file-local presentational pieces so each
  * stays well under the complexity threshold (the `DrawerBody` split pattern,
  * custom-component-inventory §1).
@@ -70,7 +78,7 @@ function beltAccentClass(colorHex: string | null): string {
 
 function PassportEyebrow({ children }: { children: ReactNode }) {
   return (
-    <span className="font-medium text-[0.625rem] text-muted-foreground uppercase tracking-wide">
+    <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wide">
       {children}
     </span>
   )
@@ -140,7 +148,9 @@ function PassportIdentity({
       </Avatar>
 
       <div className="min-w-0 flex-1">
-        <H4 className="truncate text-nowrap">{name}</H4>
+        <H4 className="truncate text-nowrap [font-family:var(--font-bbl-heading,var(--font-display))]!">
+          {name}
+        </H4>
         <Stack direction="row" className="mt-1 items-center gap-2">
           <BeltSwatch variant="bar" colorHex={colorHex} shimmer />
           {rankName && (
@@ -216,7 +226,7 @@ export function BjjPassportCard({
       hover={false}
       style={rankStyle}
       className={cx(
-        "relative isolate max-w-sm gap-5 overflow-clip border-border/60 bg-linear-to-br from-primary/10 via-card to-card shadow-sm",
+        "relative isolate max-w-sm gap-5 overflow-clip border-border/60 bg-linear-to-br from-primary/10 via-card to-card shadow-sm [font-family:var(--font-bbl-body,var(--font-sans))]",
         className,
       )}
     >
