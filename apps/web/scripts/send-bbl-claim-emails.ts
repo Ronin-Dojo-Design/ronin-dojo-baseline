@@ -37,6 +37,7 @@
 import { readFileSync } from "node:fs"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Brand, PrismaClient } from "../.generated/prisma/client.js"
+import { auth } from "../lib/auth"
 import { notifyMemberOfBblClaimYourProfile } from "../lib/notifications"
 
 type Recipient = {
@@ -134,6 +135,68 @@ async function resolveNode(recipient: Recipient): Promise<ResolvedNode | null> {
   }
 }
 
+/**
+ * Mint a per-recipient, email-bound, single-use magic link for the FIX #3
+ * one-click claim flow (SESSION_0412).
+ *
+ * The `callbackURL` is the self-arming preview hop wrapping the token-accept
+ * route: `/preview?token=<previewToken>&next=/lineage/claim/accept?node=<nodeId>`.
+ * The recipient's click chain is:
+ *   email link → /api/auth/magic-link/verify (sets session cookie, outside the
+ *   gated `(web)` group) → redirects to the callbackURL → /preview arms the
+ *   bbl_preview cookie (past the countdown gate) → redirects to
+ *   /lineage/claim/accept?node=<id> → the route has a session + arms preview →
+ *   acceptLineageClaimByToken re-validates and claims.
+ *
+ * We call Better-Auth's `signInMagicLink` only to CREATE the verification token
+ * (email-bound, single-use, plugin-managed expiry), passing
+ * `metadata: { skipEmail: true }` so the generic login email is suppressed — this
+ * branded "claim your profile" email is the one that ships, carrying the
+ * token-accept link. The freshly-created token is read back from the same DB
+ * (storeToken defaults to "plain", so `Verification.identifier` IS the token),
+ * mirroring the dev-login route. `signInMagicLink` requires a `Headers` object
+ * even outside a request, so we synthesize one pinned to the BBL host.
+ */
+async function mintClaimMagicLink(opts: {
+  baseUrl: string
+  email: string
+  nodeId: string
+  previewToken: string
+}): Promise<string> {
+  const accept = `/lineage/claim/accept?node=${opts.nodeId}`
+  const callbackURL = `/preview?token=${encodeURIComponent(opts.previewToken)}&next=${encodeURIComponent(accept)}`
+
+  const host = new URL(opts.baseUrl).host
+  const headers = new Headers({ host, "x-forwarded-host": host })
+
+  await auth.api.signInMagicLink({
+    headers,
+    body: { email: opts.email, callbackURL, metadata: { skipEmail: true } },
+  })
+
+  // Read back the token BA just created for this email (plain storeToken → identifier == token).
+  // The verification `value` is `JSON.stringify({ email, name })`, so anchor the match to the exact
+  // `"email":"<email>"` JSON fragment — a bare `contains: email` could substring-match a DIFFERENT
+  // recipient (e.g. `a@x.com` ⊂ `aa@x.com`). Combined with newest-first ordering this returns this
+  // iteration's token. ⚠ The caller MUST keep minting SERIAL (one recipient at a time); a parallel
+  // loop could interleave mints and let `orderBy desc` grab a sibling's token.
+  const verification = await prisma.verification.findFirst({
+    where: { value: { contains: `"email":"${opts.email}"` } },
+    orderBy: { createdAt: "desc" },
+    select: { identifier: true },
+  })
+  if (!verification) {
+    throw new Error(`magic-link token not found for ${opts.email}`)
+  }
+
+  // Build the verify URL on the BBL origin (not BETTER_AUTH_URL) so the emailed link
+  // points at the recipient's brand host. The verify endpoint only needs token + callbackURL.
+  const url = new URL("/api/auth/magic-link/verify", opts.baseUrl)
+  url.searchParams.set("token", verification.identifier)
+  url.searchParams.set("callbackURL", callbackURL)
+  return url.toString()
+}
+
 async function main() {
   const opts = parseArgs()
   const recipients = JSON.parse(readFileSync(opts.recipients, "utf-8")) as Recipient[]
@@ -167,15 +230,34 @@ async function main() {
         continue
       }
 
-      const claimUrl = `${opts.baseUrl}/lineage/join?node=${resolved.nodeId}`
+      // FIX #3 (SESSION_0412): the claim link is now an email-bound, single-use
+      // magic link. The recipient clicks it → BA verifies + sets the session →
+      // redirects to the `callbackURL`, which self-arms the BBL preview cookie
+      // (past the countdown gate) and lands on the token-accept route, which
+      // re-validates server-side and one-click-claims the profile. (Default
+      // preview token matches getBblPreviewToken; duplicated literally to avoid
+      // importing the app env into this SKIP_ENV_VALIDATION script.)
+      const previewToken = process.env.BBL_PREVIEW_TOKEN ?? "bob-tony-BBL-preview"
 
       if (opts.dryRun) {
+        // Dry run must not mint a real (DB-writing, single-use) token — print the
+        // would-be link SHAPE with a placeholder token instead.
+        const accept = `/lineage/claim/accept?node=${resolved.nodeId}`
+        const callbackURL = `/preview?token=${encodeURIComponent(previewToken)}&next=${encodeURIComponent(accept)}`
+        const wouldBe = `${opts.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=${encodeURIComponent(callbackURL)}`
         console.log(
-          `  ✓ would send → ${recipient.email} (${resolved.profileName}, ${recipient.dirtyDozen ? "lifetime" : "1yr"}) ${claimUrl}`,
+          `  ✓ would send → ${recipient.email} (${resolved.profileName}, ${recipient.dirtyDozen ? "lifetime" : "1yr"}) ${wouldBe}`,
         )
         sent += 1
         continue
       }
+
+      const claimUrl = await mintClaimMagicLink({
+        baseUrl: opts.baseUrl,
+        email: recipient.email,
+        nodeId: resolved.nodeId,
+        previewToken,
+      })
 
       await notifyMemberOfBblClaimYourProfile({
         brand: Brand.BBL,
