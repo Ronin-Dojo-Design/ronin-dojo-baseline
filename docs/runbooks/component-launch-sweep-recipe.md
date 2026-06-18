@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-component-launch-sweep-legal
+last_agent: claude-component-launch-sweep-events
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -247,6 +247,33 @@ Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` sea
   sweep moved it **verbatim** into the body module and **flagged it as content debt for the supervised
   content lane**. Inventing brand copy inside a presentation sweep is out of scope (same boundary as
   schema migrations) — surface it loudly in the report, don't fix it silently.
+
+Surfaced by the **/events** sweep (public list + promotion-event detail — decompose, no `PolicyLayout`):
+
+- **Content-rich card decomposition yields non-zero `complexity_introduced` — unlike the legal *prose*
+  sweep where it was 0.** A page body made of many optional-field cards (the award card branches on the
+  promotee `??` chain, the lineage-node ternary, and `discipline`/`colorHex`/`shortName`/`awardedBy`/
+  `organization`/`location` `&&`s) carries high **cyclomatic** complexity that is inherent to the
+  *content*, not the structure. Decomposing the monolithic `page.tsx` relocates that branch-heavy render
+  into the new section files (`AwardCard` cyc 19, `EventCard` cyc 14), so `fallow audit` attributes it as
+  `complexity_introduced > 0` — even though each new unit is **simpler** than the source monolith (and the
+  sweep dropped a branch by swapping the inline `rankStyle` ternary for `BeltSwatch`). Read it exactly like
+  the clone-relocation caveat: `dead_code_introduced: 0` + a held `maintainability_avg` (90 here) + low
+  `avg_cyclomatic`/`p90`/`critical_complexity_pct` (3.6 / 6 / 0%), **not** the raw above-threshold count or
+  the `fail` verdict. Do NOT fragment a coherent card further just to push each piece below threshold —
+  that's the "abstract distinct content to silence the detector" anti-pattern, and it only redistributes
+  the branches (extracting the provenance line leaves both halves above a low threshold).
+- **`next/dynamic` on a pure-RSC below-fold section is a structural marker, not a bundle win.** Every
+  events section is a Server Component (no `"use client"`, no client JS), so `next/dynamic`-splitting the
+  below-fold gallery (`CeremonyPhotos`) with SSR kept defers the *module* but there is no client chunk to
+  shrink — unlike bbl-landing, whose lazy targets are client carousels/embeds carrying real JS. Keep SSR
+  (no `ssr:false`), keep the split (it marks the boundary and is ready if the section later gains a
+  lightbox/client behaviour), and **don't add a `loading` boundary** — the SSR'd HTML paints, so the
+  fallback is never meaningfully seen. Report the win as structural, not a measured bundle reduction.
+- **A thin detail `page.tsx` that newly needs the brand resolves it on the wire — still no new-data lane.**
+  `/events/[slug]` didn't previously read the brand; feeding `BrandTypography` needs `getRequestBrand()`
+  (a header read — no schema, no payload column) added to the page and `Promise.all`-ed with the existing
+  slug fetch. That's in scope (presentation wiring of data already on the wire), not a supervised migration.
 
 ## Cross-references
 
