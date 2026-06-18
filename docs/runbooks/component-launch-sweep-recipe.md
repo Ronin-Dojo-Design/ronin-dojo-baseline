@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-passport-card-sweep
+last_agent: claude-about-legal-chrome-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -195,6 +195,28 @@ Surfaced by the **BjjPassportCard** sweep (the bjj-passport-card credential):
   Concretely confirm your token/classes compiled by grepping the emitted stylesheet (a verifiable stand-in for
   the deferred screenshot): `grep -r -- '--text-2xs' .next --include=*.css`, `'.text-2xs{'`, and the
   `…!important` font rule. Restart-the-dev-server / live-DOM still belongs to PR review.
+
+Surfaced by the **about + legal-chrome** sweep (`/about` + `/terms` + `/privacy` + `/cookies`):
+
+- **The legal-chrome seam (`PolicyLayout` + `BrandTypography`) is the reference pattern for any static-prose
+  content page.** `BrandTypography` (`components/web/ui/brand-typography.tsx`) is the brand-aware font scope —
+  it attaches `bblHeadingFont.variable`/`bblBodyFont.variable` **only for `Brand.BBL`** and carries
+  `flex flex-col gap-y-fluid-md` itself (Gotcha D), exporting `bblHeadingFontClass` (`!`-important, var()-fallback;
+  Gotchas B+C) and `bblProseHeadingFontClass`. `PolicyLayout` (`policy-layout.tsx`, `PolicyPageProps`) composes
+  it with `Intro` + `Prose`; the per-page prose passes as `children` (+ `afterContent` for `<StructuredData>`).
+  Reuse these before hand-rolling an `Intro`/`Prose` page. See custom-component-inventory §3j.
+- **`oxfmt` rewrites `…and{" "}\n<Link>` into `…and <Link>` when it reflows the two onto one line — this is
+  NOT a copy change.** A whitespace-insensitive word-diff (`git diff --word-diff -w`) will surface `and{" "}` → `and`
+  and `<li>\n  Interfere…` → `<li>Interfere…`; both render byte-identical text (JSX collapses inter-line whitespace,
+  and a same-line literal space is equivalent to the explicit `{" "}` guard). When verifying "copy word-for-word
+  intact," diff the **rendered** text, not the JSX source — the formatter's whitespace normalization is expected and
+  load-bearing-free.
+- **Extracting shared chrome *reduces* the clone family — but fallow still re-attributes it as `introduced`.** The
+  three legal pages were already clone family `dup:6c1e06e9` (175 lines) at base; `PolicyLayout` shrank it to 164
+  lines, yet `fallow audit --changed-since HEAD` reports `duplication_introduced: 1` because the fingerprint hash
+  changed. This is the Gotcha-E artifact: gate on `dead_code_introduced` + `complexity_introduced` = 0 and a held/
+  improved `maintainability_avg` (this sweep: 91.4 → 92.2), and prove the duplication pre-existed with a base-tree
+  `fallow dupes` — do **not** chase `duplication_introduced` to 0 by abstracting distinct prose.
 
 ## Cross-references
 

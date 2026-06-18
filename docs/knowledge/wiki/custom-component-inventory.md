@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-17
-last_agent: claude-session-0401
+updated: 2026-06-18
+last_agent: claude-component-launch-sweep
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -278,6 +278,17 @@ SESSION_0202 added the user-dashboard editor preview surface:
 - **Deliberately excluded:** the schedule instructor list (`components/web/schedules/schedule-instructor-list.tsx`) is a management widget (assign/unassign/set-primary, exposes email) — re-inspected SESSION_0326, no public face — stays on `user.image`. The `Author` byline (`components/web/ui/author.tsx`, used by blog/posts/testimonials) is content-authorship, not a member-directory avatar. `user-menu.tsx` (self/session) and admin avatars (bracket-viewer, user-form) are out of scope. `dashboard/membership.tsx` already prefers `passport.avatarUrl` (self-view).
 - **Proof:** `server/web/directory/queries.avatar-projection.integration.test.ts` (prefer / fallback / HIDDEN-excluded); `server/web/courses/queries.integration.test.ts` (course-instructor prefer / fallback, SESSION_0326); SESSION_0326 authenticated Playwright visual smoke across directory/member/lineage/disciplines.
 - **Brand default-avatar fallback (SESSION_0408):** `resolveDisplayAvatar(avatarUrl, brand)` in `lib/media.ts` returns a brand default (`/brand/bbl/default-black-belt.png` — a committed `public/` static asset, NOT media-base-prefixed) when `avatarUrl` is null, wired into `findProfileBySlug` + `projectDirectoryProfileListItem` (brand threaded through `searchDirectoryProfiles`). **Brand-scoped** — only `BBL` has a default key (`BRAND_DEFAULT_AVATAR`, plain string-keyed — no `Brand` value-import); Baseline/RDD fall through to initials unchanged. The account-image fallback (`avatarUrl ?? user.image`) still applies first. The WP member-migration scripts `scripts/import-bbl-members-full.ts` (full claimable roster → `bbl-lineage`) + `scripts/set-bbl-default-avatars.ts` (wire the default onto null-avatar placeholders) populate + back this.
+
+---
+
+## 3j. Content / legal page chrome — `components/web/ui/`
+
+> The brand-aware font scope + the shared chrome for static prose pages (about, terms, privacy, cookies). Server-renderable; no `"use client"`. Established by the **component-launch-sweep** on `/about` + its legal siblings (the recipe's worked legal-chrome pattern). The body prose stays in each page (distinct legal/marketing copy is never abstracted into the layout — ADR 0022 + recipe Gotcha E); only the chrome is shared.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `BrandTypography` | `apps/web/components/web/ui/brand-typography.tsx` | `brand: Brand`, plus any `<div>` attributes | Brand-aware font **scope**. The root layout (`app/layout.tsx`) only attaches `fontSans.variable`, so the BBL type tokens (`--font-bbl-heading` / `--font-bbl-body`) are undefined on a plain content page — it renders the generic app font even under `data-brand="BBL"`. This wrapper attaches `bblHeadingFont.variable` / `bblBodyFont.variable` **only for `Brand.BBL`** (every other brand gets no `.variable`, so the body cleanly inherits the app font — zero off-BBL regression). The scope element itself carries `flex flex-col gap-y-fluid-md` because it collapses the page body to a single child of the `(web)`-layout `Wrapper`, which would otherwise lose the inter-section gap (recipe Gotcha D). Exports two class strings for descendants: **`bblHeadingFontClass`** = `[font-family:var(--font-bbl-heading,var(--font-display))]!` (nested `var()`-**fallback** idiom, not a comma-list — an undefined `var()` with no fallback drops the whole declaration → silent system-font inherit off-BBL; recipe Gotcha B) with `!` to beat a heading primitive's baked-in `font-display` that `tailwind-merge` won't dedupe (Gotcha C); and **`bblProseHeadingFontClass`** = `[&_:is(h1,h2,h3,h4)]:…!` to re-point every heading inside a `Prose` block. The internal body-font class is module-local (not exported — avoids an orphan export). The component only *consumes* the brand var; the brand-aware consumer is what defines the scope (so the primitive stays brand-neutral). |
+| `PolicyLayout` | `apps/web/components/web/ui/policy-layout.tsx` | `brand: Brand`, `title: ReactNode`, `description?: ReactNode`, `children: ReactNode`, `afterContent?: ReactNode` (type `PolicyPageProps`) | Shared chrome for content/legal pages: composes `BrandTypography` (font scope + the `gap-y-fluid-md` carrier) → `Intro` (`IntroTitle` gets `bblHeadingFontClass`, `IntroDescription` optional) → `Prose` (gets `bblProseHeadingFontClass`) wrapping the verbatim body `children`. `afterContent` carries non-visual siblings that must stay inside the brand scope but outside the prose (e.g. `<StructuredData>` on `/about`). Consumers: `app/(web)/{about,terms,privacy,cookies}/page.tsx`. The distinct per-page legal/marketing prose is passed as `children` and never abstracted into the layout — extracting the chrome (not the copy) is the whole point; it *reduced* the pre-existing cross-page clone family (175→164 lines, recipe Gotcha E). |
 
 ---
 
