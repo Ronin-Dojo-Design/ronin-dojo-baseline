@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-17
 updated: 2026-06-18
-last_agent: claude-component-launch-sweep-legal
+last_agent: claude-lineage-tree-canvas-sweep
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -226,6 +226,33 @@ Surfaced by the **legal/content page sweep** (privacy / cookies / terms + the DS
   failing means §5b (`next build` compile + type + emitted-CSS grep, live-DOM deferred to PR review) is
   the only path — don't burn time trying to bring up the compose stack first; check `docker info` once,
   then go straight to §5b.
+
+### Decomposition-heavy sweeps (surfaced by the `lineage-tree-canvas` sweep — the 1502-line #1 monolith)
+
+- **Mutually-recursive sub-components must be colocated in ONE file — splitting them violates step 1.** A
+  recursive tree renders `Branch → ChildColumn → Branch`. Putting `Branch` and `ChildColumn` in separate files
+  makes each import the other, which fallow flags as a `circular-dependency` (dead-code, *introduced*) and risks
+  a bundler TDZ at module-eval. The "one component per file" rule yields here: a single mutually-recursive
+  rendering unit is ONE module. Keep both `export`/private functions in `branch.tsx`; export only the entry the
+  orchestrator renders (mark the inner one file-private, else it's an `unused-export`).
+- **Only `export` a relocated const if another file imports it.** Consts that were module-private in the monolith
+  (`MIN_SCALE`, the stagger coefficients) are used only by their own `clampScale`/`entranceDelay`. Exporting them
+  on the way out creates `unused-export` dead-code (*introduced*). Keep internal-only values file-private; export
+  just the surface the other modules consume.
+- **A high-complexity monolith will NOT read `introduced: 0` on the fallow complexity/dup axes — and that's
+  expected.** Unlike the drawer (whose extracted parts fell *below* threshold, so introduced was genuinely 0), a
+  #1-monolith's functions are individually above-threshold, and fallow has **no cross-file move detection**: it
+  attributes every relocated function to its new path as `complexity_introduced` / `duplication_introduced`. The
+  gate to actually enforce is **`dead_code_introduced: 0`** (genuinely new dead code — fixable, as above). For
+  complexity/dup, verify by *mapping*: every "introduced" finding must be a 1:1 verbatim relocation of a function
+  that existed in the original (no function's `cyclomatic` rose; the orchestrator's *fell* as logic moved to
+  hooks). Two of this sweep's three "introduced" clone groups were against **untouched** sibling files
+  (`lineage-cohort-timeline`, `lib/lineage/flatten-lineage`) — proof the clone pre-existed the move. Net-new
+  authored complexity/duplication = 0; maintainability held (1502-line hotspot → 14 files, largest ~370).
+- **Run `oxfmt` from `apps/web`, not the repo root.** oxfmt discovers `.oxfmtrc.json` from the CWD; run it from
+  the repo root and it prints "No config found, using defaults" and reformats with **semicolons + arrow-parens**
+  that fight the repo's `semi: false` / `arrowParens: avoid` style. Always `cd apps/web` first (or the package
+  `format` script) so the config applies.
 
 Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` seam, no new component):
 
