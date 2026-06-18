@@ -45,6 +45,15 @@
   --color-chart-4: hsl(43 74% 66%);
   --color-chart-5: hsl(27 87% 67%);
 
+  /* On-media treatment — text + scrim laid over photographic hero/celebration
+     media (the BBL landing's full-bleed cinematic panels). Theme-independent by
+     design: a photo legibility scrim is dark and its text is light in BOTH light
+     and dark mode. A brand-token seam so media surfaces stop hardcoding black /
+     white (component-launch-sweep; ADR 0022). Use `text-on-media`,
+     `from-media-scrim/70`, etc. — never raw `text-white` / `from-black/70`. */
+  --color-on-media: hsl(0 0% 100%);
+  --color-media-scrim: hsl(0 0% 0%);
+
   --tracking-micro: -0.0125em;
 
   --font-sans: var(--font-sans);
