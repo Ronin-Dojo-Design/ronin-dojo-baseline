@@ -227,6 +227,27 @@ Surfaced by the **legal/content page sweep** (privacy / cookies / terms + the DS
   the only path — don't burn time trying to bring up the compose stack first; check `docker info` once,
   then go straight to §5b.
 
+Surfaced by the **/about** sweep (SESSION_0412 — reused the `PolicyLayout` seam, no new component):
+
+- **A zero-height sibling after the single-wrapper scope is safe — the gap-collapse caveat above still
+  holds.** `PolicyLayout` reproduces the Wrapper's `gap-y-fluid-md` *because* wrapping a body collapses
+  it to ONE Wrapper child. `/about` keeps a `StructuredData` JSON-LD `<script>` as a **second** Wrapper
+  child (sibling AFTER the layout), so there are two children again — but a `<script>` renders
+  zero-height, so the inter-child `gap-y-fluid-md` spaces nothing visible. No regression, and you do NOT
+  need to fold the sibling into the scope. (If the trailing sibling were *visible*, you would — it would
+  re-open the double-gap the scope exists to collapse.)
+- **`PolicyLayout` is title/description source-agnostic — i18n vs hardcoded const is a route concern.**
+  The legal pages pass hardcoded `PAGE_TITLE` consts; `/about` passes strings resolved from next-intl
+  (`pages.about`) + page metadata. The layout takes already-resolved `title`/`description` strings, so
+  the i18n wiring stays in the route's `getData` and the layout is reused unchanged. When a swept page
+  already sources metadata from i18n, **leave that wiring intact** — don't inline it to match the
+  legal-page shape.
+- **A token sweep RELOCATES stale copy; it does not rewrite it.** `/about`'s body was leftover dirstarter
+  boilerplate (developer-tools copy + a "Brian Scott" author block — not BBL/martial-arts voice). The
+  sweep moved it **verbatim** into the body module and **flagged it as content debt for the supervised
+  content lane**. Inventing brand copy inside a presentation sweep is out of scope (same boundary as
+  schema migrations) — surface it loudly in the report, don't fix it silently.
+
 ## Cross-references
 
 - [ADR 0022 — brand-neutral primitives](../architecture/decisions/0022-brand-chrome-resolution.md)
