@@ -25,17 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
-import { AvatarField } from "~/components/common/fields"
 import { Form } from "~/components/common/form"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
+import { AvatarUploader } from "~/components/web/uploader"
 import { cx } from "~/lib/utils"
 import { setPassportRank } from "~/server/web/onboarding/actions"
 import type { BeltRankOption } from "~/server/web/onboarding/ranks"
-import { updatePassport } from "~/server/web/passport/actions"
 
 type WizardForm = {
-  avatarUrl: string
   rankId: string
   awardedAt: string
   promotedBy: string
@@ -55,8 +53,8 @@ type ProfileEnhancementWizardProps = {
   onSkip: () => void
   /** Belt ranks for the Step 2 picker (data-driven from `Rank`). */
   ranks: BeltRankOption[]
-  /** Account id — used for the avatar upload key (`passports/{userId}/avatar`). */
-  userId: string
+  /** Kept for caller compatibility — no longer used inside the wizard. */
+  userId?: string
   initialAvatarUrl?: string | null
 }
 
@@ -75,14 +73,13 @@ export function ProfileEnhancementWizard({
   onComplete,
   onSkip,
   ranks,
-  userId,
   initialAvatarUrl,
 }: ProfileEnhancementWizardProps) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(initialAvatarUrl ?? null)
   const reduceMotion = useReducedMotion()
   const form = useForm<WizardForm>({
     defaultValues: {
-      avatarUrl: initialAvatarUrl ?? "",
       rankId: "",
       awardedAt: "",
       promotedBy: "",
@@ -90,9 +87,8 @@ export function ProfileEnhancementWizard({
     },
   })
 
-  const avatarAction = useAction(updatePassport)
   const rankAction = useAction(setPassportRank)
-  const saving = avatarAction.isExecuting || rankAction.isExecuting
+  const saving = rankAction.isExecuting
 
   useEffect(() => {
     if (open) setCurrentStep(0)
@@ -127,16 +123,8 @@ export function ProfileEnhancementWizard({
 
     const values = form.getValues()
 
-    // Avatar (optional): only write when it changed from the starting value.
-    if (values.avatarUrl && values.avatarUrl !== (initialAvatarUrl ?? "")) {
-      const res = await avatarAction.executeAsync({ avatarUrl: values.avatarUrl })
-      if (res?.serverError) {
-        toast.error("Couldn't save your photo. Please try again.")
-        return
-      }
-    }
-
     // Belt (optional but the wizard's primary purpose): write a RankAward.
+    // Avatar is already saved directly by AvatarUploader → uploadAndPromotePassportAvatar.
     if (values.rankId) {
       const res = await rankAction.executeAsync({
         rankId: values.rankId,
@@ -210,13 +198,12 @@ export function ProfileEnhancementWizard({
           <Form {...form}>
             <div className="grid gap-4">
               {currentStep === 0 && (
-                <div className="grid gap-2">
-                  <AvatarField
-                    form={form}
-                    control={form.control}
-                    name="avatarUrl"
-                    path={`passports/${userId}/avatar`}
-                    previewAlt="Avatar preview"
+                <div className="flex flex-col items-center gap-2">
+                  <AvatarUploader
+                    initialAvatarUrl={savedAvatarUrl}
+                    rankColorHex={null}
+                    onAvatarUrl={url => setSavedAvatarUrl(url)}
+                    size="lg"
                   />
                   <p className="text-center text-sm text-muted-foreground">
                     Optional — you can add this later.
