@@ -66,9 +66,7 @@ beforeEach(() => {
 
 describe("uploadAndPromotePassportAvatar — auth gate", () => {
   it("rejects when unauthenticated", async () => {
-    const { uploadAndPromotePassportAvatar } = await import(
-      "~/server/web/actions/passport-avatar"
-    )
+    const { uploadAndPromotePassportAvatar } = await import("~/server/web/actions/passport-avatar")
     setTestSession(null)
 
     const result = await uploadAndPromotePassportAvatar({ file: validFile() })
@@ -77,9 +75,7 @@ describe("uploadAndPromotePassportAvatar — auth gate", () => {
   })
 
   it("rejects non-image files at the schema boundary", async () => {
-    const { uploadAndPromotePassportAvatar } = await import(
-      "~/server/web/actions/passport-avatar"
-    )
+    const { uploadAndPromotePassportAvatar } = await import("~/server/web/actions/passport-avatar")
     setTestSession(TEST_USER)
 
     const textFile = new File([new Uint8Array([1])], "notes.txt", { type: "text/plain" })
@@ -89,9 +85,7 @@ describe("uploadAndPromotePassportAvatar — auth gate", () => {
   })
 
   it("rejects video files even though webMediaFileSchema allows them", async () => {
-    const { uploadAndPromotePassportAvatar } = await import(
-      "~/server/web/actions/passport-avatar"
-    )
+    const { uploadAndPromotePassportAvatar } = await import("~/server/web/actions/passport-avatar")
     setTestSession(TEST_USER)
 
     const videoFile = new File([new Uint8Array([1])], "clip.mp4", { type: "video/mp4" })
@@ -101,9 +95,7 @@ describe("uploadAndPromotePassportAvatar — auth gate", () => {
   })
 
   it("fails with PASSPORT_NOT_FOUND when authenticated but no passport exists", async () => {
-    const { uploadAndPromotePassportAvatar } = await import(
-      "~/server/web/actions/passport-avatar"
-    )
+    const { uploadAndPromotePassportAvatar } = await import("~/server/web/actions/passport-avatar")
     setTestSession(TEST_USER)
 
     // db.passport.findFirst is stubbed to return null above.

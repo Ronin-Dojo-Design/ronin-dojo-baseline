@@ -1,6 +1,12 @@
 "use client"
 
-import { AlertCircleIcon, CheckCircle2Icon, LockKeyholeIcon, MailIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  CheckCircle2Icon,
+  CrownIcon,
+  LockKeyholeIcon,
+  MailIcon,
+} from "lucide-react"
 import { Button } from "~/components/common/button"
 import { Form } from "~/components/common/form"
 import { Note } from "~/components/common/note"
@@ -21,6 +27,42 @@ export function JoinLegacyWizard({
 }) {
   const wizard = useJoinWizard({ claimableTree, initialNodeId })
   const errorCount = Object.keys(wizard.form.formState.errors).length
+
+  // Founder welcome — Bob Bass, the genius behind Black Belt Legacy, claiming his own
+  // profile. A personalized, celebratory screen instead of the generic success state.
+  if (wizard.submitted && wizard.isFounder) {
+    const founderFirstName = wizard.firstName?.trim() || "Bob"
+    return (
+      <div
+        className={cx(
+          "flex flex-col items-center gap-4 px-4 py-12 text-center",
+          bblPortalFontClass,
+        )}
+      >
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-500">
+          <CrownIcon className="size-9" aria-hidden="true" />
+        </span>
+        <h3 className={cx("text-2xl uppercase italic", bblHeadingClass)}>
+          Welcome home, {founderFirstName}
+        </h3>
+        <p className="max-w-md text-sm leading-7 text-muted-foreground">
+          This one&apos;s yours. You&apos;re the founder and the genius behind{" "}
+          <strong className="text-foreground">Black Belt Legacy</strong> — none of this exists
+          without you. Thank you for your patience through every late build and every &ldquo;almost
+          there.&rdquo; It&apos;s finally here, and we could not be more excited for everything
+          ahead.
+        </p>
+        <p className="max-w-sm text-sm leading-7 text-muted-foreground">
+          <strong className="text-foreground">Check your email</strong> to claim your profile — one
+          click and your place at the head of the lineage is locked in, Elite for life.
+        </p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <MailIcon className="size-4 shrink-0 text-red-500" aria-hidden="true" />
+          Didn&apos;t get it? Check spam, or reach us at welcome@blackbeltlegacy.com.
+        </p>
+      </div>
+    )
+  }
 
   // Success state — shown after a successful submit instead of bouncing guests to a
   // sign-in modal. The confirmation email (with next steps) is sent server-side.

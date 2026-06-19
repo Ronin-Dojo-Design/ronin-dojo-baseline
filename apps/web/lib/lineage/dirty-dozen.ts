@@ -7,3 +7,21 @@
  * (SESSION_0403 — graphify comp gift epic.)
  */
 export const DIRTY_DOZEN_LABEL = "The Dirty Dozen — Rigan's First Black Belts (1992–96)"
+
+/**
+ * The founder behind Black Belt Legacy — Bob Bass (Dirty Dozen #8, 1st American
+ * Black Belt under Rigan Machado). His lineage node carries this stable slug
+ * (see `prisma/seed-baseline-lineage.ts`), so we detect "this is the founder
+ * claiming his own profile" deterministically off the node — not a brittle name
+ * string — to grant him the lifetime founder treatment + celebratory welcome.
+ * (SESSION_0418 — self-serve claim wiring.)
+ */
+export const BBL_FOUNDER_NODE_SLUG = "bob-bass"
+
+/**
+ * Bob Bass's known email addresses. The founder "Long Road" claim email shows
+ * "intended for …" these addresses (in the footer) so he recognizes it as
+ * personally his — regardless of which of his inboxes it's actually delivered
+ * to. Display-only; not the delivery target. (SESSION_0418.)
+ */
+export const BBL_FOUNDER_EMAILS = ["sbjjitsu30@gmail.com", "Bobbassjj@gmail.com"] as const

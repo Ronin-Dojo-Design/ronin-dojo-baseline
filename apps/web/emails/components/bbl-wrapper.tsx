@@ -41,9 +41,21 @@ const LOGO_WHITE = `${ASSET_BASE}/brand/blackbeltlegacy/bbl-logo-white.png`
 export type BblEmailWrapperProps = ContainerProps & {
   to: string
   preview?: string
+  /**
+   * Overrides the "This email was intended for …" footer text. Use when the
+   * displayed intended recipient differs from the delivery address (e.g. the
+   * founder letter, addressed to both of Bob's known inboxes). Defaults to `to`.
+   */
+  intendedFor?: string
 }
 
-export const BblEmailWrapper = ({ to, preview, children, ...props }: BblEmailWrapperProps) => {
+export const BblEmailWrapper = ({
+  to,
+  preview,
+  intendedFor,
+  children,
+  ...props
+}: BblEmailWrapperProps) => {
   return (
     <Html>
       <Head />
@@ -80,8 +92,9 @@ export const BblEmailWrapper = ({ to, preview, children, ...props }: BblEmailWra
                 {bbl.tagline}
               </Text>
               <Text className="my-1 text-xs/normal text-neutral-500">
-                This email was intended for <span className="text-neutral-800">{to}</span>. If you
-                weren&apos;t expecting it, you can safely ignore it.
+                This email was intended for{" "}
+                <span className="text-neutral-800">{intendedFor ?? to}</span>. If you weren&apos;t
+                expecting it, you can safely ignore it.
               </Text>
               <Text className="my-1 text-xs/normal text-neutral-500">
                 Questions? Reply to this email or reach us at {bbl.email}.

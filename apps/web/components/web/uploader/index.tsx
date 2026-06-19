@@ -152,9 +152,7 @@ export function AvatarUploader({
 
       {validationError && <p className="text-sm text-destructive">{validationError}</p>}
 
-      {serverError && phase !== "done" && (
-        <p className="text-sm text-destructive">{serverError}</p>
-      )}
+      {serverError && phase !== "done" && <p className="text-sm text-destructive">{serverError}</p>}
 
       {phase === "preview" && (
         <div className="flex gap-2">

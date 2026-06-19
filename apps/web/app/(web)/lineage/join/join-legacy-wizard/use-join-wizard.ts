@@ -23,6 +23,7 @@ export function useJoinWizard({
 }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  const [isFounder, setIsFounder] = useState(false)
   const router = useRouter()
   const form = useForm<JoinLegacyFormValues>({
     resolver: zodResolver(joinLegacyFormSchema),
@@ -67,6 +68,9 @@ export function useJoinWizard({
         router.push(data.checkoutUrl)
         return
       }
+      // The founder (Bob Bass) claiming his own profile gets the celebratory welcome
+      // instead of the generic success state.
+      setIsFounder(Boolean(data.isFounder))
       setSubmitted(true)
     },
     onError: ({ error }) => {
@@ -91,6 +95,8 @@ export function useJoinWizard({
     goNext,
     isExecuting,
     submitted,
+    isFounder,
+    firstName: form.getValues("firstName"),
     isLastStep: currentStep === STEP_META.length - 1,
     submit: form.handleSubmit(values => execute(values)),
   }

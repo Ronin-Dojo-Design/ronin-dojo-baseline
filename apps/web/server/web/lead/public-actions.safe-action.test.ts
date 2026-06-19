@@ -27,7 +27,10 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 // next/server-inline-after, ~/lib/rate-limiter, ~/lib/brand-context) BEFORE any
 // import of the action / server modules. Brand=BBL — the action looks up the
 // brand's Organization and the whole Join-the-Legacy surface is BBL.
-installSafeActionMocks({ brand: "BBL", host: "blackbeltlegacy.com" })
+// Capture the env so each test can claim a FRESH IP — the action rate-limits to
+// 5 submissions per IP/hour, and this file fires more than 5, so a shared IP
+// would trip the limiter (SESSION_0418).
+const safeActionEnv = installSafeActionMocks({ brand: "BBL", host: "blackbeltlegacy.com" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { mock } from "bun:test"
@@ -37,15 +40,58 @@ import { mock } from "bun:test"
 
 // CRITICAL: stub the email seam BEFORE importing the action. `bun test` fires
 // REAL Resend sends otherwise (project memory: unit tests send real emails).
-// These no-ops keep the `after()` notify calls from touching the network.
+// These record-only stubs keep the `after()` notify calls from touching the
+// network AND let us assert WHICH email fired per branch (SESSION_0418).
+type NotifyCall = { fn: string; to?: string; isLifetime?: boolean; profileName?: string }
+const notifyCalls: NotifyCall[] = []
 mock.module("~/lib/notifications", () => ({
-  notifyUserOfBblJoinLegacy: async () => {},
-  notifyAdminOfBblJoinLegacy: async () => {},
+  notifyUserOfBblJoinLegacy: async (p: { to: string }) => {
+    notifyCalls.push({ fn: "notifyUserOfBblJoinLegacy", to: p.to })
+  },
+  notifyAdminOfBblJoinLegacy: async (p: { to: string }) => {
+    notifyCalls.push({ fn: "notifyAdminOfBblJoinLegacy", to: p.to })
+  },
+  notifyMemberOfBblClaimYourProfile: async (p: {
+    to: string
+    isLifetime?: boolean
+    profileName?: string
+  }) => {
+    notifyCalls.push({
+      fn: "notifyMemberOfBblClaimYourProfile",
+      to: p.to,
+      isLifetime: p.isLifetime,
+      profileName: p.profileName,
+    })
+  },
+  notifyUserOfBblFreeSignup: async (p: { to: string }) => {
+    notifyCalls.push({ fn: "notifyUserOfBblFreeSignup", to: p.to })
+  },
+  notifyFounderOfTheLongRoad: async (p: { to: string }) => {
+    notifyCalls.push({ fn: "notifyFounderOfTheLongRoad", to: p.to })
+  },
 }))
 
-// @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+// Stub the magic-link minter so `after()` never calls Better Auth / writes a
+// real verification token. Record the destination so we can assert claim vs /me.
+// The action also imports the path helpers from this module, so re-export them.
+const mintCalls: Array<{ email: string; nextPath: string }> = []
+mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
+  claimAcceptNextPath: (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`,
+  FREE_SIGNUP_NEXT_PATH: "/me",
+  mintClaimMagicLink: async (opts: { email: string; nextPath: string }) => {
+    mintCalls.push({ email: opts.email, nextPath: opts.nextPath })
+    return `https://blackbeltlegacy.com/api/auth/magic-link/verify?token=stub&callbackURL=stub`
+  },
+}))
 
+/** Find the most recent notify call to a given recipient. */
+const notifyTo = (to: string) => notifyCalls.filter(c => c.to === to)
+const mintTo = (email: string) => mintCalls.filter(c => c.email === email)
+
+// @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
+
+import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import { createJoinLegacyInterest } from "~/server/web/lead/public-actions"
 import { db } from "~/services/db"
 
@@ -58,17 +104,38 @@ let claimTreeId = ""
 let claimNodeId = ""
 let claimantUserId = ""
 
+// Dirty-Dozen fixture (lifetime comp) — a node whose member carries the seeded cohort label.
+let dozenTreeId = ""
+let dozenNodeId = ""
+
+// Founder fixture (Bob Bass, slug `bob-bass`). Created best-effort: if the dev DB already
+// seeded a `bob-bass` node the unique slug collides, so we soft-skip the founder positive case.
+let founderTreeId = ""
+let founderNodeId = ""
+
+type ClaimFixtureOptions = {
+  /** Suffix so each fixture's tagged rows are unique. */
+  key: string
+  /** Display name for the node's placeholder Passport — surfaces as the claim email profileName. */
+  displayName?: string
+  /** When set, the member is tagged into a visual group with this label (e.g. the Dirty Dozen). */
+  visualGroupLabel?: string
+  /** Override the node slug (the founder fixture needs the exact `bob-bass` slug). */
+  slug?: string
+}
+
 /** A claimable member node (accountless Passport) in a published+claimable BBL tree. */
-const createClaimFixture = async () => {
+const createClaimFixture = async (options: ClaimFixtureOptions) => {
+  const { key } = options
   const nodePassport = await db.passport.create({
-    data: { displayName: tag("node-passport") },
+    data: { displayName: options.displayName ?? tag(`${key}-node-passport`) },
     select: { id: true },
   })
 
   const node = await db.lineageNode.create({
     data: {
       passportId: nodePassport.id,
-      slug: tag("node"),
+      slug: options.slug ?? tag(`${key}-node`),
       visibility: "PUBLIC",
       verificationStatus: "PENDING",
     },
@@ -77,10 +144,10 @@ const createClaimFixture = async () => {
 
   const tree = await db.lineageTree.create({
     data: {
-      id: tag("tree"),
+      id: tag(`${key}-tree`),
       brand: TEST_BRAND,
-      slug: tag("tree"),
-      name: tag("tree"),
+      slug: tag(`${key}-tree`),
+      name: tag(`${key}-tree`),
       visibility: "PUBLIC",
       isPublished: true,
       isClaimable: true,
@@ -89,18 +156,31 @@ const createClaimFixture = async () => {
     select: { id: true },
   })
 
+  let visualGroupId: string | undefined
+  if (options.visualGroupLabel) {
+    const group = await db.lineageVisualGroup.create({
+      data: {
+        treeId: tree.id,
+        label: options.visualGroupLabel,
+        groupType: "PROMOTION_DATE",
+      },
+      select: { id: true },
+    })
+    visualGroupId = group.id
+  }
+
   await db.lineageTreeMember.create({
     data: {
-      id: tag("member"),
+      id: tag(`${key}-member`),
       treeId: tree.id,
       nodeId: node.id,
       isClaimable: true,
       visualSortOrder: 0,
+      visualGroupId,
     },
   })
 
-  claimTreeId = tree.id
-  claimNodeId = node.id
+  return { treeId: tree.id, nodeId: node.id }
 }
 
 beforeAll(async () => {
@@ -122,7 +202,32 @@ beforeAll(async () => {
   })
   claimantUserId = claimant.id
 
-  await createClaimFixture()
+  const ordinary = await createClaimFixture({ key: "ord", displayName: tag("Chayce Johnson") })
+  claimTreeId = ordinary.treeId
+  claimNodeId = ordinary.nodeId
+
+  const dozen = await createClaimFixture({
+    key: "dozen",
+    displayName: tag("Dozen Member"),
+    visualGroupLabel: DIRTY_DOZEN_LABEL,
+  })
+  dozenTreeId = dozen.treeId
+  dozenNodeId = dozen.nodeId
+
+  // Founder: the node MUST carry the exact `bob-bass` slug for deterministic detection. On a
+  // dev DB already seeded with that node the create collides — soft-skip rather than fail.
+  try {
+    const founder = await createClaimFixture({
+      key: "founder",
+      displayName: tag("Bob Bass"),
+      visualGroupLabel: DIRTY_DOZEN_LABEL,
+      slug: BBL_FOUNDER_NODE_SLUG,
+    })
+    founderTreeId = founder.treeId
+    founderNodeId = founder.nodeId
+  } catch {
+    console.warn("[test] founder fixture skipped — `bob-bass` slug already present in this DB")
+  }
 })
 
 afterAll(async () => {
@@ -136,8 +241,14 @@ afterAll(async () => {
     .catch(() => {})
   await db.lineageClaimRequest.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTreeMember.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
+  await db.lineageVisualGroup.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTree.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.lineageNode.deleteMany({ where: { slug: { startsWith: PREFIX } } })
+  // The founder node carries the literal `bob-bass` slug (not PREFIX-tagged) — sweep it by id,
+  // but only the one THIS run created (guarded by founderNodeId so a seeded node is never touched).
+  if (founderNodeId) {
+    await db.lineageNode.deleteMany({ where: { id: founderNodeId } }).catch(() => {})
+  }
 
   // Tools the action created carry the tagged submitter email; sweep by that.
   await db.tool.deleteMany({ where: { submitterEmail: { contains: PREFIX } } })
@@ -147,6 +258,14 @@ afterAll(async () => {
   await db.passport.deleteMany({ where: { displayName: { startsWith: PREFIX } } })
   await db.organization.deleteMany({ where: { slug: { startsWith: PREFIX } } })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
+})
+
+// Each test claims a fresh IP so the 5-per-IP/hour submission limiter never bites
+// across this file's >5 submissions.
+let ipSeq = 0
+beforeEach(() => {
+  ipSeq += 1
+  safeActionEnv.setIp(`jli-${TS}-${ipSeq}`)
 })
 
 /** Minimal valid input for the action's schema; per-case overrides on top. */
@@ -213,11 +332,73 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
     expect(toolCount).toBe(0)
 
-    // Signed out → no LineageClaimRequest is persisted.
+    // Signed out → no LineageClaimRequest is persisted yet (the emailed magic link finishes it).
     const claimCount = await db.lineageClaimRequest.count({
       where: { treeId: claimTreeId, nodeId: claimNodeId },
     })
     expect(claimCount).toBe(0)
+
+    // SESSION_0418: the guest now gets a branded claim magic link (no sign-in bounce).
+    const email = `${tag(submitter)}@test.local`
+    const minted = mintTo(email)
+    expect(minted).toHaveLength(1)
+    expect(minted[0]?.nextPath).toBe(`/lineage/claim/accept?node=${claimNodeId}`)
+
+    const sent = notifyTo(email).map(c => c.fn)
+    expect(sent).toContain("notifyMemberOfBblClaimYourProfile")
+    expect(sent).toContain("notifyAdminOfBblJoinLegacy")
+    // The generic confirmation must NOT fire on the guest-claim path.
+    expect(sent).not.toContain("notifyUserOfBblJoinLegacy")
+
+    // Non-Dirty-Dozen node → one free year (isLifetime false), profileName from the node Passport.
+    const claimEmail = notifyTo(email).find(c => c.fn === "notifyMemberOfBblClaimYourProfile")
+    expect(claimEmail?.isLifetime).toBe(false)
+    expect(claimEmail?.profileName).toBe(tag("Chayce Johnson"))
+  })
+
+  it("Dirty-Dozen node, signed OUT: claim email mints lifetime comp (isLifetime true)", async () => {
+    setTestSession(null)
+    const submitter = "dozen-claim"
+    const email = `${tag(submitter)}@test.local`
+
+    const result = await createJoinLegacyInterest({
+      ...baseInput(submitter),
+      treeId: dozenTreeId,
+      nodeId: dozenNodeId,
+    })
+
+    expect(result?.serverError).toBeUndefined()
+
+    const minted = mintTo(email)
+    expect(minted).toHaveLength(1)
+    expect(minted[0]?.nextPath).toBe(`/lineage/claim/accept?node=${dozenNodeId}`)
+
+    const claimEmail = notifyTo(email).find(c => c.fn === "notifyMemberOfBblClaimYourProfile")
+    expect(claimEmail).toBeDefined()
+    // Dirty Dozen cohort → lifetime Elite.
+    expect(claimEmail?.isLifetime).toBe(true)
+  })
+
+  it("free signup, no node, signed OUT: mints a /me magic link + free-signup verify email (no claim email)", async () => {
+    setTestSession(null)
+    const submitter = "free-signup"
+    const email = `${tag(submitter)}@test.local`
+
+    const result = await createJoinLegacyInterest(baseInput(submitter))
+
+    expect(result?.serverError).toBeUndefined()
+    // No node selected → a placeholder Tool is still created, and isFounder is false.
+    expect(result?.data?.toolSlug).not.toBeNull()
+    expect(result?.data?.isFounder).toBe(false)
+
+    const minted = mintTo(email)
+    expect(minted).toHaveLength(1)
+    expect(minted[0]?.nextPath).toBe("/me")
+
+    const sent = notifyTo(email).map(c => c.fn)
+    expect(sent).toContain("notifyUserOfBblFreeSignup")
+    expect(sent).toContain("notifyAdminOfBblJoinLegacy")
+    expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
 
   it("claim of existing node, signed IN: no duplicate Tool; LineageClaimRequest PENDING created; claimRequiresSignIn false", async () => {
@@ -247,6 +428,14 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
     expect(claim).not.toBeNull()
     expect(claim?.status).toBe("PENDING")
+
+    // SESSION_0418: signed-in users keep the immediate claim — NO magic link is minted,
+    // and the generic confirmation (not the claim email) fires.
+    const email = `${tag(submitter)}@test.local`
+    expect(mintTo(email)).toHaveLength(0)
+    const sent = notifyTo(email).map(c => c.fn)
+    expect(sent).toContain("notifyUserOfBblJoinLegacy")
+    expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
 
   it("empty-string nodeId (form default) is treated as no-claim: Tool created, claimRequiresSignIn false, meta.claimIntent false", async () => {
@@ -268,5 +457,34 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     const lead = await db.lead.findUnique({ where: { id: result!.data!.leadId } })
     const meta = lead?.meta as Record<string, unknown> | null
     expect(meta?.claimIntent).toBe(false)
+  })
+
+  it("founder (Bob Bass) claim, signed OUT: isFounder true + lifetime claim email", async () => {
+    if (!founderNodeId) {
+      console.warn("[test] skipping founder positive case — fixture unavailable")
+      return
+    }
+    setTestSession(null)
+    const submitter = "founder-claim"
+    const email = `${tag(submitter)}@test.local`
+
+    const result = await createJoinLegacyInterest({
+      ...baseInput(submitter),
+      treeId: founderTreeId,
+      nodeId: founderNodeId,
+    })
+
+    expect(result?.serverError).toBeUndefined()
+    // The founder is detected deterministically off the `bob-bass` node slug.
+    expect(result?.data?.isFounder).toBe(true)
+
+    // He still gets the branded claim magic link.
+    const minted = mintTo(email)
+    expect(minted).toHaveLength(1)
+
+    // The founder receives "The Long Road" letter — NOT the generic claim email.
+    const sent = notifyTo(email).map(c => c.fn)
+    expect(sent).toContain("notifyFounderOfTheLongRoad")
+    expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
 })

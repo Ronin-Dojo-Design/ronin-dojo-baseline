@@ -5,15 +5,25 @@ import { after } from "next/server"
 import { z } from "zod"
 import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { getBblPreviewToken } from "~/lib/bbl-preview"
 import { getRequestBrand, getRequestOrigin } from "~/lib/brand-context"
+import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import {
   type BblJoinLegacyMembershipPath,
   notifyAdminOfBblJoinLegacy,
+  notifyFounderOfTheLongRoad,
+  notifyMemberOfBblClaimYourProfile,
+  notifyUserOfBblFreeSignup,
   notifyUserOfBblJoinLegacy,
 } from "~/lib/notifications"
 import { publicActionClient } from "~/lib/safe-actions"
 import { createSlugTakenCheck, generateUniqueSlug } from "~/lib/slug"
 import { leadPayload } from "~/server/web/lead/payloads"
+import {
+  claimAcceptNextPath,
+  FREE_SIGNUP_NEXT_PATH,
+  mintClaimMagicLink,
+} from "~/server/web/lineage/mint-claim-magic-link"
 
 const publicLeadSchema = z.object({
   organizationId: z.string().min(1),
@@ -208,10 +218,27 @@ export const createJoinLegacyInterest = publicActionClient
       claimTree && parsedInput.nodeId
         ? await db.lineageTreeMember.findFirst({
             where: { treeId: claimTree.id, nodeId: parsedInput.nodeId, isClaimable: true },
-            select: { id: true },
+            select: {
+              id: true,
+              // Cohort drives the comp term in the email copy (lifetime vs 1yr) — read off the
+              // claimed node's visual group, the SAME signal finalizeLineageNodeClaim uses to
+              // grant the comp, so the email never contradicts the grant.
+              visualGroup: { select: { label: true } },
+              node: {
+                select: { slug: true, passport: { select: { displayName: true } } },
+              },
+            },
           })
         : null
     const isClaimOfExistingNode = Boolean(claimTree && claimMember)
+
+    // Dirty Dozen → lifetime Elite comp; everyone else → one free year. (Byte-matches the
+    // seeded visual-group label, the single source of truth shared with claim-finalize.)
+    const claimIsLifetime = claimMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
+    // The founder (Bob Bass) claiming his OWN node gets the celebratory welcome — detected
+    // deterministically off the node slug, never a name string.
+    const claimIsFounder = claimMember?.node?.slug === BBL_FOUNDER_NODE_SLUG
+    const claimProfileName = claimMember?.node?.passport?.displayName ?? fullName
 
     const notes = [
       `Role: ${role.replaceAll("_", " ").toLowerCase()}`,
@@ -361,10 +388,19 @@ export const createJoinLegacyInterest = publicActionClient
       requestOrigin ?? "https://baselinemartialarts.com",
     ).toString()
 
+    const email = parsedInput.email.trim().toLowerCase()
+    // Magic links must point at the BBL brand host so the verify endpoint + preview hop
+    // resolve to the recipient's origin (not BETTER_AUTH_URL).
+    const bblOrigin = requestOrigin ?? "https://blackbeltlegacy.com"
+    // A guest (no session) on the FREE path is the self-serve magic-link case: a claim of an
+    // existing node gets the branded "claim your profile" email; a plain free signup gets a
+    // `/me` verify link. Signed-in users + paid tiers keep the original confirmation email.
+    const isGuestFreeSubmission = membershipPath === "FREE" && !session?.user?.id
+
     after(async () => {
       const notification = {
         brand,
-        to: parsedInput.email.trim().toLowerCase(),
+        to: email,
         firstName,
         fullName,
         membershipPath,
@@ -378,7 +414,46 @@ export const createJoinLegacyInterest = publicActionClient
       }
 
       try {
-        await notifyUserOfBblJoinLegacy(notification)
+        if (isGuestFreeSubmission && isClaimOfExistingNode && parsedInput.nodeId) {
+          // Guest claiming an existing profile → email-bound magic link that one-click claims
+          // the node (account attach + comp grant happen in finalizeLineageNodeClaim). No
+          // sign-in bounce — the link IS the proof of identity.
+          const claimUrl = await mintClaimMagicLink({
+            baseUrl: bblOrigin,
+            email,
+            nextPath: claimAcceptNextPath(parsedInput.nodeId),
+            previewToken: getBblPreviewToken(),
+          })
+          if (claimIsFounder) {
+            // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
+            // founder — with his one-click claim link carried inside.
+            await notifyFounderOfTheLongRoad({ brand, to: email, firstName, claimUrl })
+          } else {
+            await notifyMemberOfBblClaimYourProfile({
+              brand,
+              to: email,
+              firstName,
+              profileName: claimProfileName,
+              claimUrl,
+              compTier: "ELITE",
+              isLifetime: claimIsLifetime,
+            })
+          }
+        } else if (isGuestFreeSubmission) {
+          // Guest free signup with no node to claim → mint a `/me` magic link; Better Auth
+          // provisions the account on verify and lands them on `/me`.
+          const verifyUrl = await mintClaimMagicLink({
+            baseUrl: bblOrigin,
+            email,
+            nextPath: FREE_SIGNUP_NEXT_PATH,
+            previewToken: getBblPreviewToken(),
+          })
+          await notifyUserOfBblFreeSignup({ brand, to: email, firstName, verifyUrl })
+        } else {
+          // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):
+          // the original Join-the-Legacy confirmation.
+          await notifyUserOfBblJoinLegacy(notification)
+        }
         await notifyAdminOfBblJoinLegacy(notification)
       } catch (error) {
         console.error("[notify] Join the Legacy email failed", { leadId: lead.id, error })
@@ -395,6 +470,11 @@ export const createJoinLegacyInterest = publicActionClient
       toolSlug: tool?.slug ?? null,
       checkoutUrl,
       claimCreated,
+      // Retained for back-compat, but the guest-claim magic link now replaces the sign-in
+      // bounce — the wizard shows the success state and the emailed link finishes the claim.
       claimRequiresSignIn: isClaimOfExistingNode && !session?.user?.id,
+      // The founder claiming his own profile → the celebratory founder welcome (submit-time
+      // success state + the `/me` landing both read this).
+      isFounder: claimIsFounder,
     }
   })
