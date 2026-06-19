@@ -649,7 +649,7 @@ export const notifyFounderOfTheLongRoad = async (params: BblFounderLongRoadParam
   return await sendEmail({
     brand: params.brand,
     to: params.to,
-    subject: "The Long Road — claim your Black Belt Legacy profile, founder to founder",
+    subject: "A first look at Black Belt Legacy — and the long road that got us here",
     react: EmailBblTheLongRoad({
       to: params.to,
       firstName: params.firstName,
