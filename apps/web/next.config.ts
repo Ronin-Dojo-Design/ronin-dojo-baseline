@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   reactStrictMode: false,
   allowedDevOrigins: ["bbl.local", "baseline.local", "wekaf.local"],
+  images: {
+    // #118 introduced next/image on the BBL landing (member photos, brand media).
+    // Those assets live on Cloudflare R2 public buckets whose subdomain rotates
+    // (pub-<id>.r2.dev), so allow any R2 host rather than pinning one bucket.
+    // Without this, next/image throws "Invalid src prop … not configured" → 500.
+    remotePatterns: [
+      { protocol: "https", hostname: "**.r2.dev" },
+      { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
+    ],
+  },
   async redirects() {
     return [
       ...buildMigratedAdminAppRedirects(),
