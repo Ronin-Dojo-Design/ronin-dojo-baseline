@@ -3,16 +3,17 @@ title: "SESSION 0413 — Consolidation: merge the BBL launch fleet into main"
 slug: session-0413
 type: session--open
 created: 2026-06-18
-updated: 2026-06-18
+updated: 2026-06-19
 last_agent: claude-session-0413
 sprint: S6
 pairs_with:
 
   - docs/sprints/SESSION_0412.md
+  - docs/sprints/SESSION_0414.md
 backlinks:
 
   - docs/knowledge/wiki/index.md
-status: in-progress
+status: closed
 ---
 
 # SESSION 0413 — Consolidation: merge the BBL launch fleet into main
@@ -145,62 +146,109 @@ Sequential by default (shared docs + shared chrome). Independent draft CI verifi
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0413_TASK_01 | complete | Bow-in: read rituals/recipe/0411/0412, built the PR overlap matrix, diagnosed #117 (Prisma→client) + #116 (unit) CI, grilled 4 forks. |
-| SESSION_0413_TASK_02 | pending | Merge #118 + reconcile rich holding page on top. |
-| SESSION_0413_TASK_03 | pending | Fix + merge #117 drawer font; reset redundant local drawer files. |
-| SESSION_0413_TASK_04 | pending | Merge #110 lineage scroll. |
-| SESSION_0413_TASK_05 | pending | Merge page sweeps #111–#114 sequentially. |
-| SESSION_0413_TASK_06 | pending | Fix + merge #116 emails/Stripe. |
-| SESSION_0413_TASK_07 | pending | Merge parity #115 + #119 into shared chrome (gated). |
-| SESSION_0413_TASK_08 | pending | Verify bob-tony preview renders; full close. |
+| SESSION_0413_TASK_02 | partial | Merged #118 (`11be2579` harden BBL launch surfaces). Rich holding page built (`5413dc15`) then **reverted** (`ec3c8c11`); kept the simpler dark cinematic teaser instead (`6fee5f2b` bundled logo, `fb888576` restore dark hero). |
+| SESSION_0413_TASK_03 | superseded | Pivot to D12 — multi-brand PR fleet abandoned; #117 not merged. |
+| SESSION_0413_TASK_04 | superseded | D12 — #110 abandoned. |
+| SESSION_0413_TASK_05 | superseded | D12 — page sweeps #111–#114 abandoned. |
+| SESSION_0413_TASK_06 | superseded | D12 — #116 emails/Stripe abandoned (port to new repo later). |
+| SESSION_0413_TASK_07 | superseded | D12 — parity #115/#119 abandoned. |
+| SESSION_0413_TASK_08 | superseded | D12 — consolidation goal dropped; preview link not the close criterion. |
+| SESSION_0413_TASK_09 | complete | **PIVOT:** ratified SOT-ADR **D12** (BBL → own single-brand repo via subtractive fork) + amendment (fork point = now; cutover = Vercel project move; first data task = recover reconciler). Committed 0411/0412/0413 logs (`1bf5cf57`). |
 
 ## What landed
 
-Filled at bow-out.
+The session **changed direction mid-flight.** The planned "merge the whole PR fleet into main"
+consolidation was started but abandoned in favor of a strategic pivot:
+
+- **#118 merged + hardened** (`11be2579`) — BBL landing engine (brandable / `next-image` /
+  server-belt-color), plus the `bbl-rank-colors.ts` helper and `bbl-landing/*` token cleanups.
+- **Rich holding page built then reverted** — `5413dc15` layered a rich pre-launch holding page on
+  #118's engine; `ec3c8c11` reverted it. Net public surface kept = the **simpler dark cinematic
+  teaser**: `6fee5f2b` (show the bundled BBL logo, not the text wordmark) + `fb888576` (restore the
+  dark cinematic hero over #118's theme-token reskin). Still behind `BBL_COUNTDOWN`.
+- **🔱 PIVOT — SOT-ADR D12 ratified** (`1bf5cf57`): BBL extracts to **its own single-brand repo** via
+  a **subtractive fork** of `ronin-dojo-app` (strip the 4-brand harness, keep the engine; prune
+  ~122→~62 models; fresh Neon, re-migrate from WP+monorepo+Pods; cutover = re-attach
+  `blackbeltlegacy.com` to a new Vercel project). Plus the D12 amendment (fork point = now; carry the
+  held patch; abandon PR fleet #110–119; first data task = recover `reconcile-pods.mjs`). Committed
+  the SESSION 0411/0412/0413 logs alongside.
+- **Reconciler rescued** to `apps/web/scripts/reconcile-pods.mjs` (out of ephemeral `/tmp`) — left
+  **untracked** at session end; to be committed to the *new* repo (D12 first data task).
 
 ## Decisions resolved
 
-- Holding page RICH; scope WHOLE FLEET; #116 in; countdown stays ON (grill, above).
+- **D12 supersedes the entire 0413 plan.** The 4-brand consolidation premise is dropped; BBL gets its
+  own repo + Vercel deployment. The 4 grill forks above (holding page RICH / whole fleet / #116 in /
+  countdown ON) are **obsolete** — only "countdown stays ON" survives.
+- Public BBL surface = dark cinematic teaser (logo + hero), countdown ON. No public reveal.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
-| `docs/sprints/SESSION_0413.md` | New session ledger. |
+| `apps/web/app/(web)/(home)/bbl/bbl-landing/*` | #118 merge: brandable engine, `bbl-rank-colors.ts`, token cleanups, teaser hero/logo restore. |
+| `apps/web/app/(web)/layout.tsx` | #118 / teaser wiring (conflict markers resolved). |
+| `apps/web/scripts/reconcile-pods.mjs` | Reconciler rescued from `/tmp` (untracked — carries to new repo). |
+| `docs/product/black-belt-legacy/SOT-ADR.md` | **D12 + amendment** added. |
+| `docs/sprints/SESSION_0411.md`, `SESSION_0412.md`, `SESSION_0413.md` | Session ledgers committed. |
 
 ## Verification
 
-Filled at bow-out.
+- `git log 0548c36f..HEAD` confirms the 6-commit range landed on `main` (CI-green per push).
+- Public BBL surface = dark cinematic teaser behind `BBL_COUNTDOWN` (no reveal). Not re-screenshotted
+  this close — superseded by the D12 fork (the teaser carries forward as a patch, not the deliverable).
+- D12 + amendment present in `SOT-ADR.md`; reconciler present at `apps/web/scripts/reconcile-pods.mjs`.
 
 ## Open decisions / blockers
 
-Per-merge go/no-go pending operator confirmation.
+- None blocking. The entire 0413 merge plan is **dropped** by D12. Carry-forward: D-024/D-025 (bun
+  deploy / R2 case-sensitive keys), D-029 (register tree slug `bbl-lineage`) — relevant to the new repo.
 
 ## Next session
 
 ### Goal
 
-Filled at bow-out.
+Begin the **D12 BBL extraction** — but operator-driven, not on autopilot (operator directive
+SESSION_0414: "nothing is canonical anymore; I drive"). First: **Petey-plan the extraction**
+(grill the un-pinned mechanics: new repo name/remote, FK-safe prune clusters + order, migration
+sequence WP→monorepo→Pods, fresh Neon + Vercel + CI setup, how the held teaser patch carries in,
+where/when to commit the recovered reconciler) into a session roadmap before any structural move.
 
 ### First task
 
-Filled at bow-out.
+SESSION_0414 opened, this 0413 closed cleanly. Then Petey-plan grill with the operator. No repo
+created and no code touched until the operator says go.
 
 ## Review log
 
-Filled at bow-out.
+Light close (operator directive: nothing canonical, lean ceremony). The merged work (#118 + teaser)
+shipped green to `main`; the strategic output (D12) was operator-grilled before ratification.
 
 ## Hostile close review
 
-Filled at bow-out.
+- **Did the planned goal complete?** No — and intentionally. The consolidation was abandoned for D12.
+  Closing the session as `closed` with most tasks `superseded` is the honest record, not a failure to hide.
+- **Loose end:** `apps/web/scripts/reconcile-pods.mjs` is untracked and is the CSV-export version, NOT
+  yet rebuilt against `local.sql` as D12 specifies. It survives in the working tree → carry to 0414.
+- **Risk:** the abandoned PRs (#110–119) remain open on GitHub; they should be closed with a pointer to
+  D12 so the fleet doesn't get re-merged by mistake. Flagged for the operator (not done this session).
 
 ## ADR / ubiquitous-language check
 
-Filled at bow-out.
+- **SOT-ADR D12** added (supersedes D11's in-place flip for BBL; D1/D3/D4/D6 carry forward). No new
+  ubiquitous-language terms; "subtractive fork", "harness", "engine", "parts-donor" are framing, not domain nouns.
 
 ## Reflections
 
-Filled at bow-out.
+A reframe landed as a reversal: three sessions of multi-brand-launch consolidation gave way to "the
+friction is the harness, not the domain — fork it out." The merged #118 engine + teaser still have value
+as the patch that carries into the new repo, so the session wasn't wasted motion. Lesson reinforced:
+when the plan and the operator's evolving understanding diverge, stop executing the plan and re-decide.
 
 ## Full close evidence
 
-Filled at bow-out.
+- `git log --oneline 0548c36f..HEAD` → 6 commits (#118 merge, holding-page add+revert, 2 teaser fixes,
+  docs+D12). All on `main`.
+- `docs/product/black-belt-legacy/SOT-ADR.md` contains D12 + the D12 amendment.
+- `apps/web/scripts/reconcile-pods.mjs` present (228 lines, untracked).
+- WP migration source verified present: `~/Local Sites/BlackBeltLegacy/app/sql/local.sql` (316 MB).
