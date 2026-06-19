@@ -1,7 +1,14 @@
 "use client"
 
 import { BarChart3Icon, CheckIcon, NetworkIcon, SwordsIcon, TrophyIcon } from "lucide-react"
-import { useState, type ComponentType } from "react"
+import { useState, type ComponentType, type ReactNode } from "react"
+import { EmailCapture } from "~/app/(web)/_components/bbl-teaser/email-capture"
+import { PhoneMarquee } from "~/app/(web)/_components/bbl-teaser/phone-marquee"
+import {
+  BBL_LOGO_WHITE,
+  HERO_IMAGES,
+  type MarqueeColumn,
+} from "~/app/(web)/_components/bbl-teaser/bbl-teaser-types"
 import { Badge } from "~/components/common/badge"
 import {
   Drawer,
@@ -40,7 +47,19 @@ const VALUE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   swords: SwordsIcon,
 }
 
-const HEADING = "[font-family:var(--font-bbl-heading),system-ui,sans-serif]"
+// BBL display heading: Poppins extrabold (800) — the weight must be explicit because
+// Tailwind preflight makes headings inherit the body weight (400), and Poppins is only
+// loaded at 600/700/800. Mirrors the landing hero's font-extrabold.
+const HEADING = "[font-family:var(--font-bbl-heading),system-ui,sans-serif] font-extrabold"
+
+// Scrolling-phone background for the hero — three columns dealt from the 10 hero
+// photos (mirrors the teaser / holding page).
+const pickPhones = (indexes: number[]): string[] => indexes.map(index => HERO_IMAGES[index]!)
+const PHONE_COLUMNS: MarqueeColumn[] = [
+  { images: pickPhones([0, 3, 6, 9]), durationSec: 40, direction: "up" },
+  { images: pickPhones([1, 4, 7]), durationSec: 48, direction: "down" },
+  { images: pickPhones([2, 5, 8]), durationSec: 44, direction: "up" },
+]
 
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -56,12 +75,17 @@ export function JoinLegacyLanding({
   membershipPlans,
   isCancelled,
   isSubmitted,
+  riganSlot,
+  videoSlot,
 }: {
   claimableTree: ClaimableTree
   initialNodeId?: string
   membershipPlans: MembershipPlans
   isCancelled: boolean
   isSubmitted: boolean
+  // Server-rendered sections passed as slots (they're server components).
+  riganSlot?: ReactNode
+  videoSlot?: ReactNode
 }) {
   // Auto-open the join modal when arriving from a "Claim this profile" card.
   const [open, setOpen] = useState(Boolean(initialNodeId))
@@ -69,47 +93,85 @@ export function JoinLegacyLanding({
   const openJoin = () => setOpen(true)
 
   return (
-    <div className="[font-family:var(--font-bbl-body),system-ui,sans-serif]">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#070707] px-6 py-14 text-white sm:px-10 sm:py-20">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-[-12rem] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-red-600/20 blur-[150px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_24rem)]" />
+    <div
+      className={cx(
+        "[font-family:var(--font-bbl-body),system-ui,sans-serif]",
+        // BBL display headings: Poppins extrabold (800) italic uppercase — applied to
+        // every h1/h2 so the slotted Rigan + video section headings (H2) match the hero.
+        "[&_:is(h1,h2)]:[font-family:var(--font-bbl-heading)]! [&_:is(h1,h2)]:font-extrabold! [&_:is(h1,h2)]:uppercase [&_:is(h1,h2)]:italic [&_:is(h1,h2)]:tracking-[0.02em]",
+      )}
+    >
+      {/* Section 1 — holding-page hero with the scrolling-phone background */}
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#050505] text-white">
+        {/* Phone marquee — full-bleed band, right-weighted on desktop (matches the teaser). */}
+        <div
+          aria-hidden
+          className="absolute inset-y-0 right-0 w-full opacity-25 sm:w-3/5 sm:opacity-40 lg:w-1/2"
+        >
+          <div className="h-full px-4 [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)]">
+            <PhoneMarquee columns={PHONE_COLUMNS} />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/70 to-transparent sm:via-[#050505]/40" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-2xl text-center">
-          <SectionEyebrow>{heroContent.eyebrow}</SectionEyebrow>
+        {/* Red glow */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[-10rem] top-[-12rem] h-[40rem] w-[40rem] rounded-full bg-red-600/20 blur-[160px]" />
+        </div>
 
-          <h1
-            className={cx(
-              "mt-4 text-balance text-4xl uppercase italic tracking-[0.01em] sm:text-6xl",
-              HEADING,
-            )}
-          >
-            {heroContent.titleLead} <span className="text-red-500">{heroContent.titleAccent}</span>
-          </h1>
+        {/* Hero content — left-weighted, like the holding page */}
+        <div className="relative z-10 px-6 py-16 sm:px-10 sm:py-24">
+          <div className="max-w-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BBL_LOGO_WHITE}
+              alt="Black Belt Legacy"
+              width="120"
+              height="69"
+              className="h-14 w-auto"
+            />
 
-          <p className="mx-auto mt-5 max-w-xl text-pretty text-base/7 text-white/65">
-            {heroContent.description}
-          </p>
+            <span className="mt-8 block text-[0.7rem] font-black uppercase tracking-[0.28em] text-red-500">
+              {heroContent.eyebrow}
+            </span>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={openJoin}
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-red-600 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400"
+            <h1
+              className={cx(
+                "mt-4 text-balance text-4xl uppercase italic tracking-[0.01em] sm:text-6xl",
+                HEADING,
+              )}
             >
-              {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
-            </button>
-            <a
-              href="/lineage"
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white/80 transition hover:bg-white/[0.06]"
-            >
-              Explore the lineage
-            </a>
+              {heroContent.titleLead} <span className="text-red-500">{heroContent.titleAccent}</span>
+            </h1>
+
+            <p className="mt-5 max-w-lg text-pretty text-base/7 text-white/65">
+              {heroContent.description}
+            </p>
+
+            <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={openJoin}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-red-600 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400"
+              >
+                {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
+              </button>
+              <a
+                href="/lineage/bbl-lineage"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white/80 transition hover:bg-white/[0.06]"
+              >
+                Explore the lineage
+              </a>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Section 2 — Rigan (heritage) */}
+      {riganSlot && <div className="mt-14">{riganSlot}</div>}
+
+      {/* Section 3 — Rigan video */}
+      {videoSlot && <div className="mt-16">{videoSlot}</div>}
 
       {(isCancelled || isSubmitted) && (
         <div className="mt-6 space-y-3">
@@ -265,6 +327,11 @@ export function JoinLegacyLanding({
         >
           {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
         </button>
+      </section>
+
+      {/* Email capture — mailing-list signup at the bottom of the landing. */}
+      <section className="mt-16 flex flex-col items-center gap-4 text-center">
+        <EmailCapture />
       </section>
 
       {/* Join modal — the existing intake form, in a responsive drawer. */}

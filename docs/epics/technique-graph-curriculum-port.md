@@ -67,5 +67,5 @@ the BJJ slices).
 - Monorepo is read-only reference; modernize the older React patterns to React 19 / Next 16.
 - Single-brand BBL; BJJ-only; theme tokens only.
 - Don't regress the SESSION_0414 directory / lineage / cards work.
-- See [`docs/prune-roadmap.md`](prune-roadmap.md) for the parallel brand-prune lanes — this port is
+- See [`docs/prune-roadmap.md`](../prune-roadmap.md) for the parallel brand-prune lanes — this port is
   independent of those (it touches `/techniques` + curriculum, not the brand harness).

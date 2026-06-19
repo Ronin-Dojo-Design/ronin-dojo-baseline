@@ -10,7 +10,8 @@ import { BrandProvider } from "~/contexts/brand-context"
 import { QueryProvider } from "~/contexts/query-context"
 import { SearchProvider } from "~/contexts/search-context"
 import { getRequestBrand } from "~/lib/brand-context"
-import { fontSans } from "~/lib/fonts"
+import { brandThemeCss } from "~/lib/brand-theme"
+import { bblBodyFont, bblHeadingFont, fontSans } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
 import { getRequestOrigin } from "~/lib/request-url"
 import { findBrandSettings } from "~/server/admin/brand-settings/queries"
@@ -52,19 +53,9 @@ export default async function ({ children }: LayoutProps<"/">) {
   const brand = await getRequestBrand()
   const brandSettings = await findBrandSettings(brand)
 
-  // Build runtime CSS override from DB-driven BrandSettings
-  const cssOverrides: string[] = []
-  if (brandSettings?.primaryColor)
-    cssOverrides.push(`--color-primary: hsl(${brandSettings.primaryColor});`)
-  if (brandSettings?.primaryFgColor)
-    cssOverrides.push(`--color-primary-foreground: hsl(${brandSettings.primaryFgColor});`)
-  if (brandSettings?.accentColor)
-    cssOverrides.push(`--color-accent: hsl(${brandSettings.accentColor});`)
-  if (brandSettings?.accentFgColor)
-    cssOverrides.push(`--color-accent-foreground: hsl(${brandSettings.accentFgColor});`)
-  const brandCss = cssOverrides.length
-    ? `[data-brand="${brand}"] { ${cssOverrides.join(" ")} }`
-    : ""
+  // Runtime --color-* override from DB-driven BrandSettings (HSL-guarded via the
+  // shared helper — same path the [data-org] layout uses).
+  const brandCss = brandThemeCss(`[data-brand="${brand}"]`, brandSettings)
   const brandStyle = brandCss ? (
     <style id="brand-settings-css" dangerouslySetInnerHTML={{ __html: brandCss }} />
   ) : null
@@ -72,7 +63,7 @@ export default async function ({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fontSans.variable} scroll-smooth`}
+      className={`${fontSans.variable} ${bblHeadingFont.variable} ${bblBodyFont.variable} scroll-smooth`}
       data-scroll-behavior="smooth"
       data-brand={brand}
       suppressHydrationWarning

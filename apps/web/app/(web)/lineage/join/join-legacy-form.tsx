@@ -3,11 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AwardIcon, CheckCircle2Icon, ShieldCheckIcon, SparklesIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useAction } from "next-safe-action/hooks"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import {
@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
-import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
 import { createJoinLegacyInterest } from "~/server/web/lead/public-actions"
 import { cx } from "~/lib/utils"
@@ -130,7 +129,62 @@ const StepHeader = ({
   </div>
 )
 
+const STEP_META = [
+  { id: "path", label: "Your Path" },
+  { id: "identity", label: "Identity" },
+  { id: "lineage", label: "Lineage" },
+] as const
+
+// Fields validated before advancing past each step (the last step validates on submit).
+const STEP_FIELDS: ReadonlyArray<ReadonlyArray<keyof FormValues>> = [
+  ["membershipPath"],
+  ["firstName", "lastName", "email", "phoneE164", "role", "location"],
+  [],
+]
+
+function StepProgress({ current }: { current: number }) {
+  return (
+    <ol className="flex items-center justify-center gap-1.5">
+      {STEP_META.map((step, index) => {
+        const isActive = index === current
+        const isDone = index < current
+        return (
+          <li key={step.id} className="flex items-center gap-1.5">
+            <span
+              className={cx(
+                "flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition-colors",
+                isActive && "border-primary bg-primary text-primary-foreground",
+                isDone && "border-primary/40 bg-primary/15 text-primary",
+                !isActive && !isDone && "border-border bg-muted text-muted-foreground",
+              )}
+            >
+              {isDone ? <CheckCircle2Icon className="size-5" /> : index + 1}
+            </span>
+            <span
+              className={cx(
+                "text-xs font-semibold uppercase tracking-[0.16em] max-sm:hidden",
+                isActive ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {step.label}
+            </span>
+            {index < STEP_META.length - 1 && <span className="mx-1 h-px w-5 bg-border sm:w-8" />}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
 export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormProps) {
+  const [currentStep, setCurrentStep] = useState(0)
+  const isLastStep = currentStep === STEP_META.length - 1
+
+  const goNext = async () => {
+    const ok = await form.trigger(STEP_FIELDS[currentStep] as Array<keyof FormValues>)
+    if (ok) setCurrentStep(step => Math.min(step + 1, STEP_META.length - 1))
+  }
+  const goBack = () => setCurrentStep(step => Math.max(step - 1, 0))
   const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -188,39 +242,11 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
         onSubmit={form.handleSubmit(values => execute(values))}
         data-testid="bbl-register-form"
       >
-        <Card
-          hover={false}
-          className="overflow-hidden border-primary/15 bg-gradient-to-br from-card via-card to-primary/5 p-0!"
-        >
-          <div className="grid gap-5 p-5 md:p-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
-            <div className="space-y-3">
-              <Badge variant="outline" prefix={<SparklesIcon />}>
-                Black Belt Legacy registration
-              </Badge>
-              <div className="space-y-2">
-                <H3 className="text-2xl md:text-3xl">Reserve your verified legacy profile</H3>
-                <Note>
-                  Tell us who you are, where you trained, and how your lineage should connect. A
-                  steward reviews every claim before anything becomes verified.
-                </Note>
-              </div>
-            </div>
-            <div className="rounded-2xl border bg-background/70 p-4 text-sm shadow-sm">
-              <ul className="space-y-2.5">
-                {["Lead intake saved", "Lineage review queued", "Claim intent captured"].map(
-                  item => (
-                    <li key={item} className="flex items-center gap-2">
-                      <CheckCircle2Icon className="size-4 text-primary" aria-hidden="true" />
-                      {item}
-                    </li>
-                  ),
-                )}
-              </ul>
-            </div>
-          </div>
-        </Card>
+        <div className="pb-2">
+          <StepProgress current={currentStep} />
+        </div>
 
-        <Card hover={false} className="space-y-5 p-5 md:p-6">
+        <Card hover={false} className={cx("space-y-5 p-5 md:p-6", currentStep !== 0 && "hidden")}>
           <StepHeader
             icon={SparklesIcon}
             eyebrow="Step 1"
@@ -273,7 +299,7 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
           />
         </Card>
 
-        <Card hover={false} className="space-y-5 p-5 md:p-6">
+        <Card hover={false} className={cx("space-y-5 p-5 md:p-6", currentStep !== 1 && "hidden")}>
           <StepHeader
             icon={ShieldCheckIcon}
             eyebrow="Step 2"
@@ -379,7 +405,7 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
           </div>
         </Card>
 
-        <Card hover={false} className="space-y-5 p-5 md:p-6">
+        <Card hover={false} className={cx("space-y-5 p-5 md:p-6", currentStep !== 2 && "hidden")}>
           <StepHeader
             icon={AwardIcon}
             eyebrow="Step 3"
@@ -540,17 +566,32 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
           </div>
         </Card>
 
-        <Card hover={false} className="border-primary/20 bg-primary/5 p-5 md:p-6">
-          <Stack className="items-center justify-between gap-4" wrap>
-            <Note className="max-w-2xl text-sm">
-              Your submission stays private until reviewed. Premium and Elite selections create the
-              same intake record, then return you to the lineage membership checkout on this page.
-            </Note>
+        <div className="flex items-center justify-between gap-3 pt-1">
+          {currentStep > 0 ? (
+            <Button type="button" variant="secondary" size="lg" onClick={goBack}>
+              Back
+            </Button>
+          ) : (
+            <span />
+          )}
+
+          {isLastStep ? (
             <Button type="submit" variant="primary" size="lg" isPending={isExecuting}>
               Submit registration
             </Button>
-          </Stack>
-        </Card>
+          ) : (
+            <Button type="button" variant="primary" size="lg" onClick={goNext}>
+              Continue
+            </Button>
+          )}
+        </div>
+
+        {isLastStep && (
+          <Note className="text-center text-xs">
+            Your submission stays private until reviewed. Premium and Elite selections create the
+            same intake record, then return you to the lineage membership checkout.
+          </Note>
+        )}
       </form>
     </Form>
   )

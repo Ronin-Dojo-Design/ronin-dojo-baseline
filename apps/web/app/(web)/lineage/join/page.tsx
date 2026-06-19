@@ -5,6 +5,10 @@ import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import { db } from "~/services/db"
+import { BblHeritage } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-heritage"
+import { BblVideo } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-video"
+import { getStaticBblRankColors } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-rank-colors"
+import { heritageContent } from "~/app/(web)/(home)/bbl/bbl-landing-content"
 import { JoinLegacyLanding } from "./join-legacy-landing"
 
 const getData = cache(async (nodeId?: string) => {
@@ -94,6 +98,9 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
       ? params.node
       : undefined
 
+  // Belt color for the Rigan heritage section's badge (Rank.colorHex data).
+  const rankColors = await getStaticBblRankColors([heritageContent.badge])
+
   return (
     <Wrapper size="lg" gap="lg">
       <JoinLegacyLanding
@@ -102,6 +109,8 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
         membershipPlans={membershipPlans}
         isCancelled={isCancelled}
         isSubmitted={isSubmitted}
+        riganSlot={<BblHeritage rankColors={rankColors} />}
+        videoSlot={<BblVideo />}
       />
     </Wrapper>
   )

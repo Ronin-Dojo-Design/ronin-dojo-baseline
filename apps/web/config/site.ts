@@ -51,7 +51,7 @@ const brandConfigs: Record<
     tagline: "Honor the Lineage. Build the Future.",
     description:
       "Preserving martial arts heritage through lineage tracking, curriculum, and certifications.",
-    logoSrc: "/images/brands/black-belt-legacy/logo.png",
+    logoSrc: "/brand/blackbeltlegacy/bbl-logo-white.png",
     faviconSrc: "/images/brands/black-belt-legacy/favicon.png",
     ogImageSrc: "/images/brands/black-belt-legacy/opengraph.png",
   },

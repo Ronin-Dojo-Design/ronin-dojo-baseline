@@ -3,8 +3,12 @@ import type { FontWeight } from "satori"
 import type { Brand } from "~/.generated/prisma/client"
 import { cx } from "~/lib/utils"
 
+// Geist is the app's neutral sans fallback. It is exposed as `--font-geist` (NOT
+// `--font-sans`) so the Tailwind `--font-sans` theme token can resolve to the BBL
+// body font (Inter) with Geist as the fallback, without a self-referential cycle
+// (`--font-sans: var(--font-bbl-body, var(--font-geist))` in app/styles.css).
 export const fontSans = Geist({
-  variable: "--font-sans",
+  variable: "--font-geist",
   display: "swap",
   subsets: ["latin"],
   weight: "variable",

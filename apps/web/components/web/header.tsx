@@ -83,7 +83,11 @@ const MinimalAuthControls = () => {
   )
 }
 
-const Header = ({ className, ...props }: ComponentProps<"div">) => {
+const Header = ({
+  className,
+  userAvatarUrl,
+  ...props
+}: ComponentProps<"div"> & { userAvatarUrl?: string | null }) => {
   const search = useSearch()
   const t = useTranslations()
   const { brand } = useBrand()
@@ -132,7 +136,6 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
             <div className="flex-1 max-lg:hidden" />
           ) : (
             <nav className="flex flex-wrap gap-x-4 gap-y-0.5 flex-1 max-lg:hidden">
-              {has("programs") && <NavLink href="/programs">{t("navigation.programs")}</NavLink>}
               {has("tournaments") && (
                 <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
               )}
@@ -246,12 +249,6 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               />
             )}
 
-            {has("programs") && (
-              <Button size="sm" variant="secondary" render={<Link href="/programs" />}>
-                {t("navigation.programs")}
-              </Button>
-            )}
-
             {minimal ? (
               <MinimalAuthControls />
             ) : (
@@ -268,7 +265,7 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
           </Stack>
         </div>
 
-        <NavSheet open={isNavOpen} onOpenChange={setNavOpen} />
+        <NavSheet open={isNavOpen} onOpenChange={setNavOpen} userAvatarUrl={userAvatarUrl} />
       </Container>
     </header>
   )

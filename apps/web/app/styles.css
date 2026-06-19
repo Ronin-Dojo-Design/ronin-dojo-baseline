@@ -71,8 +71,12 @@
 
   --tracking-micro: -0.0125em;
 
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-sans);
+  /* Single-brand BBL type system: the BBL body (Inter) / heading (Poppins) fonts are
+     loaded globally on <html> (app/layout.tsx); the app tokens resolve to them, with
+     Geist (--font-geist) as the neutral fallback. Headings use the `font-display`
+     utility, body uses `font-sans`. (SESSION_0416.) */
+  --font-sans: var(--font-bbl-body, var(--font-geist));
+  --font-display: var(--font-bbl-heading, var(--font-geist));
 
   /* Micro-label step below Tailwind's text-xs (0.75rem): codifies the 10px
      uppercase eyebrow / badge-sm size as a token, replacing the repeated

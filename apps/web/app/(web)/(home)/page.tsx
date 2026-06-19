@@ -1,6 +1,6 @@
 import { cache } from "react"
 import { Brand } from "~/.generated/prisma/client"
-import { BblLanding } from "~/app/(web)/(home)/bbl/bbl-landing"
+import { BblJoinLanding } from "~/app/(web)/(home)/bbl-join-landing"
 import { BottomCTA } from "~/app/(web)/(home)/bottom-cta"
 import { FeatureCards } from "~/app/(web)/(home)/feature-cards"
 import { Hero } from "~/app/(web)/(home)/hero"
@@ -24,11 +24,11 @@ export default async function (_props: PageProps<"/">) {
   const { structuredData } = await getData()
   const brand = await getRequestBrand()
 
-  // BBL gets its dedicated landing (legacy content, current primitives — SESSION_0367).
+  // BBL home = the /lineage/join composition promoted to the main page (SESSION_0416).
   if (brand === Brand.BBL) {
     return (
       <>
-        <BblLanding />
+        <BblJoinLanding />
         <StructuredData data={structuredData} />
       </>
     )

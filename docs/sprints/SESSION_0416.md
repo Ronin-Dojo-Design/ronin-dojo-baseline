@@ -98,6 +98,13 @@ Land the four streams on a green `main` in operator-confirmed order, green befor
 | SESSION_0416_TASK_05 | landed | #119 cherry-picked (`a5d43a9d`); auto-merged clean with codex nav; navigation.json keeps techniques+curriculum. |
 | SESSION_0416_TASK_06 | landed | Pre-push: dev server on consolidate (prodsnap roster); all surfaces 200; confirmed countdown gate untouched. ff `main`→consolidate, pushed `a5d43a9d`, closed PRs #119/#120/#121. |
 | SESSION_0416_TASK_07 | landed | Greened main's pre-existing Oxc failure (formatted `reconcile-pods.mjs`, tracked+unformatted since 0414). |
+| SESSION_0416_TASK_08 | landed | BBL type system: Poppins/Inter site-wide (global font load + `@theme` tokens + `--font-geist` rename); brand-theme guard/dedupe helper. |
+| SESSION_0416_TASK_09 | landed | Landing composition on `/lineage/join`: scrolling-phone hero + Rigan/video slots + email capture; heading weights; ads removed. |
+| SESSION_0416_TASK_10 | landed | Recovered + extended the BBL footer (`5413dc15`) → global; BBL logo in header; curated right-nav; programs removed. |
+| SESSION_0416_TASK_11 | landed | gi + Passport avatar via `getCurrentUserAvatar` server seam (Prisma-in-browser fix); magic-link login modal wired; Create Account→join. |
+| SESSION_0416_TASK_12 | landed | Join form → 3-step wizard (StepProgress + per-step validation); Explore→`/lineage/bbl-lineage`. |
+| SESSION_0416_TASK_13 | landed | Promoted the landing to home `/` (`(home)/bbl-join-landing.tsx`); gate untouched; `/lineage/join` kept. |
+| SESSION_0416_TASK_14 | landed | SOT'd the foundation: 7 `wiki/files/bbl-*.md` + index/log. |
 
 ## What landed
 
@@ -155,18 +162,102 @@ push doesn't change). All consolidated work ships to prod **behind the bob-tony 
 | Push | `4e43dac5..a5d43a9d main -> main`; Vercel Production deploy Building |
 | Countdown gate | untouched — public holding page intact |
 
+## Phase 2 — BBL landing foundation (same session, post-consolidation)
+
+After the consolidation, rebuilt the BBL public landing from a solid foundation and **promoted it to
+the home page `/`** — gate untouched (public still sees the teaser; the bob-tony cookie sees the
+landing). "Finally building from a solid foundation" (operator). Task log: `SESSION_0416_TASK_08..14`.
+
+### What landed (Phase 2)
+
+- **Type system, the idiomatic way** — Poppins headings + Inter body **site-wide**: fonts loaded
+  globally on `<html>` (`app/layout.tsx`), Geist var renamed `--font-geist`, `@theme`
+  `--font-display`/`--font-sans` point at the BBL fonts. One guarded `brandThemeCss()` helper for
+  `[data-brand]` + `[data-org]` (closes the previously-unguarded inject seam). ⚠ Tailwind v4 `@theme`
+  caches in Turbopack — a `@theme` edit needs a full `rm -rf .next` in dev (prod build is fresh).
+- **Landing composition** (`join-legacy-landing.tsx`, promoted to `/` via `(home)/bbl-join-landing.tsx`):
+  scrolling-phone hero → Rigan heritage → Rigan video → **3-step claim wizard** (`join-legacy-form.tsx`,
+  monorepo stepper UX on our existing fields/action) → email capture. "Explore the lineage" →
+  `/lineage/bbl-lineage`. `/lineage/join` kept as-is.
+- **Chrome:** recovered the reverted BBL footer (`5413dc15`) → global, socials + link columns un-gated,
+  no programs; BBL logo in the header (`config/site.ts` logoSrc); curated right-nav; **gi + Passport
+  avatar** via the server seam `getCurrentUserAvatar` (the Prisma-in-browser rule); magic-link **login
+  modal** wired to the nav; ads removed (a #120 `brandHasFeature→true` regression re-enabled them).
+- **SOT'd** the foundation: 7 new `docs/knowledge/wiki/files/bbl-*.md` file docs + wiki index/log.
+
+### Files touched (Phase 2)
+
+| File | Change |
+| --- | --- |
+| `app/(web)/(home)/{page,bbl-join-landing}.tsx` | Home `/` renders the join landing for BBL (new shared component). |
+| `app/(web)/lineage/join/{join-legacy-landing,join-legacy-form,page}.tsx` | Phone hero + Rigan/video slots; 3-step wizard; rankColors. |
+| `app/(web)/_components/bbl-footer.tsx` (new) | Global BBL footer (recovered + extended). |
+| `app/(web)/layout.tsx` | Ads removed; BblFooter; avatar server seam. |
+| `lib/{fonts,brand-theme}.ts` (brand-theme new), `app/styles.css` | Type system + one guarded theme helper. |
+| `components/web/{header,nav/nav-sheet}.tsx` | Avatar prop; curated nav; login modal; programs removed. |
+| `server/web/account/current-user-avatar.ts` (new) | Passport→client avatar seam. |
+| `bbl/bbl-landing/bbl-heritage.tsx`, `bbl-teaser/email-capture.tsx`, `config/site.ts`, `organizations/[slug]/layout.tsx` | Heritage CTA removed; centered logo; BBL logoSrc; brand-theme. |
+| `docs/knowledge/wiki/files/bbl-*.md` (7 new) + `wiki/index.md` + `wiki/log.md` | SOT file docs. |
+
+### Verification (Phase 2)
+
+| Check | Result |
+| --- | --- |
+| typecheck | ✅ |
+| `next build` (full, incl. home promotion) | ✅ exit 0 |
+| Dev smoke (preview cookie) | `/`, `/lineage/join`, `/lineage/bbl-lineage` → 200; home renders phone-hero + Rigan + video + wizard |
+| Countdown gate | untouched (early-return runs before the avatar seam + new render) |
+| Prisma-in-browser | login-modal/avatar leak caught + fixed (inlined gi const; server `getCurrentUserAvatar` seam) |
+
 ## Next session
 
 ### Goal
 
-Confirm the `a5d43a9d` prod deploy is Ready on `blackbeltlegacy.com` and the consolidated work renders
-behind the bob-tony preview (directory roster, schools/org cards, technique graph, curriculum, nav).
-Then resume the prune: the deferred `getRequestBrand()` call-site inlining + dropping the brand columns/
-indexes (Prisma migration), and the GitHub+folder rename to `black-belt-legacy`.
+Operator review of the promoted landing on prod (`blackbeltlegacy.com` via the bob-tony cookie), then
+continue toward reveal-prep. Deferred: the ~7 `x-brand` non-BBL-fallback pages, the `getRequestBrand()`
+call-site inlining + brand-column Prisma migration, and the `black-belt-legacy` rename.
 
 ### First task
 
-Verify the prod deploy + bob-tony preview surfaces on `blackbeltlegacy.com`; spot-check the ~7 pages
-that still read `x-brand` directly with a non-BBL fallback (`disciplines`, `programs/*`,
-`organizations/new`) — now that the header is gone they resolve to a wrong default; collapse those to
-BBL as the next call-site cleanup.
+Verify the pushed landing renders on prod behind the preview cookie (phone hero, Rigan, video, wizard,
+footer, nav avatar). Then spot-check the `x-brand` fallback pages (`disciplines`, `programs/*`,
+`organizations/new`) — header's gone, so they resolve to a wrong default — and collapse them to BBL.
+
+## Reflections
+
+- **The whole day proved the prune thesis.** Phase 1: once "other brands don't matter," every hard
+  thing (un-deletable harness, brand-scoping bugs, the 39 test failures) turned mechanical — and
+  parallel sub-agents on disjoint file sets (operator-enabled ultracode) cut the wall-clock in half.
+- **Two latent regressions hid inside the #120 brand collapse**, both surfaced by building real
+  surfaces on top: `brandHasFeature → true` silently re-enabled **ads** (BBL was excluded) and the
+  programs link. The lesson: a "collapse to always-true" needs a follow-up audit of every
+  feature-gated surface, not just the call sites.
+- **The Prisma-in-browser rule bit twice** (login modal + avatar). `lib/media` pulls Prisma via
+  `services/s3`; importing it into client chrome breaks the Turbopack build. The fix is always the
+  same shape: resolve server-side, pass the string down as a prop (the `getCurrentUserAvatar` seam).
+- **Tailwind v4 `@theme` + Turbopack** cost a misdiagnosis: I called the `@theme` edit an "idiom
+  limit" when it was a cache — `.next/cache` clear wasn't enough; only `rm -rf .next` showed it. Verify
+  with a clean build before concluding a thing "can't work."
+- **Reuse beat rebuild repeatedly:** the footer (recovered from a reverted commit), the login modal
+  (a prior session's `LoginDialog`), the magic-link `LoginForm`, the heritage/video sections — almost
+  nothing was written from scratch. The "files folder" SOT now records these so the next session reuses
+  instead of re-deriving.
+
+## Hostile close review
+
+- **Giddy:** pass — gates green (typecheck + `next build` exit 0); countdown gate proven untouched
+  (early-return precedes the new render); no client Prisma leak (build clean). Honest verification:
+  every claim browser-/build-checked.
+- **Doug:** pass — wizard per-step validation works; avatar seam typed + resolves; footer/nav render
+  200. Note: this is a UI/landing session — no schema/auth/payment changes, so Dirstarter L1 proof n/a.
+- **Desi:** pass — Poppins/Inter consistent top-to-bottom; the landing matches the holding-page voice
+  (operator-confirmed live on :3000).
+- **Kaizen aggregate:** 9/10 — the only ding is the two #120 regressions that a feature-gate audit
+  would have caught earlier.
+
+## ADR / ubiquitous-language check
+
+- ADR update **not required** — no new architectural decision; the brand-token/type-system approach
+  follows existing Dirstarter Tailwind-v4 patterns. The Prisma-in-browser + `@theme`-cache gotchas are
+  captured in the SOT file docs + memory, not an ADR.
+- No new ubiquitous-language terms.

@@ -626,6 +626,13 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [schools/queries.ts](files/schools-queries.md) | file | active |
 | [schools/[slug]/page.tsx](files/schools-detail-page.md) | file | active |
 | [courses/page.tsx](files/courses-listing-page.md) | file | active |
+| [(home)/bbl-join-landing.tsx](files/bbl-home-landing.md) | file | active |
+| [join-legacy-landing.tsx (landing composition)](files/bbl-join-landing-composition.md) | file | active |
+| [join-legacy-form.tsx (claim wizard)](files/bbl-join-form-wizard.md) | file | active |
+| [_components/bbl-footer.tsx](files/bbl-footer.md) | file | active |
+| [nav/nav-sheet.tsx](files/bbl-nav-sheet.md) | file | active |
+| [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
+| [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components

@@ -1,15 +1,8 @@
 import Image from "next/image"
-import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
-import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
-import {
-  BBL_IMAGES,
-  BBL_ROUTES,
-  heritageContent,
-  type StaticBblRankColorMap,
-} from "../bbl-landing-content"
+import { BBL_IMAGES, heritageContent, type StaticBblRankColorMap } from "../bbl-landing-content"
 import { BeltBadge } from "./belt-badge"
 import { BBL_SECTION_CLASSES, SectionHeading } from "./landing-chrome"
 
@@ -39,13 +32,6 @@ export const BblHeritage = ({ rankColors }: { rankColors: StaticBblRankColorMap 
       />
       <Prose className="text-muted-foreground">{heritageContent.lead}</Prose>
       <Prose className="text-muted-foreground text-sm">{heritageContent.body}</Prose>
-      <Button
-        variant="ghost"
-        className="text-primary px-0"
-        render={<Link href={BBL_ROUTES.lineage} />}
-      >
-        {heritageContent.ctaLabel} →
-      </Button>
     </div>
   </section>
 )

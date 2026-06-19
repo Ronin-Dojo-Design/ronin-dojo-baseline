@@ -41,7 +41,7 @@ export function EmailCapture() {
         alt="Black Belt Legacy"
         width="96"
         height="55"
-        className="h-10 w-auto"
+        className="mx-auto h-10 w-auto"
       />
 
       {isSuccess ? (
