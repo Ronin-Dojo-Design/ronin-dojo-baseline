@@ -272,6 +272,62 @@ refreshed into `dirstarter_template` at SESSION_0359.
 
 ---
 
+## D12 — BBL extracts to its own single-brand repo (subtractive fork; harness dropped, engine kept)  *(operator grill, 2026-06-18)*
+
+- **Finding:** the friction is the 4-brand *harness*, not BBL's domain. An architecture review + an
+  8-agent evidence pass established: BBL is one enum value (`Brand.BBL`) on a shared app, with exactly
+  ONE BBL-exclusive table; the crown jewels (lineage timeline engine `lib/lineage/*`, the
+  Passport/RankAward/Affiliation model, the hardened Stripe→entitlement ledger) carry **no brand
+  coupling** and port verbatim; while the tax — `getRequestBrand()` across 159 files, 42 brand
+  columns, ~66 brand-led indexes, dual Stripe/S3/Resend clients, BrandSettings theming — is
+  structurally un-deletable *in place* because the other three brands depend on it. Separately:
+  `ronin-dojo-app` is itself an *incomplete* Next/Prisma rebuild of the feature-complete (older, Vite)
+  `ronin-dojo-monorepo`; the hardest BBL parts (lineage USP, identity re-root, claims, Stripe) already
+  landed in `ronin-dojo-app`, leaving only **curriculum + certifications** un-ported. BBL is the whole
+  near-term game; Baseline/WEKAF/RDD are parked.
+- **Decision (operator grill, 2026-06-18):** extract BBL into its own repo rather than refactor in
+  place or rewrite greenfield. Specifically:
+  - **Subtractive fork of `ronin-dojo-app`** (not an additive Dirstarter re-scaffold): clone, pin
+    `brand = Brand.BBL`, strip the harness (brand resolution → constant, drop the brand columns/indexes,
+    collapse the dual Stripe/S3/Resend clients, drop BrandSettings theming → static, drop the
+    feature-allowlist gate). Keep the engine, the domain model, and the hard-won fixes — delete the
+    harness, don't rebuild the domain.
+  - **Prune ~122 → ~62 models, cluster-by-cluster (FK-safe):** keep BBL core + Certification +
+    Curriculum/Technique (near-term, content already built in the monorepo); drop WEKAF
+    (tournaments/brackets/fight records), Baseline school-ops (programs/scheduling/attendance/family/
+    leads), the content engine, merch, and gamification.
+  - **Fresh Neon DB; prod Neon is disposable.** No real users exist yet and all data is reproducible
+    from source, so build the clean repo first, re-migrate, then flip DNS — no cutover-without-downtime
+    constraint. Migration faucets: **WordPress** (`local.sql` + uploads) for members/ranks/lineage,
+    the **old monorepo** (`src/curriculum` + Pods seed) for curriculum, and **Pods exports**. The lost
+    Phase-0 reconciler (`reconcile-pods.mjs`) is rebuilt against `local.sql` and committed to the new
+    repo as the first data task.
+  - **`ronin-dojo-app` stays frozen** as reference + parts-donor — BBL is *not* ripped out of it, the
+    engine is **hard-forked** (no shared package), and the extraction is **not** engineered as a
+    repeatable multi-brand split. Optimize purely for BBL.
+- **Supersedes / amends:** D11 (DNS flip *in place* on the shared Vercel deployment) — BBL now gets its
+  own repo + deployment; the flip target changes. The multi-brand premise of D2/D5 no longer governs
+  BBL. D1 (Passport person-rooted), D3 (oRPC), D4 (resource-scoped RBAC), D6 (RBAC-reviewed
+  verification) all **carry forward** into the new repo unchanged.
+
+### D12 amendment — fork point + cutover mechanic *(2026-06-18)*
+
+- **Fork point = now.** Fork from current `ronin-dojo-app` `main`; carry the held holding-page + avatar
+  work in as a clean patch; abandon the in-flight multi-brand PR fleet (#110–119). Do NOT keep
+  polishing the old app — bank the clean patch and leave. Finish all remaining BBL polish (curriculum +
+  certs port, claim A1/`PassportClaimToken` hardening) in the new repo, not the harness.
+- **Cutover is a Vercel project move, not a DNS change.** `blackbeltlegacy.com` already resolves to
+  Vercel anycast (`216.198.79.1`, flipped SESSION_0407) attached to the shared `ronin-dojo-baseline`
+  project. Reveal = stand the new BBL repo up as its own Vercel project behind its own countdown,
+  migrate + verify, then **re-attach the domain to the new project** and flip its countdown off.
+  Reversible by re-attaching to the old project, or Bluehost rollback to `151.101.66.159`.
+- **First data task = recover the reconciler.** Rebuild `reconcile-pods.mjs` against the WP dump
+  (`~/Local Sites/BlackBeltLegacy/app/sql/local.sql`) and **commit it to the new repo** — it is the one
+  genuinely at-risk artifact (ephemeral `/tmp`, uncommitted inputs). Snapshot prod Neon once as cheap
+  insurance even though it is disposable.
+
+---
+
 ## Superseded / historical ADRs
 
 Read only for backstory — **not** current law:
