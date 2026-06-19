@@ -80,13 +80,16 @@ async function setSessionCookie(page: Page, token: string) {
       path: "/",
     },
   ])
-  // Authenticated test users behave like RETURNING users: pre-mark the first-run
-  // dashboard onboarding tour as seen so its auto-opening modal never intercepts
-  // the functional flows under test. (Key mirrors DashboardOnboardingTour's
-  // STORAGE_KEY — a dedicated onboarding test would clear/skip this seed.)
+  // Authenticated test users behave like RETURNING users: pre-mark BOTH first-run
+  // onboarding modals as seen so their auto-opening (and click-intercepting)
+  // dialogs never ambush the functional flows under test — the dashboard tour
+  // AND the profile-enhancement wizard (which auto-opens for an incomplete
+  // Passport). Keys mirror DashboardOnboardingTour / ProfileEnhancementLauncher
+  // STORAGE_KEY; a dedicated onboarding test would clear/skip these seeds.
   await page.context().addInitScript(() => {
     try {
       window.localStorage.setItem("bbl:onboarding:dashboard:v1", "done")
+      window.localStorage.setItem("bbl:onboarding:profile:v1", "done")
     } catch {
       // Storage unavailable (e.g. about:blank) — first paint will simply show the tour.
     }
