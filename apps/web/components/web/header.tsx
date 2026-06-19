@@ -116,6 +116,13 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
                       {t("navigation.courses")}
                     </DropdownMenuItem>
                   )}
+                  {has("curriculum") && (
+                    <DropdownMenuItem
+                      render={<NavLink href="/curriculum" prefix={<BookOpenIcon />} />}
+                    >
+                      {t("navigation.curriculum")}
+                    </DropdownMenuItem>
+                  )}
                   {has("techniques") && (
                     <DropdownMenuItem
                       render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}

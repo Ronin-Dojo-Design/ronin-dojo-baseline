@@ -24,6 +24,7 @@ export const BRAND_FEATURES = [
   "certificates",
   "posts",
   "blog",
+  "curriculum",
   "tournaments",
   "courses",
   "programs",
@@ -56,6 +57,9 @@ const BBL_FEATURES: ReadonlySet<BrandFeature> = new Set<BrandFeature>([
   "certificates",
   "posts",
   "blog",
+  "curriculum",
+  "techniques",
+  "courses",
 ])
 
 const FEATURES_BY_BRAND: Partial<Record<Brand, ReadonlySet<BrandFeature>>> = {
@@ -93,6 +97,7 @@ export const FEATURE_ROUTE_PREFIXES: ReadonlyArray<
   ["/certificates", "certificates"],
   ["/posts", "posts"],
   ["/blog", "blog"],
+  ["/curriculum", "curriculum"],
   ["/tournaments", "tournaments"],
   ["/courses", "courses"],
   ["/programs", "programs"],

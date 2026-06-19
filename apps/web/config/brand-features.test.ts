@@ -21,6 +21,9 @@ describe("brandHasFeature", () => {
       "certificates",
       "posts",
       "blog",
+      "curriculum",
+      "techniques",
+      "courses",
     ]
     for (const feature of kept) {
       expect(brandHasFeature(Brand.BBL, feature)).toBe(true)
@@ -30,10 +33,8 @@ describe("brandHasFeature", () => {
   it("BBL gates everything outside the launch set", () => {
     const gated: BrandFeature[] = [
       "tournaments",
-      "courses",
       "programs",
       "disciplines",
-      "techniques",
       "gear",
       "merch",
       "advertise",

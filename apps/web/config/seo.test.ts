@@ -16,7 +16,9 @@ describe("sitemapRoutesForBrand", () => {
     expect(paths).toContain("/events")
     expect(paths).toContain("/posts")
     expect(paths).toContain("/blog")
-    expect(paths).not.toContain("/techniques")
+    expect(paths).toContain("/curriculum")
+    expect(paths).toContain("/techniques")
+    expect(paths).toContain("/techniques/graph")
     expect(paths).not.toContain("/tournaments")
     expect(paths).not.toContain("/programs")
     expect(paths).not.toContain("/categories")
@@ -36,7 +38,8 @@ describe("robotsDisallowRoutesForBrand", () => {
   it("disallows BBL gated feature routes", () => {
     const routes = robotsDisallowRoutesForBrand(Brand.BBL)
 
-    expect(routes).toContain("/techniques/")
+    expect(routes).not.toContain("/techniques/")
+    expect(routes).not.toContain("/curriculum/")
     expect(routes).toContain("/tournaments/")
     expect(routes).toContain("/programs/")
     expect(routes).toContain("/categories/")

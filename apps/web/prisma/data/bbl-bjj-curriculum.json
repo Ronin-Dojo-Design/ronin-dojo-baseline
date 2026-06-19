@@ -1,0 +1,1132 @@
+{
+  "levels": [
+    {
+      "level": {
+        "id": 1,
+        "name": "White Belt - Fundamentals",
+        "color": "#FFFFFF",
+        "belt": "white",
+        "stripes": 0,
+        "estimatedMonths": 3
+      },
+      "sections": [
+        {
+          "id": "bjj-l1-warmups",
+          "name": "Basic Movements & Warm-ups",
+          "category": "warmups",
+          "techniques": [
+            {
+              "id": "bjj-l1-breakfalls",
+              "name": "Backwards Break Falls 1-5",
+              "category": "movements",
+              "description": "Five progressions of backward break falls for safe falling.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Tuck chin to chest",
+                "Slap mat with arms at 45 degrees",
+                "Keep legs up to prevent head impact",
+                "Progress from seated to standing"
+              ],
+              "tags": ["warmups", "breakfalls", "safety", "fundamentals"]
+            },
+            {
+              "id": "bjj-l1-shrimping",
+              "name": "Shrimp Drills 1-5",
+              "category": "movements",
+              "description": "Hip escape movements essential for guard recovery and escapes.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Bridge onto shoulder",
+                "Drive off foot, push hip away",
+                "Create space with hip movement",
+                "Essential for all escapes"
+              ],
+              "tags": ["warmups", "shrimping", "hip-escape", "fundamentals"]
+            },
+            {
+              "id": "bjj-l1-shoulder-rolls",
+              "name": "Forward Shoulder Rolls",
+              "category": "movements",
+              "description": "Rolling over shoulder to safely disperse momentum.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Tuck chin, look at opposite hip",
+                "Roll diagonally across back",
+                "Come up in combat base"
+              ],
+              "tags": ["warmups", "rolls", "safety", "fundamentals"]
+            },
+            {
+              "id": "bjj-l1-swivel-drills",
+              "name": "Swivel Hip Drills 1-5",
+              "category": "movements",
+              "description": "Hip mobility drills for guard retention and attacks.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Rotate hips while on back",
+                "Keep shoulders on mat",
+                "Essential for triangles and armbars"
+              ],
+              "tags": ["warmups", "swivel", "hip-mobility", "fundamentals"]
+            },
+            {
+              "id": "bjj-l1-grappling-form",
+              "name": "Grappling Form #1 (Basic)",
+              "category": "movements",
+              "description": "Solo drill combining fundamental movements into a flow.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Combines shrimping, bridging, technical standup",
+                "Practice both sides",
+                "Builds muscle memory"
+              ],
+              "tags": ["warmups", "form", "solo-drill", "fundamentals"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l1-grab-defense",
+          "name": "Grab Art Defense",
+          "category": "grab-defense",
+          "techniques": [
+            {
+              "id": "bjj-l1-wrist-grabs",
+              "name": "Basic Wrist Grabs",
+              "category": "grab-defense",
+              "description": "Escapes from various wrist grab attacks.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Rotate against thumb",
+                "Use two-on-one control",
+                "Circle wrist toward weak point"
+              ],
+              "tags": ["self-defense", "wrist-grabs", "escapes"]
+            },
+            {
+              "id": "bjj-l1-side-headlock",
+              "name": "Side Head Lock Defense",
+              "category": "grab-defense",
+              "description": "Escape from standing side headlock.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Protect neck immediately",
+                "Step behind, take the back",
+                "Or: drop to ground, take back"
+              ],
+              "tags": ["self-defense", "headlock", "escapes"]
+            },
+            {
+              "id": "bjj-l1-bearhug-over",
+              "name": "Bear Hug Over Arms Defense",
+              "category": "grab-defense",
+              "description": "Escape when grabbed with arms trapped.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Drop level, widen base",
+                "Create space with hip movement",
+                "Frame and escape or throw"
+              ],
+              "tags": ["self-defense", "bearhug", "escapes"]
+            },
+            {
+              "id": "bjj-l1-bearhug-under",
+              "name": "Bear Hug Under Arms Defense",
+              "category": "grab-defense",
+              "description": "Escape when grabbed with arms free.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Arms are free - use them!",
+                "Overhook and whizzer",
+                "Hip throw or guillotine option"
+              ],
+              "tags": ["self-defense", "bearhug", "escapes"]
+            },
+            {
+              "id": "bjj-l1-rear-headlock",
+              "name": "Rear Head Lock Defense",
+              "category": "grab-defense",
+              "description": "Escape from rear choke/headlock.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Tuck chin, protect airway",
+                "Turn into attacker",
+                "Take down or throw"
+              ],
+              "tags": ["self-defense", "headlock", "rear-attack"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l1-combinations",
+          "name": "Position Combinations",
+          "category": "concepts",
+          "techniques": [
+            {
+              "id": "bjj-l1-guard-passing-1-5",
+              "name": "Guard Passing 1-5",
+              "category": "guard-passing",
+              "description": "First five guard passes: fundamentals of opening and passing.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Posture first, then pass",
+                "Control hips to pass",
+                "Knee slice, over-under, torreando basics"
+              ],
+              "tags": ["guard-passing", "fundamentals", "combinations"]
+            },
+            {
+              "id": "bjj-l1-guard-sweeping-1-5",
+              "name": "Guard Sweeping 1-5",
+              "category": "guard-sweeps",
+              "description": "First five sweeps from closed guard.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Break posture first",
+                "Control sleeve and collar",
+                "Hip bump, scissor, flower, pendulum, elevator"
+              ],
+              "tags": ["guard-sweeps", "closed-guard", "combinations"]
+            },
+            {
+              "id": "bjj-l1-side-control-1-5",
+              "name": "Side Control 1-5",
+              "category": "side-control",
+              "description": "Five basic side control positions and transitions.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Crossface and underhook",
+                "Kesa gatame (scarf hold)",
+                "North-south transitions"
+              ],
+              "tags": ["side-control", "positions", "fundamentals"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l1-takedowns",
+          "name": "Takedowns from Knees",
+          "category": "takedowns",
+          "techniques": [
+            {
+              "id": "bjj-l1-steering-wheel",
+              "name": "Steering Wheel",
+              "category": "takedowns",
+              "description": "Collar and sleeve control takedown from knees.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Collar grip, sleeve grip",
+                "Pull and rotate like steering wheel",
+                "Follow to side control"
+              ],
+              "tags": ["takedowns", "from-knees", "gi"]
+            },
+            {
+              "id": "bjj-l1-head-shuck",
+              "name": "Head Shuck",
+              "category": "takedowns",
+              "description": "Snap down and redirect opponent's head.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Collar tie or head control",
+                "Snap down and shuck to side",
+                "Circle to back"
+              ],
+              "tags": ["takedowns", "from-knees", "wrestling"]
+            },
+            {
+              "id": "bjj-l1-double-leg",
+              "name": "Double Leg (from knees)",
+              "category": "takedowns",
+              "description": "Classic double leg takedown from kneeling position.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Level change and penetration step",
+                "Head on hip, arms behind knees",
+                "Drive through or lift"
+              ],
+              "tags": ["takedowns", "from-knees", "wrestling", "double-leg"]
+            },
+            {
+              "id": "bjj-l1-high-single",
+              "name": "High Single Leg",
+              "category": "takedowns",
+              "description": "Single leg with head on inside.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Control leg high on thigh",
+                "Head inside, ear to chest",
+                "Run the pipe or trip"
+              ],
+              "tags": ["takedowns", "from-knees", "wrestling", "single-leg"]
+            },
+            {
+              "id": "bjj-l1-low-single",
+              "name": "Low Single Leg",
+              "category": "takedowns",
+              "description": "Ankle pick style single leg.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Shoot low to ankle", "Control heel and knee", "Elevate and sweep"],
+              "tags": ["takedowns", "from-knees", "wrestling", "single-leg"]
+            },
+            {
+              "id": "bjj-l1-sitout-turtle",
+              "name": "Sit-out from Turtle (Bonus)",
+              "category": "escapes",
+              "description": "Escape from turtle position using sit-out.",
+              "accessLevel": "public",
+              "keyPoints": [
+                "Post on hands and feet",
+                "Sit through, turn to face",
+                "Re-engage or stand up"
+              ],
+              "tags": ["escapes", "turtle", "wrestling"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 2,
+        "name": "White Belt - 1 Stripe",
+        "color": "#FFFFFF",
+        "belt": "white",
+        "stripes": 1,
+        "estimatedMonths": 3
+      },
+      "sections": [
+        {
+          "id": "bjj-l2-guard-defense",
+          "name": "Guard Defense (Invincible Guard)",
+          "category": "guard-defense",
+          "techniques": [
+            {
+              "id": "bjj-l2-ankle-grab-defense",
+              "name": "Ankle Grab Defense",
+              "category": "guard-defense",
+              "description": "Defending when opponent grabs ankles to open guard.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Curl heels to butt", "Use sleeve grips", "Pendulum or hip bump"],
+              "tags": ["guard-defense", "invincible-guard", "closed-guard"]
+            },
+            {
+              "id": "bjj-l2-stack-defense",
+              "name": "Stack Defense #1: Swim Arms vs Circle Legs",
+              "category": "guard-defense",
+              "description": "Defending against stacking pressure.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Swim arms when stacked",
+                "Circle legs to recover angle",
+                "Never let hips get pinned"
+              ],
+              "tags": ["guard-defense", "invincible-guard", "stacking"]
+            },
+            {
+              "id": "bjj-l2-knee-pin-defense",
+              "name": "Knee Pin Defense 1-3",
+              "category": "guard-defense",
+              "description": "Three escapes when knee pins thigh.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Hip out to create space",
+                "Pump knee to recover guard",
+                "Frame on hip/knee"
+              ],
+              "tags": ["guard-defense", "invincible-guard", "knee-pin"]
+            },
+            {
+              "id": "bjj-l2-knee-stack-defense",
+              "name": "Knee Stack Defense 1-3",
+              "category": "guard-defense",
+              "description": "Defending knee in center stacking.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Don't let knee split guard",
+                "Collar tie and off-balance",
+                "Granby roll option"
+              ],
+              "tags": ["guard-defense", "invincible-guard", "stacking"]
+            },
+            {
+              "id": "bjj-l2-knee-shuck-defense",
+              "name": "Knee Shuck Defense",
+              "category": "guard-defense",
+              "description": "Defending when opponent shucks your knee.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Follow hip, recover guard", "Create frames", "Reguard or scramble"],
+              "tags": ["guard-defense", "invincible-guard", "shucking"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l2-guard-attacks",
+          "name": "Guard Attacking (First 5 Grips)",
+          "category": "guard-attacks",
+          "techniques": [
+            {
+              "id": "bjj-l2-home-base",
+              "name": "Home Base Grip",
+              "category": "guard-attacks",
+              "description": "Fundamental closed guard grip: collar and sleeve.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Cross collar grip",
+                "Same side sleeve grip",
+                "Controls posture and arm"
+              ],
+              "tags": ["guard-attacks", "grips", "closed-guard"]
+            },
+            {
+              "id": "bjj-l2-heisman",
+              "name": "Heisman Grip",
+              "category": "guard-attacks",
+              "description": "Stiff arm to hip while controlling sleeve.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Hand on hip, stiff arm",
+                "Other hand controls sleeve",
+                "Creates angle for attacks"
+              ],
+              "tags": ["guard-attacks", "grips", "closed-guard"]
+            },
+            {
+              "id": "bjj-l2-figure-four",
+              "name": "Figure Four Grip",
+              "category": "guard-attacks",
+              "description": "Controlling arm with figure four (kimura grip).",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Wrist control, grip own wrist",
+                "Elbow tight to body",
+                "Sets up kimura, sweeps"
+              ],
+              "tags": ["guard-attacks", "grips", "closed-guard", "kimura"]
+            },
+            {
+              "id": "bjj-l2-underhook",
+              "name": "Underhook Grip",
+              "category": "guard-attacks",
+              "description": "Deep underhook from guard for sweeps.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Thread arm under armpit",
+                "Grip lat or belt",
+                "Excellent for elevator sweeps"
+              ],
+              "tags": ["guard-attacks", "grips", "closed-guard", "underhook"]
+            },
+            {
+              "id": "bjj-l2-two-on-one",
+              "name": "Two Hands to One Side",
+              "category": "guard-attacks",
+              "description": "Both hands control one arm for armbars.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Two-on-one arm control",
+                "Isolate the arm",
+                "Set up armbar or triangle"
+              ],
+              "tags": ["guard-attacks", "grips", "closed-guard", "arm-isolation"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l2-submissions",
+          "name": "Submissions",
+          "category": "submissions",
+          "techniques": [
+            {
+              "id": "bjj-l2-guard-armbars",
+              "name": "Guard Submissions: Arm Bars 1-3",
+              "category": "submissions",
+              "description": "Three armbar entries from closed guard.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Control arm, pivot hips",
+                "Leg over head, squeeze knees",
+                "Hips high, thumb up, extend"
+              ],
+              "tags": ["submissions", "armbar", "closed-guard"]
+            },
+            {
+              "id": "bjj-l2-guard-chokes",
+              "name": "Guard Submissions: Chokes 1-3",
+              "category": "submissions",
+              "description": "Three choke entries from closed guard.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Cross collar choke", "Guillotine variations", "Triangle choke setup"],
+              "tags": ["submissions", "chokes", "closed-guard"]
+            },
+            {
+              "id": "bjj-l2-mount-americana",
+              "name": "Mount: Americana and Juji Flow",
+              "category": "submissions",
+              "description": "Americana to armbar flow from mount.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Paint brush arm to mat",
+                "Figure four grip",
+                "If they straighten, pivot to armbar"
+              ],
+              "tags": ["submissions", "mount", "americana", "armbar"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 3,
+        "name": "White Belt - 2 Stripes",
+        "color": "#FFFFFF",
+        "belt": "white",
+        "stripes": 2,
+        "estimatedMonths": 3
+      },
+      "sections": [
+        {
+          "id": "bjj-l3-mount-escapes",
+          "name": "Mount Escapes 1-5",
+          "category": "escapes",
+          "techniques": [
+            {
+              "id": "bjj-l3-bridge-roll",
+              "name": "Bridge and Roll (Upa)",
+              "category": "escapes",
+              "description": "Classic mount escape using bridge.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Trap arm and foot same side", "Explosive bridge", "Roll to guard"],
+              "tags": ["escapes", "mount", "fundamentals"]
+            },
+            {
+              "id": "bjj-l3-knee-escape",
+              "name": "Shrimp Escape (Knee Escape)",
+              "category": "escapes",
+              "description": "Hip escape to half guard or full guard.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Frame on hip", "Shrimp away", "Insert knee, recover guard"],
+              "tags": ["escapes", "mount", "shrimping"]
+            },
+            {
+              "id": "bjj-l3-bump-throw",
+              "name": "Bump and Throw",
+              "category": "escapes",
+              "description": "Bridging to create space for escape.",
+              "accessLevel": "public",
+              "keyPoints": ["Small bridge to off-balance", "Follow with shrimp", "Create scramble"],
+              "tags": ["escapes", "mount", "combination"]
+            },
+            {
+              "id": "bjj-l3-bump-catch",
+              "name": "Bump and Catch",
+              "category": "escapes",
+              "description": "Bridge to catch leg for half guard.",
+              "accessLevel": "public",
+              "keyPoints": ["Bridge to elevate", "Catch leg as they post", "Secure half guard"],
+              "tags": ["escapes", "mount", "half-guard"]
+            },
+            {
+              "id": "bjj-l3-back-shoulder-roll",
+              "name": "Back Shoulder Roll Escape",
+              "category": "escapes",
+              "description": "Rolling escape from mount.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Create angle with frame",
+                "Roll over shoulder",
+                "Come up on top or to knees"
+              ],
+              "tags": ["escapes", "mount", "advanced"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l3-side-escapes",
+          "name": "Side Control Escapes 1-5",
+          "category": "escapes",
+          "techniques": [
+            {
+              "id": "bjj-l3-side-shrimp",
+              "name": "Shrimp to Guard",
+              "category": "escapes",
+              "description": "Hip escape to recover guard from side control.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Frame on neck and hip", "Shrimp away", "Insert knee, recover guard"],
+              "tags": ["escapes", "side-control", "fundamentals"]
+            },
+            {
+              "id": "bjj-l3-underhook-escape",
+              "name": "Underhook Escape to Knees",
+              "category": "escapes",
+              "description": "Getting underhook and coming to knees.",
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": ["Fight for underhook", "Hip out, come to knees", "Take back or stand"],
+              "tags": ["escapes", "side-control", "underhook"]
+            },
+            {
+              "id": "bjj-l3-ghost-escape",
+              "name": "Ghost Escape",
+              "category": "escapes",
+              "description": "Slipping out when they transition.",
+              "accessLevel": "student",
+              "keyPoints": ["Time their transition", "Slide hips away", "Disappear like a ghost"],
+              "tags": ["escapes", "side-control", "timing"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 5,
+        "name": "Blue Belt",
+        "color": "#1E40AF",
+        "belt": "blue",
+        "stripes": 0,
+        "estimatedMonths": 6
+      },
+      "sections": [
+        {
+          "id": "bjj-l5-advanced-warmups",
+          "name": "Advanced Movements",
+          "category": "warmups",
+          "techniques": [
+            {
+              "id": "bjj-l5-spider-walk",
+              "name": "Spider Walk and Switching Base",
+              "category": "movements",
+              "description": "Low crawling movement for mobility.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Stay low, move smoothly",
+                "Switch base frequently",
+                "Builds hip mobility"
+              ],
+              "tags": ["warmups", "movement", "blue-belt"]
+            },
+            {
+              "id": "bjj-l5-sprawl-drills",
+              "name": "Sprawl Drills",
+              "category": "movements",
+              "description": "Defensive sprawling against takedowns.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Hips to ground", "Chest on their back", "Crossface or front headlock"],
+              "tags": ["warmups", "sprawl", "wrestling"]
+            },
+            {
+              "id": "bjj-l5-sitouts",
+              "name": "Sit-outs / Bail-outs",
+              "category": "movements",
+              "description": "Wrestling-based escapes from bottom.",
+              "accessLevel": "student",
+              "keyPoints": ["Clear the head", "Sit through and turn", "Come up facing opponent"],
+              "tags": ["warmups", "wrestling", "escapes"]
+            },
+            {
+              "id": "bjj-l5-swivel-1-10",
+              "name": "Swivel Drills 1-10",
+              "category": "movements",
+              "description": "Advanced hip swivel progressions.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Full 360 hip rotation",
+                "Triangle and armbar setups",
+                "Omoplata pivots"
+              ],
+              "tags": ["warmups", "swivel", "advanced"]
+            },
+            {
+              "id": "bjj-l5-guard-back-flow",
+              "name": "Guard to Back to Guard",
+              "category": "movements",
+              "description": "Flowing between guard and back control.",
+              "accessLevel": "student",
+              "keyPoints": ["Sweep to back take", "Lost back, recover guard", "Continuous flow"],
+              "tags": ["warmups", "flow", "transitions"]
+            },
+            {
+              "id": "bjj-l5-hook-sweep-situps",
+              "name": "Hook Sweep Sit-ups",
+              "category": "movements",
+              "description": "Conditioning drill for hook sweep motion.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Butterfly hook",
+                "Sit-up into sweep motion",
+                "Builds core and hip strength"
+              ],
+              "tags": ["warmups", "conditioning", "butterfly"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l5-grab-defense-2",
+          "name": "Advanced Grab Defense",
+          "category": "grab-defense",
+          "techniques": [
+            {
+              "id": "bjj-l5-guillotine-escapes",
+              "name": "Guillotine Escapes",
+              "category": "escapes",
+              "description": "Escaping standing and ground guillotines.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": [
+                "Posture up immediately",
+                "Von Flue choke counter",
+                "Pass to side, stack"
+              ],
+              "tags": ["escapes", "guillotine", "self-defense"]
+            },
+            {
+              "id": "bjj-l5-full-nelson-escapes",
+              "name": "Full Nelson Escapes",
+              "category": "escapes",
+              "description": "Escaping the full nelson hold.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": [
+                "Drop chin, protect neck",
+                "Peel hands, turn into",
+                "Throw or take down"
+              ],
+              "tags": ["escapes", "full-nelson", "self-defense"]
+            },
+            {
+              "id": "bjj-l5-double-chicken-wing",
+              "name": "Double Chicken Wing Defense",
+              "category": "escapes",
+              "description": "Escaping double arm control from behind.",
+              "accessLevel": "student",
+              "keyPoints": ["Sit out motion", "Arm drag to escape", "Reverse and face"],
+              "tags": ["escapes", "self-defense", "arm-control"]
+            },
+            {
+              "id": "bjj-l5-shoulder-to-back",
+              "name": "Shoulder Grab to Back Clinch",
+              "category": "grab-defense",
+              "description": "When grabbed from behind at shoulder.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Immediate hip movement",
+                "Turn into, not away",
+                "Establish your grips"
+              ],
+              "tags": ["self-defense", "shoulder-grab", "clinch"]
+            },
+            {
+              "id": "bjj-l5-shoulder-to-front",
+              "name": "Shoulder Grab to Front Clinch",
+              "category": "grab-defense",
+              "description": "When grabbed at shoulder from front.",
+              "accessLevel": "student",
+              "keyPoints": ["Two-on-one control", "Arm drag or snap down", "Takedown entry"],
+              "tags": ["self-defense", "shoulder-grab", "clinch"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l5-basic-takedowns",
+          "name": "Basic Takedowns (Standing)",
+          "category": "takedowns",
+          "techniques": [
+            {
+              "id": "bjj-l5-baby-sacrifice",
+              "name": "Baby Sacrifice Throw",
+              "category": "takedowns",
+              "description": "Sitting guard pull with throw.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Pull into closed guard",
+                "Elevate with feet on hips",
+                "Roll them over"
+              ],
+              "tags": ["takedowns", "throws", "sacrifice"]
+            },
+            {
+              "id": "bjj-l5-turtle-throw",
+              "name": "Turtle Throw",
+              "category": "takedowns",
+              "description": "Throw from front headlock/turtle position.",
+              "accessLevel": "student",
+              "keyPoints": ["Control neck and arm", "Step over and roll", "End in side control"],
+              "tags": ["takedowns", "throws", "turtle"]
+            },
+            {
+              "id": "bjj-l5-outside-leg-reap",
+              "name": "Outside Leg Reap (Osoto Gari)",
+              "category": "takedowns",
+              "description": "Classic judo throw reaping outside leg.",
+              "accessLevel": "student",
+              "keyPoints": [
+                "Off-balance backward",
+                "Reap leg behind them",
+                "Follow to side control"
+              ],
+              "tags": ["takedowns", "throws", "judo"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l5-advanced-combos",
+          "name": "Advanced Combinations",
+          "category": "concepts",
+          "techniques": [
+            {
+              "id": "bjj-l5-guard-passing-6-10",
+              "name": "Guard Passing 6-10",
+              "category": "guard-passing",
+              "description": "Advanced guard passing techniques.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Leg drag", "Long step pass", "X-pass variations"],
+              "tags": ["guard-passing", "advanced", "combinations"]
+            },
+            {
+              "id": "bjj-l5-guard-sweeps-6-10",
+              "name": "Guard Sweeps 6-10",
+              "category": "guard-sweeps",
+              "description": "Advanced sweep techniques.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Overhead sweep", "Balloon sweep", "Sickle sweep"],
+              "tags": ["guard-sweeps", "advanced", "combinations"]
+            },
+            {
+              "id": "bjj-l5-invincible-guard-1-10",
+              "name": "Invincible Guard 1-10",
+              "category": "guard-defense",
+              "description": "Complete guard retention system.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": [
+                "Never let guard get passed",
+                "Multiple layers of defense",
+                "Offensive guard retention"
+              ],
+              "tags": ["guard-defense", "invincible-guard", "system"]
+            },
+            {
+              "id": "bjj-l5-turtle-escapes-1-5",
+              "name": "Turtle Escapes 1-5",
+              "category": "escapes",
+              "description": "Five escapes from turtle position.",
+              "accessLevel": "student",
+              "keyPoints": ["Sit-out", "Granby roll", "Peterson roll"],
+              "tags": ["escapes", "turtle", "combinations"]
+            },
+            {
+              "id": "bjj-l5-turtle-breakdowns-1-5",
+              "name": "Turtle Breakdowns 1-5",
+              "category": "turtle",
+              "description": "Breaking down opponent from turtle.",
+              "accessLevel": "student",
+              "keyPoints": ["Clock choke setup", "Seat belt control", "Rolling attacks"],
+              "tags": ["turtle", "attacks", "combinations"]
+            },
+            {
+              "id": "bjj-l5-half-guard-sweeps-1-5",
+              "name": "Half Guard Sweeps 1-5",
+              "category": "half-guard",
+              "description": "Five fundamental half guard sweeps.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Lockdown", "Old school sweep", "Electric chair"],
+              "tags": ["half-guard", "sweeps", "combinations"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l5-submissions-blue",
+          "name": "Blue Belt Submissions",
+          "category": "submissions",
+          "techniques": [
+            {
+              "id": "bjj-l5-side-control-subs-1-5",
+              "name": "Side Control Submissions 1-5",
+              "category": "submissions",
+              "description": "Submissions from side control.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Kimura", "Americana", "Arm triangle"],
+              "tags": ["submissions", "side-control", "combinations"]
+            },
+            {
+              "id": "bjj-l5-knee-belly-subs-1-5",
+              "name": "Knee in Belly Submissions 1-5",
+              "category": "submissions",
+              "description": "Attacks from knee on belly.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Armbar from knee ride", "Baseball bat choke", "Near side armbar"],
+              "tags": ["submissions", "knee-on-belly", "combinations"]
+            },
+            {
+              "id": "bjj-l5-back-control-subs-1-5",
+              "name": "Back Control Submissions 1-5",
+              "category": "submissions",
+              "description": "Attacks from back control.",
+              "accessLevel": "student",
+              "isRequired": true,
+              "keyPoints": ["Rear naked choke", "Bow and arrow", "Armbar from back"],
+              "tags": ["submissions", "back-control", "combinations"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 9,
+        "name": "Purple Belt",
+        "color": "#7C3AED",
+        "belt": "purple",
+        "stripes": 0,
+        "estimatedMonths": 12
+      },
+      "sections": [
+        {
+          "id": "bjj-l9-advanced-movements",
+          "name": "Advanced Movements",
+          "category": "movements",
+          "techniques": [
+            {
+              "id": "bjj-l9-kob-switching",
+              "name": "Knee in Belly Switching",
+              "category": "movements",
+              "description": "Fluid switching of knee on belly sides.",
+              "accessLevel": "member",
+              "keyPoints": [
+                "Maintain pressure while switching",
+                "Use as attack setup",
+                "Control reactions"
+              ],
+              "tags": ["movement", "knee-on-belly", "transitions"]
+            },
+            {
+              "id": "bjj-l9-advanced-breakfalls",
+              "name": "Advanced Break Falls and Shoulder Rolls",
+              "category": "movements",
+              "description": "High-level falling techniques.",
+              "accessLevel": "member",
+              "keyPoints": [
+                "Jumping break falls",
+                "Rolling from throws",
+                "Sacrifice throw recovery"
+              ],
+              "tags": ["movement", "breakfalls", "advanced"]
+            },
+            {
+              "id": "bjj-l9-triangle-swivels",
+              "name": "Triangle Swivels",
+              "category": "movements",
+              "description": "Hip movement for triangle entries.",
+              "accessLevel": "member",
+              "keyPoints": ["Cut angle with hips", "Swivel into triangle", "Multiple entry points"],
+              "tags": ["movement", "triangle", "swivel"]
+            },
+            {
+              "id": "bjj-l9-omoplata-swivels",
+              "name": "Omoplata Swivels",
+              "category": "movements",
+              "description": "Hip movement for omoplata attacks.",
+              "accessLevel": "member",
+              "keyPoints": ["Full 180 hip rotation", "Leg over shoulder", "Control hip to finish"],
+              "tags": ["movement", "omoplata", "swivel"]
+            },
+            {
+              "id": "bjj-l9-granby-roll",
+              "name": "Granby Roll",
+              "category": "movements",
+              "description": "Wrestling-style inversion for escapes.",
+              "accessLevel": "member",
+              "keyPoints": ["Shoulder roll inverted", "Used to reguard", "Creates scrambles"],
+              "tags": ["movement", "granby", "wrestling"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l9-standing-takedowns",
+          "name": "Takedowns from Standing 1-5",
+          "category": "takedowns",
+          "techniques": [
+            {
+              "id": "bjj-l9-double-leg-standing",
+              "name": "Double Leg from Standing",
+              "category": "takedowns",
+              "description": "Full standing double leg takedown.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": [
+                "Setup with strikes or feints",
+                "Level change, penetration step",
+                "Drive through or lift"
+              ],
+              "tags": ["takedowns", "wrestling", "standing"]
+            },
+            {
+              "id": "bjj-l9-single-leg-standing",
+              "name": "Single Leg Entries",
+              "category": "takedowns",
+              "description": "Multiple single leg attack entries.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": ["High C entry", "Low single", "Sweep single"],
+              "tags": ["takedowns", "wrestling", "single-leg"]
+            },
+            {
+              "id": "bjj-l9-hip-throws",
+              "name": "Hip Throws",
+              "category": "takedowns",
+              "description": "Judo-style hip throwing techniques.",
+              "accessLevel": "member",
+              "keyPoints": ["O-goshi", "Harai goshi", "Uchi mata"],
+              "tags": ["takedowns", "judo", "throws"]
+            },
+            {
+              "id": "bjj-l9-leg-sweeps",
+              "name": "Leg Sweeps",
+              "category": "takedowns",
+              "description": "Reaping and sweeping throws.",
+              "accessLevel": "member",
+              "keyPoints": ["De ashi barai", "Ko uchi gari", "Ouchi gari"],
+              "tags": ["takedowns", "judo", "sweeps"]
+            },
+            {
+              "id": "bjj-l9-clinch-work",
+              "name": "Front and Back Clinch",
+              "category": "takedowns",
+              "description": "Controlling clinch positions for takedowns.",
+              "accessLevel": "member",
+              "keyPoints": ["Collar ties", "Body locks", "Takedown entries from clinch"],
+              "tags": ["takedowns", "clinch", "control"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l9-advanced-guard",
+          "name": "Advanced Guard Work",
+          "category": "guard-attacks",
+          "techniques": [
+            {
+              "id": "bjj-l9-scissor-guard-10",
+              "name": "Scissor Guard x 10",
+              "category": "guard-sweeps",
+              "description": "Ten scissor sweep variations.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": ["Basic scissor sweep", "Push sweep", "Combination attacks"],
+              "tags": ["guard-sweeps", "scissor", "combinations"]
+            },
+            {
+              "id": "bjj-l9-hook-sweeps-10",
+              "name": "Hook Sweeps x 10",
+              "category": "guard-sweeps",
+              "description": "Ten butterfly/hook sweep variations.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": ["Butterfly sweep", "Single butterfly", "Hook sweep to x-guard"],
+              "tags": ["guard-sweeps", "butterfly", "hooks"]
+            },
+            {
+              "id": "bjj-l9-half-guard-6-10",
+              "name": "Half Guard 6-10",
+              "category": "half-guard",
+              "description": "Advanced half guard techniques.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": ["Deep half guard", "Reverse half", "Half to x-guard"],
+              "tags": ["half-guard", "advanced", "sweeps"]
+            }
+          ]
+        },
+        {
+          "id": "bjj-l9-submissions-purple",
+          "name": "Purple Belt Submissions",
+          "category": "submissions",
+          "techniques": [
+            {
+              "id": "bjj-l9-juji-bad",
+              "name": "Juji Gone Bad x 5",
+              "category": "submissions",
+              "description": "When armbar is defended, alternatives.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": [
+                "Triangle from armbar",
+                "Omoplata from armbar",
+                "Back take from armbar"
+              ],
+              "tags": ["submissions", "armbar", "transitions"]
+            },
+            {
+              "id": "bjj-l9-cutting-armbars",
+              "name": "Cutting Armbars",
+              "category": "submissions",
+              "description": "Armbars using leg as blade.",
+              "accessLevel": "member",
+              "keyPoints": ["Leg across face", "Cutting pressure", "Finish without going to back"],
+              "tags": ["submissions", "armbar", "advanced"]
+            },
+            {
+              "id": "bjj-l9-side-control-armbars-6-10",
+              "name": "Side Control Armbars 6-10",
+              "category": "submissions",
+              "description": "Advanced armbar entries from side control.",
+              "accessLevel": "member",
+              "keyPoints": ["Step over armbar", "Spinning armbar", "Far side armbar"],
+              "tags": ["submissions", "side-control", "armbar"]
+            },
+            {
+              "id": "bjj-l9-leg-locks",
+              "name": "Ankle and Leg Locks",
+              "category": "submissions",
+              "description": "Legal leg lock entries and finishes.",
+              "accessLevel": "member",
+              "isRequired": true,
+              "keyPoints": ["Straight ankle lock", "Knee bar (with control)", "Toe hold basics"],
+              "tags": ["submissions", "leg-locks", "advanced"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
