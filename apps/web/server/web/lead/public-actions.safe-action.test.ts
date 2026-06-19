@@ -27,7 +27,10 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 // next/server-inline-after, ~/lib/rate-limiter, ~/lib/brand-context) BEFORE any
 // import of the action / server modules. Brand=BBL — the action looks up the
 // brand's Organization and the whole Join-the-Legacy surface is BBL.
-installSafeActionMocks({ brand: "BBL", host: "blackbeltlegacy.com" })
+// Capture the env so each test can claim a FRESH IP — the action rate-limits to
+// 5 submissions per IP/hour, and this file fires more than 5, so a shared IP
+// would trip the limiter (SESSION_0418).
+const safeActionEnv = installSafeActionMocks({ brand: "BBL", host: "blackbeltlegacy.com" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { mock } from "bun:test"
@@ -86,7 +89,7 @@ const notifyTo = (to: string) => notifyCalls.filter(c => c.to === to)
 const mintTo = (email: string) => mintCalls.filter(c => c.email === email)
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 
 import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import { createJoinLegacyInterest } from "~/server/web/lead/public-actions"
@@ -255,6 +258,14 @@ afterAll(async () => {
   await db.passport.deleteMany({ where: { displayName: { startsWith: PREFIX } } })
   await db.organization.deleteMany({ where: { slug: { startsWith: PREFIX } } })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
+})
+
+// Each test claims a fresh IP so the 5-per-IP/hour submission limiter never bites
+// across this file's >5 submissions.
+let ipSeq = 0
+beforeEach(() => {
+  ipSeq += 1
+  safeActionEnv.setIp(`jli-${TS}-${ipSeq}`)
 })
 
 /** Minimal valid input for the action's schema; per-case overrides on top. */

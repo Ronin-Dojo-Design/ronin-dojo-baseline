@@ -49,11 +49,12 @@ export function JoinLegacyWizard({
           This one&apos;s yours. You&apos;re the founder and the genius behind{" "}
           <strong className="text-foreground">Black Belt Legacy</strong> — none of this exists
           without you. Thank you for your patience through every late build and every &ldquo;almost
-          there.&rdquo; It&apos;s finally here, and we could not be more excited for everything ahead.
+          there.&rdquo; It&apos;s finally here, and we could not be more excited for everything
+          ahead.
         </p>
         <p className="max-w-sm text-sm leading-7 text-muted-foreground">
-          <strong className="text-foreground">Check your email</strong> to claim your profile —
-          one click and your place at the head of the lineage is locked in, Elite for life.
+          <strong className="text-foreground">Check your email</strong> to claim your profile — one
+          click and your place at the head of the lineage is locked in, Elite for life.
         </p>
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
           <MailIcon className="size-4 shrink-0 text-red-500" aria-hidden="true" />

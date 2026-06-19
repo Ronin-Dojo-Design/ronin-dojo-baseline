@@ -20,7 +20,9 @@ export function BeltPreview({
   size?: "sm" | "lg"
 }) {
   const ringStyle = colorHex
-    ? { boxShadow: `0 0 0 3px ${colorHex}, 0 0 0 5px color-mix(in srgb, ${colorHex} 20%, transparent)` }
+    ? {
+        boxShadow: `0 0 0 3px ${colorHex}, 0 0 0 5px color-mix(in srgb, ${colorHex} 20%, transparent)`,
+      }
     : { boxShadow: "0 0 0 2px hsl(var(--border))" }
 
   const sizeClasses = size === "lg" ? "size-28" : "size-20"
@@ -29,17 +31,11 @@ export function BeltPreview({
 
   const inner = (
     <span
-      className={cx(
-        "relative flex items-center justify-center rounded-full p-0.5",
-        sizeClasses,
-      )}
+      className={cx("relative flex items-center justify-center rounded-full p-0.5", sizeClasses)}
       style={ringStyle}
     >
       <span
-        className={cx(
-          "relative flex shrink-0 overflow-hidden rounded-full bg-muted",
-          innerClasses,
-        )}
+        className={cx("relative flex shrink-0 overflow-hidden rounded-full bg-muted", innerClasses)}
       >
         {avatarUrl ? (
           <img src={avatarUrl} alt="Profile photo" className="size-full object-cover" />

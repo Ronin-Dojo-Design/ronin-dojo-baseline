@@ -47,12 +47,21 @@ const PullQuote = ({ children }: { children: React.ReactNode }) => (
 
 const TIMELINE: Array<{ when: string; what: string }> = [
   { when: "2018", what: "Black Belt Legacy begins — the glorious purpose, taken on eagerly." },
-  { when: "2020–2021", what: "The Tennessee hiatus. H2 Marketing, then ManageVisors — honing the craft." },
-  { when: "2022–2024", what: "Return to Colorado. Back in your good graces. The WordPress iteration." },
+  {
+    when: "2020–2021",
+    what: "The Tennessee hiatus. H2 Marketing, then ManageVisors — honing the craft.",
+  },
+  {
+    when: "2022–2024",
+    what: "Return to Colorado. Back in your good graces. The WordPress iteration.",
+  },
   { when: "Oct 2025", what: "The revelation: it was finally time to learn React." },
   { when: "Nov 2025", what: "Iteration #15 succeeds. The finish line comes into view." },
   { when: "Dec 2025", what: "The crazy week — all three sites carried to staging." },
-  { when: "Jan 2026", what: "The final touches. Production-ready. Black Belt Legacy launches first." },
+  {
+    when: "Jan 2026",
+    what: "The final touches. Production-ready. Black Belt Legacy launches first.",
+  },
 ]
 
 export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProps) => {
@@ -68,13 +77,14 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
       <Text className="mt-0">Hi {greetingName},</Text>
 
       <Text>
-        We&apos;ve been building the new Black Belt Legacy — your lineage under Rigan, your students,
-        and the whole network in one place — and we&apos;d love your eyes on it before it goes public.
+        We&apos;ve been building the new Black Belt Legacy — your lineage under Rigan, your
+        students, and the whole network in one place — and we&apos;d love your eyes on it before it
+        goes public.
       </Text>
 
       <Text>
-        This private link opens the full site for you. Everyone else still sees a countdown page until
-        we launch, so this is just for you:
+        This private link opens the full site for you. Everyone else still sees a countdown page
+        until we launch, so this is just for you:
       </Text>
 
       <BblEmailButton href={claimUrl}>Open the preview</BblEmailButton>
@@ -126,8 +136,8 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
       <Eyebrow>Your Faith</Eyebrow>
       <Text>
         You stuck by me through all of it — the login complaints, the broken pages, the people who
-        said they could do it better, helped for a moment, then quit under the weight. You heard, for
-        years, that you should replace me with someone better.
+        said they could do it better, helped for a moment, then quit under the weight. You heard,
+        for years, that you should replace me with someone better.
       </Text>
       <Text className="font-bold text-neutral-950">And you stuck with me.</Text>
       <PullQuote>Diamonds are forged under pressure.</PullQuote>
@@ -162,7 +172,9 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
       <Hr className="my-6 border-neutral-200" />
 
       <Text className="my-1 font-bold text-neutral-950">Planned Passion Produces Purpose.</Text>
-      <Text className="my-1 font-bold text-neutral-950">Design by Discipline. Disciplined by Design.</Text>
+      <Text className="my-1 font-bold text-neutral-950">
+        Design by Discipline. Disciplined by Design.
+      </Text>
       <Text className="my-1 font-bold text-neutral-950">Developed with Determination.</Text>
       <Text className="mt-3">This is the way of the Ronin. Master yourself.</Text>
 
@@ -184,7 +196,8 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
 EmailBblTheLongRoad.PreviewProps = {
   to: "ronindojodesign@gmail.com",
   firstName: "Bob",
-  claimUrl: "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=preview&callbackURL=%2Fpreview",
+  claimUrl:
+    "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=preview&callbackURL=%2Fpreview",
 } satisfies EmailProps
 
 export default EmailBblTheLongRoad
