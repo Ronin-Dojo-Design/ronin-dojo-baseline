@@ -1,17 +1,15 @@
 import type { Brand } from "~/.generated/prisma/client"
 
 /**
- * Per-brand public feature allowlist (SESSION_0368; SOT-ADR D8 amendment).
+ * BBL ships all features (single-brand collapse). brandHasFeature always
+ * returns true — the per-brand allowlist gate has been removed.
  *
- * Brands without an entry get EVERY feature (Baseline/RDD unchanged). A brand
- * with an entry only ships the listed features: gated routes 404 via the
- * proxy.ts gate, and nav/footer/landing surfaces consult `brandHasFeature`.
- * Re-enabling a feature later = add one string to the brand's set.
+ * FEATURE_ROUTE_PREFIXES is kept as documentation of the route→feature mapping
+ * (consumed by nav/footer and the slug-page in-page gate).
  *
- * Edge- AND browser-safe: imported by proxy.ts (middleware) and by client
- * components (header/footer/NavSheet). The Brand import MUST stay type-only —
- * a value import of the generated enum pulls the Prisma client runtime into
- * the browser bundle and crashes the build.
+ * Edge- AND browser-safe: imported by client components (header/footer/NavSheet).
+ * The Brand import MUST stay type-only — a value import of the generated enum
+ * pulls the Prisma client runtime into the browser bundle and crashes the build.
  */
 
 export const BRAND_FEATURES = [
@@ -38,32 +36,7 @@ export const BRAND_FEATURES = [
 
 export type BrandFeature = (typeof BRAND_FEATURES)[number]
 
-const ALL_FEATURES: ReadonlySet<BrandFeature> = new Set(BRAND_FEATURES)
-
-/**
- * BBL launches lineage-first (operator grill, SESSION_0368): lineage core +
- * its funnels (directory/members/schools/orgs/events/certificates) + the
- * content surfaces the operator feeds (posts/blog). Everything else returns
- * post-flip as its lane matures.
- */
-const BBL_FEATURES: ReadonlySet<BrandFeature> = new Set<BrandFeature>([
-  "lineage",
-  "directory",
-  "members",
-  "schools",
-  "organizations",
-  "events",
-  "certificates",
-  "posts",
-  "blog",
-])
-
-const FEATURES_BY_BRAND: Partial<Record<Brand, ReadonlySet<BrandFeature>>> = {
-  BBL: BBL_FEATURES,
-}
-
-export const brandHasFeature = (brand: Brand, feature: BrandFeature): boolean =>
-  (FEATURES_BY_BRAND[brand] ?? ALL_FEATURES).has(feature)
+export const brandHasFeature = (_brand: Brand, _feature: BrandFeature): boolean => true
 
 /**
  * Minimal-chrome brands render essentials-only header/footer (SESSION_0361
@@ -77,9 +50,10 @@ const MINIMAL_CHROME: Partial<Record<Brand, boolean>> = {
 export const brandHasMinimalChrome = (brand: Brand): boolean => MINIMAL_CHROME[brand] ?? false
 
 /**
- * Public route prefix → gating feature, consumed by the proxy.ts gate.
+ * Public route prefix → feature mapping. Used by nav/footer surfaces and
+ * the in-page gate at app/(web)/[slug]/page.tsx.
  * The root listings detail route (`/[slug]`) cannot be expressed as a prefix —
- * it is gated in-page (`app/(web)/[slug]/page.tsx`).
+ * it is gated in-page.
  */
 export const FEATURE_ROUTE_PREFIXES: ReadonlyArray<
   readonly [route: string, feature: BrandFeature]

@@ -4,14 +4,11 @@ import { Brand } from "~/.generated/prisma/client"
 import { resolveBrand } from "./brand-context"
 
 describe("resolveBrand", () => {
-  test("maps production brand domains", () => {
-    assert.equal(resolveBrand("baselinemartialarts.com"), Brand.BASELINE_MARTIAL_ARTS)
-    assert.equal(resolveBrand("ronindojodesign.com"), Brand.RONIN_DOJO_DESIGN)
+  test("always returns BBL (single-brand deployment)", () => {
     assert.equal(resolveBrand("blackbeltlegacy.com"), Brand.BBL)
-    assert.equal(resolveBrand("wekafusa.com"), Brand.WEKAF)
-  })
-
-  test("normalizes www hostnames before lookup", () => {
-    assert.equal(resolveBrand("www.baselinemartialarts.com"), Brand.BASELINE_MARTIAL_ARTS)
+    assert.equal(resolveBrand("bbl.local"), Brand.BBL)
+    assert.equal(resolveBrand("localhost"), Brand.BBL)
+    assert.equal(resolveBrand(null), Brand.BBL)
+    assert.equal(resolveBrand(undefined), Brand.BBL)
   })
 })

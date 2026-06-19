@@ -4,126 +4,65 @@ import { Brand } from "~/.generated/prisma/client"
 /**
  * Single source of truth for host -> Brand resolution.
  *
- * - `HOST_TO_BRAND` and `resolveBrand` are edge-safe (no `next/headers`) and
- *   are imported by `proxy.ts` (Next.js middleware).
- * - `getRequestBrand` is server-action / server-component only and reads the
- *   `x-brand` header that `proxy.ts` injects, falling back to host parsing if
- *   the middleware did not run for this request path.
+ * Single-brand collapse: every request is BBL. HOST_TO_BRAND and resolveBrand
+ * are kept for edge-safe usage but always resolve to Brand.BBL. getRequestBrand
+ * returns Brand.BBL unconditionally — no header injection, no host switching.
  *
- * Rule: never re-implement this map elsewhere. Importers must come back here.
- * MB-002 brand-scope hardening depends on a single resolution path.
+ * Rule: never re-implement this map elsewhere. MB-002 brand-scope hardening
+ * depends on a single resolution path.
  */
 
 export const HOST_TO_BRAND: Record<string, Brand> = {
-  // Production / public domains
-  "ronindojodesign.com": Brand.RONIN_DOJO_DESIGN,
-  "baselinemartialarts.com": Brand.BASELINE_MARTIAL_ARTS,
   "blackbeltlegacy.com": Brand.BBL,
-  "wekafusa.com": Brand.WEKAF,
-
-  // Local dev convention
-  "ronindojo.local": Brand.RONIN_DOJO_DESIGN,
-  "baseline.local": Brand.BASELINE_MARTIAL_ARTS,
   "bbl.local": Brand.BBL,
-  "wekaf.local": Brand.WEKAF,
-
-  // localhost defaults to Baseline during MVP build
-  localhost: Brand.BASELINE_MARTIAL_ARTS,
+  localhost: Brand.BBL,
 }
 
-export const DEFAULT_BRAND: Brand = Brand.RONIN_DOJO_DESIGN
+export const DEFAULT_BRAND: Brand = Brand.BBL
 
 /**
- * Origins Better Auth must trust, derived from `HOST_TO_BRAND` so the allowlist
- * can never drift from the host→brand map.
+ * Origins Better Auth must trust.
  *
- * ADR 0004/0006: this is a single multi-brand Vercel deployment serving every
- * brand by host. Better Auth defaults to trusting only `BETTER_AUTH_URL`'s host,
- * so auth requests from a non-default brand host (e.g. blackbeltlegacy.com) fail
- * the origin check — "invalid origin" on the magic-link `callbackURL` validation
- * and the Google OAuth redirect. Trusting every brand origin fixes both.
- *
- * - Production apex domains (`*.com`) → `https://<host>`.
- * - Local dev convention (`*.local`) → `http://<host>:3000` (Next dev port),
- *   bare `http://<host>`, plus the shared `http://localhost:3000` fallback.
- * - `localhost` → `http://localhost:3000`.
+ * ADR 0004/0006: Better Auth defaults to trusting only `BETTER_AUTH_URL`'s host,
+ * so auth requests from a non-default brand host fail the origin check. Listing
+ * trusted origins explicitly fixes magic-link callbackURL validation and OAuth
+ * redirects.
  */
-const trustedOriginsForHost = (host: string): string[] => {
-  if (host === "localhost") {
-    return ["http://localhost:3000"]
-  }
-  if (host.endsWith(".local")) {
-    return [`http://${host}:3000`, `http://${host}`, "http://localhost:3000"]
-  }
-  return [`https://${host}`]
-}
+export const BRAND_TRUSTED_ORIGINS: string[] = [
+  "https://blackbeltlegacy.com",
+  "http://bbl.local:3000",
+  "http://bbl.local",
+  "http://localhost:3000",
+]
 
-export const BRAND_TRUSTED_ORIGINS: string[] = Array.from(
-  new Set(Object.keys(HOST_TO_BRAND).flatMap(trustedOriginsForHost)),
-)
-
-const BRANDS = new Set<string>(Object.values(Brand))
-
-const isBrand = (value: string | null | undefined): value is Brand => {
-  return !!value && BRANDS.has(value)
-}
-
-const getHeaderHost = (requestHeaders: Headers) => {
-  return requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
-}
-
-const getHeaderProtocol = (requestHeaders: Headers, host: string) => {
-  const forwardedProtocol = requestHeaders.get("x-forwarded-proto")
-  if (forwardedProtocol) return forwardedProtocol.split(",")[0]?.trim() || "https"
-
-  const normalizedHost = host.toLowerCase()
-  if (
-    normalizedHost.startsWith("localhost") ||
-    normalizedHost.startsWith("127.0.0.1") ||
-    normalizedHost.includes(".local")
-  ) {
-    return "http"
-  }
-
-  return "https"
-}
-
-/** Edge-safe: derive brand from a raw host string. Used by middleware. */
-export const resolveBrand = (host: string | null | undefined): Brand => {
-  if (!host) return DEFAULT_BRAND
-  const bare = host
-    .split(":")[0]
-    ?.toLowerCase()
-    .replace(/^www\./, "")
-  return (bare && HOST_TO_BRAND[bare]) || DEFAULT_BRAND
-}
+/** Edge-safe: always returns Brand.BBL (single-brand deployment). */
+export const resolveBrand = (_host?: string | null): Brand => Brand.BBL
 
 /** Edge-safe: derive an absolute request origin from forwarded headers. */
 export const resolveRequestOrigin = (requestHeaders: Headers) => {
-  const host = getHeaderHost(requestHeaders)
+  const host =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
   if (!host) return null
 
-  return `${getHeaderProtocol(requestHeaders, host)}://${host}`
-}
-
-/**
- * Resolve the brand for the current server request.
- *
- * The middleware injects `x-brand` after host resolution and overwrites any
- * client-supplied value, so this header is trusted. If the header is missing
- * (request path excluded from the middleware matcher), we fall back to host
- * parsing — but production audit should treat that as a code smell.
- */
-export const getRequestBrand = async (): Promise<Brand> => {
-  const requestHeaders = await headers()
-  const headerBrand = requestHeaders.get("x-brand")
-
-  if (isBrand(headerBrand)) {
-    return headerBrand
+  const forwardedProtocol = requestHeaders.get("x-forwarded-proto")
+  let protocol: string
+  if (forwardedProtocol) {
+    protocol = forwardedProtocol.split(",")[0]?.trim() || "https"
+  } else {
+    const normalizedHost = host.toLowerCase()
+    protocol =
+      normalizedHost.startsWith("localhost") ||
+      normalizedHost.startsWith("127.0.0.1") ||
+      normalizedHost.includes(".local")
+        ? "http"
+        : "https"
   }
 
-  return resolveBrand(requestHeaders.get("host"))
+  return `${protocol}://${host}`
 }
+
+/** Always returns Brand.BBL — single-brand deployment. */
+export const getRequestBrand = async (): Promise<Brand> => Brand.BBL
 
 export const getRequestOrigin = async () => {
   return resolveRequestOrigin(await headers())

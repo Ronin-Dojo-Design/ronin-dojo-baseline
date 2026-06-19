@@ -10,46 +10,9 @@ import {
 } from "~/config/brand-features"
 
 describe("brandHasFeature", () => {
-  it("BBL ships the lineage-first launch set", () => {
-    const kept: BrandFeature[] = [
-      "lineage",
-      "directory",
-      "members",
-      "schools",
-      "organizations",
-      "events",
-      "certificates",
-      "posts",
-      "blog",
-    ]
-    for (const feature of kept) {
-      expect(brandHasFeature(Brand.BBL, feature)).toBe(true)
-    }
-  })
-
-  it("BBL gates everything outside the launch set", () => {
-    const gated: BrandFeature[] = [
-      "tournaments",
-      "courses",
-      "programs",
-      "disciplines",
-      "techniques",
-      "gear",
-      "merch",
-      "advertise",
-      "submit",
-      "listings",
-    ]
-    for (const feature of gated) {
-      expect(brandHasFeature(Brand.BBL, feature)).toBe(false)
-    }
-  })
-
-  it("brands without an allowlist entry get every feature", () => {
+  it("BBL ships all features (single-brand collapse)", () => {
     for (const feature of BRAND_FEATURES) {
-      expect(brandHasFeature(Brand.BASELINE_MARTIAL_ARTS, feature)).toBe(true)
-      expect(brandHasFeature(Brand.RONIN_DOJO_DESIGN, feature)).toBe(true)
-      expect(brandHasFeature(Brand.WEKAF, feature)).toBe(true)
+      expect(brandHasFeature(Brand.BBL, feature)).toBe(true)
     }
   })
 })
