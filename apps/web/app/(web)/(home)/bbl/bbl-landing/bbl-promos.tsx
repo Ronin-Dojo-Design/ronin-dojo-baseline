@@ -6,7 +6,7 @@ import { H2 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { promos } from "../bbl-landing-content"
 
-export const BblPromos = ({ hideAction = false }: { hideAction?: boolean }) => (
+export const BblPromos = () => (
   <>
     {promos.map(promo => (
       <section key={promo.title} className="w-full">
@@ -29,24 +29,18 @@ export const BblPromos = ({ hideAction = false }: { hideAction?: boolean }) => (
               </div>
               <H2>{promo.title}</H2>
               <p className="text-muted-foreground max-w-xl">{promo.description}</p>
-              {!hideAction && (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    size="lg"
-                    variant="primary"
-                    render={<Link href={promo.primaryCta.href} />}
-                  >
-                    {promo.primaryCta.label}
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    render={<Link href={promo.secondaryCta.href} />}
-                  >
-                    {promo.secondaryCta.label}
-                  </Button>
-                </div>
-              )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button size="lg" variant="primary" render={<Link href={promo.primaryCta.href} />}>
+                  {promo.primaryCta.label}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  render={<Link href={promo.secondaryCta.href} />}
+                >
+                  {promo.secondaryCta.label}
+                </Button>
+              </div>
             </div>
             <Card hover={false} className="bg-card/90">
               <p className="text-sm uppercase tracking-[0.15em] text-muted-foreground font-semibold">

@@ -15,8 +15,6 @@ import { env } from "~/env"
 import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
 import { getRequestBrand } from "~/lib/brand-context"
 import { findBrandSettings } from "~/server/admin/brand-settings/queries"
-import { BblLanding } from "./(home)/bbl/bbl-landing"
-import { BblFooter } from "./_components/bbl-footer"
 import { BblTeaserPage } from "./_components/bbl-teaser"
 
 const isBblCountdownActive = () =>
@@ -34,18 +32,11 @@ export default async function ({ children }: PropsWithChildren) {
   // cookie skip it. Other brands are never affected.
   if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
     const brandSettings = await findBrandSettings(Brand.BBL)
-    // Holding page = the brandable teaser hero + email capture, then the full landing
-    // (its own hero suppressed; every gated route hidden) below, then the footer — so
-    // gated visitors still get the full BBL story while the launch is held back.
     return (
-      <>
-        <BblTeaserPage
-          logoUrl={brandSettings?.logoUrl ?? null}
-          brandName={getBrandSiteConfig(Brand.BBL).name}
-        />
-        <BblLanding showHero={false} holdingPage />
-        <BblFooter />
-      </>
+      <BblTeaserPage
+        logoUrl={brandSettings?.logoUrl ?? null}
+        brandName={getBrandSiteConfig(Brand.BBL).name}
+      />
     )
   }
 

@@ -44,14 +44,7 @@ const BblPromotionMarquee = dynamic(() =>
   import("./bbl-promotion-marquee").then(m => m.BblPromotionMarquee),
 )
 
-// `showHero` / `holdingPage` adapt the landing for the pre-launch holding page: the
-// teaser supplies the hero there (so the landing's own hero is dropped), every gated
-// BBL route is suppressed via `hideAction`, and the pure-CTA / celebration sections
-// that only make sense post-launch are omitted entirely.
-export const BblLanding = async ({
-  showHero = true,
-  holdingPage = false,
-}: { showHero?: boolean; holdingPage?: boolean } = {}) => {
+export const BblLanding = async () => {
   const staticRankLabels = [
     heroContent.card.badge,
     heritageContent.badge,
@@ -68,27 +61,21 @@ export const BblLanding = async ({
   const brandName = getBrandSiteConfig(Brand.BBL).name
 
   const sections = [
-    ...(showHero ? [<BblHero key="hero" rankColors={staticRankColors} />] : []),
+    <BblHero key="hero" rankColors={staticRankColors} />,
     <BblVideo key="video" />,
-    <BblDirtyDozen key="dirty-dozen" rankColors={staticRankColors} hideAction={holdingPage} />,
-    <BblHeritage key="heritage" rankColors={staticRankColors} hideAction={holdingPage} />,
+    <BblDirtyDozen key="dirty-dozen" rankColors={staticRankColors} />,
+    <BblHeritage key="heritage" rankColors={staticRankColors} />,
     <BblValueProps key="value-props" />,
     <BblFeatures key="features" />,
-    ...(holdingPage ? [] : [<BblTimeline key="timeline" rankColors={staticRankColors} />]),
-    ...(holdingPage
-      ? []
-      : [<BblRedBeltCelebration key="red-belt" logoUrl={brandLogoUrl} brandName={brandName} />]),
-    ...(marqueeRows.length > 0
-      ? [<BblPromotionMarquee key="marquee" rows={marqueeRows} hideAction={holdingPage} />]
-      : []),
+    <BblTimeline key="timeline" rankColors={staticRankColors} />,
+    <BblRedBeltCelebration key="red-belt" logoUrl={brandLogoUrl} brandName={brandName} />,
+    ...(marqueeRows.length > 0 ? [<BblPromotionMarquee key="marquee" rows={marqueeRows} />] : []),
     <BblTestimonials key="testimonials" />,
     <BblFaq key="faq" />,
-    ...(holdingPage ? [] : [<BblFinalCta key="final-cta" />]),
-    ...(holdingPage
-      ? []
-      : [<BblCelebration key="celebration" logoUrl={brandLogoUrl} brandName={brandName} />]),
-    ...(holdingPage ? [] : [<BblTreeTeaser key="tree" />]),
-    <BblPromos key="promos" hideAction={holdingPage} />,
+    <BblFinalCta key="final-cta" />,
+    <BblCelebration key="celebration" logoUrl={brandLogoUrl} brandName={brandName} />,
+    <BblTreeTeaser key="tree" />,
+    <BblPromos key="promos" />,
   ]
 
   return (

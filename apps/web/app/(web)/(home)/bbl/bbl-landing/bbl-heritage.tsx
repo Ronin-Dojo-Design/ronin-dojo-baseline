@@ -13,13 +13,7 @@ import {
 import { BeltBadge } from "./belt-badge"
 import { BBL_SECTION_CLASSES, SectionHeading } from "./landing-chrome"
 
-export const BblHeritage = ({
-  rankColors,
-  hideAction = false,
-}: {
-  rankColors: StaticBblRankColorMap
-  hideAction?: boolean
-}) => (
+export const BblHeritage = ({ rankColors }: { rankColors: StaticBblRankColorMap }) => (
   <section className={cx(BBL_SECTION_CLASSES, "grid gap-8 md:grid-cols-2 md:items-center")}>
     <Card hover={false} className="p-0! overflow-hidden relative">
       <Image
@@ -45,15 +39,13 @@ export const BblHeritage = ({
       />
       <Prose className="text-muted-foreground">{heritageContent.lead}</Prose>
       <Prose className="text-muted-foreground text-sm">{heritageContent.body}</Prose>
-      {!hideAction && (
-        <Button
-          variant="ghost"
-          className="text-primary px-0"
-          render={<Link href={BBL_ROUTES.lineage} />}
-        >
-          {heritageContent.ctaLabel} →
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        className="text-primary px-0"
+        render={<Link href={BBL_ROUTES.lineage} />}
+      >
+        {heritageContent.ctaLabel} →
+      </Button>
     </div>
   </section>
 )
