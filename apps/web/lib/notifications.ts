@@ -14,6 +14,7 @@ import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirm
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
 import { EmailInviteNotification } from "~/emails/invite-notification"
+import { EmailLifecycleNotification, type LifecycleLineItem } from "~/emails/lifecycle-notification"
 import { EmailMembershipStatusChange } from "~/emails/membership-status-change"
 import { EmailMembershipWelcome, type MembershipWelcomeStatus } from "~/emails/membership-welcome"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
@@ -26,6 +27,7 @@ import {
   EmailTournamentRegistrationConfirmation,
   type TournamentRegistrationPaymentStatus,
 } from "~/emails/tournament-registration-confirmation"
+import { env } from "~/env"
 import { getBrandSenderEmail, sendEmail } from "~/lib/email"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { countSubmittedTools } from "~/server/web/tools/queries"
@@ -247,6 +249,103 @@ export type PrintfulFailureNotificationParams = {
  *
  * @see app/api/printful/webhooks/route.ts — order_failed / package_returned handlers
  */
+
+// ---------------------------------------------------------------------------
+// Dry-run gated lifecycle notifications (SESSION_0411)
+// ---------------------------------------------------------------------------
+
+export type LifecycleTier = "free" | "premium" | "elite" | "legend"
+
+const LIFECYCLE_FEATURES: Record<LifecycleTier, string[]> = {
+  free: ["Free: claim + verification badge only."],
+  premium: [
+    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
+  ],
+  elite: [
+    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
+    "Elite/Legend inherit Premium (Elite = comp-gift tier).",
+  ],
+  legend: [
+    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
+    "Elite/Legend inherit Premium (Elite = comp-gift tier).",
+  ],
+}
+
+export type LifecycleEmailKind =
+  | "new-member-welcome"
+  | "refund-confirmation"
+  | "subscription-ended"
+  | "upgrade-premium"
+  | "upgrade-elite"
+  | "payment-receipt"
+  | "payment-failed"
+  | "renewal-reminder"
+  | "renewal-confirmation"
+  | "trial-ending"
+  | "membership-expiring"
+  | "downgrade-confirmation"
+  | "win-back"
+  | "comp-granted"
+  | "rank-promotion"
+  | "profile-claim-approved"
+  | "profile-claim-rejected"
+  | "admin-dispute-alert"
+
+export type LifecycleNotificationParams = {
+  brand: Brand
+  kind: LifecycleEmailKind
+  to: string
+  firstName?: string | null
+  subject: string
+  heading: string
+  intro: string
+  tier?: LifecycleTier | null
+  details?: LifecycleLineItem[]
+  ctaLabel?: string
+  ctaUrl?: string
+  rateLimitKey: string
+  secondaryNote?: string
+}
+
+export const isLifecycleEmailDryRun = () =>
+  env.EMAIL_LIFECYCLE_DRYRUN !== "0" && env.EMAIL_LIFECYCLE_DRYRUN !== "false"
+
+export const notifyUserOfLifecycleEvent = async (params: LifecycleNotificationParams) => {
+  if (await shouldSkipForRateLimit(`lifecycle:${params.kind}:${params.rateLimitKey}`)) return
+
+  const features = params.tier ? LIFECYCLE_FEATURES[params.tier] : []
+
+  if (isLifecycleEmailDryRun()) {
+    console.log("[email:lifecycle:dry-run]", {
+      kind: params.kind,
+      brand: params.brand,
+      to: params.to,
+      subject: params.subject,
+      tier: params.tier,
+      details: params.details,
+    })
+    return
+  }
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: params.subject,
+    react: EmailLifecycleNotification({
+      to: params.to,
+      firstName: params.firstName,
+      eyebrow: "Black Belt Legacy",
+      heading: params.heading,
+      intro: params.intro,
+      details: params.details,
+      features,
+      ctaLabel: params.ctaLabel,
+      ctaUrl: params.ctaUrl,
+      secondaryNote: params.secondaryNote,
+    }),
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Data Subject Request (privacy/GDPR) notifications
 // ---------------------------------------------------------------------------

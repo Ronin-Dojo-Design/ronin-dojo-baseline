@@ -15,6 +15,7 @@ export const BblVideo = () => (
           title={videoContent.embedTitle}
           src={videoContent.embedUrl}
           loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
           className="h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

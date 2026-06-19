@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -10,11 +11,12 @@ export const BblPromos = () => (
     {promos.map(promo => (
       <section key={promo.title} className="w-full">
         <Card hover={false} className="relative p-0! overflow-hidden">
-          <img
+          <Image
             src={promo.image}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-10 dark:opacity-15"
-            loading="lazy"
+            fill
+            sizes="100vw"
+            className="object-cover opacity-10 dark:opacity-15"
             aria-hidden="true"
           />
           <div className="relative w-full grid gap-8 lg:grid-cols-2 lg:items-center p-6 md:p-10">
