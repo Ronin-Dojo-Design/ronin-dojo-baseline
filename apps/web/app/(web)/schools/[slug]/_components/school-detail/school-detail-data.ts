@@ -87,14 +87,13 @@ function deriveSchoolInitials(name: string): string {
  */
 export async function loadSchoolDetail(slug: string): Promise<SchoolDetailView | null> {
   const brand = await getRequestBrand()
-  const school = await findSchoolBySlug({ brand, slug })
+  const school = await findSchoolBySlug({ slug })
 
   if (!school) return null
 
   const [relatedSchools, promotionTimeline, session] = await Promise.all([
     findRelatedSchools({
       schoolId: school.id,
-      brand,
       city: school.city,
       state: school.state,
     }),

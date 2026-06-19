@@ -72,6 +72,8 @@ export const schoolDetailPayload = {
   updatedAt: true,
   ownerId: true,
   owner: { select: { id: true, name: true } },
+  // Logo for the premium hero avatar (SESSION_0415); null → gradient-initials fallback.
+  orgSettings: { select: { logoUrl: true } },
   disciplines: { select: schoolDisciplinePayload },
   memberships: {
     select: {

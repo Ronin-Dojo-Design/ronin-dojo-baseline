@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server"
 import type { SearchParams } from "nuqs"
-import type { Brand } from "~/.generated/prisma/client"
 import type { PaginationProps } from "~/components/web/pagination"
 import { SchoolList, type SchoolListProps } from "~/components/web/schools/school-list"
 import { SchoolListing, type SchoolListingProps } from "~/components/web/schools/school-listing"
@@ -13,7 +12,6 @@ import { searchOrganizations } from "~/server/web/directory/search-organizations
 
 type SchoolQueryProps = Omit<SchoolListingProps, "list" | "pagination"> & {
   searchParams: Promise<SearchParams>
-  brand: Brand
   overrideParams?: Partial<SchoolFilterParams>
   list?: Partial<Omit<SchoolListProps, "schools">>
   pagination?: Partial<Omit<PaginationProps, "total" | "pageSize">>
@@ -21,7 +19,6 @@ type SchoolQueryProps = Omit<SchoolListingProps, "list" | "pagination"> & {
 
 const SchoolQuery = async ({
   searchParams,
-  brand,
   overrideParams,
   list,
   pagination,
@@ -29,7 +26,7 @@ const SchoolQuery = async ({
 }: SchoolQueryProps) => {
   const parsedParams = schoolFilterParamsCache.parse(await searchParams)
   const params = { ...parsedParams, ...overrideParams }
-  const { schools, total, page, perPage } = await searchOrganizations(params, brand)
+  const { schools, total, page, perPage } = await searchOrganizations(params)
   const t = await getTranslations("schools")
 
   return (

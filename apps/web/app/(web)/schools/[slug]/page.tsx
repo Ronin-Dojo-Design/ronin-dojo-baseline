@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { findSchoolBySlug, findSchoolSlugs } from "~/server/web/schools/queries"
 import { SchoolDetail } from "./_components/school-detail"
@@ -17,8 +16,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const school = await findSchoolBySlug({ brand, slug })
+  const school = await findSchoolBySlug({ slug })
 
   if (!school) return { title: "School Not Found" }
 

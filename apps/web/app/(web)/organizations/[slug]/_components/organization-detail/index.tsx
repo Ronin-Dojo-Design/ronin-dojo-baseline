@@ -55,6 +55,7 @@ export function OrganizationDetail({
         <OrganizationHeader
           org={org}
           uniqueMemberCount={uniqueMemberCount}
+          formattedAddress={formattedAddress}
           breadcrumbItems={breadcrumbItems}
         />
 

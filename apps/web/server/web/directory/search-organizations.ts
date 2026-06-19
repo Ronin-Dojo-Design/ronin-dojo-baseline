@@ -1,6 +1,5 @@
 import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
-import type { Brand } from "~/.generated/prisma/client"
 import { parseSort } from "~/server/web/_shared/sortable"
 import type { SchoolFilterParams } from "~/server/web/directory/school-schema"
 import { organizationManyPayload } from "~/server/web/organization/payloads"
@@ -9,9 +8,14 @@ import { db } from "~/services/db"
 const SORTABLE_ORGANIZATION_COLUMNS = ["name"] as const
 
 /**
- * Paginated organization/school search, brand-scoped.
+ * Paginated organization/school search.
+ *
+ * Single-brand simplification (SESSION_0415): the brand scope is collapsed — every
+ * Organization in this deployment belongs to the one live brand, so the read no longer
+ * pins `brand` (which previously hid the roster on any non-default host). Filters only
+ * narrow the result set; they never widen it across a brand boundary because there is none.
  */
-export const searchOrganizations = async (search: SchoolFilterParams, brand: Brand) => {
+export const searchOrganizations = async (search: SchoolFilterParams) => {
   "use cache"
 
   cacheTag("organizations")
@@ -23,8 +27,7 @@ export const searchOrganizations = async (search: SchoolFilterParams, brand: Bra
   const take = perPage
   const { sortBy, sortOrder } = parseSort(sort, SORTABLE_ORGANIZATION_COLUMNS)
 
-  // brand is always server-derived; filters only narrow within the brand.
-  const where: Record<string, unknown> = { brand }
+  const where: Record<string, unknown> = {}
 
   if (type) {
     where.type = type

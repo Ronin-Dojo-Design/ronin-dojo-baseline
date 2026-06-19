@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache"
-import type { Brand, OrganizationType } from "~/.generated/prisma/client"
+import type { OrganizationType } from "~/.generated/prisma/client"
 import {
   SCHOOL_ORG_TYPES,
   schoolDetailPayload,
@@ -13,28 +13,32 @@ import { db } from "~/services/db"
 // School lens = Organizations where type IN (DOJO, SCHOOL).
 // LEAGUE and CLUB are tournament / club orgs and stay on /organizations/[slug].
 //
+// Single-brand simplification (SESSION_0415): these public read models no longer
+// pin `brand`. Every Organization in this deployment belongs to the one live brand,
+// so the brand scope only risked hiding the roster on a non-default host; slugs are
+// effectively unique within the single brand.
+//
 // Mirrors:
 //   - apps/web/server/web/disciplines/queries.ts (slugs + related pattern)
-//   - apps/web/server/web/organization/queries.ts (brand-scoped detail shape)
 // ---------------------------------------------------------------------------
 
 /**
- * Find a single school by slug (brand-scoped).
+ * Find a single school by slug.
  *
- * Uses Organization.@@unique([brand, slug]) for a single index hit and then
- * filters to school types in-app — returns `null` for non-school orgs so the
- * /schools/[slug] page can `notFound()` cleanly.
+ * Resolves the slug (unique within the single brand) and then filters to school
+ * types in-app — returns `null` for non-school orgs so the /schools/[slug] page can
+ * `notFound()` cleanly.
  *
  * Used on the /schools/[slug] detail page.
  */
-export const findSchoolBySlug = async ({ brand, slug }: { brand: Brand; slug: string }) => {
+export const findSchoolBySlug = async ({ slug }: { slug: string }) => {
   "use cache"
 
   cacheTag(`school-${slug}`)
   cacheLife("minutes")
 
-  const org = await db.organization.findUnique({
-    where: { brand_slug: { brand, slug } },
+  const org = await db.organization.findFirst({
+    where: { slug },
     select: schoolDetailPayload,
   })
 
@@ -67,19 +71,16 @@ export const findSchoolSlugs = async () => {
 /**
  * Find related schools for the school detail page.
  *
- * Up to 6 school-type orgs in the same brand, excluding the current school.
- * Prefers same city or same state when available (OR clause); when neither is
- * available falls back to brand-scope alphabetical (similar to the Discipline
- * pattern, per the SESSION_0238 risk note).
+ * Up to 6 school-type orgs, excluding the current school. Prefers same city or
+ * same state when available (OR clause); when neither is available falls back to
+ * alphabetical (similar to the Discipline pattern, per the SESSION_0238 risk note).
  */
 export const findRelatedSchools = async ({
   schoolId,
-  brand,
   city,
   state,
 }: {
   schoolId: string
-  brand: Brand
   city?: string | null
   state?: string | null
 }) => {
@@ -92,7 +93,6 @@ export const findRelatedSchools = async ({
 
   return db.organization.findMany({
     where: {
-      brand,
       id: { not: schoolId },
       type: { in: [...SCHOOL_ORG_TYPES] },
       ...(localityOr.length > 0 ? { OR: localityOr } : {}),
