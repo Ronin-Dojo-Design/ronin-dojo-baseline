@@ -2,6 +2,7 @@ import { ExternalLinkIcon, MailIcon, ReplyIcon } from "lucide-react"
 import { Brand } from "~/.generated/prisma/client"
 import { BblEmailCaptureList } from "~/app/app/email/_components/bbl-email-capture-list"
 import { BblEmailCatalogPanel } from "~/app/app/email/_components/bbl-email-catalog-panel"
+import { BblInviteComposer } from "~/app/app/email/_components/bbl-invite-composer"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -186,6 +187,8 @@ export default async function AppEmailPage() {
         senderEmail={getBrandSenderEmail(Brand.BBL)}
         isSenderConfigured={bblSenderConfigured}
       />
+
+      <BblInviteComposer isSenderConfigured={bblSenderConfigured} />
 
       <BblEmailCaptureList captures={bblCaptures} />
 

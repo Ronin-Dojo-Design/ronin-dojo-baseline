@@ -37,7 +37,7 @@ export const EmailBblClaimYourProfile = ({
   return (
     <BblEmailWrapper
       {...props}
-      preview="blackbeltlegacy.com is live — claim your profile and your free membership"
+      preview="Your Black Belt Legacy profile is ready — claim it in 3 steps"
     >
       <BblEmailHeading>Your place in the lineage is waiting</BblEmailHeading>
 
@@ -45,15 +45,32 @@ export const EmailBblClaimYourProfile = ({
 
       <Text>
         Black Belt Legacy is now live at <strong>blackbeltlegacy.com</strong> — a permanent home for
-        the lineage and the people who built it. We&apos;ve already created a profile for{" "}
-        <strong>{profileName}</strong> from the records carried over from the old site, so your
-        story is on the tree from day one.
+        the lineage and the people who built it.
       </Text>
 
       <Text>
-        Claim it to take ownership of your account: confirm your details, edit your profile, and see
-        the students who trace their lineage through you.
+        We created a profile for <strong>{profileName}</strong> from the records we carried over
+        from the old site. <strong>Your information is safe</strong> — your name, your rank, and the
+        students who trace their lineage through you are already on the tree, exactly as they were
+        before. Nothing was lost.
       </Text>
+
+      <Section className="my-4 rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-5 py-4">
+        <Text className="my-0 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
+          How to claim your profile — 3 steps
+        </Text>
+        <Text className="mb-0 mt-3 text-[14px] leading-7 text-neutral-800">
+          <strong>1.</strong> Click the button below to open your profile page.
+          <br />
+          <strong>2.</strong> Create your password — takes about 60 seconds.
+          <br />
+          <strong>3.</strong> Confirm your details, add a photo if you like, and you&apos;re done.
+        </Text>
+        <Text className="mb-0 mt-2 text-[13px] text-neutral-500">
+          Once you&apos;re in, you can see your students in the lineage tree and edit anything that
+          needs updating.
+        </Text>
+      </Section>
 
       {/* The comp gift — visually set apart. */}
       <Section className="my-2 rounded-lg border border-solid border-red-100 bg-red-50 px-5 py-4">
@@ -72,6 +89,10 @@ export const EmailBblClaimYourProfile = ({
         If the button doesn&apos;t work, copy and paste this link into your browser:
         <br />
         <span className="break-all text-neutral-700">{claimUrl}</span>
+      </Text>
+
+      <Text className="text-[13px] text-neutral-500">
+        Questions? Reply to this email and we&apos;ll help you through it.
       </Text>
     </BblEmailWrapper>
   )
