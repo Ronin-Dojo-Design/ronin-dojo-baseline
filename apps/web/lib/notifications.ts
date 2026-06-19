@@ -11,10 +11,12 @@ import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
+import { EmailBblTheLongRoad } from "~/emails/bbl-the-long-road"
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
 import { EmailDsrSubmissionConfirmation } from "~/emails/dsr-submission-confirmation"
 import { EmailInviteNotification } from "~/emails/invite-notification"
 import { EmailLifecycleNotification, type LifecycleLineItem } from "~/emails/lifecycle-notification"
+import { EmailMagicLink } from "~/emails/magic-link"
 import { EmailMembershipStatusChange } from "~/emails/membership-status-change"
 import { EmailMembershipWelcome, type MembershipWelcomeStatus } from "~/emails/membership-welcome"
 import { EmailMerchOrderConfirmation } from "~/emails/merch-order-confirmation"
@@ -624,6 +626,61 @@ export const notifyMemberOfBblClaimYourProfile = async (params: BblClaimYourProf
       compTier: params.compTier,
       isLifetime: params.isLifetime,
     }),
+  })
+}
+
+export type BblFounderLongRoadParams = {
+  brand: Brand
+  to: string
+  firstName?: string | null
+  /** The minted, email-bound magic link that one-click claims the founder's node. */
+  claimUrl: string
+}
+
+/**
+ * The founder's claim email (SESSION_0418): when Bob Bass — the genius behind
+ * Black Belt Legacy — claims his own profile, he does NOT get the generic
+ * "claim your profile" note. He gets "The Long Road": Brian Scott's 8-year
+ * testament, founder to founder, with his one-click claim link carried inside.
+ */
+export const notifyFounderOfTheLongRoad = async (params: BblFounderLongRoadParams) => {
+  if (await shouldSkipForRateLimit(`bbl-founder-long-road:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "The Long Road — claim your Black Belt Legacy profile, founder to founder",
+    react: EmailBblTheLongRoad({
+      to: params.to,
+      firstName: params.firstName,
+      claimUrl: params.claimUrl,
+    }),
+  })
+}
+
+export type BblFreeSignupMagicLinkParams = {
+  brand: Brand
+  to: string
+  firstName?: string | null
+  /** The minted, email-bound magic link that provisions the free account and lands on `/me`. */
+  verifyUrl: string
+}
+
+/**
+ * Free signup (no profile claim): a guest chose the FREE path without selecting
+ * a lineage node, so there is nothing to claim — they just need an account. We
+ * mint a `/me` magic link and ship it as the verify-your-email message
+ * (SESSION_0418). Better Auth provisions the User + identity shell when the link
+ * is verified; clicking lands them on `/me` with free-tier access.
+ */
+export const notifyUserOfBblFreeSignup = async (params: BblFreeSignupMagicLinkParams) => {
+  if (await shouldSkipForRateLimit(`bbl-free-signup:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "Confirm your Black Belt Legacy account",
+    react: EmailMagicLink({ to: params.to, url: params.verifyUrl }),
   })
 }
 
