@@ -40,17 +40,14 @@ export function PhoneMockup({
           className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/20"
         />
 
-        {logoUrl ? (
-          <div
-            aria-hidden
-            className="absolute bottom-3 left-3 z-10 h-5 w-12 bg-contain bg-left bg-no-repeat opacity-80 drop-shadow-sm"
-            style={{ backgroundImage: `url(${logoUrl})` }}
-          />
-        ) : (
-          <span className="absolute bottom-3 left-3 z-10 max-w-20 text-[0.55rem] font-extrabold uppercase italic leading-none tracking-wide text-foreground drop-shadow-sm">
-            {brandName}
-          </span>
-        )}
+        {/* Always show the BBL logo mark (never a text wordmark): default to the
+            bundled BBL logo since prod BrandSettings.logoUrl is null. */}
+        <div
+          aria-hidden
+          title={brandName}
+          className="absolute bottom-3 left-3 z-10 h-5 w-12 bg-contain bg-left bg-no-repeat opacity-80 drop-shadow-sm"
+          style={{ backgroundImage: `url(${logoUrl ?? "/brand/blackbeltlegacy/bbl-logo-white.png"})` }}
+        />
       </div>
     </div>
   )

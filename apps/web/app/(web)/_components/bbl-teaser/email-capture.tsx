@@ -16,15 +16,19 @@ import { captureBblEmail } from "~/server/web/bbl/capture-email"
  * in the hero rather than behind a click.
  */
 function CaptureBrandmark({ logoUrl, brandName }: { logoUrl: string | null; brandName: string }) {
-  return logoUrl ? (
-    // BrandSettings logos may be remote; keep this native until remote image
-    // optimization is configured for customer-owned brand assets.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={logoUrl} alt={brandName} width="96" height="55" className="h-10 w-auto" />
-  ) : (
-    <span className="block text-lg font-extrabold uppercase italic tracking-[0.02em] text-foreground [font-family:var(--font-bbl-heading,var(--font-display))]">
-      {brandName}
-    </span>
+  // Always show the BBL logo image (never a text wordmark): default to the bundled
+  // BBL logo asset since prod BrandSettings.logoUrl is null. A BrandSettings logo
+  // still overrides it. BrandSettings logos may be remote; keep this native until
+  // remote image optimization is configured for customer-owned brand assets.
+  // eslint-disable-next-line @next/next/no-img-element
+  return (
+    <img
+      src={logoUrl ?? "/brand/blackbeltlegacy/bbl-logo-white.png"}
+      alt={brandName}
+      width="96"
+      height="55"
+      className="h-10 w-auto"
+    />
   )
 }
 

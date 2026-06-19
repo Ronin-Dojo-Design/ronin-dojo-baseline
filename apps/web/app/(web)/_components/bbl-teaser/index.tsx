@@ -34,15 +34,20 @@ const COLUMNS: MarqueeColumn[] = [
 ]
 
 function TeaserBrandmark({ logoUrl, brandName }: { logoUrl: string | null; brandName: string }) {
-  return logoUrl ? (
-    // BrandSettings logos may be remote; keep this as a native image until image
-    // remotePatterns are configured for customer-owned brand assets.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={logoUrl} alt={brandName} width="120" height="69" className="h-14 w-auto" />
-  ) : (
-    <span className="block max-w-xs text-2xl font-extrabold uppercase italic tracking-[0.02em] text-foreground [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
-      {brandName}
-    </span>
+  // Always show the BBL logo image (never a text wordmark): default to the bundled
+  // BBL logo asset since prod BrandSettings.logoUrl is null. A BrandSettings logo
+  // still overrides it. Restores the pre-#118 teaser, which hardcoded this asset.
+  // BrandSettings logos may be remote; keep this a native image until image
+  // remotePatterns are configured for customer-owned brand assets.
+  // eslint-disable-next-line @next/next/no-img-element
+  return (
+    <img
+      src={logoUrl ?? "/brand/blackbeltlegacy/bbl-logo-white.png"}
+      alt={brandName}
+      width="120"
+      height="69"
+      className="h-14 w-auto"
+    />
   )
 }
 
