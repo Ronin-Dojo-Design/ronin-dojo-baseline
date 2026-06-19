@@ -11,7 +11,7 @@
  */
 import "dotenv/config"
 
-import { Text } from "@react-email/components"
+import { Section, Text } from "@react-email/components"
 import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 
 export type MembershipWelcomeStatus = "ACTIVE" | "PENDING"
@@ -33,30 +33,57 @@ export const EmailMembershipWelcome = ({
   const isActive = status === "ACTIVE"
   const preview = isActive
     ? `Welcome to ${organizationName} — your ${disciplineName} membership is active`
-    : `Welcome to ${organizationName} — your ${disciplineName} membership is pending approval`
+    : `You've applied to ${organizationName} — we'll let you know when you're approved`
 
   return (
     <EmailWrapper {...props} preview={preview}>
-      <Text>Hey {firstName?.trim() || "there"}!</Text>
-
-      <Text>
-        Welcome to <strong>{organizationName}</strong>.
-      </Text>
-
       {isActive ? (
-        <Text>
-          Your <strong>{disciplineName}</strong> membership is now <strong>active</strong>. You can
-          jump straight into the dashboard.
-        </Text>
-      ) : (
-        <Text>
-          Your <strong>{disciplineName}</strong> membership is{" "}
-          <strong>pending owner approval</strong>. You'll receive a follow-up email once the
-          organization owner approves your request.
-        </Text>
-      )}
+        <>
+          <Text>Hey {firstName?.trim() || "there"} — you&apos;re in!</Text>
 
-      <Text>Reply to this email if you have any questions.</Text>
+          <Text>
+            Your <strong>{disciplineName}</strong> membership in <strong>{organizationName}</strong>{" "}
+            is now <strong>active</strong>. Welcome to the team.
+          </Text>
+
+          <Section className="my-3 rounded-lg border border-solid border-gray-200 bg-gray-50 px-5 py-4">
+            <Text className="my-0 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+              What to do next
+            </Text>
+            <Text className="mb-0 mt-3 text-[13px] leading-7 text-gray-800">
+              <strong>1.</strong> Head to your dashboard and complete your profile.
+              <br />
+              <strong>2.</strong> Browse the directory to connect with other members.
+              <br />
+              <strong>3.</strong> Reply to this email any time if you have questions.
+            </Text>
+          </Section>
+        </>
+      ) : (
+        <>
+          <Text>Hey {firstName?.trim() || "there"},</Text>
+
+          <Text>
+            We received your request to join <strong>{organizationName}</strong> for{" "}
+            <strong>{disciplineName}</strong>. Your application is <strong>pending approval</strong>{" "}
+            from the organization owner.
+          </Text>
+
+          <Section className="my-3 rounded-lg border border-solid border-gray-200 bg-gray-50 px-5 py-4">
+            <Text className="my-0 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+              What happens next
+            </Text>
+            <Text className="mb-0 mt-3 text-[13px] leading-7 text-gray-800">
+              <strong>1.</strong> The owner reviews new membership requests — usually within a day
+              or two.
+              <br />
+              <strong>2.</strong> You&apos;ll get an email the moment you&apos;re approved.
+              <br />
+              <strong>3.</strong> Reply here if you have questions in the meantime.
+            </Text>
+          </Section>
+        </>
+      )}
     </EmailWrapper>
   )
 }

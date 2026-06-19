@@ -1,6 +1,6 @@
 import "dotenv/config"
 
-import { Text } from "@react-email/components"
+import { Section, Text } from "@react-email/components"
 import {
   BblEmailButton,
   BblEmailHeading,
@@ -28,36 +28,64 @@ export const EmailBblJoinLegacyConfirmation = ({
   claimCreated,
   ...props
 }: EmailProps) => {
+  const isPaid = membershipPath !== "FREE"
+
   return (
-    <BblEmailWrapper {...props} preview="We received your Black Belt Legacy lineage information">
-      <BblEmailHeading>Welcome to the legacy</BblEmailHeading>
+    <BblEmailWrapper {...props} preview="We got it — your lineage information is safe with us">
+      <BblEmailHeading>We&apos;ve got your lineage information</BblEmailHeading>
 
       <Text className="mt-0">Hey {firstName?.trim() || "there"}!</Text>
 
       <Text>
-        Thanks for joining Black Belt Legacy. We received your lineage information and created a{" "}
-        <strong>{membershipLabel[membershipPath]}</strong> intake record for review.
+        Your intake is confirmed. The lineage details you shared — your rank history, your
+        instructor, and everything else you submitted — are <strong>safe with us</strong> and have
+        been recorded as a <strong>{membershipLabel[membershipPath]}</strong> application.
       </Text>
 
-      {claimCreated ? (
-        <Text>
-          Your profile claim was also submitted for admin review. A steward will check the details
-          before any public profile ownership or lineage edit rights are granted.
+      <Section className="my-4 rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-5 py-4">
+        <Text className="my-0 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
+          What happens next
         </Text>
-      ) : (
-        <Text>
-          If you are claiming an existing profile, sign in and submit a profile claim so we can
-          connect your account to the right lineage node.
-        </Text>
-      )}
+        {claimCreated ? (
+          <Text className="mb-0 mt-3 text-[13px] leading-7 text-neutral-800">
+            <strong>1.</strong> A steward reviews your profile claim and lineage details — usually
+            within a few days.
+            <br />
+            <strong>2.</strong> Once approved, your profile will be publicly linked to your lineage
+            node and you&apos;ll be notified.
+            {isPaid && (
+              <>
+                <br />
+                <strong>3.</strong> Complete your membership below to unlock your full profile and
+                all lineage features.
+              </>
+            )}
+          </Text>
+        ) : (
+          <Text className="mb-0 mt-3 text-[13px] leading-7 text-neutral-800">
+            <strong>1.</strong> A steward reviews your lineage information — usually within a few
+            days.
+            <br />
+            <strong>2.</strong> If you want to claim an existing profile, sign in and submit a
+            profile claim so we can connect your account to the right lineage node.
+            {isPaid && (
+              <>
+                <br />
+                <strong>3.</strong> Complete your membership below to unlock your full profile and
+                all lineage features.
+              </>
+            )}
+          </Text>
+        )}
+      </Section>
 
       <Text>
         You can reply to this email with rank certificates, training photos, instructor references,
-        or any context that helps verify your lineage.
+        or any context that helps verify your lineage. We read every one.
       </Text>
 
-      {checkoutUrl && membershipPath !== "FREE" && (
-        <BblEmailButton href={checkoutUrl}>Review lineage membership options</BblEmailButton>
+      {checkoutUrl && isPaid && (
+        <BblEmailButton href={checkoutUrl}>Complete your lineage membership</BblEmailButton>
       )}
     </BblEmailWrapper>
   )
