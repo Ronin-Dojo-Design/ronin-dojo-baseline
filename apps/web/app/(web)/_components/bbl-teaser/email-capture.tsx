@@ -3,7 +3,6 @@
 import { useAction } from "next-safe-action/hooks"
 import { type FormEvent, useState } from "react"
 import { captureBblEmail } from "~/server/web/bbl/capture-email"
-import { BBL_LOGO_WHITE } from "./bbl-teaser-types"
 
 /**
  * BBL launch-teaser email capture (SESSION_0411).
@@ -16,7 +15,26 @@ import { BBL_LOGO_WHITE } from "./bbl-teaser-types"
  * Inline (not a modal) — the capture is the primary CTA of the teaser, so it lives
  * in the hero rather than behind a click.
  */
-export function EmailCapture() {
+function CaptureBrandmark({ logoUrl, brandName }: { logoUrl: string | null; brandName: string }) {
+  return logoUrl ? (
+    // BrandSettings logos may be remote; keep this native until remote image
+    // optimization is configured for customer-owned brand assets.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={logoUrl} alt={brandName} width="96" height="55" className="h-10 w-auto" />
+  ) : (
+    <span className="block text-lg font-extrabold uppercase italic tracking-[0.02em] text-foreground [font-family:var(--font-bbl-heading,var(--font-display))]">
+      {brandName}
+    </span>
+  )
+}
+
+export function EmailCapture({
+  logoUrl,
+  brandName,
+}: {
+  logoUrl: string | null
+  brandName: string
+}) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
@@ -34,31 +52,24 @@ export function EmailCapture() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm sm:p-6">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={BBL_LOGO_WHITE}
-        alt="Black Belt Legacy"
-        width="96"
-        height="55"
-        className="h-10 w-auto"
-      />
+    <div className="w-full max-w-md rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-sm sm:p-6">
+      <CaptureBrandmark logoUrl={logoUrl} brandName={brandName} />
 
       {isSuccess ? (
         <div className="mt-6 text-left" role="status" aria-live="polite">
-          <h2 className="text-xl font-extrabold uppercase italic tracking-tight text-white [font-family:var(--font-bbl-heading,var(--font-display))]">
+          <h2 className="text-xl font-extrabold uppercase italic tracking-tight text-foreground [font-family:var(--font-bbl-heading,var(--font-display))]">
             You&apos;re on the list
           </h2>
-          <p className="mt-2 text-sm/6 text-white/60">
+          <p className="mt-2 text-sm/6 text-muted-foreground">
             Thanks! We&apos;ll keep you posted on features, updates, and more.
           </p>
         </div>
       ) : (
         <>
-          <h2 className="mt-6 text-xl font-extrabold uppercase italic tracking-tight text-white [font-family:var(--font-bbl-heading,var(--font-display))]">
+          <h2 className="mt-6 text-xl font-extrabold uppercase italic tracking-tight text-foreground [font-family:var(--font-bbl-heading,var(--font-display))]">
             Join Our Mailing List
           </h2>
-          <p className="mt-2 text-sm/6 text-white/55">
+          <p className="mt-2 text-sm/6 text-muted-foreground">
             Get notified on features, updates, and more!
           </p>
 
@@ -74,7 +85,7 @@ export function EmailCapture() {
                 onChange={event => setName(event.target.value)}
                 placeholder="Your name (optional)"
                 autoComplete="name"
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition-colors focus:border-red-500/70"
+                className="w-full rounded-lg border border-input bg-background/70 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary/70 motion-reduce:transition-none"
               />
             </div>
 
@@ -90,26 +101,26 @@ export function EmailCapture() {
                 onChange={event => setEmail(event.target.value)}
                 placeholder="you@email.com"
                 autoComplete="email"
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition-colors focus:border-red-500/70"
+                className="w-full rounded-lg border border-input bg-background/70 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary/70 motion-reduce:transition-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full rounded-lg bg-red-600 px-4 py-3.5 text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-primary px-4 py-3.5 text-sm font-bold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 motion-reduce:transition-none"
             >
               {isPending ? "Enabling…" : "Enable Notifications"}
             </button>
 
             {serverError && (
-              <p className="text-center text-sm text-red-400" role="alert">
+              <p className="text-center text-sm text-destructive" role="alert">
                 {serverError}
               </p>
             )}
           </form>
 
-          <p className="mt-4 text-center text-[0.7rem] text-white/35">
+          <p className="mt-4 text-center text-[0.7rem] text-muted-foreground">
             No spam, ever. We respect your privacy.
           </p>
         </>

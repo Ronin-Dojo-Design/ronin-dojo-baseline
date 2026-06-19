@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Badge } from "~/components/common/badge"
 import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { Link } from "~/components/common/link"
@@ -7,7 +8,7 @@ import type { MarqueeMemberView, MarqueeRow } from "./bbl-promotion-marquee-data
 import { SectionHeading } from "./landing-chrome"
 
 const MarqueeCard = ({ name, rank, colorHex, image, date }: MarqueeMemberView) => (
-  <div className="w-[230px] shrink-0 rounded-xl border bg-card overflow-hidden">
+  <div className="w-full shrink-0 rounded-xl border bg-card overflow-hidden">
     <div className="relative aspect-[5/4] bg-muted">
       {date && (
         <Badge variant="outline" className="absolute top-2 right-2 z-10 bg-background/80">
@@ -15,11 +16,12 @@ const MarqueeCard = ({ name, rank, colorHex, image, date }: MarqueeMemberView) =
         </Badge>
       )}
       {image ? (
-        <img
+        <Image
           src={image}
           alt={name}
-          className="h-full w-full object-cover object-top"
-          loading="lazy"
+          fill
+          sizes="(min-width: 640px) 230px, 78vw"
+          className="object-cover object-top"
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-3xl font-bold text-muted-foreground">
@@ -51,7 +53,7 @@ export const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
           </Link>
           <Carousel ariaLabel={row.label} edgeFades controls="desktop">
             {row.members.map(member => (
-              <CarouselSlide key={member.name} className="basis-[230px]">
+              <CarouselSlide key={member.name} className="basis-[78%] sm:basis-[230px]">
                 <MarqueeCard {...member} />
               </CarouselSlide>
             ))}
