@@ -1,6 +1,6 @@
 import { Geist, Inter, Poppins } from "next/font/google"
 import type { FontWeight } from "satori"
-import { Brand } from "~/.generated/prisma/client"
+import type { Brand } from "~/.generated/prisma/client"
 import { cx } from "~/lib/utils"
 
 export const fontSans = Geist({
@@ -42,7 +42,7 @@ export const bblBodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-bod
  * layout box (the page's section rhythm is unaffected).
  */
 export const brandFontVariables = (brand: Brand): string | undefined =>
-  brand === Brand.BBL ? cx(bblHeadingFont.variable, bblBodyFont.variable) : undefined
+  brand === "BBL" ? cx(bblHeadingFont.variable, bblBodyFont.variable) : undefined
 
 export const loadGoogleFont = async (font: string, weight: FontWeight) => {
   const url = `https://fonts.googleapis.com/css2?family=${font}:wght@${weight}`
