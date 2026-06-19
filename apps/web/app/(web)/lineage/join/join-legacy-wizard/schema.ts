@@ -23,9 +23,20 @@ const httpUrlSchema = z
   .string()
   .trim()
   .url("Use a valid http or https URL")
-  .refine(value => ["http:", "https:"].includes(new URL(value).protocol), {
-    message: "Use a valid http or https URL",
-  })
+  .refine(
+    value => {
+      // new URL() THROWS on invalid/empty input — an uncaught throw here escapes the
+      // refine and aborts the whole form validation, which is the "Continue" no-op
+      // bug. Empty values are handled by the `.or(z.literal(""))` branch; here we
+      // just fail closed instead of throwing.
+      try {
+        return ["http:", "https:"].includes(new URL(value).protocol)
+      } catch {
+        return false
+      }
+    },
+    { message: "Use a valid http or https URL" },
+  )
 
 const optionalTrimmedString = (max: number) =>
   z.string().trim().max(max).optional().or(z.literal(""))

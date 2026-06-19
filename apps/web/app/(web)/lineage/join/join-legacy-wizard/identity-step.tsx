@@ -41,7 +41,7 @@ export function IdentityStep({
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4">
         <FormField
           control={form.control}
           name="firstName"

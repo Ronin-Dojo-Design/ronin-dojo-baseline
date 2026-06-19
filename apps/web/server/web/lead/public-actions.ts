@@ -28,9 +28,18 @@ const httpUrlSchema = z
   .string()
   .trim()
   .url("Use a valid http or https URL")
-  .refine(value => ["http:", "https:"].includes(new URL(value).protocol), {
-    message: "Use a valid http or https URL",
-  })
+  .refine(
+    value => {
+      // new URL() throws on invalid/empty input; fail closed instead of letting the
+      // throw escape and abort validation (mirrors the wizard schema fix).
+      try {
+        return ["http:", "https:"].includes(new URL(value).protocol)
+      } catch {
+        return false
+      }
+    },
+    { message: "Use a valid http or https URL" },
+  )
 
 const legacyInterestSchema = z.object({
   firstName: z.string().trim().min(1).max(120),

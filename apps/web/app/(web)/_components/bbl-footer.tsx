@@ -42,8 +42,7 @@ const FOOTER_SECTIONS = [
     title: "Explore",
     links: [
       { label: "Lineage", href: "/lineage" },
-      { label: "Curriculum", href: "/curriculum" },
-      { label: "Techniques", href: "/techniques" },
+      // Curriculum + Techniques hidden for launch (SESSION_0417).
     ],
   },
   {
@@ -91,7 +90,12 @@ export function BblFooter() {
                   aria-label={social.label}
                   className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/55 transition-colors hover:border-red-500/40 hover:text-red-500"
                 >
-                  <svg className="size-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg
+                    className="size-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path d={social.path} />
                   </svg>
                 </a>

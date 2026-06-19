@@ -21,11 +21,7 @@ const PAGE_DESCRIPTION = "Find practitioners and lineage profiles in the communi
 
 const CROSS_LINKS: Array<{ href: string; label: string; description: string }> = [
   { href: "/schools", label: "Schools", description: "Dojos and academies in the network" },
-  {
-    href: "/organizations",
-    label: "Organizations",
-    description: "Governing bodies and federations",
-  },
+  // Organizations link hidden for launch (SESSION_0417).
 ]
 
 type Props = {

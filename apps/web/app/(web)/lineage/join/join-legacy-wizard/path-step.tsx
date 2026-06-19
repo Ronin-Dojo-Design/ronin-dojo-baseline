@@ -37,7 +37,7 @@ export function PathStep({
                   field.onChange(value as JoinLegacyFormValues["membershipPath"])
                 }
                 aria-label="Join Legacy membership path"
-                className="grid gap-3 md:grid-cols-3"
+                className="grid gap-3"
               >
                 {pathCards.map(path => (
                   <label

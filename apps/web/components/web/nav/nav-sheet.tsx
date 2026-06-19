@@ -2,16 +2,13 @@
 
 import { getInitials } from "@dirstack/utils"
 import {
-  BookOpenIcon,
   ContactRoundIcon,
   GitBranchIcon,
-  InfoIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   NewspaperIcon,
   SchoolIcon,
   ShieldHalfIcon,
-  SwordsIcon,
   UsersIcon,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
@@ -54,10 +51,9 @@ const PRIMARY_NAV_ITEMS = [
   { href: "/directory", key: "directory", icon: ContactRoundIcon, feature: "directory" },
   { href: "/members", key: "members", icon: UsersIcon, feature: "members" },
   { href: "/schools", key: "schools", icon: SchoolIcon, feature: "schools" },
-  { href: "/curriculum", key: "curriculum", icon: BookOpenIcon, feature: "curriculum" },
-  { href: "/techniques", key: "techniques", icon: SwordsIcon, feature: "techniques" },
   { href: "/posts", key: "posts", icon: NewspaperIcon, feature: "posts" },
-  { href: "/blog", key: "blog", icon: BookOpenIcon, feature: "blog" },
+  // Curriculum / Techniques / Blog hidden for launch (SESSION_0417) — routes still
+  // exist; re-add here to resurface in nav.
 ] satisfies Array<{
   href: string
   key: string
@@ -152,9 +148,6 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
                 </NavLink>
               )
             })}
-            <NavLink href="/about" prefix={<InfoIcon />}>
-              {t("navigation.about")}
-            </NavLink>
           </nav>
 
           {user && (
