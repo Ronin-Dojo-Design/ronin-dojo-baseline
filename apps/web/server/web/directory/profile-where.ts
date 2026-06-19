@@ -47,15 +47,24 @@ export function buildDirectoryProfileWhere(
   // through passport.user (SOT-ADR D1). RankAward earner is Passport-rooted directly, so a rank
   // filter narrows on the Passport via `rankAwardsEarned`, alongside the account-side membership.
   const passport: Record<string, unknown> = {
-    user: {
-      memberships: {
-        some: {
-          // brand is always server-derived; org slug only narrows within it.
-          organization: { brand, ...(org ? { slug: org } : {}) },
-          ...(discipline ? { discipline: { slug: discipline } } : {}),
+    // The roster is Passport-rooted, with TWO brand-membership paths that must both surface:
+    //   1. account-side Membership → Organization (claimed members with a User account)
+    //   2. lineage-tree membership — the imported roster: placeholder Passports with no User
+    //      (90/91 of BBL's), brand-linked via LineageTree, not Membership.
+    // brand is server-derived and ANDed inside each path, so a cross-brand slug can't widen.
+    OR: [
+      {
+        user: {
+          memberships: {
+            some: {
+              organization: { brand, ...(org ? { slug: org } : {}) },
+              ...(discipline ? { discipline: { slug: discipline } } : {}),
+            },
+          },
         },
       },
-    },
+      { lineageNode: { treeMembers: { some: { tree: { brand } } } } },
+    ],
     // rankId is globally unique, so it is brand-safe on its own; the UI scopes the
     // available ranks by the chosen discipline for usability, not for security.
     ...(rank ? { rankAwardsEarned: { some: { rankId: rank } } } : {}),

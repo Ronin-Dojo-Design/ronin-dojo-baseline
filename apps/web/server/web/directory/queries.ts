@@ -73,10 +73,13 @@ export const findProfileBySlug = async ({
     where: {
       slug,
       visibility: { in: allowedVisibility },
+      // Same two brand-membership paths as the listing (see profile-where.ts): account-side
+      // Membership OR lineage-tree membership (the imported placeholder roster).
       passport: {
-        user: {
-          memberships: { some: { organization: { brand } } },
-        },
+        OR: [
+          { user: { memberships: { some: { organization: { brand } } } } },
+          { lineageNode: { treeMembers: { some: { tree: { brand } } } } },
+        ],
       },
     },
     select: directoryProfilePreviewPayload,
