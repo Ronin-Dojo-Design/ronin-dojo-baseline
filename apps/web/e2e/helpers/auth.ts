@@ -80,6 +80,17 @@ async function setSessionCookie(page: Page, token: string) {
       path: "/",
     },
   ])
+  // Authenticated test users behave like RETURNING users: pre-mark the first-run
+  // dashboard onboarding tour as seen so its auto-opening modal never intercepts
+  // the functional flows under test. (Key mirrors DashboardOnboardingTour's
+  // STORAGE_KEY — a dedicated onboarding test would clear/skip this seed.)
+  await page.context().addInitScript(() => {
+    try {
+      window.localStorage.setItem("bbl:onboarding:dashboard:v1", "done")
+    } catch {
+      // Storage unavailable (e.g. about:blank) — first paint will simply show the tour.
+    }
+  })
 }
 
 export async function createAuthenticatedUser(page: Page, options?: AuthUserOptions) {
