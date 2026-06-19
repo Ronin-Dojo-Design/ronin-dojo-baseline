@@ -10,7 +10,7 @@ import { cache } from "react"
 import { claimsConfig } from "~/config/claims"
 import { EmailMagicLink } from "~/emails/magic-link"
 import { env } from "~/env"
-import { resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
+import { BRAND_TRUSTED_ORIGINS, resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
 import { getBrandSenderName, sendEmail } from "~/lib/email"
 import { generateUniqueProfileSlug } from "~/lib/slug"
 import { db } from "~/services/db"
@@ -88,6 +88,13 @@ const resolveAuthEmailUrl = (url: string, ctx?: AuthEndpointContext) => {
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
 
+  // ADR 0004/0006: one Vercel deployment serves every brand by host. Without this,
+  // Better Auth trusts only BETTER_AUTH_URL's host and rejects auth requests from
+  // other brand hosts (e.g. blackbeltlegacy.com) with "invalid origin" — breaking
+  // both the magic-link callbackURL check and the Google OAuth redirect. The list is
+  // derived from HOST_TO_BRAND so it stays in lockstep with the host→brand map.
+  trustedOrigins: BRAND_TRUSTED_ORIGINS,
+
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
@@ -159,7 +166,14 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url }, ctx) => {
+      sendMagicLink: async ({ email, url, metadata }, ctx) => {
+        // FIX #3 (SESSION_0412): the BBL claim-link minter calls `signInMagicLink` only to
+        // create the verification token — it sends its OWN branded "claim your profile" email
+        // (with the token-accept callbackURL), so suppress the generic login email here. Plain
+        // login keeps sending as before (metadata is undefined). This guards the global send
+        // seam WITHOUT touching the plugin's expiresIn/storeToken config.
+        if ((metadata as { skipEmail?: boolean } | undefined)?.skipEmail) return
+
         const brand = resolveAuthEmailBrand(ctx)
         const brandedUrl = resolveAuthEmailUrl(url, ctx)
         const to = email

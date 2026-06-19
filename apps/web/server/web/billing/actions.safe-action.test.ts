@@ -11,7 +11,8 @@
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
 // Install mocks BEFORE any import that touches billing/server modules.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+// Pin the request host so the per-brand origin in `return_url` is deterministic.
+installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS", host: "baseline.local" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
@@ -37,7 +38,6 @@ mock.module("~/services/stripe", () => ({
   },
 }))
 
-import { siteConfig } from "~/config/site"
 import { createBillingPortalSession } from "~/server/web/billing/actions"
 import { db } from "~/services/db"
 
@@ -134,9 +134,13 @@ describe("createBillingPortalSession - safe-action wrapper", () => {
     expect(result?.validationErrors).toBeUndefined()
     expect(result?.data).toBeUndefined()
     expect(portalSessionCreateMock).toHaveBeenCalledTimes(1)
+    // `return_url` is built from the per-brand request origin — `getBrandOrigin()`
+    // derives it from the request host (`baseline.local`, pinned above) per ADR 0006,
+    // NOT the static `siteConfig.url`. This guards the per-brand-origin behavior the
+    // action adopted in commit a1af101 (which is what drifted this assertion red).
     expect(portalSessionCreateMock.mock.calls[0]?.[0]).toEqual({
       customer: STRIPE_CUSTOMER_ID,
-      return_url: `${siteConfig.url}/dashboard`,
+      return_url: "http://baseline.local/dashboard",
     })
     expect(redirectState.url).toBe("https://billing.stripe.test/session_0191")
   })

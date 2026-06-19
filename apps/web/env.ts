@@ -70,6 +70,10 @@ export const env = createEnv({
     // BBL public pages render the countdown instead of the app (other brands
     // unaffected). Unset = normal app. Flip off + redeploy to go live.
     BBL_COUNTDOWN: z.string().optional(),
+    // Shared secret that unlocks the BBL holding page for previewers: visiting
+    // `/preview?token=<this>` sets a bypass cookie. Optional — a code default
+    // keeps the shared link working; set this to rotate the token.
+    BBL_PREVIEW_TOKEN: z.string().optional(),
   },
 
   /**

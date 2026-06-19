@@ -24,7 +24,6 @@ export const BBL_ROUTES = {
 const IMG = "/brand/blackbeltlegacy"
 
 export const BBL_IMAGES = {
-  logoWhite: `${IMG}/bbl-logo-white.png`,
   heroTeaching: `${IMG}/hero-teaching.jpg`,
   heroNoGi: `${IMG}/hero-no-gi.jpg`,
   heroClinch: `${IMG}/hero-clinch.jpg`,
@@ -34,6 +33,9 @@ export const BBL_IMAGES = {
   communityGroup: `${IMG}/community-group.jpg`,
   celebration: `${IMG}/coral-belt-celebration.jpg`,
 } as const
+
+/** Static landing rank label → `Rank.colorHex` lookup, resolved server-side. */
+export type StaticBblRankColorMap = Record<string, string | null>
 
 export const heroContent = {
   eyebrow: "The Official Lineage Network",
@@ -56,7 +58,7 @@ export const videoContent = {
   eyebrow: "Hear from the source",
   title: "Rigan Machado on Black Belt Legacy",
   description: "Learn why lineage matters and what makes the Black Belt Legacy network special.",
-  embedUrl: "https://www.youtube.com/embed/EGGPLxKtYZ8",
+  embedUrl: "https://www.youtube-nocookie.com/embed/EGGPLxKtYZ8",
   embedTitle: "Rigan Machado explains Black Belt Legacy",
   caption: "9th Degree Red Belt · Pan American Champion · ADCC Veteran",
 }

@@ -7,20 +7,23 @@ import { findLineageMembershipPlans } from "~/server/web/billing/lineage-members
 import { db } from "~/services/db"
 import { JoinLegacyLanding } from "./join-legacy-landing"
 
-const getData = cache(async () => {
+const getData = cache(async (nodeId?: string) => {
   const brand = await getRequestBrand()
   const url = "/lineage/join"
   const title = "Join the Legacy"
   const description =
     "Share your martial arts history, claim your lineage profile, and choose a free or premium Black Belt Legacy listing path."
 
-  const [claimableTree, membershipPlans] = await Promise.all([
+  const findClaimableTree = (constrainNode: boolean) =>
     db.lineageTree.findFirst({
       where: {
         brand,
         isPublished: true,
         isClaimable: true,
-        members: { some: { isClaimable: true } },
+        // When arriving with a specific ?node= (a claim link), resolve the tree
+        // that actually CONTAINS that node — don't assume it's the most-recently
+        // -updated claimable tree, or the node silently fails to preselect.
+        members: { some: { isClaimable: true, ...(constrainNode && nodeId ? { nodeId } : {}) } },
       },
       orderBy: { updatedAt: "desc" },
       select: {
@@ -39,9 +42,16 @@ const getData = cache(async () => {
           },
         },
       },
-    }),
+    })
+
+  const [nodeTree, membershipPlans] = await Promise.all([
+    nodeId ? findClaimableTree(true) : Promise.resolve(null),
     findLineageMembershipPlans(brand),
   ])
+  // Prefer the node's own tree; fall back to the first claimable tree for the
+  // generic entry, or when a stale/invalid node link doesn't resolve (so the
+  // visitor still lands on a usable form).
+  const claimableTree = nodeTree ?? (await findClaimableTree(false))
 
   return {
     ...(await getPageData(url, title, description, {
@@ -75,7 +85,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
   const params = await searchParams
   const isCancelled = params?.cancelled === "true"
   const isSubmitted = params?.submitted === "true"
-  const { claimableTree, membershipPlans } = await getData()
+  const { claimableTree, membershipPlans } = await getData(params?.node)
 
   // Preselect the claim node only when it's an actual claimable member of the
   // resolved tree (e.g. arriving from a View A card "Claim this profile").

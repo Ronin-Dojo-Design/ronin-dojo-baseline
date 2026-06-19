@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import PlausibleProvider from "next-plausible"
 import { type PropsWithChildren, Suspense } from "react"
 import { Brand } from "~/.generated/prisma/client"
@@ -11,16 +12,25 @@ import { Backdrop } from "~/components/web/ui/backdrop"
 import { Container } from "~/components/web/ui/container"
 import { siteConfig } from "~/config/site"
 import { env } from "~/env"
+import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
 import { getRequestBrand } from "~/lib/brand-context"
-import { BblCountdown } from "./_components/bbl-countdown"
+import { BblTeaserPage } from "./_components/bbl-teaser"
 
 const isBblCountdownActive = () =>
   env.BBL_COUNTDOWN === "1" || env.BBL_COUNTDOWN?.toLowerCase() === "true"
 
+// Previewers (admins / stakeholders) who opened `/preview?token=…` carry a cookie
+// that lets them through the holding page to the real site.
+const hasBblPreviewBypass = async () =>
+  (await cookies()).get(BBL_PREVIEW_COOKIE)?.value === getBblPreviewToken()
+
 export default async function ({ children }: PropsWithChildren) {
-  // Pre-launch holding page: BBL only, env-gated. Other brands are never affected.
-  if (isBblCountdownActive() && (await getRequestBrand()) === Brand.BBL) {
-    return <BblCountdown />
+  const requestBrand = await getRequestBrand()
+
+  // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
+  // cookie skip it. Other brands are never affected.
+  if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
+    return <BblTeaserPage />
   }
 
   return (

@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { ListingRegisterCta } from "~/components/web/directory/listing-register-cta"
 import { SchoolListingSkeleton } from "~/components/web/schools/school-listing"
 import { SchoolQuery } from "~/components/web/schools/school-query"
+import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getRequestBrand } from "~/lib/brand-context"
 
@@ -19,7 +20,7 @@ export default async function SchoolsPage({ searchParams }: PageProps) {
   const brand = await getRequestBrand()
 
   return (
-    <>
+    <BrandTypography brand={brand} className={bblHeadingScopeClass}>
       <Intro>
         <IntroTitle>School Directory</IntroTitle>
         <IntroDescription>Find dojos, gyms, and academies in our network.</IntroDescription>
@@ -39,6 +40,6 @@ export default async function SchoolsPage({ searchParams }: PageProps) {
           options={{ enableFilters: true, enableSort: true }}
         />
       </Suspense>
-    </>
+    </BrandTypography>
   )
 }

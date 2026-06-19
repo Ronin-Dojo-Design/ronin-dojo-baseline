@@ -20,6 +20,14 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(3, "24 h"), // 3 attempts per day
       }),
+      // BBL launch-teaser email capture (public form). Higher than `newsletter`
+      // so clustered signups from one network (e.g. a gym's shared wifi) aren't
+      // blocked, while still stopping bot spam.
+      teaser_signup: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(30, "24 h"), // 30 signups per day per IP
+      }),
       claim: new Ratelimit({
         redis,
         analytics: true,

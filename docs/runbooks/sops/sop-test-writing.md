@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-18
+last_agent: claude-session-0412
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -458,6 +458,11 @@ Do not duplicate helper-level coverage in the wrapped-action file. Keep it to th
 
 `apps/web/lib/test/safe-action-env.ts` installs the standard mock seams once via `installSafeActionMocks({ brand })`. Tests mutate auth state per case with `setTestSession({ id, role })`.
 
+Two non-obvious seams the harness covers (SESSION_0412 — don't re-mock them per-file):
+
+- **`~/lib/brand-context` is a whole-module mock**, so it re-exports BOTH `getRequestBrand` AND `getRequestOrigin` (an action building absolute checkout/return URLs imports the latter — without it you'd get `undefined` and a throw).
+- **DB-count rate limiters aren't the `~/lib/rate-limiter` seam.** `checkPublicLeadRateLimit` counts `Lead` rows by `x-forwarded-for` IP in the last hour, so the harness's next/headers mock returns a **unique per-install IP** — zombie rows from crashed prior runs can't accumulate against a shared `"unknown"` IP and trip the limiter. Override with `installSafeActionMocks({ ip })` / `env.setIp(...)` when a test specifically exercises a limiter.
+
 ### Skeleton
 
 ```typescript
@@ -500,6 +505,32 @@ describe("reviewLineageClaim (wrapped)", () => {
 - Error strings come from `~/lib/safe-actions.ts`: `"User not authenticated"` (line 65), `"User not authorized"` (line 76). If those change, the tests change too.
 - Use cuid-shaped ids for any schema field declared `z.string().cuid()`. Either let Prisma's `@default(cuid())` fill the id, or use `createId()` from `@paralleldrive/cuid2`. Do not pass `tag(...)` prefix strings.
 - Naming: `<feature>-actions.safe-action.test.ts` next to the helper-level `<feature>-actions.test.ts`. Both files can run together; use distinct fixture prefixes (e.g., `session-NNNN-<TS>-`) so the suites don't collide.
+
+---
+
+## 5c. Action-is-the-security-boundary (no extractable helper)
+
+§5/§5b assume a **fat helper** (business logic) paired with a **thin wrapper** (gates). Some actions don't
+split that way: the security/business logic lives *inside* the action itself with no separately-exported
+helper to test at the §5 level — e.g. `acceptLineageClaimByToken`'s guards (node accountless, claimant
+owns no other node, member-in-published-claimable-tree) or `createJoinLegacyInterest`'s Tool-skip +
+`claimRequiresSignIn` logic. For these, the wrapped `*.safe-action.test.ts` is the ONLY home for that
+coverage.
+
+**Rule:** when the action IS the security boundary (no extractable helper), the wrapped test legitimately
+carries **full guard + branch coverage**. The §5b "keep it to 2–3 gate cases" cap applies only to thin
+wrappers over a fat helper you already covered at §5 — do **not** under-test a security boundary to satisfy
+a case-count guideline written for a different shape. Still prove the wrapper's own gate (the
+unauthenticated case for `userActionClient`; N/A for `publicActionClient`).
+
+**Tell-tale:** if removing a guard would let a real exploit through and there is no `*-helper.test.ts`
+asserting it, that guard MUST be asserted in the wrapped file.
+
+Example: `server/web/lineage/claim-accept-actions.safe-action.test.ts` — one unauth gate case + five
+guard/idempotency cases (accountless-attach happy path, `CLAIMANT_HAS_NODE`, already-owned-by-other,
+unpublished/unclaimable tree, replay no-op), because every guard is the security boundary and there is no
+helper-level file. The shared finalize it calls (`finalizeLineageNodeClaim`) is covered transitively by the
+admin path's `claim-review-actions` tests — so it is NOT re-asserted here (that part of §5b still holds).
 
 ---
 
@@ -636,6 +667,29 @@ it("creates audit log on transition", async () => {
   expect(log?.brand).toBe(requestBrand)
 })
 ```
+
+---
+
+## 10b. Security-validator unit tests (extract pure validators to `lib/`)
+
+A pure validator that encodes a **security boundary** — an open-redirect guard, a path/URL sanitizer, an
+input allowlist — should NOT live inline in a route handler where it can't be unit-tested and gets
+re-implemented per surface. Extract it to `lib/` and unit-test it with an **adversarial REJECT/ACCEPT input
+table** (no DB, no mocks — it's a pure function, same shape as `lib/public-media-url.test.ts`).
+
+**Why extract:** (1) it becomes unit-testable in isolation; (2) the table test lowers its CRAP via coverage
+instead of a `// fallow-ignore` suppress; (3) every call site reuses ONE audited validator instead of a
+per-route copy that can silently drift (the bug that surfaces as "guard X exists on route A but not B").
+
+**Table shape:** a `REJECT` list (every off-origin / malformed / injection vector → must collapse to the
+fallback) and an `ACCEPT` list (legitimate inputs → pass through verbatim). Drive both with a `for` loop so
+each row is its own `it` and a weakened validator flips exactly one row red. Use string escapes for control
+chars (`"\x00"`, `"\x7f"`) — **never literal control bytes in source** (they survive copy/paste invisibly and
+break tooling).
+
+Example: `lib/safe-redirect.ts` (`safeRelativePath`, the open-redirect guard) + `lib/safe-redirect.test.ts`
+(19 REJECT vectors incl. `//evil`, `/\evil`, embedded backslash, `javascript:`, control chars; 6 ACCEPT),
+reused by `app/(web)/preview/route.ts` and `hooks/use-auth-callback-url.ts`.
 
 ---
 

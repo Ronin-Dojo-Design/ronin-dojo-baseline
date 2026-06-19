@@ -27,7 +27,7 @@ const badgeVariants = cva({
         "bg-red-500/15 text-red-700 hover:[&[href],&[type]]:bg-red-500/25 dark:bg-red-500/10 dark:text-red-300 dark:hover:[&[href],&[type]]:bg-red-500/20",
     },
     size: {
-      sm: "px-1 py-px gap-1 text-[0.625rem]",
+      sm: "px-1 py-px gap-1 text-2xs",
       md: "px-1.5 py-0.5 gap-1.5 text-xs",
       lg: "px-2 py-1 gap-2 text-sm rounded-md",
     },

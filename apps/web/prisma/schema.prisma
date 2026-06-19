@@ -3912,3 +3912,19 @@ model DataSubjectRequest {
   @@index([status])
   @@index([submittedAt])
 }
+
+/// Pre-launch email capture for the brand teaser landing pages (BBL launch teaser,
+/// SESSION_0411). Unauthenticated visitors leave name + email to get early access;
+/// captured rows are deduped on `email` (a re-submit updates the name, keeps the row).
+/// This replaces the dead WordPress endpoint the legacy monorepo modal POSTed to — the
+/// capture now persists to THIS app's DB via the public `captureBblEmail` server action.
+model BblEmailCapture {
+  id        String   @id @default(cuid(2))
+  email     String   @unique
+  name      String?
+  brand     Brand    @default(BBL)
+  source    String   @default("teaser")
+  createdAt DateTime @default(now())
+
+  @@index([brand, createdAt])
+}
