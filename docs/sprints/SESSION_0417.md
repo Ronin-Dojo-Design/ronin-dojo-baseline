@@ -215,14 +215,39 @@ to `schema.prisma` — handled by the "agents edit schema, Petey cuts one migrat
 | --- | --- | --- |
 | SESSION_0417_TASK_01 | landed | Authored `docs/petey-plan-0417.md` (cloud checklist + 3 prompts + handoff). |
 | SESSION_0417_TASK_02 | landed | x-brand fallback-page collapse: 10 pages / 14 sites swapped `(headers().get("x-brand") ?? Brand.X)` → `await getRequestBrand()` (always BBL); removed dead `headers`/`Brand` imports. typecheck + oxlint + oxfmt green; full `next build` at consolidation. |
-| SESSION_0417_TASK_03 | pending | Lane A — member photo upload/crop (cloud). |
-| SESSION_0417_TASK_04 | pending | Lane B — emails copy + admin tooling (cloud). |
-| SESSION_0417_TASK_05 | pending | Lane C — registration polish + promo (cloud). |
-| SESSION_0417_TASK_06 | pending | Consolidate + migration + functional verify + push. |
+| SESSION_0417_TASK_03 | landed | Lane A — member photo upload/crop consolidated (squash `ddffc5a1`); `react-easy-crop` installed. |
+| SESSION_0417_TASK_04 | landed | Lane B — emails + admin composer consolidated (PR #122 → `221e8803`). |
+| SESSION_0417_TASK_05 | landed | Lane C — registration wizard refactor + promo intake (operator's Codex patch → `d2cd9655`); `httpUrlSchema` Continue-crash fixed; no migration (promo fields → lead meta). |
+| SESSION_0417_TASK_06 | landed | Consolidated A/B/C + launch polish; **reveal parked** on branch `reveal/gate-cut` (holding page kept); pushed to `main` (`71b3ba7f`). No migration needed. |
+| SESSION_0417_TASK_07 | landed | Launch polish: hide curriculum/techniques/blog/about/organizations/trees links; BBL favicon; email logo/sender/contact → blackbeltlegacy.com; mobile register-modal x-overflow + 16px inputs; FREE→success modal / PAID→Stripe. |
+| SESSION_0417_TASK_08 | landed | Prod Vercel env corrected (BETTER_AUTH_URL, RESEND_SENDER_EMAIL[_BBL], AUTH_GOOGLE_ID/SECRET → BBL). Bob preview email sent to operator. |
+| SESSION_0417_TASK_09 | handed off | Self-serve free-account + magic-link claim + comp-gift → cloud prompt `docs/petey-plan-0418-free-account-claim.md`. |
 
 ## What landed
 
-<!-- Filled at bow-out. -->
+All three cloud lanes consolidated onto `main` + a large launch-polish pass, with the **countdown
+holding page deliberately KEPT** (public still gated; the reveal commit is parked on branch
+`reveal/gate-cut` for when launch is called). Bob & Tony review the live site via the preview link
+`https://blackbeltlegacy.com/preview?token=bob-tony-BBL-preview`.
+
+- **Lanes A/B/C** consolidated (member photos, transactional emails + admin composer, registration
+  wizard refactor + promo intake). No migration (promo fields persist into lead `notes`/`meta`).
+- **Continue-button crash fixed** — `httpUrlSchema` refine ran `new URL("")` on empty optional URL
+  fields and threw, aborting validation; guarded with try/catch (wizard schema + public-actions).
+- **Launch polish:** hid not-ready links (curriculum / techniques / blog / about / organizations /
+  directory "Lineage Trees" toggle) across nav-sheet / footer / directory / search; BBL circle
+  favicon; emails switched to the BBL wrapper + logo/sender/contact all → `blackbeltlegacy.com`;
+  mobile register-modal x-overflow clipped + 16px inputs (iOS no-zoom) + step-indicator truncate;
+  FREE submit → in-place success modal, PAID → Stripe checkout (no more sign-in bounce/loop).
+- **Prod env corrected via Vercel CLI** (the BBL deploy was running Baseline values): `BETTER_AUTH_URL`,
+  `RESEND_SENDER_EMAIL`, `RESEND_SENDER_EMAIL_BBL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` → BBL.
+- **Bob preview email** sent to the operator (`ronindojodesign@gmail.com`) for review; Bob's addresses
+  pending operator OK.
+- **Cloud handoff:** self-serve free-account + magic-link claim + comp-gift spec →
+  `docs/petey-plan-0418-free-account-claim.md` (the machinery already exists; just needs wiring).
+
+Pushed commits: `ddffc5a1` (A) · `221e8803` (B) · `d2cd9655` (C) · `0aeb5ba4` (email/nav/contact) ·
+`71b3ba7f` (mobile + success-state). Reveal parked: `reveal/gate-cut` (`5b150086`, unpushed/local).
 
 ## Decisions resolved
 
@@ -249,11 +274,23 @@ None at plan-lock.
 
 ### Goal
 
-TBD at bow-out.
+Land the self-serve **free-account + magic-link claim + comp-gift** flow (cloud build), then call the
+public reveal (un-park `reveal/gate-cut`) once Bob/Tony sign off.
 
 ### First task
 
-TBD at bow-out.
+Hand `docs/petey-plan-0418-free-account-claim.md` to a cloud agent (wire `createJoinLegacyInterest`
+to the existing `mintClaimMagicLink` + `notifyMemberOfBblClaimYourProfile` + `acceptLineageClaimByToken`
+→ `finalizeLineageNodeClaim` comp-grant path; de-dupe placeholder Passports; stub Resend in tests).
+
+### Operator-side, still open (not code)
+
+- **Google OAuth:** confirm the `783677341288` client lists `https://blackbeltlegacy.com/api/auth/callback/google`
+  (redirect URI) + `https://blackbeltlegacy.com` (JS origin). Rotate the secret pasted in chat.
+- **Resend DKIM:** add the `resend._domainkey` TXT record in Bluehost DNS, verify in Resend.
+- **Bob preview:** OK the review email → send to `sbjjitsu30@gmail.com` + `bobbassjjitsu30@gmail.com`
+  (`/tmp/send-bob-preview.mjs <addr>`).
+- After Bob signs off: un-park `reveal/gate-cut` to drop the holding page.
 
 ## Review log
 
