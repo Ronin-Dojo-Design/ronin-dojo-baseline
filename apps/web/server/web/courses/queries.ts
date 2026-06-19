@@ -97,7 +97,7 @@ export const findCourseInstructors = async (organizationId: string, brand: Brand
           passport: { select: { avatarUrl: true } },
         },
       },
-      rank: { select: { id: true, name: true } },
+      rank: { select: { id: true, name: true, colorHex: true, shortName: true } },
       discipline: { select: { id: true, name: true } },
       roleAssignments: {
         select: {

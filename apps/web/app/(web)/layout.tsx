@@ -25,13 +25,11 @@ const hasBblPreviewBypass = async () =>
   (await cookies()).get(BBL_PREVIEW_COOKIE)?.value === getBblPreviewToken()
 
 export default async function ({ children }: PropsWithChildren) {
+  const requestBrand = await getRequestBrand()
+
   // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
   // cookie skip it. Other brands are never affected.
-  if (
-    isBblCountdownActive() &&
-    (await getRequestBrand()) === Brand.BBL &&
-    !(await hasBblPreviewBypass())
-  ) {
+  if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
     return <BblTeaserPage />
   }
 

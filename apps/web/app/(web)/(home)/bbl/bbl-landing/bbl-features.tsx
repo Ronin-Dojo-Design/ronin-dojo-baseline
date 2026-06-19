@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Card } from "~/components/common/card"
 import { H3 } from "~/components/common/heading"
 import {
@@ -21,11 +22,12 @@ export const BblFeatures = () => (
         {featureHighlights.map(feature => (
           <div key={feature.title} className="rounded-xl border overflow-hidden bg-card">
             <div className="relative h-36">
-              <img
+              <Image
                 src={feature.image}
                 alt=""
-                className="h-full w-full object-cover"
-                loading="lazy"
+                fill
+                sizes="(min-width: 1024px) 33vw, 100vw"
+                className="object-cover"
               />
             </div>
             <div className="p-4 space-y-1.5">
