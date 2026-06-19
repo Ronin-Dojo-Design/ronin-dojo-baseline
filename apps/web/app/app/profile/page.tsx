@@ -16,13 +16,17 @@ import { Link } from "~/components/common/link"
 import { Skeleton } from "~/components/common/skeleton"
 import { Stack } from "~/components/common/stack"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
+import { ProfileEnhancementLauncher } from "~/components/web/onboarding/profile-enhancement-launcher"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
 import { getBrandSiteConfig } from "~/config/site"
+import { requireUser } from "~/lib/auth-guard"
 import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
+import { getOnboardingState } from "~/server/web/onboarding/queries"
+import { getBeltRanks } from "~/server/web/onboarding/ranks"
 
 // I18n page namespace
 const namespace = "pages.dashboard"
@@ -54,6 +58,12 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
   const brand = await getRequestBrand()
   const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
 
+  const user = await requireUser()
+  const [onboarding, ranks] = await Promise.all([
+    getOnboardingState({ userId: user.id, role: user.role, brand }),
+    getBeltRanks(brand),
+  ])
+
   return (
     <>
       <Breadcrumbs items={breadcrumbs} />
@@ -62,6 +72,15 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
         <IntroTitle>{metadata.title}</IntroTitle>
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
+
+      <Suspense fallback={null}>
+        <ProfileEnhancementLauncher
+          ranks={ranks}
+          userId={user.id}
+          initialAvatarUrl={onboarding.avatarUrl}
+          incomplete={!onboarding.hasAvatar || !onboarding.hasRank}
+        />
+      </Suspense>
 
       <div className="flex flex-col gap-8">
         <Suspense fallback={<Skeleton className="h-64" />}>

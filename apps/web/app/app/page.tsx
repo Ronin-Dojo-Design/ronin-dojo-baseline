@@ -7,8 +7,11 @@ import { MetricChartSkeleton } from "~/components/admin/metrics/metric-chart"
 import { MetricValue, MetricValueSkeleton } from "~/components/admin/metrics/metric-value"
 import { H3 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
+import { DashboardOnboardingTour } from "~/components/web/onboarding/dashboard-onboarding-tour"
+import { getRequestBrand } from "~/lib/brand-context"
 import { requireUser } from "~/lib/auth-guard"
 import { can } from "~/server/orpc/permissions"
+import { getOnboardingState } from "~/server/web/onboarding/queries"
 import { db } from "~/services/db"
 
 /**
@@ -21,6 +24,8 @@ import { db } from "~/services/db"
 export default async function (_props: PageProps<"/app">) {
   const user = await requireUser()
   const showMetrics = can(user, "metrics.read")
+  const brand = await getRequestBrand()
+  const onboarding = await getOnboardingState({ userId: user.id, role: user.role, brand })
 
   const counters = [
     { label: "Tools", href: "/admin/tools", query: db.tool.count() },
@@ -32,6 +37,10 @@ export default async function (_props: PageProps<"/app">) {
 
   return (
     <Wrapper size="lg" gap="xs">
+      <Suspense fallback={null}>
+        <DashboardOnboardingTour tier={onboarding.tier} />
+      </Suspense>
+
       <H3>Dashboard</H3>
 
       {showMetrics ? (
