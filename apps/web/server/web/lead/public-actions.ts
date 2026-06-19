@@ -35,6 +35,7 @@ const httpUrlSchema = z
 const legacyInterestSchema = z.object({
   firstName: z.string().trim().min(1).max(120),
   lastName: z.string().trim().max(120).optional().or(z.literal("")),
+  preferredName: z.string().trim().max(120).optional().or(z.literal("")),
   email: z.string().trim().email(),
   phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
   currentRank: z.string().trim().max(200).optional().or(z.literal("")),
@@ -46,6 +47,16 @@ const legacyInterestSchema = z.object({
   evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   profileUrl: httpUrlSchema.optional().or(z.literal("")),
+  instagramUrl: httpUrlSchema.optional().or(z.literal("")),
+  martialArtsExperience: z.string().trim().max(1200).optional().or(z.literal("")),
+  primaryGoal: z
+    .enum(["CLAIM_PROFILE", "PRESERVE_LINEAGE", "PROMOTE_SCHOOL", "CONNECT_COMMUNITY", "EXPLORE"])
+    .default("PRESERVE_LINEAGE"),
+  discoverySource: z
+    .enum(["INSTAGRAM", "FACEBOOK", "GOOGLE", "FRIEND", "INSTRUCTOR", "EVENT", "OTHER"])
+    .default("INSTRUCTOR"),
+  discoverySourceOther: z.string().trim().max(160).optional().or(z.literal("")),
+  shareConsent: z.boolean().default(false),
   membershipPath: z.enum(["FREE", "PREMIUM", "ELITE"]).default("FREE"),
   treeId: z.string().optional(),
   nodeId: z.string().optional(),
@@ -154,6 +165,7 @@ export const createJoinLegacyInterest = publicActionClient
     const firstName = parsedInput.firstName.trim()
     const lastName = normalizeOptional(parsedInput.lastName)
     const fullName = [firstName, lastName].filter(Boolean).join(" ")
+    const preferredName = normalizeOptional(parsedInput.preferredName)
     const rankSummary = normalizeOptional(parsedInput.currentRank)
     const role = parsedInput.role
     const schoolName = normalizeOptional(parsedInput.schoolName)
@@ -163,6 +175,12 @@ export const createJoinLegacyInterest = publicActionClient
     const evidenceUrl = normalizeOptional(parsedInput.evidenceUrl)
     const bio = normalizeOptional(parsedInput.bio)
     const profileUrl = normalizeOptional(parsedInput.profileUrl)
+    const instagramUrl = normalizeOptional(parsedInput.instagramUrl)
+    const martialArtsExperience = normalizeOptional(parsedInput.martialArtsExperience)
+    const primaryGoal = parsedInput.primaryGoal
+    const discoverySource = parsedInput.discoverySource
+    const discoverySourceOther = normalizeOptional(parsedInput.discoverySourceOther)
+    const shareConsent = parsedInput.shareConsent
     const membershipPath = parsedInput.membershipPath as BblJoinLegacyMembershipPath
     const claimSelected = Boolean(parsedInput.treeId && parsedInput.nodeId)
 
@@ -188,12 +206,19 @@ export const createJoinLegacyInterest = publicActionClient
 
     const notes = [
       `Role: ${role.replaceAll("_", " ").toLowerCase()}`,
+      `Primary goal: ${primaryGoal.replaceAll("_", " ").toLowerCase()}`,
+      `Discovery source: ${discoverySource.replaceAll("_", " ").toLowerCase()}${discoverySourceOther ? ` — ${discoverySourceOther}` : ""}`,
+      `Private review consent: ${shareConsent ? "yes" : "no"}`,
+      preferredName ? `Preferred display name: ${preferredName}` : null,
       rankSummary ? `Rank/history: ${rankSummary}` : null,
       schoolName ? `Current school/academy: ${schoolName}` : null,
       location ? `Location: ${location}` : null,
       trainedUnder ? `Trained under: ${trainedUnder}` : null,
       represent ? `Wants to represent/connect to: ${represent}` : null,
+      profileUrl ? `Website/public profile: ${profileUrl}` : null,
+      instagramUrl ? `Instagram/social proof: ${instagramUrl}` : null,
       evidenceUrl ? `Evidence/reference URL: ${evidenceUrl}` : null,
+      martialArtsExperience ? `Martial arts experience: ${martialArtsExperience}` : null,
       bio ? `Bio/history: ${bio}` : null,
     ]
       .filter(Boolean)
@@ -229,13 +254,20 @@ export const createJoinLegacyInterest = publicActionClient
           source: "join-the-legacy",
           membershipPath,
           currentRank: rankSummary ?? null,
+          preferredName: preferredName ?? null,
           role,
+          primaryGoal,
+          discoverySource,
+          discoverySourceOther: discoverySourceOther ?? null,
+          shareConsent,
           schoolName: schoolName ?? null,
           location: location ?? null,
           trainedUnder: trainedUnder ?? null,
           represent: represent ?? null,
           evidenceUrl: evidenceUrl ?? null,
           profileUrl: profileUrl ?? null,
+          instagramUrl: instagramUrl ?? null,
+          martialArtsExperience: martialArtsExperience ?? null,
           claimIntent: claimSelected,
         } satisfies Prisma.InputJsonObject,
       },
