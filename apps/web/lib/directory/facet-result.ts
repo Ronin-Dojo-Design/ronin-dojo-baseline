@@ -54,6 +54,8 @@ export type DirectoryFacetResult = {
   claimStatus: LineageClaimBadgeStatus | null
   /** Neutral chips: top rank (people), disciplines (orgs/trees). */
   tags: string[]
+  /** Belt tint for the lead tag (people only): `Rank.colorHex`. Null for orgs/trees. */
+  rankColorHex: string | null
   /** Outline badges: org type (orgs), paid tier (people). */
   badges: DirectoryFacetBadge[]
   /** Persisted-Save subject (SESSION_0397): person→Passport, org→Organization, tree→LineageTree. */
@@ -78,7 +80,7 @@ export type PersonFacetSource = {
   claimBadgeStatus: LineageClaimBadgeStatus | null
   locationCity: string | null
   locationRegion: string | null
-  ranks: { rank: { id: string; name: string } }[]
+  ranks: { rank: { id: string; name: string; colorHex?: string | null } }[]
 }
 
 export type OrganizationFacetSource = {
@@ -147,6 +149,7 @@ export function mapPersonToFacet(person: PersonFacetSource): DirectoryFacetResul
     trustStatus: person.trustStatus,
     claimStatus: person.claimBadgeStatus,
     tags: topRank ? [topRank] : [],
+    rankColorHex: person.ranks[0]?.rank.colorHex ?? null,
     badges:
       person.profileTier !== "free"
         ? [{ label: tierLabel(person.profileTier), variant: "outline" }]
@@ -169,6 +172,7 @@ export function mapOrganizationToFacet(org: OrganizationFacetSource): DirectoryF
     trustStatus: null,
     claimStatus: null,
     tags: (org.disciplines ?? []).map(entry => entry.discipline.name),
+    rankColorHex: null,
     badges: org.type ? [{ label: org.type.replace(/_/g, " "), variant: "outline" }] : [],
     save: { subjectType: "ORGANIZATION", subjectId: org.id },
   }
@@ -190,6 +194,7 @@ export function mapLineageTreeToFacet(tree: LineageTreeFacetSource): DirectoryFa
     trustStatus: null,
     claimStatus: tree.isClaimable ? "claimable" : null,
     tags: tree.discipline ? [tree.discipline.name] : [],
+    rankColorHex: null,
     badges: [],
     save: { subjectType: "TREE", subjectId: tree.id },
   }

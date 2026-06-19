@@ -218,12 +218,18 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
       )}
 
       <Section>
-        <Section.Content>
+        {/* Full-bleed: the lineage views have no sidebar, so span all 3 grid columns.
+            Default col-span-2 trapped the focal explorer in 2/3 width. `min-w-0` stops
+            the focal tree's min-content width (min-w-fit) from blowing this grid item
+            past the viewport — without it the inner overflow-x-auto never scrolls. */}
+        <Section.Content className="md:col-span-3 min-w-0">
           {isExploreView ? (
             // Brand type seam (SESSION_0394): the explorer inherits BBL Poppins
             // (headings) + Inter (body) via these font vars; the LineageCohortTimeline
             // React cards apply the heading font directly (SESSION_0395, ADR 0027).
-            <div className={cx(bblHeadingFont.variable, bblBodyFont.variable)}>
+            // `w-full min-w-0`: this flex child must not grow to the tree's content
+            // width (the blowout) — it stays at column width so the tree scrolls inside.
+            <div className={cx("w-full min-w-0", bblHeadingFont.variable, bblBodyFont.variable)}>
               <LineageViewAIsland
                 members={result.members}
                 relationships={result.members.flatMap(m => m.node.relationshipsTo)}

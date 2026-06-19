@@ -17,7 +17,7 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
-      className={cx("aspect-square size-full", className)}
+      className={cx("aspect-square size-full object-cover", className)}
       {...props}
     />
   )

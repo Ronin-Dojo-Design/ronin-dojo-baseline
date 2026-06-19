@@ -572,8 +572,7 @@ export function LineageViewAIsland({
                 // SESSION_0411: content-driven height (only a floor). The fixed
                 // `clamp(560px,78vh,880px)` cap trapped the 77-member tree in a
                 // both-axis nested scroller; now the box grows to the tree's full
-                // height so the page scrolls vertically to the bottom. Horizontal
-                // overflow still scrolls inside the timeline (overflow-x-auto).
+                // height so the page scrolls vertically to the bottom.
                 minHeight: 560,
                 background: "#050505",
               } as CSSProperties

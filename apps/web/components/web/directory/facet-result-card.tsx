@@ -7,19 +7,27 @@ import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import type { DirectoryFacetResult } from "~/lib/directory/facet-result"
 
+/** BBL faceless gi default — shown when a person has no usable photo (null or broken URL). */
+const PERSON_FALLBACK_AVATAR = "/brand/bbl/default-black-belt.png"
+
+/** Validate a `Rank.colorHex` for inline styling; null when missing/malformed. */
+function beltTint(hex: string | null) {
+  return hex && /^#[0-9a-f]{6}$/i.test(hex) ? hex : null
+}
+
 /**
  * Premium faceted-directory card (SESSION_0414). Renders the normalized
- * `DirectoryFacetResult` (people / organizations / lineage trees) as a self-contained
- * card tuned for the BBL roster: large avatar with hover ring, full (wrapping) name —
- * no hard truncation — a brand-accented rank/discipline chip, trust/claim badges, a
- * location line, and a View + Save footer. Theme-token only (brand colors come from
- * `BrandSettings`, never hardcoded). Replaces the prior ListingCard delegation, whose
- * no-wrap header crushed names to "Ale…".
+ * `DirectoryFacetResult` (people / organizations / lineage trees) tuned for the BBL
+ * roster: large avatar with the gi-default fallback (no bare initials for people), a
+ * full (wrapping) name, a belt-tinted rank chip (`Rank.colorHex`), trust/claim badges, a
+ * location line, and a View + Save footer. Theme-token only for brand surfaces; the belt
+ * tint is per-rank data (ADR 0022), readable on the dark card via a light label + swatch.
  */
 export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
   const rank = result.tags[0]
   const isPerson = result.type === "person"
   const viewLabel = isPerson ? "View profile" : "View"
+  const tint = beltTint(result.rankColorHex)
 
   return (
     <Card
@@ -32,9 +40,22 @@ export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
       <div className="relative flex items-start gap-4">
         <Avatar className="size-16 rounded-2xl ring-2 ring-border shadow-sm transition group-hover:ring-primary/50">
           {result.imageUrl && <AvatarImage src={result.imageUrl} alt={result.title} />}
-          <AvatarFallback className="bg-gradient-to-br from-accent to-muted text-lg font-bold text-foreground">
-            {result.initials}
-          </AvatarFallback>
+          {/* People always fall back to the gi silhouette (covers null + broken photo URLs);
+              orgs/trees keep initials. */}
+          {isPerson ? (
+            <AvatarFallback className="p-0">
+              <img
+                src={PERSON_FALLBACK_AVATAR}
+                alt=""
+                className="size-full object-cover"
+                aria-hidden
+              />
+            </AvatarFallback>
+          ) : (
+            <AvatarFallback className="bg-gradient-to-br from-accent to-muted text-lg font-bold text-foreground">
+              {result.initials}
+            </AvatarFallback>
+          )}
         </Avatar>
 
         <div className="min-w-0 flex-1 pt-0.5">
@@ -55,12 +76,24 @@ export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
 
       {(rank || result.badges.length > 0) && (
         <div className="relative flex flex-wrap items-center gap-1.5">
-          {rank && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary ring-1 ring-inset ring-primary/20">
-              <span className="size-1.5 rounded-full bg-primary" />
-              {rank}
-            </span>
-          )}
+          {rank &&
+            (tint ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-foreground ring-1 ring-inset"
+                style={{ backgroundColor: `${tint}24`, borderColor: `${tint}59` }}
+              >
+                <span
+                  className="size-2.5 rounded-full ring-1 ring-white/25"
+                  style={{ backgroundColor: tint }}
+                />
+                {rank}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary ring-1 ring-inset ring-primary/20">
+                <span className="size-1.5 rounded-full bg-primary" />
+                {rank}
+              </span>
+            ))}
           {result.badges.map(badge => (
             <Badge key={badge.label} variant={badge.variant}>
               {badge.label}
