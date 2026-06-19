@@ -13,7 +13,7 @@ export function StepProgress({ current }: { current: number }) {
             <li key={step.id}>
               <div
                 className={cx(
-                  "flex min-h-14 items-center gap-2 rounded-2xl border px-3 py-2 transition-colors",
+                  "flex min-h-14 min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-2 transition-colors sm:px-3",
                   isActive && "border-red-500 bg-red-500/10 text-foreground",
                   isDone && "border-emerald-500/40 bg-emerald-500/10 text-foreground",
                   !isActive && !isDone && "border-border bg-muted/40 text-muted-foreground",
@@ -30,7 +30,7 @@ export function StepProgress({ current }: { current: number }) {
                   {isDone ? <CheckCircle2Icon className="size-4" /> : index + 1}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[0.65rem] font-black uppercase tracking-[0.16em]">
+                  <span className="block truncate text-[0.65rem] font-black uppercase tracking-[0.12em]">
                     {step.label}
                   </span>
                   <span className="hidden truncate text-xs sm:block">{step.title}</span>

@@ -141,7 +141,8 @@ export function JoinLegacyLanding({
                 HEADING,
               )}
             >
-              {heroContent.titleLead} <span className="text-red-500">{heroContent.titleAccent}</span>
+              {heroContent.titleLead}{" "}
+              <span className="text-red-500">{heroContent.titleAccent}</span>
             </h1>
 
             <p className="mt-5 max-w-lg text-pretty text-base/7 text-white/65">
@@ -336,7 +337,7 @@ export function JoinLegacyLanding({
 
       {/* Join modal — the existing intake form, in a responsive drawer. */}
       <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+        <DrawerContent className="max-h-[92vh] w-full max-w-full overflow-x-hidden overflow-y-auto sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>Join the Legacy</DrawerTitle>
             <DrawerDescription>

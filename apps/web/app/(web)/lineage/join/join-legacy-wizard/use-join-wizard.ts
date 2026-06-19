@@ -22,6 +22,7 @@ export function useJoinWizard({
   initialNodeId?: string
 }) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [submitted, setSubmitted] = useState(false)
   const router = useRouter()
   const form = useForm<JoinLegacyFormValues>({
     resolver: zodResolver(joinLegacyFormSchema),
@@ -56,15 +57,17 @@ export function useJoinWizard({
   const { execute, isExecuting } = useAction(createJoinLegacyInterest, {
     onSuccess: ({ data }) => {
       if (!data) return
-      toast.success("Your legacy information was received.")
-      if (data.claimRequiresSignIn) {
-        const nodeId = form.getValues("nodeId")
-        const returnTo = nodeId ? `/lineage/join?node=${nodeId}` : "/lineage/join"
-        toast.info("One more step — sign in to claim your profile.")
-        router.push(`/auth/login?next=${encodeURIComponent(returnTo)}`)
+      // Paid tiers (Premium/Elite) continue to the lineage-membership Stripe checkout.
+      // Free intake (incl. guest claims) shows an in-place success state — the
+      // confirmation email (verification pending) is sent server-side. No sign-in
+      // bounce that loops back into this same form; the steward links a guest's claim
+      // during review (or via a future emailed magic-link).
+      const path = form.getValues("membershipPath")
+      if (path === "PREMIUM" || path === "ELITE") {
+        router.push(data.checkoutUrl)
         return
       }
-      router.push(data.checkoutUrl)
+      setSubmitted(true)
     },
     onError: ({ error }) => {
       toast.error(error.serverError ?? "Unable to submit your legacy information.")
@@ -87,6 +90,7 @@ export function useJoinWizard({
     goBack,
     goNext,
     isExecuting,
+    submitted,
     isLastStep: currentStep === STEP_META.length - 1,
     submit: form.handleSubmit(values => execute(values)),
   }
