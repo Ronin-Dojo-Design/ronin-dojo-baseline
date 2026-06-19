@@ -16,7 +16,7 @@ import {
   UsersIcon,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { type ComponentProps, useState } from "react"
+import { type ComponentProps, useEffect, useState } from "react"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -36,7 +36,52 @@ import { Logo } from "~/components/web/ui/logo"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserMenu } from "~/components/web/user-menu"
 import { useSearch } from "~/contexts/search-context"
+import { useSession } from "~/lib/auth-client"
 import { cx } from "~/lib/utils"
+
+// Rounded outline "Sign In" pill for the BBL (minimal-chrome) dark header. Hand-
+// rolled rather than a Button variant because the design-system variants assume a
+// light scheme — this reads its colors from the chrome tokens so it stays legible
+// on the dark surface and brand-driven (no hardcoded neutrals).
+const OUTLINE_PILL =
+  "inline-flex items-center justify-center rounded-full border border-chrome-border px-4 py-1.5 text-sm font-medium text-chrome-foreground transition-colors hover:border-chrome-foreground/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
+
+/**
+ * Account cluster for the minimal (BBL) header: avatar menu when signed in,
+ * Sign In (outline) + Join (primary/`fancy` = `bg-primary`) pills when signed
+ * out. Mirrors `UserMenu`'s mounted+session guard so SSR and the first client
+ * paint render an identical stable node (no hydration mismatch).
+ */
+const MinimalAuthControls = () => {
+  const { data: session, isPending } = useSession()
+  const t = useTranslations()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted || isPending) {
+    return <div className="size-7" aria-hidden />
+  }
+
+  if (session?.user) {
+    return <UserMenu />
+  }
+
+  return (
+    <>
+      <Link href="/auth/login" className={OUTLINE_PILL}>
+        {t("navigation.sign_in")}
+      </Link>
+      <Button
+        size="sm"
+        variant="fancy"
+        className="rounded-full px-4"
+        render={<Link href="/lineage/join" />}
+      >
+        {t("navigation.join")}
+      </Button>
+    </>
+  )
+}
 
 const Header = ({ className, ...props }: ComponentProps<"div">) => {
   const search = useSearch()
@@ -51,7 +96,13 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
 
   return (
     <header
-      className={cx("fixed top-(--header-top) inset-x-0 z-50 bg-background", className)}
+      className={cx(
+        "fixed top-(--header-top) inset-x-0 z-50",
+        // Brand-dark chrome for minimal brands (BBL) via the shared
+        // `.chrome-surface` remap; every other brand keeps the plain background.
+        minimal ? "chrome-surface border-b border-chrome-border" : "bg-background",
+        className,
+      )}
       data-state={isNavOpen ? "open" : "close"}
       {...props}
     >
@@ -63,12 +114,18 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               onClick={() => setNavOpen(!isNavOpen)}
               aria-label={t("navigation.open_menu")}
               data-state={isNavOpen ? "open" : "close"}
-              className="group/menu block -m-1 -ml-1.5"
+              className="group/menu block -m-1 -ml-1.5 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
             >
               <Hamburger className="size-7" />
             </button>
 
-            <Logo className="min-w-0" />
+            {/* BBL ships the white uploaded mark only (no wordmark) on the dark
+                chrome; other brands keep the mark + wordmark lockup. */}
+            <Logo
+              className="min-w-0"
+              hideName={minimal}
+              imageClassName={minimal ? "h-8" : undefined}
+            />
           </Stack>
 
           {minimal ? (
@@ -195,13 +252,19 @@ const Header = ({ className, ...props }: ComponentProps<"div">) => {
               </Button>
             )}
 
-            {has("lineage") && (
-              <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
-                Join Legacy
-              </Button>
-            )}
+            {minimal ? (
+              <MinimalAuthControls />
+            ) : (
+              <>
+                {has("lineage") && (
+                  <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
+                    Join Legacy
+                  </Button>
+                )}
 
-            <UserMenu />
+                <UserMenu />
+              </>
+            )}
           </Stack>
         </div>
 

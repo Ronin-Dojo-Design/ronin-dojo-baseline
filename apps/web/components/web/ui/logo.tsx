@@ -8,31 +8,40 @@ import { LogoSymbol } from "~/components/web/ui/logo-symbol"
 import { useBrand } from "~/contexts/brand-context"
 import { cx } from "~/lib/utils"
 
-export const Logo = ({ className, ...props }: ComponentProps<typeof Stack>) => {
-  const { name, logoSrc } = useBrand()
-  const hasCustomLogo = logoSrc && !logoSrc.endsWith("/logo.png")
+type LogoProps = ComponentProps<typeof Stack> & {
+  /** Render the mark only (no wordmark) — used by minimal-chrome headers. */
+  hideName?: boolean
+  /** Tailwind height utility for the image mark (default `h-5`). */
+  imageClassName?: string
+}
+
+export const Logo = ({ className, hideName, imageClassName, ...props }: LogoProps) => {
+  const { name, logoSrc, logoUrl } = useBrand()
+  // Prefer an operator-uploaded mark (BrandSettings.logoUrl) over the static
+  // config asset; fall back to the wordmark glyph when neither is a real upload.
+  const customSrc = logoUrl ?? (logoSrc && !logoSrc.endsWith("/logo.png") ? logoSrc : null)
 
   return (
     <Stack
       size="sm"
       className={cx("group/logo", className)}
       wrap={false}
-      render={<Link href="/" />}
+      render={<Link href="/" aria-label={name} />}
       {...props}
     >
-      {hasCustomLogo ? (
+      {customSrc ? (
         <Image
-          src={logoSrc}
+          src={customSrc}
           alt={`${name} logo`}
           width={20}
           height={20}
-          className="h-5 w-auto shrink-0"
+          className={cx("h-5 w-auto shrink-0", imageClassName)}
           unoptimized
         />
       ) : (
-        <LogoSymbol />
+        <LogoSymbol className={imageClassName} />
       )}
-      <span className="font-medium text-sm truncate">{name}</span>
+      {!hideName && <span className="font-medium text-sm truncate">{name}</span>}
     </Stack>
   )
 }
