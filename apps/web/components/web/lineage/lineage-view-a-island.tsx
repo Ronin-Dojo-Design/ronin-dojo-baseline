@@ -31,7 +31,7 @@ import {
   LineageProfileDrawer,
   type LineageProfileDrawerTab,
 } from "~/components/web/lineage/lineage-profile-drawer"
-import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
+import { bblPortalTypographyClass } from "~/lib/fonts"
 import { BBL, rgba } from "~/lib/lineage/belt-color"
 import { memberInitials } from "~/lib/lineage/canvas-model"
 import {
@@ -753,7 +753,7 @@ export function LineageViewAIsland({
         isAdmin={canManage}
         activeTab={drawerTab}
         onTabChange={setDrawerTab}
-        contentClassName={cx(bblHeadingFont.variable, bblBodyFont.variable)}
+        contentClassName={bblPortalTypographyClass}
         students={drawerStudents}
         onSelectStudent={selectStudent}
       />

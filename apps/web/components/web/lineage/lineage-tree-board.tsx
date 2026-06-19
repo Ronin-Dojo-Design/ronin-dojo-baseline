@@ -6,10 +6,9 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
-import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
+import { bblPortalTypographyClass } from "~/lib/fonts"
 import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
-import { cx } from "~/lib/utils"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
   LineageNodeProfile,
@@ -232,7 +231,7 @@ export function LineageTreeBoard({
         isAdmin={!!capability?.canEditTree}
         activeTab={drawerTab}
         onTabChange={setDrawerTab}
-        contentClassName={cx(bblHeadingFont.variable, bblBodyFont.variable)}
+        contentClassName={bblPortalTypographyClass}
       />
     </>
   )
