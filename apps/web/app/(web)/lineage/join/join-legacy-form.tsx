@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
+import { AvatarUploader } from "~/components/web/uploader"
 import { createJoinLegacyInterest } from "~/server/web/lead/public-actions"
 import { cx } from "~/lib/utils"
 
@@ -306,6 +307,18 @@ export function JoinLegacyForm({ claimableTree, initialNodeId }: JoinLegacyFormP
             title="Identity and contact"
             description="This private contact information gives stewards a way to verify and follow up."
           />
+
+          {/* Avatar upload — fires to R2 + Passport when signed in; gracefully
+              deferred for guests (the action returns an auth error, shown inline). */}
+          <div className="flex flex-col items-center gap-1 pb-2">
+            <AvatarUploader
+              size="lg"
+              onAvatarUrl={() => {}}
+            />
+            <p className="text-xs text-muted-foreground">
+              Optional — add a profile photo now or after joining.
+            </p>
+          </div>
 
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
