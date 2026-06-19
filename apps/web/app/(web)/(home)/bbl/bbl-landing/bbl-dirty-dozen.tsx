@@ -13,7 +13,16 @@ import {
 import { BeltBadge } from "./belt-badge"
 import { SectionHeading } from "./landing-chrome"
 
-export const BblDirtyDozen = ({ rankColors }: { rankColors: StaticBblRankColorMap }) => (
+// `hideAction` gates the outbound links for the pre-launch holding page: every BBL
+// route is gated there, so a card link / join CTA would just bounce back. The card
+// becomes a non-interactive panel and the join button is omitted.
+export const BblDirtyDozen = ({
+  rankColors,
+  hideAction = false,
+}: {
+  rankColors: StaticBblRankColorMap
+  hideAction?: boolean
+}) => (
   <section className="w-full space-y-8">
     <div className="space-y-4 text-center">
       <Badge variant="outline" className="mx-auto">
@@ -24,12 +33,9 @@ export const BblDirtyDozen = ({ rankColors }: { rankColors: StaticBblRankColorMa
     </div>
 
     <Carousel ariaLabel="Dirty Dozen black belts" edgeFades controls="desktop">
-      {dirtyDozen.map(member => (
-        <CarouselSlide key={member.name} className="basis-[78%] sm:basis-[260px]">
-          <Link
-            href={BBL_ROUTES.lineage}
-            className="block h-full rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
-          >
+      {dirtyDozen.map(member => {
+        const cardBody = (
+          <>
             <div className="relative aspect-square bg-muted">
               {member.image ? (
                 <Image
@@ -57,17 +63,35 @@ export const BblDirtyDozen = ({ rankColors }: { rankColors: StaticBblRankColorMa
               <p className="text-sm text-muted-foreground truncate">{member.school}</p>
               <p className="text-xs text-muted-foreground">{member.location}</p>
             </div>
-          </Link>
-        </CarouselSlide>
-      ))}
+          </>
+        )
+        return (
+          <CarouselSlide key={member.name} className="basis-[78%] sm:basis-[260px]">
+            {hideAction ? (
+              <div className="block h-full rounded-xl border bg-card overflow-hidden">
+                {cardBody}
+              </div>
+            ) : (
+              <Link
+                href={BBL_ROUTES.lineage}
+                className="block h-full rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
+              >
+                {cardBody}
+              </Link>
+            )}
+          </CarouselSlide>
+        )
+      })}
     </Carousel>
 
     <div className="w-full text-center space-y-3">
       <H3>{dirtyDozenSection.footerTitle}</H3>
       <p className="text-muted-foreground max-w-2xl mx-auto">{dirtyDozenSection.footerCopy}</p>
-      <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.join} />}>
-        Join the Legacy
-      </Button>
+      {!hideAction && (
+        <Button size="lg" variant="primary" render={<Link href={BBL_ROUTES.join} />}>
+          Join the Legacy
+        </Button>
+      )}
     </div>
   </section>
 )

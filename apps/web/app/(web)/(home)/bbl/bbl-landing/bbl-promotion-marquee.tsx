@@ -39,18 +39,30 @@ const MarqueeCard = ({ name, rank, colorHex, image, date }: MarqueeMemberView) =
   </div>
 )
 
-export const BblPromotionMarquee = ({ rows }: { rows: MarqueeRow[] }) => (
+export const BblPromotionMarquee = ({
+  rows,
+  hideAction = false,
+}: {
+  rows: MarqueeRow[]
+  hideAction?: boolean
+}) => (
   <section className="w-full space-y-8">
     <SectionHeading eyebrow={promotionMarquee.eyebrow} title={promotionMarquee.title} />
     <div className="space-y-8">
       {rows.map(row => (
         <div key={row.key} className="space-y-3">
-          <Link
-            href={row.href}
-            className="block text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
-          >
-            {row.label}
-          </Link>
+          {hideAction ? (
+            <p className="block text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {row.label}
+            </p>
+          ) : (
+            <Link
+              href={row.href}
+              className="block text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
+            >
+              {row.label}
+            </Link>
+          )}
           <Carousel ariaLabel={row.label} edgeFades controls="desktop">
             {row.members.map(member => (
               <CarouselSlide key={member.name} className="basis-[78%] sm:basis-[230px]">
