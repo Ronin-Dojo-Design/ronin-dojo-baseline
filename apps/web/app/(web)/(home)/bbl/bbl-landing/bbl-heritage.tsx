@@ -1,24 +1,32 @@
+import Image from "next/image"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
-import { beltColorForRank, BBL_IMAGES, BBL_ROUTES, heritageContent } from "../bbl-landing-content"
+import {
+  BBL_IMAGES,
+  BBL_ROUTES,
+  heritageContent,
+  type StaticBblRankColorMap,
+} from "../bbl-landing-content"
 import { BeltBadge } from "./belt-badge"
 import { BBL_SECTION_CLASSES, SectionHeading } from "./landing-chrome"
 
-export const BblHeritage = () => (
+export const BblHeritage = ({ rankColors }: { rankColors: StaticBblRankColorMap }) => (
   <section className={cx(BBL_SECTION_CLASSES, "grid gap-8 md:grid-cols-2 md:items-center")}>
     <Card hover={false} className="p-0! overflow-hidden relative">
-      <img
+      <Image
         src={BBL_IMAGES.bobAndRigan}
         alt="Bob Bass and Rigan Machado"
-        className="w-full h-auto object-cover"
-        loading="lazy"
+        width={900}
+        height={675}
+        sizes="(min-width: 768px) 50vw, 100vw"
+        className="h-auto w-full object-cover"
       />
       <BeltBadge
         rank={heritageContent.badge}
-        colorHex={beltColorForRank(heritageContent.badge)}
+        colorHex={rankColors[heritageContent.badge] ?? null}
         className="absolute bottom-4 left-4"
       />
     </Card>
