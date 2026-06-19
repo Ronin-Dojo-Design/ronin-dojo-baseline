@@ -1509,7 +1509,10 @@ export const processStripeWebhook = async (
                 { label: "Refunded plan", value: plan.name },
                 {
                   label: "Amount",
-                  value: formatMoney(charge.amount_refunded, charge.currency.toUpperCase()),
+                  value: formatMoney(
+                    charge.amount_refunded,
+                    (charge.currency ?? plan.currency).toUpperCase(),
+                  ),
                 },
               ],
               rateLimitKey: `refund:${charge.id}`,
