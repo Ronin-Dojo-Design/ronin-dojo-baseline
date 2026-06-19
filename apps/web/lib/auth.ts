@@ -166,6 +166,10 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
+      // Claim/login links are single-use + email-bound. Better Auth's 5-minute default
+      // stranded real recipients who read a long email before clicking (SESSION_0418 —
+      // the founder "Long Road" letter). 7 days gives an emailed invite room to breathe.
+      expiresIn: 60 * 60 * 24 * 7,
       sendMagicLink: async ({ email, url, metadata }, ctx) => {
         // FIX #3 (SESSION_0412): the BBL claim-link minter calls `signInMagicLink` only to
         // create the verification token — it sends its OWN branded "claim your profile" email

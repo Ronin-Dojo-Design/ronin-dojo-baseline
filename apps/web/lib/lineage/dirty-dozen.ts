@@ -17,3 +17,11 @@ export const DIRTY_DOZEN_LABEL = "The Dirty Dozen — Rigan's First Black Belts 
  * (SESSION_0418 — self-serve claim wiring.)
  */
 export const BBL_FOUNDER_NODE_SLUG = "bob-bass"
+
+/**
+ * Bob Bass's known email addresses. The founder "Long Road" claim email shows
+ * "intended for …" these addresses (in the footer) so he recognizes it as
+ * personally his — regardless of which of his inboxes it's actually delivered
+ * to. Display-only; not the delivery target. (SESSION_0418.)
+ */
+export const BBL_FOUNDER_EMAILS = ["sbjjitsu30@gmail.com", "Bobbassjj@gmail.com"] as const

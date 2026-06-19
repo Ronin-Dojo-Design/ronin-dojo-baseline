@@ -1,32 +1,49 @@
 import "dotenv/config"
 
-import { Hr, Link, Section, Text } from "@react-email/components"
+import { Column, Hr, Link, Row, Section, Text } from "@react-email/components"
 import {
   BblEmailButton,
   BblEmailHeading,
   BblEmailWrapper,
   type BblEmailWrapperProps,
 } from "~/emails/components/bbl-wrapper"
+import { BBL_FOUNDER_EMAILS } from "~/lib/lineage/dirty-dozen"
+
+/** Bob's two known inboxes, shown in the "intended for" footer (display-only). */
+const FOUNDER_INTENDED_FOR = BBL_FOUNDER_EMAILS.join(" and ")
+
+/** A numbered login step — a big brand-red circle with a white number, beside its instruction. */
+const LoginStep = ({ n, children }: { n: number; children: React.ReactNode }) => (
+  <Row className="mb-2">
+    <Column className="w-9 align-top">
+      <span className="inline-block h-7 w-7 rounded-full bg-red-600 text-center text-[13px] font-bold leading-7 text-white">
+        {n}
+      </span>
+    </Column>
+    <Column className="align-top">
+      <Text className="my-0 text-[14px] leading-7 text-neutral-800">{children}</Text>
+    </Column>
+  </Row>
+)
 
 /**
  * The founder's email to Bob Bass (SESSION_0418).
  *
- * Matches the existing "A First Look at Black Belt Legacy" preview-invite voice
- * exactly — greeting, the private-link framing, the "Open the preview" button,
- * and the "Or paste this into your browser" fallback (no "if the button doesn't
- * work" wording, no hand-holding filler) — and folds in "The Long Road": Brian
- * Scott's 8-year founder testament (RoninDashboard/philosophy/THE_LONG_ROAD.md).
+ * A founder-to-founder letter addressed to "Mr. Bass": a warm "we're finally
+ * here" invite, the "Open the preview" private-link CTA, a two-method sign-in
+ * guide (Google + Magic Link, each as red-circle numbered steps), and "The Long
+ * Road" — Brian Scott's 8-year founder testament
+ * (RoninDashboard/philosophy/THE_LONG_ROAD.md).
  *
  * The button + paste link are the founder's one-click claim magic link, which
- * routes through the preview hop and finalizes his claim (Elite, for life).
+ * routes through the preview hop and one-click claims his node. The comp tier is
+ * set by the claim flow, not promised in the copy.
  *
  * Every block is fluid + word-wrapping so it reads perfectly on a narrow phone
  * (Galaxy / iPhone) with no horizontal scroll.
  */
 
 type EmailProps = BblEmailWrapperProps & {
-  /** Greeting name — defaults to Bob (the founder this letter honors). */
-  firstName?: string | null
   /** The founder's one-click claim magic link (button + paste fallback). */
   claimUrl: string
 }
@@ -46,7 +63,10 @@ const PullQuote = ({ children }: { children: React.ReactNode }) => (
 )
 
 const TIMELINE: Array<{ when: string; what: string }> = [
-  { when: "2018", what: "Black Belt Legacy begins — the glorious purpose, taken on eagerly." },
+  {
+    when: "2018–2020",
+    what: "A rush of excitement, and making it work — late nights sewing black belts, pressing shirts, coding away, getting Version 1.0 up and running. Some bumps in the road, but we got our first members on the site and we were off to the races. Functional, if not yet perfect.",
+  },
   {
     when: "2020–2021",
     what: "The Tennessee hiatus. H2 Marketing, then ManageVisors — honing the craft.",
@@ -57,35 +77,47 @@ const TIMELINE: Array<{ when: string; what: string }> = [
   },
   { when: "Oct 2025", what: "The revelation: it was finally time to learn React." },
   { when: "Nov 2025", what: "Iteration #15 succeeds. The finish line comes into view." },
-  { when: "Dec 2025", what: "The crazy week — all three sites carried to staging." },
+  { when: "Dec 2025", what: "The Black Belt Legacy app comes to life — but built on WordPress." },
   {
-    when: "Jan 2026",
-    what: "The final touches. Production-ready. Black Belt Legacy launches first.",
+    when: "Jan–March 2026",
+    what: "The final touches. Production-ready — but not yet Rigan Machado performance-worthy: not built for the scalability and security the numbers ahead demand. All the while, Black Belt Legacy keeps capturing emails, and beta testing with real users returns valuable insight and feedback.",
+  },
+  {
+    when: "April–June 2026",
+    what: "The last mile — security hardening for performance, stability, and longevity.",
   },
 ]
 
-export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProps) => {
-  const greetingName = firstName?.trim() || "Bob"
-
+export const EmailBblTheLongRoad = ({
+  claimUrl,
+  intendedFor = FOUNDER_INTENDED_FOR,
+  ...props
+}: EmailProps) => {
   return (
     <BblEmailWrapper
       {...props}
+      intendedFor={intendedFor}
       preview="A first look at Black Belt Legacy — and the long road that got us here"
     >
       <BblEmailHeading>A First Look at Black Belt Legacy</BblEmailHeading>
 
-      <Text className="mt-0">Hi {greetingName},</Text>
+      <Text className="mt-0">Mr. Bass,</Text>
 
       <Text>
-        We&apos;ve been building the new Black Belt Legacy — your lineage under Rigan, your
-        students, and the whole network in one place — and we&apos;d love your eyes on it before it
-        goes public.
+        We are finally here — the new Black Belt Legacy — your lineage under Rigan, your students,
+        and the whole network in one place — and I&apos;d love your eyes on it. This link opens the
+        full site for you. Any tweaks or edits, additions or removals you want are easy to do —
+        quickly, professionally, and perfectly. The backend security and stability is airtight, and
+        the frontend is beautifully rendered, ready for you.
       </Text>
 
       <Text>
-        This private link opens the full site for you. Everyone else still sees a countdown page
-        until we launch, so this is just for you:
+        77 people from the original site and the email capture that&apos;s been up since January —
+        plus the emails and interest we&apos;ve received from the seminars and the folks I&apos;ve
+        been talking with on the phone, by email, and in person.
       </Text>
+
+      <Text className="font-bold text-neutral-950">Let&apos;s get more now.</Text>
 
       <BblEmailButton href={claimUrl}>Open the preview</BblEmailButton>
 
@@ -99,7 +131,48 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
 
       <Text>
         Take a look around — the lineage tree, your profile, and the sign-up flow. Opening it claims
-        your profile and locks in your place at the head of the lineage: Elite, on us, for life.
+        your profile and locks in your place at the head of the lineage.
+      </Text>
+
+      <Hr className="my-6 border-neutral-200" />
+
+      {/* How to sign in — two methods, each as big red-circle numbered steps. */}
+      <Eyebrow>Signing In — Two Easy Ways</Eyebrow>
+      <Text className="mt-0">
+        The link above signs you in automatically this first time. For every visit after, here are
+        your two ways back in — I&apos;d start with Google.
+      </Text>
+
+      <Section className="my-4 overflow-hidden rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-4 py-4">
+        <Text className="my-0 mb-3 text-[12px] font-bold uppercase tracking-[0.16em] text-red-700">
+          Option 1 — Google · Recommended for you
+        </Text>
+        <LoginStep n={1}>Tap “Continue with Google.”</LoginStep>
+        <LoginStep n={2}>Choose your Google account.</LoginStep>
+        <LoginStep n={3}>You&apos;re in — instantly, every time.</LoginStep>
+      </Section>
+
+      <Section className="my-4 overflow-hidden rounded-lg border border-solid border-neutral-200 px-4 py-4">
+        <Text className="my-0 mb-2 text-[12px] font-bold uppercase tracking-[0.16em] text-red-700">
+          Option 2 — Magic Link
+        </Text>
+        <Text className="my-0 mb-3 text-[14px] leading-7 text-neutral-700">
+          No password to remember, none to lose or steal. We email you a single, private link that
+          signs you in with one tap. It feels new, but it&apos;s exactly how the best modern apps do
+          it — Slack, Notion, Substack, Medium, and Vercel all sign you in this way. It&apos;s the
+          secure, simple standard, and it&apos;s the safest login there is.
+        </Text>
+        <LoginStep n={1}>Enter your email on the sign-in screen.</LoginStep>
+        <LoginStep n={2}>Open the email from Black Belt Legacy and tap its link.</LoginStep>
+        <LoginStep n={3}>
+          That&apos;s it — you&apos;re signed in. (Open it within a few days; the link is
+          time-limited for your security.)
+        </LoginStep>
+      </Section>
+
+      <Text className="mt-4 leading-7 text-neutral-700">
+        And you&apos;re never doing any of this alone — I&apos;m here to walk you through every
+        step, any time. I&apos;ll be calling you daily now, with progress and new signups.
       </Text>
 
       <Hr className="my-6 border-neutral-200" />
@@ -176,14 +249,11 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
         Design by Discipline. Disciplined by Design.
       </Text>
       <Text className="my-1 font-bold text-neutral-950">Developed with Determination.</Text>
-      <Text className="mt-3">This is the way of the Ronin. Master yourself.</Text>
 
       <Text className="mt-6 text-[15px] text-neutral-700">
         With honor, respect, and love —
         <br />
         <strong className="text-neutral-950">Brian</strong>
-        <br />
-        <span className="text-[13px] text-neutral-500">and The Black Belt Legacy team</span>
       </Text>
 
       <Text className="mt-4 text-center text-[15px] font-bold tracking-[0.2em] text-red-700">
@@ -195,7 +265,6 @@ export const EmailBblTheLongRoad = ({ firstName, claimUrl, ...props }: EmailProp
 
 EmailBblTheLongRoad.PreviewProps = {
   to: "ronindojodesign@gmail.com",
-  firstName: "Bob",
   claimUrl:
     "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=preview&callbackURL=%2Fpreview",
 } satisfies EmailProps
