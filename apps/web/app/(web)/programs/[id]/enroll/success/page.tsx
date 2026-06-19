@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { cache } from "react"
-import type { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { getProgramById } from "~/server/web/program/queries"
 
@@ -14,8 +13,7 @@ type Props = PageProps<"/programs/[id]">
 
 const getData = cache(async ({ params }: Props) => {
   const { id } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? "RONIN_DOJO_DESIGN"
+  const brand = await getRequestBrand()
   const program = await getProgramById(brand, id)
 
   if (!program) {

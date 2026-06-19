@@ -1,8 +1,6 @@
 import { PencilIcon } from "lucide-react"
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
@@ -16,6 +14,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getEditableInstructors, getScheduleById } from "~/server/web/schedule/queries"
 
 interface Props {
@@ -24,8 +23,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { scheduleId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const schedule = await getScheduleById(brand, scheduleId)
 
   if (!schedule) return { title: "Schedule Not Found" }
@@ -34,8 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ScheduleDetailPage({ params }: Props) {
   const { id: programId, scheduleId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
 
   const schedule = await getScheduleById(brand, scheduleId)
   if (!schedule || schedule.programId !== programId) notFound()

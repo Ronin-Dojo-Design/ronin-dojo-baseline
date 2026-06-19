@@ -1,11 +1,10 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
 import { CreateProgramForm } from "~/components/web/programs/create-program-form"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getEditableProgramOrganizations } from "~/server/web/program/queries"
 
 export const metadata: Metadata = {
@@ -14,8 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CreateProgramPage() {
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const session = await getServerSession()
 
   if (!session?.user) {

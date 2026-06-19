@@ -1,10 +1,9 @@
 import { PlusIcon } from "lucide-react"
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { SearchParams } from "nuqs"
 import { createSearchParamsCache, parseAsInteger, parseAsStringEnum } from "nuqs/server"
-import { Brand, type ScheduleStatus } from "~/.generated/prisma/client"
+import type { ScheduleStatus } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardHeader } from "~/components/common/card"
@@ -18,6 +17,7 @@ import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getManageableProgramById } from "~/server/web/program/queries"
 import { getSchedulesByProgramPaginated } from "~/server/web/schedule/queries"
 
@@ -37,8 +37,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id: programId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const program = await getManageableProgramById(brand, programId)
 
   if (!program) return { title: "Schedules" }
@@ -59,8 +58,7 @@ function buildStatusHref(programId: string, status: ScheduleStatus | "") {
 
 export default async function ProgramSchedulesPage({ params, searchParams }: Props) {
   const { id: programId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const program = await getManageableProgramById(brand, programId)
 
   if (!program) notFound()

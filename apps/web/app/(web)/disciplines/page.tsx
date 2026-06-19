@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { Suspense } from "react"
-import { Brand } from "~/.generated/prisma/client"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { getRequestBrand } from "~/lib/brand-context"
 import { generateCollectionPage } from "~/lib/structured-data"
 import { DisciplineList } from "./_components/discipline-list"
 import { DisciplineListSkeleton } from "./_components/discipline-list-skeleton"
@@ -15,8 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DisciplinesPage() {
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.BASELINE_MARTIAL_ARTS
+  const brand = await getRequestBrand()
 
   return (
     <>

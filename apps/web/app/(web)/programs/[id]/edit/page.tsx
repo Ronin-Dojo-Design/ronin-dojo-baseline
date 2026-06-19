@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
 import { CreateProgramForm } from "~/components/web/programs/create-program-form"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
+import { getRequestBrand } from "~/lib/brand-context"
 import {
   getEditableProgramOrganizations,
   getManageableProgramById,
@@ -18,8 +17,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const program = await getManageableProgramById(brand, id)
 
   if (!program) return { title: "Program Not Found" }
@@ -32,8 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditProgramPage({ params }: Props) {
   const { id } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const [program, session] = await Promise.all([
     getManageableProgramById(brand, id),
     getServerSession(),

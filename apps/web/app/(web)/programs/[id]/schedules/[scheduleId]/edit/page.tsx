@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
 import { CreateScheduleForm } from "~/components/web/schedules/create-schedule-form"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { canEditOrganization } from "~/lib/authz"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getScheduleById } from "~/server/web/schedule/queries"
 import { db } from "~/services/db"
 
@@ -16,8 +15,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { scheduleId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const schedule = await getScheduleById(brand, scheduleId)
 
   if (!schedule) return { title: "Schedule Not Found" }
@@ -26,8 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditSchedulePage({ params }: Props) {
   const { id: programId, scheduleId } = await params
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
 
   const session = await getServerSession()
   if (!session?.user) {

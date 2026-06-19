@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
-import { Brand } from "~/.generated/prisma/client"
 import { CreateOrganizationForm } from "~/components/web/organizations/create-organization-form"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getDisciplinesByBrand } from "~/server/web/organization/discipline-queries"
 
 export const metadata: Metadata = {
@@ -12,8 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CreateOrganizationPage() {
-  const headersList = await headers()
-  const brand = (headersList.get("x-brand") as Brand) ?? Brand.RONIN_DOJO_DESIGN
+  const brand = await getRequestBrand()
   const disciplines = await getDisciplinesByBrand(brand)
 
   return (
