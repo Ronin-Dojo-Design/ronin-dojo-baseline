@@ -53,6 +53,7 @@ const PRIMARY_NAV_ITEMS = [
   { href: "/schools", key: "schools", icon: SchoolIcon, feature: "schools" },
   { href: "/organizations", key: "organizations", icon: BuildingIcon, feature: "organizations" },
   { href: "/disciplines", key: "disciplines", icon: ShieldIcon, feature: "disciplines" },
+  { href: "/curriculum", key: "curriculum", icon: BookOpenIcon, feature: "curriculum" },
   { href: "/techniques", key: "techniques", icon: SwordsIcon, feature: "techniques" },
   { href: "/programs", key: "programs", icon: MedalIcon, feature: "programs" },
   { href: "/tournaments", key: "tournaments", icon: TrophyIcon, feature: "tournaments" },

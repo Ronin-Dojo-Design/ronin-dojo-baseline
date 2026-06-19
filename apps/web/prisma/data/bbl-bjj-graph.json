@@ -1,0 +1,1023 @@
+{
+  "nodes": [
+    {
+      "id": "standing",
+      "type": "position",
+      "label": "Standing",
+      "description": "Upright neutral position, start of most exchanges",
+      "x": 400,
+      "y": 40,
+      "curriculumIds": ["bjj-l1-double-leg", "bjj-l1-high-single", "bjj-l1-low-single"]
+    },
+    {
+      "id": "sprawl",
+      "type": "position",
+      "label": "Sprawl",
+      "description": "Defensive position against takedowns, hips back",
+      "x": 600,
+      "y": 40,
+      "curriculumIds": ["bjj-l5-sprawl-drills"]
+    },
+    {
+      "id": "closed-guard",
+      "type": "position",
+      "label": "Closed Guard",
+      "description": "Legs wrapped around opponent, controlling posture",
+      "x": 200,
+      "y": 140,
+      "curriculumIds": [
+        "bjj-l1-guard-passing-1-5",
+        "bjj-l2-guard-defense",
+        "bjj-l2-guard-attacks",
+        "bjj-l1-guard-sweeping-1-5"
+      ]
+    },
+    {
+      "id": "open-guard",
+      "type": "position",
+      "label": "Open Guard",
+      "description": "Feet on hips/shoulders, creating distance",
+      "x": 400,
+      "y": 140,
+      "curriculumIds": [
+        "bjj-l2-home-base",
+        "bjj-l2-heisman",
+        "bjj-l2-figure-four",
+        "bjj-l5-invincible-guard-1-10"
+      ]
+    },
+    {
+      "id": "butterfly-guard",
+      "type": "position",
+      "label": "Butterfly Guard",
+      "description": "Hooks inside thighs, excellent for sweeps",
+      "x": 600,
+      "y": 140,
+      "curriculumIds": ["bjj-l5-half-guard-sweeps-1-5"]
+    },
+    {
+      "id": "spider-guard",
+      "type": "position",
+      "label": "Spider Guard",
+      "description": "Feet in biceps with sleeve grips",
+      "x": 100,
+      "y": 240,
+      "curriculumIds": ["bjj-l5-guard-passing-6-10"]
+    },
+    {
+      "id": "de-la-riva",
+      "type": "position",
+      "label": "De La Riva",
+      "description": "Hook behind far leg, off-balancing",
+      "x": 300,
+      "y": 240,
+      "curriculumIds": ["bjj-l5-guard-sweeps-6-10"]
+    },
+    {
+      "id": "x-guard",
+      "type": "position",
+      "label": "X-Guard",
+      "description": "Legs crossed under opponent, sweep position",
+      "x": 500,
+      "y": 240,
+      "curriculumIds": ["bjj-l9-hook-sweeps-10"]
+    },
+    {
+      "id": "z-guard",
+      "type": "position",
+      "label": "Z-Guard",
+      "description": "Knee shield half guard variant",
+      "x": 700,
+      "y": 240,
+      "curriculumIds": ["bjj-l5-half-guard-sweeps-1-5", "bjj-l9-half-guard-6-10"]
+    },
+    {
+      "id": "half-guard",
+      "type": "position",
+      "label": "Half Guard",
+      "description": "One leg trapped between yours",
+      "x": 200,
+      "y": 340,
+      "curriculumIds": ["bjj-l5-half-guard-sweeps-1-5", "bjj-l9-half-guard-6-10"]
+    },
+    {
+      "id": "side-control",
+      "type": "position",
+      "label": "Side Control",
+      "description": "Dominant chest-to-chest top position",
+      "x": 450,
+      "y": 340,
+      "curriculumIds": ["bjj-l1-side-control-1-5", "bjj-l5-side-control-subs-1-5"]
+    },
+    {
+      "id": "turtle",
+      "type": "position",
+      "label": "Turtle",
+      "description": "Defensive balled-up position on knees",
+      "x": 650,
+      "y": 340,
+      "curriculumIds": [
+        "bjj-l1-sitout-turtle",
+        "bjj-l5-turtle-escapes-1-5",
+        "bjj-l5-turtle-breakdowns-1-5"
+      ]
+    },
+    {
+      "id": "mount",
+      "type": "position",
+      "label": "Mount",
+      "description": "Sitting on opponent's torso, maximum control",
+      "x": 300,
+      "y": 440,
+      "curriculumIds": ["bjj-l2-mount-americana", "bjj-l3-mount-escapes"]
+    },
+    {
+      "id": "back-mount",
+      "type": "position",
+      "label": "Back Mount",
+      "description": "Behind opponent with hooks in",
+      "x": 500,
+      "y": 440,
+      "curriculumIds": ["bjj-l5-back-control-subs-1-5"]
+    },
+    {
+      "id": "knee-on-belly",
+      "type": "position",
+      "label": "Knee on Belly",
+      "description": "Knee pressing on stomach, high mobility",
+      "x": 700,
+      "y": 440,
+      "curriculumIds": ["bjj-l5-knee-belly-subs-1-5"]
+    },
+    {
+      "id": "armbar",
+      "type": "submission",
+      "label": "Armbar",
+      "description": "Hyperextending elbow joint with hips",
+      "x": 50,
+      "y": 520,
+      "curriculumIds": [
+        "bjj-l2-guard-armbars",
+        "bjj-l9-cutting-armbars",
+        "bjj-l9-side-control-armbars-6-10"
+      ]
+    },
+    {
+      "id": "triangle",
+      "type": "submission",
+      "label": "Triangle",
+      "description": "Choking with legs in figure-four",
+      "x": 150,
+      "y": 520,
+      "curriculumIds": ["bjj-l2-guard-chokes", "bjj-l9-triangle-swivels"]
+    },
+    {
+      "id": "omoplata",
+      "type": "submission",
+      "label": "Omoplata",
+      "description": "Shoulder lock using legs",
+      "x": 250,
+      "y": 520,
+      "curriculumIds": ["bjj-l9-omoplata-swivels"]
+    },
+    {
+      "id": "kimura",
+      "type": "submission",
+      "label": "Kimura",
+      "description": "Double wristlock shoulder attack",
+      "x": 350,
+      "y": 520,
+      "curriculumIds": []
+    },
+    {
+      "id": "americana",
+      "type": "submission",
+      "label": "Americana",
+      "description": "Reverse keylock shoulder attack",
+      "x": 450,
+      "y": 520,
+      "curriculumIds": ["bjj-l2-mount-americana"]
+    },
+    {
+      "id": "guillotine",
+      "type": "submission",
+      "label": "Guillotine",
+      "description": "Front headlock choke",
+      "x": 100,
+      "y": 600,
+      "curriculumIds": ["bjj-l5-guillotine-escapes"]
+    },
+    {
+      "id": "loop-choke",
+      "type": "submission",
+      "label": "Loop Choke",
+      "description": "Collar choke with arm trapped",
+      "x": 200,
+      "y": 600,
+      "curriculumIds": ["bjj-l2-guard-chokes"]
+    },
+    {
+      "id": "cross-collar",
+      "type": "submission",
+      "label": "Cross Collar",
+      "description": "Classic gi choke from guard",
+      "x": 300,
+      "y": 600,
+      "curriculumIds": ["bjj-l2-guard-chokes"]
+    },
+    {
+      "id": "rnc",
+      "type": "submission",
+      "label": "RNC",
+      "description": "Rear naked choke from back",
+      "x": 550,
+      "y": 520,
+      "curriculumIds": ["bjj-l5-back-control-subs-1-5"]
+    },
+    {
+      "id": "bow-arrow",
+      "type": "submission",
+      "label": "Bow & Arrow",
+      "description": "Collar choke with leg control",
+      "x": 650,
+      "y": 520,
+      "curriculumIds": []
+    },
+    {
+      "id": "arm-triangle",
+      "type": "submission",
+      "label": "Arm Triangle",
+      "description": "Head and arm choke",
+      "x": 750,
+      "y": 520,
+      "curriculumIds": ["bjj-l5-side-control-subs-1-5"]
+    },
+    {
+      "id": "darce",
+      "type": "submission",
+      "label": "D'Arce",
+      "description": "Arm-in guillotine from side",
+      "x": 550,
+      "y": 600,
+      "curriculumIds": []
+    },
+    {
+      "id": "ezekiel",
+      "type": "submission",
+      "label": "Ezekiel",
+      "description": "Sleeve assisted choke from mount",
+      "x": 650,
+      "y": 600,
+      "curriculumIds": []
+    },
+    {
+      "id": "baseball-choke",
+      "type": "submission",
+      "label": "Baseball Choke",
+      "description": "Collar choke with baseball grip",
+      "x": 750,
+      "y": 600,
+      "curriculumIds": []
+    },
+    {
+      "id": "heel-hook",
+      "type": "submission",
+      "label": "Heel Hook",
+      "description": "Rotational knee/ankle attack",
+      "x": 100,
+      "y": 680,
+      "curriculumIds": ["bjj-l9-leg-locks"]
+    },
+    {
+      "id": "knee-bar",
+      "type": "submission",
+      "label": "Knee Bar",
+      "description": "Hyperextending knee joint",
+      "x": 200,
+      "y": 680,
+      "curriculumIds": ["bjj-l9-leg-locks"]
+    },
+    {
+      "id": "toe-hold",
+      "type": "submission",
+      "label": "Toe Hold",
+      "description": "Twisting foot/ankle lock",
+      "x": 300,
+      "y": 680,
+      "curriculumIds": ["bjj-l9-leg-locks"]
+    },
+    {
+      "id": "straight-ankle",
+      "type": "submission",
+      "label": "Straight Ankle",
+      "description": "Achilles tendon compression",
+      "x": 400,
+      "y": 680,
+      "curriculumIds": ["bjj-l9-leg-locks"]
+    },
+    {
+      "id": "calf-slicer",
+      "type": "submission",
+      "label": "Calf Slicer",
+      "description": "Compression lock on calf",
+      "x": 500,
+      "y": 680,
+      "curriculumIds": []
+    },
+    {
+      "id": "wrist-lock",
+      "type": "submission",
+      "label": "Wrist Lock",
+      "description": "Small joint manipulation",
+      "x": 600,
+      "y": 680,
+      "curriculumIds": []
+    },
+    {
+      "id": "toreando",
+      "type": "transition",
+      "label": "Toreando Pass",
+      "description": "Bullfighter style pass around legs",
+      "x": 850,
+      "y": 140,
+      "curriculumIds": ["bjj-l1-guard-passing-1-5", "bjj-l5-guard-passing-6-10"]
+    },
+    {
+      "id": "knee-slice",
+      "type": "transition",
+      "label": "Knee Slice",
+      "description": "Cutting knee through guard",
+      "x": 850,
+      "y": 200,
+      "curriculumIds": ["bjj-l1-guard-passing-1-5"]
+    },
+    {
+      "id": "leg-drag",
+      "type": "transition",
+      "label": "Leg Drag",
+      "description": "Dragging leg across body",
+      "x": 850,
+      "y": 260,
+      "curriculumIds": ["bjj-l5-guard-passing-6-10"]
+    },
+    {
+      "id": "smash-pass",
+      "type": "transition",
+      "label": "Smash Pass",
+      "description": "Pressure passing with weight",
+      "x": 850,
+      "y": 320,
+      "curriculumIds": []
+    },
+    {
+      "id": "stack-pass",
+      "type": "transition",
+      "label": "Stack Pass",
+      "description": "Folding opponent over",
+      "x": 850,
+      "y": 380,
+      "curriculumIds": ["bjj-l2-stack-defense"]
+    },
+    {
+      "id": "scissor-sweep",
+      "type": "transition",
+      "label": "Scissor Sweep",
+      "description": "Classic closed guard sweep",
+      "x": 50,
+      "y": 340,
+      "curriculumIds": ["bjj-l1-guard-sweeping-1-5", "bjj-l5-guard-sweeps-6-10"]
+    },
+    {
+      "id": "flower-sweep",
+      "type": "transition",
+      "label": "Flower Sweep",
+      "description": "Off-balancing with hip bump",
+      "x": 50,
+      "y": 400,
+      "curriculumIds": ["bjj-l1-guard-sweeping-1-5"]
+    },
+    {
+      "id": "butterfly-sweep",
+      "type": "transition",
+      "label": "Butterfly Sweep",
+      "description": "Hook lift sweep",
+      "x": 50,
+      "y": 460,
+      "curriculumIds": ["bjj-l5-half-guard-sweeps-1-5"]
+    },
+    {
+      "id": "mount-advance",
+      "type": "transition",
+      "label": "Mount Advance",
+      "description": "Side control to mount",
+      "x": 850,
+      "y": 440,
+      "curriculumIds": ["bjj-l1-side-control-1-5"]
+    },
+    {
+      "id": "back-take",
+      "type": "transition",
+      "label": "Back Take",
+      "description": "Transitioning to back control",
+      "x": 850,
+      "y": 500,
+      "curriculumIds": ["bjj-l5-shoulder-to-back"]
+    },
+    {
+      "id": "turtle-to-back",
+      "type": "transition",
+      "label": "Turtle to Back",
+      "description": "Taking back from turtle",
+      "x": 850,
+      "y": 560,
+      "curriculumIds": ["bjj-l5-turtle-breakdowns-1-5"]
+    },
+    {
+      "id": "reguard",
+      "type": "transition",
+      "label": "Re-Guard",
+      "description": "Recovering guard from bottom",
+      "x": 50,
+      "y": 520,
+      "curriculumIds": ["bjj-l5-guard-back-flow", "bjj-l5-invincible-guard-1-10"]
+    },
+    {
+      "id": "scramble",
+      "type": "transition",
+      "label": "Scramble",
+      "description": "Chaotic positional exchange",
+      "x": 50,
+      "y": 580,
+      "curriculumIds": ["bjj-l5-sitouts"]
+    },
+    {
+      "id": "double-leg",
+      "type": "transition",
+      "label": "Double Leg",
+      "description": "Wrestling takedown both legs",
+      "x": 500,
+      "y": 40,
+      "curriculumIds": ["bjj-l1-double-leg", "bjj-l9-double-leg-standing"]
+    },
+    {
+      "id": "single-leg",
+      "type": "transition",
+      "label": "Single Leg",
+      "description": "Wrestling takedown one leg",
+      "x": 300,
+      "y": 40,
+      "curriculumIds": ["bjj-l1-high-single", "bjj-l1-low-single", "bjj-l9-single-leg-standing"]
+    },
+    {
+      "id": "hip-escape",
+      "type": "counter",
+      "label": "Hip Escape",
+      "description": "Shrimping to create space",
+      "x": 150,
+      "y": 760,
+      "curriculumIds": ["bjj-l1-shrimping", "bjj-l3-knee-escape", "bjj-l3-side-shrimp"]
+    },
+    {
+      "id": "bridge-roll",
+      "type": "counter",
+      "label": "Bridge & Roll",
+      "description": "Explosive hip bridge escape",
+      "x": 250,
+      "y": 760,
+      "curriculumIds": ["bjj-l3-bridge-roll", "bjj-l3-bump-throw", "bjj-l3-bump-catch"]
+    },
+    {
+      "id": "elbow-knee",
+      "type": "counter",
+      "label": "Elbow-Knee",
+      "description": "Frame escape from mount",
+      "x": 350,
+      "y": 760,
+      "curriculumIds": ["bjj-l3-mount-escapes", "bjj-l3-knee-escape"]
+    },
+    {
+      "id": "frame",
+      "type": "counter",
+      "label": "Frame",
+      "description": "Creating defensive structure",
+      "x": 450,
+      "y": 760,
+      "curriculumIds": ["bjj-l2-ankle-grab-defense", "bjj-l2-knee-pin-defense"]
+    },
+    {
+      "id": "chin-tuck",
+      "type": "counter",
+      "label": "Chin Tuck",
+      "description": "Defending against chokes",
+      "x": 550,
+      "y": 760,
+      "curriculumIds": ["bjj-l2-guard-defense"]
+    },
+    {
+      "id": "grip-break",
+      "type": "counter",
+      "label": "Grip Break",
+      "description": "Breaking opponent grips",
+      "x": 650,
+      "y": 760,
+      "curriculumIds": ["bjj-l2-guard-attacks"]
+    },
+    {
+      "id": "posture-up",
+      "type": "counter",
+      "label": "Posture Up",
+      "description": "Regaining posture in guard",
+      "x": 750,
+      "y": 760,
+      "curriculumIds": ["bjj-l2-ankle-grab-defense", "bjj-l2-stack-defense"]
+    },
+    {
+      "id": "roll-through",
+      "type": "counter",
+      "label": "Roll Through",
+      "description": "Rolling out of submissions",
+      "x": 200,
+      "y": 820,
+      "curriculumIds": ["bjj-l3-back-shoulder-roll"]
+    },
+    {
+      "id": "technical-stand",
+      "type": "counter",
+      "label": "Technical Stand",
+      "description": "Safe stand up from ground",
+      "x": 400,
+      "y": 820,
+      "curriculumIds": ["bjj-l1-breakfalls", "bjj-l1-shoulder-rolls"]
+    },
+    {
+      "id": "hand-fight",
+      "type": "counter",
+      "label": "Hand Fight",
+      "description": "Grip fighting for control",
+      "x": 600,
+      "y": 820,
+      "curriculumIds": ["bjj-l2-two-on-one", "bjj-l2-underhook", "bjj-l9-clinch-work"]
+    },
+    {
+      "id": "underhook",
+      "type": "counter",
+      "label": "Underhook",
+      "description": "Establishing inside position",
+      "x": 800,
+      "y": 820,
+      "curriculumIds": ["bjj-l3-underhook-escape", "bjj-l5-shoulder-to-front"]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-stand-double",
+      "from": "standing",
+      "to": "double-leg",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-stand-single",
+      "from": "standing",
+      "to": "single-leg",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-stand-sprawl",
+      "from": "standing",
+      "to": "sprawl",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-double-side",
+      "from": "double-leg",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-single-side",
+      "from": "single-leg",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-sprawl-turtle",
+      "from": "sprawl",
+      "to": "turtle",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-closed-armbar",
+      "from": "closed-guard",
+      "to": "armbar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-triangle",
+      "from": "closed-guard",
+      "to": "triangle",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-omoplata",
+      "from": "closed-guard",
+      "to": "omoplata",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-kimura",
+      "from": "closed-guard",
+      "to": "kimura",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-guillotine",
+      "from": "closed-guard",
+      "to": "guillotine",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-cross",
+      "from": "closed-guard",
+      "to": "cross-collar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-closed-scissor",
+      "from": "closed-guard",
+      "to": "scissor-sweep",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-closed-flower",
+      "from": "closed-guard",
+      "to": "flower-sweep",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-closed-open",
+      "from": "closed-guard",
+      "to": "open-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-open-spider",
+      "from": "open-guard",
+      "to": "spider-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-open-dlr",
+      "from": "open-guard",
+      "to": "de-la-riva",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-open-xguard",
+      "from": "open-guard",
+      "to": "x-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-open-butterfly",
+      "from": "open-guard",
+      "to": "butterfly-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-open-triangle",
+      "from": "open-guard",
+      "to": "triangle",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-butterfly-sweep",
+      "from": "butterfly-guard",
+      "to": "butterfly-sweep",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-butterfly-guillotine",
+      "from": "butterfly-guard",
+      "to": "guillotine",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-butterfly-zguard",
+      "from": "butterfly-guard",
+      "to": "z-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-spider-triangle",
+      "from": "spider-guard",
+      "to": "triangle",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-spider-omoplata",
+      "from": "spider-guard",
+      "to": "omoplata",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-dlr-xguard",
+      "from": "de-la-riva",
+      "to": "x-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-dlr-backtake",
+      "from": "de-la-riva",
+      "to": "back-take",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-xguard-sweep",
+      "from": "x-guard",
+      "to": "butterfly-sweep",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-xguard-heel",
+      "from": "x-guard",
+      "to": "heel-hook",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-zguard-half",
+      "from": "z-guard",
+      "to": "half-guard",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-zguard-kimura",
+      "from": "z-guard",
+      "to": "kimura",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-half-side",
+      "from": "half-guard",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-half-kimura",
+      "from": "half-guard",
+      "to": "kimura",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-half-reguard",
+      "from": "half-guard",
+      "to": "reguard",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-side-mount",
+      "from": "side-control",
+      "to": "mount-advance",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-side-kob",
+      "from": "side-control",
+      "to": "knee-on-belly",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-side-kimura",
+      "from": "side-control",
+      "to": "kimura",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-side-americana",
+      "from": "side-control",
+      "to": "americana",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-side-darce",
+      "from": "side-control",
+      "to": "darce",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-side-armtri",
+      "from": "side-control",
+      "to": "arm-triangle",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-mount-armbar",
+      "from": "mount",
+      "to": "armbar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-mount-americana",
+      "from": "mount",
+      "to": "americana",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-mount-ezekiel",
+      "from": "mount",
+      "to": "ezekiel",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-mount-back",
+      "from": "mount",
+      "to": "back-take",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-mount-armtri",
+      "from": "mount",
+      "to": "arm-triangle",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-advance-mount",
+      "from": "mount-advance",
+      "to": "mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-kob-armbar",
+      "from": "knee-on-belly",
+      "to": "armbar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-kob-baseball",
+      "from": "knee-on-belly",
+      "to": "baseball-choke",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-kob-mount",
+      "from": "knee-on-belly",
+      "to": "mount",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "e-back-rnc",
+      "from": "back-mount",
+      "to": "rnc",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-back-bowarrow",
+      "from": "back-mount",
+      "to": "bow-arrow",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-back-armbar",
+      "from": "back-mount",
+      "to": "armbar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-backtake-back",
+      "from": "back-take",
+      "to": "back-mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-turtle-back",
+      "from": "turtle",
+      "to": "turtle-to-back",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-turtle-scramble",
+      "from": "turtle",
+      "to": "scramble",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-turtle-guillotine",
+      "from": "turtle",
+      "to": "guillotine",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-turtleback-back",
+      "from": "turtle-to-back",
+      "to": "back-mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-toreando-side",
+      "from": "toreando",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-kneeslice-side",
+      "from": "knee-slice",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-legdrag-side",
+      "from": "leg-drag",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-smash-side",
+      "from": "smash-pass",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-stack-side",
+      "from": "stack-pass",
+      "to": "side-control",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-scissor-mount",
+      "from": "scissor-sweep",
+      "to": "mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-flower-mount",
+      "from": "flower-sweep",
+      "to": "mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-buttsweep-mount",
+      "from": "butterfly-sweep",
+      "to": "mount",
+      "color": "#22c55e"
+    },
+    {
+      "id": "e-half-heel",
+      "from": "half-guard",
+      "to": "heel-hook",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-half-kneebar",
+      "from": "half-guard",
+      "to": "knee-bar",
+      "color": "#ef4444"
+    },
+    {
+      "id": "e-mount-bridge",
+      "from": "mount",
+      "to": "bridge-roll",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-mount-elbow",
+      "from": "mount",
+      "to": "elbow-knee",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-side-hip",
+      "from": "side-control",
+      "to": "hip-escape",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-side-frame",
+      "from": "side-control",
+      "to": "frame",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-back-chin",
+      "from": "back-mount",
+      "to": "chin-tuck",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-rnc-chin",
+      "from": "rnc",
+      "to": "chin-tuck",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-armbar-roll",
+      "from": "armbar",
+      "to": "roll-through",
+      "color": "#f97316"
+    },
+    {
+      "id": "e-triangle-posture",
+      "from": "triangle",
+      "to": "posture-up",
+      "color": "#f97316"
+    }
+  ]
+}

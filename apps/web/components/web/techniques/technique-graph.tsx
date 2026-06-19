@@ -1,0 +1,531 @@
+"use client"
+
+import {
+  DownloadIcon,
+  FocusIcon,
+  MinusIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  WorkflowIcon,
+} from "lucide-react"
+import Link from "next/link"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
+import { Card } from "~/components/common/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/common/dialog"
+import { Stack } from "~/components/common/stack"
+import { cx } from "~/lib/utils"
+import type {
+  BjjTechniqueGraph,
+  BjjTechniqueGraphEdge,
+  BjjTechniqueGraphNode,
+} from "~/server/web/techniques/graph-query"
+
+const NODE_WIDTH = 168
+const NODE_HEIGHT = 64
+const CANVAS_PADDING = 96
+const ZOOM_MIN = 0.35
+const ZOOM_MAX = 1.8
+const ZOOM_STEP = 0.12
+const PAN_STEP = 48
+
+type GraphNodeType = BjjTechniqueGraphNode["type"]
+type FilterValue = "all" | GraphNodeType
+
+const NODE_TYPES: { value: FilterValue; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "position", label: "Positions" },
+  { value: "submission", label: "Submissions" },
+  { value: "transition", label: "Transitions" },
+  { value: "counter", label: "Counters" },
+]
+
+const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
+
+const nodeTypeClass = (type: GraphNodeType) => {
+  if (type === "position") return "border-primary/60 bg-primary/10 text-primary"
+  if (type === "submission") return "border-destructive/60 bg-destructive/10 text-destructive"
+  if (type === "counter") {
+    return "border-muted-foreground/50 bg-muted text-muted-foreground"
+  }
+  return "border-foreground/35 bg-card text-foreground"
+}
+
+const edgeTypeClass = (type: GraphNodeType) => {
+  if (type === "position") return "stroke-primary"
+  if (type === "submission") return "stroke-destructive"
+  if (type === "counter") return "stroke-muted-foreground"
+  return "stroke-foreground"
+}
+
+const labelForType = (type: GraphNodeType) =>
+  type
+    .split("-")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+
+const EXPORT_CAPTURE_STYLES: Record<
+  GraphNodeType,
+  { background: string; border: string; text: string }
+> = {
+  position: { background: "rgb(254 242 242)", border: "rgb(248 113 113)", text: "rgb(185 28 28)" },
+  submission: { background: "rgb(255 247 237)", border: "rgb(251 146 60)", text: "rgb(194 65 12)" },
+  transition: { background: "rgb(248 250 252)", border: "rgb(148 163 184)", text: "rgb(15 23 42)" },
+  counter: { background: "rgb(243 244 246)", border: "rgb(156 163 175)", text: "rgb(55 65 81)" },
+}
+
+type ExportStyleSnapshot = {
+  element: HTMLElement | SVGElement
+  fill: string | null
+  stroke: string | null
+  style: string | null
+}
+
+const withExportSafeStyles = async <T,>(
+  root: HTMLElement,
+  callback: () => Promise<T>,
+): Promise<T> => {
+  const elements = [
+    root,
+    ...(Array.from(root.querySelectorAll("*")) as Array<HTMLElement | SVGElement>),
+  ]
+  const snapshots: ExportStyleSnapshot[] = elements.map(element => ({
+    element,
+    fill: element.getAttribute("fill"),
+    stroke: element.getAttribute("stroke"),
+    style: element.getAttribute("style"),
+  }))
+
+  const setStyle = (element: HTMLElement | SVGElement, property: string, value: string) => {
+    element.style.setProperty(property, value, "important")
+  }
+
+  // html2canvas cannot parse Tailwind v4's OKLab color-mix output yet.
+  for (const element of elements) {
+    setStyle(element, "background-color", "transparent")
+    setStyle(element, "background-image", "none")
+    setStyle(element, "border-color", "rgb(203 213 225)")
+    setStyle(element, "box-shadow", "none")
+    setStyle(element, "caret-color", "rgb(17 24 39)")
+    setStyle(element, "color", "rgb(17 24 39)")
+    setStyle(element, "outline-color", "rgb(148 163 184)")
+    setStyle(element, "text-decoration-color", "rgb(17 24 39)")
+    setStyle(element, "text-shadow", "none")
+  }
+
+  setStyle(root, "background-color", "rgb(255 255 255)")
+
+  for (const node of Array.from(root.querySelectorAll<HTMLElement>("[data-graph-node-type]"))) {
+    const type = node.dataset.graphNodeType as GraphNodeType
+    const style = EXPORT_CAPTURE_STYLES[type] ?? EXPORT_CAPTURE_STYLES.transition
+    setStyle(node, "background-color", style.background)
+    setStyle(node, "border-color", style.border)
+    setStyle(node, "color", style.text)
+
+    for (const child of Array.from(node.querySelectorAll<HTMLElement>("span"))) {
+      setStyle(child, "color", style.text)
+    }
+  }
+
+  for (const edge of Array.from(root.querySelectorAll<SVGPathElement>("[data-graph-edge-type]"))) {
+    const type = edge.dataset.graphEdgeType as GraphNodeType
+    const style = EXPORT_CAPTURE_STYLES[type] ?? EXPORT_CAPTURE_STYLES.transition
+    edge.setAttribute("fill", "none")
+    edge.setAttribute("stroke", style.border)
+    setStyle(edge, "stroke", style.border)
+    setStyle(edge, "fill", "none")
+  }
+
+  try {
+    return await callback()
+  } finally {
+    for (const snapshot of snapshots) {
+      if (snapshot.style === null) snapshot.element.removeAttribute("style")
+      else snapshot.element.setAttribute("style", snapshot.style)
+
+      if (snapshot.fill === null) snapshot.element.removeAttribute("fill")
+      else snapshot.element.setAttribute("fill", snapshot.fill)
+
+      if (snapshot.stroke === null) snapshot.element.removeAttribute("stroke")
+      else snapshot.element.setAttribute("stroke", snapshot.stroke)
+    }
+  }
+}
+
+function buildEdgePath(from: BjjTechniqueGraphNode, to: BjjTechniqueGraphNode) {
+  const x1 = from.x + NODE_WIDTH / 2
+  const y1 = from.y + NODE_HEIGHT / 2
+  const x2 = to.x + NODE_WIDTH / 2
+  const y2 = to.y + NODE_HEIGHT / 2
+  const dx = Math.abs(x2 - x1) * 0.5
+
+  return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
+}
+
+function GraphEdge({
+  edge,
+  nodeById,
+}: {
+  edge: BjjTechniqueGraphEdge
+  nodeById: Map<string, BjjTechniqueGraphNode>
+}) {
+  const from = nodeById.get(edge.from)
+  const to = nodeById.get(edge.to)
+
+  if (!from || !to) return null
+
+  return (
+    <path
+      d={buildEdgePath(from, to)}
+      data-graph-edge-type={edge.type}
+      className={cx("fill-none stroke-2 opacity-55", edgeTypeClass(edge.type))}
+      strokeLinecap="round"
+    />
+  )
+}
+
+export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
+  const [pan, setPan] = useState({ x: 48, y: 48 })
+  const [zoom, setZoom] = useState(1)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [activeType, setActiveType] = useState<FilterValue>("all")
+  const [isExporting, setIsExporting] = useState(false)
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
+  const isPanning = useRef(false)
+  const lastPointer = useRef({ x: 0, y: 0 })
+
+  const bounds = useMemo(() => {
+    const width = Math.max(...graph.nodes.map(node => node.x), 0) + NODE_WIDTH + CANVAS_PADDING
+    const height = Math.max(...graph.nodes.map(node => node.y), 0) + NODE_HEIGHT + CANVAS_PADDING
+    return { width, height }
+  }, [graph.nodes])
+
+  const visibleNodes = useMemo(
+    () =>
+      activeType === "all" ? graph.nodes : graph.nodes.filter(node => node.type === activeType),
+    [activeType, graph.nodes],
+  )
+  const visibleNodeIds = useMemo(() => new Set(visibleNodes.map(node => node.id)), [visibleNodes])
+  const visibleEdges = useMemo(
+    () => graph.edges.filter(edge => visibleNodeIds.has(edge.from) && visibleNodeIds.has(edge.to)),
+    [graph.edges, visibleNodeIds],
+  )
+  const nodeById = useMemo(() => new Map(visibleNodes.map(node => [node.id, node])), [visibleNodes])
+  const allNodeById = useMemo(
+    () => new Map(graph.nodes.map(node => [node.id, node])),
+    [graph.nodes],
+  )
+  const selectedNode = selectedNodeId ? allNodeById.get(selectedNodeId) : undefined
+
+  const fitToView = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const nextZoom = clampZoom(
+      Math.min(
+        1,
+        (canvas.clientWidth - 48) / Math.max(bounds.width, 1),
+        (canvas.clientHeight - 48) / Math.max(bounds.height, 1),
+      ),
+    )
+
+    setZoom(nextZoom)
+    setPan({
+      x: Math.max(24, (canvas.clientWidth - bounds.width * nextZoom) / 2),
+      y: Math.max(24, (canvas.clientHeight - bounds.height * nextZoom) / 2),
+    })
+  }, [bounds.height, bounds.width])
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(fitToView)
+    return () => cancelAnimationFrame(raf)
+  }, [fitToView])
+
+  const updateZoom = (nextZoom: number) => setZoom(clampZoom(nextZoom))
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return
+    isPanning.current = true
+    lastPointer.current = { x: event.clientX, y: event.clientY }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPanning.current) return
+    const dx = event.clientX - lastPointer.current.x
+    const dy = event.clientY - lastPointer.current.y
+    lastPointer.current = { x: event.clientX, y: event.clientY }
+    setPan(current => ({ x: current.x + dx, y: current.y + dy }))
+  }
+
+  const stopPanning = () => {
+    isPanning.current = false
+  }
+
+  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    updateZoom(zoom + (event.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP))
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!event.key.startsWith("Arrow")) return
+    event.preventDefault()
+    setPan(current => {
+      if (event.key === "ArrowLeft") return { ...current, x: current.x + PAN_STEP }
+      if (event.key === "ArrowRight") return { ...current, x: current.x - PAN_STEP }
+      if (event.key === "ArrowUp") return { ...current, y: current.y + PAN_STEP }
+      return { ...current, y: current.y - PAN_STEP }
+    })
+  }
+
+  const exportPng = async () => {
+    if (!exportRef.current) return
+    setIsExporting(true)
+    try {
+      const html2canvas = (await import("html2canvas")).default
+      const canvas = await withExportSafeStyles(exportRef.current, () =>
+        html2canvas(exportRef.current!, {
+          backgroundColor: "#ffffff",
+          logging: false,
+          scale: 2,
+          useCORS: true,
+        }),
+      )
+      const link = document.createElement("a")
+      link.download = "bjj-technique-graph.png"
+      link.href = canvas.toDataURL("image/png")
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  return (
+    <>
+      <Card className="gap-3 p-3 md:p-4">
+        <Stack direction="row" wrap size="sm" className="w-full items-center justify-between">
+          <Stack direction="row" wrap size="xs" className="items-center">
+            <Badge variant="primary" prefix={<WorkflowIcon />}>
+              {graph.nodes.length} techniques
+            </Badge>
+            <Badge variant="soft">{graph.edges.length} links</Badge>
+            {NODE_TYPES.map(type => (
+              <Button
+                key={type.value}
+                type="button"
+                size="sm"
+                variant={activeType === type.value ? "primary" : "secondary"}
+                aria-pressed={activeType === type.value}
+                onClick={() => setActiveType(type.value)}
+              >
+                {type.label}
+              </Button>
+            ))}
+          </Stack>
+
+          <Stack direction="row" wrap size="xs">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              prefix={<MinusIcon />}
+              aria-label="Zoom out"
+              onClick={() => updateZoom(zoom - ZOOM_STEP)}
+            >
+              Out
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              prefix={<PlusIcon />}
+              aria-label="Zoom in"
+              onClick={() => updateZoom(zoom + ZOOM_STEP)}
+            >
+              In
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              prefix={<RotateCcwIcon />}
+              onClick={() => {
+                setZoom(1)
+                setPan({ x: 48, y: 48 })
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              prefix={<FocusIcon />}
+              onClick={fitToView}
+            >
+              Fit
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              prefix={<DownloadIcon />}
+              isPending={isExporting}
+              onClick={exportPng}
+            >
+              PNG
+            </Button>
+          </Stack>
+        </Stack>
+
+        <div
+          ref={exportRef}
+          className="relative h-[72vh] min-h-[520px] w-full overflow-hidden rounded-lg border bg-background"
+        >
+          <div
+            ref={canvasRef}
+            tabIndex={0}
+            role="application"
+            aria-label="BJJ technique graph"
+            className="relative size-full cursor-grab touch-none bg-[radial-gradient(circle,_hsl(var(--border))_1px,_transparent_1px)] bg-[length:28px_28px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={stopPanning}
+            onPointerLeave={stopPanning}
+            onWheel={handleWheel}
+            onKeyDown={handleKeyDown}
+          >
+            <div
+              className="absolute left-0 top-0"
+              style={{
+                width: bounds.width,
+                height: bounds.height,
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: "0 0",
+              }}
+            >
+              <svg
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-visible"
+                width={bounds.width}
+                height={bounds.height}
+              >
+                {visibleEdges.map(edge => (
+                  <GraphEdge key={edge.id} edge={edge} nodeById={nodeById} />
+                ))}
+              </svg>
+
+              {visibleNodes.map(node => (
+                <button
+                  key={node.id}
+                  type="button"
+                  className={cx(
+                    "absolute flex flex-col justify-center gap-1 rounded-lg border-2 px-3 text-left shadow-sm transition focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    selectedNodeId === node.id && "z-10 ring-2 ring-ring",
+                    nodeTypeClass(node.type),
+                  )}
+                  data-graph-node-type={node.type}
+                  style={{
+                    left: node.x,
+                    top: node.y,
+                    width: NODE_WIDTH,
+                    height: NODE_HEIGHT,
+                  }}
+                  aria-label={`${node.label}, ${labelForType(node.type)}`}
+                  aria-pressed={selectedNodeId === node.id}
+                  onClick={event => {
+                    event.stopPropagation()
+                    setSelectedNodeId(node.id)
+                  }}
+                >
+                  <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
+                    {labelForType(node.type)}
+                  </span>
+                  <span className="line-clamp-2 text-sm font-semibold leading-tight">
+                    {node.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Dialog open={!!selectedNode} onOpenChange={open => !open && setSelectedNodeId(null)}>
+        <DialogContent className="max-w-2xl">
+          {selectedNode && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedNode.label}</DialogTitle>
+                <DialogDescription>
+                  {selectedNode.description ?? "No description recorded."}
+                </DialogDescription>
+              </DialogHeader>
+
+              <Stack direction="row" wrap size="xs">
+                <Badge variant="primary">{labelForType(selectedNode.type)}</Badge>
+                {selectedNode.position && <Badge variant="soft">{selectedNode.position}</Badge>}
+                {selectedNode.difficultyLevel && (
+                  <Badge variant="outline">{selectedNode.difficultyLevel}</Badge>
+                )}
+                {selectedNode.isFoundational && <Badge variant="success">Foundational</Badge>}
+              </Stack>
+
+              {selectedNode.teachingCues.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Teaching cues</p>
+                  <ul className="space-y-1 text-sm text-secondary-foreground">
+                    {selectedNode.teachingCues.map(cue => (
+                      <li key={cue}>- {cue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedNode.curriculumItems.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Curriculum links</p>
+                  <Stack direction="column" size="xs">
+                    {selectedNode.curriculumItems.map(item => (
+                      <Link
+                        key={item.id}
+                        href={`/courses/${item.courseSlug}`}
+                        className="rounded-md border bg-card px-3 py-2 text-sm transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <span className="font-medium">{item.title}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {item.courseTitle}
+                        </span>
+                      </Link>
+                    ))}
+                  </Stack>
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button
+                  variant="secondary"
+                  render={<Link href={selectedNode.href} />}
+                  onClick={() => setSelectedNodeId(null)}
+                >
+                  Technique Detail
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

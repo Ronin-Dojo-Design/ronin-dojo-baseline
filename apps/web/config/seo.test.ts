@@ -16,7 +16,9 @@ describe("sitemapRoutesForBrand", () => {
     expect(paths).toContain("/events")
     expect(paths).toContain("/posts")
     expect(paths).toContain("/blog")
-    expect(paths).not.toContain("/techniques")
+    expect(paths).toContain("/curriculum")
+    expect(paths).toContain("/techniques")
+    expect(paths).toContain("/techniques/graph")
     expect(paths).not.toContain("/tournaments")
     expect(paths).not.toContain("/programs")
     expect(paths).not.toContain("/categories")
@@ -35,7 +37,7 @@ describe("sitemapRoutesForBrand", () => {
 describe("robotsDisallowRoutesForBrand", () => {
   it("disallows no feature routes now that BBL ships every feature (single-brand collapse)", () => {
     // Post-collapse brandHasFeature is always true, so no feature route is robots-gated;
-    // /techniques etc. are real public BBL surfaces.
+    // /techniques and /curriculum are real public BBL surfaces.
     expect(robotsDisallowRoutesForBrand(Brand.BBL)).toEqual([])
   })
 

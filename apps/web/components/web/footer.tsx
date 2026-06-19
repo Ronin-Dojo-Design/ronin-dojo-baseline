@@ -120,6 +120,9 @@ export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) 
               <NavLink href="/organizations">{t("navigation.organizations")}</NavLink>
             )}
             {has("courses") && <NavLink href="/courses">{t("navigation.courses")}</NavLink>}
+            {has("curriculum") && (
+              <NavLink href="/curriculum">{t("navigation.curriculum")}</NavLink>
+            )}
             {has("techniques") && (
               <NavLink href="/techniques">{t("navigation.techniques")}</NavLink>
             )}

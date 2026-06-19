@@ -1,7 +1,9 @@
 import dynamic from "next/dynamic"
+import Link from "next/link"
 import type { SearchParams } from "nuqs"
 import { Suspense } from "react"
 import type { Brand } from "~/.generated/prisma/client"
+import { Button } from "~/components/common/button"
 import { TechniqueListingSkeleton } from "~/components/web/techniques/technique-listing"
 import { TechniqueQuery } from "~/components/web/techniques/technique-query"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
@@ -52,6 +54,9 @@ export function TechniquesIndex({
         <Intro>
           <IntroTitle>{title}</IntroTitle>
           <IntroDescription>{description}</IntroDescription>
+          <Button variant="secondary" render={<Link href="/techniques/graph" />}>
+            BJJ Graph
+          </Button>
         </Intro>
 
         <Section>
