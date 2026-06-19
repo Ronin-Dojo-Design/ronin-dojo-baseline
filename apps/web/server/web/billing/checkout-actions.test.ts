@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun
 import type { Prisma } from "~/.generated/prisma/client"
 
 const sessionUserState = { id: "" }
-const requestBrand = "BASELINE_MARTIAL_ARTS"
+const requestBrand = "BBL"
 const otherBrand = "RONIN_DOJO_DESIGN"
 const checkoutSessionCreateMock = mock(async () => ({
   url: "https://checkout.stripe.test/session_0097",

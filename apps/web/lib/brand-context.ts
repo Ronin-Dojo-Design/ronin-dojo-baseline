@@ -40,8 +40,7 @@ export const resolveBrand = (_host?: string | null): Brand => Brand.BBL
 
 /** Edge-safe: derive an absolute request origin from forwarded headers. */
 export const resolveRequestOrigin = (requestHeaders: Headers) => {
-  const host =
-    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
   if (!host) return null
 
   const forwardedProtocol = requestHeaders.get("x-forwarded-proto")

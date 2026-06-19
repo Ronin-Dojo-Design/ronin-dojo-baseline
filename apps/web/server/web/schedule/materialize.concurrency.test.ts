@@ -28,7 +28,7 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 
 const sessionUserState = { id: "" }
 const rateLimitState = { limited: false }
-const requestBrand = "BASELINE_MARTIAL_ARTS"
+const requestBrand = "BBL"
 
 // -----------------------------------------------------------------------------
 // Module mocks — must be installed before importing `actions.ts`.

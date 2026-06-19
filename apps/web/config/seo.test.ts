@@ -33,16 +33,10 @@ describe("sitemapRoutesForBrand", () => {
 })
 
 describe("robotsDisallowRoutesForBrand", () => {
-  it("disallows BBL gated feature routes", () => {
-    const routes = robotsDisallowRoutesForBrand(Brand.BBL)
-
-    expect(routes).toContain("/techniques/")
-    expect(routes).toContain("/tournaments/")
-    expect(routes).toContain("/programs/")
-    expect(routes).toContain("/categories/")
-    expect(routes).toContain("/tags/")
-    expect(routes).not.toContain("/lineage/")
-    expect(routes).not.toContain("/directory/")
+  it("disallows no feature routes now that BBL ships every feature (single-brand collapse)", () => {
+    // Post-collapse brandHasFeature is always true, so no feature route is robots-gated;
+    // /techniques etc. are real public BBL surfaces.
+    expect(robotsDisallowRoutesForBrand(Brand.BBL)).toEqual([])
   })
 
   it("does not disallow feature routes for ungated brands", () => {

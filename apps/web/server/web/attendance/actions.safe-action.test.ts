@@ -11,7 +11,7 @@
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
 // Install mocks BEFORE any import that touches `~/server`, `~/lib/auth`, etc.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
@@ -19,7 +19,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { recordCheckIn } from "~/server/web/attendance/actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const TS = Date.now()
 const TAG_PREFIX = "session-0190-"
 const tag = (name: string) => `${TAG_PREFIX}${TS}-${name}`

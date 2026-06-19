@@ -16,6 +16,7 @@ const FACET_RESULT_KEYS = [
   "id",
   "imageUrl",
   "initials",
+  "rankColorHex",
   "save",
   "subtitle",
   "tags",
@@ -43,7 +44,7 @@ describe("mapPersonToFacet", () => {
       claimBadgeStatus: "claimable",
       locationCity: "Boulder",
       locationRegion: "CO",
-      ranks: [{ rank: { id: "r1", name: "BJJ Black Belt" } }],
+      ranks: [{ rank: { id: "r1", name: "BJJ Black Belt", colorHex: "#1A1A1A" } }],
       // @ts-expect-error — private fields must be ignored by the mapper, not surfaced.
       email: "secret@example.com",
     })
@@ -54,6 +55,8 @@ describe("mapPersonToFacet", () => {
     expect(result.trustStatus).toBe("verified")
     expect(result.claimStatus).toBe("claimable")
     expect(result.tags).toEqual(["BJJ Black Belt"])
+    // Belt tint for the lead tag is sourced from `Rank.colorHex` (SESSION_0414).
+    expect(result.rankColorHex).toBe("#1A1A1A")
     expect(result.badges).toEqual([{ label: "Elite", variant: "outline" }])
     expect(result.save).toEqual({ subjectType: "PERSON", subjectId: "p1" })
     expectFacetShape(result)
@@ -79,6 +82,8 @@ describe("mapPersonToFacet", () => {
     expect(result.subtitle).toBeNull()
     expect(result.badges).toEqual([])
     expect(result.tags).toEqual([])
+    // No rank → no belt tint.
+    expect(result.rankColorHex).toBeNull()
     expectFacetShape(result)
   })
 })
@@ -102,6 +107,8 @@ describe("mapOrganizationToFacet", () => {
     expect(result.save).toEqual({ subjectType: "ORGANIZATION", subjectId: "o1" })
     expect(result.trustStatus).toBeNull()
     expect(result.claimStatus).toBeNull()
+    // Belt tint is people-only; orgs never carry a rank color.
+    expect(result.rankColorHex).toBeNull()
     expectFacetShape(result)
   })
 
@@ -146,6 +153,8 @@ describe("mapLineageTreeToFacet", () => {
     expect(result.trustStatus).toBeNull()
     expect(result.claimStatus).toBe("claimable")
     expect(result.save).toEqual({ subjectType: "TREE", subjectId: "t1" })
+    // Belt tint is people-only; trees never carry a rank color.
+    expect(result.rankColorHex).toBeNull()
     expectFacetShape(result)
   })
 

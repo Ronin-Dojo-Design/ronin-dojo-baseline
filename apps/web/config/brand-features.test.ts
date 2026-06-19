@@ -3,7 +3,6 @@ import { describe, expect, it } from "bun:test"
 import { Brand } from "~/.generated/prisma/client"
 import {
   BRAND_FEATURES,
-  type BrandFeature,
   brandHasFeature,
   brandHasMinimalChrome,
   FEATURE_ROUTE_PREFIXES,

@@ -128,7 +128,10 @@ export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
           {viewLabel}
         </Button>
 
-        <ListingSaveButton subjectType={result.save.subjectType} subjectId={result.save.subjectId} />
+        <ListingSaveButton
+          subjectType={result.save.subjectType}
+          subjectId={result.save.subjectId}
+        />
       </div>
     </Card>
   )

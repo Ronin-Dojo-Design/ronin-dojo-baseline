@@ -7,14 +7,28 @@ const OTHER_BRAND = "WEKAF"
 
 // Narrow the loose `Record<string, unknown>` clause for assertions.
 // Phase 3c (SOT-ADR D1): memberships are account-side, reached through passport.user.
+// SESSION_0414: the brand scope is now an OR of two brand-pinned paths so the
+// imported placeholder-Passport roster (no User account) surfaces alongside
+// account-side members:
+//   OR[0] = passport.user.memberships → organization → brand  (account-side)
+//   OR[1] = passport.lineageNode → treeMembers → tree → brand (imported roster)
+type BrandOrPaths = [
+  { user: { memberships: { some: Record<string, unknown> } } },
+  { lineageNode: { treeMembers: { some: { tree: { brand: string } } } } },
+]
+function passportOr(where: Record<string, unknown>) {
+  const passport = where.passport as { OR: BrandOrPaths }
+  return passport.OR
+}
 function membershipSome(where: Record<string, unknown>) {
-  const passport = where.passport as {
-    user: { memberships: { some: Record<string, unknown> } }
-  }
-  return passport.user.memberships.some
+  return passportOr(where)[0].user.memberships.some
 }
 function organization(where: Record<string, unknown>) {
   return membershipSome(where).organization as { brand: string; slug?: string }
+}
+/** The lineage-tree OR branch — placeholder-Passport roster, brand-pinned on the tree. */
+function lineageTree(where: Record<string, unknown>) {
+  return passportOr(where)[1].lineageNode.treeMembers.some.tree
 }
 function rankAwardsEarned(where: Record<string, unknown>) {
   const passport = where.passport as {
@@ -26,8 +40,10 @@ function rankAwardsEarned(where: Record<string, unknown>) {
 describe("buildDirectoryProfileWhere — brand scope", () => {
   it("always pins the server-derived brand inside the membership filter", () => {
     const where = buildDirectoryProfileWhere({}, BRAND)
+    // Brand is pinned on BOTH brand-membership paths (account-side + imported roster).
     expect(organization(where).brand).toBe(BRAND)
     expect(organization(where).slug).toBeUndefined()
+    expect(lineageTree(where).brand).toBe(BRAND)
   })
 
   it("ANDs an org slug WITHIN the brand — a cross-brand slug cannot widen results", () => {
@@ -40,6 +56,10 @@ describe("buildDirectoryProfileWhere — brand scope", () => {
     // The resulting clause is `{ brand: BASELINE, slug: wekaf-only-school }` which
     // matches no organization across brands → zero results, never a cross-brand leak.
     expect(org.brand).not.toBe(OTHER_BRAND)
+    // The lineage-tree OR branch is also brand-pinned — the org slug only touches
+    // the membership path, so it can't widen the roster path across brands either.
+    expect(lineageTree(where).brand).toBe(BRAND)
+    expect(lineageTree(where).brand).not.toBe(OTHER_BRAND)
   })
 
   it("never reads brand from the filter inputs", () => {
@@ -48,7 +68,9 @@ describe("buildDirectoryProfileWhere — brand scope", () => {
       { org: "x", discipline: "y" } as Record<string, string>,
       BRAND,
     )
+    // Both branches stay pinned to the server-derived brand.
     expect(organization(where).brand).toBe(BRAND)
+    expect(lineageTree(where).brand).toBe(BRAND)
   })
 })
 

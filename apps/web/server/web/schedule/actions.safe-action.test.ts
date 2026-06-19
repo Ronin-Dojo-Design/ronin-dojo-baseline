@@ -25,7 +25,7 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 // `mock.module` registers eagerly when this top-level statement runs, and the
 // static imports below resolve after this point, so the action module picks up
 // the mocked dependencies. Ordering is load-bearing.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
@@ -33,7 +33,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { saveSchedule } from "~/server/web/schedule/actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const TS = Date.now()
 const TAG_PREFIX = "session-0189-"
 const tag = (name: string) => `${TAG_PREFIX}${TS}-${name}`

@@ -8,7 +8,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 
 const sessionUserState = { id: "" }
-const requestBrand = "BASELINE_MARTIAL_ARTS"
+const requestBrand = "BBL"
 const portalSessionCreateMock = mock(async () => ({
   url: "https://billing.stripe.test/session_0096",
 }))

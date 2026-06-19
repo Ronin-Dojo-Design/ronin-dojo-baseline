@@ -28,7 +28,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 
 const sessionUserState = { id: "" }
 const rateLimitState = { limited: false }
-const requestBrand = "BASELINE_MARTIAL_ARTS"
+const requestBrand = "BBL"
 const createRefundMock = mock(async () => ({}))
 
 // Per-call user identity, propagated through async context so two parallel

@@ -11,7 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun
 
 const sessionUserState = { id: "" }
 const rateLimitState = { limited: false }
-const requestBrand = "BASELINE_MARTIAL_ARTS"
+const requestBrand = "BBL"
 
 mock.module("next/headers", () => ({
   headers: async () => ({

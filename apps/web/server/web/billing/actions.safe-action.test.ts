@@ -12,7 +12,7 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 
 // Install mocks BEFORE any import that touches billing/server modules.
 // Pin the request host so the per-brand origin in `return_url` is deterministic.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS", host: "baseline.local" })
+installSafeActionMocks({ brand: "BBL", host: "baseline.local" })
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
@@ -41,7 +41,7 @@ mock.module("~/services/stripe", () => ({
 import { createBillingPortalSession } from "~/server/web/billing/actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const TS = Date.now()
 const TAG_PREFIX = "session-0191-"
 const tag = (name: string) => `${TAG_PREFIX}${TS}-${name}`
