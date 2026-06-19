@@ -1,13 +1,14 @@
+import Image from "next/image"
 import { Card } from "~/components/common/card"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
 import { cx } from "~/lib/utils"
-import { beltColorForRank, BBL_ROUTES, heroContent } from "../bbl-landing-content"
+import { BBL_ROUTES, heroContent, type StaticBblRankColorMap } from "../bbl-landing-content"
 import { BeltBadge } from "./belt-badge"
 import { BBL_FLOAT_CLASSES } from "./landing-chrome"
 
-export const BblHero = () => (
+export const BblHero = ({ rankColors }: { rankColors: StaticBblRankColorMap }) => (
   <section className="relative grid w-full overflow-hidden rounded-2xl md:rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-background via-card to-primary/10 px-5 py-10 shadow-sm md:px-10 md:py-14 lg:grid-cols-2 lg:items-center lg:gap-12">
     <div
       className="absolute -right-24 -top-24 size-72 rounded-full bg-primary/20 blur-3xl"
@@ -45,22 +46,28 @@ export const BblHero = () => (
       )}
     >
       <div className="relative aspect-[4/3] bg-muted">
-        <img
+        <Image
           src={heroContent.card.image}
           alt={heroContent.card.name}
-          className="h-full w-full object-cover object-top"
+          fill
+          priority
+          sizes="(min-width: 1024px) 384px, (min-width: 640px) 384px, 320px"
+          className="object-cover object-top"
         />
         <BeltBadge
           rank={heroContent.card.badge}
-          colorHex={beltColorForRank(heroContent.card.badge)}
+          colorHex={rankColors[heroContent.card.badge] ?? null}
           className="absolute bottom-3 left-3"
         />
       </div>
       <div className="space-y-3 p-5 bg-gradient-to-br from-card to-primary/5">
         <div className="flex items-start gap-3">
-          <img
+          <Image
             src={heroContent.card.logo}
             alt=""
+            width={48}
+            height={48}
+            sizes="48px"
             className="size-12 rounded-lg border bg-muted object-contain p-1"
           />
           <div>

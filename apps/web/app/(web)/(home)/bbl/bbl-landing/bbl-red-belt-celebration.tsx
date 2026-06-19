@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Card } from "~/components/common/card"
 import { redBeltCelebration } from "../bbl-landing-content"
 import { MediaBrandmark, RegisterButtons } from "./landing-chrome"
@@ -11,12 +12,7 @@ export const BblRedBeltCelebration = ({
 }) => (
   <section className="w-full">
     <Card hover={false} className="relative p-0! overflow-hidden">
-      <img
-        src={redBeltCelebration.image}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
-      />
+      <Image src={redBeltCelebration.image} alt="" fill sizes="100vw" className="object-cover" />
       <div
         className="absolute inset-0 bg-gradient-to-b from-media-scrim/75 via-primary/30 to-media-scrim/85"
         aria-hidden="true"

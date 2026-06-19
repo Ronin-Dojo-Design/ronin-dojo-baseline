@@ -12,7 +12,9 @@ export const courseManyPayload = {
   createdAt: true,
   organization: { select: { id: true, name: true, slug: true } },
   discipline: { select: { id: true, name: true, slug: true } },
-  rank: { select: { id: true, name: true } },
+  // colorHex / shortName already exist on Rank — selecting them is on-the-wire data
+  // (no migration) so the belt color can render via the data-driven <BeltSwatch>.
+  rank: { select: { id: true, name: true, colorHex: true, shortName: true } },
   _count: { select: { curriculumItems: true, enrollments: true } },
 } satisfies Prisma.CourseSelect
 
@@ -33,7 +35,7 @@ export const courseOnePayload = {
   updatedAt: true,
   organization: { select: { id: true, name: true, slug: true } },
   discipline: { select: { id: true, name: true, slug: true } },
-  rank: { select: { id: true, name: true } },
+  rank: { select: { id: true, name: true, colorHex: true, shortName: true } },
   curriculumItems: {
     orderBy: { order: "asc" as const },
     select: {

@@ -1,9 +1,15 @@
+import Image from "next/image"
 import { Link } from "~/components/common/link"
-import { beltColorForRank, BBL_ROUTES, timeline, timelineSection } from "../bbl-landing-content"
+import {
+  BBL_ROUTES,
+  timeline,
+  timelineSection,
+  type StaticBblRankColorMap,
+} from "../bbl-landing-content"
 import { BeltBadge } from "./belt-badge"
 import { RegisterButtons, SectionHeading } from "./landing-chrome"
 
-export const BblTimeline = () => (
+export const BblTimeline = ({ rankColors }: { rankColors: StaticBblRankColorMap }) => (
   <section className="w-full space-y-8">
     <SectionHeading
       eyebrow={timelineSection.eyebrow}
@@ -18,15 +24,16 @@ export const BblTimeline = () => (
           className="group block rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
         >
           <div className="relative aspect-square bg-muted overflow-hidden">
-            <img
+            <Image
               src={entry.image}
               alt={entry.name}
-              className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none"
-              loading="lazy"
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover object-top transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
             />
             <BeltBadge
               rank={entry.rank}
-              colorHex={beltColorForRank(entry.rank)}
+              colorHex={rankColors[entry.rank] ?? null}
               className="absolute bottom-3 left-3"
             />
           </div>

@@ -34,24 +34,8 @@ export const BBL_IMAGES = {
   celebration: `${IMG}/coral-belt-celebration.jpg`,
 } as const
 
-/**
- * BBL belt-color palette as DATA — mirrors the BJJ rank system's `Rank.colorHex`
- * in `prisma/seed.ts` (coral & red = #FF0000, black = #000000, white = #FFFFFF).
- * Fed to `<BeltSwatch colorHex={…}>` so the landing's belt indicators are
- * data-driven, never a hardcoded belt-color className map (ADR 0022). The
- * promotion marquee reads the live `Rank.colorHex` off the tree; the static
- * legacy sections (Dirty Dozen, lineage timeline, hero/heritage chips) derive it
- * from the rank label here. Returns `null` for an unknown belt → `<BeltSwatch>`
- * renders its neutral muted fallback.
- */
-export const beltColorForRank = (rankName: string): string | null => {
-  const name = rankName.toLowerCase()
-  if (name.includes("coral")) return "#FF0000"
-  if (name.includes("red")) return "#FF0000"
-  if (name.includes("black")) return "#000000"
-  if (name.includes("white")) return "#FFFFFF"
-  return null
-}
+/** Static landing rank label → `Rank.colorHex` lookup, resolved server-side. */
+export type StaticBblRankColorMap = Record<string, string | null>
 
 export const heroContent = {
   eyebrow: "The Official Lineage Network",
@@ -74,7 +58,7 @@ export const videoContent = {
   eyebrow: "Hear from the source",
   title: "Rigan Machado on Black Belt Legacy",
   description: "Learn why lineage matters and what makes the Black Belt Legacy network special.",
-  embedUrl: "https://www.youtube.com/embed/EGGPLxKtYZ8",
+  embedUrl: "https://www.youtube-nocookie.com/embed/EGGPLxKtYZ8",
   embedTitle: "Rigan Machado explains Black Belt Legacy",
   caption: "9th Degree Red Belt · Pan American Champion · ADCC Veteran",
 }

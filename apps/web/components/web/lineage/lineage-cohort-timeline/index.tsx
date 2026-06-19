@@ -54,15 +54,21 @@ export function LineageCohortTimeline({
 
   if (!focalNode) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-white/40">
+      <div className="flex min-h-[35rem] items-center justify-center text-sm text-white/40">
         No lineage members to display.
       </div>
     )
   }
 
+  // Scroll model (SESSION_0411): the tree is WIDE and TALL at 77 members. Horizontal
+  // overflow scrolls natively *inside* this container (reach the widest cohort), while
+  // vertical flow is content-driven — the container grows to the tree's full height so
+  // the PAGE scrolls top-to-bottom instead of trapping the tree in a fixed-height,
+  // both-axis nested scroller. `overflow-x-auto` is the single axis that scrolls here;
+  // the height is left to content (no `h-full`/`min-h-full`).
   return (
-    <div ref={scrollRef} className="size-full overflow-auto" style={{ scrollbarWidth: "thin" }}>
-      <div className="flex min-h-full min-w-fit flex-col items-center px-4 py-8 sm:px-10 sm:py-12">
+    <div ref={scrollRef} className="w-full overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+      <div className="flex min-w-fit flex-col items-center px-4 py-8 sm:px-10 sm:py-12">
         <AncestorSpine
           ancestors={ancestors}
           matchedMemberIds={matchedMemberIds}
