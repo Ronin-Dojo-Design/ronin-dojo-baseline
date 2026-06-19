@@ -1,56 +1,102 @@
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
-import { Stack } from "~/components/common/stack"
-import { ListingCard } from "~/components/web/listing/listing-card"
+import { Button } from "~/components/common/button"
+import { Card } from "~/components/common/card"
+import { Link } from "~/components/common/link"
 import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import type { DirectoryFacetResult } from "~/lib/directory/facet-result"
 
 /**
- * Shared faceted-directory card. SESSION_0396: renders the normalized
- * `DirectoryFacetResult` (people / organizations / lineage trees) through the shared
- * `ListingCard` (Tool→Listing parity) so directory cards match the Tool card — avatar,
- * trust/claim badges, tag badges, and a View + Save footer. Used by `/directory`,
- * `/directory/profiles`, and `/directory/schools`.
+ * Premium faceted-directory card (SESSION_0414). Renders the normalized
+ * `DirectoryFacetResult` (people / organizations / lineage trees) as a self-contained
+ * card tuned for the BBL roster: large avatar with hover ring, full (wrapping) name —
+ * no hard truncation — a brand-accented rank/discipline chip, trust/claim badges, a
+ * location line, and a View + Save footer. Theme-token only (brand colors come from
+ * `BrandSettings`, never hardcoded). Replaces the prior ListingCard delegation, whose
+ * no-wrap header crushed names to "Ale…".
  */
 export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
+  const rank = result.tags[0]
+  const isPerson = result.type === "person"
+  const viewLabel = isPerson ? "View profile" : "View"
+
   return (
-    <ListingCard
-      href={result.href}
-      name={result.title}
-      media={
-        <Avatar className="size-9 shrink-0">
+    <Card
+      hover={false}
+      className="group relative flex flex-col gap-4 overflow-hidden p-5 ring-1 ring-transparent transition-all duration-300 hover:-translate-y-1 hover:ring-primary/40 hover:shadow-xl hover:shadow-primary/10"
+    >
+      {/* ambient brand glow on hover */}
+      <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-primary/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+
+      <div className="relative flex items-start gap-4">
+        <Avatar className="size-16 rounded-2xl ring-2 ring-border shadow-sm transition group-hover:ring-primary/50">
           {result.imageUrl && <AvatarImage src={result.imageUrl} alt={result.title} />}
-          <AvatarFallback>{result.initials}</AvatarFallback>
+          <AvatarFallback className="bg-gradient-to-br from-accent to-muted text-lg font-bold text-foreground">
+            {result.initials}
+          </AvatarFallback>
         </Avatar>
-      }
-      tagline={result.subtitle}
-      categories={result.tags.map(tag => ({ name: tag }))}
-      headerBadges={
-        (result.trustStatus || result.claimStatus) && (
-          <Stack direction="row" className="ml-auto flex-wrap gap-1">
-            {result.trustStatus && <LineageTrustBadge status={result.trustStatus} />}
-            {result.claimStatus && <LineageClaimBadge status={result.claimStatus} />}
-          </Stack>
-        )
-      }
-      statusBadges={
-        result.badges.length > 0 && (
-          <Stack direction="row" className="flex-wrap gap-1">
-            {result.badges.map(badge => (
-              <Badge key={badge.label} variant={badge.variant}>
-                {badge.label}
-              </Badge>
-            ))}
-          </Stack>
-        )
-      }
-      save={
-        <ListingSaveButton
-          subjectType={result.save.subjectType}
-          subjectId={result.save.subjectId}
-        />
-      }
-    />
+
+        <div className="min-w-0 flex-1 pt-0.5">
+          <Link href={result.href} className="outline-none">
+            <h3 className="line-clamp-2 text-balance text-lg font-bold leading-tight tracking-tight text-foreground transition-colors group-hover:text-primary">
+              {result.title}
+            </h3>
+          </Link>
+
+          {(result.trustStatus || result.claimStatus) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {result.trustStatus && <LineageTrustBadge status={result.trustStatus} />}
+              {result.claimStatus && <LineageClaimBadge status={result.claimStatus} />}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {(rank || result.badges.length > 0) && (
+        <div className="relative flex flex-wrap items-center gap-1.5">
+          {rank && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary ring-1 ring-inset ring-primary/20">
+              <span className="size-1.5 rounded-full bg-primary" />
+              {rank}
+            </span>
+          )}
+          {result.badges.map(badge => (
+            <Badge key={badge.label} variant={badge.variant}>
+              {badge.label}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {result.subtitle && (
+        <p className="relative flex items-center gap-1.5 text-sm text-muted-foreground">
+          {result.type !== "lineageTree" && (
+            <svg
+              viewBox="0 0 24 24"
+              className="size-3.5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M12 21s-6-5.7-6-10a6 6 0 1 1 12 0c0 4.3-6 10-6 10Z" />
+              <circle cx="12" cy="11" r="2" />
+            </svg>
+          )}
+          <span className="truncate">{result.subtitle}</span>
+        </p>
+      )}
+
+      <div className="relative mt-auto flex items-center justify-between border-t border-border/60 pt-3.5">
+        <Button size="sm" variant="secondary" render={<Link href={result.href} />}>
+          {viewLabel}
+        </Button>
+
+        <ListingSaveButton subjectType={result.save.subjectType} subjectId={result.save.subjectId} />
+      </div>
+    </Card>
   )
 }
