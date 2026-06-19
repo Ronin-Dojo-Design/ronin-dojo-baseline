@@ -47,7 +47,7 @@ type NavSheetProps = {
 // Curated BBL nav (SESSION_0416 operator). Posts + Blog both kept for now to
 // compare. Organizations / Disciplines / Tournaments / Courses / Gear / Merch cut.
 const PRIMARY_NAV_ITEMS = [
-  { href: "/lineage", key: "lineage", icon: GitBranchIcon, feature: "lineage" },
+  { href: "/lineage/join", key: "lineage", icon: GitBranchIcon, feature: "lineage" },
   { href: "/directory", key: "directory", icon: ContactRoundIcon, feature: "directory" },
   { href: "/members", key: "members", icon: UsersIcon, feature: "members" },
   { href: "/schools", key: "schools", icon: SchoolIcon, feature: "schools" },

@@ -75,7 +75,7 @@ export const getBrandSiteConfig = (brand: Brand): BrandSiteConfig => {
   const brandConfig = brandConfigs[brand]
   return {
     ...brandConfig,
-    email: env.NEXT_PUBLIC_SITE_EMAIL,
+    email: "welcome@blackbeltlegacy.com",
     url: env.NEXT_PUBLIC_SITE_URL,
     domain: getDomain(env.NEXT_PUBLIC_SITE_URL),
   }
@@ -88,7 +88,7 @@ export const getBrandSiteConfig = (brand: Brand): BrandSiteConfig => {
 export const siteConfig = {
   name: "Baseline Martial Arts",
   slug: "baseline-martial-arts",
-  email: env.NEXT_PUBLIC_SITE_EMAIL,
+  email: "welcome@blackbeltlegacy.com",
   url: env.NEXT_PUBLIC_SITE_URL,
   domain: getDomain(env.NEXT_PUBLIC_SITE_URL),
 }

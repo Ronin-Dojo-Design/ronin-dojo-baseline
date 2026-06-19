@@ -12,7 +12,10 @@
 import "dotenv/config"
 
 import { Section, Text } from "@react-email/components"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 export type MembershipWelcomeStatus = "ACTIVE" | "PENDING"
 

@@ -32,8 +32,10 @@ import { getBrandSiteConfig } from "~/config/site"
  */
 
 const bbl = getBrandSiteConfig(Brand.BBL)
-// Brand-canonical asset base; on the BBL deployment this is blackbeltlegacy.com.
-const ASSET_BASE = bbl.url
+// Brand-canonical asset base — hardcoded to the live BBL domain so the logo + links
+// resolve in mail clients regardless of the deploy/dev NEXT_PUBLIC_SITE_URL (which is
+// localhost in dev, breaking the email logo). Single-brand BBL.
+const ASSET_BASE = "https://blackbeltlegacy.com"
 const LOGO_WHITE = `${ASSET_BASE}/brand/blackbeltlegacy/bbl-logo-white.png`
 
 export type BblEmailWrapperProps = ContainerProps & {

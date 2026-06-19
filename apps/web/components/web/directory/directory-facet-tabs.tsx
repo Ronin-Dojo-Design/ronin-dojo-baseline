@@ -7,7 +7,8 @@ import { cx } from "~/lib/utils"
 const TABS: { value: DirectoryFacetTab; label: string }[] = [
   { value: "people", label: "People" },
   { value: "organizations", label: "Schools & Orgs" },
-  { value: "trees", label: "Lineage Trees" },
+  // "Lineage Trees" toggle hidden for launch (SESSION_0417) — the trees facet still
+  // exists; this just removes the directory toggle.
 ]
 
 /**
