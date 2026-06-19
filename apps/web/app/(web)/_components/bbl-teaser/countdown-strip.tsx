@@ -29,10 +29,10 @@ function computeRemaining(target: number): Remaining {
 function Unit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
-      <span className="text-2xl font-black tabular-nums text-foreground sm:text-3xl">
+      <span className="text-2xl font-black tabular-nums text-white sm:text-3xl">
         {String(value).padStart(2, "0")}
       </span>
-      <span className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+      <span className="mt-1 text-[0.55rem] font-bold uppercase tracking-[0.22em] text-white/45">
         {label}
       </span>
     </div>
@@ -56,7 +56,7 @@ export function CountdownStrip({ launchAt }: { launchAt: string }) {
 
   if (!hasTarget || !mounted || !remaining) {
     return (
-      <span className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">
+      <span className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">
         Launching soon
       </span>
     )

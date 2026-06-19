@@ -10,11 +10,10 @@ import { Footer } from "~/components/web/footer"
 import { Header } from "~/components/web/header"
 import { Backdrop } from "~/components/web/ui/backdrop"
 import { Container } from "~/components/web/ui/container"
-import { getBrandSiteConfig, siteConfig } from "~/config/site"
+import { siteConfig } from "~/config/site"
 import { env } from "~/env"
 import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
 import { getRequestBrand } from "~/lib/brand-context"
-import { findBrandSettings } from "~/server/admin/brand-settings/queries"
 import { BblTeaserPage } from "./_components/bbl-teaser"
 
 const isBblCountdownActive = () =>
@@ -31,13 +30,7 @@ export default async function ({ children }: PropsWithChildren) {
   // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
   // cookie skip it. Other brands are never affected.
   if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
-    const brandSettings = await findBrandSettings(Brand.BBL)
-    return (
-      <BblTeaserPage
-        logoUrl={brandSettings?.logoUrl ?? null}
-        brandName={getBrandSiteConfig(Brand.BBL).name}
-      />
-    )
+    return <BblTeaserPage />
   }
 
   return (

@@ -6,6 +6,8 @@
  * auto-scroll as a seamless vertical marquee.
  */
 
+export const BBL_LOGO_WHITE = "/brand/blackbeltlegacy/bbl-logo-white.png"
+
 const HERO_BASE = "/brand/blackbeltlegacy/images/hero"
 
 /** Hero photos shown inside the phone mockups (order is the visual deal-out order). */
