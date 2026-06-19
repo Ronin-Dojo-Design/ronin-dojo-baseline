@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic"
-import { Avatar, AvatarFallback } from "~/components/common/avatar"
 import { OrgClaimCta } from "~/components/web/claims/org-claim-cta"
 import { ListingDetail } from "~/components/web/listing/listing-detail"
+import { ListingHeroAvatar } from "~/components/web/listing/listing-hero-avatar"
 import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -62,9 +62,11 @@ export function SchoolDetail({
 
         <ListingDetail
           media={
-            <Avatar className="size-12">
-              <AvatarFallback>{schoolInitials}</AvatarFallback>
-            </Avatar>
+            <ListingHeroAvatar
+              name={school.name}
+              logoUrl={school.orgSettings?.logoUrl}
+              initials={schoolInitials}
+            />
           }
           title={school.name}
           badges={<SchoolHeroBadges school={school} />}

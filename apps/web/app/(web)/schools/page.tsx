@@ -36,7 +36,6 @@ export default async function SchoolsPage({ searchParams }: PageProps) {
       <Suspense fallback={<SchoolListingSkeleton />}>
         <SchoolQuery
           searchParams={searchParams}
-          brand={brand}
           options={{ enableFilters: true, enableSort: true }}
         />
       </Suspense>

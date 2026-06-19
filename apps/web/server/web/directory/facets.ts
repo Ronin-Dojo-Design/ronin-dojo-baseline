@@ -92,25 +92,23 @@ export async function getDirectoryFacets({
 }
 
 // Orgs facet: discipline + location apply; org-slug does not (it would just be self-selection).
+// Single-brand (SESSION_0415): `searchOrganizations` is no longer brand-scoped, so this facet
+// does not thread `brand` — the org roster is the whole (single-brand) Organization set.
 async function organizationsFacet({
-  brand,
   params,
   page,
   perPage,
 }: FacetBuilderArgs): Promise<DirectoryFacetPage> {
-  const { schools, total } = await searchOrganizations(
-    {
-      q: params.q,
-      type: params.orgType ?? "",
-      discipline: params.discipline,
-      city: params.city,
-      region: params.region,
-      sort: "",
-      page,
-      perPage,
-    },
-    brand,
-  )
+  const { schools, total } = await searchOrganizations({
+    q: params.q,
+    type: params.orgType ?? "",
+    discipline: params.discipline,
+    city: params.city,
+    region: params.region,
+    sort: "",
+    page,
+    perPage,
+  })
 
   return {
     tab: "organizations",

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -23,7 +24,14 @@ function beltTint(hex: string | null) {
  * location line, and a View + Save footer. Theme-token only for brand surfaces; the belt
  * tint is per-rank data (ADR 0022), readable on the dark card via a light label + swatch.
  */
-export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
+export function FacetResultCard({
+  result,
+  style,
+}: {
+  result: DirectoryFacetResult
+  /** Optional inline style (e.g. CSS `order`) forwarded by grid consumers like `SchoolList`. */
+  style?: CSSProperties
+}) {
   const rank = result.tags[0]
   const isPerson = result.type === "person"
   const viewLabel = isPerson ? "View profile" : "View"
@@ -32,6 +40,7 @@ export function FacetResultCard({ result }: { result: DirectoryFacetResult }) {
   return (
     <Card
       hover={false}
+      style={style}
       className="group relative flex flex-col gap-4 overflow-hidden p-5 ring-1 ring-transparent transition-all duration-300 hover:-translate-y-1 hover:ring-primary/40 hover:shadow-xl hover:shadow-primary/10"
     >
       {/* ambient brand glow on hover */}
