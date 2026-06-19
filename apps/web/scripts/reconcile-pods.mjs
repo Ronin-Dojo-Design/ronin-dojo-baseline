@@ -73,8 +73,18 @@ const real = v => {
 
 // Parse "July 8th, 2009" | "2009-07-08" | "June 1st, 2004" → ISO yyyy-mm-dd (or null).
 const MONTHS = {
-  january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7,
-  august: 8, september: 9, october: 10, november: 11, december: 12,
+  january: 1,
+  february: 2,
+  march: 3,
+  april: 4,
+  may: 5,
+  june: 6,
+  july: 7,
+  august: 8,
+  september: 9,
+  october: 10,
+  november: 11,
+  december: 12,
 }
 function parseDate(v) {
   const t = (v ?? "").trim()
@@ -117,7 +127,7 @@ for (const { header, data } of parsed) {
 const pickName = v => {
   const t = (v ?? "").trim()
   if (!real(t)) return null
-  if (t.startsWith("a:") && t.includes('{')) {
+  if (t.startsWith("a:") && t.includes("{")) {
     let m = t.match(/post_title";s:\d+:"([^"]*)"/) // related post (member/school)
     if (m) return m[1]
     m = t.match(/"name";s:\d+:"([^"]*)"/) // related term (rank)
@@ -130,7 +140,11 @@ const pickName = v => {
 
 // ── reconcile per person across all files. ───────────────────────────────────
 const byKey = new Map()
-const norm = s => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+const norm = s =>
+  (s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
 let skippedSpam = 0,
   skippedDraft = 0
 
@@ -212,7 +226,9 @@ writeFileSync(
   JSON.stringify({ people, generatedFrom: files }, null, 2),
 )
 
-console.log(`Parsed ${files.length} file(s); skipped ${skippedSpam} spam, ${skippedDraft} non-publish.`)
+console.log(
+  `Parsed ${files.length} file(s); skipped ${skippedSpam} spam, ${skippedDraft} non-publish.`,
+)
 console.log(`People: ${people.length}`)
 console.log(`  with any belt ladder entry: ${withLadder.length}`)
 console.log(`  with ≥1 parsed promotion DATE: ${withDate.length}`)
