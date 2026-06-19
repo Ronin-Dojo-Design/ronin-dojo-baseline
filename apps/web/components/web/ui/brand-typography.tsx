@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import { Brand } from "~/.generated/prisma/client"
+import type { Brand } from "~/.generated/prisma/client"
 import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
 import { cx } from "~/lib/utils"
 
@@ -52,7 +52,7 @@ export const bblHeadingScopeClass =
 type BrandTypographyProps = ComponentProps<"div"> & { brand: Brand }
 
 export const BrandTypography = ({ brand, className, ...props }: BrandTypographyProps) => {
-  const isBbl = brand === Brand.BBL
+  const isBbl = brand === "BBL"
 
   return (
     <div

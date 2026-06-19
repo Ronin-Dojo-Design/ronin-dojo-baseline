@@ -6,6 +6,7 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
+import { bblPortalTypographyClass } from "~/lib/fonts"
 import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
@@ -230,6 +231,7 @@ export function LineageTreeBoard({
         isAdmin={!!capability?.canEditTree}
         activeTab={drawerTab}
         onTabChange={setDrawerTab}
+        contentClassName={bblPortalTypographyClass}
       />
     </>
   )

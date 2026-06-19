@@ -51,6 +51,13 @@ export type LineageProfileDrawerProps = {
    */
   activeTab?: LineageProfileDrawerTab
   onTabChange?: (tab: LineageProfileDrawerTab) => void
+  /**
+   * Optional classes applied to the portaled DrawerContent root.
+   *
+   * Brand-aware consumers use this to thread font variable classes into the
+   * portal without hardcoding brand tokens inside the shared drawer.
+   */
+  contentClassName?: string
   /** Focal member's students (visual children in this tree) for the drawer carousel. */
   students?: LineageTreeMemberRow[]
   /** Swap the drawer to a tapped student — recursive drill-down. */

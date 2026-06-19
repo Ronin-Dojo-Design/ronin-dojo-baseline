@@ -15,6 +15,7 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/common/tabs"
 import type { PromoterChangeContext } from "~/components/web/lineage/promoter-change-modal"
+import { cx } from "~/lib/utils"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 import { DrawerIdentityHeader } from "./drawer-header"
 import type {
@@ -63,6 +64,7 @@ export function LineageProfileDrawer({
   isAdmin,
   activeTab,
   onTabChange,
+  contentClassName,
   students,
   onSelectStudent,
 }: LineageProfileDrawerProps) {
@@ -78,7 +80,10 @@ export function LineageProfileDrawer({
       <DrawerContent
         showOverlay={!isDesktopPanel}
         containerClassName="md:pt-6! md:[@media(min-height:1000px)]:pt-6!"
-        className="md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0"
+        className={cx(
+          contentClassName,
+          "md:ml-auto md:mr-0 md:grid-rows-[auto_minmax(0,1fr)_auto] md:max-h-[calc(100dvh-3rem)] md:h-[calc(100dvh-3rem)] md:max-w-xl md:p-0",
+        )}
       >
         {!profile ? (
           <Stack direction="column" size="md" className="p-6">

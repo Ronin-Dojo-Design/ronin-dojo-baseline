@@ -1,6 +1,6 @@
 import { Geist, Inter, Poppins } from "next/font/google"
 import type { FontWeight } from "satori"
-import { Brand } from "~/.generated/prisma/client"
+import type { Brand } from "~/.generated/prisma/client"
 import { cx } from "~/lib/utils"
 
 export const fontSans = Geist({
@@ -42,7 +42,23 @@ export const bblBodyFont = Inter({ subsets: ["latin"], variable: "--font-bbl-bod
  * layout box (the page's section rhythm is unaffected).
  */
 export const brandFontVariables = (brand: Brand): string | undefined =>
-  brand === Brand.BBL ? cx(bblHeadingFont.variable, bblBodyFont.variable) : undefined
+  brand === "BBL" ? cx(bblHeadingFont.variable, bblBodyFont.variable) : undefined
+
+/**
+ * Full BBL type scope for a PORTALED surface (a drawer / popup) that renders
+ * outside the page's `<BrandTypography>` wrapper and so loses its font vars.
+ * Unlike `brandFontVariables` (which only DEFINES the vars), this also CONSUMES
+ * them — Inter body + Poppins descendant headings — via the nested `var()`
+ * fallback idiom, so the surface degrades to the app fonts off the BBL var and a
+ * non-BBL caller renders unchanged. (Heading rule mirrors `bblHeadingScopeClass`.)
+ * Pass to a portal content's `className` / `contentClassName`.
+ */
+export const bblPortalTypographyClass = cx(
+  bblHeadingFont.variable,
+  bblBodyFont.variable,
+  "[font-family:var(--font-bbl-body,var(--font-sans))]",
+  "[&_:is(h1,h2,h3,h4)]:[font-family:var(--font-bbl-heading,var(--font-display))]!",
+)
 
 export const loadGoogleFont = async (font: string, weight: FontWeight) => {
   const url = `https://fonts.googleapis.com/css2?family=${font}:wght@${weight}`
