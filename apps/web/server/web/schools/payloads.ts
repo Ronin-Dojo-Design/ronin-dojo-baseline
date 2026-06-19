@@ -81,7 +81,7 @@ export const schoolDetailPayload = {
       createdAt: true,
       user: { select: { id: true, name: true, image: true } },
       discipline: { select: { id: true, name: true, slug: true } },
-      rank: { select: { id: true, name: true, sortOrder: true } },
+      rank: { select: { id: true, name: true, sortOrder: true, colorHex: true } },
       roleAssignments: {
         select: {
           role: {

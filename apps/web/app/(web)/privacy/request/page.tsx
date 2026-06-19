@@ -3,8 +3,14 @@ import { redirect } from "next/navigation"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Prose } from "~/components/common/prose"
+import {
+  bblHeadingFontClass,
+  bblProseHeadingFontClass,
+  BrandTypography,
+} from "~/components/web/ui/brand-typography"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getServerSession } from "~/lib/auth"
+import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { DsrForm } from "./_components/dsr-form"
 
@@ -33,15 +39,16 @@ export default async function DataSubjectRequestPage() {
   }
 
   const { metadata } = await getData()
+  const brand = await getRequestBrand()
 
   return (
-    <>
+    <BrandTypography brand={brand}>
       <Intro>
-        <IntroTitle>{metadata.title}</IntroTitle>
+        <IntroTitle className={bblHeadingFontClass}>{metadata.title}</IntroTitle>
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
 
-      <Prose>
+      <Prose className={bblProseHeadingFontClass}>
         <p>
           You are signed in as <strong>{session.user.email}</strong>. Submissions on this form are
           tied to that account.
@@ -59,6 +66,6 @@ export default async function DataSubjectRequestPage() {
       </Note>
 
       <DsrForm />
-    </>
+    </BrandTypography>
   )
 }

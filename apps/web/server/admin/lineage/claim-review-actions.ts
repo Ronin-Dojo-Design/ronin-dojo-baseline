@@ -1,18 +1,11 @@
 "use server"
 
 import { Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
-import {
-  bblClaimCompTermDays,
-  getLineageCompEntitlementKeys,
-  LINEAGE_ELITE_ENTITLEMENT_KEY,
-} from "~/lib/entitlements/lineage-comp"
-import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import { adminActionClient } from "~/lib/safe-actions"
+import { finalizeLineageNodeClaim } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
-import { grantComp } from "~/server/entitlements/comp-grants"
-import { attachAccount } from "~/server/identity/person-service"
 import type { db as appDb } from "~/services/db"
 
 /**
@@ -99,145 +92,20 @@ export const applyLineageClaimReview = async ({
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
-        const member = await tx.lineageTreeMember.findUnique({
-          where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
-          select: { id: true },
+        // The APPROVED-branch identity merge + access + comp wiring lives in the shared
+        // `finalizeLineageNodeClaim` so the admin path and the BBL token-accept path can
+        // never drift. The manual `input.comp` override is threaded through `compOverride`.
+        const finalized = await finalizeLineageNodeClaim(tx, {
+          claim,
+          brand,
+          actorUserId: reviewerUserId,
+          compOverride: input.comp ?? null,
+          now: reviewTimestamp,
         })
-
-        if (!member) {
-          throw new Error(CLAIM_REVIEW_ERROR.NODE_NOT_IN_TREE)
-        }
-
-        const alreadyApproved = await tx.lineageClaimRequest.findFirst({
-          where: {
-            treeId: claim.treeId,
-            nodeId: claim.nodeId,
-            status: "APPROVED",
-            NOT: { id: claim.id },
-          },
-          select: { id: true, claimantUserId: true },
-        })
-
-        if (alreadyApproved && alreadyApproved.claimantUserId !== claim.claimantUserId) {
-          throw new Error(CLAIM_REVIEW_ERROR.NODE_ALREADY_APPROVED)
-        }
-
-        const claimantExistingNode = await tx.lineageNode.findFirst({
-          where: {
-            passport: { userId: claim.claimantUserId },
-            NOT: { id: claim.nodeId },
-          },
-          select: { id: true },
-        })
-
-        if (claimantExistingNode) {
-          throw new Error(CLAIM_REVIEW_ERROR.CLAIMANT_HAS_NODE)
-        }
-
-        // D1: attach the claimant account to the node's Passport (the node never moves). One attach
-        // lights up every satellite (profile + node + ranks + affiliations) at once.
-        if (claim.node.passport.userId !== claim.claimantUserId) {
-          // Claim merge (SESSION_0392): every signed-up user has a Passport (signup's identity shell).
-          // Claiming means "I AM this imported person", so the claimant's own signup Passport is
-          // superseded by the richer claimed identity. The CLAIMANT_HAS_NODE guard above already
-          // ensured that Passport owns no lineage node; delete it (its empty signup directory profile
-          // cascades) so the account is free to bind to the claimed Passport. The claimant User and
-          // all account-side CARRY rows (memberships, entitlements, …) are untouched.
-          const claimantPassport = await tx.passport.findUnique({
-            where: { userId: claim.claimantUserId },
-            select: { id: true },
-          })
-          if (claimantPassport && claimantPassport.id !== claim.node.passportId) {
-            await tx.passport.delete({ where: { id: claimantPassport.id } })
-          }
-
-          await attachAccount(
-            { passportId: claim.node.passportId, userId: claim.claimantUserId },
-            tx,
-          )
-          ownershipTransferred = true
-          passportAccountAttached = true
-        }
-
-        const existingGrant = await tx.lineageTreeAccess.findFirst({
-          where: {
-            treeId: claim.treeId,
-            userId: claim.claimantUserId,
-            role: "NODE_EDITOR",
-            revokedAt: null,
-            OR: [{ nodeId: claim.nodeId }, { memberId: member.id }],
-          },
-          select: { id: true, nodeId: true, memberId: true },
-        })
-
-        if (existingGrant) {
-          const repairedGrant =
-            existingGrant.nodeId === claim.nodeId && existingGrant.memberId === member.id
-              ? existingGrant
-              : await tx.lineageTreeAccess.update({
-                  where: { id: existingGrant.id },
-                  data: {
-                    nodeId: claim.nodeId,
-                    memberId: member.id,
-                  },
-                  select: { id: true },
-                })
-
-          accessGrantId = repairedGrant.id
-        } else {
-          const grant = await tx.lineageTreeAccess.create({
-            data: {
-              treeId: claim.treeId,
-              userId: claim.claimantUserId,
-              grantedById: reviewerUserId,
-              role: "NODE_EDITOR",
-              nodeId: claim.nodeId,
-              memberId: member.id,
-            },
-            select: { id: true },
-          })
-
-          accessGrantId = grant.id
-        }
-
-        if (input.comp) {
-          // Manual admin comp override (any brand) — takes precedence over the BBL auto-grant.
-          const compResult = await grantComp({
-            db: tx,
-            brand,
-            grantorUserId: reviewerUserId,
-            granteeUserId: claim.claimantUserId,
-            entitlementKeys: getLineageCompEntitlementKeys(input.comp.tier),
-            term: input.comp.termDays ? { days: input.comp.termDays } : null,
-            reason: `lineage-claim-${claim.id}`,
-            now: reviewTimestamp,
-          })
-          compGrantIds = compResult.grants.map(grant => grant.id)
-        } else if (brand === Brand.BBL) {
-          // BBL "comp gift" epic (SESSION_0403): claiming an imported placeholder
-          // Passport comps the Elite tier — Dirty Dozen cohort for life, everyone
-          // else for one year. Detected off the claimed node's visual-group cohort.
-          const cohortMember = await tx.lineageTreeMember.findUnique({
-            where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
-            select: { visualGroup: { select: { label: true } } },
-          })
-          const isDirtyDozen = cohortMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
-
-          const compResult = await grantComp({
-            db: tx,
-            brand,
-            grantorUserId: reviewerUserId,
-            granteeUserId: claim.claimantUserId,
-            entitlementKeys: getLineageCompEntitlementKeys(LINEAGE_ELITE_ENTITLEMENT_KEY),
-            term: (() => {
-              const days = bblClaimCompTermDays(isDirtyDozen)
-              return days ? { days } : null
-            })(),
-            reason: `lineage-claim-${claim.id}`,
-            now: reviewTimestamp,
-          })
-          compGrantIds = compResult.grants.map(grant => grant.id)
-        }
+        accessGrantId = finalized.accessGrantId
+        compGrantIds = finalized.compGrantIds
+        ownershipTransferred = finalized.ownershipTransferred
+        passportAccountAttached = finalized.passportAccountAttached
       }
 
       const updated = await tx.lineageClaimRequest.update({

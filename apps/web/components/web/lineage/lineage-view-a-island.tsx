@@ -569,7 +569,11 @@ export function LineageViewAIsland({
             style={
               {
                 width: "100%",
-                height: "clamp(560px, 78vh, 880px)",
+                // SESSION_0411: content-driven height (only a floor). The fixed
+                // `clamp(560px,78vh,880px)` cap trapped the 77-member tree in a
+                // both-axis nested scroller; now the box grows to the tree's full
+                // height so the page scrolls vertically to the bottom. Horizontal
+                // overflow still scrolls inside the timeline (overflow-x-auto).
                 minHeight: 560,
                 background: "#050505",
               } as CSSProperties
@@ -607,9 +611,12 @@ export function LineageViewAIsland({
             )}
           </div>
 
-          {/* Depth controls: bottom-right on mobile so they never crowd the
-              top-left hint; back to top-right on sm+. */}
-          <div className="absolute bottom-3 right-3 z-20 flex max-w-[calc(100%-1.5rem)] flex-row gap-2 sm:bottom-auto sm:right-4 sm:top-4 sm:flex-col">
+          {/* Depth controls — pinned top-right on all breakpoints (SESSION_0411):
+              the canvas now grows with the tree (page-vertical scroll), so a
+              bottom-pinned control would sit at the far bottom of a tall tree and
+              scroll out of reach. Top-right keeps it visible on initial paint and
+              clear of the top-left "Tap to recenter" hint. */}
+          <div className="absolute right-3 top-3 z-20 flex max-w-[calc(100%-1.5rem)] flex-col gap-2 sm:right-4 sm:top-4">
             <DepthStepper label="Ancestry" value={ancestryDepth} onChange={setAncestryDepth} />
             <DepthStepper label="Progeny" value={progenyDepth} onChange={setProgenyDepth} />
           </div>
@@ -651,8 +658,9 @@ export function LineageViewAIsland({
           </div>
 
           {copied && (
-            // Lifted above the bottom-right depth steppers on mobile; centered on sm+.
-            <div className="absolute bottom-16 left-1/2 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-white px-4 py-2 text-xs font-black text-black shadow-2xl sm:bottom-4">
+            // SESSION_0411: fixed to the viewport so the transient confirmation stays
+            // visible no matter how far the page has scrolled down the tall tree.
+            <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-white/10 bg-white px-4 py-2 text-xs font-black text-black shadow-2xl">
               Focus link copied
             </div>
           )}

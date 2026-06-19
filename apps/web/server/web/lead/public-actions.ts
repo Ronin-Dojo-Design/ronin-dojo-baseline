@@ -166,6 +166,26 @@ export const createJoinLegacyInterest = publicActionClient
     const membershipPath = parsedInput.membershipPath as BblJoinLegacyMembershipPath
     const claimSelected = Boolean(parsedInput.treeId && parsedInput.nodeId)
 
+    // Resolve whether this submission targets a real, claimable, EXISTING node.
+    // Hoisted so the Tool-skip (#4: don't spawn a duplicate placeholder for a
+    // claim of an existing node) and the signed-out sign-in handoff (#2) share
+    // one source of truth — and so it's evaluated regardless of session.
+    const claimTree =
+      parsedInput.treeId && parsedInput.nodeId
+        ? await db.lineageTree.findFirst({
+            where: { id: parsedInput.treeId, brand, isPublished: true, isClaimable: true },
+            select: { id: true },
+          })
+        : null
+    const claimMember =
+      claimTree && parsedInput.nodeId
+        ? await db.lineageTreeMember.findFirst({
+            where: { treeId: claimTree.id, nodeId: parsedInput.nodeId, isClaimable: true },
+            select: { id: true },
+          })
+        : null
+    const isClaimOfExistingNode = Boolean(claimTree && claimMember)
+
     const notes = [
       `Role: ${role.replaceAll("_", " ").toLowerCase()}`,
       rankSummary ? `Rank/history: ${rankSummary}` : null,
@@ -222,63 +242,50 @@ export const createJoinLegacyInterest = publicActionClient
       select: leadPayload,
     })
 
-    const toolSlug = await generateUniqueSlug({
-      source: `${fullName} legacy profile`,
-      isSlugTaken: createSlugTakenCheck(db.tool),
-    })
+    // Claiming an EXISTING placeholder node should not spawn a second pending
+    // "Legacy Profile" Tool — that's a duplicate identity an admin would have to
+    // reconcile. Only the pure-lead path (no node, or an invalid/non-claimable
+    // node) creates the Tool. (#4)
+    let tool: { id: string; slug: string } | null = null
+    if (!isClaimOfExistingNode) {
+      const toolSlug = await generateUniqueSlug({
+        source: `${fullName} legacy profile`,
+        isSlugTaken: createSlugTakenCheck(db.tool),
+      })
 
-    const tool = await db.tool.create({
-      data: {
-        name: `${fullName} Legacy Profile`,
-        slug: toolSlug,
-        websiteUrl: profileUrl ?? `https://blackbeltlegacy.com/people/${toolSlug}`,
-        tagline: rankSummary ?? "Black Belt Legacy profile submission",
-        description:
-          bio ?? `Lineage profile intake submitted through Join the Legacy for ${fullName}.`,
-        submitterName: fullName,
-        submitterEmail: parsedInput.email.trim().toLowerCase(),
-        submitterNote: notes || null,
-        status: ToolStatus.Pending,
-      },
-      select: { id: true, slug: true },
-    })
+      tool = await db.tool.create({
+        data: {
+          name: `${fullName} Legacy Profile`,
+          slug: toolSlug,
+          websiteUrl: profileUrl ?? `https://blackbeltlegacy.com/people/${toolSlug}`,
+          tagline: rankSummary ?? "Black Belt Legacy profile submission",
+          description:
+            bio ?? `Lineage profile intake submitted through Join the Legacy for ${fullName}.`,
+          submitterName: fullName,
+          submitterEmail: parsedInput.email.trim().toLowerCase(),
+          submitterNote: notes || null,
+          status: ToolStatus.Pending,
+        },
+        select: { id: true, slug: true },
+      })
+    }
 
     let claimCreated = false
-    if (session?.user?.id && parsedInput.treeId && parsedInput.nodeId) {
-      const tree = await db.lineageTree.findFirst({
+    if (session?.user?.id && isClaimOfExistingNode && claimTree && parsedInput.nodeId) {
+      const existingClaim = await db.lineageClaimRequest.findFirst({
         where: {
-          id: parsedInput.treeId,
-          brand,
-          isPublished: true,
-          isClaimable: true,
+          treeId: claimTree.id,
+          nodeId: parsedInput.nodeId,
+          claimantUserId: session.user.id,
+          status: { in: ["PENDING", "APPROVED"] },
         },
         select: { id: true },
       })
 
-      const member = tree
-        ? await db.lineageTreeMember.findFirst({
-            where: { treeId: tree.id, nodeId: parsedInput.nodeId, isClaimable: true },
-            select: { id: true },
-          })
-        : null
-
-      const existingClaim =
-        tree && member
-          ? await db.lineageClaimRequest.findFirst({
-              where: {
-                treeId: tree.id,
-                nodeId: parsedInput.nodeId,
-                claimantUserId: session.user.id,
-                status: { in: ["PENDING", "APPROVED"] },
-              },
-              select: { id: true },
-            })
-          : null
-
-      if (tree && member && !existingClaim) {
+      if (!existingClaim) {
         await db.lineageClaimRequest.create({
           data: {
-            treeId: tree.id,
+            treeId: claimTree.id,
             nodeId: parsedInput.nodeId,
             claimantUserId: session.user.id,
             claimantNote: notes || "Submitted through Join the Legacy.",
@@ -298,7 +305,7 @@ export const createJoinLegacyInterest = publicActionClient
           ...(lead.meta && typeof lead.meta === "object" && !Array.isArray(lead.meta)
             ? lead.meta
             : {}),
-          toolSlug: tool.slug,
+          toolSlug: tool?.slug ?? null,
           claimCreated,
         } satisfies Prisma.InputJsonObject,
       },
@@ -344,9 +351,9 @@ export const createJoinLegacyInterest = publicActionClient
 
     return {
       leadId: lead.id,
-      toolSlug: tool.slug,
+      toolSlug: tool?.slug ?? null,
       checkoutUrl,
       claimCreated,
-      claimRequiresSignIn: claimSelected && !session?.user?.id,
+      claimRequiresSignIn: isClaimOfExistingNode && !session?.user?.id,
     }
   })
