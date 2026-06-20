@@ -65,6 +65,13 @@ export function useJoinWizard({
       // during review (or via a future emailed magic-link).
       const path = form.getValues("membershipPath")
       if (path === "PREMIUM" || path === "ELITE") {
+        // Guest paid submission: a checkout magic link was emailed — show the success
+        // ("check your email") state so they sign in and finish checkout from the picker.
+        // Signed-in users continue straight to the membership checkout.
+        if (data.checkoutEmailSent) {
+          setSubmitted(true)
+          return
+        }
         router.push(data.checkoutUrl)
         return
       }
