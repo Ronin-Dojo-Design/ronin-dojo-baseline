@@ -42,6 +42,8 @@ beforeEach(() => {
 })
 
 describe("notifyAdminOfFeedback", () => {
+  // 30s timeout: the first react-email render() in a cold process can exceed bun's
+  // default 5s test timeout (cold-start flake), which would flake CI.
   it("emails the BBL operator inbox with the submitter as Reply-To", async () => {
     const { notifyAdminOfFeedback } = await import("~/lib/notifications")
 
@@ -61,5 +63,5 @@ describe("notifyAdminOfFeedback", () => {
     expect(payload.subject).toContain("Black Belt Legacy feedback")
     // The submitter's message survives into the rendered email body.
     expect(payload.text).toContain("discipline filter")
-  })
+  }, 30_000)
 })

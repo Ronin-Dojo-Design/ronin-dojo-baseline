@@ -14,8 +14,17 @@
  * NOTE: a real submit writes a Report row (type=Feedback) and, in an env with
  * RESEND configured, sends the operator notification. Point baseURL at a NON-prod
  * environment unless you intend to deliver a real test to welcome@blackbeltlegacy.com.
+ *
+ * CI: this is a LOCAL/MANUAL verification aid (it drives the engagement-gated toast in a
+ * real browser to capture the screenshots). It is skipped in CI to keep the blocking
+ * Playwright lane deterministic — run it locally to generate the screenshots.
  */
 import { expect, test } from "@playwright/test"
+
+// Skip in CI — see header. Runs locally where a browser + running app are available.
+test.beforeEach(() => {
+  test.skip(Boolean(process.env.CI), "feedback-widget e2e is a local/manual screenshot aid")
+})
 
 const BBL_SLUG = "black-belt-legacy"
 const PAGE_VIEWS_KEY = `${BBL_SLUG}-page-views`
