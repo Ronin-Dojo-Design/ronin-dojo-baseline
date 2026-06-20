@@ -70,8 +70,8 @@ export function ProfileClaimForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="flex flex-col gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full min-w-0">
+        <div className="flex min-w-0 flex-col gap-4">
           <FormField
             control={form.control}
             name="relationship"
