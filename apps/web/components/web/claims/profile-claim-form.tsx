@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { Note } from "~/components/common/note"
-import { Stack } from "~/components/common/stack"
 import { submitProfileClaimRequest } from "~/server/web/claims/claim-actions"
 
 /**
@@ -72,7 +71,7 @@ export function ProfileClaimForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Stack direction="column" size="sm">
+        <div className="flex flex-col gap-4">
           <FormField
             control={form.control}
             name="relationship"
@@ -107,7 +106,7 @@ export function ProfileClaimForm({
           <Note className="text-xs">
             An admin reviews every claim before any profile is handed over.
           </Note>
-        </Stack>
+        </div>
       </form>
     </Form>
   )
