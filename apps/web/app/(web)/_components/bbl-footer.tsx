@@ -143,18 +143,7 @@ export function BblFooter() {
       <div className="border-t border-white/10 bg-black">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-4 text-xs text-white/40 sm:flex-row sm:px-10">
           <p>© {year} Black Belt Legacy. All rights reserved.</p>
-          <p>
-            A{" "}
-            <a
-              href="https://ronindojo.design"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-red-500 transition-colors hover:text-red-400"
-            >
-              Ronin Dojo Design
-            </a>{" "}
-            production
-          </p>
+          <p>A Ronin Dojo Design production</p>
         </div>
       </div>
     </footer>
