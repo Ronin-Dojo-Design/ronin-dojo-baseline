@@ -1,7 +1,7 @@
 "use client"
 
 import { useAction } from "next-safe-action/hooks"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 import { captureBblEmail } from "~/server/web/bbl/capture-email"
 import { BBL_LOGO_BLACK, BBL_LOGO_WHITE } from "./bbl-teaser-types"
 
@@ -11,16 +11,45 @@ import { BBL_LOGO_BLACK, BBL_LOGO_WHITE } from "./bbl-teaser-types"
  * Submit persists to THIS app's DB via the public `captureBblEmail` server action.
  * Loading / success / error states are driven by `useAction`.
  *
- * `theme` (SESSION_0419): the card was a dark cinematic card built for the teaser holding
- * page (dark bg). It is also rendered at the bottom of the LIGHT landing page (`/lineage/join`,
- * home), where the white logo + dark inputs disappeared on white. `theme="light"` swaps to the
- * black wordmark + a light card/inputs; `theme="dark"` (default) keeps the teaser look.
+ * `theme` (SESSION_0419 / SESSION_0420): the card was a dark cinematic card built for the teaser
+ * holding page (dark bg). It is also rendered at the bottom of the LIGHT landing page
+ * (`/lineage/join`, home), where the white logo + dark inputs disappeared on white. `theme="light"`
+ * swaps to the black wordmark + a light card/inputs; `theme="dark"` keeps the teaser look.
+ *
+ * When `theme` is OMITTED (SESSION_0420), the card follows the user's system color-scheme
+ * preference (`prefers-color-scheme`) — light system → light card, dark system → dark card. With
+ * no preference (or SSR / no JS), it defaults to BLACK (dark). Callers that need a fixed look
+ * (the dark teaser page, the light landing) still pass `theme` explicitly.
  */
 type EmailCaptureProps = {
   theme?: "dark" | "light"
 }
 
-export function EmailCapture({ theme = "dark" }: EmailCaptureProps) {
+/**
+ * Resolve the effective light/dark theme. An explicit `theme` prop always wins; otherwise track
+ * the system `prefers-color-scheme`, defaulting to BLACK (dark) when there is no preference, during
+ * SSR, or before hydration. We only flip to light when the system *explicitly* prefers light, so a
+ * no-preference environment stays black.
+ */
+function useResolvedTheme(theme?: "dark" | "light"): "dark" | "light" {
+  const [systemTheme, setSystemTheme] = useState<"dark" | "light">("dark")
+
+  useEffect(() => {
+    if (theme) {
+      return
+    }
+    const query = window.matchMedia("(prefers-color-scheme: light)")
+    const apply = () => setSystemTheme(query.matches ? "light" : "dark")
+    apply()
+    query.addEventListener("change", apply)
+    return () => query.removeEventListener("change", apply)
+  }, [theme])
+
+  return theme ?? systemTheme
+}
+
+export function EmailCapture({ theme }: EmailCaptureProps) {
+  const resolvedTheme = useResolvedTheme(theme)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
@@ -37,7 +66,7 @@ export function EmailCapture({ theme = "dark" }: EmailCaptureProps) {
     execute({ email: email.trim(), name: name.trim() || undefined })
   }
 
-  const isLight = theme === "light"
+  const isLight = resolvedTheme === "light"
   const s = {
     card: isLight
       ? "border-neutral-200 bg-white shadow-sm"

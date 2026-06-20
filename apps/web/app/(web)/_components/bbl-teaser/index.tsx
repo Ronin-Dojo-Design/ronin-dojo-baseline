@@ -89,7 +89,7 @@ export function BblTeaserPage() {
           )}
 
           <div className="mt-7">
-            <EmailCapture />
+            <EmailCapture theme="dark" />
           </div>
         </div>
       </div>
