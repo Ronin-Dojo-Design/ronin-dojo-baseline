@@ -9,6 +9,7 @@ import {
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailBblBuildTour } from "~/emails/bbl-build-tour"
 import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
 import { EmailBblTheLongRoad } from "~/emails/bbl-the-long-road"
@@ -660,6 +661,25 @@ export const notifyFounderOfTheLongRoad = async (params: BblFounderLongRoadParam
       claimUrl: params.claimUrl,
       variant: params.variant,
     }),
+  })
+}
+
+export type BblBuildTourParams = {
+  brand: Brand
+  to: string
+  /** "founder" = Bob ("Mr. Bass," + both-inbox footer). "tony" = Tony ("Tony," + his inbox). */
+  variant?: "founder" | "tony"
+}
+
+/** "Explore the Build" — live docs navigator + knowledge-graph links (transparency, no asks). */
+export const notifyFounderOfBuildTour = async (params: BblBuildTourParams) => {
+  if (await shouldSkipForRateLimit(`bbl-build-tour:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "A window into everything we built for Black Belt Legacy",
+    react: EmailBblBuildTour({ to: params.to, variant: params.variant }),
   })
 }
 
