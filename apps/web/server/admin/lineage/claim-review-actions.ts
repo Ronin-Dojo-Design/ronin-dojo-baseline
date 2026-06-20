@@ -7,6 +7,7 @@ import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
+import { scheduleClaimRejectedEmail } from "~/server/web/lineage/claim-rejected-email"
 import type { db as appDb } from "~/services/db"
 
 /**
@@ -46,9 +47,13 @@ export const applyLineageClaimReview = async ({
   reviewerUserId: string
   input: ReviewLineageClaimInput
 }): Promise<ReviewLineageClaimResult> => {
-  // Captured inside the tx on APPROVED, fired AFTER commit (rollback-safe) — see below.
+  // Captured inside the tx, fired AFTER commit (rollback-safe) — see below. Both decisions notify
+  // the claimant: APPROVED → claim-approved email; DENIED → claim-rejected email (SESSION_0420).
   let approvedClaimantUserId: string | null = null
   let approvedNodeId: string | null = null
+  let deniedClaimantUserId: string | null = null
+  let deniedNodeId: string | null = null
+  const reviewerNoteForEmail = input.reviewerNote ?? null
 
   const result = await db.$transaction(
     async (tx: any): Promise<ReviewLineageClaimResult> => {
@@ -113,6 +118,11 @@ export const applyLineageClaimReview = async ({
         compGrantIds = finalized.compGrantIds
         ownershipTransferred = finalized.ownershipTransferred
         passportAccountAttached = finalized.passportAccountAttached
+      } else if (input.decision === "DENIED") {
+        // No grant on deny (verified: the finalize side-effects only run in the APPROVED branch);
+        // capture the claimant + node so we can mail the claim-rejected notice after commit.
+        deniedClaimantUserId = claim.claimantUserId
+        deniedNodeId = claim.nodeId
       }
 
       const updated = await tx.lineageClaimRequest.update({
@@ -162,6 +172,17 @@ export const applyLineageClaimReview = async ({
   // A fresh admin approval committed — fire the lifecycle "profile-claim-approved" email.
   if (approvedClaimantUserId && approvedNodeId) {
     scheduleClaimApprovedEmail({ userId: approvedClaimantUserId, brand, nodeId: approvedNodeId })
+  }
+
+  // A fresh admin denial committed — fire the lifecycle "profile-claim-rejected" notice so every
+  // decision reaches the claimant (SESSION_0420 — approve already mailed, deny was silent).
+  if (deniedClaimantUserId && deniedNodeId) {
+    scheduleClaimRejectedEmail({
+      userId: deniedClaimantUserId,
+      brand,
+      nodeId: deniedNodeId,
+      reviewerNote: reviewerNoteForEmail,
+    })
   }
 
   return result
