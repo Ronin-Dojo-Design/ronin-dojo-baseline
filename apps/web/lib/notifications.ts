@@ -13,6 +13,7 @@ import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailBblBuildTour } from "~/emails/bbl-build-tour"
 import { EmailBblClaimExplainer } from "~/emails/bbl-claim-explainer"
 import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
+import { EmailBblFirstTesterWelcome } from "~/emails/bbl-first-tester-welcome"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
 import { EmailBblTheLongRoad } from "~/emails/bbl-the-long-road"
 import { EmailDsrStatusUpdate } from "~/emails/dsr-status-update"
@@ -694,6 +695,37 @@ export const notifyFounderOfClaimExplainer = async (params: { brand: Brand; to: 
     to: params.to,
     subject: "A heads-up on the claim links (in case Bob asks)",
     react: EmailBblClaimExplainer({ to: params.to }),
+  })
+}
+
+export type BblFirstTesterWelcomeParams = {
+  brand: Brand
+  to: string
+  /** First-person salutation name (e.g. "Brian"). */
+  recipientName: string
+  /** The minted, email-bound magic link that one-click signs in + claims the node. */
+  claimUrl: string
+}
+
+/**
+ * The operator's warm thank-you to a loyal member who is BBL's first non-admin
+ * tester (SESSION_0420): years of loyalty acknowledged, the invite to be the
+ * first real claim, a friction-feedback ask, the lifetime-membership gift, the
+ * gear/certificate offer, and the login + auto-claim explainer with the
+ * recipient's one-click claim link inside.
+ */
+export const notifyMemberOfBblFirstTesterWelcome = async (params: BblFirstTesterWelcomeParams) => {
+  if (await shouldSkipForRateLimit(`bbl-first-tester:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "Thank you — and a first look at the new Black Belt Legacy",
+    react: EmailBblFirstTesterWelcome({
+      to: params.to,
+      recipientName: params.recipientName,
+      claimUrl: params.claimUrl,
+    }),
   })
 }
 
