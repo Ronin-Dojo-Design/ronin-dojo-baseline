@@ -22,7 +22,8 @@ links to its lead/engagement file.
 
 - **Type:** First intake / client discovery — **Ronin Dojo Design's first intake client conversation.**
 - **Attendees:** Michael Flores (GM, Mammoth Metal Buildings) · Brian (Ronin Dojo Design).
-- **Topic:** HubSpot Commerce Hub — improve lead → deal → contract → invoice → order flow.
+- **Topic:** HubSpot Commerce Hub **friction clean-up** (existing instance) — lead → deal →
+  contract → invoice → **actual order**; make dropping a project impossible.
 - **Status:** ⏳ **PROPOSED / UNCONFIRMED** — date, time, and timezone pending Michael's reply.
 - **Prep:** Review the engagement brief and agenda →
   [`leads/mammoth-build-michael-flores.md`](./leads/mammoth-build-michael-flores.md) (§7 open
@@ -30,7 +31,9 @@ links to its lead/engagement file.
 - **Action items before the call:**
   - [ ] Confirm date/time/timezone with Michael.
   - [ ] Create the real calendar invite (human — no integration here).
-  - [ ] Confirm whether Mammoth is already on HubSpot and which tier.
+  - [x] ~~Confirm whether Mammoth is on HubSpot~~ — **confirmed, they are** (retrofit; Stripe via HubSpot).
+  - [ ] Ask Michael to have his HubSpot open for a live screen-share of the seven friction zones.
+  - [ ] Confirm exact HubSpot **tier** (need Professional for the automation).
 
 ## Past
 

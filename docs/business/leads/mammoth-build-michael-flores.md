@@ -31,9 +31,15 @@ backlinks:
 | Contact | Michael Flores, General Manager |
 | Status | `INTAKE_SCHEDULED` |
 | Source | Referral (confirm) |
-| Engagement | HubSpot Commerce Hub setup/upgrade — lead → deal → quote/contract → invoice → order |
+| Engagement | HubSpot Commerce Hub **retrofit** — de-friction an existing instance: lead → deal → quote/contract → invoice → **actual order** |
 | Intake meeting | **PROPOSED: Wed 2026-06-24, 10:00 AM (client tz TBC)** — see calendar |
 | Owner | Brian (Ronin Dojo Design) |
+
+> **Confirmed on follow-up (2026-06-20):** Mammoth is **already on HubSpot** and hitting
+> **friction** — this is a clean-up/retrofit, not a net-new build. **Stripe is integrated
+> through HubSpot** for payments. Two hard requirements: (1) the process must end in an
+> **actual order**, not a quote left sitting; (2) the CRM must make **dropping a project
+> impossible**. The friction audit (§3a) is now the center of gravity.
 
 ## 1. Who the client is (verified)
 
@@ -79,6 +85,47 @@ unlocks:
 | **Invoice** | One invoice, manual | **Milestone invoicing + payment links** via HubSpot Payments/Stripe (deposit → engineering → fabrication → delivery → final) |
 | **Order** | Deal closed, then silence | **Closed-Won automation** → fulfillment handoff (ticket/project), retained record |
 | **Reporting** | Basic | **Commerce analytics**: pipeline value, win rate by building type, time-in-stage, AR aging |
+
+## 3a. Friction audit — where an existing HubSpot leaks (retrofit)
+
+They're on HubSpot and feeling friction. These are the seven zones where a project/
+quote-to-order business almost always leaks, each with the Commerce Pro fix. Items marked
+**[CONFIRM]** need a look at their live instance on the call — don't assume.
+
+| # | Friction zone | Symptom (the leak) | Frictionless fix |
+|---|---|---|---|
+| 1 | **Lead intake** | Web-form fields don't map to required props; duplicate contacts; no source/owner | Form → required props + **dedup**; auto-assign owner; **first-touch SLA task** so no lead sits cold |
+| 2 | **Ungated pipeline** | Deals advance (or stall) with no criteria; "sold" deals just sit | **Stage exit-gates** with required properties — e.g. can't leave "Quote" without an attached quote, can't leave "Contract" without an e-signature |
+| 3 | **Quote sprawl** | Free-form quotes, inconsistent pricing, slow turnaround | **Product library + templates + CPQ** — quotes built from reusable building systems/line items |
+| 4 | **Quote ≠ order** *(the big one)* | An accepted quote does **not** become a committed order; nothing triggers fabrication or billing | **E-sign accepted → workflow** advances the deal to **Order Confirmed**, auto-creates the deposit invoice (Stripe) **and** a fabrication ticket. The order is a *system event*, not a sticky note |
+| 5 | **Manual invoicing** | Invoices/payment chasing done by hand; AR slips | **Milestone invoices auto-generated** on stage change; Stripe payment links; **AR-aging** dashboard |
+| 6 | **Project-drop risk** | No idle-deal detection; deals "rot" with no next step | **Deal-inactivity ("rotting") workflows** → escalation tasks; **every active deal must carry a next-step task with an owner** (see below) |
+| 7 | **No single source of truth** | Status spread across email/sheets; no real reporting | Everything on the **deal record**; dashboards: pipeline value, win rate by building type, time-in-stage, **deals-at-risk** |
+
+### 3a.1 The must-have: quote → an *actual order*
+
+Brian's hard requirement — *"must result in an actual order, not just a quote."* Mechanism:
+
+1. Quote is **e-signed/accepted** (Commerce Hub e-signature).
+2. A **workflow fires** on acceptance →
+   - deal advances to **Order Confirmed** stage,
+   - **deposit invoice + Stripe payment link** auto-generated,
+   - **fabrication ticket/project** created and assigned (the order's fulfillment record),
+   - downstream **milestone invoices** scheduled (engineering → fabrication → delivery → final).
+3. The deal cannot be marked Won until the **Order Confirmed** gate is satisfied (signed
+   quote + paid/sent deposit). *Accepted quote alone ≠ Won.*
+
+### 3a.2 The other must-have: make dropping a project *impossible*
+
+*"The CRM should prevent dropping a project."* Guardrails, layered:
+
+- **No naked deals** — every open deal must have an **open next-step task with an owner**;
+  a workflow creates/re-creates one if it's missing.
+- **Rotting detection** — if a deal sits with no activity past its stage's SLA, it auto-
+  flags **At Risk** and escalates a task to the owner (then the manager).
+- **Stage gates** (§3a #2) stop deals from silently skipping steps.
+- **Required-on-close** — can't close-lost without a reason code (kills silent drops).
+- **Deals-at-risk dashboard** so Michael can *see* anything going quiet in one glance.
 
 ## 4. Proposed PEMB deal pipeline (for the intake whiteboard)
 
@@ -127,9 +174,11 @@ subscriptions where applicable.
 
 ## 7. Open decisions (need Michael / Brian sign-off — do not lock yet)
 
-1. **Existing HubSpot tier & instance** — are they already on HubSpot? Which tier? Net-new
-   build vs. retrofit changes the whole estimate. *(Confirm on intake.)*
-2. **Payments rail** — HubSpot Payments (US) vs. Stripe integration; deposit %; refund policy.
+1. ✅ **RESOLVED — already on HubSpot (retrofit).** Engagement is de-frictioning an existing
+   instance, not a net-new build. *Still confirm the exact tier on the call — milestone
+   invoicing, e-signature, and quote-to-cash automation need Commerce/Sales **Professional**.*
+2. ✅ **RESOLVED — Stripe via HubSpot.** Payments rail is Stripe integrated through HubSpot.
+   *Still confirm: deposit %, milestone split, refund policy.*
 3. **Quote = contract?** — is an e-signed quote sufficient legally, or do they need a
    separate MSA/contract doc (DocuSign)? Affects Stage 4.
 4. **Fulfillment system of record** — does "Order" live in HubSpot (tickets/projects) or a
@@ -140,13 +189,16 @@ subscriptions where applicable.
 
 ## 8. Intake call agenda (first conversation)
 
-1. Their current lead → order flow, drawn on a whiteboard (find the friction).
-2. Live walk of `mammoth.build` — forms, quote request, any existing automation.
-3. Current tools — HubSpot? Spreadsheets? Email? Where deals/quotes/invoices live today.
-4. Volume & deal shape — # leads/mo, avg deal size, sales-cycle length, who touches a deal.
-5. Validate the proposed pipeline + milestone-billing model (§4–§6).
-6. Resolve the open decisions (§7) we can, park the rest.
-7. Next step: scope + proposal.
+1. **Live screen-share of their HubSpot** — walk the seven friction zones (§3a) in *their*
+   instance: current pipeline stages, a real deal, a real quote, how an invoice goes out.
+2. Pin down the **quote → order gap** (§3a.1) — what happens today when a quote is accepted?
+   Where do orders fall through?
+3. Pin down **where projects get dropped** (§3a.2) — examples of deals that went quiet.
+4. Confirm HubSpot **tier** (need Professional for the automation), and the **Stripe** deposit/
+   milestone/refund terms.
+5. Volume & deal shape — # leads/mo, avg deal size, sales-cycle length, who touches a deal.
+6. Validate the proposed pipeline + milestone-billing model (§4–§6).
+7. Resolve remaining open decisions (§7); next step: scope + proposal.
 
 ## 9. Done means
 
