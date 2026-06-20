@@ -22,12 +22,19 @@ type BblEmailCatalogPanelProps = {
   isSenderConfigured: boolean
 }
 
+const TYPE_LABELS: Record<BblEmailTemplatePreview["type"], string> = {
+  transactional: "Transactional",
+  invite: "Invite",
+  admin: "Admin",
+}
+
 export function BblEmailCatalogPanel({
   templates,
   senderEmail,
   isSenderConfigured,
 }: BblEmailCatalogPanelProps) {
   const [selectedKey, setSelectedKey] = useState(templates[0]?.key)
+  const [typeFilter, setTypeFilter] = useState<"all" | BblEmailTemplatePreview["type"]>("all")
   const [toEmail, setToEmail] = useState("")
   const [recipientName, setRecipientName] = useState("Tony")
   const [joinUrl, setJoinUrl] = useState("https://blackbeltlegacy.com/lineage/join")
@@ -35,9 +42,28 @@ export function BblEmailCatalogPanel({
     "Thank you for helping us test the live Black Belt Legacy claim flow.",
   )
 
+  // Distinct types present, in first-seen order — drives the filter tabs.
+  const types = useMemo(() => {
+    const seen = new Set<BblEmailTemplatePreview["type"]>()
+    for (const template of templates) {
+      seen.add(template.type)
+    }
+    return [...seen]
+  }, [templates])
+
+  const visibleTemplates = useMemo(
+    () => (typeFilter === "all" ? templates : templates.filter(t => t.type === typeFilter)),
+    [templates, typeFilter],
+  )
+
+  // Selection always resolves to something visible so the preview never goes blank
+  // when the active filter hides the previously selected template.
   const selectedTemplate = useMemo(
-    () => templates.find(template => template.key === selectedKey) ?? templates[0],
-    [selectedKey, templates],
+    () =>
+      visibleTemplates.find(template => template.key === selectedKey) ??
+      visibleTemplates[0] ??
+      templates[0],
+    [selectedKey, visibleTemplates, templates],
   )
 
   const sendTest = useAction(sendBblEmailCatalogTest, {
@@ -69,9 +95,27 @@ export function BblEmailCatalogPanel({
           </Badge>
         </Stack>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="space-y-2">
-            {templates.map(template => (
+        <Stack size="xs" wrap className="border-b pb-3">
+          <FilterTab
+            label="All"
+            count={templates.length}
+            isActive={typeFilter === "all"}
+            onClick={() => setTypeFilter("all")}
+          />
+          {types.map(type => (
+            <FilterTab
+              key={type}
+              label={TYPE_LABELS[type]}
+              count={templates.filter(t => t.type === type).length}
+              isActive={typeFilter === type}
+              onClick={() => setTypeFilter(type)}
+            />
+          ))}
+        </Stack>
+
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="min-w-0 space-y-2">
+            {visibleTemplates.map(template => (
               <button
                 key={template.key}
                 type="button"
@@ -97,7 +141,7 @@ export function BblEmailCatalogPanel({
             ))}
           </div>
 
-          <Stack direction="column" className="gap-4">
+          <Stack direction="column" className="min-w-0 gap-4">
             <div className="rounded-lg border bg-background p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Subject
@@ -172,5 +216,31 @@ export function BblEmailCatalogPanel({
         </div>
       </Stack>
     </Card>
+  )
+}
+
+type FilterTabProps = {
+  label: string
+  count: number
+  isActive: boolean
+  onClick: () => void
+}
+
+function FilterTab({ label, count, isActive, onClick }: FilterTabProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={cx(
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
+        isActive
+          ? "border-primary bg-primary/10 font-medium text-foreground"
+          : "border-border bg-background text-muted-foreground hover:border-primary/50",
+      )}
+    >
+      {label}
+      <span className="text-[0.65rem] text-muted-foreground tabular-nums">{count}</span>
+    </button>
   )
 }

@@ -81,11 +81,12 @@ const FormItem = ({ direction = "column", ...props }: ComponentProps<typeof Stac
 const FormLabel = ({ className, ...props }: ComponentProps<typeof Label>) => {
   const { formItemId } = useFormField()
 
-  // Wrap by default (SESSION_0420). FormLabel used to hardcode `truncate`
-  // (white-space:nowrap), which clipped long labels on narrow mobile cards and
-  // forced one-off copy-shortening workarounds. Long labels now wrap; pass
+  // Wrap by default (SESSION_0420 #128 + #129). FormLabel used to hardcode `truncate`
+  // (white-space:nowrap), which clipped long labels on narrow mobile cards and forced
+  // one-off copy-shortening workarounds. `break-words` lets long labels wrap; `min-w-0`
+  // keeps the label from forcing horizontal overflow when it sits in a flex row. Pass
   // `truncate` via `className` at a call site that genuinely needs ellipsis.
-  return <Label htmlFor={formItemId} className={cx("break-words", className)} {...props} />
+  return <Label htmlFor={formItemId} className={cx("min-w-0 break-words", className)} {...props} />
 }
 
 const FormControl = ({ children, ...props }: ComponentProps<"div">) => {
