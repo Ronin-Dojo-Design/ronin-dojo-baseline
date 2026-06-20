@@ -4,9 +4,9 @@ slug: product-documentation-index
 type: index
 status: active
 created: 2026-05-18
-updated: 2026-05-20
+updated: 2026-06-20
 author: Brian + Giddy
-last_agent: codex-pr39-intake
+last_agent: claude-session-0425
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -50,6 +50,7 @@ They should not duplicate every schema detail, every session note, or every hist
 | Black Belt Legacy | Preserve martial arts legacy | `black-belt-legacy/PRD.md`, `black-belt-legacy/STORIES.md` | active |
 | WEKAF USA | Run tournaments and competition operations | `wekaf-usa/` | planned |
 | Ronin Dojo Design | Sell and operate white-label systems | `ronin-dojo-design/` | planned |
+| Mammoth Build | Custom CRM for a metal-building client — lead→order with build-photo proof (replaces HubSpot) | `mammoth-build/PRD.md`, `mammoth-build/STORIES.md` | draft |
 
 ## Current priority
 
