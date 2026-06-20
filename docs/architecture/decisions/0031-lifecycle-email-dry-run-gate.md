@@ -4,8 +4,8 @@ slug: adr-0031-lifecycle-email-dry-run-gate
 type: decision
 status: accepted
 created: 2026-06-18
-updated: 2026-06-18
-last_agent: codex-session-0411
+updated: 2026-06-19
+last_agent: claude-session-0419
 pairs_with:
   - docs/runbooks/sops/sop-email-runbook.md
 backlinks:
@@ -37,3 +37,13 @@ from local, CI, or rehearsal environments.
   `apps/web/lib/notifications.ts` → `apps/web/lib/email.ts`.
 - Receipt and renewal-confirmation events share the invoice-paid lifecycle template until product copy
   requires separate presentation.
+
+## Update — SESSION_0419 (2026-06-19): flipped to live in prod
+
+`EMAIL_LIFECYCLE_DRYRUN=0` was set in Vercel **production** and deployed, so lifecycle emails now
+actually send in prod. This was triggered by wiring the new `profile-claim-approved` claim-success
+email into the library (ADR 0032), which surfaced that the gate was still unset (defaulting to
+dry-run) — meaning **no** lifecycle email, including Stripe membership receipts/renewals, had ever
+sent in prod. The env var remains the safety mechanism for local / CI / rehearsal (still defaults to
+`1`); only production is flipped to `0`. Follow-up: copy-audit the now-live non-claim lifecycle
+emails (SESSION_0419 next-session task).

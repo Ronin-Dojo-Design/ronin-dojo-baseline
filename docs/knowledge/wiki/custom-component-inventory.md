@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-18
-last_agent: claude-techniques-sweep
+updated: 2026-06-20
+last_agent: claude-session-0419
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -416,6 +416,20 @@ The **one** owner-facing Passport + DirectoryProfile editor ([ADR 0025](../../ar
 | --- | --- | --- | --- |
 | `PassportEditor` | `apps/web/components/web/passport/passport-editor.tsx` | `passport: PassportOne`, `directoryProfile: DirectoryProfileOne`, `userId`, `canUploadVideo` | SESSION_0398: the canonical identity editor, rendered by **both** `/me` (MePage) and the `/app/profile` Profile tab (DashboardProfileTab) over the one query path (`server/web/passport/queries.ts`). Two hoisted `useHookFormAction` forms (Identity + Directory Profile) over the server schemas (`updatePassportSchema`/`updateDirectoryProfileSchema`) → the shared `updatePassport`/`updateDirectoryProfile` actions (which revalidate both `/me` + `/app/profile`). A live `ProfileHero` at the top mirrors name/avatar/location across both forms via `useWatch`. Full field set: display/legal name, dob, gender, phone, emergency contact, avatar (FormMedia upload), bio, social links; slug, visibility, location, show-toggles, cover (FormMedia), video (FormMedia, `canUploadVideo`-gated). Page-level extras stay on the pages (`/me`: Profile Completeness sidebar; dashboard: `MediaAttachmentManager` for Passport media). |
 | `SocialLinksEditor` | `apps/web/components/web/passport/social-links-editor.tsx` | `form: UseFormReturn<any>` | Field-array editor for `passport.socialLinks` (platform Select + URL). Moved here from `me/_components/` with the editor (SESSION_0398). |
+
+---
+
+## 11. Lineage claim — social-sign-in binding + claim emails (SESSION_0419)
+
+The claim used to ride only the magic-link `callbackURL`, so Google sign-in (the founder email's recommended method) authenticated but never claimed. These modules make **any** sign-in method claim, and confirm it by email (ADR 0032; lifecycle gate ADR 0031).
+
+| Component | File | Public API | Notable behavior |
+| --- | --- | --- | --- |
+| `claimNodeForUser` | `apps/web/server/web/lineage/claim-node-for-user.ts` | `(tx, { userId, nodeId, brand, now? }) → { outcome, nodeId, claimId }` | The ONE token-bound claim core (security boundary): re-validates the node is a claimable member of a published/claimable brand tree, runs the accountless + CLAIMANT_HAS_NODE guards, mints an APPROVED `email-token` claim, calls `finalizeLineageNodeClaim`, writes the audit. Shared verbatim by the route action and the reconciler so they can't drift. Idempotent (replay → `already-claimed`). Must run inside the caller's tx; throws `CLAIM_ACCEPT_ERROR.*`. |
+| `reconcilePendingLineageClaims` | `apps/web/server/web/lineage/reconcile-pending-claims.ts` | `({ userId, email, emailVerified }) → void` | Called from `lib/auth.ts` `hooks.after` on every successful auth (Google/magic-link/email), after `ensureIdentityShell`. Looks up unconsumed, unexpired `LineagePendingClaim` rows for the verified email and claims each (own tx, marks consumed). **Never throws** — a claim failure can't block auth. |
+| `scheduleClaimApprovedEmail` | `apps/web/server/web/lineage/claim-approved-email.ts` | `({ userId, brand, nodeId }) → void` | Fires the lifecycle `profile-claim-approved` email via Next `after()` (post-response, rollback-safe). Call AFTER the claim tx commits, only on a fresh claim. Wired into all 3 paths (route action, reconciler, admin approve). Honors `EMAIL_LIFECYCLE_DRYRUN` (ADR 0031). |
+| `EmailBblBuildTour` | `apps/web/emails/bbl-build-tour.tsx` | `{ to, variant?: "founder" \| "tony" }` | "Explore the Build" — live docs-navigator + Graphify-graph links (GitHub Pages). Positive/transparency send, no claim link. Sent via `notifyFounderOfBuildTour`. |
+| `EmailBblClaimExplainer` | `apps/web/emails/bbl-claim-explainer.tsx` | `{ to }` | Internal/co-founder heads-up explaining the Google-vs-magic-link claim gap + fix + Tony's admin link. Sent via `notifyFounderOfClaimExplainer`. |
 
 ---
 
