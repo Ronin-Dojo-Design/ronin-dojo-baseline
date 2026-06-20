@@ -32,7 +32,7 @@ backlinks:
 | Status | `INTAKE_SCHEDULED` |
 | Source | Referral (confirm) |
 | Engagement | HubSpot Commerce Hub **retrofit** — de-friction an existing instance: lead → deal → quote/contract → invoice → **actual order** |
-| Intake meeting | **PROPOSED: Wed 2026-06-24, 10:00 AM (client tz TBC)** — see calendar |
+| Intake meeting | **Brian scheduling directly with Michael (week of 2026-06-22); date TBD** — see calendar |
 | Owner | Brian (Ronin Dojo Design) |
 
 > **Confirmed on follow-up (2026-06-20):** Mammoth is **already on HubSpot** and hitting
@@ -185,7 +185,16 @@ subscriptions where applicable.
    separate ops/ERP tool we sync to?
 5. **Scope of this engagement** — advisory/blueprint only, or hands-on HubSpot configuration
    + onboarding? Drives proposal size.
-6. **Intake date/time + timezone** — proposed Wed 2026-06-24 10:00 AM is **unconfirmed**.
+6. **Intake date/time + timezone** — Brian is coordinating directly with Michael this week
+   (week of 2026-06-22); date **TBD**.
+
+> **Contracting note (2026-06-20):** Ronin Dojo Design has **flat-rate retained counsel**
+> (monthly, not hourly — "we can get anything done by them"). They're heavy on contract
+> work this month — operating agreement (in iteration), an upcoming lease review, plus other
+> docket items. **Implication:** papering the RDD↔Mammoth *engagement agreement* can route
+> through retained counsel at no marginal cost, but **sequence it against their loaded
+> month** so it doesn't slip. (Separate from §7.3, which is about Mammoth's *customer-facing*
+> quote=contract template inside HubSpot — that's Michael's legal.)
 
 ## 8. Intake call agenda (first conversation)
 

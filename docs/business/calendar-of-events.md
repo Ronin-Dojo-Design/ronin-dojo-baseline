@@ -18,18 +18,19 @@ links to its lead/engagement file.
 
 ## Upcoming
 
-### 2026-06-24 (Wed) · 10:00 AM — Intake: Michael Flores / Mammoth Metal Buildings  ⟶ TENTATIVE
+### Intake: Michael Flores / Mammoth Metal Buildings — DATE TBD  ⟶ Brian scheduling (week of 2026-06-22)
 
 - **Type:** First intake / client discovery — **Ronin Dojo Design's first intake client conversation.**
 - **Attendees:** Michael Flores (GM, Mammoth Metal Buildings) · Brian (Ronin Dojo Design).
 - **Topic:** HubSpot Commerce Hub **friction clean-up** (existing instance) — lead → deal →
   contract → invoice → **actual order**; make dropping a project impossible.
-- **Status:** ⏳ **PROPOSED / UNCONFIRMED** — date, time, and timezone pending Michael's reply.
+- **Status:** 🗓️ **Brian to set up the meeting directly with Michael this week** (the earlier
+  Wed 2026-06-24 10:00 AM slot was a placeholder and is superseded). Date/time TBD.
 - **Prep:** Review the engagement brief and agenda →
   [`leads/mammoth-build-michael-flores.md`](./leads/mammoth-build-michael-flores.md) (§7 open
   decisions, §8 agenda).
 - **Action items before the call:**
-  - [ ] Confirm date/time/timezone with Michael.
+  - [ ] Brian: talk to Michael this week, lock date/time/timezone.
   - [ ] Create the real calendar invite (human — no integration here).
   - [x] ~~Confirm whether Mammoth is on HubSpot~~ — **confirmed, they are** (retrofit; Stripe via HubSpot).
   - [ ] Ask Michael to have his HubSpot open for a live screen-share of the seven friction zones.
