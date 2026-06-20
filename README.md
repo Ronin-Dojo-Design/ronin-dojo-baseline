@@ -16,6 +16,14 @@
 
 *Planned Passion Produces Purpose. Design by Discipline. Disciplined by Design. OSSS. 🙏🏻*
 
+## 📚 Explore the Build
+
+Two interactive maps of this codebase, generated from the repo itself and published live:
+
+- **[Docs Navigator](https://ronin-dojo-design.github.io/ronin-dojo-baseline/navigator.html)** — a browsable index of every product doc, runbook, ADR, and session log.
+- **[Repo Knowledge Graph](https://ronin-dojo-design.github.io/ronin-dojo-baseline/graph.html)** — an interactive Graphify graph of how the code, docs, and decisions connect.
+- Landing page: **[ronin-dojo-design.github.io/ronin-dojo-baseline](https://ronin-dojo-design.github.io/ronin-dojo-baseline/)**
+
 ---
 
 Ronin Dojo Baseline is a multi-brand martial arts platform built from the Dirstarter stack. The same Next.js app powers school operations, public member/profile surfaces, lineage trees, course/curriculum features, tournaments, payments, entitlements, media, and admin tooling across four brands.

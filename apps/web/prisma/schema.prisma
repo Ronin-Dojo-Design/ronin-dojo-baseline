@@ -85,6 +85,7 @@ model User {
   lineageTreeAccessGranted   LineageTreeAccess[]         @relation("LineageTreeAccessGrantedBy")
   lineageClaimRequests       LineageClaimRequest[]       @relation("LineageClaimClaimant")
   reviewedLineageClaims      LineageClaimRequest[]       @relation("LineageClaimReviewer")
+  consumedPendingClaims      LineagePendingClaim[]       @relation("LineagePendingClaimConsumer")
   profileClaimRequests       ProfileClaimRequest[]       @relation("ProfileClaimClaimant")
   reviewedProfileClaims      ProfileClaimRequest[]       @relation("ProfileClaimReviewer")
   gamificationLog            GamificationEvent[]
@@ -2605,6 +2606,7 @@ model LineageNode {
   treeMembers       LineageTreeMember[]
   accessGrants      LineageTreeAccess[]
   claimRequests     LineageClaimRequest[]
+  pendingClaims     LineagePendingClaim[]
 }
 
 model LineageRelationship {
@@ -2786,6 +2788,31 @@ model LineageClaimRequest {
   @@index([treeId, status])
   @@index([nodeId, status])
   @@index([claimantUserId, status])
+}
+
+// @added SESSION_0419 — email→node pending-claim binding. The one-click claim used to ride ONLY
+// the magic-link callbackURL (/preview → /lineage/claim/accept?node=…), so a founder who signed in
+// with Google (the email's *recommended* method) authenticated fine but never claimed their node.
+// This row records "the invite to <email> is for <node>"; lib/auth.ts `hooks.after` reconciles it
+// on EVERY successful auth (Google + magic-link), so any sign-in method claims. Idempotent: the
+// magic-link route path still claims directly, and the reconciler's finalize is a no-op on replay.
+// See server/web/lineage/reconcile-pending-claims.ts + mint-claim-magic-link.ts.
+model LineagePendingClaim {
+  id         String    @id @default(cuid(2))
+  email      String // lowercased at write time — the address the claim invite was sent to
+  brand      Brand
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  consumedAt DateTime?
+
+  node             LineageNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId           String
+  consumedByUser   User?       @relation("LineagePendingClaimConsumer", fields: [consumedByUserId], references: [id], onDelete: SetNull)
+  consumedByUserId String?
+
+  @@unique([email, nodeId])
+  @@index([email, consumedAt])
+  @@index([nodeId])
 }
 
 model LineageClaimEvidence {

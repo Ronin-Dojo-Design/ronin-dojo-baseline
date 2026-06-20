@@ -13,6 +13,7 @@ import { env } from "~/env"
 import { BRAND_TRUSTED_ORIGINS, resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
 import { getBrandSenderName, sendEmail } from "~/lib/email"
 import { generateUniqueProfileSlug } from "~/lib/slug"
+import { reconcilePendingLineageClaims } from "~/server/web/lineage/reconcile-pending-claims"
 import { db } from "~/services/db"
 
 type AuthEndpointContext = {
@@ -159,6 +160,21 @@ export const auth = betterAuth({
                 ? userFromSession.name
                 : null
           await ensureIdentityShell(newUserId, displayName)
+
+          // SESSION_0419: claim any email-bound pending lineage node on EVERY successful auth, so
+          // a founder who signs in with Google (the email's recommended method, which never carries
+          // the node) still claims their profile — not just the magic-link callbackURL path. Runs
+          // AFTER ensureIdentityShell (the signup Passport must exist first; finalize swaps it for
+          // the node's). Never throws — reconcile swallows per-binding failures so auth can't break.
+          const account = await db.user.findUnique({
+            where: { id: newUserId },
+            select: { email: true, emailVerified: true },
+          })
+          await reconcilePendingLineageClaims({
+            userId: newUserId,
+            email: account?.email,
+            emailVerified: account?.emailVerified ?? false,
+          })
         }
       }
     }),
