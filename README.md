@@ -1,8 +1,26 @@
 # Ronin Dojo Baseline
 
+## 🥋 Black Belt Legacy is LIVE — launched June 19, 2026
+
+**[blackbeltlegacy.com](https://blackbeltlegacy.com)** is public: the lineage network, one-click member profile claims (magic-link, no passwords), and live paid **Premium/Elite** memberships (Stripe → entitlements) — end to end.
+
+**What it took, from the WordPress years to launch:**
+
+| | Commits | When |
+| --- | --- | --- |
+| [The monorepo](https://github.com/Ronin-Dojo-Design/ronin-dojo-monorepo) — where it began | **1,610** | Dec 20, 2025 → May 6, 2026 |
+| This repo — live now | **822** | Apr 25 → Jun 19, 2026 |
+| **End to end** | **2,432** | **~1,400 hours** at the keyboard (and that's a floor) |
+
+**56 days in the final stretch — not one off.** A commit on every single day. Eight years of falling, failing, and learning React at the eleventh hour — built to be worthy of Rigan Machado's lineage and the man who dreamed it up, **Bob Bass**.
+
+*Planned Passion Produces Purpose. Design by Discipline. Disciplined by Design. OSSS. 🙏🏻*
+
+---
+
 Ronin Dojo Baseline is a multi-brand martial arts platform built from the Dirstarter stack. The same Next.js app powers school operations, public member/profile surfaces, lineage trees, course/curriculum features, tournaments, payments, entitlements, media, and admin tooling across four brands.
 
-Current snapshot: June 5, 2026. The repo is not greenfield anymore; the active work is launch hardening and brand cutover sequencing.
+Current snapshot: June 19, 2026 — **Black Belt Legacy is launched and live.** The repo is past launch hardening; active work is post-launch polish, member photo/data backfill, and the remaining brand sequencing.
 
 ## Why This Rebuild Exists
 
@@ -16,7 +34,7 @@ Legacy reference: [ronin-dojo-monorepo](https://github.com/Ronin-Dojo-Design/ron
 
 | Brand | Role | Launch state |
 | --- | --- | --- |
-| **Black Belt Legacy** | Main production launch focus. Heritage/community product for practitioner profiles, lineage trees, rank history, claims, trust signals, curriculum, certification, and searchable legacy records. | **ASAP launch lane.** Existing WordPress site cutover is being sequenced through the BBL checklist. Lineage viewer, claims, admin review, audited comp grants, entitlement tier policy, and QR sharing are now active surfaces. Remaining launch work is deploy/DNS, BBL-only content/redirects/email domain setup, and a few feature/test gaps. |
+| **Black Belt Legacy** | Main production launch focus. Heritage/community product for practitioner profiles, lineage trees, rank history, claims, trust signals, curriculum, certification, and searchable legacy records. | **🚀 LAUNCHED — June 19, 2026** at [blackbeltlegacy.com](https://blackbeltlegacy.com). Public lineage viewer, one-click magic-link profile claims, admin claim review, audited comp grants, and **live paid Premium/Elite memberships** (Stripe checkout → signed webhook → entitlements, on the per-brand BBL Stripe account). Post-launch work is member photo/data backfill and feature polish. |
 | **Baseline Martial Arts** | Live production proxy and school-ops proof brand. Proves the shared code, auth, Stripe, Resend, Vercel, brand scoping, school lifecycle, and student/member flows before BBL cutover. | **Live proxy, not the final launch focus.** Use it to harden the platform safely while BBL-specific DNS/content/migration work continues. Product direction is school operations: lead -> trial -> household/member -> waiver -> membership -> schedule -> attendance -> progress -> rank -> billing -> renewal. |
 | **WEKAF USA** | Tournament and stick-fighting organization lane. Owns the deepest tournament/bracket/scoring future. | **Furthest from launch and no immediate rush.** Tournament schema and some admin tooling exist, but full WEKAF-specific bracket/scoring operations are not the active launch priority. |
 | **Ronin Dojo Design** | Umbrella/agency/white-label brand. Final commercial launch surface for demos, client onboarding, sales, and multi-brand management. | **Final launch lane, no immediate rush.** This comes after BBL and shared-platform hardening; do not let RDD sales/onboarding scope distract from the BBL cutover. |
