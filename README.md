@@ -56,7 +56,7 @@ Black Belt Legacy email and a human will read it.
 ## Feature status (v4.4)
 
 A snapshot of what's set-and-live versus what's in beta. Full, dated log:
-**[FEATURES.md](FEATURES.md)**.
+**[FEATURES.md](FEATURES.md)** — live in-app at **[blackbeltlegacy.com/changelog](https://blackbeltlegacy.com/changelog)**.
 
 ### ✅ Live — set and in production
 

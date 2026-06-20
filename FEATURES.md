@@ -2,6 +2,9 @@
 
 **BBLApp v4.4** · Milestone: `MVP — LIVE` (June 19, 2026) · [blackbeltlegacy.com](https://blackbeltlegacy.com)
 
+> **Live view:** [blackbeltlegacy.com/changelog](https://blackbeltlegacy.com/changelog) — the in-app
+> What's New page renders this log. Canonical source: `apps/web/lib/feature-log.ts` (keep this file in sync).
+
 This is the public, plain-language log of what Black Belt Legacy can do today. We build
 **continuously** — features land in **beta** and graduate to **live** as they harden. Have an
 idea? Open an issue or reply to any BBL email.
