@@ -57,14 +57,22 @@ export function ProfileHero({
         {subtitle && <p className="truncate text-muted-foreground text-sm">{subtitle}</p>}
 
         {(tags.length > 0 || badges.length > 0) && (
-          <Stack direction="row" className="mt-2 flex-wrap gap-1">
+          <Stack direction="row" className="mt-2 min-w-0 flex-wrap gap-1">
             {badges.map(badge => (
-              <Badge key={badge.label} variant={badge.variant ?? "outline"}>
+              <Badge
+                key={badge.label}
+                variant={badge.variant ?? "outline"}
+                className="max-w-full whitespace-normal break-words text-left"
+              >
                 {badge.label}
               </Badge>
             ))}
             {tags.map(tag => (
-              <Badge key={tag} variant="soft">
+              <Badge
+                key={tag}
+                variant="soft"
+                className="max-w-full whitespace-normal break-words text-left"
+              >
                 {tag}
               </Badge>
             ))}

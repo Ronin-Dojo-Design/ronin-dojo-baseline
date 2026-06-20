@@ -94,7 +94,7 @@ export function ProfileClaimForm({
           <TextAreaField
             control={form.control}
             name="claimantNote"
-            label="How you're connected (optional)"
+            label="Anything that helps us verify your claim (optional)"
             className="min-w-0"
             rows={3}
             placeholder="e.g. a link to your school site, your role, or how you're connected."
