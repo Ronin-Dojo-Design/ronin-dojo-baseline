@@ -85,6 +85,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Black Belt Legacy Gap Matrix](../../product/black-belt-legacy/GAP_MATRIX.md) | report | active — SESSION_0349 records shared trust badges across directory/detail/lineage surfaces, `legend` policy support, and `/directory` faceting as the next follow-up |
 | [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
 | [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan |
+| [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) | sot | active — single light P0/P1/P2 running list + Now-live (MVP_LIVE) + widget Feedback inbox; supersedes feature-intake-ledger (SESSION_0424); `lifecycle:` yaml convention |
 
 ## Architecture
 
@@ -610,7 +611,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
-| [Feature Intake Ledger](feature-intake-ledger.md) | reference | active — post-launch running list of feature requests / bugs / polish (DojoBots modal + operator + users) → triage → session → shipped |
+| [Feature Intake Ledger](feature-intake-ledger.md) | reference | superseded → [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) (SESSION_0424) |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
@@ -644,6 +645,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [nav/nav-sheet.tsx](files/bbl-nav-sheet.md) | file | active |
 | [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
 | [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
+| [_components/feature-request-dialog.tsx (DojoBots widget)](files/feature-request-dialog.md) | file | active — `lifecycle: MVP_LIVE` |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components
