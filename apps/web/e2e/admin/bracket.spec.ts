@@ -12,6 +12,9 @@ test.describe("Admin tournament detail + bracket E2E", () => {
   })
 
   test("admin can view tournament detail page with form and panels", async ({ page }) => {
+    // SESSION_0418: the admin tournament-detail route is heavy and JIT-compiles
+    // slowly under the dev server (~50s cold), exceeding the 30s default. Triple it.
+    test.slow()
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
     const fixture = getFixture()
@@ -26,6 +29,7 @@ test.describe("Admin tournament detail + bracket E2E", () => {
   })
 
   test("admin can navigate to bracket viewer from tournament detail", async ({ page }) => {
+    test.slow() // heavy admin tournament route — slow JIT compile under dev server
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
     const fixture = getFixture()

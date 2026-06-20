@@ -41,7 +41,7 @@ export async function seedTournamentFixture(): Promise<TournamentFixture> {
       name: `E2E Dojo ${TS}`,
       slug: `e2e-dojo-${TS}`,
       type: "DOJO",
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
     },
   })
 
@@ -60,14 +60,14 @@ export async function seedTournamentFixture(): Promise<TournamentFixture> {
       code: `COMPETITOR_${TS}`,
       name: "Competitor",
       isSystem: true,
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
     },
   })
 
   // 4. Tournament (PUBLISHED)
   const tournament = await prisma.tournament.create({
     data: {
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
       name: `E2E Championship ${TS}`,
       slug,
       description: "Seeded tournament for E2E testing",
