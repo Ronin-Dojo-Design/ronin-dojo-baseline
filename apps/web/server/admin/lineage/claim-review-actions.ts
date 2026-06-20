@@ -6,6 +6,7 @@ import { finalizeLineageNodeClaim } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
 import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
+import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
 import type { db as appDb } from "~/services/db"
 
 /**
@@ -45,7 +46,11 @@ export const applyLineageClaimReview = async ({
   reviewerUserId: string
   input: ReviewLineageClaimInput
 }): Promise<ReviewLineageClaimResult> => {
-  return db.$transaction(
+  // Captured inside the tx on APPROVED, fired AFTER commit (rollback-safe) — see below.
+  let approvedClaimantUserId: string | null = null
+  let approvedNodeId: string | null = null
+
+  const result = await db.$transaction(
     async (tx: any): Promise<ReviewLineageClaimResult> => {
       const claim = await tx.lineageClaimRequest.findFirst({
         where: {
@@ -92,6 +97,8 @@ export const applyLineageClaimReview = async ({
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
+        approvedClaimantUserId = claim.claimantUserId
+        approvedNodeId = claim.nodeId
         // The APPROVED-branch identity merge + access + comp wiring lives in the shared
         // `finalizeLineageNodeClaim` so the admin path and the BBL token-accept path can
         // never drift. The manual `input.comp` override is threaded through `compOverride`.
@@ -151,6 +158,13 @@ export const applyLineageClaimReview = async ({
     },
     { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
   )
+
+  // A fresh admin approval committed — fire the lifecycle "profile-claim-approved" email.
+  if (approvedClaimantUserId && approvedNodeId) {
+    scheduleClaimApprovedEmail({ userId: approvedClaimantUserId, brand, nodeId: approvedNodeId })
+  }
+
+  return result
 }
 
 export const reviewLineageClaim = adminActionClient

@@ -4,6 +4,7 @@ import { z } from "zod"
 import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { databaseIdSchema } from "~/lib/validation/id"
+import { scheduleClaimApprovedEmail } from "./claim-approved-email"
 import { claimNodeForUser, type ClaimNodeResult } from "./claim-node-for-user"
 
 /**
@@ -27,9 +28,16 @@ export const acceptLineageClaimByToken = userActionClient
   .action(async ({ parsedInput, ctx: { user, db } }): Promise<ClaimNodeResult> => {
     const brand = await getRequestBrand()
 
-    return db.$transaction(
+    const result = await db.$transaction(
       (tx: unknown): Promise<ClaimNodeResult> =>
         claimNodeForUser(tx, { userId: user.id, nodeId: parsedInput.nodeId, brand }),
       { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
     )
+
+    // A fresh claim just committed — fire the lifecycle "profile-claim-approved" email.
+    if (result.outcome === "claimed") {
+      scheduleClaimApprovedEmail({ userId: user.id, brand, nodeId: result.nodeId })
+    }
+
+    return result
   })

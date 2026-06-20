@@ -1,4 +1,5 @@
 import { db } from "~/services/db"
+import { scheduleClaimApprovedEmail } from "./claim-approved-email"
 import { claimNodeForUser } from "./claim-node-for-user"
 
 /**
@@ -45,10 +46,10 @@ export async function reconcilePendingLineageClaims({
 
   for (const binding of pending) {
     try {
-      await db.$transaction(
+      const result = await db.$transaction(
         // biome-ignore lint/suspicious/noExplicitAny: Prisma `$transaction` tx client.
         async (tx: any) => {
-          await claimNodeForUser(tx, {
+          const claimed = await claimNodeForUser(tx, {
             userId,
             nodeId: binding.nodeId,
             brand: binding.brand,
@@ -58,9 +59,14 @@ export async function reconcilePendingLineageClaims({
             where: { id: binding.id },
             data: { consumedAt: new Date(), consumedByUserId: userId },
           })
+          return claimed
         },
         { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
       )
+      // A fresh claim just committed — fire the lifecycle "profile-claim-approved" email.
+      if (result.outcome === "claimed") {
+        scheduleClaimApprovedEmail({ userId, brand: binding.brand, nodeId: binding.nodeId })
+      }
     } catch (error) {
       // Never block auth. Leave the binding unconsumed for a future retry.
       console.error(
