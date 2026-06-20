@@ -2,7 +2,7 @@
 title: "SESSION 0420 — Promote agents + protocol loops from the legacy monorepo"
 slug: session-0420
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-20
 updated: 2026-06-20
 last_agent: claude-session-0420
@@ -129,12 +129,30 @@ ranked candidate list for the rest; report rename/prune context. Stop for sign-o
 
 ## What landed
 
-<!-- Filled at bow-out. -->
+- Two monorepo loops promoted to `docs/protocols/` (leaned + trunk-adapted),
+  registered in the wiki index, committed + pushed to `main` (`70c820d6`, docs-only,
+  no deploy): `pr-review-score-fix-loop.md`, `giddy-merge-strategy.md`.
+- Agent-roster audit: complete already (Petey/Cody/Desi/Doug/Giddy); nothing promoted.
+- Ranked candidate list of the remaining 46 monorepo protocols delivered; operator
+  approved the next batch (THREE_PASS → KISS_DRY_YAGNI → QA_RUNTIME + IDENTIFY_INTENT
+  → HOT_FIX).
+- Rename/prune context report delivered (no action): in-place prune is the live
+  direction over D12's separate fork.
+- Program state saved to memory (`monorepo-loop-promotion-program`).
+
+## Decisions resolved
+
+- Promoted loops live in `docs/protocols/` (existing kebab convention; no `docs/loops/`).
+- Integrate threshold for the PR loop = repo's `≥9.5` (matches `merge-to-main` /
+  `hostile-close-review`), not the monorepo's `9.6`.
+- `GIDDY_MERGE_STRATEGY` is not a literal file — synthesized from three legacy Giddy/merge
+  protocols; those three are now considered absorbed (do not promote separately).
+- Operator approved commit + push this session (overriding the per-action hold for this one).
 
 ## Open decisions / blockers
 
-- Operator sign-off pending on: (a) commit/push of this session's staged docs,
-  (b) which candidate-list loops (if any) to promote next.
+- None. Next batch is approved and recorded; archive/maintenance-process decisions
+  raised at bow-out are staged for the operator (see chat), not blocking.
 
 ## Next session
 
@@ -155,20 +173,56 @@ and register in the wiki index.
 
 ## Review log
 
-<!-- Filled at bow-out. -->
+### SESSION_0420_REVIEW_01 — promoted-loops governance review
+
+- **Reviewed tasks:** TASK_01–TASK_04.
+- **Dirstarter docs check:** not applicable (governance/docs only — no L1 surface touched).
+- **Verdict:** Both promoted loops are leaned (no monorepo lane/runner/telemetry leakage)
+  and wired to real local targets (`/code-review`, `merge-to-main`, the roster, FS-0024).
+  Cross-links resolve; index registered; wiki-lint clean. Candidate list is honest about
+  what's redundant vs. portable. No code, no prod impact.
+- **Score:** 9.6/10.
+- **Follow-up:** when THREE_PASS lands next session, align its pass bar to `≥9.5` to
+  avoid two different "pass" thresholds across the protocol set.
 
 ## Hostile close review
 
-<!-- Filled at bow-out. -->
+- **Giddy:** pass — trunk-adapted correctly; `final-clean-base`/epic-branch families
+  dropped; commit was docs-only so no deploy; `.graphify` gitignored; one clean push.
+- **Doug:** pass — `bun run wiki:lint` 0 errors; graphify refreshed; staged set matched
+  the four deliverables exactly; no stray files.
+- **Kaizen aggregate:** 9.6/10 — clean governance session; only nit was a markdown
+  list-marker warning (line-initial `+`), caught and fixed before commit.
 
 ## ADR / ubiquitous-language check
 
-<!-- Filled at bow-out. -->
+- ADR update not required — promoting process protocols introduces no architectural
+  decision or schema change. No new ubiquitous-language terms (loop/agent names are
+  process vocabulary, not domain entities).
 
 ## Reflections
 
-<!-- Filled at bow-out. -->
+- **Promote what's missing, not what exists.** Half the value this session was *negative*
+  work: confirming the agent roster was already complete and that `GIDDY_MERGE_STRATEGY`
+  wasn't a real file, so I synthesized rather than copied. The lean-out is the point — a
+  straight port would have dragged the QF/WO/SPRINT lane machinery in with it.
+- **The repo had already grown past my mental model.** By bow-out, `reusable-prompts.md`,
+  `doc-pruning-register.md`, FEATURES.md, and a DojoBots feature-request modal existed
+  (sessions 0421/0422, which landed on `main` after my push). Lesson for the live phase:
+  check current `main` + the ledger set before proposing "new" infrastructure.
+- **22 in-progress SESSION files is the real drift**, not the count of active sessions.
+  This session being one of them is exactly why a bow-out matters; closing it is the model.
 
 ## Full close evidence
 
-<!-- Filled at bow-out. -->
+| Step | Proof |
+| --- | --- |
+| Frontmatter sweep | `status: in-progress → closed`; `updated: 2026-06-20` |
+| Backlinks/index sweep | both protocols added to `docs/knowledge/wiki/index.md` Protocols table |
+| Wiki lint | `bun run wiki:lint` → 0 errors (14 pre-existing warnings in SESSION_VIDEO_R001.md, not mine) |
+| Kaizen reflection | Reflections section above |
+| Hostile close review | SESSION_0420_REVIEW_01 + Giddy/Doug passes above |
+| Review & Recommend | Next session goal + first task written (approved batch) |
+| Memory sweep | `monorepo-loop-promotion-program.md` written + MEMORY.md pointer |
+| Git hygiene | `70c820d6` (loops + index) pushed; bow-out close commit follows |
+| Graphify update | `graphify update .` → 61 nodes, 695 edges (incremental) |
