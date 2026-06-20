@@ -24,6 +24,12 @@ clients into the product database, and do not file gym members here.
     — Mammoth Metal Buildings (Michael Flores, GM). HubSpot Commerce Hub engagement.
   - [`leads/michael-flores-project-proposal.md`](./leads/michael-flores-project-proposal.md)
     — scoped proposal for the HubSpot retrofit (DRAFT, pre-intake).
+  - [`leads/hubspot-integration-best-practices.md`](./leads/hubspot-integration-best-practices.md)
+    — HubSpot setup/integration reference (now the feature-parity spec for the custom CRM).
+  - [`leads/project-mammoth-build-crm.md`](./leads/project-mammoth-build-crm.md)
+    — **decision: replace HubSpot with a custom Mammoth Build CRM.** Plan, backend
+    architecture sketch, roadmap, and Sunday-review checklist.
+    → App MVP lives at [`clients/mammoth-build-crm/`](../../clients/mammoth-build-crm/).
 
 ## Conventions
 
