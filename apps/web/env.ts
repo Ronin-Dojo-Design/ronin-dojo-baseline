@@ -22,7 +22,21 @@ export const env = createEnv({
     DATABASE_PUBLIC_URL: z.string().optional(),
     CRON_SECRET: z.string().optional(),
     BETTER_AUTH_SECRET: z.string().min(1),
-    BETTER_AUTH_URL: z.url().min(1),
+    // Vercel Preview deploys don't set BETTER_AUTH_URL — it's Production-scoped (the
+    // canonical brand origin). Fall back to the per-deploy VERCEL_URL so build-time env
+    // validation passes and the value matches the origin Better Auth itself resolves at
+    // runtime. Production is unchanged (its explicit BETTER_AUTH_URL wins); local dev must
+    // still set it. Without this, every preview/PR build fails "Invalid environment
+    // variables: BETTER_AUTH_URL" while collecting page data.
+    BETTER_AUTH_URL: z.preprocess(
+      v =>
+        typeof v === "string" && v.length > 0
+          ? v
+          : process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : undefined,
+      z.url().min(1),
+    ),
     // Optional until wired — these are upstream Dirstarter services not yet configured
     AUTH_GOOGLE_ID: z.string().optional(),
     AUTH_GOOGLE_SECRET: z.string().optional(),
