@@ -544,9 +544,14 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
 | [Giddy Merge Strategy](../../protocols/giddy-merge-strategy.md) | protocol | active |
 | [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
+| [Hot-Fix Protocol](../../protocols/hot-fix-protocol.md) | protocol | active |
+| [Identify-Intent-Improve Loop](../../protocols/identify-intent-improve-loop.md) | protocol | active |
+| [KISS / DRY / YAGNI Loop](../../protocols/kiss-dry-yagni-loop.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [PR Review → Score → Fix Loop](../../protocols/pr-review-score-fix-loop.md) | protocol | active |
+| [QA Runtime Verification](../../protocols/qa-runtime-verification.md) | protocol | active |
+| [Three-Pass Loop](../../protocols/three-pass-loop.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) | protocol | active |
@@ -605,6 +610,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
+| [Feature Intake Ledger](feature-intake-ledger.md) | reference | active — post-launch running list of feature requests / bugs / polish (DojoBots modal + operator + users) → triage → session → shipped |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
