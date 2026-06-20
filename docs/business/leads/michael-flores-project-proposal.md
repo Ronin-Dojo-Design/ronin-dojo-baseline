@@ -45,12 +45,14 @@ The friction audit lives in the engagement brief
 ## 3. Scope of work (phased)
 
 ### Phase 0 — Discovery & instance audit
+
 - Live screen-share audit of their HubSpot against the seven friction zones.
 - Confirm tier (Professional needed for automation/e-sign/milestone invoicing), Stripe
   deposit/milestone/refund terms, and the fulfillment system of record.
 - **Deliverable:** friction findings + a prioritized fix list (the build backlog).
 
 ### Phase 1 — Pipeline & stage gates
+
 - Rebuild the deal pipeline to the PEMB stages
   ([§4 of the brief](./mammoth-build-michael-flores.md)) with **exit-gate required
   properties** so deals can't skip steps or stall ungated.
@@ -59,6 +61,7 @@ The friction audit lives in the engagement brief
 - **Deliverable:** configured pipeline + property schema + migration of open deals.
 
 ### Phase 2 — Quote-to-order engine *(the must-have #1)*
+
 - Product library of building systems/components + quote templates + CPQ.
 - **E-sign accepted → workflow:** advance deal to **Order Confirmed**, auto-create the
   Stripe deposit invoice **and** the fabrication ticket; schedule downstream milestone
@@ -66,21 +69,25 @@ The friction audit lives in the engagement brief
 - **Deliverable:** working quote→order automation, demoed end-to-end on a test deal.
 
 ### Phase 3 — Milestone billing (Stripe via HubSpot)
+
 - Auto-generated milestone invoices on stage change: deposit → engineering → fabrication →
   delivery → final; Stripe payment links; AR-aging visibility.
 - **Deliverable:** milestone billing live + AR-aging dashboard.
 
 ### Phase 4 — Drop-proofing guardrails *(the must-have #2)*
+
 - **No naked deals** (every open deal carries an owner + next-step task; workflow recreates
   if missing), **deal-rotting** detection → At-Risk escalation, required-reason-on-close.
 - **Deliverable:** guardrail workflows + a **Deals-at-Risk** dashboard for Michael.
 
 ### Phase 5 — Reporting & enablement
+
 - Dashboards: pipeline value, win rate by building type, time-in-stage, AR aging, deals-at-risk.
 - Team walkthrough + a short SOP/runbook so Mammoth's staff own it after handoff.
 - **Deliverable:** dashboards + recorded enablement session + one-page SOP.
 
 ## 4. Out of scope (this engagement)
+
 - New public website / `mammoth.build` rebuild (separate engagement if wanted).
 - Migrating off HubSpot or replacing Stripe.
 - Engineering/PE-stamp services themselves (Mammoth's domain) — we model them in CRM, we
@@ -88,6 +95,7 @@ The friction audit lives in the engagement brief
 - ERP/accounting integration beyond Stripe↔HubSpot, unless added as an option.
 
 ## 5. Assumptions & prerequisites
+
 - HubSpot tier supports CPQ, e-signature, milestone invoicing, and workflows
   (**Commerce/Sales Professional** or above) — *confirm at intake; tier upgrade, if needed,
   is Mammoth's cost.*
@@ -108,12 +116,14 @@ The friction audit lives in the engagement brief
 Phases 1–4 can overlap; total **~[5–7 weeks]** depending on instance complexity and deal volume.
 
 ## 7. Investment (placeholder — Brian's rate card)
+
 - **Option A — Fixed-fee project:** `$[TBD]` for Phases 0–5 as scoped.
 - **Option B — Phased:** pay per phase; Phase 0 audit `$[TBD]` is creditable toward the build.
 - **Option C — Retainer (ongoing optimization):** `$[TBD]/mo` after go-live.
 - *Stripe/HubSpot platform and transaction fees are Mammoth's, billed by those vendors.*
 
 ## 8. Success metrics
+
 - 100% of accepted quotes auto-convert to an **Order Confirmed** deal with a deposit invoice — **zero** "accepted but no order."
 - **Zero** open deals without an owner + next-step task (drop-proofing).
 - Reduced quote turnaround time and reduced AR aging (baseline at Phase 0, re-measure post-go-live).

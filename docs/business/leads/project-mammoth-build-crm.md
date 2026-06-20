@@ -49,6 +49,7 @@ green (5 routes).
 | `/app/project/[id]` | **Project detail + build documentation** (before/during/after photos), stage gates, and the next-step "can't-drop" guardrail. |
 
 The two must-haves are demonstrated in the frontend logic (`lib/store.ts`):
+
 - **Becomes an actual order** — crossing into the deposit stage stamps an order number +
   `orderConfirmed`; a project can't reach Complete without it.
 - **Can't be dropped** — an open project with no next-step task is flagged *at risk*;
@@ -103,6 +104,7 @@ cd clients/mammoth-build-crm && npm install && npm run dev   # http://localhost:
 5. Scope of the paid engagement (build it for them vs. with them).
 
 ## 7. Done means
+
 - App committed + building green (✅).
 - This plan + the HubSpot reference committed (✅).
 - Reviewed Sunday → decisions in §6 resolved → P2 scoped.

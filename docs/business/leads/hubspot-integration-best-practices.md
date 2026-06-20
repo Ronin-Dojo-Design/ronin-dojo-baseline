@@ -94,6 +94,7 @@ HubSpot offers **two** ways to wire Stripe. Mammoth wants the first:
 | **Subscription** | Recurring billing (rare here) | Only for service/retainer lines, not the building |
 
 ### 1.3 Setup hygiene before any automation
+
 - Turn on the **invoicing tool** and a default **invoice template** (`Commerce → Invoices`),
   set company billing details, tax, and invoice numbering.
 - Build/clean the **Product Library** first (§3) — workflows that "Convert to Invoice" only
@@ -128,6 +129,7 @@ Set required properties`) — Starter+ lets you require fields *before a deal ca
 Mirror stage: **Closed-Lost / Nurture** — requires a **Closed-Lost Reason** (§6).
 
 ### 2.2 Stage-gate rules of thumb
+
 - **Don't over-stage.** Each stage must represent a distinct buyer action you can verify.
 - The **biggest gate is between 3→4 and 8→9**: "can't leave Design & Quote without an attached
   quote," and "can't reach Closed-Won without `Order Confirmed = true`." That last one is the
@@ -144,6 +146,7 @@ built on the **Product Library + discount rules + quote templates + approval wor
 integrated payments**. This is the fix for free-form, inconsistent quotes.
 
 ### 3.1 Product Library — model the building, not just SKUs
+
 - Create products for reusable **building systems/components**: primary frame, secondary
   (purlins/girts), roof/wall panel systems, insulation packages, trim, accessories
   (doors/windows/skylights), freight, erection, engineering/PE-stamp fee.
@@ -151,6 +154,7 @@ integrated payments**. This is the fix for free-form, inconsistent quotes.
 - Keep pricing in the library so quotes are assembled, not hand-typed. This is what kills F3.
 
 ### 3.2 Quote templates (drag-and-drop, 2025 builder)
+
 - Build **one or two standard PEMB templates** with pre-filled modules: cover letter, line
   items, **terms (incl. payment-milestone schedule)**, payment options, and **acceptance method**.
 - Standardize terms so every quote carries the same milestone language (deposit → engineering →
@@ -159,6 +163,7 @@ integrated payments**. This is the fix for free-form, inconsistent quotes.
   draft, not the send.
 
 ### 3.3 E-signature = the contract gate (F4 setup, fires in §4)
+
 - Enable **e-signatures on quotes** (`Settings → Objects → Quotes`; e-sign is ~$25/user/mo add-on
   on Pro). Add **billing/payment** to the quote so the buyer can sign **and** pay in one flow.
 - Turn ON **"Automatically create contracts from accepted quotes."** When the buyer accepts/signs,
@@ -199,6 +204,7 @@ Create a **quote-based workflow**, enrollment trigger = *quote is signed/accepte
    workflows handle each milestone as the deal advances.
 
 ### 4.3 The gate that makes it real
+
 - **Closed-Won requires `Order Confirmed = true`** (§2.1). An accepted quote advances the deal
   and creates the order/deposit, but the deal **cannot be marked Won** until the order is
   confirmed and the deposit invoice exists. *Accepted quote alone ≠ Won.* This is the structural
@@ -232,6 +238,7 @@ off a **deal-stage-change workflow**:
   building itself is milestone, not subscription.
 
 ### 5.2 Stripe payment best practices
+
 - Put a **Stripe payment link on every invoice and on the quote** so buyers pay in-flow.
 - Track **`Deposit %`**, **`Milestone split`**, and **refund policy** as deal props (open
   decision §7.2) so workflows compute amounts consistently.
@@ -245,11 +252,13 @@ off a **deal-stage-change workflow**:
 Layer these so a project physically cannot go quiet unnoticed.
 
 ### 6.1 No naked deals — every open deal carries a next-step task
+
 - Workflow: enrollment = *deal is open* **AND** *deal has no open task*; action = **create a task**
   ("Set next step") for the deal owner. Re-enroll so it regenerates if the task is closed without a
   new one. Result: an active deal **always** has an owned next action.
 
 ### 6.2 Deal-rotting / inactivity detection
+
 - **Use the right filter.** Enroll on **`Days since last activity` is *more than* X** (per-stage
   SLA), **not** "has not been updated" (which schedules into the future and misbehaves). Track a
   custom **`Last stage change date`** too.
@@ -259,16 +268,19 @@ Layer these so a project physically cannot go quiet unnoticed.
   a second threshold, **escalate to the manager** (GM/Michael).
 
 ### 6.3 Owner rotation / SLA on intake
+
 - **First-touch SLA:** new-lead workflow auto-assigns an owner and creates a **first-contact task**
   due within the SLA window (e.g., 1 business hour). No lead sits cold — directly embodies the
   anti-"quote, ship, disappear" promise.
 
 ### 6.4 Required reason on close (kills silent drops)
+
 - Make **`Closed-Lost Reason`** a **required property to enter Closed-Lost** (conditional stage
   property). A deal cannot be dropped without a coded reason — no quiet disappearances, and the
   reasons feed a loss-analysis report.
 
 ### 6.5 Deals-at-risk dashboard
+
 - A saved view / dashboard filtered on **`At Risk = true`** OR **`Days since last activity > SLA`**,
   so Michael sees everything going quiet **in one glance** (see §8).
 
@@ -277,18 +289,21 @@ Layer these so a project physically cannot go quiet unnoticed.
 ## 7. Data hygiene (F1 + F7)
 
 ### 7.1 Deduplication
+
 - HubSpot auto-dedupes **contacts by email** and **companies by domain**. Enforce **domain-based**
   company matching (not name), and run HubSpot's **duplicate management tool** periodically; for
   bulk/fuzzy cleanup an app like **Insycle/Dedupely** handles variants HubSpot's exact-match won't.
 - **Require reps to search before creating** a record; enforce duplicate checks on import.
 
 ### 7.2 Required fields on lead-intake forms (F1)
+
 - Map every web-form field to a **required deal/contact property**: name, email, **building use,
   region, rough dimensions, source**. Don't let a form create a half-populated contact.
 - Use **conditional property logic by lifecycle stage** (Starter+) to require the deeper
   engineering fields (loads, geometry, PE-stamp state) only when the record reaches Discovery/Quote.
 
 ### 7.3 Lifecycle stages & lead status (keep them distinct)
+
 - **Lifecycle Stage** = funnel position (Lead → MQL → SQL → Opportunity → Customer). Let
   **automation** set it (e.g., deal created → Opportunity; Closed-Won → Customer) — don't hand-edit.
 - **Lead Status** = sub-state within qualification (New, Attempting, Connected, Qualified,
@@ -316,6 +331,7 @@ Build these as saved dashboards so status lives on data, not in email:
 ## 9. First-2-weeks implementation checklist
 
 **Week 1 — foundation & gates**
+
 - [ ] Confirm tier (Professional+) and Stripe connection type (**payment processing**, not data sync); migrate off legacy Stripe-for-quotes if needed.
 - [ ] Audit the live instance against F1–F7; screenshot current pipeline, a real deal, a real quote, a real invoice.
 - [ ] Run a **dedup pass** (contacts by email, companies by domain); enable duplicate management.
@@ -324,6 +340,7 @@ Build these as saved dashboards so status lives on data, not in email:
 - [ ] Rebuild the **deal pipeline** to the 9 PEMB stages with **conditional required properties** per §2.1.
 
 **Week 2 — automation & guardrails**
+
 - [ ] Build the **1–2 standard quote templates** (milestone payment terms baked in); enable **e-signature** + **"auto-create contracts from accepted quotes."**
 - [ ] Build the **quote-accepted → ORDER workflow** (§4): set Order Confirmed, Convert to Invoice (deposit + Stripe link), create order ticket, create fab task.
 - [ ] Gate **Closed-Won on `Order Confirmed = true`.**
@@ -336,12 +353,14 @@ Build these as saved dashboards so status lives on data, not in email:
 ---
 
 ## Open decisions carried from the brief (don't lock here)
+
 - **§7.3 Quote = contract?** Is the e-signed quote legally sufficient, or is a separate MSA/DocuSign needed? Affects Stage 4 and the auto-contract setting.
 - **§7.4 Fulfillment system of record:** HubSpot Tickets/Projects vs. external ERP. This guide assumes HubSpot Tickets until told otherwise.
 - **§7.2 Stripe terms:** deposit %, milestone split, refund policy — needed before milestone workflows compute amounts.
 - **§7.1 Tier:** confirm Professional (CPQ/e-sign/quote-to-cash); some approval routing is Enterprise.
 
 ## Sources
+
 - HubSpot Stripe / Commerce Hub payment processing model (CRM as source of truth; 0.75% platform fee; data-sync vs. payment-processing): [Stacksync](https://www.stacksync.com/blog/hubspot-stripe-data-synchronization-technical-architecture-business-impact-assessment), [TRooInbound](https://www.trooinbound.com/blog/hubspot-stripe-integration-step-by-step-guide/), HubSpot KB ([migrating from legacy Stripe quotes integration](https://knowledge.hubspot.com/payments/migrating-from-the-legacy-stripe-integration-for-quotes-to-stripe-payment-processing))
 - Quote-based workflow triggers + "Convert to Invoice" action (signed/accepted → invoice; free on all plans): [VantagePoint — quote-based triggers](https://vantagepoint.io/blog/hs/hubspot-quote-based-workflow-triggers), [VantagePoint — workflow-based invoicing](https://vantagepoint.io/blog/hs/automate-invoice-creation-hubspot-workflow-based-invoicing), [HubSpot Community](https://community.hubspot.com/t5/Tips-Tricks-Best-Practices/How-can-I-automate-an-invoice-when-a-quote-is-signed/m-p/1229355)
 - E-signature + auto-create contracts from accepted quotes: HubSpot KB ([use e-signatures with quotes](https://knowledge.hubspot.com/quotes/use-e-signatures-with-quotes), [create contracts](https://knowledge.hubspot.com/quotes/create-contracts))
