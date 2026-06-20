@@ -542,9 +542,11 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
 | [Project Log (retired)](../../protocols/project-log.md) | protocol | archived-frozen |
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
+| [Giddy Merge Strategy](../../protocols/giddy-merge-strategy.md) | protocol | active |
 | [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
+| [PR Review → Score → Fix Loop](../../protocols/pr-review-score-fix-loop.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) | protocol | active |
