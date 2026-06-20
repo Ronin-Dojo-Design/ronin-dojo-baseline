@@ -2,7 +2,7 @@
 title: "SESSION 0399 — /me Passport MediaAttachmentManager parity with the dashboard Profile tab (D-023 / ADR 0025)"
 slug: session-0399
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-17
 updated: 2026-06-17
 last_agent: claude-session-0399

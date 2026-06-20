@@ -2,7 +2,7 @@
 title: "SESSION 0412 — Supervised BBL Pods full-fidelity importer"
 slug: session-0412
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-18
 updated: 2026-06-18
 last_agent: codex-session-0412

@@ -2,7 +2,7 @@
 title: "SESSION 0415 — BJJ TechniqueGraph and curriculum port"
 slug: session-0415
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-19
 updated: 2026-06-19
 last_agent: codex-session-0415

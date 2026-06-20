@@ -8,7 +8,10 @@ import {
 } from "~/.generated/prisma/client"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
+import { EmailAdminFeedback } from "~/emails/admin-feedback"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
+import { EmailBblBuildTour } from "~/emails/bbl-build-tour"
+import { EmailBblClaimExplainer } from "~/emails/bbl-claim-explainer"
 import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
 import { EmailBblTheLongRoad } from "~/emails/bbl-the-long-road"
@@ -633,8 +636,10 @@ export type BblFounderLongRoadParams = {
   brand: Brand
   to: string
   firstName?: string | null
-  /** The minted, email-bound magic link that one-click claims the founder's node. */
+  /** The minted, email-bound magic link that one-click claims the recipient's node. */
   claimUrl: string
+  /** "founder" = Bob's letter. "tony" = Tony sees the letter verbatim + a short preface. */
+  variant?: "founder" | "tony"
 }
 
 /**
@@ -644,16 +649,51 @@ export type BblFounderLongRoadParams = {
  * testament, founder to founder, with his one-click claim link carried inside.
  */
 export const notifyFounderOfTheLongRoad = async (params: BblFounderLongRoadParams) => {
+  const isTony = params.variant === "tony"
   if (await shouldSkipForRateLimit(`bbl-founder-long-road:${params.to}`)) return
 
   return await sendEmail({
     brand: params.brand,
     to: params.to,
-    subject: "A first look at Black Belt Legacy — and the long road that got us here",
+    subject: isTony
+      ? "Black Belt Legacy is live — and the letter I sent Bob"
+      : "A first look at Black Belt Legacy — and the long road that got us here",
     react: EmailBblTheLongRoad({
       to: params.to,
       claimUrl: params.claimUrl,
+      variant: params.variant,
     }),
+  })
+}
+
+export type BblBuildTourParams = {
+  brand: Brand
+  to: string
+  /** "founder" = Bob ("Mr. Bass," + both-inbox footer). "tony" = Tony ("Tony," + his inbox). */
+  variant?: "founder" | "tony"
+}
+
+/** "Explore the Build" — live docs navigator + knowledge-graph links (transparency, no asks). */
+export const notifyFounderOfBuildTour = async (params: BblBuildTourParams) => {
+  if (await shouldSkipForRateLimit(`bbl-build-tour:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "A window into everything we built for Black Belt Legacy",
+    react: EmailBblBuildTour({ to: params.to, variant: params.variant }),
+  })
+}
+
+/** Technical heads-up to Tony about the claim-link gap + fix (SESSION_0419). */
+export const notifyFounderOfClaimExplainer = async (params: { brand: Brand; to: string }) => {
+  if (await shouldSkipForRateLimit(`bbl-claim-explainer:${params.to}`)) return
+
+  return await sendEmail({
+    brand: params.brand,
+    to: params.to,
+    subject: "A heads-up on the claim links (in case Bob asks)",
+    react: EmailBblClaimExplainer({ to: params.to }),
   })
 }
 
@@ -702,6 +742,47 @@ export const notifyAdminOfBblJoinLegacy = async (params: BblJoinLegacyNotificati
       adminLeadUrl: `${params.appUrl ?? siteConfig.url}/admin/leads/${params.leadId}`,
       checkoutUrl: params.checkoutUrl,
       claimCreated: params.claimCreated,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Site feedback widget notifications (SESSION_0420)
+// ---------------------------------------------------------------------------
+
+export type FeedbackNotificationParams = {
+  brand: Brand
+  /** The submitter's email (also used as Reply-To so the operator can reply directly). */
+  email: string
+  message: string
+}
+
+/**
+ * Notify the operator inbox when a visitor submits the public feedback widget.
+ *
+ * Feedback already persists to the Report table (type = Feedback), surfaced in the
+ * admin Reports view at /app/reports — but nobody is pinged about it. This puts a
+ * copy in the brand inbox (welcome@blackbeltlegacy.com for BBL via getBrandSenderEmail)
+ * with the submitter as Reply-To, so feedback actually gets seen. Rate-limit-guarded
+ * per submitter to absorb double-submits.
+ */
+export const notifyAdminOfFeedback = async (params: FeedbackNotificationParams) => {
+  if (await shouldSkipForRateLimit(`feedback:${params.email}`)) return
+
+  const to = getBrandSenderEmail(params.brand)
+  const siteName = getBrandSiteConfig(params.brand).name
+
+  return await sendEmail({
+    brand: params.brand,
+    to,
+    subject: `New ${siteName} feedback from ${params.email}`,
+    replyTo: params.email,
+    react: EmailAdminFeedback({
+      to,
+      fromEmail: params.email,
+      message: params.message,
+      siteName,
+      adminReportsUrl: `${siteConfig.url}/app/reports`,
     }),
   })
 }

@@ -23,6 +23,9 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
+// Used only by the lineage-comp-seed UNIT test (server/entitlements/lineage-comp-seed.test.ts),
+// which grants comp under BASELINE_MARTIAL_ARTS — no brand-scoped page is involved, so this
+// fixture must match that test's brand (it is NOT subject to the single-brand-BBL collapse).
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
 const TAG_PREFIX = "session-0346-lineage-comp-e2e"
 const RANKS = ["White Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt"] as const

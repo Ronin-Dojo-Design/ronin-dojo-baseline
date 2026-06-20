@@ -12,7 +12,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import type Stripe from "stripe"
 import { PrismaClient } from "../../.generated/prisma/client"
 
-const BRAND = "BASELINE_MARTIAL_ARTS"
+const BRAND = "BBL"
 const LINEAGE_MEMBERSHIP_SURFACE = "lineage_membership"
 
 let mockedLineItems: Stripe.LineItem[] = []

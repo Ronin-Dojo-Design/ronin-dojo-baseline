@@ -47,11 +47,12 @@ type Next = "me" | "claim"
 function parseArgs() {
   const opts = {
     to: "",
-    nodeSlug: "bob-bass",
+    nodeSlug: "",
     next: "me" as Next,
     baseUrl: "https://blackbeltlegacy.com",
     dryRun: false,
     resolveOnly: false,
+    variant: "founder" as "founder" | "tony",
   }
   const argv = process.argv.slice(2)
   for (let i = 0; i < argv.length; i += 1) {
@@ -65,9 +66,15 @@ function parseArgs() {
     } else if (arg === "--base-url") opts.baseUrl = (argv[++i] ?? opts.baseUrl).replace(/\/+$/, "")
     else if (arg === "--dry-run") opts.dryRun = true
     else if (arg === "--resolve-only") opts.resolveOnly = true
-    else throw new Error(`Unknown argument: ${arg}`)
+    else if (arg === "--variant") {
+      const v = argv[++i]
+      if (v !== "founder" && v !== "tony") throw new Error(`--variant must be 'founder' or 'tony'`)
+      opts.variant = v
+    } else throw new Error(`Unknown argument: ${arg}`)
   }
   if (!opts.to) throw new Error("--to <email> is required")
+  // Default the node to the variant's owner unless explicitly overridden.
+  if (!opts.nodeSlug) opts.nodeSlug = opts.variant === "tony" ? "tony-hua" : "bob-bass"
   return opts
 }
 
@@ -108,7 +115,7 @@ async function main() {
       : FREE_SIGNUP_NEXT_PATH
 
   console.log(
-    `📨 Founder "Long Road" REAL send → ${opts.to} | next=${opts.next} | base=${opts.baseUrl}` +
+    `📨 "Long Road" REAL send → ${opts.to} | variant=${opts.variant} | node=${opts.nodeSlug} | next=${opts.next} | base=${opts.baseUrl}` +
       (opts.dryRun ? " | DRY RUN" : ""),
   )
 
@@ -125,7 +132,12 @@ async function main() {
     return
   }
 
-  const res = await notifyFounderOfTheLongRoad({ brand: Brand.BBL, to: opts.to, claimUrl })
+  const res = await notifyFounderOfTheLongRoad({
+    brand: Brand.BBL,
+    to: opts.to,
+    claimUrl,
+    variant: opts.variant,
+  })
   const id = (res as { data?: { id?: string } } | undefined)?.data?.id
   if (res && (res as { error?: unknown }).error) {
     console.error("❌ Resend error:", (res as { error?: unknown }).error)

@@ -15,6 +15,17 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
 }))
 
+// `applyLineageClaimReview` schedules the claim-approved email via after() (through
+// scheduleClaimApprovedEmail). bun's mock.module is process-global, so this test used to
+// free-ride on another file's next/server mock depending on run order; mock it here so
+// the after() callback runs (fire-and-forget) instead of throwing "outside a request
+// scope" when this file runs first. Mirrors capture-email.test.ts (SESSION_0420).
+mock.module("next/server", () => ({
+  after: (fn: () => void | Promise<void>) => {
+    void Promise.resolve().then(() => fn())
+  },
+}))
+
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
 mock.module("~/lib/brand-context", () => ({
   getRequestBrand: () => Promise.resolve(TEST_BRAND),
@@ -23,6 +34,23 @@ mock.module("~/lib/brand-context", () => ({
 const mockSession: { user: { id: string; role: string } } | null = null
 mock.module("~/lib/auth", () => ({
   getServerSession: () => Promise.resolve(mockSession),
+}))
+
+// Spy on the post-commit lifecycle-email schedulers so the DB test stays hermetic (the real
+// modules use next/server `after()` + Resend). Each fixture has a unique nodeId, so filtering by
+// nodeId is safe even though the arrays are shared across tests. (SESSION_0420)
+const approvedEmailCalls: { userId: string; nodeId: string }[] = []
+const rejectedEmailCalls: { userId: string; nodeId: string; reviewerNote?: string | null }[] = []
+mock.module("~/server/web/lineage/claim-approved-email", () => ({
+  scheduleClaimApprovedEmail: (args: { userId: string; nodeId: string }) =>
+    approvedEmailCalls.push(args),
+}))
+mock.module("~/server/web/lineage/claim-rejected-email", () => ({
+  scheduleClaimRejectedEmail: (args: {
+    userId: string
+    nodeId: string
+    reviewerNote?: string | null
+  }) => rejectedEmailCalls.push(args),
 }))
 
 import type { Brand, LineageClaimStatus } from "~/.generated/prisma/client"
@@ -292,6 +320,9 @@ describe("applyLineageClaimReview", () => {
       evidenceCount: 0,
     })
     expect(auditAfter?.passportAccountAttached).toBe(true)
+    // The approve branch schedules the claim-approved email (and never the rejected one).
+    expect(approvedEmailCalls.some(call => call.nodeId === fx.nodeId)).toBe(true)
+    expect(rejectedEmailCalls.some(call => call.nodeId === fx.nodeId)).toBe(false)
   })
 
   it("keeps non-approved decisions as status-only review outcomes with audit", async () => {
@@ -344,6 +375,67 @@ describe("applyLineageClaimReview", () => {
       passportAccountAttached: false,
       evidenceCount: 0,
     })
+    // NEEDS_INFO is not a terminal decision — no claimant email fires.
+    expect(approvedEmailCalls.some(call => call.nodeId === fx.nodeId)).toBe(false)
+    expect(rejectedEmailCalls.some(call => call.nodeId === fx.nodeId)).toBe(false)
+  })
+
+  it("denies a claim: no grant, no ownership change, audit written, and schedules the rejected email", async () => {
+    const fx = await createClaimFixture({ name: "deny" })
+
+    const result = await applyLineageClaimReview({
+      db,
+      brand: TEST_BRAND,
+      reviewerUserId: adminUserId!,
+      input: {
+        claimId: fx.claimId,
+        decision: "DENIED",
+        reviewerNote: "Insufficient evidence.",
+      },
+    })
+
+    const [claim, nodePassport, grants, audit] = await Promise.all([
+      db.lineageClaimRequest.findUnique({ where: { id: fx.claimId } }),
+      db.passport.findUnique({ where: { id: fx.nodePassportId } }),
+      db.lineageTreeAccess.findMany({ where: { treeId: fx.treeId } }),
+      db.auditLog.findFirst({
+        where: {
+          entityType: "LineageClaimRequest",
+          entityId: fx.claimId,
+          action: "lineage.claim.reviewed",
+        },
+      }),
+    ])
+
+    // No grant on deny.
+    expect(result.status).toBe("DENIED")
+    expect(result.accessGrantId).toBeNull()
+    expect(result.compGrantIds).toHaveLength(0)
+    expect(result.ownershipTransferred).toBe(false)
+    expect(result.passportAccountAttached).toBe(false)
+    expect(claim?.status).toBe("DENIED")
+    expect(claim?.reviewedById).toBe(adminUserId)
+    expect(claim?.reviewerNote).toBe("Insufficient evidence.")
+    expect(nodePassport?.userId).toBeNull()
+    expect(grants).toHaveLength(0)
+    // Audit written for the denial.
+    expect(audit?.after).toMatchObject({
+      claimId: fx.claimId,
+      nodeId: fx.nodeId,
+      claimantUserId: fx.claimantUserId,
+      status: "DENIED",
+      reviewerUserId: adminUserId,
+      accessGrantId: null,
+      ownershipTransferred: false,
+    })
+    // The deny branch schedules the claim-rejected notice (carrying the reviewer note) and never
+    // the approved one. (SESSION_0420 — closing the "email on every decision" gap.)
+    const rejectedCall = rejectedEmailCalls.find(
+      call => call.nodeId === fx.nodeId && call.userId === fx.claimantUserId,
+    )
+    expect(rejectedCall).toBeTruthy()
+    expect(rejectedCall?.reviewerNote).toBe("Insufficient evidence.")
+    expect(approvedEmailCalls.some(call => call.nodeId === fx.nodeId)).toBe(false)
   })
 
   it("approves when the claimant already has a signup Passport — merges by superseding it", async () => {

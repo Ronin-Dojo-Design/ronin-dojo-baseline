@@ -7,6 +7,8 @@
  */
 
 export const BBL_LOGO_WHITE = "/brand/blackbeltlegacy/bbl-logo-white.png"
+/** Black/official wordmark (transparent) — for use on LIGHT backgrounds. */
+export const BBL_LOGO_BLACK = "/brand/blackbeltlegacy/bbl-logo-black.png"
 
 const HERO_BASE = "/brand/blackbeltlegacy/images/hero"
 

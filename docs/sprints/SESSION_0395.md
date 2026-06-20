@@ -2,7 +2,7 @@
 title: "SESSION 0395 — Lineage View A: custom cohort-timeline (Kajukenbo list-boxes), retire family-chart"
 slug: session-0395
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-16
 updated: 2026-06-16
 last_agent: claude-session-0395

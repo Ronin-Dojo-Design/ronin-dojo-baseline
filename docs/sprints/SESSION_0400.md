@@ -2,7 +2,7 @@
 title: "SESSION 0400 — D-023 shared field primitives (fold lineage-node + Passport forms) + BBL-DISCOVER rank filter"
 slug: session-0400
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-17
 updated: 2026-06-17
 last_agent: claude-session-0400

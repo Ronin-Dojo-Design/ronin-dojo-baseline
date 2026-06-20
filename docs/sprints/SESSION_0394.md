@@ -2,7 +2,7 @@
 title: "SESSION 0394 — Cinematic Lineage Explorer: brand-polish + selection-focus choreography"
 slug: session-0394
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-15
 updated: 2026-06-15
 last_agent: claude-session-0394

@@ -15,8 +15,10 @@ import { getCurrentUserAvatar } from "~/server/web/account/current-user-avatar"
 import { BblFooter } from "./_components/bbl-footer"
 import { BblTeaserPage } from "./_components/bbl-teaser"
 
-const isBblCountdownActive = () =>
-  env.BBL_COUNTDOWN === "1" || env.BBL_COUNTDOWN?.toLowerCase() === "true"
+// Launched 2026-06-19 — the holding page is permanently retired. Hard-off in code
+// so the public site never gates, independent of any env var. (Was gated on
+// env.BBL_COUNTDOWN; flip this back to that expression to re-gate if ever needed.)
+const isBblCountdownActive = () => false
 
 // Previewers (admins / stakeholders) who opened `/preview?token=…` carry a cookie
 // that lets them through the holding page to the real site.
@@ -27,7 +29,8 @@ export default async function ({ children }: PropsWithChildren) {
   const requestBrand = await getRequestBrand()
 
   // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
-  // cookie skip it. Other brands are never affected.
+  // cookie skip it. Other brands are never affected. (Launched 2026-06-19 — the
+  // BBL_COUNTDOWN var was removed from prod env, so this gate is now inert.)
   if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
     return <BblTeaserPage />
   }

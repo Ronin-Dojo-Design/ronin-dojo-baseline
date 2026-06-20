@@ -16,7 +16,7 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const TAG_PREFIX = "session-0265-rank-redaction-e2e"
 const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM"
 

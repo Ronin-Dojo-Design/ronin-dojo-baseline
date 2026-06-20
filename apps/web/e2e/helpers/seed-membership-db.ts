@@ -36,7 +36,7 @@ async function seedMembership(userId: string): Promise<MembershipFixture> {
       name: `E2E Org ${TS}`,
       slug: `e2e-org-${TS}`,
       type: "DOJO",
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
     },
   })
 
@@ -53,13 +53,13 @@ async function seedMembership(userId: string): Promise<MembershipFixture> {
       code: `MEMBER_${TS}`,
       name: "Member",
       isSystem: true,
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
     },
   })
 
   const membership = await prisma.membership.create({
     data: {
-      brand: "BASELINE_MARTIAL_ARTS",
+      brand: "BBL",
       status: "PENDING",
       userId,
       organizationId: org.id,

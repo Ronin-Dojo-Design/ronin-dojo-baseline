@@ -2,7 +2,7 @@
 title: "SESSION 0331 — Lineage Phase 3f search-to-highlight"
 slug: session-0331
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-01
 updated: 2026-06-01
 last_agent: claude-session-0331

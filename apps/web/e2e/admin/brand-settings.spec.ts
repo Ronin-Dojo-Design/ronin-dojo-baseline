@@ -90,12 +90,12 @@ test.describe("Admin brand-settings E2E", () => {
     })
 
     const baselineSection = page.locator("div.rounded-lg.border").filter({
-      has: page.getByRole("heading", { name: "Baseline Martial Arts", level: 3 }),
+      has: page.getByRole("heading", { name: "Black Belt Legacy", level: 3 }),
     })
 
     await baselineSection.getByLabel("Primary Color").fill("120 50% 40%")
     await baselineSection.getByRole("button", { name: /save settings/i }).click()
-    await expect(page.getByText("Baseline Martial Arts settings saved")).toBeVisible({
+    await expect(page.getByText("Black Belt Legacy settings saved")).toBeVisible({
       timeout: 10_000,
     })
 
@@ -126,11 +126,11 @@ test.describe("Admin brand-settings E2E", () => {
     })
 
     const cleanupSection = page.locator("div.rounded-lg.border").filter({
-      has: page.getByRole("heading", { name: "Baseline Martial Arts", level: 3 }),
+      has: page.getByRole("heading", { name: "Black Belt Legacy", level: 3 }),
     })
     await cleanupSection.getByLabel("Primary Color").fill("")
     await cleanupSection.getByRole("button", { name: /save settings/i }).click()
-    await expect(page.getByText("Baseline Martial Arts settings saved")).toBeVisible({
+    await expect(page.getByText("Black Belt Legacy settings saved")).toBeVisible({
       timeout: 10_000,
     })
   })

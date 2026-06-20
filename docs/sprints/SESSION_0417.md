@@ -2,7 +2,7 @@
 title: "SESSION 0417 — BBL reveal-prep: member photos + emails + registration (cloud sweep) + x-brand collapse"
 slug: session-0417
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-19
 updated: 2026-06-19
 last_agent: claude-session-0417

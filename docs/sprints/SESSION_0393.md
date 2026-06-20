@@ -2,7 +2,7 @@
 title: "SESSION 0393 — Cinematic Lineage View A explorer + Phase 3c browser re-light"
 slug: session-0393
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-15
 updated: 2026-06-15
 last_agent: claude-session-0393

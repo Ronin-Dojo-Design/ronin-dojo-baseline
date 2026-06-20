@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-18
+updated: 2026-06-20
 author: Brian + Copilot
 last_agent: codex-session-0411
 ---
@@ -85,6 +85,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Black Belt Legacy Gap Matrix](../../product/black-belt-legacy/GAP_MATRIX.md) | report | active — SESSION_0349 records shared trust badges across directory/detail/lineage surfaces, `legend` policy support, and `/directory` faceting as the next follow-up |
 | [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
 | [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan |
+| [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) | sot | active — single light P0/P1/P2 running list + Now-live (MVP_LIVE) + widget Feedback inbox; supersedes feature-intake-ledger (SESSION_0424); `lifecycle:` yaml convention |
 
 ## Architecture
 
@@ -516,6 +517,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0409](../../sprints/SESSION_0409.md) | session--implement | closed — **Member photo migration + importer drift fixes + Pods full-fidelity lane discovery.** Matched 44/44 member featured images on the WP uploads disk → `sips`+`cwebp` 512px webp → R2 `bbl-media` (200s) → backfilled `avatarUrl` on **42** prod Passports (41 default-gi→photo + Rick Williams overwrite via new `--overwrite-names`; Bob Bass+David Meyer 0407 photos kept); `scripts/backfill-bbl-avatars.ts` (idempotent, dry-run-first, pure `classifyAvatarChange`). Resolved drift **D-026** (importer dry-run affiliation accounting; real-run guard already present) + **D-027** (`normSchool`/`matchSchoolForPerson` — South Bay resolves, numeric pod-ids skipped) → 2 South Bay Affiliations realized. Discovered **D-028**: the 95-field `bbl_member` Pods provenance (per-belt date·promoter·school — the timeline USP) missed by 0408; wrote `BBL_PODS_FULL_IMPORT_SPEC.md` + proved Phase 0 reconciler (4 real dated timelines). No schema change (staged for next lane). |
 | [SESSION_0410](../../sprints/SESSION_0410.md) | session--implement | closed — **Verified merged BBL profile pipeline (PRs #88/#89/#90) end-to-end on local + drawer decomposition + launch recipe.** Fast-forwarded local `main` to `f8a5cda`; ran `enrich-bbl-members-pods.ts` against the committed fixture into a quarantined `bbl-lineage` tree (date parse / promoter→Passport / per-belt RankAwards / galleries / idempotent). Browser-verified `/me` (claimed placeholder) → fixed **2 bugs**: `currentResidence` never surfaced (projection+payload), Rank-History double-school (importer `location`-vs-org). Wired `BjjPassportCard` onto public `/directory/[slug]` (Passport-rooted, brand-neutral). **Decomposed the lineage profile drawer into a colocated folder module** (orchestrator + header + 3 lazy tabs + hook + types) — DrawerIdentityHeader CRAP **272→42**, maintainability held 90.0→89.9, **0 introduced findings**; added `Organization.logoUrl` (local migration) + null-safe school badge; wired View-A drawer tab switching (never had it). Wrote the canonical [`component-launch-sweep-recipe.md`](../../runbooks/component-launch-sweep-recipe.md) playbook (+6 gotchas) for the parallel cloud launch sweep. Prod migrate / Pods import / Poppins-A deferred to the supervised lane. |
 | [SESSION_0411](../../sprints/SESSION_0411.md) | session--implement | closed — Dry-run-gated BBL lifecycle email surface: added `EMAIL_LIFECYCLE_DRYRUN`, reusable BBL lifecycle template, notification-layer dry-run/rate-limit helper, Stripe webhook wiring for subscription welcome/update/delete, receipt/renewal, failed payment, refund, and dispute alert; documented SOP + ADR 0031. |
+| [SESSION_0418](../../sprints/SESSION_0418.md) | session--implement | closed — **🥋 BBL LAUNCH.** Lifted the holding page (env flip wouldn't propagate → hard-off `isBblCountdownActive` in code); emailed both founders (Bob + Tony) working one-click claim links (rewritten "Long Road" + sign-in guide + 7-day magic-link expiry); **greened the E2E suite** (systemic seed-brand mismatch BASELINE→BBL + ELITE entitlement + smoke/brand-settings/bracket fixes; comp-fixture reverted); **built + verified live paid memberships** (public email-bound magic-link-defer checkout, BBL Premium/Elite products+prices, prod seed, real `cs_live_` checkout reached, signature-verified webhook, **fixed a broken live webhook URL** missing `/api`); "What It Took" emails + launch milestone on both public READMEs. **NOTE:** sessions 0412–0417 were not indexed here (prior lean closes); not backfilled this session. |
+| [SESSION_0419](../../sprints/SESSION_0419.md) | session--implement | closed — **Post-launch claim hardening + email lifecycle wiring.** Root-caused the founders' "broken" claim links: the one-click claim was bound ONLY to the magic-link `callbackURL`, so signing in with **Google** (the email's recommended method, which carries no node) authenticated but never claimed. Fixed Tony directly (claimed tony-hua + `role: admin`); shipped the systemic fix (**ADR 0032**): new `LineagePendingClaim` email→node binding reconciled in `lib/auth.ts` `hooks.after` on **every** auth (Google + magic-link + email), with a shared `claimNodeForUser` core; backfilled Bob's two emails → bob-bass. Sent founder "Explore the Build" (docs navigator + Graphify graph) emails + Tony claim-explainer; **wired claim success into the email lifecycle library** (`profile-claim-approved`, all 3 paths) and flipped `EMAIL_LIFECYCLE_DRYRUN=0` in prod (**ADR 0031 updated** — surfaced that no lifecycle email, incl. Stripe receipts, had ever sent). Gates: claim-accept 6/6 + reconcile 5/5, `next build` + typecheck + oxlint/oxfmt clean. Migration `20260620041705_lineage_pending_claim` (additive). |
+| [petey-plan-0419-post-launch-sweep](../../petey-plan-0419-post-launch-sweep.md) | petey-plan | active — **agent TODO tracker** for the post-SESSION_0419 sweep: (1) **P0** Brian Truelson first-tester onboarding + lifetime comp + special thank-you email, (2) feedback-widget verify/route, (3) student sign-up-under-instructor/school + claim-approval flow, (4) admin email-composer parity + port BBLApp BBLEmail + Apple-worthy admin mobile, (5) UI polish (rank-badge overlap, EmailCapture system-pref theme default, FormLabel wrap). Each task self-contained for a fresh `/bow-in` session. |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
 | [petey-plan-0357](../../petey-plan-0357-bbl-galaxy.md) | plan | active — BBL Galaxy v1 (three.js) staging note; deferred to a dedicated session (external/ChatGPT artifacts to be pulled in) |
@@ -539,9 +543,16 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [FAILED_STEPS Log](../../protocols/failed-steps-log.md) | protocol | active |
 | [Project Log (retired)](../../protocols/project-log.md) | protocol | archived-frozen |
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
+| [Giddy Merge Strategy](../../protocols/giddy-merge-strategy.md) | protocol | active |
 | [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
+| [Hot-Fix Protocol](../../protocols/hot-fix-protocol.md) | protocol | active |
+| [Identify-Intent-Improve Loop](../../protocols/identify-intent-improve-loop.md) | protocol | active |
+| [KISS / DRY / YAGNI Loop](../../protocols/kiss-dry-yagni-loop.md) | protocol | active |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
+| [PR Review → Score → Fix Loop](../../protocols/pr-review-score-fix-loop.md) | protocol | active |
+| [QA Runtime Verification](../../protocols/qa-runtime-verification.md) | protocol | active |
+| [Three-Pass Loop](../../protocols/three-pass-loop.md) | protocol | active |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) | protocol | active |
@@ -600,6 +611,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) | runbook | active |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md) | runbook | active |
 | [Motion System](../../runbooks/design/motion-system.md) | runbook | active — martial-arts motion language, reduced-motion discipline, staged epic |
+| [Feature Intake Ledger](feature-intake-ledger.md) | reference | superseded → [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) (SESSION_0424) |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
 
@@ -633,6 +645,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [nav/nav-sheet.tsx](files/bbl-nav-sheet.md) | file | active |
 | [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
 | [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
+| [_components/feature-request-dialog.tsx (DojoBots widget)](files/feature-request-dialog.md) | file | active — `lifecycle: MVP_LIVE` |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components

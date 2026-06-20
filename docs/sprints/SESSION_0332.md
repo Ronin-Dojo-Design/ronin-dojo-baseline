@@ -2,7 +2,7 @@
 title: "SESSION 0332 — Trophy.so rank-progression proof (no-new-schema)"
 slug: session-0332
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-02
 updated: 2026-06-02
 last_agent: claude-session-0332

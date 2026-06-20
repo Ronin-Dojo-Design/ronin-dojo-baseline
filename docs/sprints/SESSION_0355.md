@@ -2,7 +2,7 @@
 title: "SESSION 0355 — Rich DataSelect labels (ReactNode rows), claim hardening (org CTA + browser smoke), BBL profile-redesign assessment"
 slug: session-0355
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-07
 updated: 2026-06-07
 last_agent: claude-session-0355

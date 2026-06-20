@@ -396,6 +396,11 @@ export const createJoinLegacyInterest = publicActionClient
     // existing node gets the branded "claim your profile" email; a plain free signup gets a
     // `/me` verify link. Signed-in users + paid tiers keep the original confirmation email.
     const isGuestFreeSubmission = membershipPath === "FREE" && !session?.user?.id
+    // A guest picking a PAID tier can't run the auth-gated membership checkout. Reconcile
+    // them first with an email-bound magic link (the same primitive the FREE path uses):
+    // the link signs them in and lands them on /lineage/join, where the membership picker
+    // creates the real Stripe checkout. Signed-in users keep the direct redirect.
+    const isGuestPaidSubmission = membershipPath !== "FREE" && !session?.user?.id
 
     after(async () => {
       const notification = {
@@ -449,6 +454,17 @@ export const createJoinLegacyInterest = publicActionClient
             previewToken: getBblPreviewToken(),
           })
           await notifyUserOfBblFreeSignup({ brand, to: email, firstName, verifyUrl })
+        } else if (isGuestPaidSubmission) {
+          // Guest paid tier → mint a magic link that signs them in and lands them on the
+          // join page's membership picker, which runs the (now-authenticated) Stripe
+          // checkout. No webhook change: metadata.userId is real once they're signed in.
+          const verifyUrl = await mintClaimMagicLink({
+            baseUrl: bblOrigin,
+            email,
+            nextPath: "/lineage/join#lineage-membership",
+            previewToken: getBblPreviewToken(),
+          })
+          await notifyUserOfBblFreeSignup({ brand, to: email, firstName, verifyUrl })
         } else {
           // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):
           // the original Join-the-Legacy confirmation.
@@ -470,6 +486,9 @@ export const createJoinLegacyInterest = publicActionClient
       toolSlug: tool?.slug ?? null,
       checkoutUrl,
       claimCreated,
+      // Guest paid submission → a checkout magic link was emailed instead of an immediate
+      // redirect; the wizard shows the success ("check your email") state.
+      checkoutEmailSent: isGuestPaidSubmission,
       // Retained for back-compat, but the guest-claim magic link now replaces the sign-in
       // bounce — the wizard shows the success state and the emailed link finishes the claim.
       claimRequiresSignIn: isClaimOfExistingNode && !session?.user?.id,

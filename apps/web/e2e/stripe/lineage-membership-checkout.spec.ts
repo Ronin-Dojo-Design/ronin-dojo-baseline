@@ -48,7 +48,9 @@ test.describe("Lineage membership Checkout E2E", () => {
     await page.goto("/lineage/join?cancelled=true")
 
     await expect(page.getByTestId("lineage-checkout-cancelled")).toBeVisible()
-    await expect(page.getByRole("heading", { name: "Join the Legacy" })).toBeVisible()
+    // SESSION_0418: the join landing hero h1 is now "Build Your Legacy" ("Join the
+    // Legacy" became a button). Match the level-1 Legacy heading robustly.
+    await expect(page.getByRole("heading", { name: /legacy/i, level: 1 })).toBeVisible()
     await expect(page.getByTestId(`lineage-membership-plan-${fixture.oneTimePlanId}`)).toBeVisible()
 
     const state = readLineageCheckoutState(fixture)

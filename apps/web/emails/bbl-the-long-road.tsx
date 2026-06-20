@@ -46,6 +46,12 @@ const LoginStep = ({ n, children }: { n: number; children: React.ReactNode }) =>
 type EmailProps = BblEmailWrapperProps & {
   /** The founder's one-click claim magic link (button + paste fallback). */
   claimUrl: string
+  /**
+   * "founder" = Bob's letter as-is. "tony" = the same letter shown verbatim to
+   * Tony, prefaced by a short note ("this is what I sent Bob — site's live"),
+   * with the claim link pointed at Tony's own node.
+   */
+  variant?: "founder" | "tony"
 }
 
 /** Section eyebrow — uppercase, tracked, brand-red. */
@@ -90,16 +96,47 @@ const TIMELINE: Array<{ when: string; what: string }> = [
 
 export const EmailBblTheLongRoad = ({
   claimUrl,
-  intendedFor = FOUNDER_INTENDED_FOR,
+  variant = "founder",
+  intendedFor,
+  to,
   ...props
 }: EmailProps) => {
+  const isTony = variant === "tony"
   return (
     <BblEmailWrapper
       {...props}
-      intendedFor={intendedFor}
-      preview="A first look at Black Belt Legacy — and the long road that got us here"
+      to={to}
+      intendedFor={intendedFor ?? (isTony ? to : FOUNDER_INTENDED_FOR)}
+      preview={
+        isTony
+          ? "Black Belt Legacy is live — and the letter I sent Bob"
+          : "A first look at Black Belt Legacy — and the long road that got us here"
+      }
     >
       <BblEmailHeading>A First Look at Black Belt Legacy</BblEmailHeading>
+
+      {isTony && (
+        <>
+          <Text className="mt-0">Tony,</Text>
+          <Text>
+            The site is fully live — if you&apos;re reading this, we made it. Below, word for word,
+            is the email I just sent Bob.
+          </Text>
+          <Text>
+            The <strong>&ldquo;Open the preview&rdquo;</strong> button below is{" "}
+            <strong>yours</strong> — it opens the full site and claims your spot at the head of the
+            lineage.
+          </Text>
+          <Text>
+            Functionality is in full. If anything looks off on your end, tell me — I&apos;m at the
+            computer the rest of the night.
+          </Text>
+          <Hr className="my-6 border-neutral-200" />
+          <Text className="mb-2 mt-0 text-[11px] font-bold uppercase tracking-[0.2em] text-red-700">
+            The exact letter I sent Bob
+          </Text>
+        </>
+      )}
 
       <Text className="mt-0">Mr. Bass,</Text>
 

@@ -37,6 +37,43 @@ export const claimAcceptNextPath = (nodeId: string) => `/lineage/claim/accept?no
 /** Post-preview destination for a plain free signup (no node to claim). */
 export const FREE_SIGNUP_NEXT_PATH = "/me"
 
+/** Generous-but-bounded window for an email→node pending claim (a founder may read slowly). */
+const PENDING_CLAIM_TTL_MS = 90 * 24 * 60 * 60 * 1000
+
+/** Pull the node id out of a claim-accept nextPath (`/lineage/claim/accept?node=<id>`), else null. */
+const claimNodeIdFromNextPath = (nextPath: string): string | null => {
+  const match = nextPath.match(/\/lineage\/claim\/accept\?node=([^&]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+/**
+ * SESSION_0419: persist an email→node pending-claim binding so the claim survives a sign-in
+ * that did NOT come through the magic-link callbackURL — most importantly the emailed Google
+ * "recommended" path, which authenticates fine but never carries the node. `lib/auth.ts`
+ * `hooks.after` reconciles the binding on the next successful auth for this email. Only a
+ * claim-accept nextPath binds a node; a free-signup nextPath (`/me`) is a no-op here.
+ */
+async function persistPendingClaimBinding(email: string, nextPath: string): Promise<void> {
+  const nodeId = claimNodeIdFromNextPath(nextPath)
+  if (!nodeId) return
+
+  // Resolve the brand off the node's published, claimable tree (matches the claim's own scoping).
+  const member = await db.lineageTreeMember.findFirst({
+    where: { nodeId, isClaimable: true, tree: { isPublished: true, isClaimable: true } },
+    select: { tree: { select: { brand: true } } },
+  })
+  if (!member) return
+
+  const normalizedEmail = email.trim().toLowerCase()
+  const expiresAt = new Date(Date.now() + PENDING_CLAIM_TTL_MS)
+  await db.lineagePendingClaim.upsert({
+    where: { email_nodeId: { email: normalizedEmail, nodeId } },
+    create: { email: normalizedEmail, nodeId, brand: member.tree.brand, expiresAt },
+    // Re-arm on re-mint: extend the window and clear any prior consumption marker.
+    update: { brand: member.tree.brand, expiresAt, consumedAt: null, consumedByUserId: null },
+  })
+}
+
 export async function mintClaimMagicLink(opts: {
   baseUrl: string
   email: string
@@ -67,6 +104,9 @@ export async function mintClaimMagicLink(opts: {
   if (!verification) {
     throw new Error(`magic-link token not found for ${opts.email}`)
   }
+
+  // Record the email→node binding so a non-magic-link sign-in (e.g. Google) still claims the node.
+  await persistPendingClaimBinding(opts.email, opts.nextPath)
 
   // Build the verify URL on the BBL origin (not BETTER_AUTH_URL) so the emailed link
   // points at the recipient's brand host. The verify endpoint only needs token + callbackURL.

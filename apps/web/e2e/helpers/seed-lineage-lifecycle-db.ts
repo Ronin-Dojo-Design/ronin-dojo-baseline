@@ -14,9 +14,14 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+// Single-brand collapse (lib/brand-context): getRequestBrand() always returns BBL,
+// so fixtures MUST seed under BBL or brand-scoped queries 404 the whole flow.
+const TEST_BRAND = "BBL" as const
 const TAG_PREFIX = "session-0251-lineage-e2e"
 const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM"
+// Claim-approval comps the ELITE tier (cumulative → PREMIUM + ELITE), so the ELITE
+// definition must exist for this brand or grantComp throws "Entitlement … not found".
+const LINEAGE_ELITE_ENTITLEMENT_KEY = "LINEAGE_ELITE"
 
 type Visibility = "PUBLIC" | "UNLISTED" | "RESTRICTED" | "PRIVATE"
 
@@ -96,6 +101,19 @@ async function grantLineagePremiumEntitlement({
       key: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
       name: "Lineage Premium",
       description: "Premium lineage-tree access entitlement for E2E fixtures.",
+    },
+  })
+
+  // Ensure the ELITE definition exists too — claim-approval grants the cumulative
+  // ELITE tier and grantComp throws if its Entitlement row is missing for the brand.
+  await prisma.entitlement.upsert({
+    where: { brand_key: { brand: TEST_BRAND, key: LINEAGE_ELITE_ENTITLEMENT_KEY } },
+    update: {},
+    create: {
+      brand: TEST_BRAND,
+      key: LINEAGE_ELITE_ENTITLEMENT_KEY,
+      name: "Lineage Elite",
+      description: "Elite lineage-tree access entitlement for E2E fixtures.",
     },
   })
 
