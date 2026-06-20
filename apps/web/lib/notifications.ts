@@ -633,8 +633,10 @@ export type BblFounderLongRoadParams = {
   brand: Brand
   to: string
   firstName?: string | null
-  /** The minted, email-bound magic link that one-click claims the founder's node. */
+  /** The minted, email-bound magic link that one-click claims the recipient's node. */
   claimUrl: string
+  /** "founder" = Bob's letter. "tony" = Tony sees the letter verbatim + a short preface. */
+  variant?: "founder" | "tony"
 }
 
 /**
@@ -644,15 +646,19 @@ export type BblFounderLongRoadParams = {
  * testament, founder to founder, with his one-click claim link carried inside.
  */
 export const notifyFounderOfTheLongRoad = async (params: BblFounderLongRoadParams) => {
+  const isTony = params.variant === "tony"
   if (await shouldSkipForRateLimit(`bbl-founder-long-road:${params.to}`)) return
 
   return await sendEmail({
     brand: params.brand,
     to: params.to,
-    subject: "A first look at Black Belt Legacy — and the long road that got us here",
+    subject: isTony
+      ? "Black Belt Legacy is live — and the letter I sent Bob"
+      : "A first look at Black Belt Legacy — and the long road that got us here",
     react: EmailBblTheLongRoad({
       to: params.to,
       claimUrl: params.claimUrl,
+      variant: params.variant,
     }),
   })
 }
