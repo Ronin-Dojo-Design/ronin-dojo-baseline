@@ -27,7 +27,8 @@ export default async function ({ children }: PropsWithChildren) {
   const requestBrand = await getRequestBrand()
 
   // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
-  // cookie skip it. Other brands are never affected.
+  // cookie skip it. Other brands are never affected. (Launched 2026-06-19 — the
+  // BBL_COUNTDOWN var was removed from prod env, so this gate is now inert.)
   if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
     return <BblTeaserPage />
   }
