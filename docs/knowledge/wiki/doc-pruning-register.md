@@ -4,7 +4,7 @@ slug: doc-pruning-register
 type: registry
 status: active
 created: 2026-05-18
-updated: 2026-05-29
+updated: 2026-06-20
 author: Brian + Giddy
 last_agent: claude-session-0298
 backlinks:
@@ -50,6 +50,7 @@ Do not delete or move a doc just because it feels stale. First preserve the usef
 | duplicate repo truth index imports | reference | reference (kept, excluded) | `docs/knowledge/wiki/repo-truth-index.md` | Canonical truth index already exists. | **RESOLVED (SESSION_0298):** these live under `docs/_imports/` — covered by the `docs/_imports/*` decision above (kept in place, excluded from active load). |
 | duplicate alias/canonical-id imports | reference | reference (kept, excluded) | `docs/knowledge/wiki/aliases-and-canonical-ids.md` | Canonical alias ledger already exists. | **RESOLVED (SESSION_0298):** under `docs/_imports/` — covered by the `docs/_imports/*` decision above. |
 | session-specific planning reports whose decisions landed elsewhere | mixed | reference | latest relevant `docs/sprints/SESSION_NNNN.md`, PRD, ADR, or architecture doc | Session planning is useful history, not always active product truth. | Demote only after landed decision is linked. |
+| `docs/sprints/SESSION_0221..04xx.md` (closed sessions) | active | archive candidate | `docs/sprints/_archive/` (same as 0001–0220) | **SESSION_0423 hygiene sweep:** archive frontier sits at 0220 (0001–0220 already in `_archive/`); ~180 closed sessions linger in the active dir. 22 `in-progress` were reconciled in 0423 (21 retro-closed, only the live session left). | **STAGED — operator go needed.** Bulk `git mv SESSION_0221..N → _archive/` + rewrite each index row path `../../sprints/SESSION_NNNN.md → ../../sprints/_archive/SESSION_NNNN.md` (167 archived rows already follow this). Recommend cutoff ≤ 0410, leaving the latest ~12 active. Scriptable + reviewable; not run mid-window to avoid a 180-file unverified churn. |
 
 ## Archive metadata rule
 

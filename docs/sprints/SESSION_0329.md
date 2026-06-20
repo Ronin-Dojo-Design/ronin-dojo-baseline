@@ -2,7 +2,7 @@
 title: "SESSION 0329 — Lineage Phase 3c on-card Change-promoter wiring"
 slug: session-0329
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-01
 updated: 2026-06-01
 last_agent: claude-session-0329

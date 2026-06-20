@@ -2,7 +2,7 @@
 title: "SESSION 0335 — Doc-system ergonomics: lint-to-spec, finding-router, domain cards, verification SOP"
 slug: session-0335
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-02
 updated: 2026-06-02
 last_agent: claude-session-0335

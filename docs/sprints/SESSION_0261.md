@@ -2,7 +2,7 @@
 title: "SESSION 0261 — A3 proper schema delta + A3-UI-v2 recipient toggle"
 slug: session-0261
 type: session--open
-status: in-progress
+status: closed
 created: 2026-05-26
 updated: 2026-05-26
 last_agent: claude-session-0261

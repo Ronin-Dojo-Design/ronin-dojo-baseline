@@ -2,7 +2,7 @@
 title: "SESSION 0337 — Desi-led lineage design review (responsiveness / overflow / toolbar / carousel)"
 slug: session-0337
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-03
 updated: 2026-06-03
 last_agent: claude-session-0337

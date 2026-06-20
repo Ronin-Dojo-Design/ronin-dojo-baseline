@@ -2,7 +2,7 @@
 title: "SESSION 0422 — E2E verify: signup-under-instructor → placement → pay → entitlements → emails → claim approval"
 slug: session-0422
 type: session--review
-status: in-progress
+status: closed
 created: 2026-06-20
 updated: 2026-06-20
 last_agent: claude-session-0422

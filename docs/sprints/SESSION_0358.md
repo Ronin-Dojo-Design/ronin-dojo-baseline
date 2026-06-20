@@ -2,7 +2,7 @@
 title: "SESSION 0358 — Passport-centric consolidation: admin add-person (+lineage placement) + read-repoint + doc leave-behind"
 slug: session-0358
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-08
 updated: 2026-06-08
 last_agent: claude-session-0358
