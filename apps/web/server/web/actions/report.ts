@@ -2,8 +2,11 @@
 
 import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
+import { after } from "next/server"
 import { ReportType } from "~/.generated/prisma/client"
 import { reportsConfig } from "~/config/reports"
+import { getRequestBrand } from "~/lib/brand-context"
+import { notifyAdminOfFeedback } from "~/lib/notifications"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { actionClient, userActionClient } from "~/lib/safe-actions"
 import { createFeedbackSchema, createReportToolSchema } from "~/server/web/shared/schema"
@@ -70,6 +73,18 @@ export const reportFeedback = actionClient
       console.error("Failed to send feedback:", result.error)
       return { success: false, error: "Failed to send feedback. Please try again later." }
     }
+
+    // Feedback is persisted (Report table, surfaced at /app/reports) — now ping the
+    // operator inbox so it actually gets seen. Scheduled post-response via after() so
+    // Resend latency never blocks the success toast and a send failure can't undo the
+    // already-committed feedback row.
+    const brand = await getRequestBrand()
+    after(async () => {
+      const notifyResult = await tryCatch(notifyAdminOfFeedback({ brand, email, message }))
+      if (notifyResult.error) {
+        console.error("Failed to notify operator of feedback:", notifyResult.error)
+      }
+    })
 
     return { success: true }
   })

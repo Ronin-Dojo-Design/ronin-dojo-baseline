@@ -15,6 +15,17 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
 }))
 
+// `applyLineageClaimReview` schedules the claim-approved email via after() (through
+// scheduleClaimApprovedEmail). bun's mock.module is process-global, so this test used to
+// free-ride on another file's next/server mock depending on run order; mock it here so
+// the after() callback runs (fire-and-forget) instead of throwing "outside a request
+// scope" when this file runs first. Mirrors capture-email.test.ts (SESSION_0420).
+mock.module("next/server", () => ({
+  after: (fn: () => void | Promise<void>) => {
+    void Promise.resolve().then(() => fn())
+  },
+}))
+
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
 mock.module("~/lib/brand-context", () => ({
   getRequestBrand: () => Promise.resolve(TEST_BRAND),

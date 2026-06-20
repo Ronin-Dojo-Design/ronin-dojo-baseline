@@ -8,6 +8,7 @@ import {
 } from "~/.generated/prisma/client"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
+import { EmailAdminFeedback } from "~/emails/admin-feedback"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailBblBuildTour } from "~/emails/bbl-build-tour"
 import { EmailBblClaimExplainer } from "~/emails/bbl-claim-explainer"
@@ -741,6 +742,47 @@ export const notifyAdminOfBblJoinLegacy = async (params: BblJoinLegacyNotificati
       adminLeadUrl: `${params.appUrl ?? siteConfig.url}/admin/leads/${params.leadId}`,
       checkoutUrl: params.checkoutUrl,
       claimCreated: params.claimCreated,
+    }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Site feedback widget notifications (SESSION_0420)
+// ---------------------------------------------------------------------------
+
+export type FeedbackNotificationParams = {
+  brand: Brand
+  /** The submitter's email (also used as Reply-To so the operator can reply directly). */
+  email: string
+  message: string
+}
+
+/**
+ * Notify the operator inbox when a visitor submits the public feedback widget.
+ *
+ * Feedback already persists to the Report table (type = Feedback), surfaced in the
+ * admin Reports view at /app/reports — but nobody is pinged about it. This puts a
+ * copy in the brand inbox (welcome@blackbeltlegacy.com for BBL via getBrandSenderEmail)
+ * with the submitter as Reply-To, so feedback actually gets seen. Rate-limit-guarded
+ * per submitter to absorb double-submits.
+ */
+export const notifyAdminOfFeedback = async (params: FeedbackNotificationParams) => {
+  if (await shouldSkipForRateLimit(`feedback:${params.email}`)) return
+
+  const to = getBrandSenderEmail(params.brand)
+  const siteName = getBrandSiteConfig(params.brand).name
+
+  return await sendEmail({
+    brand: params.brand,
+    to,
+    subject: `New ${siteName} feedback from ${params.email}`,
+    replyTo: params.email,
+    react: EmailAdminFeedback({
+      to,
+      fromEmail: params.email,
+      message: params.message,
+      siteName,
+      adminReportsUrl: `${siteConfig.url}/app/reports`,
     }),
   })
 }

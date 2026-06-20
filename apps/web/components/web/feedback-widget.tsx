@@ -7,6 +7,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { millisecondsInSecond } from "date-fns/constants"
 import debounce from "debounce"
 import { useTranslations } from "next-intl"
+import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
@@ -141,7 +142,14 @@ export const FeedbackWidget = () => {
   const startTime = useRef(Date.now())
   const [shouldShow, setShouldShow] = useState(false)
   const maxScrollRef = useRef(0)
+  const pathname = usePathname()
   const { slug } = useBrand()
+
+  // Routes with a fixed full-width bottom CTA on mobile — the bottom-corner toast
+  // would cover the primary CTA on a ~390px viewport, so it never opens there.
+  const suppressedHere = feedbackConfig.suppressOnPathPrefixes.some(prefix =>
+    pathname.startsWith(prefix),
+  )
   const feedbackKey = `${slug}-feedback-dismissed`
   const pageViewsKey = `${slug}-page-views`
   const { minTimeSpent, minPageView, minScroll, timeCheckInterval } = feedbackConfig.thresholds
@@ -198,7 +206,7 @@ export const FeedbackWidget = () => {
 
   // Setup scroll listener and engagement checker
   useEffect(() => {
-    if (dismissed || !feedbackConfig.enabled) return
+    if (dismissed || !feedbackConfig.enabled || suppressedHere) return
 
     window.addEventListener("scroll", handleScroll)
     const interval = setInterval(checkEngagement, timeCheckInterval * millisecondsInSecond)
@@ -208,7 +216,7 @@ export const FeedbackWidget = () => {
       handleScroll.clear() // Using clear() instead of cancel() for debounce
       clearInterval(interval)
     }
-  }, [dismissed, handleScroll, checkEngagement])
+  }, [dismissed, handleScroll, checkEngagement, suppressedHere])
 
   return null
 }
