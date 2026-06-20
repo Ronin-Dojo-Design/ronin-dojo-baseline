@@ -38,7 +38,7 @@ export function ProfileClaimTeaser({
     name?.trim() || (subjectType === "ORGANIZATION" ? "this organization" : "this profile")
 
   return (
-    <Stack direction="column" size="lg" className="mx-auto max-w-2xl py-6">
+    <Stack direction="column" size="lg" className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
       <ProfileHero
         name={name}
         subtitle={subtitle}

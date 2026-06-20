@@ -3,20 +3,24 @@
 import { useAction } from "next-safe-action/hooks"
 import { type FormEvent, useState } from "react"
 import { captureBblEmail } from "~/server/web/bbl/capture-email"
-import { BBL_LOGO_WHITE } from "./bbl-teaser-types"
+import { BBL_LOGO_BLACK, BBL_LOGO_WHITE } from "./bbl-teaser-types"
 
 /**
  * BBL launch-teaser email capture (SESSION_0411).
  *
- * Dark cinematic card modeled on the legacy monorepo `EmailCaptureModal` UX, but
- * the submit now persists to THIS app's DB via the public `captureBblEmail` server
- * action (the legacy modal POSTed to a now-dead WordPress endpoint — that is the bug
- * this fixes). Loading / success / error states are driven by `useAction`.
+ * Submit persists to THIS app's DB via the public `captureBblEmail` server action.
+ * Loading / success / error states are driven by `useAction`.
  *
- * Inline (not a modal) — the capture is the primary CTA of the teaser, so it lives
- * in the hero rather than behind a click.
+ * `theme` (SESSION_0419): the card was a dark cinematic card built for the teaser holding
+ * page (dark bg). It is also rendered at the bottom of the LIGHT landing page (`/lineage/join`,
+ * home), where the white logo + dark inputs disappeared on white. `theme="light"` swaps to the
+ * black wordmark + a light card/inputs; `theme="dark"` (default) keeps the teaser look.
  */
-export function EmailCapture() {
+type EmailCaptureProps = {
+  theme?: "dark" | "light"
+}
+
+export function EmailCapture({ theme = "dark" }: EmailCaptureProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
@@ -33,11 +37,26 @@ export function EmailCapture() {
     execute({ email: email.trim(), name: name.trim() || undefined })
   }
 
+  const isLight = theme === "light"
+  const s = {
+    card: isLight
+      ? "border-neutral-200 bg-white shadow-sm"
+      : "border-white/10 bg-white/[0.04] backdrop-blur-sm",
+    logo: isLight ? BBL_LOGO_BLACK : BBL_LOGO_WHITE,
+    heading: isLight ? "text-neutral-900" : "text-white",
+    sub: isLight ? "text-neutral-500" : "text-white/55",
+    successSub: isLight ? "text-neutral-600" : "text-white/60",
+    input: isLight
+      ? "border-neutral-300 bg-white text-neutral-900 placeholder-neutral-400 focus:border-red-500"
+      : "border-white/10 bg-black/40 text-white placeholder-white/35 focus:border-red-500/70",
+    fineprint: isLight ? "text-neutral-400" : "text-white/35",
+  }
+
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm sm:p-6">
+    <div className={`w-full max-w-md rounded-2xl border p-5 sm:p-6 ${s.card}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={BBL_LOGO_WHITE}
+        src={s.logo}
         alt="Black Belt Legacy"
         width="96"
         height="55"
@@ -46,21 +65,23 @@ export function EmailCapture() {
 
       {isSuccess ? (
         <div className="mt-6 text-left" role="status" aria-live="polite">
-          <h2 className="text-xl font-extrabold uppercase italic tracking-tight text-white [font-family:var(--font-bbl-heading,var(--font-display))]">
+          <h2
+            className={`text-xl font-extrabold uppercase italic tracking-tight [font-family:var(--font-bbl-heading,var(--font-display))] ${s.heading}`}
+          >
             You&apos;re on the list
           </h2>
-          <p className="mt-2 text-sm/6 text-white/60">
+          <p className={`mt-2 text-sm/6 ${s.successSub}`}>
             Thanks! We&apos;ll keep you posted on features, updates, and more.
           </p>
         </div>
       ) : (
         <>
-          <h2 className="mt-6 text-xl font-extrabold uppercase italic tracking-tight text-white [font-family:var(--font-bbl-heading,var(--font-display))]">
+          <h2
+            className={`mt-6 text-xl font-extrabold uppercase italic tracking-tight [font-family:var(--font-bbl-heading,var(--font-display))] ${s.heading}`}
+          >
             Join Our Mailing List
           </h2>
-          <p className="mt-2 text-sm/6 text-white/55">
-            Get notified on features, updates, and more!
-          </p>
+          <p className={`mt-2 text-sm/6 ${s.sub}`}>Get notified on features, updates, and more!</p>
 
           <form onSubmit={onSubmit} className="mt-5 space-y-3">
             <div>
@@ -74,7 +95,7 @@ export function EmailCapture() {
                 onChange={event => setName(event.target.value)}
                 placeholder="Your name (optional)"
                 autoComplete="name"
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition-colors focus:border-red-500/70"
+                className={`w-full rounded-lg border px-4 py-3 text-sm outline-none transition-colors ${s.input}`}
               />
             </div>
 
@@ -90,7 +111,7 @@ export function EmailCapture() {
                 onChange={event => setEmail(event.target.value)}
                 placeholder="you@email.com"
                 autoComplete="email"
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition-colors focus:border-red-500/70"
+                className={`w-full rounded-lg border px-4 py-3 text-sm outline-none transition-colors ${s.input}`}
               />
             </div>
 
@@ -103,13 +124,13 @@ export function EmailCapture() {
             </button>
 
             {serverError && (
-              <p className="text-center text-sm text-red-400" role="alert">
+              <p className="text-center text-sm text-red-500" role="alert">
                 {serverError}
               </p>
             )}
           </form>
 
-          <p className="mt-4 text-center text-[0.7rem] text-white/35">
+          <p className={`mt-4 text-center text-[0.7rem] ${s.fineprint}`}>
             No spam, ever. We respect your privacy.
           </p>
         </>

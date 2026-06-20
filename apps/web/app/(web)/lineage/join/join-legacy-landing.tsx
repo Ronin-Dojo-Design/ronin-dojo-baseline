@@ -330,9 +330,9 @@ export function JoinLegacyLanding({
         </button>
       </section>
 
-      {/* Email capture — mailing-list signup at the bottom of the landing. */}
+      {/* Email capture — mailing-list signup at the bottom of the landing (light bg). */}
       <section className="mt-16 flex flex-col items-center gap-4 text-center">
-        <EmailCapture />
+        <EmailCapture theme="light" />
       </section>
 
       {/* Join modal — the existing intake form, in a responsive drawer. */}
