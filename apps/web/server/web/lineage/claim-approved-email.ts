@@ -30,7 +30,7 @@ export function scheduleClaimApprovedEmail({
   brand: Brand
   nodeId: string
 }): void {
-  after(async () => {
+  const send = async () => {
     try {
       const user = await db.user.findUnique({
         where: { id: userId },
@@ -55,5 +55,18 @@ export function scheduleClaimApprovedEmail({
     } catch (error) {
       console.error("[scheduleClaimApprovedEmail]", error instanceof Error ? error.message : error)
     }
-  })
+  }
+
+  // `after()` throws when called outside a request scope (background jobs, scripts, tests).
+  // The claim must NEVER fail because its confirmation email couldn't be scheduled, so guard the
+  // registration itself (SESSION_0420). In a real request path `after()` is always available, so
+  // this try/catch is a no-op there; outside one, the email is simply skipped instead of throwing.
+  try {
+    after(send)
+  } catch (error) {
+    console.error(
+      "[scheduleClaimApprovedEmail] after() unavailable, skipping email:",
+      error instanceof Error ? error.message : error,
+    )
+  }
 }
