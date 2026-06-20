@@ -205,6 +205,8 @@ subscriptions where applicable.
 - This brief committed (✅ this file).
 - Intake logged on the [calendar of events](../calendar-of-events.md) (✅).
 - After the call: open decisions §7 resolved → a scoped proposal authored as the next doc.
+  → **Draft proposal now exists:** [`michael-flores-project-proposal.md`](./michael-flores-project-proposal.md)
+  (pre-intake; firms up after the call).
 
 ## Sources
 

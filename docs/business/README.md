@@ -22,6 +22,8 @@ clients into the product database, and do not file gym members here.
 - [`leads/`](./leads/) — one file per prospective/active client engagement.
   - [`leads/mammoth-build-michael-flores.md`](./leads/mammoth-build-michael-flores.md)
     — Mammoth Metal Buildings (Michael Flores, GM). HubSpot Commerce Hub engagement.
+  - [`leads/michael-flores-project-proposal.md`](./leads/michael-flores-project-proposal.md)
+    — scoped proposal for the HubSpot retrofit (DRAFT, pre-intake).
 
 ## Conventions
 
