@@ -147,15 +147,15 @@ backlogs (loop promotion + session hygiene).
 
 ### Goal
 
-Execute the staged bulk session-archive (sweep Part B) and/or begin feature-intake triage as
-real requests arrive.
+Run the live maintenance loop as work arrives — triage the feature-intake ledger and run the
+PR-review loop on incoming PRs (the promotion program + bulk archive are both done/closed).
 
 ### First task
 
-If the operator greenlights the archive: script the `git mv` of `SESSION_0221..0410` into
-`docs/sprints/_archive/` and rewrite each wiki-index row path to `../../sprints/_archive/`,
-verify with `bun run wiki:lint` (0 errors), then commit. Otherwise pick up the next loop or
-triage the feature-intake ledger per `reusable-prompts.md`.
+Pick up from `docs/protocols/reusable-prompts.md`: triage any new feature-intake-ledger rows
+(set type/priority/status, surface top 3 for the operator), or run the PR-review loop on the
+next PR. Bulk session archive was skipped by operator decision (SESSION_0423) — do not revive
+unless active-dir size becomes a problem.
 
 ## Review log
 
