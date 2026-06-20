@@ -38,7 +38,7 @@ export function ProfileClaimTeaser({
     name?.trim() || (subjectType === "ORGANIZATION" ? "this organization" : "this profile")
 
   return (
-    <Stack direction="column" size="lg" className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-6 sm:px-6">
       <ProfileHero
         name={name}
         subtitle={subtitle}
@@ -75,6 +75,6 @@ export function ProfileClaimTeaser({
         <p className="mb-3 font-medium text-base">Claim {label}</p>
         <ProfileClaimForm subjectType={subjectType} subjectId={subjectId} subjectLabel={label} />
       </Card>
-    </Stack>
+    </div>
   )
 }
