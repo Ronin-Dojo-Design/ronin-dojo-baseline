@@ -1,8 +1,12 @@
 import { ExternalLinkIcon, MailIcon, ReplyIcon } from "lucide-react"
 import { Brand } from "~/.generated/prisma/client"
-import { BblEmailCaptureList } from "~/app/app/email/_components/bbl-email-capture-list"
+import {
+  BblEmailCaptureList,
+  type BblCaptureRow,
+} from "~/app/app/email/_components/bbl-email-capture-list"
 import { BblEmailCatalogPanel } from "~/app/app/email/_components/bbl-email-catalog-panel"
 import { BblInviteComposer } from "~/app/app/email/_components/bbl-invite-composer"
+import { BblLifecycleCatalogPanel } from "~/app/app/email/_components/bbl-lifecycle-catalog-panel"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -19,7 +23,12 @@ import {
   isBrandSenderConfigured,
 } from "~/lib/email"
 import { getBblEmailTemplatePreviews } from "~/server/admin/email/catalog"
-import { findRecentBblJoinLegacyCaptures } from "~/server/admin/email/queries"
+import { getLifecycleCatalogPreviews } from "~/server/admin/email/lifecycle-catalog"
+import {
+  type BblJoinLegacyCapture,
+  findRecentBblJoinLegacyCaptures,
+  readLeadMetaString,
+} from "~/server/admin/email/queries"
 
 const brandSenders = [
   {
@@ -67,15 +76,28 @@ const emailSurfaces = [
   },
 ] as const
 
+const toCaptureRow = (capture: BblJoinLegacyCapture): BblCaptureRow => ({
+  id: capture.id,
+  name: [capture.firstName, capture.lastName].filter(Boolean).join(" ") || "Unknown",
+  email: capture.email ?? "",
+  membershipPath: readLeadMetaString(capture.meta, "membershipPath") ?? "FREE",
+  status: capture.status,
+  submittedLabel: capture.createdAt.toLocaleDateString(),
+  leadHref: `/app/leads/${capture.id}`,
+})
+
 export default async function AppEmailPage() {
   const senderConfigured = Boolean(
     env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
   )
   const bblSenderConfigured = isBrandSenderConfigured(Brand.BBL)
-  const [bblEmailTemplates, bblCaptures] = await Promise.all([
+  const [bblEmailTemplates, lifecyclePreviews, bblCaptures] = await Promise.all([
     getBblEmailTemplatePreviews(),
+    getLifecycleCatalogPreviews(),
     findRecentBblJoinLegacyCaptures(),
   ])
+
+  const captureRows: BblCaptureRow[] = bblCaptures.map(toCaptureRow)
 
   return (
     <Wrapper size="lg" gap="md">
@@ -153,7 +175,7 @@ export default async function AppEmailPage() {
         <Stack direction="column" className="gap-3">
           <span className="font-medium">Brand sender setup</span>
           <div className="overflow-hidden rounded-md border">
-            <div className="grid gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid-cols-[12rem_1fr_1fr_1fr_7rem]">
+            <div className="hidden gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid md:grid-cols-[12rem_1fr_1fr_1fr_7rem]">
               <span>Brand</span>
               <span>Domain</span>
               <span>Sender</span>
@@ -188,9 +210,15 @@ export default async function AppEmailPage() {
         isSenderConfigured={bblSenderConfigured}
       />
 
+      <BblLifecycleCatalogPanel
+        previews={lifecyclePreviews}
+        senderEmail={getBrandSenderEmail(Brand.BBL)}
+        isSenderConfigured={bblSenderConfigured}
+      />
+
       <BblInviteComposer isSenderConfigured={bblSenderConfigured} />
 
-      <BblEmailCaptureList captures={bblCaptures} />
+      <BblEmailCaptureList captures={captureRows} />
 
       <Card className="p-4">
         <Stack direction="column" className="gap-3">
@@ -199,7 +227,7 @@ export default async function AppEmailPage() {
             <span className="font-medium">Where email lives today</span>
           </Stack>
           <div className="overflow-hidden rounded-md border">
-            <div className="grid gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid-cols-[12rem_1fr_1.5fr]">
+            <div className="hidden gap-3 border-b bg-muted/30 px-4 py-2 font-medium text-muted-foreground text-xs md:grid md:grid-cols-[12rem_1fr_1.5fr]">
               <span>Surface</span>
               <span>Where</span>
               <span>Use</span>
