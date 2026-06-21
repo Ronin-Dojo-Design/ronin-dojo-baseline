@@ -55,6 +55,7 @@ backlinks:
 ## Stage 1 — the fanout (4 disjoint waves)
 
 **Shared mechanics (every wave):**
+
 - Replace each `const brand = await getRequestBrand()` usage:
   - if `brand` only feeds `where: { brand }` → drop the line, inline `Brand.BBL` at the filter (keep
     the filter), and de-`async`/drop the now-unneeded `await` if it was the only one.
