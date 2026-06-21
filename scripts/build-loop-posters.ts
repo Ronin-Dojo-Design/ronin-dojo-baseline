@@ -41,9 +41,14 @@ const clean = (s: string) =>
 const stripFm = (md: string) => (md.startsWith("---") ? md.replace(/^---\n[\s\S]*?\n---\n?/, "") : md)
 
 const firstBlurb = (lines: string[], from: number): string => {
+  let inFence = false
   for (let i = from; i < Math.min(from + 8, lines.length); i++) {
     const l = lines[i].trim()
-    if (!l || l.startsWith("#") || l.startsWith("```") || l.startsWith("|") || l.startsWith(">")) continue
+    if (l.startsWith("```")) {
+      inFence = !inFence
+      continue
+    }
+    if (inFence || !l || l.startsWith("#") || l.startsWith("|") || l.startsWith(">")) continue
     const txt = clean(l.replace(/^[-*]\s+/, ""))
     if (txt.length > 8) return txt.length > 150 ? `${txt.slice(0, 147)}…` : txt
   }
