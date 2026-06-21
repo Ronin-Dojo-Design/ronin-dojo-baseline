@@ -67,7 +67,9 @@ describe("projectPublicPassport", () => {
 
   it("hides ranks when showRanks === false (single gate)", () => {
     const dto = projectPublicPassport(
-      row({ directoryProfile: { slug: "x", visibility: "PUBLIC", showRanks: false } } as Partial<PublicPassportRow>),
+      row({
+        directoryProfile: { slug: "x", visibility: "PUBLIC", showRanks: false },
+      } as Partial<PublicPassportRow>),
     )
     expect(dto.ranks).toEqual([])
     expect(dto.currentRank).toBeNull()
@@ -76,7 +78,9 @@ describe("projectPublicPassport", () => {
 
   it("honors a showRanks override (owner/admin bypass)", () => {
     const dto = projectPublicPassport(
-      row({ directoryProfile: { slug: "x", visibility: "PUBLIC", showRanks: false } } as Partial<PublicPassportRow>),
+      row({
+        directoryProfile: { slug: "x", visibility: "PUBLIC", showRanks: false },
+      } as Partial<PublicPassportRow>),
       { showRanks: true },
     )
     expect(dto.ranks).toHaveLength(1)
@@ -84,7 +88,10 @@ describe("projectPublicPassport", () => {
 
   it("applies the brand default avatar only when no image exists", () => {
     const dto = projectPublicPassport(
-      row({ avatarUrl: null, user: { id: "u1", name: "A", image: null } } as Partial<PublicPassportRow>),
+      row({
+        avatarUrl: null,
+        user: { id: "u1", name: "A", image: null },
+      } as Partial<PublicPassportRow>),
       { brand: "BBL" },
     )
     // resolveDisplayAvatar returns the brand default (or null if none configured) — never throws.
