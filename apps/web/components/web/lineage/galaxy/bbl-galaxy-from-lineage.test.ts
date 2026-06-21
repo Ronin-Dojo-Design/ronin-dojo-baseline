@@ -36,6 +36,7 @@ const member = (
     rankName?: string | null
     discipline?: string | null
     awardYear?: number | null
+    verified?: boolean
   } = {},
 ): Member => ({
   id,
@@ -54,6 +55,7 @@ const member = (
     : null,
   node: {
     slug: `slug-${id}`,
+    isVerified: opts.verified ?? true,
     passport: {
       displayName: opts.displayName ?? null,
       avatarUrl: opts.avatarUrl ?? null,
@@ -163,5 +165,18 @@ describe("lineageTreeToGalaxyGraph", () => {
     // private group is dropped from the node projection too
     expect(a.groupId).toBeUndefined()
     expect(a.groupLabel).toBeUndefined()
+  })
+
+  it("drops unverified nodes and any edges touching them (verified-only galaxy)", () => {
+    const graph = lineageTreeToGalaxyGraph(
+      build([
+        member("root", { displayName: "Root", verified: true }),
+        member("ghost", { parent: "root", displayName: "Unverified", verified: false }),
+      ]),
+    )
+    expect(graph.nodes.map(n => n.id)).toEqual(["node-root"])
+    // the root→ghost edge is dropped because ghost was filtered out
+    expect(graph.edges).toHaveLength(0)
+    expect(graph.nodes.every(n => n.verifiedStatus === "VERIFIED")).toBe(true)
   })
 })

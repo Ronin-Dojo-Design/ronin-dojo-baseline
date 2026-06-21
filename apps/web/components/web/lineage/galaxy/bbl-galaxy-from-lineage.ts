@@ -59,8 +59,12 @@ const rankLabelOf = (member: MemberRow): string | undefined => {
 }
 
 export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGalaxyGraph => {
-  const { members, visualGroups } = result
+  const { visualGroups } = result
 
+  // Verified-only galaxy (spec security rule: no disputed/unverified public stars). The
+  // query already scopes to PUBLIC; this drops any unverified node so `verifiedStatus` is
+  // truthful by construction, and edges to dropped nodes fall away below.
+  const members = result.members.filter(member => member.node.isVerified === true)
   const generationByMemberId = computeGenerations(members)
   const nodeIdByMemberId = new Map(members.map(member => [member.id, member.nodeId]))
 
