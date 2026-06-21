@@ -62,8 +62,10 @@ Efficient JSON in = efficient JSON out = the same Ousterhout information-hiding 
 
 ## Open decision — L3 (semantic layer)
 
-**D-L3:** add a *lightweight* semantic layer (embeddings over wiki + memory + ADRs) **or** stay
-graph-first and invest in better memory descriptions as the poor-man's semantic index. A real fork —
-record the choice here (and, if it shapes the architecture, fold into ADR 0033) before building.
+**D-L3 — DECIDED (SESSION_0421): stay graph-first; defer the vector/semantic layer.** Graphify (L4)
+already covers relationship retrieval over code/docs/decisions; a vector DB adds infra + sync +
+maintenance cost for marginal gain at this scale. Instead, invest in **better memory descriptions**
+as the cheap semantic index, and revisit a lightweight embedding layer only if retrieval-by-meaning
+becomes a felt bottleneck.
 
-> *Status: not yet decided.*
+> *Status: decided — graph-first. Reopen if semantic recall becomes a real pain point.*

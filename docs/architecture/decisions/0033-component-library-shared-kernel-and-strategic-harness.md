@@ -28,8 +28,8 @@ tags:
 
 ## Status
 
-Accepted (D1 flagged as the pivotal call — recorded as the recommended decision; confirm before
-the cloud builds fire).
+Accepted — SESSION_0421 ratified all decisions, including D1: the kernel lives in `packages/ui-kit`;
+Mammoth consumes it in-repo for now.
 
 ## Context
 
@@ -62,12 +62,11 @@ sandbox + parallelize, and don't over-optimize for a model.
 
 ## Decision
 
-**D1 — The component library is a real shared kernel, extracted from the BBL app.**
+**D1 — The component library is a real shared kernel, extracted from the BBL app. DECIDED.**
 Extract `m-card`, the boards, and the design-system tokens into a workspace **package**
-(`packages/ui-kit` or similar), depended on by the BBL app *and* Mammoth — **not** ad-hoc shared
+(`packages/ui-kit`), depended on by the BBL app *and* Mammoth — **not** ad-hoc shared
 `apps/web/components`. Mammoth's surfaces consume the package; they do **not** bloat the
-single-brand BBL app. (Pivotal call — confirm. Alternative B: Mammoth in its own repo consuming the
-published package; choose B if client isolation/billing matters.)
+single-brand BBL app. (Revisit Mammoth-in-its-own-repo only when client isolation/billing demands it.)
 
 **D2 — Persistence is a port, not a hardcoded endpoint.**
 Boards persist through a `BoardStore` interface; `localStorage`, `wp-json/bbl/v1/...`, and any
