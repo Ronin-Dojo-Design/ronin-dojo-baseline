@@ -652,6 +652,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [AdminTaskBoard (BBL operator task board — Todoist model)](files/bbl-admin-task-board.md) | file | active — `lifecycle: PLANNED`; spec/flow (SESSION_0428); absorbs monorepo AdminTaskForge |
 | [m-card (content- & brand-agnostic roster/rank/task/loop card)](files/m-card-pattern.md) | file | active — `lifecycle: PLANNED`; PWCC-002; one card contract on Dirstarter base, kind→DTO; unifies the card parity gap |
 | [three-level magnetic drawer (content-agnostic canvas)](files/three-level-magnetic-drawer.md) | file | active — `lifecycle: PLANNED`; PWCC-003; 3 detents + infinite m-card list; Todoist→cinematic chrome |
+| [AdminKanban (reusable column board + intake + automations)](files/admin-kanban-board.md) | file | active — `lifecycle: PLANNED`; PWCC-007; config-driven CRM pipeline + lead intake + follow-up automations; Desi pass + reusable Cody loop |
 | [Mammoth CRM bindings (PWCC-004/005/006)](files/mammoth-crm-bindings.md) | file | active — `lifecycle: PLANNED`; library→Mammoth surface bindings + cloud-agent prompts (Petey orchestration) |
 | [Mammoth-Rebuild CRM — HubSpot replacement](../../epics/mammoth-rebuild-crm-001.md) | epic | active — component-driven CRM (PWCC-001/002/003 + design system); cross-brand proof |
 | [Component Design System (BBL doc & email branding tokens)](component-design-system.md) | concept | active — Desi brand pass (SESSION_0428); `component-design-system.html` is the living visual reference |
