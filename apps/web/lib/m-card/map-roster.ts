@@ -23,7 +23,11 @@ export type DirectoryRosterProjection = ReturnType<typeof projectDirectoryProfil
  * nulls these out when the viewer/policy may not see them, so an absent line is intentional.
  */
 function locationLineOf(profile: DirectoryRosterProjection): string | null {
-  return [profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null
+  return (
+    [profile.locationCity, profile.locationRegion, profile.locationCountry]
+      .filter(Boolean)
+      .join(", ") || null
+  )
 }
 
 export function mapToRosterCard(profile: DirectoryRosterProjection): MCardData["roster"] {

@@ -23,11 +23,14 @@ async function assertProfilesGridRenders(page: import("@playwright/test").Page) 
   const count = await cards.count()
 
   if (count > 0) {
-    // Roster cards are present → they must be m-cards of kind=roster.
-    await expect(cards.first()).toBeVisible()
-    await expect(cards.first()).toHaveAttribute("data-kind", "roster")
-    // Parity: each card still deep-links to a profile and exposes a Save affordance.
-    await expect(cards.first().getByRole("link", { name: /view profile/i })).toBeVisible()
+    // Roster cards are present → every one must be an m-card of kind=roster.
+    for (let i = 0; i < count; i += 1) {
+      const card = cards.nth(i)
+      await expect(card).toBeVisible()
+      await expect(card).toHaveAttribute("data-kind", "roster")
+      // Parity: each card still deep-links to a profile and exposes a Save affordance.
+      await expect(card.getByRole("link", { name: /view profile/i })).toBeVisible()
+    }
   } else {
     // Empty seed → the page should still render the empty-state copy, not crash.
     await expect(page.getByText(/no people found/i)).toBeVisible()

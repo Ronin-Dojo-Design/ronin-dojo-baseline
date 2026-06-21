@@ -69,7 +69,7 @@ describe("mapToRosterCard", () => {
       rank: { name: "Black Belt", colorHex: "#1a1a1a", disciplineCode: null },
       eyebrow: null,
       schoolLabel: "Gracie Academy",
-      locationLine: "Los Angeles, CA",
+      locationLine: "Los Angeles, CA, USA",
       trustStatus: "verified",
       claimStatus: null,
       badges: [{ label: "Premium", variant: "outline" }],
