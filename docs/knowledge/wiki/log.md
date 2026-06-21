@@ -371,3 +371,16 @@ Use this file only as historical context for early wiki adoption.
 - **Landing composition:** scrolling-phone hero → Rigan heritage → Rigan video → **claim wizard** (3-step stepper, monorepo UX on our fields/action) → email capture. Ads removed (a #120 `brandHasFeature→true` regression re-enabled them).
 - **Chrome:** recovered the reverted **BBL footer** (`5413dc15`) → global, socials + link columns un-gated, no programs; **BBL logo** in the header; curated right-nav links; **gi fallback avatar** + the **Passport→client server seam** (`getCurrentUserAvatar`, the Prisma-in-browser rule); **login modal** (magic link) wired to the nav.
 - New SOT file docs: `bbl-home-landing`, `bbl-join-landing-composition`, `bbl-join-form-wizard`, `bbl-footer`, `bbl-nav-sheet`, `bbl-type-system`, `bbl-current-user-avatar`.
+
+## SESSION_0428 — 2026-06-21 — files/ spec catalog + repo-health consolidation epic
+
+- Added the `files/` spec catalog: `files/README.md` (system diagram + catalog), `_template/SPEC_TEMPLATE.md`, and the first specs `public-passport-dto.md` + `bbl-galaxy-data-flow.md` (ASCII + mermaid wiring).
+- Opened `docs/epics/post-launch-clean-repo-001.md` (RepoHealth findings RH-1…6) and cataloged the specs in `wiki/index.md`.
+
+## SESSION_0429 — 2026-06-21 — design-system component batch + Mammoth-Rebuild CRM epic
+
+- **Design system (Desi pass):** `component-design-system.{md,html}` + shared `scripts/lib/bbl-doc-theme.ts` (one token set — accent `#E52421`, Poppins/Inter, 1-2-3 step; gold flagged off-brand) + dark/light inversion (`prefers-color-scheme` + `data-theme`, accent `#FF4D49` on dark). Restyled the orchestration-hub + loop-poster generators; added the `orchestration-hub.md` runbook.
+- **Component library specs (PWCC series):** `files/bbl-admin-task-board.md` (PWCC-001), `files/m-card-pattern.md` (PWCC-002), `files/three-level-magnetic-drawer.md` (PWCC-003), `files/admin-kanban-board.md` (PWCC-007), `files/mammoth-crm-bindings.md` (PWCC-004/005/006) — all brand-/content-agnostic with PWCC cloud handoffs.
+- **Mammoth-Rebuild CRM epic:** `docs/epics/mammoth-rebuild-crm-001.md` — HubSpot-replacement assembled from the library; PWCC register; cross-brand (dark/orange) proof.
+- **Inventory + index:** `custom-component-inventory.md` rows (MagneticDrawer, MCard) + bumped `updated`; `wiki/index.md` rows for all new pages + SESSION_0428/0429.
+- **Tooling:** declared `marked` as a root devDependency so the advertised `docs:hub` generator runs from a clean checkout (Codex review #137).
