@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>m-card — @ronin-dojo/ui-kit preview</title>
+    <!-- the ACTUAL kernel CSS (no build step) -->
+    <link rel="stylesheet" href="../tokens/tokens.css" />
+    <link rel="stylesheet" href="../m-card/m-card.css" />
+    <style>
+      /* page chrome only — NOT part of the kernel; uses the kernel tokens to stay on-brand */
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--mk-page);
+        color: var(--mk-fg);
+        font-family: var(--mk-font-body);
+        transition: background 150ms ease;
+      }
+      h1 {
+        font-family: var(--mk-font-head);
+        font-weight: 800;
+        font-style: italic;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--mk-muted);
+        font-size: 13px;
+        margin: 0 0 20px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .toolbar button {
+        font: inherit;
+        font-size: 13px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--mk-line);
+        background: var(--mk-bg);
+        color: var(--mk-fg);
+        cursor: pointer;
+      }
+      .toolbar button[aria-pressed="true"] {
+        background: var(--mk-accent);
+        color: var(--mk-on-accent);
+        border-color: var(--mk-accent);
+      }
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--mk-muted);
+        margin: 28px 0 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        max-width: 760px;
+      }
+      @media (min-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>m-card</h1>
+    <p class="sub">
+      @ronin-dojo/ui-kit · one card, kind = task | deal | record · compact ↔ rich · token-driven
+    </p>
+
+    <div class="toolbar">
+      <button data-theme-set="system" aria-pressed="false">System</button>
+      <button data-theme-set="light" aria-pressed="true">Light</button>
+      <button data-theme-set="dark" aria-pressed="false">Dark</button>
+      <button data-w-set="full" aria-pressed="true">Desktop</button>
+      <button data-w-set="mobile" aria-pressed="false">390px</button>
+    </div>
+
+    <div id="stage">
+      <div class="section-label">task — compact / rich</div>
+      <div class="grid">
+        <!-- task compact -->
+        <article class="mk-card" data-kind="task" data-density="compact">
+          <div class="mk-card__top">
+            <span class="mk-card__check" data-done="false" aria-hidden="true"></span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">Quick Fix · BBL</span>
+              <p class="mk-card__title">Backfill member photos to prod Passports</p>
+              <span class="mk-card__meta">Due Fri · @cody</span>
+            </div>
+            <span class="mk-card__focal" data-tone="accent">
+              <span class="mk-card__focal-value">P1</span>
+              <span class="mk-card__focal-label">priority</span>
+            </span>
+          </div>
+          <div class="mk-card__badges">
+            <span class="mk-card__badge" data-tone="accent">In progress</span>
+            <span class="mk-card__badge" data-tone="warning">SLA 1d</span>
+          </div>
+        </article>
+
+        <!-- task rich -->
+        <article class="mk-card" data-kind="task" data-density="rich">
+          <div class="mk-card__top">
+            <span class="mk-card__check" data-done="true" aria-hidden="true">✓</span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">Hot Fix · BBL</span>
+              <p class="mk-card__title">Fix live webhook URL → /api/stripe/webhooks/bbl</p>
+              <span class="mk-card__meta">Closed · @petey</span>
+            </div>
+            <span class="mk-card__focal" data-tone="positive">
+              <span class="mk-card__focal-value">Done</span>
+            </span>
+          </div>
+          <div class="mk-card__rows">
+            <div class="mk-card__row">
+              <div class="mk-card__row-main">
+                <span class="mk-card__row-endpoint">/stripe</span>
+                <span class="mk-card__row-connector" aria-hidden="true"></span>
+                <span class="mk-card__row-endpoint">/api/stripe/webhooks/bbl</span>
+              </div>
+              <span class="mk-card__row-sub">same signing secret · verified cs_live</span>
+            </div>
+          </div>
+          <span class="mk-card__footnote">SESSION_0418 · BBL paid live end-to-end</span>
+        </article>
+      </div>
+
+      <div class="section-label">deal — compact / rich</div>
+      <div class="grid">
+        <!-- deal compact -->
+        <article class="mk-card" data-kind="deal" data-density="compact">
+          <div class="mk-card__top">
+            <span class="mk-card__glyph" aria-hidden="true">$</span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">Pipeline · Construction</span>
+              <p class="mk-card__title">Kitchen remodel — Alvarez</p>
+              <span class="mk-card__meta">Stage: Proposal · 3 days in stage</span>
+            </div>
+            <span class="mk-card__focal" data-tone="accent">
+              <span class="mk-card__focal-value">$32,450</span>
+              <span class="mk-card__focal-label">deal size</span>
+            </span>
+          </div>
+          <div class="mk-card__badges">
+            <span class="mk-card__badge" data-tone="accent">Hot</span>
+            <span class="mk-card__badge" data-tone="warning">Rotting 3d</span>
+          </div>
+        </article>
+
+        <!-- deal rich -->
+        <article class="mk-card" data-kind="deal" data-density="rich">
+          <div class="mk-card__top">
+            <span class="mk-card__glyph" aria-hidden="true">$</span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">Pipeline · Construction</span>
+              <p class="mk-card__title">Full addition — 14 Oak St</p>
+              <span class="mk-card__meta">Stage: Won · closed today</span>
+            </div>
+            <span class="mk-card__focal" data-tone="accent">
+              <span class="mk-card__focal-value">$118k</span>
+              <span class="mk-card__focal-label">contract</span>
+            </span>
+          </div>
+          <div class="mk-card__hero">
+            <img
+              src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=640&q=60"
+              alt="Construction site"
+              loading="lazy"
+            />
+          </div>
+          <div class="mk-card__rows">
+            <div class="mk-card__row">
+              <div class="mk-card__row-main">
+                <span class="mk-card__row-endpoint">Intake</span>
+                <span class="mk-card__row-connector" aria-hidden="true"></span>
+                <span class="mk-card__row-endpoint">Won</span>
+              </div>
+              <span class="mk-card__row-sub">21 days · owner @brian</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="section-label">record — compact / rich</div>
+      <div class="grid">
+        <!-- record compact -->
+        <article class="mk-card" data-kind="record" data-density="compact">
+          <div class="mk-card__top">
+            <span class="mk-card__glyph" aria-hidden="true">◍</span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">BJJ · Black belt</span>
+              <p class="mk-card__title">Jane Doe</p>
+              <span class="mk-card__meta">Gracie Barra · San Jose, CA</span>
+            </div>
+          </div>
+          <div class="mk-card__badges">
+            <span class="mk-card__badge" data-tone="positive">Verified</span>
+            <span class="mk-card__badge">Claimed</span>
+          </div>
+        </article>
+
+        <!-- record rich -->
+        <article class="mk-card" data-kind="record" data-density="rich">
+          <div class="mk-card__top">
+            <span class="mk-card__glyph" aria-hidden="true">◍</span>
+            <div class="mk-card__identity">
+              <span class="mk-card__eyebrow">Kajukenbo · 7th degree</span>
+              <p class="mk-card__title">Sid Asuncion</p>
+              <span class="mk-card__meta">Dirty Dozen · promoted 1968</span>
+            </div>
+            <span class="mk-card__focal" data-tone="neutral">
+              <span class="mk-card__focal-value">7°</span>
+              <span class="mk-card__focal-label">rank</span>
+            </span>
+          </div>
+          <div class="mk-card__rows">
+            <div class="mk-card__row">
+              <div class="mk-card__row-main">
+                <span class="mk-card__row-endpoint">Promoted by Emperado</span>
+                <span class="mk-card__row-connector" aria-hidden="true"></span>
+                <span class="mk-card__row-endpoint">1968</span>
+              </div>
+              <span class="mk-card__row-sub">Palama Settlement · Honolulu</span>
+            </div>
+          </div>
+          <span class="mk-card__footnote">Provable promotion provenance — the timeline USP</span>
+        </article>
+      </div>
+    </div>
+
+    <script>
+      const root = document.documentElement;
+      const stage = document.getElementById("stage");
+      function press(group, val) {
+        document.querySelectorAll(`[data-${group}]`).forEach((b) => {
+          b.setAttribute("aria-pressed", String(b.getAttribute(`data-${group}`) === val));
+        });
+      }
+      document.querySelectorAll("[data-theme-set]").forEach((b) => {
+        b.addEventListener("click", () => {
+          const v = b.getAttribute("data-theme-set");
+          if (v === "system") root.removeAttribute("data-theme");
+          else root.setAttribute("data-theme", v);
+          press("theme-set", v);
+        });
+      });
+      document.querySelectorAll("[data-w-set]").forEach((b) => {
+        b.addEventListener("click", () => {
+          const v = b.getAttribute("data-w-set");
+          stage.style.maxWidth = v === "mobile" ? "390px" : "";
+          press("w-set", v);
+        });
+      });
+    </script>
+  </body>
+</html>

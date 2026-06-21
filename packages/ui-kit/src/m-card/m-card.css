@@ -1,0 +1,321 @@
+/**
+ * m-card styles — token-driven ONLY (every color is `var(--mk-*)`; NO literal hex here).
+ * Mobile-first: full-width, no fixed widths, `min-width: 0` everywhere to prevent overflow
+ * (the SESSION_0337 lesson). Requires `tokens.css` to be loaded on an ancestor.
+ */
+
+.mk-card {
+  /* identity */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-space-3);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--mk-space-4) var(--mk-space-4) var(--mk-space-4) var(--mk-space-5);
+  background: var(--mk-elevated);
+  color: var(--mk-fg);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-r-card);
+  box-shadow: var(--mk-shadow-card);
+  font-family: var(--mk-font-body);
+  overflow: clip;
+  text-align: left;
+}
+
+/* The accent rail — the focal-tint left edge. ONE accent moment. */
+.mk-card::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 4px;
+  background: var(--mk-accent-rail);
+  border-start-start-radius: var(--mk-r-card);
+  border-end-start-radius: var(--mk-r-card);
+}
+
+.mk-card[data-interactive="true"] {
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.mk-card[data-interactive="true"]:hover {
+  border-color: var(--mk-accent);
+}
+
+.mk-card[data-selected="true"] {
+  border-color: var(--mk-accent);
+  background: var(--mk-accent-tint);
+}
+
+.mk-card:focus-visible {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 2px;
+}
+
+a.mk-card,
+a.mk-card:hover {
+  text-decoration: none;
+  color: var(--mk-fg);
+}
+
+/* --- top row: identity cluster (icon + title/meta) + focal value, same baseline --- */
+.mk-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mk-space-3);
+  min-width: 0;
+}
+
+.mk-card__glyph {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--mk-r-inner);
+  background: var(--mk-surface);
+  color: var(--mk-accent);
+  overflow: clip;
+}
+
+.mk-card__glyph img,
+.mk-card__glyph svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* record avatars read as circles */
+.mk-card[data-kind="record"] .mk-card__glyph {
+  border-radius: var(--mk-r-pill);
+}
+
+.mk-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mk-card__eyebrow {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mk-card__title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--mk-fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mk-card__meta {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--mk-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The ONE focal value — accent, right-aligned on the title baseline. */
+.mk-card__focal {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  text-align: right;
+}
+
+.mk-card__focal-value {
+  font-family: var(--mk-font-head);
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 800;
+  font-style: italic;
+  color: var(--mk-accent);
+  white-space: nowrap;
+}
+
+.mk-card__focal[data-tone="positive"] .mk-card__focal-value {
+  color: var(--mk-accent);
+}
+.mk-card__focal[data-tone="critical"] .mk-card__focal-value {
+  color: var(--mk-accent-strong);
+}
+.mk-card__focal[data-tone="neutral"] .mk-card__focal-value {
+  color: var(--mk-fg);
+}
+
+.mk-card__focal-label {
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+  white-space: nowrap;
+}
+
+/* trailing actions slot */
+.mk-card__actions {
+  flex: 0 0 auto;
+  margin-inline-start: var(--mk-space-2);
+}
+
+/* task checkbox glyph */
+.mk-card__check {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 6px;
+  border: 2px solid var(--mk-line);
+  display: grid;
+  place-items: center;
+  color: var(--mk-on-accent);
+  font-size: 12px;
+  background: transparent;
+}
+
+.mk-card__check[data-done="true"] {
+  background: var(--mk-accent);
+  border-color: var(--mk-accent);
+}
+
+/* --- badges row --- */
+.mk-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2);
+  min-width: 0;
+}
+
+.mk-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: var(--mk-r-pill);
+  background: var(--mk-surface);
+  border: 1px solid var(--mk-line);
+  color: var(--mk-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.mk-card__badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mk-card__badge[data-tone="accent"] {
+  color: var(--mk-accent);
+  background: var(--mk-accent-tint);
+  border-color: transparent;
+}
+.mk-card__badge[data-tone="positive"] {
+  color: var(--mk-accent);
+}
+.mk-card__badge[data-tone="warning"] {
+  color: var(--mk-accent-strong);
+}
+.mk-card__badge[data-tone="critical"] {
+  color: var(--mk-on-accent);
+  background: var(--mk-accent);
+  border-color: transparent;
+}
+
+/* --- rich-only: hero + connector rows --- */
+.mk-card__hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.618 / 1; /* golden ratio, per design-system §2 */
+  border-radius: var(--mk-r-inner);
+  overflow: clip;
+  background: var(--mk-surface);
+}
+
+.mk-card__hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mk-card__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-space-2);
+  padding: var(--mk-space-3);
+  border-radius: var(--mk-r-inner);
+  background: var(--mk-surface);
+}
+
+.mk-card__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* the connector motif: from ····> to */
+.mk-card__row-main {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-2);
+  font-size: 13px;
+  color: var(--mk-fg);
+  min-width: 0;
+}
+
+.mk-card__row-endpoint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mk-card__row-connector {
+  flex: 1 1 auto;
+  min-width: 16px;
+  height: 0;
+  border-top: 2px dotted var(--mk-line);
+}
+
+.mk-card__row-connector::after {
+  content: "›";
+  color: var(--mk-muted);
+}
+
+.mk-card__row-sub {
+  font-size: 11px;
+  color: var(--mk-muted);
+}
+
+.mk-card__footnote {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--mk-muted);
+}
