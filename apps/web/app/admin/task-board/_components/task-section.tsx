@@ -1,6 +1,6 @@
 "use client"
 
-import { MCard } from "~/components/web/m-card/m-card"
+import { MCard } from "@ronin-dojo/ui-kit"
 import { mapTaskToCard } from "~/lib/task-board/map-task-card"
 import type { Project, Task } from "~/lib/task-board/types"
 
@@ -18,7 +18,10 @@ type TaskSectionProps = {
 
 /**
  * A labeled group of task cards — "Overdue", "Today", per-project, etc.
- * (spec wireframe sections). Renders each task through the m-card (kind=task).
+ * (spec wireframe sections). Renders each task through the REAL m-card
+ * (`@ronin-dojo/ui-kit`, kind=task). The kernel m-card has no dedicated
+ * checkbox-toggle prop, so completing a task rides the card's one interaction —
+ * `onSelect` — and the leading checkbox glyph reflects `data.done`.
  */
 export function TaskSection({
   label,
@@ -58,7 +61,7 @@ export function TaskSection({
               <MCard
                 kind="task"
                 data={mapTaskToCard(task, projects, today)}
-                onToggleDone={onToggleDone}
+                onSelect={onToggleDone}
               />
             </li>
           ))}

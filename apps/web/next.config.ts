@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   reactStrictMode: false,
   allowedDevOrigins: ["bbl.local", "baseline.local", "wekaf.local"],
+  // @ronin-dojo/ui-kit ships raw TS/TSX source (no build step; main → src/index.ts),
+  // so Next must transpile it like first-party code (ADR 0033 D1 — shared kernel).
+  transpilePackages: ["@ronin-dojo/ui-kit"],
   images: {
     // #118 introduced next/image on the BBL landing (member photos, brand media).
     // Those assets live on Cloudflare R2 public buckets whose subdomain rotates
