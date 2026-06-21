@@ -56,10 +56,9 @@ BBL-branded, A4 print CSS) — built to email or quick-message to Tony.
 bun run docs:posters    # → docs/posters/*.html  (+ index.html)
 ```
 
-Curated loops: bow-in, bow-out, PR review → score → fix, Giddy merge strategy, hostile close
-review, review & recommend, Cody pre-flight (`LOOPS` array in `scripts/build-loop-posters.ts`).
-Steps are auto-extracted (numbered headings → else section titles), so posters stay in sync with
-the source docs.
+Curated loops (the Tony-facing set): bow-in, bow-out, PR review → score → fix (`LOOPS` array in
+`scripts/build-loop-posters.ts`). Steps are auto-extracted (numbered headings → else section
+titles), so posters stay in sync with the source docs. Add a loop by appending to `LOOPS`.
 
 ### Export to PNG / PDF
 
