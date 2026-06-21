@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 /**
  * Lineage payload selects.
@@ -14,38 +15,30 @@ import type { Prisma } from "~/.generated/prisma/client"
  */
 
 // ---------------------------------------------------------------------------
-// User → DirectoryProfile snippet (location string for tree + drawer)
-// ---------------------------------------------------------------------------
-
-const lineageUserDirectoryProfilePayload = {
-  locationCity: true,
-  locationRegion: true,
-  locationCountry: true,
-  visibility: true,
-  showRanks: true,
-} satisfies Prisma.DirectoryProfileSelect
-
-// ---------------------------------------------------------------------------
 // Passport identity snippet — used everywhere a LineageNode carries its person
 // identity. Phase 3c (SOT-ADR D1): identity is Passport-rooted. The optional
 // `user` is the *attached account* (a null `user` = accountless placeholder,
 // replacing the old `User.isPlaceholder` flag); `name`/`image` are the account
 // mirror used as a fallback behind Passport's own `displayName`/`avatarUrl`.
+//
+// Spreads `publicPassportPayload` as the base (issue #134 surface 3a/3b) so the
+// public identity core has one canonical definition, then merges in the lineage-
+// specific directoryProfile location fields.
 // ---------------------------------------------------------------------------
 
 const lineagePassportPayload = {
-  id: true,
-  displayName: true,
-  avatarUrl: true,
-  user: {
-    select: {
-      id: true,
-      name: true,
-      image: true,
-    },
-  },
+  ...publicPassportPayload,
+  // Merge directoryProfile: public base has { slug, visibility, showRanks };
+  // lineage also needs location fields. Union them:
   directoryProfile: {
-    select: lineageUserDirectoryProfilePayload,
+    select: {
+      slug: true,
+      visibility: true,
+      showRanks: true,
+      locationCity: true,
+      locationRegion: true,
+      locationCountry: true,
+    },
   },
 } satisfies Prisma.PassportSelect
 
