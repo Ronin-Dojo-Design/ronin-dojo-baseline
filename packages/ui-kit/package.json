@@ -2,27 +2,34 @@
   "name": "@ronin-dojo/ui-kit",
   "version": "0.0.1",
   "private": true,
-  "description": "Brand-agnostic shared component kernel (ADR 0033). AdminKanban (PWCC-007), m-card, design tokens — consumed by the BBL app and client CRMs by swapping a token block + a config/DTO slice.",
+  "description": "Ronin/BBL shared component kernel — m-card, design tokens (ADR 0033 D1).",
+  "files": [
+    "src"
+  ],
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./kanban": "./src/kanban/index.ts",
-    "./m-card": "./src/m-card/index.ts"
+    "./tokens.css": "./src/tokens/tokens.css",
+    "./m-card.css": "./src/m-card/m-card.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "oxlint --fix .",
-    "lint:check": "oxlint ."
+    "lint:check": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "typescript": "^5.7.0"
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
+    "react": ">=19",
+    "react-dom": ">=19"
   }
 }

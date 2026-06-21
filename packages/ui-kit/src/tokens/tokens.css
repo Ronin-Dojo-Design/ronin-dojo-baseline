@@ -1,0 +1,108 @@
+/**
+ * @ronin-dojo/ui-kit — design tokens (the ONE token surface for the shared kernel).
+ *
+ * Canonical values traced to source (Desi brand pass, SESSION_0428):
+ *   - accent red #E52421 ← apps/web/app/styles.css `--color-primary` + scripts/lib/bbl-doc-theme.ts
+ *     (NEVER gold #FFD700/#d7a74c — styles.css:210 flags that as a corrected wrong-import).
+ *   - dark is a TRUE inversion that follows the OS (`prefers-color-scheme: dark`) and is
+ *     forceable via `<html data-theme="light|dark">` (matches the design-system reference toggle).
+ *
+ * Components in this package reference ONLY `var(--mk-*)` — never a literal hex. Brand theming =
+ * swap this block (per ADR 0033 D2: tokens in, no brand identifiers in the components).
+ *
+ * Prefix `--mk-` (m-kit) namespaces the kernel so it never collides with a host app's
+ * `--color-*` / `--accent` tokens; a host can re-map `--mk-accent: var(--color-primary)` to bridge.
+ */
+
+:root {
+  /* --- brand (light, the default) --- */
+  --mk-accent: #e52421; /* BBL brand red. The ONE focal/accent color. */
+  --mk-accent-strong: #b91c1c; /* red-700 — eyebrows, link text, pressed */
+  --mk-on-accent: #ffffff; /* text/number on the accent disc/chip */
+
+  /* --- surfaces (light) --- */
+  --mk-bg: #ffffff; /* card body */
+  --mk-page: #f5f5f5; /* page backdrop behind cards */
+  --mk-surface: #fafafa; /* nested surface: hero scrim, inset rows, code */
+  --mk-elevated: #ffffff; /* raised card on the page */
+
+  /* --- text (light) --- */
+  --mk-fg: #1f1f1f; /* primary body / title text */
+  --mk-muted: #737373; /* secondary meta — never competes with title/focal */
+  --mk-line: #e0e0e0; /* hairlines, dividers, borders */
+
+  /* --- type --- */
+  --mk-font-head: "Poppins", "Segoe UI", Tahoma, sans-serif;
+  --mk-font-body:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mk-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- radius --- */
+  --mk-r-card: 12px;
+  --mk-r-inner: 8px;
+  --mk-r-pill: 999px;
+
+  /* --- spacing scale (4px base) --- */
+  --mk-space-1: 4px;
+  --mk-space-2: 8px;
+  --mk-space-3: 12px;
+  --mk-space-4: 16px;
+  --mk-space-5: 20px;
+  --mk-space-6: 24px;
+
+  /* --- elevation --- */
+  --mk-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* --- focal/connector tints derived from the accent (single source) --- */
+  --mk-accent-tint: color-mix(in srgb, var(--mk-accent) 10%, transparent);
+  --mk-accent-rail: color-mix(in srgb, var(--mk-accent) 70%, transparent);
+}
+
+/* --- dark: a true inversion that follows the OS --- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mk-accent: #ff4d49; /* same hue, lifted for AA contrast on dark */
+    --mk-accent-strong: #ff7a75;
+    --mk-on-accent: #ffffff;
+
+    --mk-bg: #1c1c1e; /* iOS/Todoist chrome the boards are modelled on */
+    --mk-page: #000000;
+    --mk-surface: #2c2c2e;
+    --mk-elevated: #1c1c1e;
+
+    --mk-fg: #f5f5f5;
+    --mk-muted: #9a9aa0;
+    --mk-line: #2c2c2e;
+
+    --mk-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* --- forceable overrides (posters pin light; a host toggle can pin either) --- */
+[data-theme="light"] {
+  --mk-accent: #e52421;
+  --mk-accent-strong: #b91c1c;
+  --mk-on-accent: #ffffff;
+  --mk-bg: #ffffff;
+  --mk-page: #f5f5f5;
+  --mk-surface: #fafafa;
+  --mk-elevated: #ffffff;
+  --mk-fg: #1f1f1f;
+  --mk-muted: #737373;
+  --mk-line: #e0e0e0;
+  --mk-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] {
+  --mk-accent: #ff4d49;
+  --mk-accent-strong: #ff7a75;
+  --mk-on-accent: #ffffff;
+  --mk-bg: #1c1c1e;
+  --mk-page: #000000;
+  --mk-surface: #2c2c2e;
+  --mk-elevated: #1c1c1e;
+  --mk-fg: #f5f5f5;
+  --mk-muted: #9a9aa0;
+  --mk-line: #2c2c2e;
+  --mk-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.5);
+}

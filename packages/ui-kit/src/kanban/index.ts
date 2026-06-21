@@ -5,18 +5,18 @@
  * write a BoardConfig + a token block, and ship — zero per-project board code (ADR 0033).
  */
 
-export { AdminKanban, type AdminKanbanProps } from "./admin-kanban"
-export { useBoard, type UseBoard, type UseBoardOptions } from "./use-board"
+export { AdminKanban, type AdminKanbanProps } from "./admin-kanban";
+export { useBoard, type UseBoard, type UseBoardOptions } from "./use-board";
 
 export {
   type BoardStore,
   createLocalStorageBoardStore,
   createMemoryBoardStore,
-} from "./board-store"
+} from "./board-store";
 
-export { evaluateBoard, evaluateCard, sortColumn } from "./automations"
+export { evaluateBoard, evaluateCard, sortColumn } from "./automations";
 
-export { moveCard, type MoveResult } from "./move"
+export { moveCard, type MoveResult } from "./move";
 
 export {
   createLead,
@@ -24,7 +24,7 @@ export {
   isDuplicateContact,
   type IntakeResult,
   type LeadInput,
-} from "./intake"
+} from "./intake";
 
 export type {
   AutomationRule,
@@ -38,4 +38,4 @@ export type {
   LifecycleStatus,
   RiskReason,
   StageConfig,
-} from "./types"
+} from "./types";

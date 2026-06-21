@@ -1,158 +1,202 @@
-/**
- * m-card — THIN LOCAL STUB (PWCC-002).
- *
- * ⚠ RECONCILE: PWCC-002 (`m-card`) is being built in parallel. This stub exists only
- * so AdminKanban (PWCC-007) can compile and ship its first slice. When the real m-card
- * lands in this package, replace this file with the canonical contract and re-point the
- * board's import — the public shape below (`kind`, `data`, `density`, `selected`,
- * `onSelect`, `actions`) intentionally matches the spec in
- * docs/knowledge/wiki/files/m-card-pattern.md so the swap is a one-line import change.
- *
- * It is presentation-only and brand-agnostic: styling rides design tokens (CSS vars),
- * never a hex value or a brand name. See ADR 0033 D3 (one card, distinct aggregates).
- */
-
-import type { CSSProperties, ReactNode } from "react"
-
-export type MCardKind = "roster" | "rank" | "task" | "deal" | "loop" | "generic"
-
-export type MCardLifecycle = "active" | "inactive" | "deprecated" | "broken"
-
-export interface MCardTaskData {
-  id: string
-  title: string
-  due?: string
-  lane?: "QF" | "HF"
-  status?: MCardLifecycle
-  meta?: string
-  /** One focal value (design-system §4) — e.g. a deal value, right-aligned. */
-  focal?: string
-  /** At-risk = the only loud signal; renders the accent rail + ⚠. */
-  atRisk?: boolean
-  atRiskLabel?: string
-  badges?: string[]
-}
-
-export interface MCardProps {
-  kind: MCardKind
-  data: MCardTaskData
-  href?: string
-  density?: "comfortable" | "compact"
-  selected?: boolean
-  onSelect?: (id: string) => void
-  actions?: ReactNode
-}
-
-const STATUS_TINT: Record<MCardLifecycle, string> = {
-  active: "var(--accent, #6366f1)",
-  inactive: "var(--text-muted, #9ca3af)",
-  deprecated: "var(--text-muted, #9ca3af)",
-  broken: "var(--danger, var(--accent, #ef4444))",
-}
+import type { ReactNode } from "react";
+import type {
+  MCardConnectorRow,
+  MCardDensity,
+  MCardFocal,
+  MCardKind,
+  MCardProps,
+  MCardRecordData,
+  MCardTaskData,
+} from "./m-card.types";
 
 /**
- * Stub renderer — eyebrow → title → focal → meta → badges → actions, matching the
- * m-card skeleton. Loud only on at-risk (accent rail). Tokens only.
+ * m-card — the ONE presentation card for `task | deal | record` (ADR 0033 D3).
+ *
+ * Renders a single skeleton — identity cluster (glyph + title + meta) · ONE focal value · badges,
+ * and in `density="rich"`, a golden-ratio hero + connector-motif rows. Only the LEADING GLYPH and
+ * a couple of small behaviours branch on `kind`; everything else is shared.
+ *
+ * Token-driven: all color comes from `var(--mk-*)` (load `@ronin-dojo/ui-kit/tokens.css` +
+ * `@ronin-dojo/ui-kit/m-card.css` on an ancestor). NO brand identifier lives in this component.
  */
-export function MCard({
-  kind,
-  data,
-  href,
-  density = "comfortable",
-  selected,
-  onSelect,
-  actions,
-}: MCardProps) {
-  const tint = data.atRisk
-    ? "var(--danger, var(--accent, #ef4444))"
-    : STATUS_TINT[data.status ?? "active"]
+export function MCard<K extends MCardKind>(props: MCardProps<K>): ReactNode {
+  const {
+    kind,
+    data,
+    density = "compact",
+    href,
+    icon,
+    selected,
+    onSelect,
+    actions,
+    className,
+  } = props;
 
-  const pad = density === "compact" ? "0.5rem 0.625rem" : "0.625rem 0.75rem"
+  const isRich = density === "rich";
+  const interactive = Boolean(href ?? onSelect);
 
-  const style: CSSProperties = {
-    position: "relative",
-    display: "block",
-    width: "100%",
-    minWidth: 0,
-    padding: pad,
-    borderRadius: "0.75rem",
-    border: `1px solid ${selected ? "var(--accent, #6366f1)" : "var(--border, #2a2e33)"}`,
-    background: "var(--surface, #16181b)",
-    color: "var(--text-primary, inherit)",
-    textAlign: "left",
-    cursor: onSelect || href ? "pointer" : "default",
-    boxShadow: data.atRisk ? `inset 3px 0 0 0 ${tint}` : "none",
-  }
+  const rootClassName = className ? `mk-card ${className}` : "mk-card";
 
   const body = (
     <>
-      <div
-        style={{
-          fontSize: "0.625rem",
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          color: "var(--text-muted, #9ba1a8)",
-          fontWeight: 600,
-        }}
-      >
-        {kind}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: "0.5rem",
-          marginTop: "0.125rem",
-        }}
-      >
-        <span style={{ fontWeight: 600, fontSize: "0.9375rem", minWidth: 0 }}>{data.title}</span>
-        {data.focal ? (
-          <span style={{ fontWeight: 700, color: "var(--accent, #6366f1)", whiteSpace: "nowrap" }}>
-            {data.focal}
-          </span>
-        ) : null}
-      </div>
-      {data.meta ? (
-        <div
-          style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "var(--text-muted, #9ba1a8)" }}
-        >
-          {data.meta}
+      <div className="mk-card__top">
+        <Glyph kind={kind} data={data} icon={icon} />
+
+        <div className="mk-card__identity">
+          {data.eyebrow ? <span className="mk-card__eyebrow">{data.eyebrow}</span> : null}
+          <p className="mk-card__title">{data.title}</p>
+          {data.meta ? <span className="mk-card__meta">{data.meta}</span> : null}
         </div>
-      ) : null}
-      {data.atRisk ? (
-        <div style={{ marginTop: "0.375rem", fontSize: "0.75rem", fontWeight: 600, color: tint }}>
-          ⚠ {data.atRiskLabel ?? "At risk"}
-        </div>
-      ) : null}
-      {data.badges?.length ? (
-        <div style={{ marginTop: "0.375rem", display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-          {data.badges.map(b => (
+
+        {data.focal ? <Focal focal={data.focal} /> : null}
+        {actions ? <div className="mk-card__actions">{actions}</div> : null}
+      </div>
+
+      {data.badges && data.badges.length > 0 ? (
+        <div className="mk-card__badges">
+          {data.badges.map((badge, i) => (
             <span
-              key={b}
-              style={{
-                fontSize: "0.6875rem",
-                padding: "0.0625rem 0.375rem",
-                borderRadius: "9999px",
-                background: "color-mix(in srgb, var(--accent, #6366f1) 15%, transparent)",
-                color: "var(--accent, #6366f1)",
-              }}
+              // eslint-disable-next-line react/no-array-index-key -- badges are positional + static
+              key={`${badge.label}-${i}`}
+              className="mk-card__badge"
+              data-tone={badge.tone ?? "neutral"}
             >
-              {b}
+              {badge.label}
             </span>
           ))}
         </div>
       ) : null}
-      {actions ? <div style={{ marginTop: "0.5rem" }}>{actions}</div> : null}
+
+      {isRich && data.heroUrl ? (
+        <div className="mk-card__hero">
+          {/* eslint-disable-next-line @next/next/no-img-element -- kernel is framework-agnostic */}
+          <img src={data.heroUrl} alt={data.heroAlt ?? ""} loading="lazy" />
+        </div>
+      ) : null}
+
+      {isRich && data.rows && data.rows.length > 0 ? (
+        <div className="mk-card__rows">
+          {data.rows.map((row, i) => (
+            // eslint-disable-next-line react/no-array-index-key -- rows are positional + static
+            <ConnectorRow key={`${row.from}-${i}`} row={row} />
+          ))}
+        </div>
+      ) : null}
+
+      {isRich && data.footnote ? <span className="mk-card__footnote">{data.footnote}</span> : null}
     </>
-  )
+  );
+
+  const dataAttrs = {
+    "data-kind": kind,
+    "data-density": density,
+    "data-interactive": interactive ? "true" : undefined,
+    "data-selected": selected ? "true" : undefined,
+  } as const;
+
+  if (href) {
+    return (
+      <a className={rootClassName} href={href} {...dataAttrs}>
+        {body}
+      </a>
+    );
+  }
 
   if (onSelect) {
     return (
-      <button type="button" style={style} aria-pressed={selected} onClick={() => onSelect(data.id)}>
+      <button
+        type="button"
+        className={rootClassName}
+        onClick={() => onSelect(data.id)}
+        {...dataAttrs}
+      >
         {body}
       </button>
-    )
+    );
   }
-  return <div style={style}>{body}</div>
+
+  return (
+    <article className={rootClassName} {...dataAttrs}>
+      {body}
+    </article>
+  );
 }
+
+/** Leading glyph — kind-default: task → checkbox, record → avatar circle, deal/other → icon slot. */
+function Glyph({
+  kind,
+  data,
+  icon,
+}: {
+  kind: MCardKind;
+  data: MCardProps["data"];
+  icon?: ReactNode;
+}): ReactNode {
+  if (kind === "task") {
+    const done = (data as MCardTaskData).done ?? false;
+    return (
+      <span className="mk-card__check" data-done={done ? "true" : "false"} aria-hidden="true">
+        {done ? "✓" : ""}
+      </span>
+    );
+  }
+
+  if (kind === "record") {
+    const avatarUrl = (data as MCardRecordData).avatarUrl;
+    if (avatarUrl) {
+      return (
+        <span className="mk-card__glyph">
+          {/* eslint-disable-next-line @next/next/no-img-element -- framework-agnostic kernel */}
+          <img src={avatarUrl} alt="" loading="lazy" />
+        </span>
+      );
+    }
+  }
+
+  if (icon) {
+    return <span className="mk-card__glyph">{icon}</span>;
+  }
+
+  // default glyph — a small token-tinted disc with the kind initial
+  return (
+    <span className="mk-card__glyph" aria-hidden="true">
+      {kindInitial(kind)}
+    </span>
+  );
+}
+
+function kindInitial(kind: MCardKind): string {
+  if (kind === "deal") return "$";
+  if (kind === "record") return "◍";
+  return "•";
+}
+
+/** The ONE focal value, accent-emphasised. */
+function Focal({ focal }: { focal: MCardFocal }): ReactNode {
+  return (
+    <span className="mk-card__focal" data-tone={focal.tone ?? "accent"}>
+      <span className="mk-card__focal-value">{focal.value}</span>
+      {focal.label ? <span className="mk-card__focal-label">{focal.label}</span> : null}
+    </span>
+  );
+}
+
+/** A connector-motif row: from ····> to, with a muted sub-line. */
+function ConnectorRow({ row }: { row: MCardConnectorRow }): ReactNode {
+  return (
+    <div className="mk-card__row">
+      <div className="mk-card__row-main">
+        <span className="mk-card__row-endpoint">{row.from}</span>
+        {row.to ? (
+          <>
+            <span className="mk-card__row-connector" aria-hidden="true" />
+            <span className="mk-card__row-endpoint">{row.to}</span>
+          </>
+        ) : null}
+      </div>
+      {row.sub ? <span className="mk-card__row-sub">{row.sub}</span> : null}
+    </div>
+  );
+}
+
+export type { MCardDensity };

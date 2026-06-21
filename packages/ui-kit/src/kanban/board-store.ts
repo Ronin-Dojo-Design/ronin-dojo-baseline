@@ -7,13 +7,13 @@
  * swap the adapter, not the board.
  */
 
-import type { BoardState } from "./types"
+import type { BoardState } from "./types";
 
 export interface BoardStore {
   /** Load persisted board state, or `null` if nothing is stored yet. */
-  load(configId: string): Promise<BoardState | null>
+  load(configId: string): Promise<BoardState | null>;
   /** Persist board state (debounced by the caller). */
-  save(state: BoardState): Promise<void>
+  save(state: BoardState): Promise<void>;
 }
 
 /**
@@ -21,19 +21,19 @@ export interface BoardStore {
  * Used in tests and SSR; the localStorage adapter layers on top for the browser.
  */
 export function createMemoryBoardStore(seed?: BoardState[]): BoardStore {
-  const byConfig = new Map<string, BoardState>()
+  const byConfig = new Map<string, BoardState>();
   for (const s of seed ?? []) {
-    byConfig.set(s.configId, s)
+    byConfig.set(s.configId, s);
   }
   return {
     load(configId) {
-      return Promise.resolve(byConfig.get(configId) ?? null)
+      return Promise.resolve(byConfig.get(configId) ?? null);
     },
     save(state) {
-      byConfig.set(state.configId, state)
-      return Promise.resolve()
+      byConfig.set(state.configId, state);
+      return Promise.resolve();
     },
-  }
+  };
 }
 
 /**
@@ -42,44 +42,44 @@ export function createMemoryBoardStore(seed?: BoardState[]): BoardStore {
  * when `window`/`localStorage` is unavailable (SSR, tests).
  */
 export function createLocalStorageBoardStore(namespace = "ui-kit.kanban"): BoardStore {
-  const key = (configId: string) => `${namespace}.${configId}.v1`
-  const memoryFallback = createMemoryBoardStore()
+  const key = (configId: string) => `${namespace}.${configId}.v1`;
+  const memoryFallback = createMemoryBoardStore();
 
   function storage(): Storage | null {
     try {
       if (typeof window === "undefined" || !window.localStorage) {
-        return null
+        return null;
       }
-      return window.localStorage
+      return window.localStorage;
     } catch {
       // Private mode / disabled storage throws on access.
-      return null
+      return null;
     }
   }
 
   return {
     load(configId) {
-      const ls = storage()
+      const ls = storage();
       if (!ls) {
-        return memoryFallback.load(configId)
+        return memoryFallback.load(configId);
       }
-      const raw = ls.getItem(key(configId))
+      const raw = ls.getItem(key(configId));
       if (!raw) {
-        return Promise.resolve(null)
+        return Promise.resolve(null);
       }
       try {
-        return Promise.resolve(JSON.parse(raw) as BoardState)
+        return Promise.resolve(JSON.parse(raw) as BoardState);
       } catch {
-        return Promise.resolve(null)
+        return Promise.resolve(null);
       }
     },
     save(state) {
-      const ls = storage()
+      const ls = storage();
       if (!ls) {
-        return memoryFallback.save(state)
+        return memoryFallback.save(state);
       }
-      ls.setItem(key(state.configId), JSON.stringify(state))
-      return Promise.resolve()
+      ls.setItem(key(state.configId), JSON.stringify(state));
+      return Promise.resolve();
     },
-  }
+  };
 }

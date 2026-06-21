@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 /**
  * AdminKanban (PWCC-007) — the config-driven column/stage board.
@@ -17,73 +17,97 @@
  * Theming is tokens only — no hex, no brand name. Dark/light inherited from the token layer.
  */
 
-import { useMemo, useRef, useState } from "react"
-import { MCard, type MCardTaskData } from "../m-card/m-card"
-import { sortColumn } from "./automations"
-import type { BoardStore } from "./board-store"
-import { useBoard } from "./use-board"
-import type { BoardCard, BoardConfig, CardFlags, StageConfig } from "./types"
+import { useMemo, useRef, useState } from "react";
+import { MCard } from "../m-card/m-card";
+import type { MCardBadge, MCardTaskData } from "../m-card/m-card.types";
+import { sortColumn } from "./automations";
+import type { BoardStore } from "./board-store";
+import { useBoard } from "./use-board";
+import type { BoardCard, BoardConfig, CardFlags, StageConfig } from "./types";
 
 export interface AdminKanbanProps {
-  config: BoardConfig
-  store: BoardStore
-  seed?: BoardCard[]
+  config: BoardConfig;
+  store: BoardStore;
+  seed?: BoardCard[];
   /** Injectable clock for deterministic tests/stories. */
-  now?: () => number
+  now?: () => number;
 }
 
 const RISK_LABEL: Record<string, string> = {
   rotting: "Rotting — no recent activity",
   "no-next-step": "No next step set",
   "stage-sla": "Past stage SLA",
-}
+};
 
+/**
+ * Project a board card onto the shared kernel m-card view-model (MCardTaskData).
+ *
+ * The kernel card carries no `atRisk`/`due`/`lane`/`status` fields — those are board-domain
+ * concerns. We surface them through the card's generic anatomy: at-risk becomes the ONE loud
+ * signal as a `critical`-tone badge, `due` folds into the muted meta line, and the order-guard
+ * field rides a neutral badge. The card stays a pure presentation slice (ADR 0033 D3).
+ */
 function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
-  const reason = flags?.reasons[0]
+  const reason = flags?.reasons[0];
+  const badges: MCardBadge[] = [];
+  if (flags?.atRisk) {
+    badges.push({ label: (reason && RISK_LABEL[reason]) || "At risk", tone: "critical" });
+  }
+  if (card.fields?.orderNumber) {
+    badges.push({ label: `Order ${String(card.fields.orderNumber)}` });
+  }
+
+  const metaParts: string[] = [];
+  const next = card.nextStep?.trim() ? `Next: ${card.nextStep}` : card.contact?.name;
+  if (next) {
+    metaParts.push(next);
+  }
+  if (card.due) {
+    metaParts.push(`Due ${card.due}`);
+  }
+
   return {
     id: card.id,
     title: card.title,
-    due: card.due,
-    lane: card.lane,
-    status: flags?.atRisk ? "broken" : card.status,
-    meta: card.nextStep?.trim() ? `Next: ${card.nextStep}` : card.contact?.name,
-    focal: typeof card.value === "number" ? formatValue(card.value) : undefined,
-    atRisk: flags?.atRisk,
-    atRiskLabel: reason ? RISK_LABEL[reason] : undefined,
-    badges: card.fields?.orderNumber ? [`Order ${String(card.fields.orderNumber)}`] : undefined,
-  }
+    meta: metaParts.length > 0 ? metaParts.join(" · ") : undefined,
+    focal:
+      typeof card.value === "number"
+        ? { value: formatValue(card.value), label: "value" }
+        : undefined,
+    badges: badges.length > 0 ? badges : undefined,
+  };
 }
 
 function formatValue(v: number): string {
-  return v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`
+  return v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`;
 }
 
 export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
-  const board = useBoard({ config, store, seed, now })
-  const [toast, setToast] = useState<string | null>(null)
-  const [intakeOpen, setIntakeOpen] = useState(false)
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const board = useBoard({ config, store, seed, now });
+  const [toast, setToast] = useState<string | null>(null);
+  const [intakeOpen, setIntakeOpen] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function flash(message: string) {
-    setToast(message)
+    setToast(message);
     if (toastTimer.current) {
-      clearTimeout(toastTimer.current)
+      clearTimeout(toastTimer.current);
     }
-    toastTimer.current = setTimeout(() => setToast(null), 3200)
+    toastTimer.current = setTimeout(() => setToast(null), 3200);
   }
 
   const columns = useMemo(() => {
-    return config.stages.map(stage => {
-      const inStage = board.cards.filter(c => c.stage === stage.id)
-      const sorted = sortColumn(inStage, board.flags)
-      return { stage, cards: sorted }
-    })
-  }, [config.stages, board.cards, board.flags])
+    return config.stages.map((stage) => {
+      const inStage = board.cards.filter((c) => c.stage === stage.id);
+      const sorted = sortColumn(inStage, board.flags);
+      return { stage, cards: sorted };
+    });
+  }, [config.stages, board.cards, board.flags]);
 
   function handleDrop(cardId: string, toStageId: string) {
-    const result = board.move(cardId, toStageId)
+    const result = board.move(cardId, toStageId);
     if (!result.ok) {
-      flash(result.message)
+      flash(result.message);
     }
   }
 
@@ -97,19 +121,19 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
             {board.atRiskCount > 0 ? ` · ${board.atRiskCount} at risk` : ""}
           </p>
         </div>
-        <button type="button" style={primaryBtn} onClick={() => setIntakeOpen(v => !v)}>
+        <button type="button" style={primaryBtn} onClick={() => setIntakeOpen((v) => !v)}>
           + New lead
         </button>
       </header>
 
       {intakeOpen ? (
         <IntakeForm
-          onSubmit={input => {
-            const result = board.intake(input)
+          onSubmit={(input) => {
+            const result = board.intake(input);
             if (!result.ok) {
-              flash(result.message)
+              flash(result.message);
             } else {
-              setIntakeOpen(false)
+              setIntakeOpen(false);
             }
           }}
           onCancel={() => setIntakeOpen(false)}
@@ -126,8 +150,8 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
             flags={board.flags}
             stages={config.stages}
             hydrated={board.hydrated}
-            onDrop={cardId => handleDrop(cardId, stage.id)}
-            onQuickAdd={title => board.quickAdd(stage.id, title)}
+            onDrop={(cardId) => handleDrop(cardId, stage.id)}
+            onQuickAdd={(title) => board.quickAdd(stage.id, title)}
             onMenuMove={(cardId, to) => handleDrop(cardId, to)}
           />
         ))}
@@ -139,7 +163,7 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
         </div>
       ) : null}
     </section>
-  )
+  );
 }
 
 function Column({
@@ -153,36 +177,36 @@ function Column({
   onQuickAdd,
   onMenuMove,
 }: {
-  stage: StageConfig
-  cards: BoardCard[]
-  cardKind: BoardConfig["cardKind"]
-  flags: Map<string, CardFlags>
-  stages: StageConfig[]
-  hydrated: boolean
-  onDrop: (cardId: string) => void
-  onQuickAdd: (title: string) => void
-  onMenuMove: (cardId: string, toStageId: string) => void
+  stage: StageConfig;
+  cards: BoardCard[];
+  cardKind: BoardConfig["cardKind"];
+  flags: Map<string, CardFlags>;
+  stages: StageConfig[];
+  hydrated: boolean;
+  onDrop: (cardId: string) => void;
+  onQuickAdd: (title: string) => void;
+  onMenuMove: (cardId: string, toStageId: string) => void;
 }) {
-  const [over, setOver] = useState(false)
-  const [adding, setAdding] = useState(false)
-  const [draft, setDraft] = useState("")
+  const [over, setOver] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
 
   return (
     <div
       role="listitem"
       data-stage={stage.id}
       style={{ ...columnStyle, ...(over ? columnOver : null) }}
-      onDragOver={e => {
-        e.preventDefault()
-        setOver(true)
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
       }}
       onDragLeave={() => setOver(false)}
-      onDrop={e => {
-        e.preventDefault()
-        setOver(false)
-        const id = e.dataTransfer.getData("text/card-id")
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        const id = e.dataTransfer.getData("text/card-id");
         if (id) {
-          onDrop(id)
+          onDrop(id);
         }
       }}
     >
@@ -198,11 +222,11 @@ function Column({
         ) : cards.length === 0 ? (
           <p style={emptyState}>{stage.intake ? "No leads yet — add one" : "—"}</p>
         ) : (
-          cards.map(card => (
+          cards.map((card) => (
             <div
               key={card.id}
               draggable
-              onDragStart={e => e.dataTransfer.setData("text/card-id", card.id)}
+              onDragStart={(e) => e.dataTransfer.setData("text/card-id", card.id)}
               style={{ cursor: "grab" }}
             >
               <MCard
@@ -225,17 +249,17 @@ function Column({
       {!stage.terminal ? (
         adding ? (
           <form
-            onSubmit={e => {
-              e.preventDefault()
-              onQuickAdd(draft)
-              setDraft("")
-              setAdding(false)
+            onSubmit={(e) => {
+              e.preventDefault();
+              onQuickAdd(draft);
+              setDraft("");
+              setAdding(false);
             }}
           >
             <input
               autoFocus
               value={draft}
-              onChange={e => setDraft(e.target.value)}
+              onChange={(e) => setDraft(e.target.value)}
               onBlur={() => setAdding(false)}
               placeholder="Card title…"
               style={quickAddInput}
@@ -249,7 +273,7 @@ function Column({
         )
       ) : null}
     </div>
-  )
+  );
 }
 
 /** Keyboard/menu move — a11y path so a card moves without a drag. */
@@ -259,32 +283,32 @@ function MoveMenu({
   stages,
   onMove,
 }: {
-  cardId: string
-  currentStage: string
-  stages: StageConfig[]
-  onMove: (cardId: string, toStageId: string) => void
+  cardId: string;
+  currentStage: string;
+  stages: StageConfig[];
+  onMove: (cardId: string, toStageId: string) => void;
 }) {
   return (
     <label style={{ fontSize: "0.6875rem", color: "var(--text-muted, #9ba1a8)" }}>
       Move
       <select
         value={currentStage}
-        onChange={e => {
+        onChange={(e) => {
           if (e.target.value !== currentStage) {
-            onMove(cardId, e.target.value)
+            onMove(cardId, e.target.value);
           }
         }}
         aria-label="Move card to stage"
         style={moveSelect}
       >
-        {stages.map(s => (
+        {stages.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}
           </option>
         ))}
       </select>
     </label>
-  )
+  );
 }
 
 function IntakeForm({
@@ -292,32 +316,32 @@ function IntakeForm({
   onCancel,
 }: {
   onSubmit: (input: {
-    title: string
-    contact?: { name?: string; phone?: string; email?: string }
-    source?: string
-  }) => void
-  onCancel: () => void
+    title: string;
+    contact?: { name?: string; phone?: string; email?: string };
+    source?: string;
+  }) => void;
+  onCancel: () => void;
 }) {
-  const [title, setTitle] = useState("")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [source, setSource] = useState("web")
+  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [source, setSource] = useState("web");
 
   return (
     <form
       style={intakeFormStyle}
-      onSubmit={e => {
-        e.preventDefault()
+      onSubmit={(e) => {
+        e.preventDefault();
         if (!title.trim()) {
-          return
+          return;
         }
-        onSubmit({ title, contact: { name, email, phone }, source })
+        onSubmit({ title, contact: { name, email, phone }, source });
       }}
     >
       <input
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Lead title"
         style={intakeInput}
         aria-label="Lead title"
@@ -325,28 +349,28 @@ function IntakeForm({
       />
       <input
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
         placeholder="Contact name"
         style={intakeInput}
         aria-label="Contact name"
       />
       <input
         value={email}
-        onChange={e => setEmail(e.target.value)}
+        onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         style={intakeInput}
         aria-label="Email"
       />
       <input
         value={phone}
-        onChange={e => setPhone(e.target.value)}
+        onChange={(e) => setPhone(e.target.value)}
         placeholder="Phone"
         style={intakeInput}
         aria-label="Phone"
       />
       <select
         value={source}
-        onChange={e => setSource(e.target.value)}
+        onChange={(e) => setSource(e.target.value)}
         style={intakeInput}
         aria-label="Source"
       >
@@ -363,36 +387,36 @@ function IntakeForm({
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 /* ---- token-only styles (no hex except graceful CSS-var fallbacks) ---- */
 
-import type { CSSProperties } from "react"
+import type { CSSProperties } from "react";
 
 const shell: CSSProperties = {
   color: "var(--text-primary, inherit)",
   fontFamily: "var(--font-sans, inherit)",
-}
+};
 const headerRow: CSSProperties = {
   display: "flex",
   alignItems: "flex-end",
   justifyContent: "space-between",
   gap: "1rem",
   flexWrap: "wrap",
-}
+};
 const eyebrow: CSSProperties = {
   fontSize: "0.6875rem",
   textTransform: "uppercase",
   letterSpacing: "0.18em",
   color: "var(--accent, #6366f1)",
   fontWeight: 600,
-}
+};
 const subtle: CSSProperties = {
   fontSize: "0.8125rem",
   color: "var(--text-muted, #9ba1a8)",
   marginTop: "0.125rem",
-}
+};
 const columnsRow: CSSProperties = {
   display: "flex",
   gap: "0.75rem",
@@ -400,7 +424,7 @@ const columnsRow: CSSProperties = {
   paddingBottom: "1rem",
   marginTop: "1rem",
   scrollSnapType: "x proximity",
-}
+};
 const columnStyle: CSSProperties = {
   width: "min(86vw, 18rem)",
   flex: "0 0 auto",
@@ -409,38 +433,38 @@ const columnStyle: CSSProperties = {
   padding: "0.625rem",
   background: "color-mix(in srgb, var(--surface, #16181b) 60%, transparent)",
   border: "1px solid var(--border, #2a2e33)",
-}
+};
 const columnOver: CSSProperties = {
   borderColor: "var(--accent, #6366f1)",
   background: "color-mix(in srgb, var(--accent, #6366f1) 8%, transparent)",
-}
+};
 const columnHead: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   paddingBottom: "0.375rem",
   borderBottom: "1px solid var(--border, #2a2e33)",
-}
+};
 const columnTitle: CSSProperties = {
   fontSize: "0.6875rem",
   textTransform: "uppercase",
   letterSpacing: "0.12em",
   fontWeight: 600,
   color: "var(--text-muted, #9ba1a8)",
-}
-const countChip: CSSProperties = { fontSize: "0.6875rem", color: "var(--text-muted, #9ba1a8)" }
+};
+const countChip: CSSProperties = { fontSize: "0.6875rem", color: "var(--text-muted, #9ba1a8)" };
 const gateLine: CSSProperties = {
   marginTop: "0.25rem",
   fontSize: "0.625rem",
   color: "var(--text-muted, #9ba1a8)",
-}
+};
 const columnBody: CSSProperties = {
   marginTop: "0.625rem",
   display: "flex",
   flexDirection: "column",
   gap: "0.5rem",
   minHeight: "2rem",
-}
+};
 const emptyState: CSSProperties = {
   fontSize: "0.75rem",
   color: "var(--text-muted, #9ba1a8)",
@@ -448,7 +472,7 @@ const emptyState: CSSProperties = {
   padding: "0.75rem",
   border: "1px dashed var(--border, #2a2e33)",
   borderRadius: "0.5rem",
-}
+};
 const primaryBtn: CSSProperties = {
   borderRadius: "0.5rem",
   background: "var(--accent, #6366f1)",
@@ -458,7 +482,7 @@ const primaryBtn: CSSProperties = {
   fontWeight: 600,
   border: "none",
   cursor: "pointer",
-}
+};
 const ghostBtn: CSSProperties = {
   borderRadius: "0.5rem",
   background: "transparent",
@@ -467,7 +491,7 @@ const ghostBtn: CSSProperties = {
   fontSize: "0.8125rem",
   border: "1px solid var(--border, #2a2e33)",
   cursor: "pointer",
-}
+};
 const quickAddBtn: CSSProperties = {
   marginTop: "0.5rem",
   width: "100%",
@@ -478,7 +502,7 @@ const quickAddBtn: CSSProperties = {
   fontSize: "0.75rem",
   border: "1px dashed var(--border, #2a2e33)",
   cursor: "pointer",
-}
+};
 const quickAddInput: CSSProperties = {
   marginTop: "0.5rem",
   width: "100%",
@@ -488,7 +512,7 @@ const quickAddInput: CSSProperties = {
   padding: "0.4375rem",
   fontSize: "0.8125rem",
   border: "1px solid var(--accent, #6366f1)",
-}
+};
 const moveSelect: CSSProperties = {
   marginLeft: "0.375rem",
   background: "var(--surface, #16181b)",
@@ -497,7 +521,7 @@ const moveSelect: CSSProperties = {
   borderRadius: "0.375rem",
   fontSize: "0.6875rem",
   padding: "0.125rem 0.25rem",
-}
+};
 const intakeFormStyle: CSSProperties = {
   marginTop: "1rem",
   display: "grid",
@@ -507,7 +531,7 @@ const intakeFormStyle: CSSProperties = {
   borderRadius: "0.75rem",
   border: "1px solid var(--border, #2a2e33)",
   background: "var(--surface, #16181b)",
-}
+};
 const intakeInput: CSSProperties = {
   borderRadius: "0.5rem",
   background: "color-mix(in srgb, var(--surface, #16181b) 60%, transparent)",
@@ -515,7 +539,7 @@ const intakeInput: CSSProperties = {
   padding: "0.4375rem 0.625rem",
   fontSize: "0.8125rem",
   border: "1px solid var(--border, #2a2e33)",
-}
+};
 const toastStyle: CSSProperties = {
   position: "fixed",
   bottom: "1.5rem",
@@ -529,4 +553,4 @@ const toastStyle: CSSProperties = {
   fontSize: "0.8125rem",
   boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
   zIndex: 50,
-}
+};

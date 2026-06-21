@@ -13,24 +13,24 @@ import type {
   CardFlags,
   RiskReason,
   StageConfig,
-} from "./types"
+} from "./types";
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function daysSince(iso: string, now: number): number {
-  const then = Date.parse(iso)
+  const then = Date.parse(iso);
   if (Number.isNaN(then)) {
-    return 0
+    return 0;
   }
-  return (now - then) / DAY_MS
+  return (now - then) / DAY_MS;
 }
 
 function enabled(rule: AutomationRule, config: BoardConfig): boolean {
-  return config.automations.includes(rule)
+  return config.automations.includes(rule);
 }
 
 function stageById(config: BoardConfig, id: string): StageConfig | undefined {
-  return config.stages.find(s => s.id === id)
+  return config.stages.find((s) => s.id === id);
 }
 
 /**
@@ -46,24 +46,24 @@ export function evaluateCard(
   config: BoardConfig,
   now: number = Date.now(),
 ): CardFlags {
-  const reasons: RiskReason[] = []
-  const stage = stageById(config, card.stage)
+  const reasons: RiskReason[] = [];
+  const stage = stageById(config, card.stage);
 
   if (!stage?.terminal) {
-    const overSla = typeof stage?.sla === "number" && daysSince(card.updatedAt, now) > stage.sla
+    const overSla = typeof stage?.sla === "number" && daysSince(card.updatedAt, now) > stage.sla;
 
     if (overSla && enabled("rotting", config)) {
-      reasons.push("rotting")
+      reasons.push("rotting");
     }
     if (overSla && enabled("stage-sla", config)) {
-      reasons.push("stage-sla")
+      reasons.push("stage-sla");
     }
     if (enabled("next-step-reminder", config) && !card.nextStep?.trim()) {
-      reasons.push("no-next-step")
+      reasons.push("no-next-step");
     }
   }
 
-  return { cardId: card.id, atRisk: reasons.length > 0, reasons }
+  return { cardId: card.id, atRisk: reasons.length > 0, reasons };
 }
 
 /** Evaluate every card; returns a flags map keyed by card id. */
@@ -72,11 +72,11 @@ export function evaluateBoard(
   config: BoardConfig,
   now: number = Date.now(),
 ): Map<string, CardFlags> {
-  const out = new Map<string, CardFlags>()
+  const out = new Map<string, CardFlags>();
   for (const card of cards) {
-    out.set(card.id, evaluateCard(card, config, now))
+    out.set(card.id, evaluateCard(card, config, now));
   }
-  return out
+  return out;
 }
 
 /**
@@ -85,11 +85,11 @@ export function evaluateBoard(
  */
 export function sortColumn(cards: BoardCard[], flags: Map<string, CardFlags>): BoardCard[] {
   return [...cards].sort((a, b) => {
-    const aRisk = flags.get(a.id)?.atRisk ? 1 : 0
-    const bRisk = flags.get(b.id)?.atRisk ? 1 : 0
+    const aRisk = flags.get(a.id)?.atRisk ? 1 : 0;
+    const bRisk = flags.get(b.id)?.atRisk ? 1 : 0;
     if (aRisk !== bRisk) {
-      return bRisk - aRisk
+      return bRisk - aRisk;
     }
-    return Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
-  })
+    return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+  });
 }
