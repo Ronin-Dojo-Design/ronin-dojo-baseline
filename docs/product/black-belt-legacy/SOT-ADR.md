@@ -274,6 +274,8 @@ refreshed into `dirstarter_template` at SESSION_0359.
 
 ## D12 — BBL extracts to its own single-brand repo (subtractive fork; harness dropped, engine kept)  *(operator grill, 2026-06-18)*
 
+> **⛔ SUPERSEDED (SESSION_0421) by [ADR 0034](../../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md).** The "extract to its own repo" half was wrong: BBL is a *permanent flagship*, not a hand-off — it stays in the monorepo. The "drop the 4-brand harness" half survives (single-brand collapse + full prune). The separate-repo pattern belongs to *client* handoff, not BBL. The local `black-belt-legacy` fork (1 unique commit, 90 behind) is the dead D12 artifact.
+
 - **Finding:** the friction is the 4-brand *harness*, not BBL's domain. An architecture review + an
   8-agent evidence pass established: BBL is one enum value (`Brand.BBL`) on a shared app, with exactly
   ONE BBL-exclusive table; the crown jewels (lineage timeline engine `lib/lineage/*`, the

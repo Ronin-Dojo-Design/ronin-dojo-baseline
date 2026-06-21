@@ -31,6 +31,14 @@ tags:
 
 Black Belt Legacy helps martial artists preserve, verify, explore, and share their training legacy through profiles, lineage trees, rank history, curriculum, certifications, and community knowledge.
 
+## North Star (SESSION_0421, ADR 0034)
+
+The **verified lineage graph** is the prize — a defensible network/moat, not a feature list. The
+**mission** (preserving the Machado / Bob Bass lineage) is the *engine* that makes practitioners want
+to claim and verify; **revenue (the listing tiers) is exhaust** that follows coverage. The single
+metric to optimize above all is the **claim loop** — each verified node pulling its promoter and
+students into the graph. Features serve the graph and the trust; they are not the goal.
+
 ## Product identity
 
 Black Belt Legacy is the Ronin platform's heritage and community brand.

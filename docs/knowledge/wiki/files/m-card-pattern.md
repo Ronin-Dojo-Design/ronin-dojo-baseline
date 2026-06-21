@@ -242,7 +242,7 @@ plus the cloud-sweep handoff (mirrors `codex-cloud-bbl-waves-2-4.md`). Cloud age
 | **wrap** | `apps/web/components/web/lineage/lineage-node-card.tsx` | wrap or refactor onto m-card |
 | **reuse** | `components/common/card.tsx`, `components/web/ui/grid.tsx`, `app/styles.css` tokens | do not rebuild |
 | **deprecate** | `facet-result-card.tsx`, `bjj-passport-card.tsx`, `listing-card.tsx` | re-export 1 release → `deprecated` |
-| **monorepo** | AdminTaskBoard + curriculum pages consume `m-card(kind=task|rank)` | cross-brand reuse |
+| **monorepo** | AdminTaskBoard + curriculum pages consume `m-card(kind=task\|rank)` | cross-brand reuse |
 
 ### Needs
 

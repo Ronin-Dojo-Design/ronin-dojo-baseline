@@ -57,6 +57,20 @@ The codebase began as a *multi-brand* martial arts platform (one shared Next.js 
 
 The four-brand harness is being collapsed to single-brand BBL (see `What this project is`); the table records the historical shape, not current priority.
 
+## Repo & product strategy (ADR 0034)
+
+**One monorepo (this repo) = the platform**; deploy unit = **per-product Vercel projects**
+(`ignoreCommand`); `main` = prod, previews = staging. **No separate prod repos.** Multi-*brand* (the
+`Brand` enum, ~170 `getRequestBrand` sites) is dead → single-brand collapse to BBL + full prune;
+**multi-*product* (separate apps in one monorepo) is the model.** Repo name stays platform-neutral
+(**not** `black-belt-legacy`). A true separate repo is reserved for a **client handoff** only.
+
+| Surface | Role | North star |
+| --- | --- | --- |
+| `apps/web` — **Black Belt Legacy** | flagship product; **permanent in-repo** (never handed off) | the verified lineage **graph** (asset/moat); **mission** (preserve the Machado / Bob Bass lineage) is the engine; revenue is exhaust; **optimize the claim loop**. Full vision: BBL PRD. |
+| `packages/ui-kit` | shared kernel (m-card, boards, tokens) | reusable leverage; published as a package on client handoff (ADR 0033 D1) |
+| `clients/*` — e.g. Mammoth CRM | client products | in-repo until a contractual handoff, then own repo consuming `ui-kit` |
+
 ## Non-negotiable rules
 
 - Dirstarter is the L1 baseline.
