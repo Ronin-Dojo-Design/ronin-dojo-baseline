@@ -9,9 +9,7 @@ updated: 2026-06-21
 author: Brian + Desi
 last_agent: claude-session-0421
 pairs_with:
-  - docs/knowledge/wiki/component-design-system.md
   - docs/knowledge/wiki/files/bbl-type-system.md
-  - docs/knowledge/wiki/files/m-card-pattern.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -26,7 +24,7 @@ tags:
 # Design System — 12-grid, golden ratio & visual hierarchy
 
 > The **layout + proportion + hierarchy** layer of the design system. Complements the canonical
-> token set + 1-2-3 rhythm + 4px spacing scale in [`component-design-system`](../component-design-system.md)
+> token set + 1-2-3 rhythm + 4px spacing scale in `component-design-system` (lands with PR #137)
 > and the type ladder in [`bbl-type-system`](bbl-type-system.md). PWCC: TBD (slot into the spec
 > catalog when PR #137 lands — don't pre-assign and collide with that branch's numbering).
 

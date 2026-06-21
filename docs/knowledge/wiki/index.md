@@ -30,6 +30,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
+| [Second-Brain Levels](second-brain-levels.md) | reference | active — 5-level self-assessment of the repo's knowledge system (strong L1/L2/L4, gap at L3 semantic, emerging L5); open L3 decision |
 | [Repo Code Glossary](repo-code-glossary.md) | reference | active — SESSION_0351 expanded repo/project/session/schema/monitoring terms; SESSION_0352 added slug, cross-facet filter, pagination, projection, and pen-test terms |
 | [ENTER_THE_DOJO Schema Intake](concepts/enter-the-dojo-schema-intake.md) | concept | active — legacy WordPress/Pods doctrine translated to current Prisma/server-action/query-payload language |
 | [Aliases and Canonical IDs](aliases-and-canonical-ids.md) | concept | active |
@@ -645,6 +646,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [_components/bbl-footer.tsx](files/bbl-footer.md) | file | active |
 | [nav/nav-sheet.tsx](files/bbl-nav-sheet.md) | file | active |
 | [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
+| [Design System — 12-grid, golden ratio & hierarchy](files/design-system-grid-ratio-hierarchy.md) | file | active |
 | [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
 | [_components/feature-request-dialog.tsx (DojoBots widget)](files/feature-request-dialog.md) | file | active — `lifecycle: MVP_LIVE` |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
