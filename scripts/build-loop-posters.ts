@@ -100,7 +100,8 @@ const posterHtml = (loop: Loop, steps: Step[]): string => {
         )}</h2>${s.blurb ? `<p>${esc(s.blurb)}</p>` : ""}</div></div>`,
     )
     .join("")
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  // data-theme="light": posters are paper — always print/screenshot on white, ignore OS dark.
+  return `<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(loop.title)} — Ronin Dojo loop poster</title>${BBL_FONTS_LINK}<style>${css}</style></head>
 <body><div class="poster">

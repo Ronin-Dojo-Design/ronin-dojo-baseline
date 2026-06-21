@@ -44,6 +44,28 @@ Desi brand pass, SESSION_0428.
 | body font | `--font-bbl-body` (`fonts.ts`) | `"Inter",-apple-system,…` | everything else |
 | radius | email `rounded-2xl/lg` | container `16px` · card `8px` | — |
 
+## Dark / light inversion
+
+Light is the default; **dark is a true inversion** that follows the OS
+(`prefers-color-scheme: dark`) and is forceable via `<html data-theme="light|dark">` (the
+HTML reference has a System → Light → Dark toggle; posters pin `light` so they print as paper).
+Both modes keep the brand accent and one step component — only the surfaces invert.
+
+| Token | Light | Dark | Note |
+| --- | --- | --- | --- |
+| accent | `#E52421` | `#FF4D49` | same hue, lifted for AA contrast on dark |
+| accent-dark | `#B91C1C` | `#FF7A75` | eyebrows / links |
+| on-accent | `#FFFFFF` | `#FFFFFF` | number/text on the red disc |
+| bg | `#FFFFFF` | `#0A0A0A` | — |
+| page | `#F5F5F5` | `#000000` | backdrop |
+| surface | `#FAFAFA` | `#1C1C1E` | cards / sidebar / code (iOS/Todoist chrome) |
+| fg | `#1F1F1F` | `#F5F5F5` | body text |
+| muted | `#737373` | `#9A9AA0` | meta |
+| line | `#E0E0E0` | `#2C2C2E` | hairlines |
+
+Dark surfaces deliberately mirror the iOS/Todoist chrome the **AdminTaskBoard** is modelled on,
+so the operator board, the docs hub, and the app all read as one system.
+
 ## The 1-2-3 step component
 
 Canonical origin: the email `LoginStep` (`apps/web/emails/bbl-the-long-road.tsx`). **Filled red
