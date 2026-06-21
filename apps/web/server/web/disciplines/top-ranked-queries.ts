@@ -6,23 +6,18 @@
 //          Membership is Baseline enrollment, not the rank source (passport-and-shells.md).
 // @wired   apps/web/app/(web)/disciplines/_components/black-belt-rail.tsx
 import type { Brand, Prisma } from "~/.generated/prisma/client"
-import { passportDisplayName } from "~/lib/identity/passport-display"
+import { publicPassportPayload } from "~/server/web/passport/public-payloads"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
 
 // DTO — the strict shape the rail consumes; no raw Prisma rows reach the component.
 const topRankedAwardSelect = {
   passportId: true,
   rank: { select: { name: true, colorHex: true, sortOrder: true } },
-  // Phase 3c (SOT-ADR D1): the earner is Passport-rooted; identity is on the Passport, with the
-  // attached account image as a fallback.
-  passport: {
-    select: {
-      id: true,
-      displayName: true,
-      avatarUrl: true,
-      user: { select: { id: true, name: true, image: true } },
-    },
-  },
+  // Phase 3c / issue #134: use the canonical public passport payload so identity
+  // derivation (displayName fallback, avatarUrl resolution) is centralised in
+  // projectPublicPassport rather than repeated per-surface.
+  passport: { select: publicPassportPayload },
 } satisfies Prisma.RankAwardSelect
 
 export type TopRankedMember = {
@@ -74,10 +69,11 @@ export async function getTopRankedMembersForDiscipline({
   for (const award of awards) {
     if (seen.has(award.passportId)) continue
     seen.add(award.passportId)
+    const passportDto = projectPublicPassport(award.passport, { showRanks: true })
     members.push({
       id: award.passportId,
-      name: passportDisplayName(award.passport) ?? "Unnamed",
-      image: award.passport.avatarUrl ?? award.passport.user?.image ?? null,
+      name: passportDto.displayName,
+      image: passportDto.avatarUrl,
       rankName: award.rank.name,
       colorHex: award.rank.colorHex,
     })
