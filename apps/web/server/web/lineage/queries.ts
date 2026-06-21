@@ -21,6 +21,7 @@ import {
   normalizeLineageSearchParams,
 } from "~/server/web/lineage/schema"
 import { buildPublishedLineageTreeWhere } from "~/server/web/lineage/tree-where"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
 
 /**
@@ -58,21 +59,18 @@ const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
   node.passport?.directoryProfile?.showRanks !== false
 
 const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
-  if (shouldShowPublicRanks(node) || !node.passport) {
-    return node
-  }
+  if (!node.passport) return node
+  const dto = projectPublicPassport(node.passport, {})
+  if (dto.ranks.length > 0) return node
   return { ...node, passport: { ...node.passport, rankAwardsEarned: [] } }
 }
 
 export const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
-  if (shouldShowPublicRanks(profile) || !profile.passport) {
-    return profile
-  }
-  // SESSION_0266_FINDING_01 — `passport.user.memberships[].rank.{name,shortName}`
-  // was an adjacent rank-leak path the SESSION_0264/0265 redactions
-  // missed. Null out the embedded `Membership.rank` (nullable in schema)
-  // for `showRanks=false` viewers alongside the existing `rankAwards` blank.
-  // (Phase 3c: ranks earned are now Passport-rooted; memberships stay account-side.)
+  if (!profile.passport) return profile
+  const dto = projectPublicPassport(profile.passport, {})
+  if (dto.ranks.length > 0) return profile
+  // SESSION_0266_FINDING_01 — null out membership.rank for showRanks=false viewers
+  // (adjacent rank-leak path; projectPublicPassport handles rankAwards but not embedded membership ranks)
   return {
     ...profile,
     passport: {
