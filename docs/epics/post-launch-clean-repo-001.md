@@ -63,7 +63,8 @@ Every major data/wiring flow gets a lightweight `files/` spec (ASCII + mermaid) 
 | [bbl-galaxy-data-flow](../knowledge/wiki/files/bbl-galaxy-data-flow.md) | published tree → galaxy graph → R3F viewer + drawer | WIP (PR #133) |
 | [feature-request-dialog](../knowledge/wiki/files/feature-request-dialog.md) | feedback widget → Report(Feedback) + operator notify | MVP_LIVE |
 | [bbl-admin-task-board](../knowledge/wiki/files/bbl-admin-task-board.md) | operator actions → useTaskBoard → localStorage + wp-json/bbl/v1/admin/taskboard → views; PWCC cloud handoff | PLANNED (cloud build) |
-| [m-card-pattern](../knowledge/wiki/files/m-card-pattern.md) | native query → kind mapper → MCardData → m-card (Dirstarter base + tokens) → roster/rank/task/loop pages; PWCC cloud handoff | PLANNED (cloud build) |
+| [m-card-pattern](../knowledge/wiki/files/m-card-pattern.md) | native query → kind mapper → MCardData → m-card (Dirstarter base + tokens) → roster/rank/task/loop pages; PWCC cloud handoff | PLANNED (PWCC-002) |
+| [three-level-magnetic-drawer](../knowledge/wiki/files/three-level-magnetic-drawer.md) | attach items+kind → magnetic 3-detent canvas → infinite m-card list; Todoist→cinematic chrome; PWCC cloud handoff | PLANNED (PWCC-003) |
 | [component-design-system](../knowledge/wiki/component-design-system.md) | one token set + 1-2-3 step + dark/light → emails · app · doc generators | active (Desi pass) |
 
 ## RepoHealth findings (Giddy)

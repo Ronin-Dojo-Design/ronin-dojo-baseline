@@ -4,6 +4,7 @@ slug: m-card-pattern
 type: file
 status: active
 lifecycle: PLANNED
+pwcc: PWCC-002
 created: 2026-06-21
 updated: 2026-06-21
 author: Brian + Petey/Cody/Desi
