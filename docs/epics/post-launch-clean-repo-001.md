@@ -63,6 +63,7 @@ Every major data/wiring flow gets a lightweight `files/` spec (ASCII + mermaid) 
 | [bbl-galaxy-data-flow](../knowledge/wiki/files/bbl-galaxy-data-flow.md) | published tree → galaxy graph → R3F viewer + drawer | WIP (PR #133) |
 | [feature-request-dialog](../knowledge/wiki/files/feature-request-dialog.md) | feedback widget → Report(Feedback) + operator notify | MVP_LIVE |
 | [bbl-admin-task-board](../knowledge/wiki/files/bbl-admin-task-board.md) | operator actions → useTaskBoard → localStorage + wp-json/bbl/v1/admin/taskboard → views; PWCC cloud handoff | PLANNED (cloud build) |
+| [m-card-pattern](../knowledge/wiki/files/m-card-pattern.md) | native query → kind mapper → MCardData → m-card (Dirstarter base + tokens) → roster/rank/task/loop pages; PWCC cloud handoff | PLANNED (cloud build) |
 | [component-design-system](../knowledge/wiki/component-design-system.md) | one token set + 1-2-3 step + dark/light → emails · app · doc generators | active (Desi pass) |
 
 ## RepoHealth findings (Giddy)
@@ -76,7 +77,7 @@ independent lane; effort/risk noted. Docs-only items are low-risk quick wins.
 | RH-2 | **Doc-root sprawl** — 11 `petey-plan-*.md` + `consolidation-merge-prompt.md` + `prune-roadmap.md` loose at `docs/`. | Move completed plans → `docs/_archive/petey-plans/`; keep only active plans (relink inbound refs atomically). | low | low (docs) |
 | RH-3 | **`scripts/` one-offs** — 31 `apps/web/scripts/*.ts`, many executed-once imports/sends (`import-bbl-*`, `send-bbl-*`). | Move executed one-offs → `apps/web/scripts/_archive/`; keep reusable utilities. Add a 1-line header to each marking run-once vs reusable. | low | low |
 | RH-4 | **Prisma schema scale** — single `schema.prisma` at **3,957 lines / 123 models / 86 enums / 56 migrations**. Hard to navigate; enum set likely has dupes/unused. | Opportunity: split to multi-file schema (`prismaSchemaFolder`) by domain (identity · lineage · directory · billing · tournaments · courses · media); audit enums for dup/unused. **Needs an ADR + generate/migrate parity proof.** | medium | medium |
-| RH-5 | **N parallel public identity projections** (the parity audit). | Canonical public Passport DTO — see L1 / issue #134. | medium | low (behavior-preserving) |
+| RH-5 | **N parallel public identity projections** (the parity audit) + **5 cards / 4 shapes / 3 components** at the render layer. | Canonical public Passport DTO (L1 / issue #134) for the data layer + [`m-card-pattern`](../knowledge/wiki/files/m-card-pattern.md) (one content-/brand-agnostic card on the Dirstarter base) for the render layer. | medium | low (behavior-preserving) |
 | RH-6 | `files/` had **no catalog or template** — 26 specs, no index. | Added [`files/README.md`](../knowledge/wiki/files/README.md) (system diagram + catalog) + [`_template/SPEC_TEMPLATE.md`](../knowledge/wiki/files/_template/SPEC_TEMPLATE.md). ✅ this PR. | — | — |
 
 > RH-4 is the one item that touches generated code + migrations — treat as its own ADR-gated lane,

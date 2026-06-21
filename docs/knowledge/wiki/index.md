@@ -650,6 +650,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Public Passport DTO (canonical public identity projection)](files/public-passport-dto.md) | file | active — `lifecycle: WIP`; spec/flow (issue #134, PR #135) |
 | [BBL Galaxy data flow](files/bbl-galaxy-data-flow.md) | file | active — `lifecycle: WIP`; spec/flow (PR #133) |
 | [AdminTaskBoard (BBL operator task board — Todoist model)](files/bbl-admin-task-board.md) | file | active — `lifecycle: PLANNED`; spec/flow (SESSION_0428); absorbs monorepo AdminTaskForge |
+| [m-card (content- & brand-agnostic roster/rank/task/loop card)](files/m-card-pattern.md) | file | active — `lifecycle: PLANNED`; one card contract on Dirstarter base, kind→DTO; unifies the card parity gap |
 | [Component Design System (BBL doc & email branding tokens)](component-design-system.md) | concept | active — Desi brand pass (SESSION_0428); `component-design-system.html` is the living visual reference |
 | [SPEC file template](files/_template/SPEC_TEMPLATE.md) | template | active — canonical `_spec` shape for the files catalog |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
