@@ -63,6 +63,23 @@ Every major data/wiring flow gets a lightweight `files/` spec (ASCII + mermaid) 
 | [bbl-galaxy-data-flow](../knowledge/wiki/files/bbl-galaxy-data-flow.md) | published tree → galaxy graph → R3F viewer + drawer | WIP (PR #133) |
 | [feature-request-dialog](../knowledge/wiki/files/feature-request-dialog.md) | feedback widget → Report(Feedback) + operator notify | MVP_LIVE |
 
+## RepoHealth findings (Giddy)
+
+Architectural / folder / DB consolidation targets surfaced by the SESSION_0428 sweep. Each is an
+independent lane; effort/risk noted. Docs-only items are low-risk quick wins.
+
+| ID | Finding | Action | Effort | Risk |
+| --- | --- | --- | --- | --- |
+| RH-1 | `docs/_imports/baseline-systems-pack/` is **byte-identical** to `docs/ronin_dojo_baseline_systems_pack/` (14 files each); both are import-staging now synthesized into `docs/runbooks/sops/`. | Archive/remove the `_imports` copy; confirm the root copy is superseded by `runbooks/sops/` and archive it too. Leave one canonical lineage. | low | low (docs) |
+| RH-2 | **Doc-root sprawl** — 11 `petey-plan-*.md` + `consolidation-merge-prompt.md` + `prune-roadmap.md` loose at `docs/`. | Move completed plans → `docs/_archive/petey-plans/`; keep only active plans (relink inbound refs atomically). | low | low (docs) |
+| RH-3 | **`scripts/` one-offs** — 31 `apps/web/scripts/*.ts`, many executed-once imports/sends (`import-bbl-*`, `send-bbl-*`). | Move executed one-offs → `apps/web/scripts/_archive/`; keep reusable utilities. Add a 1-line header to each marking run-once vs reusable. | low | low |
+| RH-4 | **Prisma schema scale** — single `schema.prisma` at **3,957 lines / 123 models / 86 enums / 56 migrations**. Hard to navigate; enum set likely has dupes/unused. | Opportunity: split to multi-file schema (`prismaSchemaFolder`) by domain (identity · lineage · directory · billing · tournaments · courses · media); audit enums for dup/unused. **Needs an ADR + generate/migrate parity proof.** | medium | medium |
+| RH-5 | **N parallel public identity projections** (the parity audit). | Canonical public Passport DTO — see L1 / issue #134. | medium | low (behavior-preserving) |
+| RH-6 | `files/` had **no catalog or template** — 26 specs, no index. | Added [`files/README.md`](../knowledge/wiki/files/README.md) (system diagram + catalog) + [`_template/SPEC_TEMPLATE.md`](../knowledge/wiki/files/_template/SPEC_TEMPLATE.md). ✅ this PR. | — | — |
+
+> RH-4 is the one item that touches generated code + migrations — treat as its own ADR-gated lane,
+> not a quick win. RH-1/2/3 and L5 are safe docs/scripts hygiene that cloud agents can clear fast.
+
 ## Guardrails
 
 - **No behavior change** in L1 migrations — pure consolidation; lean on existing visibility/tier tests.
