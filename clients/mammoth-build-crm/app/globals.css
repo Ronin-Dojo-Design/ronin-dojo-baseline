@@ -21,6 +21,17 @@
 
   --font-display: "Saira", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /*
+   * Mammoth token block for the shared kernel (@ronin-dojo/ui-kit — AdminKanban PWCC-007).
+   * The kernel reads ONLY these CSS vars, never a hex value (ADR 0033). The board already
+   * consumes --surface / --surface-elevated / --border / --text-primary / --text-muted
+   * from the palette above; these three bridge the kernel's accent + danger names onto the
+   * Mammoth orange. Swap this block to re-skin the board for another brand. Mammoth = dark + orange.
+   */
+  --accent: var(--primary);          /* board accent + primary CTA = Mammoth orange */
+  --accent-foreground: var(--bg);    /* dark ink on the orange button */
+  --danger: var(--primary-hover);    /* at-risk = the one loud signal, on-brand orange */
 }
 
 html {
