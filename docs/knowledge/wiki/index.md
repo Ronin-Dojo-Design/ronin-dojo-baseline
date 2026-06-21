@@ -647,6 +647,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
 | [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
 | [_components/feature-request-dialog.tsx (DojoBots widget)](files/feature-request-dialog.md) | file | active — `lifecycle: MVP_LIVE` |
+| [Public Passport DTO (canonical public identity projection)](files/public-passport-dto.md) | file | active — `lifecycle: WIP`; spec/flow (issue #134, PR #135) |
+| [BBL Galaxy data flow](files/bbl-galaxy-data-flow.md) | file | active — `lifecycle: WIP`; spec/flow (PR #133) |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |
 
 ## L1 Component Patterns & UI Components
