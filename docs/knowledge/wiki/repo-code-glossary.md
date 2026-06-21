@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-11
-last_agent: claude-session-0357
+updated: 2026-06-21
+last_agent: claude-session-0421
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -124,6 +124,7 @@ commit) so the term is concrete, not abstract.
 
 ## Domain words in this repo
 
+- **Black Belt Legacy (BBLApp v4.4)** — the live product: the heritage/lineage network for martial artists at [blackbeltlegacy.com](https://blackbeltlegacy.com) (launched June 19, 2026). `BBL` is its brand code; `v4.4` is the current app line. It's the only active brand — the codebase's other three brands are dormant.
 - **Passport** — a person's global identity record: name, profile basics, emergency/contact fields. It is not the same as their membership in a school.
 - **DirectoryProfile** — the public/private directory face of a person. It controls visibility and which profile fields may show up.
 - **Organization** — a school, dojo, club, league, or federation. It is the main container for memberships, programs, schedules, billing, and events.
@@ -136,7 +137,8 @@ commit) so the term is concrete, not abstract.
 - **ContentAtom** — one canonical teaching/marketing idea that can become posts, curriculum, social copy, videos, or other variants.
 - **ContentVariant** — a brand/channel-specific version of a ContentAtom, such as a Baseline blog post or BBL social caption.
 - **LineageTree** — a public or private family-tree-style view of martial arts relationships.
-- **LineageNode** — the person identity point inside lineage data.
+- **Timeline-tree** — BBL's signature lineage view: a *chronological* tree of who promoted whom, with **provable provenance** ("Promoted by X · date", year-stamped connectors, ordered by time). The product's USP — not just who's connected, but when and by whom.
+- **LineageNode** — the person identity point inside lineage data. Rooted on a **Passport** (a placeholder node has an accountless Passport, claimable).
 - **LineageTreeMember** — a person's membership in a specific lineage tree, including visual parent, sort order, and public display flags.
 - **DataSelect** — the id/slug-aware `Select` wrapper (`components/common/data-select.tsx`). Takes `options:{value,label}[]` and forwards a `value→label` map to Base UI `Select.Root` so a preset id renders its label, not the raw cuid (the systemic WL-P1-7 fix). Use it for any Select whose value is an id/slug. SESSION_0355 added an optional per-option `content?: ReactNode` (resolved by `dataSelectRowContent`) that renders a **rich dropdown row** (e.g. a belt swatch) while `label` still drives the collapsed trigger, typeahead, and a11y — so the prior ReactNode-label exception is removed and `tool-filters` is back on `DataSelect`. (For *searchable* person/org pickers use `ComboboxSelector`, not `DataSelect`.)
 - **BeltSwatch** — the small belt-color swatch primitive (`components/common/belt-swatch.tsx`), driven by `Rank.colorHex` data via a data-bound SVG `fill` (never a hardcoded colour or inline `style`). The reusable consolidation of the per-surface bespoke belt-color treatments.

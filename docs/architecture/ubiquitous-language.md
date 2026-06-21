@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-09
-last_agent: claude-session-0358
+updated: 2026-06-21
+last_agent: claude-session-0421
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -234,7 +234,7 @@ PromotionEvent holds a shared date, host venue (`hostOrganizationId`, distinct f
 
 The reusable lineage profile for a person.
 
-LineageNode belongs to one User and can appear in one or more LineageTree contexts through LineageTreeMember.
+LineageNode is **Passport-rooted** (`passportId`, not User — SOT-ADR D1) and can appear in one or more LineageTree contexts through LineageTreeMember. A **placeholder** node has an accountless Passport, claimable via LineageClaimRequest.
 
 ### LineageRelationship
 
@@ -274,15 +274,21 @@ Organization owner and organization admin access may be derived by server author
 
 ### LineageClaimRequest
 
-A request by an authenticated user to claim a placeholder LineageNode.
+A request by an authenticated user to claim a placeholder LineageNode. The node is **Passport-rooted** (`passportId`); approval **attaches the claimant's account to the node's Passport** — the node never moves (Phase 3c, SOT-ADR D1). A claimant's empty signup Passport is superseded, not blocked (SESSION_0392). Reviewed via the admin claim-review path (approve / deny / needs-info); every decision is audited and emails the claimant (approve → `profile-claim-approved`, deny → `profile-claim-rejected`).
 
-Approval may transfer the placeholder node only when the claimant does not already have a LineageNode. Duplicate-node cases require manual merge.
+### LineagePendingClaim
+
+An **email-bound** pending lineage claim (ADR 0032, SESSION_0419). Created when a claim is initiated before the claimant has an account; **reconciled on every sign-in** — magic-link *and* social — via `lib/auth.ts` `hooks.after` → the shared `claimNodeForUser` core, so social sign-in no longer bypasses the magic-link-only claim. Verification emails store exact email casing.
 
 ### LineageClaimEvidence
 
 Private evidence attached to a LineageClaimRequest.
 
 Evidence is visible to the claimant and reviewers, not public lineage payloads.
+
+### ProfileClaimRequest
+
+The **second, distinct** claim system (SESSION_0354) — a request to claim an **owner-less Organization** or a **placeholder person**, separate from lineage claims. Org approval sets `ownerId`; person approval is a manual merge. **Register ≠ Claim** (ADR 0023): register creates new, claim takes over existing. Do not conflate with `LineageClaimRequest` (placeholder LineageNode) — see [[profile-claim-vs-lineage-claim]].
 
 ### LineageVerificationStatus
 
@@ -528,6 +534,8 @@ Initial values:
 - `WEKAF`
 
 Brand is currently an enum/column, not a table.
+
+**`BBL` is the only live/active brand** (BBLApp v4.4 — launched June 19, 2026). The enum retains all four for the not-yet-pruned multi-brand harness, so **brand-scoping still applies in code**; the single-brand collapse is a future prune.
 
 ## AI naming rules
 

@@ -4,9 +4,9 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-06-11
+updated: 2026-06-21
 author: Brian + Giddy
-last_agent: claude-session-0360
+last_agent: claude-session-0421
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -34,7 +34,9 @@ It is intentionally short. It should explain the rules a new agent must not miss
 
 ## What this project is
 
-Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter/Next.js foundation with one shared app, one shared schema, and brand behavior controlled through data, routing, and theme context.
+**Black Belt Legacy (BBLApp v4.4) is LIVE** at [blackbeltlegacy.com](https://blackbeltlegacy.com) — launched **June 19, 2026** — the heritage/community lineage network for martial artists (profiles, the promotion **timeline-tree**, rank history, claims, paid Premium/Elite memberships).
+
+The codebase began as a *multi-brand* martial arts platform (one shared Next.js app + schema, brand behavior via data/routing/theme) and is being **pared to single-brand BBL** — the multi-brand harness is dormant and slated for prune. For agents: the schema + `Brand` enum still carry four brands, so **brand-scoping still applies in code**, but **BBL is the only live/active brand and the whole near-term game.**
 
 ## Toolchain (canonical, SESSION_0360)
 
@@ -44,14 +46,16 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 - **Typecheck is separate from lint:** `next typegen && tsc --noEmit` (Oxc does not replace `tsc`).
 - Command recipes: [session-ops-cookbook](../../runbooks/dev-environment/session-ops-cookbook.md).
 
-## The four brands
+## Brands (BBL is live; the rest are dormant)
 
-| Brand | Product theme | Primary story |
+| Brand | Product theme | Status |
 | --- | --- | --- |
-| Baseline Martial Arts | School operations, curriculum, certification, and affiliation | Prove the operating system through Brian's school/program first, then scale as reusable school-ops SaaS for other schools and university programs. |
-| Black Belt Legacy | Lineage, profiles, curriculum, certifications, and trust | Preserve martial arts legacy. |
-| WEKAF USA | Tournament operations | Run events, divisions, brackets, scoring, and results. |
-| Ronin Dojo Design | White-label sales, demos, and onboarding | Sell and operate client martial arts systems. |
+| **Black Belt Legacy** | Lineage, profiles, the promotion timeline-tree, claims, certifications, trust, paid memberships | **🚀 LAUNCHED June 19, 2026 — the only active brand.** |
+| Baseline Martial Arts | School operations, curriculum, certification, affiliation | Live proxy only — hardened the shared platform pre-BBL; not the active lane. |
+| WEKAF USA | Tournament operations | Dormant — schema exists, no active build. |
+| Ronin Dojo Design | White-label sales, demos, onboarding | Dormant — post-everything-else. |
+
+The four-brand harness is being collapsed to single-brand BBL (see `What this project is`); the table records the historical shape, not current priority.
 
 ## Non-negotiable rules
 
@@ -72,10 +76,10 @@ Ronin Dojo Baseline is a multi-brand martial arts platform built on a Dirstarter
 
 ## Current product priorities
 
-1. **Black Belt Legacy launch** — the `BBL-SOT-Spec` program (upstream-current substrate → person-rooted identity → claim → WP-parity → cutover). THE focus until cutover.
-2. Baseline Martial Arts school-ops PRD + stories.
-3. Four-brand story map.
-4. Docs pruning/consolidation.
+1. **Black Belt Legacy post-launch** — BBL is **LIVE** (launched June 19, 2026). The running post-launch list (P0/P1/P2 + Now-live) is canonical in `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md`. Feature lifecycle is tracked as `lifecycle:` (e.g. `MVP_LIVE`) on `files/` specs; public feature status lives in `FEATURES.md` + the in-app `/changelog`.
+2. Single-brand collapse / multi-brand-harness prune (GitHub + folder rename → black-belt-legacy).
+3. Docs pruning/consolidation + session-process lean-up.
+4. Baseline Martial Arts school-ops (dormant lane).
 5. Agent workflow/dashboard integration later.
 
 ## Where truth lives
@@ -119,7 +123,8 @@ They should not carry every implementation note, full session history, raw resea
 
 ## Current Black Belt Legacy canon
 
-- `docs/product/black-belt-legacy/BBL-SOT-Spec.md` — **THE single program blueprint (SESSION_0359 pivot); read first.** `SOT-ADR.md` D1–D7 are the current decisions.
+- `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md` — **post-launch running list (P0/P1/P2 + Now-live); canonical since launch.**
+- `docs/product/black-belt-legacy/BBL-SOT-Spec.md` — the phased program blueprint (SESSION_0359 pivot). `SOT-ADR.md` **D1–D11** are the current decisions (D11 = minimum-viable-flip gate, ratified).
 - `docs/product/black-belt-legacy/PRD.md`
 - `docs/product/black-belt-legacy/STORIES.md`
 - `docs/architecture/lineage/lineage-tree-v1-requirements.md`
