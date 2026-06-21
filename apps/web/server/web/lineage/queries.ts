@@ -58,37 +58,6 @@ const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
 const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
   node.passport?.directoryProfile?.showRanks !== false
 
-const redactLineageNodeRowRanks = (node: LineageNodeRow): LineageNodeRow => {
-  if (!node.passport) return node
-  const dto = projectPublicPassport(node.passport, {})
-  if (dto.ranks.length > 0) return node
-  return { ...node, passport: { ...node.passport, rankAwardsEarned: [] } }
-}
-
-export const redactLineageNodeProfileRanks = (profile: LineageNodeProfile): LineageNodeProfile => {
-  if (!profile.passport) return profile
-  const dto = projectPublicPassport(profile.passport, {})
-  if (dto.ranks.length > 0) return profile
-  // SESSION_0266_FINDING_01 — null out membership.rank for showRanks=false viewers
-  // (adjacent rank-leak path; projectPublicPassport handles rankAwards but not embedded membership ranks)
-  return {
-    ...profile,
-    passport: {
-      ...profile.passport,
-      rankAwardsEarned: [],
-      user: profile.passport.user
-        ? {
-            ...profile.passport.user,
-            memberships: profile.passport.user.memberships.map(membership => ({
-              ...membership,
-              rank: null,
-            })),
-          }
-        : null,
-    },
-  }
-}
-
 /**
  * Resolve the visibility scope for a viewer.
  *
@@ -144,7 +113,14 @@ export const getLineageRootForUser = async (userId: string): Promise<LineageNode
     },
     select: lineageNodeRowPayload,
   })
-  return node ? redactLineageNodeRowRanks(node) : null
+  if (!node) return null
+  if (node.passport) {
+    const _dto = projectPublicPassport(node.passport, {})
+    if (_dto.ranks.length === 0) {
+      return { ...node, passport: { ...node.passport, rankAwardsEarned: [] } }
+    }
+  }
+  return node
 }
 
 // ---------------------------------------------------------------------------
@@ -190,7 +166,16 @@ export const getLineageTreeForUser = async (
 
   const nodeMap = new Map<string, LineageNodeRow>()
   const edgeMap = new Map<string, LineageRelationshipRow>()
-  nodeMap.set(root.id, redactLineageNodeRowRanks(root))
+  {
+    let _root: LineageNodeRow = root
+    if (_root.passport) {
+      const _dto = projectPublicPassport(_root.passport, {})
+      if (_dto.ranks.length === 0) {
+        _root = { ..._root, passport: { ..._root.passport, rankAwardsEarned: [] } }
+      }
+    }
+    nodeMap.set(_root.id, _root)
+  }
 
   let frontier: string[] = [root.id]
 
@@ -228,7 +213,14 @@ export const getLineageTreeForUser = async (
         select: lineageNodeRowPayload,
       })
       for (const n of neighbours) {
-        nodeMap.set(n.id, redactLineageNodeRowRanks(n))
+        let _n: LineageNodeRow = n
+        if (_n.passport) {
+          const _dto = projectPublicPassport(_n.passport, {})
+          if (_dto.ranks.length === 0) {
+            _n = { ..._n, passport: { ..._n.passport, rankAwardsEarned: [] } }
+          }
+        }
+        nodeMap.set(_n.id, _n)
         visibleNeighbourIds.add(n.id)
       }
     }
@@ -281,7 +273,30 @@ export const getLineageProfile = cache(
       },
       select: lineageNodeProfilePayload,
     })
-    return profile ? redactLineageNodeProfileRanks(profile) : null
+    if (!profile) return null
+    if (profile.passport) {
+      const _dto = projectPublicPassport(profile.passport, {})
+      if (_dto.ranks.length === 0) {
+        // SESSION_0266_FINDING_01 — null out membership.rank for showRanks=false viewers
+        return {
+          ...profile,
+          passport: {
+            ...profile.passport,
+            rankAwardsEarned: [],
+            user: profile.passport.user
+              ? {
+                  ...profile.passport.user,
+                  memberships: profile.passport.user.memberships.map(membership => ({
+                    ...membership,
+                    rank: null,
+                  })),
+                }
+              : null,
+          },
+        }
+      }
+    }
+    return profile
   },
 )
 
@@ -329,7 +344,29 @@ export const getLineageProfilesByIds = cache(
 
     return Object.fromEntries(
       profiles.map(profile => {
-        const publicProfile = redactLineageNodeProfileRanks(profile)
+        let publicProfile = profile
+        if (publicProfile.passport) {
+          const _dto = projectPublicPassport(publicProfile.passport, {})
+          if (_dto.ranks.length === 0) {
+            // SESSION_0266_FINDING_01 — null out membership.rank for showRanks=false viewers
+            publicProfile = {
+              ...publicProfile,
+              passport: {
+                ...publicProfile.passport,
+                rankAwardsEarned: [],
+                user: publicProfile.passport.user
+                  ? {
+                      ...publicProfile.passport.user,
+                      memberships: publicProfile.passport.user.memberships.map(membership => ({
+                        ...membership,
+                        rank: null,
+                      })),
+                    }
+                  : null,
+              },
+            }
+          }
+        }
         return [publicProfile.id, publicProfile]
       }),
     )
@@ -386,7 +423,16 @@ export const materializeLineageTreeResult = (
       !survivingMemberIds.has(member.primaryVisualParentMemberId)
         ? { ...member, primaryVisualParentMemberId: null }
         : member
-    const redactedNode = redactLineageNodeRowRanks(normalizedMember.node)
+    let redactedNode = normalizedMember.node
+    if (redactedNode.passport) {
+      const _dto = projectPublicPassport(redactedNode.passport, {})
+      if (_dto.ranks.length === 0) {
+        redactedNode = {
+          ...redactedNode,
+          passport: { ...redactedNode.passport, rankAwardsEarned: [] },
+        }
+      }
+    }
     const selectedRankAward = shouldShowPublicRanks(normalizedMember.node)
       ? normalizedMember.selectedRankAward
       : null
