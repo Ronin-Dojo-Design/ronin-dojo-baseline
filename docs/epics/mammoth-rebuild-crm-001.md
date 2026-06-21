@@ -99,9 +99,9 @@ extend the series.
 | PWCC-001 | AdminTaskBoard (Todoist model) | [spec](../knowledge/wiki/files/bbl-admin-task-board.md) | PLANNED | pipeline + tasks/activities |
 | PWCC-002 | m-card (roster/rank/task/loop) | [spec](../knowledge/wiki/files/m-card-pattern.md) | PLANNED | contact/company/deal cards + lists |
 | PWCC-003 | three-level magnetic drawer | [spec](../knowledge/wiki/files/three-level-magnetic-drawer.md) | PLANNED | record detail + build-proof explorer |
-| PWCC-004 | Mammoth pipeline board binding | _(this epic — to spec)_ | PLANNED | Lead→Order columns on AdminTaskBoard |
-| PWCC-005 | Mammoth record drawer binding | _(this epic — to spec)_ | PLANNED | contact/deal/project drawer on PWCC-003 |
-| PWCC-006 | Build-proof photo carousel | _(this epic — to spec)_ | PLANNED | before/during/after in the full detent |
+| PWCC-004 | Mammoth pipeline board binding | [bindings](../knowledge/wiki/files/mammoth-crm-bindings.md) | PLANNED | Lead→Order columns on AdminTaskBoard |
+| PWCC-005 | Mammoth record drawer binding | [bindings](../knowledge/wiki/files/mammoth-crm-bindings.md) | PLANNED | contact/deal/project drawer on PWCC-003 |
+| PWCC-006 | Build-proof photo carousel | [bindings](../knowledge/wiki/files/mammoth-crm-bindings.md) | PLANNED | before/during/after in the full detent |
 
 ## Phased roadmap (aligns components to the existing P1–P6)
 
