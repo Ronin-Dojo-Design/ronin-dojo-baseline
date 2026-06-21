@@ -3,12 +3,12 @@ title: "m-card (content- & brand-agnostic roster / rank / task / loop card)"
 slug: m-card-pattern
 type: file
 status: active
-lifecycle: PLANNED
+lifecycle: WIP
 pwcc: PWCC-002
 created: 2026-06-21
 updated: 2026-06-21
 author: Brian + Petey/Cody/Desi
-last_agent: claude-session-0428
+last_agent: claude-session-0430
 pairs_with:
 
   - docs/knowledge/wiki/files/public-passport-dto.md
@@ -254,17 +254,22 @@ plus the cloud-sweep handoff (mirrors `codex-cloud-bbl-waves-2-4.md`). Cloud age
 ### TODOs (cloud agent checklist)
 
 ```text
-[ ] 1. Scaffold m-card.tsx on components/common/card.tsx with the kind switch + density
-[ ] 2. map-roster.ts from projectDirectoryProfileListItem; render eyebrow/title/tint/meta/badges
-[ ] 3. Swap /directory/profiles (FacetResultCard → m-card) behind a parity test
+[x] 1. Scaffold m-card.tsx on components/common/card.tsx with the kind switch + density  (SESSION_0430)
+[x] 2. map-roster.ts; render eyebrow/title/tint/meta/badges  (SESSION_0430 — binds the gated DirectoryFacetResult)
+[x] 3. Swap /directory people facet (FacetResultCard → m-card) behind a parity test  (SESSION_0430)
 [ ] 4. map-rank.ts (belt group + curriculum checklist); a rank/curriculum-card-page
 [ ] 5. map-task.ts + map-loop.ts; wire AdminTaskBoard rows + loop posters to m-card
 [ ] 6. Migrate /me + /directory/[slug] sidebars; wrap lineage-node-card; deprecate old cards
 [ ] 7. Brand proof: render the same grid under 2 brand token blocks (e.g. BBL + Baseline)
-[ ] 8. Vitest: each mapper's output shape; redaction stays upstream (no leaked fields)
-[ ] 9. Playwright: desktop + 390px + dark/light + belt-tint + brand swap
-[ ] 10. Proof gate green → catalog entry + draft PR + update health table
+[x] 8. Vitest/bun: mapper output shape; redaction stays upstream (no leaked fields)  (SESSION_0430 — map-roster.test.ts, 4 pass)
+[~] 9. Playwright: desktop + 390px + dark/light + belt-tint + brand swap  (SESSION_0430 — spec authored e2e/directory/m-card-roster.spec.ts; runs on CI. Single-brand baseline: dark/light = the token swap; cross-brand swap on the monorepo/Mammoth surface)
+[~] 10. Proof gate → catalog entry [x] + draft PR [x] + health  (SESSION_0430 — roster slice; rank/task/loop deferred)
 ```
+
+> **Build status (SESSION_0430):** `kind="roster"` slice **BUILT** — `m-card.tsx` + `lib/m-card/{types,map-roster}.ts`,
+> `/directory` people facet swapped, bun mapper proof green, Playwright spec authored (CI). `rank`/`task`/`loop`
+> kinds + the `/me` and `/directory/[slug]` sidebars + the `lineage-node-card` wrap + old-card deprecation are
+> follow-up slices (one coherent slice per PR).
 
 ### Cloud prompt (paste-ready)
 
