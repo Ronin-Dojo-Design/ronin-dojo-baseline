@@ -36,7 +36,7 @@ export const AboutContent = ({ siteName }: PolicyPageProps) => {
         <H2>What&apos;s live — and what&apos;s coming</H2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border border-primary/10 bg-card p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-green-700">✅ Live</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-400">✅ Live</p>
             <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
               {LIVE_FEATURES.slice(0, 8).map(feature => (
                 <li key={feature.name}>{feature.name}</li>
@@ -44,7 +44,7 @@ export const AboutContent = ({ siteName }: PolicyPageProps) => {
             </ul>
           </div>
           <div className="rounded-xl border border-primary/10 bg-card p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">🧪 In beta</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-400">🧪 In beta</p>
             <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
               {BETA_FEATURES.map(feature => (
                 <li key={feature.name}>
