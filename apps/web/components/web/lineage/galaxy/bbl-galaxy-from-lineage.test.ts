@@ -14,33 +14,33 @@
  */
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { describe, expect, it } from "bun:test";
-import type { LineageTreePublicResult } from "~/server/web/lineage/payloads";
-import { lineageTreeToGalaxyGraph } from "./bbl-galaxy-from-lineage";
+import { describe, expect, it } from "bun:test"
+import type { LineageTreePublicResult } from "~/server/web/lineage/payloads"
+import { lineageTreeToGalaxyGraph } from "./bbl-galaxy-from-lineage"
 
 type Member = {
-  id: string;
-  nodeId: string;
-  visualSortOrder: number;
-  primaryVisualParentMemberId: string | null;
-  visualGroupId: string | null;
-  selectedRankAward?: unknown;
-  node: unknown;
-};
+  id: string
+  nodeId: string
+  visualSortOrder: number
+  primaryVisualParentMemberId: string | null
+  visualGroupId: string | null
+  selectedRankAward?: unknown
+  node: unknown
+}
 
 const member = (
   id: string,
   opts: {
-    parent?: string | null;
-    sort?: number;
-    group?: string | null;
-    displayName?: string | null;
-    accountName?: string | null;
-    avatarUrl?: string | null;
-    rankName?: string | null;
-    discipline?: string | null;
-    awardYear?: number | null;
-    verified?: boolean;
+    parent?: string | null
+    sort?: number
+    group?: string | null
+    displayName?: string | null
+    accountName?: string | null
+    avatarUrl?: string | null
+    rankName?: string | null
+    discipline?: string | null
+    awardYear?: number | null
+    verified?: boolean
   } = {},
 ): Member => ({
   id,
@@ -92,10 +92,10 @@ const member = (
         : [],
     },
   },
-});
+})
 
 const build = (members: Member[], visualGroups: unknown[] = []): LineageTreePublicResult =>
-  ({ members, visualGroups }) as unknown as LineageTreePublicResult;
+  ({ members, visualGroups }) as unknown as LineageTreePublicResult
 
 describe("lineageTreeToGalaxyGraph", () => {
   it("derives generation + role from the visual parent chain", () => {
@@ -107,18 +107,18 @@ describe("lineageTreeToGalaxyGraph", () => {
         member("c", { parent: "a", sort: 0, displayName: "Instructor C" }),
         member("d", { parent: "c", sort: 0, displayName: "Student D" }),
       ]),
-    );
+    )
 
-    const byId = Object.fromEntries(graph.nodes.map((node) => [node.id, node]));
-    expect(byId["node-root"].role).toBe("ROOT_STAR");
-    expect(byId["node-root"].generation).toBe(0);
-    expect(byId["node-a"].role).toBe("LEGEND_STAR");
-    expect(byId["node-a"].generation).toBe(1);
-    expect(byId["node-c"].role).toBe("INSTRUCTOR_PLANET");
-    expect(byId["node-c"].generation).toBe(2);
-    expect(byId["node-d"].role).toBe("STUDENT_MOON");
-    expect(byId["node-d"].generation).toBe(3);
-  });
+    const byId = Object.fromEntries(graph.nodes.map(node => [node.id, node]))
+    expect(byId["node-root"].role).toBe("ROOT_STAR")
+    expect(byId["node-root"].generation).toBe(0)
+    expect(byId["node-a"].role).toBe("LEGEND_STAR")
+    expect(byId["node-a"].generation).toBe(1)
+    expect(byId["node-c"].role).toBe("INSTRUCTOR_PLANET")
+    expect(byId["node-c"].generation).toBe(2)
+    expect(byId["node-d"].role).toBe("STUDENT_MOON")
+    expect(byId["node-d"].generation).toBe(3)
+  })
 
   it("slots orbit index/total within a generation band by visualSortOrder", () => {
     const graph = lineageTreeToGalaxyGraph(
@@ -127,15 +127,15 @@ describe("lineageTreeToGalaxyGraph", () => {
         member("a", { parent: "root", sort: 5, displayName: "A" }),
         member("b", { parent: "root", sort: 1, displayName: "B" }),
       ]),
-    );
-    const a = graph.nodes.find((n) => n.id === "node-a")!;
-    const b = graph.nodes.find((n) => n.id === "node-b")!;
-    expect(a.orbitTotal).toBe(2);
-    expect(b.orbitTotal).toBe(2);
+    )
+    const a = graph.nodes.find(n => n.id === "node-a")!
+    const b = graph.nodes.find(n => n.id === "node-b")!
+    expect(a.orbitTotal).toBe(2)
+    expect(b.orbitTotal).toBe(2)
     // b (sort 1) comes before a (sort 5)
-    expect(b.orbitIndex).toBe(0);
-    expect(a.orbitIndex).toBe(1);
-  });
+    expect(b.orbitIndex).toBe(0)
+    expect(a.orbitIndex).toBe(1)
+  })
 
   it("emits a primary-lineage edge per visual parent pointer (nodeId-keyed)", () => {
     const graph = lineageTreeToGalaxyGraph(
@@ -143,15 +143,15 @@ describe("lineageTreeToGalaxyGraph", () => {
         member("root", { displayName: "Root" }),
         member("a", { parent: "root", displayName: "A" }),
       ]),
-    );
-    expect(graph.edges).toHaveLength(1);
+    )
+    expect(graph.edges).toHaveLength(1)
     expect(graph.edges[0]).toMatchObject({
       sourceId: "node-root",
       targetId: "node-a",
       relationshipType: "PRIMARY_LINEAGE",
       verifiedStatus: "VERIFIED",
-    });
-  });
+    })
+  })
 
   it("maps public fields: name fallback, photo, rank label, timeline year (via projectPublicPassport)", () => {
     const graph = lineageTreeToGalaxyGraph(
@@ -164,16 +164,16 @@ describe("lineageTreeToGalaxyGraph", () => {
           awardYear: 2018,
         }),
       ]),
-    );
-    const node = graph.nodes[0];
-    expect(node.displayName).toBe("Account Only");
-    expect(node.initials).toBe("AO");
-    expect(node.photoUrl).toBe("https://cdn/x.jpg");
+    )
+    const node = graph.nodes[0]
+    expect(node.displayName).toBe("Account Only")
+    expect(node.initials).toBe("AO")
+    expect(node.photoUrl).toBe("https://cdn/x.jpg")
     // rankLabel comes from projectPublicPassport (rankAwardsEarned[0]) — same format
-    expect(node.rankLabel).toBe("Black Belt · Brazilian Jiu-Jitsu");
-    expect(node.timelineYear).toBe(2018);
-    expect(node.verifiedStatus).toBe("VERIFIED");
-  });
+    expect(node.rankLabel).toBe("Black Belt · Brazilian Jiu-Jitsu")
+    expect(node.timelineYear).toBe(2018)
+    expect(node.verifiedStatus).toBe("VERIFIED")
+  })
 
   it("only exposes public group labels", () => {
     const graph = lineageTreeToGalaxyGraph(
@@ -187,15 +187,15 @@ describe("lineageTreeToGalaxyGraph", () => {
           { id: "g-private", label: "Hidden Cohort", showPublicLabel: false },
         ],
       ),
-    );
-    expect(graph.groups.map((g) => g.id)).toEqual(["g-public"]);
-    const root = graph.nodes.find((n) => n.id === "node-root")!;
-    const a = graph.nodes.find((n) => n.id === "node-a")!;
-    expect(root.groupLabel).toBe("Dirty Dozen");
+    )
+    expect(graph.groups.map(g => g.id)).toEqual(["g-public"])
+    const root = graph.nodes.find(n => n.id === "node-root")!
+    const a = graph.nodes.find(n => n.id === "node-a")!
+    expect(root.groupLabel).toBe("Dirty Dozen")
     // private group is dropped from the node projection too
-    expect(a.groupId).toBeUndefined();
-    expect(a.groupLabel).toBeUndefined();
-  });
+    expect(a.groupId).toBeUndefined()
+    expect(a.groupLabel).toBeUndefined()
+  })
 
   it("drops unverified nodes and any edges touching them (verified-only galaxy)", () => {
     const graph = lineageTreeToGalaxyGraph(
@@ -203,10 +203,10 @@ describe("lineageTreeToGalaxyGraph", () => {
         member("root", { displayName: "Root", verified: true }),
         member("ghost", { parent: "root", displayName: "Unverified", verified: false }),
       ]),
-    );
-    expect(graph.nodes.map((n) => n.id)).toEqual(["node-root"]);
+    )
+    expect(graph.nodes.map(n => n.id)).toEqual(["node-root"])
     // the root→ghost edge is dropped because ghost was filtered out
-    expect(graph.edges).toHaveLength(0);
-    expect(graph.nodes.every((n) => n.verifiedStatus === "VERIFIED")).toBe(true);
-  });
-});
+    expect(graph.edges).toHaveLength(0)
+    expect(graph.nodes.every(n => n.verifiedStatus === "VERIFIED")).toBe(true)
+  })
+})

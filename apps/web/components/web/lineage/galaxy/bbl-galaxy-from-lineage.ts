@@ -1,14 +1,14 @@
-import { projectPublicPassport } from "~/server/web/passport/public-projection";
-import type { LineageTreePublicResult } from "~/server/web/lineage/payloads";
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
+import type { LineageTreePublicResult } from "~/server/web/lineage/payloads"
 import type {
   BblGalaxyEdge,
   BblGalaxyGraph,
   BblGalaxyGroup,
   BblGalaxyNode,
   BblGalaxyRole,
-} from "./bbl-galaxy-types";
+} from "./bbl-galaxy-types"
 
-type MemberRow = LineageTreePublicResult["members"][number];
+type MemberRow = LineageTreePublicResult["members"][number]
 
 /**
  * Public-safe projection: turn a published BBL lineage tree (already visibility-filtered
@@ -28,82 +28,82 @@ const ROLE_BY_GENERATION: BblGalaxyRole[] = [
   "ROOT_STAR", // 0 — the anchor
   "LEGEND_STAR", // 1 — Dirty Dozen / legends around the root
   "INSTRUCTOR_PLANET", // 2 — instructors
-];
+]
 
 const roleForGeneration = (generation: number): BblGalaxyRole =>
-  ROLE_BY_GENERATION[generation] ?? "STUDENT_MOON";
+  ROLE_BY_GENERATION[generation] ?? "STUDENT_MOON"
 
 const initialsOf = (name: string): string => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "•";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-};
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "•"
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
 
 /** Depth from the visual root via primaryVisualParentMemberId, guarding cycles/orphans. */
 const computeGenerations = (members: MemberRow[]): Map<string, number> => {
-  const byId = new Map(members.map((member) => [member.id, member]));
-  const depthCache = new Map<string, number>();
+  const byId = new Map(members.map(member => [member.id, member]))
+  const depthCache = new Map<string, number>()
 
   const depthOf = (member: MemberRow, seen: Set<string>): number => {
-    const cached = depthCache.get(member.id);
-    if (cached !== undefined) return cached;
+    const cached = depthCache.get(member.id)
+    if (cached !== undefined) return cached
 
-    const parentId = member.primaryVisualParentMemberId;
-    const parent = parentId && parentId !== member.id ? byId.get(parentId) : undefined;
-    const depth = !parent || seen.has(member.id) ? 0 : 1 + depthOf(parent, seen.add(member.id));
+    const parentId = member.primaryVisualParentMemberId
+    const parent = parentId && parentId !== member.id ? byId.get(parentId) : undefined
+    const depth = !parent || seen.has(member.id) ? 0 : 1 + depthOf(parent, seen.add(member.id))
 
-    depthCache.set(member.id, depth);
-    return depth;
-  };
+    depthCache.set(member.id, depth)
+    return depth
+  }
 
-  for (const member of members) depthOf(member, new Set());
-  return depthCache;
-};
+  for (const member of members) depthOf(member, new Set())
+  return depthCache
+}
 
 export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGalaxyGraph => {
-  const { visualGroups } = result;
+  const { visualGroups } = result
 
   // Verified-only galaxy (spec security rule: no disputed/unverified public stars). The
   // query already scopes to PUBLIC; this drops any unverified node so `verifiedStatus` is
   // truthful by construction, and edges to dropped nodes fall away below.
-  const members = result.members.filter((member) => member.node.isVerified === true);
-  const generationByMemberId = computeGenerations(members);
-  const nodeIdByMemberId = new Map(members.map((member) => [member.id, member.nodeId]));
+  const members = result.members.filter(member => member.node.isVerified === true)
+  const generationByMemberId = computeGenerations(members)
+  const nodeIdByMemberId = new Map(members.map(member => [member.id, member.nodeId]))
 
   // Orbit slotting: index each member within its generation band (stable by visualSortOrder).
-  const membersByGeneration = new Map<number, MemberRow[]>();
+  const membersByGeneration = new Map<number, MemberRow[]>()
   for (const member of members) {
-    const generation = generationByMemberId.get(member.id) ?? 0;
-    const band = membersByGeneration.get(generation) ?? [];
-    band.push(member);
-    membersByGeneration.set(generation, band);
+    const generation = generationByMemberId.get(member.id) ?? 0
+    const band = membersByGeneration.get(generation) ?? []
+    band.push(member)
+    membersByGeneration.set(generation, band)
   }
   for (const band of membersByGeneration.values()) {
-    band.sort((a, b) => a.visualSortOrder - b.visualSortOrder);
+    band.sort((a, b) => a.visualSortOrder - b.visualSortOrder)
   }
 
   const groupLabelById = new Map(
     visualGroups
-      .filter((group) => group.showPublicLabel !== false)
-      .map((group) => [group.id, group.label]),
-  );
+      .filter(group => group.showPublicLabel !== false)
+      .map(group => [group.id, group.label]),
+  )
 
-  const nodes: BblGalaxyNode[] = members.map((member) => {
-    const generation = generationByMemberId.get(member.id) ?? 0;
-    const band = membersByGeneration.get(generation) ?? [member];
-    const orbitIndex = band.findIndex((candidate) => candidate.id === member.id);
-    const passport = member.node.passport;
-    const groupId = member.visualGroupId ?? undefined;
-    const awardedAt = member.selectedRankAward?.awardedAt;
+  const nodes: BblGalaxyNode[] = members.map(member => {
+    const generation = generationByMemberId.get(member.id) ?? 0
+    const band = membersByGeneration.get(generation) ?? [member]
+    const orbitIndex = band.findIndex(candidate => candidate.id === member.id)
+    const passport = member.node.passport
+    const groupId = member.visualGroupId ?? undefined
+    const awardedAt = member.selectedRankAward?.awardedAt
 
     // Delegate identity to the canonical public passport projector (showRanks: true for
     // the public lineage galaxy view). `LineageNodeRow.passport` is a structural superset
     // of `PublicPassportRow` after PR #144 spread `publicPassportPayload`, so it is
     // directly compatible as the argument to `projectPublicPassport`.
-    const passportDto = passport ? projectPublicPassport(passport, { showRanks: true }) : null;
-    const displayName = passportDto?.displayName ?? "Unknown lineage holder";
-    const photoUrl = passportDto?.avatarUrl ?? undefined;
+    const passportDto = passport ? projectPublicPassport(passport, { showRanks: true }) : null
+    const displayName = passportDto?.displayName ?? "Unknown lineage holder"
+    const photoUrl = passportDto?.avatarUrl ?? undefined
 
     return {
       id: member.nodeId,
@@ -121,16 +121,16 @@ export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGa
       groupId: groupId && groupLabelById.has(groupId) ? groupId : undefined,
       groupLabel: groupId ? groupLabelById.get(groupId) : undefined,
       timelineYear: awardedAt ? new Date(awardedAt).getUTCFullYear() : undefined,
-    };
-  });
+    }
+  })
 
   // Primary-lineage edges from the visual parent pointer (parent member → this member).
-  const edges: BblGalaxyEdge[] = [];
+  const edges: BblGalaxyEdge[] = []
   for (const member of members) {
-    const parentId = member.primaryVisualParentMemberId;
-    if (!parentId || parentId === member.id) continue;
-    const sourceNodeId = nodeIdByMemberId.get(parentId);
-    if (!sourceNodeId) continue;
+    const parentId = member.primaryVisualParentMemberId
+    if (!parentId || parentId === member.id) continue
+    const sourceNodeId = nodeIdByMemberId.get(parentId)
+    if (!sourceNodeId) continue
     edges.push({
       id: `${sourceNodeId}__${member.nodeId}`,
       sourceId: sourceNodeId,
@@ -138,18 +138,18 @@ export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGa
       relationshipType: "PRIMARY_LINEAGE",
       verifiedStatus: "VERIFIED",
       groupId: member.visualGroupId ?? undefined,
-    });
+    })
   }
 
   const groups: BblGalaxyGroup[] = visualGroups
-    .filter((group) => group.showPublicLabel !== false)
-    .map((group) => ({
+    .filter(group => group.showPublicLabel !== false)
+    .map(group => ({
       id: group.id,
       label: group.label,
       kind: "PROMOTION_COHORT",
       generation: 0,
       color: "#d7a74c",
-    }));
+    }))
 
-  return { nodes, edges, groups };
-};
+  return { nodes, edges, groups }
+}

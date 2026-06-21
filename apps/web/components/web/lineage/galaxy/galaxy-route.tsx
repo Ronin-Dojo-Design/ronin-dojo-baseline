@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import dynamic from "next/dynamic";
-import type { BblGalaxyData } from "~/server/web/lineage/galaxy-data";
+import dynamic from "next/dynamic"
+import type { BblGalaxyData } from "~/server/web/lineage/galaxy-data"
 
 // The galaxy viewer pulls in three.js / R3F / drei / gsap — heavy, browser-only deps.
 // Load it client-side only (ssr:false) and lazily, so the bundle is fetched only on this
@@ -11,11 +11,11 @@ import type { BblGalaxyData } from "~/server/web/lineage/galaxy-data";
 const BblLineageGalaxyDemo = dynamic(
   () =>
     import("~/components/web/lineage/galaxy/BblLineageGalaxyDemo").then(
-      (mod) => mod.BblLineageGalaxyDemo,
+      mod => mod.BblLineageGalaxyDemo,
     ),
   { ssr: false },
-);
+)
 
 export function GalaxyRoute({ data }: { data: BblGalaxyData | null }) {
-  return <BblLineageGalaxyDemo data={data} />;
+  return <BblLineageGalaxyDemo data={data} />
 }

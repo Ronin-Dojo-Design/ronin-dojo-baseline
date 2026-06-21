@@ -1,4 +1,4 @@
-import type { BblGalaxyGraph } from "./bbl-galaxy-types";
+import type { BblGalaxyGraph } from "./bbl-galaxy-types"
 
 const legendIds = [
   "bob-bass",
@@ -8,7 +8,7 @@ const legendIds = [
   "dave-meyer",
   "rick-williams",
   "casey-olson",
-];
+]
 
 export const bblGalaxyMockGraph: BblGalaxyGraph = {
   groups: [
@@ -209,7 +209,7 @@ export const bblGalaxyMockGraph: BblGalaxyGraph = {
   ],
 
   edges: [
-    ...legendIds.map((legendId) => ({
+    ...legendIds.map(legendId => ({
       id: `rigan-to-${legendId}`,
       sourceId: "rigan-machado",
       targetId: legendId,
@@ -234,4 +234,4 @@ export const bblGalaxyMockGraph: BblGalaxyGraph = {
       groupId: "american-bjj",
     })),
   ],
-};
+}

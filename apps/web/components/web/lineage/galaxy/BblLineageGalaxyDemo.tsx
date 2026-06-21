@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer";
-import { bblPortalTypographyClass } from "~/lib/fonts";
-import type { BblGalaxyData } from "~/server/web/lineage/galaxy-data";
-import { BblLineageGalaxy } from "./BblLineageGalaxy";
-import { bblGalaxyMockGraph } from "./bbl-galaxy-mock-data";
-import type { BblGalaxyNode } from "./bbl-galaxy-types";
+import { LineageProfileDrawer } from "~/components/web/lineage/lineage-profile-drawer"
+import { bblPortalTypographyClass } from "~/lib/fonts"
+import type { BblGalaxyData } from "~/server/web/lineage/galaxy-data"
+import { BblLineageGalaxy } from "./BblLineageGalaxy"
+import { bblGalaxyMockGraph } from "./bbl-galaxy-mock-data"
+import type { BblGalaxyNode } from "./bbl-galaxy-types"
 
 export function BblLineageGalaxyDemo({ data }: { data?: BblGalaxyData | null }) {
   // Real public data when a published tree exists; mock graph otherwise (no-DB dev path).
-  const graph = data?.graph ?? bblGalaxyMockGraph;
-  const profilesById = data?.profilesById ?? null;
+  const graph = data?.graph ?? bblGalaxyMockGraph
+  const profilesById = data?.profilesById ?? null
 
-  const [selectedNode, setSelectedNode] = useState<BblGalaxyNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<BblGalaxyNode | null>(null)
 
   // Node ids ARE lineage nodeIds in the public projection, so the drawer profile is a
   // direct lookup — no extra fetch on select (profiles are eager-loaded server-side).
   const selectedProfile =
-    selectedNode && profilesById ? (profilesById[selectedNode.id] ?? null) : null;
+    selectedNode && profilesById ? (profilesById[selectedNode.id] ?? null) : null
 
   return (
     <div className="min-h-screen bg-black px-6 py-10 text-white">
@@ -35,13 +35,13 @@ export function BblLineageGalaxyDemo({ data }: { data?: BblGalaxyData | null }) 
           </p>
         </div>
 
-        <BblLineageGalaxy graph={graph} onSelectNode={(node) => setSelectedNode(node)} />
+        <BblLineageGalaxy graph={graph} onSelectNode={node => setSelectedNode(node)} />
 
         {profilesById ? (
           <LineageProfileDrawer
             open={selectedNode !== null}
-            onOpenChange={(open) => {
-              if (!open) setSelectedNode(null);
+            onOpenChange={open => {
+              if (!open) setSelectedNode(null)
             }}
             profile={selectedProfile}
             nodeId={selectedNode?.id ?? null}
@@ -53,7 +53,7 @@ export function BblLineageGalaxyDemo({ data }: { data?: BblGalaxyData | null }) 
         )}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -62,7 +62,7 @@ export function BblLineageGalaxyDemo({ data }: { data?: BblGalaxyData | null }) 
  * there's no DB / no published tree.
  */
 function MockLineageDrawer({ node, onClose }: { node: BblGalaxyNode | null; onClose: () => void }) {
-  if (!node) return null;
+  if (!node) return null
 
   return (
     <aside className="fixed right-4 top-4 z-50 w-90 rounded-3xl border border-white/10 bg-zinc-950/95 p-5 text-white shadow-2xl backdrop-blur-xl">
@@ -104,5 +104,5 @@ function MockLineageDrawer({ node, onClose }: { node: BblGalaxyNode | null; onCl
         </p>
       </div>
     </aside>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import { notFound } from "next/navigation";
-import { GalaxyRoute } from "~/components/web/lineage/galaxy/galaxy-route";
-import { galaxyConfig } from "~/config/galaxy";
-import { getBblGalaxyData } from "~/server/web/lineage/galaxy-data";
+import { notFound } from "next/navigation"
+import { GalaxyRoute } from "~/components/web/lineage/galaxy/galaxy-route"
+import { galaxyConfig } from "~/config/galaxy"
+import { getBblGalaxyData } from "~/server/web/lineage/galaxy-data"
 
 /**
  * Black Belt Legacy Galaxy — the cinematic public lineage viewer (galaxy epic, slice 2).
@@ -13,10 +13,10 @@ import { getBblGalaxyData } from "~/server/web/lineage/galaxy-data";
  */
 export default async function BblLineageGalaxyPage() {
   if (!galaxyConfig.enabled) {
-    notFound();
+    notFound()
   }
 
-  const data = await getBblGalaxyData();
+  const data = await getBblGalaxyData()
 
-  return <GalaxyRoute data={data} />;
+  return <GalaxyRoute data={data} />
 }

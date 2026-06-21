@@ -1,58 +1,58 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, OrbitControls, Sparkles, Stars } from "@react-three/drei";
-import gsap from "gsap";
-import * as THREE from "three";
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Html, OrbitControls, Sparkles, Stars } from "@react-three/drei"
+import gsap from "gsap"
+import * as THREE from "three"
 
 import type {
   BblGalaxyEdge,
   BblGalaxyGraph,
   BblGalaxyGroup,
   BblGalaxyNode,
-} from "./bbl-galaxy-types";
+} from "./bbl-galaxy-types"
 import {
   createBblGalaxyLayout,
   getGalaxyNodeSize,
   mergePositionsIntoNodes,
-} from "./bbl-galaxy-layout";
+} from "./bbl-galaxy-layout"
 
 type PositionedNode = BblGalaxyNode & {
   position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-};
+    x: number
+    y: number
+    z: number
+  }
+}
 
 type BblLineageGalaxyProps = {
-  graph: BblGalaxyGraph;
-  onSelectNode?: (node: BblGalaxyNode) => void;
-};
+  graph: BblGalaxyGraph
+  onSelectNode?: (node: BblGalaxyNode) => void
+}
 
 const ROLE_COLOR: Record<BblGalaxyNode["role"], string> = {
   ROOT_STAR: "#f8d98a",
   LEGEND_STAR: "#d7a74c",
   INSTRUCTOR_PLANET: "#63d6ff",
   STUDENT_MOON: "#d8d8e8",
-};
+}
 
 function GalaxyShell({
   graph,
   selectedNode,
   onSelectNode,
 }: {
-  graph: BblGalaxyGraph;
-  selectedNode: BblGalaxyNode | null;
-  onSelectNode?: (node: BblGalaxyNode) => void;
+  graph: BblGalaxyGraph
+  selectedNode: BblGalaxyNode | null
+  onSelectNode?: (node: BblGalaxyNode) => void
 }) {
-  const positions = useMemo(() => createBblGalaxyLayout(graph.nodes), [graph.nodes]);
+  const positions = useMemo(() => createBblGalaxyLayout(graph.nodes), [graph.nodes])
 
   const nodes = useMemo(
     () => mergePositionsIntoNodes(graph.nodes, positions),
     [graph.nodes, positions],
-  );
+  )
 
   return (
     <>
@@ -67,7 +67,7 @@ function GalaxyShell({
       <TimelineBands groups={graph.groups} />
       <GalaxyEdges nodes={nodes} edges={graph.edges} />
 
-      {nodes.map((node) => (
+      {nodes.map(node => (
         <GalaxyNode
           key={node.id}
           node={node}
@@ -79,14 +79,14 @@ function GalaxyShell({
       <CameraZoomController selectedNode={selectedNode} nodes={nodes} />
       <OrbitControls makeDefault enableDamping dampingFactor={0.075} />
     </>
-  );
+  )
 }
 
 function TimelineBands({ groups }: { groups: BblGalaxyGroup[] }) {
   return (
     <>
-      {groups.map((group) => {
-        const radius = group.generation === 0 ? 1.4 : 4.9 + group.generation * 4.2;
+      {groups.map(group => {
+        const radius = group.generation === 0 ? 1.4 : 4.9 + group.generation * 4.2
 
         return (
           <group key={group.id} rotation={[Math.PI / 2.35, 0, 0]}>
@@ -95,10 +95,10 @@ function TimelineBands({ groups }: { groups: BblGalaxyGroup[] }) {
               <meshBasicMaterial color={group.color} transparent opacity={0.33} />
             </mesh>
           </group>
-        );
+        )
       })}
     </>
-  );
+  )
 }
 
 function GalaxyNode({
@@ -106,22 +106,22 @@ function GalaxyNode({
   isSelected,
   onSelectNode,
 }: {
-  node: PositionedNode;
-  isSelected: boolean;
-  onSelectNode?: (node: BblGalaxyNode) => void;
+  node: PositionedNode
+  isSelected: boolean
+  onSelectNode?: (node: BblGalaxyNode) => void
 }) {
-  const groupRef = useRef<THREE.Group | null>(null);
-  const color = ROLE_COLOR[node.role];
-  const size = getGalaxyNodeSize(node);
+  const groupRef = useRef<THREE.Group | null>(null)
+  const color = ROLE_COLOR[node.role]
+  const size = getGalaxyNodeSize(node)
 
   useFrame(({ clock }) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current) return
 
-    const pulse = Math.sin(clock.elapsedTime * 2.1 + node.orbitIndex) * 0.045;
-    const selectedScale = isSelected ? 1.3 : 1;
+    const pulse = Math.sin(clock.elapsedTime * 2.1 + node.orbitIndex) * 0.045
+    const selectedScale = isSelected ? 1.3 : 1
 
-    groupRef.current.scale.setScalar(selectedScale + pulse);
-  });
+    groupRef.current.scale.setScalar(selectedScale + pulse)
+  })
 
   return (
     <group ref={groupRef} position={[node.position.x, node.position.y, node.position.z]}>
@@ -186,26 +186,26 @@ function GalaxyNode({
         </button>
       </Html>
     </group>
-  );
+  )
 }
 
 function GalaxyEdges({ nodes, edges }: { nodes: PositionedNode[]; edges: BblGalaxyEdge[] }) {
-  const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
+  const nodeById = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes])
 
   return (
     <>
-      {edges.map((edge) => {
-        const source = nodeById.get(edge.sourceId);
-        const target = nodeById.get(edge.targetId);
+      {edges.map(edge => {
+        const source = nodeById.get(edge.sourceId)
+        const target = nodeById.get(edge.targetId)
 
-        if (!source || !target) return null;
+        if (!source || !target) return null
 
         const geometry = new THREE.BufferGeometry().setFromPoints([
           new THREE.Vector3(source.position.x, source.position.y, source.position.z),
           new THREE.Vector3(target.position.x, target.position.y, target.position.z),
-        ]);
+        ])
 
-        const isPrimary = edge.relationshipType === "PRIMARY_LINEAGE";
+        const isPrimary = edge.relationshipType === "PRIMARY_LINEAGE"
 
         // Build the line imperatively and mount via <primitive>. R3F's <line> JSX intrinsic
         // collides with React's SVG <line> in the type system (resolves to SVGLineElement),
@@ -214,22 +214,22 @@ function GalaxyEdges({ nodes, edges }: { nodes: PositionedNode[]; edges: BblGala
           color: isPrimary ? "#d7a74c" : "#7fd7ff",
           transparent: true,
           opacity: isPrimary ? 0.42 : 0.24,
-        });
+        })
 
-        return <primitive key={edge.id} object={new THREE.Line(geometry, material)} />;
+        return <primitive key={edge.id} object={new THREE.Line(geometry, material)} />
       })}
     </>
-  );
+  )
 }
 
 function CameraZoomController({
   selectedNode,
   nodes,
 }: {
-  selectedNode: BblGalaxyNode | null;
-  nodes: PositionedNode[];
+  selectedNode: BblGalaxyNode | null
+  nodes: PositionedNode[]
 }) {
-  const { camera } = useThree();
+  const { camera } = useThree()
 
   useEffect(() => {
     if (!selectedNode) {
@@ -240,25 +240,25 @@ function CameraZoomController({
         duration: 1.2,
         ease: "power3.inOut",
         onUpdate: () => camera.lookAt(0, 0, 0),
-      });
+      })
 
-      return;
+      return
     }
 
-    const positioned = nodes.find((node) => node.id === selectedNode.id);
-    if (!positioned) return;
+    const positioned = nodes.find(node => node.id === selectedNode.id)
+    if (!positioned) return
 
     const target = new THREE.Vector3(
       positioned.position.x,
       positioned.position.y,
       positioned.position.z,
-    );
-    const direction = target.clone().normalize();
-    const safeDirection = direction.length() > 0 ? direction : new THREE.Vector3(0, 0.25, 1);
+    )
+    const direction = target.clone().normalize()
+    const safeDirection = direction.length() > 0 ? direction : new THREE.Vector3(0, 0.25, 1)
     const cameraTarget = target
       .clone()
       .add(safeDirection.multiplyScalar(3.8))
-      .add(new THREE.Vector3(0, 1.25, 2.5));
+      .add(new THREE.Vector3(0, 1.25, 2.5))
 
     gsap.to(camera.position, {
       x: cameraTarget.x,
@@ -267,10 +267,10 @@ function CameraZoomController({
       duration: 1.15,
       ease: "power3.inOut",
       onUpdate: () => camera.lookAt(target),
-    });
-  }, [camera, nodes, selectedNode]);
+    })
+  }, [camera, nodes, selectedNode])
 
-  return null;
+  return null
 }
 
 function GalaxyHud({
@@ -278,9 +278,9 @@ function GalaxyHud({
   onReset,
   onFollowPath,
 }: {
-  selectedNode: BblGalaxyNode | null;
-  onReset: () => void;
-  onFollowPath: () => void;
+  selectedNode: BblGalaxyNode | null
+  onReset: () => void
+  onFollowPath: () => void
 }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-5">
@@ -338,26 +338,26 @@ function GalaxyHud({
         ) : null}
       </div>
     </div>
-  );
+  )
 }
 
 export function BblLineageGalaxy({ graph, onSelectNode }: BblLineageGalaxyProps) {
-  const [selectedNode, setSelectedNode] = useState<BblGalaxyNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<BblGalaxyNode | null>(null)
 
   function handleSelectNode(node: BblGalaxyNode) {
-    setSelectedNode(node);
-    onSelectNode?.(node);
+    setSelectedNode(node)
+    onSelectNode?.(node)
   }
 
   function handleReset() {
-    setSelectedNode(null);
+    setSelectedNode(null)
   }
 
   function handleFollowPath() {
-    const root = graph.nodes.find((node) => node.role === "ROOT_STAR");
+    const root = graph.nodes.find(node => node.role === "ROOT_STAR")
     if (root) {
-      setSelectedNode(root);
-      onSelectNode?.(root);
+      setSelectedNode(root)
+      onSelectNode?.(root)
     }
   }
 
@@ -376,5 +376,5 @@ export function BblLineageGalaxy({ graph, onSelectNode }: BblLineageGalaxyProps)
         <GalaxyShell graph={graph} selectedNode={selectedNode} onSelectNode={handleSelectNode} />
       </Canvas>
     </section>
-  );
+  )
 }
