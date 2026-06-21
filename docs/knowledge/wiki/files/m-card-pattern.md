@@ -3,12 +3,12 @@ title: "m-card (content- & brand-agnostic roster / rank / task / loop card)"
 slug: m-card-pattern
 type: file
 status: active
-lifecycle: PLANNED
+lifecycle: WIP
 pwcc: PWCC-002
 created: 2026-06-21
 updated: 2026-06-21
 author: Brian + Petey/Cody/Desi
-last_agent: claude-session-0428
+last_agent: claude-session-0430
 pairs_with:
 
   - docs/knowledge/wiki/files/public-passport-dto.md

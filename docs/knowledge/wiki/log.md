@@ -384,3 +384,9 @@ Use this file only as historical context for early wiki adoption.
 - **Mammoth-Rebuild CRM epic:** `docs/epics/mammoth-rebuild-crm-001.md` — HubSpot-replacement assembled from the library; PWCC register; cross-brand (dark/orange) proof.
 - **Inventory + index:** `custom-component-inventory.md` rows (MagneticDrawer, MCard) + bumped `updated`; `wiki/index.md` rows for all new pages + SESSION_0428/0429.
 - **Tooling:** declared `marked` as a root devDependency so the advertised `docs:hub` generator runs from a clean checkout (Codex review #137).
+
+## SESSION_0430 — 2026-06-21 — m-card PWCC-002 slice 1 (kind=roster on /directory/profiles)
+
+- Built the first real `m-card` slice: `apps/web/components/web/m-card/m-card.tsx` (`kind=roster` on the Dirstarter base `components/common/card.tsx`) + `apps/web/lib/m-card/map-roster.ts`; `/directory/profiles` people now render via m-card (orgs/trees stay on `FacetResultCard`), parity preserved.
+- Token-only theming (`--rank-color`→`--primary` fallback); presentation-only (redaction upstream). Unit test (shape + no leak) + a desktop/390px e2e.
+- Wiki sync: `m-card-pattern.md` lifecycle PLANNED→WIP; `index.md` row updated to WIP + slice-1 note; `custom-component-inventory.md` MCard row flipped to BUILT. PR #150.
