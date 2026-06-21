@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Component Design System — Black Belt Legacy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:ital,wght@0,700;0,800;1,800&display=swap" rel="stylesheet">
+<style>
+/* Light is default; dark is a true inversion that keeps the brand accent and
+   follows the OS (prefers-color-scheme). The toggle forces data-theme. Mirrors
+   scripts/lib/bbl-doc-theme.ts so docs, app, and AdminTaskBoard read as one brand. */
+:root{
+  --accent:#E52421;        /* BBL brand red (styles.css --color-primary). NEVER gold. */
+  --accent-dark:#B91C1C;   /* red-700 — eyebrows / link text */
+  --on-accent:#FFFFFF;     /* number/text on a red disc */
+  --bg:#FFFFFF; --page:#F5F5F5; --surface:#FAFAFA;
+  --fg:#1F1F1F; --muted:#737373; --line:#E0E0E0;
+  --chrome:#0A0A0A; --chrome-fg:#FFFFFF;
+  --font-head:"Poppins","Segoe UI",Tahoma,sans-serif;
+  --font-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r-card:8px; --r-container:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --accent:#FF4D49; --accent-dark:#FF7A75; --on-accent:#FFFFFF;
+  --bg:#0A0A0A; --page:#000000; --surface:#1C1C1E;
+  --fg:#F5F5F5; --muted:#9A9AA0; --line:#2C2C2E; --chrome:#000000;
+}}
+[data-theme="dark"]{
+  --accent:#FF4D49; --accent-dark:#FF7A75; --on-accent:#FFFFFF;
+  --bg:#0A0A0A; --page:#000000; --surface:#1C1C1E;
+  --fg:#F5F5F5; --muted:#9A9AA0; --line:#2C2C2E; --chrome:#000000;
+}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--fg);font:15px/1.6 var(--font-body)}
+.bbl-h{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;letter-spacing:-.01em}
+
+/* chrome header band — matches email/site dark chrome */
+header.chrome{position:relative;background:var(--chrome);color:var(--chrome-fg);padding:34px clamp(20px,5vw,72px)}
+.theme-toggle{position:absolute;top:22px;right:clamp(20px,5vw,72px);display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body)}
+.theme-toggle:hover{border-color:var(--accent)}
+/* side-by-side inversion frames */
+.invert{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.frame{border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+.frame .bar{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--line)}
+.frame .body{padding:16px}
+.frame .ttl{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;font-size:18px}
+.frame .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin-top:8px}
+.frame.light{--accent:#E52421;--on-accent:#fff;--bg:#FFFFFF;--surface:#FAFAFA;--fg:#1F1F1F;--muted:#737373;--line:#E0E0E0;background:#FFFFFF;color:#1F1F1F}
+.frame.dark{--accent:#FF4D49;--on-accent:#fff;--bg:#0A0A0A;--surface:#1C1C1E;--fg:#F5F5F5;--muted:#9A9AA0;--line:#2C2C2E;background:#0A0A0A;color:#F5F5F5}
+.frame .bar{color:var(--muted)}
+.frame .disc{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;font-size:13px}
+.frame .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.frame .pill{background:var(--accent);color:var(--on-accent)}
+@media(max-width:640px){.invert{grid-template-columns:1fr}}
+header.chrome .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fff;opacity:.7}
+header.chrome h1{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;font-size:clamp(30px,5vw,46px);margin:6px 0 4px;letter-spacing:-.01em}
+header.chrome .rule{width:64px;height:4px;background:var(--accent);border-radius:2px;margin:14px 0 0}
+header.chrome p{color:#d6d6d6;max-width:640px;margin:14px 0 0;font-size:15px}
+
+main{max-width:960px;margin:0 auto;padding:48px clamp(20px,5vw,40px) 80px}
+section{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-container);padding:32px clamp(20px,4vw,40px);margin:0 0 28px}
+section>.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-dark);margin:0 0 6px}
+section h2{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;font-size:24px;margin:0 0 4px;letter-spacing:-.01em}
+section>p{color:var(--muted);margin:.4em 0 1.4em}
+h3{font-size:15px;font-weight:700;margin:1.6em 0 .6em}
+
+/* swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.sw{border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;background:#fff}
+.sw .chip{height:64px}
+.sw .meta{padding:9px 11px}
+.sw .name{font-weight:600;font-size:13px}
+.sw .hex{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+
+/* type specimen */
+.specimen{display:grid;gap:18px}
+.spec-row{border-left:3px solid var(--accent);padding-left:16px}
+.spec-row .lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.t-h1{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;font-size:40px;line-height:1.05}
+.t-h2{font-family:var(--font-head);font-weight:800;text-transform:uppercase;font-style:italic;font-size:26px}
+.t-body{font-size:15px;line-height:1.6;max-width:60ch}
+.t-meta{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* the 1-2-3 step component — filled red disc + white number (email LoginStep) */
+.step{display:flex;align-items:flex-start;gap:12px;margin:10px 0}
+.step-num{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-family:var(--font-body);font-size:13px;font-weight:700;line-height:28px;text-align:center;display:grid;place-items:center}
+.step-label{font-size:14px;line-height:1.6;color:var(--fg);font-weight:600}
+.step-blurb{font-size:13px;line-height:1.5;color:var(--muted);margin:2px 0 0}
+.poster-scale .step-num{width:38px;height:38px;font-size:16px;font-weight:800}
+
+/* buttons */
+.btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--font-body);font-weight:600;font-size:14px;border-radius:8px;padding:11px 20px;border:1px solid var(--accent);cursor:pointer;text-decoration:none;display:inline-block}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-ghost{background:#fff;color:var(--accent)}
+
+/* do/don't */
+.dd{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dd .card{border:1px solid var(--line);border-radius:var(--r-card);padding:16px}
+.dd .do{border-top:4px solid var(--accent)}
+.dd .dont{border-top:4px solid #999}
+.dd h4{margin:0 0 8px;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.dd ul{margin:0;padding-left:18px;font-size:13px;color:#2b2b30}
+.dd li{margin:5px 0}
+.gold-bad{display:inline-block;width:14px;height:14px;border-radius:3px;background:#d7a74c;vertical-align:-2px;margin-right:6px}
+
+table{border-collapse:collapse;width:100%;font-size:13px;margin:.4em 0}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--surface);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--surface);padding:.12em .4em;border-radius:5px}
+.foot{color:var(--muted);font-size:12px;text-align:center;padding:8px 0 0}
+@media(max-width:640px){.dd{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="chrome">
+  <button class="theme-toggle" id="themeBtn" title="System → Light → Dark">◐ Theme</button>
+  <div class="eyebrow">Ronin Dojo · Black Belt Legacy</div>
+  <h1>Component Design System</h1>
+  <div class="rule"></div>
+  <p>One token set, one type pair, one step component — so emails, the app, the doc generators,
+  and the spec/poster artifacts all read as <strong>one brand</strong>. This is the living visual
+  reference; the machine source is <code>scripts/lib/bbl-doc-theme.ts</code>.</p>
+</header>
+
+<main>
+
+<section>
+  <div class="eyebrow">Color</div>
+  <h2>Tokens</h2>
+  <p>Brand red <code>#E52421</code> is the single accent (from <code>styles.css --color-primary</code>).
+  Gold is off-brand — see Do / Don't.</p>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#E52421"></div><div class="meta"><div class="name">accent</div><div class="hex">#E52421</div></div></div>
+    <div class="sw"><div class="chip" style="background:#B91C1C"></div><div class="meta"><div class="name">accent-dark</div><div class="hex">#B91C1C</div></div></div>
+    <div class="sw"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">background</div><div class="hex">#FFFFFF</div></div></div>
+    <div class="sw"><div class="chip" style="background:#F5F5F5"></div><div class="meta"><div class="name">page</div><div class="hex">#F5F5F5</div></div></div>
+    <div class="sw"><div class="chip" style="background:#FAFAFA"></div><div class="meta"><div class="name">surface</div><div class="hex">#FAFAFA</div></div></div>
+    <div class="sw"><div class="chip" style="background:#1F1F1F"></div><div class="meta"><div class="name">foreground</div><div class="hex">#1F1F1F</div></div></div>
+    <div class="sw"><div class="chip" style="background:#737373"></div><div class="meta"><div class="name">muted</div><div class="hex">#737373</div></div></div>
+    <div class="sw"><div class="chip" style="background:#E0E0E0"></div><div class="meta"><div class="name">border</div><div class="hex">#E0E0E0</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0A0A0A"></div><div class="meta"><div class="name">chrome</div><div class="hex">#0A0A0A</div></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Mode</div>
+  <h2>Dark / light inversion</h2>
+  <p>Light is the default; dark is a true inversion that follows the OS (<code>prefers-color-scheme</code>)
+  and is forceable via the header toggle (System → Light → Dark). The accent lifts to
+  <code>#FF4D49</code> on dark for AA contrast — same hue, more legible. Surfaces mirror the
+  iOS/Todoist chrome the AdminTaskBoard is modelled on.</p>
+  <div class="invert">
+    <div class="frame light">
+      <div class="bar">Light</div>
+      <div class="body">
+        <div class="ttl">Forge Your Legacy</div>
+        <div class="row"><span class="disc">1</span><span style="color:var(--muted)">step on surface</span></div>
+        <span class="pill">Verified</span>
+      </div>
+    </div>
+    <div class="frame dark">
+      <div class="bar">Dark</div>
+      <div class="body">
+        <div class="ttl">Forge Your Legacy</div>
+        <div class="row"><span class="disc">1</span><span style="color:var(--muted)">step on surface</span></div>
+        <span class="pill">Verified</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Type</div>
+  <h2>Typography</h2>
+  <p>Poppins (headings — 800, uppercase, italic) + Inter (body). From <code>apps/web/lib/fonts.ts</code>.</p>
+  <div class="specimen">
+    <div class="spec-row"><div class="lbl">Heading · Poppins 800 uppercase italic</div><div class="t-h1">The Long Road</div></div>
+    <div class="spec-row"><div class="lbl">Subhead · Poppins 800 uppercase italic</div><div class="t-h2">Forge Your Legacy</div></div>
+    <div class="spec-row"><div class="lbl">Body · Inter 400/500</div><div class="t-body">Your Passport is the single source of truth for your martial-arts identity — every rank, every lineage, every claim traces back to it. Black Belt Legacy renders that record cleanly across the tree, passport, directory, and galaxy.</div></div>
+    <div class="spec-row"><div class="lbl">Meta · Inter 600 tracked uppercase</div><div class="t-meta">Verified · Lineage · Rank System</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Component</div>
+  <h2>The 1-2-3 step</h2>
+  <p>Canonical origin: the email <code>LoginStep</code> (<code>emails/bbl-the-long-road.tsx</code>).
+  <strong>Filled red disc + white number</strong> — never an outline variant.</p>
+  <h3>Inline (emails, app, hub)</h3>
+  <div class="step"><div class="step-num">1</div><div><div class="step-label">Open your Passport link</div><div class="step-blurb">The email button drops you straight onto your record — no login wall.</div></div></div>
+  <div class="step"><div class="step-num">2</div><div><div class="step-label">Confirm your lineage</div><div class="step-blurb">Review the rank chain and instructor; flag anything off.</div></div></div>
+  <div class="step"><div class="step-num">3</div><div><div class="step-label">Share your galaxy</div><div class="step-blurb">Your public projection is ready to send.</div></div></div>
+  <h3>Poster scale (PDF / PNG for Tony)</h3>
+  <div class="poster-scale">
+    <div class="step"><div class="step-num">1</div><div><div class="step-label">Bow in</div><div class="step-blurb">Read the session's "Next" block.</div></div></div>
+    <div class="step"><div class="step-num">2</div><div><div class="step-label">Build</div><div class="step-blurb">One coherent change; gates green.</div></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Component</div>
+  <h2>Buttons</h2>
+  <p>Primary = filled red; ghost = red outline on white. Radius 8px.</p>
+  <div class="btns">
+    <a class="btn btn-primary" href="#">View my Passport</a>
+    <a class="btn btn-ghost" href="#">Learn more</a>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Guardrails</div>
+  <h2>Do / Don't</h2>
+  <div class="dd">
+    <div class="card do">
+      <h4>✅ Do</h4>
+      <ul>
+        <li>Use brand red <code>#E52421</code> as the single accent.</li>
+        <li>White number on a red disc for steps.</li>
+        <li>Headings Poppins extrabold uppercase italic.</li>
+        <li>Import <code>scripts/lib/bbl-doc-theme.ts</code> in generators.</li>
+      </ul>
+    </div>
+    <div class="card dont">
+      <h4>❌ Don't</h4>
+      <ul>
+        <li><span class="gold-bad"></span>Use gold <code>#d7a74c</code> / <code>#FFD700</code> — <code>styles.css:210</code> records this exact import as a defect already corrected once.</li>
+        <li>Hand-roll a second token block.</li>
+        <li>Outline-style step discs.</li>
+        <li><em>Exception:</em> the Galaxy viewer's star palette is intentionally gold — art inside the 3D scene, not brand chrome.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Map</div>
+  <h2>Where each consumer pulls from</h2>
+  <table>
+    <thead><tr><th>Consumer</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>emails</td><td><code>emails/components/bbl-wrapper.tsx</code> + <code>LoginStep</code> (the visual origin)</td></tr>
+      <tr><td>app surfaces</td><td><code>apps/web/app/styles.css</code> tokens + <code>lib/fonts.ts</code></td></tr>
+      <tr><td>doc generators</td><td><code>scripts/lib/bbl-doc-theme.ts</code> (BBL_TOKENS · STEP_CHIP_CSS · BBL_HEADING_CSS)</td></tr>
+      <tr><td>spec / poster docs</td><td>SPEC_TEMPLATE + the generators above</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:1em">All four trace to one accent (<code>#E52421</code>), one type pair (Poppins/Inter),
+  one step component.</p>
+</section>
+
+<div class="foot">Ronin Dojo · Black Belt Legacy — Desi brand pass, SESSION_0428 · companion to
+<code>docs/knowledge/wiki/component-design-system.md</code></div>
+
+</main>
+<script>
+// Theme toggle: system default → light → dark, persisted in localStorage.
+(function(){
+  var root=document.documentElement,btn=document.getElementById('themeBtn');
+  var saved=localStorage.getItem('bbl-theme');
+  if(saved){root.setAttribute('data-theme',saved);}
+  function label(){var t=root.getAttribute('data-theme');return '◐ '+(t?t[0].toUpperCase()+t.slice(1):'System');}
+  btn.textContent=label();
+  btn.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    var next=cur==='light'?'dark':cur==='dark'?'':'light';
+    if(next){root.setAttribute('data-theme',next);localStorage.setItem('bbl-theme',next);}
+    else{root.removeAttribute('data-theme');localStorage.removeItem('bbl-theme');}
+    btn.textContent=label();
+  });
+})();
+</script>
+</body>
+</html>

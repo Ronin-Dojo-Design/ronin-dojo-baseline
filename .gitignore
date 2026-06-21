@@ -42,3 +42,5 @@ ronin-baseline.code-workspace
 
 # throwaway BBL prod/dev screenshots (do not commit)
 /bbl-*.jpeg
+docs/orchestration.html
+docs/posters/
