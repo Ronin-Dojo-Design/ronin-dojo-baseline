@@ -9,6 +9,7 @@ import {
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { DirectoryProfileList, DirectoryProfileSelf } from "~/server/web/directory/payloads"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 
 type ProfileViewer = {
   viewerUserId?: string | null
@@ -153,18 +154,18 @@ export function projectOwnProfile({
   brand?: string | null
 }): MyProfile {
   const { passport } = profile
-  const account = passport.user
 
-  const topAward = passport.rankAwardsEarned[0] ?? null
-  const currentRank = topAward
+  // Project identity through the canonical public passport projector (issue #134 surface-2).
+  // showRanks: true — the owner always sees their own ranks in full (no gate for /me).
+  const passportDto = projectPublicPassport(passport, { brand, showRanks: true })
+  const currentRankFromDto = passportDto.currentRank
+
+  const currentRank = currentRankFromDto
     ? {
-        name: topAward.rank.name,
-        colorHex: topAward.rank.colorHex,
-        // Discipline code reads as the credential eyebrow (e.g. "BJJ"); name is the fallback.
-        disciplineLabel:
-          topAward.rank.rankSystem.discipline?.code?.toUpperCase() ??
-          topAward.rank.rankSystem.discipline?.name ??
-          null,
+        name: currentRankFromDto.name,
+        colorHex: currentRankFromDto.colorHex,
+        // disciplineName is the full discipline name (e.g. "Brazilian Jiu-Jitsu").
+        disciplineLabel: currentRankFromDto.disciplineName ?? null,
       }
     : null
 
@@ -192,8 +193,8 @@ export function projectOwnProfile({
   return {
     passportId: profile.passportId,
     slug: profile.slug,
-    name: passport.displayName ?? account?.name ?? null,
-    avatarUrl: resolveDisplayAvatar(passport.avatarUrl ?? account?.image, brand),
+    name: passportDto.displayName,
+    avatarUrl: passportDto.avatarUrl,
     bio: passport.bio ?? null,
     socialLinks: (passport.socialLinks as Record<string, string> | null) ?? null,
     visibility: profile.visibility,

@@ -13,7 +13,7 @@ import type { DirectoryProfile } from "./directory-profile-data"
  */
 export function ProfileSidebar({ profile }: { profile: DirectoryProfile }) {
   const { user } = profile
-  const topRank = user.ranks[0]?.rank ?? null
+  const topRank = user.ranks[0] ?? null
   const passportRank = topRank ? { name: topRank.name, colorHex: topRank.colorHex } : null
 
   return (

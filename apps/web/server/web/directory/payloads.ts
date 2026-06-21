@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 // ---------------------------------------------------------------------------
 // Directory listing payloads — Dirstarter L1 pattern
@@ -143,6 +144,10 @@ export type DirectoryProfilePreview = Prisma.DirectoryProfileGetPayload<{
 
 // ---------------------------------------------------------------------------
 // Detail payload — single profile page
+// @changed issue #134 surface-2 — now spreads publicPassportPayload for the
+// canonical identity core (displayName, avatarUrl, bio, socialLinks, rankAwardsEarned
+// ordered by awardedAt desc). Surface-specific extras (user email, memberships,
+// techniqueProgress, lineageNode) are merged on top.
 // ---------------------------------------------------------------------------
 
 export const directoryProfileDetailPayload = {
@@ -160,11 +165,8 @@ export const directoryProfileDetailPayload = {
   videoIntroUrl: true,
   passport: {
     select: {
-      id: true,
-      displayName: true,
-      avatarUrl: true,
-      bio: true,
-      socialLinks: true,
+      ...publicPassportPayload,
+      // Surface-specific extras on top of the canonical public identity core:
       user: {
         select: {
           id: true,
@@ -187,10 +189,6 @@ export const directoryProfileDetailPayload = {
         },
       },
       lineageNode: { select: directoryLineageTrustPayload },
-      rankAwardsEarned: {
-        select: directoryRankAwardPayload,
-        orderBy: { rank: { sortOrder: "desc" as const } },
-      },
     },
   },
 } satisfies Prisma.DirectoryProfileSelect
@@ -209,6 +207,8 @@ export type DirectoryProfileDetail = Prisma.DirectoryProfileGetPayload<{
 // list (role + isCurrent, not just the current-org facet) and a current-rank join for
 // the BJJ Passport card. Promotion *provenance* (promoter/school per belt) is NOT here —
 // that is the lineage read model's `LineageNodeProfile`, fed to the one timeline.
+// @changed issue #134 surface-2 — rankAwardsEarned now uses publicPassportPayload.rankAwardsEarned
+// (awardedAt desc, full discipline shape) instead of the manual take:1 + sortOrder desc select.
 // ---------------------------------------------------------------------------
 
 export const directoryProfileSelfPayload = {
@@ -243,32 +243,10 @@ export const directoryProfileSelfPayload = {
         },
         orderBy: [{ isCurrent: "desc" as const }, { updatedAt: "desc" as const }],
       },
-      // Highest-sorted earned belt → the BJJ Passport card's current rank (name + colorHex
-      // + discipline). Derived current rank, never a stored field (ADR 0025 §2).
-      rankAwardsEarned: {
-        select: {
-          id: true,
-          awardedAt: true,
-          rank: {
-            select: {
-              id: true,
-              name: true,
-              shortName: true,
-              colorHex: true,
-              sortOrder: true,
-              rankSystem: {
-                select: {
-                  id: true,
-                  name: true,
-                  discipline: { select: { id: true, name: true, code: true } },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { rank: { sortOrder: "desc" as const } },
-        take: 1,
-      },
+      // Canonical public rank select (awardedAt desc, full discipline shape for the BJJ Passport card).
+      rankAwardsEarned: publicPassportPayload.rankAwardsEarned,
+      // Canonical directoryProfile link required by projectPublicPassport for showRanks gate.
+      directoryProfile: publicPassportPayload.directoryProfile,
     },
   },
 } satisfies Prisma.DirectoryProfileSelect
