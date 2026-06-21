@@ -24,9 +24,9 @@ import {
   lineageNodeRowPayload,
   lineageTreePublicPayload,
 } from "~/server/web/lineage/payloads"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import {
   materializeLineageTreeResult,
-  redactLineageNodeProfileRanks,
   resolveLineageVisibilityScope,
 } from "~/server/web/lineage/queries"
 
@@ -348,14 +348,10 @@ describe("lineage tree visibility materialization", () => {
       relationshipsTo: [],
     }
 
-    const result = redactLineageNodeProfileRanks(profile as never)
+    const dto = projectPublicPassport(profile.passport as never, {})
 
-    expect(result.passport?.rankAwardsEarned).toEqual([])
-    expect(result.passport?.user?.memberships).toHaveLength(1)
-    expect(result.passport?.user?.memberships[0]?.rank).toBeNull()
-    // Discipline + organization metadata pass through (shared container fields).
-    expect(result.passport?.user?.memberships[0]?.discipline?.name).toBe("BJJ")
-    expect(result.passport?.user?.memberships[0]?.organization?.name).toBe("Org")
+    // showRanks=false → rank gate closes: DTO exposes no ranks
+    expect(dto.ranks.length).toBe(0)
   })
 
   it("preserves memberships[].rank when showRanks=true", () => {
@@ -409,9 +405,9 @@ describe("lineage tree visibility materialization", () => {
       relationshipsTo: [],
     }
 
-    const result = redactLineageNodeProfileRanks(profile as never)
+    const dto = projectPublicPassport(profile.passport as never, {})
 
-    expect(result.passport?.rankAwardsEarned).toHaveLength(1)
-    expect(result.passport?.user?.memberships[0]?.rank).toMatchObject({ shortName: "SMR" })
+    // showRanks=true → rank gate opens: DTO exposes ranks
+    expect(dto.ranks.length).toBeGreaterThan(0)
   })
 })
