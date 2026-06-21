@@ -7,6 +7,7 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { bblHeadingFontClass } from "~/components/web/ui/brand-typography"
 import { cx } from "~/lib/utils"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import type { PromotionEventCard } from "~/server/web/promotion-events/payloads"
 import { eventLocation, formatDate } from "./event-format"
 
@@ -81,12 +82,14 @@ export function EventCard({ event }: { event: PromotionEventCard }) {
           </Stack>
           {event.rankAwards.length > 0 && (
             <Stack size="xs" wrap>
-              {event.rankAwards.slice(0, 3).map(award => (
-                <Badge key={award.id} variant="outline" size="sm">
-                  {award.passport.displayName ?? award.passport.user?.name ?? "Unnamed"} -{" "}
-                  {award.rank.shortName ?? award.rank.name}
-                </Badge>
-              ))}
+              {event.rankAwards.slice(0, 3).map(award => {
+                const promoteeDto = projectPublicPassport(award.passport, { showRanks: true })
+                return (
+                  <Badge key={award.id} variant="outline" size="sm">
+                    {promoteeDto.displayName} - {award.rank.shortName ?? award.rank.name}
+                  </Badge>
+                )
+              })}
               {event.rankAwards.length > 3 && (
                 <Badge variant="soft" size="sm">
                   +{event.rankAwards.length - 3} more
