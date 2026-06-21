@@ -24,6 +24,8 @@
     "markdown:lint:architecture": "npx markdownlint-cli2 \"docs/architecture/**/*.md\" \"docs/architecture/*.md\"",
     "markdown:fix:architecture": "bun run scripts/fix-architecture-markdownlint.ts",
     "docs:nav": "python3 scripts/generate-docs-nav.py",
+    "docs:hub": "bun run scripts/build-orchestration-hub.ts",
+    "docs:posters": "bun run scripts/build-loop-posters.ts",
     "graphify:viz": "GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify export --format html --out apps/web/public/graphify.html",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",
