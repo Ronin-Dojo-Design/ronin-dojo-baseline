@@ -67,12 +67,35 @@ Canonical type ladder (from `components/common/heading.tsx`; defer to [`bbl-type
 `primary`) → space → tracking. **Canonical rhythm:** eyebrow → title → body → **one primary CTA**
 (`Button variant="primary"`); everything else `secondary`/`ghost`. One primary action per view.
 
-## 4 — Desi sweep checklist (audit any surface against this)
+## 4 — Card visual hierarchy (`m-card` anatomy)
+
+Distilled from the "Burrito Bowl" card progression (a compact text card → the same card enriched with
+a hero image). The rules `m-card` should encode (BBL tokens, but the hierarchy is universal):
+
+- **One focal value per card.** Exactly one element gets accent + emphasis (the `$32.45` in blue →
+  for us, `text-primary`). The eye lands once. Everything else is identity or supporting meta.
+- **Identity cluster reads as one unit:** leading icon/avatar + title + secondary meta (date/time)
+  stacked, left-aligned; the focal value right-aligned on the same baseline.
+- **Progressive enrichment, one component.** The *same* card data renders **compact** (text-only) or
+  **rich** (+ hero image) by a `density`/`variant` prop — never fork into two components. This is the
+  same seam as `DataSelect`'s `content?: ReactNode` and the `/changelog` optional-note row.
+- **Supporting rows use the connector motif.** Sequential rows (origin → destination, pin-to-pin
+  dotted line) reuse the **lineage timeline-tree connector idiom** — don't reinvent it.
+- **Secondary meta is muted** (`text-muted-foreground`, `text-sm`/`xs`) and never competes with the
+  title or the focal value.
+- **Map to the ladder:** title = `H4`/`font-semibold`; focal value = `text-primary` emphasized;
+  meta/timestamps = `text-sm text-muted-foreground`.
+
+> Authoring note: an "easy author" card-builder (cf. *iseazy author*) is the right north star for the
+> AdminTaskBoard/content lane — author a card by filling the anatomy above, never by writing markup.
+
+## 5 — Desi sweep checklist (audit any surface against this)
 
 - [ ] Every block snaps to the 12-grid; container is `max-w-6xl` with the standard padding.
 - [ ] Mobile collapses to 1 column; no fixed widths; cards `min-w-0`.
 - [ ] Two-pane / hero proportions use φ (or the 8/4 grid), not 50/50 by default.
 - [ ] Exactly **one `H1`** and **one primary CTA** per view.
+- [ ] Each card has **one focal value** (accent) + an identity cluster + muted secondary meta (§4).
 - [ ] Type follows the ladder; no ad-hoc sizes; hierarchy reads in a 3-second squint test.
 - [ ] Color does hierarchy work (`muted-foreground` for secondary), not just decoration.
 - [ ] Spacing is on the 4px scale (component) / φ (macro); no magic numbers.
