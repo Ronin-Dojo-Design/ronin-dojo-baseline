@@ -2,7 +2,7 @@
 title: "SESSION 0430 — m-card (PWCC-002) smallest slice: kind=roster on /directory"
 slug: session-0430
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-21
 updated: 2026-06-21
 last_agent: claude-session-0430
@@ -111,6 +111,36 @@ shape + no-leak (bun test) and author the Playwright visual proof.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0430_TASK_01 | in-progress | m-card contract + component |
-| SESSION_0430_TASK_02 | in-progress | map-roster mapper + tests |
-| SESSION_0430_TASK_03 | in-progress | /directory swap + Playwright proof |
+| SESSION_0430_TASK_01 | landed | m-card contract + component (`lib/m-card/types.ts`, `components/web/m-card/m-card.tsx`) |
+| SESSION_0430_TASK_02 | landed | map-roster mapper + bun tests (`lib/m-card/map-roster.ts`, 4 pass — shape + no-leak) |
+| SESSION_0430_TASK_03 | landed | /directory people-facet swap + Playwright proof spec (`e2e/directory/m-card-roster.spec.ts`) |
+
+## What landed
+
+- **m-card roster slice (PWCC-002):** one content-/brand-agnostic card on the Dirstarter `Card`
+  base; token-only theming (data-driven rank `colorHex` → `--color-primary` accent fallback,
+  dark/light). `kind`→DTO contract as a discriminated union; roster fully bound, rank/task/loop
+  share a minimal skeleton for follow-ups.
+- **map-roster:** pure mapper from the gated `DirectoryFacetResult` → `MCardData["roster"]`; fixed
+  public allowlist (no passthrough). Person gi-silhouette fallback surface-injected, not in the card.
+- **/directory swap:** people facet renders `MCard(kind=roster)` in place of `FacetResultCard`;
+  href + persisted Save passed as structural props/actions. `FacetResultCard` retained (still used
+  by `school-card.tsx` + `listing-hero-avatar.tsx`) — no deprecation this slice.
+- **PR #149** (draft) opened against `main`.
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `bun test lib/m-card/` | 4 pass, 0 fail (shape + surface-injected fallback + no-rank fallback + no-leak allowlist) |
+| `bunx oxlint` (new + changed files) | 0 errors |
+| `bunx oxfmt --check` | clean (after fmt) |
+| `bun run wiki:lint` | 0 errors, 14 warnings (pre-existing in `SESSION_VIDEO_R001.md`) |
+| `tsc` / `next build` / Playwright | not run in-container (no `node_modules` in web session — same as SESSION_0429); types reviewed by hand; full gate runs on CI |
+
+## Open decisions / blockers
+
+- **Follow-up slices (separate PRs):** rank/task/loop kinds + mappers; `/me` + `/directory/[slug]`
+  sidebars (BjjPassportCard → m-card); wrap `lineage-node-card`; deprecate `bjj-passport-card` +
+  `listing-card` as re-exports for one release.
+- PR #149 is draft — CI to confirm the full typecheck/Playwright gate green. Not blocked on user.
