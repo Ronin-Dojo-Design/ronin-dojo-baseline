@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
-import { passportDisplayName } from "~/lib/identity/passport-display"
+import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
 import {
   type PromotionEventCard,
@@ -41,15 +41,18 @@ export type PromotionTimelineEntry = {
 
 const summarizeAward = (
   award: PromotionEventCard["rankAwards"][number] | PromotionTimelineAwardRow,
-): PromotionTimelineAwardSummary => ({
-  id: award.id,
-  personName: passportDisplayName(award.passport) ?? "Unnamed promotee",
-  rankName: award.rank.name,
-  rankShortName: award.rank.shortName,
-  awardedAt: award.awardedAt,
-  promoterName: award.awardedByPassport?.displayName ?? award.awardedBy?.name ?? null,
-  organizationName: award.organization?.name ?? null,
-})
+): PromotionTimelineAwardSummary => {
+  const passportDto = projectPublicPassport(award.passport, { showRanks: true })
+  return {
+    id: award.id,
+    personName: passportDto.displayName,
+    rankName: award.rank.name,
+    rankShortName: award.rank.shortName,
+    awardedAt: award.awardedAt,
+    promoterName: award.awardedByPassport?.displayName ?? award.awardedBy?.name ?? null,
+    organizationName: award.organization?.name ?? null,
+  }
+}
 
 const timelineEntryFromEvent = ({
   event,

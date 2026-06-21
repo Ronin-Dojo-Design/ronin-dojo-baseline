@@ -1,16 +1,15 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 // Phase 3c (SOT-ADR D1): the promotee (earner) is Passport-rooted. Identity is on the Passport;
 // the attached account (nullable `user`) is the link to a lineage node slug + account avatar fallback.
+// issue #134 surface-D: consume the canonical publicPassportPayload base; add lineageNode as a
+// surface-local add-on because award-card links to the lineage node page (a different URL from the
+// directoryProfile slug that publicPassportPayload routes through).
 const promotionEventPassportPayload = {
-  id: true,
-  displayName: true,
-  avatarUrl: true,
+  ...publicPassportPayload,
   lineageNode: {
     select: { slug: true },
-  },
-  user: {
-    select: { id: true, name: true, image: true },
   },
 } satisfies Prisma.PassportSelect
 

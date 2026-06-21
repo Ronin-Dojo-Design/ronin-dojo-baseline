@@ -14,6 +14,10 @@ let rankAwardRows: any[] = []
 let promotionEventFindManyCalls: any[] = []
 let rankAwardFindManyCalls: any[] = []
 
+mock.module("~/lib/media", () => ({
+  resolveDisplayAvatar: (avatarUrl: string | null | undefined) => avatarUrl ?? null,
+}))
+
 mock.module("~/services/db", () => ({
   db: {
     promotionEvent: {
@@ -39,11 +43,18 @@ const awardSummaryRow = {
   awardedAt: eventDate,
   location: "Combat Submission Wrestling Headquarters",
   // Phase 3c (SOT-ADR D1): the promotee (earner) is Passport-rooted.
+  // issue #134 surface-D: passport shape now mirrors promotionEventPassportPayload
+  // (publicPassportPayload spread + lineageNode add-on); projectPublicPassport needs
+  // directoryProfile and rankAwardsEarned at runtime.
   passport: {
     id: "passport-1",
     displayName: "Erik Paulson",
     avatarUrl: null,
+    bio: null,
+    socialLinks: null,
     user: { id: "user-1", name: "Erik Paulson", image: null },
+    directoryProfile: null,
+    rankAwardsEarned: [],
     lineageNode: { slug: "erik-paulson" },
   },
   rank: {
