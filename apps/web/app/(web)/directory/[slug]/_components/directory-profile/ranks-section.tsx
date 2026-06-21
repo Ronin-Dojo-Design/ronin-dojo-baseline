@@ -17,12 +17,10 @@ export function RanksSection({ profile }: { profile: DirectoryProfile }) {
       <H4>{profile.canRenderFullProfile ? "Ranks & Achievements" : "Rank Summary"}</H4>
       <Stack size="sm">
         {user.ranks.map(rankAward => (
-          <div key={rankAward.id} className="flex items-center gap-2">
-            <Badge variant="outline">{rankAward.rank?.name ?? "Rank"}</Badge>
-            {rankAward.rank?.rankSystem?.name && (
-              <span className="text-sm text-muted-foreground">
-                {rankAward.rank.rankSystem.name}
-              </span>
+          <div key={rankAward.awardId} className="flex items-center gap-2">
+            <Badge variant="outline">{rankAward.name || "Rank"}</Badge>
+            {rankAward.disciplineName && (
+              <span className="text-sm text-muted-foreground">{rankAward.disciplineName}</span>
             )}
           </div>
         ))}

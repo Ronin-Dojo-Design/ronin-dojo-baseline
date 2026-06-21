@@ -14,7 +14,40 @@ import {
   trustSummaryForUser,
 } from "~/server/web/directory/profile-projection"
 import { getLineageProfileDetailRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
+import {
+  projectPublicPassport,
+  type PublicPassportRank,
+} from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
+
+/**
+ * Project a preview-payload rank award (from `directoryProfilePreviewPayload`) to the
+ * `PublicPassportRank` shape so both branches of `findProfileBySlug` return the same
+ * `user.ranks` type. The preview payload does not include discipline data, so those
+ * fields are null.
+ */
+function previewRankToPublicRank(award: {
+  id: string
+  rank: {
+    id: string
+    name: string
+    sortOrder: number
+    colorHex: string | null
+    rankSystem: { id: string; name: string }
+  }
+  awardedAt: Date | null
+}): PublicPassportRank {
+  return {
+    awardId: award.id,
+    rankId: award.rank.id,
+    name: award.rank.name,
+    shortName: null,
+    colorHex: award.rank.colorHex,
+    awardedAt: award.awardedAt,
+    disciplineName: null,
+    disciplineSlug: null,
+  }
+}
 
 type ProfileViewer = {
   viewerUserId?: string | null
@@ -132,7 +165,7 @@ export const findProfileBySlug = async ({
         ranks: rankSummaryForProfile({
           showRanks: preview.showRanks,
           rankAwards: preview.passport.rankAwardsEarned,
-        }),
+        }).map(previewRankToPublicRank),
         techniqueProgress: [],
       },
     }
@@ -146,6 +179,14 @@ export const findProfileBySlug = async ({
   if (!profile) return null
 
   const account = profile.passport.user
+
+  // Project identity through the canonical public passport projector (issue #134 surface-2).
+  // This applies the displayName → account.name fallback, resolves the avatar, applies the
+  // showRanks gate, and projects rankAwardsEarned → PublicPassportRank[].
+  const passportDto = projectPublicPassport(profile.passport, {
+    brand,
+    showRanks: profile.showRanks ?? undefined,
+  })
 
   // Apply per-field privacy flags
   return {
@@ -168,9 +209,8 @@ export const findProfileBySlug = async ({
     locationCountry: profile.locationCountry,
     user: {
       id: account?.id ?? null,
-      name: profile.passport.displayName ?? account?.name ?? null,
-      // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
-      image: resolveDisplayAvatar(profile.passport.avatarUrl ?? account?.image, brand),
+      name: passportDto.displayName,
+      image: passportDto.avatarUrl,
       bio: profile.passport.bio ?? null,
       socialLinks: profile.passport.socialLinks ?? null,
       email: profile.showEmail ? (account?.email ?? null) : null,
@@ -186,7 +226,7 @@ export const findProfileBySlug = async ({
                 joinedAt: m.joinedAt,
               }))
           : [],
-      ranks: profile.showRanks ? profile.passport.rankAwardsEarned : [],
+      ranks: passportDto.ranks,
       techniqueProgress: account?.techniqueProgress ?? [],
     },
   }

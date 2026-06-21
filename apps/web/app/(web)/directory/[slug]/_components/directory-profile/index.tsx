@@ -52,7 +52,7 @@ export function DirectoryProfile({ profile, profileUrl, locationLine }: Director
         name={user.name}
         avatarUrl={user.image}
         subtitle={[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null}
-        tags={user.ranks.map(rankAward => rankAward.rank?.name).filter(Boolean) as string[]}
+        tags={user.ranks.map(rankAward => rankAward.name).filter(Boolean)}
       />
     )
   }
