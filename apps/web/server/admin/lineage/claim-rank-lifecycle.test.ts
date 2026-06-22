@@ -93,10 +93,7 @@ type ClaimFixture = {
   claimantUserId: string
 }
 
-async function createClaimFixture(
-  name: string,
-  claimedRankId?: string,
-): Promise<ClaimFixture> {
+async function createClaimFixture(name: string, claimedRankId?: string): Promise<ClaimFixture> {
   const claimant = await createUser(`${name}-claimant`)
 
   const nodePassport = await db.passport.create({

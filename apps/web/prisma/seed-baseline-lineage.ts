@@ -253,7 +253,8 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
   {
     fromKey: "helio-gracie",
     toKey: "rorion-gracie",
-    description: "Rorion Gracie is the son of Hélio Gracie; trained in Gracie Jiu-Jitsu under Hélio.",
+    description:
+      "Rorion Gracie is the son of Hélio Gracie; trained in Gracie Jiu-Jitsu under Hélio.",
     isVerified: true,
   },
   {

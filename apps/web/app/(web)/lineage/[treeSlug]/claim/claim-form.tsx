@@ -222,8 +222,8 @@ export function LineageClaimForm({ treeId, members, ranks }: ClaimFormProps) {
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Shown as pending until a reviewer verifies your claim. Approval creates a
-                  verified rank award on your profile.
+                  Shown as pending until a reviewer verifies your claim. Approval creates a verified
+                  rank award on your profile.
                 </p>
                 <FormMessage />
               </FormItem>
