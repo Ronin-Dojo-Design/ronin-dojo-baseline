@@ -4,7 +4,7 @@ import { CurriculumItemsEditor } from "~/app/app/courses/_components/curriculum-
 import { Wrapper } from "~/components/common/wrapper"
 import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findCourseById } from "~/server/admin/courses/queries"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 
@@ -16,10 +16,10 @@ export default async ({ params }: PageProps<"/app/courses/[id]">) => {
     return notFound()
   }
 
-  const [session, brand] = await Promise.all([getServerSession(), getRequestBrand()])
+  const session = await getServerSession()
   const courseAttachments = session?.user
     ? ((await getDashboardMediaAttachments({
-        brand,
+        brand: Brand.BBL,
         user: session.user,
         target: { kind: "course", id: course.id },
       })) ?? [])

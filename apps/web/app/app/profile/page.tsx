@@ -23,7 +23,7 @@ import { Section } from "~/components/web/ui/section"
 import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
 import { getBrandSiteConfig } from "~/config/site"
 import { requireUser } from "~/lib/auth-guard"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { getOnboardingState } from "~/server/web/onboarding/queries"
 import { getBeltRanks } from "~/server/web/onboarding/ranks"
@@ -33,8 +33,7 @@ const namespace = "pages.dashboard"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const t = await getTranslations()
   const url = "/app/profile"
   const title = t(`${namespace}.title`)
@@ -55,13 +54,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function ({ searchParams }: PageProps<"/app/profile">) {
   const { breadcrumbs, metadata } = await getData()
-  const brand = await getRequestBrand()
-  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
+  const has = (feature: BrandFeature) => brandHasFeature(Brand.BBL, feature)
 
   const user = await requireUser()
   const [onboarding, ranks] = await Promise.all([
-    getOnboardingState({ userId: user.id, role: user.role, brand }),
-    getBeltRanks(brand),
+    getOnboardingState({ userId: user.id, role: user.role, brand: Brand.BBL }),
+    getBeltRanks(Brand.BBL),
   ])
 
   return (

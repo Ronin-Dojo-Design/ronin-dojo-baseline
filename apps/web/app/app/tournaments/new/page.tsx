@@ -1,12 +1,11 @@
 import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 export default async () => {
-  const brand = await getRequestBrand()
   const organizations = await db.organization.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })

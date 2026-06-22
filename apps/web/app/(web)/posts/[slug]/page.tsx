@@ -18,7 +18,7 @@ import { Favicon } from "~/components/web/ui/favicon"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { Tag } from "~/components/web/ui/tag"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { brandFontVariables } from "~/lib/fonts"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateArticle } from "~/lib/structured-data"
@@ -45,8 +45,7 @@ type Props = {
 
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const post = await findPublishedContentPostBySlug(slug, brand)
+  const post = await findPublishedContentPostBySlug(slug, Brand.BBL)
 
   if (!post) {
     notFound()
@@ -79,7 +78,7 @@ const getData = cache(async ({ params }: Props) => {
     ],
   })
 
-  return { post, body, brand, ...data }
+  return { post, body, brand: Brand.BBL, ...data }
 })
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {

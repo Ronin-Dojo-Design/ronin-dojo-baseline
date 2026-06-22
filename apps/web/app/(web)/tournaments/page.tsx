@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { Skeleton } from "~/components/common/skeleton"
 import { TournamentQuery } from "~/components/web/tournaments/tournament-query"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 
 export const metadata = {
   title: "Tournaments",
@@ -15,8 +15,6 @@ type PageProps = {
 }
 
 export default async function TournamentsPage({ searchParams }: PageProps) {
-  const brand = await getRequestBrand()
-
   return (
     <>
       <Intro>
@@ -27,7 +25,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
       </Intro>
 
       <Suspense fallback={<Skeleton className="h-96" />}>
-        <TournamentQuery searchParams={searchParams} brand={brand} />
+        <TournamentQuery searchParams={searchParams} brand={Brand.BBL} />
       </Suspense>
     </>
   )

@@ -5,8 +5,8 @@ import { PostList } from "~/components/web/posts/post-list"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateBlog } from "~/lib/structured-data"
 import { findPublishedPosts } from "~/server/web/posts/queries"
@@ -16,9 +16,8 @@ const namespace = "pages.blog"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
-  const posts = await findPublishedPosts(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
+  const posts = await findPublishedPosts(Brand.BBL)
 
   const t = await getTranslations()
   const url = "/blog"

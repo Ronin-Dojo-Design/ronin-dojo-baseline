@@ -4,8 +4,8 @@ import { CreateProgramForm } from "~/components/web/programs/create-program-form
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import {
   getEditableProgramOrganizations,
   getManageableProgramById,
@@ -17,8 +17,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const program = await getManageableProgramById(brand, id)
+  const program = await getManageableProgramById(Brand.BBL, id)
 
   if (!program) return { title: "Program Not Found" }
 
@@ -30,9 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EditProgramPage({ params }: Props) {
   const { id } = await params
-  const brand = await getRequestBrand()
   const [program, session] = await Promise.all([
-    getManageableProgramById(brand, id),
+    getManageableProgramById(Brand.BBL, id),
     getServerSession(),
   ])
 
@@ -46,7 +44,7 @@ export default async function EditProgramPage({ params }: Props) {
   if (!canEdit) notFound()
 
   const organizations = await getEditableProgramOrganizations(
-    brand,
+    Brand.BBL,
     session.user.id,
     (session.user as { role?: string | null }).role,
   )

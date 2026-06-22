@@ -5,7 +5,7 @@ import { MediaAttachmentManager } from "~/components/web/media/media-attachment-
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { db } from "~/services/db"
@@ -73,10 +73,9 @@ export default async function EditTechniquePage({ params }: Props) {
     orderBy: { name: "asc" },
   })
 
-  const brand = await getRequestBrand()
   const mediaAttachments =
     (await getDashboardMediaAttachments({
-      brand,
+      brand: Brand.BBL,
       user: session.user,
       target: { kind: "technique", id: technique.id },
     })) ?? []

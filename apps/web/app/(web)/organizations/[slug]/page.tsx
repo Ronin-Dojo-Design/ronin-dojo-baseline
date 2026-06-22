@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { findOrganizationSlugs, getOrganizationBySlug } from "~/server/web/organization/queries"
 import { OrganizationDetail } from "./_components/organization-detail"
@@ -17,8 +17,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const org = await getOrganizationBySlug(brand, slug)
+  const org = await getOrganizationBySlug(Brand.BBL, slug)
 
   if (!org) return { title: "Organization Not Found" }
 

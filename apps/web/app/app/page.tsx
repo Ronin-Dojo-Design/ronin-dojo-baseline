@@ -8,7 +8,7 @@ import { MetricValue, MetricValueSkeleton } from "~/components/admin/metrics/met
 import { H3 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
 import { DashboardOnboardingTour } from "~/components/web/onboarding/dashboard-onboarding-tour"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { requireUser } from "~/lib/auth-guard"
 import { can } from "~/server/orpc/permissions"
 import { getOnboardingState } from "~/server/web/onboarding/queries"
@@ -24,8 +24,11 @@ import { db } from "~/services/db"
 export default async function (_props: PageProps<"/app">) {
   const user = await requireUser()
   const showMetrics = can(user, "metrics.read")
-  const brand = await getRequestBrand()
-  const onboarding = await getOnboardingState({ userId: user.id, role: user.role, brand })
+  const onboarding = await getOnboardingState({
+    userId: user.id,
+    role: user.role,
+    brand: Brand.BBL,
+  })
 
   const counters = [
     { label: "Tools", href: "/admin/tools", query: db.tool.count() },

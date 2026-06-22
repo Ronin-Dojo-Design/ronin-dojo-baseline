@@ -8,8 +8,8 @@ import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { Container } from "~/components/web/ui/container"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { Tile, TileCaption, TileDivider } from "~/components/web/ui/tile"
+import { Brand } from "~/.generated/prisma/client"
 import { brandHasFeature } from "~/config/brand-features"
-import { getRequestBrand } from "~/lib/brand-context"
 import { cx } from "~/lib/utils"
 import { findCategories } from "~/server/web/categories/queries"
 
@@ -17,7 +17,7 @@ export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrap
   const t = await getTranslations("components.bottom")
 
   // Categories are the listings taxonomy — brands without listings skip the rail.
-  const categories = brandHasFeature(await getRequestBrand(), "listings")
+  const categories = brandHasFeature(Brand.BBL, "listings")
     ? await findCategories({
         orderBy: { tools: { _count: "desc" } },
         take: 12,

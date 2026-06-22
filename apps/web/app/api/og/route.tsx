@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { createLoader } from "nuqs/server"
 import { OgBase } from "~/components/web/og/og-base"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { loadGoogleFont } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
 import { openGraphSearchParams } from "~/lib/opengraph"
@@ -15,8 +15,7 @@ export const size = { width: 1200, height: 630 }
 
 export const GET = async (req: NextRequest) => {
   const t = await getTranslations()
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const { title, description, faviconUrl } = createLoader(openGraphSearchParams)(req)
 
   const params = {

@@ -1,19 +1,13 @@
 import { cache } from "react"
 import { Brand } from "~/.generated/prisma/client"
 import { BblJoinLanding } from "~/app/(web)/(home)/bbl-join-landing"
-import { BottomCTA } from "~/app/(web)/(home)/bottom-cta"
-import { FeatureCards } from "~/app/(web)/(home)/feature-cards"
-import { Hero } from "~/app/(web)/(home)/hero"
-import { ValueProp } from "~/app/(web)/(home)/value-prop"
 import { StructuredData } from "~/components/web/structured-data"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData } from "~/lib/pages"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const title = `${brandConfig.name} - ${brandConfig.tagline}`
   const description = brandConfig.description
 
@@ -22,24 +16,11 @@ const getData = cache(async () => {
 
 export default async function (_props: PageProps<"/">) {
   const { structuredData } = await getData()
-  const brand = await getRequestBrand()
 
   // BBL home = the /lineage/join composition promoted to the main page (SESSION_0416).
-  if (brand === Brand.BBL) {
-    return (
-      <>
-        <BblJoinLanding />
-        <StructuredData data={structuredData} />
-      </>
-    )
-  }
-
   return (
     <>
-      <Hero />
-      <FeatureCards />
-      <ValueProp />
-      <BottomCTA />
+      <BblJoinLanding />
       <StructuredData data={structuredData} />
     </>
   )

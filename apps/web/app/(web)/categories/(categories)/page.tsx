@@ -6,8 +6,8 @@ import { CategoryQuery } from "~/components/web/categories/category-query"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 
@@ -16,8 +16,7 @@ const namespace = "pages.categories"
 
 // Get page data
 const getData = async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const t = await getTranslations()
   const url = "/categories"
   const title = t(`${namespace}.title`)

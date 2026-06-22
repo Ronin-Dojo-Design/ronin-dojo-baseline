@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { getOwnDirectoryProfile } from "~/server/web/directory/queries"
 import { getOwnLineageProfile } from "~/server/web/lineage/queries"
@@ -26,20 +26,19 @@ export default async function MePage() {
     redirect("/auth/login")
   }
 
-  const brand = await getRequestBrand()
   const userId = session.user.id
-  const profile = await getOwnDirectoryProfile({ userId, brand })
+  const profile = await getOwnDirectoryProfile({ userId, brand: Brand.BBL })
 
   // Post-S2 sign-up always creates a Passport + DirectoryProfile, but degrade
   // gracefully (no redirect loop) if the profile hasn't been provisioned yet.
   if (!profile) {
-    return <MeProfile brand={brand} profile={null} lineageProfile={null} galleryImages={[]} />
+    return <MeProfile brand={Brand.BBL} profile={null} lineageProfile={null} galleryImages={[]} />
   }
 
   const [lineageProfile, attachments] = await Promise.all([
     profile.lineageNodeId ? getOwnLineageProfile(userId) : Promise.resolve(null),
     getDashboardMediaAttachments({
-      brand,
+      brand: Brand.BBL,
       user: session.user,
       target: { kind: "passport", id: profile.passportId },
     }),
@@ -49,7 +48,7 @@ export default async function MePage() {
 
   return (
     <MeProfile
-      brand={brand}
+      brand={Brand.BBL}
       profile={profile}
       lineageProfile={lineageProfile}
       galleryImages={galleryImages}

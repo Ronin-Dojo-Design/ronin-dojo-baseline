@@ -4,7 +4,7 @@ import { getStaticBblRankColors } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-r
 import { BblVideo } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-video"
 import { heritageContent } from "~/app/(web)/(home)/bbl/bbl-landing-content"
 import { JoinLegacyLanding } from "~/app/(web)/lineage/join/join-legacy-landing"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import { db } from "~/services/db"
 
@@ -16,12 +16,10 @@ import { db } from "~/services/db"
  * bob-tony preview cookie sees it.
  */
 export async function BblJoinLanding() {
-  const brand = await getRequestBrand()
-
   const [claimableTree, membershipPlans, rankColors] = await Promise.all([
     db.lineageTree.findFirst({
       where: {
-        brand,
+        brand: Brand.BBL,
         isPublished: true,
         isClaimable: true,
         members: { some: { isClaimable: true } },
@@ -44,7 +42,7 @@ export async function BblJoinLanding() {
         },
       },
     }),
-    findLineageMembershipPlans(brand),
+    findLineageMembershipPlans(Brand.BBL),
     getStaticBblRankColors([heritageContent.badge]),
   ])
 

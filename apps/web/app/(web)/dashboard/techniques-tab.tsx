@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { TechniquesTable } from "~/app/(web)/dashboard/techniques-table"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { findUserTechniques } from "~/server/web/dashboard/queries"
 
 export async function DashboardTechniquesTab() {
@@ -11,8 +11,7 @@ export async function DashboardTechniquesTab() {
     throw redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
-  const techniques = await findUserTechniques(session.user.id, brand)
+  const techniques = await findUserTechniques(session.user.id, Brand.BBL)
 
   return <TechniquesTable techniques={techniques} />
 }

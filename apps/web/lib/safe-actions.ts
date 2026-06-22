@@ -1,9 +1,8 @@
 import { noCase } from "change-case"
 import { revalidatePath, updateTag } from "next/cache"
 import { createSafeActionClient } from "next-safe-action"
-import { Prisma } from "~/.generated/prisma/client"
+import { Brand, Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { canUploadMedia } from "~/server/web/entitlements/queries"
 import { db } from "~/services/db"
 
@@ -77,9 +76,7 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
     throw new Error("User not authorized")
   }
 
-  const brand = await getRequestBrand()
-
-  return next({ ctx: { brand } })
+  return next({ ctx: { brand: Brand.BBL } })
 })
 
 // -----------------------------------------------------------------------------
@@ -90,9 +87,7 @@ export const tournamentAdminActionClient = userActionClient.use(async ({ next, c
     throw new Error("User not authorized")
   }
 
-  const brand = await getRequestBrand()
-
-  return next({ ctx: { brand } })
+  return next({ ctx: { brand: Brand.BBL } })
 })
 
 // -----------------------------------------------------------------------------
@@ -104,11 +99,9 @@ export const publicActionClient = actionClient
 // 6. Media-upload client (auth + canUploadMedia entitlement gate)
 // -----------------------------------------------------------------------------
 export const mediaUploadActionClient = userActionClient.use(async ({ next, ctx }) => {
-  const brand = await getRequestBrand()
-
-  if (!(await canUploadMedia(ctx.user.id, brand))) {
+  if (!(await canUploadMedia(ctx.user.id, Brand.BBL))) {
     throw new Error("User not authorized to upload media")
   }
 
-  return next({ ctx: { brand } })
+  return next({ ctx: { brand: Brand.BBL } })
 })

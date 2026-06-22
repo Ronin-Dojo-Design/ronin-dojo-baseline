@@ -8,7 +8,7 @@ import { BracketResults } from "~/components/web/tournaments/bracket-results"
 import { MedalStandings } from "~/components/web/tournaments/medal-standings"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findTournamentResults } from "~/server/web/tournaments/queries"
 
 export const metadata = {
@@ -22,8 +22,7 @@ type PageProps = {
 
 export default async function TournamentResultsPage({ params }: PageProps) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const tournament = await findTournamentResults(slug, brand)
+  const tournament = await findTournamentResults(slug, Brand.BBL)
 
   if (!tournament) {
     notFound()

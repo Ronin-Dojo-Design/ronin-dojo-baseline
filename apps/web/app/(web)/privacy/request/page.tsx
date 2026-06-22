@@ -9,8 +9,8 @@ import {
   BrandTypography,
 } from "~/components/web/ui/brand-typography"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { DsrForm } from "./_components/dsr-form"
 
@@ -39,10 +39,9 @@ export default async function DataSubjectRequestPage() {
   }
 
   const { metadata } = await getData()
-  const brand = await getRequestBrand()
 
   return (
-    <BrandTypography brand={brand}>
+    <BrandTypography brand={Brand.BBL}>
       <Intro>
         <IntroTitle className={bblHeadingFontClass}>{metadata.title}</IntroTitle>
         <IntroDescription>{metadata.description}</IntroDescription>

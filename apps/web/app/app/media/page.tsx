@@ -2,21 +2,20 @@ import { ImageIcon } from "lucide-react"
 import { Badge } from "~/components/common/badge"
 import { H2 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findMedia } from "~/server/admin/media/queries"
 import { DeleteMediaButton } from "./_components/delete-media-button"
 import { MediaUploader } from "./_components/media-uploader"
 
 export default async ({ searchParams }: PageProps<"/app/media">) => {
   const sp = await searchParams
-  const brand = await getRequestBrand()
   const {
     media,
     total,
     page: _page,
     perPage: _perPage,
   } = await findMedia({
-    brand,
+    brand: Brand.BBL,
     q: sp?.q as string | undefined,
     page: Number(sp?.page) || 1,
   })

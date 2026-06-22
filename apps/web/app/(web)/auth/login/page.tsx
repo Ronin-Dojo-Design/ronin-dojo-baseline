@@ -4,8 +4,8 @@ import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import { Login } from "~/components/web/auth/login"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 
 // I18n page namespace
@@ -13,8 +13,7 @@ const namespace = "pages.auth.login"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const t = await getTranslations()
   const url = "/auth/login"
   const title = t(`${namespace}.title`)

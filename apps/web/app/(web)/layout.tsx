@@ -10,7 +10,6 @@ import { Container } from "~/components/web/ui/container"
 import { siteConfig } from "~/config/site"
 import { env } from "~/env"
 import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getCurrentUserAvatar } from "~/server/web/account/current-user-avatar"
 import { BblFooter } from "./_components/bbl-footer"
 import { BblTeaserPage } from "./_components/bbl-teaser"
@@ -26,19 +25,17 @@ const hasBblPreviewBypass = async () =>
   (await cookies()).get(BBL_PREVIEW_COOKIE)?.value === getBblPreviewToken()
 
 export default async function ({ children }: PropsWithChildren) {
-  const requestBrand = await getRequestBrand()
-
   // Pre-launch holding page: BBL only, env-gated. Previewers with a valid bypass
   // cookie skip it. Other brands are never affected. (Launched 2026-06-19 — the
   // BBL_COUNTDOWN var was removed from prod env, so this gate is now inert.)
-  if (isBblCountdownActive() && requestBrand === Brand.BBL && !(await hasBblPreviewBypass())) {
+  if (isBblCountdownActive() && !(await hasBblPreviewBypass())) {
     return <BblTeaserPage />
   }
 
   // Resolved server-side (Passport avatar ?? user.image ?? gi default) and passed to
   // the client header/nav-sheet as a prop — lib/media pulls Prisma, so it can't run
   // in the client chrome.
-  const userAvatarUrl = await getCurrentUserAvatar(requestBrand)
+  const userAvatarUrl = await getCurrentUserAvatar(Brand.BBL)
 
   return (
     <PlausibleProvider

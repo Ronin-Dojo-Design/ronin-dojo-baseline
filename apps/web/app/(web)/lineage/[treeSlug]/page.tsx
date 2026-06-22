@@ -13,8 +13,8 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { hasLineageAdminAccess } from "~/components/admin/auth-hoc"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { bblBodyFont, bblHeadingFont } from "~/lib/fonts"
 import { cx } from "~/lib/utils"
 import { rsc } from "~/lib/orpc-server"
@@ -57,8 +57,7 @@ export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { treeSlug } = await params
-  const brand = await getRequestBrand()
-  const tree = await findPublishedLineageTreeSummaryBySlug({ brand, slug: treeSlug })
+  const tree = await findPublishedLineageTreeSummaryBySlug({ brand: Brand.BBL, slug: treeSlug })
 
   if (!tree) {
     return { title: "Lineage Tree Not Found" }
@@ -83,7 +82,6 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
   // SESSION_0393: the cinematic focal explorer is the default public lineage view;
   // the practical board/tree view is the labelled `?view=board` fallback.
   const isExploreView = view !== "board"
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   // Phase 1c (SESSION_0364): the primary tree read now travels through oRPC
   // (`lineage.bySlug`) instead of a direct query import. The handler calls the
@@ -94,7 +92,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
   const api = await rsc()
   const [result, renderPolicy, canManage] = await Promise.all([
     api.lineage.bySlug({ slug: treeSlug }),
-    getLineageListingRenderPolicyForUser({ brand, userId: session?.user?.id ?? null }),
+    getLineageListingRenderPolicyForUser({ brand: Brand.BBL, userId: session?.user?.id ?? null }),
     session?.user
       ? hasLineageAdminAccess(session.user.id, session.user.role)
       : Promise.resolve(false),

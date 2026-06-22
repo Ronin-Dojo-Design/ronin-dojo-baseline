@@ -9,7 +9,7 @@ import { getBrandSiteConfig } from "~/config/site"
 import { BrandProvider } from "~/contexts/brand-context"
 import { QueryProvider } from "~/contexts/query-context"
 import { SearchProvider } from "~/contexts/search-context"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { brandThemeCss } from "~/lib/brand-theme"
 import { bblBodyFont, bblHeadingFont, fontSans } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
@@ -20,10 +20,9 @@ import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages, getTimeZone } from "next-intl/server"
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const brand = await getRequestBrand()
   const origin = await getRequestOrigin()
-  const brandConfig = getBrandSiteConfig(brand)
-  const brandSettings = await findBrandSettings(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
+  const brandSettings = await findBrandSettings(Brand.BBL)
 
   // DB asset URLs override static config/site.ts paths when present
   const faviconUrl = brandSettings?.faviconUrl ?? resolvePublicMediaUrl(brandConfig.faviconSrc)
@@ -50,12 +49,11 @@ export default async function ({ children }: LayoutProps<"/">) {
   const locale = await getLocale()
   const messages = await getMessages()
   const timeZone = await getTimeZone()
-  const brand = await getRequestBrand()
-  const brandSettings = await findBrandSettings(brand)
+  const brandSettings = await findBrandSettings(Brand.BBL)
 
   // Runtime --color-* override from DB-driven BrandSettings (HSL-guarded via the
   // shared helper — same path the [data-org] layout uses).
-  const brandCss = brandThemeCss(`[data-brand="${brand}"]`, brandSettings)
+  const brandCss = brandThemeCss(`[data-brand="${Brand.BBL}"]`, brandSettings)
   const brandStyle = brandCss ? (
     <style id="brand-settings-css" dangerouslySetInnerHTML={{ __html: brandCss }} />
   ) : null
@@ -65,7 +63,7 @@ export default async function ({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${fontSans.variable} ${bblHeadingFont.variable} ${bblBodyFont.variable} scroll-smooth`}
       data-scroll-behavior="smooth"
-      data-brand={brand}
+      data-brand={Brand.BBL}
       suppressHydrationWarning
     >
       <head>{brandStyle}</head>
@@ -75,7 +73,7 @@ export default async function ({ children }: LayoutProps<"/">) {
             <NuqsAdapter>
               <TooltipProvider delay={250}>
                 <SearchProvider>
-                  <BrandProvider brand={brand} logoUrl={brandSettings?.logoUrl ?? null}>
+                  <BrandProvider brand={Brand.BBL} logoUrl={brandSettings?.logoUrl ?? null}>
                     <ThemeProvider attribute="class" disableTransitionOnChange>
                       {children}
                       <Toaster />

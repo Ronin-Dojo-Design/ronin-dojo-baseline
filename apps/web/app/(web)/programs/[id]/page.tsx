@@ -14,8 +14,8 @@ import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import {
   createGraph,
@@ -37,8 +37,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const program = await getProgramById(brand, id)
+  const program = await getProgramById(Brand.BBL, id)
 
   if (!program) return { title: "Program Not Found" }
 
@@ -53,8 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProgramDetailPage({ params }: Props) {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const [program, session] = await Promise.all([getProgramById(brand, id), getServerSession()])
+  const [program, session] = await Promise.all([getProgramById(Brand.BBL, id), getServerSession()])
 
   if (!program) notFound()
 
@@ -64,7 +62,7 @@ export default async function ProgramDetailPage({ params }: Props) {
 
   const relatedPrograms = await findRelatedPrograms({
     programId: program.id,
-    brand,
+    brand: Brand.BBL,
     disciplineId: program.disciplineId,
     organizationId: program.organizationId,
   })

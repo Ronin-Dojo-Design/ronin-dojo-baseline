@@ -16,8 +16,8 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Favicon } from "~/components/web/ui/favicon"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { blogConfig } from "~/config/blog"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateArticle } from "~/lib/structured-data"
 import { findPublishedPostBySlug } from "~/server/web/posts/queries"
@@ -29,8 +29,7 @@ type Props = PageProps<"/blog/[slug]">
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const post = await findPublishedPostBySlug(slug, brand)
+  const post = await findPublishedPostBySlug(slug, Brand.BBL)
 
   if (!post) {
     notFound()

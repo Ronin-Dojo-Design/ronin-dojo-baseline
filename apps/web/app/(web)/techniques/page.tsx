@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { SearchParams } from "nuqs"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { TechniquesIndex } from "./_components/techniques-index"
 
@@ -20,12 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TechniquesPage({ searchParams }: PageProps) {
-  const brand = await getRequestBrand()
-
   return (
     <TechniquesIndex
       searchParams={searchParams}
-      brand={brand}
+      brand={Brand.BBL}
       url={PAGE_URL}
       title={PAGE_TITLE}
       description={PAGE_DESCRIPTION}

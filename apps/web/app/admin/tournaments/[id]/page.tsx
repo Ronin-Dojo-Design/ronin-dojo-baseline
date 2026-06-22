@@ -7,7 +7,7 @@ import { StaffPanel } from "~/app/admin/tournaments/_components/staff-panel"
 import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
 import { withTournamentAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import {
   findFightRecordsByTournament,
   findMatAssignmentsByTournament,
@@ -30,15 +30,14 @@ export default withTournamentAdminPage(async ({ params }) => {
   const matAssignmentsPromise = findMatAssignmentsByTournament(id)
   const fightRecordsPromise = findFightRecordsByTournament(id)
 
-  const brand = await getRequestBrand()
   const organizations = await db.organization.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 
   const disciplines = await db.discipline.findMany({
-    where: { OR: [{ brand }, { brand: null, isSystem: true }] },
+    where: { OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }] },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
@@ -139,7 +138,7 @@ export default withTournamentAdminPage(async ({ params }) => {
         availableDisciplines={disciplines}
         tournamentRoles={(await rolesPromise).map(r => ({ id: r.id, name: r.name, code: r.code }))}
         ruleSets={await db.ruleSet.findMany({
-          where: { OR: [{ brand }, { brand: null, isSystem: true }] },
+          where: { OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }] },
           select: { id: true, name: true },
           orderBy: { name: "asc" },
         })}

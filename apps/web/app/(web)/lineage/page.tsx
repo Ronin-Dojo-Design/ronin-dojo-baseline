@@ -8,7 +8,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateBreadcrumbs } from "~/lib/structured-data"
 
@@ -48,8 +48,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LineageIndexPage(props: PageProps<"/lineage">) {
-  const brand = await getRequestBrand()
-
   return (
     <>
       <StructuredData
@@ -67,7 +65,7 @@ export default async function LineageIndexPage(props: PageProps<"/lineage">) {
         <Section.Content>
           <LineageQuery
             searchParams={props.searchParams}
-            brand={brand}
+            brand={Brand.BBL}
             pageUrl={PAGE_URL}
             pageTitle={PAGE_TITLE}
             pageDescription={PAGE_DESCRIPTION}

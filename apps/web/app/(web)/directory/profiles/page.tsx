@@ -7,8 +7,8 @@ import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 import { getDirectoryFacets } from "~/server/web/directory/facets"
@@ -31,14 +31,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DirectoryProfilesPage({ searchParams }: Props) {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   const params = directoryFilterParamsCache.parse(await searchParams)
 
   // `params` is already string-defaulted by the nuqs cache; passed straight through (this also
   // wires the `rank` filter on the dedicated people page, which the old hand-built object omitted).
   const facets = await getDirectoryFacets({
-    brand,
+    brand: Brand.BBL,
     tab: "people",
     viewerUserId: session?.user?.id,
     viewerRole: session?.user?.role,

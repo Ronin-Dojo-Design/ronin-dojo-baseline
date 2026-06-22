@@ -10,8 +10,8 @@ import { RegisterButton } from "~/components/web/tournaments/register-button"
 import { RegistrationNotice } from "~/components/web/tournaments/registration-notice"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { findTournamentBySlug } from "~/server/web/tournaments/queries"
 import { db } from "~/services/db"
 
@@ -23,8 +23,7 @@ type PageProps = {
 export default async function TournamentDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params
   const { registered } = await searchParams
-  const brand = await getRequestBrand()
-  const tournament = await findTournamentBySlug(slug, brand)
+  const tournament = await findTournamentBySlug(slug, Brand.BBL)
 
   if (!tournament) {
     notFound()

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { UploadGrantToggle } from "~/app/admin/users/_components/upload-grant-toggle"
 import { UserForm } from "~/app/admin/users/_components/user-form"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findUserById } from "~/server/admin/users/queries"
 import { hasEntitlement } from "~/server/web/entitlements/queries"
 
@@ -14,8 +14,7 @@ export default async ({ params }: PageProps<"/app/users/[id]">) => {
     return notFound()
   }
 
-  const brand = await getRequestBrand()
-  const hasUpload = await hasEntitlement(id, "S3_UPLOAD", brand)
+  const hasUpload = await hasEntitlement(id, "S3_UPLOAD", Brand.BBL)
 
   return (
     <Wrapper size="md" gap="sm">

@@ -2,8 +2,8 @@ import { notFound, redirect } from "next/navigation"
 import { H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getEditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import { LineageNodeProfileForm } from "./_components/lineage-node-profile-form"
 
@@ -19,9 +19,8 @@ export default async function EditLineageNodeProfilePage({ params }: Props) {
     redirect(`/auth/login?next=/lineage/${treeSlug}/edit/${nodeId}`)
   }
 
-  const brand = await getRequestBrand()
   const profile = await getEditableLineageNodeProfile({
-    brand,
+    brand: Brand.BBL,
     treeSlug,
     nodeId,
     userId: session.user.id,

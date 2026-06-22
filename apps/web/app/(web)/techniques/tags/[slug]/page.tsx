@@ -7,7 +7,7 @@ import { TechniqueListingSkeleton } from "~/components/web/techniques/technique-
 import { TechniqueQuery } from "~/components/web/techniques/technique-query"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 import { findTag } from "~/server/web/tags/queries"
@@ -42,7 +42,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ({ params, searchParams }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
   const tag = await findTag({ where: { slug } })
 
   if (!tag) {
@@ -72,7 +71,7 @@ export default async function ({ params, searchParams }: Props) {
       <Suspense fallback={<TechniqueListingSkeleton />}>
         <TechniqueQuery
           searchParams={searchParams}
-          brand={brand}
+          brand={Brand.BBL}
           where={{ tags: { some: { slug: tag.slug } } }}
           search={{ placeholder }}
           options={{ enableFilters: true, enableSort: true }}

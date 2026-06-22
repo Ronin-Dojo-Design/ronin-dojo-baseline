@@ -6,7 +6,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
 import { PromotionEventEditorForm } from "~/app/(web)/dashboard/events/promotion-event-editor-form"
@@ -30,8 +30,7 @@ export default async function NewPromotionEventPage() {
     redirect(`/auth/login?next=${url}`)
   }
 
-  const brand = await getRequestBrand()
-  const data = await getPromotionEventEditorData({ brand, user: session.user })
+  const data = await getPromotionEventEditorData({ brand: Brand.BBL, user: session.user })
 
   if (!data?.canCreate) {
     notFound()

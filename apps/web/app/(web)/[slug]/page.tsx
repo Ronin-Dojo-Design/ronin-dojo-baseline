@@ -26,8 +26,8 @@ import { Section } from "~/components/web/ui/section"
 import { Sticky } from "~/components/web/ui/sticky"
 import { Tag } from "~/components/web/ui/tag"
 import { VerifiedBadge } from "~/components/web/verified-badge"
+import { Brand } from "~/.generated/prisma/client"
 import { brandHasFeature } from "~/config/brand-features"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 import { hasToolTierCap, isToolPublished } from "~/lib/tools"
@@ -39,7 +39,7 @@ type Props = PageProps<"/[slug]">
 const getData = cache(async ({ params }: Props) => {
   // Listings detail can't be prefix-gated in proxy.ts (root catch-all) —
   // gate per-brand here instead (SESSION_0368 brand feature gate).
-  if (!brandHasFeature(await getRequestBrand(), "listings")) {
+  if (!brandHasFeature(Brand.BBL, "listings")) {
     notFound()
   }
 

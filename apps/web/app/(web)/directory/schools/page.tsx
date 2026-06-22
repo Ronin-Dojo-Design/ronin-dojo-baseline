@@ -6,8 +6,8 @@ import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 import { getDirectoryFacets } from "~/server/web/directory/facets"
@@ -30,12 +30,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DirectorySchoolsPage({ searchParams }: Props) {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   const params = directoryFilterParamsCache.parse(await searchParams)
 
   const facets = await getDirectoryFacets({
-    brand,
+    brand: Brand.BBL,
     tab: "organizations",
     viewerUserId: session?.user?.id,
     viewerRole: session?.user?.role,

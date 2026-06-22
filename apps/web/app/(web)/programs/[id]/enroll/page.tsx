@@ -4,8 +4,8 @@ import { cache, Suspense } from "react"
 import { ProductListSkeleton } from "~/components/web/products/product-list"
 import { ProductQuery } from "~/components/web/products/product-query"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { getProgramById } from "~/server/web/program/queries"
 
@@ -13,8 +13,7 @@ type Props = PageProps<"/programs/[id]">
 
 const getData = cache(async ({ params }: Props) => {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const program = await getProgramById(brand, id)
+  const program = await getProgramById(Brand.BBL, id)
 
   if (!program) {
     notFound()

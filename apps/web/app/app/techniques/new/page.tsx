@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { db } from "~/services/db"
 
@@ -22,14 +22,12 @@ export default async function NewTechniquePage() {
   const session = await getServerSession()
   if (!session?.user) redirect("/auth/login?next=/app/techniques/new")
 
-  const brand = await getRequestBrand()
-
   // Find org where user is owner/instructor
   const membership = await db.membership.findFirst({
     where: {
       userId: session.user.id,
       roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      organization: { brand },
+      organization: { brand: Brand.BBL },
     },
     include: { organization: { select: { id: true } } },
   })

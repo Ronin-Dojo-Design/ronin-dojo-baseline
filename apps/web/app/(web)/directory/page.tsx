@@ -10,8 +10,8 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { createGraph, generateCollectionPage } from "~/lib/structured-data"
 
@@ -36,7 +36,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DirectoryPage({ searchParams }: Props) {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
 
   return (
@@ -65,7 +64,7 @@ export default async function DirectoryPage({ searchParams }: Props) {
         <Section.Content>
           <DirectoryQuery
             searchParams={searchParams}
-            brand={brand}
+            brand={Brand.BBL}
             viewerUserId={session?.user?.id}
             viewerRole={session?.user?.role}
           />

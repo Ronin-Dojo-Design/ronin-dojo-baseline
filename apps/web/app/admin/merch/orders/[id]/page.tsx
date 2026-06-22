@@ -8,7 +8,7 @@ import { H3 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findMerchOrderById } from "~/server/web/merch/queries"
 
 function formatCents(cents: number, currency = "USD") {
@@ -25,8 +25,7 @@ type LineItem = {
 
 export default withAdminPage(async ({ params }: PageProps<"/admin/merch/orders/[id]">) => {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const order = await findMerchOrderById(id, brand)
+  const order = await findMerchOrderById(id, Brand.BBL)
 
   if (!order) {
     notFound()

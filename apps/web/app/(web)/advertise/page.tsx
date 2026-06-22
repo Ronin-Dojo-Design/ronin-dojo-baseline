@@ -10,8 +10,8 @@ import { Stats } from "~/components/web/stats"
 import { StructuredData } from "~/components/web/structured-data"
 import { Testimonial } from "~/components/web/testimonial"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 
 // I18n page namespace
@@ -19,8 +19,7 @@ const namespace = "pages.advertise"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const t = await getTranslations()
   const url = "/advertise"
   const title = t(`${namespace}.title`)

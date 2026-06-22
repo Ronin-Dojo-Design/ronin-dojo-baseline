@@ -10,7 +10,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getPromotionEventEditorData } from "~/server/web/promotion-events/editor-queries"
@@ -41,8 +41,7 @@ export default async function EditPromotionEventPage({ params }: Props) {
     redirect(`/auth/login?next=${url}`)
   }
 
-  const brand = await getRequestBrand()
-  const data = await getPromotionEventEditorData({ brand, user: session.user, eventId })
+  const data = await getPromotionEventEditorData({ brand: Brand.BBL, user: session.user, eventId })
 
   if (!data?.event) {
     notFound()
@@ -50,7 +49,7 @@ export default async function EditPromotionEventPage({ params }: Props) {
 
   const galleryAttachments =
     (await getDashboardMediaAttachments({
-      brand,
+      brand: Brand.BBL,
       user: session.user,
       target: { kind: "promotionEvent", id: data.event.id },
     })) ?? []

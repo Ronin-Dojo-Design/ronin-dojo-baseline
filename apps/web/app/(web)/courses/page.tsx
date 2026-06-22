@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { SearchParams } from "nuqs"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { searchCourses } from "~/server/web/courses/queries"
 import { CoursesIndex } from "./_components/courses-index"
@@ -24,15 +24,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CoursesPage({ searchParams }: PageProps) {
-  const brand = await getRequestBrand()
-
   // Lightweight top-N fetch (no q/sort/page) for ItemList JSON-LD.
   // Distinct cache key from CourseQuery's parsed-params fetch — no double-fetch.
-  const { courses: featuredCourses, total } = await searchCourses({ perPage: 10 }, brand)
+  const { courses: featuredCourses, total } = await searchCourses({ perPage: 10 }, Brand.BBL)
 
   return (
     <CoursesIndex
-      brand={brand}
+      brand={Brand.BBL}
       featuredCourses={featuredCourses}
       total={total}
       searchParams={searchParams}

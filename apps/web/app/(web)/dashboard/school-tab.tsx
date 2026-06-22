@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { SchoolForm } from "~/app/(web)/dashboard/school-form"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { findUserOrganization } from "~/server/web/dashboard/queries"
 
 export async function DashboardSchoolTab() {
@@ -11,8 +11,7 @@ export async function DashboardSchoolTab() {
     throw redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
-  const organization = await findUserOrganization(session.user.id, brand)
+  const organization = await findUserOrganization(session.user.id, Brand.BBL)
 
   return <SchoolForm organization={organization} />
 }

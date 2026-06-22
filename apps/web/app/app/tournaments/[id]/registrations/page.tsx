@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { RegistrationsTable } from "~/components/admin/tournaments/registrations-table"
 import { H4 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import {
   findActiveUsers,
   findTournamentById,
@@ -12,7 +12,6 @@ import { findRegistrationsByTournamentId } from "~/server/admin/tournaments/regi
 
 export default async ({ params }: PageProps<"/app/tournaments/[id]/registrations">) => {
   const { id } = await params
-  const brand = await getRequestBrand()
   const tournament = await findTournamentById(id)
 
   if (!tournament) {
@@ -20,7 +19,7 @@ export default async ({ params }: PageProps<"/app/tournaments/[id]/registrations
   }
 
   const [registrations, roles, users] = await Promise.all([
-    findRegistrationsByTournamentId(id, brand),
+    findRegistrationsByTournamentId(id, Brand.BBL),
     findTournamentRoles(),
     findActiveUsers(),
   ])

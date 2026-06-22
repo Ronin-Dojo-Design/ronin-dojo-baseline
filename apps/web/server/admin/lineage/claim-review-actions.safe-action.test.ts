@@ -21,12 +21,12 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 // the mock registrations run before the action module is evaluated.
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 
 const TS = Date.now()
 const PREFIX = `session-0187-safe-action-${TS}`
@@ -45,6 +45,23 @@ type Fixture = {
 
 let fx: Fixture | null = null
 
+// The brand-prune inlined Brand.BBL at the entitlement lookup, and the unit-test DB
+// catalog isn't seeded with BBL entitlements — so seed the comp tiers this test grants
+// under TEST_BRAND ourselves (find-or-create; only delete what we created).
+const createdEntitlementIds: string[] = []
+const ensureEntitlement = async (key: string, name: string) => {
+  const existing = await db.entitlement.findUnique({
+    where: { brand_key: { brand: TEST_BRAND, key } },
+    select: { id: true },
+  })
+  if (existing) return
+  const created = await db.entitlement.create({
+    data: { brand: TEST_BRAND, key, name },
+    select: { id: true },
+  })
+  createdEntitlementIds.push(created.id)
+}
+
 const createUser = async (
   name: string,
   options: { role?: string; isPlaceholder?: boolean } = {},
@@ -61,6 +78,9 @@ const createUser = async (
 }
 
 beforeAll(async () => {
+  await ensureEntitlement("LINEAGE_PREMIUM", "Lineage Premium")
+  await ensureEntitlement("LINEAGE_ELITE", "Lineage Elite")
+
   const admin = await createUser("admin", { role: "admin" })
   const placeholder = await createUser("placeholder", { isPlaceholder: true })
   const claimant = await createUser("claimant")
@@ -173,6 +193,11 @@ afterAll(async () => {
   await db.lineageTree.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.lineageNode.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
+  // Delete entitlement definitions last (after users → UserEntitlement rows are gone),
+  // and only the ones we created so we don't clobber a pre-seeded catalog row.
+  if (createdEntitlementIds.length > 0) {
+    await db.entitlement.deleteMany({ where: { id: { in: createdEntitlementIds } } })
+  }
 })
 
 describe("reviewLineageClaim (safe-action wrapper)", () => {

@@ -7,8 +7,8 @@ import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import {
   findUserEnrollments,
   findUserEntitlements,
@@ -24,14 +24,12 @@ export const DashboardMembership = async () => {
     throw redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
-
   const [enrollments, entitlements, registrations, passport, stripeCustomer] = await Promise.all([
-    findUserEnrollments(session.user.id, brand),
-    findUserEntitlements(session.user.id, brand),
-    findUserRegistrations(session.user.id, brand),
+    findUserEnrollments(session.user.id, Brand.BBL),
+    findUserEntitlements(session.user.id, Brand.BBL),
+    findUserRegistrations(session.user.id, Brand.BBL),
     getPassportByUserId(session.user.id),
-    findUserStripeCustomer(session.user.id, brand),
+    findUserStripeCustomer(session.user.id, Brand.BBL),
   ])
 
   const hasData =
