@@ -86,8 +86,12 @@ const PLACEHOLDER_USERS: PlaceholderUser[] = [
   { key: "erik-paulson", name: "Erik Paulson", email: "erik-paulson@placeholder.lineage" },
   { key: "casey-olsen", name: "Casey Olsen", email: "casey-olsen@placeholder.lineage" },
   { key: "rick-minter", name: "Rick Minter", email: "rick-minter@placeholder.lineage" },
-  // @added SESSION_0318 — operator-confirmed April 10, 2026 coral-belt recipient.
-  { key: "chris-posnik", name: "Chris Posnik", email: "chris-posnik@placeholder.lineage" },
+  // @added SESSION_0433 — Christopher Alexander Poznik (Black Belt 5th; merged from/replaces chris-posnik per SESSION_0430 C2).
+  {
+    key: "poznik",
+    name: "Christopher Alexander Poznik",
+    email: "christopher-alexander-poznik@placeholder.lineage",
+  },
   // @added SESSION_0318 — promoted with Bob Bass on June 8, 2024 in Oklahoma City.
   { key: "renato-magno", name: "Renato Magno", email: "renato-magno@placeholder.lineage" },
   { key: "david-meyer", name: "David Meyer", email: "david-meyer@placeholder.lineage" },
@@ -98,6 +102,8 @@ const PLACEHOLDER_USERS: PlaceholderUser[] = [
 
   // ========== NEXT GENERATION ==========
   { key: "brian-truelson", name: "Brian Truelson", email: "brian-truelson@placeholder.lineage" },
+  // @added SESSION_0433 — Rikki Rockett, Black Belt 4th Degree under Renato Magno (SESSION_0430 B3).
+  { key: "rikki-rockett", name: "Rikki Rockett", email: "rikki-rockett@placeholder.lineage" },
 
   // ========== Brian's non-BJJ instructors ==========
   { key: "steve-wolk", name: "GM Steve Wolk", email: "steve-wolk@placeholder.lineage" },
@@ -164,9 +170,10 @@ const NODE_SEEDS: LineageNodeSeed[] = [
     bio: "7th Degree Coral Belt · promoted by Rigan Machado on April 10, 2026 at the CSW World Conference.",
   },
   {
-    userKey: "chris-posnik",
-    slug: "chris-posnik",
-    bio: "7th Degree Coral Belt · promoted by Rigan Machado on April 10, 2026 at the CSW World Conference.",
+    // @added SESSION_0433 — Christopher Alexander Poznik (BK5; replaces chris-posnik per SESSION_0430 C2).
+    userKey: "poznik",
+    slug: "poznik",
+    bio: "Black Belt – 5th Degree · Rigan Machado lineage.",
   },
   {
     userKey: "renato-magno",
@@ -189,14 +196,16 @@ const NODE_SEEDS: LineageNodeSeed[] = [
     bio: "7th Degree Coral Belt · promoted by Rigan Machado on September 14, 2025 · Dirty Dozen under Rigan Machado · John Will Martial Arts, Melbourne, Australia.",
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B1: erroneous Coral Belt corrected to Black Belt – 5th Degree.
     userKey: "bill-hosken",
     slug: "bill-hosken",
-    bio: "Coral Belt · Under Rigan Machado · Colorado Springs BJJ, Colorado Springs CO.",
+    bio: "Black Belt – 5th Degree · Under Rigan Machado · Colorado Springs BJJ, Colorado Springs CO.",
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B2: erroneous Coral Belt award deleted; base Black Belt.
     userKey: "jerry-smith",
     slug: "jerry-smith",
-    bio: "Coral Belt · Under Rigan Machado · Mat Fitness, California.",
+    bio: "Black Belt · Under Rigan Machado · Mat Fitness, California.",
   },
 
   // Next generation
@@ -204,6 +213,12 @@ const NODE_SEEDS: LineageNodeSeed[] = [
     userKey: "brian-truelson",
     slug: "brian-truelson",
     bio: "1st Degree Black Belt · Under Bill Hosken (Rigan Machado lineage) · Puyallup BJJ, Puyallup WA.",
+  },
+  {
+    // @added SESSION_0433 — Rikki Rockett, BK4 under Renato Magno (SESSION_0430 B3).
+    userKey: "rikki-rockett",
+    slug: "rikki-rockett",
+    bio: "Black Belt – 4th Degree · Promoted 2024-01-27 by Renato Magno (Rigan Machado lineage).",
   },
 
   // Brian's non-BJJ instructors
@@ -301,10 +316,11 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     isVerified: true,
   },
   {
+    // @added SESSION_0433 — Poznik replaces chris-posnik (SESSION_0430 C2). BK5.
     fromKey: "rigan-machado",
-    toKey: "chris-posnik",
+    toKey: "poznik",
     description:
-      "Chris Posnik — Rigan Machado black belt lineage. Promoted to 7th Degree Coral Belt on April 10, 2026 at the CSW World Conference.",
+      "Christopher Alexander Poznik — Black Belt 5th Degree under Rigan Machado lineage.",
     isVerified: true,
   },
   {
@@ -333,15 +349,17 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     isVerified: true,
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B1: Black Belt – 5th Degree (not Coral).
     fromKey: "rigan-machado",
     toKey: "bill-hosken",
-    description: "Bill Hosken — under Rigan Machado. Now Coral Belt.",
+    description: "Bill Hosken — under Rigan Machado. Black Belt – 5th Degree.",
     isVerified: true,
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B2: base Black Belt (erroneous Coral award deleted).
     fromKey: "rigan-machado",
     toKey: "jerry-smith",
-    description: "Jerry Smith — under Rigan Machado. Now Coral Belt.",
+    description: "Jerry Smith — under Rigan Machado. Black Belt.",
     isVerified: true,
   },
 
@@ -368,6 +386,15 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     toKey: "brian-truelson",
     description: "Brian Truelson — 1st Degree Black Belt under Bill Hosken.",
     isVerified: false,
+  },
+
+  // @added SESSION_0433 — Renato Magno → Rikki Rockett (SESSION_0430 B3).
+  {
+    fromKey: "renato-magno",
+    toKey: "rikki-rockett",
+    description:
+      "Rikki Rockett — Black Belt 4th Degree under Renato Magno (Rigan Machado lineage). Promoted 2024-01-27.",
+    isVerified: true,
   },
 
   // Brian's non-BJJ instructors → Brian
@@ -524,12 +551,11 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
     notes: APRIL_2026_CEREMONY_NOTE,
   },
   {
-    userKey: "chris-posnik",
-    rankShortName: "CB7",
+    // @added SESSION_0433 — Poznik replaces chris-posnik (SESSION_0430 C2). Black Belt 5th, not Coral.
+    userKey: "poznik",
+    rankShortName: "BK5",
     awardedByKey: "rigan-machado",
     awardedAt: "2026-04-10",
-    location: "Combat Submission Wrestling Headquarters",
-    notes: APRIL_2026_CEREMONY_NOTE,
   },
   {
     userKey: "renato-magno",
@@ -569,16 +595,27 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
       "Public source correction — John Will 7th Degree Coral Belt awarded by Rigan Machado on September 14, 2025.",
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B1: Black Belt 5th Degree (was erroneous CB7).
     userKey: "bill-hosken",
-    rankShortName: "CB7",
+    rankShortName: "BK5",
     awardedByKey: "rigan-machado",
     awardedAt: "2020-06-01",
   },
   {
+    // @updated SESSION_0433 — SESSION_0430 B2: base Black Belt BK0 (erroneous CB7 deleted in corrective block).
     userKey: "jerry-smith",
-    rankShortName: "CB7",
+    rankShortName: "BK0",
     awardedByKey: "rigan-machado",
     awardedAt: "2021-06-01",
+  },
+  {
+    // @added SESSION_0433 — Rikki Rockett BK4, promoted 2024-01-27 by Renato Magno (SESSION_0430 B3).
+    userKey: "rikki-rockett",
+    rankShortName: "BK4",
+    awardedByKey: "renato-magno",
+    awardedAt: "2024-01-27",
+    notes:
+      "Public record — 4th Degree Black Belt, January 27, 2024, under Renato Magno (Rigan Machado lineage). SESSION_0430 B3.",
   },
   {
     userKey: "brian-truelson",
@@ -923,8 +960,9 @@ const PROMOTION_EVENTS: PromotionEventSeed[] = [
     slug: "coral-belt-ceremony-csw-world-conference-2026",
     eventDate: "2026-04-10",
     location: "Combat Submission Wrestling Headquarters",
+    // @updated SESSION_0433 — removed chris-posnik (merged/deleted per SESSION_0430 C2; Poznik has BK5, not CB7).
     description:
-      "Rorion Gracie promoted Rigan Machado to Red Belt (9th degree); Rigan Machado promoted Erik Paulson, Casey Olsen, Rick Minter, Rick Williams, and Chris Posnik to 7th Degree Coral Belt. Hosted at Erik Paulson's Combat Submission Wrestling during the CSW World Conference.",
+      "Rorion Gracie promoted Rigan Machado to Red Belt (9th degree); Rigan Machado promoted Erik Paulson, Casey Olsen, Rick Minter, and Rick Williams to 7th Degree Coral Belt. Hosted at Erik Paulson's Combat Submission Wrestling during the CSW World Conference.",
     awardMatches: [
       {
         userKey: "rigan-machado",
@@ -956,16 +994,10 @@ const PROMOTION_EVENTS: PromotionEventSeed[] = [
         awardedAt: "2026-04-10",
         location: "Combat Submission Wrestling Headquarters",
       },
-      {
-        userKey: "chris-posnik",
-        rankShortName: "CB7",
-        awardedAt: "2026-04-10",
-        location: "Combat Submission Wrestling Headquarters",
-      },
     ],
     // Rick Williams stays in Dirty Dozen; his RankAward still links to this event.
     cohortLabel: "Coral Belt Ceremony — Apr 10, 2026",
-    cohortKeys: ["erik-paulson", "casey-olsen", "rick-minter", "chris-posnik"],
+    cohortKeys: ["erik-paulson", "casey-olsen", "rick-minter"],
     cohortSortOrder: 1,
     media: [
       {
@@ -1422,6 +1454,103 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------
+  // 2b. Identity merge corrections (SESSION_0433 / SESSION_0430).
+  //     Must run AFTER passportIdByKey + nodeIdByKey are populated and
+  //     BEFORE edges (section 3) are created so stale nodes are gone.
+  // ---------------------------------------------------------------------
+
+  // C1: Remove stale accountless "Brian Scott" Passport created by old seed
+  // versions before SOT-ADR D1 distinguished user-linked from accountless
+  // passports. Brian's canonical Passport is user-linked (userId=owner.id).
+  // No-op if already cleaned up or on a fresh DB.
+  {
+    const stalePassport = await db.passport.findFirst({
+      where: { displayName: "Brian Scott", userId: null },
+      select: { id: true },
+    })
+    if (stalePassport) {
+      const staleNode = await db.lineageNode.findFirst({
+        where: { passportId: stalePassport.id },
+        select: { id: true },
+      })
+      if (staleNode) {
+        const staleMembers = await db.lineageTreeMember.findMany({
+          where: { nodeId: staleNode.id },
+          select: { id: true, treeId: true },
+        })
+        for (const sm of staleMembers) {
+          const canonical = await db.lineageTreeMember.findUnique({
+            where: { treeId_nodeId: { treeId: sm.treeId, nodeId: brianNode.id } },
+            select: { id: true },
+          })
+          if (canonical) {
+            await db.lineageTreeMember.delete({ where: { id: sm.id } })
+          } else {
+            await db.lineageTreeMember.update({
+              where: { id: sm.id },
+              data: { nodeId: brianNode.id },
+            })
+          }
+        }
+        await db.lineageRelationship.deleteMany({
+          where: { OR: [{ fromNodeId: staleNode.id }, { toNodeId: staleNode.id }] },
+        })
+        await db.lineageNode.delete({ where: { id: staleNode.id } })
+      }
+      await db.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
+      await db.passport.delete({ where: { id: stalePassport.id } })
+      console.log("   C1: Deleted stale accountless 'Brian Scott' Passport + node")
+    }
+  }
+
+  // C2: Remove stale "Chris Posnik" Passport and merge into canonical "poznik"
+  // (Christopher Alexander Poznik, BK5). SESSION_0430 prod correction.
+  // Tree memberships that referenced chris-posnik are re-pointed to poznik or
+  // dropped if poznik already occupies that tree slot. No-op if cleaned up.
+  {
+    const stalePassport = await db.passport.findFirst({
+      where: { displayName: "Chris Posnik", userId: null },
+      select: { id: true },
+    })
+    if (stalePassport) {
+      const staleNode = await db.lineageNode.findFirst({
+        where: { passportId: stalePassport.id },
+        select: { id: true },
+      })
+      const poznikNodeId = nodeIdByKey.get("poznik")
+      if (staleNode) {
+        const staleMembers = await db.lineageTreeMember.findMany({
+          where: { nodeId: staleNode.id },
+          select: { id: true, treeId: true },
+        })
+        for (const sm of staleMembers) {
+          const canonical = poznikNodeId
+            ? await db.lineageTreeMember.findUnique({
+                where: { treeId_nodeId: { treeId: sm.treeId, nodeId: poznikNodeId } },
+                select: { id: true },
+              })
+            : null
+          if (canonical || !poznikNodeId) {
+            await db.lineageTreeMember.delete({ where: { id: sm.id } })
+          } else {
+            await db.lineageTreeMember.update({
+              where: { id: sm.id },
+              data: { nodeId: poznikNodeId },
+            })
+          }
+        }
+        await db.lineageRelationship.deleteMany({
+          where: { OR: [{ fromNodeId: staleNode.id }, { toNodeId: staleNode.id }] },
+        })
+        await db.lineageNode.delete({ where: { id: staleNode.id } })
+      }
+      await db.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
+      await db.passport.delete({ where: { id: stalePassport.id } })
+      console.log("   C2: Deleted stale 'Chris Posnik' Passport + node; merged into poznik")
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // 3. INSTRUCTOR_STUDENT relationships.
   // ---------------------------------------------------------------------
   for (const e of EDGE_SEEDS) {
@@ -1469,6 +1598,63 @@ async function main() {
           await db.rankAward.update({ where: { id: staleCoral.id }, data: { rankId: bk6.id } })
         }
         console.log("   Haueter correction: stale coral award repointed to BK6")
+      }
+    }
+  }
+
+  // SESSION_0433 B1: Bill Hosken — repoint stale CB7 award to BK5. SESSION_0430 prod
+  // correction (erroneous Coral Belt; correct rank is Black Belt 5th Degree).
+  // No-op on a fresh DB (RANK_AWARD_SEEDS below creates BK5 directly).
+  {
+    const hoskenId = passportIdByKey.get("bill-hosken")
+    const bk5 = await db.rank.findFirst({
+      where: { shortName: "BK5", rankSystem: { discipline: { code: "bjj" } } },
+      select: { id: true },
+    })
+    if (hoskenId && bk5) {
+      const staleCoral = await db.rankAward.findFirst({
+        where: {
+          passportId: hoskenId,
+          rank: { shortName: { in: ["CB7", "CB8"] }, rankSystem: { discipline: { code: "bjj" } } },
+        },
+        select: { id: true },
+      })
+      if (staleCoral) {
+        const existingBk5 = await db.rankAward.findFirst({
+          where: { passportId: hoskenId, rankId: bk5.id },
+          select: { id: true },
+        })
+        if (existingBk5) {
+          await db.rankAward.delete({ where: { id: staleCoral.id } })
+        } else {
+          await db.rankAward.update({ where: { id: staleCoral.id }, data: { rankId: bk5.id } })
+        }
+        console.log("   Hosken correction: stale coral award repointed to BK5")
+      }
+    }
+  }
+
+  // SESSION_0433 B2: Jerry Smith — delete stale CB7 award. SESSION_0430 prod correction.
+  // The correct rank (BK0 base Black Belt) is seeded by RANK_AWARD_SEEDS below.
+  // LineageTreeMember.rankAwardId is explicitly nulled before delete (onDelete: SetNull
+  // handles it, but explicit is safer). No-op on a fresh DB.
+  {
+    const jerryId = passportIdByKey.get("jerry-smith")
+    if (jerryId) {
+      const staleCoral = await db.rankAward.findFirst({
+        where: {
+          passportId: jerryId,
+          rank: { shortName: { in: ["CB7", "CB8"] }, rankSystem: { discipline: { code: "bjj" } } },
+        },
+        select: { id: true },
+      })
+      if (staleCoral) {
+        await db.lineageTreeMember.updateMany({
+          where: { rankAwardId: staleCoral.id },
+          data: { rankAwardId: null },
+        })
+        await db.rankAward.delete({ where: { id: staleCoral.id } })
+        console.log("   Jerry Smith correction: stale CB7 award deleted")
       }
     }
   }
@@ -1548,6 +1734,7 @@ async function main() {
       slug: "rigan-machado-bjj-lineage",
       name: "Rigan Machado BJJ Lineage",
       disciplineCode: "bjj",
+      // @updated SESSION_0433 — chris-posnik removed, poznik + rikki-rockett added (SESSION_0430 B3/C2).
       memberKeys: [
         "carlos-gracie-sr",
         "rorion-gracie", // SESSION_0385: secondary instructor of rigan (Red Belt promotion 2026)
@@ -1558,8 +1745,9 @@ async function main() {
         "erik-paulson",
         "casey-olsen",
         "rick-minter",
-        "chris-posnik",
+        "poznik", // SESSION_0433: Christopher Alexander Poznik (BK5), replaces chris-posnik
         "renato-magno",
+        "rikki-rockett", // SESSION_0433: Rikki Rockett (BK4, under Renato Magno)
         "david-meyer",
         "chris-haueter",
         "john-will",
@@ -1578,8 +1766,9 @@ async function main() {
         "erik-paulson": "rigan-machado",
         "casey-olsen": "rigan-machado",
         "rick-minter": "rigan-machado",
-        "chris-posnik": "rigan-machado",
+        poznik: "rigan-machado",
         "renato-magno": "rigan-machado",
+        "rikki-rockett": "renato-magno",
         "david-meyer": "rigan-machado",
         "chris-haueter": "rigan-machado",
         "john-will": "rigan-machado",
@@ -1598,13 +1787,18 @@ async function main() {
         "erik-paulson": { disciplineCode: "bjj", rankShortName: "CB7" },
         "casey-olsen": { disciplineCode: "bjj", rankShortName: "CB7" },
         "rick-minter": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "chris-posnik": { disciplineCode: "bjj", rankShortName: "CB7" },
+        // @updated SESSION_0433 — Poznik is BK5, not CB7 (SESSION_0430 C2).
+        poznik: { disciplineCode: "bjj", rankShortName: "BK5" },
         "renato-magno": { disciplineCode: "bjj", rankShortName: "CB7" },
+        // @added SESSION_0433 — Rikki Rockett BK4 (SESSION_0430 B3).
+        "rikki-rockett": { disciplineCode: "bjj", rankShortName: "BK4" },
         "david-meyer": { disciplineCode: "bjj", rankShortName: "CB7" },
         "chris-haueter": { disciplineCode: "bjj", rankShortName: "BK6" },
         "john-will": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "bill-hosken": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "jerry-smith": { disciplineCode: "bjj", rankShortName: "CB7" },
+        // @updated SESSION_0433 — Hosken is BK5 (SESSION_0430 B1).
+        "bill-hosken": { disciplineCode: "bjj", rankShortName: "BK5" },
+        // @updated SESSION_0433 — Jerry Smith is BK0 base Black Belt (SESSION_0430 B2).
+        "jerry-smith": { disciplineCode: "bjj", rankShortName: "BK0" },
         "brian-truelson": { disciplineCode: "bjj", rankShortName: "BK1" },
         OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
         // @added SESSION_0386 — colors rorion's secondary slink (R9 red belt).
@@ -1614,6 +1808,7 @@ async function main() {
       // SESSION_0316: Carlos Sr & Jr are historical roots — not claimable.
       // Everyone else (Rigan, the Dozen, Truelson, OWNER) is claimable.
       // SESSION_0385: rorion-gracie and tim-wolchek added as claimable real persons.
+      // SESSION_0433: chris-posnik removed; poznik + rikki-rockett added as claimable.
       isClaimable: {
         "carlos-gracie-sr": false,
         "carlos-gracie-jr": false,
@@ -1624,8 +1819,9 @@ async function main() {
         "erik-paulson": true,
         "casey-olsen": true,
         "rick-minter": true,
-        "chris-posnik": true,
+        poznik: true,
         "renato-magno": true,
+        "rikki-rockett": true,
         "david-meyer": true,
         "chris-haueter": true,
         "john-will": true,
