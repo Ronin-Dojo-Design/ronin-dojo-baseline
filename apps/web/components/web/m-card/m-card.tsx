@@ -22,9 +22,9 @@ import { cx } from "~/lib/utils"
  *
  * Spec: `docs/knowledge/wiki/files/m-card-pattern.md`.
  *
- * Slice 1 (this file) implements `kind="roster"` fully. The other kinds
- * (`rank` / `task` / `loop` / `generic`) are minimal placeholders so the union type
- * compiles — see the per-kind TODOs referencing the spec.
+ * Slice 1 implemented `kind="roster"`; slice 2 adds `kind="rank"` (belt group /
+ * curriculum). The remaining kinds (`task` / `loop` / `generic`) are minimal
+ * placeholders so the union type compiles — see the per-kind TODOs referencing the spec.
  */
 
 export type MCardKind = "roster" | "rank" | "task" | "loop" | "generic"
@@ -66,7 +66,7 @@ export type MCardData = {
     /** Extra presentation badges (e.g. paid tier). */
     badges?: MCardBadge[]
   }
-  // TODO(PWCC-002 slice ≥4): belt group / curriculum. See m-card-pattern.md kind=rank.
+  // Belt group / curriculum (PWCC-002 slice 2). See m-card-pattern.md kind=rank.
   rank: {
     id: string
     name: string
@@ -276,6 +276,146 @@ function RosterCard({
   )
 }
 
+function RankCard({
+  data,
+  href,
+  density = "comfortable",
+  selected,
+  actions,
+}: {
+  data: MCardData["rank"]
+  href?: string
+  density?: "comfortable" | "compact"
+  selected?: boolean
+  actions?: ReactNode
+}) {
+  const colorHex = data.colorHex ?? null
+  const hasRankTint = colorHex != null
+  const isCompact = density === "compact"
+  const items = data.items ?? []
+  const eyebrow = data.disciplineCode ?? "Rank"
+
+  return (
+    <Card
+      hover={false}
+      isHighlighted={selected}
+      data-testid="m-card"
+      data-kind="rank"
+      style={rankColorStyle(colorHex)}
+      className={cx(
+        "group overflow-hidden ring-1 ring-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:ring-primary/40",
+        isCompact && "gap-3 p-4",
+      )}
+    >
+      {/* accent tint rail — belt color when present, brand accent otherwise (token-only) */}
+      <span
+        aria-hidden
+        className={cx(
+          "absolute inset-x-0 top-0 h-1.5",
+          hasRankTint ? "bg-(--rank-color)" : "bg-primary",
+        )}
+      />
+      <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-primary/20 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+
+      <div className="relative flex items-start gap-4">
+        {/* belt swatch — data-driven tint; brand accent fallback (never hardcoded) */}
+        <span
+          aria-hidden
+          data-testid="m-card-rank-swatch"
+          className={cx(
+            "mt-0.5 size-12 shrink-0 rounded-2xl shadow-sm ring-2",
+            hasRankTint
+              ? "bg-(--rank-color)/15 ring-(--rank-color)"
+              : "bg-primary/10 ring-border group-hover:ring-primary/50",
+          )}
+        >
+          <span
+            className={cx(
+              "block size-full rounded-2xl",
+              hasRankTint ? "bg-(--rank-color)" : "bg-primary",
+              "opacity-80",
+            )}
+          />
+        </span>
+
+        <div className="min-w-0 flex-1 pt-0.5">
+          <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wide">
+            {eyebrow}
+          </span>
+
+          {href ? (
+            <Link href={href} className="outline-none">
+              <h3 className="line-clamp-2 text-balance text-lg font-bold leading-tight tracking-tight text-foreground transition-colors group-hover:text-primary">
+                {data.name}
+              </h3>
+            </Link>
+          ) : (
+            <h3 className="line-clamp-2 text-balance text-lg font-bold leading-tight tracking-tight text-foreground">
+              {data.name}
+            </h3>
+          )}
+
+          {data.count != null && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {data.count} {data.count === 1 ? "member" : "members"}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {items.length > 0 && (
+        <ul className="relative flex w-full flex-col gap-1.5" data-testid="m-card-rank-checklist">
+          {items.map(item => (
+            <li key={item.id} className="flex items-center gap-2 text-sm text-foreground">
+              <span
+                aria-hidden
+                className={cx(
+                  "flex size-4 shrink-0 items-center justify-center rounded border",
+                  item.done
+                    ? hasRankTint
+                      ? "border-(--rank-color) bg-(--rank-color)/20 text-(--rank-color)"
+                      : "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-transparent text-transparent",
+                )}
+              >
+                {item.done ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                ) : null}
+              </span>
+              <span className={cx("truncate", item.done && "text-muted-foreground line-through")}>
+                {item.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {(href || actions) && (
+        <div className="relative mt-auto flex items-center justify-between border-t border-border/60 pt-3.5">
+          {href ? (
+            <Button size="sm" variant="secondary" render={<Link href={href} />}>
+              View rank
+            </Button>
+          ) : (
+            <span />
+          )}
+          {actions}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 /**
  * Placeholder for `kind` paths not yet built this slice. Renders a minimal Dirstarter card
  * so the union type compiles and a surface that wires an un-built kind fails visibly, not silently.
@@ -297,7 +437,7 @@ function PlaceholderCard({ kind, title }: { kind: MCardKind; title: string }) {
 
 /**
  * The one card. Renders a single skeleton per kind; only the binding differs.
- * Slice 1: `roster` is fully implemented; the rest are placeholders (see TODOs above).
+ * `roster` (slice 1) + `rank` (slice 2) are implemented; the rest are placeholders.
  */
 export function MCard<K extends MCardKind>(props: MCardProps<K>) {
   if (props.kind === "roster") {
@@ -313,7 +453,20 @@ export function MCard<K extends MCardKind>(props: MCardProps<K>) {
     )
   }
 
-  // TODO(PWCC-002 slices ≥4/5): rank / task / loop / generic. See m-card-pattern.md.
+  if (props.kind === "rank") {
+    const data = props.data as MCardData["rank"]
+    return (
+      <RankCard
+        data={data}
+        href={props.href}
+        density={props.density}
+        selected={props.selected}
+        actions={props.actions}
+      />
+    )
+  }
+
+  // TODO(PWCC-002 slices ≥5): task / loop / generic. See m-card-pattern.md.
   const data = props.data as { title?: string; name?: string }
   return <PlaceholderCard kind={props.kind} title={data.title ?? data.name ?? "Untitled"} />
 }
