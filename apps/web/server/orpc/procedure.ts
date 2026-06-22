@@ -1,6 +1,6 @@
 import { ORPCError, os } from "@orpc/server"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import type { InitialContext } from "~/server/orpc/context"
 import { can } from "~/server/orpc/permissions"
 import { consumeRateLimit, type RateLimitConfig } from "~/server/orpc/rate-limit"
@@ -37,14 +37,15 @@ const withSession = base.middleware(async ({ next, context }) => {
 })
 
 /**
- * Ronin delta (SOT-ADR D3 hard gate — brand scope is mandatory): resolve the
- * request brand server-side, mirroring `lib/safe-actions.ts`. The middleware
- * `x-brand` header is trusted (proxy.ts overwrites client-supplied values);
- * an in-process transport (rsc) may pre-inject `brand` to skip re-resolution.
- * Clients can never choose a brand.
+ * Ronin delta (SOT-ADR D3 hard gate — brand scope is mandatory): the request
+ * brand is resolved server-side, mirroring `lib/safe-actions.ts`. Single-brand
+ * collapse (ADR 0034): every request is `Brand.BBL`; an in-process transport
+ * (rsc) may still pre-inject `brand` via `context.brand`. Clients can never
+ * choose a brand. (`brand: Brand.BBL` filters + the `Brand` enum stay until the
+ * Stage 2 schema drop.)
  */
 const withBrand = base.middleware(async ({ next, context }) => {
-  const brand = context.brand ?? (await getRequestBrand())
+  const brand = context.brand ?? Brand.BBL
   return next({ context: { brand } })
 })
 

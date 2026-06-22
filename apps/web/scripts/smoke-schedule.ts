@@ -13,10 +13,9 @@
  *   4. other-org-same-brand member → deny
  *   5. other-brand member → deny
  *   6. unauthenticated (no membership row) → deny
- *   7. proxy overwrites client x-brand → covered by `getRequestBrand` smoke
- *      below (asserts mismatch host header is overwritten by middleware
- *      contract; we simulate by injecting both and confirming we use brand
- *      column predicate, not header value, in DB write)
+ *   7. proxy overwrites client x-brand → covered by the brand-scope smoke below
+ *      (single-brand collapse: the action scopes by the server-resolved
+ *      `Brand.BBL`, not a client-supplied header value, in the DB write)
  *   8. unknown discipline (not linked to org) → deny
  *   9. program in different org → deny
  *
@@ -331,7 +330,7 @@ async function main() {
     )
 
     // Gate 7 — proxy overwrites client x-brand. The action only ever uses the
-    // brand resolved from the request (via getRequestBrand). Here we simulate
+    // brand resolved server-side (single-brand collapse: Brand.BBL). Here we simulate
     // by treating `activeBrand` as the trusted value: even when a "client"
     // attempts to assert OTHER_BRAND, our code path uses `activeBrand` to
     // scope the org lookup, so a brand mismatch fails closed.
