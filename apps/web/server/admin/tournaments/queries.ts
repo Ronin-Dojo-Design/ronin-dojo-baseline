@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type {
   RuleSetsTableSchema,
   TournamentRolesTableSchema,
@@ -29,7 +28,6 @@ export const findTournaments = async (
   where?: Prisma.TournamentWhereInput,
 ) => {
   const { name, sort, page, perPage, from, to, operator, status } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -44,7 +42,7 @@ export const findTournaments = async (
   ]
 
   const whereQuery: Prisma.TournamentWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -76,10 +74,8 @@ export const findTournaments = async (
 }
 
 export const findTournamentById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.tournament.findUnique({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       host: { select: { id: true, name: true } },
       disciplines: {
@@ -131,11 +127,9 @@ export const findTournamentBySlug = async (slug: string, brand: string) => {
 // -----------------------------------------------------------------------------
 
 export const findTournamentRoles = async () => {
-  const brand = await getRequestBrand()
-
   return db.tournamentRole.findMany({
     where: {
-      OR: [{ brand }, { brand: null, isSystem: true }],
+      OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
     },
     orderBy: [{ isSystem: "desc" }, { name: "asc" }],
   })
@@ -143,7 +137,6 @@ export const findTournamentRoles = async () => {
 
 export const findTournamentRolesPaginated = async (search: TournamentRolesTableSchema) => {
   const { name, sort, page, perPage, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -157,7 +150,7 @@ export const findTournamentRolesPaginated = async (search: TournamentRolesTableS
   ]
 
   const whereQuery: Prisma.TournamentRoleWhereInput = {
-    OR: [{ brand }, { brand: null, isSystem: true }],
+    OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -287,11 +280,9 @@ export const findWeighInRecordsByTournament = async (tournamentId: string) => {
 // -----------------------------------------------------------------------------
 
 export const findRuleSets = async () => {
-  const brand = await getRequestBrand()
-
   return db.ruleSet.findMany({
     where: {
-      OR: [{ brand }, { brand: null, isSystem: true }],
+      OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
     },
     include: {
       discipline: { select: { id: true, name: true } },
@@ -303,7 +294,6 @@ export const findRuleSets = async () => {
 
 export const findRuleSetsPaginated = async (search: RuleSetsTableSchema) => {
   const { name, sort, page, perPage, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -317,7 +307,7 @@ export const findRuleSetsPaginated = async (search: RuleSetsTableSchema) => {
   ]
 
   const whereQuery: Prisma.RuleSetWhereInput = {
-    OR: [{ brand }, { brand: null, isSystem: true }],
+    OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 

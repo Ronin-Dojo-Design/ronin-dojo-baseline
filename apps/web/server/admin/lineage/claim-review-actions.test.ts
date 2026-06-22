@@ -27,9 +27,6 @@ mock.module("next/server", () => ({
 }))
 
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
-mock.module("~/lib/brand-context", () => ({
-  getRequestBrand: () => Promise.resolve(TEST_BRAND),
-}))
 
 const mockSession: { user: { id: string; role: string } } | null = null
 mock.module("~/lib/auth", () => ({

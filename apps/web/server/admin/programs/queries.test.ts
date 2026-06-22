@@ -1,8 +1,8 @@
 /**
  * SESSION_0140 TASK_05 — Integration test for findPrograms brand filtering.
  *
- * Proves that `findPrograms` calls `getRequestBrand()` and forwards
- * the brand into the Prisma `where` clause.
+ * Proves that `findPrograms` inlines the single-brand `Brand.BBL` literal
+ * into the Prisma `where` clause (post brand-harness de-thread, Stage 1).
  *
  * Run: cd apps/web && bun test server/admin/programs/queries.test.ts
  */
@@ -30,10 +30,6 @@ describe("findPrograms", () => {
       capturedFindManyArgs = undefined
       capturedCountArgs = undefined
 
-      mock.module("~/lib/brand-context", () => ({
-        getRequestBrand: () => Promise.resolve("BASELINE_MARTIAL_ARTS"),
-      }))
-
       mock.module("~/services/db", () => ({
         db: {
           $transaction: async (queries: Promise<unknown>[]) => {
@@ -53,18 +49,18 @@ describe("findPrograms", () => {
       }))
     })
 
-    it("passes brand from getRequestBrand into Prisma where clause", async () => {
+    it("passes the single-brand BBL literal into Prisma where clause", async () => {
       const { findPrograms } = await import("./queries")
 
       await findPrograms(defaultSearch as any)
 
       expect(capturedFindManyArgs).toBeDefined()
       const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
+      expect(findManyWhere.brand).toBe("BBL")
 
       expect(capturedCountArgs).toBeDefined()
       const countWhere = (capturedCountArgs as any).where
-      expect(countWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
+      expect(countWhere.brand).toBe("BBL")
     })
 
     it("merges brand filter with name search filter", async () => {
@@ -74,7 +70,7 @@ describe("findPrograms", () => {
       await findPrograms(searchWithName as any)
 
       const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
+      expect(findManyWhere.brand).toBe("BBL")
       expect(findManyWhere.AND).toBeDefined()
       expect(findManyWhere.AND.length).toBeGreaterThan(0)
     })
@@ -86,7 +82,7 @@ describe("findPrograms", () => {
       await findPrograms(searchWithStatus as any)
 
       const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
+      expect(findManyWhere.brand).toBe("BBL")
       expect(findManyWhere.AND).toBeDefined()
     })
   })

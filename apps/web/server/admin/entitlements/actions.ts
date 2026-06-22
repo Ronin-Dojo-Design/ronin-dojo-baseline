@@ -2,7 +2,7 @@
 
 import { after } from "next/server"
 import { z } from "zod"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import {
   getLineageCompEntitlementKeys,
   lineageCompGrantSpecSchema,
@@ -17,8 +17,6 @@ import { grantComp, revokeComp } from "~/server/entitlements/comp-grants"
 export const upsertEntitlement = adminActionClient
   .inputSchema(entitlementSchema)
   .action(async ({ parsedInput: { id, ...input }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const entitlement = id
       ? await db.entitlement.update({
           where: { id },
@@ -30,7 +28,7 @@ export const upsertEntitlement = adminActionClient
         })
       : await db.entitlement.create({
           data: {
-            brand,
+            brand: Brand.BBL,
             key: input.key,
             name: input.name,
             description: input.description,
@@ -50,10 +48,8 @@ export const upsertEntitlement = adminActionClient
 export const deleteEntitlements = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     await db.entitlement.deleteMany({
-      where: { id: { in: ids }, brand },
+      where: { id: { in: ids }, brand: Brand.BBL },
     })
 
     revalidate({

@@ -1,7 +1,7 @@
 "use server"
 
 import { after } from "next/server"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
 import { subscriptionTierSchema } from "~/server/admin/subscription-tiers/schema"
@@ -9,8 +9,6 @@ import { subscriptionTierSchema } from "~/server/admin/subscription-tiers/schema
 export const upsertSubscriptionTier = adminActionClient
   .inputSchema(subscriptionTierSchema)
   .action(async ({ parsedInput: { id, ...input }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const tier = id
       ? await db.subscriptionTier.update({
           where: { id },
@@ -24,7 +22,7 @@ export const upsertSubscriptionTier = adminActionClient
         })
       : await db.subscriptionTier.create({
           data: {
-            brand,
+            brand: Brand.BBL,
             code: input.code,
             name: input.name,
             description: input.description,
@@ -46,10 +44,8 @@ export const upsertSubscriptionTier = adminActionClient
 export const deleteSubscriptionTiers = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     await db.subscriptionTier.deleteMany({
-      where: { id: { in: ids }, brand },
+      where: { id: { in: ids }, brand: Brand.BBL },
     })
 
     revalidate({

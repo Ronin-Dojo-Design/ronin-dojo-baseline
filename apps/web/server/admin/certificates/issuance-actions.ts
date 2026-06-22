@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto"
 import { after } from "next/server"
 import { z } from "zod/v4"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 
 const issueCertificateSchema = z.object({
@@ -29,12 +29,11 @@ export const issueCertificate = adminActionClient
     const { certificateTemplateId, userId, certificationId, expiresAt } = parsedInput
 
     // Brand validation: ensure template belongs to admin's current brand
-    const brand = await getRequestBrand()
     const template = await db.certificateTemplate.findUnique({
       where: { id: certificateTemplateId },
       select: { brand: true },
     })
-    if (!template || template.brand !== brand) {
+    if (!template || template.brand !== Brand.BBL) {
       throw new Error("Certificate template not found or does not belong to this brand")
     }
 

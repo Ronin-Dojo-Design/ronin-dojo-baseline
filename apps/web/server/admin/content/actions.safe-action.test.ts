@@ -3,12 +3,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+// Single-brand collapse (brand-prune Stage 1): content media actions inline the BBL literal,
+// so fixtures must be created on BBL to be reachable by the brand-scoped atom lookups.
+installSafeActionMocks({ brand: "BBL" })
 
 import { MediaType } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0227-content-${Date.now()}`
 
 let adminUserId = ""

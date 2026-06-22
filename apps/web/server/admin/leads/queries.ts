@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { LeadsTableSchema } from "~/server/admin/leads/schema"
 import { leadFollowUpPayload, leadPayload } from "~/server/web/lead/payloads"
 import { db } from "~/services/db"
@@ -12,7 +11,6 @@ import { db } from "~/services/db"
 // ---------------------------------------------------------------------------
 
 export const findLeads = async (search: LeadsTableSchema, where?: Prisma.LeadWhereInput) => {
-  const brand = await getRequestBrand()
   const { name, sort, page, perPage, from, to, operator, status, source, organizationId } = search
 
   const offset = (page - 1) * perPage
@@ -46,7 +44,7 @@ export const findLeads = async (search: LeadsTableSchema, where?: Prisma.LeadWhe
   ]
 
   const whereQuery: Prisma.LeadWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -79,10 +77,8 @@ export type LeadRow = FindLeadsResult["leads"][number]
 // ---------------------------------------------------------------------------
 
 export const findLeadById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.lead.findFirst({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     select: {
       ...leadPayload,
       organization: { select: { id: true, name: true, slug: true } },

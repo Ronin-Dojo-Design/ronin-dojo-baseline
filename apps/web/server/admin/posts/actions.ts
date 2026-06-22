@@ -1,7 +1,7 @@
 "use server"
 
 import { after } from "next/server"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { postSchema } from "~/server/admin/posts/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
@@ -14,7 +14,6 @@ export const upsertPost = adminActionClient
     // Strip content to plain text for search/read-time
     const plainText = input.content.replace(/[#*_~`>[\]()!-]/g, "").trim()
     const toolIds = tools?.map(id => ({ id }))
-    const brand = await getRequestBrand()
 
     const post = id
       ? await db.post.update({
@@ -32,7 +31,7 @@ export const upsertPost = adminActionClient
             slug: input.slug || "",
             plainText,
             authorId: user.id,
-            brand,
+            brand: Brand.BBL,
             tools: { connect: toolIds },
           },
         })

@@ -3,12 +3,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+// Single-brand collapse (brand-prune Stage 1): the admin content query inlines the BBL
+// literal, so the round-trip fixture variant must be on BBL to be reachable.
+installSafeActionMocks({ brand: "BBL" })
 
 import { findContentAtomById } from "~/server/admin/content/queries"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0230-roundtrip-${Date.now()}`
 
 let adminUserId = ""

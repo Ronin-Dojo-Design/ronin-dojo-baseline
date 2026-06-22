@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { PricingPlansTableSchema } from "~/server/admin/pricing-plans/schema"
 import { db } from "~/services/db"
 
@@ -10,7 +9,6 @@ export const findPricingPlans = async (
   where?: Prisma.PricingPlanWhereInput,
 ) => {
   const { name, page, perPage, sort, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -24,7 +22,7 @@ export const findPricingPlans = async (
   ]
 
   const whereQuery: Prisma.PricingPlanWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -51,10 +49,8 @@ export const findPricingPlans = async (
 }
 
 export const findPricingPlanById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.pricingPlan.findFirst({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       organization: { select: { id: true, name: true } },
       program: { select: { id: true, name: true } },
@@ -66,30 +62,24 @@ export const findPricingPlanById = async (id: string) => {
 }
 
 export const findPricingPlanList = async () => {
-  const brand = await getRequestBrand()
-
   return db.pricingPlan.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 }
 
 export const findOrganizationList = async () => {
-  const brand = await getRequestBrand()
-
   return db.organization.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 }
 
 export const findProgramList = async (organizationId?: string) => {
-  const brand = await getRequestBrand()
-
   return db.program.findMany({
-    where: { brand, ...(organizationId ? { organizationId } : {}) },
+    where: { brand: Brand.BBL, ...(organizationId ? { organizationId } : {}) },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })

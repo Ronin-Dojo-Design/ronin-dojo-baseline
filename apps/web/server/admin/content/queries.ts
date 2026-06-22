@@ -1,13 +1,11 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { ContentAtomsTableSchema } from "~/server/admin/content/schema"
 import { db } from "~/services/db"
 
 export const findContentAtoms = async (search: ContentAtomsTableSchema) => {
   const { title, sort, page, perPage, from, to, operator, status } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -25,7 +23,7 @@ export const findContentAtoms = async (search: ContentAtomsTableSchema) => {
     [operator.toUpperCase()]: expressions.filter(isTruthy),
     // Brand scoping: atoms are visible if they have at least one variant for this brand,
     // or if they were created within the org context of this brand.
-    variants: { some: { brand } },
+    variants: { some: { brand: Brand.BBL } },
   }
 
   const [atoms, total] = await db.$transaction([
@@ -49,10 +47,8 @@ export const findContentAtoms = async (search: ContentAtomsTableSchema) => {
 }
 
 export const findContentAtomById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.contentAtom.findFirst({
-    where: { id, variants: { some: { brand } } },
+    where: { id, variants: { some: { brand: Brand.BBL } } },
     include: {
       discipline: { select: { id: true, name: true } },
       style: { select: { id: true, name: true } },
@@ -109,9 +105,7 @@ export const findStyleOptions = async () => {
 }
 
 export const findContentVariantById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.contentVariant.findFirst({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
   })
 }
