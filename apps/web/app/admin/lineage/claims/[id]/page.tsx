@@ -84,6 +84,34 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
           </dl>
         </Card>
 
+        {/* Claimed Rank */}
+        {claim.claimedRank && (
+          <Card className="p-4">
+            <Heading
+              render={props => <h2 {...props}>{props.children}</h2>}
+              size="h5"
+              className="mb-2"
+            >
+              Claimed Rank
+            </Heading>
+            <div className="flex items-center gap-2 text-sm">
+              {claim.claimedRank.colorHex && (
+                <span
+                  className="inline-block h-4 w-4 rounded-full border"
+                  style={{ backgroundColor: claim.claimedRank.colorHex }}
+                />
+              )}
+              <span className="font-medium">{claim.claimedRank.name}</span>
+              {claim.claimedRank.shortName && (
+                <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
+              )}
+              <span className="text-muted-foreground text-xs">
+                — asserted at claim time; approval will create a verified RankAward
+              </span>
+            </div>
+          </Card>
+        )}
+
         {/* Claimant Note */}
         {claim.claimantNote && (
           <Card className="p-4">

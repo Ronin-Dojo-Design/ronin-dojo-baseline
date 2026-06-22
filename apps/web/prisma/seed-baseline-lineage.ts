@@ -75,6 +75,8 @@ const PLACEHOLDER_USERS: PlaceholderUser[] = [
     name: "Carlos Gracie Jr",
     email: "carlos-gracie-jr@placeholder.lineage",
   },
+  // @added SESSION_0432 — Hélio Gracie node so Rorion Gracie's promoter link resolves.
+  { key: "helio-gracie", name: "Hélio Gracie", email: "helio-gracie@placeholder.lineage" },
   { key: "rorion-gracie", name: "Rorion Gracie", email: "rorion-gracie@placeholder.lineage" },
   { key: "rigan-machado", name: "Rigan Machado", email: "rigan-machado@placeholder.lineage" },
 
@@ -117,6 +119,12 @@ const NODE_SEEDS: LineageNodeSeed[] = [
     userKey: "carlos-gracie-jr",
     slug: "carlos-gracie-jr",
     bio: "Son of Carlos Gracie Sr. Founder of Gracie Barra. 9th Degree Red Belt. Rio de Janeiro, Brazil.",
+  },
+  // @added SESSION_0432 — Hélio Gracie node (promoter for Rorion Gracie's lineage link).
+  {
+    userKey: "helio-gracie",
+    slug: "helio-gracie",
+    bio: "10th Degree Red Belt · Co-founder of Gracie Jiu-Jitsu (with Carlos Gracie Sr) · Rio de Janeiro, Brazil.",
   },
   {
     userKey: "rorion-gracie",
@@ -239,6 +247,13 @@ const EDGE_SEEDS: LineageEdgeSeed[] = [
     fromKey: "carlos-gracie-sr",
     toKey: "carlos-gracie-jr",
     description: "Carlos Gracie Jr trained under his father Carlos Gracie Sr.",
+    isVerified: true,
+  },
+  // @added SESSION_0432 — Hélio Gracie → Rorion Gracie (father→son) so the promoter link resolves.
+  {
+    fromKey: "helio-gracie",
+    toKey: "rorion-gracie",
+    description: "Rorion Gracie is the son of Hélio Gracie; trained in Gracie Jiu-Jitsu under Hélio.",
     isVerified: true,
   },
   {
@@ -434,12 +449,20 @@ const BJJ_RANK_AWARD_SEEDS: RankAwardSeed[] = [
     awardedByKey: "carlos-gracie-sr",
     awardedAt: "2012-01-01",
   },
+  // @added SESSION_0432 — Hélio Gracie 10th Degree Red Belt (root of his lineage branch).
   {
-    // @added SESSION_0386 — gives rorion's secondary slink (rorion → rigan) a belt
-    // color instead of neutral gray. 9th Degree Red Belt · son of Hélio Gracie.
+    userKey: "helio-gracie",
+    rankShortName: "R10",
+    awardedByKey: null,
+    awardedAt: "1960-01-01",
+    notes: "10th Degree Red Belt — co-founder of Gracie Jiu-Jitsu. Approximate date.",
+  },
+  {
+    // @updated SESSION_0432 — awardedByKey now links to helio-gracie (node exists).
+    // Previously null; SESSION_0386 noted "son of Hélio Gracie" in the notes field.
     userKey: "rorion-gracie",
     rankShortName: "R9",
-    awardedByKey: null,
+    awardedByKey: "helio-gracie",
     awardedAt: "2013-01-01",
     notes:
       "9th Degree Red Belt — son of Hélio Gracie. Approximate date; pre-PromotionEvent seed bridge.",

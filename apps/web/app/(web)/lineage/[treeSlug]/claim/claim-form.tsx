@@ -28,23 +28,29 @@ import {
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import type { BjjRankOption } from "~/server/web/lineage/rank-queries"
 import { submitLineageClaimRequest } from "~/server/web/lineage/claim-actions"
 
 /**
  * Client-island lineage claim form.
  *
  * Author: Cody / SESSION_0182 TASK_02.
+ * @updated SESSION_0432 FI-006 — rank picker (optional; stored as pending on claim record).
  */
 
 interface ClaimFormProps {
   treeId: string
   members: Array<{ nodeId: string; displayName: string }>
+  // FI-006: BJJ rank options for the rank picker, fetched server-side.
+  ranks: BjjRankOption[]
 }
 
 const formSchema = z.object({
   nodeId: z.string().min(1, "Select a node to claim"),
   relationship: z.enum(["SELF", "STUDENT_OF", "FAMILY", "ARCHIVIST"]),
   claimantNote: z.string().max(2000).optional(),
+  // FI-006: optional rank assertion. "" = no rank selected (maps to undefined on submit).
+  claimedRankId: z.string().optional(),
   evidence: z
     .array(
       z.object({
@@ -65,7 +71,9 @@ const RELATIONSHIP_OPTIONS = [
   { value: "ARCHIVIST", label: "I'm an archivist with permission" },
 ] as const
 
-export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
+const NO_RANK_VALUE = "__none__"
+
+export function LineageClaimForm({ treeId, members, ranks }: ClaimFormProps) {
   const router = useRouter()
 
   const { execute, isExecuting, result } = useAction(submitLineageClaimRequest, {
@@ -80,6 +88,7 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
       nodeId: "",
       relationship: "SELF",
       claimantNote: "",
+      claimedRankId: "",
       evidence: [],
     },
   })
@@ -103,6 +112,11 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
       nodeId: values.nodeId,
       relationship: values.relationship,
       claimantNote: values.claimantNote || undefined,
+      // FI-006: "" and NO_RANK_VALUE both mean "no rank asserted".
+      claimedRankId:
+        values.claimedRankId && values.claimedRankId !== NO_RANK_VALUE
+          ? values.claimedRankId
+          : undefined,
       evidence: evidence?.length ? evidence : undefined,
     })
   }
@@ -165,6 +179,57 @@ export function LineageClaimForm({ treeId, members }: ClaimFormProps) {
             </FormItem>
           )}
         />
+
+        {/* FI-006: Rank picker — optional assertion stored as pending on the claim record */}
+        {ranks.length > 0 && (
+          <FormField
+            control={form.control}
+            name="claimedRankId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Your current rank (optional)</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value ?? ""}
+                  items={Object.fromEntries([
+                    [NO_RANK_VALUE, "Not specified"],
+                    ...ranks.map(r => [r.id, r.name]),
+                  ])}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your rank" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={NO_RANK_VALUE}>Not specified</SelectItem>
+                    {ranks.map(r => (
+                      <SelectItem key={r.id} value={r.id}>
+                        <span className="flex items-center gap-2">
+                          {r.colorHex && (
+                            <span
+                              className="inline-block h-3 w-3 rounded-full border"
+                              style={{ backgroundColor: r.colorHex }}
+                            />
+                          )}
+                          {r.name}
+                          {r.shortName && (
+                            <span className="text-muted-foreground text-xs">({r.shortName})</span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Shown as pending until a reviewer verifies your claim. Approval creates a
+                  verified rank award on your profile.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Note */}
         <TextAreaField

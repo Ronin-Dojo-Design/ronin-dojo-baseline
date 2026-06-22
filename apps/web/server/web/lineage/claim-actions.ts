@@ -71,13 +71,16 @@ export const submitLineageClaimRequest = userActionClient
       throw new Error(LINEAGE_CLAIM_ERROR.DUPLICATE_CLAIM)
     }
 
-    // 4. Create the claim request with optional evidence.
+    // 4. Create the claim request with optional evidence + optional claimed rank.
     const claim = await db.lineageClaimRequest.create({
       data: {
         treeId: tree.id,
         nodeId: parsedInput.nodeId,
         claimantUserId: user.id,
         claimantNote: parsedInput.claimantNote ?? null,
+        // FI-006: store the rank the claimant asserts (stays PENDING until admin-verify
+        // creates the awarded RankAward). SetNull FK — safe if the Rank is ever deleted.
+        claimedRankId: parsedInput.claimedRankId ?? null,
         ...(parsedInput.evidence?.length
           ? {
               evidence: {
