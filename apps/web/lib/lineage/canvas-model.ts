@@ -54,30 +54,32 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
 }
 
 /**
- * Belt color hex for the member's *shown* rank — the tree-member's selected
- * rank award wins, else the person's latest overall award. Null → no swatch.
+ * Belt color hex for the member's *shown* rank = their highest **awarded** belt
+ * (`rankAwardsEarned[0]`, now ordered by Rank.sortOrder desc). Null → no swatch.
+ *
+ * @param selectedRank DEPRECATED for display (SESSION_0430). `LineageTreeMember.
+ * selectedRankAward` is being repurposed as a *pending claim* (set at registration/
+ * claim, promoted to an awarded RankAward on admin-verify), so it must NOT override
+ * the displayed awarded rank — that decoupling is the whole point. Param kept only
+ * for caller-signature stability; slated for removal with the FK. Display = awarded
+ * truth, full stop (the leak that mis-ranked the founders read off this override).
  */
 export function memberBeltColor(
   node: LineageNodeRow,
-  selectedRank?: SelectedRank | null,
+  _selectedRank?: SelectedRank | null,
 ): string | null {
-  return selectedRank?.colorHex ?? node.passport?.rankAwardsEarned?.[0]?.rank.colorHex ?? null
+  return node.passport?.rankAwardsEarned?.[0]?.rank.colorHex ?? null
 }
 
 /**
- * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's *shown*
- * rank — selected rank award first, else latest overall award. Null → no rank.
+ * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's *shown* rank =
+ * their highest **awarded** belt. Null → no rank. See `memberBeltColor` for why
+ * `selectedRank` no longer participates (SESSION_0430 claim→award decoupling).
  */
 export function memberRankLabel(
   node: LineageNodeRow,
-  selectedRank?: SelectedRank | null,
+  _selectedRank?: SelectedRank | null,
 ): string | null {
-  if (selectedRank) {
-    return `${selectedRank.name}${
-      selectedRank.disciplineName ? ` · ${selectedRank.disciplineName}` : ""
-    }`
-  }
-
   const latestRankAward = node.passport?.rankAwardsEarned?.[0]
   if (!latestRankAward?.rank) return null
 

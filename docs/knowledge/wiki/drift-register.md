@@ -352,3 +352,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   SESSION_0409 proved Phase 0 (the `reconcile-pods.mjs` extractor resolves real dated/attributed ladders from the
   rich Pods CSVs). The promotion ladder maps onto the **existing** `RankAward` schema (no migration for the core
   timeline); secondary fields (residence/galleries/sizes) need a small Phase 1 migration. **Logged in:** SESSION_0409.
+
+### D-029 — Lineage "current rank" had three disagreeing sources of truth (SESSION_0430, resolved)
+
+- **Source:** the profile drawer/canvas/focus card read rank from up to three places that disagreed:
+  free-text `LineageNode.bio` vs structured `Passport.rankAwardsEarned[0]` vs the editorial
+  `LineageTreeMember.selectedRankAward` FK. `[0]` was ordered `awardedAt desc` (Postgres NULLS-FIRST
+  floated null-dated lower belts to the top); `selectedRankAward` overrode `[0]` for the header/canvas
+  with stale importer values; and `Rank.sortOrder` for base "Black Belt" was corrupt (31, above Red 10th).
+- **Impact:** 7 of 10 multi-award founders displayed a lower belt than awarded (e.g. David Meyer "Black
+  Belt 5th" instead of "Coral 7th"); bio and structured rank visibly contradicted.
+- **Status:** **resolved** — [ADR 0035](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md):
+  structured `RankAward` canonical, bio narrative-only; display = highest *awarded* belt by sortOrder;
+  `selectedRankAward` repurposed as a pending claim (not a display override); `sortOrder` corrected.
+  Code + prodsnap data fixed and live-verified. **Follow-up:** re-run the data script on prod Neon.
+  **Logged in:** SESSION_0430.

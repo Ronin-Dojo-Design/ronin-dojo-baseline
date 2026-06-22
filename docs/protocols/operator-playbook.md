@@ -95,5 +95,6 @@ in any order. See `giddy-merge-strategy.md` + `merge-to-main.md`.
   all landed).
 - Brand-harness prune **Stage 1 complete + shipped**; **Stage 2 (schema drop) pending** — gated,
   own session, 4 Phase-0 decisions first (`petey-plan-brand-harness-prune.md`).
-- Open cleanups: retire `feature-intake-ledger` (→ POST_LAUNCH_SOT); the lineage rank/identity
-  wiring drift (SESSION_0430 Track A).
+- `feature-intake-ledger` retired (→ POST_LAUNCH_SOT) — doc + wiki index marked superseded
+  (SESSION_0424); finding-router (closing.md §6.7) now carries the POST_LAUNCH_SOT row (SESSION_0430).
+- Open cleanups: the lineage rank/identity wiring drift (SESSION_0430 Track A).

@@ -70,6 +70,8 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 | FI-003 | Student sign-up under instructor/school + claim-approval flow | feature | P1 | triaged | petey-plan-0419 |
 | FI-004 | Admin email-composer parity + port BBLApp BBLEmail + mobile admin | feature | P1 | triaged | petey-plan-0419 |
 | FI-005 | UI polish: rank-badge overlap · EmailCapture theme default · FormLabel wrap | polish | P2 | triaged | petey-plan-0419 |
+| FI-006 | Claim→award rank lifecycle: registration/claim rank picker → pending claim (`rankId` on claim record) → admin-verify creates `RankAward`; deprecate `LineageTreeMember.selectedRankAward` FK | feature | P1 | triaged | ADR 0035 / SESSION_0430 |
+| FI-007 | Directory-profile form: Cover Photo Url + Video intro show **"Invalid URL" on empty fields** (validation bug); assess cover-photo + avatar wiring correctness end-to-end; update the forms | bug | P1 | triaged | SESSION_0430 (screenshot `_assets/SESSION_0430-directory-profile-form-invalid-url.png`) |
 
 <!-- Append new rows above. Resolve in place: Status → MVP_LIVE (+ link the file-spec) or declined (+ reason). -->
 

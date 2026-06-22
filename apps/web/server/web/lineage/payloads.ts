@@ -129,7 +129,12 @@ export const lineageNodeRowPayload = {
           },
           ...rankAwardPromoterPayload,
         },
-        orderBy: { awardedAt: "desc" as const },
+        // "Current rank" = highest belt by Rank.sortOrder, with awardedAt as the
+        // tiebreak. A plain `awardedAt desc` floats NULL-dated awards to [0]
+        // (Postgres NULLS FIRST in DESC), which under-ranked 7/10 multi-award
+        // founders to a lower belt (SESSION_0430). Matches the correct precedent
+        // at server/web/disciplines/top-ranked-queries.ts.
+        orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
         take: 1,
       },
       // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
@@ -287,7 +292,12 @@ export const lineageNodeProfilePayload = {
             select: { id: true, title: true, slug: true, eventDate: true },
           },
         },
-        orderBy: [{ awardedAt: "desc" as const }],
+        // [0] is read as "current rank" by the drawer (deriveDrawerProfileView) +
+        // canvas-model + students-carousel. Order by highest belt (Rank.sortOrder)
+        // first so a NULL-dated lower-belt award can't float to the top via the
+        // Postgres NULLS-FIRST default (SESSION_0430). The rank-history + progression
+        // panels are order-independent (they self-sort), so this is safe for them.
+        orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
       },
     },
   },

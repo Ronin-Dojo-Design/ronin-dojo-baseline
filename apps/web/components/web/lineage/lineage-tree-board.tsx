@@ -222,7 +222,13 @@ export function LineageTreeBoard({
         }}
         profile={selectedProfile}
         promoterChangeContext={promoterChangeContext}
-        selectedRankAward={selectedMember?.selectedRankAward ?? null}
+        // SESSION_0430: the drawer header/history must reflect awarded truth (highest
+        // RankAward), NOT the LineageTreeMember.selectedRankAward pointer — that FK is
+        // being repurposed as a pending *claim* (set at registration/claim, awarded on
+        // admin-verify) and must not drive display. Pass null so the header defaults to
+        // the highest awarded belt. Admin promoter-change still reads selectedMember
+        // .selectedRankAward directly (above), so the editorial path is unaffected.
+        selectedRankAward={null}
         isClaimable={selectedMember?.isClaimable}
         isTreeClaimable={isTreeClaimable}
         treeSlug={treeSlug}

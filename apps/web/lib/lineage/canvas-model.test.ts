@@ -223,19 +223,21 @@ describe("member view-model derivations", () => {
     assert.equal(memberAvatarSrc(node), null)
   })
 
-  test("memberBeltColor: selectedRank wins, else latest award, else null", () => {
+  test("memberBeltColor: highest awarded belt ([0]); selectedRank is ignored (SESSION_0430)", () => {
     const node = makeRichNode()
-    assert.equal(memberBeltColor(node, { colorHex: "#abcabc" } as never), "#abcabc")
+    // selectedRank no longer overrides — display = awarded truth.
+    assert.equal(memberBeltColor(node, { colorHex: "#abcabc" } as never), "#111111")
     assert.equal(memberBeltColor(node), "#111111")
     node.passport.rankAwardsEarned = []
     assert.equal(memberBeltColor(node), null)
   })
 
-  test("memberRankLabel: selectedRank wins, else latest award with discipline, else null", () => {
+  test("memberRankLabel: highest awarded belt with discipline; selectedRank ignored (SESSION_0430)", () => {
     const node = makeRichNode()
+    // selectedRank no longer wins — always the highest awarded RankAward.
     assert.equal(
       memberRankLabel(node, { name: "Coral Belt", disciplineName: "BJJ" } as never),
-      "Coral Belt · BJJ",
+      "Black Belt · Brazilian Jiu-Jitsu",
     )
     assert.equal(memberRankLabel(node), "Black Belt · Brazilian Jiu-Jitsu")
     node.passport.rankAwardsEarned = []

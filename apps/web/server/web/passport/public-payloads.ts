@@ -24,7 +24,11 @@ export const publicPassportPayload = {
     select: { slug: true, visibility: true, showRanks: true },
   },
   rankAwardsEarned: {
-    orderBy: { awardedAt: "desc" as const },
+    // [0] is the headline "current rank" in projectPublicPassport. Order by highest
+    // belt (Rank.sortOrder) first, awardedAt as tiebreak, so a NULL-dated lower-belt
+    // award can't float to the top (Postgres NULLS-FIRST default). SESSION_0430 —
+    // matches server/web/disciplines/top-ranked-queries.ts.
+    orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
     select: {
       id: true,
       awardedAt: true,

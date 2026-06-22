@@ -243,6 +243,8 @@ A session surfaces different kinds of findings; each has **one** canonical home 
 | SOP/protocol violation + its corrective action | [`failed-steps-log.md`](../protocols/failed-steps-log.md) | `FS-NNNN` |
 | Unclean close / crash / interrupted ritual | [`incidents.md`](../knowledge/wiki/incidents.md) | dated entry |
 | "Smoke pending" / manually-verified boundary the session shifted | [`manual-boundary-registry.md`](../knowledge/wiki/manual-boundary-registry.md) | registry row |
+| A test that broke + how it was fixed | [`test-fail-fix-ledger.md`](../knowledge/wiki/test-fail-fix-ledger.md) | dated entry |
+| Feature status / post-launch running list | [`POST_LAUNCH_SOT.md`](../product/black-belt-legacy/POST_LAUNCH_SOT.md) (supersedes `feature-intake-ledger`) | `FI-NNN` |
 | Architectural decision made/changed/rejected | new/updated ADR in [`architecture/decisions/`](../architecture/decisions/) | `ADR NNNN` |
 
 The SESSION file's `### Findings (severity ≥ medium)` block stays **session-scoped** and should backlink the canonical ledger row — never duplicate a cross-session severity list into the SESSION file (it rots; see `wiki/log.md`).
