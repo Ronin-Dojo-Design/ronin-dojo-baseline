@@ -21,12 +21,12 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 // the mock registrations run before the action module is evaluated.
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 
 const TS = Date.now()
 const PREFIX = `session-0187-safe-action-${TS}`

@@ -3,12 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 import { ToolStatus, ToolTier } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0207-tools-${Date.now()}`
 
 let adminUserId = ""

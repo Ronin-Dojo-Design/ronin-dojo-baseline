@@ -8,7 +8,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
@@ -18,7 +18,7 @@ import { grantUserComp, revokeUserComp } from "~/server/admin/entitlements/actio
 import { grantComp } from "~/server/entitlements/comp-grants"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0346-comp-${Date.now()}`
 const tag = (name: string) => `${PREFIX}-${name}`
 
