@@ -194,23 +194,35 @@ Wiring map already scouted (SESSION_0429 Explore pass) — confirm, then decide 
 
 ### Track B — agent-workflow system-setup orientation (lighter; can be a sub-agent)
 
-Review what's accreted and tell the operator how to run it smoothly:
+The **operator playbook already exists** — `docs/protocols/operator-playbook.md` (drafted late
+SESSION_0429). Track B is now **validate + close gaps**, not create from scratch:
 
-- **Protocols/loops** (`docs/protocols/`): the loop-promotion program is **complete** —
-  THREE_PASS / KISS_DRY_YAGNI / QA_RUNTIME / IDENTIFY_INTENT / HOT_FIX all landed, plus
-  `pr-review-score-fix-loop`, `giddy-merge-strategy`, `merge-to-main`, `review-recommend`,
-  `next-session-loading-order`, `WORKFLOW_5.0`, `reusable-prompts`. Map: which to invoke when.
-- **Ledgers/registers**: `wiring-ledger`, `drift-register`, `incidents`, `failed-steps-log`,
-  `test-fail-fix-ledger`, `feature-intake-ledger` (note: superseded by `POST_LAUNCH_SOT`),
-  `doc-pruning-register`, `cache-risk-register`, `lane-ledger`, `ronin-security-risk-register`.
-  Check the finding-router (closing.md §6.7) still points at the live ones; flag stale/duplicated.
-- **Recommendation:** a one-page "operator playbook" — when to fan out cloud agents vs inline,
-  pause-on-merge cadence, which loop/ledger for which signal, and how SESSION docs + bow-in/out
-  fit the new multi-agent flow.
+- **Validate the playbook** against the live system: confirm the loop→signal and finding→ledger
+  tables are accurate and the inline-vs-cloud-fanout rule matches how sessions actually run.
+- **Finding-router check (closing.md §6.7):** confirm it points at live ledgers and **retire
+  `feature-intake-ledger`** (superseded by `POST_LAUNCH_SOT`) — the playbook flags this as open.
+- **Loops/ledgers are mapped** in the playbook (loop-promotion program complete: THREE_PASS /
+  KISS_DRY_YAGNI / QA_RUNTIME / IDENTIFY_INTENT / HOT_FIX + pr-review-score-fix-loop /
+  giddy-merge-strategy / merge-to-main / review-recommend). Spot-check for stale/duplicated docs.
+
+### Known backlog (not this session unless you choose to)
+
+- **PR #157** — `codex/technique-graph-curriculum` draft: recovered BJJ curriculum + technique-graph
+  feature (~4,200 lines incl. 2 data JSONs). CONFLICTING + uses the deleted `getRequestBrand`;
+  needs a rebase-onto-post-prune-main + de-thread + lockfile re-sync before review. Merge-vs-re-derive
+  decision pending.
+- **Brand-prune Stage 2** (schema drop) — gated, own session, 4 Phase-0 decisions first
+  (`docs/petey-plan-brand-harness-prune.md`).
+
+### Repo state at handoff (SESSION_0429 close)
+
+`main` green + deployed (through #156). Remote branches pruned 94→3 (`main`, `gh-pages`,
+`codex/technique-graph-curriculum`). No open PRs except the #157 draft.
 
 ### Inputs to read (next bow-in)
 
-- `docs/sprints/SESSION_0429.md` (this file) · `docs/reviews/giddy-review-recommend.md`
+- `docs/sprints/SESSION_0429.md` (this file) · `docs/reviews/giddy-review-recommend.md` ·
+  `docs/protocols/operator-playbook.md`
 - `docs/protocols/next-session-loading-order.md` · `docs/rituals/{opening,closing}.md`
 - Track A files above · `docs/petey-plan-brand-harness-prune.md` (Stage 2 still pending, gated)
 
