@@ -223,11 +223,15 @@ but Track A is the priority lane; run it inline, Track B can be a sub-agent.
 | SQL dry-run (ROLLBACK) then COMMIT on prodsnap | ✅ all statements valid; ladder + 5 members + 2 merges verified |
 | DB re-query: all 10 multi-award members | ✅ 7 founders corrected, 3 correctly unchanged |
 | Live browser: David Meyer focus card | ✅ "Coral Belt (Red/Black) - 7th Degree · Brazilian Jiu-Jitsu" |
+| `next build` (push gate) | ✅ green (exit 0, 0 errors, 9.6min compile + full route gen) |
+| Prod Neon apply (dry-run ROLLBACK → COMMIT) | ✅ identical to prodsnap; founders verified live on prod post-commit |
+| `git push origin main` | ✅ `40fc8c7f..bcd486d3` → prod deploy triggered |
 
 ## Open decisions / blockers
 
-- **Prod data follow-up (BLOCKED ON OPERATOR GO):** `scripts/data/SESSION_0430-bbl-rank-corrections.sql`
-  is applied to prodsnap only; needs a separate authorized run against **prod Neon**.
+- **Prod data apply — DONE (SESSION_0430 close):** `scripts/data/SESSION_0430-bbl-rank-corrections.sql`
+  dry-run (ROLLBACK) then COMMIT against **prod Neon**; founders' ranks verified live on prod (Meyer/Bob
+  Bass → Coral 7th, Bill Hosken → 5th, etc.). Code pushed to `main` (`bcd486d3`) → prod deploy triggered.
 - **Hélio Gracie node** not yet in DB → Rorion's promoter is unlinked (TODO noted in the award notes).
 - Latent: real Brian Scott node has 2 `rigan-machado-bjj-lineage` memberships (pre-existing dup, untouched).
 
