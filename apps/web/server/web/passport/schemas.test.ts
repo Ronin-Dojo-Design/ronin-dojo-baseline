@@ -1,3 +1,4 @@
+// @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 import { updateDirectoryProfileSchema, updatePassportSchema } from "./schemas"
 
