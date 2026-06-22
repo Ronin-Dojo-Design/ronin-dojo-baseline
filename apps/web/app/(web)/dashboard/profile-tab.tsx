@@ -2,8 +2,8 @@ import { redirect } from "next/navigation"
 import { Stack } from "~/components/common/stack"
 import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { PassportEditor } from "~/components/web/passport/passport-editor"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { canUploadMedia } from "~/server/web/entitlements/queries"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
@@ -15,7 +15,6 @@ export async function DashboardProfileTab() {
     throw redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
   const [passport, directoryProfile] = await Promise.all([
     getPassportByUserId(session.user.id),
     getDirectoryProfileByUserId(session.user.id),
@@ -27,9 +26,9 @@ export async function DashboardProfileTab() {
   }
 
   const [canUpload, passportAttachments] = await Promise.all([
-    canUploadMedia(session.user.id, brand),
+    canUploadMedia(session.user.id, Brand.BBL),
     getDashboardMediaAttachments({
-      brand,
+      brand: Brand.BBL,
       user: session.user,
       target: { kind: "passport", id: passport.id },
     }),

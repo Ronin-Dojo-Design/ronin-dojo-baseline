@@ -16,8 +16,8 @@ import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getManageableProgramById } from "~/server/web/program/queries"
 import { getSchedulesByProgramPaginated } from "~/server/web/schedule/queries"
 
@@ -37,8 +37,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id: programId } = await params
-  const brand = await getRequestBrand()
-  const program = await getManageableProgramById(brand, programId)
+  const program = await getManageableProgramById(Brand.BBL, programId)
 
   if (!program) return { title: "Schedules" }
   return { title: `${program.name} schedules`, description: "Class schedules for this program." }
@@ -58,8 +57,7 @@ function buildStatusHref(programId: string, status: ScheduleStatus | "") {
 
 export default async function ProgramSchedulesPage({ params, searchParams }: Props) {
   const { id: programId } = await params
-  const brand = await getRequestBrand()
-  const program = await getManageableProgramById(brand, programId)
+  const program = await getManageableProgramById(Brand.BBL, programId)
 
   if (!program) notFound()
 
@@ -72,7 +70,7 @@ export default async function ProgramSchedulesPage({ params, searchParams }: Pro
   const activeStatus: ScheduleStatus | undefined = status ?? undefined
 
   const { items: schedules, total } = await getSchedulesByProgramPaginated(
-    brand,
+    Brand.BBL,
     program.id,
     program.organizationId,
     { status: activeStatus, page, pageSize: PAGE_SIZE },

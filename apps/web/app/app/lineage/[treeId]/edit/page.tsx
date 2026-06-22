@@ -13,7 +13,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getLineageEditorTree } from "~/server/web/lineage/editor-queries"
 
@@ -36,8 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     })
   }
 
-  const brand = await getRequestBrand()
-  const result = await getLineageEditorTree({ brand, treeId, user: session.user })
+  const result = await getLineageEditorTree({ brand: Brand.BBL, treeId, user: session.user })
 
   if (!result) {
     return await getPageMetadata({
@@ -67,8 +66,7 @@ export default async function AppLineageEditorPage({ params }: Props) {
     redirect(`/auth/login?next=/app/lineage/${treeId}/edit`)
   }
 
-  const brand = await getRequestBrand()
-  const result = await getLineageEditorTree({ brand, treeId, user: session.user })
+  const result = await getLineageEditorTree({ brand: Brand.BBL, treeId, user: session.user })
 
   if (!result) {
     notFound()

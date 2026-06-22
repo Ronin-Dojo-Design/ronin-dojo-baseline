@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import type { Thing } from "schema-dts"
+import { Brand } from "~/.generated/prisma/client"
 import { getMetadataConfig } from "~/config/metadata"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getOpenGraphImageUrl, type OpenGraphParams } from "~/lib/opengraph"
 import { getRequestOrigin } from "~/lib/request-url"
 import {
@@ -28,13 +28,12 @@ export const getPageData = async (
   description: string,
   options?: DataOptions,
 ) => {
-  const brand = await getRequestBrand()
   const metadata = { ...options?.metadata, title, description }
   const breadcrumbs = options?.breadcrumbs ?? []
 
   const structuredData = createGraph([
-    getOrganization(brand),
-    getWebSite(brand),
+    getOrganization(Brand.BBL),
+    getWebSite(Brand.BBL),
     generateWebPage(url, title, description),
     generateBreadcrumbs(options?.breadcrumbs ?? []),
     ...(options?.structuredData ?? []),
@@ -54,9 +53,8 @@ type GetPageMetadataProps = {
  * Resolves the request brand internally for og:site_name.
  */
 export const getPageMetadata = async ({ url, ogImage, metadata }: GetPageMetadataProps) => {
-  const brand = await getRequestBrand()
   const origin = await getRequestOrigin()
-  const defaultMetadata = Object.assign({}, getMetadataConfig(brand), metadata)
+  const defaultMetadata = Object.assign({}, getMetadataConfig(Brand.BBL), metadata)
   const { title, description, alternates, openGraph, twitter, ...rest } = defaultMetadata
   const ogTitle = String(title)
   const ogDescription = typeof description === "string" ? description : undefined

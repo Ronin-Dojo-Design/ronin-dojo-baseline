@@ -2,13 +2,12 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
-import { ToolTier } from "~/.generated/prisma/client"
+import { Brand, ToolTier } from "~/.generated/prisma/client"
 import { ProductListSkeleton } from "~/components/web/products/product-list"
 import { ProductQuery } from "~/components/web/products/product-query"
 import { Stats } from "~/components/web/stats"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { isToolPublished } from "~/lib/tools"
 import { toolOnePayload } from "~/server/web/tools/payloads"
@@ -22,8 +21,7 @@ const namespace = "pages.submit"
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
 
   const tool = await db.tool.findFirst({
     where: { slug, tier: { not: ToolTier.Premium } },

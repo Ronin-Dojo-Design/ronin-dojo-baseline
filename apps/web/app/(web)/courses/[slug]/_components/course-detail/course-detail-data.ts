@@ -1,6 +1,5 @@
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getCurrentCourseEnrollmentState } from "~/server/web/course-enrollment/queries"
 import type { CourseMany, CourseOne } from "~/server/web/courses/payloads"
 import {
@@ -62,15 +61,14 @@ export const formatCertificationType = (value: string) => value.replace(/_/g, " 
  * can `notFound()`.
  */
 export async function loadCourseDetail(slug: string): Promise<CourseDetailView | null> {
-  const brand = await getRequestBrand()
-  const course = await findCourseBySlug(slug, brand)
+  const course = await findCourseBySlug(slug, Brand.BBL)
 
   if (!course) return null
 
   const session = await getServerSession()
   const enrollmentState = session?.user
     ? await getCurrentCourseEnrollmentState({
-        brand,
+        brand: Brand.BBL,
         courseId: course.id,
         organizationId: course.organization.id,
         userId: session.user.id,
@@ -78,14 +76,14 @@ export async function loadCourseDetail(slug: string): Promise<CourseDetailView |
     : { enrollment: null, hasActiveMembership: false, hasCourseAccessEntitlement: false }
 
   const [instructors, programData] = await Promise.all([
-    findCourseInstructors(course.organization.id, brand),
-    findProgramSiblingCourses(course.id, brand),
+    findCourseInstructors(course.organization.id, Brand.BBL),
+    findProgramSiblingCourses(course.id, Brand.BBL),
   ])
 
   const programSiblingIds = programData.courses.map(c => c.id)
   const relatedCourses = await findRelatedCourses({
     courseId: course.id,
-    brand,
+    brand: Brand.BBL,
     disciplineId: course.discipline?.id ?? null,
     organizationId: course.organization.id,
     excludeIds: programSiblingIds,
@@ -109,7 +107,7 @@ export async function loadCourseDetail(slug: string): Promise<CourseDetailView |
 
   return {
     course,
-    brand,
+    brand: Brand.BBL,
     isAuthenticated: Boolean(session?.user),
     hasActiveMembership: enrollmentState.hasActiveMembership,
     hasCourseAccessEntitlement: enrollmentState.hasCourseAccessEntitlement,

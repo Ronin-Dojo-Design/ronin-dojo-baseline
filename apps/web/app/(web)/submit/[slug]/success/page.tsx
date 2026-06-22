@@ -4,8 +4,8 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { toolOnePayload } from "~/server/web/tools/payloads"
 import { db } from "~/services/db"
@@ -18,8 +18,7 @@ const namespace = "pages.submit"
 // Get page data
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
 
   const tool = await db.tool.findFirst({
     where: { slug },

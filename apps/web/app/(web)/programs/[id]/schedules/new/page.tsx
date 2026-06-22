@@ -4,8 +4,8 @@ import { CreateScheduleForm } from "~/components/web/schedules/create-schedule-f
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getManageableProgramById } from "~/server/web/program/queries"
 import { db } from "~/services/db"
 
@@ -20,14 +20,13 @@ export const metadata: Metadata = {
 
 export default async function CreateSchedulePage({ params }: Props) {
   const { id: programId } = await params
-  const brand = await getRequestBrand()
 
   const session = await getServerSession()
   if (!session?.user) {
     redirect(`/auth/login?next=/programs/${programId}/schedules/new`)
   }
 
-  const program = await getManageableProgramById(brand, programId)
+  const program = await getManageableProgramById(Brand.BBL, programId)
   if (!program) notFound()
 
   const canEdit = await canEditOrganization(session.user, program.organizationId)

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 import { DirectoryProfile } from "./_components/directory-profile"
 import { loadDirectoryProfile } from "./_components/directory-profile/directory-profile-data"
@@ -10,8 +10,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const profile = await findProfileBySlug({ slug, brand })
+  const profile = await findProfileBySlug({ slug, brand: Brand.BBL })
 
   if (!profile) return { title: "Profile Not Found" }
 

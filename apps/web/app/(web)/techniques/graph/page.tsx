@@ -7,7 +7,7 @@ import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getBjjTechniqueGraph } from "~/server/web/techniques/graph-query"
 
@@ -24,15 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TechniqueGraphPage() {
-  const brand = await getRequestBrand()
-  const graph = await getBjjTechniqueGraph(brand)
+  const graph = await getBjjTechniqueGraph(Brand.BBL)
 
   if (graph.nodes.length === 0) {
     notFound()
   }
 
   return (
-    <BrandTypography brand={brand} className={bblHeadingScopeClass}>
+    <BrandTypography brand={Brand.BBL} className={bblHeadingScopeClass}>
       <Breadcrumbs
         items={[
           { url: "/techniques", title: "Techniques" },

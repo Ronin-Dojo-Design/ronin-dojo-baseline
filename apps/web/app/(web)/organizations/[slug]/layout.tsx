@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { brandThemeCss } from "~/lib/brand-theme"
 import { getOrganizationBySlug } from "~/server/web/organization/queries"
 
@@ -10,8 +10,7 @@ interface Props {
 
 export default async function OrganizationLayout({ params, children }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const org = await getOrganizationBySlug(brand, slug)
+  const org = await getOrganizationBySlug(Brand.BBL, slug)
 
   if (!org) notFound()
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { CreateOrganizationForm } from "~/components/web/organizations/create-organization-form"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getDisciplinesByBrand } from "~/server/web/organization/discipline-queries"
 
 export const metadata: Metadata = {
@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CreateOrganizationPage() {
-  const brand = await getRequestBrand()
-  const disciplines = await getDisciplinesByBrand(brand)
+  const disciplines = await getDisciplinesByBrand(Brand.BBL)
 
   return (
     <>
@@ -23,7 +22,11 @@ export default async function CreateOrganizationPage() {
 
       <Section>
         <Section.Content>
-          <CreateOrganizationForm brand={brand} disciplines={disciplines} className="max-w-lg" />
+          <CreateOrganizationForm
+            brand={Brand.BBL}
+            disciplines={disciplines}
+            className="max-w-lg"
+          />
         </Section.Content>
       </Section>
     </>

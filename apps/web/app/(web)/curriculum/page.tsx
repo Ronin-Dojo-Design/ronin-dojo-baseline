@@ -7,7 +7,7 @@ import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getBjjCurriculumLibrary } from "~/server/web/curriculum/queries"
 
@@ -24,15 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CurriculumPage() {
-  const brand = await getRequestBrand()
-  const levels = await getBjjCurriculumLibrary(brand)
+  const levels = await getBjjCurriculumLibrary(Brand.BBL)
 
   if (levels.length === 0) {
     notFound()
   }
 
   return (
-    <BrandTypography brand={brand} className={bblHeadingScopeClass}>
+    <BrandTypography brand={Brand.BBL} className={bblHeadingScopeClass}>
       <Breadcrumbs items={[{ url: PAGE_URL, title: PAGE_TITLE }]} />
 
       <Intro>

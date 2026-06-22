@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getOrganizationsByBrand } from "~/server/web/organization/queries"
 import { OrganizationsList } from "./_components/organizations-list"
@@ -16,13 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function OrganizationsPage() {
-  const brand = await getRequestBrand()
-  const orgs = await getOrganizationsByBrand(brand)
+  const orgs = await getOrganizationsByBrand(Brand.BBL)
 
   return (
     <OrganizationsList
       orgs={orgs}
-      brand={brand}
+      brand={Brand.BBL}
       url={PAGE_URL}
       title={PAGE_TITLE}
       description={PAGE_DESCRIPTION}

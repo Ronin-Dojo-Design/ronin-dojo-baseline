@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { generateCollectionPage } from "~/lib/structured-data"
 import { DisciplineList } from "./_components/discipline-list"
 import { DisciplineListSkeleton } from "./_components/discipline-list-skeleton"
@@ -14,8 +14,6 @@ export const metadata: Metadata = {
 }
 
 export default async function DisciplinesPage() {
-  const brand = await getRequestBrand()
-
   return (
     <>
       <Breadcrumbs items={[{ url: "/disciplines", title: "Disciplines" }]} />
@@ -28,7 +26,7 @@ export default async function DisciplinesPage() {
       </Intro>
 
       <Suspense fallback={<DisciplineListSkeleton />}>
-        <DisciplineList brand={brand} />
+        <DisciplineList brand={Brand.BBL} />
       </Suspense>
 
       <StructuredData

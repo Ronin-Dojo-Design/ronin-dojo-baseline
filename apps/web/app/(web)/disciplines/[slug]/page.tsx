@@ -11,7 +11,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
 import {
@@ -41,8 +41,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const discipline = await findDisciplineBySlug(brand, slug)
+  const discipline = await findDisciplineBySlug(Brand.BBL, slug)
 
   if (!discipline) return { title: "Discipline Not Found" }
 
@@ -57,15 +56,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DisciplineDetailPage({ params }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const discipline = await findDisciplineBySlug(brand, slug)
+  const discipline = await findDisciplineBySlug(Brand.BBL, slug)
 
   if (!discipline) notFound()
 
   const [videos, membersByRank, relatedDisciplines] = await Promise.all([
     findDisciplineVideos(discipline.id),
     findDisciplineMembersByRank(discipline.id),
-    findRelatedDisciplines({ disciplineId: discipline.id, brand }),
+    findRelatedDisciplines({ disciplineId: discipline.id, brand: Brand.BBL }),
   ])
 
   const hasHistory = Boolean(
@@ -222,28 +220,28 @@ export default async function DisciplineDetailPage({ params }: Props) {
       {/* Courses & Certifications */}
       <Section>
         <Section.Content>
-          <CoursesSection disciplineId={discipline.id} brand={brand} />
+          <CoursesSection disciplineId={discipline.id} brand={Brand.BBL} />
         </Section.Content>
       </Section>
 
       {/* Schools */}
       <Section>
         <Section.Content>
-          <SchoolsSection disciplineId={discipline.id} brand={brand} />
+          <SchoolsSection disciplineId={discipline.id} brand={Brand.BBL} />
         </Section.Content>
       </Section>
 
       {/* Black Belt Rail */}
       <Section>
         <Section.Content>
-          <BlackBeltRail disciplineId={discipline.id} brand={brand} />
+          <BlackBeltRail disciplineId={discipline.id} brand={Brand.BBL} />
         </Section.Content>
       </Section>
 
       {/* Content Atoms */}
       <Section>
         <Section.Content>
-          <ContentAtomsSection disciplineId={discipline.id} brand={brand} />
+          <ContentAtomsSection disciplineId={discipline.id} brand={Brand.BBL} />
         </Section.Content>
       </Section>
 
@@ -268,7 +266,7 @@ export default async function DisciplineDetailPage({ params }: Props) {
       {/* Lineage */}
       <Section>
         <Section.Content className="items-stretch md:col-span-3">
-          <LineageTreeSection brand={brand} disciplineCode={discipline.code} />
+          <LineageTreeSection brand={Brand.BBL} disciplineCode={discipline.code} />
         </Section.Content>
       </Section>
 

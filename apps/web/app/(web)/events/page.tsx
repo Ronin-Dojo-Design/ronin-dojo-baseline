@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { findPublicPromotionEvents } from "~/server/web/promotion-events/queries"
 import { PromotionEventsIndex } from "./_components/promotion-events-index"
@@ -16,12 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PromotionEventsIndexPage() {
-  const brand = await getRequestBrand()
-  const events = await findPublicPromotionEvents(brand)
+  const events = await findPublicPromotionEvents(Brand.BBL)
 
   return (
     <PromotionEventsIndex
-      brand={brand}
+      brand={Brand.BBL}
       events={events}
       pageUrl={PAGE_URL}
       pageTitle={PAGE_TITLE}

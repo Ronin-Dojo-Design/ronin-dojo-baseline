@@ -8,8 +8,8 @@ import { OrgAccessDenied } from "~/components/web/organizations/org-access-denie
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import {
   getOrganizationBySlug,
@@ -34,8 +34,10 @@ const STATUS_VARIANT: Record<string, "primary" | "success" | "warning" | "danger
 
 export default async function OrgMembersPage({ params }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const [org, session] = await Promise.all([getOrganizationBySlug(brand, slug), getServerSession()])
+  const [org, session] = await Promise.all([
+    getOrganizationBySlug(Brand.BBL, slug),
+    getServerSession(),
+  ])
 
   if (!org) notFound()
   if (!session?.user) notFound()

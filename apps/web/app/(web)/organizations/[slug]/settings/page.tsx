@@ -8,8 +8,8 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import { getOrganizationBySlug } from "~/server/web/organization/queries"
 
@@ -46,8 +46,10 @@ const settingsSections = [
 
 export default async function OrgSettingsIndexPage({ params }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const [org, session] = await Promise.all([getOrganizationBySlug(brand, slug), getServerSession()])
+  const [org, session] = await Promise.all([
+    getOrganizationBySlug(Brand.BBL, slug),
+    getServerSession(),
+  ])
 
   if (!org) notFound()
   if (!session?.user) notFound()

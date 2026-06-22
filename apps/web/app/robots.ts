@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next"
+import { Brand } from "~/.generated/prisma/client"
 import { robotsDisallowRoutesForBrand } from "~/config/seo"
-import { getRequestBrand } from "~/lib/brand-context"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const [brand, origin] = await Promise.all([getRequestBrand(), getRequestOrigin()])
-  const disallow = robotsDisallowRoutesForBrand(brand)
+  const origin = await getRequestOrigin()
+  const disallow = robotsDisallowRoutesForBrand(Brand.BBL)
 
   return {
     rules: {

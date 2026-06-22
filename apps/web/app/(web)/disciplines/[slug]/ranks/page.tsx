@@ -6,7 +6,7 @@ import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { mapRankGroupToCard } from "~/lib/m-card/map-rank"
 import { getPageMetadata } from "~/lib/pages"
 import { generateCollectionPage } from "~/lib/structured-data"
@@ -24,8 +24,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const discipline = await findDisciplineBySlug(brand, slug)
+  const discipline = await findDisciplineBySlug(Brand.BBL, slug)
 
   if (!discipline) return { title: "Discipline Not Found" }
 
@@ -49,15 +48,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function DisciplineRanksPage({ params }: Props) {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const discipline = await findDisciplineBySlug(brand, slug)
+  const discipline = await findDisciplineBySlug(Brand.BBL, slug)
 
   if (!discipline) notFound()
 
   const groups = await getRankGroupsForDiscipline({
     disciplineId: discipline.id,
     disciplineCode: discipline.code,
-    brand,
+    brand: Brand.BBL,
   })
 
   return (

@@ -7,8 +7,8 @@ import { H6 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { findEditablePromotionEvents } from "~/server/web/promotion-events/editor-queries"
 
 const formatEventDate = (date: Date) =>
@@ -21,8 +21,7 @@ export async function DashboardEventsTab() {
     redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
-  const events = await findEditablePromotionEvents({ brand, user: session.user })
+  const events = await findEditablePromotionEvents({ brand: Brand.BBL, user: session.user })
 
   if (events.length === 0) {
     return (

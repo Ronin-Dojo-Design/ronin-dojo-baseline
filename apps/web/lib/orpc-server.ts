@@ -1,7 +1,7 @@
 import { createRouterClient, ORPCError } from "@orpc/server"
 import { notFound } from "next/navigation"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { appRouter } from "~/server/router"
 
 /**
@@ -27,13 +27,12 @@ import { appRouter } from "~/server/router"
  */
 export const rsc = async () => {
   const session = await getServerSession()
-  const brand = await getRequestBrand()
 
   return createRouterClient(appRouter, {
     context: {
       user: session?.user ?? null,
       source: "rsc" as const,
-      brand,
+      brand: Brand.BBL,
     },
   })
 }

@@ -3,8 +3,8 @@ import { H4 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { QrShareButton } from "~/components/common/qr-share-button"
 import { Stack } from "~/components/common/stack"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { getLineageTreeBySlug } from "~/server/web/lineage/queries"
 import { LineageClaimForm } from "./claim-form"
@@ -30,8 +30,7 @@ export default async function LineageClaimPage({ params }: Props) {
     redirect(`/auth/login?next=/lineage/${treeSlug}/claim`)
   }
 
-  const brand = await getRequestBrand()
-  const tree = await getLineageTreeBySlug({ brand, slug: treeSlug })
+  const tree = await getLineageTreeBySlug({ brand: Brand.BBL, slug: treeSlug })
 
   if (!tree) {
     notFound()

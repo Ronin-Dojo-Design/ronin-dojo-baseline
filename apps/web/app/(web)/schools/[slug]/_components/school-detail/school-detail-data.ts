@@ -1,6 +1,5 @@
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPromotionTimelineForOrganization } from "~/server/web/promotion-events/queries"
 import type { SchoolDetail, SchoolMany } from "~/server/web/schools/payloads"
 import { findRelatedSchools, findSchoolBySlug } from "~/server/web/schools/queries"
@@ -86,7 +85,6 @@ function deriveSchoolInitials(name: string): string {
  * Returns `null` when the school is missing so the route can `notFound()`.
  */
 export async function loadSchoolDetail(slug: string): Promise<SchoolDetailView | null> {
-  const brand = await getRequestBrand()
   const school = await findSchoolBySlug({ slug })
 
   if (!school) return null
@@ -105,7 +103,7 @@ export async function loadSchoolDetail(slug: string): Promise<SchoolDetailView |
 
   return {
     school,
-    brand,
+    brand: Brand.BBL,
     instructors: deriveInstructors(school.memberships),
     classesPerWeek: deriveClassesPerWeek(school),
     schoolInitials: deriveSchoolInitials(school.name),

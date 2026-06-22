@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import {
   findPromotionEventSlugs,
@@ -36,9 +36,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PromotionEventPage({ params }: Props) {
   const { slug } = await params
-  const [event, brand] = await Promise.all([getPromotionEventBySlug(slug), getRequestBrand()])
+  const event = await getPromotionEventBySlug(slug)
 
   if (!event?.slug) notFound()
 
-  return <PromotionEventDetail event={{ ...event, slug: event.slug }} brand={brand} />
+  return <PromotionEventDetail event={{ ...event, slug: event.slug }} brand={Brand.BBL} />
 }

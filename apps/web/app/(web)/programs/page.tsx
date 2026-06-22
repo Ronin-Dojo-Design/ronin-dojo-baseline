@@ -13,7 +13,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Grid } from "~/components/web/ui/grid"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import {
   createGraph,
@@ -46,8 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProgramsPage() {
-  const brand = await getRequestBrand()
-  const programs = await getProgramsByBrand(brand)
+  const programs = await getProgramsByBrand(Brand.BBL)
 
   const itemListItems = programs.map(p => ({
     name: p.name,

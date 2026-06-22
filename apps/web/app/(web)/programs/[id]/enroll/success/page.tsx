@@ -5,7 +5,7 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { getProgramById } from "~/server/web/program/queries"
 
@@ -13,8 +13,7 @@ type Props = PageProps<"/programs/[id]">
 
 const getData = cache(async ({ params }: Props) => {
   const { id } = await params
-  const brand = await getRequestBrand()
-  const program = await getProgramById(brand, id)
+  const program = await getProgramById(Brand.BBL, id)
 
   if (!program) {
     notFound()

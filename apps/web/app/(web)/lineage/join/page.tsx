@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { cache } from "react"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import { db } from "~/services/db"
@@ -12,7 +12,6 @@ import { heritageContent } from "~/app/(web)/(home)/bbl/bbl-landing-content"
 import { JoinLegacyLanding } from "./join-legacy-landing"
 
 const getData = cache(async (nodeId?: string) => {
-  const brand = await getRequestBrand()
   const url = "/lineage/join"
   const title = "Join the Legacy"
   const description =
@@ -21,7 +20,7 @@ const getData = cache(async (nodeId?: string) => {
   const findClaimableTree = (constrainNode: boolean) =>
     db.lineageTree.findFirst({
       where: {
-        brand,
+        brand: Brand.BBL,
         isPublished: true,
         isClaimable: true,
         // When arriving with a specific ?node= (a claim link), resolve the tree
@@ -50,7 +49,7 @@ const getData = cache(async (nodeId?: string) => {
 
   const [nodeTree, membershipPlans] = await Promise.all([
     nodeId ? findClaimableTree(true) : Promise.resolve(null),
-    findLineageMembershipPlans(brand),
+    findLineageMembershipPlans(Brand.BBL),
   ])
   // Prefer the node's own tree; fall back to the first claimable tree for the
   // generic entry, or when a stale/invalid node link doesn't resolve (so the

@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
+import { Brand } from "~/.generated/prisma/client"
 import { StructuredData } from "~/components/web/structured-data"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateAboutPage } from "~/lib/structured-data"
 import { AboutContent } from "./_components/about-content"
@@ -13,8 +13,7 @@ const namespace = "pages.about"
 
 // Get page data
 const getData = cache(async () => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const t = await getTranslations()
   const url = "/about"
   const title = t(`${namespace}.title`)
@@ -33,13 +32,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function () {
   const { metadata, structuredData } = await getData()
-  const brand = await getRequestBrand()
-  const { name: siteName } = getBrandSiteConfig(brand)
+  const { name: siteName } = getBrandSiteConfig(Brand.BBL)
 
   return (
     <>
       <AboutContent
-        brand={brand}
+        brand={Brand.BBL}
         siteName={siteName}
         title={metadata.title}
         description={metadata.description}

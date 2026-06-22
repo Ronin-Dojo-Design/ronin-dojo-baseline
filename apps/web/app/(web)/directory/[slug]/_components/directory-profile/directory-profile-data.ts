@@ -1,5 +1,5 @@
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 
@@ -49,13 +49,12 @@ function buildLocationLine(profile: DirectoryProfile): string | null {
  * carries `isClaimablePlaceholder` and the orchestrator renders the claim teaser.
  */
 export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfileView | null> {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   const viewerUserId = session?.user?.id ?? null
 
   const profile = await findProfileBySlug({
     slug,
-    brand,
+    brand: Brand.BBL,
     viewerUserId,
     viewerRole: session?.user?.role,
   })

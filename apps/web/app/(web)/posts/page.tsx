@@ -6,8 +6,8 @@ import { ContentTagFilter } from "~/components/web/content-posts/content-tag-fil
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { brandFontVariables } from "~/lib/fonts"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { generateBlog } from "~/lib/structured-data"
@@ -20,11 +20,10 @@ import {
 const namespace = "pages.blog"
 
 const getData = cache(async (tagSlug?: string) => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const [posts, tags] = await Promise.all([
-    findPublishedContentPosts(brand, tagSlug),
-    findPublishedContentTags(brand),
+    findPublishedContentPosts(Brand.BBL, tagSlug),
+    findPublishedContentTags(Brand.BBL),
   ])
 
   const t = await getTranslations()
@@ -37,7 +36,7 @@ const getData = cache(async (tagSlug?: string) => {
     structuredData: [generateBlog(url, title, description, [] as any)],
   })
 
-  return { posts, tags, brand, ...data }
+  return { posts, tags, brand: Brand.BBL, ...data }
 })
 
 export const generateMetadata = async (): Promise<Metadata> => {

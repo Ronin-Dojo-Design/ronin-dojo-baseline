@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { findCourseBySlug } from "~/server/web/courses/queries"
 import { CourseDetail } from "./_components/course-detail"
@@ -12,8 +12,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const brand = await getRequestBrand()
-  const course = await findCourseBySlug(slug, brand)
+  const course = await findCourseBySlug(slug, Brand.BBL)
 
   if (!course) {
     return {}

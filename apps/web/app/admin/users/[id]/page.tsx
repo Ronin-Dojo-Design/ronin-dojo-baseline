@@ -3,7 +3,7 @@ import { UploadGrantToggle } from "~/app/admin/users/_components/upload-grant-to
 import { UserForm } from "~/app/admin/users/_components/user-form"
 import { withAdminPage } from "~/components/admin/auth-hoc"
 import { Wrapper } from "~/components/common/wrapper"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { findUserById } from "~/server/admin/users/queries"
 import { hasEntitlement } from "~/server/web/entitlements/queries"
 
@@ -15,8 +15,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/users/[id]">) 
     return notFound()
   }
 
-  const brand = await getRequestBrand()
-  const hasUpload = await hasEntitlement(id, "S3_UPLOAD", brand)
+  const hasUpload = await hasEntitlement(id, "S3_UPLOAD", Brand.BBL)
 
   return (
     <Wrapper size="md" gap="sm">

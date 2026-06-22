@@ -7,8 +7,8 @@ import { H6 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { findEditableLineageTrees } from "~/server/web/lineage/editor-queries"
 
 export async function DashboardLineageTab() {
@@ -18,8 +18,7 @@ export async function DashboardLineageTab() {
     redirect("/auth/login?next=/app/profile")
   }
 
-  const brand = await getRequestBrand()
-  const trees = await findEditableLineageTrees({ brand, user: session.user })
+  const trees = await findEditableLineageTrees({ brand: Brand.BBL, user: session.user })
 
   if (trees.length === 0) {
     return (

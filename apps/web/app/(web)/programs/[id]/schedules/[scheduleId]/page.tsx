@@ -13,8 +13,8 @@ import { ScheduleInstructorList } from "~/components/web/schedules/schedule-inst
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getEditableInstructors, getScheduleById } from "~/server/web/schedule/queries"
 
 interface Props {
@@ -23,8 +23,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { scheduleId } = await params
-  const brand = await getRequestBrand()
-  const schedule = await getScheduleById(brand, scheduleId)
+  const schedule = await getScheduleById(Brand.BBL, scheduleId)
 
   if (!schedule) return { title: "Schedule Not Found" }
   return { title: schedule.name, description: `${schedule.daysOfWeek.join(", ")}` }
@@ -32,9 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ScheduleDetailPage({ params }: Props) {
   const { id: programId, scheduleId } = await params
-  const brand = await getRequestBrand()
 
-  const schedule = await getScheduleById(brand, scheduleId)
+  const schedule = await getScheduleById(Brand.BBL, scheduleId)
   if (!schedule || schedule.programId !== programId) notFound()
 
   const session = await getServerSession()
@@ -43,7 +41,7 @@ export default async function ScheduleDetailPage({ params }: Props) {
     : false
 
   const eligibleInstructors = canEdit
-    ? await getEditableInstructors(brand, schedule.organizationId)
+    ? await getEditableInstructors(Brand.BBL, schedule.organizationId)
     : []
 
   const upcomingSessions = schedule.sessions.filter(s => {

@@ -8,8 +8,8 @@ import { AdForm } from "~/app/(web)/advertise/success/ad-form"
 import { AdCard } from "~/components/web/ads/ad-card"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { cx } from "~/lib/utils"
 import { adOnePayload } from "~/server/web/ads/payloads"
@@ -25,8 +25,7 @@ const namespace = "pages.advertise.success"
 const getData = cache(async ({ searchParams }: Props) => {
   const searchParamsLoader = createLoader({ sessionId: parseAsString.withDefault("") })
   const { sessionId } = await searchParamsLoader(searchParams)
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const { data: session, error } = await tryCatch(stripe.checkout.sessions.retrieve(sessionId))
 
   if (error || session.status !== "complete") {

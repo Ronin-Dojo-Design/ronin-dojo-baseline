@@ -3,10 +3,9 @@ import type { NextRequest } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { createLoader, parseAsInteger, parseAsStringEnum } from "nuqs/server"
 import satori from "satori"
-import { ToolStatus } from "~/.generated/prisma/client"
+import { Brand, ToolStatus } from "~/.generated/prisma/client"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
 import { getBrandSiteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { loadGoogleFont } from "~/lib/fonts"
 import { isToolPublished } from "~/lib/tools"
 import { findTool } from "~/server/web/tools/queries"
@@ -121,8 +120,7 @@ const searchParamsLoader = createLoader({
 export const GET = async ({ url }: NextRequest, { params }: RouteContext<"/[slug]/badge.svg">) => {
   const { slug } = await params
   const { theme, width, height } = searchParamsLoader(url)
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
 
   const tool = await findTool({
     where: {

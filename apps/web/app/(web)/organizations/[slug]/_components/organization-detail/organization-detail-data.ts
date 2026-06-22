@@ -1,6 +1,5 @@
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { hasOrgAdminAccess } from "~/server/web/organization/org-admin-access"
 import type { OrganizationDetail, OrganizationMany } from "~/server/web/organization/payloads"
 import {
@@ -87,9 +86,8 @@ function formatOrgAddress(org: OrganizationDetail): string | null {
  * Returns `null` when the org is missing so the route can `notFound()`.
  */
 export async function loadOrganizationDetail(slug: string): Promise<OrganizationDetailView | null> {
-  const brand = await getRequestBrand()
   const [org, session, roles] = await Promise.all([
-    getOrganizationBySlug(brand, slug),
+    getOrganizationBySlug(Brand.BBL, slug),
     getServerSession(),
     getSystemRoles(),
   ])
@@ -103,7 +101,7 @@ export async function loadOrganizationDetail(slug: string): Promise<Organization
   const [relatedOrgs, promotionTimeline] = await Promise.all([
     findRelatedOrganizations({
       organizationId: org.id,
-      brand,
+      brand: Brand.BBL,
       disciplineIds: org.disciplines.map(od => od.discipline.id),
       city: org.city,
     }),
@@ -115,7 +113,7 @@ export async function loadOrganizationDetail(slug: string): Promise<Organization
 
   return {
     org,
-    brand,
+    brand: Brand.BBL,
     isOwner,
     canManage,
     roles,
