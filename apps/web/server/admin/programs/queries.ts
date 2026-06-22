@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { ProgramsTableSchema } from "~/server/admin/programs/schema"
 import { db } from "~/services/db"
 
@@ -10,7 +9,6 @@ export const findPrograms = async (
   where?: Prisma.ProgramWhereInput,
 ) => {
   const { name, status, sort, page, perPage, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -25,7 +23,7 @@ export const findPrograms = async (
   ]
 
   const whereQuery: Prisma.ProgramWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -52,10 +50,8 @@ export const findPrograms = async (
 }
 
 export const findProgramById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.program.findUnique({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       organization: { select: { id: true, name: true } },
       discipline: { select: { id: true, name: true } },
@@ -80,38 +76,30 @@ export const findProgramById = async (id: string) => {
 }
 
 export const findProgramList = async (where?: Prisma.ProgramWhereInput) => {
-  const brand = await getRequestBrand()
-
   return db.program.findMany({
-    where: { brand, ...where },
+    where: { brand: Brand.BBL, ...where },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 }
 
 export const findOrganizationOptions = async () => {
-  const brand = await getRequestBrand()
-
   return db.organization.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 }
 
 export const findDisciplineOptions = async () => {
-  const brand = await getRequestBrand()
-
   return db.discipline.findMany({
-    where: { OR: [{ isSystem: true }, { brand }] },
+    where: { OR: [{ isSystem: true }, { brand: Brand.BBL }] },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
 }
 
 export const findAvailableCourses = async (programId: string) => {
-  const brand = await getRequestBrand()
-
   // Get courses not already linked to this program
   const linkedCourseIds = await db.programCourse.findMany({
     where: { programId },
@@ -122,7 +110,7 @@ export const findAvailableCourses = async (programId: string) => {
 
   return db.course.findMany({
     where: {
-      brand,
+      brand: Brand.BBL,
       ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
     },
     select: { id: true, title: true },
@@ -131,8 +119,6 @@ export const findAvailableCourses = async (programId: string) => {
 }
 
 export const findAvailableWaivers = async (programId: string) => {
-  const brand = await getRequestBrand()
-
   const linkedWaiverIds = await db.programWaiver.findMany({
     where: { programId },
     select: { waiverId: true },
@@ -143,7 +129,7 @@ export const findAvailableWaivers = async (programId: string) => {
   return db.waiver.findMany({
     where: {
       isActive: true,
-      OR: [{ brand }, { brand: null }],
+      OR: [{ brand: Brand.BBL }, { brand: null }],
       ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
     },
     select: { id: true, title: true, type: true },

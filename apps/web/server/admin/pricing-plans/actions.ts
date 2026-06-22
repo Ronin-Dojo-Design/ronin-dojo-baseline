@@ -1,8 +1,7 @@
 "use server"
 
 import { after } from "next/server"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { pricingPlanSchema } from "~/server/admin/pricing-plans/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
@@ -14,8 +13,6 @@ export const upsertPricingPlan = adminActionClient
       parsedInput: { id, entitlementIds, metadata, ...input },
       ctx: { db, revalidate },
     }) => {
-      const brand = await getRequestBrand()
-
       const pricingPlan = id
         ? await db.pricingPlan.update({
             where: { id },
@@ -41,7 +38,7 @@ export const upsertPricingPlan = adminActionClient
           })
         : await db.pricingPlan.create({
             data: {
-              brand,
+              brand: Brand.BBL,
               name: input.name,
               pricingModel: input.pricingModel,
               amountCents: input.amountCents,
@@ -94,10 +91,8 @@ export const upsertPricingPlan = adminActionClient
 export const deletePricingPlans = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     await db.pricingPlan.deleteMany({
-      where: { id: { in: ids }, brand },
+      where: { id: { in: ids }, brand: Brand.BBL },
     })
 
     revalidate({

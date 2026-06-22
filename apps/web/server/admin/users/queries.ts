@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 import type { UsersTableSchema } from "./schema"
 
@@ -86,8 +85,9 @@ export const findUserList = async () => {
  * @added SESSION_0358 — Passport-centric add-person (TASK_01). Rank chain is Rank → RankSystem → Discipline.
  */
 export const findAddPersonOptions = async () => {
-  const brand = await getRequestBrand()
-  const disciplineWhere: Prisma.DisciplineWhereInput = { OR: [{ isSystem: true }, { brand }] }
+  const disciplineWhere: Prisma.DisciplineWhereInput = {
+    OR: [{ isSystem: true }, { brand: Brand.BBL }],
+  }
 
   const [disciplines, ranks, organizations, trees, treeMembers] = await db.$transaction([
     db.discipline.findMany({
@@ -107,17 +107,17 @@ export const findAddPersonOptions = async () => {
       orderBy: { sortOrder: "asc" },
     }),
     db.organization.findMany({
-      where: { brand },
+      where: { brand: Brand.BBL },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     db.lineageTree.findMany({
-      where: { brand },
+      where: { brand: Brand.BBL },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     db.lineageTreeMember.findMany({
-      where: { tree: { brand } },
+      where: { tree: { brand: Brand.BBL } },
       select: {
         id: true,
         treeId: true,

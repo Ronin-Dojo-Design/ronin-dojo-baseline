@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { SubscriptionTiersTableSchema } from "~/server/admin/subscription-tiers/schema"
 import { db } from "~/services/db"
 
@@ -10,7 +9,6 @@ export const findSubscriptionTiers = async (
   where?: Prisma.SubscriptionTierWhereInput,
 ) => {
   const { name, page, perPage, sort, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -24,7 +22,7 @@ export const findSubscriptionTiers = async (
   ]
 
   const whereQuery: Prisma.SubscriptionTierWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -49,10 +47,8 @@ export const findSubscriptionTiers = async (
 }
 
 export const findSubscriptionTierById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.subscriptionTier.findFirst({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       subscriptions: {
         include: { user: { select: { id: true, name: true, email: true } } },
@@ -64,10 +60,8 @@ export const findSubscriptionTierById = async (id: string) => {
 }
 
 export const findSubscriptionTierList = async () => {
-  const brand = await getRequestBrand()
-
   return db.subscriptionTier.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true, code: true, level: true },
     orderBy: { level: "asc" },
   })

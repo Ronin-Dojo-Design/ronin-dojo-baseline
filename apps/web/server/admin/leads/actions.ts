@@ -1,7 +1,7 @@
 "use server"
 
 import { after } from "next/server"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { followUpFormSchema, leadFormSchema } from "~/server/admin/leads/schema"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
@@ -16,12 +16,11 @@ import { writeSchoolOpsAudit } from "~/server/web/school-ops/audit"
 export const upsertLead = adminActionClient
   .inputSchema(leadFormSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const { id, programId, ...input } = parsedInput
 
     // Validate org belongs to current brand
     const org = await db.organization.findFirst({
-      where: { id: input.organizationId, brand },
+      where: { id: input.organizationId, brand: Brand.BBL },
       select: { id: true, brand: true },
     })
 
@@ -46,13 +45,13 @@ export const upsertLead = adminActionClient
           select: leadPayload,
         })
       : await db.lead.create({
-          data: { ...data, brand },
+          data: { ...data, brand: Brand.BBL },
           select: leadPayload,
         })
 
     after(async () => {
       await writeSchoolOpsAudit({
-        brand,
+        brand: Brand.BBL,
         userId: user.id,
         organizationId: org.id,
         entityType: "Lead",
@@ -77,11 +76,9 @@ export const upsertLead = adminActionClient
 export const deleteLeads = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     // Only delete leads belonging to this brand
     const leads = await db.lead.findMany({
-      where: { id: { in: ids }, brand },
+      where: { id: { in: ids }, brand: Brand.BBL },
       select: { id: true, organizationId: true },
     })
 
@@ -92,7 +89,7 @@ export const deleteLeads = adminActionClient
     after(async () => {
       for (const lead of leads) {
         await writeSchoolOpsAudit({
-          brand,
+          brand: Brand.BBL,
           userId: user.id,
           organizationId: lead.organizationId,
           entityType: "Lead",
@@ -117,8 +114,6 @@ export const deleteLeads = adminActionClient
 export const markLeadLost = adminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const lead = await db.lead.update({
       where: { id },
       data: { status: "LOST" },
@@ -127,7 +122,7 @@ export const markLeadLost = adminActionClient
 
     after(async () => {
       await writeSchoolOpsAudit({
-        brand,
+        brand: Brand.BBL,
         userId: user.id,
         organizationId: lead.organizationId,
         entityType: "Lead",
@@ -147,8 +142,6 @@ export const markLeadLost = adminActionClient
 export const markLeadNurture = adminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const lead = await db.lead.update({
       where: { id },
       data: { status: "NURTURE" },
@@ -157,7 +150,7 @@ export const markLeadNurture = adminActionClient
 
     after(async () => {
       await writeSchoolOpsAudit({
-        brand,
+        brand: Brand.BBL,
         userId: user.id,
         organizationId: lead.organizationId,
         entityType: "Lead",
@@ -181,8 +174,6 @@ export const markLeadNurture = adminActionClient
 export const createFollowUp = adminActionClient
   .inputSchema(followUpFormSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const followUp = await db.leadFollowUp.create({
       data: {
         leadId: parsedInput.leadId,
@@ -207,7 +198,7 @@ export const createFollowUp = adminActionClient
 
       if (lead) {
         await writeSchoolOpsAudit({
-          brand,
+          brand: Brand.BBL,
           userId: user.id,
           organizationId: lead.organizationId,
           entityType: "LeadFollowUp",
@@ -229,8 +220,6 @@ export const createFollowUp = adminActionClient
 export const completeFollowUp = adminActionClient
   .inputSchema(idSchema)
   .action(async ({ parsedInput: { id }, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     const followUp = await db.leadFollowUp.update({
       where: { id },
       data: { completedAt: new Date() },
@@ -244,7 +233,7 @@ export const completeFollowUp = adminActionClient
 
       if (lead) {
         await writeSchoolOpsAudit({
-          brand,
+          brand: Brand.BBL,
           userId: user.id,
           organizationId: lead.organizationId,
           entityType: "LeadFollowUp",

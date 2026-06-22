@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { CertificatesTableSchema } from "~/server/admin/certificates/schema"
 import { db } from "~/services/db"
 
@@ -10,7 +9,6 @@ export const findCertificateTemplates = async (
   where?: Prisma.CertificateTemplateWhereInput,
 ) => {
   const { name, sort, page, perPage, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -24,7 +22,7 @@ export const findCertificateTemplates = async (
   ]
 
   const whereQuery: Prisma.CertificateTemplateWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -49,10 +47,8 @@ export const findCertificateTemplates = async (
 }
 
 export const findCertificateTemplateById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.certificateTemplate.findUnique({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       organization: { select: { id: true, name: true } },
     },
@@ -60,10 +56,8 @@ export const findCertificateTemplateById = async (id: string) => {
 }
 
 export const findCertificateTemplateList = async (where?: Prisma.CertificateTemplateWhereInput) => {
-  const brand = await getRequestBrand()
-
   return db.certificateTemplate.findMany({
-    where: { brand, ...where },
+    where: { brand: Brand.BBL, ...where },
     select: { id: true, name: true, type: true },
     orderBy: { name: "asc" },
   })

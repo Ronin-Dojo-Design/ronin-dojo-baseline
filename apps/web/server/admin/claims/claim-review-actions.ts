@@ -1,6 +1,6 @@
 "use server"
 
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { reviewProfileClaimSchema } from "~/server/admin/claims/claim-review-schemas"
 
@@ -29,11 +29,9 @@ const PROFILE_CLAIM_REVIEW_ERROR = {
 export const reviewProfileClaim = adminActionClient
   .inputSchema(reviewProfileClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     return db.$transaction(async tx => {
       const claim = await tx.profileClaimRequest.findFirst({
-        where: { id: parsedInput.claimId, brand },
+        where: { id: parsedInput.claimId, brand: Brand.BBL },
         select: {
           id: true,
           status: true,
@@ -53,7 +51,7 @@ export const reviewProfileClaim = adminActionClient
 
       if (parsedInput.decision === "APPROVED" && claim.subjectType === "ORGANIZATION") {
         const org = await tx.organization.findFirst({
-          where: { id: claim.organizationId ?? "", brand },
+          where: { id: claim.organizationId ?? "", brand: Brand.BBL },
           select: { id: true, ownerId: true },
         })
         // Only grant if still owner-less (avoid clobbering an owner set meanwhile).

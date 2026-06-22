@@ -1,8 +1,7 @@
 "use server"
 
 import { after } from "next/server"
-import type { Brand } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   toggleLineageTreeClaimabilitySchema,
@@ -22,17 +21,15 @@ async function assertCanManageLineageTree({
   db,
   userId,
   userRole,
-  brand,
   treeId,
 }: {
   db: typeof appDb
   userId: string
   userRole: string | null | undefined
-  brand: Brand
   treeId: string
 }) {
   const tree = await db.lineageTree.findFirst({
-    where: { id: treeId, brand },
+    where: { id: treeId, brand: Brand.BBL },
     select: { id: true, slug: true, name: true, isClaimable: true },
   })
 
@@ -64,12 +61,10 @@ async function assertCanManageLineageTree({
 export const toggleLineageTreeClaimability = userActionClient
   .inputSchema(toggleLineageTreeClaimabilitySchema)
   .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
-    const brand = await getRequestBrand()
     const tree = await assertCanManageLineageTree({
       db,
       userId: user.id,
       userRole: user.role,
-      brand,
       treeId: parsedInput.treeId,
     })
 
@@ -81,7 +76,7 @@ export const toggleLineageTreeClaimability = userActionClient
 
     await db.auditLog.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         action: "lineage.tree.claimability.updated",
         entityType: "LineageTree",
         entityId: tree.id,
@@ -94,7 +89,7 @@ export const toggleLineageTreeClaimability = userActionClient
     after(async () => {
       revalidate({
         paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
-        tags: ["lineage", `lineage-tree-${brand}-${tree.slug}`, `lineage-trees-${brand}`],
+        tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })
 
@@ -104,12 +99,10 @@ export const toggleLineageTreeClaimability = userActionClient
 export const toggleLineageTreeMemberClaimability = userActionClient
   .inputSchema(toggleLineageTreeMemberClaimabilitySchema)
   .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
-    const brand = await getRequestBrand()
     const tree = await assertCanManageLineageTree({
       db,
       userId: user.id,
       userRole: user.role,
-      brand,
       treeId: parsedInput.treeId,
     })
 
@@ -133,7 +126,7 @@ export const toggleLineageTreeMemberClaimability = userActionClient
 
     await db.auditLog.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         action: "lineage.tree.member.claimability.updated",
         entityType: "LineageTreeMember",
         entityId: member.id,
@@ -146,7 +139,7 @@ export const toggleLineageTreeMemberClaimability = userActionClient
     after(async () => {
       revalidate({
         paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
-        tags: ["lineage", `lineage-tree-${brand}-${tree.slug}`, `lineage-trees-${brand}`],
+        tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })
 
@@ -156,12 +149,10 @@ export const toggleLineageTreeMemberClaimability = userActionClient
 export const updateLineageTreeMemberSelectedRank = userActionClient
   .inputSchema(updateLineageTreeMemberSelectedRankSchema)
   .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
-    const brand = await getRequestBrand()
     const tree = await assertCanManageLineageTree({
       db,
       userId: user.id,
       userRole: user.role,
-      brand,
       treeId: parsedInput.treeId,
     })
 
@@ -204,7 +195,7 @@ export const updateLineageTreeMemberSelectedRank = userActionClient
 
     await db.auditLog.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         action: "lineage.tree.member.selected_rank.updated",
         entityType: "LineageTreeMember",
         entityId: member.id,
@@ -217,7 +208,7 @@ export const updateLineageTreeMemberSelectedRank = userActionClient
     after(async () => {
       revalidate({
         paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
-        tags: ["lineage", `lineage-tree-${brand}-${tree.slug}`, `lineage-trees-${brand}`],
+        tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })
 

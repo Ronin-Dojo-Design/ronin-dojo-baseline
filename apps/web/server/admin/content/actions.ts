@@ -3,8 +3,7 @@
 import { slugify } from "@dirstack/utils"
 import { after } from "next/server"
 import * as z from "zod"
-import { MediaType } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, MediaType } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 import { contentAtomSchema, contentVariantSchema } from "~/server/admin/content/schema"
 import { idsSchema } from "~/server/admin/shared/schema"
@@ -13,7 +12,6 @@ export const upsertContentAtom = adminActionClient
   .inputSchema(contentAtomSchema)
   .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
     const { id, tags, tools, ...input } = parsedInput
-    const brand = await getRequestBrand()
 
     const slug = input.slug || slugify(input.title)
     const canonicalId = input.canonicalId || `atom-${new Date().getFullYear()}-${slug}`
@@ -25,7 +23,7 @@ export const upsertContentAtom = adminActionClient
       ? await (async () => {
           // Brand-scope the update: verify the atom belongs to the current brand
           const existing = await db.contentAtom.findFirst({
-            where: { id, variants: { some: { brand } } },
+            where: { id, variants: { some: { brand: Brand.BBL } } },
             select: { id: true },
           })
           if (!existing) {
@@ -53,7 +51,7 @@ export const upsertContentAtom = adminActionClient
             // Create a default BLOG variant for the current brand
             variants: {
               create: {
-                brand,
+                brand: Brand.BBL,
                 channel: "BLOG",
                 status: "DRAFT",
                 publicTitle: input.title,
@@ -76,11 +74,9 @@ export const upsertContentAtom = adminActionClient
 export const deleteContentAtoms = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     // Only delete atoms that have at least one variant for the current brand
     await db.contentAtom.deleteMany({
-      where: { id: { in: ids }, variants: { some: { brand } } },
+      where: { id: { in: ids }, variants: { some: { brand: Brand.BBL } } },
     })
 
     revalidate({
@@ -95,7 +91,6 @@ export const upsertContentVariant = adminActionClient
   .inputSchema(contentVariantSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, publishDate, ...input } = parsedInput
-    const brand = await getRequestBrand()
 
     const variant = id
       ? await db.contentVariant.update({
@@ -105,7 +100,7 @@ export const upsertContentVariant = adminActionClient
       : await db.contentVariant.create({
           data: {
             ...input,
-            brand,
+            brand: Brand.BBL,
             publishDate: publishDate ?? null,
           },
         })
@@ -123,10 +118,8 @@ export const upsertContentVariant = adminActionClient
 export const deleteContentVariant = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     await db.contentVariant.deleteMany({
-      where: { id: { in: ids }, brand },
+      where: { id: { in: ids }, brand: Brand.BBL },
     })
 
     revalidate({
@@ -149,12 +142,11 @@ export const attachMediaToAtom = adminActionClient
   .inputSchema(attachMediaSchema)
   .action(async ({ parsedInput, ctx: { db, user, revalidate } }) => {
     const { atomId, url, title, altText, purpose } = parsedInput
-    const brand = await getRequestBrand()
 
     const atom = await db.contentAtom.findFirst({
       where: {
         id: atomId,
-        variants: { some: { brand } },
+        variants: { some: { brand: Brand.BBL } },
       },
       select: { id: true },
     })
@@ -190,7 +182,7 @@ export const attachMediaToAtom = adminActionClient
     // Create the Media record first
     const media = await db.media.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         type: mediaType,
         url,
         title,
@@ -228,7 +220,6 @@ export const reorderContentAtomMediaAttachments = adminActionClient
   .inputSchema(reorderContentAtomMediaAttachmentsSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { atomId, attachmentIds } = parsedInput
-    const brand = await getRequestBrand()
     const uniqueIds = new Set(attachmentIds)
 
     if (uniqueIds.size !== attachmentIds.length) {
@@ -238,7 +229,7 @@ export const reorderContentAtomMediaAttachments = adminActionClient
     const atom = await db.contentAtom.findFirst({
       where: {
         id: atomId,
-        variants: { some: { brand } },
+        variants: { some: { brand: Brand.BBL } },
       },
       select: {
         id: true,

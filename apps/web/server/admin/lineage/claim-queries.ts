@@ -1,6 +1,6 @@
 import "server-only"
 
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**
@@ -10,11 +10,9 @@ import { db } from "~/services/db"
  */
 
 export async function findPendingClaims() {
-  const brand = await getRequestBrand()
-
   return db.lineageClaimRequest.findMany({
     where: {
-      tree: { brand },
+      tree: { brand: Brand.BBL },
       status: { in: ["PENDING", "NEEDS_INFO"] },
     },
     orderBy: { createdAt: "desc" },
@@ -38,12 +36,10 @@ export async function findPendingClaims() {
 export type PendingClaim = Awaited<ReturnType<typeof findPendingClaims>>[number]
 
 export async function findClaimById(id: string) {
-  const brand = await getRequestBrand()
-
   return db.lineageClaimRequest.findFirst({
     where: {
       id,
-      tree: { brand },
+      tree: { brand: Brand.BBL },
     },
     select: {
       id: true,

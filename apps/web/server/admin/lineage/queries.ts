@@ -1,9 +1,8 @@
 import "server-only"
 
 import { isTruthy } from "@dirstack/utils"
-import type { Prisma } from "~/.generated/prisma/client"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import type { LineageTreesTableSchema } from "~/server/admin/lineage/schema"
 import { db } from "~/services/db"
 
@@ -28,7 +27,6 @@ function latestClaimStatus<T extends { status: keyof typeof claimStatusOrder; up
 }
 
 export const findLineageTrees = async (search: LineageTreesTableSchema) => {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   const isAdmin = session?.user.role === "admin"
 
@@ -45,7 +43,7 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
   ]
 
   const where: Prisma.LineageTreeWhereInput = {
-    brand,
+    brand: Brand.BBL,
     ...(isAdmin
       ? {}
       : {
@@ -106,7 +104,6 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
 export type AdminLineageTreeRow = Awaited<ReturnType<typeof findLineageTrees>>["trees"][number]
 
 export const findLineageTreeDetail = async (treeId: string) => {
-  const brand = await getRequestBrand()
   const session = await getServerSession()
   const isAdmin = session?.user.role === "admin"
 
@@ -117,7 +114,7 @@ export const findLineageTreeDetail = async (treeId: string) => {
   const tree = await db.lineageTree.findFirst({
     where: {
       id: treeId,
-      brand,
+      brand: Brand.BBL,
       ...(isAdmin
         ? {}
         : {

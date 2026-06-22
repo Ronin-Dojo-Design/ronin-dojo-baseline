@@ -1,13 +1,11 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { CoursesTableSchema } from "~/server/admin/courses/schema"
 import { db } from "~/services/db"
 
 export const findCourses = async (search: CoursesTableSchema, where?: Prisma.CourseWhereInput) => {
   const { title, sort, page, perPage, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -21,7 +19,7 @@ export const findCourses = async (search: CoursesTableSchema, where?: Prisma.Cou
   ]
 
   const whereQuery: Prisma.CourseWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -48,10 +46,8 @@ export const findCourses = async (search: CoursesTableSchema, where?: Prisma.Cou
 }
 
 export const findCourseById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.course.findUnique({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       organization: { select: { id: true, name: true } },
       discipline: { select: { id: true, name: true } },
@@ -72,10 +68,8 @@ export const findCourseById = async (id: string) => {
 }
 
 export const findCourseList = async (where?: Prisma.CourseWhereInput) => {
-  const brand = await getRequestBrand()
-
   return db.course.findMany({
-    where: { brand, ...where },
+    where: { brand: Brand.BBL, ...where },
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   })

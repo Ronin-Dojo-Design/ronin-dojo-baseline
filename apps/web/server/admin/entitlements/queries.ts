@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import type { EntitlementsTableSchema } from "~/server/admin/entitlements/schema"
 import { db } from "~/services/db"
 
@@ -10,7 +9,6 @@ export const findEntitlements = async (
   where?: Prisma.EntitlementWhereInput,
 ) => {
   const { name, page, perPage, sort, from, to, operator } = search
-  const brand = await getRequestBrand()
 
   const offset = (page - 1) * perPage
   const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
@@ -24,7 +22,7 @@ export const findEntitlements = async (
   ]
 
   const whereQuery: Prisma.EntitlementWhereInput = {
-    brand,
+    brand: Brand.BBL,
     [operator.toUpperCase()]: expressions.filter(isTruthy),
   }
 
@@ -49,10 +47,8 @@ export const findEntitlements = async (
 }
 
 export const findEntitlementById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.entitlement.findFirst({
-    where: { id, brand },
+    where: { id, brand: Brand.BBL },
     include: {
       grants: {
         include: { pricingPlan: true },
@@ -67,10 +63,8 @@ export const findEntitlementById = async (id: string) => {
 }
 
 export const findEntitlementList = async () => {
-  const brand = await getRequestBrand()
-
   return db.entitlement.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: { id: true, name: true, key: true },
     orderBy: { name: "asc" },
   })
