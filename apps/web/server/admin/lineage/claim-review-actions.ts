@@ -34,6 +34,8 @@ export type ReviewLineageClaimResult = {
   // Passport (`Passport.userId`) rather than moving the node FK or archiving a synthetic placeholder
   // User. `placeholderArchived*` are retired (the placeholder is now an accountless Passport).
   passportAccountAttached: boolean
+  // FI-006: id of the RankAward created from the claimed rank on approval, or null.
+  rankAwardId: string | null
 }
 
 export const applyLineageClaimReview = async ({
@@ -68,6 +70,8 @@ export const applyLineageClaimReview = async ({
           treeId: true,
           nodeId: true,
           claimantUserId: true,
+          // FI-006: claimed rank is promoted to a RankAward on approval.
+          claimedRankId: true,
           node: {
             select: {
               passportId: true,
@@ -99,6 +103,7 @@ export const applyLineageClaimReview = async ({
       let compGrantIds: string[] = []
       let ownershipTransferred = false
       let passportAccountAttached = false
+      let rankAwardId: string | null = null
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
@@ -118,6 +123,7 @@ export const applyLineageClaimReview = async ({
         compGrantIds = finalized.compGrantIds
         ownershipTransferred = finalized.ownershipTransferred
         passportAccountAttached = finalized.passportAccountAttached
+        rankAwardId = finalized.rankAwardId
       } else if (input.decision === "DENIED") {
         // No grant on deny (verified: the finalize side-effects only run in the APPROVED branch);
         // capture the claimant + node so we can mail the claim-rejected notice after commit.
@@ -152,6 +158,7 @@ export const applyLineageClaimReview = async ({
             compGrantIds,
             ownershipTransferred,
             passportAccountAttached,
+            rankAwardId,
           },
         },
       })
@@ -164,6 +171,7 @@ export const applyLineageClaimReview = async ({
         compGrantIds,
         ownershipTransferred,
         passportAccountAttached,
+        rankAwardId,
       }
     },
     { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },

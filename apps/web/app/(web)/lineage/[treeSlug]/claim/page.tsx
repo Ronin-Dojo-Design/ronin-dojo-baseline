@@ -7,6 +7,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import { getLineageTreeBySlug } from "~/server/web/lineage/queries"
+import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { LineageClaimForm } from "./claim-form"
 
 /**
@@ -62,6 +63,9 @@ export default async function LineageClaimPage({ params }: Props) {
     )
   }
 
+  // FI-006: fetch BJJ ranks for the rank picker (passed server-side; no client fetch needed).
+  const ranks = await getBjjRanksForClaimPicker()
+
   const origin = await getRequestOrigin()
   const claimUrl = buildAbsoluteUrl(`/lineage/${treeSlug}/claim`, origin)
 
@@ -81,7 +85,7 @@ export default async function LineageClaimPage({ params }: Props) {
         tree. After review, you&#39;ll be able to edit your profile and choose a listing tier.
       </p>
 
-      <LineageClaimForm treeId={tree.tree.id} members={members} />
+      <LineageClaimForm treeId={tree.tree.id} members={members} ranks={ranks} />
     </Stack>
   )
 }

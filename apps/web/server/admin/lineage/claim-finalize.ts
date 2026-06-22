@@ -42,6 +42,8 @@ export type FinalizeClaimInput = {
   treeId: string
   nodeId: string
   claimantUserId: string
+  // FI-006: rank asserted at claim time; if set, approval creates an awarded RankAward.
+  claimedRankId?: string | null
   node: {
     passportId: string
     passport: { userId: string | null }
@@ -53,6 +55,8 @@ export type FinalizeLineageNodeClaimResult = {
   compGrantIds: string[]
   ownershipTransferred: boolean
   passportAccountAttached: boolean
+  // FI-006: id of the RankAward created from the claimed rank on approval, or null.
+  rankAwardId: string | null
 }
 
 export const finalizeLineageNodeClaim = async (
@@ -76,6 +80,7 @@ export const finalizeLineageNodeClaim = async (
   let compGrantIds: string[] = []
   let ownershipTransferred = false
   let passportAccountAttached = false
+  let rankAwardId: string | null = null
 
   const member = await tx.lineageTreeMember.findUnique({
     where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
@@ -175,6 +180,32 @@ export const finalizeLineageNodeClaim = async (
     accessGrantId = grant.id
   }
 
+  // FI-006 (ADR 0035 §4): if the claimant asserted a rank at claim time, create an awarded
+  // RankAward on the node's Passport. Upsert so re-running approval is idempotent and an
+  // existing award for this rank is not overwritten. STATED source (claimant said so) +
+  // VERIFIED status (admin approved the claim = admin vouches for the assertion).
+  if (claim.claimedRankId) {
+    const existing = await tx.rankAward.findFirst({
+      where: { passportId: claim.node.passportId, rankId: claim.claimedRankId },
+      select: { id: true },
+    })
+    if (existing) {
+      rankAwardId = existing.id
+    } else {
+      const created = await tx.rankAward.create({
+        data: {
+          passportId: claim.node.passportId,
+          rankId: claim.claimedRankId,
+          source: "STATED",
+          verificationStatus: "VERIFIED",
+          awardedById: actorUserId,
+        },
+        select: { id: true },
+      })
+      rankAwardId = created.id
+    }
+  }
+
   if (compOverride) {
     // Manual admin comp override (any brand) — takes precedence over the BBL auto-grant.
     const compResult = await grantComp({
@@ -214,5 +245,5 @@ export const finalizeLineageNodeClaim = async (
     compGrantIds = compResult.grants.map((grant: { id: string }) => grant.id)
   }
 
-  return { accessGrantId, compGrantIds, ownershipTransferred, passportAccountAttached }
+  return { accessGrantId, compGrantIds, ownershipTransferred, passportAccountAttached, rankAwardId }
 }

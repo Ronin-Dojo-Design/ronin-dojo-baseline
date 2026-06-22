@@ -1276,6 +1276,7 @@ model Rank {
 
   memberships           Membership[]
   rankAwards            RankAward[]
+  lineageClaimRequests  LineageClaimRequest[]         @relation("ClaimedRank")
   courses               Course[]
   beltTestRegistrations BeltTestRegistration[]
   prerequisiteConfigs   BeltTestPrerequisiteConfig[]
@@ -2764,6 +2765,12 @@ model LineageTreeAccess {
   @@index([nodeId])
 }
 
+// @added SESSION_0432 FI-006 — claimedRankId stores the rank the claimant asserts at
+// registration/claim time (PENDING state). It is NOT a RankAward — it cannot display on the
+// tree. Admin-verify creates the awarded RankAward from this field (claim→award lifecycle).
+// See ADR 0035 §4 for the structural reason: a claimed rank on the claim record cannot
+// structurally leak onto the tree as if awarded (the exact failure mode of the old
+// selectedRankAward display override).
 model LineageClaimRequest {
   id           String             @id @default(cuid(2))
   status       LineageClaimStatus @default(PENDING)
@@ -2782,12 +2789,15 @@ model LineageClaimRequest {
   claimantUserId String
   reviewedBy     User?       @relation("LineageClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedById   String?
+  claimedRank    Rank?       @relation("ClaimedRank", fields: [claimedRankId], references: [id], onDelete: SetNull)
+  claimedRankId  String?
 
   evidence LineageClaimEvidence[]
 
   @@index([treeId, status])
   @@index([nodeId, status])
   @@index([claimantUserId, status])
+  @@index([claimedRankId])
 }
 
 // @added SESSION_0419 — email→node pending-claim binding. The one-click claim used to ride ONLY

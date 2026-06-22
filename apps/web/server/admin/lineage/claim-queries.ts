@@ -49,6 +49,8 @@ export async function findClaimById(id: string) {
       reviewedAt: true,
       createdAt: true,
       updatedAt: true,
+      // FI-006: rank the claimant asserted at claim time.
+      claimedRank: { select: { id: true, name: true, shortName: true, colorHex: true } },
       tree: { select: { id: true, name: true, slug: true } },
       node: {
         select: {
