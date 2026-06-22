@@ -8,7 +8,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
@@ -18,7 +18,9 @@ import { createInvite } from "~/server/admin/invites/actions"
 import { claimInvite } from "~/server/invites/actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+// Single-brand collapse (brand-prune Stage 1): the action scopes by the
+// server-resolved Brand.BBL, so seed the entitlement/membership rows under BBL too.
+const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0346-invite-comp-${Date.now()}`
 const tag = (name: string) => `${PREFIX}-${name}`
 

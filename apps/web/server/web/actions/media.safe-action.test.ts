@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 // Control the entitlement gate without DB fixtures.
 const entitlementState = { canUpload: true }

@@ -5,8 +5,9 @@ import { Brand } from "~/.generated/prisma/client"
  * Single source of truth for host -> Brand resolution.
  *
  * Single-brand collapse: every request is BBL. HOST_TO_BRAND and resolveBrand
- * are kept for edge-safe usage but always resolve to Brand.BBL. getRequestBrand
- * returns Brand.BBL unconditionally — no header injection, no host switching.
+ * are kept for edge-safe usage but always resolve to Brand.BBL. The old async
+ * request-brand resolver was removed in the single-brand collapse (ADR 0034) —
+ * callers inline Brand.BBL.
  *
  * Rule: never re-implement this map elsewhere. MB-002 brand-scope hardening
  * depends on a single resolution path.
@@ -59,9 +60,6 @@ export const resolveRequestOrigin = (requestHeaders: Headers) => {
 
   return `${protocol}://${host}`
 }
-
-/** Always returns Brand.BBL — single-brand deployment. */
-export const getRequestBrand = async (): Promise<Brand> => Brand.BBL
 
 export const getRequestOrigin = async () => {
   return resolveRequestOrigin(await headers())

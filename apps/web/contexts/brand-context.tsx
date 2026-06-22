@@ -28,10 +28,9 @@ const BrandContext = createContext<BrandContextValue | null>(null)
 /**
  * Read the active brand in any client component.
  *
- * The value is injected by `<BrandProvider>` in the root server layout
- * after `getRequestBrand()` resolves the brand from the middleware-set
- * `x-brand` header. This avoids the need for client components to call
- * server-only APIs or parse cookies directly.
+ * The value is injected by `<BrandProvider>` in the root server layout (the
+ * single-brand collapse resolves it to `Brand.BBL`). This avoids the need for
+ * client components to call server-only APIs or parse cookies directly.
  */
 export const useBrand = (): BrandContextValue => {
   const ctx = useContext(BrandContext)
@@ -46,8 +45,7 @@ export const useBrand = (): BrandContextValue => {
  *
  * Usage (in a server layout):
  * ```tsx
- * const brand = await getRequestBrand()
- * <BrandProvider brand={brand}>{children}</BrandProvider>
+ * <BrandProvider brand={Brand.BBL}>{children}</BrandProvider>
  * ```
  */
 export const BrandProvider = ({

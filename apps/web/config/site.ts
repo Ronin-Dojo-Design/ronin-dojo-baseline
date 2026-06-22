@@ -69,7 +69,7 @@ const brandConfigs: Record<
 
 /**
  * Get brand-specific site config. Use this in server components/actions
- * where you have the brand from `getRequestBrand()`.
+ * where you have the brand (single-brand collapse: `Brand.BBL`).
  */
 export const getBrandSiteConfig = (brand: Brand): BrandSiteConfig => {
   const brandConfig = brandConfigs[brand]

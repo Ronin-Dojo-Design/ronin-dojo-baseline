@@ -11,7 +11,7 @@
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
 // Install mocks BEFORE any import that touches `~/server` / `~/lib/auth`.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
@@ -23,7 +23,8 @@ mock.module("~/lib/email", () => ({ sendEmail: mock(async () => undefined) }))
 import { setPassportRank } from "~/server/web/onboarding/actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+// Single-brand collapse (brand-prune Stage 1): seed under BBL (seed == filter).
+const TEST_BRAND = "BBL" as const
 const TS = Date.now()
 const tag = (name: string) => `onboarding-${TS}-${name}`
 

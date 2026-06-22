@@ -7,9 +7,10 @@
  * actions end-to-end instead of only the exported helper functions.
  *
  * Two seams beyond the bare §3 list, learned the hard way (SESSION_0412):
- *   - `~/lib/brand-context` is mocked as a WHOLE module, so it must re-export BOTH
- *     `getRequestBrand` AND `getRequestOrigin` — an action importing the latter
- *     would otherwise get `undefined` and crash building absolute URLs.
+ *   - `~/lib/brand-context` is mocked as a WHOLE module, so it must re-export
+ *     `getRequestOrigin` — an action importing it would otherwise get `undefined`
+ *     and crash building absolute URLs. (The old request-brand resolver was
+ *     removed in the single-brand collapse, ADR 0034 — nothing to mock.)
  *   - The `~/lib/rate-limiter` mock only covers Upstash `isRateLimited`. Some
  *     limiters are DB-COUNT seams instead (e.g. `checkPublicLeadRateLimit` counts
  *     `Lead` rows by `x-forwarded-for` IP in the last hour). So next/headers
@@ -121,10 +122,11 @@ export const installSafeActionMocks = (options: SafeActionMockOptions = {}): Saf
   }))
 
   mock.module("~/lib/brand-context", () => ({
-    getRequestBrand: async () => brandState.value,
-    // Whole-module mock → must also provide getRequestOrigin (actions use it to
-    // build absolute checkout/return URLs). Delegate to the real resolver against
-    // the mocked host so the scheme is faithful (http for *.local, https for prod).
+    // Whole-module mock → must provide getRequestOrigin (actions use it to build
+    // absolute checkout/return URLs). Delegate to the real resolver against the
+    // mocked host so the scheme is faithful (http for *.local, https for prod).
+    // The old request-brand resolver is gone (single-brand collapse, ADR 0034) —
+    // the safe-action / orpc pipelines now resolve `ctx.brand` to `Brand.BBL` directly.
     getRequestOrigin: async () => resolveRequestOrigin(new Headers({ host: hostState.value })),
     resolveRequestOrigin,
   }))

@@ -27,7 +27,7 @@ mock.module("~/env", () => ({
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 const uploadCalls: { path: string }[] = []
 

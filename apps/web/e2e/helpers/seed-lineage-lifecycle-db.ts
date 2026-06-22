@@ -14,8 +14,8 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
-// Single-brand collapse (lib/brand-context): getRequestBrand() always returns BBL,
-// so fixtures MUST seed under BBL or brand-scoped queries 404 the whole flow.
+// Single-brand collapse (ADR 0034): every request resolves to Brand.BBL, so
+// fixtures MUST seed under BBL or brand-scoped queries 404 the whole flow.
 const TEST_BRAND = "BBL" as const
 const TAG_PREFIX = "session-0251-lineage-e2e"
 const LINEAGE_PREMIUM_ENTITLEMENT_KEY = "LINEAGE_PREMIUM"
