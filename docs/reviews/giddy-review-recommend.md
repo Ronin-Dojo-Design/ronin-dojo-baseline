@@ -67,6 +67,7 @@ surface before bigger changes build on it; finish features on a clean base; run 
 on a lean, stable tree.
 
 ### 1. Dead-code sweep — DO FIRST
+
 - **Scope:** `fallow fix` the unused exports/types above + remove the 3–4 verified-unused deps.
 - **Why first:** mechanical, high-confidence, docs-tier risk; *reduces surface* for everything
   after — notably removes dead exports from `common/field.tsx` **before** m-card slice 3 touches
@@ -76,6 +77,7 @@ on a lean, stable tree.
 - **Deliverable:** one focused "dead-code sweep" PR.
 
 ### 2. m-card slice 3 — SECOND
+
 - **Scope:** `task`/`loop` kinds + migrate remaining roster surfaces (`/me`, `/directory/[slug]`
   sidebars, wrap `lineage-node-card`) + deprecate `facet-result-card`/`bjj-passport-card`/
   `listing-card` as re-exports for one release.
@@ -86,6 +88,7 @@ on a lean, stable tree.
 - **Note:** churns `components/**` — must not overlap with any concurrent component sweep.
 
 ### 3. Brand-prune Stage 2 (schema drop) — LAST, gated, own session
+
 - **Scope:** drop the 43 `brand` columns + `enum Brand` + `User.brand`; remove the now-literal
   `brand: Brand.BBL` filters Stage 1 left; resolve the BASELINE comp-fixture; settle `BrandSettings`.
 - **Why last:** highest risk (prod migration on a live DB), irreversible, needs Phase-0 decisions
@@ -101,5 +104,6 @@ on a lean, stable tree.
 4. `User.brand` — drop the column or keep nullable for audit? (no writer left after Stage 1).
 
 ## Out of scope / parking lot
+
 - Script-complexity extractions (run-once tooling) — park unless a script is actively re-edited.
 - The bulk of inherited dupes — revisit only if a clone group lands in a hot path.
