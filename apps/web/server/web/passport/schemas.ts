@@ -4,6 +4,17 @@ import { z } from "zod"
 const DirectoryVisibility = z.enum(["PUBLIC", "MEMBERS_ONLY", "HIDDEN"])
 const Gender = z.enum(["MALE", "FEMALE", "NONBINARY", "PREFER_NOT_TO_SAY"])
 
+// Form inputs coerce null → "" via the str() helper in passport-editor.tsx. An empty
+// string is "not set" — valid to submit, maps to null in the DB (clears the field).
+// Without this, z.string().url().optional() rejects "" with "Invalid URL".
+const optionalUrl = z
+  .string()
+  .url()
+  .max(2048)
+  .or(z.literal(""))
+  .optional()
+  .transform(v => (v === "" ? null : v))
+
 export const updatePassportSchema = z.object({
   displayName: z.string().max(100).optional(),
   legalFirstName: z.string().max(100).optional(),
@@ -13,7 +24,7 @@ export const updatePassportSchema = z.object({
   phoneE164: z.string().max(20).optional(),
   emergencyContactName: z.string().max(100).optional(),
   emergencyContactPhoneE164: z.string().max(20).optional(),
-  avatarUrl: z.string().url().max(2048).optional(),
+  avatarUrl: optionalUrl,
   bio: z.string().max(2000).optional(),
   socialLinks: z
     .array(
@@ -39,6 +50,6 @@ export const updateDirectoryProfileSchema = z.object({
   showPhone: z.boolean().optional(),
   showOrgs: z.boolean().optional(),
   showRanks: z.boolean().optional(),
-  coverPhotoUrl: z.string().url().max(2048).optional(),
-  videoIntroUrl: z.string().url().max(2048).optional(),
+  coverPhotoUrl: optionalUrl,
+  videoIntroUrl: optionalUrl,
 })
