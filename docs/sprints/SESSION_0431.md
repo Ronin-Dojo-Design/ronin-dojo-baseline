@@ -334,5 +334,5 @@ CI." That's the correct posture: acknowledge the gap rather than claim passes th
 | Review & Recommend | Next session goal + first task written: yes. |
 | Memory sweep | Key project fact: `optionalUrl` is now the canonical Zod pattern for optional URL fields in passport/directory-profile schemas. WL-P2-14/15 document the cover photo + video deferred render gap. No operator memory update needed — these are code-level facts. |
 | Next session unblock check | Unblocked: FI-006 (claim→award lifecycle) is the next lane; prereqs are ADR 0035 + POST_LAUNCH_SOT FI-006 entry (both already written). |
-| Git hygiene | Branch `claude/directory-profile-validation-w6cdqd`; worktree clean; single close commit → push. Hash reported at bow-out / see git log. |
+| Git hygiene | Branch `claude/directory-profile-validation-w6cdqd`; worktree clean; single close commit `d27d4ea` → pushed; PR #159 (draft) created. |
 | Graphify update | Skipped — Graphify not installed in this environment. |
