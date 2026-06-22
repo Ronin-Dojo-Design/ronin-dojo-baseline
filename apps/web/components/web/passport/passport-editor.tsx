@@ -118,12 +118,14 @@ export function PassportEditor({ passport, directoryProfile, userId, canUploadVi
   const previewAvatar = useWatch({ control: passportForm.form.control, name: "avatarUrl" })
   const previewCity = useWatch({ control: directoryForm.form.control, name: "locationCity" })
   const previewRegion = useWatch({ control: directoryForm.form.control, name: "locationRegion" })
+  const previewCover = useWatch({ control: directoryForm.form.control, name: "coverPhotoUrl" })
 
   return (
     <div className="flex flex-col gap-10">
       <ProfileHero
         name={previewName || null}
         avatarUrl={previewAvatar || null}
+        coverPhotoUrl={previewCover || null}
         subtitle={[previewCity, previewRegion].filter(Boolean).join(", ") || null}
         initials={initialsOf(previewName)}
       />

@@ -22,6 +22,8 @@ export type ProfileHeroProps = {
   /** Secondary line — location (people) or owning org (trees/orgs). */
   subtitle?: string | null
   avatarUrl?: string | null
+  /** Optional cover photo rendered as the hero background (FI-007 / WL-P2-14). */
+  coverPhotoUrl?: string | null
   initials: string
   /** Neutral chips — disciplines, top rank/belt. */
   tags?: string[]
@@ -34,6 +36,7 @@ export function ProfileHero({
   name,
   subtitle,
   avatarUrl,
+  coverPhotoUrl,
   initials,
   tags = [],
   badges = [],
@@ -42,14 +45,32 @@ export function ProfileHero({
   return (
     <Stack
       direction="row"
-      className={cx("items-center gap-4 rounded-lg border bg-card p-4 sm:p-6", className)}
+      className={cx(
+        "relative items-center gap-4 overflow-hidden rounded-lg border bg-card p-4 sm:p-6",
+        className,
+      )}
     >
-      <Avatar className="size-16 shrink-0 sm:size-20">
+      {coverPhotoUrl && (
+        <>
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-center bg-cover"
+            style={{ backgroundImage: `url("${coverPhotoUrl}")` }}
+          />
+          {/* Legibility scrim — keep avatar + text readable over any cover image. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-r from-card via-card/85 to-card/50"
+          />
+        </>
+      )}
+
+      <Avatar className="relative z-10 size-16 shrink-0 sm:size-20">
         {avatarUrl && <AvatarImage src={avatarUrl} alt={name ?? "Profile"} />}
         <AvatarFallback className="text-lg">{initials}</AvatarFallback>
       </Avatar>
 
-      <div className="min-w-0 flex-1">
+      <div className="relative z-10 min-w-0 flex-1">
         <h2 className="truncate font-semibold text-foreground text-xl sm:text-2xl">
           {name?.trim() || "Your name"}
         </h2>

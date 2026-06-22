@@ -24,6 +24,7 @@ export function ProfileClaimTeaser({
   subjectId,
   name,
   avatarUrl,
+  coverPhotoUrl,
   subtitle,
   tags = [],
 }: {
@@ -31,6 +32,7 @@ export function ProfileClaimTeaser({
   subjectId: string
   name: string | null
   avatarUrl?: string | null
+  coverPhotoUrl?: string | null
   subtitle?: string | null
   tags?: string[]
 }) {
@@ -43,6 +45,7 @@ export function ProfileClaimTeaser({
         name={name}
         subtitle={subtitle}
         avatarUrl={avatarUrl}
+        coverPhotoUrl={coverPhotoUrl}
         initials={initialsOf(name)}
         tags={tags}
         badges={[{ label: "Unclaimed", variant: "soft" }]}

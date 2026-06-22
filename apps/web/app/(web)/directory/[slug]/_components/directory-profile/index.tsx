@@ -4,12 +4,14 @@ import { ListingDetail } from "~/components/web/listing/listing-detail"
 import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser"
 import { IntroDescription } from "~/components/web/ui/intro"
 import { AboutSection } from "./about-section"
+import { ProfileCoverBanner } from "./cover-banner"
 import type { DirectoryProfileView } from "./directory-profile-data"
 import { profileInitial } from "./directory-profile-fields"
 import { HeroActions } from "./hero-actions"
 import { HeroBadges } from "./hero-badges"
 import { ProfileSidebar } from "./profile-sidebar"
 import { RanksSection } from "./ranks-section"
+import { VideoIntroSection } from "./video-section"
 
 /**
  * `/directory/[slug]` — the public member/listing detail (BBL_PARITY_SPEC).
@@ -51,6 +53,7 @@ export function DirectoryProfile({ profile, profileUrl, locationLine }: Director
         subjectId={profile.id}
         name={user.name}
         avatarUrl={user.image}
+        coverPhotoUrl={profile.coverPhotoUrl}
         subtitle={[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null}
         tags={user.ranks.map(rankAward => rankAward.name).filter(Boolean)}
       />
@@ -58,24 +61,28 @@ export function DirectoryProfile({ profile, profileUrl, locationLine }: Director
   }
 
   return (
-    <ListingDetail
-      media={
-        <Avatar className="size-12">
-          {user.image && <AvatarImage src={user.image} alt={user.name ?? "Directory profile"} />}
-          <AvatarFallback>{profileInitial(user.name)}</AvatarFallback>
-        </Avatar>
-      }
-      title={user.name ?? "Directory Profile"}
-      badges={<HeroBadges profile={profile} />}
-      actions={<HeroActions profile={profile} profileUrl={profileUrl} />}
-      intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
-      sidebar={<ProfileSidebar profile={profile} />}
-    >
-      <AboutSection profile={profile} />
-      <RanksSection profile={profile} />
-      <OrganizationsSection profile={profile} />
-      <SocialSection profile={profile} />
-      {!profile.canRenderFullProfile && <UpgradeSection />}
-    </ListingDetail>
+    <>
+      <ProfileCoverBanner coverPhotoUrl={profile.coverPhotoUrl} />
+      <ListingDetail
+        media={
+          <Avatar className="size-12">
+            {user.image && <AvatarImage src={user.image} alt={user.name ?? "Directory profile"} />}
+            <AvatarFallback>{profileInitial(user.name)}</AvatarFallback>
+          </Avatar>
+        }
+        title={user.name ?? "Directory Profile"}
+        badges={<HeroBadges profile={profile} />}
+        actions={<HeroActions profile={profile} profileUrl={profileUrl} />}
+        intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
+        sidebar={<ProfileSidebar profile={profile} />}
+      >
+        <AboutSection profile={profile} />
+        <VideoIntroSection videoIntroUrl={profile.videoIntroUrl} />
+        <RanksSection profile={profile} />
+        <OrganizationsSection profile={profile} />
+        <SocialSection profile={profile} />
+        {!profile.canRenderFullProfile && <UpgradeSection />}
+      </ListingDetail>
+    </>
   )
 }
