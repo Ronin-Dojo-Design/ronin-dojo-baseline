@@ -28,12 +28,18 @@ enum ToolStatus {
   Deleted
 }
 
+// @added   migration 20260520_uplift_l3 (2026-05-20)
+// @why     Per-tool access tier (Free/Standard/Premium) gating directory tool visibility & entitlements
+// @wired   server/admin/tools/schema.ts, server/admin/tools/actions.ts, server/web/billing/stripe-webhook.ts, app/app/tools/_components/tool-form.tsx
 enum ToolTier {
   Free
   Standard
   Premium
 }
 
+// @added   migration 20260520_uplift_l3 (2026-05-20)
+// @why     Category for user-submitted listing reports (broken link, wrong category, outdated, feedback)
+// @wired   server/web/shared/schema.ts, server/web/actions/report.ts, server/admin/reports/schema.ts
 enum ReportType {
   BrokenLink
   WrongCategory
@@ -525,12 +531,18 @@ enum LineageRelationType {
   COMPETITION_TEAM
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     Verification state of a lineage relationship (pending → verified → disputed)
+// @wired   server/web/lineage/bbl-bjj-rank-map.ts (lineage relationship payloads/queries)
 enum LineageVerificationStatus {
   PENDING
   VERIFIED
   DISPUTED
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     What a LineageTree is scoped to (brand, organization, discipline, style, person, or custom)
+// @wired   server/web/lineage/tree-where.ts (scope-based tree filtering)
 enum LineageTreeScopeType {
   BRAND
   ORGANIZATION
@@ -540,6 +552,9 @@ enum LineageTreeScopeType {
   CUSTOM
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     Scoped edit-permission tiers on a tree (whole-tree admin → branch → single-node editor)
+// @wired   server/orpc/resource-permissions.ts, server/orpc/roles.ts, server/web/lineage/editor-queries.ts, server/web/promotion-events/editor-authorization.ts
 enum LineageTreeAccessRole {
   TREE_ADMIN
   TREE_EDITOR
@@ -547,6 +562,9 @@ enum LineageTreeAccessRole {
   NODE_EDITOR
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     Admin-review state of a lineage/profile claim (also reused by ProfileClaimRequest)
+// @wired   server/admin/lineage/claim-review-actions.ts
 enum LineageClaimStatus {
   PENDING
   APPROVED
@@ -555,6 +573,9 @@ enum LineageClaimStatus {
   CANCELLED
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     How a tree's visual cohort boxes are grouped (by promotion date, rank, generation, team, or custom)
+// @wired   (no runtime consumers found — verify)
 enum LineageVisualGroupType {
   PROMOTION_DATE
   RANK
@@ -2636,6 +2657,9 @@ model LineageRelationship {
   @@index([verificationStatus])
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     A publishable lineage tree (brand/org/discipline/person scope) — the container the timeline-tree renders
+// @wired   server/web/lineage/queries.ts, server/web/lineage/payloads.ts, server/admin/lineage/actions.ts, app/(web)/lineage/[treeSlug]/page.tsx
 model LineageTree {
   id                  String               @id @default(cuid(2))
   brand               Brand
@@ -2675,6 +2699,9 @@ model LineageTree {
   @@index([ownerNodeId])
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     A node's placement within a tree — visual parent, sort order, selected rank, per-member public flags
+// @wired   server/web/lineage/payloads.ts, server/web/lineage/editor-actions.ts, app/(web)/lineage/[treeSlug]/page.tsx, components/web/lineage/lineage-tree-board.tsx
 model LineageTreeMember {
   id                      String   @id @default(cuid(2))
   visualSortOrder         Int      @default(0)
@@ -2710,6 +2737,9 @@ model LineageTreeMember {
   @@index([rankAwardId])
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     A cohort box within a tree (e.g. a promotion-date group) that members are bucketed into for display
+// @wired   server/web/lineage/payloads.ts, server/web/lineage/editor-actions.ts, components/web/lineage/lineage-tree-board.tsx, components/web/lineage/lineage-compact-child-list.tsx
 model LineageVisualGroup {
   id                 String                 @id @default(cuid(2))
   label              String
@@ -2739,6 +2769,9 @@ model LineageVisualGroup {
   @@index([promotionEventId])
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     Per-user scoped edit grant on a tree/branch/node (drives the RBAC editor-permission checks)
+// @wired   server/orpc/resource-permissions.ts, server/orpc/permissions.ts, server/web/lineage/node-profile-actions.ts, app/app/lineage/layout.tsx
 model LineageTreeAccess {
   id        String                @id @default(cuid(2))
   role      LineageTreeAccessRole
@@ -2765,12 +2798,9 @@ model LineageTreeAccess {
   @@index([nodeId])
 }
 
-// @added SESSION_0432 FI-006 — claimedRankId stores the rank the claimant asserts at
-// registration/claim time (PENDING state). It is NOT a RankAward — it cannot display on the
-// tree. Admin-verify creates the awarded RankAward from this field (claim→award lifecycle).
-// See ADR 0035 §4 for the structural reason: a claimed rank on the claim record cannot
-// structurally leak onto the tree as if awarded (the exact failure mode of the old
-// selectedRankAward display override).
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     A user's request to claim a lineage node in a tree, with admin review/approval workflow
+// @wired   server/web/lineage/claim-node-for-user.ts, server/admin/lineage/claim-review-actions.ts
 model LineageClaimRequest {
   id           String             @id @default(cuid(2))
   status       LineageClaimStatus @default(PENDING)
@@ -2789,6 +2819,12 @@ model LineageClaimRequest {
   claimantUserId String
   reviewedBy     User?       @relation("LineageClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedById   String?
+  // @added SESSION_0432 FI-006 — claimedRankId stores the rank the claimant asserts at
+  // registration/claim time (PENDING state). It is NOT a RankAward — it cannot display on the
+  // tree. Admin-verify creates the awarded RankAward from this field (claim→award lifecycle).
+  // See ADR 0035 §4 for the structural reason: a claimed rank on the claim record cannot
+  // structurally leak onto the tree as if awarded (the exact failure mode of the old
+  // selectedRankAward display override).
   claimedRank    Rank?       @relation("ClaimedRank", fields: [claimedRankId], references: [id], onDelete: SetNull)
   claimedRankId  String?
 
@@ -2825,6 +2861,9 @@ model LineagePendingClaim {
   @@index([nodeId])
 }
 
+// @added   migration 20260517_lineage_tree_v1 (2026-05-17)
+// @why     A piece of supporting evidence (link/text/media) attached to a LineageClaimRequest for review
+// @wired   (no runtime consumers found — verify; written/read via LineageClaimRequest.evidence includes)
 model LineageClaimEvidence {
   id        String   @id @default(cuid(2))
   label     String?
@@ -3915,12 +3954,18 @@ model Post {
   @@index([publishedAt])
 }
 
+// @added   migration 20260525 (2026-05-25)
+// @why     Kind of GDPR-like data-subject request (export / delete / rectify)
+// @wired   app/(web)/privacy/request/_actions.ts, server/admin/privacy/actions.ts
 enum DataSubjectRequestType {
   EXPORT
   DELETE
   RECTIFY
 }
 
+// @added   migration 20260525 (2026-05-25)
+// @why     Admin-processing state of a data-subject request (pending → in-progress → fulfilled/rejected)
+// @wired   server/admin/privacy/queries.ts, app/app/privacy/requests/[id]/_components/dsr-status-actions.tsx
 enum DataSubjectRequestStatus {
   PENDING
   IN_PROGRESS
@@ -3931,6 +3976,9 @@ enum DataSubjectRequestStatus {
 /// GDPR-like Data Subject Request queue.
 /// Submissions go to this queue with status=PENDING; admin processes manually.
 /// See SESSION_0254 for the Plausible/GDPR mutual understanding that drove this.
+// @added   migration 20260525 (2026-05-25)
+// @why     GDPR-like data-subject request queue (export/delete/rectify) for manual admin fulfilment
+// @wired   app/(web)/privacy/request/_actions.ts, server/admin/privacy/actions.ts, server/admin/privacy/queries.ts, app/app/privacy/requests/page.tsx
 model DataSubjectRequest {
   id          String                   @id @default(cuid(2))
   userId      String
@@ -3955,6 +4003,9 @@ model DataSubjectRequest {
 /// captured rows are deduped on `email` (a re-submit updates the name, keeps the row).
 /// This replaces the dead WordPress endpoint the legacy monorepo modal POSTed to — the
 /// capture now persists to THIS app's DB via the public `captureBblEmail` server action.
+// @added   migration 20260618 (2026-06-18)
+// @why     Pre-launch teaser email capture (name + email, deduped on email) for the BBL countdown page
+// @wired   server/web/bbl/capture-email.ts, app/app/email/page.tsx, app/app/email/_components/bbl-email-capture-list.tsx
 model BblEmailCapture {
   id        String   @id @default(cuid(2))
   email     String   @unique
