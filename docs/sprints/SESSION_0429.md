@@ -204,14 +204,17 @@ SESSION_0429). Track B is now **validate + close gaps**, not create from scratch
 - **Loops/ledgers are mapped** in the playbook (loop-promotion program complete: THREE_PASS /
   KISS_DRY_YAGNI / QA_RUNTIME / IDENTIFY_INTENT / HOT_FIX + pr-review-score-fix-loop /
   giddy-merge-strategy / merge-to-main / review-recommend). Spot-check for stale/duplicated docs.
-- **JETTY schema-annotation sweep (in-flight):** draft PR on branch `chore/jetty-schema-annotations`
-  (launched SESSION_0429) annotates the ~28 recent-migration models/enums (lineage v1, passport
-  identity/provenance, claims, promotion, bookmarks, GDPR, brand-settings, pending-claim) with
-  `@added/@why/@wired` — comment-only, `prisma validate`-clean. **Review `@wired` accuracy and
-  merge.** Root cause it addresses: JETTY schema coverage was ~2/209 — the standard wasn't being
-  followed; going forward, annotate new models **at creation** (closing-ritual JETTY sweep), and
-  consider a hook/preflight check so it can't lapse again. This directly aids Track A — the
-  claim/rank/passport models the deep-dive traces will now carry inline provenance.
+- **JETTY schema-annotation sweep → draft PR #158** (`chore/jetty-schema-annotations`): annotated
+  the **17** recent-migration models/enums that genuinely lacked blocks (lineage-v1's 6 models +
+  5 enums, `ToolTier`, `ReportType`, `DataSubjectRequest` + 2 enums, `BblEmailCapture`) with
+  `@added/@why/@wired`. Comment-only (51 ins / 0 del), `prisma validate`-clean. **Review `@wired`
+  accuracy and merge.** Correction to an earlier guess: the standard IS followed for recent domain
+  models — `Bookmark`, `Affiliation`/provenance enums, `BrandSettings`, `PromotionEvent`, the
+  ProfileClaim group, and `LineagePendingClaim` were already annotated (correctly skipped). Two
+  enums flagged `(no runtime consumers found — verify)`: `LineageVisualGroupType` and
+  `LineageClaimEvidence` (the latter is reached via `LineageClaimRequest.evidence` includes, so
+  likely a grep artifact, not dead). Going forward: keep annotating new models **at creation**;
+  the older pre-standard models stay un-backfilled per the standard.
 
 ### Known backlog (not this session unless you choose to)
 
