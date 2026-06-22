@@ -378,7 +378,11 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Impact:** running the full seed would **regress** the 0430 corrections (re-create the deleted
   duplicate, reset ranks). Safe today because prod deploy is migrate-only, not seeded (D-024) — but
   the seed is a latent regression and cannot be run to apply Hélio/Rorion without reconciliation.
-- **Status:** **open** — POST_LAUNCH_SOT `FI-008`. SESSION_0432 worked around it by applying the
-  Hélio→Rorion promoter link surgically (`scripts/data/SESSION_0432-helio-rorion-promoter-link.sql`,
-  prodsnap+prod) instead of via the seed. The full Hélio node (in-tree R10 + edge) is deferred to the
-  reconciled seed. **Logged in:** SESSION_0432.
+- **Status:** **resolved** (SESSION_0433, PR #161, FI-008). `seed-baseline-lineage.ts` reconciled with
+  the 0430/0432 corrections — data folded in (Hosken→BK5, Jerry→base Black Belt, Poznik replaces
+  chris-posnik, Rikki→BK4, Hélio node) plus imperative corrective blocks (B1/B2 award fixes, C1/C2
+  identity merges) that self-heal stale data on run. **Verified:** ran the seed against prodsnap (which
+  held the corrected state) — all 5 corrections survived (no regression), Hélio created, base "Black
+  Belt" sortOrder = 21; 210 lineage tests pass. The seed is now safe to run again.
+  SESSION_0432 had worked around it surgically (`scripts/data/SESSION_0432-helio-rorion-promoter-link.sql`).
+  **Logged in:** SESSION_0432; **resolved in:** SESSION_0433.
