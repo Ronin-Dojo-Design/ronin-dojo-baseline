@@ -1,6 +1,6 @@
 "use server"
 
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   applyPassportAvatarPromotion,
@@ -47,8 +47,7 @@ function revalidateForTarget(target: MediaAttachTarget) {
 export const uploadWebMedia = userActionClient
   .inputSchema(uploadWebMediaSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-    const result = await applyWebMediaUpload({ db, brand, user, input: parsedInput })
+    const result = await applyWebMediaUpload({ db, brand: Brand.BBL, user, input: parsedInput })
 
     revalidate(revalidateForTarget(parsedInput.target))
 
@@ -58,8 +57,12 @@ export const uploadWebMedia = userActionClient
 export const promotePassportAvatarMedia = userActionClient
   .inputSchema(promotePassportAvatarMediaSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-    const result = await applyPassportAvatarPromotion({ db, brand, user, input: parsedInput })
+    const result = await applyPassportAvatarPromotion({
+      db,
+      brand: Brand.BBL,
+      user,
+      input: parsedInput,
+    })
 
     revalidate(revalidateForTarget(parsedInput.target))
 
@@ -69,8 +72,7 @@ export const promotePassportAvatarMedia = userActionClient
 export const removeWebMedia = userActionClient
   .inputSchema(removeWebMediaSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
-    const result = await applyWebMediaRemoval({ db, brand, user, input: parsedInput })
+    const result = await applyWebMediaRemoval({ db, brand: Brand.BBL, user, input: parsedInput })
 
     revalidate(revalidateForTarget(parsedInput.target))
 

@@ -1,8 +1,7 @@
 "use server"
 
-import type { ClassSchedule } from "~/.generated/prisma/client"
+import { Brand, type ClassSchedule } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { writeScheduleAudit } from "~/server/web/schedule/audit"
@@ -23,12 +22,10 @@ import { generateSessionPlan } from "~/server/web/schedule/session-generator"
  *
  * Mirrors `server/web/program/actions.ts` exactly:
  *   - userActionClient (auth-guarded)
- *   - getRequestBrand from ~/lib/brand-context (gate 1)
  *   - canEditOrganization (org+role) check
  *   - explicit { brand, organizationId } predicates on every write (MB-002)
  *
  * Security gates folded into done-criteria:
- *   1 brand-context import       (this file)
  *   4 schedule_write rate limiter (each action)
  *   5 instructor selector predicates (assignInstructor)
  *   7 IANA timezone validation   (schemas.ts)
@@ -50,8 +47,6 @@ const REVALIDATE_SCHEDULE_PATHS = (programId: string, scheduleId?: string) => [
 export const saveSchedule = userActionClient
   .inputSchema(saveScheduleSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
@@ -75,7 +70,7 @@ export const saveSchedule = userActionClient
     const locationName = rawLocationName?.trim() || undefined
 
     const organization = await db.organization.findFirst({
-      where: { id: organizationId, brand: requestBrand },
+      where: { id: organizationId, brand: Brand.BBL },
       select: {
         id: true,
         brand: true,
@@ -97,7 +92,7 @@ export const saveSchedule = userActionClient
     }
 
     const program = await db.program.findFirst({
-      where: { id: programId, brand: requestBrand, organizationId: organization.id },
+      where: { id: programId, brand: Brand.BBL, organizationId: organization.id },
       select: { id: true },
     })
     if (!program) {
@@ -107,7 +102,7 @@ export const saveSchedule = userActionClient
     let before: ClassSchedule | null = null
     if (id) {
       const existing = await db.classSchedule.findFirst({
-        where: { id, brand: requestBrand, organizationId: organization.id, programId },
+        where: { id, brand: Brand.BBL, organizationId: organization.id, programId },
       })
       if (!existing) {
         throw new Error(SCHEDULE_ERROR.SCHEDULE_NOT_FOUND)
@@ -166,14 +161,12 @@ export const saveSchedule = userActionClient
 export const archiveSchedule = userActionClient
   .inputSchema(archiveScheduleSchema)
   .action(async ({ parsedInput: { id }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
 
     const schedule = await db.classSchedule.findFirst({
-      where: { id, brand: requestBrand },
+      where: { id, brand: Brand.BBL },
       select: { id: true, organizationId: true, programId: true, status: true },
     })
 
@@ -197,7 +190,7 @@ export const archiveSchedule = userActionClient
     }
 
     await writeScheduleAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: schedule.organizationId,
       entityType: "ClassSchedule",
@@ -215,14 +208,12 @@ export const archiveSchedule = userActionClient
 export const assignInstructor = userActionClient
   .inputSchema(assignInstructorSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
 
     const schedule = await db.classSchedule.findFirst({
-      where: { id: parsedInput.classScheduleId, brand: requestBrand },
+      where: { id: parsedInput.classScheduleId, brand: Brand.BBL },
       select: { id: true, organizationId: true, programId: true },
     })
 
@@ -238,7 +229,7 @@ export const assignInstructor = userActionClient
     // OWNER/ORG_ADMIN/INSTRUCTOR role assignment.
     const eligibleMembership = await db.membership.findFirst({
       where: {
-        brand: requestBrand,
+        brand: Brand.BBL,
         organizationId: schedule.organizationId,
         userId: parsedInput.userId,
         status: "ACTIVE",
@@ -291,7 +282,7 @@ export const assignInstructor = userActionClient
     }
 
     await writeScheduleAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: schedule.organizationId,
       entityType: "ClassInstructorAssignment",
@@ -313,14 +304,12 @@ export const assignInstructor = userActionClient
 export const unassignInstructor = userActionClient
   .inputSchema(unassignInstructorSchema)
   .action(async ({ parsedInput: { assignmentId }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
 
     const assignment = await db.classInstructorAssignment.findFirst({
-      where: { id: assignmentId, classSchedule: { brand: requestBrand } },
+      where: { id: assignmentId, classSchedule: { brand: Brand.BBL } },
       select: {
         id: true,
         userId: true,
@@ -344,7 +333,7 @@ export const unassignInstructor = userActionClient
     }
 
     await writeScheduleAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: assignment.classSchedule.organizationId,
       entityType: "ClassInstructorAssignment",
@@ -366,14 +355,12 @@ export const unassignInstructor = userActionClient
 export const setPrimaryInstructor = userActionClient
   .inputSchema(setPrimaryInstructorSchema)
   .action(async ({ parsedInput: { assignmentId }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
 
     const assignment = await db.classInstructorAssignment.findFirst({
-      where: { id: assignmentId, classSchedule: { brand: requestBrand } },
+      where: { id: assignmentId, classSchedule: { brand: Brand.BBL } },
       select: {
         id: true,
         classSchedule: { select: { id: true, organizationId: true, programId: true } },
@@ -408,7 +395,7 @@ export const setPrimaryInstructor = userActionClient
     }
 
     await writeScheduleAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: assignment.classSchedule.organizationId,
       entityType: "ClassInstructorAssignment",
@@ -430,14 +417,12 @@ export const materializeSchedule = userActionClient
   .inputSchema(materializeScheduleSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
     const startedAt = Date.now()
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "schedule_write")) {
       throw new Error(SCHEDULE_ERROR.RATE_LIMITED)
     }
 
     const schedule = await db.classSchedule.findFirst({
-      where: { id: parsedInput.id, brand: requestBrand },
+      where: { id: parsedInput.id, brand: Brand.BBL },
       select: {
         id: true,
         organizationId: true,
@@ -561,7 +546,7 @@ export const materializeSchedule = userActionClient
     )
 
     await writeScheduleAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: schedule.organizationId,
       entityType: "ClassSchedule",

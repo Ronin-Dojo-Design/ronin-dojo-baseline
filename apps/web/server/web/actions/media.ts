@@ -3,7 +3,7 @@
 import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import wretch from "wretch"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getFaviconFetchUrl, getScreenshotFetchUrl, uploadToS3Storage } from "~/lib/media"
 import { mediaUploadActionClient } from "~/lib/safe-actions"
 import { createFetchMediaSchema, createUploadMediaSchema } from "~/server/web/shared/schema"
@@ -22,7 +22,7 @@ export const fetchMedia = mediaUploadActionClient
       throw error
     }
 
-    return await uploadToS3Storage(data, path, await getRequestBrand())
+    return await uploadToS3Storage(data, path, Brand.BBL)
   })
 
 export const uploadMedia = mediaUploadActionClient
@@ -33,5 +33,5 @@ export const uploadMedia = mediaUploadActionClient
   .action(async ({ parsedInput: { file, path } }) => {
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    return await uploadToS3Storage(buffer, path, await getRequestBrand())
+    return await uploadToS3Storage(buffer, path, Brand.BBL)
   })

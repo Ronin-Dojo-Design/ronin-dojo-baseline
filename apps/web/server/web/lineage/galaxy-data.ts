@@ -1,6 +1,6 @@
+import { Brand } from "~/.generated/prisma/client"
 import { lineageTreeToGalaxyGraph } from "~/components/web/lineage/galaxy/bbl-galaxy-from-lineage"
 import type { BblGalaxyGraph } from "~/components/web/lineage/galaxy/bbl-galaxy-types"
-import { getRequestBrand } from "~/lib/brand-context"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 import {
   findPublishedLineageTreeSlugs,
@@ -25,13 +25,11 @@ export type BblGalaxyData = {
  * v1 targets one tree; the "whole galaxy of all public trees" merge is a later slice.
  */
 export const getBblGalaxyData = async (): Promise<BblGalaxyData | null> => {
-  const brand = await getRequestBrand()
-
   const publishedSlugs = await findPublishedLineageTreeSlugs()
-  const target = publishedSlugs.find(entry => entry.brand === brand) ?? null
+  const target = publishedSlugs.find(entry => entry.brand === Brand.BBL) ?? null
   if (!target) return null
 
-  const result = await getLineageTreeBySlug({ brand, slug: target.slug })
+  const result = await getLineageTreeBySlug({ brand: Brand.BBL, slug: target.slug })
   if (!result || result.members.length === 0) return null
 
   const graph = lineageTreeToGalaxyGraph(result)

@@ -1,7 +1,6 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { COURSE_ENROLLMENT_ERROR } from "~/server/web/course-enrollment/errors"
@@ -72,14 +71,12 @@ const assertUserCanEnroll = async (userId: string, brand: Brand, organizationId:
 export const enrollInCourse = userActionClient
   .schema(enrollInCourseSchema)
   .action(async ({ ctx, parsedInput: { courseId } }) => {
-    const brand = await getRequestBrand()
-
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
-    const course = await assertCourseExists(courseId, brand)
-    await assertUserCanEnroll(ctx.user.id, brand, course.organizationId)
+    const course = await assertCourseExists(courseId, Brand.BBL)
+    await assertUserCanEnroll(ctx.user.id, Brand.BBL, course.organizationId)
 
     // Check for existing enrollment
     const existing = await db.courseEnrollment.findUnique({
@@ -114,14 +111,12 @@ export const enrollInCourse = userActionClient
 export const unenrollFromCourse = userActionClient
   .schema(unenrollFromCourseSchema)
   .action(async ({ ctx, parsedInput: { enrollmentId } }) => {
-    const brand = await getRequestBrand()
-
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     const enrollment = await db.courseEnrollment.findFirst({
-      where: { id: enrollmentId, userId: ctx.user.id, course: { brand } },
+      where: { id: enrollmentId, userId: ctx.user.id, course: { brand: Brand.BBL } },
       select: { id: true, course: { select: { slug: true } } },
     })
 
@@ -149,15 +144,13 @@ export const unenrollFromCourse = userActionClient
 export const markItemComplete = userActionClient
   .schema(markItemCompleteSchema)
   .action(async ({ ctx, parsedInput: { enrollmentId, curriculumItemId, notes } }) => {
-    const brand = await getRequestBrand()
-
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     // Verify the enrollment belongs to this user
     const enrollment = await db.courseEnrollment.findFirst({
-      where: { id: enrollmentId, userId: ctx.user.id, course: { brand } },
+      where: { id: enrollmentId, userId: ctx.user.id, course: { brand: Brand.BBL } },
       select: { id: true, courseId: true, course: { select: { slug: true } } },
     })
 
@@ -226,8 +219,6 @@ export const markItemComplete = userActionClient
 export const markItemIncomplete = userActionClient
   .schema(markItemIncompleteSchema)
   .action(async ({ ctx, parsedInput: { completionId } }) => {
-    const brand = await getRequestBrand()
-
     if (await isRateLimited(ctx.user.id, "enrollment_write")) {
       throw new Error(COURSE_ENROLLMENT_ERROR.RATE_LIMITED)
     }
@@ -235,7 +226,7 @@ export const markItemIncomplete = userActionClient
     const completion = await db.curriculumItemCompletion.findFirst({
       where: {
         id: completionId,
-        enrollment: { userId: ctx.user.id, course: { brand } },
+        enrollment: { userId: ctx.user.id, course: { brand: Brand.BBL } },
       },
       select: {
         id: true,

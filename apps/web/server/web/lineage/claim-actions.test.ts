@@ -16,11 +16,9 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
 }))
 
-// Mock brand-context — returns a fixed brand for all tests.
+// These tests replicate the action's DB queries directly with a fixed brand,
+// so no brand-context mock is needed (production code inlines Brand.BBL post brand-prune).
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
-mock.module("~/lib/brand-context", () => ({
-  getRequestBrand: () => Promise.resolve(TEST_BRAND),
-}))
 
 // Mock auth — will be overridden per test via mockSession.
 const mockSession: { user: { id: string; role: string } } | null = null

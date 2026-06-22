@@ -18,7 +18,7 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 // `mock.module` registers eagerly when this top-level statement runs, and static
 // imports below resolve after this point, so the action module picks up the
 // mocked dependencies.
-installSafeActionMocks({ brand: "BASELINE_MARTIAL_ARTS" })
+installSafeActionMocks({ brand: "BBL" })
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
@@ -26,7 +26,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { updateLineageNodeProfile } from "~/server/web/lineage/node-profile-actions"
 import { db } from "~/services/db"
 
-const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
+const TEST_BRAND = "BBL" as const
 const TS = Date.now()
 const tag = (name: string) => `session-0187-${TS}-${name}`
 

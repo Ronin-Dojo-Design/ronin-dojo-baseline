@@ -1,8 +1,7 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { writeSchoolOpsAudit } from "~/server/web/school-ops/audit"
@@ -173,20 +172,18 @@ const auditSignatureSnapshot = (signature: WaiverSignatureRecord) => ({
 export const signWaiver = userActionClient
   .inputSchema(signWaiverSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "waiver_write")) {
       throw new Error(WAIVER_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     const waiver = await resolveWaiver({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: organization.id,
       waiverId: parsedInput.waiverId,
       programId: parsedInput.programId,
@@ -194,7 +191,7 @@ export const signWaiver = userActionClient
 
     await assertActiveMemberWithPassport({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: organization.id,
       userId: user.id,
     })
@@ -203,7 +200,7 @@ export const signWaiver = userActionClient
     if (signedOnBehalfId) {
       const target = await assertActiveMemberWithPassport({
         db,
-        brand: requestBrand,
+        brand: Brand.BBL,
         organizationId: organization.id,
         userId: signedOnBehalfId,
       })
@@ -243,7 +240,7 @@ export const signWaiver = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: organization.id,
       entityType: "WaiverSignature",
@@ -260,15 +257,13 @@ export const signWaiver = userActionClient
 export const revokeWaiverSignature = userActionClient
   .inputSchema(revokeWaiverSignatureSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "waiver_write")) {
       throw new Error(WAIVER_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     if (!(await canEditOrganization(user, organization.id))) {
@@ -283,7 +278,7 @@ export const revokeWaiverSignature = userActionClient
             user: {
               memberships: {
                 some: {
-                  brand: requestBrand,
+                  brand: Brand.BBL,
                   organizationId: organization.id,
                   status: "ACTIVE",
                 },
@@ -294,7 +289,7 @@ export const revokeWaiverSignature = userActionClient
             signedOnBehalfOf: {
               memberships: {
                 some: {
-                  brand: requestBrand,
+                  brand: Brand.BBL,
                   organizationId: organization.id,
                   status: "ACTIVE",
                 },
@@ -304,7 +299,7 @@ export const revokeWaiverSignature = userActionClient
         ],
         waiver: {
           AND: [
-            { OR: [{ brand: requestBrand }, { brand: null }] },
+            { OR: [{ brand: Brand.BBL }, { brand: null }] },
             { OR: [{ organizationId: organization.id }, { organizationId: null }] },
           ],
         },
@@ -324,7 +319,7 @@ export const revokeWaiverSignature = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: organization.id,
       entityType: "WaiverSignature",

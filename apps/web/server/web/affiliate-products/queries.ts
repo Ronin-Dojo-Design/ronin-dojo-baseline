@@ -1,5 +1,4 @@
-import type { Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 export type AffiliateProductRow = Prisma.PricingPlanGetPayload<{
@@ -18,11 +17,9 @@ export type AffiliateProductRow = Prisma.PricingPlanGetPayload<{
  * These are PricingPlan rows where metadata.source = "tuffbuffs-affiliate".
  */
 export const findAffiliateProducts = async () => {
-  const brand = await getRequestBrand()
-
   return db.pricingPlan.findMany({
     where: {
-      brand,
+      brand: Brand.BBL,
       isActive: true,
       metadata: {
         path: ["source"],
@@ -64,11 +61,9 @@ export const getMetadata = (row: AffiliateProductRow): AffiliateProductMetadata 
  * @see docs/sprints/SESSION_0109.md TASK_04
  */
 export const findGearRecommendations = async (disciplineSlug: string) => {
-  const brand = await getRequestBrand()
-
   const recommendations = await db.gearRecommendation.findMany({
     where: {
-      brand,
+      brand: Brand.BBL,
       discipline: { slug: disciplineSlug },
     },
     select: {
@@ -101,10 +96,8 @@ export const findGearRecommendations = async (disciplineSlug: string) => {
  * @see docs/sprints/SESSION_0109.md TASK_04
  */
 export const findAllGearRecommendations = async () => {
-  const brand = await getRequestBrand()
-
   const recommendations = await db.gearRecommendation.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     select: {
       type: true,
       sortOrder: true,

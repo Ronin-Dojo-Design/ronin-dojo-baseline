@@ -1,7 +1,6 @@
 import { isTruthy } from "@dirstack/utils"
 import { endOfDay, startOfDay } from "date-fns"
-import type { Brand, FulfillmentStatus, Prisma } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand, type FulfillmentStatus, type Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 export type MerchProductRow = Prisma.PricingPlanGetPayload<{
@@ -50,10 +49,8 @@ const MERCH_SELECT = {
  * @see docs/sprints/SESSION_0111.md TASK_02
  */
 export const findMerchProducts = async (category?: string) => {
-  const brand = await getRequestBrand()
-
   const where: Prisma.PricingPlanWhereInput = {
-    brand,
+    brand: Brand.BBL,
     isActive: true,
     metadata: {
       path: ["source"],
@@ -84,12 +81,10 @@ export const findMerchProducts = async (category?: string) => {
  * Fetches a single merch product by its PricingPlan ID.
  */
 export const findMerchProductById = async (id: string) => {
-  const brand = await getRequestBrand()
-
   return db.pricingPlan.findFirst({
     where: {
       id,
-      brand,
+      brand: Brand.BBL,
       isActive: true,
       metadata: {
         path: ["source"],

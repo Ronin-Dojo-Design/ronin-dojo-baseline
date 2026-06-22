@@ -22,12 +22,9 @@ mock.module("next/cache", () => ({
   updateTag: () => {},
 }))
 
-// Mock brand-context — the helper receives brand directly, but the action module
-// imports getRequestBrand for the safe-action wrapper.
+// The helper under test receives `brand` directly as a parameter, so no
+// brand-context mock is needed (production code inlines Brand.BBL post brand-prune).
 const TEST_BRAND = "BASELINE_MARTIAL_ARTS" as const
-mock.module("~/lib/brand-context", () => ({
-  getRequestBrand: () => Promise.resolve(TEST_BRAND),
-}))
 
 // Mock auth — not used by the helper tests, but required by userActionClient.
 const mockSession: { user: { id: string; role: string } } | null = null

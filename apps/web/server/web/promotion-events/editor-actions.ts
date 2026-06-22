@@ -1,8 +1,7 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { generateUniqueSlug } from "~/lib/slug"
 import {
@@ -304,10 +303,9 @@ export const applyPromotionEventEditorUpsert = async ({
 export const upsertPromotionEvent = userActionClient
   .inputSchema(upsertPromotionEventSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const result = await applyPromotionEventEditorUpsert({
       db,
-      brand,
+      brand: Brand.BBL,
       user,
       input: parsedInput,
     })

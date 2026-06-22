@@ -1,8 +1,8 @@
 "use server"
 
+import { Brand } from "~/.generated/prisma/client"
 import { env } from "~/env"
 import { isInSameBrand } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { checkEntitlement } from "~/server/web/entitlement/check-entitlement"
@@ -20,14 +20,13 @@ import { stripe } from "~/services/stripe"
 export const createRegistrationCheckout = userActionClient
   .schema(registrationCheckoutSchema)
   .action(async ({ parsedInput: input, ctx }) => {
-    const brand = await getRequestBrand()
     const userId = ctx.user.id
 
     // 1. Verify tournament exists, is PUBLISHED, and belongs to this brand
     const tournament = await db.tournament.findFirst({
       where: {
         id: input.tournamentId,
-        brand,
+        brand: Brand.BBL,
         status: "PUBLISHED",
       },
       select: { id: true, name: true, slug: true, startDate: true },
@@ -41,7 +40,7 @@ export const createRegistrationCheckout = userActionClient
     const hasEntitlement = await checkEntitlement({
       userId,
       entitlementKey: "tournament-registration",
-      brand,
+      brand: Brand.BBL,
     })
 
     if (!hasEntitlement) {
@@ -51,7 +50,7 @@ export const createRegistrationCheckout = userActionClient
     }
 
     // 2b. Verify user belongs to this brand
-    const userInBrand = await isInSameBrand(ctx.user, brand)
+    const userInBrand = await isInSameBrand(ctx.user, Brand.BBL)
     if (!userInBrand) {
       throw new Error("You are not a member of this brand")
     }
@@ -76,7 +75,7 @@ export const createRegistrationCheckout = userActionClient
 
     // 4. Resolve tournament role
     const role = await db.tournamentRole.findFirst({
-      where: { code: input.roleCode, OR: [{ brand }, { brand: null, isSystem: true }] },
+      where: { code: input.roleCode, OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }] },
     })
 
     if (!role) {
@@ -190,7 +189,7 @@ export const createRegistrationCheckout = userActionClient
     }
 
     const { divisions } = capacityResult
-    const existingCustomer = await findStripeCustomerForCheckout({ userId, brand })
+    const existingCustomer = await findStripeCustomerForCheckout({ userId, brand: Brand.BBL })
 
     // 8. Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({

@@ -1,7 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { databaseIdSchema } from "~/lib/validation/id"
 import { scheduleClaimApprovedEmail } from "./claim-approved-email"
@@ -26,17 +26,15 @@ const acceptLineageClaimSchema = z.object({
 export const acceptLineageClaimByToken = userActionClient
   .inputSchema(acceptLineageClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db } }): Promise<ClaimNodeResult> => {
-    const brand = await getRequestBrand()
-
     const result = await db.$transaction(
       (tx: unknown): Promise<ClaimNodeResult> =>
-        claimNodeForUser(tx, { userId: user.id, nodeId: parsedInput.nodeId, brand }),
+        claimNodeForUser(tx, { userId: user.id, nodeId: parsedInput.nodeId, brand: Brand.BBL }),
       { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
     )
 
     // A fresh claim just committed — fire the lifecycle "profile-claim-approved" email.
     if (result.outcome === "claimed") {
-      scheduleClaimApprovedEmail({ userId: user.id, brand, nodeId: result.nodeId })
+      scheduleClaimApprovedEmail({ userId: user.id, brand: Brand.BBL, nodeId: result.nodeId })
     }
 
     return result

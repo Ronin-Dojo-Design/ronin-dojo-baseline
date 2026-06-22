@@ -1,7 +1,6 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
@@ -120,10 +119,9 @@ export const applyLineageNodeProfileUpdate = async ({
 export const updateLineageNodeProfile = userActionClient
   .inputSchema(updateLineageNodeProfileSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const result = await applyLineageNodeProfileUpdate({
       db,
-      brand,
+      brand: Brand.BBL,
       userId: user.id,
       input: parsedInput,
     })

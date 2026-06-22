@@ -1,6 +1,6 @@
 "use server"
 
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { submitProfileClaimSchema } from "~/server/web/claims/claim-schemas"
 
@@ -22,12 +22,11 @@ const PROFILE_CLAIM_ERROR = {
 export const submitProfileClaimRequest = userActionClient
   .inputSchema(submitProfileClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
     const { subjectType, subjectId, relationship, claimantNote } = parsedInput
 
     if (subjectType === "ORGANIZATION") {
       const org = await db.organization.findFirst({
-        where: { id: subjectId, brand },
+        where: { id: subjectId, brand: Brand.BBL },
         select: { id: true, ownerId: true },
       })
 
@@ -60,7 +59,7 @@ export const submitProfileClaimRequest = userActionClient
 
     const claim = await db.profileClaimRequest.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         subjectType,
         relationship,
         claimantUserId: user.id,

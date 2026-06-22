@@ -3,10 +3,10 @@
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { z } from "zod"
-import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
+import { Brand, type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getBblPreviewToken } from "~/lib/bbl-preview"
-import { getRequestBrand, getRequestOrigin } from "~/lib/brand-context"
+import { getRequestOrigin } from "~/lib/brand-context"
 import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import {
   type BblJoinLegacyMembershipPath,
@@ -97,7 +97,7 @@ const checkPublicLeadRateLimit = async ({
   ip,
 }: {
   db: any
-  brand: Awaited<ReturnType<typeof getRequestBrand>>
+  brand: Brand
   ip: string
 }) => {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
@@ -121,15 +121,13 @@ const checkPublicLeadRateLimit = async ({
 export const createPublicLead = publicActionClient
   .inputSchema(publicLeadSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
-
     // Basic IP-based rate limiting
     const ip = await getPublicLeadIp()
-    await checkPublicLeadRateLimit({ db, brand, ip })
+    await checkPublicLeadRateLimit({ db, brand: Brand.BBL, ip })
 
     // Validate org belongs to brand
     const organization = await db.organization.findFirst({
-      where: { id: parsedInput.organizationId, brand },
+      where: { id: parsedInput.organizationId, brand: Brand.BBL },
       select: { id: true },
     })
 
@@ -139,7 +137,7 @@ export const createPublicLead = publicActionClient
 
     const lead = await db.lead.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         organizationId: organization.id,
         programId: parsedInput.programId || null,
         source: "WEBSITE",
@@ -165,14 +163,13 @@ export const createPublicLead = publicActionClient
 export const createJoinLegacyInterest = publicActionClient
   .inputSchema(legacyInterestSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const requestOrigin = await getRequestOrigin()
     const session = await getServerSession()
     const ip = await getPublicLeadIp()
-    await checkPublicLeadRateLimit({ db, brand, ip })
+    await checkPublicLeadRateLimit({ db, brand: Brand.BBL, ip })
 
     const organization = await db.organization.findFirst({
-      where: { brand },
+      where: { brand: Brand.BBL },
       orderBy: { createdAt: "asc" },
       select: { id: true, name: true },
     })
@@ -210,7 +207,12 @@ export const createJoinLegacyInterest = publicActionClient
     const claimTree =
       parsedInput.treeId && parsedInput.nodeId
         ? await db.lineageTree.findFirst({
-            where: { id: parsedInput.treeId, brand, isPublished: true, isClaimable: true },
+            where: {
+              id: parsedInput.treeId,
+              brand: Brand.BBL,
+              isPublished: true,
+              isClaimable: true,
+            },
             select: { id: true },
           })
         : null
@@ -276,7 +278,7 @@ export const createJoinLegacyInterest = publicActionClient
 
     const lead = await db.lead.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         organizationId: organization.id,
         source: "WEBSITE",
         firstName,
@@ -404,7 +406,7 @@ export const createJoinLegacyInterest = publicActionClient
 
     after(async () => {
       const notification = {
-        brand,
+        brand: Brand.BBL,
         to: email,
         firstName,
         fullName,
@@ -432,10 +434,10 @@ export const createJoinLegacyInterest = publicActionClient
           if (claimIsFounder) {
             // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
             // founder — with his one-click claim link carried inside.
-            await notifyFounderOfTheLongRoad({ brand, to: email, firstName, claimUrl })
+            await notifyFounderOfTheLongRoad({ brand: Brand.BBL, to: email, firstName, claimUrl })
           } else {
             await notifyMemberOfBblClaimYourProfile({
-              brand,
+              brand: Brand.BBL,
               to: email,
               firstName,
               profileName: claimProfileName,
@@ -453,7 +455,7 @@ export const createJoinLegacyInterest = publicActionClient
             nextPath: FREE_SIGNUP_NEXT_PATH,
             previewToken: getBblPreviewToken(),
           })
-          await notifyUserOfBblFreeSignup({ brand, to: email, firstName, verifyUrl })
+          await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
         } else if (isGuestPaidSubmission) {
           // Guest paid tier → mint a magic link that signs them in and lands them on the
           // join page's membership picker, which runs the (now-authenticated) Stripe
@@ -464,7 +466,7 @@ export const createJoinLegacyInterest = publicActionClient
             nextPath: "/lineage/join#lineage-membership",
             previewToken: getBblPreviewToken(),
           })
-          await notifyUserOfBblFreeSignup({ brand, to: email, firstName, verifyUrl })
+          await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
         } else {
           // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):
           // the original Join-the-Legacy confirmation.
