@@ -367,3 +367,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   `selectedRankAward` repurposed as a pending claim (not a display override); `sortOrder` corrected.
   Code + prodsnap data fixed and live-verified. **Follow-up:** re-run the data script on prod Neon.
   **Logged in:** SESSION_0430.
+
+### D-030 — seed-baseline-lineage.ts drifted from SESSION_0430 SQL corrections (SESSION_0432)
+
+- **Source:** the SESSION_0430 roster corrections (Bill Hosken→BB5th + bio, Jerry Smith→Black Belt,
+  Rikki→4th, base "Black Belt" sortOrder, Posnik/Poznik + Brian Scott merges, Andre TKD, Rorion R9)
+  were applied via one-off SQL to prodsnap + prod, but **never folded back into
+  `apps/web/prisma/seed-baseline-lineage.ts`**. The seed still has Bill Hosken as "Coral Belt",
+  still contains `chris-posnik` (merged/deleted), etc., and is upsert-based.
+- **Impact:** running the full seed would **regress** the 0430 corrections (re-create the deleted
+  duplicate, reset ranks). Safe today because prod deploy is migrate-only, not seeded (D-024) — but
+  the seed is a latent regression and cannot be run to apply Hélio/Rorion without reconciliation.
+- **Status:** **open** — POST_LAUNCH_SOT `FI-008`. SESSION_0432 worked around it by applying the
+  Hélio→Rorion promoter link surgically (`scripts/data/SESSION_0432-helio-rorion-promoter-link.sql`,
+  prodsnap+prod) instead of via the seed. The full Hélio node (in-tree R10 + edge) is deferred to the
+  reconciled seed. **Logged in:** SESSION_0432.
