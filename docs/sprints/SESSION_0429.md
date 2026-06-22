@@ -127,55 +127,92 @@ See frontmatter `status:`.
 
 ## Next session
 
+> Superseded the stale PR-Review-Loop-on-#137 brief: #137 and the whole DTO + brand-prune +
+> dead-code-sweep program (PRs #146/#147/#150/#151/#152/#153/#154/#155/#156) all merged out-of-band
+> across the agent-workflow sessions. SESSION_0430 = a **local, full-close** session: a lineage
+> rank/identity wiring-health deep-dive + an agent-workflow system-setup orientation. Create
+> `docs/sprints/SESSION_0430.md` at bow-in (highest on `main` is 0429).
+
 ### Type
 
-**PR-Review-Loop** (lightweight Petey orchestration) — see the Petey prompt below.
+**Wiring-health deep-dive** (Petey orchestration: Petey plans/grills → Cody fixes → Doug verifies)
+**+ system-setup orientation review.** Full local session; full bow-out close.
 
 ### Goal
 
-Drive PR #137 (`claude/post-launch-clean-repo-001`) to merge-ready: confirm CI green, run the
-review loop on the docs/spec batch, fix any review findings, mark ready, merge.
+Track A — find and fix the lineage **rank / promotion-date / verification / bio** sources-of-truth
+drift exposed live in the profile drawer, and harden the DTO + editor + client/server wiring so the
+structured rank and the displayed narrative can't silently disagree again.
+Track B — orient on the **new agent-workflow system setup** (protocols/loops/ledgers added of late)
+and recommend how the operator runs it smoothly going forward.
 
-### Petey prompt — next session (PR-Review-Loop on PR #137)
+### Anchor bug (reproduced live, SESSION_0429, `/lineage/bbl-lineage` → David Meyer drawer)
 
-```text
-SESSION TYPE: PR-Review-Loop (lightweight). Act as Petey → orchestrate; Doug reviews; Cody fixes.
-TARGET: PR #137 — claude/post-launch-clean-repo-001 (docs/spec batch, PWCC-001..007 + Mammoth epic).
+Three sources of truth disagree on one member:
 
-LANE 0 — Bow-in + CI gate (inline)
-  READ:  docs/sprints/SESSION_0429.md (this file) · docs/epics/post-launch-clean-repo-001.md
-  DO:    pull_request_read get_check_runs on #137; if any non-Vercel/CodeRabbit check is red,
-         diagnose (get_job_logs) — re-kick only transient infra flakes, fix real failures.
-  TOUCH: none unless a fix is needed.
+| Drawer field | Shows | Source |
+| --- | --- | --- |
+| Bio narrative | "**7th Degree Coral Belt** · promoted by Rigan Machado on **January 17, 2026** · Seattle WA" | `LineageNode.bio` (free-text WP import) |
+| CURRENT RANK | "**Black Belt — 5th Degree**" | `Passport.rankAwardsEarned[0].rank` (structured `RankAward`) |
+| PROMOTED ON | "**Unknown date**" | `currentAward.awardedAt` (null in prodsnap) |
+| AWARDED BY | "**lineage-unverified**" | fallback when `RankAward.awardedByPassport` is null |
+| Header badge | "**Verified**" | `LineageNode.isVerified` / `verificationStatus` (set independently) |
 
-LANE A — Doug review: standards + spec parity (read-only, parallelizable sub-agent)
-  READ:  docs/knowledge/wiki/files/{bbl-admin-task-board,m-card-pattern,three-level-magnetic-drawer,
-         admin-kanban-board,mammoth-crm-bindings}.md · docs/epics/mammoth-rebuild-crm-001.md ·
-         docs/knowledge/wiki/files/_template/SPEC_TEMPLATE.md (shape) · component-design-system.md
-  CHECK: every spec matches SPEC_TEMPLATE; PWCC ids unique + cross-linked; wiring paths real
-         (spot-check monorepo/baseline paths exist); no gold; redaction-stays-upstream stated;
-         each file cataloged in index.md + epic + (components) custom-component-inventory.md.
-  OUTPUT: a findings list (severity ≥ medium) — no code edits.
+So: free-text bio ≠ structured rank; promotion date present in prose but null in data; "Verified"
+badge is independent of the award's own verification + promoter backfill. Nothing reconciles them,
+and there is **no admin UI to edit verification** (drawer says "Manage verification (coming soon)").
 
-LANE B — Cody fixes (inline, only if Lane A finds issues)
-  TOUCH: only the flagged spec/catalog files. Re-run `bun run wiki:lint` (must stay 0 errors).
-  COMMIT: docs(spec): address #137 review — <one line>. Push to the same branch.
+### Track A — wiring deep-dive (Petey: grill scope first, then Cody/Doug)
 
-LANE C — Ready + merge (inline, after green + clean review)
-  DO:    mark PR #137 ready for review (update_pull_request draft=false) so CodeRabbit runs;
-         address any CodeRabbit blocker; when CI green + reviews clear → merge_pull_request (squash).
-  GUARD: docs-only; never force-push; FS-0024 git guard before any mutating git.
+Wiring map already scouted (SESSION_0429 Explore pass) — confirm, then decide the fix:
 
-STOP CONDITIONS: PR merged/closed → unsubscribe + done. Ambiguous review finding or a real (non-flake)
-CI failure that needs a scope decision → AskUserQuestion, don't guess.
+- **Read path:** `components/web/lineage/lineage-profile-drawer/{index,info-tab,rank-history-tab,
+  lineage-tab,use-drawer-profile}.tsx` — `deriveDrawerProfileView()` picks `rankAwardsEarned[0]`
+  (order `awardedAt desc`); `awardedBy` falls back to `awardedByPassport ?? awardedBy ?? "lineage-unverified"`.
+- **DTO layer:** `server/web/lineage/payloads.ts` (`LineageNodeProfile`, `lineageNodeProfilePayload`,
+  rank/award sub-payloads) · `server/web/directory/profile-projection.ts` · `lib/identity/*` ·
+  `lib/lineage/trust-status.ts` (`resolveLineageTrustStatus`). Note `RankAward.verificationStatus`
+  is **never joined** into the drawer payload — possible missing signal.
+- **Source-of-truth question (the core decision):** reconcile `LineageNode.bio` (free text) vs
+  `Passport.rankAwardsEarned` (structured) vs `Passport.bio` (import narrative, currently unused in
+  drawer). Decide which is canonical and whether bio should derive from / be validated against the
+  structured rank, or be clearly labelled as narrative.
+- **Verification:** `LineageNode.isVerified`/`verificationStatus` (drives badge) vs
+  `RankAward.awardedByPassport` backfill (drives "lineage-unverified"). Decide the contract; the
+  Rigan-Machado promoter backfill (`awardedByPassportId`, Phase 3b) may be incomplete in prod.
+- **Three editors that WRITE these — audit client↔server parity for each:**
+  - User/owner editor: `app/(web)/lineage/[treeSlug]/edit/[nodeId]/_components/lineage-node-profile-form.tsx`
+    → `server/web/lineage/node-profile-actions.ts` (writes `bio`, `promotionDate`→`selectedRankAward.awardedAt`).
+  - Admin claim-review: `server/admin/lineage/claim-review-actions.ts` + `claim-finalize.ts`
+    (attaches account + access; does NOT write rank/bio/verification).
+  - Profile editor: `app/(web)/me/*` + `app/(web)/directory/[slug]/*` sidebars + their server actions.
+  - For each: which of {rank, promotionDate, awardedBy, verification, bio} is editable in UI, which
+    is actually persisted, and which is surfaced — flag any field editable-but-not-persisted or
+    persisted-but-not-shown (the drift seams).
+- **Deliverable:** a fix (or a tight ADR + scoped fix) that gives rank/date/verification one
+  reconciled read model; log the divergence in `wiring-ledger` (WL) + `drift-register` (D).
 
-FIRST TASK: Lane 0 — re-check #137 CI on the latest commit; if green, mark ready and start Lane A.
-```
+### Track B — agent-workflow system-setup orientation (lighter; can be a sub-agent)
+
+Review what's accreted and tell the operator how to run it smoothly:
+
+- **Protocols/loops** (`docs/protocols/`): the loop-promotion program is **complete** —
+  THREE_PASS / KISS_DRY_YAGNI / QA_RUNTIME / IDENTIFY_INTENT / HOT_FIX all landed, plus
+  `pr-review-score-fix-loop`, `giddy-merge-strategy`, `merge-to-main`, `review-recommend`,
+  `next-session-loading-order`, `WORKFLOW_5.0`, `reusable-prompts`. Map: which to invoke when.
+- **Ledgers/registers**: `wiring-ledger`, `drift-register`, `incidents`, `failed-steps-log`,
+  `test-fail-fix-ledger`, `feature-intake-ledger` (note: superseded by `POST_LAUNCH_SOT`),
+  `doc-pruning-register`, `cache-risk-register`, `lane-ledger`, `ronin-security-risk-register`.
+  Check the finding-router (closing.md §6.7) still points at the live ones; flag stale/duplicated.
+- **Recommendation:** a one-page "operator playbook" — when to fan out cloud agents vs inline,
+  pause-on-merge cadence, which loop/ledger for which signal, and how SESSION docs + bow-in/out
+  fit the new multi-agent flow.
 
 ### Inputs to read (next bow-in)
 
-- `docs/sprints/SESSION_0429.md` (this file) · `docs/epics/post-launch-clean-repo-001.md` ·
-  `docs/epics/mammoth-rebuild-crm-001.md` · the 5 PWCC spec files under `docs/knowledge/wiki/files/`.
+- `docs/sprints/SESSION_0429.md` (this file) · `docs/reviews/giddy-review-recommend.md`
+- `docs/protocols/next-session-loading-order.md` · `docs/rituals/{opening,closing}.md`
+- Track A files above · `docs/petey-plan-brand-harness-prune.md` (Stage 2 still pending, gated)
 
 ## ADR / ubiquitous-language check
 
