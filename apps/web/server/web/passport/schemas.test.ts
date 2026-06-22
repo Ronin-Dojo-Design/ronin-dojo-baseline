@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "bun:test"
 import { updateDirectoryProfileSchema, updatePassportSchema } from "./schemas"
 
 // FI-007: empty optional URL fields must not produce "Invalid URL" errors.
