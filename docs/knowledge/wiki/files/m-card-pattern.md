@@ -257,7 +257,7 @@ plus the cloud-sweep handoff (mirrors `codex-cloud-bbl-waves-2-4.md`). Cloud age
 [ ] 1. Scaffold m-card.tsx on components/common/card.tsx with the kind switch + density
 [ ] 2. map-roster.ts from projectDirectoryProfileListItem; render eyebrow/title/tint/meta/badges
 [ ] 3. Swap /directory/profiles (FacetResultCard → m-card) behind a parity test
-[ ] 4. map-rank.ts (belt group + curriculum checklist); a rank/curriculum-card-page
+[x] 4. map-rank.ts (belt group + curriculum checklist); a rank/curriculum-card-page  // slice 2 — /disciplines/[slug]/ranks
 [ ] 5. map-task.ts + map-loop.ts; wire AdminTaskBoard rows + loop posters to m-card
 [ ] 6. Migrate /me + /directory/[slug] sidebars; wrap lineage-node-card; deprecate old cards
 [ ] 7. Brand proof: render the same grid under 2 brand token blocks (e.g. BBL + Baseline)
