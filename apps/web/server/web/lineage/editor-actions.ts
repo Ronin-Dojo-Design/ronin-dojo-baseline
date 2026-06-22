@@ -1,8 +1,7 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { isAdmin } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { LINEAGE_EDITOR_ERROR } from "~/server/web/lineage/editor-errors"
 import {
@@ -628,10 +627,9 @@ export const applyLineageVisualGroupUpdate = async ({
 export const updateLineageMemberPlacement = userActionClient
   .inputSchema(updateLineageMemberPlacementSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const result = await applyLineageMemberPlacementUpdate({
       db,
-      brand,
+      brand: Brand.BBL,
       userId: user.id,
       input: parsedInput,
       isGlobalAdmin: isAdmin(user),
@@ -648,10 +646,9 @@ export const updateLineageMemberPlacement = userActionClient
 export const updateLineagePromotionRelationship = userActionClient
   .inputSchema(updateLineagePromotionRelationshipSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const result = await applyLineagePromotionRelationshipUpdate({
       db,
-      brand,
+      brand: Brand.BBL,
       userId: user.id,
       input: parsedInput,
       isGlobalAdmin: isAdmin(user),
@@ -668,10 +665,9 @@ export const updateLineagePromotionRelationship = userActionClient
 export const updateLineageVisualGroup = userActionClient
   .inputSchema(updateLineageVisualGroupSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const brand = await getRequestBrand()
     const result = await applyLineageVisualGroupUpdate({
       db,
-      brand,
+      brand: Brand.BBL,
       userId: user.id,
       input: parsedInput,
       isGlobalAdmin: isAdmin(user),

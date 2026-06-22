@@ -1,7 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
 
 const createEntitlementSchema = z.object({
@@ -21,11 +21,9 @@ const linkPlanToEntitlementSchema = z.object({
 export const createEntitlement = adminActionClient
   .schema(createEntitlementSchema)
   .action(async ({ parsedInput: input, ctx: { db } }) => {
-    const brand = await getRequestBrand()
-
     return db.entitlement.create({
       data: {
-        brand,
+        brand: Brand.BBL,
         key: input.key,
         name: input.name,
         description: input.description,
@@ -51,10 +49,8 @@ export const linkPlanToEntitlement = adminActionClient
  * List all entitlements for the current brand.
  */
 export const listEntitlements = adminActionClient.action(async ({ ctx: { db } }) => {
-  const brand = await getRequestBrand()
-
   return db.entitlement.findMany({
-    where: { brand },
+    where: { brand: Brand.BBL },
     include: { grants: { include: { pricingPlan: true } } },
     orderBy: { createdAt: "desc" },
   })

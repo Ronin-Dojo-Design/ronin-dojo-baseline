@@ -1,6 +1,6 @@
 "use server"
 
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { submitLineageClaimSchema } from "~/server/web/lineage/claim-schemas"
 
@@ -21,13 +21,11 @@ const LINEAGE_CLAIM_ERROR = {
 export const submitLineageClaimRequest = userActionClient
   .inputSchema(submitLineageClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     // 1. Validate the tree exists, is published, and belongs to the brand.
     const tree = await db.lineageTree.findFirst({
       where: {
         id: parsedInput.treeId,
-        brand,
+        brand: Brand.BBL,
         isPublished: true,
       },
       select: { id: true, isClaimable: true },

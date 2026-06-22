@@ -1,9 +1,9 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { Brand } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { actionClient } from "~/lib/safe-actions"
 import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { checkoutSchema } from "~/server/web/products/schema"
@@ -14,7 +14,7 @@ export const createStripeCheckout = actionClient
   .action(async ({ parsedInput: { lineItems, successUrl, cancelUrl, mode, metadata, coupon } }) => {
     const session = await getServerSession()
     const shouldAttachCustomer = Boolean(session?.user?.id && metadata?.userId === session.user.id)
-    const requestBrand = shouldAttachCustomer ? await getRequestBrand() : null
+    const requestBrand = shouldAttachCustomer ? Brand.BBL : null
     const existingCustomer =
       session?.user?.id && requestBrand
         ? await findStripeCustomerForCheckout({

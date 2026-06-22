@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { z } from "zod"
-import { getRequestBrand } from "~/lib/brand-context"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandOrigin } from "~/lib/brand-origin"
 import { userActionClient } from "~/lib/safe-actions"
 import {
@@ -47,13 +47,11 @@ const resolvePlanCheckoutMode = ({
 export const createBillingPortalSession = userActionClient
   .inputSchema(createBillingPortalSessionSchema)
   .action(async ({ parsedInput: { returnUrl }, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     const customer = await db.stripeCustomer.findUnique({
       where: {
         userId_brand_accountScope: {
           userId: user.id,
-          brand,
+          brand: Brand.BBL,
           accountScope: STRIPE_CUSTOMER_ACCOUNT_SCOPE,
         },
       },
@@ -63,7 +61,7 @@ export const createBillingPortalSession = userActionClient
       throw new Error("No billing customer found for this brand.")
     }
 
-    const session = await getStripeClient(brand).billingPortal.sessions.create({
+    const session = await getStripeClient(Brand.BBL).billingPortal.sessions.create({
       customer: customer.stripeCustomerId,
       return_url: `${await getBrandOrigin()}${returnUrl}`,
     })
@@ -78,11 +76,9 @@ export const createBillingPortalSession = userActionClient
 export const createProgramEnrollmentCheckout = userActionClient
   .inputSchema(createProgramEnrollmentCheckoutSchema)
   .action(async ({ parsedInput: { programId, stripePriceId, coupon }, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     const matchingPlans = await db.pricingPlan.findMany({
       where: {
-        brand,
+        brand: Brand.BBL,
         programId,
         stripePriceId,
         isActive: true,
@@ -116,7 +112,7 @@ export const createProgramEnrollmentCheckout = userActionClient
     if (
       !pricingPlan.program ||
       pricingPlan.program.status !== "ACTIVE" ||
-      pricingPlan.program.brand !== brand ||
+      pricingPlan.program.brand !== Brand.BBL ||
       pricingPlan.program.organizationId !== pricingPlan.organizationId ||
       pricingPlan.programId !== programId ||
       !pricingPlan.stripePriceId ||
@@ -127,7 +123,7 @@ export const createProgramEnrollmentCheckout = userActionClient
 
     const existingCustomer = await findStripeCustomerForCheckout({
       userId: user.id,
-      brand,
+      brand: Brand.BBL,
     })
     const origin = await getBrandOrigin()
     const mode = resolvePlanCheckoutMode(pricingPlan)
@@ -137,10 +133,10 @@ export const createProgramEnrollmentCheckout = userActionClient
       programId: pricingPlan.program.id,
       pricingPlanId: pricingPlan.id,
       organizationId: pricingPlan.organizationId,
-      brand,
+      brand: Brand.BBL,
     }
 
-    const checkout = await getStripeClient(brand).checkout.sessions.create({
+    const checkout = await getStripeClient(Brand.BBL).checkout.sessions.create({
       mode,
       line_items: [{ price: pricingPlan.stripePriceId, quantity: 1 }],
       automatic_tax: { enabled: true },
@@ -170,8 +166,6 @@ export const createProgramEnrollmentCheckout = userActionClient
 export const createLineageMembershipCheckout = userActionClient
   .inputSchema(createLineageMembershipCheckoutSchema)
   .action(async ({ parsedInput: { pricingPlanId, coupon }, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     const pricingPlan = await db.pricingPlan.findUnique({
       where: { id: pricingPlanId },
       select: {
@@ -190,7 +184,7 @@ export const createLineageMembershipCheckout = userActionClient
 
     if (
       !pricingPlan ||
-      pricingPlan.brand !== brand ||
+      pricingPlan.brand !== Brand.BBL ||
       !pricingPlan.isActive ||
       pricingPlan.programId !== null ||
       !pricingPlan.stripePriceId ||
@@ -202,7 +196,7 @@ export const createLineageMembershipCheckout = userActionClient
 
     const existingCustomer = await findStripeCustomerForCheckout({
       userId: user.id,
-      brand,
+      brand: Brand.BBL,
     })
     const origin = await getBrandOrigin()
     const mode = resolvePlanCheckoutMode(pricingPlan)
@@ -211,10 +205,10 @@ export const createLineageMembershipCheckout = userActionClient
       userId: user.id,
       pricingPlanId: pricingPlan.id,
       organizationId: pricingPlan.organizationId,
-      brand,
+      brand: Brand.BBL,
     }
 
-    const checkout = await getStripeClient(brand).checkout.sessions.create({
+    const checkout = await getStripeClient(Brand.BBL).checkout.sessions.create({
       mode,
       line_items: [{ price: pricingPlan.stripePriceId, quantity: 1 }],
       automatic_tax: { enabled: true },

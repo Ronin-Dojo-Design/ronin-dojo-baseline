@@ -3,10 +3,9 @@
 import { getDomain } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import z from "zod"
-import { AdType, type Prisma } from "~/.generated/prisma/client"
+import { AdType, Brand, type Prisma } from "~/.generated/prisma/client"
 import { adsConfig } from "~/config/ads"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getFaviconFetchUrl } from "~/lib/media"
 import { actionClient } from "~/lib/safe-actions"
 import { fetchMedia } from "~/server/web/actions/media"
@@ -40,8 +39,7 @@ export const findAdWithFallback = actionClient
   .inputSchema(findAdWithFallbackSchema)
   .action(async ({ parsedInput: { type, explicitAd, fallback } }) => {
     const t = await getTranslations("ads")
-    const brand = await getRequestBrand()
-    const brandConfig = getBrandSiteConfig(brand)
+    const brandConfig = getBrandSiteConfig(Brand.BBL)
     let ads: AdOne[] = []
 
     const defaultAd = {

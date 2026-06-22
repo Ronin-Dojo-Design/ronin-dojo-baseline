@@ -9,10 +9,8 @@ mock.module("next/cache", () => ({
   updateTag: () => {},
 }))
 
-mock.module("~/lib/brand-context", () => ({
-  getRequestBrand: () => Promise.resolve("BASELINE_MARTIAL_ARTS"),
-}))
-
+// The helper under test receives `brand` directly as a parameter, so no
+// brand-context mock is needed (production code inlines Brand.BBL post brand-prune).
 mock.module("~/lib/auth", () => ({
   getServerSession: () => Promise.resolve(null),
 }))

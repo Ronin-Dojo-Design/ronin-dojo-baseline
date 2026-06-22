@@ -1,8 +1,7 @@
 "use server"
 
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { FAMILY_ERROR } from "~/server/web/family/errors"
@@ -137,21 +136,19 @@ const auditFamilyMemberSnapshot = (member: FamilyMemberRecord) => ({
 export const createFamilyGroup = userActionClient
   .inputSchema(createFamilyGroupSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "family_write")) {
       throw new Error(FAMILY_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     await assertCanManageOrganization({ user, organizationId: organization.id })
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: organization.id,
       userId: parsedInput.primaryUserId,
     })
@@ -202,27 +199,25 @@ export const createFamilyGroup = userActionClient
 export const addFamilyMember = userActionClient
   .inputSchema(addFamilyMemberSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "family_write")) {
       throw new Error(FAMILY_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     await assertCanManageOrganization({ user, organizationId: organization.id })
     await assertFamilyGroupVisibleInOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: organization.id,
       familyGroupId: parsedInput.familyGroupId,
     })
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: organization.id,
       userId: parsedInput.userId,
     })
@@ -280,15 +275,13 @@ export const addFamilyMember = userActionClient
 export const removeFamilyMember = userActionClient
   .inputSchema(removeFamilyMemberSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "family_write")) {
       throw new Error(FAMILY_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     await assertCanManageOrganization({ user, organizationId: organization.id })
@@ -299,7 +292,7 @@ export const removeFamilyMember = userActionClient
         user: {
           memberships: {
             some: {
-              brand: requestBrand,
+              brand: Brand.BBL,
               organizationId: organization.id,
               status: "ACTIVE",
             },

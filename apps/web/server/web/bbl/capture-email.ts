@@ -35,9 +35,6 @@ export const captureBblEmail = publicActionClient
     }
 
     // This capture only ever runs on the BBL teaser, so the brand is always BBL.
-    // Don't derive it from the request: in a server action `getRequestBrand()`
-    // falls back to the default brand, which sent the confirmation from the wrong
-    // (Baseline) sender.
     const brand = Brand.BBL
     const email = parsedInput.email.trim().toLowerCase()
     const name = parsedInput.name?.trim() || null

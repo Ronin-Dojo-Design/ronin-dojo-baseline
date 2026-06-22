@@ -1,8 +1,7 @@
 "use server"
 
-import type { Brand, EnrollmentStatus } from "~/.generated/prisma/client"
+import { Brand, type EnrollmentStatus } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { ENROLLMENT_ERROR } from "~/server/web/enrollment/errors"
@@ -184,21 +183,19 @@ const upsertEnrollment = async ({
 export const enrollInProgram = userActionClient
   .inputSchema(enrollmentProgramUserSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "enrollment_write")) {
       throw new Error(ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     const program = await resolveProgramForEnrollment({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       programId: parsedInput.programId,
     })
     await assertCanManageProgram({ user, program })
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: program.organizationId,
       userId: parsedInput.userId,
       disciplineId: program.disciplineId,
@@ -257,21 +254,19 @@ export const enrollInProgram = userActionClient
 export const joinProgramWaitlist = userActionClient
   .inputSchema(enrollmentProgramUserSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "enrollment_write")) {
       throw new Error(ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
     const program = await resolveProgramForEnrollment({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       programId: parsedInput.programId,
     })
     await assertCanManageProgram({ user, program })
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: program.organizationId,
       userId: parsedInput.userId,
       disciplineId: program.disciplineId,
@@ -328,8 +323,6 @@ export const joinProgramWaitlist = userActionClient
 export const withdrawEnrollment = userActionClient
   .inputSchema(withdrawEnrollmentSchema)
   .action(async ({ parsedInput: { enrollmentId }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "enrollment_write")) {
       throw new Error(ENROLLMENT_ERROR.RATE_LIMITED)
     }
@@ -337,7 +330,7 @@ export const withdrawEnrollment = userActionClient
     const existing = await db.programEnrollment.findFirst({
       where: {
         id: enrollmentId,
-        program: { brand: requestBrand },
+        program: { brand: Brand.BBL },
       },
       select: programEnrollmentPayload,
     })
@@ -386,13 +379,11 @@ export const withdrawEnrollment = userActionClient
 export const promoteFromWaitlist = userActionClient
   .inputSchema(promoteFromWaitlistSchema)
   .action(async ({ parsedInput: { programId }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "enrollment_write")) {
       throw new Error(ENROLLMENT_ERROR.RATE_LIMITED)
     }
 
-    const program = await resolveProgramForEnrollment({ db, brand: requestBrand, programId })
+    const program = await resolveProgramForEnrollment({ db, brand: Brand.BBL, programId })
     await assertCanManageProgram({ user, program })
 
     let enrollment: ProgramEnrollmentRecord

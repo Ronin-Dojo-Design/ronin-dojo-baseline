@@ -3,9 +3,8 @@
 import { tryCatch } from "@dirstack/utils"
 import { getTranslations } from "next-intl/server"
 import { after } from "next/server"
-import { ReportType } from "~/.generated/prisma/client"
+import { Brand, ReportType } from "~/.generated/prisma/client"
 import { reportsConfig } from "~/config/reports"
-import { getRequestBrand } from "~/lib/brand-context"
 import { notifyAdminOfFeedback } from "~/lib/notifications"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { actionClient, userActionClient } from "~/lib/safe-actions"
@@ -78,9 +77,10 @@ export const reportFeedback = actionClient
     // operator inbox so it actually gets seen. Scheduled post-response via after() so
     // Resend latency never blocks the success toast and a send failure can't undo the
     // already-committed feedback row.
-    const brand = await getRequestBrand()
     after(async () => {
-      const notifyResult = await tryCatch(notifyAdminOfFeedback({ brand, email, message }))
+      const notifyResult = await tryCatch(
+        notifyAdminOfFeedback({ brand: Brand.BBL, email, message }),
+      )
       if (notifyResult.error) {
         console.error("Failed to notify operator of feedback:", notifyResult.error)
       }

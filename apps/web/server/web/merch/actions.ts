@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { z } from "zod"
+import { Brand } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
-import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { stripe } from "~/services/stripe"
@@ -32,13 +32,11 @@ const createMerchCheckoutSchema = z.object({
 export const createMerchCheckout = userActionClient
   .inputSchema(createMerchCheckoutSchema)
   .action(async ({ parsedInput: { pricingPlanId, quantity, size, color }, ctx: { user, db } }) => {
-    const brand = await getRequestBrand()
-
     // 1. Resolve the merch PricingPlan
     const matchingPlans = await db.pricingPlan.findMany({
       where: {
         id: pricingPlanId,
-        brand,
+        brand: Brand.BBL,
         isActive: true,
         metadata: {
           path: ["source"],
@@ -79,7 +77,7 @@ export const createMerchCheckout = userActionClient
     // 4. Resolve or find existing Stripe customer
     const existingCustomer = await findStripeCustomerForCheckout({
       userId: user.id,
-      brand,
+      brand: Brand.BBL,
     })
 
     // 5. Build checkout session metadata (ADR 0014 §4)
@@ -88,7 +86,7 @@ export const createMerchCheckout = userActionClient
       userId: user.id,
       pricingPlanId: plan.id,
       organizationId: plan.organizationId,
-      brand,
+      brand: Brand.BBL,
       ...(size ? { size } : {}),
       ...(color ? { color } : {}),
     }
@@ -188,16 +186,14 @@ const updateMerchOrderStatusSchema = z.object({
 
 /**
  * Admin: manually override a merch order's fulfillment status.
- * Brand-scoped via getRequestBrand().
+ * Brand-scoped (single-brand: BBL).
  *
  * @see docs/sprints/SESSION_0120.md — TASK_07
  */
 export const updateMerchOrderStatus = adminActionClient
   .inputSchema(updateMerchOrderStatusSchema)
   .action(async ({ parsedInput: { id, status, reason }, ctx: { user } }) => {
-    const brand = await getRequestBrand()
-
-    const order = await db.merchOrder.findFirst({ where: { id, brand } })
+    const order = await db.merchOrder.findFirst({ where: { id, brand: Brand.BBL } })
     if (!order) {
       throw new Error("Order not found.")
     }
@@ -237,10 +233,8 @@ const retryPrintfulOrderSchema = z.object({
 export const retryPrintfulOrder = adminActionClient
   .inputSchema(retryPrintfulOrderSchema)
   .action(async ({ parsedInput: { merchOrderId } }) => {
-    const brand = await getRequestBrand()
-
     const order = await db.merchOrder.findFirst({
-      where: { id: merchOrderId, brand },
+      where: { id: merchOrderId, brand: Brand.BBL },
     })
 
     if (!order) {

@@ -1,14 +1,13 @@
 "use server"
 
+import { Brand } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { userActionClient } from "~/lib/safe-actions"
 import { archiveProgramSchema, saveProgramSchema } from "~/server/web/program/schemas"
 
 export const saveProgram = userActionClient
   .inputSchema(saveProgramSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
     const { organizationId, ...programInput } = parsedInput
     const id = programInput.id && programInput.id !== "none" ? programInput.id : undefined
     const disciplineId =
@@ -20,7 +19,7 @@ export const saveProgram = userActionClient
     const organization = await db.organization.findFirst({
       where: {
         id: organizationId,
-        brand: requestBrand,
+        brand: Brand.BBL,
       },
       select: {
         id: true,
@@ -53,7 +52,7 @@ export const saveProgram = userActionClient
       const existingProgram = await db.program.findFirst({
         where: {
           id,
-          brand: requestBrand,
+          brand: Brand.BBL,
         },
         select: { organizationId: true },
       })
@@ -101,12 +100,10 @@ export const saveProgram = userActionClient
 export const archiveProgram = userActionClient
   .inputSchema(archiveProgramSchema)
   .action(async ({ parsedInput: { id }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     const program = await db.program.findFirst({
       where: {
         id,
-        brand: requestBrand,
+        brand: Brand.BBL,
       },
       select: {
         id: true,

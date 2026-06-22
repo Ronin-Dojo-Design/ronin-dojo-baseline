@@ -5,10 +5,10 @@ import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { getTranslations } from "next-intl/server"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig } from "~/config/site"
 import { EmailVerifyDomain } from "~/emails/verify-domain"
 import { auth } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { sendEmail } from "~/lib/email"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
@@ -64,8 +64,7 @@ const verifyEmailDomain = (email: string, toolWebsiteUrl: string) => {
  * Generate and send OTP email
  */
 const generateAndSendOtp = async (email: string) => {
-  const brand = await getRequestBrand()
-  const brandConfig = getBrandSiteConfig(brand)
+  const brandConfig = getBrandSiteConfig(Brand.BBL)
   const { token: otp } = await auth.api.generateOneTimeToken({
     headers: await headers(),
   })

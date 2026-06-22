@@ -1,8 +1,7 @@
 "use server"
 
-import type { AttendanceStatus, Brand, Prisma } from "~/.generated/prisma/client"
+import { Brand, type AttendanceStatus, type Prisma } from "~/.generated/prisma/client"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
 import { ATTENDANCE_ERROR } from "~/server/web/attendance/errors"
@@ -104,8 +103,6 @@ const auditAttendanceSnapshot = (attendance: {
 export const recordCheckIn = userActionClient
   .inputSchema(recordCheckInSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "attendance_write")) {
       throw new Error(ATTENDANCE_ERROR.RATE_LIMITED)
     }
@@ -113,7 +110,7 @@ export const recordCheckIn = userActionClient
     const session = await db.classSession.findFirst({
       where: {
         id: parsedInput.classSessionId,
-        classSchedule: { brand: requestBrand },
+        classSchedule: { brand: Brand.BBL },
       },
       select: {
         id: true,
@@ -143,7 +140,7 @@ export const recordCheckIn = userActionClient
 
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: session.classSchedule.organizationId,
       userId: parsedInput.userId,
       disciplineId: session.classSchedule.disciplineId,
@@ -229,8 +226,6 @@ export const recordCheckIn = userActionClient
 export const markAttendance = userActionClient
   .inputSchema(markAttendanceSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "attendance_write")) {
       throw new Error(ATTENDANCE_ERROR.RATE_LIMITED)
     }
@@ -238,7 +233,7 @@ export const markAttendance = userActionClient
     const session = await db.classSession.findFirst({
       where: {
         id: parsedInput.classSessionId,
-        classSchedule: { brand: requestBrand },
+        classSchedule: { brand: Brand.BBL },
       },
       select: {
         id: true,
@@ -268,7 +263,7 @@ export const markAttendance = userActionClient
 
     await assertTargetIsActiveMember({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: session.classSchedule.organizationId,
       userId: parsedInput.userId,
       disciplineId: session.classSchedule.disciplineId,
@@ -340,8 +335,6 @@ export const markAttendance = userActionClient
 export const voidCheckIn = userActionClient
   .inputSchema(voidCheckInSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "attendance_write")) {
       throw new Error(ATTENDANCE_ERROR.RATE_LIMITED)
     }
@@ -350,7 +343,7 @@ export const voidCheckIn = userActionClient
       where: {
         id: parsedInput.attendanceId,
         classSession: {
-          classSchedule: { brand: requestBrand },
+          classSchedule: { brand: Brand.BBL },
         },
       },
       select: {

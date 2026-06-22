@@ -1,11 +1,10 @@
 "use server"
 
 import { after } from "next/server"
-import type { Brand } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { EmailMagicLink } from "~/emails/magic-link"
 import { canEditOrganization } from "~/lib/authz"
-import { getRequestBrand } from "~/lib/brand-context"
 import { sendEmail } from "~/lib/email"
 import { isRateLimited } from "~/lib/rate-limiter"
 import { userActionClient } from "~/lib/safe-actions"
@@ -134,15 +133,13 @@ const auditLeadSnapshot = (lead: LeadRecord) => ({
 export const createLead = userActionClient
   .inputSchema(createLeadSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "lead_write")) {
       throw new Error(LEAD_ERROR.RATE_LIMITED)
     }
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: parsedInput.organizationId,
     })
     await assertCanManageOrganization({ user, organizationId: organization.id })
@@ -150,7 +147,7 @@ export const createLead = userActionClient
     if (parsedInput.programId) {
       await resolveProgram({
         db,
-        brand: requestBrand,
+        brand: Brand.BBL,
         organizationId: organization.id,
         programId: parsedInput.programId,
       })
@@ -160,7 +157,7 @@ export const createLead = userActionClient
     try {
       lead = await db.lead.create({
         data: {
-          brand: requestBrand,
+          brand: Brand.BBL,
           organizationId: organization.id,
           programId: parsedInput.programId,
           source: parsedInput.source,
@@ -179,7 +176,7 @@ export const createLead = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: organization.id,
       entityType: "Lead",
@@ -196,13 +193,11 @@ export const createLead = userActionClient
 export const bookTrial = userActionClient
   .inputSchema(bookTrialSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "trial_book")) {
       throw new Error(LEAD_ERROR.TRIAL_RATE_LIMITED)
     }
 
-    const lead = await resolveLead({ db, brand: requestBrand, leadId: parsedInput.leadId })
+    const lead = await resolveLead({ db, brand: Brand.BBL, leadId: parsedInput.leadId })
     await assertCanManageOrganization({ user, organizationId: lead.organizationId })
 
     if (lead.status === "TRIAL_BOOKED" && lead.trialBookedAt) {
@@ -229,7 +224,7 @@ export const bookTrial = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: lead.organizationId,
       entityType: "TrialBooking",
@@ -247,13 +242,11 @@ export const bookTrial = userActionClient
 export const completeTrial = userActionClient
   .inputSchema(completeTrialSchema)
   .action(async ({ parsedInput: { leadId }, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "lead_write")) {
       throw new Error(LEAD_ERROR.RATE_LIMITED)
     }
 
-    const lead = await resolveLead({ db, brand: requestBrand, leadId })
+    const lead = await resolveLead({ db, brand: Brand.BBL, leadId })
     await assertCanManageOrganization({ user, organizationId: lead.organizationId })
 
     if (lead.status !== "TRIAL_BOOKED") {
@@ -273,7 +266,7 @@ export const completeTrial = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: lead.organizationId,
       entityType: "Lead",
@@ -291,13 +284,11 @@ export const completeTrial = userActionClient
 export const convertLead = userActionClient
   .inputSchema(convertLeadSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const requestBrand = await getRequestBrand()
-
     if (await isRateLimited(user.id, "lead_write")) {
       throw new Error(LEAD_ERROR.RATE_LIMITED)
     }
 
-    const lead = await resolveLead({ db, brand: requestBrand, leadId: parsedInput.leadId })
+    const lead = await resolveLead({ db, brand: Brand.BBL, leadId: parsedInput.leadId })
     await assertCanManageOrganization({ user, organizationId: lead.organizationId })
 
     if (lead.status === "CONVERTED" && lead.convertedToUserId) {
@@ -320,14 +311,14 @@ export const convertLead = userActionClient
 
     const organization = await resolveOrganization({
       db,
-      brand: requestBrand,
+      brand: Brand.BBL,
       organizationId: lead.organizationId,
     })
 
     const program = lead.programId
       ? await resolveProgram({
           db,
-          brand: requestBrand,
+          brand: Brand.BBL,
           organizationId: organization.id,
           programId: lead.programId,
         })
@@ -367,7 +358,7 @@ export const convertLead = userActionClient
             data: {
               email: leadEmail,
               name: displayName,
-              lastActiveBrandId: requestBrand,
+              lastActiveBrandId: Brand.BBL,
             },
             select: { id: true },
           }))
@@ -406,12 +397,12 @@ export const convertLead = userActionClient
             },
           },
           update: {
-            brand: requestBrand,
+            brand: Brand.BBL,
             status: "ACTIVE",
             leftAt: null,
           },
           create: {
-            brand: requestBrand,
+            brand: Brand.BBL,
             userId: convertedUser.id,
             organizationId: organization.id,
             disciplineId,
@@ -487,7 +478,7 @@ export const convertLead = userActionClient
               id: { in: parsedInput.waiverIds },
               isActive: true,
               AND: [
-                { OR: [{ brand: requestBrand }, { brand: null }] },
+                { OR: [{ brand: Brand.BBL }, { brand: null }] },
                 { OR: [{ organizationId: organization.id }, { organizationId: null }] },
               ],
               ...(program
@@ -496,7 +487,7 @@ export const convertLead = userActionClient
                       some: {
                         programId: program.id,
                         program: {
-                          brand: requestBrand,
+                          brand: Brand.BBL,
                           organizationId: organization.id,
                         },
                       },
@@ -557,7 +548,7 @@ export const convertLead = userActionClient
     }
 
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: lead.organizationId,
       entityType: "Lead",
@@ -567,7 +558,7 @@ export const convertLead = userActionClient
       after: { ...auditLeadSnapshot(result.lead), correlationId },
     })
     await writeSchoolOpsAudit({
-      brand: requestBrand,
+      brand: Brand.BBL,
       userId: user.id,
       organizationId: lead.organizationId,
       entityType: "Membership",
@@ -577,7 +568,7 @@ export const convertLead = userActionClient
     })
     if (result.enrollmentId && program) {
       await writeSchoolOpsAudit({
-        brand: requestBrand,
+        brand: Brand.BBL,
         userId: user.id,
         organizationId: lead.organizationId,
         entityType: "Enrollment",
@@ -588,7 +579,7 @@ export const convertLead = userActionClient
     }
     for (const signatureId of result.waiverSignatureIds) {
       await writeSchoolOpsAudit({
-        brand: requestBrand,
+        brand: Brand.BBL,
         userId: user.id,
         organizationId: lead.organizationId,
         entityType: "WaiverSignature",
@@ -602,7 +593,7 @@ export const convertLead = userActionClient
 
     // Send welcome email to newly created users directing them to log in
     if (result.isNewUser && lead.email) {
-      const brandConfig = getBrandSiteConfig(requestBrand)
+      const brandConfig = getBrandSiteConfig(Brand.BBL)
       after(async () => {
         try {
           const loginUrl = `${siteConfig.url}/login`
