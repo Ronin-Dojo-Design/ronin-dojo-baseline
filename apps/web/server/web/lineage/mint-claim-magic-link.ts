@@ -8,12 +8,15 @@ import { db } from "~/services/db"
  * email-bound, single-use magic link.
  *
  * The recipient's click chain is:
- *   email link → /api/auth/magic-link/verify (sets the session cookie, outside
- *   the gated `(web)` group) → redirects to the `callbackURL`, which is the
- *   self-arming preview hop → /preview arms the `bbl_preview` cookie (past the
- *   pre-launch countdown gate) → redirects to `nextPath`. `nextPath` is either
- *   the token-accept route (`/lineage/claim/accept?node=…`, which one-click
+ *   email link → /api/auth/magic-link/verify (sets the session cookie, outside the
+ *   gated `(web)` group) → redirects straight to the `callbackURL` == `nextPath`,
+ *   either the token-accept route (`/lineage/claim/accept?node=…`, which one-click
  *   claims the node) or `/me` (a plain free signup that just needs an account).
+ *
+ * SESSION_0440: the callbackURL was previously wrapped in a `/preview?token=…&next=…`
+ * countdown-gate-bypass hop, but that produced a NESTED `?` for claim links which Better
+ * Auth's double-decoding `originCheck` rejected with INVALID_CALLBACK_URL (see the
+ * callbackURL note in `mintClaimMagicLink`). The gate is hard-off now, so the hop is gone.
  *
  * We call Better-Auth's `signInMagicLink` ONLY to CREATE the verification token
  * (email-bound, single-use, plugin-managed expiry), passing
@@ -77,11 +80,24 @@ async function persistPendingClaimBinding(email: string, nextPath: string): Prom
 export async function mintClaimMagicLink(opts: {
   baseUrl: string
   email: string
-  /** Where the recipient lands AFTER the preview hop — claim-accept route or `/me`. */
+  /** Where the recipient lands after verifying — the claim-accept route or `/me`. */
   nextPath: string
-  previewToken: string
+  /**
+   * @deprecated SESSION_0440 — retained for caller compat but no longer used. The
+   * `/preview` gate-bypass hop is gone (see callbackURL note below).
+   */
+  previewToken?: string
 }): Promise<string> {
-  const callbackURL = `/preview?token=${encodeURIComponent(opts.previewToken)}&next=${encodeURIComponent(opts.nextPath)}`
+  // The callbackURL MUST be a relative path with at most ONE query string. Better Auth's
+  // magic-link `originCheck` runs `decodeURIComponent(ctx.query.callbackURL)` — a SECOND
+  // decode on top of the framework's — then validates against a trusted-relative regex that
+  // permits a single `?` only. The old `/preview?token=…&next=/lineage/claim/accept?node=<id>`
+  // wrapper decoded to a callbackURL with a NESTED `?` (the `%3F` in `next` collapsed to a
+  // literal `?`) → INVALID_CALLBACK_URL on every node claim. (The `/me` free-signup path
+  // survived only because its `next` carried no query.) The preview hop is now vestigial — the
+  // BBL countdown gate is hard-off (`isBblCountdownActive()` returns false; `BBL_COUNTDOWN`
+  // unset in prod) — so point the callbackURL straight at the single-query destination.
+  const callbackURL = opts.nextPath
 
   const host = new URL(opts.baseUrl).host
   const headers = new Headers({ host, "x-forwarded-host": host })
