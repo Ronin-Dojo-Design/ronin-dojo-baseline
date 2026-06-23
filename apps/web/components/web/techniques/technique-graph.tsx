@@ -51,8 +51,8 @@ const NODE_TYPES: { value: FilterValue; label: string }[] = [
 const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
 
 const nodeTypeClass = (type: GraphNodeType) => {
-  if (type === "position") return "border-primary/60 bg-primary/10 text-primary"
-  if (type === "submission") return "border-destructive/60 bg-destructive/10 text-destructive"
+  if (type === "position") return "border-primary/60 bg-card text-primary"
+  if (type === "submission") return "border-destructive/60 bg-card text-destructive"
   if (type === "counter") {
     return "border-muted-foreground/50 bg-muted text-muted-foreground"
   }

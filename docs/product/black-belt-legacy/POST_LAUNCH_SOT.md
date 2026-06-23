@@ -4,8 +4,8 @@ slug: post-launch-sot
 type: sot
 status: active
 created: 2026-06-20
-updated: 2026-06-22
-last_agent: claude-session-0434
+updated: 2026-06-23
+last_agent: claude-session-0435
 pairs_with:
   - docs/knowledge/wiki/files/feature-request-dialog.md
   - docs/petey-plan-0419-post-launch-sweep.md
@@ -73,7 +73,7 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 | FI-006 | Claim→award rank lifecycle: registration/claim rank picker → pending claim (`rankId` on claim record) → admin-verify creates `RankAward`; deprecate `LineageTreeMember.selectedRankAward` FK | feature | P1 | triaged | ADR 0035 / SESSION_0430 |
 | FI-007 | Directory-profile form: Cover Photo Url + Video intro show **"Invalid URL" on empty fields** (validation bug); assess cover-photo + avatar wiring correctness end-to-end; update the forms | bug | P1 | resolved (SESSION_0434) | Validation fixed (#159); wiring audited — avatar round-trips; cover/video were stored + in the read model but **never rendered** (logged WL-P2-14/15). SESSION_0434 wired the render: `coverPhotoUrl` → `ProfileHero` background + new `ProfileCoverBanner` (claimed `ListingDetail` path); `videoIntroUrl` → new `VideoIntroSection` (YouTube/Vimeo embed). Browser-verified (dev-login as admin owner → `/directory/brian-scott`). Orig screenshot `_assets/SESSION_0430-directory-profile-form-invalid-url.png`. |
 | FI-008 | Reconcile `seed-baseline-lineage.ts` with the SESSION_0430 SQL corrections (Bill Hosken/Jerry Smith/Rikki/ranks/merges) so the seed stops being a latent regression (D-030); then it can carry the full Hélio Gracie node + Rorion link | bug | P1 | resolved (#161) | SESSION_0433 — seed reconciled; D-030 resolved; seed-run verified on prodsnap (no regression; independently re-verified SESSION_0434 — throwaway prodsnap copy, before/after byte-identical) |
-| FI-009 | Re-derive the technique-graph + BJJ-curriculum feature fresh on current main (do NOT rebase the conflicting WIP). Reference: closed PR #157 / branch `codex/technique-graph-curriculum` + its 2 data JSONs (`prisma/data/bbl-bjj-{curriculum,graph}.json`) + `import-bbl-bjj-curriculum.ts`. De-threads getRequestBrand (gone); needs html2canvas dep | feature | P2 | triaged | SESSION_0432 / re-derive decision |
+| FI-009 | Re-derive the technique-graph + BJJ-curriculum feature fresh on current main (do NOT rebase the conflicting WIP). Reference: closed PR #157 / branch `codex/technique-graph-curriculum` + its 2 data JSONs (`prisma/data/bbl-bjj-{curriculum,graph}.json`) + `import-bbl-bjj-curriculum.ts`. De-threads getRequestBrand (gone); needs html2canvas dep | feature | P2 | resolved (SESSION_0435) — LIVE on prod | **Already built + merged on `main` before this lane** — the re-derive landed via `0be7eacc` (port) + `e2cdeb9c`/#154 (getRequestBrand de-thread, pages use `Brand.BBL`); `main` is byte-identical to the ref branch; html2canvas + nav/seo/footer/header/brand-features all present. SESSION_0435 = browser-verified both pages render with real data (no console errors); made graph node cards opaque (`bg-card`) so connector lines no longer bleed through; ran the idempotent `import-bbl-bjj-curriculum.ts` against **prod Neon** (all-creates: +1 org, 5 courses, 80 items, 61 techniques, 75 prereqs, 81 links; before-state confirmed 0 BJJ rows). Live: `blackbeltlegacy.com/curriculum` + `/techniques/graph` both 200 with content (countdown off). |
 
 <!-- Append new rows above. Resolve in place: Status → MVP_LIVE (+ link the file-spec) or declined (+ reason). -->
 
