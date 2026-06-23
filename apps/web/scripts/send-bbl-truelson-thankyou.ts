@@ -318,9 +318,15 @@ async function grant(): Promise<void> {
 /** Mint the one-click claim/sign-in link and send the email via Resend. */
 async function send(): Promise<void> {
   const { db } = await import("~/services/db")
-  const { mintClaimMagicLink, claimAcceptNextPath } =
+  const { mintClaimMagicLink, claimAcceptNextPath, FREE_SIGNUP_NEXT_PATH } =
     await import("~/server/web/lineage/mint-claim-magic-link")
   const { notifyMemberOfBblFirstTesterWelcome } = await import("~/lib/notifications")
+
+  // Test overrides (SESSION_0439): --to redirects the send to a throwaway inbox, and
+  // --free-signup points the magic link at /me (plain sign-in) INSTEAD of the claim-accept
+  // path — so a test click creates only a disposable account and NEVER claims Brian's node.
+  const toEmail = (flagValue("--to") ?? TARGET.email).trim()
+  const freeSignup = has("--free-signup")
 
   const resolved = await resolveNode(db)
   if (!resolved) {
@@ -328,33 +334,37 @@ async function send(): Promise<void> {
     process.exitCode = 1
     return
   }
-  if (resolved.passportUserId) {
+  if (!freeSignup && resolved.passportUserId) {
     console.error("❌ SEND — node already claimed; aborting (will not re-mint).")
     process.exitCode = 1
     return
   }
 
+  const nextPath = freeSignup ? FREE_SIGNUP_NEXT_PATH : claimAcceptNextPath(resolved.nodeId)
   const previewToken = process.env.BBL_PREVIEW_TOKEN ?? "bob-tony-BBL-preview"
   const claimUrl = await mintClaimMagicLink({
     baseUrl: TARGET.baseUrl,
-    email: TARGET.email,
-    nextPath: claimAcceptNextPath(resolved.nodeId),
+    email: toEmail,
+    nextPath,
     previewToken,
   })
+  console.log(
+    `📤 SEND — to=${toEmail} | nextPath=${nextPath}${freeSignup ? " (FREE-SIGNUP test — no claim)" : ""}`,
+  )
 
   const res = await notifyMemberOfBblFirstTesterWelcome({
     brand: TARGET.brand,
-    to: TARGET.email,
+    to: toEmail,
     recipientName: TARGET.recipientName,
     claimUrl,
   })
   const id = (res as { data?: { id?: string } } | undefined)?.data?.id
   const err = (res as { error?: unknown } | undefined)?.error
   if (err) {
-    console.error(`❌ SEND — ${TARGET.email}:`, err)
+    console.error(`❌ SEND — ${toEmail}:`, err)
     process.exitCode = 1
   } else if (id) {
-    console.log(`✅ SEND — ${TARGET.email} — Resend id ${id}`)
+    console.log(`✅ SEND — ${toEmail} — Resend id ${id}`)
   } else {
     console.warn(`⚠️ SEND — no id/error (rate-limited or RESEND_API_KEY unset?)`)
   }
