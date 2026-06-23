@@ -4,15 +4,16 @@ import { z } from "zod"
 const DirectoryVisibility = z.enum(["PUBLIC", "MEMBERS_ONLY", "HIDDEN"])
 const Gender = z.enum(["MALE", "FEMALE", "NONBINARY", "PREFER_NOT_TO_SAY"])
 
-// Form inputs coerce null → "" via the str() helper in passport-editor.tsx. An empty
-// string is "not set" — valid to submit, maps to null in the DB (clears the field).
-// Without this, z.string().url().optional() rejects "" with "Invalid URL".
+// Form inputs represent "not set" as either "" (text fields via the str() helper) or
+// null (FormMedia clears to null) — both are valid to submit and map to null in the DB
+// (clears the field). Use `.nullish()` (not `.optional()`) so a null from FormMedia is
+// accepted; without it z.string().url() rejects null with the union's "Invalid input".
 const optionalUrl = z
   .string()
   .url()
   .max(2048)
   .or(z.literal(""))
-  .optional()
+  .nullish()
   .transform(v => (v === "" ? null : v))
 
 export const updatePassportSchema = z.object({

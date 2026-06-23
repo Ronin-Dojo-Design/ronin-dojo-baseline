@@ -4,6 +4,9 @@ import { updateDirectoryProfileSchema, updatePassportSchema } from "./schemas"
 
 // FI-007: empty optional URL fields must not produce "Invalid URL" errors.
 // The form coerces null → "" via str(); the schema must accept "" and convert it to null.
+// SESSION_0439: FormMedia (cover photo / video upload) clears to *null*, not "" — the
+// schema must accept null too, or save blocks with the union's "Invalid input" (dogfooded
+// on the live directory-profile edit screen).
 
 describe("updatePassportSchema — avatarUrl", () => {
   it("accepts a valid URL", () => {
@@ -14,6 +17,12 @@ describe("updatePassportSchema — avatarUrl", () => {
 
   it("accepts empty string and transforms to null", () => {
     const r = updatePassportSchema.safeParse({ avatarUrl: "" })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.avatarUrl).toBeNull()
+  })
+
+  it("accepts null and transforms to null", () => {
+    const r = updatePassportSchema.safeParse({ avatarUrl: null })
     expect(r.success).toBe(true)
     if (r.success) expect(r.data.avatarUrl).toBeNull()
   })
@@ -53,6 +62,15 @@ describe("updateDirectoryProfileSchema — coverPhotoUrl / videoIntroUrl", () =>
     const r = updateDirectoryProfileSchema.safeParse({ videoIntroUrl: "" })
     expect(r.success).toBe(true)
     if (r.success) expect(r.data.videoIntroUrl).toBeNull()
+  })
+
+  it("accepts null for both fields and transforms to null (FormMedia clears to null)", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ coverPhotoUrl: null, videoIntroUrl: null })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      expect(r.data.coverPhotoUrl).toBeNull()
+      expect(r.data.videoIntroUrl).toBeNull()
+    }
   })
 
   it("accepts both fields absent (fully optional)", () => {
