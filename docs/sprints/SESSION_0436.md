@@ -420,6 +420,10 @@ scope decision before Phase 3 fixes.**
 | `docs/petey-plan-0436-claim-unification.md` | NEW — E0 epic spec + fan-out phase prompts (P0–P6) |
 | `docs/sprints/SESSION_0436.md` | This file |
 | `docs/knowledge/wiki/index.md` | Session 0436 row added |
+| `apps/web/emails/bbl-truelson-holding-note.tsx` | NEW — Brian holding-note email (no claim link) |
+| `apps/web/scripts/send-bbl-truelson-holding.ts` | NEW — dry-run/preview/send script for the holding note |
+| `docs/protocols/send-email-flow.md` | NEW — SEND_EMAIL_FLOW SOP (draft→preview→gated send) |
+| prod `Passport.avatarUrl` (Brian) + R2 `bbl-media` | Cropped avatar uploaded + avatarUrl repointed (prod data, no repo change) |
 
 ## Verification
 
@@ -475,8 +479,13 @@ Fan this out via the §P0 fan-out prompt. (Interim Gap 1 guard from SESSION_0436
 - E0 tracking board: use the **Mammoth `AdminKanban`** (`packages/ui-kit/src/kanban/`, config-driven,
   content-agnostic) — NOT BBL's content-bound `AdminTaskBoard`. Small reusable task: implement a DB-backed
   `BoardStore` (port exists) + engineering `BoardConfig` for E0 P0–P6. See `petey-plan-0436`.
-- Brian holding-note **operator-approved copy captured** in `petey-plan-0436` — ⚠ copy says claim "by tonight"
-  vs E0-first gating (reconcile before send); "Machado / Bill Hosken" lineage wording to confirm.
+- Brian holding-note **operator-approved copy captured** in `petey-plan-0436`; **note SENT** (Resend
+  `681a8d65…`); real claim invite = 2nd touch after E0.
+- **Admin "set placeholder avatar" path** (staged build): admins currently can't set a placeholder person's
+  avatar (`uploadAndPromotePassportAvatar` is self-only + media-authz enforces ownership). Build an
+  admin-gated action + surface reusing the circle cropper (`components/web/uploader/cropper.tsx`); fixes the
+  systemic full-body-photo decapitation. Security-sensitive — own focused, browser-verified task.
+- Brian's avatar **fixed in prod this session** (face-crop uploaded + avatarUrl repointed).
 
 ## Review log
 
@@ -548,3 +557,29 @@ Fan this out via the §P0 fan-out prompt. (Interim Gap 1 guard from SESSION_0436
 | Next session unblock check | SESSION_0437 first task (P0 schema) is doable from the fan-out prompt; holding note BLOCKED ON USER (copy edits) |
 | Git hygiene | branch `main`; worktrees: pr115/pr117 + fallow caches left (not this session's); single push — hash reported at bow-out / see git log |
 | Graphify update | node/edge/community count reported in bow-out chat (run before close commit) |
+
+## Post-close addendum (same-session continuation)
+
+After the close commit (`1546b46b`), the operator continued with VIP follow-through for Brian:
+
+- **Holding note SENT** — drafted `emails/bbl-truelson-holding-note.tsx` (no claim link) +
+  `scripts/send-bbl-truelson-holding.ts` (dry-run/preview/send). Previewed to `mrbscott@gmail.com`
+  (Resend `4baf8764…`), operator approved, **sent to `btruelson@gmail.com`** (Resend `681a8d65…`).
+  Copy = operator's, softened "by tonight" → "coming very soon" (E0-first), dropped an odd duplicate
+  lineage clause. Real **claim invite is the second touch, after E0**.
+- **Avatar de-decapitated** — his source `Black-Belt1-3.webp` is a 248×512 full-body gi shot; the
+  centered square avatar crop chopped his head. Cropped a face-square (crop B, 512×512 webp via `sharp`),
+  uploaded to R2 `bbl-media` at `media/bbl/profiles/brian-truelson-avatar.webp` (operator-provided R2
+  creds, inline, not persisted), verified public 200, and **updated prod `Passport.avatarUrl`** (UPDATE 1).
+  Source image untouched.
+- **SEND_EMAIL_FLOW SOP** — `docs/protocols/send-email-flow.md` captures the draft→preview→gated-send
+  flow + the reusable seams (`BblEmailWrapper`, `sendEmail`, the 3-flag script template).
+- **Systemic finding:** many imported placeholder avatars are full-body shots that a centered square crop
+  decapitates. `uploadAndPromotePassportAvatar` is **self-service only** (`where:{userId:user.id}`) +
+  `applyWebMediaUpload` enforces passport-ownership — so admins can't fix a placeholder's avatar in-app.
+  → **Staged task (next session):** admin "set placeholder avatar" path (extend the media-authz boundary
+  for admins + an admin surface reusing the existing circle cropper `components/web/uploader/cropper.tsx`).
+  Security-sensitive (don't weaken the ownership boundary) — warrants its own focused, browser-verified build.
+
+⚠️ **Rotate both pasted credentials** (prod Neon password + R2 access/secret keys) — both are in this
+session's chat transcript.
