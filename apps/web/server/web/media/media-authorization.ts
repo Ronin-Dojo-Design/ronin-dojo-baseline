@@ -87,17 +87,26 @@ async function isAdminOfPassportOwnerOrg(
  * - technique/course → org author of the owning organization
  * - passport → the passport owner, or an org admin of the owner's org
  * - promotionEvent → existing `canAuthorPromotionEvent` lineage/org scope
+ *
+ * `allowAdminOverride` (default `false`) is an *explicit*, opt-in bypass for the
+ * admin-driven passport path (SESSION_0437_TASK_0A): it lets an admin set the
+ * avatar of an *unowned/placeholder* Passport, which the ordinary passport
+ * branch refuses (`passport.userId === null → false`). It is ONLY honored for
+ * admins, and the self-service callers never set it — so the non-admin
+ * ownership boundary below is unaffected.
  */
 export async function authorizeMediaTarget({
   db,
   brand,
   user,
   target,
+  allowAdminOverride = false,
 }: {
   db: AppDb
   brand: Brand
   user: AuthzUser
   target: MediaAttachTarget
+  allowAdminOverride?: boolean
 }): Promise<boolean> {
   if (isAdmin(user)) return true
 
@@ -130,6 +139,12 @@ export async function authorizeMediaTarget({
       })
       if (!passport) return false
       if (passport.userId === user.id) return true
+      // @changed SESSION_0437_TASK_0A — explicit admin override for setting a placeholder
+      // person's avatar (full-body imported photos need an admin re-crop). Only reachable
+      // when the admin passport action sets `allowAdminOverride`; self-service callers never
+      // do. Real admins also pass at the global `isAdmin` line above — this branch keeps the
+      // capability provable from the call site and would still gate it were that line removed.
+      if (allowAdminOverride && isAdmin(user)) return true
       // @changed SESSION_0390 (Phase 3a) — Passport.userId is now nullable (accountless placeholder,
       // SOT-ADR D1). An accountless Passport has no owner account to delegate org-admin from, so only
       // admins (handled above) manage its media. Revisit in the Phase 3c read-path sweep.

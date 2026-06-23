@@ -2,12 +2,20 @@
 
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
+import { submitPassportClaim } from "~/server/web/claims/submit-passport-claim"
 import { submitLineageClaimSchema } from "~/server/web/lineage/claim-schemas"
 
 /**
- * Lineage claim server actions.
+ * Lineage claim server action — a thin DOOR ADAPTER over the unified
+ * `submitPassportClaim` core (ADR 0036, SESSION_0437 P1).
  *
- * Author: Cody / SESSION_0182 TASK_01.
+ * This door keeps its tree/node/membership validation (the lineage-specific
+ * preconditions), then resolves the node's `passportId` and delegates to the
+ * core, passing node+tree context. The claimable guard (was the SESSION_0436
+ * interim already-claimed guard) and the duplicate guard now live in the core,
+ * keyed on identity — so they are deleted here.
+ *
+ * Author: Cody / SESSION_0182 TASK_01; adapted SESSION_0437 (ADR 0036).
  */
 
 const LINEAGE_CLAIM_ERROR = {
@@ -15,8 +23,6 @@ const LINEAGE_CLAIM_ERROR = {
   TREE_NOT_CLAIMABLE: "This lineage tree is not currently accepting profile claims.",
   NODE_NOT_IN_TREE: "Node is not a member of this tree.",
   NODE_NOT_CLAIMABLE: "This lineage profile is not currently accepting claims.",
-  NODE_ALREADY_CLAIMED: "This lineage profile has already been claimed by an account.",
-  DUPLICATE_CLAIM: "You already have a pending or approved claim on this node.",
 } as const
 
 export const submitLineageClaimRequest = userActionClient
@@ -40,13 +46,14 @@ export const submitLineageClaimRequest = userActionClient
       throw new Error(LINEAGE_CLAIM_ERROR.TREE_NOT_CLAIMABLE)
     }
 
-    // 2. Validate the node belongs to the tree via LineageTreeMember.
+    // 2. Validate the node belongs to the tree via LineageTreeMember + resolve the
+    // node's Passport (the identity the unified claim keys on).
     const member = await db.lineageTreeMember.findFirst({
       where: {
         treeId: tree.id,
         nodeId: parsedInput.nodeId,
       },
-      select: { id: true, isClaimable: true },
+      select: { id: true, isClaimable: true, node: { select: { passportId: true } } },
     })
 
     if (!member) {
@@ -57,60 +64,18 @@ export const submitLineageClaimRequest = userActionClient
       throw new Error(LINEAGE_CLAIM_ERROR.NODE_NOT_CLAIMABLE)
     }
 
-    // 2b. Already-claimed guard (SESSION_0436): a node whose Passport already has an
-    // attached account has been claimed (e.g. auto-claimed via the email/magic-link
-    // reconcile in `claim-node-for-user`). `member.isClaimable` is a per-membership flag
-    // that the reconcile path does NOT flip, so without this check a tree-claim could be
-    // filed against an already-owned node and dead-end at admin review with
-    // NODE_ALREADY_APPROVED. Mirrors the generic profile-claim PERSON_NOT_CLAIMABLE guard.
-    const node = await db.lineageNode.findUnique({
-      where: { id: parsedInput.nodeId },
-      select: { passport: { select: { userId: true } } },
+    // 3. Delegate to the unified core. The claimable guard (already-claimed Passport)
+    // and the duplicate guard live there now, keyed on identity not door.
+    return submitPassportClaim(db, {
+      passportId: member.node.passportId,
+      claimantUserId: user.id,
+      brand: Brand.BBL,
+      claimantNote: parsedInput.claimantNote ?? null,
+      // FI-006: rank asserted by the claimant (stays PENDING until admin-verify mints
+      // the awarded RankAward; ADR 0035 §4).
+      claimedRankId: parsedInput.claimedRankId ?? null,
+      nodeId: parsedInput.nodeId,
+      treeId: tree.id,
+      evidence: parsedInput.evidence,
     })
-
-    if (node?.passport?.userId != null) {
-      throw new Error(LINEAGE_CLAIM_ERROR.NODE_ALREADY_CLAIMED)
-    }
-
-    // 3. Duplicate guard: PENDING or APPROVED claim by same user on same node+tree.
-    const existingClaim = await db.lineageClaimRequest.findFirst({
-      where: {
-        treeId: tree.id,
-        nodeId: parsedInput.nodeId,
-        claimantUserId: user.id,
-        status: { in: ["PENDING", "APPROVED"] },
-      },
-      select: { id: true },
-    })
-
-    if (existingClaim) {
-      throw new Error(LINEAGE_CLAIM_ERROR.DUPLICATE_CLAIM)
-    }
-
-    // 4. Create the claim request with optional evidence + optional claimed rank.
-    const claim = await db.lineageClaimRequest.create({
-      data: {
-        treeId: tree.id,
-        nodeId: parsedInput.nodeId,
-        claimantUserId: user.id,
-        claimantNote: parsedInput.claimantNote ?? null,
-        // FI-006: store the rank the claimant asserts (stays PENDING until admin-verify
-        // creates the awarded RankAward). SetNull FK — safe if the Rank is ever deleted.
-        claimedRankId: parsedInput.claimedRankId ?? null,
-        ...(parsedInput.evidence?.length
-          ? {
-              evidence: {
-                create: parsedInput.evidence.map(item => ({
-                  label: item.label ?? null,
-                  url: item.url ?? null,
-                  text: item.text ?? null,
-                })),
-              },
-            }
-          : {}),
-      },
-      select: { id: true },
-    })
-
-    return { claimId: claim.id }
   })

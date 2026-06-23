@@ -94,6 +94,8 @@ model User {
   consumedPendingClaims      LineagePendingClaim[]       @relation("LineagePendingClaimConsumer")
   profileClaimRequests       ProfileClaimRequest[]       @relation("ProfileClaimClaimant")
   reviewedProfileClaims      ProfileClaimRequest[]       @relation("ProfileClaimReviewer")
+  passportClaimRequests      PassportClaimRequest[]      @relation("PassportClaimClaimant")
+  reviewedPassportClaims     PassportClaimRequest[]      @relation("PassportClaimReviewer")
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
@@ -350,18 +352,18 @@ model Bookmark {
 
   // Polymorphic subject — exactly one set, matching subjectType (enforced in the action).
   // @changed SESSION_0397 — toolId relaxed to optional so non-tool subjects can be saved.
-  tool             Tool?         @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  toolId           String?
-  passport         Passport?     @relation(fields: [passportId], references: [id], onDelete: Cascade)
-  passportId       String?
-  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId   String?
-  technique        Technique?    @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
-  techniqueId      String?
-  post             Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId           String?
-  lineageTree      LineageTree?  @relation(fields: [lineageTreeId], references: [id], onDelete: Cascade)
-  lineageTreeId    String?
+  tool           Tool?         @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId         String?
+  passport       Passport?     @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId     String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  technique      Technique?    @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  techniqueId    String?
+  post           Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId         String?
+  lineageTree    LineageTree?  @relation(fields: [lineageTreeId], references: [id], onDelete: Cascade)
+  lineageTreeId  String?
 
   // Indexes — one (userId, subject) unique per subject type, plus per-FK lookup indexes.
   @@unique([userId, toolId])
@@ -1081,6 +1083,9 @@ model Passport {
   rankAwardsEarned   RankAward[]
   rankAwardsPromoted RankAward[]       @relation("PromotedByPassport")
   fightRecords       FightRecord[]
+
+  // @added SESSION_0437 (ADR 0036) — unified person claim keyed on identity.
+  claimRequests PassportClaimRequest[]
 }
 
 model DirectoryProfile {
@@ -1102,9 +1107,11 @@ model DirectoryProfile {
   // @changed SESSION_0392 (Phase 3c) — Passport is the identity root (SOT-ADR D1); the old
   // `user`/`userId` satellite FK was dropped. `passportId` is the canonical @unique NOT NULL link.
   // onDelete: Cascade mirrors the old User cascade (deleting a person removes their satellites).
-  passport      Passport              @relation(fields: [passportId], references: [id], onDelete: Cascade)
-  passportId    String                @unique
-  claimRequests ProfileClaimRequest[]
+  passport              Passport               @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId            String                 @unique
+  claimRequests         ProfileClaimRequest[]
+  // @added SESSION_0437 (ADR 0036) — unified claim back-relation (directory door context).
+  passportClaimRequests PassportClaimRequest[]
 }
 
 // ---------------------------------------------------------------------------
@@ -1180,10 +1187,10 @@ model Organization {
   tags       Tag[]
 
   // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=ORGANIZATION.
-  bookmarks Bookmark[]
+  bookmarks        Bookmark[]
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4)
-  mediaAttachments     MediaAttachment[]
+  mediaAttachments MediaAttachment[]
 
   // Merch / POD
   merchOrders MerchOrder[]
@@ -1297,7 +1304,8 @@ model Rank {
 
   memberships           Membership[]
   rankAwards            RankAward[]
-  lineageClaimRequests  LineageClaimRequest[]         @relation("ClaimedRank")
+  lineageClaimRequests  LineageClaimRequest[]        @relation("ClaimedRank")
+  passportClaimRequests PassportClaimRequest[]       @relation("PassportClaimClaimedRank")
   courses               Course[]
   beltTestRegistrations BeltTestRegistration[]
   prerequisiteConfigs   BeltTestPrerequisiteConfig[]
@@ -2622,13 +2630,15 @@ model LineageNode {
   passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   passportId String   @unique
 
-  relationshipsFrom LineageRelationship[] @relation("LineageFrom")
-  relationshipsTo   LineageRelationship[] @relation("LineageTo")
-  ownedLineageTrees LineageTree[]         @relation("LineageTreeOwnerNode")
-  treeMembers       LineageTreeMember[]
-  accessGrants      LineageTreeAccess[]
-  claimRequests     LineageClaimRequest[]
-  pendingClaims     LineagePendingClaim[]
+  relationshipsFrom     LineageRelationship[]  @relation("LineageFrom")
+  relationshipsTo       LineageRelationship[]  @relation("LineageTo")
+  ownedLineageTrees     LineageTree[]          @relation("LineageTreeOwnerNode")
+  treeMembers           LineageTreeMember[]
+  accessGrants          LineageTreeAccess[]
+  claimRequests         LineageClaimRequest[]
+  pendingClaims         LineagePendingClaim[]
+  // @added SESSION_0437 (ADR 0036) — unified claim back-relation (node door context).
+  passportClaimRequests PassportClaimRequest[]
 }
 
 model LineageRelationship {
@@ -2683,10 +2693,12 @@ model LineageTree {
   ownerNode      LineageNode?  @relation("LineageTreeOwnerNode", fields: [ownerNodeId], references: [id], onDelete: SetNull)
   ownerNodeId    String?
 
-  members       LineageTreeMember[]
-  visualGroups  LineageVisualGroup[]
-  accessGrants  LineageTreeAccess[]
-  claimRequests LineageClaimRequest[]
+  members               LineageTreeMember[]
+  visualGroups          LineageVisualGroup[]
+  accessGrants          LineageTreeAccess[]
+  claimRequests         LineageClaimRequest[]
+  // @added SESSION_0437 (ADR 0036) — unified claim back-relation (tree door context).
+  passportClaimRequests PassportClaimRequest[]
 
   // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=TREE.
   bookmarks Bookmark[]
@@ -2932,6 +2944,85 @@ model ProfileClaimRequest {
   @@index([directoryProfileId, status])
   @@index([organizationId, status])
   @@index([claimantUserId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Models — Unified Passport-keyed person claim (ADR 0036, SESSION_0437)
+// ---------------------------------------------------------------------------
+//
+// THE single person-claim record. A human is one Passport (identity SoT,
+// ADR 0025); both claim doors (lineage node + directory person profile)
+// resolve their subject to a `passportId` and write THIS record, so the
+// duplicate guard, admin review queue, and finalize all key on identity, not
+// door. Replaces the person split across LineageClaimRequest and person
+// ProfileClaimRequest; carries optional door context so finalize runs the
+// tree-member / NODE_EDITOR / cohort-comp / RankAward branches only when a
+// lineage node is present, and un-stubs the directory-only person approval.
+// Org claims stay a separate sibling in ProfileClaimRequest (an owner-less
+// Organization is not a Passport). Reuses LineageClaimStatus +
+// ProfileClaimRelationship. "Claimed" still means Passport.userId != null.
+model PassportClaimRequest {
+  id           String                    @id @default(cuid(2))
+  status       LineageClaimStatus        @default(PENDING)
+  // relationship is optional: the lineage door does not capture one (parity
+  // with LineageClaimRequest); the directory-person door passes it through.
+  relationship ProfileClaimRelationship?
+  brand        Brand
+  claimantNote String?
+  reviewerNote String?
+  bypassReason String?
+  reviewedAt   DateTime?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  // Identity key — NOT NULL. Deleting the person removes their claims.
+  passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId String
+
+  // Door context — all optional (SetNull): a directory-only person claim has
+  // no node/tree; a lineage claim back-fills node+tree; directoryProfileId is
+  // set when the directory door opened the claim.
+  node               LineageNode?      @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+  nodeId             String?
+  tree               LineageTree?      @relation(fields: [treeId], references: [id], onDelete: SetNull)
+  treeId             String?
+  directoryProfile   DirectoryProfile? @relation(fields: [directoryProfileId], references: [id], onDelete: SetNull)
+  directoryProfileId String?
+
+  claimant       User    @relation("PassportClaimClaimant", fields: [claimantUserId], references: [id], onDelete: Cascade)
+  claimantUserId String
+  reviewedBy     User?   @relation("PassportClaimReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedById   String?
+
+  // The rank the claimant asserts at claim time (PENDING) — NOT a RankAward;
+  // admin-verify mints the awarded RankAward from this (claim→award, ADR 0035).
+  claimedRank   Rank?   @relation("PassportClaimClaimedRank", fields: [claimedRankId], references: [id], onDelete: SetNull)
+  claimedRankId String?
+
+  evidence PassportClaimEvidence[]
+
+  @@index([brand, status])
+  @@index([passportId, status])
+  @@index([nodeId, status])
+  @@index([directoryProfileId, status])
+  @@index([claimantUserId, status])
+}
+
+// @added SESSION_0437 (ADR 0036) — mirrors LineageClaimEvidence for the unified claim.
+model PassportClaimEvidence {
+  id        String   @id @default(cuid(2))
+  label     String?
+  url       String?
+  text      String?
+  createdAt DateTime @default(now())
+
+  claimRequest   PassportClaimRequest @relation(fields: [claimRequestId], references: [id], onDelete: Cascade)
+  claimRequestId String
+  media          Media?               @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId        String?
+
+  @@index([claimRequestId])
+  @@index([mediaId])
 }
 
 // ---------------------------------------------------------------------------
@@ -3480,8 +3571,9 @@ model Media {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
 
-  attachments          MediaAttachment[]
-  lineageClaimEvidence LineageClaimEvidence[]
+  attachments           MediaAttachment[]
+  lineageClaimEvidence  LineageClaimEvidence[]
+  passportClaimEvidence PassportClaimEvidence[]
 
   @@index([brand, uploadedById])
   @@index([organizationId])

@@ -3,19 +3,24 @@
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { submitProfileClaimSchema } from "~/server/web/claims/claim-schemas"
+import { submitPassportClaim } from "~/server/web/claims/submit-passport-claim"
 
 /**
  * Generic member/org profile-claim server action (SESSION_0354).
  *
- * Mirrors `server/web/lineage/claim-actions.ts`: a logged-in user submits a
- * claim request that an admin reviews. Only legitimately-unclaimed subjects are
- * claimable — owner-less Organizations and placeholder-User DirectoryProfiles.
+ * The ORGANIZATION branch is unchanged — an owner-less Organization is not a
+ * Passport, so it stays in `ProfileClaimRequest` (approval sets `ownerId`).
+ *
+ * The PERSON branch is now a thin DOOR ADAPTER over the unified
+ * `submitPassportClaim` core (ADR 0036, SESSION_0437 P1): it resolves the
+ * directory profile's `passportId`, back-fills lineage node/tree context when the
+ * Passport owns a node (so one finalize runs the node branches too), and delegates.
+ * The claimable + duplicate guards live in the core, keyed on identity.
  */
 
 const PROFILE_CLAIM_ERROR = {
   SUBJECT_NOT_FOUND: "That profile no longer exists or is not in this brand.",
   ORG_ALREADY_OWNED: "This organization already has an owner and cannot be claimed.",
-  PERSON_NOT_CLAIMABLE: "This profile belongs to an active account and cannot be claimed.",
   DUPLICATE_CLAIM: "You already have a pending or approved claim on this profile.",
 } as const
 
@@ -32,44 +37,65 @@ export const submitProfileClaimRequest = userActionClient
 
       if (!org) throw new Error(PROFILE_CLAIM_ERROR.SUBJECT_NOT_FOUND)
       if (org.ownerId) throw new Error(PROFILE_CLAIM_ERROR.ORG_ALREADY_OWNED)
-    } else {
-      // PERSON: a DirectoryProfile whose Passport has no attached account (accountless = claimable).
-      const profile = await db.directoryProfile.findFirst({
-        where: { id: subjectId },
-        select: { id: true, passport: { select: { userId: true } } },
+
+      // Org duplicate guard (org claims stay in ProfileClaimRequest, ADR 0036 §5).
+      const existing = await db.profileClaimRequest.findFirst({
+        where: {
+          claimantUserId: user.id,
+          status: { in: ["PENDING", "APPROVED"] },
+          organizationId: subjectId,
+        },
+        select: { id: true },
       })
 
-      if (!profile) throw new Error(PROFILE_CLAIM_ERROR.SUBJECT_NOT_FOUND)
-      if (profile.passport.userId != null) throw new Error(PROFILE_CLAIM_ERROR.PERSON_NOT_CLAIMABLE)
+      if (existing) throw new Error(PROFILE_CLAIM_ERROR.DUPLICATE_CLAIM)
+
+      const claim = await db.profileClaimRequest.create({
+        data: {
+          brand: Brand.BBL,
+          subjectType,
+          relationship,
+          claimantUserId: user.id,
+          claimantNote: claimantNote ?? null,
+          organizationId: subjectId,
+        },
+        select: { id: true },
+      })
+
+      return { claimId: claim.id }
     }
 
-    // Duplicate guard: one open/approved claim per claimant per subject.
-    const existing = await db.profileClaimRequest.findFirst({
-      where: {
-        claimantUserId: user.id,
-        status: { in: ["PENDING", "APPROVED"] },
-        ...(subjectType === "ORGANIZATION"
-          ? { organizationId: subjectId }
-          : { directoryProfileId: subjectId }),
+    // PERSON: resolve the directory profile's Passport (identity SoT), back-fill any
+    // lineage node/tree context, and delegate to the unified core.
+    const profile = await db.directoryProfile.findFirst({
+      where: { id: subjectId },
+      select: {
+        id: true,
+        passportId: true,
+        passport: {
+          select: {
+            lineageNode: {
+              select: {
+                id: true,
+                treeMembers: { select: { treeId: true }, take: 1 },
+              },
+            },
+          },
+        },
       },
-      select: { id: true },
     })
 
-    if (existing) throw new Error(PROFILE_CLAIM_ERROR.DUPLICATE_CLAIM)
+    if (!profile) throw new Error(PROFILE_CLAIM_ERROR.SUBJECT_NOT_FOUND)
 
-    const claim = await db.profileClaimRequest.create({
-      data: {
-        brand: Brand.BBL,
-        subjectType,
-        relationship,
-        claimantUserId: user.id,
-        claimantNote: claimantNote ?? null,
-        ...(subjectType === "ORGANIZATION"
-          ? { organizationId: subjectId }
-          : { directoryProfileId: subjectId }),
-      },
-      select: { id: true },
+    const node = profile.passport.lineageNode
+    return submitPassportClaim(db, {
+      passportId: profile.passportId,
+      claimantUserId: user.id,
+      brand: Brand.BBL,
+      relationship,
+      claimantNote: claimantNote ?? null,
+      directoryProfileId: profile.id,
+      nodeId: node?.id ?? null,
+      treeId: node?.treeMembers[0]?.treeId ?? null,
     })
-
-    return { claimId: claim.id }
   })

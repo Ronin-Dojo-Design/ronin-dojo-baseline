@@ -170,6 +170,8 @@ afterAll(async () => {
     },
   })
   await db.lineageClaimRequest.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
+  // ADR 0036: the email path mints PassportClaimRequest rows; clean them by tagged tree.
+  await db.passportClaimRequest.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTreeMember.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTree.deleteMany({ where: { id: { startsWith: PREFIX } } })
   // Nodes use auto-generated cuids (the action validates the id) — clean by tagged slug.
@@ -208,7 +210,8 @@ describe("acceptLineageClaimByToken", () => {
 
     const [passport, claim, grant, audit, comps] = await Promise.all([
       db.passport.findUnique({ where: { id: fx.nodePassportId } }),
-      db.lineageClaimRequest.findFirst({ where: { id: result!.data!.claimId } }),
+      // ADR 0036: the email path now mints the unified PassportClaimRequest (keyed on identity).
+      db.passportClaimRequest.findFirst({ where: { id: result!.data!.claimId } }),
       db.lineageTreeAccess.findFirst({
         where: {
           treeId: fx.treeId,
@@ -220,7 +223,7 @@ describe("acceptLineageClaimByToken", () => {
       }),
       db.auditLog.findFirst({
         where: {
-          entityType: "LineageClaimRequest",
+          entityType: "PassportClaimRequest",
           entityId: result!.data!.claimId,
           action: "lineage.claim.reviewed",
         },
@@ -233,10 +236,11 @@ describe("acceptLineageClaimByToken", () => {
 
     // (c) account attached to the claimed Passport
     expect(passport?.userId).toBe(fx.claimantUserId)
-    // auto-approved with the email-token bypass reason
+    // auto-approved unified PassportClaimRequest with the email-token bypass reason
     expect(claim?.status).toBe("APPROVED")
     expect(claim?.bypassReason).toBe("email-token")
     expect(claim?.reviewedById).toBe(fx.claimantUserId)
+    expect(claim?.passportId).toBe(fx.nodePassportId)
     // NODE_EDITOR access granted
     expect(grant?.id).toBeTruthy()
     // audit parity with the admin path
@@ -269,7 +273,7 @@ describe("acceptLineageClaimByToken", () => {
     // No attach, no claim row.
     const [passport, claims] = await Promise.all([
       db.passport.findUnique({ where: { id: fx.nodePassportId } }),
-      db.lineageClaimRequest.findMany({ where: { nodeId: fx.nodeId } }),
+      db.passportClaimRequest.findMany({ where: { passportId: fx.nodePassportId } }),
     ])
     expect(passport?.userId).toBeNull()
     expect(claims).toHaveLength(0)
@@ -287,8 +291,8 @@ describe("acceptLineageClaimByToken", () => {
     // The prior owner still owns the Passport; no claim created for this claimant.
     const [passport, claims] = await Promise.all([
       db.passport.findUnique({ where: { id: fx.nodePassportId } }),
-      db.lineageClaimRequest.findMany({
-        where: { nodeId: fx.nodeId, claimantUserId: fx.claimantUserId },
+      db.passportClaimRequest.findMany({
+        where: { passportId: fx.nodePassportId, claimantUserId: fx.claimantUserId },
       }),
     ])
     expect(passport?.userId).not.toBe(fx.claimantUserId)
@@ -319,8 +323,12 @@ describe("acceptLineageClaimByToken", () => {
     expect(second?.data?.nodeId).toBe(fx.nodeId)
 
     // Still exactly one APPROVED claim — the replay did not mint a duplicate.
-    const approved = await db.lineageClaimRequest.count({
-      where: { nodeId: fx.nodeId, claimantUserId: fx.claimantUserId, status: "APPROVED" },
+    const approved = await db.passportClaimRequest.count({
+      where: {
+        passportId: fx.nodePassportId,
+        claimantUserId: fx.claimantUserId,
+        status: "APPROVED",
+      },
     })
     expect(approved).toBe(1)
   })

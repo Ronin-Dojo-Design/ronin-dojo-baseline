@@ -11,46 +11,65 @@ import { grantComp } from "~/server/entitlements/comp-grants"
 import { attachAccount } from "~/server/identity/person-service"
 
 /**
- * Shared APPROVED-branch side-effects for lineage claims (SESSION_0412 FIX #3).
+ * Shared APPROVED-branch side-effects for person claims — `finalizePassportClaim`
+ * (SESSION_0412 FIX #3; generalized to node-optional at SESSION_0437 / ADR 0036).
  *
- * Both the admin review path (`applyLineageClaimReview`) and the BBL one-click
- * token-accept path (`acceptLineageClaimByToken`) need the SAME identity merge +
- * access + comp wiring when a claim is approved. This is the single source of
- * that truth so the two callers can never drift:
+ * Every approved person claim (admin review, BBL one-click token-accept, the new
+ * unified `reviewPassportClaim`) needs the SAME identity merge + access + comp
+ * wiring. This is the single source of that truth so the callers can never drift.
+ * The claim is keyed on a **Passport** (identity SoT, ADR 0025); lineage node/tree
+ * context is OPTIONAL:
  *
- *   1. resolve the node's tree member (it must be a member of the tree),
- *   2. guard against another claimant already approved for the node,
- *   3. guard against the claimant already owning a *different* node,
- *   4. attach the claimant account to the node's Passport (deleting the
- *      claimant's empty signup Passport so the unique account link is free),
- *   5. grant / repair the NODE_EDITOR access row,
- *   6. grant the comp (a manual `compOverride` wins for any brand; otherwise BBL
- *      auto-comps the Elite tier — Dirty Dozen for life, everyone else 1yr).
+ *   ALWAYS (identity):
+ *   - guard the claimant owns no OTHER lineage node (protects the signup-Passport delete),
+ *   - attach the claimant account to the claimed Passport (deleting the claimant's
+ *     empty signup Passport so the unique account link is free),
+ *   - mint the asserted RankAward (FI-006), and
+ *   - grant the comp (manual `compOverride` wins for any brand; else BBL auto-comps Elite).
  *
- * It does NOT mutate the claim row's status or write the `lineage.claim.reviewed`
- * audit log — the caller owns those (the admin path records the reviewer note /
- * timestamp; the token path records the email-token bypass), so each can stamp
- * its own actor + before/after snapshot.
+ *   ONLY WHEN node context is present (a lineage claim):
+ *   - resolve + require the tree member,
+ *   - guard against another claimant already approved for the node,
+ *   - grant / repair the NODE_EDITOR access row, and
+ *   - detect the Dirty-Dozen cohort for the comp term.
+ *
+ * A directory-only person (Passport with no LineageNode) therefore gets a REAL
+ * identity attach + brand entitlement — this is what un-stubs the old person
+ * ProfileClaimRequest approval (ADR 0036 §3).
+ *
+ * It does NOT mutate the claim row's status, auto-cancel sibling claims, or write
+ * the audit log — the caller owns those (see `cancelSiblingPassportClaims` for Gap 2).
  */
 
 /** Prisma transaction client surface (callers pass `tx`). */
 type Tx = any
 
-/** The minimal claim shape the finalize needs — caller fetches it inside the tx. */
-export type FinalizeClaimInput = {
+/**
+ * The minimal claim shape the finalize needs — caller fetches it inside the tx.
+ * Keyed on the Passport; node/tree are optional door context (ADR 0036).
+ */
+export type FinalizePassportClaimInput = {
   id: string
-  treeId: string
-  nodeId: string
   claimantUserId: string
+  /** Identity key — the Passport being claimed. */
+  passportId: string
+  /** Current owner of that Passport (null = claimable placeholder). */
+  passportUserId: string | null
   // FI-006: rank asserted at claim time; if set, approval creates an awarded RankAward.
   claimedRankId?: string | null
-  node: {
-    passportId: string
-    passport: { userId: string | null }
-  }
+  // Door context — present for a lineage claim, null for a directory-only person.
+  treeId?: string | null
+  nodeId?: string | null
+  /**
+   * When the lineage ADMIN path approves a legacy `LineageClaimRequest`, pass its id
+   * here so the "another claimant already approved this node" guard (which still reads
+   * the legacy table until P5) excludes the row being approved. Unified callers leave
+   * this undefined.
+   */
+  excludeLineageClaimId?: string | null
 }
 
-export type FinalizeLineageNodeClaimResult = {
+export type FinalizePassportClaimResult = {
   accessGrantId: string | null
   compGrantIds: string[]
   ownershipTransferred: boolean
@@ -59,7 +78,7 @@ export type FinalizeLineageNodeClaimResult = {
   rankAwardId: string | null
 }
 
-export const finalizeLineageNodeClaim = async (
+export const finalizePassportClaim = async (
   tx: Tx,
   {
     claim,
@@ -68,47 +87,58 @@ export const finalizeLineageNodeClaim = async (
     compOverride,
     now = new Date(),
   }: {
-    claim: FinalizeClaimInput
+    claim: FinalizePassportClaimInput
     brand: Brand
     actorUserId: string
     /** Admin-supplied manual comp override; takes precedence over the BBL auto-grant. */
     compOverride?: LineageCompGrantSpec | null
     now?: Date
   },
-): Promise<FinalizeLineageNodeClaimResult> => {
+): Promise<FinalizePassportClaimResult> => {
   let accessGrantId: string | null = null
   let compGrantIds: string[] = []
   let ownershipTransferred = false
   let passportAccountAttached = false
   let rankAwardId: string | null = null
 
-  const member = await tx.lineageTreeMember.findUnique({
-    where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
-    select: { id: true },
-  })
+  const hasNode = claim.nodeId != null && claim.treeId != null
+  const treeId = claim.treeId ?? null
+  const nodeId = claim.nodeId ?? null
 
-  if (!member) {
-    throw new Error(CLAIM_REVIEW_ERROR.NODE_NOT_IN_TREE)
+  // --- Node-only guards + member resolution ------------------------------------------------
+  let member: { id: string } | null = null
+  if (hasNode) {
+    member = await tx.lineageTreeMember.findUnique({
+      where: { treeId_nodeId: { treeId: treeId as string, nodeId: nodeId as string } },
+      select: { id: true },
+    })
+
+    if (!member) {
+      throw new Error(CLAIM_REVIEW_ERROR.NODE_NOT_IN_TREE)
+    }
+
+    const alreadyApproved = await tx.lineageClaimRequest.findFirst({
+      where: {
+        treeId: treeId as string,
+        nodeId: nodeId as string,
+        status: "APPROVED",
+        ...(claim.excludeLineageClaimId ? { NOT: { id: claim.excludeLineageClaimId } } : {}),
+      },
+      select: { id: true, claimantUserId: true },
+    })
+
+    if (alreadyApproved && alreadyApproved.claimantUserId !== claim.claimantUserId) {
+      throw new Error(CLAIM_REVIEW_ERROR.NODE_ALREADY_APPROVED)
+    }
   }
 
-  const alreadyApproved = await tx.lineageClaimRequest.findFirst({
-    where: {
-      treeId: claim.treeId,
-      nodeId: claim.nodeId,
-      status: "APPROVED",
-      NOT: { id: claim.id },
-    },
-    select: { id: true, claimantUserId: true },
-  })
-
-  if (alreadyApproved && alreadyApproved.claimantUserId !== claim.claimantUserId) {
-    throw new Error(CLAIM_REVIEW_ERROR.NODE_ALREADY_APPROVED)
-  }
-
+  // The claimant must not already own a DIFFERENT lineage node — ALWAYS checked (a
+  // directory-only claim still deletes the claimant's signup Passport below, which would
+  // cascade-delete any node that Passport owns). For a node claim, exclude the claimed node.
   const claimantExistingNode = await tx.lineageNode.findFirst({
     where: {
       passport: { userId: claim.claimantUserId },
-      NOT: { id: claim.nodeId },
+      ...(nodeId ? { NOT: { id: nodeId } } : {}),
     },
     select: { id: true },
   })
@@ -117,9 +147,10 @@ export const finalizeLineageNodeClaim = async (
     throw new Error(CLAIM_REVIEW_ERROR.CLAIMANT_HAS_NODE)
   }
 
-  // D1: attach the claimant account to the node's Passport (the node never moves). One attach
-  // lights up every satellite (profile + node + ranks + affiliations) at once.
-  if (claim.node.passport.userId !== claim.claimantUserId) {
+  // --- Identity attach (ALWAYS) ------------------------------------------------------------
+  // D1: attach the claimant account to the claimed Passport. One attach lights up every
+  // satellite (profile + node + ranks + affiliations) at once.
+  if (claim.passportUserId !== claim.claimantUserId) {
     // Claim merge (SESSION_0392): every signed-up user has a Passport (signup's identity shell).
     // Claiming means "I AM this imported person", so the claimant's own signup Passport is
     // superseded by the richer claimed identity. The CLAIMANT_HAS_NODE guard above already
@@ -130,63 +161,63 @@ export const finalizeLineageNodeClaim = async (
       where: { userId: claim.claimantUserId },
       select: { id: true },
     })
-    if (claimantPassport && claimantPassport.id !== claim.node.passportId) {
+    if (claimantPassport && claimantPassport.id !== claim.passportId) {
       await tx.passport.delete({ where: { id: claimantPassport.id } })
     }
 
-    await attachAccount({ passportId: claim.node.passportId, userId: claim.claimantUserId }, tx)
+    await attachAccount({ passportId: claim.passportId, userId: claim.claimantUserId }, tx)
     ownershipTransferred = true
     passportAccountAttached = true
   }
 
-  const existingGrant = await tx.lineageTreeAccess.findFirst({
-    where: {
-      treeId: claim.treeId,
-      userId: claim.claimantUserId,
-      role: "NODE_EDITOR",
-      revokedAt: null,
-      OR: [{ nodeId: claim.nodeId }, { memberId: member.id }],
-    },
-    select: { id: true, nodeId: true, memberId: true },
-  })
-
-  if (existingGrant) {
-    const repairedGrant =
-      existingGrant.nodeId === claim.nodeId && existingGrant.memberId === member.id
-        ? existingGrant
-        : await tx.lineageTreeAccess.update({
-            where: { id: existingGrant.id },
-            data: {
-              nodeId: claim.nodeId,
-              memberId: member.id,
-            },
-            select: { id: true },
-          })
-
-    accessGrantId = repairedGrant.id
-  } else {
-    const grant = await tx.lineageTreeAccess.create({
-      data: {
-        treeId: claim.treeId,
+  // --- NODE_EDITOR access grant (node claims only) -----------------------------------------
+  if (hasNode && member) {
+    const existingGrant = await tx.lineageTreeAccess.findFirst({
+      where: {
+        treeId: treeId as string,
         userId: claim.claimantUserId,
-        grantedById: actorUserId,
         role: "NODE_EDITOR",
-        nodeId: claim.nodeId,
-        memberId: member.id,
+        revokedAt: null,
+        OR: [{ nodeId }, { memberId: member.id }],
       },
-      select: { id: true },
+      select: { id: true, nodeId: true, memberId: true },
     })
 
-    accessGrantId = grant.id
+    if (existingGrant) {
+      const repairedGrant =
+        existingGrant.nodeId === nodeId && existingGrant.memberId === member.id
+          ? existingGrant
+          : await tx.lineageTreeAccess.update({
+              where: { id: existingGrant.id },
+              data: {
+                nodeId,
+                memberId: member.id,
+              },
+              select: { id: true },
+            })
+
+      accessGrantId = repairedGrant.id
+    } else {
+      const grant = await tx.lineageTreeAccess.create({
+        data: {
+          treeId: treeId as string,
+          userId: claim.claimantUserId,
+          grantedById: actorUserId,
+          role: "NODE_EDITOR",
+          nodeId,
+          memberId: member.id,
+        },
+        select: { id: true },
+      })
+
+      accessGrantId = grant.id
+    }
   }
 
-  // FI-006 (ADR 0035 §4): if the claimant asserted a rank at claim time, create an awarded
-  // RankAward on the node's Passport. Upsert so re-running approval is idempotent and an
-  // existing award for this rank is not overwritten. STATED source (claimant said so) +
-  // VERIFIED status (admin approved the claim = admin vouches for the assertion).
+  // --- Asserted RankAward (FI-006, ADR 0035 §4) — ALWAYS (keyed on the claimed Passport) ----
   if (claim.claimedRankId) {
     const existing = await tx.rankAward.findFirst({
-      where: { passportId: claim.node.passportId, rankId: claim.claimedRankId },
+      where: { passportId: claim.passportId, rankId: claim.claimedRankId },
       select: { id: true },
     })
     if (existing) {
@@ -194,7 +225,7 @@ export const finalizeLineageNodeClaim = async (
     } else {
       const created = await tx.rankAward.create({
         data: {
-          passportId: claim.node.passportId,
+          passportId: claim.passportId,
           rankId: claim.claimedRankId,
           source: "STATED",
           verificationStatus: "VERIFIED",
@@ -206,6 +237,7 @@ export const finalizeLineageNodeClaim = async (
     }
   }
 
+  // --- Comp grant --------------------------------------------------------------------------
   if (compOverride) {
     // Manual admin comp override (any brand) — takes precedence over the BBL auto-grant.
     const compResult = await grantComp({
@@ -220,13 +252,16 @@ export const finalizeLineageNodeClaim = async (
     })
     compGrantIds = compResult.grants.map((grant: { id: string }) => grant.id)
   } else if (brand === Brand.BBL) {
-    // BBL "comp gift" epic (SESSION_0403): claiming an imported placeholder
-    // Passport comps the Elite tier — Dirty Dozen cohort for life, everyone
-    // else for one year. Detected off the claimed node's visual-group cohort.
-    const cohortMember = await tx.lineageTreeMember.findUnique({
-      where: { treeId_nodeId: { treeId: claim.treeId, nodeId: claim.nodeId } },
-      select: { visualGroup: { select: { label: true } } },
-    })
+    // BBL "comp gift" epic (SESSION_0403): claiming an imported placeholder Passport comps the
+    // Elite tier — Dirty Dozen cohort for life, everyone else for one year. The cohort signal
+    // is the claimed node's visual group; a directory-only person (no node) defaults to non-DD.
+    const cohortMember =
+      hasNode && member
+        ? await tx.lineageTreeMember.findUnique({
+            where: { treeId_nodeId: { treeId: treeId as string, nodeId: nodeId as string } },
+            select: { visualGroup: { select: { label: true } } },
+          })
+        : null
     const isDirtyDozen = cohortMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
 
     const compResult = await grantComp({
@@ -246,4 +281,42 @@ export const finalizeLineageNodeClaim = async (
   }
 
   return { accessGrantId, compGrantIds, ownershipTransferred, passportAccountAttached, rankAwardId }
+}
+
+/**
+ * Gap 2 (ADR 0036 §3): when a claim on a Passport is finalized as the winner, auto-cancel every
+ * OTHER claimant's open claim (PENDING / NEEDS_INFO) on the same Passport so a won identity can no
+ * longer be double-claimed through a second door. Returns the cancelled claim ids. The caller is
+ * responsible for the surrounding tx + audit; this only flips status.
+ */
+export const cancelSiblingPassportClaims = async (
+  tx: Tx,
+  {
+    passportId,
+    winnerClaimId,
+    reviewerUserId,
+    now = new Date(),
+  }: { passportId: string; winnerClaimId: string; reviewerUserId: string; now?: Date },
+): Promise<string[]> => {
+  const siblings = await tx.passportClaimRequest.findMany({
+    where: {
+      passportId,
+      status: { in: ["PENDING", "NEEDS_INFO"] },
+      NOT: { id: winnerClaimId },
+    },
+    select: { id: true },
+  })
+  if (siblings.length === 0) return []
+
+  await tx.passportClaimRequest.updateMany({
+    where: { id: { in: siblings.map((s: { id: string }) => s.id) } },
+    data: {
+      status: "CANCELLED",
+      reviewerNote: `Auto-cancelled: this person was claimed via another request (${winnerClaimId}).`,
+      reviewedById: reviewerUserId,
+      reviewedAt: now,
+    },
+  })
+
+  return siblings.map((s: { id: string }) => s.id)
 }

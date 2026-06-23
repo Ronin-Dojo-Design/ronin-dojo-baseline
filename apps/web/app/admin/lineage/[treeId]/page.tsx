@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { LineageAvatarAction } from "~/app/admin/lineage/_components/lineage-avatar-action"
 import { LineageClaimabilityToggle } from "~/app/admin/lineage/_components/lineage-claimability-toggle"
 import { LineageSelectedRankSelect } from "~/app/admin/lineage/_components/lineage-selected-rank-select"
 import { withLineageAdminPage } from "~/components/admin/auth-hoc"
@@ -201,6 +202,13 @@ export default withLineageAdminPage(async ({ params }: PageProps<"/admin/lineage
                 </Stack>
 
                 <Stack size="xs" className="justify-end" wrap>
+                  {member.node.passport?.id && (
+                    <LineageAvatarAction
+                      passportId={member.node.passport.id}
+                      displayName={displayName(member)}
+                      initialAvatarUrl={member.node.passport.avatarUrl}
+                    />
+                  )}
                   {member.currentClaim && (
                     <Button
                       variant="secondary"

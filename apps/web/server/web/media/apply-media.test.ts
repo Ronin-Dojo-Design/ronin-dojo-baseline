@@ -211,6 +211,70 @@ describe("web media authorization", () => {
   })
 })
 
+describe("admin passport-avatar override (SESSION_0437_TASK_0A)", () => {
+  const adminUser = { id: "user-admin", role: "admin" }
+  const nonAdminUser = { id: "user-nobody", role: "user" }
+
+  // A small fake that can represent BOTH owned and unowned (placeholder) passports —
+  // the shared `makeDb` maps id → ownerId and cannot express `userId: null`.
+  function makePassportDb(passports: Record<string, { userId: string | null }>) {
+    return {
+      organization: { findFirst: async () => null },
+      passport: {
+        findFirst: async ({ where }: any) => passports[where.id] ?? null,
+      },
+    } as any
+  }
+
+  it("non-admin still CANNOT set another (owned) passport's avatar, even with the flag set", async () => {
+    const db = makePassportDb({ "pass-other": { userId: "someone-else" } })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: nonAdminUser,
+      target: { kind: "passport", id: "pass-other" },
+      allowAdminOverride: true, // a forged flag must NOT help a non-admin
+    })
+    expect(ok).toBe(false)
+  })
+
+  it("non-admin still CANNOT set an unclaimed placeholder passport's avatar with the flag set", async () => {
+    const db = makePassportDb({ "pass-placeholder": { userId: null } })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: nonAdminUser,
+      target: { kind: "passport", id: "pass-placeholder" },
+      allowAdminOverride: true,
+    })
+    expect(ok).toBe(false)
+  })
+
+  it("WITHOUT the flag, the self-service path is byte-for-byte unchanged for a placeholder (admin global line aside)", async () => {
+    const db = makePassportDb({ "pass-placeholder": { userId: null } })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: nonAdminUser,
+      target: { kind: "passport", id: "pass-placeholder" },
+      // allowAdminOverride omitted → defaults false
+    })
+    expect(ok).toBe(false)
+  })
+
+  it("admin CAN set an unclaimed placeholder passport's avatar via the override path", async () => {
+    const db = makePassportDb({ "pass-placeholder": { userId: null } })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: adminUser,
+      target: { kind: "passport", id: "pass-placeholder" },
+      allowAdminOverride: true,
+    })
+    expect(ok).toBe(true)
+  })
+})
+
 describe("passport avatar promotion", () => {
   it("promotes a passport image attachment to avatarUrl and makes the media public", async () => {
     const { db, created } = makeDb({

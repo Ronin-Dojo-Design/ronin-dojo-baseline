@@ -1,5 +1,8 @@
 import type { Brand } from "~/.generated/prisma/client"
-import { finalizeLineageNodeClaim } from "~/server/admin/lineage/claim-finalize"
+import {
+  cancelSiblingPassportClaims,
+  finalizePassportClaim,
+} from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_ACCEPT_ERROR } from "./claim-accept-errors"
 
 /**
@@ -24,11 +27,11 @@ import { CLAIM_ACCEPT_ERROR } from "./claim-accept-errors"
  *   (d) the claimant owns no OTHER lineage node (CLAIMANT_HAS_NODE).
  * (Guard (a) — a signed-in/identified user — is the caller's responsibility.)
  *
- * On success it auto-approves: records a `LineageClaimRequest { status: APPROVED,
- * bypassReason: "email-token" }` for audit parity, runs the same finalize side-effects +
- * audit log the admin path writes. Idempotent: a replay after a successful claim is a
- * no-op success (the node's Passport now belongs to the claimant; `attachAccount` is
- * idempotent).
+ * On success it auto-approves: records a `PassportClaimRequest { status: APPROVED,
+ * bypassReason: "email-token" }` (the unified identity-keyed claim, ADR 0036), runs the same
+ * `finalizePassportClaim` side-effects + audit log the admin path writes, and Gap-2 auto-cancels
+ * any sibling open claims on that Passport. Idempotent: a replay after a successful claim is a
+ * no-op success (the node's Passport now belongs to the claimant; `attachAccount` is idempotent).
  */
 
 export const CLAIM_NODE_RESULT = {
@@ -86,8 +89,8 @@ export async function claimNodeForUser(
   // someone ELSE, the node is taken.
   if (node.passport.userId) {
     if (node.passport.userId === userId) {
-      const existing = await tx.lineageClaimRequest.findFirst({
-        where: { treeId, nodeId: node.id, claimantUserId: userId, status: "APPROVED" },
+      const existing = await tx.passportClaimRequest.findFirst({
+        where: { passportId: node.passportId, claimantUserId: userId, status: "APPROVED" },
         orderBy: { createdAt: "desc" },
         select: { id: true },
       })
@@ -111,13 +114,12 @@ export async function claimNodeForUser(
     throw new Error(CLAIM_ACCEPT_ERROR.CLAIMANT_HAS_NODE)
   }
 
-  // Reuse a non-terminal claim for (node, claimant) if one exists; otherwise mint an
-  // auto-approved one. The email is the identity proof, so we go straight to APPROVED with a
-  // `bypassReason` for the audit trail.
-  const reusable = await tx.lineageClaimRequest.findFirst({
+  // Reuse a non-terminal unified claim for (passport, claimant) if one exists; otherwise mint an
+  // auto-approved `PassportClaimRequest`. The email is the identity proof, so we go straight to
+  // APPROVED with a `bypassReason` for the audit trail (ADR 0036 — one identity-keyed record).
+  const reusable = await tx.passportClaimRequest.findFirst({
     where: {
-      treeId,
-      nodeId: node.id,
+      passportId: node.passportId,
       claimantUserId: userId,
       status: { in: ["PENDING", "NEEDS_INFO"] },
     },
@@ -126,21 +128,25 @@ export async function claimNodeForUser(
   })
 
   const claim = reusable
-    ? await tx.lineageClaimRequest.update({
+    ? await tx.passportClaimRequest.update({
         where: { id: reusable.id },
         data: {
           status: "APPROVED",
           bypassReason: "email-token",
+          nodeId: node.id,
+          treeId,
           reviewedById: userId,
           reviewedAt: now,
         },
         select: { id: true },
       })
-    : await tx.lineageClaimRequest.create({
+    : await tx.passportClaimRequest.create({
         data: {
+          passportId: node.passportId,
           treeId,
           nodeId: node.id,
           claimantUserId: userId,
+          brand,
           status: "APPROVED",
           bypassReason: "email-token",
           reviewedById: userId,
@@ -153,21 +159,32 @@ export async function claimNodeForUser(
     claimId: claim.id,
     treeId,
     nodeId: node.id,
+    passportId: node.passportId,
     claimantUserId: userId,
     status: "PENDING",
     evidenceCount: 0,
   }
 
-  const finalized = await finalizeLineageNodeClaim(tx, {
+  const finalized = await finalizePassportClaim(tx, {
     claim: {
       id: claim.id,
+      claimantUserId: userId,
+      passportId: node.passportId,
+      passportUserId: node.passport.userId,
       treeId,
       nodeId: node.id,
-      claimantUserId: userId,
-      node: { passportId: node.passportId, passport: { userId: node.passport.userId } },
     },
     brand,
     actorUserId: userId,
+    now,
+  })
+
+  // Gap 2 (ADR 0036): a won Passport auto-cancels any other open claim on it (e.g. a directory-door
+  // claim filed before the email arrived).
+  await cancelSiblingPassportClaims(tx, {
+    passportId: node.passportId,
+    winnerClaimId: claim.id,
+    reviewerUserId: userId,
     now,
   })
 
@@ -176,7 +193,7 @@ export async function claimNodeForUser(
     data: {
       brand,
       action: "lineage.claim.reviewed",
-      entityType: "LineageClaimRequest",
+      entityType: "PassportClaimRequest",
       entityId: claim.id,
       userId,
       before,

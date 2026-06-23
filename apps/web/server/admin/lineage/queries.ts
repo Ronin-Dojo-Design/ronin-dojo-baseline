@@ -162,7 +162,9 @@ export const findLineageTreeDetail = async (treeId: string) => {
               // `user`) carries account fields; null `user` = accountless placeholder.
               passport: {
                 select: {
+                  id: true,
                   displayName: true,
+                  avatarUrl: true,
                   user: {
                     select: {
                       id: true,

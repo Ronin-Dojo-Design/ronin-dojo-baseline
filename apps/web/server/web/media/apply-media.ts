@@ -49,13 +49,22 @@ export async function applyWebMediaUpload({
   brand,
   user,
   input,
+  allowAdminOverride = false,
 }: {
   db: AppDb
   brand: Brand
   user: AuthzUser
   input: UploadWebMediaInput
+  /** Opt-in admin bypass for setting an unowned/placeholder passport's media. Default false. */
+  allowAdminOverride?: boolean
 }): Promise<WebMediaUploadResult> {
-  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  const authorized = await authorizeMediaTarget({
+    db,
+    brand,
+    user,
+    target: input.target,
+    allowAdminOverride,
+  })
   if (!authorized) {
     throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
   }
@@ -187,13 +196,22 @@ export async function applyPassportAvatarPromotion({
   brand,
   user,
   input,
+  allowAdminOverride = false,
 }: {
   db: AppDb
   brand: Brand
   user: AuthzUser
   input: PromotePassportAvatarMediaInput
+  /** Opt-in admin bypass for promoting an unowned/placeholder passport's avatar. Default false. */
+  allowAdminOverride?: boolean
 }): Promise<PassportAvatarPromotionResult> {
-  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  const authorized = await authorizeMediaTarget({
+    db,
+    brand,
+    user,
+    target: input.target,
+    allowAdminOverride,
+  })
   if (!authorized) {
     throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
   }

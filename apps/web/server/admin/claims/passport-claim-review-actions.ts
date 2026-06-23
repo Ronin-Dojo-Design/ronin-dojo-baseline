@@ -1,44 +1,54 @@
 "use server"
 
-import { Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
+import { type Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
-import { finalizePassportClaim } from "~/server/admin/lineage/claim-finalize"
+import {
+  cancelSiblingPassportClaims,
+  finalizePassportClaim,
+} from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
-import type { ReviewLineageClaimInput } from "~/server/admin/lineage/claim-review-schemas"
-import { reviewLineageClaimSchema } from "~/server/admin/lineage/claim-review-schemas"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
 import { scheduleClaimRejectedEmail } from "~/server/web/lineage/claim-rejected-email"
 import type { db as appDb } from "~/services/db"
+import {
+  type ReviewPassportClaimInput,
+  reviewPassportClaimSchema,
+} from "./passport-claim-review-schemas"
 
 /**
- * Admin lineage claim review server action.
+ * Unified Passport-claim admin review (ADR 0036, SESSION_0437 P2).
  *
- * State machine: PENDING | NEEDS_INFO → APPROVED | DENIED | NEEDS_INFO.
- * Terminal states (APPROVED, DENIED, CANCELLED) cannot be re-reviewed.
+ * THE single review surface for every person claim — lineage-door and
+ * directory-door alike, because both now write `PassportClaimRequest`. On
+ * APPROVED it runs the shared `finalizePassportClaim` (account→Passport attach +
+ * entitlement always; node branches only when node context is present, which is
+ * what gives a directory-only person a REAL identity attach — the old PERSON
+ * stub is gone), Gap-2 auto-cancels sibling open claims, then stamps status +
+ * audit. State machine: PENDING | NEEDS_INFO → APPROVED | DENIED | NEEDS_INFO.
  *
- * Author: Cody / SESSION_0183 TASK_01.
+ * Org claims are NOT reviewed here — they stay in `reviewProfileClaim`
+ * (ProfileClaimRequest); an owner-less Organization is not a Passport.
  */
 
 const REVIEWABLE_STATUSES = ["PENDING", "NEEDS_INFO"] as const
 
 type AppDb = typeof appDb
 
-export type ReviewLineageClaimResult = {
+export type ReviewPassportClaimResult = {
   claimId: string
   status: LineageClaimStatus
-  nodeId: string
+  passportId: string
+  claimantUserId: string
+  nodeId: string | null
   accessGrantId: string | null
   compGrantIds: string[]
   ownershipTransferred: boolean
-  // Phase 3c (SOT-ADR D1): approving a PERSON claim attaches the claimant account to the node's
-  // Passport (`Passport.userId`) rather than moving the node FK or archiving a synthetic placeholder
-  // User. `placeholderArchived*` are retired (the placeholder is now an accountless Passport).
   passportAccountAttached: boolean
-  // FI-006: id of the RankAward created from the claimed rank on approval, or null.
   rankAwardId: string | null
+  cancelledSiblingClaimIds: string[]
 }
 
-export const applyLineageClaimReview = async ({
+export const applyPassportClaimReview = async ({
   db,
   brand,
   reviewerUserId,
@@ -47,37 +57,24 @@ export const applyLineageClaimReview = async ({
   db: AppDb
   brand: Brand
   reviewerUserId: string
-  input: ReviewLineageClaimInput
-}): Promise<ReviewLineageClaimResult> => {
-  // Captured inside the tx, fired AFTER commit (rollback-safe) — see below. Both decisions notify
-  // the claimant: APPROVED → claim-approved email; DENIED → claim-rejected email (SESSION_0420).
-  let approvedClaimantUserId: string | null = null
-  let approvedNodeId: string | null = null
-  let deniedClaimantUserId: string | null = null
-  let deniedNodeId: string | null = null
+  input: ReviewPassportClaimInput
+}): Promise<ReviewPassportClaimResult> => {
   const reviewerNoteForEmail = input.reviewerNote ?? null
 
   const result = await db.$transaction(
-    async (tx: any): Promise<ReviewLineageClaimResult> => {
-      const claim = await tx.lineageClaimRequest.findFirst({
-        where: {
-          id: input.claimId,
-          tree: { brand },
-        },
+    // biome-ignore lint/suspicious/noExplicitAny: Prisma `$transaction` tx client.
+    async (tx: any): Promise<ReviewPassportClaimResult> => {
+      const claim = await tx.passportClaimRequest.findFirst({
+        where: { id: input.claimId, brand },
         select: {
           id: true,
           status: true,
+          passportId: true,
           treeId: true,
           nodeId: true,
           claimantUserId: true,
-          // FI-006: claimed rank is promoted to a RankAward on approval.
           claimedRankId: true,
-          node: {
-            select: {
-              passportId: true,
-              passport: { select: { userId: true } },
-            },
-          },
+          passport: { select: { userId: true } },
           _count: { select: { evidence: true } },
         },
       })
@@ -92,6 +89,7 @@ export const applyLineageClaimReview = async ({
 
       const before = {
         claimId: claim.id,
+        passportId: claim.passportId,
         treeId: claim.treeId,
         nodeId: claim.nodeId,
         claimantUserId: claim.claimantUserId,
@@ -104,26 +102,19 @@ export const applyLineageClaimReview = async ({
       let ownershipTransferred = false
       let passportAccountAttached = false
       let rankAwardId: string | null = null
+      let cancelledSiblingClaimIds: string[] = []
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
-        approvedClaimantUserId = claim.claimantUserId
-        approvedNodeId = claim.nodeId
-        // The APPROVED-branch identity merge + access + comp wiring lives in the shared
-        // `finalizePassportClaim` so every approve path (admin lineage, token-accept, unified
-        // reviewPassportClaim) can never drift. This legacy lineage door still reads
-        // `LineageClaimRequest`; map it to the Passport-keyed finalize input. `excludeLineageClaimId`
-        // lets the (still legacy-table) already-approved guard self-exclude this row.
         const finalized = await finalizePassportClaim(tx, {
           claim: {
             id: claim.id,
             claimantUserId: claim.claimantUserId,
-            passportId: claim.node.passportId,
-            passportUserId: claim.node.passport.userId,
+            passportId: claim.passportId,
+            passportUserId: claim.passport.userId,
             claimedRankId: claim.claimedRankId,
             treeId: claim.treeId,
             nodeId: claim.nodeId,
-            excludeLineageClaimId: claim.id,
           },
           brand,
           actorUserId: reviewerUserId,
@@ -135,14 +126,17 @@ export const applyLineageClaimReview = async ({
         ownershipTransferred = finalized.ownershipTransferred
         passportAccountAttached = finalized.passportAccountAttached
         rankAwardId = finalized.rankAwardId
-      } else if (input.decision === "DENIED") {
-        // No grant on deny (verified: the finalize side-effects only run in the APPROVED branch);
-        // capture the claimant + node so we can mail the claim-rejected notice after commit.
-        deniedClaimantUserId = claim.claimantUserId
-        deniedNodeId = claim.nodeId
+
+        // Gap 2: a won Passport auto-cancels every other open claim on it.
+        cancelledSiblingClaimIds = await cancelSiblingPassportClaims(tx, {
+          passportId: claim.passportId,
+          winnerClaimId: claim.id,
+          reviewerUserId,
+          now: reviewTimestamp,
+        })
       }
 
-      const updated = await tx.lineageClaimRequest.update({
+      const updated = await tx.passportClaimRequest.update({
         where: { id: claim.id },
         data: {
           status: input.decision,
@@ -157,7 +151,7 @@ export const applyLineageClaimReview = async ({
         data: {
           brand,
           action: "lineage.claim.reviewed",
-          entityType: "LineageClaimRequest",
+          entityType: "PassportClaimRequest",
           entityId: claim.id,
           userId: reviewerUserId,
           before,
@@ -170,6 +164,7 @@ export const applyLineageClaimReview = async ({
             ownershipTransferred,
             passportAccountAttached,
             rankAwardId,
+            cancelledSiblingClaimIds,
           },
         },
       })
@@ -177,40 +172,42 @@ export const applyLineageClaimReview = async ({
       return {
         claimId: updated.id,
         status: updated.status,
+        passportId: claim.passportId,
+        claimantUserId: claim.claimantUserId,
         nodeId: claim.nodeId,
         accessGrantId,
         compGrantIds,
         ownershipTransferred,
         passportAccountAttached,
         rankAwardId,
+        cancelledSiblingClaimIds,
       }
     },
     { isolationLevel: "Serializable", maxWait: 30000, timeout: 30000 },
   )
 
-  // A fresh admin approval committed — fire the lifecycle "profile-claim-approved" email.
-  if (approvedClaimantUserId && approvedNodeId) {
-    scheduleClaimApprovedEmail({ userId: approvedClaimantUserId, brand, nodeId: approvedNodeId })
-  }
-
-  // A fresh admin denial committed — fire the lifecycle "profile-claim-rejected" notice so every
-  // decision reaches the claimant (SESSION_0420 — approve already mailed, deny was silent).
-  if (deniedClaimantUserId && deniedNodeId) {
-    scheduleClaimRejectedEmail({
-      userId: deniedClaimantUserId,
-      brand,
-      nodeId: deniedNodeId,
-      reviewerNote: reviewerNoteForEmail,
-    })
+  // Lineage-flavoured lifecycle emails fire AFTER commit, and only for node claims (they key +
+  // link on nodeId). A directory-only person approval email is a follow-up (different copy).
+  if (result.nodeId) {
+    if (result.status === "APPROVED") {
+      scheduleClaimApprovedEmail({ userId: result.claimantUserId, brand, nodeId: result.nodeId })
+    } else if (result.status === "DENIED") {
+      scheduleClaimRejectedEmail({
+        userId: result.claimantUserId,
+        brand,
+        nodeId: result.nodeId,
+        reviewerNote: reviewerNoteForEmail,
+      })
+    }
   }
 
   return result
 }
 
-export const reviewLineageClaim = adminActionClient
-  .inputSchema(reviewLineageClaimSchema)
+export const reviewPassportClaim = adminActionClient
+  .inputSchema(reviewPassportClaimSchema)
   .action(async ({ parsedInput, ctx: { user, db, brand } }) => {
-    return applyLineageClaimReview({
+    return applyPassportClaimReview({
       db,
       brand,
       reviewerUserId: user.id,
