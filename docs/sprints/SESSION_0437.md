@@ -200,12 +200,43 @@ Tony Hua's APPROVED history lives only in **prod Neon**, so the real backfill is
 > Done: every media caller passes an explicit actor; no implicit global admin short-circuit; all media
 > tests green; `bun run typecheck` clean. Run AFTER E0 settles; isolate in its own worktree.
 
+## Open decisions / blockers
+
+- **P5 scope discovery (deferred from this session):** P5 ("retire legacy `LineageClaimRequest`
+  writers, cut surfaces to `PassportClaimRequest`") is a **coupled multi-surface migration**, wider
+  than the plan one-liner. Once the LAST writer (`server/web/lead/public-actions.ts:356`, the
+  "Join the Legacy" lead path) is converted to `submitPassportClaim`, NO new `LineageClaimRequest`
+  rows are created — so the admin review queue MUST be repointed in the SAME change or PENDING
+  claims become invisible to admins. Surfaces to migrate together:
+  - writer: `server/web/lead/public-actions.ts` (the lead-intake claim create) → `submitPassportClaim`.
+  - admin queue/detail: `server/admin/lineage/claim-queries.ts` (`findPendingClaims`/`findClaimById`)
+    → `passportClaimRequest` (use direct `passport.displayName`; keep `node`/`tree` context).
+  - admin UI: `app/admin/lineage/claims/page.tsx`, `[id]/page.tsx`, and `_components/claim-status-actions.tsx`
+    (swap `reviewLineageClaim` → `reviewPassportClaim`; adapt the detail shape).
+  - claimant UI: `app/app/lineage/claims/page.tsx` + `[id]/page.tsx` (read the unified record).
+  - `server/admin/claims/claim-queries.ts` — confirm the person path reads `passportClaimRequest`
+    (org stays on `ProfileClaimRequest`).
+  - Keep `applyLineageClaimReview` only for any straggler legacy rows until the legacy table is
+    dropped in a later migration. **Needs browser verification of BOTH claim queues** → its own
+    focused session.
+- **Prod backfill + Brian's real send:** gated. Run `scripts/backfill-passport-claims.ts` against
+  prod Neon (where Tony Hua's APPROVED + Brian's state live) only after the Neon password rotation;
+  then send Brian's claim invite. Operator go required for both.
+- **Kanban `BoardStore`** (deferred): DB-backed `BoardStore` + E0 `BoardConfig` as the epic's visual hub.
+- **TASK_0A browser verification** pending: admin avatar-set surface at `/admin/lineage/[treeId]`.
+- **Neon password rotation** (carryover from SESSION_0436) — still pending.
+
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+Land E0 **P5** (retire legacy `LineageClaimRequest` surfaces) as one coupled, browser-verified change,
+then run the gated prod backfill + send Brian's real claim invite.
 
 ### First task
 
-TBD at bow-out.
+`SESSION_0438_TASK_01` — P5 writer + queue + UI repoint (see Open decisions for the exact file set).
+Convert the `public-actions.ts` lead-claim writer to `submitPassportClaim`, repoint
+`claim-queries.ts` + the admin and claimant claim pages to `PassportClaimRequest` /
+`reviewPassportClaim`, keep tests green, and **browser-verify both the admin review queue and the
+claimant claim list** before pushing.

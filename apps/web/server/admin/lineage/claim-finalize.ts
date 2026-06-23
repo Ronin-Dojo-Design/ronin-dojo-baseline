@@ -78,6 +78,143 @@ export type FinalizePassportClaimResult = {
   rankAwardId: string | null
 }
 
+/** NODE_EDITOR access grant for a node claim — creates the access row or repairs an existing one. */
+const grantNodeEditorAccess = async (
+  tx: Tx,
+  {
+    treeId,
+    nodeId,
+    memberId,
+    claimantUserId,
+    actorUserId,
+  }: {
+    treeId: string
+    nodeId: string
+    memberId: string
+    claimantUserId: string
+    actorUserId: string
+  },
+): Promise<string> => {
+  const existingGrant = await tx.lineageTreeAccess.findFirst({
+    where: {
+      treeId,
+      userId: claimantUserId,
+      role: "NODE_EDITOR",
+      revokedAt: null,
+      OR: [{ nodeId }, { memberId }],
+    },
+    select: { id: true, nodeId: true, memberId: true },
+  })
+
+  if (!existingGrant) {
+    const grant = await tx.lineageTreeAccess.create({
+      data: {
+        treeId,
+        userId: claimantUserId,
+        grantedById: actorUserId,
+        role: "NODE_EDITOR",
+        nodeId,
+        memberId,
+      },
+      select: { id: true },
+    })
+    return grant.id
+  }
+
+  if (existingGrant.nodeId === nodeId && existingGrant.memberId === memberId) {
+    return existingGrant.id
+  }
+
+  const repaired = await tx.lineageTreeAccess.update({
+    where: { id: existingGrant.id },
+    data: { nodeId, memberId },
+    select: { id: true },
+  })
+  return repaired.id
+}
+
+/**
+ * FI-006 (ADR 0035 §4): mint the claimant's asserted RankAward on the claimed Passport. Idempotent —
+ * an existing award for that rank is returned untouched. STATED source + VERIFIED (admin vouched).
+ */
+const mintAssertedRankAward = async (
+  tx: Tx,
+  {
+    passportId,
+    claimedRankId,
+    actorUserId,
+  }: { passportId: string; claimedRankId: string; actorUserId: string },
+): Promise<string> => {
+  const existing = await tx.rankAward.findFirst({
+    where: { passportId, rankId: claimedRankId },
+    select: { id: true },
+  })
+  if (existing) return existing.id
+
+  const created = await tx.rankAward.create({
+    data: {
+      passportId,
+      rankId: claimedRankId,
+      source: "STATED",
+      verificationStatus: "VERIFIED",
+      awardedById: actorUserId,
+    },
+    select: { id: true },
+  })
+  return created.id
+}
+
+/**
+ * Comp grant: a manual `compOverride` wins for any brand; otherwise BBL auto-comps the Elite tier
+ * (Dirty Dozen cohort for life, everyone else one year). No grant for non-BBL without an override.
+ */
+const grantClaimComp = async (
+  tx: Tx,
+  {
+    brand,
+    claimId,
+    claimantUserId,
+    actorUserId,
+    compOverride,
+    dirtyDozen,
+    now,
+  }: {
+    brand: Brand
+    claimId: string
+    claimantUserId: string
+    actorUserId: string
+    compOverride?: LineageCompGrantSpec | null
+    dirtyDozen: boolean
+    now: Date
+  },
+): Promise<string[]> => {
+  if (!compOverride && brand !== Brand.BBL) return []
+
+  const entitlementKeys = getLineageCompEntitlementKeys(
+    compOverride ? compOverride.tier : LINEAGE_ELITE_ENTITLEMENT_KEY,
+  )
+  const term = compOverride
+    ? compOverride.termDays
+      ? { days: compOverride.termDays }
+      : null
+    : (() => {
+        const days = bblClaimCompTermDays(dirtyDozen)
+        return days ? { days } : null
+      })()
+
+  const compResult = await grantComp({
+    db: tx,
+    brand,
+    grantorUserId: actorUserId,
+    granteeUserId: claimantUserId,
+    entitlementKeys,
+    term,
+    reason: `lineage-claim-${claimId}`,
+    now,
+  })
+  return compResult.grants.map((grant: { id: string }) => grant.id)
+}
+
 export const finalizePassportClaim = async (
   tx: Tx,
   {
@@ -172,113 +309,46 @@ export const finalizePassportClaim = async (
 
   // --- NODE_EDITOR access grant (node claims only) -----------------------------------------
   if (hasNode && member) {
-    const existingGrant = await tx.lineageTreeAccess.findFirst({
-      where: {
-        treeId: treeId as string,
-        userId: claim.claimantUserId,
-        role: "NODE_EDITOR",
-        revokedAt: null,
-        OR: [{ nodeId }, { memberId: member.id }],
-      },
-      select: { id: true, nodeId: true, memberId: true },
+    accessGrantId = await grantNodeEditorAccess(tx, {
+      treeId: treeId as string,
+      nodeId: nodeId as string,
+      memberId: member.id,
+      claimantUserId: claim.claimantUserId,
+      actorUserId,
     })
-
-    if (existingGrant) {
-      const repairedGrant =
-        existingGrant.nodeId === nodeId && existingGrant.memberId === member.id
-          ? existingGrant
-          : await tx.lineageTreeAccess.update({
-              where: { id: existingGrant.id },
-              data: {
-                nodeId,
-                memberId: member.id,
-              },
-              select: { id: true },
-            })
-
-      accessGrantId = repairedGrant.id
-    } else {
-      const grant = await tx.lineageTreeAccess.create({
-        data: {
-          treeId: treeId as string,
-          userId: claim.claimantUserId,
-          grantedById: actorUserId,
-          role: "NODE_EDITOR",
-          nodeId,
-          memberId: member.id,
-        },
-        select: { id: true },
-      })
-
-      accessGrantId = grant.id
-    }
   }
 
   // --- Asserted RankAward (FI-006, ADR 0035 §4) — ALWAYS (keyed on the claimed Passport) ----
   if (claim.claimedRankId) {
-    const existing = await tx.rankAward.findFirst({
-      where: { passportId: claim.passportId, rankId: claim.claimedRankId },
-      select: { id: true },
+    rankAwardId = await mintAssertedRankAward(tx, {
+      passportId: claim.passportId,
+      claimedRankId: claim.claimedRankId,
+      actorUserId,
     })
-    if (existing) {
-      rankAwardId = existing.id
-    } else {
-      const created = await tx.rankAward.create({
-        data: {
-          passportId: claim.passportId,
-          rankId: claim.claimedRankId,
-          source: "STATED",
-          verificationStatus: "VERIFIED",
-          awardedById: actorUserId,
-        },
-        select: { id: true },
-      })
-      rankAwardId = created.id
-    }
   }
 
   // --- Comp grant --------------------------------------------------------------------------
-  if (compOverride) {
-    // Manual admin comp override (any brand) — takes precedence over the BBL auto-grant.
-    const compResult = await grantComp({
-      db: tx,
-      brand,
-      grantorUserId: actorUserId,
-      granteeUserId: claim.claimantUserId,
-      entitlementKeys: getLineageCompEntitlementKeys(compOverride.tier),
-      term: compOverride.termDays ? { days: compOverride.termDays } : null,
-      reason: `lineage-claim-${claim.id}`,
-      now,
-    })
-    compGrantIds = compResult.grants.map((grant: { id: string }) => grant.id)
-  } else if (brand === Brand.BBL) {
-    // BBL "comp gift" epic (SESSION_0403): claiming an imported placeholder Passport comps the
-    // Elite tier — Dirty Dozen cohort for life, everyone else for one year. The cohort signal
-    // is the claimed node's visual group; a directory-only person (no node) defaults to non-DD.
-    const cohortMember =
-      hasNode && member
-        ? await tx.lineageTreeMember.findUnique({
+  // Dirty-Dozen cohort drives the BBL comp term; the signal is the claimed node's visual group
+  // (a directory-only person with no node defaults to non-DD).
+  const dirtyDozen =
+    hasNode && member
+      ? (
+          await tx.lineageTreeMember.findUnique({
             where: { treeId_nodeId: { treeId: treeId as string, nodeId: nodeId as string } },
             select: { visualGroup: { select: { label: true } } },
           })
-        : null
-    const isDirtyDozen = cohortMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
+        )?.visualGroup?.label === DIRTY_DOZEN_LABEL
+      : false
 
-    const compResult = await grantComp({
-      db: tx,
-      brand,
-      grantorUserId: actorUserId,
-      granteeUserId: claim.claimantUserId,
-      entitlementKeys: getLineageCompEntitlementKeys(LINEAGE_ELITE_ENTITLEMENT_KEY),
-      term: (() => {
-        const days = bblClaimCompTermDays(isDirtyDozen)
-        return days ? { days } : null
-      })(),
-      reason: `lineage-claim-${claim.id}`,
-      now,
-    })
-    compGrantIds = compResult.grants.map((grant: { id: string }) => grant.id)
-  }
+  compGrantIds = await grantClaimComp(tx, {
+    brand,
+    claimId: claim.id,
+    claimantUserId: claim.claimantUserId,
+    actorUserId,
+    compOverride,
+    dirtyDozen,
+    now,
+  })
 
   return { accessGrantId, compGrantIds, ownershipTransferred, passportAccountAttached, rankAwardId }
 }
