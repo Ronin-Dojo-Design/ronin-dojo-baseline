@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-16
-last_agent: claude-session-0398
+updated: 2026-06-23
+last_agent: claude-session-0438
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -171,6 +171,7 @@ model narrative in [passport-and-shells](concepts/passport-and-shells.md).
 | School / affiliation / league | **`Affiliation`** (display-only person↔org; linked `Organization` or free-text `schoolName`) | `Membership` (that is Baseline enrollment, not school) |
 | Baseline enrollment / roster | **`Membership`** (paying = separate entitlement, ADR 0019) | — |
 | Lineage tree placement | **`LineageTreeMember`** + `LineageRelationship` (`PROMOTED_BY` references the `RankAward`) | re-deriving from `RankAward` alone |
+| Person claim (lineage + directory door) | **`PassportClaimRequest`** (keyed on `passportId`; reviewed via `reviewPassportClaim` → `finalizePassportClaim`) — ADR 0036 P5, SESSION_0438 | `LineageClaimRequest` (retired — legacy stragglers only); org claims live in `ProfileClaimRequest` |
 | Brand colors | **`BrandSettings` DB row** (injected by `layout.tsx`, **overrides** `styles.css`) | `app/styles.css` (fallback only — editing it alone does nothing live) |
 
 **Add-person** (`/admin/users/new` → `createPerson`) writes the identity set in one transaction:

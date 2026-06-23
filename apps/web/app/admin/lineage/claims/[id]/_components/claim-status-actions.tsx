@@ -22,7 +22,7 @@ import {
   type LineageCompTier,
 } from "~/lib/entitlements/lineage-comp"
 import type { ClaimDetail } from "~/server/admin/lineage/claim-queries"
-import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
+import { reviewPassportClaim } from "~/server/admin/claims/passport-claim-review-actions"
 
 /**
  * Claim review status action buttons.
@@ -43,7 +43,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
 
   const refresh = () => router.refresh()
 
-  const { executeAsync: execApprove, isPending: approvePending } = useAction(reviewLineageClaim, {
+  const { executeAsync: execApprove, isPending: approvePending } = useAction(reviewPassportClaim, {
     onSuccess: () => {
       toast.success("Claim approved")
       refresh()
@@ -51,7 +51,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
     onError: ({ error }) => toast.error(error.serverError ?? "Failed to approve"),
   })
 
-  const { executeAsync: execDeny, isPending: denyPending } = useAction(reviewLineageClaim, {
+  const { executeAsync: execDeny, isPending: denyPending } = useAction(reviewPassportClaim, {
     onSuccess: () => {
       toast.success("Claim denied")
       refresh()
@@ -60,7 +60,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
   })
 
   const { executeAsync: execNeedsInfo, isPending: needsInfoPending } = useAction(
-    reviewLineageClaim,
+    reviewPassportClaim,
     {
       onSuccess: () => {
         toast.success("Info requested from claimant")

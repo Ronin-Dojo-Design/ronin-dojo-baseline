@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-06-23
 updated: 2026-06-23
-last_agent: claude-session-0436
+last_agent: claude-session-0438
 pairs_with:
   - apps/web/prisma/schema.prisma
   - docs/architecture/decisions/0023-generic-profile-claim.md
@@ -21,7 +21,14 @@ backlinks:
 
 ## Status
 
-Accepted (SESSION_0436). Build phased per [petey-plan-0436-claim-unification](../../petey-plan-0436-claim-unification.md).
+Accepted (SESSION_0436); **implemented through P5 (SESSION_0438)**. P0–P4 landed SESSION_0437
+(schema + `submitPassportClaim` core + `finalizePassportClaim` + email auto-approve + prodsnap
+backfill). **P5 (SESSION_0438)** retired the last `LineageClaimRequest` writer (the "Join the Legacy"
+lead path → `submitPassportClaim`) and repointed the admin + manager person-claim queues to
+`PassportClaimRequest` / `reviewPassportClaim`; `/admin/claims` is now organization-only.
+`applyLineageClaimReview` + the `LineageClaimRequest` table are retained for legacy stragglers until a
+post-cutover migration drops them. Remaining gated steps: prod backfill + Brian Truelson's real claim
+invite. Build phased per [petey-plan-0436-claim-unification](../../petey-plan-0436-claim-unification.md).
 
 ## Context
 

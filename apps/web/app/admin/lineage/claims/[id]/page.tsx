@@ -23,7 +23,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
     notFound()
   }
 
-  const nodeDisplayName = claim.node.passport?.displayName ?? "Unnamed lineage node"
+  const subjectName = claim.passport.displayName ?? "Unnamed profile"
 
   return (
     <Wrapper>
@@ -40,7 +40,7 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
             size="h3"
             className="mt-2"
           >
-            Claim: {nodeDisplayName}
+            Claim: {subjectName}
           </Heading>
         </div>
 
@@ -64,9 +64,13 @@ export default withAdminPage(async ({ params }: PageProps<"/admin/lineage/claims
             <div>
               <dt className="text-muted-foreground">Tree</dt>
               <dd>
-                <Link href={`/lineage/${claim.tree.slug}`} className="hover:underline">
-                  {claim.tree.name}
-                </Link>
+                {claim.tree ? (
+                  <Link href={`/lineage/${claim.tree.slug}`} className="hover:underline">
+                    {claim.tree.name}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">Directory profile (no tree)</span>
+                )}
               </dd>
             </div>
             {claim.reviewedBy && (

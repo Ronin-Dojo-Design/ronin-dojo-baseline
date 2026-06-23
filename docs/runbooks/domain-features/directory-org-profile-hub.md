@@ -4,8 +4,8 @@ slug: directory-org-profile-hub
 type: runbook
 status: active
 created: 2026-06-07
-updated: 2026-06-08
-last_agent: claude-session-0356
+updated: 2026-06-23
+last_agent: claude-session-0438
 domain: directory-org-profile
 pairs_with:
   - docs/architecture/decisions/0023-generic-profile-claim.md
@@ -41,8 +41,11 @@ Three subject types share one discovery + claim surface — keep them distinct:
 Two funnels connect a visitor to these subjects — **do not conflate them**:
 
 - **Register** = create a *new* entity you own (`/organizations/new`, signup → directory presence).
-- **Claim** = take over an *existing* owner-less / placeholder entity (`ProfileClaimRequest` →
-  `/admin/claims` review → approve). See [ADR 0023](../../architecture/decisions/0023-generic-profile-claim.md).
+- **Claim** = take over an *existing* owner-less / placeholder entity. **Person** claims (lineage
+  node + directory profile, unified) write `PassportClaimRequest` → reviewed at `/app/lineage/claims`
+  via `reviewPassportClaim` → approve attaches the account to the Passport. **Organization** claims
+  write `ProfileClaimRequest` → `/admin/claims` review → approve sets `ownerId`. See
+  [ADR 0023](../../architecture/decisions/0023-generic-profile-claim.md) + ADR 0036 P5 (SESSION_0438).
 
 **Brand is a column** ([ADR 0004](../../architecture/decisions/0004-multi-brand-as-column.md)) — every
 query in this domain is brand-scoped. Never add cross-brand fallbacks.
@@ -72,7 +75,8 @@ So a session opens the right file directly instead of grepping.
 | **Register org** | `/organizations/new`, `/organizations/join`, `/organizations/[slug]/get-started` | `create-organization-form.tsx` |
 | **Org admin (owner)** | `/organizations/[slug]/settings/*` | `settings/{general,invites,members,theme}/` |
 | **Own profile** | `/me` | `app/(web)/me/` (+ `passport-editor.tsx`) |
-| **Claim review (admin)** | `/admin/claims`, `/admin/claims/[id]` | `app/admin/claims/` |
+| **Org claim review (admin)** | `/admin/claims`, `/admin/claims/[id]` (org-only since ADR 0036 P5) | `app/app/claims/` (`/admin/*` 308-redirects to `/app/*`) |
+| **Person claim review (manager)** | `/app/lineage/claims`, `/app/lineage/claims/[id]` | `app/app/lineage/claims/` (unified `PassportClaimRequest` queue) |
 | **Org admin (platform)** | `/admin/organizations`, `/admin/organizations/[id]/theme` | `app/admin/organizations/` |
 
 ### Read models & actions (server)
@@ -82,7 +86,8 @@ So a session opens the right file directly instead of grepping.
 | Directory read model + tier projection | `server/web/directory/queries.ts`, `profile-projection.ts`, `search-profiles.ts` |
 | Directory filters/facets | `server/web/directory/filter-options.ts` |
 | Claim submit (claimant) | `server/web/claims/claim-actions.ts` (`userActionClient`; owner-less/placeholder precondition; per-claimant dedup; brand-scoped) |
-| Claim review (admin) | `server/admin/claims/claim-review-actions.ts` (approve sets `organization.ownerId`; person approval = manual merge) |
+| Org claim review (admin) | `server/admin/claims/claim-review-actions.ts` (ProfileClaimRequest; approve sets `organization.ownerId`; org-only since P5) |
+| Person claim review (unified) | `server/admin/claims/passport-claim-review-actions.ts` (`reviewPassportClaim` → `finalizePassportClaim`: real account→Passport attach + node entitlements when node context present). Admin queries: `server/admin/lineage/claim-queries.ts`. `applyLineageClaimReview` retained for legacy stragglers only. |
 
 ## Components
 

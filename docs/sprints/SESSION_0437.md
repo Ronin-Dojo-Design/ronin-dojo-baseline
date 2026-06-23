@@ -200,6 +200,28 @@ Tony Hua's APPROVED history lives only in **prod Neon**, so the real backfill is
 > Done: every media caller passes an explicit actor; no implicit global admin short-circuit; all media
 > tests green; `bun run typecheck` clean. Run AFTER E0 settles; isolate in its own worktree.
 
+## Fallow health (SESSION_0437)
+
+Repo-wide signal healthy: maintainability **90.8 (good)**, **0 dead files**, avg cyclomatic **2.5**,
+duplication **0.6%**. Findings localized to the new E0 code.
+
+**Fixed:** `finalizePassportClaim` was 204 LOC / cyclomatic 27 (HIGH) → **137 LOC / cyclomatic 20**
+(HIGH flag cleared) by extracting three single-purpose private helpers (`grantNodeEditorAccess`,
+`mintAssertedRankAward`, `grantClaimComp`); behavior identical (153 tests green). Commit `9a5843b1`.
+
+**Triaged — deliberately left:**
+
+- *Staged for P5:* `reviewPassportClaim` / `passportClaimDecision` flagged "unused exports" (consumed
+  when P5 wires the admin queue); the 19-line mirror between `passport-claim-review-actions.ts` ↔
+  `claim-review-actions.ts` (P5 deletes the lineage one — extracting now is churn).
+- *Pre-existing (not introduced this session):* `AdminLineageTreeRow` unused type; the `applyWebMedia*`
+  authorize-preamble dup; the 225-line admin-vs-claimant `lineage/[treeId]/page.tsx` clone (inside P5's
+  surface — consolidates there).
+
+**Dead-code / dupes:** 0 dead files; dead-exports 10.3% dominated by the staged P5 surface (no genuine
+orphans); 1,029 dup lines (0.6%) — actionable claim-side ones are the two P5-staged items, rest is
+test-setup boilerplate.
+
 ## Open decisions / blockers
 
 - **P5 scope discovery (deferred from this session):** P5 ("retire legacy `LineageClaimRequest`

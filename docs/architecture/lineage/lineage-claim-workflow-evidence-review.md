@@ -4,8 +4,8 @@ slug: lineage-claim-workflow-evidence-review
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0177
+updated: 2026-06-23
+last_agent: claude-session-0438
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/knowledge/wiki/index.md
@@ -13,9 +13,22 @@ backlinks:
 
 # Lineage Claim Workflow And Evidence Review
 
+> **⚠ Updated by ADR 0036 P5 (SESSION_0438).** This v1 spec describes the original `LineageClaimRequest`
+> flow. The live implementation now unifies **both** person-claim doors (lineage node + directory profile)
+> onto a single `PassportClaimRequest` keyed on `passportId` (identity SoT, ADR 0025), reviewed via
+> `reviewPassportClaim` → `finalizePassportClaim`. Approval **attaches the claimant account to the
+> Passport** (the node never moves) and, when node context is present, grants `LineageTreeAccess` + cohort
+> comps; a directory-only person now gets a real attach (the old "manual merge" stub is gone). `/admin/claims`
+> is **organization-only**; org claims stay in `ProfileClaimRequest`. `LineageClaimRequest` + `applyLineageClaimReview`
+> are retained read-only for legacy stragglers until a post-cutover migration drops them. Read the workflow
+> below for intent; substitute `PassportClaimRequest` / `reviewPassportClaim` for the legacy names.
+
 ## Summary
 
-Lineage Tree v1 supports claimable placeholder profiles. Historical people remain represented by placeholder `User` plus `LineageNode` records until the real person claims the profile or an admin assigns it.
+Lineage Tree v1 supports claimable placeholder profiles, claimed through the unified
+`PassportClaimRequest` flow (ADR 0036 P5). Historical people remain represented by placeholder `User` +
+`Passport` + `LineageNode` records until the real person claims the profile (via the lineage or directory
+door) or an admin assigns it.
 
 Claim approval is a reviewed workflow. Evidence is private to reviewers and the claimant.
 

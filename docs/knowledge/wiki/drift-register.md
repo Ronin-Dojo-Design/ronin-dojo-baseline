@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-17
-last_agent: claude-session-0408
+updated: 2026-06-23
+last_agent: claude-session-0438
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -386,3 +386,16 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   Belt" sortOrder = 21; 210 lineage tests pass. The seed is now safe to run again.
   SESSION_0432 had worked around it surgically (`scripts/data/SESSION_0432-helio-rorion-promoter-link.sql`).
   **Logged in:** SESSION_0432; **resolved in:** SESSION_0433.
+
+### D-031 — `profileClaimSelect` selected the Phase-3c-removed `DirectoryProfile.user` relation (SESSION_0438, resolved)
+
+- **Source:** `apps/web/server/admin/claims/claim-queries.ts` `profileClaimSelect` selected
+  `directoryProfile.user.{name,isPlaceholder,passport.displayName}`, but Phase 3c (SESSION_0392)
+  dropped the `DirectoryProfile.user` satellite relation (Passport became the identity root).
+- **Impact:** `findPendingProfileClaims` / `findProfileClaimById` threw `PrismaClientValidationError`
+  on every render — the admin/manager profile-claim queue (`/app/claims`) had been **500ing since
+  Phase 3c**, latent because the page wasn't exercised until P5's org-only filter hit it.
+- **Status:** **resolved** (SESSION_0438). `profileClaimSelect` now reads
+  `directoryProfile.passport.displayName` (identity SoT, ADR 0025); `profileClaimSubjectLabel`
+  updated to match. `/app/claims` renders green (browser-verified, 0 console errors).
+  **Logged + resolved in:** SESSION_0438 (surfaced during ADR 0036 P5).

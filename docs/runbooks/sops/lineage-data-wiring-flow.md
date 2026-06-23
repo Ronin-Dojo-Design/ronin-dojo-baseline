@@ -4,8 +4,8 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-06
-last_agent: claude-session-0350
+updated: 2026-06-23
+last_agent: claude-session-0438
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
@@ -51,7 +51,7 @@ LineageTree (brand + scopeType + visibility + isPublished + isClaimable)
   |                |                                     |
   |                +--> visibility / verificationStatus  |
   |                +--> isVerified (legacy fallback)     |
-  |                +--> claimRequests [LineageClaimRequest]
+  |                +--> claimRequests [PassportClaimRequest]  (ADR 0036 P5 — person claims unified; LineageClaimRequest retired)
   |                                                       |
   +--> LineageVisualGroup (PROMOTION_DATE / RANK / ...)   |
   +--> LineageTreeAccess (TREE_ADMIN / TREE_EDITOR / ...) |
@@ -68,7 +68,7 @@ flowchart TD
     LT[LineageTree\nbrand + scopeType + visibility + isPublished] --> TM[LineageTreeMember\nisClaimable, public-rank flags]
     TM --> LN[LineageNode\n1:1 User]
     LN --> VS[visibility / verificationStatus / isVerified]
-    LN --> CR[LineageClaimRequest]
+    LN --> CR[PassportClaimRequest]
     LT --> VG[LineageVisualGroup]
     LT --> AG[LineageTreeAccess\nTREE_ADMIN / EDITOR]
     LN -->|PROMOTED_BY edge| LN2[LineageNode]
@@ -198,7 +198,7 @@ header fields; it never widens a private field. `/organizations` is retained for
 
 ---
 
-## 5. Claim → review → tier (reuses LineageClaimRequest)
+## 5. Claim → review → tier (unified PassportClaimRequest for person claims; ProfileClaimRequest for orgs — ADR 0036 P5)
 
 ```text
 Visitor clicks Claim (node or tree)
@@ -207,7 +207,9 @@ Visitor clicks Claim (node or tree)
 Auth check -> sign in if needed
   |
   v
-LineageClaimRequest created (status PENDING) + evidence (URL/text/media)
+PassportClaimRequest created (status PENDING) + evidence (URL/text/media)
+  (both lineage-node + directory-person doors write this ONE record, keyed on passportId;
+   reviewed via reviewPassportClaim → finalizePassportClaim. Org claims stay in ProfileClaimRequest.)
   |
   v
 Admin / tree-admin review
@@ -225,7 +227,7 @@ flowchart TD
     C[Claim node/tree] --> A{Signed in?}
     A -->|No| SI[Sign in] --> F[Claim form + evidence]
     A -->|Yes| F
-    F --> CRR[LineageClaimRequest PENDING]
+    F --> CRR[PassportClaimRequest PENDING]
     CRR --> REV{Admin review}
     REV -->|APPROVED| OWN[Ownership / LineageTreeAccess]
     REV -->|DENIED| REJ[reviewerNote private]

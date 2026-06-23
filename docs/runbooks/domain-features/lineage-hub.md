@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-23
+last_agent: claude-session-0438
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -53,7 +53,7 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 - [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — create/update/delete promotion flows, conflict rules, verification, visual-group sync.
 - [Lineage Prisma Schema Patch Proposal](../../architecture/lineage/lineage-prisma-schema-patch-proposal.md) — the v1 schema patch shape.
 - [Promotion Event Model — design + plan](../../architecture/lineage/promotion-event-model.md) — **draft/staged (SESSION_0316).** First-class `PromotionEvent` (belt ceremony) grouping multiple `RankAward`s with a shared media gallery; discipline-agnostic; flagged the most important cross-brand domain logic. Build via dedicated ADR + epic.
-- Schema: `apps/web/prisma/schema.prisma` — `LineageNode`, `LineageRelationship`, `LineageTree`, `LineageTreeMember`, `LineageVisualGroup`, `LineageClaimRequest`, `LineageTreeAccess`, `RankAward`.
+- Schema: `apps/web/prisma/schema.prisma` — `LineageNode`, `LineageRelationship`, `LineageTree`, `LineageTreeMember`, `LineageVisualGroup`, `PassportClaimRequest` (unified person-claim SoT, ADR 0036 P5 — both lineage + directory doors write it; reviewed via `reviewPassportClaim`/`finalizePassportClaim`), `LineageTreeAccess`, `RankAward`. (`LineageClaimRequest` is retired as the live writer — read-only for legacy stragglers until dropped.)
 
 ## Requirements & port specs
 

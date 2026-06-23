@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-21
-last_agent: claude-session-0421
+updated: 2026-06-23
+last_agent: claude-session-0438
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -272,9 +272,13 @@ An explicit ACL grant for editing lineage.
 
 Organization owner and organization admin access may be derived by server authorization logic; explicit grants are stored for tree, branch, or node-specific editors.
 
+### PassportClaimRequest
+
+The **unified person-claim record** (ADR 0036; live since SESSION_0438 P5). Both person-claim doors — lineage-node *and* directory-profile — resolve their subject to a `passportId` (identity SoT, ADR 0025) and write ONE `PassportClaimRequest`, so the claimable + duplicate guards key on identity, not door. Reviewed via `reviewPassportClaim` → `finalizePassportClaim` (approve / deny / needs-info; node branches run only when node context is present — this is what gives a directory-only person a real account→Passport attach). Org claims do NOT come here (see `ProfileClaimRequest`). Every decision is audited; node claims email the claimant.
+
 ### LineageClaimRequest
 
-A request by an authenticated user to claim a placeholder LineageNode. The node is **Passport-rooted** (`passportId`); approval **attaches the claimant's account to the node's Passport** — the node never moves (Phase 3c, SOT-ADR D1). A claimant's empty signup Passport is superseded, not blocked (SESSION_0392). Reviewed via the admin claim-review path (approve / deny / needs-info); every decision is audited and emails the claimant (approve → `profile-claim-approved`, deny → `profile-claim-rejected`).
+**RETIRED as the live person-claim path** (ADR 0036 P5, SESSION_0438) — superseded by `PassportClaimRequest`. Historically: a request by an authenticated user to claim a placeholder LineageNode (Passport-rooted; approval attached the account to the node's Passport). Retained read-only for legacy straggler rows until the table is dropped in a post-cutover migration; `applyLineageClaimReview` stays only to review those.
 
 ### LineagePendingClaim
 
@@ -288,7 +292,7 @@ Evidence is visible to the claimant and reviewers, not public lineage payloads.
 
 ### ProfileClaimRequest
 
-The **second, distinct** claim system (SESSION_0354) — a request to claim an **owner-less Organization** or a **placeholder person**, separate from lineage claims. Org approval sets `ownerId`; person approval is a manual merge. **Register ≠ Claim** (ADR 0023): register creates new, claim takes over existing. Do not conflate with `LineageClaimRequest` (placeholder LineageNode) — see [[profile-claim-vs-lineage-claim]].
+The **ORGANIZATION-only** claim system (SESSION_0354; narrowed by ADR 0036 P5, SESSION_0438) — a request to claim an **owner-less Organization**. Org approval sets `ownerId`. **Person claims no longer come here** — they unified onto `PassportClaimRequest`, and the `/admin/claims` queue is now organization-only. **Register ≠ Claim** (ADR 0023): register creates new, claim takes over existing. See [[profile-claim-vs-lineage-claim]].
 
 ### LineageVerificationStatus
 

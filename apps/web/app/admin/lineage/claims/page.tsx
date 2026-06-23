@@ -23,7 +23,7 @@ async function ClaimsContent() {
   return (
     <div className="divide-y rounded-lg border">
       {claims.map(claim => {
-        const nodeDisplayName = claim.node.passport?.displayName ?? "Unnamed lineage node"
+        const subjectName = claim.passport.displayName ?? "Unnamed profile"
 
         return (
           <Link
@@ -33,9 +33,11 @@ async function ClaimsContent() {
           >
             <div className="min-w-0 flex-1">
               <p className="font-medium truncate">
-                {claim.claimant.name ?? claim.claimant.email} → {nodeDisplayName}
+                {claim.claimant.name ?? claim.claimant.email} → {subjectName}
               </p>
-              <p className="text-sm text-muted-foreground truncate">Tree: {claim.tree.name}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {claim.tree ? `Tree: ${claim.tree.name}` : "Directory profile (no tree)"}
+              </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">

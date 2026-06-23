@@ -4,8 +4,8 @@ slug: adr-0023-generic-profile-claim
 type: decision
 status: accepted
 created: 2026-06-07
-updated: 2026-06-07
-last_agent: claude-session-0354
+updated: 2026-06-23
+last_agent: claude-session-0438
 pairs_with:
   - apps/web/prisma/schema.prisma
   - apps/web/server/web/claims/claim-actions.ts
@@ -20,7 +20,12 @@ backlinks:
 
 ## Status
 
-Accepted
+Accepted. **Superseded for person claims by [ADR 0036](0036-unified-passport-claim.md) (SESSION_0438 P5):**
+the PERSON branch (placeholder-person profile claims) no longer writes `ProfileClaimRequest` — both
+person-claim doors now resolve to a Passport and write the unified `PassportClaimRequest`, and the
+old "person approval = manual merge" stub is replaced by a real account→Passport attach via
+`finalizePassportClaim`. The **ORGANIZATION** branch (owner-less-org claim → approval sets `ownerId`)
+remains in `ProfileClaimRequest`, and the `/admin/claims` queue is now organization-only.
 
 ## Context
 

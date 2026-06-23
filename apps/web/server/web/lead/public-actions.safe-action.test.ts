@@ -240,6 +240,12 @@ afterAll(async () => {
     .deleteMany({ where: { claimRequest: { treeId: { startsWith: PREFIX } } } })
     .catch(() => {})
   await db.lineageClaimRequest.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
+  // P5 (ADR 0036): the lead door now writes PassportClaimRequest — sweep it (+ evidence)
+  // by the same tagged treeId so signed-in reruns start clean.
+  await db.passportClaimEvidence
+    .deleteMany({ where: { claimRequest: { treeId: { startsWith: PREFIX } } } })
+    .catch(() => {})
+  await db.passportClaimRequest.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTreeMember.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageVisualGroup.deleteMany({ where: { treeId: { startsWith: PREFIX } } })
   await db.lineageTree.deleteMany({ where: { id: { startsWith: PREFIX } } })
@@ -298,7 +304,8 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     const [lead, tool, claimCount] = await Promise.all([
       db.lead.findUnique({ where: { id: result!.data!.leadId } }),
       db.tool.findUnique({ where: { slug: result!.data!.toolSlug! } }),
-      db.lineageClaimRequest.count({ where: { claimantUserId } }),
+      // P5 (ADR 0036): the lead door now writes the unified PassportClaimRequest.
+      db.passportClaimRequest.count({ where: { claimantUserId } }),
     ])
 
     expect(lead?.brand).toBe(TEST_BRAND)
@@ -332,8 +339,8 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
     expect(toolCount).toBe(0)
 
-    // Signed out → no LineageClaimRequest is persisted yet (the emailed magic link finishes it).
-    const claimCount = await db.lineageClaimRequest.count({
+    // Signed out → no claim is persisted yet (the emailed magic link finishes it).
+    const claimCount = await db.passportClaimRequest.count({
       where: { treeId: claimTreeId, nodeId: claimNodeId },
     })
     expect(claimCount).toBe(0)
@@ -401,7 +408,7 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
 
-  it("claim of existing node, signed IN: no duplicate Tool; LineageClaimRequest PENDING created; claimRequiresSignIn false", async () => {
+  it("claim of existing node, signed IN: no duplicate Tool; PassportClaimRequest PENDING created; claimRequiresSignIn false", async () => {
     setTestSession({ id: claimantUserId })
     const submitter = "claim-signed-in"
 
@@ -422,8 +429,9 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
     expect(toolCount).toBe(0)
 
-    // A PENDING claim IS persisted for the signed-in claimant.
-    const claim = await db.lineageClaimRequest.findFirst({
+    // A PENDING unified claim IS persisted for the signed-in claimant — keyed on the
+    // node's Passport (identity SoT), with node/tree context back-filled.
+    const claim = await db.passportClaimRequest.findFirst({
       where: { treeId: claimTreeId, nodeId: claimNodeId, claimantUserId },
     })
     expect(claim).not.toBeNull()

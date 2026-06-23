@@ -18,6 +18,10 @@ import {
 } from "~/lib/notifications"
 import { publicActionClient } from "~/lib/safe-actions"
 import { createSlugTakenCheck, generateUniqueSlug } from "~/lib/slug"
+import {
+  SUBMIT_PASSPORT_CLAIM_ERROR,
+  submitPassportClaim,
+} from "~/server/web/claims/submit-passport-claim"
 import { leadPayload } from "~/server/web/lead/payloads"
 import {
   claimAcceptNextPath,
@@ -160,6 +164,101 @@ export const createPublicLead = publicActionClient
     return { id: lead.id }
   })
 
+/**
+ * Join-the-Legacy email dispatch — extracted from `createJoinLegacyInterest`'s `after()`
+ * block (SESSION_0438 health: drop the action's cyclomatic below the CRITICAL threshold).
+ * Picks exactly ONE recipient-facing email per submission shape (guest-claim magic link →
+ * founder letter vs claim-your-profile; guest free signup; guest paid checkout-link; else
+ * the generic confirmation), then always notifies admin. Best-effort, post-commit: send
+ * failures are swallowed (logged), identical to the inlined behaviour.
+ */
+async function dispatchJoinLegacyNotifications(opts: {
+  email: string
+  firstName: string
+  bblOrigin: string
+  leadId: string
+  nodeId: string | undefined
+  isGuestFreeSubmission: boolean
+  isGuestPaidSubmission: boolean
+  isClaimOfExistingNode: boolean
+  claimIsFounder: boolean
+  claimIsLifetime: boolean
+  claimProfileName: string
+  notification: Parameters<typeof notifyUserOfBblJoinLegacy>[0]
+}): Promise<void> {
+  const {
+    email,
+    firstName,
+    bblOrigin,
+    leadId,
+    nodeId,
+    isGuestFreeSubmission,
+    isGuestPaidSubmission,
+    isClaimOfExistingNode,
+    claimIsFounder,
+    claimIsLifetime,
+    claimProfileName,
+    notification,
+  } = opts
+
+  try {
+    if (isGuestFreeSubmission && isClaimOfExistingNode && nodeId) {
+      // Guest claiming an existing profile → email-bound magic link that one-click claims
+      // the node (account attach + comp grant happen in finalizeLineageNodeClaim). No
+      // sign-in bounce — the link IS the proof of identity.
+      const claimUrl = await mintClaimMagicLink({
+        baseUrl: bblOrigin,
+        email,
+        nextPath: claimAcceptNextPath(nodeId),
+        previewToken: getBblPreviewToken(),
+      })
+      if (claimIsFounder) {
+        // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
+        // founder — with his one-click claim link carried inside.
+        await notifyFounderOfTheLongRoad({ brand: Brand.BBL, to: email, firstName, claimUrl })
+      } else {
+        await notifyMemberOfBblClaimYourProfile({
+          brand: Brand.BBL,
+          to: email,
+          firstName,
+          profileName: claimProfileName,
+          claimUrl,
+          compTier: "ELITE",
+          isLifetime: claimIsLifetime,
+        })
+      }
+    } else if (isGuestFreeSubmission) {
+      // Guest free signup with no node to claim → mint a `/me` magic link; Better Auth
+      // provisions the account on verify and lands them on `/me`.
+      const verifyUrl = await mintClaimMagicLink({
+        baseUrl: bblOrigin,
+        email,
+        nextPath: FREE_SIGNUP_NEXT_PATH,
+        previewToken: getBblPreviewToken(),
+      })
+      await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
+    } else if (isGuestPaidSubmission) {
+      // Guest paid tier → mint a magic link that signs them in and lands them on the
+      // join page's membership picker, which runs the (now-authenticated) Stripe
+      // checkout. No webhook change: metadata.userId is real once they're signed in.
+      const verifyUrl = await mintClaimMagicLink({
+        baseUrl: bblOrigin,
+        email,
+        nextPath: "/lineage/join#lineage-membership",
+        previewToken: getBblPreviewToken(),
+      })
+      await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
+    } else {
+      // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):
+      // the original Join-the-Legacy confirmation.
+      await notifyUserOfBblJoinLegacy(notification)
+    }
+    await notifyAdminOfBblJoinLegacy(notification)
+  } catch (error) {
+    console.error("[notify] Join the Legacy email failed", { leadId, error })
+  }
+}
+
 export const createJoinLegacyInterest = publicActionClient
   .inputSchema(legacyInterestSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
@@ -227,7 +326,14 @@ export const createJoinLegacyInterest = publicActionClient
               // grant the comp, so the email never contradicts the grant.
               visualGroup: { select: { label: true } },
               node: {
-                select: { slug: true, passport: { select: { displayName: true } } },
+                select: {
+                  slug: true,
+                  // Identity key for the unified claim core (ADR 0036, P5): the lead door
+                  // now writes PassportClaimRequest keyed on the node's Passport, not a
+                  // node-keyed LineageClaimRequest.
+                  passportId: true,
+                  passport: { select: { displayName: true } },
+                },
               },
             },
           })
@@ -341,30 +447,36 @@ export const createJoinLegacyInterest = publicActionClient
     }
 
     let claimCreated = false
-    if (session?.user?.id && isClaimOfExistingNode && claimTree && parsedInput.nodeId) {
-      const existingClaim = await db.lineageClaimRequest.findFirst({
-        where: {
-          treeId: claimTree.id,
-          nodeId: parsedInput.nodeId,
+    if (
+      session?.user?.id &&
+      isClaimOfExistingNode &&
+      claimTree &&
+      claimMember &&
+      parsedInput.nodeId
+    ) {
+      // ADR 0036 P5: the last LineageClaimRequest writer — converted to the unified
+      // Passport-keyed core. submitPassportClaim resolves the identity guards
+      // (already-claimed / duplicate open claim) and throws on either; for the lead
+      // flow those are benign (it silently skipped a duplicate before), so swallow the
+      // known guard errors and leave claimCreated false. Any other error still propagates.
+      try {
+        await submitPassportClaim(db, {
+          passportId: claimMember.node.passportId,
           claimantUserId: session.user.id,
-          status: { in: ["PENDING", "APPROVED"] },
-        },
-        select: { id: true },
-      })
-
-      if (!existingClaim) {
-        await db.lineageClaimRequest.create({
-          data: {
-            treeId: claimTree.id,
-            nodeId: parsedInput.nodeId,
-            claimantUserId: session.user.id,
-            claimantNote: notes || "Submitted through Join the Legacy.",
-            evidence: {
-              create: claimEvidence,
-            },
-          },
+          brand: Brand.BBL,
+          claimantNote: notes || "Submitted through Join the Legacy.",
+          nodeId: parsedInput.nodeId,
+          treeId: claimTree.id,
+          evidence: claimEvidence,
         })
         claimCreated = true
+      } catch (error) {
+        const benign =
+          error instanceof Error &&
+          (error.message === SUBMIT_PASSPORT_CLAIM_ERROR.DUPLICATE_CLAIM ||
+            error.message === SUBMIT_PASSPORT_CLAIM_ERROR.ALREADY_CLAIMED ||
+            error.message === SUBMIT_PASSPORT_CLAIM_ERROR.PASSPORT_NOT_FOUND)
+        if (!benign) throw error
       }
     }
 
@@ -405,77 +517,33 @@ export const createJoinLegacyInterest = publicActionClient
     const isGuestPaidSubmission = membershipPath !== "FREE" && !session?.user?.id
 
     after(async () => {
-      const notification = {
-        brand: Brand.BBL,
-        to: email,
+      await dispatchJoinLegacyNotifications({
+        email,
         firstName,
-        fullName,
-        membershipPath,
+        bblOrigin,
         leadId: lead.id,
-        rankSummary,
-        trainedUnder,
-        represent,
-        checkoutUrl: absoluteCheckoutUrl,
-        appUrl: requestOrigin,
-        claimCreated,
-      }
-
-      try {
-        if (isGuestFreeSubmission && isClaimOfExistingNode && parsedInput.nodeId) {
-          // Guest claiming an existing profile → email-bound magic link that one-click claims
-          // the node (account attach + comp grant happen in finalizeLineageNodeClaim). No
-          // sign-in bounce — the link IS the proof of identity.
-          const claimUrl = await mintClaimMagicLink({
-            baseUrl: bblOrigin,
-            email,
-            nextPath: claimAcceptNextPath(parsedInput.nodeId),
-            previewToken: getBblPreviewToken(),
-          })
-          if (claimIsFounder) {
-            // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
-            // founder — with his one-click claim link carried inside.
-            await notifyFounderOfTheLongRoad({ brand: Brand.BBL, to: email, firstName, claimUrl })
-          } else {
-            await notifyMemberOfBblClaimYourProfile({
-              brand: Brand.BBL,
-              to: email,
-              firstName,
-              profileName: claimProfileName,
-              claimUrl,
-              compTier: "ELITE",
-              isLifetime: claimIsLifetime,
-            })
-          }
-        } else if (isGuestFreeSubmission) {
-          // Guest free signup with no node to claim → mint a `/me` magic link; Better Auth
-          // provisions the account on verify and lands them on `/me`.
-          const verifyUrl = await mintClaimMagicLink({
-            baseUrl: bblOrigin,
-            email,
-            nextPath: FREE_SIGNUP_NEXT_PATH,
-            previewToken: getBblPreviewToken(),
-          })
-          await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
-        } else if (isGuestPaidSubmission) {
-          // Guest paid tier → mint a magic link that signs them in and lands them on the
-          // join page's membership picker, which runs the (now-authenticated) Stripe
-          // checkout. No webhook change: metadata.userId is real once they're signed in.
-          const verifyUrl = await mintClaimMagicLink({
-            baseUrl: bblOrigin,
-            email,
-            nextPath: "/lineage/join#lineage-membership",
-            previewToken: getBblPreviewToken(),
-          })
-          await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
-        } else {
-          // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):
-          // the original Join-the-Legacy confirmation.
-          await notifyUserOfBblJoinLegacy(notification)
-        }
-        await notifyAdminOfBblJoinLegacy(notification)
-      } catch (error) {
-        console.error("[notify] Join the Legacy email failed", { leadId: lead.id, error })
-      }
+        nodeId: parsedInput.nodeId,
+        isGuestFreeSubmission,
+        isGuestPaidSubmission,
+        isClaimOfExistingNode,
+        claimIsFounder,
+        claimIsLifetime,
+        claimProfileName,
+        notification: {
+          brand: Brand.BBL,
+          to: email,
+          firstName,
+          fullName,
+          membershipPath,
+          leadId: lead.id,
+          rankSummary,
+          trainedUnder,
+          represent,
+          checkoutUrl: absoluteCheckoutUrl,
+          appUrl: requestOrigin,
+          claimCreated,
+        },
+      })
 
       revalidate({
         paths: ["/admin/leads", "/lineage/join"],
