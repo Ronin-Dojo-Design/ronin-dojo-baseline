@@ -470,6 +470,26 @@ captures it.
 `apps/web/prisma/schema.prisma` per ADR 0036 §1, generate the additive migration, apply locally, typecheck.
 Fan this out via the §P0 fan-out prompt. (Interim Gap 1 guard from SESSION_0436 is deleted in P1.)
 
+### Parallel task (disjoint from E0 — run alongside, slot early)
+
+`SESSION_0437_TASK_0A` — **Admin "set placeholder avatar" path** (operator-requested). Disjoint from the E0
+claim work (media-authz + admin UI, not claim records), so it runs in parallel with the E0 fan-out — slot it
+early since it's small + fixes a live cosmetic defect on placeholder profiles.
+
+- **Problem:** `uploadAndPromotePassportAvatar` (`server/web/actions/passport-avatar.ts`) is self-service only
+  (`where:{userId:user.id}`), and `applyWebMediaUpload` → `authorizeMediaTarget` enforces passport-OWNERSHIP.
+  So no admin can set a placeholder (unclaimed) person's avatar in-app. Many imported member photos are
+  full-body shots a centered square crop decapitates (Brian's was fixed by hand this session).
+- **Build:** an `adminActionClient` action `setPassportAvatarAsAdmin({ passportId, file })` that uploads +
+  promotes for ANY passport, gated by admin authz — extend `authorizeMediaTarget` to allow an admin actor
+  WITHOUT weakening the ownership check for non-admins (security-sensitive — review carefully). Wire an admin
+  surface that reuses the existing circle cropper (`components/web/uploader/cropper.tsx` +
+  `use-photo-upload.ts`) so an admin crops + sets a placeholder's avatar. Likely host: the admin lineage
+  node / person area.
+- **Done means:** an admin can crop+set any placeholder person's avatar in-app; non-admin ownership boundary
+  unchanged (add a test); browser-verified. Backfill consideration: a batch re-crop pass for already-imported
+  full-body placeholder photos is a separate follow-up.
+
 ### Carryover / deferred
 
 - Helio-gracie `TREE_SEEDS` membership (deferred since 0433/0434) — still open, unrelated to E0.
