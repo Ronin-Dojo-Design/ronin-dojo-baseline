@@ -61,7 +61,11 @@ type ResolvedNode = {
 async function resolveNode(db: any, slug: string): Promise<ResolvedNode | null> {
   const node = await db.lineageNode.findUnique({
     where: { slug },
-    select: { id: true, passportId: true, passport: { select: { displayName: true, userId: true } } },
+    select: {
+      id: true,
+      passportId: true,
+      passport: { select: { displayName: true, userId: true } },
+    },
   })
   if (!node) return null
 
@@ -115,7 +119,11 @@ async function status(): Promise<void> {
       where: { claimantUserId: user.id, status: { in: ["PENDING", "APPROVED", "NEEDS_INFO"] } },
     })
     const ents = await db.userEntitlement.count({ where: { userId: user.id, status: "ACTIVE" } })
-    console.table({ ownsNode: ownsNode?.slug ?? "(none)", openClaims: claims, activeEntitlements: ents })
+    console.table({
+      ownsNode: ownsNode?.slug ?? "(none)",
+      openClaims: claims,
+      activeEntitlements: ents,
+    })
   }
 
   if (NODE_SLUG) {
@@ -145,7 +153,8 @@ async function status(): Promise<void> {
 async function verify(): Promise<void> {
   if (!NODE_SLUG) return fail("--verify requires --node-slug")
   const { db } = await import("~/services/db")
-  const { claimNodeForUser, CLAIM_NODE_RESULT } = await import("~/server/web/lineage/claim-node-for-user")
+  const { claimNodeForUser, CLAIM_NODE_RESULT } =
+    await import("~/server/web/lineage/claim-node-for-user")
 
   const resolved = await resolveNode(db, NODE_SLUG)
   if (!resolved) return fail(`no node for "${NODE_SLUG}"`)
@@ -160,12 +169,21 @@ async function verify(): Promise<void> {
         let userId = user?.id as string | undefined
         if (!userId) {
           const temp = await tx.user.create({
-            data: { id: `verify_${Date.now()}`, email: `verify_${Date.now()}@test.invalid`, name: "verify", emailVerified: true },
+            data: {
+              id: `verify_${Date.now()}`,
+              email: `verify_${Date.now()}@test.invalid`,
+              name: "verify",
+              emailVerified: true,
+            },
             select: { id: true },
           })
           userId = temp.id
         }
-        const result = await claimNodeForUser(tx, { userId: userId as string, nodeId: resolved.nodeId, brand: BRAND })
+        const result = await claimNodeForUser(tx, {
+          userId: userId as string,
+          nodeId: resolved.nodeId,
+          brand: BRAND,
+        })
         outcome = result.outcome
         throw new Rollback()
       },
@@ -176,7 +194,9 @@ async function verify(): Promise<void> {
   }
 
   if (outcome === CLAIM_NODE_RESULT.CLAIMED) {
-    console.log(`✅ VERIFY — would CLAIM "${resolved.profileName}" (rolled back; nothing persisted).`)
+    console.log(
+      `✅ VERIFY — would CLAIM "${resolved.profileName}" (rolled back; nothing persisted).`,
+    )
   } else {
     fail(`simulation did not reach CLAIMED: ${outcome}`)
   }
@@ -202,7 +222,9 @@ async function resetClaim(db: any, resolved: ResolvedNode): Promise<void> {
     console.log("   • detached Passport (userId → null)")
   }
   // Revoke node-editor access grant(s) for this user on this node.
-  const grants = await db.lineageTreeAccess.deleteMany({ where: { userId: user.id, nodeId: resolved.nodeId } })
+  const grants = await db.lineageTreeAccess.deleteMany({
+    where: { userId: user.id, nodeId: resolved.nodeId },
+  })
   if (grants.count) console.log(`   • removed ${grants.count} access grant(s)`)
   // Drop the claim rows (evidence cascades) for this claimant on this Passport.
   await db.passportClaimEvidence.deleteMany({
@@ -239,8 +261,7 @@ async function bind(): Promise<void> {
   const resolved = await resolveNode(db, NODE_SLUG)
   if (!resolved) return fail(`no node for "${NODE_SLUG}"`)
 
-  const guardsOk =
-    resolved.isClaimableMember && resolved.treePublished && resolved.treeClaimable
+  const guardsOk = resolved.isClaimableMember && resolved.treePublished && resolved.treeClaimable
   if (!guardsOk) {
     return fail(
       `node "${NODE_SLUG}" is not claimable (member=${resolved.isClaimableMember} published=${resolved.treePublished} treeClaimable=${resolved.treeClaimable})`,
@@ -270,7 +291,9 @@ function fail(msg: string): void {
 
 async function main() {
   if (!mode.status && !mode.verify && !mode.bind && !mode.reset) {
-    console.log("No mode flag. Use --status | --verify | --bind | --reset (+ --node-slug <slug> [--email <e>]).")
+    console.log(
+      "No mode flag. Use --status | --verify | --bind | --reset (+ --node-slug <slug> [--email <e>]).",
+    )
     return
   }
   if (mode.status) await status()

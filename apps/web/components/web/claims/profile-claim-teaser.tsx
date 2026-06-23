@@ -1,4 +1,7 @@
+import { UserRoundPlusIcon } from "lucide-react"
+import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { ProfileClaimForm } from "~/components/web/claims/profile-claim-form"
@@ -24,6 +27,7 @@ export function ProfileClaimTeaser({
   subjectType,
   subjectId,
   claimState,
+  claimFunnelHref,
   name,
   avatarUrl,
   coverPhotoUrl,
@@ -34,10 +38,17 @@ export function ProfileClaimTeaser({
   subjectId: string
   /**
    * The viewer's claim state for a PERSON subject (ADR 0036, SESSION_0440). Only
-   * `PENDING_MINE` changes the teaser — it swaps the claim form for a "pending review"
+   * `PENDING_MINE` changes the teaser — it swaps the claim CTA for a "pending review"
    * note. Org subjects (a different claim system) leave this undefined.
    */
   claimState?: ClaimViewerState
+  /**
+   * Account-optional claim funnel URL (SESSION_0440 follow-up). When present, the CTA is a
+   * "Claim this profile" button to that funnel (the `/lineage/join` wizard — guest enters an
+   * email, no sign-in wall) instead of the inline `ProfileClaimForm`, whose submit required an
+   * existing session and dead-ended logged-out visitors. Org callers omit it → inline form.
+   */
+  claimFunnelHref?: string | null
   name: string | null
   avatarUrl?: string | null
   coverPhotoUrl?: string | null
@@ -105,6 +116,22 @@ export function ProfileClaimTeaser({
               You already have an open claim on {label}. An admin will review it shortly — there’s
               nothing more to do right now.
             </p>
+          </>
+        ) : claimFunnelHref ? (
+          <>
+            <p className="mb-1 font-medium text-base">Claim {label}</p>
+            <p className="mb-3 text-muted-foreground text-sm">
+              No account needed to start — enter your email and we’ll send a one-click link to
+              finish claiming.
+            </p>
+            <Button
+              variant="primary"
+              size="md"
+              prefix={<UserRoundPlusIcon />}
+              render={<Link href={claimFunnelHref} />}
+            >
+              Claim {label}
+            </Button>
           </>
         ) : (
           <>

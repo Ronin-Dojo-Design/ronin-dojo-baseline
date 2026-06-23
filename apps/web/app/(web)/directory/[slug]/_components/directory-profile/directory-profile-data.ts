@@ -42,6 +42,40 @@ export type DirectoryProfileView = {
    * CTA without the surface re-deriving it.
    */
   viewerClaimState: ClaimViewerState
+  /**
+   * Account-optional claim funnel for a placeholder person (SESSION_0440 follow-up).
+   * The directory "Claim" CTA routes here — the SAME `/lineage/join` wizard the lineage
+   * drawer uses (guest enters an email → magic link), NOT the login-gated inline form
+   * (which dead-ended logged-out visitors with "User not authenticated"). Carries the
+   * person's claimable node so the wizard preselects it; `/lineage/join` with no node is
+   * still a valid entry. Null when the profile is already claimed (no CTA).
+   */
+  claimFunnelHref: string | null
+}
+
+/**
+ * Account-optional claim funnel for a placeholder person. Returns the `/lineage/join`
+ * wizard URL (preselecting the person's CLAIMABLE node when they have one), or null when
+ * the profile is already claimed. A guest claims without signing in first — the wizard
+ * emails a magic link — so the directory door behaves like the lineage drawer's CTA.
+ */
+async function resolveClaimFunnelHref(profile: DirectoryProfile): Promise<string | null> {
+  if (!profile.isClaimablePlaceholder) {
+    return null
+  }
+  const node = await db.lineageNode.findFirst({
+    where: {
+      passportId: profile.passportId,
+      treeMembers: {
+        some: {
+          isClaimable: true,
+          tree: { brand: Brand.BBL, isPublished: true, isClaimable: true },
+        },
+      },
+    },
+    select: { id: true },
+  })
+  return node ? `/lineage/join?node=${node.id}` : "/lineage/join"
 }
 
 /** Joined "City, Region, Country" line, or null when the city is unset. */
@@ -74,9 +108,10 @@ export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfi
     return null
   }
 
-  const [origin, viewerClaimState] = await Promise.all([
+  const [origin, viewerClaimState, claimFunnelHref] = await Promise.all([
     getRequestOrigin(),
     resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
+    resolveClaimFunnelHref(profile),
   ])
 
   return {
@@ -84,6 +119,7 @@ export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfi
     slug,
     profileUrl: buildAbsoluteUrl(`/directory/${slug}`, origin),
     locationLine: buildLocationLine(profile),
+    claimFunnelHref,
     viewerClaimState,
   }
 }

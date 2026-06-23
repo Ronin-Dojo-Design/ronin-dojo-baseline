@@ -45,6 +45,7 @@ export function DirectoryProfile({
   profileUrl,
   locationLine,
   viewerClaimState,
+  claimFunnelHref,
 }: DirectoryProfileView) {
   const { user } = profile
 
@@ -59,6 +60,7 @@ export function DirectoryProfile({
         subjectType="PERSON"
         subjectId={profile.id}
         claimState={viewerClaimState}
+        claimFunnelHref={claimFunnelHref}
         name={user.name}
         avatarUrl={user.image}
         coverPhotoUrl={profile.coverPhotoUrl}
