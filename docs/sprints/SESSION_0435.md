@@ -2,9 +2,9 @@
 title: "SESSION 0435 — FI-009 BJJ technique-graph + curriculum: verify already-landed feature + prod import"
 slug: session-0435
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-22
-updated: 2026-06-22
+updated: 2026-06-23
 last_agent: claude-session-0435
 sprint: S43
 pairs_with:
