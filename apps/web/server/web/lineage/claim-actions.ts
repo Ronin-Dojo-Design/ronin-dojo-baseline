@@ -15,6 +15,7 @@ const LINEAGE_CLAIM_ERROR = {
   TREE_NOT_CLAIMABLE: "This lineage tree is not currently accepting profile claims.",
   NODE_NOT_IN_TREE: "Node is not a member of this tree.",
   NODE_NOT_CLAIMABLE: "This lineage profile is not currently accepting claims.",
+  NODE_ALREADY_CLAIMED: "This lineage profile has already been claimed by an account.",
   DUPLICATE_CLAIM: "You already have a pending or approved claim on this node.",
 } as const
 
@@ -54,6 +55,21 @@ export const submitLineageClaimRequest = userActionClient
 
     if (!member.isClaimable) {
       throw new Error(LINEAGE_CLAIM_ERROR.NODE_NOT_CLAIMABLE)
+    }
+
+    // 2b. Already-claimed guard (SESSION_0436): a node whose Passport already has an
+    // attached account has been claimed (e.g. auto-claimed via the email/magic-link
+    // reconcile in `claim-node-for-user`). `member.isClaimable` is a per-membership flag
+    // that the reconcile path does NOT flip, so without this check a tree-claim could be
+    // filed against an already-owned node and dead-end at admin review with
+    // NODE_ALREADY_APPROVED. Mirrors the generic profile-claim PERSON_NOT_CLAIMABLE guard.
+    const node = await db.lineageNode.findUnique({
+      where: { id: parsedInput.nodeId },
+      select: { passport: { select: { userId: true } } },
+    })
+
+    if (node?.passport?.userId != null) {
+      throw new Error(LINEAGE_CLAIM_ERROR.NODE_ALREADY_CLAIMED)
     }
 
     // 3. Duplicate guard: PENDING or APPROVED claim by same user on same node+tree.
