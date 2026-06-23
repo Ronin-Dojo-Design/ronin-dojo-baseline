@@ -31,6 +31,7 @@ import {
   type PromoterChangeContext,
   PromoterChangeModal,
 } from "~/components/web/lineage/promoter-change-modal"
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import { resolveLineageClaimBadgeStatus } from "~/lib/lineage/trust-status"
 import { initials, type DrawerProfileView } from "./use-drawer-profile"
 
@@ -148,6 +149,7 @@ function DrawerHeaderActions({
 export function DrawerIdentityHeader({
   view,
   isClaimable,
+  claimState,
   promoterChangeContext,
   isAdmin,
   treeSlug,
@@ -155,6 +157,12 @@ export function DrawerIdentityHeader({
 }: {
   view: DrawerProfileView
   isClaimable?: boolean
+  /**
+   * The viewer's claim state (ADR 0036, SESSION_0440). A CLAIMED Passport suppresses the
+   * "Claimable" header badge — the legacy `view.claimStatus` it used to key off is no longer
+   * written post-P5, so without this a claimed node wrongly reads as claimable.
+   */
+  claimState?: ClaimViewerState
   promoterChangeContext: PromoterChangeContext | null
   isAdmin?: boolean
   treeSlug?: string
@@ -170,8 +178,9 @@ export function DrawerIdentityHeader({
     headerDisciplineName,
     trustStatus,
   } = view
+  const isClaimed = claimState === "CLAIMED_MINE" || claimState === "CLAIMED_OTHER"
   const claimBadgeStatus = resolveLineageClaimBadgeStatus({
-    isClaimable,
+    isClaimable: isClaimable === true && !isClaimed,
     claimStatus: view.claimStatus,
   })
   const panelHeaderStyle = panelRankColor

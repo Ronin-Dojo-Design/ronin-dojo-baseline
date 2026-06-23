@@ -40,17 +40,25 @@ const OrganizationsSection = dynamic(() =>
 const SocialSection = dynamic(() => import("./social-section").then(m => m.SocialSection))
 const UpgradeSection = dynamic(() => import("./upgrade-section").then(m => m.UpgradeSection))
 
-export function DirectoryProfile({ profile, profileUrl, locationLine }: DirectoryProfileView) {
+export function DirectoryProfile({
+  profile,
+  profileUrl,
+  locationLine,
+  viewerClaimState,
+}: DirectoryProfileView) {
   const { user } = profile
 
   // Legacy placeholder (no real account) → show the claim teaser instead of an empty
   // profile. HIDDEN/private already 404'd in the loader; a tier-gated profile still
-  // renders its listing preview below.
+  // renders its listing preview below. The placeholder maps to UNCLAIMED / PENDING_MINE;
+  // the teaser swaps its claim form for a "pending review" note when the viewer already
+  // has an open claim (ADR 0036, SESSION_0440).
   if (profile.isClaimablePlaceholder) {
     return (
       <ProfileClaimTeaser
         subjectType="PERSON"
         subjectId={profile.id}
+        claimState={viewerClaimState}
         name={user.name}
         avatarUrl={user.image}
         coverPhotoUrl={profile.coverPhotoUrl}
@@ -72,7 +80,9 @@ export function DirectoryProfile({ profile, profileUrl, locationLine }: Director
         }
         title={user.name ?? "Directory Profile"}
         badges={<HeroBadges profile={profile} />}
-        actions={<HeroActions profile={profile} profileUrl={profileUrl} />}
+        actions={
+          <HeroActions profile={profile} profileUrl={profileUrl} claimState={viewerClaimState} />
+        }
         intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
         sidebar={<ProfileSidebar profile={profile} />}
       >

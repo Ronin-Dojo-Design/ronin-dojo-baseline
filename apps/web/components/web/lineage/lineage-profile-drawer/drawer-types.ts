@@ -1,3 +1,4 @@
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 
 /** The award the drawer focuses on (from a clicked rank in the tree); null = current. */
@@ -39,6 +40,14 @@ export type LineageProfileDrawerProps = {
   selectedRankAward?: SelectedRankAward
   isClaimable?: boolean
   isTreeClaimable?: boolean
+  /**
+   * The viewer's claim state for this node's Passport (ADR 0036, SESSION_0440). The
+   * shared resolver both claim surfaces consume — drives the 5-state CTA so a claimed
+   * node never shows a (ghost) Claim button. When omitted (e.g. the editor/board/galaxy
+   * callers that don't thread it yet), the drawer falls back to a coarse claimed/
+   * unclaimed read off `profile.passport.user`, which still suppresses the ghost button.
+   */
+  viewerClaimState?: ClaimViewerState
   treeSlug?: string
   treeId?: string
   nodeId?: string | null

@@ -44,22 +44,22 @@ export const EmailBblTruelsonHoldingNote = ({ recipientName, ...wrapper }: Email
     <Para>
       I want you to know: your place in the lineage is already preserved. You&apos;re recorded as a
       1st-degree black belt under Bill Hosken — and your promotion history is in the system, not
-      lost. (If you&apos;ve been promoted since, just let me know. Once you&apos;re in, you&apos;ll be
-      able to add photos, edit dates, and more — we&apos;re pulling in features from beta constantly,
-      so tell me anything that would be helpful to you.)
+      lost. (If you&apos;ve been promoted since, just let me know. Once you&apos;re in, you&apos;ll
+      be able to add photos, edit dates, and more — we&apos;re pulling in features from beta
+      constantly, so tell me anything that would be helpful to you.)
     </Para>
 
     <Para>
-      We&apos;re putting the final polish on the part that lets you claim your own profile — sign in,
-      edit it, and see it live on your page, the way it always should have worked. I didn&apos;t want
-      to send you a half-working link, so I&apos;m holding the claim invite until it&apos;s a clean,
-      one-click experience. You&apos;ll be among the very first we send it to, and it&apos;s coming
-      very soon.
+      We&apos;re putting the final polish on the part that lets you claim your own profile — sign
+      in, edit it, and see it live on your page, the way it always should have worked. I didn&apos;t
+      want to send you a half-working link, so I&apos;m holding the claim invite until it&apos;s a
+      clean, one-click experience. You&apos;ll be among the very first we send it to, and it&apos;s
+      coming very soon.
     </Para>
 
     <Para>
-      Certificates are on the way too — we&apos;re building a proper home for them so your rank shows
-      up digitally and you can order physical copies, the way you earned it.
+      Certificates are on the way too — we&apos;re building a proper home for them so your rank
+      shows up digitally and you can order physical copies, the way you earned it.
     </Para>
 
     <Para>Appreciate your patience and your loyalty over the years. More soon.</Para>

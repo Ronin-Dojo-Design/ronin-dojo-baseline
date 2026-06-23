@@ -43,6 +43,7 @@ import {
 } from "~/lib/lineage/filter-facets"
 import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type {
   LineageNodeProfile,
   LineageRelationshipRow,
@@ -58,6 +59,12 @@ type Props = {
   visualGroups?: Pick<LineageVisualGroupRow, "id" | "label">[]
   defaultRootMemberId?: string | null
   profilesById: Record<string, LineageNodeProfile>
+  /**
+   * The viewer's claim state per node id (ADR 0036, SESSION_0440). Threaded from the
+   * page loader's shared resolver so the drawer + card menu render the right CTA and
+   * never offer a claim on a claimed/pending node.
+   */
+  claimStateByNodeId?: Record<string, ClaimViewerState>
   treeSlug?: string
   isTreeClaimable?: boolean
   initialFocusId?: string | null
@@ -253,6 +260,7 @@ export function LineageViewAIsland({
   visualGroups = [],
   defaultRootMemberId,
   profilesById,
+  claimStateByNodeId,
   treeSlug,
   isTreeClaimable = false,
   initialFocusId,
@@ -709,14 +717,18 @@ export function LineageViewAIsland({
                 View profile
               </DropdownMenuItem>
 
-              {activeMenuNode?.claimable && isTreeClaimable && (
-                <DropdownMenuItem
-                  render={<Link href={`/lineage/join?node=${activeMenuNode.nodeId}`} />}
-                >
-                  <UserRoundPlusIcon />
-                  Claim this profile
-                </DropdownMenuItem>
-              )}
+              {activeMenuNode?.claimable &&
+                isTreeClaimable &&
+                // SESSION_0440 — don't offer a claim on a node already claimed or with the
+                // viewer's claim pending (shared resolver). Undefined (un-threaded) → UNCLAIMED.
+                (claimStateByNodeId?.[activeMenuNode.nodeId] ?? "UNCLAIMED") === "UNCLAIMED" && (
+                  <DropdownMenuItem
+                    render={<Link href={`/lineage/join?node=${activeMenuNode.nodeId}`} />}
+                  >
+                    <UserRoundPlusIcon />
+                    Claim this profile
+                  </DropdownMenuItem>
+                )}
 
               <DropdownMenuItem
                 onClick={() => {
@@ -747,6 +759,7 @@ export function LineageViewAIsland({
         selectedRankAward={drawerMember?.selectedRankAward ?? null}
         isClaimable={drawerMember?.isClaimable ?? false}
         isTreeClaimable={isTreeClaimable}
+        viewerClaimState={drawerMember ? claimStateByNodeId?.[drawerMember.nodeId] : undefined}
         treeSlug={treeSlug}
         nodeId={drawerMember?.nodeId}
         isAdmin={canManage}

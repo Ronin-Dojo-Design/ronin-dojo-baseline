@@ -378,5 +378,14 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
     ).toBeVisible()
     await openLineageProfileDrawer(page, updatedDisplayName)
     await expect(page.getByText(updatedBio)).toBeVisible({ timeout: 30_000 })
+
+    // SESSION_0440 (Full A, ADR 0036): the node is now CLAIMED by the signed-in viewer,
+    // so the drawer must NOT render the (ghost) "Claim this profile" CTA — the exact bug
+    // the shared `resolveViewerClaimState` machine fixes — and instead offers the
+    // CLAIMED_MINE manage affordance.
+    await expect(page.getByRole("link", { name: /Claim this profile/i })).toHaveCount(0)
+    await expect(page.getByRole("link", { name: /This profile is yours/i })).toBeVisible({
+      timeout: 15_000,
+    })
   })
 })

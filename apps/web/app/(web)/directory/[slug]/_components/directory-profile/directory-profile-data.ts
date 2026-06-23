@@ -1,7 +1,12 @@
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
+import {
+  type ClaimViewerState,
+  resolveViewerClaimState,
+} from "~/server/web/claims/resolve-viewer-claim-state"
 import { findProfileBySlug } from "~/server/web/directory/queries"
+import { db } from "~/services/db"
 
 /**
  * `/directory/[slug]` server loader (component-launch-sweep step 1 — data-heavy route).
@@ -31,6 +36,12 @@ export type DirectoryProfileView = {
   profileUrl: string
   /** Pre-joined "City, Region, Country" intro line, or null when no city. */
   locationLine: string | null
+  /**
+   * The viewer's claim state for this person's Passport (ADR 0036, SESSION_0440).
+   * The shared resolver both claim surfaces consume — drives the claim/pending/yours
+   * CTA without the surface re-deriving it.
+   */
+  viewerClaimState: ClaimViewerState
 }
 
 /** Joined "City, Region, Country" line, or null when the city is unset. */
@@ -63,12 +74,16 @@ export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfi
     return null
   }
 
-  const origin = await getRequestOrigin()
+  const [origin, viewerClaimState] = await Promise.all([
+    getRequestOrigin(),
+    resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
+  ])
 
   return {
     profile,
     slug,
     profileUrl: buildAbsoluteUrl(`/directory/${slug}`, origin),
     locationLine: buildLocationLine(profile),
+    viewerClaimState,
   }
 }

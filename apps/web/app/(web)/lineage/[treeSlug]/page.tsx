@@ -27,11 +27,16 @@ import {
   generateSchemaReference,
   generateStructuredDataEntity,
 } from "~/lib/structured-data"
+import {
+  CLAIM_VIEWER_STATE,
+  resolveViewerClaimStates,
+} from "~/server/web/claims/resolve-viewer-claim-state"
 import { getLineageListingRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 import {
   findPublishedLineageTreeSummaryBySlug,
   getLineageProfilesByIds,
 } from "~/server/web/lineage/queries"
+import { db } from "~/services/db"
 
 /**
  * Standalone public lineage tree viewer.
@@ -163,6 +168,21 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
   const visibleNodeIds = Array.from(new Set(result.members.map(member => member.nodeId)))
   const profilesById = await getLineageProfilesByIds(visibleNodeIds)
 
+  // Viewer claim state per visible node (ADR 0036, SESSION_0440) — the shared resolver
+  // both claim surfaces consume. One batched query feeds the drawer + card-menu CTAs so a
+  // claimed node never shows a ghost "Claim" button. Keyed by node id (the drawer's key).
+  const profileEntries = Object.entries(profilesById)
+  const claimStatesByPassport = await resolveViewerClaimStates(db, {
+    passportIds: profileEntries.map(([, profile]) => profile.passportId),
+    viewerUserId: session?.user?.id ?? null,
+  })
+  const claimStateByNodeId = Object.fromEntries(
+    profileEntries.map(([nodeId, profile]) => [
+      nodeId,
+      claimStatesByPassport.get(profile.passportId) ?? CLAIM_VIEWER_STATE.UNCLAIMED,
+    ]),
+  )
+
   return (
     <>
       <StructuredData data={structuredData} />
@@ -234,6 +254,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
                 visualGroups={result.visualGroups}
                 defaultRootMemberId={result.defaultRootMemberId}
                 profilesById={profilesById}
+                claimStateByNodeId={claimStateByNodeId}
                 treeSlug={treeSlug}
                 isTreeClaimable={result.tree.isClaimable}
                 initialFocusId={focus ?? null}
@@ -246,6 +267,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
               visualGroups={result.visualGroups}
               defaultRootMemberId={result.defaultRootMemberId}
               profilesById={profilesById}
+              claimStateByNodeId={claimStateByNodeId}
               treeSlug={treeSlug}
               isTreeClaimable={result.tree.isClaimable}
               renderPolicy={renderPolicy}

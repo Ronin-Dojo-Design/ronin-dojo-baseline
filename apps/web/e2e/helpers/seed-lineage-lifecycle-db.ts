@@ -61,6 +61,15 @@ async function sweepStaleLifecycleRows() {
   await prisma.lineageClaimRequest.deleteMany({
     where: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] },
   })
+  // SESSION_0440 — the unified door (ADR 0036) writes PassportClaimRequest; its node/tree
+  // FKs are SetNull-on-delete, so a stale row survives the node/tree sweep above unless we
+  // delete it here (its passport may also be an accountless placeholder the user-sweep misses).
+  await prisma.passportClaimEvidence.deleteMany({
+    where: { claimRequest: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] } },
+  })
+  await prisma.passportClaimRequest.deleteMany({
+    where: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] },
+  })
   await prisma.lineageTreeAccess.deleteMany({
     where: { OR: [{ treeId: { in: treeIds } }, { userId: { in: userIds } }] },
   })
@@ -535,7 +544,10 @@ async function readLineageLifecycleState(
     siblingMembers,
     siblingRelationshipCount,
   ] = await Promise.all([
-    prisma.lineageClaimRequest.findFirst({
+    // SESSION_0440: the node-submit door now writes the unified PassportClaimRequest
+    // (ADR 0036 / P5), so the lifecycle assertions read it here. status/claimantNote/
+    // reviewerNote/evidence carry the same shape they did on LineageClaimRequest.
+    prisma.passportClaimRequest.findFirst({
       where: {
         treeId: fixture.treeId,
         nodeId: fixture.claimTargetNodeId,
@@ -649,6 +661,11 @@ async function cleanupLineageLifecycleFixture(fixture: LineageLifecycleFixture) 
     where: { claimRequest: { treeId: fixture.treeId } },
   })
   await prisma.lineageClaimRequest.deleteMany({ where: { treeId: fixture.treeId } })
+  // SESSION_0440 — unified PassportClaimRequest rows written by the node-submit door.
+  await prisma.passportClaimEvidence.deleteMany({
+    where: { claimRequest: { treeId: fixture.treeId } },
+  })
+  await prisma.passportClaimRequest.deleteMany({ where: { treeId: fixture.treeId } })
   await prisma.lineageTreeAccess.deleteMany({ where: { treeId: fixture.treeId } })
   await prisma.lineageRelationship.deleteMany({
     where: {

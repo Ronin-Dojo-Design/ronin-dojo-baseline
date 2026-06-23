@@ -4,6 +4,7 @@ import { Stack } from "~/components/common/stack"
 import { ProfileClaimForm } from "~/components/web/claims/profile-claim-form"
 import { ProfileHero } from "~/components/web/profile/profile-hero"
 import { initialsOf } from "~/lib/directory/facet-result"
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 
 /**
  * Public "mock profile" claim teaser (SESSION_0354).
@@ -22,6 +23,7 @@ function SkeletonLine({ className }: { className?: string }) {
 export function ProfileClaimTeaser({
   subjectType,
   subjectId,
+  claimState,
   name,
   avatarUrl,
   coverPhotoUrl,
@@ -30,6 +32,12 @@ export function ProfileClaimTeaser({
 }: {
   subjectType: "PERSON" | "ORGANIZATION"
   subjectId: string
+  /**
+   * The viewer's claim state for a PERSON subject (ADR 0036, SESSION_0440). Only
+   * `PENDING_MINE` changes the teaser — it swaps the claim form for a "pending review"
+   * note. Org subjects (a different claim system) leave this undefined.
+   */
+  claimState?: ClaimViewerState
   name: string | null
   avatarUrl?: string | null
   coverPhotoUrl?: string | null
@@ -38,6 +46,7 @@ export function ProfileClaimTeaser({
 }) {
   const label =
     name?.trim() || (subjectType === "ORGANIZATION" ? "this organization" : "this profile")
+  const hasPendingClaim = claimState === "PENDING_MINE"
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-2xl space-y-6 px-4 py-6 sm:px-6">
@@ -48,13 +57,27 @@ export function ProfileClaimTeaser({
         coverPhotoUrl={coverPhotoUrl}
         initials={initialsOf(name)}
         tags={tags}
-        badges={[{ label: "Unclaimed", variant: "soft" }]}
+        badges={[
+          hasPendingClaim
+            ? { label: "Claim pending", variant: "soft" }
+            : { label: "Unclaimed", variant: "soft" },
+        ]}
       />
 
       <Note>
-        This {subjectType === "ORGANIZATION" ? "organization" : "profile"} hasn’t been claimed yet.
-        Claim it to fill out the rest — bio, photos, schools, schedule, and rank history all unlock
-        once it’s yours.
+        {hasPendingClaim ? (
+          <>
+            Your claim on this {subjectType === "ORGANIZATION" ? "organization" : "profile"} is in
+            review. We’ll email you once it’s approved — then bio, photos, schools, schedule, and
+            rank history all unlock.
+          </>
+        ) : (
+          <>
+            This {subjectType === "ORGANIZATION" ? "organization" : "profile"} hasn’t been claimed
+            yet. Claim it to fill out the rest — bio, photos, schools, schedule, and rank history
+            all unlock once it’s yours.
+          </>
+        )}
       </Note>
 
       {/* Skeleton "above the fold" preview of the real profile sections. */}
@@ -75,8 +98,24 @@ export function ProfileClaimTeaser({
       </Card>
 
       <Card className="p-4">
-        <p className="mb-3 font-medium text-base">Claim {label}</p>
-        <ProfileClaimForm subjectType={subjectType} subjectId={subjectId} subjectLabel={label} />
+        {hasPendingClaim ? (
+          <>
+            <p className="mb-1 font-medium text-base">Claim pending review</p>
+            <p className="text-muted-foreground text-sm">
+              You already have an open claim on {label}. An admin will review it shortly — there’s
+              nothing more to do right now.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mb-3 font-medium text-base">Claim {label}</p>
+            <ProfileClaimForm
+              subjectType={subjectType}
+              subjectId={subjectId}
+              subjectLabel={label}
+            />
+          </>
+        )}
       </Card>
     </div>
   )

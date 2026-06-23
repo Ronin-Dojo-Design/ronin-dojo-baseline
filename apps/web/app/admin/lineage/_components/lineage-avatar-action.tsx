@@ -92,11 +92,7 @@ export function LineageAvatarAction({
         prefix={
           avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="size-5 shrink-0 rounded-full object-cover"
-            />
+            <img src={avatarUrl} alt="" className="size-5 shrink-0 rounded-full object-cover" />
           ) : (
             <ImageIcon />
           )

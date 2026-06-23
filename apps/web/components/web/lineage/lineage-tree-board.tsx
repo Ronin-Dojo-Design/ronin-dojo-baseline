@@ -9,6 +9,7 @@ import {
 import { bblPortalTypographyClass } from "~/lib/fonts"
 import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
 import type {
   LineageNodeProfile,
@@ -32,6 +33,8 @@ import { type LineageLayout, LineageTreeCanvas } from "./lineage-tree-canvas"
 
 type LineageTreeBoardProps = {
   profilesById: Record<string, LineageNodeProfile>
+  /** Viewer claim state per node id (ADR 0036, SESSION_0440) — drives the drawer CTA. */
+  claimStateByNodeId?: Record<string, ClaimViewerState>
   treeId?: string
   treeSlug?: string
   isTreeClaimable?: boolean
@@ -88,6 +91,7 @@ export function LineageTreeBoard({
   rows,
   rootId,
   profilesById,
+  claimStateByNodeId,
   edges,
   members,
   visualGroups,
@@ -231,6 +235,7 @@ export function LineageTreeBoard({
         selectedRankAward={null}
         isClaimable={selectedMember?.isClaimable}
         isTreeClaimable={isTreeClaimable}
+        viewerClaimState={selectedNodeId ? claimStateByNodeId?.[selectedNodeId] : undefined}
         treeSlug={treeSlug}
         treeId={treeId}
         nodeId={selectedNodeId}

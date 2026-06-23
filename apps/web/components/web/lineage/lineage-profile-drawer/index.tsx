@@ -1,6 +1,6 @@
 "use client"
 
-import { UserRoundPlusIcon } from "lucide-react"
+import { ClockIcon, UserRoundPlusIcon } from "lucide-react"
 import dynamic from "next/dynamic"
 import { Button } from "~/components/common/button"
 import {
@@ -16,6 +16,7 @@ import { Stack } from "~/components/common/stack"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/common/tabs"
 import type { PromoterChangeContext } from "~/components/web/lineage/promoter-change-modal"
 import { cx } from "~/lib/utils"
+import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 import { DrawerIdentityHeader } from "./drawer-header"
 import type {
@@ -59,6 +60,7 @@ export function LineageProfileDrawer({
   selectedRankAward,
   isClaimable,
   isTreeClaimable,
+  viewerClaimState,
   treeSlug,
   nodeId,
   isAdmin,
@@ -99,6 +101,7 @@ export function LineageProfileDrawer({
             selectedRankAward={selectedRankAward ?? null}
             isClaimable={isClaimable}
             isTreeClaimable={isTreeClaimable}
+            viewerClaimState={viewerClaimState}
             treeSlug={treeSlug}
             nodeId={nodeId}
             isAdmin={isAdmin}
@@ -119,6 +122,7 @@ function DrawerBody({
   selectedRankAward,
   isClaimable,
   isTreeClaimable,
+  viewerClaimState,
   treeSlug,
   nodeId,
   isAdmin,
@@ -132,6 +136,7 @@ function DrawerBody({
   selectedRankAward: SelectedRankAward
   isClaimable?: boolean
   isTreeClaimable?: boolean
+  viewerClaimState?: ClaimViewerState
   treeSlug?: string
   nodeId?: string | null
   isAdmin?: boolean
@@ -142,12 +147,14 @@ function DrawerBody({
 }) {
   const view = deriveDrawerProfileView(profile, selectedRankAward)
   const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
+  const claimState = effectiveClaimState(viewerClaimState, profile)
 
   return (
     <>
       <DrawerIdentityHeader
         view={view}
         isClaimable={isClaimable}
+        claimState={claimState}
         promoterChangeContext={promoterChangeContext}
         isAdmin={isAdmin}
         treeSlug={treeSlug}
@@ -190,23 +197,97 @@ function DrawerBody({
         </TabsContent>
       </Tabs>
 
-      {/* Claim CTA — shown when node is claimable and tree accepts claims. Routes to
-          the public "Join the Legacy" funnel (account-optional) rather than the
-          login-gated /claim form — a non-user should not hit a login wall
-          (SESSION_0386). Carries the node so the join form can preselect it. */}
-      {isClaimable && isTreeClaimable && treeSlug && (
-        <div className="border-t p-4">
-          <Button
-            variant="primary"
-            size="md"
-            className="w-full"
-            prefix={<UserRoundPlusIcon />}
-            render={<Link href={`/lineage/join${nodeId ? `?node=${nodeId}` : ""}`} />}
-          >
-            Claim this profile
-          </Button>
-        </div>
-      )}
+      <ClaimCta
+        state={claimState}
+        isClaimable={isClaimable}
+        isTreeClaimable={isTreeClaimable}
+        treeSlug={treeSlug}
+        nodeId={nodeId}
+      />
     </>
   )
+}
+
+/**
+ * The viewer's effective claim state for the CTA. Prefers the threaded resolver
+ * value (the shared SoT). Falls back — for callers that don't thread it yet (editor /
+ * board / galaxy) — to a coarse claimed/unclaimed read off the attached account, which
+ * still suppresses the ghost Claim button on an already-claimed node. The mine/pending
+ * refinement only exists on the threaded (public-tree) path, which has the viewer.
+ */
+function effectiveClaimState(
+  viewerClaimState: ClaimViewerState | undefined,
+  profile: LineageNodeProfile,
+): ClaimViewerState {
+  if (viewerClaimState) {
+    return viewerClaimState
+  }
+  return profile.passport?.user ? "CLAIMED_OTHER" : "UNCLAIMED"
+}
+
+/**
+ * Bottom-pinned claim CTA — the 5-state machine (ADR 0036, SESSION_0440):
+ *   - CLAIMED_MINE  → "This profile is yours →" (manage; no claim button)
+ *   - PENDING_MINE  → "Claim pending review" (disabled/info)
+ *   - UNCLAIMED     → "Claim this profile" → the account-optional /lineage/join funnel
+ *                     (only when the tree + this member accept claims), NOT the
+ *                     login-gated /claim form — a non-user should not hit a login wall
+ *                     (SESSION_0386). Carries the node so the join form can preselect it.
+ *   - CLAIMED_OTHER → nothing (normal claimed public profile)
+ */
+function ClaimCta({
+  state,
+  isClaimable,
+  isTreeClaimable,
+  treeSlug,
+  nodeId,
+}: {
+  state: ClaimViewerState
+  isClaimable?: boolean
+  isTreeClaimable?: boolean
+  treeSlug?: string
+  nodeId?: string | null
+}) {
+  if (state === "CLAIMED_MINE") {
+    return (
+      <div className="border-t p-4">
+        <Button
+          variant="secondary"
+          size="md"
+          className="w-full"
+          render={<Link href="/app/profile" />}
+        >
+          This profile is yours →
+        </Button>
+      </div>
+    )
+  }
+
+  if (state === "PENDING_MINE") {
+    return (
+      <div className="border-t p-4">
+        <Button variant="soft" size="md" className="w-full" prefix={<ClockIcon />} disabled>
+          Claim pending review
+        </Button>
+      </div>
+    )
+  }
+
+  if (state === "UNCLAIMED" && isClaimable && isTreeClaimable && treeSlug) {
+    return (
+      <div className="border-t p-4">
+        <Button
+          variant="primary"
+          size="md"
+          className="w-full"
+          prefix={<UserRoundPlusIcon />}
+          render={<Link href={`/lineage/join${nodeId ? `?node=${nodeId}` : ""}`} />}
+        >
+          Claim this profile
+        </Button>
+      </div>
+    )
+  }
+
+  return null
 }
